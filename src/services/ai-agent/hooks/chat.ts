@@ -1,12 +1,16 @@
 'use client';
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
+
 import { useQueryClient } from '@tanstack/react-query';
+import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
+
 import { atom, useAtom } from 'jotai';
-import React, { useCallback, useEffect } from 'react';
+import React, {useCallback, useEffect } from 'react';
 
 import { useAIActiveTools } from '@/components/ai-assistant/state';
-import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
+import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
+
 import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
@@ -16,7 +20,8 @@ import { useAiAssistant } from '../assistant';
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { Config } from '@/features/scan-config/components/components';
 
-const AI_AGENT_STATE: { id?: string; config?: Record<string, Config> } = {};
+const agentStateAtom = atom<Record<string, Config>>({});
+let requestId = crypto.randomUUID().replace(/-/g, '');
 let returnId: string = '';
 
 export interface AiAgentRateLimit {
@@ -53,7 +58,8 @@ function setStoredRateLimit(value: number): void {
   }
 }
 
-export function useServiceAiAgentChat(threadId: string, initialMessages: Message[] = []) {
+export function useServiceAiAgentChat(threadId: string) {
+  const [aiAgentState] = useAtom(agentStateAtom);
   const assistant = useAiAssistant();
   const assistantInitialMessages = assistant.initialMessages.useValue();
   const { accessToken } = assistant.useContext();
@@ -70,18 +76,19 @@ export function useServiceAiAgentChat(threadId: string, initialMessages: Message
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
     initialMessages:
-      assistantInitialMessages.length > 0 ? assistantInitialMessages : initialMessages,
+     assistantInitialMessages, 
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      'x-request-id': AI_AGENT_STATE.id ?? '',
+      'x-request-id': requestId,
     },
     experimental_prepareRequestBody: ({ messages }) => {
       const lastMessage = messages.at(-1);
+
       return {
         content: (lastMessage?.content ?? '').trim(),
         tool_selection: activeTools,
-        frontend_url: `${globalThis.location.pathname}${globalThis.location.search}`,
-        shared_state: AI_AGENT_STATE.config,
+        frontend_url: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
+        shared_state: aiAgentState,
       };
     },
     fetch: async (url, options) => {
@@ -109,11 +116,11 @@ export function useServiceAiAgentChat(threadId: string, initialMessages: Message
     ) as ToolInvocationUIPart | undefined;
 
     //@ts-expect-error
-    if (toolInvocation?.toolInvocation?.result && returnId === AI_AGENT_STATE.id) {
+    if (toolInvocation?.toolInvocation?.result && returnId === requestId) {
       try {
         //@ts-expect-error
         const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
-        setConfig(result);
+        setConfig(result.smc_simulation_config ?? null);
       } catch {
         logError(
           'Failed to parse tool invocation result as JSON:',
@@ -163,32 +170,44 @@ export function useServiceAiAgentChat(threadId: string, initialMessages: Message
 export const configStateAtom = atom<Config | null>(null);
 const isChatReadyAtom = atom(true);
 
-export function useAgentState(key: 'smc_simulation_config', config: Config) {
-  const [_, setConfig] = useAtom(configStateAtom);
-  useEffect(() => {
-    AI_AGENT_STATE.id = crypto.randomUUID().replace(/-/g, '');
-    return () => setConfig(null);
-  }, [setConfig]);
+export function useAgentState(key: 'smc_simulation_config', config?: Config) {
+  const [, setAIAgentState] = useAtom(agentStateAtom);
+  const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
 
   useEffect(() => {
-    AI_AGENT_STATE.config = {
-      [key]: config,
+    const stateConfig = config ?? defaultConfig;
+    if (!stateConfig) return;
+
+    setAIAgentState({
+      [key]: stateConfig,
+    });
+
+    return () => {
+      if (!defaultConfig) return;
+      setAIAgentState({
+        [key]: defaultConfig,
+      });
     };
-  }, [config, key]);
+  }, [defaultConfig, config, key, setAIAgentState]);
 
-  const updateId = useCallback(() => {
-    AI_AGENT_STATE.id = crypto.randomUUID().replace(/-/g, '');
+  return useCallback(() => {
+    requestId = crypto.randomUUID().replace(/-/g, '');
   }, []);
-
-  return updateId;
 }
 
 export function useAIConfig() {
   const [aiConfig, setAiConfig] = useAtom(configStateAtom);
+  const [aiAgentState] = useAtom(agentStateAtom);
   const [isChatReady] = useAtom(isChatReadyAtom);
 
   return {
-    aiConfig,
+    aiConfig:
+      // @ts-expect-error
+      aiConfig?.initialize?.circuit?.id_str ===
+      // @ts-expect-error
+      aiAgentState?.smc_simulation_config?.initialize?.circuit?.id_str
+        ? aiConfig
+        : null,
     setAiConfig,
     isChatReady,
   };

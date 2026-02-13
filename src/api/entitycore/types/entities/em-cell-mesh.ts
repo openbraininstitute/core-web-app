@@ -131,6 +131,7 @@ export interface IEMCellMesh
     Subject,
     Timestamps,
     IEMCellMeshBase {
+  description: string;
   contributions?: Array<IContributor> | null;
   license?: ILicense | null;
   brain_region: BrainRegionHierarchyBase;

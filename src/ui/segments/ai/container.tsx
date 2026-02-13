@@ -11,6 +11,7 @@ import { type JSX, useEffect, useMemo, useState } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import { usePanelWidth } from '@/components/ai-assistant/hooks';
+import { useAgentState } from '@/services/ai-agent';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { cn } from '@/utils/css-class';
@@ -24,9 +25,10 @@ export function Container(): JSX.Element {
   const [animationComplete, setAnimationComplete] = useState(false);
 
   const style: React.CSSProperties = {
-    //@ts-expect-error
     '--custom-panel-width': isFullscreen ? '100%' : `${panelWidth}px`,
   };
+  useAgentState('smc_simulation_config');
+
   useEffect(() => {
     if (isFullscreen) {
       document.body.style.overflow = 'hidden';
@@ -63,12 +65,10 @@ export function Container(): JSX.Element {
       style={style}
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai] border-none!',
+        'text-white [grid-area:ai]',
         { 'text-primary-9 mr-3 rounded-lg! bg-white': isExpanded },
         { 'text-primary-9 my-2 bg-white shadow-lg': isFullscreen },
-        {
-          'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed,
-        },
+        { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed },
         { 'rounded-full!': isCollapsed && animationComplete }
       )}
       animate={{

@@ -1,51 +1,73 @@
 'use client';
 
-import { omit } from 'es-toolkit/compat';
+import { compact, omit } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
 import { notFound } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
-import { WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
-  usePrimaryHierarchyOfCurrentSpeciesQuery,
+  brainRegionBasicCellGroupsRegionsHierarchyAtom,
+  useBrainRegionHierarchy,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
-import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { useScope } from '@/ui/hooks/use-scope';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceSection } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
-  buildType: TExtendedEntitiesTypeDict;
+  section: TWorkspaceSection;
+  workspace: WorkspaceContext;
+  baseModelType: TExtendedEntitiesTypeDict;
 };
 
-export function WorkflowBrowseEntity({ buildType }: Props) {
-  const dataType = getEntityByExtendedType({ type: buildType });
-  const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
-  const { changeBrainRegion } = useWorkspaceHierarchyRegistry();
-  const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
+export function WorkflowBrowseEntity({ section, workspace, baseModelType }: Props) {
+  const dataType = getEntityByExtendedType({ type: baseModelType });
+  const { scope } = useScope({ clearOnDefault: false });
 
+  const dataKey = compact([
+    workspace.virtualLabId,
+    workspace.projectId,
+    section,
+    baseModelType,
+    scope,
+  ]).join('/');
+
+  const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
+  const { updateHierarchyConfig } = useBrainRegionHierarchy({
+    dataKey,
+  });
+
+  const brainRegionHierarchy = useAtomValue(
+    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
+  );
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: both functions are stable
   useEffect(() => {
     if (brainRegionHierarchy) {
       const defaultBrainRegion = brainRegionHierarchy?.root;
-      changeBrainRegion(defaultBrainRegion);
+      updateHierarchyConfig(defaultBrainRegion);
       updateSelectedBrainRegion(omit(defaultBrainRegion, 'children'));
     }
-  }, [brainRegionHierarchy, changeBrainRegion, updateSelectedBrainRegion]);
+  }, [brainRegionHierarchy]);
 
   if (!dataType) return notFound();
   return (
     <BrowseEntityScope
       requireMiniDetailView
-      requireBrainRegion={false}
-      section={WorkspaceSection.SimulateWorkflow}
+      requireBrainRegion
+      section={section}
       classNames={{ container: 'max-h-full', miniView: 'max-h-[calc(100vh-15rem)]' }}
-      dataType={buildType}
+      dataType={baseModelType}
       mainTableProps={{
         selectionType: undefined,
       }}
       miniViewProps={{
-        section: WorkspaceSection.SimulateWorkflow,
+        section,
       }}
     />
   );

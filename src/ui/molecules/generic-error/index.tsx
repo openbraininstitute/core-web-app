@@ -1,22 +1,22 @@
-import type { ComponentProps, ReactNode } from 'react';
-
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
+import type { ComponentProps, ReactNode } from 'react';
+
 type Props = {
   icon?: ReactNode;
-  text: string;
+  content: ReactNode;
   shouldContactSupport?: boolean;
   cls?: {
     container?: ComponentProps<'div'>['className'];
     icon?: ComponentProps<'div'>['className'];
-    text?: ComponentProps<'p'>['className'];
+    content?: ComponentProps<'p'>['className'];
     contact?: ComponentProps<'div'>['className'];
   };
 };
 
-export function GenericError({ text, icon, shouldContactSupport, cls }: Props) {
+export function GenericError({ content, icon, shouldContactSupport, cls }: Props) {
   const breakpoint = useDefaultBreakpoint();
   return (
     <div className={cn('flex flex-col items-center justify-center gap-1.5', cls?.container)}>
@@ -27,10 +27,10 @@ export function GenericError({ text, icon, shouldContactSupport, cls }: Props) {
         className={cn(
           'text-warning max-w-xl text-center',
           breakpoint === 'l' ? 'text-lg' : 'text-2xl',
-          cls?.text
+          cls?.content
         )}
       >
-        {text}
+        {content}
       </p>
       {shouldContactSupport && (
         <Button

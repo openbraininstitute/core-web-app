@@ -1,4 +1,5 @@
-import isEqual from 'es-toolkit/compat/isEqual';
+import { useQuery } from '@tanstack/react-query';
+import { isEqual } from 'es-toolkit/compat';
 import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
 import { match } from 'ts-pattern';
@@ -15,6 +16,7 @@ import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execu
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -44,11 +46,17 @@ const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
 export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
   ({ campaignId, context }: { campaignId: string; context: WorkspaceContext }) =>
     atomWithRefresh<Promise<SimExecStatusMap>>(async (get) => {
-      const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
+      const simulationsAtom = simulationsByCampaignIdAtomFamily({
+        campaignId,
+        context,
+      });
       const simulations = await get(simulationsAtom);
       const simulationIds = simulations.map((s) => s.id);
 
-      const simExecutions = await resolveExecutions({ context, allSimIds: simulationIds });
+      const simExecutions = await resolveExecutions({
+        context,
+        allSimIds: simulationIds,
+      });
 
       const executionsGrouped = simExecutions.reduce<Map<string, ICircuitSimulationExecution[]>>(
         (map, exec) => map.set(exec.used[0].id, [...(map.get(exec.used[0].id) ?? []), exec]),
@@ -71,7 +79,10 @@ export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
   }
 );
 
-type SimExecStatusMapAtomFamilyArg = { campaignId: string; context: WorkspaceContext };
+type SimExecStatusMapAtomFamilyArg = {
+  campaignId: string;
+  context: WorkspaceContext;
+};
 
 export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
   ({ campaignId, context }: SimExecStatusMapAtomFamilyArg) => {
@@ -84,7 +95,10 @@ export const simExecStatusMapAtomFamily = atomFamilyWithExpiration(
 
     return atom<Promise<SimExecStatusMap>, [string, EntitycoreExecutionStatus], void>(
       async (get) => {
-        const simulationsAtom = simulationsByCampaignIdAtomFamily({ campaignId, context });
+        const simulationsAtom = simulationsByCampaignIdAtomFamily({
+          campaignId,
+          context,
+        });
         const simulations = await get(simulationsAtom);
 
         const remoteStatusMap = await get(simExecRemoteStatusMapAtom);
@@ -148,7 +162,10 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
         return null;
       }
 
-      return getCircuitSimulationResult({ id: execution.generated[0].id, context });
+      return getCircuitSimulationResult({
+        id: execution.generated[0].id,
+        context,
+      });
     }),
   {
     ttl: 120000, // 2 minutes
@@ -165,7 +182,10 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
       const simulations = res.data;
 
       // To correctly sort simulations by name which might contain a simulation index.
-      const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+      const collator = new Intl.Collator(undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      });
       const sortedSimulations = simulations.sort((a, b) => collator.compare(a.name, b.name));
 
       return sortedSimulations;
@@ -176,30 +196,44 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   }
 );
 
-// TODO Refactor to use tanstack query
-export const modelAtomFamily = readAtomFamilyWithExpiration(
-  ({ id, context }: { id: string; context: WorkspaceContext }) =>
-    atom<Promise<ICircuit | IMEModel>>(async () => {
-      if (!id) {
-        throw new Error(`No model ID provided`);
-      }
+export function useModelQuery({ id, context }: { id: string; context: WorkspaceContext }) {
+  if (!id) {
+    throw new Error(`No model ID provided`);
+  }
+  const params = { id, context };
+  const {
+    data: entityType,
+    isLoading: entityLoading,
+    error: entityError,
+  } = useQuery({
+    queryKey: keyBuilder.entity({ id, context }),
+    queryFn: () => getEntity(params),
+    select: (r) => r.type,
+    enabled: !!id,
+  });
 
-      const params = { id, context };
-
-      const modelEntityBase = await getEntity(params);
-
-      return match(modelEntityBase.type)
+  const {
+    data: entity,
+    isLoading: modelLoading,
+    error: modelError,
+  } = useQuery<ICircuit | IMEModel, Error, ICircuit | IMEModel>({
+    queryKey: keyBuilder.entity({ id, context, type: entityType }),
+    queryFn: () => {
+      return match(entityType)
         .with(EntityTypeDict.Circuit, () => getCircuit(params))
         .with(EntityTypeDict.Memodel, () => getMEModel(params))
         .otherwise((entityType) => {
           throw new Error(`Unsupported model entity type ${entityType}`);
         });
-    }),
-  {
-    ttl: 120000, // 2 minutes
-    areEqual: isEqual,
-  }
-);
+    },
+    enabled: !!entityType && !!id,
+  });
+
+  const isLoading = entityLoading || modelLoading;
+  const error = entityError || modelError;
+
+  return { entity, isLoading, error };
+}
 
 export const jsonFileAtomFamily = readAtomFamilyWithExpiration(
   ({

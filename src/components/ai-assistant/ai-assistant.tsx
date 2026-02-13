@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import React, { type CSSProperties } from 'react';
 
-import { useServiceAiAgentChat } from '@/services/ai-agent';
+import { useAgentState, useServiceAiAgentChat } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
@@ -68,7 +68,7 @@ export default function AiAssistant({
             containerRef?.(el);
           }}
           style={style}
-          className={classNames(className, styles.aiAssistant, 'border-0! bg-transparent!')}
+          className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
         >
           <div className={styles.mask} />
           <div

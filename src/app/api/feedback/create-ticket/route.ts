@@ -1,9 +1,8 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Octokit } from '@octokit/core';
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { serverConfig } from '@/config/server';
-import { log } from '@/utils/logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,12 +13,13 @@ export async function POST(req: NextRequest) {
     }
 
     if (!serverConfig.GITHUB_FEEDBACK_TOKEN) {
-      log('error', 'GITHUB_FEEDBACK_TOKEN is not configured');
+      // eslint-disable-next-line no-console
+      console.error('GITHUB_FEEDBACK_TOKEN is not configured');
       return NextResponse.json({ error: 'GitHub token not configured' }, { status: 500 });
     }
 
-    log(
-      'info',
+    // eslint-disable-next-line no-console
+    console.log(
       'GITHUB_FEEDBACK_TOKEN is configured:',
       serverConfig.GITHUB_FEEDBACK_TOKEN ? 'Yes' : 'No'
     );
@@ -29,19 +29,20 @@ export async function POST(req: NextRequest) {
     // Check token validity early - fail fast if token is invalid
     try {
       const tokenInfo = await octokit.request('GET /user');
-      log('info', 'Token authenticated as:', tokenInfo.data.login);
+      // eslint-disable-next-line no-console
+      console.log('Token authenticated as:', tokenInfo.data.login);
 
       // Try to check organization access (this helps diagnose private repo access issues)
       try {
         const orgInfo = await octokit.request('GET /orgs/{org}', {
           org: 'openbraininstitute',
         });
-        log('info', 'Organization access verified:', orgInfo.data.login);
+        // eslint-disable-next-line no-console
+        console.log('Organization access verified:', orgInfo.data.login);
       } catch (orgError) {
         const orgErr = orgError as { status?: number; message?: string };
-
-        log(
-          'warn',
+        // eslint-disable-next-line no-console
+        console.warn(
           'Could not verify organization access (this may be normal for private orgs):',
           orgErr.status,
           orgErr.message
@@ -50,7 +51,8 @@ export async function POST(req: NextRequest) {
       }
     } catch (tokenError) {
       const error = tokenError as { status?: number; message?: string };
-      log('error', 'Token validation failed:', error);
+      // eslint-disable-next-line no-console
+      console.error('Token validation failed:', error);
 
       if (error.status === 401) {
         return NextResponse.json(
@@ -64,7 +66,8 @@ export async function POST(req: NextRequest) {
       }
 
       // For other token errors, still try to proceed but log the warning
-      log('warn', 'Could not verify token, but continuing:', tokenError);
+      // eslint-disable-next-line no-console
+      console.warn('Could not verify token, but continuing:', tokenError);
     }
 
     // Format timestamp: DD/MM/YYYY hh:mm
@@ -79,7 +82,8 @@ export async function POST(req: NextRequest) {
     // Add timestamp to body
     const bodyWithTimestamp = `${body}\n\n---\n\n${timestamp}`;
 
-    log('info', 'Creating issue with:', {
+    // eslint-disable-next-line no-console
+    console.log('Creating issue with:', {
       title,
       body: bodyWithTimestamp.substring(0, 100) + '...',
       label,
@@ -159,11 +163,8 @@ export async function POST(req: NextRequest) {
     const issueUrl = createIssueResponse.data.html_url;
     const issueNumber = createIssueResponse.data.number;
 
-    log('info', 'Issue created successfully:', {
-      issueUrl,
-      issueNodeId,
-      issueNumber,
-    });
+    // eslint-disable-next-line no-console
+    console.log('Issue created successfully:', { issueUrl, issueNodeId, issueNumber });
 
     // Upload screenshots if provided
     // Support both single screenshot (backward compatibility) and screenshots array
@@ -178,7 +179,8 @@ export async function POST(req: NextRequest) {
       allScreenshots.push(screenshot);
     }
 
-    log('info', 'Screenshot data received:', {
+    // eslint-disable-next-line no-console
+    console.log('Screenshot data received:', {
       hasScreenshots: !!screenshots,
       screenshotsIsArray: Array.isArray(screenshots),
       screenshotsLength: Array.isArray(screenshots) ? screenshots.length : 0,
@@ -190,11 +192,13 @@ export async function POST(req: NextRequest) {
     const uploadedScreenshotUrls: string[] = [];
 
     if (allScreenshots.length > 0) {
-      log('info', `Uploading ${allScreenshots.length} screenshot(s)...`);
+      // eslint-disable-next-line no-console
+      console.log(`Uploading ${allScreenshots.length} screenshot(s)...`);
 
       for (let i = 0; i < allScreenshots.length; i++) {
         const screenshotData = allScreenshots[i];
-        log('info', `Processing screenshot ${i + 1}:`, {
+        // eslint-disable-next-line no-console
+        console.log(`Processing screenshot ${i + 1}:`, {
           hasData: !!screenshotData,
           type: typeof screenshotData,
           startsWithData:
@@ -206,7 +210,8 @@ export async function POST(req: NextRequest) {
           typeof screenshotData !== 'string' ||
           !screenshotData.startsWith('data:image')
         ) {
-          log('warn', `Skipping screenshot ${i + 1}: invalid data`);
+          // eslint-disable-next-line no-console
+          console.warn(`Skipping screenshot ${i + 1}: invalid data`);
           continue;
         }
 
@@ -215,7 +220,7 @@ export async function POST(req: NextRequest) {
           const base64Data = screenshotData.replace(/^data:image\/\w+;base64,/, '');
 
           // eslint-disable-next-line no-console
-          log('info', `Uploading screenshot ${i + 1} to Imgur...`);
+          console.log(`Uploading screenshot ${i + 1} to Imgur...`);
 
           // Use Imgur's anonymous upload API
           // Default client ID for anonymous uploads (can be overridden with env var)
@@ -243,7 +248,7 @@ export async function POST(req: NextRequest) {
               const screenshotUrl = responseData.data.link;
               uploadedScreenshotUrls.push(screenshotUrl);
               // eslint-disable-next-line no-console
-              log('info', `Screenshot ${i + 1} uploaded successfully:`, screenshotUrl);
+              console.log(`Screenshot ${i + 1} uploaded successfully:`, screenshotUrl);
             } else {
               throw new Error('No URL returned from Imgur');
             }
@@ -252,7 +257,8 @@ export async function POST(req: NextRequest) {
             throw new Error(`Imgur upload failed: ${uploadResponse.status} ${errorText}`);
           }
         } catch (screenshotError) {
-          log('error', `Failed to upload screenshot ${i + 1}:`, screenshotError);
+          // eslint-disable-next-line no-console
+          console.error(`Failed to upload screenshot ${i + 1}:`, screenshotError);
 
           // Add a warning comment to the issue about failed upload
           try {
@@ -263,14 +269,16 @@ export async function POST(req: NextRequest) {
               body: `⚠️ Screenshot ${i + 1} failed to upload. Error: ${screenshotError instanceof Error ? screenshotError.message : 'Unknown error'}`,
             });
           } catch (commentError) {
-            log('error', 'Failed to add error comment:', commentError);
+            // eslint-disable-next-line no-console
+            console.error('Failed to add error comment:', commentError);
           }
         }
       }
 
       // Update issue body with uploaded screenshots
       if (uploadedScreenshotUrls.length > 0) {
-        log('info', `Adding ${uploadedScreenshotUrls.length} screenshot(s) to issue body`);
+        // eslint-disable-next-line no-console
+        console.log(`Adding ${uploadedScreenshotUrls.length} screenshot(s) to issue body`);
 
         // Add screenshots as markdown images
         const screenshotSection =
@@ -290,32 +298,31 @@ export async function POST(req: NextRequest) {
             body: updatedBody,
           });
 
-          log('info', 'Issue body updated with screenshots');
+          // eslint-disable-next-line no-console
+          console.log('Issue body updated with screenshots');
         } catch (updateError) {
-          const error = updateError as {
-            status?: number;
-            message?: string;
-            errors?: unknown;
-          };
-          log('error', 'Failed to update issue body:', error.status, error.message);
+          const error = updateError as { status?: number; message?: string; errors?: unknown };
+          // eslint-disable-next-line no-console
+          console.error('Failed to update issue body:', error.status, error.message);
           // Don't throw - issue was created successfully, but log the error
         }
       } else if (allScreenshots.length > 0) {
-        log('warn', `Failed to upload all screenshots. Total attempted: ${allScreenshots.length}`);
+        // eslint-disable-next-line no-console
+        console.warn(`Failed to upload all screenshots. Total attempted: ${allScreenshots.length}`);
       }
     }
 
     // ADD TO PROJECT (optional, continue even if it fails)
     const projectId = serverConfig.GITHUB_FEEDBACK_PROJECT_ID;
     if (!projectId || projectId.startsWith('{{') || projectId.trim() === '') {
-      log(
-        'warn',
+      // eslint-disable-next-line no-console
+      console.warn(
         'GITHUB_FEEDBACK_PROJECT_ID is not configured or is a placeholder, skipping project addition'
       );
     } else {
       try {
         // eslint-disable-next-line no-console
-        log('info', 'Adding issue to project:', {
+        console.log('Adding issue to project:', {
           projectId: serverConfig.GITHUB_FEEDBACK_PROJECT_ID,
           issueNodeId,
         });
@@ -338,10 +345,11 @@ export async function POST(req: NextRequest) {
               projectId: process.env.GITHUB_FEEDBACK_PROJECT_ID,
             }
           );
-          log('info', 'Project info:', projectInfo);
+          // eslint-disable-next-line no-console
+          console.log('Project info:', projectInfo);
         } catch (projectCheckError) {
-          log(
-            'warn',
+          // eslint-disable-next-line no-console
+          console.warn(
             'Could not verify project (this is okay, will try to add anyway):',
             projectCheckError
           );
@@ -364,7 +372,8 @@ export async function POST(req: NextRequest) {
           }
         );
 
-        log('info', 'Project addition response:', addToProject);
+        // eslint-disable-next-line no-console
+        console.log('Project addition response:', addToProject);
 
         const result = addToProject as {
           addProjectV2ItemById?: { item: { id: string } };
@@ -372,17 +381,20 @@ export async function POST(req: NextRequest) {
         };
 
         if (result.errors) {
-          log('warn', 'GraphQL errors when adding to project:', result.errors);
+          // eslint-disable-next-line no-console
+          console.error('GraphQL errors when adding to project:', result.errors);
           throw new Error(`GraphQL errors: ${result.errors.map((e) => e.message).join(', ')}`);
         }
 
         if (!result.addProjectV2ItemById?.item?.id) {
-          log('error', 'No item ID returned from project addition');
+          // eslint-disable-next-line no-console
+          console.error('No item ID returned from project addition');
           throw new Error('Failed to add issue to project: No item ID returned');
         }
 
         const itemId = result.addProjectV2ItemById.item.id;
-        log('info', 'Issue added to project successfully, itemId:', itemId);
+        // eslint-disable-next-line no-console
+        console.log('Issue added to project successfully, itemId:', itemId);
 
         // Update status (optional, continue even if it fails)
         if (process.env.STATUS_FIELD_ID && process.env.RECEIVED_ID) {
@@ -415,11 +427,13 @@ export async function POST(req: NextRequest) {
             };
 
             if (statusUpdateResult.errors) {
-              log('error', 'Failed to update status:', statusUpdateResult.errors);
+              // eslint-disable-next-line no-console
+              console.error('Failed to update status:', statusUpdateResult.errors);
             }
           } catch (statusError) {
             // Log but don't fail - issue was created successfully
-            log('error', 'Failed to update status:', statusError);
+            // eslint-disable-next-line no-console
+            console.error('Failed to update status:', statusError);
           }
         }
       } catch (projectError) {
@@ -435,7 +449,8 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        log('error', 'Failed to add to project:', {
+        // eslint-disable-next-line no-console
+        console.error('Failed to add to project:', {
           error: errorMessage,
           projectError,
           projectId: serverConfig.GITHUB_FEEDBACK_PROJECT_ID,
@@ -462,11 +477,7 @@ export async function POST(req: NextRequest) {
       errorDetails = error.stack;
     } else if (typeof error === 'object' && error !== null) {
       // Handle Octokit errors
-      const octokitError = error as {
-        message?: string;
-        status?: number;
-        errors?: unknown;
-      };
+      const octokitError = error as { message?: string; status?: number; errors?: unknown };
       if (octokitError.message) {
         errorMessage = octokitError.message;
       }

@@ -3,12 +3,10 @@ import { useQueries } from '@tanstack/react-query';
 import { useState } from 'react';
 import { match, P } from 'ts-pattern';
 
-import type { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { CoinsIcon } from '@/components/icons/buttons';
-import { makeRoles } from '@/hooks/use-user-role';
+import { makeRoles } from '@/hooks/use-user-membership';
 import { getProjectAccountBalance } from '@/services/virtual-lab/projects';
-import type { ProjectBalance } from '@/types/accounting';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -16,6 +14,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+
+import type { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { ProjectBalance } from '@/types/accounting';
 
 export function Wallet() {
   const breakpoint = useDefaultBreakpoint();
@@ -32,7 +33,7 @@ export function Wallet() {
           select: (res: ProjectBalance) => res.balance,
         },
         {
-          queryKey: keyBuilder.roles(),
+          queryKey: keyBuilder.membership(),
           queryFn: getUserGroups,
           select: (res: VlmUserGroupsResponse) => makeRoles(res, virtualLabId, projectId),
         },

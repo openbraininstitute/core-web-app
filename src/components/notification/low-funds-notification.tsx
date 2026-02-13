@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
 import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -23,7 +23,7 @@ export function LowFundsNotification({ title, description, onClose, duration = 1
   const [isVisible, setIsVisible] = useState(true);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const { virtualLabId } = useWorkspace();
-  const { isVirtualLabAdmin } = useUserRole({ virtualLabId });
+  const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
 
   const { data: membersData } = useQuery({
     queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),

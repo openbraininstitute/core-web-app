@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import type { SinglePrice } from '@/app/api/help/prices/route';
+import type { SinglePrice } from '@/services/sanity';
 
 interface UsePricesReturn {
   prices: SinglePrice[];

@@ -1,9 +1,10 @@
 'use client';
 
-import { PropsWithChildren } from 'react';
 import Image from 'next/image';
 
 import Logo from '@/components/logo/as-svg';
+
+import type { PropsWithChildren } from 'react';
 
 export function SharedLayout({ children }: PropsWithChildren) {
   return (

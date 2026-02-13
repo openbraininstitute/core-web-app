@@ -5,12 +5,14 @@ import {
   type AtomsMap,
   type ConfigSchema,
   isType,
-  type TabType,
+  type TScanConfigActivity,
+  type TScanConfigTabs,
 } from '@/features/scan-config/types';
-import { useAIConfig } from '@/services/ai-agent';
+import { useAgentState, useAIConfig } from '@/services/ai-agent';
 
 import GenerateConfigButton from './generate-config-button';
 import { useValidateSchema } from './hooks';
+import { resetConfig } from './hooks/schema';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -41,7 +43,9 @@ export default function Left({
   setNewKey,
   isEditingKey,
   setIsEditingKey,
+  activity,
   handleAcceptAIChanges,
+  handleRejectAIChanges,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -57,7 +61,7 @@ export default function Left({
   readOnly?: boolean;
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  setTab: React.Dispatch<React.SetStateAction<TabType>>;
+  setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
   model: ICircuit | IMEModel;
   initialConfig?: Config;
   allEntries: Set<string>;
@@ -65,14 +69,16 @@ export default function Left({
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
+  activity: TScanConfigActivity;
   handleAcceptAIChanges: () => void;
+  handleRejectAIChanges: () => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
-  const { aiConfig, setAiConfig } = useAIConfig();
+  const { aiConfig } = useAIConfig();
 
   return (
     <div className={styles.scrollable}>
-      <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
+      <div className="flex grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
         {schema.group_order.map((group) => {
           return (
             <Fragment key={group}>
@@ -125,7 +131,7 @@ export default function Left({
           <button
             type="button"
             className="min-h-[50px] text-lg drop-shadow border-red-500 border-1 rounded-full p-2 grow text-red-500"
-            onClick={() => setAiConfig(null)}
+            onClick={handleRejectAIChanges}
           >
             Reject changes
           </button>
@@ -149,6 +155,7 @@ export default function Left({
           model={model}
           setTab={setTab}
           setLoading={setLoading}
+          activity={activity}
         />
       )}
     </div>

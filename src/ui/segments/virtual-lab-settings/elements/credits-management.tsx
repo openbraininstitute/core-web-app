@@ -1,15 +1,16 @@
-import { useQueries } from '@tanstack/react-query';
 import { SwapOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { List } from 'antd';
+import { useMemo, useState } from 'react';
 
-import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { ProjectBalance } from '@/types/accounting';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
+import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { Button } from '@/ui/molecules/button';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+
+import type { ProjectBalance } from '@/types/accounting';
 
 type Props = {
   virtualLabId: string;
@@ -23,7 +24,7 @@ export function CreditsManagement({
   onManageProjectCreditsClick,
 }: Props) {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 5 });
-  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId });
+  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId });
 
   const { balanceMap, virtualLabBalance, projects, isLoading } = useQueries({
     queries: [

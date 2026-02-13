@@ -17,7 +17,6 @@ type LogArgs = Parameters<
 
 export function log(type: 'log' | 'error' | 'warn' | 'debug' | 'trace' | 'info', ...args: LogArgs) {
   if (config.DEPLOYMENT_ENV !== 'production') {
-    // biome-ignore lint/suspicious/noConsole: logger for dev/staging
     console[type](`${logColors[type]}${args[0]}${resetColor}`, ...args.slice(1), '\n');
   }
 }

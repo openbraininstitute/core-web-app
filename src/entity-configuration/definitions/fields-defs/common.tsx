@@ -1,4 +1,5 @@
 import { Button } from 'antd';
+import { capitalize } from 'es-toolkit/compat';
 import get from 'es-toolkit/compat/get';
 import isNil from 'es-toolkit/compat/isNil';
 import { useAtom } from 'jotai';
@@ -25,7 +26,7 @@ import {
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ensureArray } from '@/utils/array';
 
-import type { EntityCoreDensityObjectTypes, EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IContributor, TAgentType } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
@@ -222,7 +223,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.BrainRegion]: {
     title: 'Brain Region',
     filter: null,
-    render: (r) => renderEmptyOrValue('brain_region' in r ? r.brain_region.name : ''),
+    render: (r) => renderEmptyOrValue('brain_region' in r ? capitalize(r.brain_region.name) : ''),
     vocabulary: {
       plural: 'Brain Regions',
       singular: 'Brain Region',
@@ -277,9 +278,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       [ExtendedEntitiesTypeDict.IonChannelRecording]: 'subject__species__name__in',
       [ExtendedEntitiesTypeDict.Circuit]: 'subject__species__name__in',
       [ExtendedEntitiesTypeDict.MEModelWithSynapses]: 'subject__species__name__in',
-      [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: 'subject__species__name__in',
-      [ExtendedEntitiesTypeDict.SmallMicrocircuit]: 'subject__species__name__in',
-      [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: 'subject__species__name__in',
     },
     order: [
       {

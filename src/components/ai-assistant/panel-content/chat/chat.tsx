@@ -28,10 +28,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   const [initialMessages, isLoadingMessages] = assistant.useMessages();
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
-  const { messages, status, append, error, stop, rateLimitRemaining } = useServiceAiAgentChat(
-    threadId ?? '',
-    initialMessages
-  );
+  const { messages, status, append, error, stop, rateLimitRemaining } = useServiceAiAgentChat(threadId ?? '');
   const [suggestions, clearSuggestions, isLoadingSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 

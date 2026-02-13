@@ -1,12 +1,21 @@
+import { getRoundedByIndex, Tab } from '@/features/scan-config/components/components';
+// biome-ignore lint/style/useImportType: biome hallucination
+import {
+  ExtractScanConfigTabs,
+  ScanConfigActivity,
+  ScanConfigTabs,
+  SimulateScanConfigTabs,
+  type TScanConfigActivity,
+  type TScanConfigTabs,
+} from '@/features/scan-config/types';
 import { classNames } from '@/util/utils';
-import type { TabType } from '../../types';
-import { Tab } from '../components';
 
 interface TabsSelectorProps {
   className?: string;
-  tab: TabType;
-  setTab(tab: TabType): void;
+  tab: TScanConfigTabs;
+  setTab(tab: TScanConfigTabs): void;
   disableSimulationTab: boolean;
+  activity: TScanConfigActivity;
 }
 
 export default function TabsSelector({
@@ -14,27 +23,44 @@ export default function TabsSelector({
   tab,
   setTab,
   disableSimulationTab,
+  activity,
 }: TabsSelectorProps) {
+  const tabs = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => ({
+    id,
+    label,
+    disabled: id === 'simulations' && disableSimulationTab,
+    onClick: () => {
+      if (disableSimulationTab && id === 'simulations') return;
+      if (activity === ScanConfigActivity.Simulate) {
+        setTab({
+          __activity: ScanConfigActivity.Simulate,
+          id: id as keyof typeof SimulateScanConfigTabs,
+        });
+      } else {
+        setTab({
+          __activity: ScanConfigActivity.Extract,
+          id: id as keyof typeof ExtractScanConfigTabs,
+        });
+      }
+    },
+  }));
+
   return (
     <div className={classNames(className, 'flex')}>
       <div className="inline-flex overflow-hidden rounded-full border border-gray-200">
-        <Tab
-          tab="configuration"
-          rounded="rounded-l-full"
-          selectedTab={tab}
-          onClick={() => setTab('configuration')}
-        >
-          Configuration
-        </Tab>
-        <Tab
-          tab="simulations"
-          rounded="rounded-r-full"
-          selectedTab={tab}
-          onClick={() => setTab('simulations')}
-          disabled={disableSimulationTab}
-        >
-          Simulations
-        </Tab>
+        {tabs.map(({ disabled, id, label, onClick }, index) => (
+          <Tab
+            key={`${id}`}
+            tab={label}
+            rounded={getRoundedByIndex(index, tabs.length)}
+            selectedTab={tab}
+            onClick={onClick}
+            disabled={disabled}
+            extraClass="capitalize"
+          >
+            {label}
+          </Tab>
+        ))}
       </div>
     </div>
   );

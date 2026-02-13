@@ -1,7 +1,6 @@
 'use client';
 
-import { atomWithReset } from 'jotai/utils';
-import { atomFamily } from 'jotai-family';
+import { atomFamily, atomWithReset } from 'jotai/utils';
 
 import { getSimulationColor } from '@/constants/simulate/single-neuron';
 import {

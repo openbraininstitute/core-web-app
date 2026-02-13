@@ -1,5 +1,3 @@
-import type { VirtualLabResponse } from '@/api/virtual-lab-svc/queries/types';
-import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import authFetch, { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { assertApiResponse } from '@/util/utils';
@@ -8,23 +6,6 @@ export type NotebookStartResponse = {
   message: string;
   url: string;
 };
-
-export interface NotebookStartRequest {
-  analysis_notebook_template_id: string;
-  analysis_notebook_template_filename: string;
-  vlabId: string;
-  projectId: string;
-  session: {
-    idToken: string;
-    accessToken: string;
-    user: {
-      email: string;
-      id: string;
-      name: string;
-      username: string;
-    };
-  };
-}
 
 export interface NotebookStartInNumberedPodRequest {
   analysis_notebook_template_id: string;
@@ -42,7 +23,7 @@ export interface NotebookStartInNumberedPodRequest {
     };
   };
   podNumber: number;
-  cloud: string; // either 'aws' or 'azure'
+  cloud: string;
 }
 
 export interface EmptyNotebookStartRequest {
@@ -58,14 +39,24 @@ export interface EmptyNotebookStartRequest {
       username: string;
     };
   };
+  cloud: string;
 }
 
+/**
+ * Open a specific analysis notebook template in JupyterHub
+ * @param id ID of the analysis notebook template in entity cores
+ * @param filename filename of the notebook, for now still needed but will be removed in near future as the notebook service can fetch it from entity core
+ * @param vlabId  ID of the virtual lab
+ * @param projectId ID of the project
+ * @param cloud : notebook service accepts 'cell_a', 'aws', 'cell_b', 'azure'
+ * @param podNum : a user can have multiple pods, but normally simply 0
+ */
 export async function startNotebook(
   id: string,
   filename: string,
   vlabId: string,
   projectId: string,
-  cloud?: string,
+  cloud: string,
   podNum?: number
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
@@ -81,69 +72,33 @@ export async function startNotebook(
 
   let res: Response;
 
-  if (cloud === 'azure' || cloud === 'aws' || cloud === 'from_vlab') {
-    // use new service which requires pod number and cloud param
-
-    let cloudParam: string = cloud;
-    if (cloud === 'from_vlab') {
-      const vlab: VirtualLabResponse = await getVirtualLab(vlabId);
-      if (vlab.data?.virtual_lab.compute_cell === 'cell_b') {
-        cloudParam = 'azure';
-      } else {
-        cloudParam = 'aws';
-      }
-    }
-
-    const request: NotebookStartInNumberedPodRequest = {
-      analysis_notebook_template_id: id,
-      analysis_notebook_template_filename: filename,
-      vlabId,
-      projectId,
-      session: {
-        idToken: session.idToken,
-        accessToken: session.accessToken,
-        user: {
-          email: session.user.email ?? '',
-          id: session.user.id,
-          name: session.user.name ?? '',
-          username: session.user.username,
-        },
+  const request: NotebookStartInNumberedPodRequest = {
+    analysis_notebook_template_id: id,
+    analysis_notebook_template_filename: filename,
+    vlabId,
+    projectId,
+    session: {
+      idToken: session.idToken,
+      accessToken: session.accessToken,
+      user: {
+        email: session.user.email ?? '',
+        id: session.user.id,
+        name: session.user.name ?? '',
+        username: session.user.username,
       },
-      podNumber: podNum === undefined ? 0 : podNum,
-      cloud: cloudParam,
-    };
+    },
+    podNumber: podNum === undefined ? 0 : podNum,
+    cloud: cloud,
+  };
 
-    res = await authFetch(
-      `${config.NOTEBOOK_API_URL}/analysis_notebook_template/start_in_numbered_pod`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
-      }
-    );
-  } else {
-    const request: NotebookStartRequest = {
-      analysis_notebook_template_id: id,
-      analysis_notebook_template_filename: filename,
-      vlabId,
-      projectId,
-      session: {
-        idToken: session.idToken,
-        accessToken: session.accessToken,
-        user: {
-          email: session.user.email ?? '',
-          id: session.user.id,
-          name: session.user.name ?? '',
-          username: session.user.username,
-        },
-      },
-    };
-    res = await authFetch(`${config.NOTEBOOK_API_URL}/analysis_notebook_template/start`, {
+  res = await authFetch(
+    `${config.NOTEBOOK_API_URL}/analysis_notebook_template/start_in_numbered_pod`,
+    {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
-    });
-  }
+    }
+  );
 
   if (!res.ok) {
     if (res.status === 460) {
@@ -175,9 +130,16 @@ export async function startNotebook(
   return assertApiResponse(res);
 }
 
+/**
+ * Start an empty jupyterhub notebook
+ * @param vlabId : ID of the virtual lab
+ * @param projectId : ID of the project
+ * @param cloud : notebook service accepts 'cell_a', 'aws', 'cell_b', 'azure'
+ */
 export async function startEmptyNotebook(
-  vlabId: string,
-  projectId: string
+  virtualLabId: string,
+  projectId: string,
+  computeCell: string // accepted: aws, azure, cell_a, cell_b as notebook service does conversion
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
 
@@ -191,8 +153,8 @@ export async function startEmptyNotebook(
   }
 
   const request = {
-    vlabId,
-    projectId,
+    vlabId: virtualLabId,
+    projectId: projectId,
     session: {
       idToken: session.idToken,
       accessToken: session.accessToken,
@@ -203,6 +165,7 @@ export async function startEmptyNotebook(
         username: session.user.username,
       },
     },
+    cloud: computeCell,
   };
   const res = await authFetch(`${config.NOTEBOOK_API_URL}/empty/start`, {
     method: 'POST',

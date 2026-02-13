@@ -133,7 +133,7 @@ function FormContent<
         )}
       </div>
 
-      <div className="flex w-full shrink-0 items-center justify-between gap-2 py-3">
+      <div className="flex w-full flex-shrink-0 items-center justify-between gap-2 py-3">
         <Button
           rounded
           variant="outline"

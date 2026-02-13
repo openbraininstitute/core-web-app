@@ -18,6 +18,7 @@ const configFields = {
   KEYCLOAK_ISSUER: { schema: z.string().url(), public: false },
 
   NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
+  AUTH_PROXY_URL: { schema: z.string().url().optional(), public: true },
 
   MAILCHIMP_API_KEY: {
     schema: z.string().nonempty().optional(),
@@ -83,69 +84,29 @@ const configFields = {
     schema: z.string().nonempty(),
     public: true,
   },
-  APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID: {
-    schema: z.string().nonempty(),
-    public: true,
-  },
-  APP_DEFAULT__BRAIN_ATLAS__ID: {
-    schema: z.string().nonempty(),
-    public: true,
-  },
-  // MOUSE
-  MOUSE_ROOT__BRAIN_REGION_ID: {
-    schema: z.string().nonempty(),
-    public: true,
-  },
-  MOUSE_ROOT__BRAIN_REGION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty().default('997'),
-    public: true,
-  },
-  /**
-   * Represents the primary anatomical division annotation value for a given voxel
-   * or region in the Allen Mouse Brain Common Coordinate Framework (CCF).
-   * This value encodes the highest-level anatomical partition (e.g., major
-   * brain compartments) assigned to the voxel according to the Allen structural
-   * ontology hierarchy, facilitating region-specific analysis and lookup.
-   */
-  MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty().default('8'),
-    public: true,
-  },
-  MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID: {
-    schema: z.string().nonempty(),
-    public: true,
-  },
-  MOUSE_ATLAS__ID: { schema: z.string().nonempty(), public: true },
-  // HUMAN
-  HUMAN_ROOT__BRAIN_REGION_ID: {
-    schema: z.string().nonempty(),
-    public: true,
-  },
-  HUMAN_ROOT__BRAIN_REGION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty().default('999'),
-    public: true,
-  },
-  /**
-   * Annotation value representing the primary anatomical division for a given
-   * voxel or region in the Allen Human Brain Reference Atlas. This value
-   * encodes the top-level anatomical partition (major structural compartments
-   * of the human brain) according to the atlas’s hierarchical ontology.
-   * It is intended for use in region lookup, grouping, and spatial analysis.
-   */
-  HUMAN_PRIMARY__DIVISION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty('999'),
-    public: true,
-  },
 
-  HUMAN_DEFAULT__SELECTED_BRAIN_REGION_ID: {
+  BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE: {
     schema: z.string().nonempty(),
     public: true,
   },
-  HUMAN_ATLAS__ID: { schema: z.string().nonempty(), public: true },
+  DEFAULT_BRAIN_ATLAS_ID: { schema: z.string().nonempty(), public: true },
+  DEFAULT_BRAIN_REGION_HIERARCHY_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  DEFAULT_SELECTED_BRAIN_REGION_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
   LEGACY_DEFAULT_CIRCUIT_ID: {
     schema: z.string().url().nonempty(),
     public: true,
   },
+  ROOT_BRAIN_REGION_ANNOTATION_VALUE: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  ROOT_BRAIN_REGION_ID: { schema: z.string().nonempty(), public: true },
 
   NOTEBOOK_REPO_URL: { schema: z.string().url(), public: true },
 } as const;
@@ -162,13 +123,22 @@ const platformApiUrlFields = {
   VIRTUAL_LAB_API_URL: '/virtual-lab-manager',
 } as const satisfies Partial<Record<keyof typeof configFields, string>>;
 
-const baseServerSchema = z.object(
-  Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
-) as z.ZodObject<{
+const baseServerSchema = z
+  .object(
+    Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
+  )
+  .superRefine((data, ctx) => {
+    if (data.AUTH_PROXY_URL && data.DEPLOYMENT_ENV !== 'preview') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'AUTH_PROXY_URL can only be set when DEPLOYMENT_ENV is "preview"',
+        path: ['AUTH_PROXY_URL'],
+      });
+    }
+  }) as any as z.ZodObject<{
   [K in keyof typeof configFields]: (typeof configFields)[K]['schema'];
 }>;
 
-// biome-ignore lint/suspicious/noExplicitAny: reason for using any
 const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
   schema
     .superRefine((data, ctx) => {
