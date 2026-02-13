@@ -1,4 +1,5 @@
-import { getClient } from '@/api/sanity/client';
+import { getClient } from '@/services/sanity/client';
+import aboutQuery from '@/services/sanity/queries/help-about';
 import { logError } from '@/util/logger';
 import { assertType } from '@/util/type-guards';
 
@@ -7,12 +8,6 @@ export type AboutContentProps = {
   aboutTheAppContent: unknown;
   termsAndConditionContent: unknown;
 };
-
-const queryForAboutContent = `*[_type=="ResourceHelpSection"][0]{
-  aboutContent,
-  aboutTheAppContent,
-  termsAndConditionContent
-}`;
 
 function isContentForAbout(data: unknown): data is AboutContentProps {
   try {
@@ -34,9 +29,7 @@ function isContentForAbout(data: unknown): data is AboutContentProps {
 
 export async function getAboutContent(): Promise<AboutContentProps> {
   try {
-    const data = await getClient().fetch<AboutContentProps>({
-      query: queryForAboutContent,
-    });
+    const data = await getClient().fetch<AboutContentProps>(aboutQuery);
     if (isContentForAbout(data)) return data;
   } catch (err) {
     logError(err);

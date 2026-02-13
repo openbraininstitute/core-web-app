@@ -1,21 +1,9 @@
-import { getClient } from '@/api/sanity/client';
-import { ContentForTutorialItem } from '@/types/help/type';
+import { getClient } from '@/services/sanity/client';
+import tutorialQuery from '@/services/sanity/queries/help-tutorial';
 import { logError } from '@/util/logger';
-import { assertType, TypeDef } from '@/util/type-guards';
+import { assertType, type TypeDef } from '@/util/type-guards';
 
-const queryForAboutContent = `*[_type == "documentationSettings"][0] {
-  tutorialOrder[]-> {
-    title, 
-    description,
-    "slug": slug.current,
-    "url": videoUrl,
-    transcript,
-    "imageURL": thumbnail.asset->url,
-    "imageWidth": thumbnail.asset->metadata.dimensions.width,
-    "imageHeight": thumbnail.asset->metadata.dimensions.height,
-    steps
-  }
-}`;
+import type { ContentForTutorialItem } from '@/types/help/type';
 
 function isContentForTutorials(data: unknown): data is ContentForTutorialItem {
   const typeStringOrNull: TypeDef = ['|', 'string', 'null'];
@@ -47,9 +35,7 @@ function isContentForTutorials(data: unknown): data is ContentForTutorialItem {
 
 export async function getTutorialContent(): Promise<ContentForTutorialItem> {
   try {
-    const data = await getClient().fetch<ContentForTutorialItem>({
-      query: queryForAboutContent,
-    });
+    const data = await getClient().fetch<ContentForTutorialItem>(tutorialQuery);
     if (isContentForTutorials(data)) return data;
   } catch (err) {
     logError(err);

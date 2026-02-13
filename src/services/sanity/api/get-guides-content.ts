@@ -1,8 +1,10 @@
 import { z } from 'zod';
-import { PortableTextBlock } from 'next-sanity';
 
-import { getClient } from '@/api/sanity/client';
+import { getClient } from '@/services/sanity/client';
+import guidesQuery from '@/services/sanity/queries/help-guides';
 import { logError } from '@/util/logger';
+
+import type { PortableTextBlock } from 'next-sanity';
 
 export type GuideCardProps = {
   title: string;
@@ -14,15 +16,6 @@ export type GuideCardProps = {
   content: PortableTextBlock;
 };
 
-const queryForGuidesContent = `*[_type=="guides"]{
-  title,
-  slug,
-  topic,
-  scale,
-  content
-}`;
-
-// Schema for a single guide item
 const GuideItemSchema = z.object({
   title: z.string().nullable().optional(),
   slug: z
@@ -36,7 +29,6 @@ const GuideItemSchema = z.object({
   content: z.unknown().nullable().optional(),
 });
 
-// Schema for the array of guides
 const GuidesContentsSchema = z.array(GuideItemSchema);
 
 export type GuideItem = z.infer<typeof GuideItemSchema>;
@@ -44,9 +36,7 @@ export type GuidesContentsProps = z.infer<typeof GuidesContentsSchema>;
 
 function isContentForGuides(data: unknown): data is GuidesContentsProps {
   try {
-    // Handle null/undefined case
     if (!data) return false;
-
     GuidesContentsSchema.parse(data);
     return true;
   } catch (ex) {
@@ -57,9 +47,7 @@ function isContentForGuides(data: unknown): data is GuidesContentsProps {
 
 export async function getGuidesContent(): Promise<GuidesContentsProps> {
   try {
-    const data = await getClient().fetch<GuidesContentsProps>({
-      query: queryForGuidesContent,
-    });
+    const data = await getClient().fetch<GuidesContentsProps>(guidesQuery);
     if (isContentForGuides(data)) return data;
   } catch (err) {
     logError(err);
