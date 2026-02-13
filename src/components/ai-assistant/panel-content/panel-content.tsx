@@ -10,9 +10,9 @@ interface PanelContentProps {
 }
 
 export default function PanelContent({ className, threadId, onTabChange, tab }: PanelContentProps) {
-  if (!threadId) {
-    return <TabTransitionLoader message="Initializing assistant..." />;
-  }
+  // if (!threadId) {
+  //   return <TabTransitionLoader message="Initializing assistant..." />;
+  // }
 
   return (
     <>

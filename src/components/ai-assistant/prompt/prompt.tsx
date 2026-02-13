@@ -70,7 +70,7 @@ export default function Prompt({
           aria-label="Send prompt"
           disabled={value.trim().length === 0 || disabled}
         >
-          <SendIcon />
+          {disabled ? <div className={styles.spinner} /> : <SendIcon />}
         </button>
       </div>
       <ToolsSelector

@@ -18,11 +18,12 @@ export class ThreadManager {
   readonly init = async (context: AssistantContext) => {
     this.context = context;
     const { threadId, isEmpty } = await this.createThread();
+    this.target.threadId.set(threadId);
     return { threadId, isEmpty };
   };
 
   readonly createThread = async () => {
-    const { context, target } = this;
+    const { context } = this;
     if (!context) throw new Error('ThreadManager has not been initialized yet!');
 
     const lastThread = await serviceAiAgentThreadList({
@@ -36,7 +37,6 @@ export class ThreadManager {
 
       // Compare up to milliseconds
       if (new Date(thread.creation_date).getTime() === new Date(thread.update_date).getTime()) {
-        target.threadId.set(thread.thread_id);
         return { threadId: thread.thread_id, isEmpty: true };
       }
     }
@@ -47,7 +47,6 @@ export class ThreadManager {
     };
     const thread = await serviceAiAgentThreadCreate(params);
     const { threadId } = thread;
-    target.threadId.set(threadId);
     return { threadId, isEmpty: true };
   };
 }

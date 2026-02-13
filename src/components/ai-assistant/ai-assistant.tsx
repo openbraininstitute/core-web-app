@@ -53,8 +53,9 @@ export default function AiAssistant({
   };
 
   const handleNewChat = async () => {
-    await assistant.createThread();
+    assistant.threadId.set(undefined);
     setTab('chat');
+    await assistant.createThread();
   };
 
   return (
@@ -126,16 +127,12 @@ export default function AiAssistant({
                 <div>New Chat</div>
               </button>
             </nav>
-            {threadId ? (
-              <PanelContent
-                className={styles.content}
-                threadId={threadId}
-                tab={tab}
-                onTabChange={setTab}
-              />
-            ) : (
-              <TabTransitionLoader message="Initializing assistant..." />
-            )}
+            <PanelContent
+              className={styles.content}
+              threadId={threadId}
+              tab={tab}
+              onTabChange={setTab}
+            />
             {!fullscreen && <PanelSplitter />}
           </div>
         </div>

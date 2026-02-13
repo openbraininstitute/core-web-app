@@ -20,7 +20,7 @@ import styles from './chat.module.css';
 
 export interface ChatProps {
   className?: string;
-  threadId: string;
+  threadId: string | undefined;
 }
 
 export default function Chat({ className, threadId }: ChatProps) {
@@ -88,7 +88,7 @@ export default function Chat({ className, threadId }: ChatProps) {
         refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
       }, 200);
     }
-  }, [isAutoScrollEnabled]);
+  }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
 
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
@@ -121,7 +121,7 @@ export default function Chat({ className, threadId }: ChatProps) {
         ref={refContainer}
         onWheel={handleWheel}
       >
-        {isEmptyThread && <Welcome />}
+        {(!threadId || isEmptyThread) && <Welcome />}
         {messages.map((item) => (
           <MessageItem key={item.id} value={item} />
         ))}
