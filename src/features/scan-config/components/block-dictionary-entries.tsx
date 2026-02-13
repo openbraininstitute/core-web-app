@@ -5,7 +5,6 @@ import {
   DeleteOutlined,
   EditOutlined,
   PlusCircleOutlined,
-  PlusOutlined,
   WarningFilled,
 } from '@ant-design/icons';
 import { Input } from 'antd';
