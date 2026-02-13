@@ -271,7 +271,7 @@ export default function Block({
                     <TooltipTrigger asChild>
                       <div>
                         <div className="mb-1 flex">
-                          <div className={cn('border flex-1 mr-1', patchBorderClass())}>
+                          <div className={cn('border rounded-lg flex-1 mr-1', patchBorderClass())}>
                             {renderInput(k, blockElementSchema, value)}
                           </div>
                           {(op_ === 'delete' || op_ === 'replace') && (
@@ -282,7 +282,7 @@ export default function Block({
 
                         {op_ === 'replace' && !!blockAIConfig && (
                           <div className="flex">
-                            <div className="border border-[#1690ff] flex-1 mr-1">
+                            <div className="border rounded-lg border-[#1690ff] flex-1 mr-1">
                               {renderInput(k, blockElementSchema, blockAIConfig[k])}
                             </div>
                             <PlusOutlined className="text-[#1690ff]" />
