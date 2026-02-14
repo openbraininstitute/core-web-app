@@ -1,19 +1,13 @@
 'use client';
 
 import { ConfigProvider, Table, type TableProps } from 'antd';
-import type { TableRef } from 'antd/es/table';
-import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import { isString } from 'es-toolkit/compat';
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
-import type { WorkspaceContext } from '@/types/common';
 import TableControls from '@/ui/segments/data-table/elements/controls';
 import { useOnCellRouteHandler } from '@/ui/segments/data-table/elements/hooks';
-import styles from '@/ui/segments/data-table/elements/table.module.css';
 import {
   type RenderButtonProps,
   useRowSelection,
@@ -24,6 +18,15 @@ import {
 } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { TableRef } from 'antd/es/table';
+import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
+
+import styles from '@/ui/segments/data-table/elements/table.module.css';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 
@@ -321,8 +324,6 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
       >
         {controls}
       </TableControls>
-      {/* {(!autohideControls || (autohideControls && selectedRows.length > 0)) && (
-      )} */}
     </>
   );
 }
