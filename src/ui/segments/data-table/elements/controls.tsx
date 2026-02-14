@@ -41,6 +41,8 @@ function RenderButton<T extends EntityCoreIdentifiable>({
   if (children) {
     return children({ selectedRows, clearSelectedRows, dataType });
   }
+  const countRows = selectedRows.length;
+  const label = countRows > 1 ? `${countRows} items selected` : '1 item selected';
 
   return (
     <div className="flex items-center gap-2">
@@ -58,7 +60,7 @@ function RenderButton<T extends EntityCoreIdentifiable>({
           description={
             <div>
               <div className="font-bold text-sm text-primary-8">
-                Are you sure you want to delete {selectedRows.length} items?
+                Are you sure you want to delete {label}?
               </div>
               <small className="font-light text-primary-6">This action cannot be undone.</small>
             </div>
@@ -76,13 +78,9 @@ function RenderButton<T extends EntityCoreIdentifiable>({
             ),
           }}
         >
-          {/* Wrap in span to ensure Popconfirm triggers correctly on custom components */}
           <span className="inline-block">
             <EntityDeleteButton<T>
               selectedRows={selectedRows}
-              dataType={dataType}
-              clearSelectedRows={clearSelectedRows}
-              workspace={workspace}
               loading={isDeleting}
               data-testid="listing-view-delete-button"
             />
@@ -157,8 +155,6 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
       await queryClient.invalidateQueries({
         predicate: (query) => get(query.queryKey[0], 'context.key') === dataKey,
       });
-
-      // Refresh sidebar counts
       await queryClient.invalidateQueries({
         queryKey: [`data-entity-count-${dataType}`],
       });
