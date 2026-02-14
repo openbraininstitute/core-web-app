@@ -1,63 +1,34 @@
 import z from 'zod';
 
-import type { IActivityFilter } from '@/api/entitycore/types/shared/activity';
-import type {
-  EntityAuthorization,
-  EntityCoreIdentifiable,
-  EntityCoreOwnership,
-  EntityCoreType,
-  Timestamps,
-} from '@/api/entitycore/types/shared/global';
+import {
+  ActivityStatus,
+  type IActivity,
+  type IActivityFilter,
+  type TActivityStatus,
+} from '@/api/entitycore/types/shared/activity';
 
-export enum ActivityExecutionStatus {
-  CREATED = 'created',
-  PENDING = 'pending',
-  RUNNING = 'running',
-  DONE = 'done',
-  ERROR = 'error',
-  CANCELLED = 'cancelled',
-}
+export const ExecutorType = {
+  SingleNodeJob: 'single_node_job',
+  DistributedJob: 'distributed_job',
+  JupyterNotebook: 'jupyter_notebook',
+} as const;
 
-export enum ActivityExecutorType {
-  SINGLE_NODE_JOB = 'single_node_job',
-  DISTRIBUTED_JOB = 'distributed_job',
-  JUPYTER_NOTEBOOK = 'jupyter_notebook',
-}
+export type TExecutorType = (typeof ExecutorType)[keyof typeof ExecutorType];
 
-export type TActivityExecutorType = `${ActivityExecutorType}`;
-export type TActivityExecutionStatus = `${ActivityExecutionStatus}`;
-
-export interface TNestedEntityBase {
-  id: string;
-  type: string;
-  authorized_project_id: string;
-  authorized_public: boolean;
-}
-
-export interface IExecutionActivity
-  extends EntityCoreIdentifiable,
-    EntityAuthorization,
-    EntityCoreOwnership,
-    Timestamps,
-    EntityCoreType {
-  executor: TActivityExecutorType | null;
+export interface IExecutionActivity extends IActivity {
+  executor: TExecutorType | null;
   execution_id: string | null;
-  start_time: string;
-  end_time: string | null;
-  status: TActivityExecutionStatus;
-  generated: Array<TNestedEntityBase>;
-  used: Array<TNestedEntityBase>;
 }
 
 export interface IExecutionActivityFilter extends IActivityFilter {
-  executor?: TActivityExecutorType | null;
+  executor?: TExecutorType | null;
   execution_id?: string | null;
-  status?: TActivityExecutionStatus | null;
+  status?: TActivityStatus | null;
 }
 
 const CreateExecutionActivitySchema = z.object({
-  status: z.nativeEnum(ActivityExecutionStatus),
-  executor: z.nativeEnum(ActivityExecutorType).optional().nullable(),
+  status: z.nativeEnum(ActivityStatus),
+  executor: z.nativeEnum(ExecutorType).optional().nullable(),
   execution_id: z.string().uuid().optional().nullable(),
   start_time: z.string().datetime().optional().nullable(),
   end_time: z.string().datetime().optional().nullable(),
@@ -69,8 +40,8 @@ const CreateExecutionActivitySchema = z.object({
 export type TCreateCircuitExtractionExecution = z.infer<typeof CreateExecutionActivitySchema>;
 
 const UpdateExecutionActivitySchema = z.object({
-  status: z.nativeEnum(ActivityExecutionStatus).optional().nullable(),
-  executor: z.nativeEnum(ActivityExecutorType).optional().nullable(),
+  status: z.nativeEnum(ActivityStatus).optional().nullable(),
+  executor: z.nativeEnum(ExecutorType).optional().nullable(),
   execution_id: z.string().uuid().optional().nullable(),
   start_time: z.string().datetime().optional().nullable(),
   end_time: z.string().datetime().optional().nullable(),

@@ -11,9 +11,9 @@ import {
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { ActivityExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
@@ -164,8 +164,8 @@ export function getSimulationStatus(simulation: ICircuitSimulation) {
 
   // Used when there are no executions present
   const fallbackStatus = hasSimConfigAsset(simulation)
-    ? ActivityExecutionStatus.CREATED
-    : ActivityExecutionStatus.ERROR;
+    ? ActivityStatus.CREATED
+    : ActivityStatus.ERROR;
 
   const status = sortedExecutions.at(-1)?.status ?? fallbackStatus;
 

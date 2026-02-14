@@ -10,9 +10,9 @@ import {
   getCircuitExtractionExecutions,
 } from '@/api/entitycore/queries/extraction';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import { ActivityExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
@@ -197,7 +197,7 @@ export function getExtractionStatus(config: TEnrichedConfig) {
     creation_date?: string;
   }>;
   const sorted = sortBy(executions, (e) => e.creation_date);
-  return (sorted.at(-1)?.status as ActivityExecutionStatus) ?? ActivityExecutionStatus.CREATED;
+  return (sorted.at(-1)?.status as ActivityStatus) ?? ActivityStatus.CREATED;
 }
 
 export function getStatusCountMap(campaign: TEnrichedExtractionCampaign) {
@@ -206,7 +206,7 @@ export function getStatusCountMap(campaign: TEnrichedExtractionCampaign) {
   return allConfigs.reduce((map, config) => {
     const status = getExtractionStatus(config);
     return map.set(status, (map.get(status) ?? 0) + 1);
-  }, new Map<ActivityExecutionStatus, number>());
+  }, new Map<ActivityStatus, number>());
 }
 
 export const CircuitExtractionCampaign: EntityCoreTypeConfig<ICircuitExtractionCampaign> = {

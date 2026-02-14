@@ -1,7 +1,6 @@
 import type {
   EntityAuthorization,
   EntityCoreIdentifiable,
-  TActivityType,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
@@ -14,22 +13,47 @@ import type {
 interface IUsedEntity extends EntityCoreIdentifiable, EntityAuthorization {}
 interface IGeneratedEntity extends EntityCoreIdentifiable, EntityAuthorization {}
 
-interface IActivityBase<
-  UsedEntityT extends EntityCoreIdentifiable,
-  GeneratedEntityT extends EntityCoreIdentifiable,
-> {
+export enum ActivityStatus {
+  CREATED = 'created',
+  PENDING = 'pending',
+  RUNNING = 'running',
+  DONE = 'done',
+  ERROR = 'error',
+  CANCELLED = 'cancelled',
+}
+
+export type TActivityStatus = `${ActivityStatus}`;
+
+export const ActivityTypeDict = {
+  simulation_execution: 'simulation_execution',
+  simulation_generation: 'simulation_generation',
+  validation: 'validation',
+  calibration: 'calibration',
+  analysis_notebook_execution: 'analysis_notebook_execution',
+  ion_channel_modeling_execution: 'ion_channel_modeling_execution',
+  ion_channel_modeling_config_generation: 'ion_channel_modeling_config_generation',
+  circuit_extraction_config_generation: 'circuit_extraction_config_generation',
+  circuit_extraction_execution: 'circuit_extraction_execution',
+  skeletonization_execution: 'skeletonization_execution',
+  skeletonization_config_generation: 'skeletonization_config_generation',
+} as const;
+
+export type TActivityType = (typeof ActivityTypeDict)[keyof typeof ActivityTypeDict];
+
+interface IActivityBase {
   start_time: string;
   end_time: string;
-  used: UsedEntityT[];
-  generated?: GeneratedEntityT[];
+  used: IUsedEntity[];
+  generated?: IGeneratedEntity[];
+  status: ActivityStatus;
+  type: TActivityType;
 }
 
 export interface IActivity
   extends EntityCoreIdentifiable,
-    IActivityBase<IUsedEntity, IGeneratedEntity>,
+    IActivityBase,
     Timestamps,
-    EntityAuthorization,
-    TActivityType {}
+    EntityAuthorization {}
 
 interface IActivityFilterBase {
   used__id?: string | null;

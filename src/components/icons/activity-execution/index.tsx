@@ -1,4 +1,4 @@
-import { ActivityExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import CancelledIcon from '@/components/icons/activity-execution/cancelled';
 import DoneIcon from '@/components/icons/activity-execution/done';
 import ErrorIcon from '@/components/icons/activity-execution/error';
@@ -8,11 +8,11 @@ import RunningIcon from '@/components/icons/activity-execution/running';
 
 import type { ReactNode } from 'react';
 
-export const executionStatusIconMap: Record<ActivityExecutionStatus, ReactNode> = {
-  [ActivityExecutionStatus.CREATED]: <GeneratedIcon />,
-  [ActivityExecutionStatus.PENDING]: <PendingIcon />,
-  [ActivityExecutionStatus.RUNNING]: <RunningIcon />,
-  [ActivityExecutionStatus.DONE]: <DoneIcon />,
-  [ActivityExecutionStatus.ERROR]: <ErrorIcon />,
-  [ActivityExecutionStatus.CANCELLED]: <CancelledIcon />,
+export const executionStatusIconMap: Record<ActivityStatus, ReactNode> = {
+  [ActivityStatus.CREATED]: <GeneratedIcon />,
+  [ActivityStatus.PENDING]: <PendingIcon />,
+  [ActivityStatus.RUNNING]: <RunningIcon />,
+  [ActivityStatus.DONE]: <DoneIcon />,
+  [ActivityStatus.ERROR]: <ErrorIcon />,
+  [ActivityStatus.CANCELLED]: <CancelledIcon />,
 };

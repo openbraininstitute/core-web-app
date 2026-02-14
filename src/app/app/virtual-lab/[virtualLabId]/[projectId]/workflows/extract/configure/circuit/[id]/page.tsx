@@ -8,6 +8,7 @@ import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { resolveExtractionByCampaignId } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigActivity } from '@/features/scan-config/types';
+import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -68,6 +69,7 @@ export default function Page({
           className="px-10 pt-2"
           activity={ScanConfigActivity.Extract}
         />
+        <DownloadPanel />
       </div>
     );
   }

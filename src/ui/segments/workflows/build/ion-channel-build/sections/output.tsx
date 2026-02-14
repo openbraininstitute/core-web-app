@@ -9,11 +9,7 @@ import {
 import { useAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 
-import {
-  ActivityExecutionStatus,
-  type IExecutionActivity,
-  type TActivityExecutionStatus,
-} from '@/api/entitycore/types/entities/execution';
+import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import {
   build as buildIonChannel,
@@ -44,6 +40,7 @@ import {
 } from '@/utils/streamutils';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type {
   IonChannelModelingCampaign,
@@ -76,7 +73,7 @@ type IonChannelBuildingStreamDataMessage = TStreamMessage<{
 
 type Build = {
   executionId: string;
-  status: TActivityExecutionStatus;
+  status: TActivityStatus;
   configEntity: Partial<EntityCoreResource>;
   modelEntity?: Partial<EntityCoreResource>;
   executionStatus?: string;
@@ -204,8 +201,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   }, [data]);
 
   const isBuilding =
-    currentStatus === ActivityExecutionStatus.RUNNING ||
-    currentStatus === ActivityExecutionStatus.PENDING;
+    currentStatus === ActivityStatus.RUNNING || currentStatus === ActivityStatus.PENDING;
   const hasBuilds = builds.length > 0;
   const hasOutputForSelectedBuild = selectedBuild?.modelEntity !== undefined;
 
@@ -293,7 +289,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
           </Card>
         ) : (
           builds.map((build, index) => {
-            const statusColor = getStatusColor(build.status as ActivityExecutionStatus);
+            const statusColor = getStatusColor(build.status as ActivityStatus);
             const isSelected = selectedBuildIndex === index;
 
             return (
@@ -315,8 +311,8 @@ export function Output({ sessionId }: { sessionId: string | null }) {
                 <CardTitle className="flex items-center justify-between gap-2">
                   <div className="text-primary-9 font-bold">Build {index}</div>
                   <div className="flex items-center gap-2">
-                    {(build.status === ActivityExecutionStatus.RUNNING ||
-                      build.status === ActivityExecutionStatus.PENDING) && (
+                    {(build.status === ActivityStatus.RUNNING ||
+                      build.status === ActivityStatus.PENDING) && (
                       <LoadingOutlined
                         spin
                         className="text-lg"

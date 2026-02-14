@@ -1,4 +1,4 @@
-import { ActivityExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 
 import type { Atom } from 'jotai';
 
@@ -16,17 +16,14 @@ export function isAtom<T>(val: unknown): val is Atom<T> {
 }
 
 const simExecStatusListOrdered = [
-  ActivityExecutionStatus.CREATED,
-  ActivityExecutionStatus.PENDING,
-  ActivityExecutionStatus.RUNNING,
-  ActivityExecutionStatus.DONE,
-  ActivityExecutionStatus.ERROR,
+  ActivityStatus.CREATED,
+  ActivityStatus.PENDING,
+  ActivityStatus.RUNNING,
+  ActivityStatus.DONE,
+  ActivityStatus.ERROR,
 ];
 
-export function getLatestSimExecStatus(
-  remoteStatus: ActivityExecutionStatus,
-  localStatus: ActivityExecutionStatus
-) {
+export function getLatestSimExecStatus(remoteStatus: ActivityStatus, localStatus: ActivityStatus) {
   const remoteStatusIdx = simExecStatusListOrdered.indexOf(remoteStatus);
   const localStatusIdx = simExecStatusListOrdered.indexOf(localStatus);
 

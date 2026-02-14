@@ -272,12 +272,10 @@ export function ProgressiveEntityImage({
       </div>
     ))
     .with({ status: 'loaded', asset: P.not(P.nullish).select() }, (value) => {
-      const newHeight = `calc(${ratioHeight}px + ${yPadding * 2}px)`;
       return (
         <div
           className={cn('w-full', bordered && 'border border-gray-300', className)}
           style={{
-            height: newHeight,
             paddingTop: yPadding,
             paddingBottom: yPadding,
             paddingLeft: xPadding,
@@ -287,7 +285,7 @@ export function ProgressiveEntityImage({
           <div
             ref={containerRef}
             className="relative transition-all duration-200 ease-in-out"
-            style={{ height: ratioHeight }}
+            style={{ height: ratioHeight, maxHeight: isNumber(maxHeight) ? maxHeight : undefined }}
           >
             {optimized ? (
               <NextImage
