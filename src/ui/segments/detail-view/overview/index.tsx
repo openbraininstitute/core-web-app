@@ -29,6 +29,7 @@ import {
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
+import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
 
 import type {
@@ -144,19 +145,22 @@ export default async function Overview({
     }
 
     return (
-      <ScanConfiguration
-        modelId={extractionConfig.circuitId}
-        virtualLabId={ctx.virtualLabId}
-        projectId={ctx.projectId}
-        initialCampaignId={extractionConfig.campaign.id}
-        initialConfig={extractionConfig.config?.form}
-        readOnly={!isWorkflow}
-        defaultTab={{
-          __activity: ScanConfigActivity.Extract,
-          id: ExtractScanConfigTabs.configuration,
-        }}
-        activity={ScanConfigActivity.Extract}
-      />
+      <>
+        <ScanConfiguration
+          modelId={extractionConfig.circuitId}
+          virtualLabId={ctx.virtualLabId}
+          projectId={ctx.projectId}
+          initialCampaignId={extractionConfig.campaign.id}
+          initialConfig={extractionConfig.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Extract,
+            id: ExtractScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Extract}
+        />
+        <DownloadPanel />
+      </>
     );
   }
 
