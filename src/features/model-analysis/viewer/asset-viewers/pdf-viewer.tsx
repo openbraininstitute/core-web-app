@@ -1,16 +1,16 @@
 'use client';
 
 import { Empty, Skeleton } from 'antd';
-import kebabCase from 'es-toolkit/compat/kebabCase';
+import { kebabCase } from 'es-toolkit/compat';
 import { Fragment, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 
-import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
-
-import { TEntityTypeDict } from '@/api/entitycore/types';
 import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
 import { config } from '@/config';
+import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
 import { classNames } from '@/util/utils';
+
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 
 import styles from './pdf-viewer.module.css';
 
@@ -107,3 +107,5 @@ export default function PDFViewer({
     </div>
   );
 }
+
+export { PDFViewer };

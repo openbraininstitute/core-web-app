@@ -1,10 +1,12 @@
 import sortBy from 'es-toolkit/compat/sortBy';
+
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import PDFViewer from '@/features/model-analysis/viewer/asset-viewers/pdf-viewer';
-import { WorkspaceContext } from '@/types/common';
+import { PDFViewer } from '@/features/model-analysis/viewer/asset-viewers/pdf-viewer';
+
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { WorkspaceContext } from '@/types/common';
 
 type SummaryJson = Record<
   string,
@@ -22,6 +24,7 @@ export default async function IonChannelModelOverview({
   icm: IonChannelModel;
   ctx: WorkspaceContext;
 }) {
+  console.log('# # IonChannelModelOverview # icm:', icm);
   const asset = icm.assets.filter((a) => a.label === AssetLabel.neuron_mechanisms)[0];
   if (!asset) return null;
   const file: ArrayBuffer = await downloadAsset({
@@ -69,13 +72,13 @@ export default async function IonChannelModelOverview({
               return (
                 <div key={key}>
                   <div className="flex justify-between">
-                    <div className="text-primary-8 w-[50px] font-bold uppercase">{key}</div>
+                    <div className="text-primary-8 w-12.5 font-bold uppercase">{key}</div>
                     {i === 0 && (
                       <>
-                        <div className="text-neutral-3 w-[400px] text-center text-sm uppercase">
+                        <div className="text-neutral-3 w-100 text-center text-sm uppercase">
                           Stimulus
                         </div>
-                        <div className="text-neutral-3 w-[400px] text-center text-sm uppercase">
+                        <div className="text-neutral-3 w-100 text-center text-sm uppercase">
                           Response
                         </div>
                       </>
@@ -83,21 +86,21 @@ export default async function IonChannelModelOverview({
 
                     {i !== 0 && (
                       <>
-                        <div className="w-[50px]" />
-                        <div className="w-[50px]" />
+                        <div className="w-12.5" />
+                        <div className="w-12.5" />
                       </>
                     )}
                   </div>
 
                   <div className="mt-5 flex justify-between">
-                    <div className="w-[50px]" />
+                    <div className="w-12.5" />
                     <PDFViewer
                       key={imagesByPath[value.stimuli].path}
                       entityType={EntityTypeDict.IonChannelModel}
                       entityId={icm.id}
                       assetId={imagesByPath[value.stimuli].id}
                       showPageCount={false}
-                      documentClassName="w-[400px]"
+                      documentClassName="w-100"
                       pageWidth={400}
                     />
                     <PDFViewer
@@ -106,7 +109,7 @@ export default async function IonChannelModelOverview({
                       entityId={icm.id}
                       assetId={imagesByPath[value.traces].id}
                       showPageCount={false}
-                      documentClassName="w-[400px]"
+                      documentClassName="w-100"
                       pageWidth={400}
                     />
                   </div>
