@@ -272,6 +272,10 @@ export function ProgressiveEntityImage({
       </div>
     ))
     .with({ status: 'loaded', asset: P.not(P.nullish).select() }, (value) => {
+      const aspectRatio =
+        Number(cacheEntry?.dimensions?.width) / Number(cacheEntry?.dimensions?.height);
+      const hasNumericMaxHeight = isNumber(maxHeight);
+
       return (
         <div
           className={cn('w-full', bordered && 'border border-gray-300', className)}
@@ -285,7 +289,11 @@ export function ProgressiveEntityImage({
           <div
             ref={containerRef}
             className="relative transition-all duration-200 ease-in-out"
-            style={{ height: ratioHeight, maxHeight: isNumber(maxHeight) ? maxHeight : undefined }}
+            style={{
+              height: hasNumericMaxHeight ? ratioHeight : undefined,
+              maxHeight: hasNumericMaxHeight ? maxHeight : undefined,
+              aspectRatio: !hasNumericMaxHeight && aspectRatio ? aspectRatio : undefined,
+            }}
           >
             {optimized ? (
               <NextImage
@@ -293,10 +301,7 @@ export function ProgressiveEntityImage({
                 ref={imageRef}
                 src={imageUrl || ''}
                 alt={`${value.path}`}
-                style={{
-                  aspectRatio:
-                    Number(cacheEntry?.dimensions?.width) / Number(cacheEntry?.dimensions?.height),
-                }}
+                style={{ aspectRatio }}
                 objectFit="contain"
                 className="h-full w-full transition-all duration-200 ease-in-out"
               />
@@ -304,10 +309,7 @@ export function ProgressiveEntityImage({
               <AntdImage
                 src={imageUrl || ''}
                 alt={`${value.path}`}
-                style={{
-                  aspectRatio:
-                    Number(cacheEntry?.dimensions?.width) / Number(cacheEntry?.dimensions?.height),
-                }}
+                style={{ aspectRatio }}
                 rootClassName="w-full h-full flex items-center justify-center [&_.ant-image-preview-mask]:bg-white!"
                 className="h-full w-full object-contain transition-all duration-200 ease-in-out"
                 preview={{ maskClassName: 'bg-white' }}
