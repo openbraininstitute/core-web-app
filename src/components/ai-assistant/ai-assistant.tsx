@@ -69,7 +69,6 @@ export default function AiAssistant({
           style={style}
           className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
         >
-          <div className={styles.mask} />
           <div
             className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
           >

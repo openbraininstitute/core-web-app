@@ -2,7 +2,7 @@
 
 import { PlusOutlined } from '@ant-design/icons';
 import { motion } from 'motion/react';
-import { type JSX, useEffect, useMemo, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import { usePanelWidth } from '@/components/ai-assistant/hooks';
@@ -14,14 +14,13 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import styles from '@/ui/segments/ai/container.module.css';
 
+const EXPANDED_WIDTH = 400;
+
 export function Container(): JSX.Element {
   const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();
   const { panelWidth } = usePanelWidth();
   const [animationComplete, setAnimationComplete] = useState(false);
 
-  const style: React.CSSProperties = {
-    '--custom-panel-width': isFullscreen ? '100%' : `${panelWidth}px`,
-  };
   useAgentState('smc_simulation_config');
 
   useEffect(() => {
@@ -30,24 +29,18 @@ export function Container(): JSX.Element {
     } else {
       document.body.style.overflow = '';
     }
-
     return () => {
       document.body.style.overflow = '';
     };
   }, [isFullscreen]);
 
-  const targetWidth = useMemo<string>(() => {
-    if (isCollapsed) return '3rem';
-    if (isFullscreen) return 'calc(100vw - 20px)';
-    return '24rem'; // Fixed width for grid cell
-  }, [isCollapsed, isFullscreen]);
-
-  const targetHeight = useMemo<string>(() => {
-    if (isFullscreen) return 'calc(100vh - 1rem)';
-    if (isExpanded) return 'calc(100vh - 6rem)';
-    if (isCollapsed) return 'calc(100vh - 6rem)';
-    return 'calc(100vh - 5.2rem)';
-  }, [isFullscreen, isExpanded, isCollapsed]);
+  const containerWidth = isCollapsed
+    ? '3rem'
+    : isFullscreen
+      ? 'calc(100vw - 20px)'
+      : `${EXPANDED_WIDTH}px`;
+  const containerHeight = isFullscreen ? 'calc(100vh - 1rem)' : 'calc(100vh - 6rem)';
+  const contentWidth = isFullscreen ? '100%' : `${panelWidth}px`;
 
   function beginTransition(next: PanelState) {
     setAnimationComplete(false);
@@ -57,22 +50,21 @@ export function Container(): JSX.Element {
   return (
     <motion.div
       id="workspace-ai"
-      style={style}
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai]',
-        { 'text-primary-9 mr-3 rounded-lg! bg-white': isExpanded },
-        { 'text-primary-9 my-2 bg-white shadow-lg': isFullscreen },
+        '[grid-area:ai]',
         { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed },
-        { 'rounded-full!': isCollapsed && animationComplete }
+        { 'rounded-full!': isCollapsed && animationComplete },
+        { 'text-primary-9 my-2 bg-white shadow-lg': isFullscreen },
+        { 'mr-3': isExpanded }
       )}
       animate={{
-        width: targetWidth,
-        height: targetHeight,
+        width: containerWidth,
+        height: containerHeight,
         position: isFullscreen ? 'fixed' : 'relative',
         top: isFullscreen ? 0 : undefined,
         right: isFullscreen ? 10 : undefined,
-        left: isFullscreen ? 10 : undefined,
+        left: isFullscreen ? undefined : undefined,
         zIndex: isFullscreen ? 500 : 100,
       }}
       initial={false}
@@ -104,21 +96,22 @@ export function Container(): JSX.Element {
           </div>
         </button>
       ) : (
-        <div className="flex h-full w-full flex-col rounded-lg overflow-visible">
-          <div className="relative flex-1 border-none overflow-visible">
-            <HydrateWrapper>
-              <AiAssistant
-                section="explore"
-                fullscreen={isFullscreen}
-                onFullscreenToggle={() =>
-                  beginTransition(
-                    state === PanelState.Fullscreen ? PanelState.Expanded : PanelState.Fullscreen
-                  )
-                }
-                onCollapse={() => beginTransition(PanelState.Collapsed)}
-              />
-            </HydrateWrapper>
-          </div>
+        <div
+          className="absolute top-0 right-0 h-full rounded-lg overflow-visible"
+          style={{ width: contentWidth, '--custom-panel-width': contentWidth }}
+        >
+          <HydrateWrapper>
+            <AiAssistant
+              section="explore"
+              fullscreen={isFullscreen}
+              onFullscreenToggle={() =>
+                beginTransition(
+                  state === PanelState.Fullscreen ? PanelState.Expanded : PanelState.Fullscreen
+                )
+              }
+              onCollapse={() => beginTransition(PanelState.Collapsed)}
+            />
+          </HydrateWrapper>
         </div>
       )}
     </motion.div>
