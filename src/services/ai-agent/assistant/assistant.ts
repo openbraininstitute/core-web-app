@@ -221,11 +221,22 @@ export function useAiAssistant() {
       queryClient.invalidateQueries({ queryKey: keyBuilderAI.history(virtualLabId, projectId) });
     },
     deleteThread: async (threadId: string) => {
+      const isCurrentThread = AiAssistant.threadId.get() === threadId;
+
+      if (isCurrentThread) {
+        AiAssistant.threadId.set(undefined);
+        AiAssistant.initialMessages.set([]);
+      }
+
       await AiAssistant.deleteThread(threadId);
       queryClient.invalidateQueries({ queryKey: keyBuilderAI.history(virtualLabId, projectId) });
       queryClient.invalidateQueries({
         queryKey: keyBuilderAI.messages(threadId, virtualLabId, projectId),
       });
+
+      if (isCurrentThread) {
+        await AiAssistant.createThread();
+      }
     },
     createThread: async () => {
       const threadId = await AiAssistant.createThread();

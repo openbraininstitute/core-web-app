@@ -1,86 +1,127 @@
 .history {
   overflow: auto;
-  display: grid;
-  grid-template-columns: 1fr minmax(200px, 640px) 1fr;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2em 1em;
 }
 
 .history > div {
-  grid-column: 2;
+  width: 100%;
+  max-width: 600px;
 }
 
 .history div > .card {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 1em;
-  margin: 1em 0;
-  color: #003;
-  box-shadow:
-    0 0.25em 0.5em #0008,
-    0 -0.25em 0.5em #fff;
-  border-radius: 1em;
-  padding: 1em;
-  border: 2px solid #fff;
-  background: linear-gradient(to top, #fff, #eee);
+  align-items: center;
+  gap: 0.75em;
+  margin: 0.5em 0;
+  color: var(--color-primary-9);
+  border-radius: 0.5em;
+  padding: 0.875em 1em;
+  border: 1px solid var(--color-neutral-3);
+  background: var(--color-light);
+  transition: all 0.15s ease;
+}
+
+.history div > .card:hover {
+  border-color: var(--color-primary-12);
+  background: var(--color-background-2);
 }
 
 .history div > .card.currentThread {
-  background: linear-gradient(to top, #1890ff, #003a8c, #012766);
-  color: #fff;
-  border-color: #003a8c;
+  background: var(--color-primary-4);
+  color: var(--color-light);
+  border-color: var(--color-primary-8);
+  border-width: 2px;
+}
+
+.history div > .card.currentThread:hover {
+  background: var(--color-primary-3);
+  border-color: var(--color-primary-7);
+  border-width: 2px;
 }
 
 .history div > .card.currentThread .more,
 .history div > .card.currentThread menu {
-  color: #000;
+  color: #fff;
 }
 
 .history div > .mainButton {
   border: none;
   background: none;
-  box-shadow: none;
   text-align: left;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
   margin: 0;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
 }
 
 .delete {
-  color: #e00;
+  color: var(--color-error);
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete:hover {
+  opacity: 1;
+}
+
+.edit {
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit:hover {
+  opacity: 1;
 }
 
 .history > div h1 {
-  color: #0008;
+  color: var(--color-primary-8);
   font-variant: small-caps;
-  font-weight: bold;
-  font-size: 120%;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  margin: 1.5em 0 0.75em;
+  text-transform: uppercase;
 }
 
 div.loadMore {
   display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
-  gap: 0;
-  padding: 1em 0;
+  justify-content: center;
+  padding: 1.5em 0;
 }
 
 div.loadMore > button {
   font: inherit;
-  line-height: inherit;
   cursor: pointer;
-  background: #fff;
-  border: 2px solid #f0f0f0;
-  border-radius: 999vmax;
-  flex-flow: row;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 1em;
-  padding: 0.5em 2em;
-  line-height: 2;
+  background: var(--color-light);
+  border: 1px solid var(--color-neutral-2);
+  border-radius: 0.5em;
   display: flex;
-  box-shadow:
-    0 0.5em 1em #0004,
-    0 -0.5em 0.5em #fff;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.625em 1.25em;
+  color: var(--color-primary-9);
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+div.loadMore > button:hover {
+  background: var(--color-background);
+  border-color: var(--color-primary-5);
+  color: var(--color-primary-5);
 }

@@ -1,8 +1,8 @@
-import React from 'react';
 import { Button } from 'antd';
+import React from 'react';
 
-import { classNames } from '@/util/utils';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
+import { classNames } from '@/util/utils';
 
 import styles from './dialog-delete.module.css';
 
@@ -27,9 +27,22 @@ export default function DialogDelete({
     const dialog = ref.current;
     if (!dialog) return;
 
-    if (open) dialog.showModal();
-    else dialog.close();
-  }, [open]);
+    const handleCancel = (e: Event) => {
+      e.preventDefault();
+      onClose();
+    };
+
+    if (open) {
+      dialog.showModal();
+      dialog.addEventListener('cancel', handleCancel);
+    } else {
+      dialog.close();
+    }
+
+    return () => {
+      dialog.removeEventListener('cancel', handleCancel);
+    };
+  }, [open, onClose]);
 
   return (
     <dialog className={classNames(styles.dialogDelete)} ref={ref}>
