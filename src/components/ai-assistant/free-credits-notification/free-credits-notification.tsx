@@ -28,8 +28,7 @@ export default function FreeCreditsNotification({
     });
 
     // Check if reset is today or tomorrow
-    const now = new Date();
-    const isToday = resetDate.toDateString() === now.toDateString();
+    const isToday = new Date().getDate() === resetDate.getDate();
 
     if (isToday) {
       return `at ${timeString}`;
