@@ -52,7 +52,7 @@ export function useCircuitImageURL(circuitId: string) {
   const isLoading = circuitLoading || assetLoading;
   const error = circuitError || assetError;
 
-  if (!asset || !circuitLoading) {
+  if ((!data && !isLoading) || error) {
     notifyError({
       message: `No image found for circuit "${circuit?.name}" (${circuitId})!`,
       placement: 'topRight',
