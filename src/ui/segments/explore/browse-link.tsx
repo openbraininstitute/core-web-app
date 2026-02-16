@@ -224,7 +224,7 @@ export function BrowseLink({
     isActiveEntity,
   });
 
-  // Fallback count query: used when this entity type is NOT the active table entity
+  // fallback count query: used when this entity type is NOT the active table entity
   const fallbackQuery = buildQuery({
     virtualLabId,
     projectId,
@@ -277,7 +277,6 @@ export function BrowseLink({
   const count = isActiveEntity && hasCachedData ? tableCount : fallbackData?.pagination.total_items;
   const loadingCurrent = isActiveEntity ? tableCountLoading : loadingFallback;
   const isCurrentError = isActiveEntity ? isTableCountError : isFallbackError;
-
   const rootCount = root?.pagination.total_items;
   const isLoading = loadingCurrent || loadingRoot;
 

@@ -1,54 +1,66 @@
-import { useAtomValue } from 'jotai';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useAppNotification } from '@/components/notification';
-import { modelAtomFamily } from '@/features/scan-config/components/atoms';
+import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export function useCircuitImageURL(circuitId: string) {
   const context = useWorkspace();
-  const modelAtom = modelAtomFamily({ id: circuitId, context });
-  const circuit = useAtomValue(modelAtom);
+  const { error: notifyError } = useAppNotification();
+  const {
+    entity: circuit,
+    error: circuitError,
+    isLoading: circuitLoading,
+  } = useModelQuery({ id: circuitId, context });
 
-  const { error } = useAppNotification();
-  const [url, setUrl] = useState<string | undefined>(undefined);
+  const asset = (circuit as ICircuit)?.assets?.find(
+    (item) => item.label === AssetLabel.simulation_designer_image
+  );
 
-  useEffect(() => {
-    const action = async () => {
-      if (!circuit || !('assets' in circuit)) return;
-
-      const asset = circuit.assets.find(
-        (item) => item.label === AssetLabel.simulation_designer_image
-      );
-      if (!asset) {
-        error({ message: `No image found for circuit "${circuit.name}" (${circuitId})!` });
-        return;
+  const {
+    data,
+    error: assetError,
+    isLoading: assetLoading,
+  } = useQuery({
+    queryKey: ['circuit/simulation-designer-image', { context, circuitId, assetId: asset?.id }],
+    queryFn: async () => {
+      const resp = await downloadAsset({
+        entityType: EntityTypeDict.Circuit,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when circuit and asset are available
+        entityId: circuit!.id,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when circuit and asset are available
+        id: asset?.id!,
+        asRawResponse: false,
+      });
+      return { buffer: resp, asset };
+    },
+    enabled: !!circuit && !!asset && !circuitLoading,
+    select: (resp) => {
+      if (!(resp?.buffer instanceof ArrayBuffer)) {
+        throw new Error('Wrong image format: expected ArrayBuffer!');
       }
-      try {
-        const resp = await downloadAsset({
-          ctx: context,
-          entityType: EntityTypeDict.Circuit,
-          entityId: circuit.id,
-          id: asset.id,
-          asRawResponse: false,
-        });
-        if (!(resp instanceof ArrayBuffer)) {
-          throw new Error('Wrong image format: expected ArrayBuffer!');
-        }
-        const blob = new Blob([resp], { type: asset.content_type });
-        const newUrl = URL.createObjectURL(blob);
-        setUrl(newUrl);
-      } catch (ex) {
-        error({
-          message: `Unable to download image for circuit "${circuit.name}"!\n${ex}`,
-        });
-      }
-    };
-    action();
-  }, [circuit, circuitId, context, error]);
+      const blob = new Blob([resp.buffer], { type: resp.asset?.content_type });
+      const url = URL.createObjectURL(blob);
+      return url;
+    },
+    refetchOnWindowFocus: false,
+  });
+  const isLoading = circuitLoading || assetLoading;
+  const error = circuitError || assetError;
 
-  return url;
+  if ((!data && !isLoading) || error) {
+    notifyError({
+      message: `No image found for circuit "${circuit?.name}" (${circuitId})!`,
+      placement: 'topRight',
+      key: `circuit-image-error-${circuitId}`,
+    });
+    return { data: undefined, isLoading: false, error };
+  }
+
+  return { data, isLoading, error };
 }

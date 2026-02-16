@@ -1,26 +1,27 @@
 import { atom } from 'jotai';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import {
-  BlockUI,
-  type Config,
-  type ConfigValue,
-} from '@/features/scan-config/components/components';
+
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
-import type {
-  AtomsMap,
-  Block,
-  BlockDictionary as BlockDictionaryT,
-  ConfigSchema,
-  SchemaName,
+import {
+  type AtomsMap,
+  type ConfigSchema,
+  type IBlockDictionary,
+  ScanConfigUIElementDict,
+  type SchemaName,
+  type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+
+import Block from './block';
+
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 
 type Props = {
   schemaName: SchemaName;
   schema: ConfigSchema;
-  blockDictionarySchema: BlockDictionaryT;
+  blockDictionarySchema: IBlockDictionary;
   selectedRootElement: string;
   atomsMap: AtomsMap;
   setAtomsMap: (v: AtomsMap) => void;
@@ -29,7 +30,7 @@ type Props = {
   campaignId: string;
   loading: boolean;
   config: Config;
-  selectedBlockSchema?: Block;
+  selectedBlockSchema?: TBlock;
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
@@ -66,14 +67,14 @@ export default function BlockDictionary({
 
   const selectedBlock = selectedBlockLocal ?? selectedBlockAI;
 
-  const selectedBlockSchema: Block | undefined =
+  const selectedBlockSchema: TBlock | undefined =
     blockDictionarySchema.additionalProperties.oneOf.find(
-      (o: Block) => o.properties?.type.const === selectedBlock
+      (o: TBlock) => o.properties?.type.const === selectedBlock
     );
 
   if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement])) {
     return (
-      <BlockUI
+      <Block
         schemaName={schemaName}
         key={`${selectedRootElement}_${selectedEntry}`}
         disabled={!!campaignId || loading || !!blockAIConfig || !isChatReady}
@@ -93,7 +94,7 @@ export default function BlockDictionary({
           <button
             key={o.title}
             type="button"
-            className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
+            className="min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
             onClick={() => {
               if (isRootBlock(schema, selectedRootElement)) return;
 
@@ -108,7 +109,9 @@ export default function BlockDictionary({
               const element = schema.properties?.[selectedRootElement];
 
               const baseName =
-                element.ui_element === 'block_dictionary' ? element.singular_name : 'element';
+                element.ui_element === ScanConfigUIElementDict.BlockDictionary
+                  ? element.singular_name
+                  : 'element';
               let counter = 0;
               let newEntry: string;
 

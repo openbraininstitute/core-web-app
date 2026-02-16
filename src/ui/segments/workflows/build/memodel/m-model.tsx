@@ -49,6 +49,7 @@ export function MModel({ sessionId }: Props) {
       dataType={ExtendedEntitiesTypeDict.CellMorphology}
       miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
       allowDownload={false}
+      allowDelete={false}
       mainTableProps={{
         selectionType: 'radio',
         onCellClick: (_, record) => {

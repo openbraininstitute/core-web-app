@@ -1,12 +1,16 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
+
+import { useScope } from '@/ui/hooks/use-scope';
+import { EntityDeleteButton } from '@/ui/segments/data-table/elements/delete-button';
+import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download-button';
+import { useScrollNav } from '@/ui/segments/data-table/elements/hooks';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
-import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download-button';
-import { useScrollNav } from '@/ui/segments/data-table/elements/hooks';
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 
 function RenderButton<T extends EntityCoreIdentifiable>({
@@ -15,20 +19,37 @@ function RenderButton<T extends EntityCoreIdentifiable>({
   selectedRows,
   dataType,
   workspace,
+  allowDownload,
+  allowDelete,
 }: RenderButtonProps<T> & {
   children?: (props: RenderButtonProps<T>) => ReactNode;
   workspace?: WorkspaceContext;
+  allowDownload?: boolean;
+  allowDelete?: boolean;
 }) {
-  return children ? (
-    children({ selectedRows, clearSelectedRows, dataType })
-  ) : (
-    <EntityDownloadButton<T>
-      selectedRows={selectedRows}
-      dataType={dataType}
-      clearSelectedRows={clearSelectedRows}
-      workspace={workspace}
-      data-testid="listing-view-download-button"
-    />
+  if (children) {
+    return children({ selectedRows, clearSelectedRows, dataType });
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {allowDownload && (
+        <EntityDownloadButton<T>
+          selectedRows={selectedRows}
+          dataType={dataType}
+          clearSelectedRows={clearSelectedRows}
+          workspace={workspace}
+        />
+      )}
+      {allowDelete && (
+        <EntityDeleteButton<T>
+          selectedRows={selectedRows}
+          dataType={dataType}
+          clearSelectedRows={clearSelectedRows}
+          workspace={workspace}
+        />
+      )}
+    </div>
   );
 }
 
@@ -39,8 +60,9 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   selectedRows,
   visible,
   dataType,
-  allowDownload,
   workspace,
+  allowDownload,
+  allowDelete,
 }: {
   clearSelectedRows: RenderButtonProps<T>['clearSelectedRows'];
   children?: ReactNode;
@@ -48,14 +70,24 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   selectedRows: RenderButtonProps<T>['selectedRows'];
   visible: boolean;
   dataType: TExtendedEntitiesTypeDict;
-  allowDownload?: boolean;
   workspace?: WorkspaceContext;
+  // allow Download and Delete are two properties to define if the current table is able to use this two functionalities
+  // and does not means that the entity is downloadable or deletable
+  allowDownload?: boolean;
+  allowDelete?: boolean;
 }) {
   const { left, right } = useScrollNav('.ant-table-body');
+  const { scope: currentScope } = useScope();
+
+  useEffect(() => {
+    if (clearSelectedRows) {
+      clearSelectedRows();
+    }
+  }, [clearSelectedRows]);
 
   if (!visible) return null;
 
-  const hasSelection = !!selectedRows?.length && Boolean(clearSelectedRows) && allowDownload;
+  const hasSelection = !!selectedRows?.length && Boolean(clearSelectedRows);
 
   return (
     <motion.div
@@ -63,25 +95,22 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
       className="flex h-max shrink-0 items-center justify-between gap-5 px-1 pt-3"
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
     >
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" key={`presence-${currentScope}`}>
         {hasSelection && (
           <motion.div
-            key="download-button-wrapper"
+            key={`actions-wrapper-${currentScope}`}
             initial={{ opacity: 0, x: -30, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: -30, scale: 0.95 }}
-            transition={{
-              type: 'spring',
-              stiffness: 400,
-              damping: 25,
-              mass: 0.8,
-            }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25, mass: 0.8 }}
           >
             <RenderButton<T>
               clearSelectedRows={clearSelectedRows}
               selectedRows={selectedRows}
               dataType={dataType}
               workspace={workspace}
+              allowDownload={allowDownload}
+              allowDelete={allowDelete}
             >
               {renderButton}
             </RenderButton>

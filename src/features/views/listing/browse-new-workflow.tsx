@@ -4,9 +4,7 @@ import { omit } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import { useEffect } from 'react';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import { WorkspaceSection } from '@/constants';
+import { type TWorkspaceSection, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   usePrimaryHierarchyOfCurrentSpeciesQuery,
@@ -15,12 +13,17 @@ import {
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { WorkspaceContext } from '@/types/common';
+
 type Props = {
-  buildType: TExtendedEntitiesTypeDict;
+  section: TWorkspaceSection;
+  workspace: WorkspaceContext;
+  baseModelType: TExtendedEntitiesTypeDict;
 };
 
-export function WorkflowBrowseEntity({ buildType }: Props) {
-  const dataType = getEntityByExtendedType({ type: buildType });
+export function WorkflowBrowseEntity({ section, workspace, baseModelType }: Props) {
+  const dataType = getEntityByExtendedType({ type: baseModelType });
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
   const { changeBrainRegion } = useWorkspaceHierarchyRegistry();
   const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
@@ -40,12 +43,12 @@ export function WorkflowBrowseEntity({ buildType }: Props) {
       requireBrainRegion={false}
       section={WorkspaceSection.SimulateWorkflow}
       classNames={{ container: 'max-h-full', miniView: 'max-h-[calc(100vh-15rem)]' }}
-      dataType={buildType}
+      dataType={baseModelType}
       mainTableProps={{
         selectionType: undefined,
       }}
       miniViewProps={{
-        section: WorkspaceSection.SimulateWorkflow,
+        section,
       }}
     />
   );

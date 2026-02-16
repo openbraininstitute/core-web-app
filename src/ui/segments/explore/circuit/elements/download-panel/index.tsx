@@ -1,18 +1,17 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
+import sum from 'es-toolkit/compat/sum';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useHotkeys } from 'react-hotkeys-hook';
-import sum from 'es-toolkit/compat/sum';
 
-import NetworkAndMorphologyConfig from '@/ui/segments/explore/circuit/elements/download-panel/network-morphology-config';
 import ConnectivityMatrices from '@/ui/segments/explore/circuit/elements/download-panel/connectivity-matrices';
 import EntireCircuitExport from '@/ui/segments/explore/circuit/elements/download-panel/entire-circuit-export';
-
 import {
   fileCounterAtom,
   updateFileCounterAtom,
 } from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
+import NetworkAndMorphologyConfig from '@/ui/segments/explore/circuit/elements/download-panel/network-morphology-config';
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -35,7 +34,9 @@ export function DownloadPanel() {
   if (!circuit) return null;
   return (
     <div className="relative w-full">
-      <div // eslint-disable-line jsx-a11y/click-events-have-key-events
+      {/** biome-ignore lint/a11y/useSemanticElements: it contains button inside */}
+      {/** biome-ignore lint/a11y/useKeyWithClickEvents: no need for keydown/up */}
+      <div
         role="button"
         tabIndex={0}
         aria-label="Close download panel mask"
@@ -60,7 +61,6 @@ export function DownloadPanel() {
             </small>
           </span>
           <button
-            autoFocus // eslint-disable-line jsx-a11y/no-autofocus
             type="button"
             onClick={onClose}
             className="hover:bg-neutral-1/10 rounded-md px-2 py-1 text-white"

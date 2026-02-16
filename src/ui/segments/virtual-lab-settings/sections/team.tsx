@@ -16,7 +16,7 @@ import {
 } from '@/api/virtual-lab-svc/queries/member';
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Badge } from '@/ui/molecules/badge';
 import { Button as UiButton } from '@/ui/molecules/button';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -421,7 +421,7 @@ type ListingStepProps = {
 
 function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
   const { data } = useSession();
-  const { isVirtualLabAdmin } = useUserRole({ virtualLabId });
+  const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
 
   const { data: team, isLoading } = useQuery({
     queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),

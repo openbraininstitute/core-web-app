@@ -2,13 +2,17 @@ import {
   getBrainRegionHierarchiesWithSpecies,
   getBrainRegionHierarchy,
 } from '@/api/entitycore/queries/general/brain-region';
-import { getWorkspaceHierarchySpeciesPreference } from '@/api/virtual-lab-svc/queries/user';
+import {
+  getUserGroups,
+  getWorkspaceHierarchySpeciesPreference,
+} from '@/api/virtual-lab-svc/queries/user';
 import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { ReactNode } from 'react';
 
@@ -37,10 +41,16 @@ export default async function Layout({ children }: Props) {
     staleTime: Infinity,
     gcTime: Infinity,
   });
+
   queryClient.prefetchQuery({
     queryKey: keyBuilderHierarchy.hierarchyPreference(),
     queryFn: () => getWorkspaceHierarchySpeciesPreference(),
     staleTime: Infinity,
+  });
+
+  queryClient.prefetchQuery({
+    queryKey: keyBuilder.membership(),
+    queryFn: getUserGroups,
   });
 
   return (

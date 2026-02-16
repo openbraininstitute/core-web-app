@@ -2,11 +2,8 @@
 
 import { Form, Input } from 'antd';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-
-import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { ExperimentalBoutonDensitySchema } from '@/ui/segments/contribute/experimental-bouton-density/schema';
+import { BrainRegionSelector } from '@/ui/segments/contribute/shared/components/brain-region-selector';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
@@ -15,8 +12,6 @@ import {
 
 export function Setup() {
   const form = Form.useFormInstance();
-
-  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <div className="h-full w-full">
@@ -72,12 +67,7 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdownWithFormItem
-          clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
-          showIcon={false}
-          charsPerLine={200}
-          defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
-        />
+        <BrainRegionSelector />
       </Form.Item>
     </div>
   );

@@ -8,7 +8,7 @@ import GalleryContent from '@/ui/segments/gallery/content';
 import HeroGallery from '@/ui/segments/gallery/hero';
 import { useScrollHasStarted } from '@/utils/scroll-has-started';
 
-import type { GalleryContentProps } from '@/api/sanity/gallery/route';
+import type { GalleryContentProps } from '@/services/sanity';
 
 import styles from '@/components/LandingPage/LandingPage.module.css';
 

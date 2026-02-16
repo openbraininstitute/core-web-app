@@ -4,10 +4,7 @@
 
 import { Form, Input } from 'antd';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-
-import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+import { BrainRegionSelector } from '@/ui/segments/contribute/shared/components/brain-region-selector';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
@@ -17,10 +14,8 @@ import { ExperimentalSynapsesPerConnectionSchema } from '@/ui/segments/contribut
 import { PostMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/post-mtype-selector';
 import { PreMTypeClassificationSelector } from '@/ui/segments/contribute/synapses-per-connection/steps/pre-mtype-selector';
 
-// Wrapper component to handle state updates properly
 function BrainRegionFormField({ name, label }: { name: string; label: string }) {
   const form = Form.useFormInstance();
-  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <Form.Item
@@ -37,12 +32,7 @@ function BrainRegionFormField({ name, label }: { name: string; label: string }) 
         },
       ]}
     >
-      <BrainRegionDropdownWithFormItem
-        clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
-        showIcon={false}
-        charsPerLine={200}
-        defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
-      />
+      <BrainRegionSelector />
     </Form.Item>
   );
 }
@@ -100,15 +90,11 @@ export function Setup() {
         />
       </Form.Item>
       <BrainRegionFormField name="brain_region_id" label="Brain region" />
-
       {/* Pre brain region: Required field, top-level */}
       <BrainRegionFormField name="pre_region_id" label="Pre brain region" />
-
       <PreMTypeClassificationSelector schema={ExperimentalSynapsesPerConnectionSchema} />
-
       {/* Post brain region: Required field, top-level */}
       <BrainRegionFormField name="post_region_id" label="Post brain region" />
-
       <PostMTypeClassificationSelector schema={ExperimentalSynapsesPerConnectionSchema} />
     </div>
   );

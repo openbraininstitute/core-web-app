@@ -1,11 +1,13 @@
 'use client';
 
 import { LoadingOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import { Modal } from 'antd';
 import { Popover } from 'antd/lib';
 import { useState } from 'react';
-import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
 import { useAppNotification } from '@/components/notification';
@@ -13,6 +15,9 @@ import { config } from '@/config';
 import { downloadArchive } from '@/services/entity-download';
 import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+
+import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 
 interface ActionPopoverProps {
   notebook: INotebook;
@@ -25,7 +30,13 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const [loading, setLoading] = useState(false);
 
-  async function handleRunNotebook(cloud?: string, podNum?: number) {
+  const { data: virtualLabData } = useQuery({
+    queryKey: keyBuilder.getOneLab({ virtualLabId }),
+    queryFn: () => getVirtualLab(virtualLabId),
+    enabled: Boolean(virtualLabId),
+  });
+
+  async function handleRunNotebook(cloud: string, podNum?: number) {
     if (loading) return;
     const asset = notebook.assets.find((n) => n.label === 'jupyter_notebook');
     if (!asset) return;
@@ -119,7 +130,12 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                   className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleRunNotebook();
+                    if (virtualLabData == null || virtualLabData.data == null) {
+                      throw new Error(
+                        `Could not fetch virtual lab data with useQuery ${virtualLabData}`
+                      );
+                    }
+                    handleRunNotebook(virtualLabData.data?.virtual_lab.compute_cell, 0);
                   }}
                 >
                   {!loading && <PlayCircleOutlined aria-label="Run" />}
@@ -137,27 +153,12 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                       className="hover:text-primary-4 inline-flex items-center gap-[10px]"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleRunNotebook('from_vlab', 0);
-                      }}
-                    >
-                      {!loading && <PlayCircleOutlined aria-label="Run" />}
-                      {loading && <LoadingOutlined />}
-                      Run in your compute_cell
-                    </button>
-                  </div>
-                  <div className="flex gap-4">
-                    <button
-                      disabled={loading}
-                      type="button"
-                      className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-                      onClick={(e) => {
-                        e.stopPropagation();
                         handleRunNotebook('aws', 0);
                       }}
                     >
                       {!loading && <PlayCircleOutlined aria-label="Run" />}
                       {loading && <LoadingOutlined />}
-                      Run in single pod 0 on AWS
+                      Run in single pod 0 on AWS (dev only)
                     </button>
                   </div>
                   <div className="flex gap-4">
@@ -172,37 +173,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                     >
                       {!loading && <PlayCircleOutlined aria-label="Run" />}
                       {loading && <LoadingOutlined />}
-                      Run in single pod 0 on Azure
-                    </button>
-                  </div>
-                  <div className="flex gap-4">
-                    <button
-                      disabled={loading}
-                      type="button"
-                      className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRunNotebook('aws', 1);
-                      }}
-                    >
-                      {!loading && <PlayCircleOutlined aria-label="Run" />}
-                      {loading && <LoadingOutlined />}
-                      Run in single pod 1 on AWS
-                    </button>
-                  </div>
-                  <div className="flex gap-4">
-                    <button
-                      disabled={loading}
-                      type="button"
-                      className="hover:text-primary-4 inline-flex items-center gap-[10px]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRunNotebook('azure', 1);
-                      }}
-                    >
-                      {!loading && <PlayCircleOutlined aria-label="Run" />}
-                      {loading && <LoadingOutlined />}
-                      Run in single pod 1 on Azure
+                      Run in single pod 0 on Azure (dev only)
                     </button>
                   </div>
                 </div>
@@ -218,7 +189,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
           placement="bottomRight"
           arrow={false}
         >
-          <PlusOutlined className="bg-primary-8 rounded-full p-2 text-lg font-bold !text-white shadow-md" />
+          <PlusOutlined className="bg-primary-8 rounded-full p-2 text-lg font-bold text-white shadow-md" />
         </Popover>
       </div>
     </>

@@ -5,20 +5,17 @@ import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
 import dayjs from 'dayjs';
 import { upperFirst } from 'es-toolkit/compat';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-
 import {
   ElectricalRecordingOrigin,
   ElectricalRecordingOriginDictionary,
   RecordingType,
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import {
   ElectricalCellRecordingSchema,
   RECORDING_LOCATION_OPTIONS,
 } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import { BrainRegionSelector } from '@/ui/segments/contribute/shared/components/brain-region-selector';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
@@ -26,9 +23,10 @@ import {
 } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
 
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 export function Setup() {
   const form = Form.useFormInstance();
-  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   const RecordingTypeFormInput = SelectPopoverFormItem<typeof RecordingType>({
     options: Object.values(RecordingType).map(({ key, label }) => ({
@@ -110,12 +108,7 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdownWithFormItem
-          clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
-          showIcon={false}
-          charsPerLine={200}
-          defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
-        />
+        <BrainRegionSelector />
       </Form.Item>
 
       <Form.Item

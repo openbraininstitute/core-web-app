@@ -3,18 +3,15 @@
 import { DatePicker, Form, Input, InputNumber } from 'antd';
 import dayjs from 'dayjs';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-
 import {
   EMCellMeshGenerationMethodDict,
   EMCellMeshTypeDict,
   type TEMCellMeshGenerationMethod,
   type TEMCellMeshType,
 } from '@/api/entitycore/types/entities/em-cell-mesh';
-import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import { EMCellMeshSchema } from '@/ui/segments/contribute/em-cell-mesh/schema';
+import { BrainRegionSelector } from '@/ui/segments/contribute/shared/components/brain-region-selector';
 import { EMDenseReconstructionDatasetSelector } from '@/ui/segments/contribute/shared/components/em-dense-reconstruction-dataset-selector';
 import {
   createZodFieldValidator,
@@ -22,9 +19,10 @@ import {
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 export function Setup() {
   const form = Form.useFormInstance();
-  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   const GenerationMethodFormInput = SelectPopoverFormItem<TEMCellMeshGenerationMethod>({
     options: Object.entries(EMCellMeshGenerationMethodDict).map(([, value]) => ({
@@ -80,12 +78,7 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdownWithFormItem
-          clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
-          showIcon={false}
-          charsPerLine={200}
-          defaultBrainRegion={selectedBrainRegion as IBrainRegionHierarchy}
-        />
+        <BrainRegionSelector />
       </Form.Item>
 
       <EMDenseReconstructionDatasetSelector schema={EMCellMeshSchema} />

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
-import { makeRoles } from '@/hooks/use-user-role';
+import { makeRoles } from '@/hooks/use-user-membership';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { Credits } from '@/ui/segments/project/credits';
@@ -18,7 +18,7 @@ export default async function Home({
 
   try {
     const result = await queryClient.fetchQuery({
-      queryKey: keyBuilder.roles(),
+      queryKey: keyBuilder.membership(),
       queryFn: getUserGroups,
     });
 

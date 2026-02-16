@@ -60,6 +60,7 @@ export function MEModel({ sessionId }: Props) {
         requireBrainRegion
         requireBrainRegionDropdown
         allowDownload={false}
+        allowDelete={false}
         id={sessionId}
         requireMiniDetailView={false}
         section={WorkspaceSection.BuildWorkflow}

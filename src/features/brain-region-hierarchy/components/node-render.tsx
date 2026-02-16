@@ -2,12 +2,12 @@
 
 import { CaretRightFilled } from '@ant-design/icons';
 import { capitalize } from 'es-toolkit/compat';
-import type { CSSProperties } from 'react';
-
-import type { RenderNodeProps } from '@/components/tree/types';
-import type { IBrainRegionHierarchyExtended } from '@/features/brain-region-hierarchy/types';
 
 import { cn } from '@/utils/css-class';
+
+import type { CSSProperties } from 'react';
+import type { RenderNodeProps } from '@/components/tree/types';
+import type { IBrainRegionHierarchyExtended } from '@/features/brain-region-hierarchy/types';
 
 type Props<TNode extends IBrainRegionHierarchyExtended = IBrainRegionHierarchyExtended> =
   RenderNodeProps<TNode>;
@@ -22,14 +22,15 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
   defaultColor,
 }: Props<TNode>) {
   const color = 'color' in node ? node.color : defaultColor;
-  const nodeName = node.name;
+  const nodeName = capitalize(node.name);
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: reason-for-later
-    <div
+    <button
+      type="button"
       id={node.id.toString()}
       title={nodeName}
-      data-label={nodeName}
+      aria-label={nodeName}
+      tabIndex={0}
       className={cn(
         'flex min-w-0 flex-1 cursor-pointer items-center transition-colors',
         'duration-200 ease-in-out text-primary-9 hover:text-primary-8',
@@ -63,14 +64,17 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
         </div>
       </div>
       {hasChildren && (
-        <button
+        // biome-ignore lint/a11y/useSemanticElements: parent is a button, button cannot be a descendant of button
+        // biome-ignore lint/a11y/useKeyWithClickEvents: no need for keydown
+        <div
+          tabIndex={0}
           className={cn(
             'ml-auto flex shrink-0 items-center justify-center',
             'rounded-full p-0.5 hover:bg-black/10 hover:shadow-md',
             { 'text-primary-9': isSelected },
             { 'text-primary-9/60': !isSelected }
           )}
-          type="button"
+          role="button"
           onClick={onToggle}
           style={{ '--color': `#${color}` } as CSSProperties}
         >
@@ -80,8 +84,8 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
               'rotate-90': isExpanded,
             })}
           />
-        </button>
+        </div>
       )}
-    </div>
+    </button>
   );
 }

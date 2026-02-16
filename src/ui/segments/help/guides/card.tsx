@@ -1,6 +1,6 @@
 import { PortableText } from 'next-sanity';
 
-import { GuideCardProps } from '@/api/sanity/help-guides-section/route';
+import type { GuideCardProps } from '@/services/sanity';
 
 import styles from './content.module.css';
 

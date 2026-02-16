@@ -1,9 +1,9 @@
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 
 export const simulationStatusColorMap = {
-  [EntitycoreExecutionStatus.CREATED]: '#1890ff',
-  [EntitycoreExecutionStatus.PENDING]: '#fa8c16',
-  [EntitycoreExecutionStatus.RUNNING]: '#389e0d',
-  [EntitycoreExecutionStatus.ERROR]: '#f5222d',
-  [EntitycoreExecutionStatus.DONE]: '#002766',
+  [ActivityStatus.CREATED]: '#1890ff',
+  [ActivityStatus.PENDING]: '#fa8c16',
+  [ActivityStatus.RUNNING]: '#389e0d',
+  [ActivityStatus.ERROR]: '#f5222d',
+  [ActivityStatus.DONE]: '#002766',
 };

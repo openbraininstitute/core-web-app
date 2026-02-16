@@ -5,7 +5,8 @@ import {
   type AtomsMap,
   type ConfigSchema,
   isType,
-  type TabType,
+  type TScanConfigActivity,
+  type TScanConfigTabs,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
@@ -14,7 +15,7 @@ import { useValidateSchema } from './hooks';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Config } from './components';
+import type { Config } from '@/features/scan-config/components/components';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
@@ -41,7 +42,9 @@ export default function Left({
   setNewKey,
   isEditingKey,
   setIsEditingKey,
+  activity,
   handleAcceptAIChanges,
+  handleRejectAIChanges,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -57,7 +60,7 @@ export default function Left({
   readOnly?: boolean;
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  setTab: React.Dispatch<React.SetStateAction<TabType>>;
+  setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
   model: ICircuit | IMEModel;
   initialConfig?: Config;
   allEntries: Set<string>;
@@ -65,14 +68,16 @@ export default function Left({
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
+  activity: TScanConfigActivity;
   handleAcceptAIChanges: () => void;
+  handleRejectAIChanges: () => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
-  const { aiConfig, setAiConfig } = useAIConfig();
+  const { aiConfig } = useAIConfig();
 
   return (
     <div className={styles.scrollable}>
-      <div className="flex flex-grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
+      <div className="flex grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
         {schema.group_order.map((group) => {
           return (
             <Fragment key={group}>
@@ -121,17 +126,17 @@ export default function Left({
       </div>
 
       {!!aiConfig && !campaignId && (
-        <div className="flex w-[95%] min-h-[50px] gap-2">
+        <div className="flex w-[95%] min-h-12.5 gap-2">
           <button
             type="button"
-            className="min-h-[50px] text-lg drop-shadow border-red-500 border-1 rounded-full p-2 grow text-red-500"
-            onClick={() => setAiConfig(null)}
+            className="min-h-12.5 text-lg drop-shadow border-red-500 border rounded-full p-2 grow text-red-500"
+            onClick={handleRejectAIChanges}
           >
             Reject changes
           </button>
           <button
             type="button"
-            className="min-h-[50px] text-lg bg-green-600 text-white p-2 rounded-full grow "
+            className="min-h-12.5 text-lg bg-green-600 text-white p-2 rounded-full grow "
             onClick={handleAcceptAIChanges}
           >
             Accept changes
@@ -149,6 +154,7 @@ export default function Left({
           model={model}
           setTab={setTab}
           setLoading={setLoading}
+          activity={activity}
         />
       )}
     </div>

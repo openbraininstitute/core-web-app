@@ -3,5 +3,5 @@ pre-commit:
   commands:
     check:
       glob: "*.{js,ts,cjs,mjs,jsx,tsx,json,jsonc}"
-      run: pnpx @biomejs/biome check --write {staged_files}
+      run: pnpx @biomejs/biome check --write {staged_files} --max-diagnostics 100
       stage_fixed: true

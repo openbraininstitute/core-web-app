@@ -4,12 +4,13 @@ import snakeCase from 'es-toolkit/compat/snakeCase';
 import { notFound } from 'next/navigation';
 import { use } from 'react';
 
+import { WorkspaceSection } from '@/constants';
+import { WorkflowBrowseEntity } from '@/features/views/listing/browse-new-workflow';
+import { getBaseModelTypeFromActivityType } from '@/ui/segments/workflows/elements/helpers';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { KebabCase } from '@/utils/type';
-
-import { WorkflowBrowseEntity } from '@/features/views/listing/browse-new-workflow';
-import { getBuildTypeFromSimulateType } from '@/ui/segments/workflows/elements/helpers';
 
 export default function Page({
   params,
@@ -17,11 +18,20 @@ export default function Page({
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   null
 >) {
-  const { type } = use(params);
+  const { type, virtualLabId, projectId } = use(params);
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
-  const buildType = getBuildTypeFromSimulateType(dataType);
-  if (!buildType) return notFound();
+  const baseModelType = getBaseModelTypeFromActivityType({
+    type: dataType,
+    section: WorkspaceSection.SimulateWorkflow,
+  });
 
-  return <WorkflowBrowseEntity buildType={buildType} />;
+  if (!baseModelType) return notFound();
+  return (
+    <WorkflowBrowseEntity
+      workspace={{ virtualLabId, projectId }}
+      baseModelType={baseModelType}
+      section={WorkspaceSection.SimulateWorkflow}
+    />
+  );
 }

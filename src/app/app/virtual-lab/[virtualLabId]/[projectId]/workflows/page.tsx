@@ -5,17 +5,15 @@ import { kebabCase } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'motion/react';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { use } from 'react';
+import { match, P } from 'ts-pattern';
 
 import { config } from '@/config';
-import { WorkspaceScope } from '@/constants';
+import { WorkflowActivityDictValue, WorkspaceScope } from '@/constants';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { SCOPE_QUERY_PARAMS } from '@/ui/hooks/use-scope';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
-import {
-  ActivityValues,
-  WorkflowSessionIdSearchParam,
-} from '@/ui/segments/workflows/elements/helpers';
+import { WorkflowSessionIdSearchParam } from '@/ui/segments/workflows/elements/helpers';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
 import {
@@ -56,20 +54,33 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
   };
 
   const onSelectType = (value: TExtendedEntitiesTypeDict | null) => {
-    if (activity === ActivityValues.Build) {
-      const sessionId = crypto.randomUUID();
-      const query = new URLSearchParams();
-      query.set(WorkflowSessionIdSearchParam, sessionId);
-      query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
-      if (value)
+    return match({ activity, value })
+      .with(
+        {
+          activity: WorkflowActivityDictValue.build,
+        },
+        () => {
+          const sessionId = crypto.randomUUID();
+          const query = new URLSearchParams();
+          query.set(WorkflowSessionIdSearchParam, sessionId);
+          query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
+          if (value)
+            navigate(
+              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`
+            );
+        }
+      )
+      .with({ activity: WorkflowActivityDictValue.simulate, value: P.nonNullable }, ({ value }) => {
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`
         );
-    } else if (activity === ActivityValues.Simulate && value) {
-      navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
-      );
-    }
+      })
+      .with({ activity: WorkflowActivityDictValue.extract, value: P.nonNullable }, ({ value }) => {
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
+        );
+      })
+      .otherwise(() => null);
   };
 
   useNextStepOnboarding({ condition: true, tour: workflowTour });

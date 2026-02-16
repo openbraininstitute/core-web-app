@@ -1,15 +1,15 @@
 'use client';
 
 import * as SwitchPrimitives from '@radix-ui/react-switch';
-import { atom } from 'jotai';
 import keyBy from 'es-toolkit/compat/keyBy';
 import map from 'es-toolkit/compat/map';
 import merge from 'es-toolkit/compat/merge';
 import omit from 'es-toolkit/compat/omit';
+import { atom } from 'jotai';
 import { forwardRef } from 'react';
 
-import { getSanityTiers } from '@/api/sanity/client';
 import { listSubscriptionTiers } from '@/api/virtual-lab-svc/queries/subscription';
+import { getSanityTiers } from '@/services/sanity';
 import { classNames } from '@/util/utils';
 
 type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
@@ -177,10 +177,7 @@ const renameAndRemove = (arr: Array<any>, oldKey: string, newKey: string) =>
   );
 
 export async function getAllTiers(): Promise<Array<ExtendedTier>> {
-  const [appTiers, sanityTiers] = await Promise.all([
-    listSubscriptionTiers(),
-    getSanityTiers()({ next: { revalidate: 3600 } }),
-  ]);
+  const [appTiers, sanityTiers] = await Promise.all([listSubscriptionTiers(), getSanityTiers()]);
   if (!appTiers || !sanityTiers) {
     throw new Error('Tiers can not be fetched');
   }

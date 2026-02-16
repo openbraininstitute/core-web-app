@@ -1,8 +1,11 @@
 import z from 'zod';
+
+// biome-ignore lint/style/useImportType: biome hallucination
+import { EntityCoreConfiguration } from '@/entity-configuration/domain';
+
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
 import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
-import type { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import type { Prettify } from '@/utils/type';
 
 export type EntityCoreDataType =
@@ -15,11 +18,6 @@ export type EntityCoreIdentifiable = {
 
 export type EntityCoreType = {
   type: TEntityTypeDict;
-};
-
-export type ActivityType = {
-  // TODO: derive from activity type, same as done with EntityTypeValue
-  type: 'simulation_execution' | 'simulation_generation';
 };
 
 export type EntityCoreOwnership = {
@@ -247,6 +245,7 @@ export enum AssetLabel {
   ion_channel_model_figure_summary_json = 'ion_channel_model_figure_summary_json',
   jupyter_notebook = 'jupyter_notebook',
   ion_channel_model_thumbnail = 'ion_channel_model_thumbnail',
+  circuit_extraction_config = 'circuit_extraction_config',
 }
 
 type AssetBase = {

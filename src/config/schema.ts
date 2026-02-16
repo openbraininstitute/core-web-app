@@ -18,6 +18,7 @@ const configFields = {
   KEYCLOAK_ISSUER: { schema: z.string().url(), public: false },
 
   NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
+  AUTH_PROXY_URL: { schema: z.string().url().optional(), public: true },
 
   MAILCHIMP_API_KEY: {
     schema: z.string().nonempty().optional(),
@@ -162,9 +163,19 @@ const platformApiUrlFields = {
   VIRTUAL_LAB_API_URL: '/virtual-lab-manager',
 } as const satisfies Partial<Record<keyof typeof configFields, string>>;
 
-const baseServerSchema = z.object(
-  Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
-) as z.ZodObject<{
+const baseServerSchema = z
+  .object(
+    Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))
+  )
+  .superRefine((data, ctx) => {
+    if (data.AUTH_PROXY_URL && data.DEPLOYMENT_ENV !== 'preview') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'AUTH_PROXY_URL can only be set when DEPLOYMENT_ENV is "preview"',
+        path: ['AUTH_PROXY_URL'],
+      });
+    }
+  }) as any as z.ZodObject<{
   [K in keyof typeof configFields]: (typeof configFields)[K]['schema'];
 }>;
 

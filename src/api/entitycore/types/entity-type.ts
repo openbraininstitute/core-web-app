@@ -24,6 +24,8 @@ export const EntityTypeDict = {
   ValidationResult: 'validation_result',
   Notebook: 'analysis_notebook_template',
   EMCellMesh: 'em_cell_mesh',
+  CircuitExtractionCampaign: 'circuit_extraction_campaign',
+  CircuitExtractionConfig: 'circuit_extraction_config',
 } as const;
 
 export const EntityTypeWithBrainRegionDict = {
@@ -41,3 +43,8 @@ export const EntityTypeWithBrainRegionDict = {
 export type TEntityTypeDict = (typeof EntityTypeDict)[keyof typeof EntityTypeDict];
 export type TEntityTypeWithBrainRegionDict =
   (typeof EntityTypeWithBrainRegionDict)[keyof typeof EntityTypeWithBrainRegionDict];
+
+export type TEntityTypeDictKey = keyof typeof EntityTypeDict;
+export const EntityTypeByKeyDict = new Proxy({} as { [K in TEntityTypeDictKey]: K }, {
+  get: (_, prop: string) => prop,
+});

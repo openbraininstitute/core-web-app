@@ -1,10 +1,10 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 'use client';
 
-import * as React from 'react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
+
 import { cn } from '@/utils/css-class';
+
+import type * as React from 'react';
 
 function TooltipProvider({
   delayDuration = 0,
@@ -63,7 +63,7 @@ function TooltipContent({
         {showArrow && (
           <TooltipPrimitive.Arrow
             className={cn(
-              'z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px] bg-current fill-transparent',
+              'z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-xs bg-current fill-transparent',
               arrowClassName
             )}
           />
