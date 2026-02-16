@@ -49,7 +49,10 @@ import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
-const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [EntityTypeDict.SimulationCampaign];
+const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [
+  EntityTypeDict.SimulationCampaign,
+  EntityTypeDict.CircuitExtractionCampaign,
+];
 export interface WorkflowActivityRef {
   dataCount: number;
   totalItems: number;
@@ -259,9 +262,14 @@ export function WorkflowActivity() {
       );
     }
     if (selectedRow?.type === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
+      const circuitId = (
+        selectedRow as unknown as TExtendedExtractionCampaignsType['data'][0]
+      ).generations
+        .at(0)
+        ?.configs.at(0)?.circuit_id;
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
-          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+          circuitId
         }?initialCampaignId=${selectedRow.id}`
       );
     }
@@ -450,7 +458,8 @@ export function WorkflowActivity() {
                       entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation && (
+                      entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation &&
+                      entityType !== ExtendedEntitiesTypeDict.CircuitExtractionCampaign && (
                         <Button
                           rounded
                           asChild={activityType !== ActivityValues.Build}
