@@ -1,6 +1,12 @@
+import { get } from 'es-toolkit/compat';
 import { atom } from 'jotai';
 
-import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
+import Block from '@/features/scan-config/components/block';
+import {
+  getBlockUsabilityConfig,
+  isRootBlock,
+  type TUsabilityAndPropertyMappingConfiguration,
+} from '@/features/scan-config/components/hooks/schema';
 import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
@@ -11,8 +17,6 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-
-import Block from './block';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -35,6 +39,7 @@ type Props = {
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   blockAIConfig: ConfigObject | null;
+  usabilityPropertyMappingConfig: TUsabilityAndPropertyMappingConfiguration;
 };
 
 export default function BlockDictionary({
@@ -53,6 +58,7 @@ export default function BlockDictionary({
   allEntries,
   onNewBlockClick,
   blockAIConfig,
+  usabilityPropertyMappingConfig,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
 
@@ -83,13 +89,24 @@ export default function BlockDictionary({
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
         model={model}
         blockAIConfig={blockAIConfig}
+        usabilityPropertyMappingConfig={usabilityPropertyMappingConfig}
       />
     );
   }
 
   return (
-    <div className="flex flex-col items-center gap-5">
+    <div
+      className="flex flex-col items-center gap-5"
+      data-scan-config-block={blockDictionarySchema.ui_element}
+    >
       {blockDictionarySchema.additionalProperties.oneOf.map((o) => {
+        const usability = getBlockUsabilityConfig({ block: o });
+        if (
+          usability.block_usability_entity_dependent &&
+          !get(usabilityPropertyMappingConfig.usability, usability.block_usability_property)
+        )
+          return null;
+
         return (
           <button
             key={o.title}
@@ -97,7 +114,6 @@ export default function BlockDictionary({
             className="min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
             onClick={() => {
               if (isRootBlock(schema, selectedRootElement)) return;
-
               if (onNewBlockClick) onNewBlockClick();
 
               const initial: Record<string, ConfigValue> = {};
@@ -130,6 +146,7 @@ export default function BlockDictionary({
                 },
               });
             }}
+            data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
           >
             <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
             <span className="mt-3 block">{o.description}</span>

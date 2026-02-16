@@ -1,6 +1,7 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
+import { useQueries } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
@@ -11,6 +12,7 @@ import {
   resetConfig,
   useAtomsMap,
   useObioneJsonSchema,
+  useSchemaUsabilityAndPropertiesMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
 import Left from '@/features/scan-config/components/left';
 import Middle from '@/features/scan-config/components/middle';
@@ -71,8 +73,16 @@ export function ScanConfigTemplate({
 
   const schemaName = useSchemaName({ model: entity, activity });
   const schema = useObioneJsonSchema(schemaName);
-  const allEntries = useEntries({ initialConfig, schema });
 
+  const { data: usabilityPropertyMappingConfig, isLoading } =
+    useSchemaUsabilityAndPropertiesMappingConfiguration({
+      schema,
+      circuitId: entity.id,
+      workspace: { virtualLabId, projectId },
+      endpointType: 'Circuit',
+    });
+
+  const allEntries = useEntries({ initialConfig, schema });
   const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model: entity });
 
   const config = useConfigAtom(schema, atomsMap);
@@ -82,7 +92,7 @@ export function ScanConfigTemplate({
   const updateRequestId = useAgentState(aiEnabled ? 'smc_simulation_config' : '', config);
   const { aiConfig, setAiConfig } = useAIConfig();
 
-  if (!schema || Object.keys(atomsMap).length === 0) {
+  if (!schema || Object.keys(atomsMap).length === 0 || isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <LoadingOutlined />
@@ -205,6 +215,7 @@ export function ScanConfigTemplate({
                   setIsEditingKey(false);
                 }}
                 selectedSchema={schema.properties[selectedRootElement]}
+                usabilityPropertyMappingConfig={usabilityPropertyMappingConfig}
               />
             )}
           </div>

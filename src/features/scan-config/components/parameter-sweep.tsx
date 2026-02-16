@@ -1,7 +1,9 @@
 import { CloseOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
-import isNil from 'es-toolkit/compat/isNil';
+import { isNil } from 'es-toolkit/compat';
 import { useEffect, useState } from 'react';
+
+import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 export default function ParameterSweep({
   value,
@@ -54,7 +56,10 @@ export default function ParameterSweep({
   if (mode === 'single' && !Array.isArray(value)) {
     const errorMessage = !isNil(value) ? error(value) : undefined;
     return (
-      <div className="relative">
+      <div
+        className="relative"
+        data-scan-config-block-element={ScanConfigUIElementDict.FloatParameterSweep}
+      >
         <InputNumber
           controls={false}
           disabled={disabled}
@@ -83,7 +88,7 @@ export default function ParameterSweep({
 
   if (mode === 'multiple') {
     return (
-      <div>
+      <div data-scan-config-block-element={ScanConfigUIElementDict.FloatParameterSweep}>
         {!disabled && (
           <div className="mb-1 flex justify-end">
             <CloseOutlined

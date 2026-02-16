@@ -1,44 +1,28 @@
-import { LoadingOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
 import { Select } from 'antd';
-import authFetch from '@/auth-fetch';
-import { config } from '@/config';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { get } from 'es-toolkit/compat';
+
+import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+
+import type { TUsabilityAndPropertyMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
 export default function EntityPropertyDropdown({
-  modelId,
   value,
   onChange,
-  entity_type,
   property,
   disabled = false,
+  usabilityPropertyMappingConfig,
 }: {
-  modelId: string;
   value: string[];
   onChange: (v: string[]) => void;
-  entity_type: string;
   property: string;
   disabled?: boolean;
+  usabilityPropertyMappingConfig: TUsabilityAndPropertyMappingConfiguration;
 }) {
-  const { virtualLabId, projectId } = useWorkspace();
-
-  const { data, error, isLoading } = useQuery({
-    queryKey: keyBuilder.modelProperties({ modelId }),
-    queryFn: () => fetchProperties({ modelId, virtualLabId, projectId, entity_type, property }),
-  });
-
-  if (error) {
-    return <div className="text-red-500">There was an error downloading the nodesets</div>;
-  }
-  if (isLoading) {
-    return <LoadingOutlined className="text-primary-8" />;
-  }
-
-  if (!data) return null;
+  const options = get(usabilityPropertyMappingConfig.properties, property, []) as string[];
 
   return (
     <Select
+      data-scan-config-block-element={ScanConfigUIElementDict.EntityPropertyDropdown}
       showSearch
       mode="multiple"
       disabled={disabled}
@@ -46,7 +30,7 @@ export default function EntityPropertyDropdown({
       value={value}
       onChange={onChange}
       options={[
-        ...data.map((n) => {
+        ...options.map((n) => {
           return {
             label: n,
             value: n,
@@ -55,38 +39,4 @@ export default function EntityPropertyDropdown({
       ]}
     />
   );
-}
-
-async function fetchProperties({
-  modelId,
-  virtualLabId,
-  projectId,
-  entity_type,
-  property,
-}: {
-  modelId: string;
-  virtualLabId: string;
-  projectId: string;
-  entity_type: string;
-  property: string;
-}) {
-  const res = await authFetch(
-    `${config.OBI_ONE_URL}/declared/mapped-${entity_type}-properties/${modelId}`,
-    {
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'virtual-lab-id': virtualLabId,
-        'project-id': projectId,
-      },
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error('Error fetching node sets');
-  }
-
-  const properties = (await res.json()) as Record<string, string[]>;
-
-  return properties[property];
 }

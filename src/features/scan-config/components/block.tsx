@@ -24,6 +24,7 @@ import { cn } from '@/utils/css-class';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TUsabilityAndPropertyMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -43,6 +44,7 @@ export default function Block({
   model,
   blockAIConfig,
   hideTitle,
+  usabilityPropertyMappingConfig,
 }: {
   schemaName: SchemaName;
   disabled: boolean;
@@ -52,6 +54,7 @@ export default function Block({
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   blockAIConfig: Record<string, ConfigValue> | null;
   hideTitle?: boolean;
+  usabilityPropertyMappingConfig: TUsabilityAndPropertyMappingConfiguration;
 }) {
   // Empty atom for when a block doesn't exist in the config (and the atoms map) yet, only in the AI suggested changes
   const emptyAtom = useRef(atom<Record<string, ConfigValue>>({}));
@@ -61,6 +64,7 @@ export default function Block({
     if (paramSchema.ui_element === ScanConfigUIElementDict.StringInput) {
       return (
         <Input
+          data-scan-config-block-element={ScanConfigUIElementDict.StringInput}
           disabled={disabled}
           value={typeof value === 'string' ? value : ''}
           className="w-full"
@@ -175,11 +179,10 @@ export default function Block({
 
       return (
         <EntityPropertyDropdown
+          usabilityPropertyMappingConfig={usabilityPropertyMappingConfig}
           disabled={disabled}
-          modelId={model.id}
           value={getValue()}
           onChange={(newV: string[]) => setState({ ...state, node_set: newV })}
-          entity_type={paramSchema.entity_type}
           property={paramSchema.property}
         />
       );
@@ -216,7 +219,7 @@ export default function Block({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" data-scan-config-block={ScanConfigUIElementDict.BlockSingle}>
       {!hideTitle && (
         <>
           <div className="text-lg text-gray-500 uppercase">{blockSchema.title}</div>
@@ -263,6 +266,7 @@ export default function Block({
                     'w-full flex',
                     isBooleanInput ? 'flex-row items-center' : 'flex-col'
                   )}
+                  data-scan-config-block-element={blockElementSchema.ui_element}
                 >
                   <div className="flex gap-3 w-full items-center">
                     <div

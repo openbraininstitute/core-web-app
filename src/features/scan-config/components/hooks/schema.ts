@@ -1,11 +1,15 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { pick } from 'es-toolkit/compat';
+import get from 'es-toolkit/compat/get';
 import { atom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { obioneApi } from '@/api/one/utils';
 import { config } from '@/config';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
@@ -14,10 +18,12 @@ import {
   isType,
   ScanConfigUIElementDict,
   type SchemaName,
+  type TBlock,
 } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { Config, ConfigValue } from '@/features/scan-config/components/components';
+import type { WorkspaceContext } from '@/types/common';
 
 export function useObioneJsonSchema(schemaName: SchemaName) {
   const { data: schema } = useQuery({
@@ -29,6 +35,84 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
   });
 
   return schema;
+}
+
+export type TUsabilityAndPropertyMappingConfiguration = {
+  usability: Record<string, boolean>;
+  properties: Record<string, ConfigValue>;
+};
+
+export function useSchemaUsabilityAndPropertiesMappingConfiguration({
+  schema,
+  circuitId,
+  workspace,
+  endpointType,
+}: {
+  workspace: WorkspaceContext;
+  circuitId: string;
+  schema: ConfigSchema | undefined;
+  endpointType: string;
+}) {
+  const properties_endpoint = get(schema?.properties_endpoints, endpointType, '');
+  const usability_endpoint = get(schema?.usability_endpoints ?? {}, endpointType, '');
+
+  return useQueries({
+    queries: [
+      {
+        queryKey: ['entity_properties_config', { workspace, circuitId, endpointType }],
+        queryFn: async () => {
+          const api = await obioneApi();
+          return api.get<TUsabilityAndPropertyMappingConfiguration['properties']>(
+            `/declared${properties_endpoint}`.replace('{circuit_id}', circuitId),
+            {
+              headers: {
+                ...getEntityCoreContext(workspace).headers,
+              },
+            }
+          );
+        },
+        enabled: !!properties_endpoint,
+        refetchOnWindowFocus: false,
+        staleTime: 3600, //  1 hour
+      },
+      {
+        queryKey: ['entity_usability_config', { workspace, circuitId, endpointType }],
+        queryFn: async () => {
+          const api = await obioneApi();
+          return api.get<TUsabilityAndPropertyMappingConfiguration['usability']>(
+            `/declared${usability_endpoint}`.replace('{circuit_id}', circuitId),
+            {
+              headers: {
+                ...getEntityCoreContext(workspace).headers,
+              },
+            }
+          );
+        },
+        enabled: !!usability_endpoint,
+        refetchOnWindowFocus: false,
+        staleTime: 3600, //  1 hour
+      },
+    ],
+    combine(result) {
+      return {
+        isLoading: result.some((r) => r.isLoading),
+        isError: result.some((r) => r.isError),
+        data: {
+          properties: result[0].data ?? {},
+          usability: result[1].data ?? {},
+        },
+      };
+    },
+  });
+}
+
+export function getBlockUsabilityConfig({ block }: { block: TBlock }) {
+  return pick(block, [
+    'block_usability_entity_dependent',
+    'block_usability_false_message',
+    'block_usability_group',
+    'block_usability_property',
+  ]);
 }
 
 export function useDefaultConfig(
@@ -45,12 +129,12 @@ export function useDefaultConfig(
 
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (isType(v)) return;
-    if (v.ui_element === 'block_single') {
+    if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
       const initial: Record<string, ConfigValue> = {};
 
       Object.entries(v.properties).forEach(([subkey, subValue]) => {
         initial[subkey] = subValue.default ?? null;
-        if (!isType(subValue) && subValue.ui_element === 'model_identifier') {
+        if (!isType(subValue) && subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier) {
           initial[subkey] = {
             type: formModelType,
             id_str: '',

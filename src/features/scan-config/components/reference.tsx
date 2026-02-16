@@ -1,9 +1,14 @@
 import { Select } from 'antd';
 
+import {
+  type Reference as ReferenceSchema,
+  ScanConfigUIElementDict,
+  type SchemaName,
+} from '@/features/scan-config/types';
+
 import { useObioneJsonSchema, useReferenceTypeDict } from './hooks/schema';
 
-import type { Reference as ReferenceSchema, SchemaName } from '../types';
-import type { Config } from './components';
+import type { Config } from '@/features/scan-config/components/components';
 
 export default function Reference({
   value,
@@ -57,6 +62,7 @@ export default function Reference({
 
   return (
     <Select
+      data-scan-config-block-element={ScanConfigUIElementDict.Reference}
       className="w-full"
       disabled={disabled}
       onChange={(newV: string | null) => onChange(newV, configOptions.configKey)}

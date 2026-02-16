@@ -197,6 +197,10 @@ export type TBlock = {
   description: string;
   properties: Record<string, ParamSchema> & { type: Type };
   required?: string[];
+  block_usability_entity_dependent: boolean;
+  block_usability_false_message: string;
+  block_usability_group: string;
+  block_usability_property: string;
 };
 
 export interface IBlockSingle extends TRootElement, TBlock {
@@ -223,6 +227,8 @@ export type ConfigSchema = {
     type: Type;
   };
   title: string;
+  properties_endpoints: Record<string, string>;
+  usability_endpoints: Record<string, string>;
 };
 
 type Type = {
