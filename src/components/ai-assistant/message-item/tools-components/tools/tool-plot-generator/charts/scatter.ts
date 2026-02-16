@@ -1,6 +1,6 @@
-import { assertType } from '@/util/type-guards';
+import { Data, Layout } from 'plotly.js-dist-min';
 
-import type { Data, Layout } from 'plotly.js-dist-min';
+import { assertType } from '@/util/type-guards';
 
 export interface ScatterChartInput {
   title: string;

@@ -2,15 +2,14 @@ import { useAtomValue } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import React from 'react';
-
 import {
   BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-hierarchy/context';
+
 import { useCurrentExplorerArtifactValue } from '@/state/explore-section/artifact';
 import { resolveDataKey } from '@/utils/key-builder';
-
 import { useAiContext } from '../hooks';
 
 export interface Snapshot {

@@ -1,7 +1,6 @@
+import { fetchJSON, isVoidType } from './util';
 import { logError } from '@/util/logger';
 import { assertType, isType } from '@/util/type-guards';
-
-import { fetchJSON, isVoidType } from './util';
 
 export async function serviceAiAgentThreadCreate({
   accessToken,

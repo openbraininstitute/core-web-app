@@ -1,6 +1,6 @@
-import { classNames } from '@/util/utils';
+import React from 'react';
 
-import type React from 'react';
+import { classNames } from '@/util/utils';
 
 import styles from './expand.module.css';
 

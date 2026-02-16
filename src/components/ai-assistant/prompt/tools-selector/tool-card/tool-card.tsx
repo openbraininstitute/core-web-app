@@ -2,19 +2,16 @@
 /* eslint-disable jsx-a11y/no-noninteractive-tabindex */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-
-import Link from 'next/link';
 import React from 'react';
-
-import { useAIToolsInvertedSelection } from '@/components/ai-assistant/state';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { classNames } from '@/util/utils';
+import Link from 'next/link';
 
 import { IconChecked } from './icon-checked';
 import { IconUnchecked } from './icon-unchecked';
+import { classNames } from '@/util/utils';
+import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+import { useAIToolsInvertedSelection } from '@/components/ai-assistant/state';
 
-import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
-
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import styles from './tool-card.module.css';
 
 interface ToolCardProps {

@@ -1,10 +1,11 @@
-import { classNames } from '@/util/utils';
+import React from 'react';
+import { ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 
 import ToolPlotGenerator from './tools/tool-plot-generator';
 import ToolThumbnailGeneration from './tools/tool-thumbnail-generation-morphology-getone';
 import { isToolResult } from './tools/types';
 
-import type { ToolInvocationUIPart } from '@ai-sdk/ui-utils';
+import { classNames } from '@/util/utils';
 
 import styles from './tools-components.module.css';
 

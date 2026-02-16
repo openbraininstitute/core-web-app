@@ -1,6 +1,5 @@
+import { UIMessage } from '@ai-sdk/ui-utils';
 import { MessageItem } from '../../message-item';
-
-import type { UIMessage } from '@ai-sdk/ui-utils';
 
 export function Messages({ messages }: { messages: UIMessage[] }) {
   return (

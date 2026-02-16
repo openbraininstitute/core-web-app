@@ -3,14 +3,12 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { compact } from 'es-toolkit/compat';
 import { useCallback, useRef, useSyncExternalStore } from 'react';
-
-import { WorkspaceSection } from '@/constants';
-import { buildQueryKey, useQueryParameters } from '@/ui/hooks/use-query-extended-entity-type';
-
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
+import { WorkspaceSection } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
+import { buildQueryKey, useQueryParameters } from '@/ui/hooks/use-query-extended-entity-type';
 
 /**
  * subscribes to the data table's cached query for a given extended entity type
