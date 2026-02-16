@@ -1,19 +1,16 @@
 import { get } from 'es-toolkit/compat';
 
-import {
-  EntitycoreExecutionStatus,
-  type TEntitycoreExecutionStatus,
-} from '@/api/entitycore/types/entities/execution';
+import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 
 export const executionStatusColorMap = {
-  [EntitycoreExecutionStatus.CREATED]: '#004793',
-  [EntitycoreExecutionStatus.PENDING]: '#a24fcc',
-  [EntitycoreExecutionStatus.RUNNING]: '#1890ff',
-  [EntitycoreExecutionStatus.ERROR]: '#e81f1f',
-  [EntitycoreExecutionStatus.DONE]: '#389e0d',
-  [EntitycoreExecutionStatus.CANCELLED]: '#a4a4a4',
+  [ActivityStatus.CREATED]: '#004793',
+  [ActivityStatus.PENDING]: '#a24fcc',
+  [ActivityStatus.RUNNING]: '#1890ff',
+  [ActivityStatus.ERROR]: '#e81f1f',
+  [ActivityStatus.DONE]: '#389e0d',
+  [ActivityStatus.CANCELLED]: '#a4a4a4',
 };
 
-export function getStatusColor(status: TEntitycoreExecutionStatus): string {
+export function getStatusColor(status: TActivityStatus): string {
   return get(executionStatusColorMap, status, '#000000');
 }

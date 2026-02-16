@@ -1,5 +1,4 @@
 import type {
-  ActivityType,
   EntityAuthorization,
   EntityCoreIdentifiable,
   Timestamps,
@@ -11,24 +10,50 @@ import type {
   SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 
-interface IActivityBase<
-  UsedEntityT extends EntityCoreIdentifiable,
-  GeneratedEntityT extends EntityCoreIdentifiable,
-> {
-  start_time: string;
-  end_time: string;
-  used: UsedEntityT[];
-  generated?: GeneratedEntityT[];
+interface IUsedEntity extends EntityCoreIdentifiable, EntityAuthorization {}
+interface IGeneratedEntity extends EntityCoreIdentifiable, EntityAuthorization {}
+
+export enum ActivityStatus {
+  CREATED = 'created',
+  PENDING = 'pending',
+  RUNNING = 'running',
+  DONE = 'done',
+  ERROR = 'error',
+  CANCELLED = 'cancelled',
 }
 
-export interface IActivity<
-  UsedEntityT extends EntityCoreIdentifiable,
-  GeneratedEntityT extends EntityCoreIdentifiable,
-> extends EntityCoreIdentifiable,
-    IActivityBase<UsedEntityT, GeneratedEntityT>,
+export type TActivityStatus = `${ActivityStatus}`;
+
+export const ActivityTypeDict = {
+  simulation_execution: 'simulation_execution',
+  simulation_generation: 'simulation_generation',
+  validation: 'validation',
+  calibration: 'calibration',
+  analysis_notebook_execution: 'analysis_notebook_execution',
+  ion_channel_modeling_execution: 'ion_channel_modeling_execution',
+  ion_channel_modeling_config_generation: 'ion_channel_modeling_config_generation',
+  circuit_extraction_config_generation: 'circuit_extraction_config_generation',
+  circuit_extraction_execution: 'circuit_extraction_execution',
+  skeletonization_execution: 'skeletonization_execution',
+  skeletonization_config_generation: 'skeletonization_config_generation',
+} as const;
+
+export type TActivityType = (typeof ActivityTypeDict)[keyof typeof ActivityTypeDict];
+
+interface IActivityBase {
+  start_time: string;
+  end_time: string;
+  used: IUsedEntity[];
+  generated?: IGeneratedEntity[];
+  status: ActivityStatus;
+  type: TActivityType;
+}
+
+export interface IActivity
+  extends EntityCoreIdentifiable,
+    IActivityBase,
     Timestamps,
-    EntityAuthorization,
-    ActivityType {}
+    EntityAuthorization {}
 
 interface IActivityFilterBase {
   used__id?: string | null;

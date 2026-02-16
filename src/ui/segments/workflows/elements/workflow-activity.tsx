@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { useMemo, useState } from 'react';
+import { match } from 'ts-pattern';
 
 import {
   type EntityCoreObjectTypes,
@@ -18,6 +19,10 @@ import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import {
+  getStatusCountMap as getExtractionStatusCountMap,
+  type TExtendedExtractionCampaignsType,
+} from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   type ExtendedCampaignsType,
@@ -28,7 +33,7 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { CardContent } from '@/ui/molecules/card';
-import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
+import { ExecutionAggregatedStatus } from '@/ui/segments/activity-execution/status';
 import { useRowSelection } from '@/ui/segments/data-table/elements/use-row-selection';
 import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { BaseTable } from '@/ui/segments/data-table/table';
@@ -165,23 +170,30 @@ export function WorkflowActivity() {
       dataIndex: 'status',
       key: 'status',
       render: (_, record) => {
-        if (record.type === EntityTypeDict.SimulationCampaign) {
-          const statusCountMap = getStatusCountMap(record as ICircuitSimulationCampaign);
-
-          return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
-        }
-
-        const status = get(record, 'status', 'default');
-        const mapper = get(StatusMap, status, null);
-        const className = mapper?.class;
-        const icon = mapper?.icon;
-        const title = mapper?.title;
-        return (
-          <span className={cn('flex items-center capitalize', className)}>
-            {icon}
-            {title}
-          </span>
-        );
+        return match({ type: record.type })
+          .with({ type: EntityTypeDict.SimulationCampaign }, () => {
+            const statusCountMap = getStatusCountMap(record as ICircuitSimulationCampaign);
+            return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+          })
+          .with({ type: EntityTypeDict.CircuitExtractionCampaign }, () => {
+            const statusCountMap = getExtractionStatusCountMap(
+              record as unknown as TExtendedExtractionCampaignsType['data'][number]
+            );
+            return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+          })
+          .otherwise(() => {
+            const status = get(record, 'status', 'default');
+            const mapper = get(StatusMap, status, null);
+            const className = mapper?.class;
+            const icon = mapper?.icon;
+            const title = mapper?.title;
+            return (
+              <span className={cn('flex items-center capitalize', className)}>
+                {icon}
+                {title}
+              </span>
+            );
+          });
       },
     },
   ];
@@ -211,21 +223,18 @@ export function WorkflowActivity() {
 
   const selectedRow = selectedRows.at(0);
 
-  // eslint-disable-next-line  no-nested-ternary
   const configurationLink = entityType
     ? entity?.detailViewSections?.includes('configuration')
       ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
       : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
 
-  // eslint-disable-next-line no-nested-ternary
   const resultsPath = entity?.detailViewSections?.includes(DetailViewSectionsDict.Results)
     ? DetailViewSectionsDict.Results
     : entity?.detailViewSections?.includes(DetailViewSectionsDict.RelatedArtifacts)
       ? DetailViewSectionsDict.RelatedArtifacts
       : null;
 
-  // eslint-disable-next-line  no-nested-ternary
   const resultsLink = entityType
     ? resultsPath
       ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
@@ -242,10 +251,16 @@ export function WorkflowActivity() {
 
       return;
     }
-
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
+          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+        }?initialCampaignId=${selectedRow.id}`
+      );
+    }
+    if (selectedRow?.type === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
+      navigate(
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
           (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
         }?initialCampaignId=${selectedRow.id}`
       );
@@ -413,7 +428,7 @@ export function WorkflowActivity() {
                     showSizeChanger={false}
                     aria-label="pagination for listing results"
                     className={cn(
-                      '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
+                      '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active_a]:text-white!',
                       '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
                     )}
                   />

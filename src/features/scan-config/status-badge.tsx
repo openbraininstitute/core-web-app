@@ -1,25 +1,13 @@
 import { InfoCircleOutlined } from '@ant-design/icons';
 
-import {
-  EntitycoreExecutionStatus,
-  type TEntitycoreExecutionStatus,
-} from '@/api/entitycore/types/entities/execution';
+import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
-export function StatusBadge({
-  status,
-  details,
-}: {
-  status?: TEntitycoreExecutionStatus;
-  details?: string;
-}) {
-  const color = status ? executionStatusColorMap[status as EntitycoreExecutionStatus] : '#fafafa';
+export function StatusBadge({ status, details }: { status?: TActivityStatus; details?: string }) {
+  const color = status ? executionStatusColorMap[status] : '#fafafa';
   const showSpinner =
-    status &&
-    [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(
-      status as EntitycoreExecutionStatus
-    );
+    status && [ActivityStatus.PENDING, ActivityStatus.RUNNING].includes(status as ActivityStatus);
 
   return (
     <div className="flex items-center">

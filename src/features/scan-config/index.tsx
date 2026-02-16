@@ -12,7 +12,7 @@ import {
 
 import type { Config } from '@/features/scan-config/components/components';
 
-export default function ScanConfiguration({
+export function ScanConfiguration({
   modelId,
   virtualLabId,
   projectId,
@@ -65,3 +65,5 @@ export default function ScanConfiguration({
   }
   return null;
 }
+
+export default ScanConfiguration;

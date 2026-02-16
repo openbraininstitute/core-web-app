@@ -3,21 +3,20 @@ import { includes } from 'es-toolkit/compat';
 import { useEffect, useMemo } from 'react';
 
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
-import { useModelQuery } from '@/features/scan-config/components/atoms/index';
+import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { classNames } from '@/util/utils';
 
 import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
-import type { ICircuitExtractionExecution } from '@/api/entitycore/types/entities/circuit-extraction-execution';
-import type { TEntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 
 type Props = {
   config: ICircuitExtractionConfig;
-  execStatus?: TEntitycoreExecutionStatus;
-  execution?: ICircuitExtractionExecution;
+  execStatus?: TActivityStatus;
+  execution?: IExecutionActivity;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
   context: { virtualLabId: string; projectId: string };
@@ -61,8 +60,7 @@ export function ExtractionInOutFiles({
   }, [config, circuit, circuitConfigAsset, extractionConfigAsset]);
 
   const outputAvailable =
-    !!execStatus &&
-    includes([EntitycoreExecutionStatus.ERROR, EntitycoreExecutionStatus.DONE], execStatus);
+    !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
 
   const extractedCircuitId = execution?.generated?.[0]?.id;
   const { data: extractedCircuit, isLoading } = useQuery({
@@ -74,6 +72,15 @@ export function ExtractionInOutFiles({
     // biome-ignore lint/style/noNonNullAssertion: the function is enable only if extractedCircuitId is present (see useQuery/enabled)
     queryFn: () => getCircuit({ id: extractedCircuitId!, context }),
     enabled: !!extractedCircuitId,
+    // the refetch is required as the extraction upload to s3 will not be ready immediately
+    refetchInterval(query) {
+      const data = query.state.data;
+      const hasVisAsset = data?.assets?.some(
+        (asset) => asset.label === AssetLabel.circuit_visualization
+      );
+      const retry = hasVisAsset ? false : 2_000;
+      return retry;
+    },
   });
 
   useEffect(() => {

@@ -1,6 +1,6 @@
-import type { Atom } from 'jotai';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import type { Atom } from 'jotai';
 
 export type Primitive = null | boolean | number | string;
 export interface ConfigObject {
@@ -16,17 +16,14 @@ export function isAtom<T>(val: unknown): val is Atom<T> {
 }
 
 const simExecStatusListOrdered = [
-  EntitycoreExecutionStatus.CREATED,
-  EntitycoreExecutionStatus.PENDING,
-  EntitycoreExecutionStatus.RUNNING,
-  EntitycoreExecutionStatus.DONE,
-  EntitycoreExecutionStatus.ERROR,
+  ActivityStatus.CREATED,
+  ActivityStatus.PENDING,
+  ActivityStatus.RUNNING,
+  ActivityStatus.DONE,
+  ActivityStatus.ERROR,
 ];
 
-export function getLatestSimExecStatus(
-  remoteStatus: EntitycoreExecutionStatus,
-  localStatus: EntitycoreExecutionStatus
-) {
+export function getLatestSimExecStatus(remoteStatus: ActivityStatus, localStatus: ActivityStatus) {
   const remoteStatusIdx = simExecStatusListOrdered.indexOf(remoteStatus);
   const localStatusIdx = simExecStatusListOrdered.indexOf(localStatus);
 

@@ -5,10 +5,12 @@ import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 import values from 'es-toolkit/compat/values';
 import { match, P } from 'ts-pattern';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type TWorkspaceSection, WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
 import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
 export const EntityGroupDict = {
@@ -260,12 +262,21 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
   },
 } as const;
 
-export const extractConfiguration: Array<TExtractWorkflowConfig> = [
+export const extractNewConfiguration: Array<TExtractWorkflowConfig> = [
   {
     group: EntityGroupDict.Circuit,
     disabled: false,
     label: 'Circuit (beta)',
     value: ExtendedEntitiesTypeDict.Circuit,
+  },
+] as const;
+
+export const extractActivitiesConfiguration: Array<TExtractWorkflowConfig> = [
+  {
+    group: EntityGroupDict.Circuit,
+    disabled: false,
+    label: 'Circuit (beta)',
+    value: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
   },
 ] as const;
 
@@ -304,7 +315,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     disabled: false,
     name: 'Extraction',
     configType: 'extract',
-    config: extractConfiguration,
+    config: extractNewConfiguration,
   },
   {
     label: 'Optimize',
@@ -360,13 +371,15 @@ export function getDropdownOptionsByCategory(
     return { allOptions: [], enabledOptions: [] };
   }
   if (category === WorkflowActivityDictValue.extract) {
-    const grouped = groupBy(extractConfiguration, 'group');
-    const options = Object.entries(grouped).map(([k, v]) => ({
-      group: k,
-      options: v,
-    }));
+    const grouped = groupBy(extractActivitiesConfiguration, 'group');
+    const options = Object.entries(grouped).map(([k, v]) => {
+      return {
+        group: k,
+        options: v,
+      };
+    });
 
-    const enabledOptions = options.filter((o) => o.options.some((a) => a.disabled));
+    const enabledOptions = options.filter((o) => o.options.some((a) => !a.disabled));
 
     return { allOptions: options, enabledOptions };
   }
@@ -442,7 +455,7 @@ export function getAllOptionsOrdered(
     return [];
   }
   if (category === WorkflowActivityDictValue.extract) {
-    return extractConfiguration;
+    return extractNewConfiguration;
   }
 
   if (includes([WorkflowActivityDictValue.build, WorkflowActivityDictValue.simulate], category)) {
@@ -493,7 +506,7 @@ export function getEntityTypeWorkflowConfigurationItem({
 }) {
   return match({ section, value })
     .with({ section: WorkspaceSection.ExtractWorkflow, value: P.nonNullable }, () =>
-      extractConfiguration.find((o) => o.value === value)
+      extractNewConfiguration.find((o) => o.value === value)
     )
     .with(
       {
@@ -517,7 +530,7 @@ export function getBaseModelTypeFromActivityType({
   return match({ section, type })
     .with(
       { section: WorkspaceSection.ExtractWorkflow, type: P.nonNullable },
-      () => extractConfiguration.find((p) => p.value === type)?.value
+      () => extractNewConfiguration.find((p) => p.value === type)?.value
     )
     .with(
       {
