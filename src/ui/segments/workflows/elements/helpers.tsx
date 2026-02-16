@@ -8,7 +8,12 @@ import { match, P } from 'ts-pattern';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type TWorkspaceSection, WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
-import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
+import {
+  extractionActivityFlag,
+  type FeatureFlags,
+  type FlagKey,
+  microcircuitFlag,
+} from '@/features/feature-flags/flags';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
@@ -290,6 +295,7 @@ type ActivityDictEntry = {
   value: string;
   disabled: boolean;
   name: string;
+  requiredFeatures?: Array<FlagKey>;
 } & ActivityConfigType;
 
 export const ActivityDict: readonly ActivityDictEntry[] = [
@@ -316,6 +322,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     name: 'Extraction',
     configType: 'extract',
     config: extractNewConfiguration,
+    requiredFeatures: [extractionActivityFlag.key],
   },
   {
     label: 'Optimize',

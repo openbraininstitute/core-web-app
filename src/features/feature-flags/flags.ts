@@ -1,7 +1,7 @@
-import { defineFlag } from './define-flag';
-
-import { PanelState } from '@/ui/segments/ai/types';
 import { config } from '@/config';
+import { PanelState } from '@/ui/segments/ai/types';
+
+import { defineFlag } from './define-flag';
 
 export const aiPanelStateFlag = defineFlag<PanelState>({
   key: 'aiPanelState',
@@ -19,7 +19,15 @@ export const microcircuitFlag = defineFlag<boolean>({
   visible: () => ['local', 'development'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const flags = [aiPanelStateFlag, microcircuitFlag] as const;
+export const extractionActivityFlag = defineFlag<boolean>({
+  key: 'extraction-activity',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Enable extraction activity',
+  visible: () => ['local', 'development'].includes(config.DEPLOYMENT_ENV),
+});
+
+export const flags = [aiPanelStateFlag, microcircuitFlag, extractionActivityFlag] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 
