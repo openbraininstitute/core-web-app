@@ -275,7 +275,7 @@ export default function Block({
                             {renderInput(k, blockElementSchema, value)}
                           </div>
                           {(op_ === 'delete' || op_ === 'replace') && (
-                            <CloseOutlined className="!text-red-500 !text-[16px]" />
+                            <CloseOutlined className="text-red-500! text-[16px]!" />
                           )}
                           {op_ === 'add' && <AIAdd />}
                         </div>
@@ -295,8 +295,12 @@ export default function Block({
                       hideWhenDetached
                       align="center"
                       side="bottom"
-                      className="text-white shadow-bnb max-w-2xs min-w-2xs rounded-md bg-[#0050b3ee] px-4 py-2 text-base text-wrap"
-                      arrowClassName="bg-[#0050b3ee]"
+                      className={cn(
+                        'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
+                        'bg-primary-8 px-4 py-2 text-base text-wrap ',
+                        'overflow-y-auto max-h-50 primary-scrollbar'
+                      )}
+                      arrowClassName="bg-primary-8"
                     >
                       {k === 'circuit' && model
                         ? model.description

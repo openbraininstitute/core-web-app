@@ -94,7 +94,7 @@ export default function BlockDictionary({
           <button
             key={o.title}
             type="button"
-            className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
+            className="min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
             onClick={() => {
               if (isRootBlock(schema, selectedRootElement)) return;
 

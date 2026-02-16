@@ -27,7 +27,7 @@ export function ExtractionConfigsLeftMenu({
   selectedForExtraction,
   selectionDisabled,
 }: Props) {
-  const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED] ?? '#8c8c8c';
+  const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED] ?? '#004793';
   const isSelectable =
     !execStatus || execStatus === ActivityStatus.CREATED || execStatus === ActivityStatus.ERROR;
 
