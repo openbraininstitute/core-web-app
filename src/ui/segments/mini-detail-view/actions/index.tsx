@@ -1,3 +1,3 @@
 export * from './build';
 export * from './data';
-export * from './simulate-or-extract';
+export * from './simulate-extract-process';

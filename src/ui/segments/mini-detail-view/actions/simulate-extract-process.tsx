@@ -1,20 +1,21 @@
 import { kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
+
 import { type EntityCoreObjectTypes, EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
-import type { TWorkspaceSection } from '@/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
-export function WorkflowSimulationOrExtractActions<T extends EntityCoreObjectTypes>({
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceSection } from '@/constants';
+
+export function WorkflowActions<T extends EntityCoreObjectTypes>({
   section,
   record,
   dataType,

@@ -46,6 +46,7 @@ export type TSchemaMappingKey = (typeof SchemaMappingKeyDict)[keyof typeof Schem
 export const ScanConfigActivity = {
   Simulate: 'simulate',
   Extract: 'extract',
+  Process: 'process',
 } as const;
 
 export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
@@ -74,11 +75,25 @@ export type TExtractScanConfigTabs = {
   __activity: 'extract';
 };
 
-export type TScanConfigTabs = Prettify<TSimulateScanConfigTabs> | Prettify<TExtractScanConfigTabs>;
+export const ProcessScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  skeletonizations: 'skeletonizations',
+} as const;
+
+export type TProcessScanConfigTabs = {
+  id: keyof typeof ProcessScanConfigTabs;
+  __activity: 'process';
+};
+
+export type TScanConfigTabs =
+  | Prettify<TSimulateScanConfigTabs>
+  | Prettify<TExtractScanConfigTabs>
+  | Prettify<TProcessScanConfigTabs>;
 
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
+  [ScanConfigActivity.Process]: ProcessScanConfigTabs,
 } as const;
 
 export const ScanConfigDefaultTab = {
@@ -95,7 +110,9 @@ export type SchemaName =
   | 'MEModelSimulationScanConfig'
   | 'MEModelWithSynapsesCircuitSimulationScanConfig'
   // extraction
-  | 'CircuitExtractionScanConfig';
+  | 'CircuitExtractionScanConfig'
+  // processing
+  | 'SkeletonizationScanConfig';
 
 export type TRootElement = {
   description: string;
