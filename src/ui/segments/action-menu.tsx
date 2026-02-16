@@ -9,24 +9,23 @@ import {
   LoadingOutlined,
 } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { App, Popconfirm } from 'antd';
+import { Popconfirm } from 'antd';
 import { compact, get } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 import NextLink from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
+
 import { deleteCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
 import {
   type EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
-import type { WorkspaceContext } from '@/types/common';
 import Action from '@/ui/molecules/side-menu-action';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import {
@@ -34,6 +33,10 @@ import {
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { cn } from '@/utils/css-class';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
+import type { WorkspaceContext } from '@/types/common';
 
 export default function ActionMenu({
   entity,
@@ -51,13 +54,13 @@ export default function ActionMenu({
   const { replace: navigate } = useRouter();
   const queryClient = useQueryClient();
   const [, setCircuit] = useAtom(downloadPanelCircuitAtom);
-  const { notification } = App.useApp();
+  const { error: notifyError, success: notifySuccess } = useAppNotification();
   const entityType = getEntityByExtendedType({ type });
   if (!entityType) notFound();
 
   const [, copy, , copying] = useCopyToClipboard({
     onSuccess: () => {
-      notification.success({
+      notifySuccess({
         message: 'ID Copied',
         description: 'The entity ID has been copied to your clipboard.',
         duration: 3,
@@ -65,7 +68,7 @@ export default function ActionMenu({
       });
     },
     onError: () => {
-      notification.error({
+      notifyError({
         message: 'Copy Failed',
         description: 'Could not copy to clipboard. Please copy the ID manually.',
         placement: 'topRight',
@@ -102,7 +105,7 @@ export default function ActionMenu({
           return identifierKey === key;
         },
       });
-      notification.success({
+      notifySuccess({
         message: 'Deleted successfully',
         description: 'The item has been successfully deleted.',
         placement: 'topRight',
@@ -115,7 +118,7 @@ export default function ActionMenu({
       if (errorMessage.toLowerCase().includes('foreign keys integrity violation')) {
         description = 'This entity is referenced by another record and cannot be deleted.';
       }
-      notification.error({
+      notifyError({
         message: 'Deletion failed',
         description,
         placement: 'topRight',

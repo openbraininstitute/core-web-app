@@ -2,24 +2,25 @@
 
 import { get as _get, compact } from 'es-toolkit/compat';
 
+import { DEFAULT_PAGE_NUMBER } from '@/constants';
+import { getFieldsDefinition } from '@/entity-configuration/definitions';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import {
+  SortOrder,
+  type TCoreFilter,
+  type TSortOrder,
+  type TSortState,
+} from '@/entity-configuration/definitions/types';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { columnKeyToFilter } from '@/ui/segments/data-table/elements/column-key-to-filter';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import {
   CircuitRepresentationView,
   type TCircuitRepresentationView,
 } from '@/ui/segments/explore/circuit/helpers';
-import { DEFAULT_PAGE_NUMBER } from '@/constants';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import {
-  SortOrder,
-  TSortState,
-  type TCoreFilter,
-  type TSortOrder,
-} from '@/entity-configuration/definitions/types';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import type { Nullable } from '@/utils/type';
 
 export const makeTypeDefaultFilters = ({ dataType }: { dataType: TExtendedEntitiesTypeDict }) => {
   const columns = getViewDefinitionByExtendedType(dataType)?.columns;
@@ -78,11 +79,15 @@ export const makeDataKey = ({
   scope,
   id,
   extra,
-}: Omit<Required<DataKeyParts>, 'scope' | 'id' | 'extra'> & {
-  scope?: TWorkspaceScope | null;
-  id?: string | null;
-  extra?: string | undefined | null;
-}) => {
+}: Partial<
+  Nullable<
+    Omit<Required<DataKeyParts>, 'scope' | 'id' | 'extra'> & {
+      scope?: TWorkspaceScope | null;
+      id?: string | null;
+      extra?: string | undefined | null;
+    }
+  >
+>) => {
   const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id, extra]).join('/');
   return { dataKey };
 };
