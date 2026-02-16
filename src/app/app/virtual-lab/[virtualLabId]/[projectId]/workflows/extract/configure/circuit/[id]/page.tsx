@@ -65,7 +65,7 @@ export default function Page({
           modelId={entity.id}
           virtualLabId={virtualLabId}
           projectId={projectId}
-          initialConfig={undefined}
+          initialConfig={campaignData?.config.form}
           className="px-10 pt-2"
           activity={ScanConfigActivity.Extract}
         />
