@@ -48,6 +48,7 @@ export function useCircuitImageURL(circuitId: string) {
       const url = URL.createObjectURL(blob);
       return url;
     },
+    refetchOnWindowFocus: false,
   });
   const isLoading = circuitLoading || assetLoading;
   const error = circuitError || assetError;

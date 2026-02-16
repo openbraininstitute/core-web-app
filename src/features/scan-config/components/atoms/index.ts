@@ -224,6 +224,7 @@ export function useModelQuery({ id, context }: { id: string; context: WorkspaceC
         });
     },
     enabled: !!entityType && !!id,
+    refetchOnWindowFocus: false,
   });
 
   const isLoading = entityLoading || modelLoading;
