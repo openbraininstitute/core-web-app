@@ -16,6 +16,7 @@ import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
   ExtractScanConfigTabs,
+  ProcessScanConfigTabs,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   ScanConfigTabs,
@@ -120,6 +121,19 @@ export function ScanConfigTemplate({
             virtualLabId={virtualLabId}
             projectId={projectId}
           />
+        </Suspense>
+      )
+    )
+    .with(
+      { activity: ScanConfigActivity.Process, tab: { id: ProcessScanConfigTabs.skeletonizations } },
+      () => (
+        <Suspense>
+          <h1>Hooray!</h1>
+          {/* <ExtractionTab
+            campaignId={campaignId}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          /> */}
         </Suspense>
       )
     )

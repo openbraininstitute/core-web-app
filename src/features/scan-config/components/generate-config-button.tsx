@@ -7,6 +7,7 @@ import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
 import {
   ExtractScanConfigTabs,
+  ProcessScanConfigTabs,
   ScanConfigActivity,
   SimulateScanConfigTabs,
   type TScanConfigActivity,
@@ -74,6 +75,11 @@ export default function GenerateConfigButton({
       setTab({
         id: ExtractScanConfigTabs.extractions,
         __activity: ScanConfigActivity.Extract,
+      });
+    if (activity === ScanConfigActivity.Process)
+      setTab({
+        id: ProcessScanConfigTabs.executions,
+        __activity: ScanConfigActivity.Process,
       });
   };
 
