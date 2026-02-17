@@ -1,7 +1,6 @@
 'use client';
 
-import isNil from 'es-toolkit/compat/isNil';
-import kebabCase from 'es-toolkit/compat/kebabCase';
+import { isNil, kebabCase } from 'es-toolkit/compat';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
@@ -14,7 +13,6 @@ import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overfl
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -58,6 +56,7 @@ export function MEModel({ sessionId }: Props) {
     >
       <BrowseEntityScope
         requireBrainRegion
+        requireScopeSelector
         requireBrainRegionDropdown
         allowDownload={false}
         allowDelete={false}
@@ -95,7 +94,6 @@ export function MEModel({ sessionId }: Props) {
             }
           },
         }}
-        left={<WorkflowScopeTabs className="max-w-max" />}
       />
     </motion.div>
   );

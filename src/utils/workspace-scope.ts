@@ -1,4 +1,5 @@
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
+
 import type { WorkspaceContext } from '@/types/common';
 
 export function getWorkspaceScopeFilters(scope: TWorkspaceScope, context?: WorkspaceContext) {

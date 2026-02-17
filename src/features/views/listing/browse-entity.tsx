@@ -69,8 +69,8 @@ type Props = {
   allowDownload?: boolean;
   allowDelete?: boolean;
   requireBrainRegionDropdown?: boolean;
+  requireScopeSelector?: boolean;
   extraQueryParams?: Record<string, unknown>;
-  left?: ReactNode;
 };
 
 export function BrowseEntityScope({
@@ -87,8 +87,8 @@ export function BrowseEntityScope({
   allowDownload,
   allowDelete,
   requireBrainRegionDropdown,
+  requireScopeSelector,
   extraQueryParams,
-  left,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
@@ -265,6 +265,7 @@ export function BrowseEntityScope({
             allowDownload={allowDownload}
             allowDelete={allowDelete}
             requireBrainRegionDropdown={requireBrainRegionDropdown}
+            requireScopeSelector={requireScopeSelector}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
             dataScope={scope}
@@ -289,7 +290,6 @@ export function BrowseEntityScope({
             {...mainTableProps}
             filterClassNames={classNames?.filterClassNames}
             expandableOptions={expandableOptions}
-            left={left}
           />
         </div>
       </div>

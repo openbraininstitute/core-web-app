@@ -2,7 +2,7 @@
 
 import { ReloadOutlined } from '@ant-design/icons';
 import { Image } from 'antd';
-import kebabCase from 'es-toolkit/compat/kebabCase';
+import { kebabCase } from 'es-toolkit/compat';
 import { useRouter } from 'next/navigation';
 
 import { EntityTypeDict, type ICellMorphology } from '@/api/entitycore/types';
@@ -20,7 +20,6 @@ import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
@@ -41,6 +40,7 @@ export function MModel({ sessionId }: Props) {
   return (
     <BrowseEntityScope
       requireBrainRegion
+      requireScopeSelector
       requireBrainRegionDropdown
       id={sessionId}
       section={WorkspaceSection.BuildWorkflow}
@@ -65,7 +65,6 @@ export function MModel({ sessionId }: Props) {
           });
         },
       }}
-      left={<WorkflowScopeTabs className="max-w-max" />}
     />
   );
 }

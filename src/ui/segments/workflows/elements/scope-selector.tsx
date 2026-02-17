@@ -1,12 +1,13 @@
 'use client';
 
-import type { TWorkspaceScope } from '@/constants';
 import { useScope } from '@/ui/hooks/use-scope';
 import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
 } from '@/ui/segments/mini-detail-view/event';
 import { WorkspaceScopeSelector } from '@/ui/segments/shared/scope-selector';
+
+import type { TWorkspaceScope } from '@/constants';
 
 export function WorkflowScopeTabs({ className }: { className?: string }) {
   const { setMdv } = useMiniDetailView();

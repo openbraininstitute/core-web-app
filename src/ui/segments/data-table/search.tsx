@@ -1,7 +1,7 @@
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { useAtom, useSetAtom } from 'jotai';
 import { type ChangeEvent, type ComponentProps, useDeferredValue, useRef, useState } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import {
   corePageNumberAtom,
@@ -9,6 +9,8 @@ import {
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
 import { cn } from '@/utils/css-class';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type SearchProps = {
   dataKey: string;
@@ -70,7 +72,7 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
 
   return (
     <div
-      className={cn('flex items-center justify-start min-w-0 max-w-112.5', className, {
+      className={cn('flex items-center justify-start min-w-0 max-w-112.5 ml-0.5', className, {
         'border border-gray-100 rounded-full shadow-sm': isSearchOpen,
       })}
     >
