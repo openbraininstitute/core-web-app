@@ -44,12 +44,14 @@ async function resolveSkeletonizationCampaigns({
   });
   const campaignIDs = source.data.map((o) => o.id);
 
+  // fetch all generations linked to these campaigns
   const generations = await getSkeletonizationConfigGenerations({
     context,
     withFacets: false,
     filters: { used__id__in: campaignIDs },
   });
 
+  // map campaignId → generations that used it
   const generationsByCampaignId = generations.data.reduce<
     Record<string, (typeof generations.data)[number][]>
   >((acc, gen) => {
@@ -60,6 +62,7 @@ async function resolveSkeletonizationCampaigns({
     return acc;
   }, {});
 
+  // fetch all configs produced by those generations
   const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
   const configs =
     allConfigIds.length > 0
@@ -71,6 +74,7 @@ async function resolveSkeletonizationCampaigns({
       : { data: [] };
   const configById = keyBy(configs.data, 'id');
 
+  // fetch all executions linked to those configs
   const configIDs = configs.data.map((c) => c.id);
   const executionsResponse =
     configIDs.length > 0
@@ -83,6 +87,7 @@ async function resolveSkeletonizationCampaigns({
           data: [] as Awaited<ReturnType<typeof getSkeletonizationExecutions>>['data'],
         };
 
+  // map configId → executions that used it
   const executions = executionsResponse.data;
   const executionsByConfigId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
     for (const u of exec.used) {
@@ -92,6 +97,7 @@ async function resolveSkeletonizationCampaigns({
     return acc;
   }, {});
 
+  // enrich each campaign with its generations → configs → executions
   const enrichedData = source.data.map((campaign) => {
     const campaignGenerations = generationsByCampaignId[campaign.id] ?? [];
     const enrichedGenerations = campaignGenerations.map((gen) => {
@@ -127,12 +133,14 @@ export async function resolveSkeletonizationByCampaignId({
     throw new Error(`No skeletonization campaign with id ${id} found`);
   }
 
+  // campaign → config generations
   const generations = await getSkeletonizationConfigGenerations({
     context,
     withFacets: false,
     filters: { used__id: id },
   });
 
+  // config generations → configs
   const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
   const configs =
     allConfigIds.length > 0
@@ -145,6 +153,7 @@ export async function resolveSkeletonizationByCampaignId({
 
   const firstConfig = configs.data.at(0);
 
+  // get the generation config asset from the campaign
   const assets = campaign.assets ?? [];
   const configAsset = getAssetElement({
     assets,
