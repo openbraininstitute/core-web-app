@@ -21,6 +21,10 @@ export interface BrainAtlasViewerGltfProps {
 export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerGltfProps) {
   const [showResetCamera, setShowResetCamera] = React.useState(false);
   const accessToken = useAccessToken();
+  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const previousPainterRef = React.useRef<{
+    start: (canvas: HTMLCanvasElement | null) => void;
+  } | null>(null);
   const {
     loading,
     result: { workspaceHierarchyId },
@@ -31,6 +35,25 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
     loading: loading || !resolvedAtlasId,
     atlasId: resolvedAtlasId,
   });
+
+  React.useEffect(() => {
+    const previousPainter = previousPainterRef.current;
+    if (previousPainter && previousPainter !== painter) {
+      previousPainter.start(null);
+    }
+    previousPainterRef.current = painter;
+
+    if (!painter) {
+      setShowResetCamera(false);
+      onLoading(false);
+      if (canvasRef.current) {
+        // Force-clear stale WebGL frame when no atlas is available.
+        const width = canvasRef.current.width;
+        canvasRef.current.width = width + 1;
+        canvasRef.current.width = width;
+      }
+    }
+  }, [painter, onLoading]);
 
   // Temporary disabled
   // const [values, setValues] = useAtlasViewerSettingsValues(painter);
@@ -59,7 +82,12 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
 
   return (
     <div className={classNames(className, styles.brainAtlasViewerGltf)}>
-      <canvas ref={painter?.start} />
+      <canvas
+        ref={(canvas) => {
+          canvasRef.current = canvas;
+          painter?.start(canvas);
+        }}
+      />
       <header className={classNames(showResetCamera && styles.show)}>
         <button
           type="button"

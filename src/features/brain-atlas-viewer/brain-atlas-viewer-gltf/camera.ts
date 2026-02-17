@@ -19,6 +19,11 @@ interface CameraPreset {
   far: number;
 }
 
+const FIT_DISTANCE_MULTIPLIER = 1.7;
+const MIN_FIT_DISTANCE = 450;
+const MIN_NEAR_PLANE = 0.1;
+const MIN_FAR_PLANE = 10000;
+
 const MOUSE_PRESET: CameraPreset = {
   position: [6714.025177001953, 3849.1394271850586, 5688.234390258789],
   distance: 20000,
@@ -52,13 +57,13 @@ export function computePresetFromBounds(min: number[], max: number[]): CameraPre
   const dy = max[1] - min[1];
   const dz = max[2] - min[2];
   const diagonal = Math.sqrt(dx * dx + dy * dy + dz * dz);
-  // place camera at ~1.5x the bounding diagonal away
-  const distance = diagonal * 1.5;
+  // Keep non-mouse atlases readable by avoiding too-tight auto-fit.
+  const distance = Math.max(diagonal * FIT_DISTANCE_MULTIPLIER, MIN_FIT_DISTANCE);
   return {
     position: [cx, cy, cz],
     distance,
-    near: distance * 0.001,
-    far: distance * 10,
+    near: Math.max(distance * 0.001, MIN_NEAR_PLANE),
+    far: Math.max(distance * 12, MIN_FAR_PLANE),
   };
 }
 
