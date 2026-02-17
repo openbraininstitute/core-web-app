@@ -1,3 +1,4 @@
+import { getBrainAtlases } from '@/api/entitycore/queries/general/brain-atlas';
 import {
   getBrainRegionHierarchiesWithSpecies,
   getBrainRegionHierarchy,
@@ -11,7 +12,7 @@ import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
-import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
+import { keyBuilderAtlas, keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { ReactNode } from 'react';
@@ -22,6 +23,7 @@ type Props = {
 
 export default async function Layout({ children }: Props) {
   const queryClient = getQueryClient();
+
   queryClient.prefetchQuery({
     queryKey: keyBuilderHierarchy.hierarchies(),
     queryFn: async () => {
@@ -38,6 +40,13 @@ export default async function Layout({ children }: Props) {
         });
       return result;
     },
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  queryClient.prefetchQuery({
+    queryKey: keyBuilderAtlas.all(),
+    queryFn: () => getBrainAtlases({}),
     staleTime: Infinity,
     gcTime: Infinity,
   });

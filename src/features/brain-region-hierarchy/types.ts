@@ -27,6 +27,7 @@ export const SPECIES_TAXONOMY_IDS = {
 export interface IWorkspaceSpecies {
   id: string;
   name: string;
+  taxonomyId: string;
   hierarchId: string;
   displayName: string;
 }

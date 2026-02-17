@@ -6,11 +6,8 @@ import { usePainter, useVisibleRegions } from './hooks';
 // Temporary disabled
 // import { Settings } from './settings/settings';
 
-import {
-  AppSpeciesBrainRegionConfig,
-  getSpeciesConfigByHierarchyId,
-  useBrainRegionRootHierarchyQuery,
-} from '@/features/brain-region-hierarchy/context';
+import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
+import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
 
@@ -28,10 +25,11 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
     loading,
     result: { workspaceHierarchyId },
   } = useBrainRegionRootHierarchyQuery();
-  const SpeciesConfig = getSpeciesConfigByHierarchyId(workspaceHierarchyId);
+  const { runtimeHierarchyById } = useHierarchyRuntimeMetadataQuery();
+  const resolvedAtlasId = runtimeHierarchyById.get(workspaceHierarchyId)?.atlasId;
   const painter = usePainter({
-    loading,
-    atlasId: SpeciesConfig.AtlasId ?? AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
+    loading: loading || !resolvedAtlasId,
+    atlasId: resolvedAtlasId,
   });
 
   // Temporary disabled

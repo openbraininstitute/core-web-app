@@ -244,6 +244,7 @@ export function transformSpecies(
   return {
     id: apiSpecies.id,
     name: apiSpecies.name,
+    taxonomyId: apiSpecies.taxonomy_id,
     hierarchId,
     displayName: getSpeciesDisplayName(apiSpecies.name),
   };

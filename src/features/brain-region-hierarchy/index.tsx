@@ -11,11 +11,11 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import { BrainRegionHierarchyNodeRender } from '@/features/brain-region-hierarchy/components/node-render';
 import {
   brainRegionSidebarAtom,
-  getSpeciesConfigByHierarchyId,
   usePrimaryExtendedHierarchySpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
 import { makeBrainRegionClickEvent } from '@/features/brain-region-hierarchy/event';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { corePageNumberAtom } from '@/ui/segments/data-table/elements/context';
 import { classNames } from '@/util/utils';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
@@ -35,6 +35,7 @@ export function BrainRegionHierarchy({
   const { result: brainRegionHierarchyResult, loading } = usePrimaryExtendedHierarchySpeciesQuery();
   const { changeBrainRegion, selectedBrainRegion, workspaceHierarchyId } =
     useWorkspaceHierarchyRegistry();
+  const { runtimeHierarchyById } = useHierarchyRuntimeMetadataQuery();
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
 
   if (loading) {
@@ -54,10 +55,13 @@ export function BrainRegionHierarchy({
       </div>
     );
   }
-  const speciesConfig = getSpeciesConfigByHierarchyId(workspaceHierarchyId);
-  const defaultBrainRegion = brainRegionHierarchyResult.options.find(
-    (o) => o.data.annotation_value === speciesConfig.DefaultSelectedAnnotationValue
-  )?.value;
+  const fallbackDefaultRegionId =
+    runtimeHierarchyById.get(workspaceHierarchyId)?.fallbackDefaultSelectedRegionId ?? '';
+  const defaultBrainRegion =
+    selectedBrainRegion?.id ||
+    brainRegionHierarchyResult.options.find((option) => option.value === fallbackDefaultRegionId)
+      ?.value ||
+    brainRegionHierarchyResult.options.at(0)?.value;
 
   const onClick = (clickedNode: TTreeNode) => {
     changeBrainRegion(clickedNode as IBrainRegionHierarchy);

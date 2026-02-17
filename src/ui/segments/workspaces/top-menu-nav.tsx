@@ -14,10 +14,7 @@ import {
 } from '@/components/icons/buttons';
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
-import {
-  DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
-  DEFAULT_BRAIN_REGION_QUERY_ID,
-} from '@/features/brain-region-hierarchy/context';
+import { URL_PARAMS } from '@/features/brain-region-hierarchy/context';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -251,7 +248,7 @@ export function TopMenuNavigation() {
           const searchParams = new URLSearchParams(queryParams);
           const linkSearchParams = cleanSearchParams({
             searchParams,
-            keepKeys: [DEFAULT_BRAIN_REGION_QUERY_ID, DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE],
+            keepKeys: [URL_PARAMS.BRAIN_REGION_ID, URL_PARAMS.HIERARCHY_ID],
           }).toString();
 
           if (id === 'workspace-feedbacks') {

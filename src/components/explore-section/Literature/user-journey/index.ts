@@ -1,6 +1,5 @@
 'use client';
 
-import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
 import GenericEvent from '@/util/generic-event';
 import { logError } from '@/util/logger';
 import { getLocalStorageHelper } from '@/util/storage';
@@ -54,7 +53,7 @@ class UserJourneyTracker {
         [
           {
             timestamp: Date.now(),
-            region: AppSpeciesBrainRegionConfig.Mouse.DefaultSelectedName,
+            region: 'Cerebrum',
             artifact: null,
           },
         ],

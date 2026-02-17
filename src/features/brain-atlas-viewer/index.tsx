@@ -7,11 +7,9 @@ import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { Loader } from '@/components/loader';
 import { BrainAtlasViewerGltf } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf';
 import { FullScreen } from '@/features/brain-atlas-viewer/full-screen';
-import {
-  AppSpeciesBrainRegionConfig,
-  getSpeciesConfigByHierarchyId,
-  useBrainRegionRootHierarchyQuery,
-} from '@/features/brain-region-hierarchy/context';
+import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
+import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
+import { SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
 
 export function AtlasViewer({ children }: { children?: ReactNode }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -20,9 +18,10 @@ export function AtlasViewer({ children }: { children?: ReactNode }) {
   const {
     result: { workspaceHierarchyId },
   } = useBrainRegionRootHierarchyQuery();
+  const { runtimeHierarchyById } = useHierarchyRuntimeMetadataQuery();
   const isMouse =
-    getSpeciesConfigByHierarchyId(workspaceHierarchyId).name ===
-    AppSpeciesBrainRegionConfig.Mouse.name;
+    runtimeHierarchyById.get(workspaceHierarchyId)?.species.taxonomyId ===
+    SPECIES_TAXONOMY_IDS.MUS_MUSCULUS;
 
   const handleFullScreenToggle = useCallback(() => {
     setIsFullScreen((prev) => !prev);
@@ -61,7 +60,7 @@ export function AtlasViewer({ children }: { children?: ReactNode }) {
     <div className="@container relative flex h-full max-h-full w-full max-w-full flex-col items-start lg:flex-row">
       <FullScreen isFullScreen={isFullScreen} onToggle={handleFullScreenToggle} />
 
-      <div className="relative h-1/2 w-full min-w-0 rounded-2xl lg:h-full lg:min-h-0 lg:flex-[2]">
+      <div className="relative h-1/2 w-full min-w-0 rounded-2xl lg:h-full lg:min-h-0 lg:flex-2">
         {isLoading && (
           <div className="bg-primary-9/40 pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl">
             <Loader className="text-neutral-3" />

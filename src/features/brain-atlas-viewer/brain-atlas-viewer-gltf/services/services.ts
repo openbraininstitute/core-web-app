@@ -4,17 +4,14 @@ import { getBrainAtlasRegions } from '@/api/entitycore/queries/general/brain-atl
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
 import { fetchPointCloud } from '@/features/brain-atlas-viewer/api';
-import {
-  AppSpeciesBrainRegionConfig,
-  getSpeciesConfigByAtlasId,
-} from '@/features/brain-region-hierarchy/context';
+import { getSpeciesConfigByAtlasId } from '@/features/brain-region-hierarchy/context';
 import { assertType } from '@/util/type-guards';
 import { log } from '@/utils/logger';
 
 const cacheMeshes = new Map<string, Promise<ArrayBuffer>>();
 
 export async function getCachedBrainRegionMeshArrayBuffer({
-  atlasId = AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
+  atlasId,
   regionId,
 }: {
   regionId: string;
@@ -95,7 +92,7 @@ async function getAtlas(atlasId: string) {
 
 async function actualGetAtlas(atlasId: string) {
   const atlas = await getBrainAtlasRegions({
-    atlasId: atlasId ?? AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
+    atlasId,
     filters: {
       page: 1,
       page_size: 2000,

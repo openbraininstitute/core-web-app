@@ -10,10 +10,10 @@ import { useAtomValue } from 'jotai';
 
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
+import { config } from '@/config';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { SortOrder } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import {
   coreFiltersAtom,
@@ -92,7 +92,7 @@ export function useQueryParameters(
     ...(requireBrainRegion
       ? {
           within_brain_region_hierarchy_id:
-            workspaceHierarchyId ?? AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId,
+            workspaceHierarchyId ?? config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
           within_brain_region_brain_region_id: defaultBrainRegion ?? selectedBrainRegion?.id,
           within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
         }

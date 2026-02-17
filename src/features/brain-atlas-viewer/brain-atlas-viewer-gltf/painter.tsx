@@ -13,7 +13,7 @@ import {
   webglPresetDepth,
 } from '@tolokoban/tgd';
 
-import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
+import { config } from '@/config';
 import GenericEvent from '@/util/generic-event';
 import { logError } from '@/util/logger';
 
@@ -67,7 +67,7 @@ export class Painter {
   private _uniforms: SettingsValues = {};
 
   constructor(
-    readonly atlasId: string = AppSpeciesBrainRegionConfig.Common.DefaultAtlasId,
+    readonly atlasId: string,
     private readonly backgroundColor = '#002766'
   ) {
     this.ID = globalId++;
@@ -261,7 +261,7 @@ export class Painter {
       if (
         !this.hasFittedCamera &&
         this.cameraController &&
-        this.AtlasID !== AppSpeciesBrainRegionConfig.Common.DefaultAtlasId
+        this.AtlasID !== config.MOUSE_ATLAS__ID
       ) {
         this.fitCameraFromGltf(asset);
       }

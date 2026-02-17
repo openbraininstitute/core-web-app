@@ -4,7 +4,8 @@ export const keyBuilderAtlas = {
     prefix,
     { atlasId, page, page_size },
   ],
-  defaultBrainAtlas: () => [prefix, 'default-brain-atlas'],
+  byId: (atlasId: string) => [prefix, 'by-id', { atlasId }],
+  all: () => [prefix, 'all'],
 };
 
 const hierarchyPrefix = 'brain-region-hierarchy-with-species';

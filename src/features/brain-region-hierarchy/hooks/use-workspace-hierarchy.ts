@@ -6,9 +6,8 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { updateBrainRegionPreference } from '@/api/virtual-lab-svc/queries/user';
+import { config } from '@/config';
 import {
-  AppSpeciesBrainRegionConfig,
-  getSpeciesConfigByHierarchyId,
   selectedBrainRegionAtom,
   useBrainRegionRootHierarchyQuery,
   useHierarchyBrainRegionUrlState,
@@ -19,6 +18,7 @@ import {
 import { getSpeciesDisplayName } from '@/features/brain-region-hierarchy/helpers';
 import {
   useAvailableHierarchySpeciesQuery,
+  useHierarchyRuntimeMetadataQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
 } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { useLocalStorage } from '@/hooks/use-local-storage';
@@ -57,6 +57,7 @@ import type {
 export function useLocalStoreHierarchySpeciesAndBrainRegion() {
   const queryClient = useQueryClient();
   const { remoteAvailableHierarchies: hierarchies } = useAvailableHierarchySpeciesQuery();
+  const { runtimeHierarchyById } = useHierarchyRuntimeMetadataQuery();
   const { queryOption, select } = useBrainRegionRootHierarchyQuery();
 
   const [selectedBrainRegion, setSelectedBrainRegion] = useAtom(selectedBrainRegionAtom);
@@ -71,6 +72,7 @@ export function useLocalStoreHierarchySpeciesAndBrainRegion() {
         name: species?.name,
         displayName: getSpeciesDisplayName(species?.name),
         id: species?.id,
+        taxonomyId: species?.taxonomyId,
         hierarchId: hierarchyId || '',
       });
     }
@@ -86,10 +88,12 @@ export function useLocalStoreHierarchySpeciesAndBrainRegion() {
         ...queryOption(hierarchyId),
       });
       const { options: brainRegions } = select(result);
-      const hierarchyConfig = getSpeciesConfigByHierarchyId(hierarchyId);
-      const defaultBrainRegion = brainRegions.find(
-        (br) => br.value === (brainRegionId ?? hierarchyConfig.DefaultSelectedId)
-      );
+      const fallbackDefaultRegionId =
+        runtimeHierarchyById.get(hierarchyId)?.fallbackDefaultSelectedRegionId ??
+        config.MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID;
+      const resolvedRegionId = brainRegionId ?? fallbackDefaultRegionId;
+      const defaultBrainRegion =
+        brainRegions.find((br) => br.value === resolvedRegionId) ?? brainRegions.at(0);
       if (!defaultBrainRegion) return;
       setWorkspaceSpecies(hierarchy.species);
       setSelectedBrainRegion(defaultBrainRegion?.data);
@@ -140,6 +144,7 @@ export function useWorkspaceHierarchyRegistry() {
   const { urlState, setUrlState } = useHierarchyBrainRegionUrlState();
   const { remoteAvailableHierarchies, loading: isLoadingAvailableHierarchiesSpecies } =
     useAvailableHierarchySpeciesQuery();
+  const { runtimeHierarchyById } = useHierarchyRuntimeMetadataQuery();
   const { remoteUserPreferenceHierarchySpecies, loading: isLoadingRemotePreference } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
 
@@ -152,22 +157,22 @@ export function useWorkspaceHierarchyRegistry() {
 
   // get default hierarchy based on configured species
   const defaultHierarchy = remoteAvailableHierarchies?.find(
-    (h) => h.id === AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId
+    (h) => h.id === config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID
   );
 
   const defaultingCurrentHierarchyId =
     urlState.hierarchyId ||
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
     browserStorageHierarchy?.hierarchyId ||
-    AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId;
+    config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
 
-  const defaultBrainRegionId = getSpeciesConfigByHierarchyId(
-    defaultingCurrentHierarchyId
-  ).DefaultSelectedId;
+  const defaultBrainRegionId =
+    runtimeHierarchyById.get(defaultingCurrentHierarchyId)?.fallbackDefaultSelectedRegionId ??
+    config.MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID;
 
-  const defaultBrainRegionObject = brainRegions?.options.find(
-    (o) => o.value === defaultBrainRegionId
-  );
+  const defaultBrainRegionObject =
+    brainRegions?.options.find((o) => o.value === defaultBrainRegionId) ??
+    brainRegions?.options.at(0);
 
   /**
    * fire-and-forget api persistence
@@ -175,19 +180,28 @@ export function useWorkspaceHierarchyRegistry() {
    */
   function syncHierarchySpeciesRemoteUserPreference(selection: BrainRegionHierarchySelection) {
     void (async () => {
-      updateBrainRegionPreference({
-        hierarchy_id: selection.hierarchyId,
-        species_name: selection.speciesName,
-        brain_region_id: selection.brainRegionId || null,
-        brain_region_name: selection.brainRegionName || null,
-      }).finally(() => {
-        queryClient.invalidateQueries({
-          queryKey: keyBuilderHierarchy.hierarchies(),
+      try {
+        await updateBrainRegionPreference({
+          hierarchy_id: selection.hierarchyId,
+          species_name: selection.speciesName,
+          brain_region_id: selection.brainRegionId || null,
+          brain_region_name: selection.brainRegionName || null,
         });
+        queryClient.setQueryData(keyBuilderHierarchy.hierarchyPreference(), {
+          data: {
+            preference: {
+              hierarchy_id: selection.hierarchyId,
+              species_name: selection.speciesName,
+              brain_region_id: selection.brainRegionId || null,
+              brain_region_name: selection.brainRegionName || null,
+            },
+          },
+        });
+      } catch {
         queryClient.invalidateQueries({
           queryKey: keyBuilderHierarchy.hierarchyPreference(),
         });
-      });
+      }
     })();
   }
 
@@ -246,13 +260,16 @@ export function useWorkspaceHierarchyRegistry() {
       hierarchy.id,
       remembered?.brainRegionId ?? null
     );
-    const { DefaultSelectedId, DefaultSelectedName } = getSpeciesConfigByHierarchyId(hierarchy.id);
+    const fallbackRegionId =
+      runtimeHierarchyById.get(hierarchy.id)?.fallbackDefaultSelectedRegionId ??
+      config.MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID;
+    const fallbackRegionName = remembered?.brainRegionName ?? '';
 
     syncExternalStores({
       hierarchyId: hierarchy.id,
       speciesName: hierarchy.species.name,
-      brainRegionId: result?.brainRegion?.id ?? DefaultSelectedId,
-      brainRegionName: result?.brainRegion?.name ?? DefaultSelectedName,
+      brainRegionId: result?.brainRegion?.id ?? fallbackRegionId,
+      brainRegionName: result?.brainRegion?.name ?? fallbackRegionName,
       perHierarchyMemory: prevMemory,
     });
   }
@@ -268,15 +285,19 @@ export function useWorkspaceHierarchyRegistry() {
         urlState.hierarchyId ||
         remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
         browserStorageHierarchy?.hierarchyId ||
-        AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId;
+        config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
 
       const currentSpeciesName = workspaceSpecies?.name || '';
-      const hierarchyConfig = getSpeciesConfigByHierarchyId(currentHierarchyId);
+      const fallbackRegionId =
+        runtimeHierarchyById.get(currentHierarchyId)?.fallbackDefaultSelectedRegionId ??
+        config.MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID;
+      const fallbackRegionName =
+        brainRegions?.options.find((option) => option.value === fallbackRegionId)?.data.name ?? '';
       syncExternalStores({
         hierarchyId: currentHierarchyId,
         speciesName: currentSpeciesName,
-        brainRegionId: hierarchyConfig.DefaultSelectedId,
-        brainRegionName: hierarchyConfig.DefaultSelectedName,
+        brainRegionId: fallbackRegionId,
+        brainRegionName: fallbackRegionName,
         perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
       });
       return;
@@ -366,7 +387,7 @@ export function useWorkspaceHierarchyRegistry() {
             setBrowserStorageHierarchy({
               hierarchyId: urlState.hierarchyId,
               speciesName: hierarchy.species.name,
-              brainRegionId: urlState.brainRegionId,
+              brainRegionId: result.brainRegion.id,
               brainRegionName: result?.brainRegion?.name,
               perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
             });
@@ -397,7 +418,7 @@ export function useWorkspaceHierarchyRegistry() {
           });
           setUrlState({
             hierarchyId: hierarchy.id,
-            brainRegionId: remoteUserPreferenceHierarchySpecies.brain_region_id || '',
+            brainRegionId: result?.brainRegion?.id || '',
           });
           isInitializedRef.current = true;
           return;
@@ -409,11 +430,14 @@ export function useWorkspaceHierarchyRegistry() {
           (h) => h.id === browserStorageHierarchy.hierarchyId
         );
         if (hierarchy) {
-          changeLocalStoreHierarchySpecies(hierarchy.id);
+          const result = await changeLocalStoreHierarchySpecies(
+            hierarchy.id,
+            browserStorageHierarchy.brainRegionId
+          );
           // Sync to URL
           setUrlState({
             hierarchyId: browserStorageHierarchy.hierarchyId,
-            brainRegionId: browserStorageHierarchy.brainRegionId,
+            brainRegionId: result?.brainRegion?.id || browserStorageHierarchy.brainRegionId,
           });
         }
         isInitializedRef.current = true;
@@ -421,14 +445,16 @@ export function useWorkspaceHierarchyRegistry() {
       }
       // priority 4: Defaults config
       if (defaultHierarchy) {
-        changeLocalStoreHierarchySpecies(defaultHierarchy.id);
-        const defaultConfig = getSpeciesConfigByHierarchyId(defaultHierarchy.id);
+        const result = await changeLocalStoreHierarchySpecies(defaultHierarchy.id);
+        const fallbackRegionId =
+          runtimeHierarchyById.get(defaultHierarchy.id)?.fallbackDefaultSelectedRegionId ??
+          config.MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID;
 
         const newSelection: BrainRegionHierarchySelection = {
           hierarchyId: defaultHierarchy.id,
           speciesName: defaultHierarchy.species.name,
-          brainRegionId: defaultConfig.DefaultSelectedId,
-          brainRegionName: defaultConfig.DefaultSelectedName,
+          brainRegionId: result?.brainRegion?.id ?? fallbackRegionId,
+          brainRegionName: result?.brainRegion?.name ?? '',
         };
 
         setBrowserStorageHierarchy(newSelection);
@@ -450,6 +476,7 @@ export function useWorkspaceHierarchyRegistry() {
     defaultHierarchy,
     setBrowserStorageHierarchy,
     changeLocalStoreHierarchySpecies,
+    runtimeHierarchyById,
     setUrlState,
   ]);
 
@@ -480,7 +507,7 @@ export function useWorkspaceHierarchyRegistry() {
       urlState.hierarchyId ||
       browserStorageHierarchy?.hierarchyId ||
       defaultHierarchy?.id ||
-      AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId;
+      config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
 
     const currentSpeciesName = remoteAvailableHierarchies?.find((p) => p.id === currentHierarchyId)
       ?.species.name;
@@ -509,7 +536,7 @@ export function useWorkspaceHierarchyRegistry() {
     urlState.hierarchyId ||
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
     browserStorageHierarchy?.hierarchyId ||
-    AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId;
+    config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
 
   return {
     workspaceSpecies,

@@ -6,25 +6,24 @@ import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import React from 'react';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { SettingsDefinitions } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/settings';
-import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';
-
 import { useAppNotification } from '@/components/notification';
 import { Painter } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/painter';
 import {
-  AppSpeciesBrainRegionConfig,
   useBrainRegionRootHierarchyQuery,
   usePrimaryHierarchyOfCurrentSpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { SettingsDefinitions } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/settings';
+import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';
 
 export const ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY = '3d-mesh-error';
 export function usePainter({
   atlasId,
   loading,
 }: {
-  atlasId: string;
+  atlasId?: string;
   loading: boolean;
 }): Painter | null {
   const notifier = useAppNotification();
@@ -38,7 +37,7 @@ export function usePainter({
     refAtlasId.current = atlasId;
   }
 
-  if (loading) return null;
+  if (loading || !atlasId) return null;
   if (!refPainter.current) {
     refPainter.current = new Painter(atlasId);
     refAtlasId.current = atlasId;
@@ -59,15 +58,11 @@ export function useVisibleRegions(): {
   region: IBrainRegionHierarchy | undefined;
   regions: VisibleRegion[];
 } {
-  const { selectedBrainRegion: brainRegionNode, workspaceHierarchyId } =
-    useWorkspaceHierarchyRegistry();
+  const { selectedBrainRegion: brainRegionNode } = useWorkspaceHierarchyRegistry();
   const { result: rootBrainRegions } = useBrainRegionRootHierarchyQuery();
   const { result: brainRegions } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
-  const rootBrainRegionId =
-    workspaceHierarchyId === AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId
-      ? AppSpeciesBrainRegionConfig.Mouse.RootId
-      : AppSpeciesBrainRegionConfig.Human.RootId;
+  const rootBrainRegionId = rootBrainRegions?.root?.id;
 
   return React.useMemo(() => {
     const rootBrainRegion = find(rootBrainRegions?.options, {

@@ -1,4 +1,3 @@
-import type { TgdCamera, TgdCameraState, TgdContext } from '@tolokoban/tgd';
 import {
   TgdCameraPerspective,
   TgdControllerCameraOrbit,
@@ -8,9 +7,10 @@ import {
   tgdCalcDegToRad,
 } from '@tolokoban/tgd';
 
-import type GenericEvent from '@/util/generic-event';
+import { config } from '@/config';
 
-import { AppSpeciesBrainRegionConfig } from '@/features/brain-region-hierarchy/context';
+import type { TgdCamera, TgdCameraState, TgdContext } from '@tolokoban/tgd';
+import type GenericEvent from '@/util/generic-event';
 
 interface CameraPreset {
   position: [number, number, number];
@@ -27,7 +27,7 @@ const MOUSE_PRESET: CameraPreset = {
 };
 
 function getPresetForAtlas(atlasId: string): CameraPreset {
-  if (atlasId === AppSpeciesBrainRegionConfig.Mouse.AtlasId) {
+  if (atlasId === config.MOUSE_ATLAS__ID) {
     return MOUSE_PRESET;
   }
   // for non-mouse atlases, return a neutral default that will be
@@ -70,7 +70,7 @@ export interface CameraController {
 export function setCamera(
   context: TgdContext,
   eventChange: GenericEvent<TgdCamera>,
-  atlasId: string = AppSpeciesBrainRegionConfig.Common.DefaultAtlasId
+  atlasId: string
 ): CameraController {
   const preset = getPresetForAtlas(atlasId);
   let restTransformation: Partial<TgdCameraState> = {
