@@ -3,11 +3,13 @@ import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brai
 export const SPECIES_DISPLAY_NAMES: Record<string, string> = {
   'Homo sapiens': 'Human',
   'Mus musculus': 'Rodent',
+  'Rattus norvegicus': 'Rat',
 } as const;
 
 export const SPECIES_SUBTITLES: Record<string, string> = {
   'Homo sapiens': 'Homo sapiens',
-  'Mus musculus': 'Mus musculus and Rattus norvegicus',
+  'Mus musculus': 'Mus musculus',
+  'Rattus norvegicus': 'Rattus norvegicus',
 } as const;
 
 /**
@@ -16,6 +18,7 @@ export const SPECIES_SUBTITLES: Record<string, string> = {
 export const SPECIES_TAXONOMY_IDS = {
   HOMO_SAPIENS: 'NCBITaxon:9606',
   MUS_MUSCULUS: 'NCBITaxon:10090',
+  RATTUS_NORVEGICUS: 'NCBITaxon:10116',
 } as const;
 
 /**

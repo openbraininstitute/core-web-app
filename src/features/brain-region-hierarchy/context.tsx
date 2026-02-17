@@ -57,12 +57,21 @@ export const {
   MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID,
   MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 997
   MOUSE_ATLAS__ID,
+  MOUSE_BRAIN_REGION_HIERARCHY_ID,
   // HUMAN
   HUMAN_ROOT__BRAIN_REGION_ID,
   HUMAN_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 999
   HUMAN_DEFAULT__SELECTED_BRAIN_REGION_ID,
   HUMAN_PRIMARY__DIVISION_ANNOTATION_VALUE, // 999
   HUMAN_ATLAS__ID,
+  HUMAN_BRAIN_REGION_HIERARCHY_ID,
+  // RAT
+  RAT_ROOT__BRAIN_REGION_ID,
+  RAT_ROOT__BRAIN_REGION_ANNOTATION_VALUE,
+  RAT_DEFAULT__SELECTED_BRAIN_REGION_ID,
+  RAT_PRIMARY__DIVISION_ANNOTATION_VALUE,
+  RAT_ATLAS__ID,
+  RAT_BRAIN_REGION_HIERARCHY_ID,
 } = config;
 
 // MOUSE
@@ -75,6 +84,10 @@ export const MOUSE_DEFAULT__SELECTED_BRAIN_REGION_NAME = 'Cerebrum';
 export const HUMAN_DEFAULT__SELECTED_BRAIN_REGION_ANNOTATION_VALUE = 525; // Telencephalon
 export const HUMAN_DEFAULT__SELECTED_BRAIN_REGION_NAME = 'telencephalon';
 
+// RAT
+// Awful but requested from entitycore for the moment
+export const RAT_DEFAULT__SELECTED_BRAIN_REGION_ANNOTATION_VALUE = 567; // Cerebrum
+export const RAT_DEFAULT__SELECTED_BRAIN_REGION_NAME = 'Cerebrum';
 // Query
 export const DEFAULT_BRAIN_REGION_ANNOTATION_FIELD = 'annotation_value';
 export const DEFAULT_BRAIN_REGION_QUERY_ID = 'br_id';
@@ -89,6 +102,7 @@ export const AppSpeciesBrainRegionConfig = {
   Human: {
     name: 'Human',
     AtlasId: HUMAN_ATLAS__ID,
+    HierarchyId: HUMAN_BRAIN_REGION_HIERARCHY_ID,
     RootId: HUMAN_ROOT__BRAIN_REGION_ID,
     RootAnnotationValue: HUMAN_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 999
     PrimaryDivisionAnnotationValue: HUMAN_PRIMARY__DIVISION_ANNOTATION_VALUE, // 999
@@ -99,6 +113,7 @@ export const AppSpeciesBrainRegionConfig = {
   Mouse: {
     name: 'Mouse',
     AtlasId: MOUSE_ATLAS__ID,
+    HierarchyId: MOUSE_BRAIN_REGION_HIERARCHY_ID,
     RootId: MOUSE_ROOT__BRAIN_REGION_ID,
     RootAnnotationValue: MOUSE_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 997
     PrimaryDivisionAnnotationValue: MOUSE_PRIMARY__DIVISION_ANNOTATION_VALUE, // 997
@@ -106,12 +121,25 @@ export const AppSpeciesBrainRegionConfig = {
     DefaultSelectedAnnotationValue: MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
     DefaultSelectedName: MOUSE_DEFAULT__SELECTED_BRAIN_REGION_NAME,
   },
+  Rat: {
+    name: 'Rat',
+    AtlasId: RAT_ATLAS__ID,
+    HierarchyId: RAT_BRAIN_REGION_HIERARCHY_ID,
+    RootId: RAT_ROOT__BRAIN_REGION_ID,
+    RootAnnotationValue: RAT_ROOT__BRAIN_REGION_ANNOTATION_VALUE, // 997
+    PrimaryDivisionAnnotationValue: RAT_PRIMARY__DIVISION_ANNOTATION_VALUE, // 997
+    DefaultSelectedId: RAT_DEFAULT__SELECTED_BRAIN_REGION_ID,
+    DefaultSelectedAnnotationValue: RAT_DEFAULT__SELECTED_BRAIN_REGION_ANNOTATION_VALUE,
+    DefaultSelectedName: RAT_DEFAULT__SELECTED_BRAIN_REGION_NAME,
+  },
 };
 
 export function getSpeciesConfigByHierarchyId(hId: string) {
   return hId === AppSpeciesBrainRegionConfig.Common.DefaultHierarchyId
     ? AppSpeciesBrainRegionConfig.Mouse
-    : AppSpeciesBrainRegionConfig.Human;
+    : hId === AppSpeciesBrainRegionConfig.Human.HierarchyId
+      ? AppSpeciesBrainRegionConfig.Human
+      : AppSpeciesBrainRegionConfig.Rat;
 }
 /**
  * Get the species config by atlas ID
@@ -123,7 +151,9 @@ export function getSpeciesConfigByHierarchyId(hId: string) {
 export function getSpeciesConfigByAtlasId(aId: string) {
   return aId === AppSpeciesBrainRegionConfig.Common.DefaultAtlasId
     ? AppSpeciesBrainRegionConfig.Mouse
-    : AppSpeciesBrainRegionConfig.Human;
+    : aId === AppSpeciesBrainRegionConfig.Human.AtlasId
+      ? AppSpeciesBrainRegionConfig.Human
+      : AppSpeciesBrainRegionConfig.Rat;
 }
 
 export const brainRegionSidebarAtom = atom(false);

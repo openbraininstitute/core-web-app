@@ -93,6 +93,10 @@ const configFields = {
     public: true,
   },
   // MOUSE
+  MOUSE_BRAIN_REGION_HIERARCHY_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
   MOUSE_ROOT__BRAIN_REGION_ID: {
     schema: z.string().nonempty(),
     public: true,
@@ -118,6 +122,10 @@ const configFields = {
   },
   MOUSE_ATLAS__ID: { schema: z.string().nonempty(), public: true },
   // HUMAN
+  HUMAN_BRAIN_REGION_HIERARCHY_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
   HUMAN_ROOT__BRAIN_REGION_ID: {
     schema: z.string().nonempty(),
     public: true,
@@ -143,6 +151,28 @@ const configFields = {
     public: true,
   },
   HUMAN_ATLAS__ID: { schema: z.string().nonempty(), public: true },
+  // RAT
+  RAT_BRAIN_REGION_HIERARCHY_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  RAT_ROOT__BRAIN_REGION_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  RAT_ROOT__BRAIN_REGION_ANNOTATION_VALUE: {
+    schema: z.string().nonempty().default('997'),
+    public: true,
+  },
+  RAT_PRIMARY__DIVISION_ANNOTATION_VALUE: {
+    schema: z.string().nonempty().default('8'),
+    public: true,
+  },
+  RAT_DEFAULT__SELECTED_BRAIN_REGION_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  RAT_ATLAS__ID: { schema: z.string().nonempty(), public: true },
   LEGACY_DEFAULT_CIRCUIT_ID: {
     schema: z.string().url().nonempty(),
     public: true,
