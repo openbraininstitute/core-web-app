@@ -84,6 +84,7 @@ export function CategorySelectScrollable({
   value: TActivityValue | null;
   onSelect: (v: TActivityValue | null) => void;
 }) {
+  const featureFlags = useFlags();
   const breakpoint = useDefaultBreakpoint();
   return (
     <Select value={value ?? undefined} onValueChange={(v: TActivityValue) => onSelect(v)}>
@@ -104,7 +105,11 @@ export function CategorySelectScrollable({
         side="bottom"
         sideOffset={3}
       >
-        {ActivityDict.filter((o) => !o.disabled).map(({ label, value: _value }) => (
+        {ActivityDict.filter(
+          (o) =>
+            !o.disabled &&
+            (!o.requiredFeatures || o.requiredFeatures.every((flag) => featureFlags[flag]))
+        ).map(({ label, value: _value }) => (
           <SelectItem
             key={`category-${_value}`}
             value={_value}
