@@ -1,18 +1,17 @@
 'use client';
 
+import { DownloadOutlined } from '@ant-design/icons';
 import { Empty, Skeleton } from 'antd';
-import kebabCase from 'es-toolkit/compat/kebabCase';
+import { kebabCase } from 'es-toolkit/compat';
 import { Fragment, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 
-import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
-
-import { TEntityTypeDict } from '@/api/entitycore/types';
-import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
 import { config } from '@/config';
+import { useClientCachedUrl } from '@/features/model-analysis/viewer/asset-viewers/storage';
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
-import styles from './pdf-viewer.module.css';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -101,9 +100,20 @@ export default function PDFViewer({
           </Fragment>
         ))}
       </Document>
-      <a className={styles.link} href={cachedUrl} target="PDF" download={`${assetId}.pdf`}>
-        <IconDownloadFile /> <div>Download as PDF</div>
+      <a
+        className={cn(
+          'text-primary-8',
+          'flex items-center justify-center gap-1.5 mt-4 px-3 py-1 rounded-full border border-transparent',
+          'float-left hover:border hover:border-primary-8 hover:shadow-bnb hover:text-primary-8'
+        )}
+        href={cachedUrl}
+        target="PDF"
+        download={`${assetId}.pdf`}
+      >
+        <DownloadOutlined className="text-base" /> <div>Download as PDF</div>
       </a>
     </div>
   );
 }
+
+export { PDFViewer };

@@ -93,6 +93,7 @@ export function EModel({ sessionId }: Props) {
     <BrowseEntityScope
       requireBrainRegion
       allowDownload={false}
+      allowDelete={false}
       id={sessionId}
       section={WorkspaceSection.BuildWorkflow}
       requireMiniDetailView={false}
@@ -120,7 +121,7 @@ export function EModel({ sessionId }: Props) {
               'black-listed': `This e-model cannot be combined
               with any morphology for now.
               `,
-            } as HTMLAttributes<any> & TdHTMLAttributes<any>;
+            } as HTMLAttributes<HTMLElement> & TdHTMLAttributes<HTMLElement>;
           return {};
         },
         // eslint-disable-next-line
@@ -199,8 +200,9 @@ export function EModelMiniDetail({ sessionId }: Props) {
 
   const content = details.map(({ value, label: text, className }) => {
     return (
-      <div key={`item-${label}`} className="flex w-full flex-col items-start justify-start">
-        {label(text!, 'secondary')}
+      <div key={`item-${text}`} className="flex w-full flex-col items-start justify-start">
+        {/* Remove the ! and use a fallback if necessary */}
+        {label(text ?? '', 'secondary')}
         <div className={cn('text-primary-9 font-light', className)}>{value}</div>
       </div>
     );

@@ -2,8 +2,8 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type {
-  ICircuitSimulationCampaignFilter,
   ICircuitSimulationCampaign,
+  ICircuitSimulationCampaignFilter,
   TCreateCircuitSimulation,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';

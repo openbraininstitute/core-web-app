@@ -41,7 +41,6 @@ import styles from '@/features/scan-config/scan-config.module.css';
 export function ScanConfigTemplate({
   entity,
   virtualLabId,
-
   projectId,
   initialCampaignId,
   initialConfig,
@@ -125,7 +124,7 @@ export function ScanConfigTemplate({
           activity={activity}
           tab={tab}
           setTab={setTab}
-          disableSimulationTab={!campaignId || loading}
+          disableResultsTab={!campaignId || loading}
         />
         <div className="flex items-center justify-center gap-8">
           {!!campaignId && (

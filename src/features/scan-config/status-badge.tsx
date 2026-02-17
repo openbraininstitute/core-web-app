@@ -1,25 +1,13 @@
 import { InfoCircleOutlined } from '@ant-design/icons';
 
-import {
-  EntitycoreExecutionStatus,
-  type TEntitycoreExecutionStatus,
-} from '@/api/entitycore/types/entities/execution';
+import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
-export function StatusBadge({
-  status,
-  details,
-}: {
-  status?: TEntitycoreExecutionStatus;
-  details?: string;
-}) {
-  const color = status ? executionStatusColorMap[status as EntitycoreExecutionStatus] : '#fafafa';
+export function StatusBadge({ status, details }: { status?: TActivityStatus; details?: string }) {
+  const color = status ? executionStatusColorMap[status ?? ActivityStatus.CREATED] : '#004793';
   const showSpinner =
-    status &&
-    [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(
-      status as EntitycoreExecutionStatus
-    );
+    status && [ActivityStatus.PENDING, ActivityStatus.RUNNING].includes(status as ActivityStatus);
 
   return (
     <div className="flex items-center">
@@ -48,7 +36,7 @@ export function StatusBadge({
         </svg>
       )}
       <span
-        style={{ borderColor: color, color }}
+        style={{ borderColor: color, color: `${color} !important` }}
         className="flex items-center rounded-xl border px-4 capitalize transition-colors duration-300"
       >
         {status ?? 'created'}

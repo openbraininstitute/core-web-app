@@ -1,6 +1,5 @@
 import BlockDictionary from '@/features/scan-config/components/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/block-union';
-import { BlockUI, type Config } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
@@ -14,8 +13,11 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
+import Block from './block';
+
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Config } from '@/features/scan-config/components/components';
 
 type MiddleProps = {
   schemaName: SchemaName;
@@ -86,7 +88,7 @@ export default function Middle({
 
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockSingle &&
         isAtom(atomsMap[selectedRootElement]) && (
-          <BlockUI
+          <Block
             schemaName={schemaName}
             disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
             config={config}
@@ -108,7 +110,7 @@ export default function Middle({
           loading={loading}
           config={config}
           model={model}
-          // blockAIConfig={getBlockAIConfig()}
+          blockAIConfig={getBlockAIConfig()}
         />
       )}
     </>

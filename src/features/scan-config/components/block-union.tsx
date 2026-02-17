@@ -1,14 +1,14 @@
 import { atom } from 'jotai';
+
+import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { isType } from '@/features/scan-config/types';
+
+import Block from './block';
+
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import {
-  BlockUI,
-  type Config,
-  type ConfigValue,
-} from '@/features/scan-config/components/components';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 import type { AtomsMap, IRootBlockUnion, SchemaName, TBlock } from '@/features/scan-config/types';
-import { isType } from '@/features/scan-config/types';
 
 type Props = {
   schemaName: SchemaName;
@@ -20,6 +20,7 @@ type Props = {
   loading: boolean;
   config: Config;
   model: ICircuit | IMEModel;
+  blockAIConfig: Record<string, ConfigValue> | null;
 };
 
 /**
@@ -41,6 +42,7 @@ export default function BlockUnion({
   loading,
   config,
   model,
+  blockAIConfig,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
 
@@ -60,7 +62,7 @@ export default function BlockUnion({
   // If a variant is selected and we have an atom, show the form
   if (selectedBlockSchema && isAtom(atomsMap[selectedRootElement])) {
     return (
-      <BlockUI
+      <Block
         schemaName={schemaName}
         key={`${selectedRootElement}_${selectedType}`}
         disabled={!!campaignId || loading}
@@ -68,6 +70,7 @@ export default function BlockUnion({
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]}
         model={model}
+        blockAIConfig={blockAIConfig}
       />
     );
   }

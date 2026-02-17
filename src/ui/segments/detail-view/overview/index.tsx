@@ -1,21 +1,13 @@
 import { notFound } from 'next/navigation';
 
 import { getMEModel } from '@/api/entitycore/queries';
-import type {
-  ICellMorphology,
-  IElectricalCellRecording,
-  ISingleNeuronSynaptome,
-} from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { tryCatch } from '@/api/utils';
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
-import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
+import { resolveExtractionByCampaignId } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { circuitTypes, type EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   resolveSimulationByCampaignId,
@@ -28,12 +20,29 @@ import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-mo
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
-import ScanConfig from '@/features/scan-config';
-import type { AwaitedType, WorkspaceContext } from '@/types/common';
+import { ScanConfiguration } from '@/features/scan-config';
+import {
+  ExtractScanConfigTabs,
+  ScanConfigActivity,
+  SimulateScanConfigTabs,
+} from '@/features/scan-config/types';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
+import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
+
+import type {
+  ICellMorphology,
+  IElectricalCellRecording,
+  ISingleNeuronSynaptome,
+} from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
+import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 export default async function Overview({
   entity,
@@ -106,7 +115,7 @@ export default async function Overview({
     if (!config.simulation?.entity_id) notFound();
 
     return (
-      <ScanConfig
+      <ScanConfiguration
         modelId={config.simulation.entity_id}
         virtualLabId={ctx.virtualLabId}
         projectId={ctx.projectId}
@@ -115,12 +124,43 @@ export default async function Overview({
         readOnly={!isWorkflow}
         // This is a temporary solution to show sim campaigns not complient with obi-one gen config.
         // TODO: remove this after microcircuit scale simulations are fully implemented.
-        defaultTab={
-          extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation
-            ? 'simulations'
-            : undefined
-        }
+        defaultTab={{
+          __activity: ScanConfigActivity.Simulate,
+          id:
+            extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation
+              ? SimulateScanConfigTabs.simulations
+              : ExtractScanConfigTabs.configuration,
+        }}
+        activity={ScanConfigActivity.Simulate}
       />
+    );
+  }
+  if (extendedType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
+    const { data: extractionConfig, error } = await tryCatch(
+      resolveExtractionByCampaignId({ id: entity.id, context: ctx })
+    );
+
+    if (error || !extractionConfig.circuitId) {
+      notFound();
+    }
+
+    return (
+      <>
+        <ScanConfiguration
+          modelId={extractionConfig.circuitId}
+          virtualLabId={ctx.virtualLabId}
+          projectId={ctx.projectId}
+          initialCampaignId={extractionConfig.campaign.id}
+          initialConfig={extractionConfig.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Extract,
+            id: ExtractScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Extract}
+        />
+        <DownloadPanel />
+      </>
     );
   }
 

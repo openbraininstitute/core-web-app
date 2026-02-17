@@ -12,11 +12,8 @@ import {
   getCircuitExtractionConfigGenerations,
   getCircuitExtractionExecutions,
 } from '@/api/entitycore/queries/extraction';
-import {
-  EntitycoreExecutionStatus,
-  type TEntitycoreExecutionStatus,
-} from '@/api/entitycore/types/entities/execution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ApiError } from '@/api/error';
 import { launchExtraction, ObiOneTaskTypeDict } from '@/api/one/extraction';
 import { Loader } from '@/components/loader';
@@ -93,6 +90,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     queryFn: () =>
       getCircuitExtractionConfigGenerations({
         filters: { used__id: campaignId },
+        withFacets: false,
         context,
       }),
   });
@@ -138,17 +136,14 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     refetchInterval: (query) => {
       const executions = query.state.data?.data ?? [];
       const hasActiveExtractions = executions.some((exec) =>
-        includes(
-          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING],
-          exec.status
-        )
+        includes([ActivityStatus.PENDING, ActivityStatus.RUNNING], exec.status)
       );
       return hasActiveExtractions && !extractionRequestInProgress ? STATUS_POLL_INTERVAL : false;
     },
   });
 
   const statusMap = useMemo(() => {
-    const map = new Map<string, TEntitycoreExecutionStatus>();
+    const map = new Map<string, TActivityStatus>();
     const executions = executionsResponse?.data ?? [];
 
     for (const config of configList) {
@@ -196,11 +191,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     return configList
       .filter((config) => {
         const status = statusMap.get(config.id);
-        return (
-          !status ||
-          status === EntitycoreExecutionStatus.CREATED ||
-          status === EntitycoreExecutionStatus.ERROR
-        );
+        return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
       })
       .map((c) => c.id);
   }, [configList, statusMap]);

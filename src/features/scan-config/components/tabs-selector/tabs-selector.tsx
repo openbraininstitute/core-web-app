@@ -14,7 +14,7 @@ interface TabsSelectorProps {
   className?: string;
   tab: TScanConfigTabs;
   setTab(tab: TScanConfigTabs): void;
-  disableSimulationTab: boolean;
+  disableResultsTab: boolean;
   activity: TScanConfigActivity;
 }
 
@@ -22,15 +22,15 @@ export default function TabsSelector({
   className,
   tab,
   setTab,
-  disableSimulationTab,
+  disableResultsTab,
   activity,
 }: TabsSelectorProps) {
   const tabs = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => ({
     id,
     label,
-    disabled: id === 'simulations' && disableSimulationTab,
+    disabled: (id === 'simulations' || id === 'extractions') && disableResultsTab,
     onClick: () => {
-      if (disableSimulationTab && id === 'simulations') return;
+      if (disableResultsTab && id === 'simulations') return;
       if (activity === ScanConfigActivity.Simulate) {
         setTab({
           __activity: ScanConfigActivity.Simulate,

@@ -6,15 +6,13 @@ import { AnimatePresence, motion } from 'motion/react';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { use } from 'react';
 import { match, P } from 'ts-pattern';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { config } from '@/config';
 import { WorkflowActivityDictValue, WorkspaceScope } from '@/constants';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { SCOPE_QUERY_PARAMS } from '@/ui/hooks/use-scope';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 import { WorkflowSessionIdSearchParam } from '@/ui/segments/workflows/elements/helpers';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
@@ -22,6 +20,10 @@ import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 export default function Page({ params }: ServerSideComponentProp<WorkspaceContext, null>) {
   useDisableElementOverflow({ id: 'workspace-body' });

@@ -1,8 +1,6 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import type { ErrorObject } from 'ajv';
 import { get } from 'es-toolkit/compat';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+
 import authFetch from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
@@ -16,8 +14,13 @@ import {
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { assertErrorMessage, classNames } from '@/util/utils';
-import type { Config } from './components';
+
 import { useApiUrl } from './hooks';
+
+import type { ErrorObject } from 'ajv';
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Config } from './components';
 
 export default function GenerateConfigButton({
   loading,
