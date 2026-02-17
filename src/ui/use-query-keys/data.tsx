@@ -14,6 +14,15 @@ import type { WorkspaceContext } from '@/types/common';
 const prefix = 'data';
 
 export const keyBuilder = {
+  entity: ({
+    context,
+    id,
+    type,
+    ...props
+  }: { id: string; context: WorkspaceContext; type?: TEntityTypeDict } & Record<string, any>) => [
+    'entity',
+    { context, id, type, ...props },
+  ],
   dataCountPerEntity: ({
     virtualLabId,
     projectId,

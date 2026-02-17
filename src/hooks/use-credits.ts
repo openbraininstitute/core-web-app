@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import type { CreditsPack } from '@/app/api/help/credits/route';
+import type { CreditsPack } from '@/services/sanity';
 
 interface UseCreditsReturn {
   creditsPacks: CreditsPack[];

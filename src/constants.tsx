@@ -24,11 +24,21 @@ export const WorkspaceScope = {
 
 export type TWorkspaceScope = (typeof WorkspaceScope)[keyof typeof WorkspaceScope];
 
+export const WorkflowActivityDictValue = {
+  build: 'build',
+  simulate: 'simulate',
+  extract: 'extract',
+  optimize: 'optimize',
+  validate: 'validate',
+  process_data: 'process_data',
+} as const;
+
 export const WorkspaceSection = {
   Data: 'data',
-  BuildWorkflow: 'workflows/build',
-  SimulateWorkflow: 'workflows/simulate',
   Notebooks: 'notebooks',
+  BuildWorkflow: WorkflowActivityDictValue.build,
+  SimulateWorkflow: WorkflowActivityDictValue.simulate,
+  ExtractWorkflow: WorkflowActivityDictValue.extract,
 } as const;
 
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];

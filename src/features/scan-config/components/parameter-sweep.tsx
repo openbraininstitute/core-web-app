@@ -70,7 +70,7 @@ export default function ParameterSweep({
 
         {!disabled && (
           <PlusCircleOutlined
-            className="text-primary-8 absolute top-[10px] right-[8px]"
+            className="!text-primary-8 absolute top-[10px] right-[8px]"
             onClick={() => {
               setMode('multiple');
               onChange(multipleValues);
@@ -87,7 +87,7 @@ export default function ParameterSweep({
         {!disabled && (
           <div className="mb-1 flex justify-end">
             <CloseOutlined
-              className="text-primary-8"
+              className="!text-primary-8"
               onClick={() => {
                 setMode('single');
                 onChange(singleValue);
@@ -118,7 +118,7 @@ export default function ParameterSweep({
                       <div className="flex gap-1">
                         {i === multipleValues.length - 1 && (
                           <PlusCircleOutlined
-                            className="text-primary-8"
+                            className="!text-primary-8"
                             onClick={() => {
                               onChange([...multipleValues, null]);
                             }}
@@ -126,7 +126,7 @@ export default function ParameterSweep({
                         )}
                         {multipleValues.length >= 2 && (
                           <CloseOutlined
-                            className="text-primary-8"
+                            className="!text-primary-8"
                             onClick={() => {
                               const updated = [...multipleValues];
                               updated.splice(i, 1);

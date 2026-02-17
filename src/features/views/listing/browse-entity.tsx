@@ -1,13 +1,13 @@
 'use client';
 
 import { WarningOutlined } from '@ant-design/icons';
-import { compact, get, uniqBy } from 'es-toolkit/compat';
+import { get, uniqBy } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
 import { type ComponentProps, type ReactElement, type ReactNode, useEffect, useMemo } from 'react';
 
-import ApiError from '@/api/error';
+import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -22,6 +22,7 @@ import {
   coreSortStateAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
+import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
@@ -66,8 +67,9 @@ type Props = {
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
   allowDownload?: boolean;
+  allowDelete?: boolean;
   requireBrainRegionDropdown?: boolean;
-  extraQueryParams?: Record<string, any>;
+  extraQueryParams?: Record<string, unknown>;
   left?: ReactNode;
 };
 
@@ -83,6 +85,7 @@ export function BrowseEntityScope({
   mainTableProps,
   miniViewProps,
   allowDownload,
+  allowDelete,
   requireBrainRegionDropdown,
   extraQueryParams,
   left,
@@ -91,7 +94,14 @@ export function BrowseEntityScope({
   const { mdv, setMdv } = useMiniDetailView();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
 
-  const dataKey = compact([virtualLabId, projectId, section, dataType, scope, id]).join('/');
+  const { dataKey } = makeDataKey({
+    virtualLabId,
+    projectId,
+    section,
+    dataType,
+    scope,
+    id,
+  });
   const entity = getEntityByExtendedType({ type: dataType });
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
@@ -153,7 +163,7 @@ export function BrowseEntityScope({
   const { data, error, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
-      workspaceScope: scope!,
+      workspaceScope: scope,
       extendedEntityType: dataType as TExtendedEntitiesTypeDict,
     },
     workspace: { virtualLabId, projectId },
@@ -162,7 +172,7 @@ export function BrowseEntityScope({
       const filters = {
         ...queryParameters,
         ...extraQueryParams,
-        ...getWorkspaceScopeFilters(scope!, { virtualLabId, projectId }),
+        ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
       };
       return entity?.api?.query.list?.({
         withFacets: true,
@@ -253,10 +263,11 @@ export function BrowseEntityScope({
           <MainTable
             showLoadingState
             allowDownload={allowDownload}
+            allowDelete={allowDelete}
             requireBrainRegionDropdown={requireBrainRegionDropdown}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
-            dataScope={scope!}
+            dataScope={scope}
             section={section}
             dataSource={dataSource ?? []}
             dataType={dataType}

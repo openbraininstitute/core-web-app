@@ -33,6 +33,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
       count?: (query: any) => Promise<EntityCoreResponse<T>>;
       one: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
       create?: (body: any) => Promise<T>;
+      delete?: (query: { id: string; context: WorkspaceContext | null }) => Promise<void>;
     };
     /**
      * Enriches a single entity with related data for detail view pages.
@@ -67,7 +68,7 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   detailViewSections?: TDetailViewSectionDict[];
   isDownloadable?: boolean;
   isCopyable?: boolean;
-  isDeletable: boolean;
+  isDeletable?: boolean;
   isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);
   isUploadable?: boolean;
 };

@@ -2,6 +2,7 @@
 
 import { PlusOutlined } from '@ant-design/icons';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+
 import { config } from '@/config';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -14,6 +15,7 @@ import {
   useMiniDetailView,
 } from '@/ui/segments/mini-detail-view/event';
 import { WorkspaceScopeSelector } from '@/ui/segments/shared/scope-selector';
+import { cn } from '@/utils/css-class';
 
 export function DataScopeTabs() {
   const navigate = useRouter().push;
@@ -67,8 +69,14 @@ export function DataHeader() {
             variant="success"
             size={breakpoint === 'xl' ? 'lg' : 'md'}
             type="button"
-            className="px-8"
             onClick={onContribute}
+            className={cn(
+              'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+              'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
+              'transition-all duration-300 ease-out',
+              'hover:scale-[1.02] active:scale-[0.98]',
+              'disabled:cursor-not-allowed disabled:opacity-70'
+            )}
           >
             <div className="flex items-center justify-between gap-5">
               <span>Upload data</span>

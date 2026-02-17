@@ -78,12 +78,12 @@ const nextConfig = (phase: string): NextConfig => {
     },
     devIndicators: process.env.NEXT_PUBLIC_NEXT_DEVTOOLS_POSITION
       ? {
-        position:
-          (process.env.NEXT_PUBLIC_NEXT_DEVTOOLS_POSITION as Exclude<
-            NextConfig['devIndicators'],
-            false | undefined
-          >['position']) ?? 'top-right',
-      }
+          position:
+            (process.env.NEXT_PUBLIC_NEXT_DEVTOOLS_POSITION as Exclude<
+              NextConfig['devIndicators'],
+              false | undefined
+            >['position']) ?? 'top-right',
+        }
       : false,
     assetPrefix: isDev || !cdnUrl ? undefined : `${cdnUrl}/${appVersion}`,
     reactStrictMode: true,
@@ -148,6 +148,11 @@ const nextConfig = (phase: string): NextConfig => {
         {
           source: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id',
           destination: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id/overview',
+          permanent: false,
+        },
+        {
+          source: '/static/coming-soon/index.html',
+          destination: '/',
           permanent: false,
         },
       ];

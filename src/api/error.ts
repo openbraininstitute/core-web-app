@@ -10,7 +10,7 @@ export interface ApiErrorCause {
  *
  * It is used to represent errors that occur when making API requests.
  */
-export default class ApiError extends Error {
+export class ApiError extends Error {
   override cause?: ApiErrorCause;
 
   constructor(message: string, cause?: ApiErrorCause) {
@@ -19,3 +19,5 @@ export default class ApiError extends Error {
     this.cause = cause;
   }
 }
+
+export default ApiError;
