@@ -46,7 +46,7 @@ export type TSchemaMappingKey = (typeof SchemaMappingKeyDict)[keyof typeof Schem
 export const ScanConfigActivity = {
   Simulate: 'simulate',
   Extract: 'extract',
-  Process: 'process',
+  Process: 'process_data',
 } as const;
 
 export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
@@ -82,7 +82,7 @@ export const ProcessScanConfigTabs = {
 
 export type TProcessScanConfigTabs = {
   id: keyof typeof ProcessScanConfigTabs;
-  __activity: 'process';
+  __activity: 'process_data';
 };
 
 export type TScanConfigTabs =

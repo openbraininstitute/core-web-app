@@ -29,6 +29,7 @@ import {
 } from '@/features/scan-config/types';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
+import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
@@ -128,17 +129,16 @@ export function ScanConfigTemplate({
       { activity: ScanConfigActivity.Process, tab: { id: ProcessScanConfigTabs.skeletonizations } },
       () => (
         <Suspense>
-          <h1>Hooray!</h1>
-          {/* <ExtractionTab
+          <SkeletonizationTab
             campaignId={campaignId}
             virtualLabId={virtualLabId}
             projectId={projectId}
-          /> */}
+          />
         </Suspense>
       )
     )
     .otherwise(() => {
-      throw new Error(`${activity} is not supported yet,`);
+      throw new Error(`${activity} is not supported yet`);
     });
 
   return (

@@ -78,7 +78,7 @@ export default function GenerateConfigButton({
       });
     if (activity === ScanConfigActivity.Process)
       setTab({
-        id: ProcessScanConfigTabs.executions,
+        id: ProcessScanConfigTabs.skeletonizations,
         __activity: ScanConfigActivity.Process,
       });
   };
