@@ -58,7 +58,7 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
     >
       <div className="mr-1.5 flex min-w-0 shrink grow basis-0 items-center">
         <div className="flex items-baseline">
-          <span className={cn('text-base', { 'line-clamp-1': isSelected })}>
+          <span className={cn('text-base text-left', { 'line-clamp-1': isSelected })}>
             {capitalize(nodeName)}
           </span>
         </div>

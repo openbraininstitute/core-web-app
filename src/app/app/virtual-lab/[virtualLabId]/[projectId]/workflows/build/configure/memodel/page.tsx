@@ -32,7 +32,7 @@ export default function Page({
           >
             <Menu sessionId={sessionId} />
           </div>
-          <div className="h-full overflow-hidden [grid-area:content]">
+          <div className="h-full min-h-0 overflow-hidden [grid-area:content]">
             <Content sessionId={sessionId} />
           </div>
         </div>

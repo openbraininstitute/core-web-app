@@ -1,14 +1,14 @@
 import isNil from 'es-toolkit/compat/isNil';
 import memoize from 'memoize-one';
 
-import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-
 import {
   type IBrainRegionHierarchyExtended,
   type IWorkspaceSpecies,
   SPECIES_DISPLAY_NAMES,
 } from '@/features/brain-region-hierarchy/types';
+
+import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function findParentIds(root: IBrainRegionHierarchy, targetId: string): string[] {
   function dfs(node: IBrainRegionHierarchy, path: string[]): string[] | null {

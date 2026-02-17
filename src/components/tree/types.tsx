@@ -23,7 +23,7 @@ export interface NodeIndentation {
 
 export interface RenderNodeProps<TNode extends TTreeNode> {
   node: TNode;
-  onToggle: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  onToggle: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
   onClick: () => void;
   isExpanded: boolean;
   isSelected: boolean;
