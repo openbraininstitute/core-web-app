@@ -5,7 +5,7 @@ import Block from '@/features/scan-config/components/block';
 import {
   getBlockUsabilityConfig,
   isRootBlock,
-  type TUsabilityAndPropertyMappingConfiguration,
+  type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
 import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
@@ -41,7 +41,7 @@ type Props = {
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   blockAIConfig: ConfigObject | null;
-  usabilityPropertyMappingConfig: TUsabilityAndPropertyMappingConfiguration;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };
 
 export default function BlockDictionary({
@@ -60,7 +60,7 @@ export default function BlockDictionary({
   allEntries,
   onNewBlockClick,
   blockAIConfig,
-  usabilityPropertyMappingConfig,
+  schemaMappingConfig,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
 
@@ -91,7 +91,7 @@ export default function BlockDictionary({
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
         model={model}
         blockAIConfig={blockAIConfig}
-        usabilityPropertyMappingConfig={usabilityPropertyMappingConfig}
+        schemaMappingConfig={schemaMappingConfig}
       />
     );
   }
@@ -104,14 +104,15 @@ export default function BlockDictionary({
       {blockDictionarySchema.additionalProperties.oneOf.map((o) => {
         const usability = getBlockUsabilityConfig({ block: o });
         let disable = false,
-          message = '';
+          message: string | undefined;
 
         if (
-          usability.block_usability_entity_dependent &&
-          !get(usabilityPropertyMappingConfig.usability, usability.block_usability_property)
+          usability.isDependent &&
+          usability.property &&
+          !get(schemaMappingConfig?.usability, usability.property)
         ) {
           disable = true;
-          message = usability.block_usability_false_message;
+          message = usability.error_message;
         }
 
         return (

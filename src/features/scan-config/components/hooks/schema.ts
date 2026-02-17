@@ -1,7 +1,6 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser';
-import { useQueries, useQuery } from '@tanstack/react-query';
-import { pick } from 'es-toolkit/compat';
-import get from 'es-toolkit/compat/get';
+import { useQuery } from '@tanstack/react-query';
+import { get, omit, pick } from 'es-toolkit/compat';
 import { atom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
@@ -37,12 +36,12 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
   return schema;
 }
 
-export type TUsabilityAndPropertyMappingConfiguration = {
-  usability: Record<string, boolean>;
-  properties: Record<string, ConfigValue>;
+export type TSchemaMappingConfiguration = {
+  usability: Record<string, boolean> | null;
+  properties: Record<string, ConfigValue> | null;
 };
 
-export function useSchemaUsabilityAndPropertiesMappingConfiguration({
+export function useSchemaMappingConfiguration({
   schema,
   circuitId,
   workspace,
@@ -53,66 +52,43 @@ export function useSchemaUsabilityAndPropertiesMappingConfiguration({
   schema: ConfigSchema | undefined;
   endpointType: string;
 }) {
-  const properties_endpoint = get(schema?.properties_endpoints, endpointType, '');
-  const usability_endpoint = get(schema?.usability_endpoints ?? {}, endpointType, '');
-
-  return useQueries({
-    queries: [
-      {
-        queryKey: ['entity_properties_config', { workspace, circuitId, endpointType }],
-        queryFn: async () => {
-          const api = await obioneApi();
-          return api.get<TUsabilityAndPropertyMappingConfiguration['properties']>(
-            `/declared${properties_endpoint}`.replace('{circuit_id}', circuitId),
-            {
-              headers: {
-                ...getEntityCoreContext(workspace).headers,
-              },
-            }
-          );
+  const properties_endpoint = get(schema?.property_endpoints, endpointType, '');
+  return useQuery({
+    queryKey: ['schema-mapping-configuration', { workspace, circuitId, endpointType }],
+    queryFn: async () => {
+      const api = await obioneApi();
+      return api.get<{
+        usability: {
+          [key: string]: boolean;
+        } | null;
+        [key: string]: any;
+      }>(`/declared${properties_endpoint}`.replace('{circuit_id}', circuitId), {
+        headers: {
+          ...getEntityCoreContext(workspace).headers,
         },
-        enabled: !!properties_endpoint,
-        refetchOnWindowFocus: false,
-        staleTime: 3600, //  1 hour
-      },
-      {
-        queryKey: ['entity_usability_config', { workspace, circuitId, endpointType }],
-        queryFn: async () => {
-          const api = await obioneApi();
-          return api.get<TUsabilityAndPropertyMappingConfiguration['usability']>(
-            `/declared${usability_endpoint}`.replace('{circuit_id}', circuitId),
-            {
-              headers: {
-                ...getEntityCoreContext(workspace).headers,
-              },
-            }
-          );
-        },
-        enabled: !!usability_endpoint,
-        refetchOnWindowFocus: false,
-        staleTime: 3600, //  1 hour
-      },
-    ],
-    combine(result) {
+      });
+    },
+    enabled: !!properties_endpoint,
+    refetchOnWindowFocus: false,
+    staleTime: 3600, //  1 hour
+    select: (resp) => {
       return {
-        isLoading: result.some((r) => r.isLoading),
-        isError: result.some((r) => r.isError),
-        data: {
-          properties: result[0].data ?? {},
-          usability: result[1].data ?? {},
-        },
+        properties: omit(resp, ['usability']),
+        usability: pick(resp, ['usability']).usability,
       };
     },
   });
 }
 
 export function getBlockUsabilityConfig({ block }: { block: TBlock }) {
-  return pick(block, [
-    'block_usability_entity_dependent',
-    'block_usability_false_message',
-    'block_usability_group',
-    'block_usability_property',
-  ]);
+  const usability = pick(block, ['block_usability_entity_dependent', 'block_usability_dictionary']);
+
+  return {
+    isDependent: usability.block_usability_entity_dependent,
+    error_message: usability.block_usability_dictionary?.false_message,
+    property: usability.block_usability_dictionary?.property,
+    property_group: usability.block_usability_dictionary?.property_group,
+  };
 }
 
 export function useDefaultConfig(
@@ -120,7 +96,6 @@ export function useDefaultConfig(
   formModelType: 'CircuitFromId' = 'CircuitFromId'
 ) {
   const schema = useObioneJsonSchema(schemaName);
-
   if (!schema) return;
 
   const map: {

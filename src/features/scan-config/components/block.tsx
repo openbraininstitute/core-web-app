@@ -24,7 +24,7 @@ import { cn } from '@/utils/css-class';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TUsabilityAndPropertyMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -44,7 +44,7 @@ export default function Block({
   model,
   blockAIConfig,
   hideTitle,
-  usabilityPropertyMappingConfig,
+  schemaMappingConfig,
 }: {
   schemaName: SchemaName;
   disabled: boolean;
@@ -54,7 +54,7 @@ export default function Block({
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   blockAIConfig: Record<string, ConfigValue> | null;
   hideTitle?: boolean;
-  usabilityPropertyMappingConfig: TUsabilityAndPropertyMappingConfiguration;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 }) {
   // Empty atom for when a block doesn't exist in the config (and the atoms map) yet, only in the AI suggested changes
   const emptyAtom = useRef(atom<Record<string, ConfigValue>>({}));
@@ -179,7 +179,7 @@ export default function Block({
 
       return (
         <EntityPropertyDropdown
-          usabilityPropertyMappingConfig={usabilityPropertyMappingConfig}
+          schemaMappingConfig={schemaMappingConfig}
           disabled={disabled}
           value={getValue()}
           onChange={(newV: string[]) => setState({ ...state, node_set: newV })}

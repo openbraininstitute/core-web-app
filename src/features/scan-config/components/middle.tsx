@@ -3,7 +3,7 @@ import BlockDictionary from '@/features/scan-config/components/block-dictionary'
 import BlockUnion from '@/features/scan-config/components/block-union';
 import {
   isRootBlock,
-  type TUsabilityAndPropertyMappingConfiguration,
+  type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
@@ -37,7 +37,7 @@ type MiddleProps = {
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
-  usabilityPropertyMappingConfig: TUsabilityAndPropertyMappingConfiguration;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };
 
 export default function Middle({
@@ -55,7 +55,7 @@ export default function Middle({
   allEntries,
   onNewBlockClick,
   selectedSchema,
-  usabilityPropertyMappingConfig,
+  schemaMappingConfig,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
 
@@ -87,7 +87,7 @@ export default function Middle({
           selectedRootElement={selectedRootElement}
           onNewBlockClick={onNewBlockClick}
           blockAIConfig={getBlockAIConfig()}
-          usabilityPropertyMappingConfig={usabilityPropertyMappingConfig}
+          schemaMappingConfig={schemaMappingConfig}
         />
       )}
 
@@ -101,7 +101,7 @@ export default function Middle({
             stateAtom={atomsMap[selectedRootElement]}
             model={model}
             blockAIConfig={getBlockAIConfig()}
-            usabilityPropertyMappingConfig={usabilityPropertyMappingConfig}
+            schemaMappingConfig={schemaMappingConfig}
           />
         )}
 
@@ -117,7 +117,7 @@ export default function Middle({
           config={config}
           model={model}
           blockAIConfig={getBlockAIConfig()}
-          usabilityPropertyMappingConfig={usabilityPropertyMappingConfig}
+          schemaMappingConfig={schemaMappingConfig}
         />
       )}
     </>

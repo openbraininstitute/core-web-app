@@ -3,22 +3,22 @@ import { get } from 'es-toolkit/compat';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
-import type { TUsabilityAndPropertyMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
 export default function EntityPropertyDropdown({
   value,
   onChange,
   property,
   disabled = false,
-  usabilityPropertyMappingConfig,
+  schemaMappingConfig,
 }: {
   value: string[];
   onChange: (v: string[]) => void;
   property: string;
   disabled?: boolean;
-  usabilityPropertyMappingConfig: TUsabilityAndPropertyMappingConfiguration;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 }) {
-  const options = get(usabilityPropertyMappingConfig.properties, property, []) as string[];
+  const options = get(schemaMappingConfig?.properties, property, []) as string[];
 
   return (
     <Select

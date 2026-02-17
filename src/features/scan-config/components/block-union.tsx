@@ -8,7 +8,7 @@ import { isType } from '@/features/scan-config/types';
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config, ConfigValue } from '@/features/scan-config/components/components';
-import type { TUsabilityAndPropertyMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { AtomsMap, IRootBlockUnion, SchemaName, TBlock } from '@/features/scan-config/types';
 
 type Props = {
@@ -22,7 +22,7 @@ type Props = {
   config: Config;
   model: ICircuit | IMEModel;
   blockAIConfig: Record<string, ConfigValue> | null;
-  usabilityPropertyMappingConfig: TUsabilityAndPropertyMappingConfiguration;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };
 
 function getDiscriminatorProperty(schema: IRootBlockUnion): string {
@@ -42,7 +42,7 @@ export default function BlockUnion({
   config,
   model,
   blockAIConfig,
-  usabilityPropertyMappingConfig,
+  schemaMappingConfig,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
 
@@ -91,6 +91,7 @@ export default function BlockUnion({
           model={model}
           blockAIConfig={blockAIConfig}
           hideTitle
+          schemaMappingConfig={schemaMappingConfig}
         />
       </div>
     );
