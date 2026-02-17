@@ -225,7 +225,6 @@ export function WorkflowActivity() {
     },
   ];
 
-  console.log(entityType);
   const entity = getEntityByExtendedType({ type: entityType! });
   const {
     data: activityResult,

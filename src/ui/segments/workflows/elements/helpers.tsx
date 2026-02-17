@@ -395,7 +395,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
   },
   {
     label: 'Process Data',
-    value: WorkflowActivityDictValue.processData,
+    value: WorkflowActivityDictValue.process,
     disabled: false,
     name: 'Processing Data',
     configType: 'process',
@@ -454,7 +454,7 @@ export function getDropdownOptionsByCategory(
 
     return { allOptions: options, enabledOptions };
   }
-  if (category === WorkflowActivityDictValue.processData) {
+  if (category === WorkflowActivityDictValue.process) {
     const grouped = groupBy(processActivitiesConfiguration, 'group');
     const options = Object.entries(grouped).map(([k, v]) => {
       return {
@@ -550,7 +550,7 @@ export function getAllOptionsOrdered(
     });
   }
 
-  if (category === WorkflowActivityDictValue.processData) {
+  if (category === WorkflowActivityDictValue.process) {
     return processNewConfiguration;
   }
 

@@ -30,7 +30,7 @@ export const WorkflowActivityDictValue = {
   extract: 'extract',
   optimize: 'optimize',
   validate: 'validate',
-  processData: 'process_data',
+  process: 'process',
 } as const;
 
 export const WorkspaceSection = {
@@ -39,7 +39,7 @@ export const WorkspaceSection = {
   BuildWorkflow: WorkflowActivityDictValue.build,
   SimulateWorkflow: WorkflowActivityDictValue.simulate,
   ExtractWorkflow: WorkflowActivityDictValue.extract,
-  ProcessWorkflow: WorkflowActivityDictValue.processData,
+  ProcessWorkflow: WorkflowActivityDictValue.process,
 } as const;
 
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];

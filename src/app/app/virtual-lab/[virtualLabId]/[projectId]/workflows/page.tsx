@@ -91,14 +91,11 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
         );
       })
-      .with(
-        { activity: WorkflowActivityDictValue.processData, value: P.nonNullable },
-        ({ value }) => {
-          navigate(
-            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
-          );
-        }
-      )
+      .with({ activity: WorkflowActivityDictValue.process, value: P.nonNullable }, ({ value }) => {
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
+        );
+      })
       .otherwise(() => null);
   };
 
