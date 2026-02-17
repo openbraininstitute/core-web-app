@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
+import { WorkspaceSection } from '@/constants';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
@@ -18,7 +19,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div className="h-full mx-2 flex flex-col max-h-[calc(100vh-6rem)] w-[calc(100%-10px)] overflow-hidden">
       <WorkflowScopeTabs className="max-w-max mb-3" />
       <div className="bg-background border-neutral-2 h-full  overflow-hidden rounded-2xl border">
-        <SimulateWorkflowsBreadcrumb />
+        <SimulateWorkflowsBreadcrumb section={WorkspaceSection.SimulateWorkflow} />
         <motion.div
           id="workflow-new-inner-layout"
           className="grid gap-2 [grid-area:main] h-full max-h-[calc(100%-4rem)] px-3 py-2"

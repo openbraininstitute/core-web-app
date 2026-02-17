@@ -16,6 +16,6 @@
   will-change: transform;
   transform: translateY(12px);
 }
-.SwitchThumb[data-state='checked'] {
+.SwitchThumb[data-state="checked"] {
   transform: translateY(-12px);
 }

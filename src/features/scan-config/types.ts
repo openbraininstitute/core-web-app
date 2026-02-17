@@ -1,6 +1,9 @@
 import type { atom } from 'jotai';
-import type { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import type { ConfigValue } from './components/components';
+import type { IEntity } from '@/api/entitycore/types/entities/entity';
+import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
+import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { ConfigValue } from '@/features/scan-config/components/components';
+import type { Prettify } from '@/utils/type';
 
 export interface AtomsMap {
   [key: string]:
@@ -8,37 +11,100 @@ export interface AtomsMap {
     | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
 }
 
+export const ScanConfigActivity = {
+  Simulate: 'simulate',
+  Extract: 'extract',
+} as const;
+
+export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
+
+export const BaseScanConfigTabs = {
+  configuration: 'configuration',
+} as const;
+
+export const SimulateScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  simulations: 'simulations',
+} as const;
+
+export type TSimulateScanConfigTabs = {
+  id: keyof typeof SimulateScanConfigTabs;
+  __activity: 'simulate';
+};
+
+export const ExtractScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  extractions: 'extractions',
+} as const;
+
+export type TExtractScanConfigTabs = {
+  id: keyof typeof ExtractScanConfigTabs;
+  __activity: 'extract';
+};
+
+export type TScanConfigTabs = Prettify<TSimulateScanConfigTabs> | Prettify<TExtractScanConfigTabs>;
+
+export const ScanConfigTabs = {
+  [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
+  [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
+} as const;
+
+export const ScanConfigDefaultTab = {
+  id: SimulateScanConfigTabs.configuration,
+  __activity: ScanConfigActivity.Simulate,
+} as const;
+
+export type SimExecStatusMap = Map<string, ActivityStatus>;
 export type TabType = 'configuration' | 'simulations';
 
-export type SimExecStatusMap = Map<string, EntitycoreExecutionStatus>;
-
 export type SchemaName =
+  // simulation
   | 'CircuitSimulationScanConfig'
   | 'MEModelSimulationScanConfig'
-  | 'MEModelWithSynapsesCircuitSimulationScanConfig';
+  | 'MEModelWithSynapsesCircuitSimulationScanConfig'
+  // extraction
+  | 'CircuitExtractionScanConfig';
 
-export type RootElement = {
+export type TRootElement = {
   description: string;
   title: string;
   group: string;
   group_order: number;
 };
 
-export interface StringInput extends BlockElement {
-  ui_element: 'string_input';
+export const ScanConfigUIElementDict = {
+  // blocks
+  BlockUnion: 'block_union',
+  BlockSingle: 'block_single',
+  BlockDictionary: 'block_dictionary',
+  // components
+  StringInput: 'string_input',
+  ModelIdentifier: 'model_identifier',
+  FloatParameterSweep: 'float_parameter_sweep',
+  IntParameterSweep: 'int_parameter_sweep',
+  Reference: 'reference',
+  EntityPropertyDropdown: 'entity_property_dropdown',
+  NeuronIds: 'neuron_ids',
+  BooleanInput: 'boolean_input',
+} as const;
+
+export interface StringInput extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.StringInput;
 }
 
-export interface ModelIdentifier extends BlockElement {
-  ui_element: 'model_identifier';
+export interface ModelIdentifier extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.ModelIdentifier;
 }
 
-export interface FloatParameterSweep extends BlockElement {
-  ui_element: 'float_parameter_sweep';
+export interface FloatParameterSweep extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.FloatParameterSweep;
   anyOf: [
     {
       type: 'number';
       minimum?: number;
       maximum?: number;
+      exclusiveMinimum?: number;
+      exclusiveMaximum?: number;
     },
     {
       type: 'array';
@@ -46,18 +112,22 @@ export interface FloatParameterSweep extends BlockElement {
         type: 'number';
         minimum?: number;
         maximum?: number;
+        exclusiveMinimum?: number;
+        exclusiveMaximum?: number;
       };
     },
   ];
 }
 
-export interface IntParameterSweep extends BlockElement {
-  ui_element: 'int_parameter_sweep';
+export interface IntParameterSweep extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.IntParameterSweep;
   anyOf: [
     {
       type: 'integer';
       minimum?: number;
       maximum?: number;
+      exclusiveMinimum?: number;
+      exclusiveMaximum?: number;
     },
     {
       type: 'array';
@@ -65,27 +135,46 @@ export interface IntParameterSweep extends BlockElement {
         type: 'integer';
         minimum?: number;
         maximum?: number;
+        exclusiveMinimum?: number;
+        exclusiveMaximum?: number;
       };
     },
   ];
 }
 
-export interface Reference extends BlockElement {
-  ui_element: 'reference';
+export interface Reference extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.Reference;
   reference_type: string;
 }
 
-export interface EntityPropertyDropdown extends BlockElement {
-  ui_element: 'entity_property_dropdown';
+export interface EntityPropertyDropdown extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.EntityPropertyDropdown;
   entity_type: string;
   property: string;
 }
 
-export interface NeuronIds extends BlockElement {
-  ui_element: 'neuron_ids';
+export interface NeuronIds extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.NeuronIds;
 }
 
-export type BlockElement = {
+export interface BooleanInput extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.BooleanInput;
+  true_label?: string;
+  false_label?: string;
+}
+
+export interface IBlockUnion extends TRootElement {
+  ui_element: typeof ScanConfigUIElementDict.BlockUnion;
+  /** the property name used to block between variants (defaults to 'type') */
+  discriminator?: string | { propertyName: string; mapping?: Record<string, string> };
+  /** array of possible variant schemas */
+  oneOf: TBlock[];
+}
+
+/** root-level block union (single value that can be one of several types) */
+export interface IRootBlockUnion extends TRootElement, IBlockUnion {}
+
+export type TBlockElement = {
   default?: ConfigValue;
   title: string;
   description: string;
@@ -100,27 +189,28 @@ export type ParamSchema =
   | IntParameterSweep
   | Reference
   | NeuronIds
-  | EntityPropertyDropdown;
+  | EntityPropertyDropdown
+  | BooleanInput;
 
-export type Block = {
+export type TBlock = {
   title: string;
   description: string;
   properties: Record<string, ParamSchema> & { type: Type };
   required?: string[];
 };
 
-export interface RootBlock extends RootElement, Block {
-  ui_element: 'block_single';
+export interface IBlockSingle extends TRootElement, TBlock {
+  ui_element: typeof ScanConfigUIElementDict.BlockSingle;
   additionalProperties: false;
   required?: string[];
 }
 
-export interface BlockDictionary extends RootElement {
-  ui_element: 'block_dictionary';
+export interface IBlockDictionary extends TRootElement {
+  ui_element: typeof ScanConfigUIElementDict.BlockDictionary;
   reference_type: string;
   singular_name: string;
   additionalProperties: {
-    oneOf: Block[];
+    oneOf: TBlock[];
   };
 }
 
@@ -129,7 +219,9 @@ export type ConfigSchema = {
   default_block_reference_labels: Record<string, string>;
   description: string;
   group_order: string[];
-  properties: Record<string, RootBlock | BlockDictionary> & { type: Type };
+  properties: Record<string, IBlockSingle | IBlockDictionary | IRootBlockUnion> & {
+    type: Type;
+  };
   title: string;
 };
 
@@ -138,6 +230,22 @@ type Type = {
   default: string;
 };
 
-export function isType(v: RootElement | Type | BlockElement): v is Type {
+export function isType(v: TRootElement | Type | TBlockElement): v is Type {
   return 'const' in v;
 }
+
+export const ActivityCustomFileRenderer = {
+  MiniDetailView: 'mini-detail-view',
+  Default: 'default',
+} as const;
+
+export type TActivityCustomFileRenderer =
+  (typeof ActivityCustomFileRenderer)[keyof typeof ActivityCustomFileRenderer];
+
+export type TActivityCustomFile = {
+  asset: IAsset;
+  entity: IEntity;
+  assetPath?: string;
+  name?: string;
+  renderer: TActivityCustomFileRenderer;
+};

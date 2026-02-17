@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Modal } from 'antd';
 import { Popover } from 'antd/lib';
 import { useState } from 'react';
-import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
@@ -16,6 +16,8 @@ import { downloadArchive } from '@/services/entity-download';
 import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+
+import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 
 interface ActionPopoverProps {
   notebook: INotebook;

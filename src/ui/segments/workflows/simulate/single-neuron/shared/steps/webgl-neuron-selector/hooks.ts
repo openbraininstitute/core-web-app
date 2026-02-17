@@ -1,25 +1,30 @@
-/* eslint-disable no-param-reassign */
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atomFamily, atomWithReset } from 'jotai/utils';
 
-import {
-  RecordLocationConfigurationAtomFamily,
-  StimulationConfigurationAtomFamily,
-} from '../../context';
-import { getSessionKey } from '../../helpers';
 import {
   RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
   STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-} from '../../constant';
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import {
+  RecordLocationConfigurationAtomFamily,
+  StimulationConfigurationAtomFamily,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+
+import { getSessionKey } from '../../helpers';
 import { getColorFromGeneratedPalette } from './colors';
 
-const atomSynapsesToShowInViewer = atom<Array<{ color: string; data: Float32Array }>>([]);
+const synapsesToShowInViewerAtomFamily = atomFamily((key: string) => {
+  const childAtom = atomWithReset<Array<{ color: string; data: Float32Array }>>([]);
+  childAtom.debugLabel = `synapses-to-show-in-viewer-${key}`;
+  return childAtom;
+});
 
-export function useVisibleSynapsesSetter() {
-  return useSetAtom(atomSynapsesToShowInViewer);
+export function useVisibleSynapsesSetter(sessionId: string) {
+  return useSetAtom(synapsesToShowInViewerAtomFamily(sessionId));
 }
 
-export function useVisibleSynapses() {
-  return useAtomValue(atomSynapsesToShowInViewer);
+export function useVisibleSynapses(sessionId: string) {
+  return useAtomValue(synapsesToShowInViewerAtomFamily(sessionId));
 }
 
 export function useRecordingsAndInjection(sessionId: string) {

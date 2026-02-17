@@ -1,12 +1,15 @@
 import React from 'react';
 
-import { useRecordingsAndInjection } from '../hooks';
-import { PainterManager } from '../painter';
-import { LegendTarget, useLegendPainter } from './legend-painter';
-
+import { useRecordingsAndInjection } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
+import {
+  type LegendTarget,
+  useLegendPainter,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/legend-overlay/legend-painter';
 import { classNames } from '@/util/utils';
 
-import styles from './legend-overlay.module.css';
+import type { PainterManager } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/painter';
+
+import styles from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/legend-overlay/legend-overlay.module.css';
 
 export interface LegendOverlayProps {
   className?: string;

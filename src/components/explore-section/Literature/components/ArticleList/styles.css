@@ -1,7 +1,7 @@
-@reference '../../../../../styles/globals.css';
+@reference "../../../../../styles/globals.css";
 
 .article-list-scrollbar {
-  scrollbar-color: theme('colors.primary.8') #f0f0f0;
+  scrollbar-color: theme("colors.primary.8") #f0f0f0;
 }
 
 .article-list-scrollbar::-webkit-scrollbar {

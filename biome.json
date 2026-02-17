@@ -80,7 +80,65 @@
     "enabled": true,
     "actions": {
       "source": {
-        "organizeImports": "on"
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              {
+                "type": false,
+                "source": [":PACKAGE:"]
+              },
+              ":BLANK_LINE:",
+              {
+                "type": false,
+                "source": [
+                  "@/**",
+                  "!**/*.css",
+                  "!**/*.module.css",
+                  "!**/*.scss",
+                  "!**/*.module.scss",
+                  "!**/*.less"
+                ]
+              },
+              ":BLANK_LINE:",
+              {
+                "type": false,
+                "source": [
+                  ":PATH:",
+                  "!**/*.css",
+                  "!**/*.module.css",
+                  "!**/*.scss",
+                  "!**/*.module.scss",
+                  "!**/*.less"
+                ]
+              },
+              ":BLANK_LINE:",
+              {
+                "type": true,
+                "source": [":PACKAGE:"]
+              },
+              {
+                "type": true,
+                "source": [
+                  "@/**",
+                  "!**/*.css",
+                  "!**/*.module.css",
+                  "!**/*.scss",
+                  "!**/*.module.scss",
+                  "!**/*.less"
+                ]
+              },
+              {
+                "type": true,
+                "source": [":PATH:"]
+              },
+              ":BLANK_LINE:",
+              "*.css",
+              "*.scss",
+              "*.less"
+            ]
+          }
+        }
       }
     }
   }

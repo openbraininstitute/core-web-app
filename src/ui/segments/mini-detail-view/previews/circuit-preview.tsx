@@ -1,10 +1,10 @@
 import { Empty } from 'antd';
 
-import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
-import { EmptyPreview } from '@/entity-configuration/definitions/renderer';
+import { hasAssets } from '@/api/entitycore/guards';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
-import { hasAssets } from '@/api/entitycore/guards';
+import { EmptyPreview } from '@/entity-configuration/definitions/renderer';
+import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
@@ -28,6 +28,7 @@ export function CircuitPreview({ record }: { record: ICircuit }) {
   return (
     <div className="w-full bg-white">
       <ProgressiveEntityImage
+        key={visualizationAsset.id}
         asset={visualizationAsset}
         entityId={record.id}
         alt="hii"

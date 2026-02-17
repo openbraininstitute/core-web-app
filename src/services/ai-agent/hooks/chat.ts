@@ -1,17 +1,22 @@
 'use client';
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
-import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import { atom, useAtom } from 'jotai';
-import React, { useCallback, useEffect } from 'react';
+import React, { use, useCallback, useEffect } from 'react';
+
 import { useAIActiveTools } from '@/components/ai-assistant/state';
-import type { Config } from '@/features/scan-config/components/components';
+import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { logError } from '@/util/logger';
+
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
 
-const AI_AGENT_STATE: { id?: string; config?: Record<string, Config> } = {};
-let returnId: string = '';
+import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
+import type { Config } from '@/features/scan-config/components/components';
+
+const agentStateAtom = atom<Record<string, Config>>({});
+let requestId = crypto.randomUUID().replace(/-/g, '');
+let returnId = '';
 
 export interface AiAgentRateLimit {
   limit: number;
@@ -48,6 +53,7 @@ function setStoredRateLimit(value: number): void {
 }
 
 export function useServiceAiAgentChat(threadId: string) {
+  const [aiAgentState] = useAtom(agentStateAtom);
   const assistant = useAiAssistant();
   const initialMessages = assistant.initialMessages.useValue();
   const { accessToken } = assistant.useContext();
@@ -63,15 +69,16 @@ export function useServiceAiAgentChat(threadId: string) {
     initialMessages,
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      'x-request-id': AI_AGENT_STATE.id ?? '',
+      'x-request-id': requestId,
     },
     experimental_prepareRequestBody: ({ messages }) => {
       const lastMessage = messages.at(-1);
+
       return {
         content: (lastMessage?.content ?? '').trim(),
         tool_selection: activeTools,
-        frontend_url: `${globalThis.location.pathname}${globalThis.location.search}`,
-        shared_state: AI_AGENT_STATE.config,
+        frontend_url: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
+        shared_state: aiAgentState,
       };
     },
     fetch: async (url, options) => {
@@ -99,10 +106,18 @@ export function useServiceAiAgentChat(threadId: string) {
     ) as ToolInvocationUIPart | undefined;
 
     //@ts-expect-error
-    if (toolInvocation?.toolInvocation?.result && returnId === AI_AGENT_STATE.id) {
-      //@ts-expect-error
-      const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
-      setConfig(result);
+    if (toolInvocation?.toolInvocation?.result && returnId === requestId) {
+      try {
+        //@ts-expect-error
+        const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
+        setConfig(result.smc_simulation_config ?? null);
+      } catch {
+        logError(
+          'Failed to parse tool invocation result as JSON:',
+          //@ts-expect-error
+          toolInvocation.toolInvocation.result
+        );
+      }
     }
   }, [chat.messages, setConfig]);
 
@@ -140,32 +155,44 @@ export function useServiceAiAgentChat(threadId: string) {
 export const configStateAtom = atom<Config | null>(null);
 const isChatReadyAtom = atom(true);
 
-export function useAgentState(key: 'smc_simulation_config', config: Config) {
-  const [_, setConfig] = useAtom(configStateAtom);
-  useEffect(() => {
-    AI_AGENT_STATE.id = crypto.randomUUID().replace(/-/g, '');
-    return () => setConfig(null);
-  }, [setConfig]);
+export function useAgentState(key: 'smc_simulation_config', config?: Config) {
+  const [, setAIAgentState] = useAtom(agentStateAtom);
+  const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
 
   useEffect(() => {
-    AI_AGENT_STATE.config = {
-      [key]: config,
+    const stateConfig = config ?? defaultConfig;
+    if (!stateConfig) return;
+
+    setAIAgentState({
+      [key]: stateConfig,
+    });
+
+    return () => {
+      if (!defaultConfig) return;
+      setAIAgentState({
+        [key]: defaultConfig,
+      });
     };
-  }, [config, key]);
+  }, [defaultConfig, config, key, setAIAgentState]);
 
-  const updateId = useCallback(() => {
-    AI_AGENT_STATE.id = crypto.randomUUID().replace(/-/g, '');
+  return useCallback(() => {
+    requestId = crypto.randomUUID().replace(/-/g, '');
   }, []);
-
-  return updateId;
 }
 
 export function useAIConfig() {
   const [aiConfig, setAiConfig] = useAtom(configStateAtom);
+  const [aiAgentState] = useAtom(agentStateAtom);
   const [isChatReady] = useAtom(isChatReadyAtom);
 
   return {
-    aiConfig,
+    aiConfig:
+      // @ts-expect-error
+      aiConfig?.initialize?.circuit?.id_str ===
+      // @ts-expect-error
+      aiAgentState?.smc_simulation_config?.initialize?.circuit?.id_str
+        ? aiConfig
+        : null,
     setAiConfig,
     isChatReady,
   };

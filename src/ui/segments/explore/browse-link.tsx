@@ -3,21 +3,19 @@
 'use client';
 
 import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
-import { useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { kebabCase, snakeCase } from 'es-toolkit/compat';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { config } from '@/config';
-import type { TWorkspaceScope } from '@/constants';
 import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import type { WorkspaceContext } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useTableQueryCount } from '@/ui/hooks/use-table-query-count';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -27,6 +25,11 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
+
+import type { ReactNode } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceScope } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
 
 function buildDataUrl({
   virtualLabId,
@@ -194,51 +197,79 @@ export function BrowseLink({
   defaultBrainRegionId,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
+  const { type } = useParams<{ type: TExtendedEntitiesTypeDict }>();
+
   const entity = getEntityByExtendedType({ type: extendedType });
   const href = buildDataUrl({ virtualLabId, projectId, extendedType });
-  const currentQuery = buildQuery({
+
+  // determine if this entity type is the one currently displayed in the data table
+  const activeEntityType = snakeCase(type);
+  const isActiveEntity = activeEntityType === extendedType;
+
+  // read the filtered count from the table's cached query
+  const {
+    count: tableCount,
+    isLoading: tableCountLoading,
+    isError: isTableCountError,
+    hasCachedData,
+  } = useTableQueryCount({
+    extendedType,
+    scope,
+    workspace: { virtualLabId, projectId },
+    isActiveEntity,
+  });
+
+  // fallback count query: used when this entity type is NOT the active table entity
+  const fallbackQuery = buildQuery({
     virtualLabId,
     projectId,
-    brainRegionId: currentBrainRegionId!,
+    brainRegionId: currentBrainRegionId ?? '',
     scope,
     extendedType,
   });
 
+  // root count query: always fetch results (unfiltered total)
   const rootQuery = buildQuery({
     virtualLabId,
     projectId,
-    brainRegionId: defaultBrainRegionId!,
+    brainRegionId: defaultBrainRegionId ?? '',
     scope,
     extendedType,
   });
 
-  const [
-    { isLoading: loadingCurrent, data: current, isError: isCurrentError },
-    { isLoading: loadingRoot, data: root, isError: isRootError },
-  ] = useQueries({
-    queries: [
-      {
-        queryKey: currentQuery.queryKey,
-        queryFn: () => {
-          if (entity?.api.query.count) return entity?.api.query.count(currentQuery.query);
-          return entity?.api.query.list?.(currentQuery.query);
-        },
-        enabled: !!currentBrainRegionId && enabled,
-        staleTime: Infinity,
-      },
-      {
-        queryKey: rootQuery.queryKey,
-        queryFn: () => {
-          if (entity?.api.query.count) return entity?.api.query.count(rootQuery.query);
-          return entity?.api.query.list?.(rootQuery.query);
-        },
-        enabled: !!defaultBrainRegionId && enabled,
-        staleTime: Infinity,
-      },
-    ],
+  const {
+    isLoading: loadingFallback,
+    data: fallbackData,
+    isError: isFallbackError,
+  } = useQuery<{ pagination: { total_items: number } } | undefined>({
+    queryKey: fallbackQuery.queryKey,
+    queryFn: async () => {
+      if (entity?.api.query.count) return entity.api.query.count(fallbackQuery.query);
+      return entity?.api.query.list?.(fallbackQuery.query);
+    },
+    // only fetch when this entity is NOT the active table entity
+    enabled: !!currentBrainRegionId && enabled && !isActiveEntity,
+    staleTime: Infinity,
   });
 
-  const count = current?.pagination.total_items;
+  const {
+    isLoading: loadingRoot,
+    data: root,
+    isError: isRootError,
+  } = useQuery<{ pagination: { total_items: number } } | undefined>({
+    queryKey: rootQuery.queryKey,
+    queryFn: async () => {
+      if (entity?.api.query.count) return entity.api.query.count(rootQuery.query);
+      return entity?.api.query.list?.(rootQuery.query);
+    },
+    enabled: !!defaultBrainRegionId && enabled,
+    staleTime: Infinity,
+  });
+
+  // resolve current count: prioritize table query when active, fallback otherwise
+  const count = isActiveEntity && hasCachedData ? tableCount : fallbackData?.pagination.total_items;
+  const loadingCurrent = isActiveEntity ? tableCountLoading : loadingFallback;
+  const isCurrentError = isActiveEntity ? isTableCountError : isFallbackError;
   const rootCount = root?.pagination.total_items;
   const isLoading = loadingCurrent || loadingRoot;
 

@@ -1,7 +1,5 @@
-import React from 'react';
 import {
-  TgdCamera,
-  tgdCanvasCreateFill,
+  type TgdCamera,
   TgdContext,
   TgdDataGlb,
   TgdGeometryGltf,
@@ -11,23 +9,26 @@ import {
   TgdPainterState,
   TgdPainterXRay,
   TgdTexture2D,
+  tgdCanvasCreateFill,
   webglPresetDepth,
 } from '@tolokoban/tgd';
 
-import { setCamera } from './camera';
-import { VisibleRegion } from './types';
-import { SettingsValues } from './settings';
-import { getBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
-import { makeColor } from './hooks';
-
-import { logError } from '@/util/logger';
 import GenericEvent from '@/util/generic-event';
+import { logError } from '@/util/logger';
+
+import { setCamera } from './camera';
+import { makeColor } from './hooks';
+import { getBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
+
+import type { ReactNode } from 'react';
+import type { SettingsValues } from './settings';
+import type { VisibleRegion } from './types';
 
 let globalId = 1;
 export class Painter {
   public readonly ID: number;
 
-  public readonly eventError = new GenericEvent<React.ReactNode>();
+  public readonly eventError = new GenericEvent<ReactNode>();
 
   public readonly eventCameraChange = new GenericEvent<TgdCamera>();
 
@@ -47,7 +48,10 @@ export class Painter {
 
   private isAddingRegions = false;
 
-  private nextRegionsToAdd: { regions: VisibleRegion[]; accessToken: string } | null = null;
+  private nextRegionsToAdd: {
+    regions: VisibleRegion[];
+    accessToken: string;
+  } | null = null;
 
   private _loadingMesh = false;
 
@@ -90,7 +94,10 @@ export class Painter {
       const group = new TgdPainterGroup();
       this.group = group;
       context.add(
-        new TgdPainterClear(context, { depth: 1, color: makeColor(this.backgroundColor) }),
+        new TgdPainterClear(context, {
+          depth: 1,
+          color: makeColor(this.backgroundColor),
+        }),
         new TgdPainterState(context, {
           depth: webglPresetDepth.lessOrEqual,
           children: [group],

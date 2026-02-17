@@ -1,12 +1,14 @@
 import { snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import { match, P } from 'ts-pattern';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceScope } from '@/constants';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { KebabCase } from '@/utils/type';
 
@@ -41,7 +43,6 @@ export default async function Page({
   { scope: TWorkspaceScope | null }
 >) {
   const { scope } = await searchParams;
-
   const { type } = await params;
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
@@ -65,6 +66,7 @@ export default async function Page({
               selectionType: 'checkbox',
             }}
             allowDownload
+            allowDelete
           />
         );
       }

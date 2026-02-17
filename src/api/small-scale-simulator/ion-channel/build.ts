@@ -1,14 +1,14 @@
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
 
+import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUrl = '/ion-channel/build';
 
 export type TJobBuildResponse = {
   id: string;
-  status: EntitycoreExecutionStatus;
+  status: ActivityStatus;
   output: unknown | null;
   created_at: string;
   enqueued_at: string;
@@ -31,7 +31,7 @@ interface MessageBase {
 
 export interface StatusMessage extends MessageBase {
   message_type: MessageType.STATUS;
-  status: EntitycoreExecutionStatus;
+  status: ActivityStatus;
   extra?: string | null;
 }
 

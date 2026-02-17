@@ -1,5 +1,4 @@
-import $RefParser, { JSONSchema } from '@apidevtools/json-schema-ref-parser';
-import { RJSFSchema } from '@rjsf/utils';
+import $RefParser, { type JSONSchema } from '@apidevtools/json-schema-ref-parser';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 import { atomFamily, atomWithStorage } from 'jotai/utils';
@@ -14,6 +13,7 @@ import {
 import { normalizePrefixItems } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 
+import type { RJSFSchema } from '@rjsf/utils';
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 
 export async function dereferenceOpenApiSchema({ json, form }: { form?: string; json: any }) {

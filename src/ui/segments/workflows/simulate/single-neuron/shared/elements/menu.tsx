@@ -4,10 +4,11 @@ import { RightOutlined, SettingFilled, WarningFilled } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
 import { useAppNotification } from '@/components/notification';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -38,7 +39,6 @@ import { useSingleNeuronSimulationAtoms } from '@/ui/segments/workflows/simulate
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { browserHistoryReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';
-import { useVisibleSynapsesSetter } from '../steps/webgl-neuron-selector/hooks';
 
 export const ExperimentStep = {
   Info: 'info',
@@ -65,7 +65,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const launchSimulation = useSetAtom(launchSimulationAtom);
-  const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
+  const { isProjectAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const step = searchParams.get('step') ?? ExperimentStep.Info;
 
@@ -243,7 +243,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
-                    <WarningFilled className="text-sm text-yellow-300" />
+                    <WarningFilled className="text-sm text-yellow-300!" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent
@@ -251,7 +251,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
                   side="bottom"
                   sideOffset={10}
                   collisionPadding={{ left: 25 }}
-                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                  className="text-destructive! shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100! px-4 py-5 text-wrap"
                   arrowClassName="bg-amber-100"
                 >
                   {Object.values(warnInfo ?? {}).map((e1) => {
@@ -288,7 +288,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
-                    <WarningFilled className="text-sm text-yellow-300" />
+                    <WarningFilled className="text-sm text-yellow-300!" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent
@@ -296,7 +296,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
                   side="bottom"
                   sideOffset={10}
                   collisionPadding={{ left: 25 }}
-                  className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                  className="text-destructive! shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100! px-4 py-5 text-wrap"
                   arrowClassName="bg-amber-100"
                 >
                   {warnExperimentalSetup &&
@@ -336,7 +336,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span>
-                      <WarningFilled className="text-sm text-yellow-300" />
+                      <WarningFilled className="text-sm text-yellow-300!" />
                     </span>
                   </TooltipTrigger>
                   <TooltipContent
@@ -387,7 +387,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
-                    <WarningFilled className="text-sm text-yellow-300" />
+                    <WarningFilled className="text-sm text-yellow-300!" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent
@@ -434,7 +434,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
-                    <WarningFilled className="text-sm text-yellow-300" />
+                    <WarningFilled className="text-sm text-yellow-300!" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent
@@ -486,7 +486,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
         <TooltipContent
           sideOffset={0}
           arrowClassName={overResourceThreshold ? 'bg-warning' : 'bg-primary-9'}
-          className={overResourceThreshold ? 'bg-warning' : undefined}
+          className={overResourceThreshold ? 'bg-warning!' : undefined}
         >
           {overResourceThreshold ? (
             <div className="max-w-80 text-white">

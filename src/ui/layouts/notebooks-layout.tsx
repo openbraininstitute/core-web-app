@@ -1,16 +1,18 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import NextLink from 'next/link';
-import Image from 'next/image';
-import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useWorkspace } from '../hooks/use-workspace';
-import { cn } from '@/utils/css-class';
+import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
+import NextLink from 'next/link';
+import { type ReactNode, useState } from 'react';
+
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { useAppNotification } from '@/components/notification';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useAppNotification } from '@/components/notification';
+import { cn } from '@/utils/css-class';
+
+import { useWorkspace } from '../hooks/use-workspace';
 
 type Props = {
   children: ReactNode;

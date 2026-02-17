@@ -1,7 +1,6 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Select } from 'antd';
-
 import authFetch from '@/auth-fetch';
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -16,8 +15,8 @@ export default function EntityPropertyDropdown({
   disabled = false,
 }: {
   modelId: string;
-  value: string | null;
-  onChange: (v: string | null) => void;
+  value: string[];
+  onChange: (v: string[]) => void;
   entity_type: string;
   property: string;
   disabled?: boolean;
@@ -40,12 +39,13 @@ export default function EntityPropertyDropdown({
 
   return (
     <Select
+      showSearch
+      mode="multiple"
       disabled={disabled}
       className="w-full"
       value={value}
       onChange={onChange}
       options={[
-        { label: '—', value: null },
         ...data.map((n) => {
           return {
             label: n,

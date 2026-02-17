@@ -1,5 +1,5 @@
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 interface VlmResponse<T> {
   message: string;

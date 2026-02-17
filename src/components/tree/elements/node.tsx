@@ -1,13 +1,14 @@
-import React, { CSSProperties, memo } from 'react';
+import { type CSSProperties, memo } from 'react';
 
 import DefaultNode from '@/components/tree/elements/default-node';
 import {
-  VerticalIndentationLine,
   HorizontalIndentationLine,
+  VerticalIndentationLine,
 } from '@/components/tree/elements/indentation';
 import { classNames } from '@/util/utils';
 
-import type { TTreeNode, RenderNodeProps, NodeIndentation } from '@/components/tree/types';
+import type React from 'react';
+import type { NodeIndentation, RenderNodeProps, TTreeNode } from '@/components/tree/types';
 
 interface NodeProps<TNode extends TTreeNode> {
   dataKey: string;
@@ -57,6 +58,7 @@ function Node<TNode extends TTreeNode>({
   };
 
   return (
+    // biome-ignore lint/a11y/useFocusableInteractive: need to be treeitem
     <div
       className={classNames('group/node flex flex-col')}
       role="treeitem"
@@ -75,7 +77,7 @@ function Node<TNode extends TTreeNode>({
           />
         )}
         <div
-          className="relative flex min-h-[var(--min-height)] w-full items-center pl-[var(--padding-left)]"
+          className="relative flex min-h-(--min-height) w-full items-center pl-(--padding-left)"
           style={
             {
               '--min-height': `${nodeRowHeight}px`,
@@ -109,7 +111,7 @@ function Node<TNode extends TTreeNode>({
             <div
               className={classNames(
                 `border-b-neutral-2 absolute border-b`,
-                'right-1.5 bottom-0 left-[var(--left)] h-px w-[var(--width)]'
+                'right-1.5 bottom-0 left-(--left) h-px w-(--width)'
               )}
               style={
                 {

@@ -1,6 +1,6 @@
 'use client';
 
-import { find, isNil, lowerCase, omit } from 'es-toolkit/compat';
+import { capitalize, find, isNil, lowerCase, omit } from 'es-toolkit/compat';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect, useRef } from 'react';
@@ -271,7 +271,7 @@ export const brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom = atom(
         .map((region) => ({
           av: region.annotation_value,
           value: region.id,
-          label: `${region.name}`,
+          label: capitalize(`${region.name}`),
           data: {
             ...region,
             children: region.children.filter((o) => !isNil(o)),
@@ -386,8 +386,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     }
 
     isInitializedRef.current = true;
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // biome-ignore lint/correctness/useExhaustiveDependencies: updateSelectedBrainRegion is stable
   }, [brainRegions, id, annotationValue, stored, defaultSelectedBrainRegion]);
 
   // Sync localStorage when URL params change
