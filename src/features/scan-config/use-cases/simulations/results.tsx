@@ -113,12 +113,19 @@ export default function SimulationsTab({
   }, [simulations, statusMap]);
 
   useEffect(() => {
-    // Auto select all simulations with status "created" on page load.
+    // Auto select all valid simulations with status "created" on page load.
+    // Previously failed simulations with a valid simulation config have to be explicitly
+    // re-selected by the user.
+    const simIds = simulations
+      .filter((simulation) => [undefined, 'created'].includes(statusMap?.get(simulation.id)))
+      .filter((simulation) => hasSimConfigAsset(simulation))
+      .map((s) => s.id);
+
     if (statusMap && simulations && !initialSelectionDone) {
-      setSelectedSimulationIds(selectableSimulationIds);
+      setSelectedSimulationIds(simIds);
       setInitialSelectionDone(true);
     }
-  }, [simulations, statusMap, initialSelectionDone, selectableSimulationIds]);
+  }, [simulations, statusMap, initialSelectionDone]);
 
   useEffect(() => {
     // Select first simulation from the list
@@ -303,6 +310,7 @@ export default function SimulationsTab({
                   onSelectedForSimChange={onSelectedForSimChange}
                   selectedForSim={selectedSimulationIds.includes(simulation.id)}
                   selectionForSimDisabled={simRequestInProgress}
+                  canBeSelectedForSim={hasSimConfigAsset(simulation)}
                 />
               ))}
           </div>
@@ -379,6 +387,7 @@ type SimulationBlockProps = {
   onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
   selectedForSim: boolean;
   selectionForSimDisabled?: boolean;
+  canBeSelectedForSim?: boolean;
 };
 
 function SimulationListItem({
@@ -389,6 +398,7 @@ function SimulationListItem({
   onSelectedForSimChange,
   selectedForSim,
   selectionForSimDisabled,
+  canBeSelectedForSim,
 }: SimulationBlockProps) {
   const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED];
 
@@ -412,7 +422,9 @@ function SimulationListItem({
           onClick={() => onSelect(simulation.id)}
         >
           <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
-            {!execStatus || execStatus === ActivityStatus.CREATED ? (
+            {!execStatus ||
+            ([ActivityStatus.CREATED, ActivityStatus.ERROR].includes(execStatus) &&
+              canBeSelectedForSim) ? (
               <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
                 <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
                   <Checkbox
