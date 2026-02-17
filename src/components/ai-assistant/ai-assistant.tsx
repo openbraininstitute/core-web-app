@@ -46,16 +46,18 @@ export default function AiAssistant({
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const { status } = useServiceAiAgentChat(threadId ?? '');
 
-  const canCreateNewChat = threadId && !isEmptyThread && status === 'ready';
+  const canCreateNewChat = status === 'ready';
 
   const style: CSSProperties = {
     '--custom-panel-width': fullscreen ? '100%' : `${panelWidth.toFixed(0)}px`,
   };
 
   const handleNewChat = async () => {
-    assistant.threadId.set(undefined);
     setTab('chat');
-    await assistant.createThread();
+    if (!isEmptyThread) {
+      assistant.threadId.set(undefined);
+      await assistant.createThread();
+    }
   };
 
   return (
@@ -73,7 +75,43 @@ export default function AiAssistant({
             className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
           >
             <div className={styles.header}>
+              <nav className={styles.headerNav}>
+                <button
+                  type="button"
+                  className={classNames(styles.navBtn, styles.newChatBtn)}
+                  disabled={!canCreateNewChat}
+                  onClick={handleNewChat}
+                  aria-label="New Chat"
+                  title="New Chat"
+                >
+                  <IconNewChat />
+                </button>
+
+                <button
+                  type="button"
+                  className={classNames(styles.navBtn, tab === 'chat' && styles.navBtnActive)}
+                  onClick={() => setTab('chat')}
+                  disabled={!threadId}
+                  aria-label="Chat"
+                  title="Chat"
+                >
+                  <IconChat />
+                </button>
+
+                <button
+                  type="button"
+                  className={classNames(styles.navBtn, tab === 'history' && styles.navBtnActive)}
+                  onClick={() => setTab('history')}
+                  disabled={!threadId}
+                  aria-label="History"
+                  title="History"
+                >
+                  <IconHistory />
+                </button>
+              </nav>
+
               <div className={styles.headerTitle}>AI assistant</div>
+
               <div className={styles.headerActions}>
                 {onFullscreenToggle && (
                   <button
@@ -81,6 +119,7 @@ export default function AiAssistant({
                     onClick={onFullscreenToggle}
                     className={styles.headerBtn}
                     aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                    title={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                   >
                     {fullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                   </button>
@@ -89,43 +128,16 @@ export default function AiAssistant({
                   <button
                     type="button"
                     onClick={onCollapse}
-                    className={styles.headerBtn}
+                    className={classNames(styles.headerBtn, styles.collapseBtn)}
                     aria-label="Collapse"
+                    title="Collapse"
                   >
                     <MinusOutlined />
                   </button>
                 )}
               </div>
             </div>
-            <nav>
-              <button
-                type="button"
-                className={classNames(tab === 'chat' && styles.selected)}
-                onClick={() => setTab('chat')}
-                disabled={!threadId}
-              >
-                <IconChat />
-                <div>Chat</div>
-              </button>
-              <button
-                type="button"
-                className={classNames(tab === 'history' && styles.selected)}
-                onClick={() => setTab('history')}
-                disabled={!threadId}
-              >
-                <IconHistory />
-                <div>History</div>
-              </button>
-              <button
-                type="button"
-                className={styles.newChatBtn}
-                disabled={!canCreateNewChat}
-                onClick={handleNewChat}
-              >
-                <IconNewChat />
-                <div>New Chat</div>
-              </button>
-            </nav>
+
             <PanelContent
               className={styles.content}
               threadId={threadId}

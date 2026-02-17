@@ -75,11 +75,11 @@ export function Container(): JSX.Element {
         <button
           type="button"
           onClick={() => beginTransition(PanelState.Expanded)}
-          className="relative flex h-full w-full cursor-pointer items-start justify-center px-2 select-none"
+          className="flex h-full w-full cursor-pointer flex-col items-center px-2 select-none"
           aria-label="expand AI assistant"
         >
-          <div className="absolute top-3 flex items-center justify-center text-white">
-            <PlusOutlined className="h-5 w-5" />
+          <div className="mt-3 flex h-8 w-8 items-center justify-center text-white">
+            <PlusOutlined className="h-4 w-4" />
           </div>
           <div
             className="text-xl font-bold"
@@ -88,7 +88,7 @@ export function Container(): JSX.Element {
               transformOrigin: 'center',
               whiteSpace: 'nowrap',
               position: 'relative',
-              top: '80px',
+              top: '45px',
               margin: 0,
             }}
           >
