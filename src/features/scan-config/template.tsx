@@ -1,7 +1,6 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useQueries } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
