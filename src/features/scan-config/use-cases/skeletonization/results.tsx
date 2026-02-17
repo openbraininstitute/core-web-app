@@ -1,10 +1,9 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Checkbox } from 'antd';
 import { includes } from 'es-toolkit/compat';
-import pMap from 'p-map';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -15,7 +14,7 @@ import {
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ApiError } from '@/api/error';
-import { launchExtraction, ObiOneTaskTypeDict } from '@/api/one/extraction';
+import { runBatch } from '@/api/small-scale-simulator/em-cell-mesh/skeletonization';
 import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
 import { WorkspaceSection } from '@/constants';
@@ -216,48 +215,33 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
     }
   }, [configList, activeConfig, onActiveConfigChange]);
 
-  const launchSkeletonizationMutation = useMutation({
-    mutationFn: async (configId: string) => {
-      return launchExtraction({
-        ctx: { virtualLabId, projectId },
-        task_type: ObiOneTaskTypeDict.Skeletonization,
-        config_id: configId,
-      });
-    },
-    throwOnError: false,
-    onSuccess: (result, vars) => {
-      log('info', `Skeletonization for ${vars} launched successfully, execution ID`, { result });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.skeletonizationExecutions(configIds, context),
-      });
-    },
-    onError: (error, vars) => {
-      log('error', `Failed to launch skeletonization for config ${vars}`, error);
-      const defaultMsg =
-        'We ran into a problem launching your skeletonization. Please try again later.';
-      if (error instanceof ApiError) {
-        const code = error.cause?.code;
-        const apiMessage = error.cause?.message ?? defaultMsg;
-        const message = code ? getErrorMessage(code, errorRegistry, apiMessage) : apiMessage;
-        notification.error({ message, duration: 5, key: SKELETONIZATION_ERROR_KEY });
-        return;
-      }
-
-      notification.error({ message: defaultMsg, duration: 5, key: SKELETONIZATION_ERROR_KEY });
-    },
-  });
-
   const runSkeletonization = async (configIdsToRun: string[]) => {
     setSkeletonizationRequestInProgress(true);
     try {
       await consentGate.runWithConsent({
         fn: async () => {
-          await pMap(configIdsToRun, (c) => launchSkeletonizationMutation.mutateAsync(c), {
-            concurrency: 3,
+          await runBatch({
+            ctx: { virtualLabId, projectId },
+            skeletonizationIds: configIdsToRun,
+          });
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.skeletonizationExecutions(configIds, context),
           });
           setSelectedConfigIds([]);
         },
       });
+    } catch (error) {
+      log('error', 'Failed to launch skeletonization batch', error);
+      const defaultMsg =
+        'We ran into a problem launching your skeletonization(s). Please try again later.';
+      if (error instanceof ApiError) {
+        const code = error.cause?.code;
+        const apiMessage = error.cause?.message ?? defaultMsg;
+        const message = code ? getErrorMessage(code, errorRegistry, apiMessage) : apiMessage;
+        notification.error({ message, duration: 5, key: SKELETONIZATION_ERROR_KEY });
+      } else {
+        notification.error({ message: defaultMsg, duration: 5, key: SKELETONIZATION_ERROR_KEY });
+      }
     } finally {
       setSkeletonizationRequestInProgress(false);
     }
