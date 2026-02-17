@@ -76,7 +76,10 @@ export function ScanConfigTemplate({
   const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model: entity });
 
   const config = useConfigAtom(schema, atomsMap);
-  const updateRequestId = useAgentState('smc_simulation_config', config);
+
+  const aiEnabled = 'scale' in entity && entity.scale !== 'single';
+
+  const updateRequestId = useAgentState(aiEnabled ? 'smc_simulation_config' : '', config);
   const { aiConfig, setAiConfig } = useAIConfig();
 
   if (!schema || Object.keys(atomsMap).length === 0) {

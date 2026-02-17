@@ -155,7 +155,7 @@ export function useServiceAiAgentChat(threadId: string) {
 export const configStateAtom = atom<Config | null>(null);
 const isChatReadyAtom = atom(true);
 
-export function useAgentState(key: 'smc_simulation_config', config?: Config) {
+export function useAgentState(key: 'smc_simulation_config' | '', config?: Config) {
   const [, setAIAgentState] = useAtom(agentStateAtom);
   const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
 
@@ -163,14 +163,18 @@ export function useAgentState(key: 'smc_simulation_config', config?: Config) {
     const stateConfig = config ?? defaultConfig;
     if (!stateConfig) return;
 
-    setAIAgentState({
-      [key]: stateConfig,
-    });
+    setAIAgentState(
+      key
+        ? {
+            [key]: stateConfig,
+          }
+        : {}
+    );
 
     return () => {
       if (!defaultConfig) return;
       setAIAgentState({
-        [key]: defaultConfig,
+        smc_simulation_config: defaultConfig,
       });
     };
   }, [defaultConfig, config, key, setAIAgentState]);
