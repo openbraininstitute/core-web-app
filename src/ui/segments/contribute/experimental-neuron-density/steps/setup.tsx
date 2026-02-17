@@ -3,32 +3,15 @@
 import { Form, Input } from 'antd';
 
 import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experimental-neuron-density/schema';
-import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { BrainRegionSelector } from '@/ui/segments/contribute/shared/components/brain-region-selector';
 import {
-  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
+  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();
-  const { projectId } = useWorkspace();
-
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
-
-  const BrainRegionDropdown = BrainRegionDropdownWithFormItem({
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
-    showIcon: false,
-    charsPerLine: 200,
-    defaultBrainRegion: defaultBrainRegion as IBrainRegionHierarchy,
-  });
 
   return (
     <div className="h-full w-full">
@@ -84,7 +67,7 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdown />
+        <BrainRegionSelector />
       </Form.Item>
     </div>
   );

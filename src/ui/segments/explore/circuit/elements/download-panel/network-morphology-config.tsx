@@ -1,39 +1,36 @@
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import { match, P } from 'ts-pattern';
-import { useSetAtom } from 'jotai';
-import { useEffect } from 'react';
-
-import isString from 'es-toolkit/compat/isString';
 import compact from 'es-toolkit/compat/compact';
 import get from 'es-toolkit/compat/get';
-
-import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
-import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';
-import {
-  morphologiesContentConfiguration,
-  networksContentConfiguration,
-} from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
-import { Error } from '@/ui/segments/explore/circuit/elements/download-panel/error';
-import {
-  updateFileCounterAtom,
-  buildNetworksConfig,
-  resolveCircuitConfigAndDirectory,
-  extractWithAlternateMorphologies,
-  getAssetPath,
-} from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getAssetElement } from '@/api/entitycore/utils';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import isString from 'es-toolkit/compat/isString';
+import { useSetAtom } from 'jotai';
+import { useParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { match, P } from 'ts-pattern';
 import type {
   ICircuit,
   ICircuitSonataConfiguration,
 } from '@/api/entitycore/types/entities/circuit';
-
-import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
+import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
+import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
+import {
+  morphologiesContentConfiguration,
+  networksContentConfiguration,
+} from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
+import { DownloadPanelError } from '@/ui/segments/explore/circuit/elements/download-panel/error';
+import {
+  buildNetworksConfig,
+  extractWithAlternateMorphologies,
+  getAssetPath,
+  resolveCircuitConfigAndDirectory,
+  updateFileCounterAtom,
+} from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
+import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
-const AssetDefaultPath = 'circuit_config.json';
+export const AssetDefaultPath = 'circuit_config.json';
 
 export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICircuit }) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
@@ -81,11 +78,12 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
     },
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: biome hallucination
   useEffect(() => {
     updateFileCounter({
       nodes: networksConfig.data?.nodes,
-      edges: networksConfig.data?.nodes,
-      morphologies: networksConfig.data?.nodes,
+      edges: networksConfig.data?.edges,
+      morphologies: networksConfig.data?.morphologies,
     });
   }, [
     networksConfig.data?.nodes,
@@ -111,12 +109,17 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
         else if (error?.directory) err = error.directory;
         else if (error?.config) err = error.config;
         return (
-          <Error icon={null} title="Networks" description={err} cls={{ container: 'text-white' }} />
+          <DownloadPanelError
+            icon={null}
+            title="Networks"
+            description={err}
+            cls={{ container: 'text-white' }}
+          />
         );
       }
     )
     .with({ data: { directory: P.nullish, config: P.nonNullable } }, () => (
-      <Error
+      <DownloadPanelError
         icon={null}
         title="Networks"
         description="No assets directory was found"
@@ -124,7 +127,7 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
       />
     ))
     .with({ data: { directory: P.nonNullable, config: P.nullish } }, () => (
-      <Error
+      <DownloadPanelError
         icon={null}
         title="Networks"
         description="No configuration asset was found"

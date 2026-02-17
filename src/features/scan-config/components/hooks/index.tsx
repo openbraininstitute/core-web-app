@@ -1,48 +1,94 @@
 import Ajv, { type AnySchema } from 'ajv';
-import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useRef } from 'react';
 import { match } from 'ts-pattern';
+
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { config as appConfig } from '@/config';
+import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
+import {
+  type ConfigSchema,
+  ScanConfigActivity,
+  type SchemaName,
+  type TScanConfigActivity,
+} from '@/features/scan-config/types';
+import { log } from '@/utils/logger';
+
 import type { Config } from '@/features/scan-config/components/components';
-import type { ConfigSchema, SchemaName } from '@/features/scan-config/types';
-import type { WorkspaceContext } from '@/types/common';
-import { modelAtomFamily } from '../atoms';
-import { isRootBlock } from './schema';
 
-export function useModel({ id, context }: { id: string; context: WorkspaceContext }) {
-  const modelAtom = modelAtomFamily({ id, context });
-  const model = useAtomValue(modelAtom);
-
-  return { model };
-}
-
-export function useApiUrl({ model }: { model: ICircuit | IMEModel }) {
-  const apiPath = match(model)
-    .with({ type: EntityTypeDict.Memodel }, () => 'me-model-simulation-scan-config-generate-grid')
-    .with(
-      { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
-      () => 'me-model-with-synapses-circuit-simulation-scan-config-generate-grid'
-    )
-    .with({ type: EntityTypeDict.Circuit }, () => 'circuit-simulation-scan-config-generate-grid')
-    .otherwise(() => {
-      throw new Error(`Unsupported model type ${model.type}`);
-    });
+export function useApiUrl({
+  activity = ScanConfigActivity.Simulate,
+  model,
+}: {
+  activity?: TScanConfigActivity;
+  model: ICircuit | IMEModel;
+}) {
+  const apiPath = match(activity)
+    .with(ScanConfigActivity.Extract, () => {
+      const path = match(model)
+        .with(
+          { type: EntityTypeDict.Circuit },
+          () => 'circuit-extraction-scan-config-generate-grid'
+        )
+        .otherwise(() => {
+          throw new Error(`Unsupported model type ${model.type}`);
+        });
+      return path;
+    })
+    .with(ScanConfigActivity.Simulate, () => {
+      const path = match(model)
+        .with(
+          { type: EntityTypeDict.Memodel },
+          () => 'me-model-simulation-scan-config-generate-grid'
+        )
+        .with(
+          { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
+          () => 'me-model-with-synapses-circuit-simulation-scan-config-generate-grid'
+        )
+        .with(
+          { type: EntityTypeDict.Circuit },
+          () => 'circuit-simulation-scan-config-generate-grid'
+        )
+        .otherwise(() => {
+          throw new Error(`Unsupported model type ${model.type}`);
+        });
+      return path;
+    })
+    .exhaustive();
   return `${appConfig.OBI_ONE_URL}/generated/${apiPath}`;
 }
 
-export function useSchemaName({ model }: { model: ICircuit | IMEModel }) {
-  const schemaName = match(model)
-    .with({ type: EntityTypeDict.Memodel }, () => 'MEModelSimulationScanConfig')
-    .with(
-      { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
-      () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
-    )
-    .with({ type: EntityTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
-    .otherwise(() => {
-      throw new Error(`Unsupported entity type: ${model.type}`);
-    });
+export function useSchemaName({
+  model,
+  activity = ScanConfigActivity.Simulate,
+}: {
+  model: ICircuit | IMEModel;
+  activity?: TScanConfigActivity;
+}) {
+  const schemaName = match({ activity })
+    .with({ activity: ScanConfigActivity.Extract }, () => {
+      const name = match(model)
+        .with({ type: EntityTypeDict.Circuit }, () => 'CircuitExtractionScanConfig')
+        .otherwise(() => {
+          throw new Error(`Unsupported entity type: ${model.type}`);
+        });
+      return name as SchemaName;
+    })
+    .with({ activity: ScanConfigActivity.Simulate }, () => {
+      const name = match(model)
+        .with({ type: EntityTypeDict.Memodel }, () => 'MEModelSimulationScanConfig')
+        .with(
+          { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
+          () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
+        )
+        .with({ type: EntityTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
+        .otherwise(() => {
+          throw new Error(`Unsupported entity type: ${model.type}`);
+        });
+      return name as SchemaName;
+    })
+    .exhaustive();
+
   return schemaName as SchemaName;
 }
 
@@ -66,7 +112,15 @@ export function useValidateSchema({
   if (validate && initialConfig && !initialConfigValidated.current) {
     initialConfigValidated.current = true;
     validate(initialConfig);
-    if (validate.errors) throw new Error('Invalid Simulation Campaign Configuration');
+    if (validate.errors) {
+      log(
+        'error',
+        '[schema validation failed]',
+        { initialConfig, config, schema },
+        { errors: validate.errors }
+      );
+      throw new Error('Invalid campaign configuration');
+    }
   }
 
   const errors = useMemo(() => {
@@ -91,7 +145,9 @@ export function useEntries({
     Object.entries(initialConfig)
       .filter(([k]) => !isRootBlock(schema, k))
       .forEach(([_key, value]) => {
-        Object.keys(value).forEach((entryKey) => { allEntries.current.add(entryKey) });
+        Object.keys(value).forEach((entryKey) => {
+          allEntries.current.add(entryKey);
+        });
       });
   }, [schema, initialConfig]);
 

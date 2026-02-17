@@ -1,9 +1,17 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { Input as AInput, InputProps, Select as ASelect, SelectProps, InputRef } from 'antd';
-import { TextAreaProps } from 'antd/lib/input/TextArea';
-import { ForwardedRef, forwardRef } from 'react';
+import {
+  Input as AInput,
+  Select as ASelect,
+  type InputProps,
+  type InputRef,
+  type SelectProps,
+} from 'antd';
+import { type ForwardedRef, forwardRef } from 'react';
+
 import { cn } from '@/utils/css-class';
+
+import type { TextAreaProps } from 'antd/lib/input/TextArea';
 
 const { TextArea: ATextArea } = AInput;
 

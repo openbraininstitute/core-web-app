@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
-import { DefaultOptionType } from 'antd/es/select';
 import { Select } from 'antd';
 import map from 'es-toolkit/compat/map';
+import { useCallback, useEffect, useState } from 'react';
+
 import { cn } from '@/utils/css-class';
 
+import type { DefaultOptionType } from 'antd/es/select';
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 export type OptionType = DefaultOptionType;
@@ -86,17 +87,21 @@ export function DropdownList({
           'has-[.ant-select-clear]:[&_.ant-select-arrow]:hidden!',
           '[&_.ant-select-clear]:bg-transparent!'
         )}
-        popupClassName={cn(
-          'bg-primary-8 border-neutral-3 text-white',
-          '[&_.ant-select-item]:text-white! [&_.ant-select-item-option-selected]:bg-primary-7! [&_.ant-select-item-option-state]:text-white!',
-          '[&_.ant-select-item-option-active]:bg-white! [&_.ant-select-item-option-active]:text-primary-8! select-none!',
-          '[&_.ant-select-item-option-active.ant-select-item-option-selected]:text-white!'
-        )}
+        classNames={{
+          popup: {
+            root: cn(
+              'bg-primary-8 border-neutral-3 text-white!',
+              '[&_.ant-select-item]:text-white! [&_.ant-select-item-option-selected]:bg-primary-7! [&_.ant-select-item-option-state]:text-white!',
+              '[&_.ant-select-item-option-active]:bg-white! [&_.ant-select-item-option-active]:text-primary-8! select-none!',
+              '[&_.ant-select-item-option-active.ant-select-item-option-selected]:text-white!'
+            ),
+          },
+        }}
         size="large"
         options={options}
       />
       {selectedValues.length > 0 && (
-        <div className="text-primary-3 text-xs">
+        <div className="text-primary-3! text-xs">
           {selectedValues.length} item{selectedValues.length !== 1 ? 's' : ''} selected
         </div>
       )}

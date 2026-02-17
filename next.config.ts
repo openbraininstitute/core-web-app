@@ -11,6 +11,8 @@ const withBundleAnalyzer = NextBundleAnalyzer({
 const cdnUrl = process.env.CDN_URL;
 const appVersion = process.env.APP_VERSION;
 
+const isPreviewBuild = !!(process.env.AWS_APP_ID || process.env.AWS_AMPLIFY_BUILD);
+
 const SentryOptions: SentryBuildOptions = {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
@@ -39,8 +41,10 @@ const nextConfig = (phase: string): NextConfig => {
     env: {
       APP_BUILD_TIME: new Date().toISOString(),
     },
+    productionBrowserSourceMaps: !isPreviewBuild,
     experimental: {
       turbopackFileSystemCacheForDev: true,
+      serverSourceMaps: !isPreviewBuild,
     },
     reactCompiler: true,
     turbopack: {
@@ -146,6 +150,11 @@ const nextConfig = (phase: string): NextConfig => {
           destination: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id/overview',
           permanent: false,
         },
+        {
+          source: '/static/coming-soon/index.html',
+          destination: '/',
+          permanent: false,
+        },
       ];
     },
     async headers() {
@@ -180,5 +189,17 @@ const nextConfig = (phase: string): NextConfig => {
 };
 
 export default function generateConfig(phase: string) {
-  return withBundleAnalyzer(withSentryConfig(nextConfig(phase), SentryOptions));
+  const config = nextConfig(phase);
+
+  /*
+    The build with Sentry/sourcemaps is hitting 220 MB limit in AWS Amplify,
+    see https://docs.aws.amazon.com/amplify/latest/userguide/troubleshooting-SSR.html#build-output-too-large.
+
+    TODO: Enable Sentry once there is a solution.
+  */
+  if (isPreviewBuild) {
+    return withBundleAnalyzer(config);
+  }
+
+  return withBundleAnalyzer(withSentryConfig(config, SentryOptions));
 }

@@ -1,23 +1,19 @@
-import { atomFamily } from 'jotai/utils';
-import { atom } from 'jotai';
-
 import escapeRegExp from 'es-toolkit/compat/escapeRegExp';
-import isEmpty from 'es-toolkit/compat/isEmpty';
-import toPairs from 'es-toolkit/compat/toPairs';
-import reduce from 'es-toolkit/compat/reduce';
-import values from 'es-toolkit/compat/values';
-import sumBy from 'es-toolkit/compat/sumBy';
-import map from 'es-toolkit/compat/map';
 import get from 'es-toolkit/compat/get';
 import has from 'es-toolkit/compat/has';
+import isEmpty from 'es-toolkit/compat/isEmpty';
+import map from 'es-toolkit/compat/map';
+import reduce from 'es-toolkit/compat/reduce';
+import sumBy from 'es-toolkit/compat/sumBy';
+import toPairs from 'es-toolkit/compat/toPairs';
+import values from 'es-toolkit/compat/values';
+import { atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
 
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
-import { EmptyValue } from '@/entity-configuration/definitions/renderer';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { EmptyValue } from '@/entity-configuration/definitions/renderer';
 
-import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
-import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
-import type { WorkspaceContext } from '@/types/common';
 import type {
   CircuitConnectivityMatricesConfiguration,
   SonataCircuitComponentConfig,
@@ -25,6 +21,9 @@ import type {
   SonataCircuitNetworkEdgeConfigItem,
   SonataCircuitNetworkNodeConfigItem,
 } from '@/api/entitycore/types/entities/circuit';
+import type { DirectoryListContent } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
+import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 
 type FilesCount = Record<TCircuitContentConfigurationKeys, number>;
 

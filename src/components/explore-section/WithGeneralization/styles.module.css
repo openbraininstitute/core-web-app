@@ -1,4 +1,4 @@
-@reference '../../../styles/globals.css';
+@reference "../../../styles/globals.css";
 
 .label {
   @apply text-primary-9 min-w-fit text-lg font-bold;

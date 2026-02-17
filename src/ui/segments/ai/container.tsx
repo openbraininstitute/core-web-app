@@ -10,15 +10,19 @@ import { motion } from 'motion/react';
 import { type JSX, useEffect, useMemo, useState } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
-import styles from '@/ui/segments/ai/container.module.css';
+import { useAgentState } from '@/services/ai-agent';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { cn } from '@/utils/css-class';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
+import styles from '@/ui/segments/ai/container.module.css';
+
 export function Container(): JSX.Element {
   const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();
   const [animationComplete, setAnimationComplete] = useState(false);
+  useAgentState('smc_simulation_config');
+
   useEffect(() => {
     if (isFullscreen) {
       document.body.style.overflow = 'hidden';

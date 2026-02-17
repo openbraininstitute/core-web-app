@@ -51,7 +51,7 @@
   filter: grayscale(100%);
 }
 
-.SwitchRoot[data-state='checked'] {
+.SwitchRoot[data-state="checked"] {
   background-color: var(--custom-switch-color-front);
   filter: grayscale(0);
 }
@@ -68,21 +68,21 @@
   background-color: var(--custom-switch-color-front);
 }
 
-.SwitchThumb[data-state='checked'] {
+.SwitchThumb[data-state="checked"] {
   transform: translateX(calc(var(--custom-width) - var(--custom-padding) - var(--size)));
   background-color: var(--custom-switch-color-back);
 }
 
-.SwitchRoot[data-disabled=''] {
+.SwitchRoot[data-disabled=""] {
   border: 1px solid var(--custom-switch-color-disabled);
   filter: grayscale(0);
   cursor: not-allowed;
 }
 
-.SwitchThumb[data-disabled=''] {
+.SwitchThumb[data-disabled=""] {
   background-color: var(--custom-switch-color-disabled);
 }
 
-.SwitchThumb[data-disabled=''][data-state='checked'] {
+.SwitchThumb[data-disabled=""][data-state="checked"] {
   background-color: var(--custom-switch-color-back);
 }

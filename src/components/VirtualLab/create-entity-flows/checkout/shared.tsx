@@ -8,7 +8,7 @@ import merge from 'es-toolkit/compat/merge';
 import omit from 'es-toolkit/compat/omit';
 import { forwardRef } from 'react';
 
-import { getSanityTiers } from '@/api/sanity/client';
+import { getSanityTiers } from '@/services/sanity';
 import { listSubscriptionTiers } from '@/api/virtual-lab-svc/queries/subscription';
 import { classNames } from '@/util/utils';
 
@@ -179,7 +179,7 @@ const renameAndRemove = (arr: Array<any>, oldKey: string, newKey: string) =>
 export async function getAllTiers(): Promise<Array<ExtendedTier>> {
   const [appTiers, sanityTiers] = await Promise.all([
     listSubscriptionTiers(),
-    getSanityTiers()({ next: { revalidate: 3600 } }),
+    getSanityTiers(),
   ]);
   if (!appTiers || !sanityTiers) {
     throw new Error('Tiers can not be fetched');

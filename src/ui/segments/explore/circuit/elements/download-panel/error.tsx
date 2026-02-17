@@ -1,9 +1,9 @@
 import { InfoCircleFilled } from '@ant-design/icons';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { classNames } from '@/util/utils';
 
-export function Error({
+export function DownloadPanelError({
   title,
   description,
   icon = <InfoCircleFilled />,

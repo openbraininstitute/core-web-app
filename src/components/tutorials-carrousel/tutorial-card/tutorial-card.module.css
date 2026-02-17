@@ -21,7 +21,7 @@
 }
 
 .tutorialCard .thumbnail::after {
-  content: '';
+  content: "";
   position: absolute;
   left: -0.5em;
   top: -30%;

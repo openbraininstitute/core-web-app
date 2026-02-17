@@ -1,12 +1,13 @@
 'use client';
 
 import { CaretRightFilled } from '@ant-design/icons';
-import { type CSSProperties } from 'react';
+import { capitalize } from 'es-toolkit/compat';
 
 import { cn } from '@/utils/css-class';
 
-import type { IBrainRegionHierarchyExtended } from '@/features/brain-region-hierarchy/context';
+import type { CSSProperties } from 'react';
 import type { RenderNodeProps } from '@/components/tree/types';
+import type { IBrainRegionHierarchyExtended } from '@/features/brain-region-hierarchy/context';
 
 type Props<TNode extends IBrainRegionHierarchyExtended = IBrainRegionHierarchyExtended> =
   RenderNodeProps<TNode>;
@@ -21,14 +22,14 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
   defaultColor,
 }: Props<TNode>) {
   const color = 'color' in node ? node.color : defaultColor;
-  const nodeName = node.name;
+  const nodeName = capitalize(node.name);
 
   return (
-    <div
+    <button
+      type="button"
       id={node.id.toString()}
       title={nodeName}
       aria-label={nodeName}
-      role="button"
       tabIndex={0}
       className={cn(
         'flex min-w-0 flex-1 cursor-pointer items-center transition-colors duration-200 ease-in-out',
@@ -48,20 +49,23 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
         } as CSSProperties
       }
     >
-      <div className="mr-1.5 flex min-w-0 flex-shrink flex-grow basis-0 items-center">
+      <div className="mr-1.5 flex min-w-0 shrink grow basis-0 items-center">
         <div className="flex items-baseline">
           <span className={cn('text-base', { 'line-clamp-1': isSelected })}>{nodeName}</span>
         </div>
       </div>
       {hasChildren && (
-        <button
+        // biome-ignore lint/a11y/useSemanticElements: parent is a button, button cannot be a descendant of button
+        // biome-ignore lint/a11y/useKeyWithClickEvents: no need for keydown
+        <div
+          tabIndex={0}
           className={cn(
-            'ml-auto flex flex-shrink-0 items-center justify-center',
+            'ml-auto flex shrink-0 items-center justify-center',
             'rounded-full p-0.5 hover:bg-black/10 hover:shadow-md',
             { 'text-primary-9': isSelected },
             { 'text-primary-9/60': !isSelected }
           )}
-          type="button"
+          role="button"
           onClick={onToggle}
           style={{ '--color': `#${color}` } as CSSProperties}
         >
@@ -71,8 +75,8 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
               'rotate-90': isExpanded,
             })}
           />
-        </button>
+        </div>
       )}
-    </div>
+    </button>
   );
 }

@@ -1,8 +1,9 @@
-import find from 'es-toolkit/compat/find';
-
+import { find, snakeCase } from 'es-toolkit/compat';
 import { authApiClient } from '@/api/apiClient';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreBaseAsset, IAsset } from '@/api/entitycore/types/shared/global';
 import { config as appConfig } from '@/config';
+import type { KebabCase } from '@/utils/type';
 
 export const getEntityCoreContext = (
   ctx:
@@ -39,3 +40,11 @@ export function getAssetElement(
   }
   return find(config.assets, { path: config.path, content_type: config.type });
 }
+
+export const convertEntitySlugToExtendedType = ({
+  type,
+}: {
+  type: KebabCase<TExtendedEntitiesTypeDict>;
+}) => {
+  return snakeCase(type) as TExtendedEntitiesTypeDict;
+};

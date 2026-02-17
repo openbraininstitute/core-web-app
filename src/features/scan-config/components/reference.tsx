@@ -1,7 +1,9 @@
 import { Select } from 'antd';
+
+import { useObioneJsonSchema, useReferenceTypeDict } from './hooks/schema';
+
 import type { Reference as ReferenceSchema, SchemaName } from '../types';
 import type { Config } from './components';
-import { useObioneJsonSchema, useReferenceTypeDict } from './hooks/schema';
 
 export default function Reference({
   value,
@@ -10,7 +12,6 @@ export default function Reference({
   schemaName,
   referenceSchema,
   config,
-  hasReplacePatch,
 }: {
   schemaName: SchemaName;
   referenceSchema: ReferenceSchema;
@@ -18,7 +19,6 @@ export default function Reference({
   value: string | null;
   onChange: (block_name: string | null, block_dict_name: string | null) => void;
   disabled: boolean;
-  hasReplacePatch: boolean;
 }) {
   const referenceTypeDict = useReferenceTypeDict(schemaName);
   const schema = useObioneJsonSchema(schemaName);
@@ -47,7 +47,8 @@ export default function Reference({
     value: null,
   });
 
-  if (hasReplacePatch && typeof value === 'string') {
+  // Id The AI suggested a value that is not in the options add it
+  if (typeof value === 'string' && !options.map((o) => o.value).includes(value)) {
     options.push({
       label: value,
       value: value,

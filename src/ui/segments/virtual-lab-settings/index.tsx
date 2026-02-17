@@ -1,25 +1,25 @@
 'use client';
 
-import { CloseOutlined, EditOutlined, CheckOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CheckOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 import { z } from 'zod';
 
-import { updateVirtualLab, checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { TeamTable } from '@/ui/segments/virtual-lab-settings/sections/team';
-import { Credits } from '@/ui/segments/virtual-lab-settings/sections/credits';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { useAppNotification } from '@/components/notification';
-import { ExpandableText } from '@/ui/molecules/more-less-text';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { checkVirtualLabExists, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { useTabs } from '@/components/detail-view-tabs';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useAppNotification } from '@/components/notification';
+import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/virtual-lab';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { Credits } from '@/ui/segments/virtual-lab-settings/sections/credits';
+import { TeamTable } from '@/ui/segments/virtual-lab-settings/sections/team';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 import type { VirtualLab, VirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
@@ -69,7 +69,7 @@ function EditableName({
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const queryClient = useQueryClient();
-  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId });
+  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId });
 
   const updateMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -408,7 +408,7 @@ function Tabs({ id }: { id?: string | null }) {
     shallow: true,
     clearOnDefault: true,
   });
-  const { isVirtualLabAdmin: isAdmin } = useUserRole({ virtualLabId: id! });
+  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId: id! });
   const [popoverOpen, setIsPopoverOpen] = useState(false);
 
   const onOpenChange = (visible: boolean) => {
@@ -475,10 +475,11 @@ function Content({ id }: { id?: string | null }) {
   });
 
   if (!id) return null;
-  return match(activeTab)
-    .with(null, () => <TeamTable virtualLabId={id} />)
-    .with('team', () => <TeamTable virtualLabId={id} />)
-    .with('credits', () => <Credits virtualLabId={id} />)
+
+  return match({ activeTab })
+    .with({ activeTab: P.nullish }, () => <TeamTable virtualLabId={id} />)
+    .with({ activeTab: 'team' }, () => <TeamTable virtualLabId={id} />)
+    .with({ activeTab: 'credits' }, () => <Credits virtualLabId={id} />)
     .otherwise(() => <TeamTable virtualLabId={id} />);
 }
 

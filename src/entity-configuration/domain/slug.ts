@@ -33,10 +33,15 @@ const SimulationEntitySlug = {
   MicrocircuitSimulation: 'microcircuit-simulation',
 } as const;
 
+const ExtractionEntitySlug = {
+  CircuitExtraction: 'circuit-extraction',
+} as const;
+
 export const EntitySlug = {
   ...ExperimentalEntitySlug,
   ...ModelEntitySlug,
   ...SimulationEntitySlug,
+  ...ExtractionEntitySlug,
   Notebook: 'notebook',
 } as const;
 
@@ -46,3 +51,5 @@ export type SimulationEntitySlugValue =
   (typeof SimulationEntitySlug)[keyof typeof SimulationEntitySlug];
 export type ExperimentalEntitySlugValue =
   (typeof ExperimentalEntitySlug)[keyof typeof ExperimentalEntitySlug];
+export type ExtractionEntitySlugValue =
+  (typeof ExtractionEntitySlug)[keyof typeof ExtractionEntitySlug];

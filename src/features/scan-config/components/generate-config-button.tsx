@@ -1,15 +1,26 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import type { ErrorObject } from 'ajv';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { get } from 'es-toolkit/compat';
+
 import authFetch from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
-import type { TabType } from '@/features/scan-config/types';
+import {
+  ExtractScanConfigTabs,
+  ScanConfigActivity,
+  SimulateScanConfigTabs,
+  type TScanConfigActivity,
+  type TScanConfigTabs,
+} from '@/features/scan-config/types';
+import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { assertErrorMessage, classNames } from '@/util/utils';
-import type { Config } from './components';
+
 import { useApiUrl } from './hooks';
+
+import type { ErrorObject } from 'ajv';
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Config } from './components';
 
 export default function GenerateConfigButton({
   loading,
@@ -20,6 +31,7 @@ export default function GenerateConfigButton({
   config,
   model,
   setTab,
+  activity,
 }: {
   loading: boolean;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
@@ -28,20 +40,27 @@ export default function GenerateConfigButton({
   setLoading: (loading: boolean) => void;
   config: Config;
   model: ICircuit | IMEModel;
-  setTab: React.Dispatch<React.SetStateAction<TabType>>;
+  setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
+  activity: TScanConfigActivity;
 }) {
   const { projectId, virtualLabId } = useWorkspace();
   const notification = useAppNotification();
-  const apiUrl = useApiUrl({ model });
+  const apiUrl = useApiUrl({ model, activity });
 
+  const onTabChange = () => {
+    if (activity === ScanConfigActivity.Simulate)
+      setTab({ id: SimulateScanConfigTabs.simulations, __activity: ScanConfigActivity.Simulate });
+    if (activity === ScanConfigActivity.Extract)
+      setTab({ id: ExtractScanConfigTabs.extractions, __activity: ScanConfigActivity.Extract });
+  };
   return (
     <button
       type="button"
       className={classNames(
-        'flex min-h-[50px] w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
+        'flex min-h-12.5 w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
         (errors && errors.length > 0) || loading
           ? 'bg-gray-300 text-gray-500'
-          : 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white'
+          : 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
       )}
       onClick={async () => {
         if (loading) return;
@@ -69,7 +88,7 @@ export default function GenerateConfigButton({
           if (coordinateCountRes.status !== 200) {
             const message = await coordinateCountRes.json();
             notification.error({
-              message: 'An error ocurred generating the simulation campaign',
+              message: get(messages, `${activity}.CoordinateCountFailed`),
               description: message.detail,
             });
             return;
@@ -93,7 +112,7 @@ export default function GenerateConfigButton({
               res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
 
             notification.error({
-              message: 'An error ocurred generating the simulation campaign',
+              message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
               description: details,
             });
             return;
@@ -102,13 +121,13 @@ export default function GenerateConfigButton({
           const returnedCampaignId = (await res.json()) as string;
           if (returnedCampaignId === '') {
             notification.error({
-              message: 'An error ocurred generating the simulation campaign',
+              message: get(messages, `${activity}.ScanConfigGenerateGridCampaignIdFailed`),
             });
             return;
           }
 
           setCampaignId(returnedCampaignId);
-          setTab('simulations');
+          onTabChange();
         } catch (e) {
           notification.error({ message: assertErrorMessage(e) });
           return;
@@ -119,7 +138,9 @@ export default function GenerateConfigButton({
       disabled={!!(errors && errors.length > 0) || loading}
     >
       <div className="flex justify-between gap-5">
-        {!campaignId ? 'Generate simulations' : 'New simulation campaign'}
+        {!campaignId
+          ? get(messages, `${activity}.Generate`, 'Generate campaign')
+          : get(messages, `${activity}.New`, 'New campaign')}
         {loading && <LoadingOutlined />}
       </div>
     </button>

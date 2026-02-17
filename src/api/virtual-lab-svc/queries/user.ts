@@ -1,6 +1,6 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { config } from '@/config';
 import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
 
 import type {
   UpdateUserProfileRequest,

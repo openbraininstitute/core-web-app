@@ -7,7 +7,6 @@ import {
   EM_CELL_MESH_PROGRESS_STEPS,
 } from '@/ui/segments/contribute/em-cell-mesh/config';
 import { useEMCellMeshPipeline } from '@/ui/segments/contribute/em-cell-mesh/pipeline';
-import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import {
   AssetUpload,
   Contribution,
@@ -17,8 +16,10 @@ import {
   Subject,
 } from '@/ui/segments/contribute/em-cell-mesh/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+
+import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
 const EM_CELL_MESH_STEP_CONFIG: IContributionStep<TEMCellMeshForm>[] = [
   {

@@ -1,9 +1,6 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 'use client';
 
 import { CheckOutlined as CheckIcon, CopyOutlined as CopyIcon } from '@ant-design/icons';
-import { type BundledLanguage, codeToHtml, type ShikiTransformer } from 'shiki';
 import type { Element } from 'hast';
 import {
   type ComponentProps,
@@ -14,6 +11,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { type BundledLanguage, codeToHtml, type ShikiTransformer } from 'shiki';
 
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -65,12 +63,12 @@ export async function highlightCode(
   return await Promise.all([
     codeToHtml(code, {
       lang: language,
-      theme: 'one-light',
+      theme: 'catppuccin-latte',
       transformers,
     }),
     codeToHtml(code, {
       lang: language,
-      theme: 'one-dark-pro',
+      theme: 'catppuccin-mocha',
       transformers,
     }),
   ]);
@@ -116,12 +114,12 @@ export function CodeBlock({
         <div className="relative">
           <div
             className="[&>pre]:bg-background! [&>pre]:text-foreground! overflow-hidden dark:hidden [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm"
-            // eslint-disable-next-line react/no-danger
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: required
             dangerouslySetInnerHTML={{ __html: html }}
           />
           <div
             className="[&>pre]:bg-background! [&>pre]:text-foreground! hidden overflow-hidden dark:block [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm"
-            // eslint-disable-next-line react/no-danger
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: required
             dangerouslySetInnerHTML={{ __html: darkHtml }}
           />
         </div>

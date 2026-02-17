@@ -15,7 +15,6 @@ import kebabCase from 'es-toolkit/compat/kebabCase';
 import omit from 'es-toolkit/compat/omit';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import type { z } from 'zod';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
@@ -23,7 +22,7 @@ import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
 import { LowFundsNotification } from '@/components/notification/low-funds-notification';
 import { config } from '@/config';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -40,6 +39,8 @@ import { browserHistoryReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
+import type { z } from 'zod';
+
 const CreateSingleNeuronContextSchema = CreateSingleNeuronSchema.merge(WorkspaceContextSchema);
 type TCreateSingleNeuronContext = z.infer<typeof CreateSingleNeuronContextSchema>;
 
@@ -53,7 +54,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const { push: navigate } = useRouter();
   const step = searchParams.get('step');
   const [showLowFundsNotification, setShowLowFundsNotification] = useState(false);
-  const { isProjectAdmin } = useUserRole({ virtualLabId, projectId });
+  const { isProjectAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
 
   const { sessionValue } = useBuildMeModelSessionState({
     sessionId,
@@ -182,7 +183,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span>
-                      <WarningFilled className="text-sm text-yellow-300" />
+                      <WarningFilled className="text-sm text-yellow-300!" />
                     </span>
                   </TooltipTrigger>
                   <TooltipContent
@@ -190,7 +191,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
                     side="bottom"
                     sideOffset={10}
                     collisionPadding={{ left: 25 }}
-                    className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100 px-4 py-5 text-wrap"
+                    className="text-destructive shadow-bnb max-w-2xs min-w-2xs rounded-md bg-amber-100! px-4 py-5 text-wrap"
                     arrowClassName="bg-amber-100"
                   >
                     <p className="w-full pb-0.5 wrap-break-word hyphens-auto">
@@ -224,7 +225,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
             {sessionValue?.mmodel ? (
               <Tooltip>
                 <TooltipTrigger>
-                  <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                  <div className="text-accent-light! flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
                     <CheckCircleFilled className="shrink-0 text-base" />
                     <div
                       title={sessionValue.mmodel.name}
@@ -263,7 +264,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
             {sessionValue?.emodel ? (
               <Tooltip>
                 <TooltipTrigger>
-                  <div className="text-accent-light flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                  <div className="text-accent-light! flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
                     <CheckCircleFilled className="shrink-0 text-base" />
                     <div
                       title={sessionValue.emodel.name}
