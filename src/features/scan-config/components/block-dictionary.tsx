@@ -17,6 +17,8 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { cn } from '@/utils/css-class';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -101,56 +103,84 @@ export default function BlockDictionary({
     >
       {blockDictionarySchema.additionalProperties.oneOf.map((o) => {
         const usability = getBlockUsabilityConfig({ block: o });
+        let disable = false,
+          message = '';
+
         if (
           usability.block_usability_entity_dependent &&
           !get(usabilityPropertyMappingConfig.usability, usability.block_usability_property)
-        )
-          return null;
+        ) {
+          disable = true;
+          message = usability.block_usability_false_message;
+        }
 
         return (
-          <button
-            key={o.title}
-            type="button"
-            className="min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
-            onClick={() => {
-              if (isRootBlock(schema, selectedRootElement)) return;
-              if (onNewBlockClick) onNewBlockClick();
+          <Tooltip key={o.title}>
+            <TooltipTrigger asChild>
+              <button
+                key={o.title}
+                type="button"
+                disabled={disable}
+                className={cn(
+                  'min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white',
+                  { 'cursor-not-allowed opacity-50': disable }
+                )}
+                onClick={() => {
+                  if (isRootBlock(schema, selectedRootElement)) return;
+                  if (onNewBlockClick) onNewBlockClick();
 
-              const initial: Record<string, ConfigValue> = {};
-              if (o.properties)
-                Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                  initial[subkey] = subValue.default ?? null;
-                });
+                  const initial: Record<string, ConfigValue> = {};
+                  if (o.properties)
+                    Object.entries(o.properties).forEach(([subkey, subValue]) => {
+                      initial[subkey] = subValue.default ?? null;
+                    });
 
-              const element = schema.properties?.[selectedRootElement];
+                  const element = schema.properties?.[selectedRootElement];
 
-              const baseName =
-                element.ui_element === ScanConfigUIElementDict.BlockDictionary
-                  ? element.singular_name
-                  : 'element';
-              let counter = 0;
-              let newEntry: string;
+                  const baseName =
+                    element.ui_element === ScanConfigUIElementDict.BlockDictionary
+                      ? element.singular_name
+                      : 'element';
+                  let counter = 0;
+                  let newEntry: string;
 
-              do {
-                newEntry = `${baseName} ${counter++}`;
-              } while (allEntries.has(newEntry));
+                  do {
+                    newEntry = `${baseName} ${counter++}`;
+                  } while (allEntries.has(newEntry));
 
-              setSelectedEntry(newEntry);
-              allEntries.add(newEntry);
+                  setSelectedEntry(newEntry);
+                  allEntries.add(newEntry);
 
-              setAtomsMap({
-                ...atomsMap,
-                [selectedRootElement]: {
-                  ...atomsMap[selectedRootElement],
-                  [newEntry]: atom<Record<string, ConfigValue>>(initial),
-                },
-              });
-            }}
-            data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
-          >
-            <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
-            <span className="mt-3 block">{o.description}</span>
-          </button>
+                  setAtomsMap({
+                    ...atomsMap,
+                    [selectedRootElement]: {
+                      ...atomsMap[selectedRootElement],
+                      [newEntry]: atom<Record<string, ConfigValue>>(initial),
+                    },
+                  });
+                }}
+                data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
+              >
+                <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
+                <span className="mt-3 block">{o.description}</span>
+              </button>
+            </TooltipTrigger>
+            {disable && (
+              <TooltipContent
+                avoidCollisions
+                hideWhenDetached
+                align="center"
+                className={cn(
+                  'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
+                  'bg-primary-8 px-4 py-2 text-base text-wrap ',
+                  'overflow-y-auto max-h-50 primary-scrollbar'
+                )}
+                arrowClassName="bg-primary-8"
+              >
+                {message}
+              </TooltipContent>
+            )}
+          </Tooltip>
         );
       })}
     </div>
