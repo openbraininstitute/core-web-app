@@ -1,6 +1,6 @@
-import type { SelectProps } from 'antd';
-
 import { cn } from '@/utils/css-class';
+
+import type { SelectProps } from 'antd';
 
 export function OptionRender({ data }: Parameters<NonNullable<SelectProps['optionRender']>>[0]) {
   return (

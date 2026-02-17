@@ -3,10 +3,8 @@
 import { CheckOutlined } from '@ant-design/icons';
 import { Form } from 'antd';
 import { useMemo, useState } from 'react';
-import type { ZodObject, ZodRawShape } from 'zod';
+
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
-import type { IMType } from '@/api/entitycore/types/shared/global';
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem, type AsyncSelectOption } from '@/ui/molecules/async-select';
 import {
@@ -16,6 +14,10 @@ import {
 } from '@/ui/segments/contribute/shared/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
+
+import type { ZodObject, ZodRawShape } from 'zod';
+import type { IMType } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 
 interface ICustomRendererProps {
   data: AsyncSelectOption<IMType>;
@@ -86,7 +88,7 @@ export function PostMTypeClassificationSelector<TSchema extends ZodObject<ZodRaw
         customItemRender: CustomRenderer,
         onSelect: handleSelect,
       }),
-    [virtualLabId, projectId]
+    [virtualLabId, projectId, handleSelect]
   );
 
   return (

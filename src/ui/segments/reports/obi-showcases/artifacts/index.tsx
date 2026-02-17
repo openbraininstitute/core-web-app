@@ -8,7 +8,8 @@ import EModelTable from '@/components/PublicProjects/tables/e-model-table';
 import LinkAndDownloadList from '@/ui/segments/reports/obi-showcases/artifacts/link-and-download-list';
 import MEModelTable from '@/ui/segments/reports/obi-showcases/artifacts/tables/me-model-table';
 import SynaptomeTable from '@/ui/segments/reports/obi-showcases/artifacts/tables/synpatome-table';
-import { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
+
+import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
 
 const getActiveArtifactsCount = (
   activeArtifactType: string | null,

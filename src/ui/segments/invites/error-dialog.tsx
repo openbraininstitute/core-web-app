@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Button, Modal } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { Button, Modal } from 'antd';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { InviteErrorCodes } from '@/types/virtual-lab/invites';
 import { generateLabUrl, generateVlProjectUrl } from '@/util/virtual-lab/urls';
@@ -41,7 +41,6 @@ const getInviteErrorMessage = (code?: string): { title: string; message: string 
           message:
             'This invitation has already been accepted. You can proceed to sign in and access your environment.',
         };
-      case InviteErrorCodes.UNKNOWN:
       default:
         return {
           title: 'Unexpected error',

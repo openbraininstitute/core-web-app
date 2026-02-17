@@ -1,12 +1,11 @@
 /* eslint-disable jsx-a11y/media-has-caption */
 import { usePathname } from 'next/navigation';
-import React, { CSSProperties, SyntheticEvent, useRef, useState } from 'react';
-
-import { isNumber } from '@/util/type-guards';
-import { classNames } from '@/util/utils';
+import React, { type CSSProperties, type SyntheticEvent, useRef, useState } from 'react';
 
 import { PauseIcon } from '@/components/icons';
 import { PlayIcon } from '@/components/tutorials-carrousel/tutorial-card/play-icon';
+import { isNumber } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
 
 import styles from './Video.module.css';
 
@@ -91,32 +90,29 @@ export default function ProgressiveVideo({
       aria-label="Click to play"
       style={style}
     >
-      {isHomepage && (
-        <>
-          {videoPlaying ? (
-            <button
-              type="button"
-              aria-label="pause video"
-              onClick={handlePause}
-              className={styles.playButton}
-              style={{
-                opacity: isHovered ? 1 : 0,
-              }}
-            >
-              <PauseIcon className="h-16 w-auto" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              aria-label="play video"
-              onClick={handlePlay}
-              className={styles.playButton}
-            >
-              <PlayIcon className="h-32 w-auto" />
-            </button>
-          )}
-        </>
-      )}
+      {isHomepage &&
+        (videoPlaying ? (
+          <button
+            type="button"
+            aria-label="pause video"
+            onClick={handlePause}
+            className={styles.playButton}
+            style={{
+              opacity: isHovered ? 1 : 0,
+            }}
+          >
+            <PauseIcon className="h-16 w-auto" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            aria-label="play video"
+            onClick={handlePlay}
+            className={styles.playButton}
+          >
+            <PlayIcon className="h-32 w-auto" />
+          </button>
+        ))}
       <video
         className={classNames(controls && styles.pointer)}
         src={src}

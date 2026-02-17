@@ -1,11 +1,12 @@
 import { getCellMorphology } from '@/api/entitycore/queries';
 import { getEModel, getEModels } from '@/api/entitycore/queries/model/e-model';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const Emodel: EntityCoreTypeConfig<IEModel> = {

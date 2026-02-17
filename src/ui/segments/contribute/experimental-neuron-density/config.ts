@@ -1,5 +1,4 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
 import {
   ExperimentalNeuronDensitySchema,
   type TExperimentalNeuronDensityForm,

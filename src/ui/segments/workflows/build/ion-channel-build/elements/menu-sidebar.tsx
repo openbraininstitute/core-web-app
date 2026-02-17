@@ -1,13 +1,13 @@
 'use client';
 
-import { ErrorSchema } from '@rjsf/utils';
-import { ReactNode } from 'react';
-
 import { MenuButton } from '@/ui/segments/workflows/build/ion-channel-build/elements/menu-button';
 import {
-  BlockGroupProperties,
+  type BlockGroupProperties,
   extractParentErrors,
 } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
+
+import type { ErrorSchema } from '@rjsf/utils';
+import type { ReactNode } from 'react';
 
 interface Props {
   // grouped block properties by their sections

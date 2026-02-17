@@ -1,7 +1,9 @@
 import { get, set } from 'es-toolkit/compat';
+
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import type { WorkspaceContext } from '@/types/common';
 
 // TODO Remove this after the data is migrated

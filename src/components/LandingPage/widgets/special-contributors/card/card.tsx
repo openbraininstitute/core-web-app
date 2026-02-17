@@ -1,9 +1,8 @@
-import React from 'react';
-
-import { ContentForSpecialContributor } from '../hooks';
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
 import { styleButtonHoverable } from '@/components/LandingPage/styles';
 import { classNames } from '@/util/utils';
+
+import type { ContentForSpecialContributor } from '../hooks';
 
 import styles from './card.module.css';
 

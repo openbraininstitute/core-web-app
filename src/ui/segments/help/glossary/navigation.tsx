@@ -2,12 +2,12 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import type { CellTypeContentProps } from '@/ui/segments/help/glossary';
-
-import { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
 import AccordionButton from '@/ui/molecules/dropdown';
 import Slugify from '@/util/slugify';
 import { cn } from '@/utils/css-class';
+
+import type { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
+import type { CellTypeContentProps } from '@/ui/segments/help/glossary';
 
 export type GlossarySectionType = {
   name: string;

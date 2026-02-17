@@ -1,8 +1,11 @@
 import React from 'react';
 
+import { fetchSanity } from '@/services/sanity';
+import { classNames } from '@/util/utils';
+
 import CenteredColumn from '../../components/CenteredColumn';
 import {
-  ContentForNewsList,
+  type ContentForNewsList,
   isContentForNewsList,
   useSanityContentForNewsListCount,
 } from '../../content';
@@ -10,8 +13,6 @@ import { styleBlockMedium, styleButtonRounded } from '../../styles';
 import Card from './Card';
 import CategoryButton from './CategoryButton';
 
-import { fetchSanity } from '@/services/sanity';
-import { classNames } from '@/util/utils';
 import styles from './SectionNews.module.css';
 
 interface SectionNewsProps {
@@ -29,7 +30,7 @@ export default function SectionNews({ className, showHeader = false }: SectionNe
   React.useEffect(() => {
     setNewsList([]);
     setPageStart(0);
-  }, [newsCount]);
+  }, []);
   React.useEffect(() => {
     const action = async () => {
       if (pageStart >= newsCount || newsList.length > pageStart) return;
@@ -57,61 +58,59 @@ export default function SectionNews({ className, showHeader = false }: SectionNe
   const newsListEPFL = newsList.filter((item) => item.isEPFL);
 
   return (
-    <>
-      <div className={classNames(className, styles.news, styleBlockMedium)}>
-        {showHeader && (
-          <header>
-            <div className={styles.label}>Filter by</div>
-            <CategoryButton
-              selected={categories.length === CATEGORIES.length}
-              onClick={handleSwitchAll}
-            >
-              All
-            </CategoryButton>
-            <div className={styles.buttons}>
-              {CATEGORIES.map((cat) => (
-                <CategoryButton
-                  key={cat.id}
-                  onClick={() => handleSwitchCat(cat.id)}
-                  selected={categories.includes(cat.id)}
-                >
-                  {cat.label}
-                </CategoryButton>
-              ))}
-            </div>
-          </header>
-        )}
-        <main>
-          {newsListOBI.map((item) => (
-            <Card key={item.id} news={item} />
-          ))}
-        </main>
-        {newsListEPFL.length > 0 && (
-          <div className={styles.epflNews}>
-            <h1 className={styles.separator}>BBP news highlight</h1>
-            <div className={styles.copyright}>Copyright © EPFL - BBP</div>
-            <hr className={styles.separator} />
-            <div className={styles.epfl}>
-              {newsListEPFL.map((item) => (
-                <Card key={item.id} news={item} />
-              ))}
-            </div>
+    <div className={classNames(className, styles.news, styleBlockMedium)}>
+      {showHeader && (
+        <header>
+          <div className={styles.label}>Filter by</div>
+          <CategoryButton
+            selected={categories.length === CATEGORIES.length}
+            onClick={handleSwitchAll}
+          >
+            All
+          </CategoryButton>
+          <div className={styles.buttons}>
+            {CATEGORIES.map((cat) => (
+              <CategoryButton
+                key={cat.id}
+                onClick={() => handleSwitchCat(cat.id)}
+                selected={categories.includes(cat.id)}
+              >
+                {cat.label}
+              </CategoryButton>
+            ))}
           </div>
-        )}
-        {newsList.length < newsCount && (
-          <CenteredColumn>
-            <button
-              type="button"
-              className={styleButtonRounded}
-              onClick={() => setPageStart(pageStart + PAGE_SIZE)}
-            >
-              Load {Math.min(PAGE_SIZE, newsCount - newsList.length)} more article
-              {Math.min(PAGE_SIZE, newsCount - newsList.length) > 1 ? 's' : ''}
-            </button>
-          </CenteredColumn>
-        )}
-      </div>
-    </>
+        </header>
+      )}
+      <main>
+        {newsListOBI.map((item) => (
+          <Card key={item.id} news={item} />
+        ))}
+      </main>
+      {newsListEPFL.length > 0 && (
+        <div className={styles.epflNews}>
+          <h1 className={styles.separator}>BBP news highlight</h1>
+          <div className={styles.copyright}>Copyright © EPFL - BBP</div>
+          <hr className={styles.separator} />
+          <div className={styles.epfl}>
+            {newsListEPFL.map((item) => (
+              <Card key={item.id} news={item} />
+            ))}
+          </div>
+        </div>
+      )}
+      {newsList.length < newsCount && (
+        <CenteredColumn>
+          <button
+            type="button"
+            className={styleButtonRounded}
+            onClick={() => setPageStart(pageStart + PAGE_SIZE)}
+          >
+            Load {Math.min(PAGE_SIZE, newsCount - newsList.length)} more article
+            {Math.min(PAGE_SIZE, newsCount - newsList.length) > 1 ? 's' : ''}
+          </button>
+        </CenteredColumn>
+      )}
+    </div>
   );
 }
 

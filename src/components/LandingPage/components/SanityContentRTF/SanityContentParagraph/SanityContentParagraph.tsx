@@ -1,9 +1,9 @@
-import React from 'react';
-
-import { Text } from '../../Text';
-import { ContentForRichTextParagraph } from '../../../content/types';
-import { styleBlockSmall } from '../../../styles';
 import { classNames } from '@/util/utils';
+
+import { styleBlockSmall } from '../../../styles';
+import { Text } from '../../Text';
+
+import type { ContentForRichTextParagraph } from '../../../content/types';
 
 import styles from './SanityContentParagraph.module.css';
 

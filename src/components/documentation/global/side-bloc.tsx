@@ -1,7 +1,8 @@
 import { useDocumentationArchitecture } from '../content/architecture-content';
-import { SingleSectionProps } from '../type';
 import NavItem from './nav-item';
 import TutorialNavList from './tutorial-nav-list';
+
+import type { SingleSectionProps } from '../type';
 
 export default function DocumentationSideBloc() {
   const architectureData = useDocumentationArchitecture();

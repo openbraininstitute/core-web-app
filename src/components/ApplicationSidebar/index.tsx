@@ -1,11 +1,11 @@
-import { UserOutlined, HomeOutlined } from '@ant-design/icons';
+import { HomeOutlined, UserOutlined } from '@ant-design/icons';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Suspense, useRef } from 'react';
-import Link from 'next/link';
 
-import { classNames, signOut } from '@/util/utils';
-import useOnClickOutside from '@/hooks/useOnClickOutside';
 import UserMenu from '@/components/user-menu';
+import useOnClickOutside from '@/hooks/useOnClickOutside';
+import { classNames, signOut } from '@/util/utils';
 
 type ApplicationSidebarHeaderProps = {
   title: ({ expanded }: { expanded: boolean }) => React.ReactNode;

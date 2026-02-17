@@ -2,7 +2,6 @@
 import React from 'react';
 
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
-
 import { cn } from '@/utils/css-class';
 
 type HeroProps = {

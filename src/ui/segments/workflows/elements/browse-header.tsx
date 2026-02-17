@@ -1,11 +1,11 @@
 'use client';
 
+import { useFlags } from '@/features/feature-flags';
 import { getDropdownOptionsByCategory } from '@/ui/segments/workflows/elements/helpers';
 import {
   CategorySelectScrollable,
   EntityTypeSelectScrollable,
 } from '@/ui/segments/workflows/elements/selectors';
-import { useFlags } from '@/features/feature-flags';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';

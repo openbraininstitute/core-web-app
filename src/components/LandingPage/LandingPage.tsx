@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+
 import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
 import { logError } from '@/util/logger';
 import { classNames } from '@/util/utils';
+
 import PaddedBlock from './components/PaddedBlock';
 import VerticalSpace from './components/VerticalSpace';
-import styles from './LandingPage.module.css';
 import FooterPanel from './layout/FooterPanel';
 import Hero from './layout/Hero';
 import Menu from './layout/Menu';
@@ -16,7 +17,10 @@ import SectionNews from './sections/SectionNews';
 import SectionPricing from './sections/SectionPricing';
 import { EnumSection } from './sections/sections';
 import { getSection } from './utils';
+
+import styles from './LandingPage.module.css';
 import './global.css';
+
 import useScrollHasStarted from '@/hooks/use-scroll-has-started';
 
 export type LandingPageProps = {

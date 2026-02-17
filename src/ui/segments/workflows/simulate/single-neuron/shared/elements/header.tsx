@@ -1,13 +1,13 @@
 'use client';
 
-import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
+import { parseAsString, type SingleParserBuilder, useQueryState } from 'nuqs';
 
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { cn } from '@/utils/css-class';
 
 import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';

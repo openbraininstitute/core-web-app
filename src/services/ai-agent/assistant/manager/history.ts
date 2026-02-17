@@ -1,6 +1,7 @@
 import { serviceAiAgentThreadList } from '../../api';
-import { Signal } from '../signal';
-import {
+
+import type { Signal } from '../signal';
+import type {
   AiAssistantHistory,
   AiAssistantHistoryItem,
   AssistantContext,

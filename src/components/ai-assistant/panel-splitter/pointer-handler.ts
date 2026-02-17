@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { usePanelWidth } from '../hooks';
-
 import GenericEvent from '@/util/generic-event';
+
+import { usePanelWidth } from '../hooks';
 
 export function usePointerHandler() {
   const { panelWidth, setPanelWidth } = usePanelWidth();

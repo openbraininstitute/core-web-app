@@ -4,15 +4,17 @@ import { CheckCircleFilled, DownloadOutlined, LoadingOutlined } from '@ant-desig
 import { useAtomValue } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { type ReactNode, useCallback, useState } from 'react';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 import { useAppNotification } from '@/components/notification';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { downloadArchive } from '@/services/entity-download';
 import sessionAtom from '@/state/session';
-import type { WorkspaceContext } from '@/types/common';
 import { Button } from '@/ui/molecules/button';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import { cn } from '@/utils/css-class';
+
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
+import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 
 const DownloadStateDict = {
   idle: 'idle',

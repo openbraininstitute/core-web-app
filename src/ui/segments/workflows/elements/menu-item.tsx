@@ -1,10 +1,10 @@
 'use client';
 
-import type { ComponentProps } from 'react';
-
 import { ArrowOpenRight } from '@/components/icons/buttons';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
+
+import type { ComponentProps } from 'react';
 
 type Props<T> = {
   title: string;

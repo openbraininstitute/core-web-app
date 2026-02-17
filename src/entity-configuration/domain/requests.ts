@@ -1,7 +1,8 @@
 import {
-  EntityCoreExtendedType,
+  type EntityCoreExtendedType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
+
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 export async function retrieveEntity({

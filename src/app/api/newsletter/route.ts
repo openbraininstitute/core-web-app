@@ -1,8 +1,9 @@
-import { createHash } from 'crypto';
 import { captureException } from '@sentry/nextjs';
 import { z } from 'zod';
 
 import { serverConfig as config } from '@/config/server';
+
+import { createHash } from 'node:crypto';
 
 const newsletterFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
     tags.push('test');
   }
 
-  if (formValidation.tags && formValidation.tags.length) {
+  if (formValidation.tags?.length) {
     tags = [...tags, ...formValidation.tags];
   }
 
@@ -130,8 +131,6 @@ export async function POST(req: Request) {
       { status: result.status ?? 400 }
     );
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('error sending newsletter email', error);
     captureException(error, {
       tags: { section: 'landing-page', feature: 'newsletter' },
       extra: {

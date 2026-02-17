@@ -2,15 +2,17 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
 
+import { classNames } from '@/util/utils';
+
 import { IconGear } from '../../icons/gear';
 import { Spinner } from '../../spinner';
 import { useAIToolsInvertedSelection } from '../../state';
-import ToolCard from './tool-card';
 import { IconClose } from './icon-close';
-import { IconUnchecked } from './tool-card/icon-unchecked';
+import ToolCard from './tool-card';
 import { IconChecked } from './tool-card/icon-checked';
-import { classNames } from '@/util/utils';
-import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+import { IconUnchecked } from './tool-card/icon-unchecked';
+
+import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './tools-selector.module.css';
 
@@ -88,15 +90,13 @@ export default function ToolsSelector({ className, tools, open, onClose }: Tools
         </header>
         <hr />
         {tools && tools.length > 0 ? (
-          <>
-            <main>
-              {tools
-                .filter(({ id }) => SELECTABLE_TOOLS_IDS.includes(id))
-                .map((tool) => (
-                  <ToolCard key={tool.id} tool={tool} />
-                ))}
-            </main>
-          </>
+          <main>
+            {tools
+              .filter(({ id }) => SELECTABLE_TOOLS_IDS.includes(id))
+              .map((tool) => (
+                <ToolCard key={tool.id} tool={tool} />
+              ))}
+          </main>
         ) : (
           <div className={styles.loading}>
             <div>Loading...</div>

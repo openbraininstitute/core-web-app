@@ -1,6 +1,7 @@
-import { serviceAiAgentUrl } from './url';
 import { logError } from '@/util/logger';
 import { createHeaders } from '@/util/utils';
+
+import { serviceAiAgentUrl } from './url';
 
 interface QueryOptions<T> {
   accessToken?: string | null;
@@ -49,7 +50,7 @@ export async function fetchJSON<T>({
 /**
  * Use this type guard only when you want to ignore a return type.
  */
-export function isVoidType(data: unknown): data is void {
+export function isVoidType(data: unknown): data is undefined {
   return true;
 }
 

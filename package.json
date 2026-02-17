@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
+    "lint:fix": "biome check --write --max-diagnostics 1000",
     "ci": "biome ci",
     "format": "biome format --write",
     "analyze": "ANALYZE=true npm run build",

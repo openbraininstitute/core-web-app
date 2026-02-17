@@ -1,6 +1,6 @@
-import { SingleSectionProps } from '../type';
-
 import { useAITools } from '@/services/ai-agent/tools/tools';
+
+import type { SingleSectionProps } from '../type';
 
 export function useDocumentationArchitecture(): SingleSectionProps[] {
   const tools = useAITools() ?? [];

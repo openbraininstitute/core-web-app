@@ -17,7 +17,7 @@ export function useMenuHeight(): number {
     if (!menu) return;
 
     setMenuHeight(menu.clientHeight);
-  }, [setMenuHeight]);
+  }, []);
   const observer = useResizeObserver(handleResize);
   useEffect(() => {
     observer.observe(document.body);

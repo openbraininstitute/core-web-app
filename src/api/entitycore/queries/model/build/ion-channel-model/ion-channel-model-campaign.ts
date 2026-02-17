@@ -1,11 +1,11 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
   IonChannelModelingCampaign,
   IonChannelModelingCampaignFilter,
 } from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/ion-channel-modeling-campaign';

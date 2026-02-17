@@ -244,10 +244,10 @@ export function Output({ sessionId }: { sessionId: string | null }) {
     const groups: Array<IonChannelModelProtocolGroup> = [];
 
     Object.entries(summaryData).forEach(([key, value]) => {
-      const tracesAsset = selectedBuild.modelEntity!.assets?.find(
+      const tracesAsset = selectedBuild.modelEntity?.assets?.find(
         (a) => a.path === value.traces || a.path.endsWith(`/${value.traces}`)
       );
-      const stimuliAsset = selectedBuild.modelEntity!.assets?.find(
+      const stimuliAsset = selectedBuild.modelEntity?.assets?.find(
         (a) => a.path === value.stimuli || a.path.endsWith(`/${value.stimuli}`)
       );
 
@@ -481,14 +481,14 @@ export function Output({ sessionId }: { sessionId: string | null }) {
             <div className="flex flex-1 flex-col overflow-hidden">
               <FileViewer
                 asset={selectedProtocol.stimuli}
-                entity={selectedBuild!.modelEntity!}
+                entity={selectedBuild?.modelEntity!}
                 context={context}
               />
             </div>
             <div className="flex flex-1 flex-col overflow-hidden">
               <FileViewer
                 asset={selectedProtocol.traces}
-                entity={selectedBuild!.modelEntity!}
+                entity={selectedBuild?.modelEntity!}
                 context={context}
               />
             </div>

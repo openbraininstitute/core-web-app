@@ -5,7 +5,8 @@ import { useState } from 'react';
 import AlphabeticalFilter from '@/components/documentation/global/AlphabeticalFilter';
 import ItemCard from '@/components/documentation/global/item-card';
 import { useSanityContentForArtifactTypes } from '@/components/documentation/hooks/use-sanity-content-for-artifact-types';
-import { ContentForGlossaryItem } from '@/components/documentation/type';
+
+import type { ContentForGlossaryItem } from '@/components/documentation/type';
 
 export default function DataTypesPage() {
   const artifactTypesContent = useSanityContentForArtifactTypes();

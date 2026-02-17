@@ -1,22 +1,24 @@
-import fs from 'node:fs/promises';
-import fsPath from 'node:path';
-import { Readable } from 'node:stream';
 import { format } from 'date-fns';
 import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import template from 'es-toolkit/compat/template';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getSession } from '@/auth-fetch';
+
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
-import { getSession } from '@/auth-fetch';
 import type {
   CsvEntryBase,
   CsvSimulationEntryBase,
   FileEntry,
 } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
+
+import fs from 'node:fs/promises';
+import fsPath from 'node:path';
+import { Readable } from 'node:stream';
 
 const README_TEMPLATE_DIR = './src/features/entity-download/readme-templates';
 

@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+
 import Logo from '@/components/logo/as-svg';
 
 export default function Layout({ children }: { children: React.ReactNode }) {

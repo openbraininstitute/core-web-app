@@ -1,5 +1,4 @@
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ASSET_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
@@ -8,6 +7,7 @@ import {
   createTemplateFileEntry,
   getMetadataCsvEntryBase,
 } from '@/features/entity-download/utils';
+
 import type { WorkspaceContext } from '@/types/common';
 
 export async function* getCircuitFiles(entityIds: string[], ctx?: WorkspaceContext) {

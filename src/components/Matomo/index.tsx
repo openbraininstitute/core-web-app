@@ -42,7 +42,7 @@ function Matomo() {
 
   useEffect(() => {
     if (isAnalyticsDisabled || !pathname) return;
-    const url = `${pathname}${searchParamsString ? '?' + decodeURIComponent(searchParamsString) : ''}`;
+    const url = `${pathname}${searchParamsString ? `?${decodeURIComponent(searchParamsString)}` : ''}`;
     push(['setCustomUrl', url]);
     push(['trackPageView']);
   }, [pathname, searchParamsString, isAnalyticsDisabled]);

@@ -1,8 +1,9 @@
-import {
+import { classNames } from '@/util/utils';
+
+import type {
   ContentForPricingFeatureItem,
   ContentForPricingPlan,
 } from '@/components/LandingPage/content/pricing';
-import { classNames } from '@/util/utils';
 
 import styles from './FeatureCellSinglePlan.module.css';
 

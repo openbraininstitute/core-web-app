@@ -2,7 +2,7 @@ import { CloseOutlined } from '@ant-design/icons';
 import { isNil } from 'es-toolkit/compat';
 import { useState } from 'react';
 import { match, P } from 'ts-pattern';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -20,6 +20,8 @@ import { ExperimentalBoutonDensity } from '@/ui/segments/contribute/experimental
 import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental-neuron-density';
 import { ExperimentalSynapsesPerConnection } from '@/ui/segments/contribute/synapses-per-connection';
 import { cn } from '@/utils/css-class';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 interface IExtendedEntitiesSelectorProps {
   onSelectEntityType: (type: TExtendedEntitiesTypeDict) => void;

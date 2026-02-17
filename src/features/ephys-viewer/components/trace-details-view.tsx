@@ -5,8 +5,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import InteractivePlot from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
+import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import NWBTrace, { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
+
+import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
 
 interface TraceDetailsViewProps {
   trace: NWBTrace;
@@ -105,10 +107,7 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
     [selectedSweeps, previewItem, sweeps, colorMap, sweepDataMap, plotRevision]
   );
 
-  useEffect(
-    () => updatePlots(),
-    [selectedProtocol, selectedRepetition, selectedSweeps, updatePlots]
-  );
+  useEffect(() => updatePlots(), [updatePlots]);
 
   return (
     <div className="flex flex-col gap-10">

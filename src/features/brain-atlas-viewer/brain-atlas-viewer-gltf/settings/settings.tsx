@@ -1,12 +1,12 @@
 import React from 'react';
 
+import { IconGear } from '@/components/ai-assistant/icons/gear';
+import { Button } from '@/ui/molecules/button';
+import { classNames } from '@/util/utils';
+
 import { getAtlasViewerDefaultSettings } from '../hooks';
 import Slider from './slider';
 
-import { classNames } from '@/util/utils';
-import { IconGear } from '@/components/ai-assistant/icons/gear';
-
-import { Button } from '@/ui/molecules/button';
 import styles from './settings.module.css';
 
 export type SettingsValues = Record<

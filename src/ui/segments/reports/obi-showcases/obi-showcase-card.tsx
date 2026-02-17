@@ -3,10 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { OBIShowcaseProjectType } from './types';
-
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+
+import type { OBIShowcaseProjectType } from './types';
 
 function formatAuthors(authorsList: OBIShowcaseProjectType['authorsList']): string {
   if (!authorsList || authorsList.length === 0) return 'Unknown authors';

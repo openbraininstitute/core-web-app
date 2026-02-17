@@ -1,10 +1,9 @@
-/* eslint-disable react/no-array-index-key */
-import React from 'react';
-
-import ProgressiveImage from '../../ProgressiveImage';
-import { styleBlockSmall } from '../../../styles';
-import { ContentForRichTextItems } from '../../../content/types';
 import { classNames } from '@/util/utils';
+
+import { styleBlockSmall } from '../../../styles';
+import ProgressiveImage from '../../ProgressiveImage';
+
+import type { ContentForRichTextItems } from '../../../content/types';
 
 import styles from './SanityContentItems.module.css';
 

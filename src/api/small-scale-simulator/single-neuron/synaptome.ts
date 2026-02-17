@@ -27,7 +27,7 @@ async function validateSynapseGenerationFormula(formula: string) {
 export async function validateFormula(value: string) {
   try {
     return validateSynapseGenerationFormula(value);
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }

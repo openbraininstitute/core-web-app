@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import type { TValidationResultNonUndefined } from '@/features/model-analysis/explorer/use-analysis';
+
 import { useFlatValidationResults, useSelectedValidationResults } from './hooks';
 import { SelectAnalysis } from './select-analysis';
 import { ValidationExplanation } from './validation-explanation';
 import { ValidationResultCard } from './validation-result-card';
+
+import type { TValidationResultNonUndefined } from '@/features/model-analysis/explorer/use-analysis';
 
 type Props = {
   rin: number | undefined;

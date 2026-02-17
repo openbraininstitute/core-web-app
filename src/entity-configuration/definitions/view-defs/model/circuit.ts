@@ -1,5 +1,7 @@
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
 import { EntityCoreFields } from '../../fields-defs/enums';
+
 import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForCircuit: ViewDefinitionConfig = {

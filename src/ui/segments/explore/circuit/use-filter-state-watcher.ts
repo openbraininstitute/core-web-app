@@ -1,6 +1,6 @@
+import isNil from 'es-toolkit/compat/isNil';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
-import isNil from 'es-toolkit/compat/isNil';
 
 import { coreFiltersAtom, coreSearchStringAtom } from '@/ui/segments/data-table/elements/context';
 import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';

@@ -1,20 +1,21 @@
 'use client';
 
-import Table, { ColumnsType } from 'antd/es/table';
 import { useQuery } from '@tanstack/react-query';
 import { ConfigProvider, theme } from 'antd';
+import Table, { type ColumnsType } from 'antd/es/table';
 import { format } from 'date-fns';
 import { useState } from 'react';
 
-import { HistoryError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
-import { CONVERSION_RATE } from '@/ui/segments/virtual-lab-settings/elements/helpers';
-import { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
 import { listStandalonePayments } from '@/api/virtual-lab-svc/queries/payment';
-import { Card, CardContent, CardTitle } from '@/ui/molecules/card';
 import { FileDownloadFill } from '@/components/icons/EditorIcons';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { HistoryError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
 import { Button } from '@/ui/molecules/button';
+import { Card, CardContent, CardTitle } from '@/ui/molecules/card';
+import { CONVERSION_RATE } from '@/ui/segments/virtual-lab-settings/elements/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
+
+import type { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
 
 export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 5 });

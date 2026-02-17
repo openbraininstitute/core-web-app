@@ -302,7 +302,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       if ('strain' in r)
         return renderEmptyOrValue(renderArray(ensureArray({ input: r.strain }).map((s) => s.name)));
       if ('subject' in r && 'strain' in r.subject)
-        return renderEmptyOrValue(r.subject.strain!.name);
+        return renderEmptyOrValue(r.subject.strain?.name);
       return EmptyValue;
     },
     vocabulary: {

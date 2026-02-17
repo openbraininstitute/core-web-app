@@ -1,26 +1,26 @@
-import React from 'react';
-
-import { ContentForRichTextWidget } from '../../../content/types';
-import {
-  WidgetMissionStatement,
-  WidgetOurFoundations,
-  WidgetVirtualLabsPanel,
-  WidgetNews,
-  WidgetFromCellToBrain,
-  WidgetHero,
-} from '../../../widgets';
-import { WidgetPortalsPanel } from '../../../widgets/PortalsPanel';
-import Error from '../../Error';
-import { WidgetContributorsPanel } from '../../../widgets/ContributorsPanel';
 import { WidgetCompanyMembers } from '@/components/LandingPage/widgets/CompanyMembers';
 import { WidgetEmail } from '@/components/LandingPage/widgets/Email';
-import WidgetPriceList from '@/components/LandingPage/widgets/PriceList';
-import { WidgetSwipeableList } from '@/components/LandingPage/widgets/swipeable-list';
+import WidgetMilestones from '@/components/LandingPage/widgets/milestones';
 import WidgetMultipleMember from '@/components/LandingPage/widgets/multiple-member/multiple-member';
+import WidgetPriceList from '@/components/LandingPage/widgets/PriceList';
 import WidgetPriceList2 from '@/components/LandingPage/widgets/price-list-2/price-list-2';
 import WidgetRepositories from '@/components/LandingPage/widgets/repositories';
 import WidgetSpecialContributors from '@/components/LandingPage/widgets/special-contributors';
-import WidgetMilestones from '@/components/LandingPage/widgets/milestones';
+import { WidgetSwipeableList } from '@/components/LandingPage/widgets/swipeable-list';
+
+import {
+  WidgetFromCellToBrain,
+  WidgetHero,
+  WidgetMissionStatement,
+  WidgetNews,
+  WidgetOurFoundations,
+  WidgetVirtualLabsPanel,
+} from '../../../widgets';
+import { WidgetContributorsPanel } from '../../../widgets/ContributorsPanel';
+import { WidgetPortalsPanel } from '../../../widgets/PortalsPanel';
+import Error from '../../Error';
+
+import type { ContentForRichTextWidget } from '../../../content/types';
 
 interface SanityContentWidgetProps {
   value: ContentForRichTextWidget;

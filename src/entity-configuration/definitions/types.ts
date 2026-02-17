@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-
 import type { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';

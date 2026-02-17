@@ -1,10 +1,11 @@
-import {
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
+
+import type {
   VlmProjectStatsResponse,
   VlmUserStatsResponse,
   VlmVirtualLabStatsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import { getSession } from '@/auth-fetch';
-import { config } from '@/config';
 
 /**
  * Get statistics for the current user.

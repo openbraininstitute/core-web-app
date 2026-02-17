@@ -1,19 +1,21 @@
 import { Input, Select } from 'antd';
 import { map } from 'es-toolkit/compat';
-import type { Facets } from '@/api/entitycore/types/shared/response';
+
 import { CoreFieldFilterTypeEnum } from '@/entity-configuration/definitions/fields-defs/enums';
-import type {
-  CoreFilterValues,
-  GteLteValue,
-  TCoreFilter,
-  ValueOrRangeFilter,
-} from '@/entity-configuration/definitions/types';
 import { CheckList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist';
 import { defaultList } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/default-checklist';
 import { DateRange } from '@/ui/segments/data-table/elements/listing-filter-panel/date-range';
 import { DropdownList } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-as-dropdown';
 import { ValueOrRange } from '@/ui/segments/data-table/elements/listing-filter-panel/value-or-range';
 import { ValueRange } from '@/ui/segments/data-table/elements/listing-filter-panel/value-range';
+
+import type { Facets } from '@/api/entitycore/types/shared/response';
+import type {
+  CoreFilterValues,
+  GteLteValue,
+  TCoreFilter,
+  ValueOrRangeFilter,
+} from '@/entity-configuration/definitions/types';
 
 export function createFilterItemComponent(
   filter: TCoreFilter,

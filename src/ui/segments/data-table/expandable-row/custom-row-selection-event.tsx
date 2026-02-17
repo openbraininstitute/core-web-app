@@ -1,4 +1,5 @@
 import noop from 'es-toolkit/compat/noop';
+
 import { isBrowser } from '@/utils/environment';
 
 const CustomRowSelectionEvent = 'CustomRowSelectionEvent' as const;

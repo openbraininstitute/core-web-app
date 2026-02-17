@@ -4,14 +4,11 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Form } from 'antd';
 import { capitalize, get, isNil } from 'es-toolkit/compat';
 import { useMemo } from 'react';
-import type { ZodObject, ZodRawShape } from 'zod';
+
 import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
 import { getOrganizations } from '@/api/entitycore/queries/general/organization-agent';
 import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { getRoles } from '@/api/entitycore/queries/general/role';
-import type { Agent } from '@/api/entitycore/types/shared/global';
-import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
-import type { IRole } from '@/api/entitycore/types/shared/role';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
@@ -21,12 +18,17 @@ import {
   RequiredFieldMarker,
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-import type { TContribution } from '@/ui/segments/contribute/shared/schemas';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
-import type { TAgentType } from '@/ui/segments/contribute/shared/types';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
+
+import type { ZodObject, ZodRawShape } from 'zod';
+import type { Agent } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { IRole } from '@/api/entitycore/types/shared/role';
+import type { TContribution } from '@/ui/segments/contribute/shared/schemas';
+import type { TAgentType } from '@/ui/segments/contribute/shared/types';
 
 interface IContributionSelectorProps<TSchema extends ZodObject<ZodRawShape>> {
   schema: TSchema;

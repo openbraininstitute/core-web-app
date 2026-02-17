@@ -4,10 +4,9 @@ import { RightOutlined } from '@ant-design/icons';
 import capitalize from 'es-toolkit/compat/capitalize';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { convertEntitySlugToExtendedType } from '@/api/entitycore/utils';
 import { config } from '@/config';
-import type { TWorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
@@ -23,6 +22,9 @@ import {
   getEntityTypeWorkflowConfigurationItem,
   getWorkflowSegment,
 } from '@/ui/segments/workflows/elements/helpers';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceSection } from '@/constants';
 import type { KebabCase } from '@/utils/type';
 
 type Props = {

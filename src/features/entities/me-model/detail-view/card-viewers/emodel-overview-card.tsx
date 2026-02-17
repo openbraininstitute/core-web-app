@@ -1,17 +1,17 @@
+import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { memo } from 'react';
-import Link from 'next/link';
 
-import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
   EmptyValue,
   renderArray,
   renderEmptyOrValue,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import CardContainer from '@/features/entities/me-model/detail-view/card-viewers/card-container';
 import { classNames } from '@/util/utils';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
@@ -97,7 +97,7 @@ export default memo(EModelOverviewCard);
 
 // TODO: keep this one until migrate simulations
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function EModelThumbnail({ emodel }: { emodel: IEModel }) {
+function _EModelThumbnail({ emodel }: { emodel: IEModel }) {
   // if (!emodel.image)
   //   return <Empty description="No thumbnail available" image={Empty.PRESENTED_IMAGE_SIMPLE} />;
 

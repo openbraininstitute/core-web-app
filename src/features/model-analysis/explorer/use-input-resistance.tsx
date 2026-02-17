@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getMEModel } from '@/api/entitycore/queries';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 export function useInputResistance(entityId: string): number | undefined {
   const { projectId, virtualLabId } = useWorkspace();

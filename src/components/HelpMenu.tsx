@@ -1,4 +1,3 @@
-import { ReactNode } from 'react';
 import Link from 'next/link';
 
 import {
@@ -9,6 +8,8 @@ import {
   MenubarTrigger,
 } from '@/components/Menu';
 import { classNames } from '@/util/utils';
+
+import type { ReactNode } from 'react';
 
 type Props = {
   children: ReactNode;

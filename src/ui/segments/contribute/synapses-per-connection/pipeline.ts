@@ -5,21 +5,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { compact, get } from 'es-toolkit/compat';
 
-import type { z } from 'zod';
 import { measurementSchema } from '@/api/entitycore/queries/experimental/neuron-density';
 import { createExperimentalSynapsesPerConnection } from '@/api/entitycore/queries/experimental/synapses-per-connection';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 // NOTE: The import for MeasurementUnit has been intentionally removed as it was failing to resolve at runtime.
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
+import { EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS } from '@/ui/segments/contribute/synapses-per-connection/config';
+
+import type { z } from 'zod';
+import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
 } from '@/ui/segments/contribute/shared/types';
-import { EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS } from '@/ui/segments/contribute/synapses-per-connection/config';
 import type { ExperimentalSynapsesPerConnectionSchema } from '@/ui/segments/contribute/synapses-per-connection/schema';
 
 type TExperimentalSynapsesPerConnectionForm = z.infer<

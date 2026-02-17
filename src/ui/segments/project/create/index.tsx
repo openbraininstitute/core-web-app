@@ -2,8 +2,8 @@
 
 import { CloseOutlined } from '@ant-design/icons';
 
-import { CreationForm } from '@/ui/segments/project/create/form';
 import { Button } from '@/ui/molecules/button';
+import { CreationForm } from '@/ui/segments/project/create/form';
 
 function Header({ onClose }: { onClose: () => void }) {
   return (

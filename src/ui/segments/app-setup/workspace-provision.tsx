@@ -1,30 +1,30 @@
 'use client';
 
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
-import { ComponentProps, useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import unionBy from 'es-toolkit/compat/unionBy';
 import delay from 'es-toolkit/compat/delay';
 import find from 'es-toolkit/compat/find';
+import unionBy from 'es-toolkit/compat/unionBy';
+import { useSession } from 'next-auth/react';
+import { type ComponentProps, useEffect, useState } from 'react';
 
-import { streamingFetch, type StreamItem } from '@/ui/segments/app-setup/stream-fetch';
-import { WorkspaceCustomization } from '@/ui/segments/app-setup/workspace-customization';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import {
   WorkspaceBootstrap,
   WorkspaceBootstrapStep,
   WorkspaceBootstrapStepStatus,
 } from '@/ui/segments/app-setup/helpers';
+import { type StreamItem, streamingFetch } from '@/ui/segments/app-setup/stream-fetch';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
-import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
-import type { Prettify } from '@/utils/type';
 import type {
   TResolvedWorkspace,
   TWorkspaceBootstrapStep,
   TWorkspaceBootstrapStepStatus,
 } from '@/ui/segments/app-setup/helpers';
+import type { WorkspaceCustomization } from '@/ui/segments/app-setup/workspace-customization';
+import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
+import type { Prettify } from '@/utils/type';
 
 type FinalStepProps = Prettify<ComponentProps<typeof WorkspaceCustomization>>;
 
@@ -122,7 +122,14 @@ export function WorkspaceProvision({
     };
 
     asyncFetch();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
+    accountPayload,
+    move,
+    session.data?.accessToken,
+    shouldCreateProject,
+    shouldCreateVirtualLab,
+    workspaceResolution,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <HydrateWrapper>

@@ -4,6 +4,7 @@ import { FullscreenOutlined, MinusOutlined, PlusOutlined } from '@ant-design/ico
 import { motion } from 'motion/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useTransition } from 'react';
+
 import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
 import {
   type ThreeDVisualizerQueryParamKeys,
@@ -11,6 +12,7 @@ import {
   threeDVisualizerState,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { cn } from '@/utils/css-class';
+
 import { useFullscreenSwitcher } from './hooks';
 
 import styles from './neuron-visualizer.module.css';

@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 export default function Action({ children, icon }: { children: ReactNode; icon: ReactNode }) {
   return (

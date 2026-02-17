@@ -1,11 +1,11 @@
 'use client';
 
-import React, { type CSSProperties } from 'react';
 import { CaretRightFilled } from '@ant-design/icons';
 
 import { classNames } from '@/util/utils';
 
-import type { TTreeNode, RenderNodeProps } from '@/components/tree/types';
+import type { CSSProperties } from 'react';
+import type { RenderNodeProps, TTreeNode } from '@/components/tree/types';
 
 type Props<TNode extends TTreeNode = TTreeNode> = RenderNodeProps<TNode>;
 

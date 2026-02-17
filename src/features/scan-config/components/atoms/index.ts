@@ -69,7 +69,7 @@ export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
       );
 
       return Array.from(executionsGrouped.keys()).reduce(
-        (map, simId) => map.set(simId, executionsGrouped.get(simId)![0].status),
+        (map, simId) => map.set(simId, executionsGrouped.get(simId)?.[0].status),
         new Map()
       );
     }),

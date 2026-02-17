@@ -1,12 +1,14 @@
 /* eslint-disable no-param-reassign */
-import startsWith from 'es-toolkit/compat/startsWith';
-import some from 'es-toolkit/compat/some';
 
-import { entityCoreApi, getEntityCoreContext, getAssetElement } from '@/api/entitycore/utils';
+import some from 'es-toolkit/compat/some';
+import startsWith from 'es-toolkit/compat/startsWith';
+
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
+import { getColorFromGeneratedPalette } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
 
 import type {
   ISingleNeuronSynaptome,
@@ -16,7 +18,6 @@ import type {
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import { getColorFromGeneratedPalette } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
 
 const baseUri = '/single-neuron-synaptome';
 

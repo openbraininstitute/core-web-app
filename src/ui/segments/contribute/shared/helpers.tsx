@@ -1,12 +1,11 @@
-import { initial, last, join, split } from 'es-toolkit/compat';
+import { initial, join, last, split } from 'es-toolkit/compat';
 import { z } from 'zod';
-
-import type { SafeParseReturnType, ZodTypeAny } from 'zod';
-import type { ComponentProps, ReactNode } from 'react';
-import type { FormInstance } from 'antd';
 
 import { cn } from '@/utils/css-class';
 
+import type { FormInstance } from 'antd';
+import type { ComponentProps, ReactNode } from 'react';
+import type { SafeParseReturnType, ZodTypeAny } from 'zod';
 import type {
   ICustomFormErrorOptions,
   TStepValidationStatus,

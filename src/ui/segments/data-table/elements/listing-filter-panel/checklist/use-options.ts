@@ -24,18 +24,15 @@ export function useOptions(
   data?: Array<FacetLabelValuePair>
 ): FacetOptionsList {
   return useMemo(() => {
-    return (
-      data &&
-      data.map(({ id, label, value, type, count }) => {
-        return {
-          id,
-          label,
-          type,
-          value,
-          count,
-          checked: values?.includes(label),
-        };
-      })
-    );
+    return data?.map(({ id, label, value, type, count }) => {
+      return {
+        id,
+        label,
+        type,
+        value,
+        count,
+        checked: values?.includes(label),
+      };
+    });
   }, [data, values]);
 }

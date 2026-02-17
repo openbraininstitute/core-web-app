@@ -1,6 +1,5 @@
-import { StepsProps } from 'antd/lib/steps';
-
-import { EntitySlugValue } from '@/entity-configuration/domain/slug';
+import type { StepsProps } from 'antd/lib/steps';
+import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 
 export type SimulationType = Extract<
   EntitySlugValue,

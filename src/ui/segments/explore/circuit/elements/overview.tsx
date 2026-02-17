@@ -2,10 +2,10 @@
 
 import toPairs from 'es-toolkit/compat/toPairs';
 
-import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
-import { Header } from '@/ui/segments/explore/circuit/elements/section-header';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
+import { Header } from '@/ui/segments/explore/circuit/elements/section-header';
+import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 

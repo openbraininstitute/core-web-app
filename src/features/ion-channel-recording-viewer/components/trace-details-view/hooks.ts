@@ -1,8 +1,9 @@
-import React from 'react';
 import { TgdColor } from '@tolokoban/tgd';
+import React from 'react';
 
 import { createPalette } from '../../colors';
-import {
+
+import type {
   IonChannelRecordingPlot,
   IonChannelRecordingProtocol,
   IonChannelRecordingRepetition,
@@ -36,10 +37,10 @@ export function usePlotParams(
   );
 }
 
-export function useVisibleLines(plot?: IonChannelRecordingPlot) {
+export function useVisibleLines(_plot?: IonChannelRecordingPlot) {
   const [selection, setSelection] = React.useState<string[]>([]);
   const [preview, setPreview] = React.useState<string | undefined>(undefined);
-  React.useEffect(() => setSelection([]), [plot]);
+  React.useEffect(() => setSelection([]), []);
 
   return {
     reset() {

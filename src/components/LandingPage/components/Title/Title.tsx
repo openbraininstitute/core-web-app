@@ -1,11 +1,13 @@
-import React, { CSSProperties } from 'react';
+import { classNames } from '@/util/utils';
 
 import {
-  styleBlockSmallMarginLeft,
   styleBlockSmall,
   styleBlockSmallExpandRight,
+  styleBlockSmallMarginLeft,
 } from '../../styles';
-import { classNames } from '@/util/utils';
+
+import type React from 'react';
+import type { CSSProperties } from 'react';
 
 import styles from './Title.module.css';
 

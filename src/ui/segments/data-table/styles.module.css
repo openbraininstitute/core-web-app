@@ -26,11 +26,11 @@
 }
 
 .alignmentHack > div {
-  align-items: normal !important;
+  align-items: normal;
 }
 
 .tableRow {
-  border: none !important;
+  border: none;
   @apply cursor-pointer;
 }
 

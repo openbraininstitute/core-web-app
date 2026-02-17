@@ -1,6 +1,6 @@
-import { getDefaultFormState, RJSFSchema } from '@rjsf/utils';
-import { get } from 'es-toolkit/compat';
+import { getDefaultFormState, type RJSFSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
+import { get } from 'es-toolkit/compat';
 
 /**
  * Retrieves default values for a form based on the provided schema and form data.

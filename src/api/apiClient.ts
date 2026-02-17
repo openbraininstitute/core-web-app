@@ -61,8 +61,6 @@ class ApiClient {
 
   private _token?: string;
 
-  private _timeout?: number;
-
   private _attempts?: number;
 
   private _backoff?: BackoffStrategy;

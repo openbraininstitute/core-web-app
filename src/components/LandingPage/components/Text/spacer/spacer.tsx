@@ -1,8 +1,7 @@
-import React from 'react';
+import { isType } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
 
 import Error from '../../Error';
-import { classNames } from '@/util/utils';
-import { isType } from '@/util/type-guards';
 
 import styles from './spacer.module.css';
 

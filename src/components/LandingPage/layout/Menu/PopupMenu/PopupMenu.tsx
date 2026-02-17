@@ -1,12 +1,11 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import Link from 'next/link';
 
+import { EnumSection } from '@/components/LandingPage/sections/sections';
+import { classNames } from '@/util/utils';
+
 import { DEFAULT_SECTION } from '../../../constants';
 import { IconClose } from '../../../icons/IconClose';
-
-import { EnumSection } from '@/components/LandingPage/sections/sections';
-
-import { classNames } from '@/util/utils';
 
 interface MenuItem {
   caption: string;

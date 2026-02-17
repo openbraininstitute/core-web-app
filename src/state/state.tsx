@@ -1,7 +1,8 @@
 'use client';
 
-import { Atom } from 'jotai';
-import { PropsWithChildren, useRef, createContext } from 'react';
+import { createContext, type PropsWithChildren, useRef } from 'react';
+
+import type { Atom } from 'jotai';
 
 const newMap = () => new Map<string, Atom<any>>();
 const AtomContext = createContext(newMap());

@@ -1,11 +1,12 @@
 import React from 'react';
 
+import { classNames } from '@/util/utils';
+
+import { IconCircular } from './icons/circular';
+import { IconStraight } from './icons/straight';
 import { usePainterDendrogram } from './painter/painter';
 
-import { IconStraight } from './icons/straight';
-import { IconCircular } from './icons/circular';
-import { classNames } from '@/util/utils';
-import { Morphology } from '@/services/bluenaas-single-cell/types';
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
 
 import styles from './viewer-dendrogram.module.css';
 

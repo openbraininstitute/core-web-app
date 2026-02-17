@@ -1,8 +1,9 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import { HTMLProps, ReactNode } from 'react';
 import { Spin } from 'antd';
 
 import { classNames } from '@/util/utils';
+
+import type { HTMLProps, ReactNode } from 'react';
 
 export function Btn({
   children,

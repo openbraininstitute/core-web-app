@@ -1,10 +1,9 @@
-import React from 'react';
-
-import { classNames } from '@/util/utils';
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
-import { ContentForNewsItem } from '@/components/LandingPage/content';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
 import { getSection } from '@/components/LandingPage/utils';
+import { classNames } from '@/util/utils';
+
+import type { ContentForNewsItem } from '@/components/LandingPage/content';
 
 import styles from './NewsCard.module.css';
 

@@ -1,17 +1,20 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 
-import type { Message } from '@ai-sdk/react';
 import debounce from 'es-toolkit/compat/debounce';
 import React from 'react';
+
 import { useAppNotification } from '@/components/notification';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
+
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { HistoryManager } from './manager/history';
 import { MessageManager } from './manager/message';
 import { ThreadManager } from './manager/thread';
 import { Signal } from './signal';
+
+import type { Message } from '@ai-sdk/react';
 import type { AiAssistantHistory, AssistantContext, AssistantError } from './types';
 
 class AiAssistantClass {

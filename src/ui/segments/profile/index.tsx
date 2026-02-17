@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { match } from 'ts-pattern';
+
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { useTabs } from '@/components/detail-view-tabs';
 import { SignOutFill } from '@/components/icons/EditorIcons';
@@ -33,7 +34,7 @@ function Header({ onClose }: { onClose: () => void }) {
   if (isLoading) return <LoadingOutlined spin />;
   if (isError) return <div>Error</div>;
   const onCopyToken = async () => {
-    if (session && session.data) copy(session.data?.accessToken);
+    if (session?.data) copy(session.data?.accessToken);
   };
   const userName = data?.profile.first_name
     ? `${data?.profile.first_name} ${data?.profile.last_name}`

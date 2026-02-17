@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ContributorProps, CONTRIBUTORS_LIST } from '@/constants/home/contributors-list';
+
+import { CONTRIBUTORS_LIST, type ContributorProps } from '@/constants/home/contributors-list';
 
 export type Contributor = ContributorProps;
 

@@ -1,6 +1,6 @@
-import React from 'react';
-
 import { classNames } from '@/util/utils';
+
+import type React from 'react';
 
 import styles from './button.module.css';
 

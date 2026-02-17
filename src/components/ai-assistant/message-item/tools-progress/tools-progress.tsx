@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import Link from 'next/link';
-import { IconGear } from '../../icons/gear';
-import LoadingDots from './loading-dots/loading-dots';
-import { cn } from '@/utils/css-class';
+import { useState } from 'react';
 
-import HelpIconI from '@/components/icons/HelpIcon';
 import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
-
+import HelpIconI from '@/components/icons/HelpIcon';
 import { useAITools } from '@/services/ai-agent/tools/tools';
-import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
-
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { cn } from '@/utils/css-class';
+
+import { IconGear } from '../../icons/gear';
+import LoadingDots from './loading-dots/loading-dots';
+
+import type { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
+import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+
 import styles from './tools-progress.module.css';
 
 interface ToolsProgressProps {

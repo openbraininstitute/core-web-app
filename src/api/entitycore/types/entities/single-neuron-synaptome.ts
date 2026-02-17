@@ -1,5 +1,8 @@
 import isNil from 'es-toolkit/compat/isNil';
 import { z } from 'zod';
+
+import { validateSingleNeuronSynapseGenerationFormula } from '@/api/small-scale-simulator';
+
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { IMEModel, IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
 import type {
@@ -22,7 +25,6 @@ import type {
   PaginationFilter,
   SharedFilter,
 } from '@/api/entitycore/types/shared/request';
-import { validateSingleNeuronSynapseGenerationFormula } from '@/api/small-scale-simulator';
 
 export interface SingleNeuronSynaptomeBase {
   name: string;

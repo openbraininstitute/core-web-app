@@ -1,12 +1,14 @@
 import { includes, without } from 'es-toolkit/compat';
+
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
-import type { ICircuit, TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import type { ICircuit, TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const circuitScaleFilter = {

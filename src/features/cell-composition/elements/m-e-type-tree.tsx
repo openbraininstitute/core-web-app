@@ -1,25 +1,24 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { useCallback, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { loadable } from 'jotai/utils';
-import { match, P } from 'ts-pattern';
 import { useAtomValue } from 'jotai';
+import { loadable } from 'jotai/utils';
+import { useParams } from 'next/navigation';
+import { useCallback, useMemo, useState } from 'react';
+import { match, P } from 'ts-pattern';
 
-import Node from '@/features/cell-composition/elements/default-node';
 import Tree from '@/components/tree';
-
+import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
+import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { annotationTypesAtom, cellCompositionAtom } from '@/features/cell-composition/context';
 import { CellCompositionSkeleton } from '@/features/cell-composition/elements/cell-composition-skeleton';
 import { DensityOrCountToggle } from '@/features/cell-composition/elements/composition-type-toggle';
-import { cellCompositionAtom, annotationTypesAtom } from '@/features/cell-composition/context';
+import Node from '@/features/cell-composition/elements/default-node';
 import { getMetric, metricToUnit } from '@/features/cell-composition/elements/helpers';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import { classNames } from '@/util/utils';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
-import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
 import type { RenderNodeProps } from '@/components/tree/types';
+import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export function CellCompositionMETypeTree() {

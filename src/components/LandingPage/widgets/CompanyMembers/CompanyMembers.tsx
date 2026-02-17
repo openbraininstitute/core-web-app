@@ -1,11 +1,10 @@
-/* eslint-disable react/no-array-index-key */
-import React from 'react';
+import { classNames } from '@/util/utils';
 
 import { styleBlockMedium } from '../../styles';
-import { Group } from './types';
 import { useMembersBlocs } from './hook';
 import TeamMember from './TeamMember';
-import { classNames } from '@/util/utils';
+
+import type { Group } from './types';
 
 import styles from './CompanyMembers.module.css';
 

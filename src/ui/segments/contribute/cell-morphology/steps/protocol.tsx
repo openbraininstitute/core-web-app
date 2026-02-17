@@ -2,8 +2,6 @@ import { Form } from 'antd';
 import { useCallback, useMemo } from 'react';
 
 import { getProtocols } from '@/api/entitycore/queries/general/protocol';
-import type { IProtocol } from '@/api/entitycore/types/shared/global';
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
 import { CellMorphologySchema } from '@/ui/segments/contribute/cell-morphology/schema';
@@ -13,6 +11,9 @@ import {
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type { IProtocol } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 
 export function Protocol() {
   const form = Form.useFormInstance();
@@ -48,7 +49,7 @@ export function Protocol() {
         id: 'protocol-selector',
         dataKey: keyBuilder.protocols({ virtualLabId, projectId }),
         queryFn: getProtocols,
-        getOptionLabel: (l) => l.name + ' (' + l.generation_type + ')',
+        getOptionLabel: (l) => `${l.name} (${l.generation_type})`,
         getOptionValue: (l) => l.id,
         placeholder: 'Select a protocol...',
         searchPlaceholder: 'Search protocol...',

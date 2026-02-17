@@ -1,5 +1,6 @@
 import SingleArtifact from '@/ui/segments/reports/obi-showcases/artifacts/single-artifact';
-import { LinkAndDownloadArtifactProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+
+import type { LinkAndDownloadArtifactProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 export default function LinkAndDownloadList({
   content,

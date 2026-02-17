@@ -1,10 +1,10 @@
 import { snakeCase } from 'es-toolkit/compat';
-import { ReactNode } from 'react';
 
-import { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import { DataViewLayout } from '@/ui/layouts/data-view-layout';
 
-import type { WorkspaceContext, ServerSideComponentProp } from '@/types/common';
+import type { ReactNode } from 'react';
+import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 interface Params {
   id: string;

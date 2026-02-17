@@ -1,6 +1,17 @@
-import React from 'react';
+import { logError } from '@/util/logger';
 
-import {
+import Error from '../Error';
+import SanityContentItems from './SanityContentItems';
+import SanityContentParagraph from './SanityContentParagraph';
+import SanityContentPreview from './SanityContentPreview';
+import SanityContentTitle from './SanityContentTitle';
+import SanityContentVerticalDivider from './SanityContentVerticalSpace';
+import SanityContentWidget from './SanityContentWidget';
+import SanityContentImage from './sanity-content-image';
+import { SanityContentMultipleButton } from './sanity-content-multiple-button';
+import SanityContentVideo from './sanity-content-video';
+
+import type {
   ContentForRichText,
   ContentForRichTextImage,
   ContentForRichTextItems,
@@ -12,17 +23,6 @@ import {
   ContentForRichTextVideo,
   ContentForRichTextWidget,
 } from '../../content/types';
-import Error from '../Error';
-import SanityContentTitle from './SanityContentTitle';
-import SanityContentParagraph from './SanityContentParagraph';
-import SanityContentItems from './SanityContentItems';
-import SanityContentWidget from './SanityContentWidget';
-import SanityContentVerticalDivider from './SanityContentVerticalSpace';
-import SanityContentPreview from './SanityContentPreview';
-import SanityContentImage from './sanity-content-image';
-import SanityContentVideo from './sanity-content-video';
-import { SanityContentMultipleButton } from './sanity-content-multiple-button';
-import { logError } from '@/util/logger';
 
 interface SanityContentRTFProps {
   className?: string;

@@ -4,7 +4,7 @@
   padding-right: 4px;
   padding-left: 4px;
   padding-bottom: 5px;
-  margin-left: 0 !important;
+  margin-left: 0;
 }
 
 .trace-selector-group .trace-selector-cover {
@@ -114,7 +114,7 @@
 }
 
 .interactive-view-btn > .repetition-label {
-  display: none !important;
+  display: none;
 }
 
 .trace-type-label {
@@ -141,20 +141,20 @@
   }
 
   .interactive-view-btn {
-    display: block !important;
+    display: block;
     width: 100%;
   }
 
   .repetition-label {
-    display: none !important;
+    display: none;
   }
 
   .generic-label {
-    display: none !important;
+    display: none;
   }
 
   .interactive-view-btn > .repetition-label {
-    display: inline !important;
+    display: inline;
   }
 
   .repetition-list:nth-child(1) .trace-type-label {

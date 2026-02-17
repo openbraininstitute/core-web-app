@@ -1,12 +1,13 @@
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable no-param-reassign */
-import React, { CSSProperties, type JSX } from 'react';
+import React, { type CSSProperties, type JSX } from 'react';
+
+import { classNames } from '@/util/utils';
 
 import { IconChevronLeft } from '../../icons/IconChevronLeft';
 import { IconChevronRight } from '../../icons/IconChevronRight';
 import { styleButtonSquare } from '../../styles';
 
-import { classNames } from '@/util/utils';
 import styles from './swipeable-cards-list.module.css';
 
 interface SwipeableCardsListProps {

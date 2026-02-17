@@ -1,5 +1,6 @@
-import { ReactElement, ReactNode } from 'react';
 import useTheme from '@/hooks/theme';
+
+import type { ReactElement, ReactNode } from 'react';
 
 interface ThemeProviderProps {
   children: ReactNode;

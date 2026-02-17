@@ -1,6 +1,6 @@
-import { RichText, tryType } from './_common';
+import { type RichText, tryType } from './_common';
 
-import { TypeDef } from '@/util/type-guards';
+import type { TypeDef } from '@/util/type-guards';
 
 export const typeStringOrNull: TypeDef = ['|', 'string', 'null', 'undefined'];
 export const typeNumberOrNull: TypeDef = ['|', 'number', 'null', 'undefined'];

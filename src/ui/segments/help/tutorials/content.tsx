@@ -34,7 +34,7 @@ export default function TutorialContent() {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tutorialSlug, content.length]);
+  }, [tutorialSlug, content.length, pathname, router.replace, content[0], searchParams.toString]);
 
   const singleTutorial = useSanityForSingleTutorial({ slug: effectiveTutorialSlug });
 

@@ -1,8 +1,8 @@
-import React from 'react';
-
-import { ContentForRichTextVerticalSpace } from '../../../content';
-import { styleBlockFullWidth } from '../../../styles';
 import { classNames } from '@/util/utils';
+
+import { styleBlockFullWidth } from '../../../styles';
+
+import type { ContentForRichTextVerticalSpace } from '../../../content';
 
 import styles from './SanityContentVerticalSpace.module.css';
 

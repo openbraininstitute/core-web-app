@@ -1,25 +1,25 @@
-import { arrayToTree } from 'performant-array-to-tree';
-import { atomFamily } from 'jotai/utils';
-import { Atom, atom } from 'jotai';
 import isEqual from 'es-toolkit/compat/isEqual';
+import { type Atom, atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
+import { arrayToTree } from 'performant-array-to-tree';
 
-import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
-import { getCellCompositions } from '@/api/entitycore/queries/general/cell-composition';
-import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
-import { brainRegionAtlasAtom } from '@/features/brain-atlas-viewer/context';
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
-import { renameKeyDeep } from '@/components/tree/elements/helpers';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getAssetElement } from '@/api/entitycore/utils';
+import { getCellCompositions } from '@/api/entitycore/queries/general/cell-composition';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
+import { renameKeyDeep } from '@/components/tree/elements/helpers';
+import { brainRegionAtlasAtom } from '@/features/brain-atlas-viewer/context';
+import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
+import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
 import { log } from '@/utils/logger';
 
 import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
-import type { WorkspaceContext } from '@/types/common';
 import type { IAnnotation } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
 
 const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
 

@@ -1,9 +1,11 @@
 'use client';
 
 import { Checkbox } from 'antd';
-import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { useCallback, useId } from 'react';
+
 import { cn } from '@/utils/css-class';
+
+import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 
 export interface BooleanInputProps {
   value: boolean | null;

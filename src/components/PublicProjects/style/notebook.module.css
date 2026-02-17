@@ -74,7 +74,7 @@
 
 .readMeParagraph code {
   font-family: "Titillium Web";
-  font-size: 18px !important;
+  font-size: 18px;
   padding: 2px 8px;
   background: #eaf8ff;
   border-radius: 4px;
@@ -100,7 +100,7 @@
 
 .readMeParagraph code {
   font-family: "Titillium Web";
-  font-size: 18px !important;
+  font-size: 18px;
   padding: 2px 8px;
   background: #eaf8ff;
   border-radius: 4px;

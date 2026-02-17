@@ -1,7 +1,8 @@
-import { Popover, PopoverProps } from 'antd';
-import React from 'react';
+import { Popover, type PopoverProps } from 'antd';
 
 import { classNames } from '@/util/utils';
+
+import type React from 'react';
 
 type Props = {
   message?: React.ReactNode;

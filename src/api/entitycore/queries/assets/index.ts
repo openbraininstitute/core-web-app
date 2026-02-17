@@ -1,11 +1,11 @@
 import kebabCase from 'es-toolkit/compat/kebabCase';
 
-import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { getEntityCoreContext } from '@/api/entitycore/utils';
-import { compactRecord } from '@/utils/dictionary';
 import { authApiClient } from '@/api/apiClient';
+import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { config } from '@/config';
+import { compactRecord } from '@/utils/dictionary';
 
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   AssetLabel,
   DirectoryListContent,

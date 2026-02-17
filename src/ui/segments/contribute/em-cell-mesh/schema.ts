@@ -1,5 +1,5 @@
-import type dayjs from 'dayjs';
 import { z } from 'zod';
+
 import {
   EMCellMeshGenerationMethodDictionary,
   EMCellMeshTypeDictionary,
@@ -11,6 +11,8 @@ import {
   SubjectIdSchema,
 } from '@/ui/segments/contribute/shared/schemas';
 import { valuesToEnumTuple } from '@/utils/array';
+
+import type dayjs from 'dayjs';
 
 const ExperimentDateSchema = z.custom<dayjs.Dayjs | Date | string>((val) => !!val, {
   message: 'Experiment date is required',

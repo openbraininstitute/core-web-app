@@ -2644,7 +2644,7 @@ const COUNTRIES = [
 // Here are the countries that are currently forbidden by insurances.
 // This list should be in sync with the one in `src/util/email.ts`.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const FORBIDDEN_COUNTRIES = [
+const _FORBIDDEN_COUNTRIES = [
   {
     alpha2: 'AF',
     alpha3: 'AFG',

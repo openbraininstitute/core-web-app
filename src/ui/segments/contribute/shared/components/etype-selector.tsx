@@ -1,24 +1,23 @@
 'use client';
 
 import { CheckOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
 import { Form } from 'antd';
+import { useMemo, useState } from 'react';
 
-import type { ZodObject, ZodRawShape } from 'zod';
-
-import { AsyncSelectFormItem, type AsyncSelectOption } from '@/ui/molecules/async-select';
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { AsyncSelectFormItem, type AsyncSelectOption } from '@/ui/molecules/async-select';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
+import type { ZodObject, ZodRawShape } from 'zod';
 import type { IEType } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 
 interface ICustomRendererProps {
   data: AsyncSelectOption<IEType>;
@@ -88,7 +87,7 @@ export function ETypeClassificationSelector<TSchema extends ZodObject<ZodRawShap
         customItemRender: CustomRenderer,
         onSelect: handleSelect,
       }),
-    [virtualLabId, projectId]
+    [virtualLabId, projectId, handleSelect]
   );
 
   return (

@@ -5,10 +5,11 @@ import Link from 'next/link';
 // import { ContentForTutorialItem } from '../type';
 // import SingleTutorialCard from './single-tutorial-card';
 
-import { TutorialProps } from '../type';
+import { useSanityContentForTutorialsList } from '@/components/tutorials-carrousel/hooks';
+
 import SingleTutorialCard from './single-tutorial-card';
 
-import { useSanityContentForTutorialsList } from '@/components/tutorials-carrousel/hooks';
+import type { TutorialProps } from '../type';
 
 export default function SliderTutorial() {
   const tutorials = useSanityContentForTutorialsList();

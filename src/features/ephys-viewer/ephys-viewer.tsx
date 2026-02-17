@@ -1,5 +1,5 @@
 import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
-import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
+import { Empty, Radio, type RadioChangeEvent, Spin } from 'antd';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 

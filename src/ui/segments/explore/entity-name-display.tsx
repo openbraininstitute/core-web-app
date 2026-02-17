@@ -1,8 +1,10 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+
+import type { ReactNode } from 'react';
 
 type EntityNameDisplayProps = {
   name: string;

@@ -1,40 +1,41 @@
 'use client';
 
-import { ErrorSchema, RJSFSchema, RJSFValidationError, UiSchema } from '@rjsf/utils';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LoadingOutlined, CloseOutlined } from '@ant-design/icons';
-import { flatMap, toArray, map, isNil } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
+import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import validator from '@rjsf/validator-ajv8';
-import dynamic from 'next/dynamic';
+import { flatMap, isNil, map, toArray } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
+import dynamic from 'next/dynamic';
+import { useSession } from 'next-auth/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { GenerationWorkflowFormPanelKeys } from '@/ui/segments/workflows/build/ion-channel-build/elements/panel-tabs';
-import { resetFormSection } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/reset-form-block';
-import { rjsfValidateForm } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
-import { ConfigurationSidebar } from '@/ui/segments/workflows/build/ion-channel-build/elements/menu-sidebar';
+import { Button } from '@/ui/molecules/button';
 import { EquationMenuItem } from '@/ui/segments/workflows/build/ion-channel-build/elements/equation-tooltip';
-import { labelClasses } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
+import { ConfigurationSidebar } from '@/ui/segments/workflows/build/ion-channel-build/elements/menu-sidebar';
+import { GenerationWorkflowFormPanelKeys } from '@/ui/segments/workflows/build/ion-channel-build/elements/panel-tabs';
 import {
-  BlockGroupProperties,
+  CONFIGURATION_FORM_STATE_KEY,
+  CONFIGURATION_RECORDING_STATE_KEY,
+  GenerativeFromAtomFamily,
+  IonChannelModelingSharedStateFamily,
+  IonChannelRecordingAtomFamily,
+  useGenerativeFormSchemaApi,
+} from '@/ui/segments/workflows/build/ion-channel-build/helpers';
+import {
+  type AutomatedFormHandle,
+  SchemaGeneratedForm,
+} from '@/ui/segments/workflows/build/ion-channel-build/rjsf';
+import {
+  type BlockGroupProperties,
   bundleSchemaFields,
   makeHiddenTypeUiSchema,
 } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
-import {
-  useGenerativeFormSchemaApi,
-  IonChannelModelingSharedStateFamily,
-  IonChannelRecordingAtomFamily,
-  CONFIGURATION_RECORDING_STATE_KEY,
-  CONFIGURATION_FORM_STATE_KEY,
-  GenerativeFromAtomFamily,
-} from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-import {
-  SchemaGeneratedForm,
-  AutomatedFormHandle,
-} from '@/ui/segments/workflows/build/ion-channel-build/rjsf';
-import { Button } from '@/ui/molecules/button';
+import { resetFormSection } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/reset-form-block';
+import { rjsfValidateForm } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
+import { labelClasses } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+
+import type { ErrorSchema, RJSFSchema, RJSFValidationError, UiSchema } from '@rjsf/utils';
 
 const Recording = dynamic(
   () => import('@/ui/segments/workflows/build/ion-channel-build/elements/recording'),
@@ -277,10 +278,13 @@ export function Configuration({ sessionId }: Props) {
     log('error', '[IonChannelModelBuilding][errors]', errors);
   }, []);
 
-  const onFormChange = useCallback((data: any, errorSchema?: ErrorSchema) => {
-    updateFormDataStorage(data || {});
-    setValidationErrorsMap(errorSchema);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const onFormChange = useCallback(
+    (data: any, errorSchema?: ErrorSchema) => {
+      updateFormDataStorage(data || {});
+      setValidationErrorsMap(errorSchema);
+    },
+    [updateFormDataStorage]
+  ); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onResetForm = useCallback(
     (propName: string) => {
@@ -313,11 +317,11 @@ export function Configuration({ sessionId }: Props) {
     } catch (error) {
       log('error', '[Configuration]', error);
     }
-  }, [canSubmitForm, formDataStorage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [canSubmitForm, RootSchema, updateIoChannelState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     formRef.current?.validate();
-  }, [formRef]);
+  }, []);
 
   useEffect(() => {
     if (Blocks.length > 0 && !activeBlock) {

@@ -1,8 +1,8 @@
-import { Suspense, type ReactNode } from 'react';
+import { type ReactNode, Suspense } from 'react';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
+import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';

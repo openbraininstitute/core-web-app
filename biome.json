@@ -25,13 +25,25 @@
     "rules": {
       "recommended": true,
       "a11y": {
-        "useButtonType": "error"
+        "useButtonType": "error",
+        "useSemanticElements": "info",
+        "useAriaPropsSupportedByRole": "info",
+        "useKeyWithClickEvents": "warn",
+        "noSvgWithoutTitle": "info",
+        "noStaticElementInteractions": "warn",
+        "useGenericFontNames": "warn",
+        "useFocusableInteractive": "warn",
+        "useAltText": "warn"
       },
       "correctness": {
-        "noUnusedVariables": "error"
+        "noUnusedVariables": "error",
+        "useExhaustiveDependencies": "warn",
+        "useJsxKeyInIterable": "warn",
+        "noUnknownFunction": "warn",
+        "noUnknownProperty": "warn"
       },
       "style": {
-        "noParameterAssign": "error",
+        "noParameterAssign": "info",
         "useConsistentArrayType": "off",
         "useConst": "error",
         "useExportType": "error",
@@ -43,9 +55,16 @@
         "noConsole": "warn",
         "noVar": "error",
         "noExplicitAny": "info",
+        "noAssignInExpressions": "info",
         "noImplicitAnyLet": "warn",
         "useIterableCallbackReturn": "warn",
-        "noNonNullAssertedOptionalChain": "info"
+        "noNonNullAssertedOptionalChain": "warn",
+        "noShadowRestrictedNames": "warn",
+        "noShorthandPropertyOverrides": "warn"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "warn",
+        "noDangerouslySetInnerHtmlWithChildren": "warn"
       }
     }
   },

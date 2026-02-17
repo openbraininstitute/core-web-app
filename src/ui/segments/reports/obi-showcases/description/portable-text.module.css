@@ -57,11 +57,11 @@
 }
 
 .content ul {
-  list-style: disc !important;
-  padding-left: 20px !important;
+  list-style: disc;
+  padding-left: 20px;
 }
 
 .content ol {
-  list-style: decimal !important;
-  padding-left: 20px !important;
+  list-style: decimal;
+  padding-left: 20px;
 }

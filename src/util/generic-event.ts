@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import React from 'react';
+
 import { logError } from '@/util/logger';
 
 export interface GenericEventInterface<T> {

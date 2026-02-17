@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
-import { getValidationResults } from '@/api/entitycore/queries/general/validation-result';
 import { getAssets } from '@/api/entitycore/queries/assets';
+import { getValidationResults } from '@/api/entitycore/queries/general/validation-result';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { DEFAULT_PAGE_XSMALL_SIZE } from '@/constants';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -39,7 +39,7 @@ export function useAnalysis({ workspace, id }: { id: string; workspace: Workspac
       query.fetchNextPage();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query.hasNextPage, query.isFetchingNextPage, query.data]);
+  }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
 
   return query;
 }

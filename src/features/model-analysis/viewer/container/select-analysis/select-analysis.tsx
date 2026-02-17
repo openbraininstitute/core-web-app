@@ -1,10 +1,11 @@
 /* eslint-disable react/no-unstable-nested-components */
 
 import { Select } from 'antd';
-import React, { type ReactNode } from 'react';
-import { isType } from '@/util/type-guards';
 
+import { isType } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
+
+import type { ReactNode } from 'react';
 import type { FlatValidationResult } from '../hooks';
 
 import styles from './select-analysis.module.css';

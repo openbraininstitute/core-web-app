@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 
-import GlossaryContent from '@/ui/segments/help/glossary/content';
-import GlossaryNavigation from '@/ui/segments/help/glossary/navigation';
-
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { useSanityContentForArtifactTypes } from '@/components/documentation/hooks/use-sanity-content-for-artifact-types';
 import { useSanityContentForExperimentsModels } from '@/components/documentation/hooks/use-sanity-content-for-data-type';
-import { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
+import GlossaryContent from '@/ui/segments/help/glossary/content';
+import GlossaryNavigation from '@/ui/segments/help/glossary/navigation';
+
+import type { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
 
 export type CellTypeContentProps = {
   name: string;

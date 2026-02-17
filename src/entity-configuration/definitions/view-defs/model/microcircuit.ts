@@ -1,7 +1,8 @@
-import { ViewDefinitionConfig } from '../types';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
+
 import { EntityCoreFields } from '../../fields-defs/enums';
 
-import { EntitySlug } from '@/entity-configuration/domain/slug';
+import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForMicrocircuit: ViewDefinitionConfig = {
   title: 'Microcircuit',

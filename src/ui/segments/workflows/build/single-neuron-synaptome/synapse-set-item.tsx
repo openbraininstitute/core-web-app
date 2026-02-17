@@ -144,7 +144,7 @@ export function SynapseSet({ sessionId }: Props) {
   const onHideSynapse = () => {
     if (config?.id) {
       const currentSynapsesPlacementConfig = synapsesPlacement?.[config.id];
-      if (currentSynapsesPlacementConfig && currentSynapsesPlacementConfig.meshId) {
+      if (currentSynapsesPlacementConfig?.meshId) {
         sendRemoveSynapses3DEvent(config?.id, currentSynapsesPlacementConfig.meshId);
         setSynapsesPlacementAtom({
           ...synapsesPlacement,

@@ -42,9 +42,7 @@ export function useFilterItems(
             display: item?.isDisplayable && activeColumns?.includes(filter.field),
             label: fieldTitleSentenceCase(item?.title ?? ''),
             type: filter.type,
-            toggleFunc: showDisplayTrigger
-              ? () => onToggleActive && onToggleActive(filter.field)
-              : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
+            toggleFunc: showDisplayTrigger ? () => onToggleActive?.(filter.field) : undefined, // There are cases where we don't want to show the display trigger. Undefined toggleFunc achieves this.
           };
         })
         .filter((item) => showDisplayTrigger || !isNil(item.content)), // If showDisplayTrigger is false and content is undefined that filter is not needed.

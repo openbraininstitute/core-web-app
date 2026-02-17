@@ -1,9 +1,10 @@
 import { captureException } from '@sentry/nextjs';
 
-import { InviteData, InviteErrorCodes } from '@/types/virtual-lab/invites';
-import { generateLabUrl } from '@/util/virtual-lab/urls';
-import { ApiErrorCause } from '@/api/error';
 import { config } from '@/config';
+import { type InviteData, InviteErrorCodes } from '@/types/virtual-lab/invites';
+import { generateLabUrl } from '@/util/virtual-lab/urls';
+
+import type { ApiErrorCause } from '@/api/error';
 
 const errorPath = '/';
 

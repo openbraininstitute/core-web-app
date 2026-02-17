@@ -1,6 +1,6 @@
-import { Metadata } from 'next';
-
 import ImageURL from './default.jpg';
+
+import type { Metadata } from 'next';
 
 export const DEFAULT_METADATA: Metadata = {
   title: 'Open Brain Platform',

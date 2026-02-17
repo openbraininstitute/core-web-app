@@ -1,10 +1,10 @@
-import { RefObject, useEffect, useRef } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
 
 function on<T extends Window | Document | HTMLElement | EventTarget>(
   obj: T | null,
   ...args: Parameters<T['addEventListener']> | [string, Function | null, ...any]
 ): void {
-  if (obj && obj.addEventListener) {
+  if (obj?.addEventListener) {
     obj.addEventListener(...(args as Parameters<HTMLElement['addEventListener']>));
   }
 }
@@ -13,7 +13,7 @@ function off<T extends Window | Document | HTMLElement | EventTarget>(
   obj: T | null,
   ...args: Parameters<T['removeEventListener']> | [string, Function | null, ...any]
 ): void {
-  if (obj && obj.removeEventListener) {
+  if (obj?.removeEventListener) {
     obj.removeEventListener(...(args as Parameters<HTMLElement['removeEventListener']>));
   }
 }

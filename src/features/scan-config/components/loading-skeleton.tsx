@@ -1,6 +1,7 @@
-import styles from '@/features/scan-config/scan-config.module.css';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
+
+import styles from '@/features/scan-config/scan-config.module.css';
 
 function TabsSkeleton() {
   return (

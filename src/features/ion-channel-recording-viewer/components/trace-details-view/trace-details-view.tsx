@@ -32,7 +32,7 @@ export function TraceDetailsView({ trace, cls }: TraceDetailsViewProps) {
   const [repetitionName, setRepetitionName] = React.useState(repetitionsNames[0] ?? '');
   React.useEffect(() => {
     setRepetitionName(repetitionsNames[0] ?? '');
-  }, [protocolName, repetitionsNames]);
+  }, [repetitionsNames]);
   const repetition = React.useMemo(
     () => trace.findRepetition(protocolName, repetitionName),
     [trace, protocolName, repetitionName]

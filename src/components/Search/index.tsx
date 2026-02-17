@@ -1,6 +1,7 @@
-import { ReactElement, JSXElementConstructor } from 'react';
 import { ConfigProvider, Select } from 'antd';
-import { SelectProps, DefaultOptionType } from 'antd/es/select';
+
+import type { DefaultOptionType, SelectProps } from 'antd/es/select';
+import type { JSXElementConstructor, ReactElement } from 'react';
 
 type SearchProps<T> = {
   className?: string;

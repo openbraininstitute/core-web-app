@@ -1,11 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { signIn, useSession } from 'next-auth/react';
-import { Session } from 'next-auth';
-import { usePrevious } from './hooks';
+import { useEffect } from 'react';
+
 import sessionAtom from '@/state/session';
+
+import { usePrevious } from './hooks';
+
+import type { Session } from 'next-auth';
 
 export type SessionOrNull = Session | null;
 

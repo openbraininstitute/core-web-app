@@ -1,9 +1,10 @@
 import { CloseCircleFilled } from '@ant-design/icons';
-import { InputProps, InputRef, Input } from 'antd';
-import { ForwardedRef, ReactNode } from 'react';
+import { Input, type InputProps, type InputRef } from 'antd';
 
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { ForwardedRef, ReactNode } from 'react';
 
 export function ProfileError() {
   return (

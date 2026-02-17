@@ -5,30 +5,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { chunk, flatMap, get, isArray, keyBy, mergeWith, uniqBy } from 'es-toolkit/compat';
 import pMap from 'p-map';
+
 import {
   getCircuitHierarchyByDerivation,
   getCircuits,
 } from '@/api/entitycore/queries/model/circuit';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
-import type {
-  EntityCoreResponse,
-  Facets,
-  Pagination,
-} from '@/api/entitycore/types/shared/response';
-import type { TWorkspaceScope } from '@/constants';
 import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
 import { circuitScaleFilter } from '@/entity-configuration/domain/model/circuit';
-import type { WorkspaceContext } from '@/types/common';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import type {
-  HierarchyOutputNode,
-  TCircuitRepresentationView,
-} from '@/ui/segments/explore/circuit/helpers';
 import {
   buildFilteredHierarchyTree,
   CircuitRepresentationView,
@@ -40,6 +27,21 @@ import {
 } from '@/ui/segments/explore/circuit/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
+import type {
+  EntityCoreResponse,
+  Facets,
+  Pagination,
+} from '@/api/entitycore/types/shared/response';
+import type { TWorkspaceScope } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
+import type {
+  HierarchyOutputNode,
+  TCircuitRepresentationView,
+} from '@/ui/segments/explore/circuit/helpers';
 
 export function useFullRawHierarchy({
   view = CircuitRepresentationView.Flat,

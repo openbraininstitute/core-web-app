@@ -1,5 +1,6 @@
-import { tryType, typeImage } from './_common';
 import { useSanity } from '@/services/sanity';
+
+import { tryType, typeImage } from './_common';
 
 export interface ContentForMember {
   firstName: string;

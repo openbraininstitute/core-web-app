@@ -1,7 +1,9 @@
-import NextLink from 'next/link';
 import { RightOutlined } from '@ant-design/icons';
-import { ReactNode } from 'react';
+import NextLink from 'next/link';
+
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 export default function Tab({
   children,

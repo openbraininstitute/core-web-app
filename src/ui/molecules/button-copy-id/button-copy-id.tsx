@@ -2,9 +2,9 @@ import { CheckCircleOutlined, CopyOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import React from 'react';
 
+import { ToolbarButton } from '@/components/buttons/toolbar';
 import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
-import { ToolbarButton } from '@/components/buttons/toolbar';
 import { classNames } from '@/util/utils';
 
 import styles from '@/ui/molecules/button-copy-id/button-copy-id.module.css';

@@ -1,32 +1,32 @@
 'use client';
 
-import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DownOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
 import { useQueries, useQuery } from '@tanstack/react-query';
-import { usePathname, useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useSession } from 'next-auth/react';
 import { compact } from 'es-toolkit/compat';
+import { AnimatePresence, motion } from 'framer-motion';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { Item } from '@/ui/segments/workspaces/space-switcher/item';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { UserFilled } from '@/components/icons/buttons';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
   type TTriggerWorkspaceConfigurationClickEvent,
   useWorkspaceConfigurationClickEvent,
   WorkspaceActions,
 } from '@/ui/segments/workspaces/space-manager/event';
-import { Skeleton } from '@/ui/molecules/skeleton';
-import { Button } from '@/ui/molecules/button';
+import { Item } from '@/ui/segments/workspaces/space-switcher/item';
+import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 type Props = {

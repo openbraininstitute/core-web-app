@@ -1,14 +1,14 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import superjson from 'superjson';
 
 import { useSessionStorage } from '@/hooks/use-session-storage';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
-import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { ReactNode } from 'react';
 import type { IMEModel } from '@/api/entitycore/types';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {

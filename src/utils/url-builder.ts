@@ -1,12 +1,13 @@
 import kebabCase from 'es-toolkit/compat/kebabCase';
 
-import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import {
   getEntityByCoreType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
+
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
 

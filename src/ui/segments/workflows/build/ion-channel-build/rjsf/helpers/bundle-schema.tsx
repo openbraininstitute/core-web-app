@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
-import { RJSFSchema } from '@rjsf/utils';
-
 import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/render-mathematic-symbol';
+
+import type { RJSFSchema } from '@rjsf/utils';
+import type { ReactNode } from 'react';
 
 /**
  * represents metadata about a property extracted from the schema

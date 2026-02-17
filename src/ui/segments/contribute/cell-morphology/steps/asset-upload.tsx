@@ -7,6 +7,7 @@ import { Form, Spin } from 'antd';
 import { isNil, reject } from 'es-toolkit/compat';
 import JSZip from 'jszip';
 import { useState } from 'react';
+
 import { resolveNeuronFile } from '@/api/one/cell-morphology';
 import { tryCatch } from '@/api/utils';
 import { DownloadAsBoxIcon } from '@/components/icons/buttons';
@@ -15,11 +16,12 @@ import { messages } from '@/i18n/en/upload';
 import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use-file-upload';
 import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
 import { Button } from '@/ui/molecules/button';
-import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
 import { CELL_MORPHOLOGY_FILE_TYPES } from '@/ui/segments/contribute/cell-morphology/schema';
-import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
 import { getFileExtension, parseFileName } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
+
+import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
+import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
 
 interface IAssetUploadProps {
   maxFiles?: number;
@@ -79,7 +81,7 @@ export function AssetUpload({
         }));
         return;
       }
-      if (resolution && resolution.isValid) {
+      if (resolution?.isValid) {
         const zip = new JSZip();
         const unzippedData = await zip.loadAsync(resolution.buffer, {});
         const fsAdded = await Promise.all(

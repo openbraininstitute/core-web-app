@@ -1,32 +1,32 @@
 'use client';
 
 import { RightSquareOutlined } from '@ant-design/icons';
-import { Empty, Table, ConfigProvider } from 'antd';
-import { ColumnsType } from 'antd/es/table';
-import { useState } from 'react';
+import { ConfigProvider, Empty, Table } from 'antd';
+import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import Link from 'next/link';
-import get from 'es-toolkit/compat/get';
+import { useState } from 'react';
 
-import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Card, CardContent, CardHeader } from '@/ui/molecules/card';
 import { Header } from '@/ui/segments/project/activities/elements/header';
-import { Card, CardHeader, CardContent } from '@/ui/molecules/card';
 import {
   ACTIVITY_DEFAULT_PAGE_SIZE,
   Scales,
   StatusMap,
 } from '@/ui/segments/project/activities/elements/helpers';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
-import { config } from '@/config';
 
+import type { ColumnsType } from 'antd/es/table';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 export function ProjectActivities() {
   const { virtualLabId, projectId } = useWorkspace();
@@ -53,7 +53,7 @@ export function ProjectActivities() {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: (text, record) => <span className="text-primary-8">{record.name}</span>,
+      render: (_text, record) => <span className="text-primary-8">{record.name}</span>,
     },
     {
       title: 'Status',

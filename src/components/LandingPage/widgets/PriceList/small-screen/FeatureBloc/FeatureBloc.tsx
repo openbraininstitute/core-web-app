@@ -1,7 +1,6 @@
-import React from 'react';
-
 import FeatureLine from './FeatureLine';
-import {
+
+import type {
   ContentForPricingFeatureBloc,
   ContentForPricingPlan,
 } from '@/components/LandingPage/content/pricing';

@@ -1,12 +1,13 @@
+import { styleBlockFullWidth, styleBlockSmall, styleLayout } from '@/components/LandingPage/styles';
+import { gotoSection } from '@/components/LandingPage/utils';
+import { classNames } from '@/util/utils';
+
 import ProgressiveImage from '../../ProgressiveImage';
 import { Text } from '../../Text';
 import Title from '../../Title';
 import VerticalSpace from '../../VerticalSpace';
 
-import { ContentForRichTextPreview } from '@/components/LandingPage/content';
-import { styleBlockFullWidth, styleBlockSmall, styleLayout } from '@/components/LandingPage/styles';
-import { gotoSection } from '@/components/LandingPage/utils';
-import { classNames } from '@/util/utils';
+import type { ContentForRichTextPreview } from '@/components/LandingPage/content';
 
 import styles from './SanityContentPreview.module.css';
 

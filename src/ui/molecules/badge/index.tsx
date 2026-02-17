@@ -1,7 +1,8 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from '@radix-ui/react-slot';
+import { cva, type VariantProps } from 'class-variance-authority';
+
 import { cn } from '@/utils/css-class';
 
 const badgeVariants = cva(

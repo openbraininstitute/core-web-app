@@ -1,9 +1,11 @@
 import { kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
   const { virtualLabId, projectId } = useWorkspace();

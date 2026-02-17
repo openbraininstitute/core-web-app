@@ -1,6 +1,7 @@
+import { useSanity } from '@/services/sanity';
+
 import { tryType, typeNumberOrNull, typeStringOrNull } from '../../content';
 import query from './hooks.groq';
-import { useSanity } from '@/services/sanity';
 
 export function useSanityContentForPriceList2(): ContentForPriceList2 {
   return (

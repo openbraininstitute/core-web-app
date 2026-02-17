@@ -1,13 +1,14 @@
 'use client';
 
 import { Table } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import type { CSSProperties, ReactNode } from 'react';
 import { useMemo } from 'react';
 
+import { cn } from '@/utils/css-class';
+
+import type { ColumnsType } from 'antd/es/table';
+import type { CSSProperties, ReactNode } from 'react';
 import type { CreditsPack } from '@/app/api/help/credits/route';
 import type { SinglePrice } from '@/app/api/help/prices/route';
-import { cn } from '@/utils/css-class';
 
 type PriceTableProps = {
   prices: SinglePrice[];

@@ -1,8 +1,6 @@
-import React from 'react';
-
-import { FlatValidationResult } from '../../hooks';
-
 import { classNames } from '@/util/utils';
+
+import type { FlatValidationResult } from '../../hooks';
 
 import styles from './documentation.module.css';
 

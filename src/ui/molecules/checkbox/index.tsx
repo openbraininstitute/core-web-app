@@ -2,11 +2,12 @@
 
 'use client';
 
-import * as React from 'react';
-import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { CheckOutlined as CheckIcon } from '@ant-design/icons';
+import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 
 import { cn } from '@/utils/css-class';
+
+import type * as React from 'react';
 
 function Checkbox({ className, ...props }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
   return (

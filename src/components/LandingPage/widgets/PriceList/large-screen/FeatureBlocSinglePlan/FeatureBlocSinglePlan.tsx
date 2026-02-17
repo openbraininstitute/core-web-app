@@ -1,6 +1,6 @@
 import FeatureLineSinglePlan from './FeatureLineSinglePlan';
 
-import {
+import type {
   ContentForPricingFeatureBloc,
   ContentForPricingPlan,
 } from '@/components/LandingPage/content/pricing';

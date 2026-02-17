@@ -1,15 +1,18 @@
 /* eslint-disable react/no-array-index-key */
 
 import React from 'react';
+
 import CenteredColumn from '@/components/LandingPage/components/CenteredColumn';
 import SwipeableCardsList from '@/components/LandingPage/components/swipeable-cards-list/swipeable-cards-list';
 import { useSanityContentForPricing } from '@/components/LandingPage/content/pricing';
 import { styleBlockFullWidth } from '@/components/LandingPage/styles';
 import { classNames } from '@/util/utils';
+
 import FeatureBloc from './FeatureBloc';
 import FeatureBlocSinglePlan from './FeatureBlocSinglePlan';
-import styles from './large-screen.module.css';
 import PlanHeader from './PlanHeader';
+
+import styles from './large-screen.module.css';
 
 export default function LargeScreen() {
   const data = useSanityContentForPricing();

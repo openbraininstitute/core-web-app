@@ -2,12 +2,12 @@
 
 import { Empty } from 'antd';
 
+import { getSimulationColor, SYNAPSE_CODE_TO_TYPE } from '@/constants/simulate/single-neuron';
+import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
 import {
   SECTION_TARGET_MAPPING,
-  SectionTargetMappingKeys,
+  type SectionTargetMappingKeys,
 } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
-import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
-import { getSimulationColor, SYNAPSE_CODE_TO_TYPE } from '@/constants/simulate/single-neuron';
 
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 

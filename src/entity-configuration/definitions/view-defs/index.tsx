@@ -1,15 +1,15 @@
-import findKey from 'es-toolkit/compat/findKey';
 import find from 'es-toolkit/compat/find';
-import pick from 'es-toolkit/compat/pick';
+import findKey from 'es-toolkit/compat/findKey';
 import get from 'es-toolkit/compat/get';
+import pick from 'es-toolkit/compat/pick';
 
-import { ViewsDefinition as ExperimentalViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { ViewsDefinition as ExperimentViewDefinition } from '@/entity-configuration/definitions/view-defs/experiment';
+import { ViewsDefinition as ExperimentalViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental';
 import { ViewsDefinition as ModelViewDefinition } from '@/entity-configuration/definitions/view-defs/model';
 import { ViewsDefinition as NotebookViewDefinition } from '@/entity-configuration/definitions/view-defs/notebook';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { TExperimentTypeNames } from '@/entity-configuration/domain/experimental';
 

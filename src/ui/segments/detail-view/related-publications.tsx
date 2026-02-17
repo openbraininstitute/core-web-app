@@ -2,13 +2,14 @@
 
 import { notFound } from 'next/navigation';
 
-import { PerTypePublications } from './per-type-publications';
-
 import { PublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
-import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
+
+import { PerTypePublications } from './per-type-publications';
+
 import type { EntityTypeValue } from '@/entity-configuration/domain';
+import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 
 export default function RelatedPublications({
   entity,

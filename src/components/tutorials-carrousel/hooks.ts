@@ -1,10 +1,10 @@
-import { ContentForTutorialItem } from '../documentation/type';
+import { useSanity } from '@/services/sanity';
+import { logError } from '@/util/logger';
+import { assertType, type TypeDef } from '@/util/type-guards';
 
 import query from './hooks.groq';
 
-import { useSanity } from '@/services/sanity';
-import { logError } from '@/util/logger';
-import { assertType, TypeDef } from '@/util/type-guards';
+import type { ContentForTutorialItem } from '../documentation/type';
 
 export function useSanityContentForTutorialsList() {
   return useSanity(query, isContentForTutorialsList) ?? null;

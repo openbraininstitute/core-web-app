@@ -1,12 +1,12 @@
 'use client';
 
-import { Table, TableProps } from 'antd';
-import { Key, useState } from 'react';
+import { Table, type TableProps } from 'antd';
+import { type Key, useState } from 'react';
 
 import columns from '@/ui/segments/reports/obi-showcases/artifacts/columns/me-model-column';
-import { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
-
 import { classNames } from '@/util/utils';
+
+import type { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 import styles from '@/ui/segments/reports/obi-showcases/artifacts/styles/me-model.module.css';
 
@@ -15,7 +15,7 @@ export default function MEModelTable({ content }: { content: MEModelsProps[] }) 
 
   const rowSelection: TableProps<MEModelsProps>['rowSelection'] = {
     type: 'radio',
-    onChange: (selectedRowKeys: Key[], selectedRows: MEModelsProps[]) => {
+    onChange: (_selectedRowKeys: Key[], selectedRows: MEModelsProps[]) => {
       setSelectedRow(selectedRows[0] || null);
     },
   };

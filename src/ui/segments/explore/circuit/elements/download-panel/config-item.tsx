@@ -1,19 +1,19 @@
-import { kebabCase, get } from 'es-toolkit/compat';
-import { ReactNode } from 'react';
 import { Button } from 'antd';
+import { get, kebabCase } from 'es-toolkit/compat';
 
-import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
-import { useAppNotification } from '@/components/notification';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { DownloadIcon } from '@/components/icons';
-import { formatBytes } from '@/utils/format';
-import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
+import { DownloadIcon } from '@/components/icons';
+import { useAppNotification } from '@/components/notification';
+import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
+import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
+import { classNames } from '@/util/utils';
+import { formatBytes } from '@/utils/format';
 import { log } from '@/utils/logger';
 
-import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
+import type { ReactNode } from 'react';
 import type { DirectoryItem } from '@/api/entitycore/types/shared/global';
+import type { TCircuitContentConfigurationKeys } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import type { Nullable } from '@/utils/type';
 
 export type TConfigChild = {

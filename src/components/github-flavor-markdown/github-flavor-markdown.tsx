@@ -1,13 +1,14 @@
 import Link from 'next/link';
-import React, { AnchorHTMLAttributes, useMemo } from 'react';
+import React, { type AnchorHTMLAttributes, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import TruncableImage from './truncable-image';
-import { Highlighter } from './highlighter';
 
 import { classNames } from '@/util/utils';
+
+import { Highlighter } from './highlighter';
+import TruncableImage from './truncable-image';
 
 import styles from './github-flavor-markdown.module.css';
 
@@ -44,7 +45,7 @@ function RawGithubFlavorMarkdown({
   );
 }
 
-function makeLink(onLinkClicked: (external: boolean, href: string) => void | boolean) {
+function makeLink(onLinkClicked: (external: boolean, href: string) => undefined | boolean) {
   function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
     if (!href) return null;
 

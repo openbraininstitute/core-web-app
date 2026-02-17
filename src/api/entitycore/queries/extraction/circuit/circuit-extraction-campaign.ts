@@ -1,3 +1,6 @@
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { compactRecord } from '@/utils/dictionary';
+
 import type {
   ICircuitExtractionCampaign,
   ICircuitExtractionCampaignFilter,
@@ -5,9 +8,7 @@ import type {
   TUpdateCircuitExtractionCampaign,
 } from '@/api/entitycore/types/entities/circuit-extraction-campaign';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
-import { compactRecord } from '@/utils/dictionary';
 
 const baseUri = '/circuit-extraction-campaign';
 

@@ -1,16 +1,16 @@
 import {
-  tgdActionCreateCameraInterpolation,
-  tgdCalcDegToRad,
-  TgdCamera,
+  type TgdCamera,
   TgdCameraPerspective,
-  TgdCameraState,
-  TgdContext,
+  type TgdCameraState,
+  type TgdContext,
+  TgdControllerCameraOrbit,
   TgdQuat,
   TgdVec3,
-  TgdControllerCameraOrbit,
+  tgdActionCreateCameraInterpolation,
+  tgdCalcDegToRad,
 } from '@tolokoban/tgd';
 
-import GenericEvent from '@/util/generic-event';
+import type GenericEvent from '@/util/generic-event';
 
 export function setCamera(context: TgdContext, eventChange: GenericEvent<TgdCamera>) {
   const restTransfo: Partial<TgdCameraState> = {

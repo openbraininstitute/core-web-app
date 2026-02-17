@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { nwbArrayBufferAtomFamily } from '@/features/ephys-viewer/atoms';
 import NWBTrace from '@/features/ephys-viewer/nwb-trace';

@@ -1,4 +1,3 @@
-import multipleCompositions from './data/multiple-compositions.json';
 import calculateCompositions, {
   addCountPairs,
   addNode,
@@ -6,8 +5,11 @@ import calculateCompositions, {
   convertCountPairToComposition,
   iterateNode,
 } from '@/util/composition/composition-parser';
-import { CalculationLink, CalculationNode, CountPair } from '@/types/composition/calculation';
-import { OriginalCompositionPair } from '@/types/composition/original';
+
+import multipleCompositions from './data/multiple-compositions.json';
+
+import type { CalculationLink, CalculationNode, CountPair } from '@/types/composition/calculation';
+import type { OriginalCompositionPair } from '@/types/composition/original';
 
 describe('count pair to composition converter', () => {
   it('should convert the count pair correctly', () => {
@@ -125,7 +127,7 @@ describe('Composition Parser unit tests for single region', () => {
     const nodes = {};
     const links = {};
     const composition = iterateNode(
-      // @ts-ignore
+      // @ts-expect-error
       compToTest,
       singleCompId,
       nodes,
@@ -140,26 +142,26 @@ describe('Composition Parser unit tests for single region', () => {
   it('MType counts is calculated correctly', () => {
     const nodes: { [key: string]: CalculationNode } = {};
     const links: { [key: string]: CalculationLink } = {};
-    // @ts-ignore
+    // @ts-expect-error
     iterateNode(compToTest, singleCompId, nodes, links, singleCompId, '', 0.5);
     expect(nodes.A.countPair.neuron).toBe(15);
     expect(nodes.C__I.countPair.neuron).toBe(30);
   });
 
   it('should calculate the correct extended node ids', () => {
-    // @ts-ignore
+    // @ts-expect-error
     const nodes: { [key: string]: CalculationNode } = {};
     const links: { [key: string]: CalculationLink } = {};
-    // @ts-ignore
+    // @ts-expect-error
     iterateNode(compToTest, singleCompId, nodes, links, singleCompId, '', 0.5);
     expect(nodes.A__D.extendedNodeId).toBe('A__D');
   });
 
   it('composition parser returns all nodes and links', () => {
-    // @ts-ignore
+    // @ts-expect-error
     const nodes: { [key: string]: CalculationNode } = {};
     const links: { [key: string]: CalculationLink } = {};
-    // @ts-ignore
+    // @ts-expect-error
     iterateNode(compToTest, singleCompId, nodes, links, singleCompId, '', 0.5);
     expect(Object.values(nodes)).toHaveLength(9);
     expect(Object.values(links)).toHaveLength(6);
@@ -179,7 +181,7 @@ describe('Calculate compositions unit tests', () => {
 
   it('total count is calculated correctly', async () => {
     const { totalComposition } = await calculateCompositions(
-      // @ts-ignore
+      // @ts-expect-error
       multipleCompositions,
       'http://api.brain-map.org/api/v2/data/Structure/5',
       leafIds,
@@ -191,7 +193,7 @@ describe('Calculate compositions unit tests', () => {
 
   it('all nodes and links are returned', async () => {
     const { nodes, links } = await calculateCompositions(
-      // @ts-ignore
+      // @ts-expect-error
       multipleCompositions,
       'http://api.brain-map.org/api/v2/data/Structure/5',
       leafIds,

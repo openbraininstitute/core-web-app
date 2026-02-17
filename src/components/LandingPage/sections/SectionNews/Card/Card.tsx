@@ -1,10 +1,11 @@
-import CategoryButton from '../CategoryButton';
-
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
-import { ContentForNewsItem } from '@/components/LandingPage/content';
 import { IconPlus } from '@/components/LandingPage/icons/IconPlus';
 import { styleButtonHoverable } from '@/components/LandingPage/styles';
 import { classNames } from '@/util/utils';
+
+import CategoryButton from '../CategoryButton';
+
+import type { ContentForNewsItem } from '@/components/LandingPage/content';
 
 import styles from './Card.module.css';
 

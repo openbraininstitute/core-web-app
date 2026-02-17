@@ -1,8 +1,10 @@
 import { find, snakeCase } from 'es-toolkit/compat';
+
 import { authApiClient } from '@/api/apiClient';
+import { config as appConfig } from '@/config';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreBaseAsset, IAsset } from '@/api/entitycore/types/shared/global';
-import { config as appConfig } from '@/config';
 import type { KebabCase } from '@/utils/type';
 
 export const getEntityCoreContext = (

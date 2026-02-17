@@ -1,11 +1,11 @@
-import React from 'react';
+import { classNames } from '@/util/utils';
 
 import FeatureCell from './FeatureCell';
-import {
+
+import type {
   ContentForPricingFeatureItem,
   ContentForPricingPlan,
 } from '@/components/LandingPage/content/pricing';
-import { classNames } from '@/util/utils';
 
 import styles from './FeatureLine.module.css';
 

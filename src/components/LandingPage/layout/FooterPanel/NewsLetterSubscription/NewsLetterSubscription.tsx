@@ -1,11 +1,12 @@
 import React, { useId } from 'react';
 
-import { styleButtonHoverable } from '../../../styles';
-import { useNewsLetterSubscription } from './hook';
+import { EnumSection } from '@/components/LandingPage/sections/sections';
+import { isValidEMail } from '@/util/email';
 import { classNames } from '@/util/utils';
 
-import { isValidEMail } from '@/util/email';
-import { EnumSection } from '@/components/LandingPage/sections/sections';
+import { styleButtonHoverable } from '../../../styles';
+import { useNewsLetterSubscription } from './hook';
+
 import styles from './NewsLetterSubscription.module.css';
 
 interface NewsLetterSubscriptionProps {

@@ -1,8 +1,7 @@
-import React from 'react';
-
-import { ContentForSwipeableListItem } from '../hooks';
-import { classNames } from '@/util/utils';
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
+import { classNames } from '@/util/utils';
+
+import type { ContentForSwipeableListItem } from '../hooks';
 
 import styles from './card.module.css';
 

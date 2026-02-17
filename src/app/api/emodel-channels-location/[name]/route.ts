@@ -1,7 +1,7 @@
-import fs from 'fs/promises';
-import path from 'path';
-
 import { NextResponse } from 'next/server';
+
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 export async function GET(_: Request, { params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;

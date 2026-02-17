@@ -1,14 +1,13 @@
-import React from 'react';
-
-import { styleBlockMedium } from '../../styles';
-import { classNames } from '@/util/utils';
 import Button from '@/components/LandingPage/components/buttons/Button';
+import { Text } from '@/components/LandingPage/components/Text';
+import Video from '@/components/LandingPage/components/Video';
 import {
   useSanityContentForOurFoundationsLinks,
   useSanityContentForOurFoundationsText,
 } from '@/components/LandingPage/content';
-import Video from '@/components/LandingPage/components/Video';
-import { Text } from '@/components/LandingPage/components/Text';
+import { classNames } from '@/util/utils';
+
+import { styleBlockMedium } from '../../styles';
 
 import styles from './OurFoundations.module.css';
 

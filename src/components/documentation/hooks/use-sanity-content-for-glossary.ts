@@ -1,10 +1,10 @@
-import query from '../query/glossary-hooks.groq';
-
-import { ContentForGlossaryItem } from '@/components/documentation/type';
-
 import { useSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
-import { assertType, TypeDef } from '@/util/type-guards';
+import { assertType, type TypeDef } from '@/util/type-guards';
+
+import query from '../query/glossary-hooks.groq';
+
+import type { ContentForGlossaryItem } from '@/components/documentation/type';
 
 export function useSanityContentForGlossary() {
   return useSanity(query, isContentForGlossary) ?? [];

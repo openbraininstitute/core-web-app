@@ -1,11 +1,13 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
-import type { ExpandableConfig } from 'antd/es/table/interface';
 import { useAtomValue } from 'jotai';
 import { type ReactNode, useCallback, useEffect, useState } from 'react';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 import { log } from '@/utils/logger';
+
+import type { ExpandableConfig } from 'antd/es/table/interface';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
   expandedData: Record<string, Array<T> | null>;

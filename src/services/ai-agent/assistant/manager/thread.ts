@@ -1,13 +1,13 @@
-import { serviceAiAgentThreadCreate, serviceAiAgentThreadExists } from '../../api';
-import { Signal } from '../signal';
-import { AssistantContext } from '../types';
 import { sharedSessionStorage } from '@/util/shared-session-storage';
 
-export class ThreadManager {
-  private context: AssistantContext | null = null;
+import { serviceAiAgentThreadCreate, serviceAiAgentThreadExists } from '../../api';
 
+import type { Signal } from '../signal';
+import type { AssistantContext } from '../types';
+
+export class ThreadManager {
   constructor(
-    private readonly target: {
+    readonly _target: {
       threadId: Signal<string | undefined>;
     }
   ) {}

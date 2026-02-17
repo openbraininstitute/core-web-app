@@ -1,7 +1,7 @@
 import { Image } from 'antd';
 
-import { EmptyPreview, renderPreview } from '@/entity-configuration/definitions/renderer';
 import { hasAssets } from '@/api/entitycore/guards';
+import { EmptyPreview, renderPreview } from '@/entity-configuration/definitions/renderer';
 import { cn } from '@/utils/css-class';
 
 import type {

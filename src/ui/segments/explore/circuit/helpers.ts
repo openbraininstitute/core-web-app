@@ -1,10 +1,10 @@
-import { atomWithReset } from 'jotai/utils';
 import { keyBy } from 'es-toolkit/compat';
 import { atom } from 'jotai';
+import { atomWithReset } from 'jotai/utils';
 
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { HierarchyNode, HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export const CircuitRepresentationView = {
   Flat: 'flat',

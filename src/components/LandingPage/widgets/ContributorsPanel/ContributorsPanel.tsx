@@ -1,8 +1,9 @@
 import { useState } from 'react';
 
-import ContributorsNavigation from './ContributorsNavigation';
 import ContributorsList from './ContributorsList';
-import { Contributor } from './data';
+import ContributorsNavigation from './ContributorsNavigation';
+
+import type { Contributor } from './data';
 
 export function WidgetContributorsPanel() {
   const [contributorsPage, setContributorsPage] = useState<Contributor[]>([]);

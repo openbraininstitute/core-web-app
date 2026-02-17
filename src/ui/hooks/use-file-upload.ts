@@ -1,14 +1,13 @@
 'use client';
 
 import isString from 'es-toolkit/compat/isString';
-
 import {
-  useCallback,
-  useRef,
-  useState,
   type ChangeEvent,
   type DragEvent,
   type InputHTMLAttributes,
+  useCallback,
+  useRef,
+  useState,
 } from 'react';
 
 import { messages } from '@/i18n/en/upload';
@@ -284,8 +283,7 @@ export const useFileUpload = (
       setState((prev) => {
         const fileToRemove = prev.files.find((file) => file.id === id);
         if (
-          fileToRemove &&
-          fileToRemove.preview &&
+          fileToRemove?.preview &&
           fileToRemove.file instanceof File &&
           fileToRemove.file.type.startsWith('image/')
         ) {

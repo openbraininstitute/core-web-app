@@ -1,12 +1,13 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import { EMCellMeshSchema } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import { DEFAULT_LICENSE_ID } from '@/ui/segments/contribute/shared/schemas';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+
+import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
 import type {
   IContributionFormConfig,
   IContributionStep,
 } from '@/ui/segments/contribute/shared/types';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 export const EM_CELL_MESH_PROGRESS_STEPS = [
   {

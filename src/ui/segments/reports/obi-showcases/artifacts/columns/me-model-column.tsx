@@ -1,7 +1,8 @@
 import Image from 'next/image';
 
-import type { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 import truncateText from '@/util/truncate';
+
+import type { MEModelsProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 const columns = () => {
   return [

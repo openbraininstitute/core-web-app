@@ -1,4 +1,4 @@
-import { TgdVec4 } from '@tolokoban/tgd';
+import type { TgdVec4 } from '@tolokoban/tgd';
 
 export interface VisibleRegion {
   id: string;

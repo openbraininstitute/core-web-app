@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import type { PlanV2 } from '@/types/virtual-lab/pricing';
+
 import {
   Carousel,
   type CarouselApi,
@@ -12,6 +12,8 @@ import {
   CarouselPrevious,
 } from '@/ui/molecules/carousel';
 import PlanCard from '@/ui/segments/plans/card';
+
+import type { PlanV2 } from '@/types/virtual-lab/pricing';
 
 export default function Plans({ plans }: { plans: PlanV2[] }) {
   const fallbackOrder = ['Free', 'Pro', 'Enterprise', 'Education'];

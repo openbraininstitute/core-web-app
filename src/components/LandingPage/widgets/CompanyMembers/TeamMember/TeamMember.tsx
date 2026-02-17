@@ -1,10 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
-import React from 'react';
 
 import NextImage from 'next/image';
+import React from 'react';
+
 import { classNames } from '@/util/utils';
 
-import { ContentForMember } from '@/components/LandingPage/content';
+import type { ContentForMember } from '@/components/LandingPage/content';
+
 import styles from './TeamMember.module.css';
 
 interface TeamMemberProps {

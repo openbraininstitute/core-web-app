@@ -2,7 +2,7 @@
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
 import { atom, useAtom } from 'jotai';
-import React, { use, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { useAIActiveTools } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';

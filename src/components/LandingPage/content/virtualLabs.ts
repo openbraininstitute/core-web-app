@@ -1,5 +1,6 @@
-import { tryType } from './_common';
 import { useSanity } from '@/services/sanity';
+
+import { tryType } from './_common';
 
 interface ContentForVirtualLabsBlock {
   title: string;

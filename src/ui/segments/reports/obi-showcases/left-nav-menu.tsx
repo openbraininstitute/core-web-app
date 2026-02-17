@@ -3,11 +3,12 @@
 import { RightOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { ComponentProps } from 'react';
 
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
+
+import type { ComponentProps } from 'react';
 
 type Props = {
   className?: ComponentProps<'div'>['className'];

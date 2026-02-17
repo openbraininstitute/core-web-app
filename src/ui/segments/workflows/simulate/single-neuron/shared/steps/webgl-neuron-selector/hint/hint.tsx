@@ -1,9 +1,9 @@
-import React from 'react';
-
-import { PainterManager } from '../painter';
-import { StructureItem, StructureItemType } from '../painter/structure';
-
 import { classNames } from '@/util/utils';
+
+import { type StructureItem, StructureItemType } from '../painter/structure';
+
+import type React from 'react';
+import type { PainterManager } from '../painter';
 
 import styles from './hint.module.css';
 

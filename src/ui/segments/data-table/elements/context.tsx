@@ -1,26 +1,26 @@
 'use client';
 
-import { atomFamily, atomWithDefault, atomWithReset, atomWithStorage } from 'jotai/utils';
-import { use, useCallback, useEffect, useMemo, createContext } from 'react';
 import { isNil, noop } from 'es-toolkit/compat';
-import { Atom, atom, useSetAtom } from 'jotai';
+import { type Atom, atom, useSetAtom } from 'jotai';
+import { atomFamily, atomWithDefault, atomWithReset, atomWithStorage } from 'jotai/utils';
+import { createContext, use, useCallback, useEffect, useMemo } from 'react';
 import { match } from 'ts-pattern';
 
-import { createSuperJsonStorage, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
-import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
 import {
   DEFAULT_PAGE_NUMBER,
-  TWorkspaceScope,
-  TWorkspaceSection,
+  type TWorkspaceScope,
+  type TWorkspaceSection,
   WorkspaceSection,
 } from '@/constants';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { SortOrder } from '@/entity-configuration/definitions/types';
+import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
+import { createSuperJsonStorage, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
   makeDataListStateSnapshotAtomsInitialValue,
   makeTypeDefaultFilters,
 } from '@/ui/segments/data-table/elements/helpers';
+import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TCoreFilter, TSortState } from '@/entity-configuration/definitions/types';

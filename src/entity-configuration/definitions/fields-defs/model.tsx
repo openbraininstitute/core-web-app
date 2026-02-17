@@ -1,15 +1,10 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
 import { find, isNil, map, omit } from 'es-toolkit/compat';
+
 import { hasAssets } from '@/api/entitycore/guards';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -25,10 +20,17 @@ import {
   renderLocalizedNumber,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
 import { isNumber } from '@/util/type-guards';
+
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {

@@ -1,7 +1,8 @@
 import Link from 'next/link';
 
-import { ContentForPortalsListItem } from '@/components/LandingPage/content/portals';
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
+
+import type { ContentForPortalsListItem } from '@/components/LandingPage/content/portals';
 
 import styles from './PortalCard.module.css';
 

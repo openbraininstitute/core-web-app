@@ -1,20 +1,22 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useState } from 'react';
 import { Form } from 'antd';
+import { useState } from 'react';
 
-import countries from '../../../../../public/static/country';
-import { ProfileFormData } from './types';
-import { label, Label, XInput } from './elements';
-import { validate, validateEMail } from './validator';
-import { useFieldsChangeHandler, useSubmitCallback } from './hooks';
-import { Select } from '@/components/VirtualLab/create-entity-flows/common/inputs';
-import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
 import { useAppNotification } from '@/components/notification';
+import { Select } from '@/components/VirtualLab/create-entity-flows/common/inputs';
 import { Button } from '@/ui/molecules/button';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import countries from '../../../../../public/static/country';
+import { Label, label, XInput } from './elements';
+import { useFieldsChangeHandler, useSubmitCallback } from './hooks';
+import { validate, validateEMail } from './validator';
+
+import type { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { ProfileFormData } from './types';
 
 type ProfileProps = {
   data: UserProfileResponse | undefined;

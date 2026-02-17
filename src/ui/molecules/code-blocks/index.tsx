@@ -1,7 +1,6 @@
 'use client';
 
 import { CheckOutlined as CheckIcon, CopyOutlined as CopyIcon } from '@ant-design/icons';
-import type { Element } from 'hast';
 import {
   type ComponentProps,
   createContext,
@@ -15,6 +14,8 @@ import { type BundledLanguage, codeToHtml, type ShikiTransformer } from 'shiki';
 
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
+
+import type { Element } from 'hast';
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;

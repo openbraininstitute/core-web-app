@@ -1,13 +1,12 @@
-/* eslint-disable react/no-array-index-key */
-import React from 'react';
+import { useCurrency } from '@/components/LandingPage/atoms';
+import { classNames } from '@/util/utils';
 
 import ContactUs from '../../contact-us';
-import { classNames } from '@/util/utils';
-import {
+
+import type {
   ContentForPricingPlan,
   MultiCurrencyPrice,
 } from '@/components/LandingPage/content/pricing';
-import { useCurrency } from '@/components/LandingPage/atoms';
 
 import styles from './plan-header.module.css';
 

@@ -387,7 +387,16 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
 
     isInitializedRef.current = true;
     // biome-ignore lint/correctness/useExhaustiveDependencies: updateSelectedBrainRegion is stable
-  }, [brainRegions, id, annotationValue, stored, defaultSelectedBrainRegion]);
+  }, [
+    brainRegions,
+    id,
+    annotationValue,
+    stored,
+    defaultSelectedBrainRegion,
+    selectedBrainRegion?.id,
+    setSearchParamHierarchyConfig,
+    updateSelectedBrainRegion,
+  ]);
 
   // Sync localStorage when URL params change
   useEffect(() => {

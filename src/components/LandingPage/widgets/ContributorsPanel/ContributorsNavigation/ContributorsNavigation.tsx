@@ -1,12 +1,12 @@
 /* eslint-disable react/no-array-index-key */
-import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
-
-import { Contributor, useContributors } from '../data';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 
 import { IconChevronLeft } from '@/components/LandingPage/icons/IconChevronLeft';
 import { IconChevronRight } from '@/components/LandingPage/icons/IconChevronRight';
 import { styleBlockSmall, styleButtonHoverable } from '@/components/LandingPage/styles';
 import { classNames } from '@/util/utils';
+
+import { type Contributor, useContributors } from '../data';
 
 import styles from './ContributorsNavigation.module.css';
 

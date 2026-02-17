@@ -4,6 +4,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { compact, get } from 'es-toolkit/compat';
+
 import { createEtypeClassification } from '@/api/entitycore/queries/annotations/etype-classification';
 import { createMtypeClassification } from '@/api/entitycore/queries/annotations/mtype-classification';
 import {
@@ -13,12 +14,12 @@ import {
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { MeasurementUnit } from '@/api/entitycore/types/shared/global';
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS } from '@/ui/segments/contribute/experimental-neuron-density/config';
-
-import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
+
+import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
+import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,

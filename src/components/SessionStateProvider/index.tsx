@@ -1,7 +1,8 @@
 'use client';
 
-import { ReactNode, ReactElement } from 'react';
 import useSessionState from '@/hooks/session';
+
+import type { ReactElement, ReactNode } from 'react';
 
 type SessionStateWrapperProps = {
   children: ReactNode;

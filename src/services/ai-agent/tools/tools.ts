@@ -1,12 +1,13 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
-import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React from 'react';
 
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
+
+import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
+import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
 
 /**
  *
@@ -25,7 +26,7 @@ export function useAITools(): AIAssistantTool[] | undefined | null {
   });
   React.useEffect(() => {
     queryClient.invalidateQueries({ queryKey: keyBuilderAI.tools() });
-  }, [accessToken, queryClient]);
+  }, [queryClient]);
   if (isLoading) return undefined;
 
   return isError ? null : data;
@@ -42,7 +43,7 @@ export function useAITool(toolId: string) {
   });
   React.useEffect(() => {
     queryClient.invalidateQueries({ queryKey: keyBuilderAI.tool(toolId) });
-  }, [accessToken, queryClient, toolId]);
+  }, [queryClient, toolId]);
   if (isLoading) return undefined;
 
   return isError ? null : data;

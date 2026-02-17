@@ -1,15 +1,17 @@
 'use client';
 
 import React from 'react';
-import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
-import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
-import ToolsProgress from './tools-progress';
-import ToolsComponents from './tools-components';
-
-import { classNames } from '@/util/utils';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { isString } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
+import { log } from '@/utils/logger';
+
+import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
+import ToolsComponents from './tools-components';
+import ToolsProgress from './tools-progress';
+
+import type { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
 import styles from './message-item.module.css';
 
@@ -68,11 +70,10 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
               return (
                 <div key={`tool-${toolCallId}`}>
                   <ToolsProgress part={part} />
-                  <>
-                    <ToolsComponents part={part} />
-                    {/* This tool component has been disabled yet */}
-                    {/* <ToolArticles message={value} /> */}
-                  </>
+
+                  <ToolsComponents part={part} />
+                  {/* This tool component has been disabled yet */}
+                  {/* <ToolArticles message={value} /> */}
                 </div>
               );
             }
@@ -98,22 +99,14 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
 }
 
 function debugToConsole(value: UIMessage) {
-  // eslint-disable-next-line no-console
-  console.log(value);
   for (const part of value.parts) {
     if (part.type !== 'tool-invocation') continue;
 
     const toolInvocation = part.toolInvocation as ToolInvocation & { result: string };
-    // eslint-disable-next-line no-console
-    console.debug(`%c${toolInvocation.toolName}`, 'font-weight: bolder; font-size: 110%');
     const { result } = toolInvocation;
+    log('info', `Tool invocation result for tool call ID ${toolInvocation.toolCallId}:`, result);
     try {
-      // eslint-disable-next-line no-console
-      console.debug(JSON.parse(result));
-    } catch (ex) {
-      // eslint-disable-next-line no-console
-      console.error('Not a valid JSON:', result);
-    }
+    } catch (_ex) {}
   }
 }
 
@@ -131,7 +124,7 @@ function formatDate(d: Date | string): string {
     });
     const date = isString(d) ? new Date(d) : d;
     return formatter.format(date);
-  } catch (ex) {
+  } catch (_ex) {
     return '';
   }
 }

@@ -1,11 +1,12 @@
 'use client';
 
-import type { HTMLProps, ReactNode } from 'react';
 import { SettingsIcon } from '@/components/icons/Settings';
-import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 import { filterHasValue } from '@/ui/segments/data-table/elements/listing-filter-panel/util';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { HTMLProps, ReactNode } from 'react';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 function FilterBtn({ disabled, className, children, onClick }: HTMLProps<HTMLButtonElement>) {
   return (

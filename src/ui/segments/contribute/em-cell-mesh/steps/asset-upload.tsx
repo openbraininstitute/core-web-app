@@ -5,6 +5,7 @@ import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Form, Spin } from 'antd';
 import { isNil } from 'es-toolkit/compat';
 import { useEffect, useMemo, useState } from 'react';
+
 import { resolveOBJFile } from '@/api/one/em-cell-mesh';
 import { tryCatch } from '@/api/utils';
 import { DownloadAsBoxIcon } from '@/components/icons/buttons';
@@ -14,9 +15,10 @@ import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use
 import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
 import { Button } from '@/ui/molecules/button';
 import { EM_CELL_MESH_FILE_TYPES } from '@/ui/segments/contribute/em-cell-mesh/schema';
-import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
 import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
+
+import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
 
 interface IAssetUploadProps {
   maxFiles?: number;
