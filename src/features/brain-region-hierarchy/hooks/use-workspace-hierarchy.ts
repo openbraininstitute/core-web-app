@@ -37,22 +37,19 @@ import type {
  * exposes the currently selected brain region and workspace species stored in local atoms, and provides
  * helpers to update those atoms in a consistent manner.
  *
- * Local stores:
+ * local stores:
  * - workspaceHierarchySpeciesAtom: currently selected species for brain-region hierarchy
  * - selectedBrainRegionAtom: currently selected brain region
  *
- * Behavior:
+ * behavior:
  * - changeLocalStoreBrainRegion(brainRegion):
- *   - Updates the selected brain region atom.
- *   - Derives and sets the workspace species from the brain region's hierarchy (if available).
+ *   - updates the selected brain region atom.
+ *   - derives and sets the workspace species from the brain region's hierarchy (if available).
  * - changeLocalStoreHierarchySpecies(hierarchyId, brainRegionId?):
- *   - Ensures brain-region options for the provided hierarchy are loaded (uses queryClient.ensureQueryData).
- *   - Selects a default brain region (provided brainRegionId or hierarchy config default).
- *   - Updates the workspace species and selected brain region atoms.
- *   - Returns an object with the resolved brainRegion and hierarchy, or null if the hierarchy is not found or a default brain region cannot be determined.
- *
- * @remarks
- * - Depends on useAvailableHierarchySpeciesQuery and useBrainRegionRootHierarchyQuery.
+ *   - ensures brain-region options for the provided hierarchy are loaded (uses queryClient.ensureQueryData).
+ *   - selects a default brain region (provided brainRegionId or hierarchy config default).
+ *   - updates the workspace species and selected brain region atoms.
+ *   - returns an object with the resolved brainRegion and hierarchy, or null if the hierarchy is not found or a default brain region cannot be determined.
  */
 export function useLocalStoreHierarchySpeciesAndBrainRegion() {
   const queryClient = useQueryClient();
@@ -112,15 +109,16 @@ export function useLocalStoreHierarchySpeciesAndBrainRegion() {
     changeLocalStoreBrainRegion,
   };
 }
+
 /**
  * managing brain region hierarchy selection state
  *
- * this hook provides a complete solution for:
- * - Species selection with automatic hierarchy switching
- * - Brain region selection within the current hierarchy
- * - State synchronization across URL, localStorage, and API
- * - Fire-and-forget API persistence (non-blocking)
- * - Per-hierarchy brain region memory (restores previous selection when switching back)
+ * features:
+ * - species selection with automatic hierarchy switching
+ * - brain region selection within the current hierarchy
+ * - state synchronization across URL, localStorage, and API
+ * - fire-and-forget API persistence (non-blocking)
+ * - per-hierarchy brain region memory (restores previous selection when switching back)
  *
  * state priority on initialization:
  * 1. URL parameters (highest - for shareable links)
@@ -237,7 +235,7 @@ export function useWorkspaceHierarchyRegistry() {
     const hierarchy = latestHierarchies?.find((h) => h.id === hId);
     if (!hierarchy) return;
 
-    // Remember the current brain region for the current hierarchy before switching
+    // memoize the current brain region for the current hierarchy before switching
     const currentHierarchyId = latestUrlState.hierarchyId || latestStorage?.hierarchyId;
     const prevMemory = {
       ...(latestStorage?.perHierarchyMemory ?? {}),

@@ -13,13 +13,13 @@ import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overfl
 import { SCOPE_QUERY_PARAMS } from '@/ui/hooks/use-scope';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
-import { WorkflowSessionIdSearchParam } from '@/ui/segments/workflows/elements/helpers';
+import {
+  WorkflowBuildDefaultStepNameSearchParam,
+  WorkflowBuildDefaultStepSearchParam,
+  WorkflowSessionIdSearchParam,
+} from '@/ui/segments/workflows/elements/helpers';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
-import {
-  PanelQueryParam,
-  WorkflowSimulatePanels,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -63,7 +63,8 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
           const sessionId = crypto.randomUUID();
           const query = new URLSearchParams();
           query.set(WorkflowSessionIdSearchParam, sessionId);
-          query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
+          query.set(WorkflowBuildDefaultStepSearchParam, WorkflowBuildDefaultStepNameSearchParam);
+
           if (value)
             navigate(
               `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`

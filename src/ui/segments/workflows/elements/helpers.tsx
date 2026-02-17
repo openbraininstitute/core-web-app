@@ -13,6 +13,9 @@ import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/fe
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export const WorkflowSessionIdSearchParam = 'sessionId';
+export const WorkflowBuildDefaultStepSearchParam = 'step';
+export const WorkflowBuildDefaultStepNameSearchParam = 'info';
+
 export const EntityGroupDict = {
   Subcellular: 'Subcellular',
   Cellular: 'Cellular',

@@ -23,7 +23,6 @@ import {
   descriptionClasses,
   labelClasses,
 } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
 
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';

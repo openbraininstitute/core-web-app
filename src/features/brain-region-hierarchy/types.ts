@@ -2,7 +2,7 @@ import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brai
 
 export const SPECIES_DISPLAY_NAMES: Record<string, string> = {
   'Homo sapiens': 'Human',
-  'Mus musculus': 'Rodent',
+  'Mus musculus': 'Mouse',
   'Rattus norvegicus': 'Rat',
 } as const;
 
@@ -22,7 +22,7 @@ export const SPECIES_TAXONOMY_IDS = {
 } as const;
 
 /**
- * Species information with both scientific and display names
+ * species information with both scientific and display names
  */
 export interface IWorkspaceSpecies {
   id: string;
@@ -33,7 +33,7 @@ export interface IWorkspaceSpecies {
 }
 
 /**
- * Brain region hierarchy with associated species information
+ * brain region hierarchy with associated species information
  */
 export interface IHierarchyWithSpecies {
   id: string;
@@ -42,20 +42,20 @@ export interface IHierarchyWithSpecies {
 }
 
 /**
- * Complete selection state for brain region hierarchy
- * Used for persistence in URL, localStorage, and API
+ * complete selection state for brain region hierarchy
+ * used for persistence in URL, localStorage, and API
  */
 export interface BrainRegionHierarchySelection {
   hierarchyId: string;
   speciesName: string;
   brainRegionId: string;
   brainRegionName: string;
-  /** Per-hierarchy brain region memory for restoring selections when switching species */
+  /** per-hierarchy brain region memory for restoring selections when switching species */
   perHierarchyMemory?: Record<string, { brainRegionId: string; brainRegionName: string }>;
 }
 
 /**
- * API request/response shape for brain region preference
+ * api request/response shape for brain region preference
  */
 export interface IWorkspaceHierarchySpeciesPreference {
   hierarchy_id: string;

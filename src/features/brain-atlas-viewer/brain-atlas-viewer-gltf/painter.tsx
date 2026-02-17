@@ -14,7 +14,7 @@ import {
 } from '@tolokoban/tgd';
 
 import { config } from '@/config';
-import GenericEvent from '@/util/generic-event';
+import { GenericEvent } from '@/util/generic-event';
 import { logError } from '@/util/logger';
 
 import { type CameraController, setCamera } from './camera';
@@ -191,6 +191,20 @@ export class Painter {
   public async setPointCloud(annotationValue: number, color: string, accessToken: string) {
     const { context, group } = this;
     if (!context || !group || this.pointCloudId === annotationValue) return;
+
+    // point cloud data is only available for the mouse atlas (legacy circuit)
+    // for other species the coordinates live in a different space and would
+    // appear misaligned with the mesh, so skip them entirely.
+    if (this.AtlasID !== config.MOUSE_ATLAS__ID) {
+      if (this.pointCloudPainter) {
+        group.remove(this.pointCloudPainter);
+        this.pointCloudPainter.delete();
+        this.pointCloudPainter = null;
+        this.pointCloudId = -1;
+        context.paint();
+      }
+      return;
+    }
 
     this.loadingPointCloud = true;
     try {

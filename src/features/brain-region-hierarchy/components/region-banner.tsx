@@ -194,6 +194,7 @@ export function PortalRegionBanner({
   const [isOpen, setIsOpen] = useState(initialOpen);
   const [defaultPortalContainer, setDefaultPortalContainer] = useState<HTMLElement | null>(null);
   const [anchorPosition, setAnchorPosition] = useState({ left: 0, bottom: 0, width: 0 });
+  const [isInsideModal, setIsInsideModal] = useState(false);
   const effectiveDataKey = dataKey ?? `portal-region-${autoDataKeyId.replaceAll(':', '')}`;
 
   useEffect(() => {
@@ -209,6 +210,8 @@ export function PortalRegionBanner({
         bottom: rect.bottom,
         width: rect.width,
       });
+      const insideModal = !!anchorRef.current?.closest('#modal-dialog');
+      setIsInsideModal(insideModal);
     };
 
     updateAnchorPosition();
@@ -272,6 +275,10 @@ export function PortalRegionBanner({
       if (!isOpen) return true;
       const targetNode = event.target as Node | null;
       if (!targetNode) return false;
+      const targetElement = targetNode instanceof Element ? targetNode : targetNode.parentElement;
+      // Ant Select renders search options in a body-level dropdown portal.
+      // Treat interactions inside that dropdown as internal clicks.
+      if (targetElement?.closest('.ant-select-dropdown')) return true;
       return anchorRef.current?.contains(targetNode) ?? false;
     }
   );
@@ -300,7 +307,7 @@ export function PortalRegionBanner({
         ? createPortal(
             <div
               data-testid="portal-region-banner"
-              className="fixed z-50"
+              className={cn('fixed', isInsideModal ? 'z-1002' : 'z-50')}
               style={{ left: anchorPosition.left, top: safeY + 5, width: computedWidth }}
             >
               <div

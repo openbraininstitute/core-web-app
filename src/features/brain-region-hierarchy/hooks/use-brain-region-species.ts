@@ -22,7 +22,7 @@ const {
 } = config;
 
 /**
- * Transform API response to HierarchyWithSpecies array with display names
+ * transform api response to HierarchyWithSpecies array with display names
  */
 function transformHierarchiesResponse(response: IBrainRegionHierarchiesResponse) {
   if (!response?.data) return [];
@@ -57,10 +57,9 @@ function getFallbackDefaultBrainRegionId(taxonomyId: string) {
 /**
  * fetching available species and their brain region hierarchies
  *
- * this hook provides:
- * - List of all available species/hierarchy combinations
- * - Automatic caching infinitely, 30 min garbage collection)
- * - Loading and error states
+ * automatic caching infinitely, 30 min garbage collection)
+ *
+ * @return list of all available species/hierarchy combinations
  */
 export function useAvailableHierarchySpeciesQuery() {
   const query = useQuery({
