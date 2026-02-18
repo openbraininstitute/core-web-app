@@ -47,7 +47,7 @@
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 0;
-  border: 1.5px solid #c2c1c1;
+  border: 1px solid #d9d9d9;
   border-radius: 1em;
   overflow: hidden;
   pointer-events: auto;
