@@ -146,7 +146,7 @@ export default function BlockDictionaryEntries({
         key={entry}
         className={classNames(
           'text-primary-8 flex h-[50px] min-h-[50px] w-full min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-          isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
+          isSelected ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white' : ''
         )}
         tabIndex={0}
         onClick={() => handleEntryClick(entry)}
@@ -377,7 +377,7 @@ export default function BlockDictionaryEntries({
       {/* AI suggested changes */}
 
       {!campaignId && areThereAiEntries && (
-        <div className="border-neutral-200 border-1 rounded-lg w-[90%] px-2 pb-4 pt-2 flex flex-col gap-2">
+        <div className="border-neutral-200 border rounded-lg w-90percent px-2 pb-4 pt-2 flex flex-col gap-2">
           {aiAddedEntries.length > 0 && (
             <div className="text-sm text-[#1690ff] flex items-center gap-1">
               <AIAdd w={12} h={12} /> Added
@@ -397,7 +397,7 @@ export default function BlockDictionaryEntries({
           {aiEditedEntries.length > 0 && (
             <div className="flex items-center gap-1">
               <AIEdit />
-              <span className="text-sm bg-gradient-to-r from-[#ef4444] to-[#1690ff] bg-clip-text text-transparent">
+              <span className="text-sm bg-linear-to-r from-[#ef4444] to-[#1690ff] bg-clip-text text-transparent">
                 Edited
               </span>
             </div>

@@ -22,11 +22,7 @@ type Props = {
   config: Config;
   model: ICircuit | IMEModel;
   blockAIConfig: Record<string, ConfigValue> | null;
-<<<<<<< HEAD
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
-=======
-  schemaMappingConfig: TSchemaMappingConfiguration;
->>>>>>> fbf105f7e (disable unwanted fields and show tooltip)
 };
 
 function getDiscriminatorProperty(schema: IRootBlockUnion): string {

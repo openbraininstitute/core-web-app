@@ -13,10 +13,10 @@ import {
   useObioneJsonSchema,
   useSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
-import Left from '@/features/scan-config/components/left';
-import Middle from '@/features/scan-config/components/middle';
 import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
+import Left from '@/features/scan-config/components/ui-columns/left';
+import Middle from '@/features/scan-config/components/ui-columns/middle';
 import {
   ExtractScanConfigTabs,
   ScanConfigActivity,
@@ -190,7 +190,7 @@ export function ScanConfigTemplate({
           <div
             className={cn(
               styles.scrollable,
-              'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
+              'h-full overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-5'
             )}
           >
             {editing && (
