@@ -26,7 +26,7 @@ export default function Reference({
   disabled: boolean;
 }) {
   const referenceTypeDict = useReferenceTypeDict(schemaName);
-  const schema = useObioneJsonSchema(schemaName);
+  const { schema } = useObioneJsonSchema(schemaName);
 
   const configOptions = referenceTypeDict[referenceSchema.reference_type] ?? {
     singularName: '',
