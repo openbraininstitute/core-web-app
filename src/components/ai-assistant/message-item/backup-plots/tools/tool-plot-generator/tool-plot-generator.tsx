@@ -74,14 +74,14 @@ function CustomPlot({
   const title = props.layout?.title?.text || props.layout?.title || '';
   const titleFont = props.layout?.title?.font || {};
   const titleHeight = title ? 60 : 0;
-  const maxPlotHeight = 400 - titleHeight;
-  const maxWidth = maxPlotHeight * 1.5;
+  const plotHeight = 400 - titleHeight;
+  const plotWidth = 600;
 
   const modifiedLayout = {
     ...props.layout,
     title: undefined,
     autosize: true,
-    height: maxPlotHeight,
+    height: plotHeight,
     margin: {
       ...props.layout?.margin,
       t: (props.layout?.margin?.t || 80) - 40,
@@ -90,8 +90,8 @@ function CustomPlot({
 
   return (
     <div
-      className={classNames('h-full w-full', styles.plotContainer)}
-      style={{ maxWidth: `${maxWidth}px` }}
+      className={classNames('h-full', styles.plotContainer)}
+      style={{ width: `${plotWidth}px`, maxWidth: '100%' }}
     >
       {title && (
         <div
@@ -112,7 +112,7 @@ function CustomPlot({
         className={classNames(className, styles.toolPlotGenerator)}
         style={{
           width: '100%',
-          height: `${maxPlotHeight}px`,
+          height: `${plotHeight}px`,
           display: plotReady ? 'block' : 'none',
         }}
         data={props.data}

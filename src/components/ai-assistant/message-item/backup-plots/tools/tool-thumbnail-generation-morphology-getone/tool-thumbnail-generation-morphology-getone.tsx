@@ -65,16 +65,21 @@ function CustomThumbnail({
   }
 
   return (
-    <>
+    <div style={{ width: '600px', maxWidth: '100%', height: '400px' }}>
       {!imageLoaded && <ToolSkeleton />}
       <img
         className={className}
         src={content}
         alt="Morphology thumbnail"
-        style={{ display: imageLoaded ? 'block' : 'none' }}
+        style={{
+          display: imageLoaded ? 'block' : 'none',
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+        }}
         onLoad={() => setImageLoaded(true)}
         onError={() => setImageError(true)}
       />
-    </>
+    </div>
   );
 }
