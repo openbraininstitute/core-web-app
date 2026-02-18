@@ -1,3 +1,153 @@
-export function Range() {
-  return <div>Range</div>;
+'use client';
+
+import { useMemo } from 'react';
+
+import {
+  SectionListConfigEditor,
+  type SectionValue,
+} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/editor';
+import {
+  buildChannelGroups,
+  type ChannelVariableOption,
+  decodeSelectionValue,
+  encodeSelectionValue,
+  findChannelNameByEntityId,
+  type MechanismVariablesRoot,
+  MechanismVariableTypeDict,
+  type SectionListEntry,
+} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import {
+  type IonChannelSelection,
+  IonChannelVariableSelector,
+} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/selector';
+
+import type { SetStateAction } from 'jotai';
+import type { ConfigValue } from '@/features/scan-config/types';
+
+type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
+
+interface RangeProps {
+  data: MechanismVariablesRoot | null;
+  disabled: boolean;
+  state: Record<string, ConfigValue>;
+  setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
+  fieldKey: string;
+  modificationType: string;
+}
+
+export function Range({ data, disabled, state, setState, fieldKey, modificationType }: RangeProps) {
+  const currentModification = state[fieldKey];
+  const isValidModification =
+    !!currentModification &&
+    typeof currentModification === 'object' &&
+    !Array.isArray(currentModification);
+
+  const currentValue = useMemo(() => {
+    if (
+      !isValidModification ||
+      !data ||
+      typeof currentModification.ion_channel_id !== 'string' ||
+      typeof currentModification.variable_name !== 'string'
+    )
+      return null;
+    const channelName = findChannelNameByEntityId(
+      data,
+      currentModification.ion_channel_id as string
+    );
+    if (!channelName) return null;
+    return encodeSelectionValue(channelName, currentModification.variable_name as string);
+  }, [isValidModification, currentModification, data]);
+
+  const channelGroups = useMemo(
+    () => (data ? buildChannelGroups(data, MechanismVariableTypeDict.Range) : []),
+    [data]
+  );
+
+  const resolvedVariable: ChannelVariableOption | null = useMemo(() => {
+    if (!currentValue) return null;
+    const { channelName, variableName } = decodeSelectionValue(currentValue);
+    const group = channelGroups.find((g) => g.channel_name === channelName);
+    return group?.variables.find((v) => v.neuron_variable === variableName) ?? null;
+  }, [currentValue, channelGroups]);
+
+  const sectionValues: Record<string, SectionValue> = useMemo(() => {
+    if (
+      !isValidModification ||
+      !currentModification.section_list_modifications ||
+      typeof currentModification.section_list_modifications !== 'object'
+    )
+      return {};
+
+    const mods = currentModification.section_list_modifications as Record<string, ConfigValue>;
+    const result: Record<string, SectionValue> = {};
+    for (const [key, val] of Object.entries(mods)) {
+      if (typeof val === 'number') result[key] = val;
+      else if (Array.isArray(val) && val.every((v) => typeof v === 'number'))
+        result[key] = val as number[];
+    }
+    return result;
+  }, [isValidModification, currentModification]);
+
+  const sectionListsWithDefaults: SectionListEntry[] = useMemo(() => {
+    if (!resolvedVariable) return [];
+    return resolvedVariable.section_lists;
+  }, [resolvedVariable]);
+
+  if (!data) return null;
+
+  const handleVariableChange = (selection: IonChannelSelection) => {
+    const sectionListModifications: Record<string, number> = {};
+    for (const entry of selection.variable.section_lists) {
+      sectionListModifications[entry.section_list] = entry.value ?? 0;
+    }
+
+    setState({
+      ...state,
+      [fieldKey]: {
+        type: modificationType,
+        ion_channel_id: selection.entityId ?? '',
+        variable_name: selection.variable.neuron_variable,
+        section_list_modifications: sectionListModifications,
+      },
+    });
+  };
+
+  const handleSectionChange = (sectionList: string, value: SectionValue) => {
+    if (!isValidModification) return;
+
+    const currentMods =
+      (currentModification.section_list_modifications as Record<string, ConfigValue>) ?? {};
+
+    setState({
+      ...state,
+      [fieldKey]: {
+        ...currentModification,
+        section_list_modifications: {
+          ...currentMods,
+          [sectionList]: value,
+        },
+      },
+    });
+  };
+
+  return (
+    <div>
+      <IonChannelVariableSelector
+        data={data}
+        variableType={MechanismVariableTypeDict.Range}
+        value={currentValue}
+        onChange={handleVariableChange}
+        disabled={disabled}
+      />
+
+      {resolvedVariable && sectionListsWithDefaults.length > 0 && (
+        <SectionListConfigEditor
+          sectionLists={sectionListsWithDefaults}
+          values={sectionValues}
+          onChange={handleSectionChange}
+          disabled={disabled}
+        />
+      )}
+    </div>
+  );
 }

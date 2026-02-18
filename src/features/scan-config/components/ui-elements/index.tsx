@@ -1,4 +1,5 @@
 import { Input } from 'antd';
+import { get } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
 
 import ModelDetails from '@/features/scan-config/components/model-details';
@@ -6,6 +7,10 @@ import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-
 import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/global';
 import { Range } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/range';
+import {
+  type MechanismVariablesRoot,
+  RootSelector,
+} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
@@ -25,7 +30,7 @@ import type { TSchemaMappingConfiguration } from '@/features/scan-config/compone
 
 type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
-export function RenderUIElement({
+export function UIElementRender({
   k,
   disabled,
   paramSchema,
@@ -46,7 +51,7 @@ export function RenderUIElement({
   entity: ICircuit | IMEModel | null | undefined;
   state: Record<string, ConfigValue>;
   setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
-  schemaMappingConfig: TSchemaMappingConfiguration;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 }) {
   return match({ entity, paramSchema })
     .with(
@@ -208,11 +213,41 @@ export function RenderUIElement({
     )
     .with(
       { paramSchema: { ui_element: ScanConfigUIElementDict.IonChannelGlobalVariableModification } },
-      () => <Global />
+      ({ paramSchema }) => {
+        const mechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
+        const modificationType = get(paramSchema, 'properties.type.const', 'ByNeuronModification');
+        return (
+          <Global
+            data={mechanismConfig as MechanismVariablesRoot | null}
+            disabled={disabled}
+            state={state}
+            setState={setState}
+            fieldKey={k}
+            modificationType={modificationType}
+          />
+        );
+      }
     )
     .with(
       { paramSchema: { ui_element: ScanConfigUIElementDict.IonChannelRangeVariableModification } },
-      () => <Range />
+      ({ paramSchema }) => {
+        const mechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
+        const modificationType = get(
+          paramSchema,
+          'properties.type.const',
+          'BySectionListModification'
+        );
+        return (
+          <Range
+            data={mechanismConfig as MechanismVariablesRoot | null}
+            disabled={disabled}
+            state={state}
+            setState={setState}
+            fieldKey={k}
+            modificationType={modificationType}
+          />
+        );
+      }
     )
     .otherwise(() => null);
 }

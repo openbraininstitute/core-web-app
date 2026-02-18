@@ -62,7 +62,7 @@ export function ScanConfigTemplate({
   readOnly?: boolean;
   className?: string;
   activity: TScanConfigActivity;
-  schemaMappingConfig: TSchemaMappingConfiguration;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   schema: ConfigSchema;
   schemaName: SchemaName;
 }) {

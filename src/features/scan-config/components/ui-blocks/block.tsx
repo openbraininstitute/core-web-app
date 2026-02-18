@@ -4,7 +4,7 @@ import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
 
 import AIAdd from '@/components/icons/ai/add_icon';
-import { RenderUIElement } from '@/features/scan-config/components/ui-elements';
+import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
   type Config,
   type ConfigValue,
@@ -108,7 +108,7 @@ export default function Block({
                   )}
                   data-scan-config-block-element={blockElementSchema.ui_element}
                 >
-                  <div className="flex gap-3 w-full items-center">
+                  <div className="flex gap-3 w-full items-center mb-2">
                     <div
                       className="text-primary-9 text-base font-semibold uppercase"
                       title={blockElementSchema.description}
@@ -125,7 +125,7 @@ export default function Block({
                       <div>
                         <div className="mb-1 flex items-center gap-1">
                           <div className={cn('border rounded-lg flex-1 mr-1', patchBorderClass())}>
-                            <RenderUIElement
+                            <UIElementRender
                               k={k}
                               disabled={disabled}
                               paramSchema={blockElementSchema}
@@ -147,7 +147,7 @@ export default function Block({
                         {op_ === 'replace' && !!blockAIConfig && (
                           <div className="flex items-center gap-1">
                             <div className="border rounded-lg border-[#1690ff] flex-1 mr-1">
-                              <RenderUIElement
+                              <UIElementRender
                                 k={k}
                                 disabled={disabled}
                                 paramSchema={blockElementSchema}
@@ -169,7 +169,7 @@ export default function Block({
                       avoidCollisions
                       hideWhenDetached
                       align="center"
-                      side="bottom"
+                      side="top"
                       className={cn(
                         'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
                         'bg-primary-8 px-4 py-2 text-base text-wrap ',

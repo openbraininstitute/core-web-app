@@ -68,6 +68,7 @@ export default function BlockDictionaryEntries({
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
 }) {
+  console.log('–– – BlockDictionaryEntries – errors––', errors);
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
 
   const onNameChangeConfirm = (
