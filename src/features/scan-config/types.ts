@@ -89,6 +89,10 @@ export const ScanConfigUIElementDict = {
   EntityPropertyDropdown: "entity_property_dropdown",
   NeuronIds: "neuron_ids",
   BooleanInput: "boolean_input",
+  IonChannelRangeVariableModification:
+    "ion_channel_range_variable_modification",
+  IonChannelGlobalVariableModification:
+    "ion_channel_global_variable_modification",
 } as const;
 
 export interface StringInput extends TBlockElement {
