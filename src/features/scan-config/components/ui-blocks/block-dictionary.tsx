@@ -1,12 +1,12 @@
 import { get } from 'es-toolkit/compat';
 import { atom } from 'jotai';
 
-import Block from '@/features/scan-config/components/block';
 import {
   getBlockUsabilityConfig,
   isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
+import Block from '@/features/scan-config/components/ui-blocks/block';
 import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
@@ -123,7 +123,7 @@ export default function BlockDictionary({
                 type="button"
                 disabled={disable}
                 className={cn(
-                  'min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white',
+                  'min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white hover:shadow-xs',
                   { 'cursor-not-allowed opacity-50': disable }
                 )}
                 onClick={() => {
@@ -162,7 +162,9 @@ export default function BlockDictionary({
                 }}
                 data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
               >
-                <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
+                <span className="text-primary-9 block text-lg font-bold">
+                  {o.title?.replace(/([a-z])([A-Z])/g, '$1\u00AD$2')}
+                </span>
                 <span className="mt-3 block">{o.description}</span>
               </button>
             </TooltipTrigger>

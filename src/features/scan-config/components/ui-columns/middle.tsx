@@ -1,10 +1,10 @@
-import Block from '@/features/scan-config/components/block';
-import BlockDictionary from '@/features/scan-config/components/block-dictionary';
-import BlockUnion from '@/features/scan-config/components/block-union';
 import {
   isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
+import Block from '@/features/scan-config/components/ui-blocks/block';
+import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
+import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,

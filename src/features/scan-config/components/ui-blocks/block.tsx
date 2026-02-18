@@ -5,12 +5,12 @@ import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
 
 import AIAdd from '@/components/icons/ai/add_icon';
-import BooleanInput from '@/features/scan-config/components/boolean-input';
-import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
-import NeuronIds from '@/features/scan-config/components/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/parameter-sweep';
-import Reference from '@/features/scan-config/components/reference';
+import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
+import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
+import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
+import Reference from '@/features/scan-config/components/ui-elements/reference';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   isType,

@@ -6,7 +6,7 @@ import {
   type SchemaName,
 } from '@/features/scan-config/types';
 
-import { useObioneJsonSchema, useReferenceTypeDict } from './hooks/schema';
+import { useObioneJsonSchema, useReferenceTypeDict } from '../hooks/schema';
 
 import type { Config } from '@/features/scan-config/components/components';
 
