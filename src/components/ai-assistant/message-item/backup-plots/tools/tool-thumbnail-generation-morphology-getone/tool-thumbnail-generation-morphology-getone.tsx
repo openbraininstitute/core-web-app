@@ -3,7 +3,6 @@ import React from 'react';
 import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
-import { usePlotFile } from '../hooks';
 import ToolSkeleton from '../tool-skeleton';
 
 import type { ToolResult } from '../types';
@@ -43,11 +42,20 @@ function CustomThumbnail({
   className?: string;
   providedData: { content: string; type: string };
 }) {
+  const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
 
   const { content, type } = providedData;
   if (type !== 'image' || !isString(content)) return null;
+
+  const handleShow = () => {
+    refDialog.current?.showModal();
+  };
+
+  const handleHide = () => {
+    refDialog.current?.close();
+  };
 
   if (imageError) {
     return (
@@ -65,21 +73,30 @@ function CustomThumbnail({
   }
 
   return (
-    <div style={{ width: '600px', maxWidth: '100%', height: '400px' }}>
-      {!imageLoaded && <ToolSkeleton />}
-      <img
-        className={className}
-        src={content}
-        alt="Morphology thumbnail"
-        style={{
-          display: imageLoaded ? 'block' : 'none',
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-        }}
-        onLoad={() => setImageLoaded(true)}
-        onError={() => setImageError(true)}
-      />
-    </div>
+    <>
+      <div style={{ width: '600px', maxWidth: '100%', height: '400px' }}>
+        {!imageLoaded && <ToolSkeleton />}
+        <img
+          className={className}
+          src={content}
+          alt="Morphology thumbnail"
+          style={{
+            display: imageLoaded ? 'block' : 'none',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            cursor: 'pointer',
+          }}
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageError(true)}
+          onClick={handleShow}
+        />
+      </div>
+      <dialog ref={refDialog} className={styles.dialog}>
+        <button type="button" onClick={handleHide}>
+          <img src={content} alt="Morphology thumbnail fullscreen" />
+        </button>
+      </dialog>
+    </>
   );
 }
