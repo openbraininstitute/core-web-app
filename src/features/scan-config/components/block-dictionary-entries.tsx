@@ -21,8 +21,7 @@ import { isAtom, isPlainObject } from './utils';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
-import type { AtomsMap } from '../types';
-import type { Config, ConfigValue } from './components';
+import type { AtomsMap, Config, ConfigValue } from '@/features/scan-config/types';
 
 export default function BlockDictionaryEntries({
   config,

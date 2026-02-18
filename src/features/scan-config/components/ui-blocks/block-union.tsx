@@ -88,7 +88,7 @@ export default function BlockUnion({
           config={config}
           blockSchema={selectedBlockSchema}
           stateAtom={atomsMap[selectedRootElement]}
-          model={model}
+          entity={model}
           blockAIConfig={blockAIConfig}
           hideTitle
           schemaMappingConfig={schemaMappingConfig}

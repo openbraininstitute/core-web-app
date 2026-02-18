@@ -2,8 +2,15 @@ import type { atom } from "jotai";
 import type { IEntity } from "@/api/entitycore/types/entities/entity";
 import type { ActivityStatus } from "@/api/entitycore/types/shared/activity";
 import type { IAsset } from "@/api/entitycore/types/shared/global";
-import type { ConfigValue } from "@/features/scan-config/components/components";
 import type { Prettify } from "@/utils/type";
+
+type Primitive = null | boolean | number | string;
+interface Object {
+  [key: string]: Primitive | Primitive[] | Object;
+}
+
+export type ConfigValue = Primitive | Primitive[] | Object;
+export type Config = Record<string, Object | string>;
 
 export interface AtomsMap {
   [key: string]:
@@ -163,6 +170,31 @@ export interface EntityPropertyDropdown extends TBlockElement {
 export interface NeuronIds extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronIds;
 }
+export interface IonChannelRangeVariableModification extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.IonChannelRangeVariableModification;
+  description: string;
+  property: "IonChannelRangeVariables";
+  title: string;
+  type: "object";
+  properties: {
+    modification: any;
+    neuron_set: any;
+    type: Type;
+  };
+}
+
+export interface IonChannelGlobalVariableModification extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.IonChannelGlobalVariableModification;
+  description: string;
+  title: string;
+  property: "IonChannelGlobalVariables";
+  type: "object";
+  properties: {
+    modification: any;
+    neuron_set: any;
+    type: Type;
+  };
+}
 
 export interface BooleanInput extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.BooleanInput;
@@ -199,7 +231,9 @@ export type ParamSchema =
   | Reference
   | NeuronIds
   | EntityPropertyDropdown
-  | BooleanInput;
+  | BooleanInput
+  | IonChannelRangeVariableModification
+  | IonChannelGlobalVariableModification;
 
 export type TBlock = {
   title: string;

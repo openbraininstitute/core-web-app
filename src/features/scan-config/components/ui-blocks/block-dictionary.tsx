@@ -10,7 +10,9 @@ import Block from '@/features/scan-config/components/ui-blocks/block';
 import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
+  type Config,
   type ConfigSchema,
+  type ConfigValue,
   type IBlockDictionary,
   ScanConfigUIElementDict,
   type SchemaName,
@@ -22,7 +24,6 @@ import { cn } from '@/utils/css-class';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 
 type Props = {
   schemaName: SchemaName;
@@ -89,7 +90,7 @@ export default function BlockDictionary({
         config={config}
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
-        model={model}
+        entity={model}
         blockAIConfig={blockAIConfig}
         schemaMappingConfig={schemaMappingConfig}
       />

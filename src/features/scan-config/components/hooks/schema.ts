@@ -16,7 +16,9 @@ import { config } from "@/config";
 import { isAtom, isPlainObject } from "@/features/scan-config/components/utils";
 import {
   type AtomsMap,
+  type Config,
   type ConfigSchema,
+  type ConfigValue,
   isType,
   ScanConfigUIElementDict,
   type SchemaName,
@@ -24,14 +26,10 @@ import {
 } from "@/features/scan-config/types";
 import { keyBuilder } from "@/ui/use-query-keys/data";
 
-import type {
-  Config,
-  ConfigValue,
-} from "@/features/scan-config/components/components";
 import type { WorkspaceContext } from "@/types/common";
 
 export function useObioneJsonSchema(schemaName: SchemaName) {
-  const { data: schema } = useQuery({
+  const { data: schema, isLoading } = useQuery({
     queryKey: keyBuilder.obiOneJsonSchema(schemaName),
     queryFn: () => fetchSchema({ schemaName }),
     // Keep data fresh indefinitely to prevent atom regeneration on window focus
@@ -39,7 +37,7 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
     refetchOnWindowFocus: false,
   });
 
-  return schema;
+  return { isLoading, schema };
 }
 
 export type TSchemaMappingConfiguration = {
@@ -54,7 +52,7 @@ export function useSchemaMappingConfiguration({
   endpointType,
 }: {
   workspace: WorkspaceContext;
-  circuitId: string;
+  circuitId: string | undefined;
   schema: ConfigSchema | undefined;
   endpointType: string;
 }) {
@@ -107,7 +105,8 @@ export function useDefaultConfig(
   schemaName: SchemaName,
   formModelType: "CircuitFromId" = "CircuitFromId",
 ) {
-  const schema = useObioneJsonSchema(schemaName);
+  const { schema } = useObioneJsonSchema(schemaName);
+
   if (!schema) return;
 
   const map: {
@@ -284,7 +283,7 @@ export function resetConfig(
 }
 
 export function useReferenceTypeDict(schemaName: SchemaName) {
-  const schema = useObioneJsonSchema(schemaName);
+  const { schema } = useObioneJsonSchema(schemaName);
 
   const referenceTypeDict: Record<
     string,

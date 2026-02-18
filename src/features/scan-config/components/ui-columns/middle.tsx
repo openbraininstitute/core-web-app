@@ -8,6 +8,7 @@ import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union'
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
+  type Config,
   type ConfigSchema,
   type IBlockDictionary,
   type IBlockSingle,
@@ -19,7 +20,6 @@ import { useAIConfig } from '@/services/ai-agent';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Config } from '@/features/scan-config/components/components';
 
 type MiddleProps = {
   schemaName: SchemaName;
@@ -99,7 +99,7 @@ export default function Middle({
             config={config}
             blockSchema={selectedSchema}
             stateAtom={atomsMap[selectedRootElement]}
-            model={model}
+            entity={model}
             blockAIConfig={getBlockAIConfig()}
             schemaMappingConfig={schemaMappingConfig}
           />

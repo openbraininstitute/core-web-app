@@ -1,20 +1,14 @@
 import { CloseOutlined } from '@ant-design/icons';
-import { Input } from 'antd';
 import { isEqual, isNil } from 'es-toolkit/compat';
 import { atom, useAtom } from 'jotai';
 import { useRef } from 'react';
 
 import AIAdd from '@/components/icons/ai/add_icon';
-import ModelDetails from '@/features/scan-config/components/model-details';
-import ParameterSweep from '@/features/scan-config/components/parameter-sweep';
-import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
-import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
-import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
-import Reference from '@/features/scan-config/components/ui-elements/reference';
-import { isPlainObject } from '@/features/scan-config/components/utils';
+import { RenderUIElement } from '@/features/scan-config/components/ui-elements';
 import {
+  type Config,
+  type ConfigValue,
   isType,
-  type ParamSchema,
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
@@ -26,22 +20,13 @@ import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
-type Primitive = null | boolean | number | string;
-interface Object {
-  [key: string]: Primitive | Primitive[] | Object;
-}
-
-export type ConfigValue = Primitive | Primitive[] | Object;
-
-export type Config = Record<string, Object | string>;
-
 export default function Block({
   schemaName,
   disabled,
   blockSchema,
   stateAtom,
   config,
-  model,
+  entity,
   blockAIConfig,
   hideTitle,
   schemaMappingConfig,
@@ -50,7 +35,7 @@ export default function Block({
   disabled: boolean;
   config: Config;
   blockSchema?: TBlock;
-  model: ICircuit | IMEModel | undefined | null;
+  entity: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   blockAIConfig: Record<string, ConfigValue> | null;
   hideTitle?: boolean;
@@ -59,151 +44,6 @@ export default function Block({
   // Empty atom for when a block doesn't exist in the config (and the atoms map) yet, only in the AI suggested changes
   const emptyAtom = useRef(atom<Record<string, ConfigValue>>({}));
   const [state, setState] = useAtom(stateAtom ?? emptyAtom.current);
-
-  function renderInput(k: string, paramSchema: ParamSchema, value: ConfigValue) {
-    if (paramSchema.ui_element === ScanConfigUIElementDict.StringInput) {
-      return (
-        <Input
-          data-scan-config-block-element={ScanConfigUIElementDict.StringInput}
-          disabled={disabled}
-          value={typeof value === 'string' ? value : ''}
-          className="w-full"
-          onChange={(e) => {
-            setState({ ...state, [k]: e.currentTarget.value });
-          }}
-        />
-      );
-    }
-
-    if (paramSchema.ui_element === ScanConfigUIElementDict.ModelIdentifier && model) {
-      return <ModelDetails model={model} />;
-    }
-
-    if (
-      paramSchema.ui_element === ScanConfigUIElementDict.FloatParameterSweep ||
-      paramSchema.ui_element === ScanConfigUIElementDict.IntParameterSweep
-    ) {
-      return (
-        <ParameterSweep
-          k={k}
-          min={paramSchema.anyOf[0]?.minimum}
-          max={paramSchema.anyOf[0]?.maximum}
-          exclusiveMin={paramSchema.anyOf[0]?.exclusiveMinimum}
-          exclusiveMax={paramSchema.anyOf[0]?.exclusiveMaximum}
-          disabled={disabled}
-          value={value as number | null | number[]}
-          onChange={(value) => {
-            setState({ ...state, [k]: value });
-          }}
-        />
-      );
-    }
-
-    if (paramSchema.ui_element === ScanConfigUIElementDict.Reference) {
-      const defaultV: string | null =
-        isPlainObject(value) && typeof value.block_name === 'string' ? value.block_name : null;
-
-      return (
-        <Reference
-          config={config}
-          schemaName={schemaName}
-          referenceSchema={paramSchema}
-          value={defaultV}
-          disabled={disabled}
-          onChange={(block_name: string | null, block_dict_name: string | null) => {
-            if (block_name === null) {
-              setState({ ...state, [k]: null });
-              return;
-            }
-
-            setState({
-              ...state,
-              [k]: {
-                block_name,
-                block_dict_name,
-              },
-            });
-          }}
-        />
-      );
-    }
-
-    if (paramSchema.ui_element === ScanConfigUIElementDict.NeuronIds) {
-      const elements: number[] =
-        isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
-
-      return (
-        <NeuronIds
-          elements={elements}
-          disabled={disabled}
-          onDeleteElement={(i: number) => {
-            if (!isPlainObject(state[k]) || !Array.isArray(state[k].elements)) return;
-
-            if (state[k].elements.length === 1) {
-              setState({ ...state, [k]: null });
-              return;
-            }
-
-            state[k].elements.splice(i, 1); // delete in place
-
-            setState({
-              ...state,
-              [k]: { elements: [...state[k].elements] },
-            });
-          }}
-          onAddElement={(newElement: number) => {
-            if (!state[k]) {
-              setState({
-                ...state,
-                [k]: { elements: [newElement] },
-              });
-            } else if (isPlainObject(state[k]) && Array.isArray(state[k].elements)) {
-              setState({
-                ...state,
-                [k]: { elements: [...state[k].elements, newElement] },
-              });
-            }
-          }}
-        />
-      );
-    }
-
-    if (paramSchema.ui_element === ScanConfigUIElementDict.EntityPropertyDropdown && model) {
-      const getValue = (): string[] => {
-        if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
-          return value;
-        }
-        if (typeof value === 'string') return [value];
-        return [];
-      };
-
-      return (
-        <EntityPropertyDropdown
-          schemaMappingConfig={schemaMappingConfig}
-          disabled={disabled}
-          value={getValue()}
-          onChange={(newV: string[]) => setState({ ...state, node_set: newV })}
-          property={paramSchema.property}
-        />
-      );
-    }
-
-    if (paramSchema.ui_element === ScanConfigUIElementDict.BooleanInput) {
-      const currentValue = typeof state[k] === 'boolean' ? state[k] : null;
-      return (
-        <BooleanInput
-          value={currentValue}
-          disabled={disabled}
-          onChange={(value: boolean) => {
-            setState({ ...state, [k]: value });
-          }}
-          ariaLabel={paramSchema.description}
-        />
-      );
-    }
-
-    return null;
-  }
 
   if (!blockSchema) return null;
 
@@ -285,7 +125,18 @@ export default function Block({
                       <div>
                         <div className="mb-1 flex items-center gap-1">
                           <div className={cn('border rounded-lg flex-1 mr-1', patchBorderClass())}>
-                            {renderInput(k, blockElementSchema, value)}
+                            <RenderUIElement
+                              k={k}
+                              disabled={disabled}
+                              paramSchema={blockElementSchema}
+                              value={value}
+                              config={config}
+                              schemaName={schemaName}
+                              entity={entity}
+                              schemaMappingConfig={schemaMappingConfig}
+                              state={state}
+                              setState={setState}
+                            />
                           </div>
                           {(op_ === 'delete' || op_ === 'replace') && (
                             <CloseOutlined className="text-red-500! text-[16px]!" />
@@ -296,7 +147,18 @@ export default function Block({
                         {op_ === 'replace' && !!blockAIConfig && (
                           <div className="flex items-center gap-1">
                             <div className="border rounded-lg border-[#1690ff] flex-1 mr-1">
-                              {renderInput(k, blockElementSchema, blockAIConfig[k])}
+                              <RenderUIElement
+                                k={k}
+                                disabled={disabled}
+                                paramSchema={blockElementSchema}
+                                value={blockAIConfig[k]}
+                                config={config}
+                                schemaName={schemaName}
+                                entity={entity}
+                                schemaMappingConfig={schemaMappingConfig}
+                                state={state}
+                                setState={setState}
+                              />
                             </div>
                             <AIAdd />
                           </div>
@@ -315,8 +177,8 @@ export default function Block({
                       )}
                       arrowClassName="bg-primary-8"
                     >
-                      {k === 'circuit' && model
-                        ? model.description
+                      {k === 'circuit' && entity
+                        ? entity.description
                         : blockElementSchema.description}
                     </TooltipContent>
                   </Tooltip>
