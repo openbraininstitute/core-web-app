@@ -1,0 +1,14 @@
+.toolPlotGenerator {
+  width: 100%;
+}
+
+.plotContainer {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  margin: 8px 0;
+  background-color: white;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
