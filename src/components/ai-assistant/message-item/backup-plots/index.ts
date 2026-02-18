@@ -1,1 +1,1 @@
-export { default } from './backup-plots';
+export { BackupPlotsWrapper, default } from './backup-plots';
