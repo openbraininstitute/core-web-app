@@ -92,29 +92,36 @@ function MessageChild({
       });
 
       // Collect tool components (plots, thumbnails) separately - only show when last message is ready
-      const toolComponents =
+      const backupPlotsData =
         !isLastMessage || status === 'ready'
-          ? deferredParts
-              .filter((part) => part.type === 'tool-invocation')
-              .map((part) => {
-                const { toolCallId } = (part as any).toolInvocation;
-                const textParts = deferredParts.filter((p) => p.type === 'text');
-                const lastTextPart =
-                  textParts.length > 0 ? textParts[textParts.length - 1].text : undefined;
-                return (
-                  <div key={`tool-component-${toolCallId}`}>
-                    <BackupPlots part={part as ToolInvocationUIPart} lastTextPart={lastTextPart} />
-                  </div>
-                );
-              })
+          ? deferredParts.filter((part) => part.type === 'tool-invocation')
           : [];
+
+      const textParts = deferredParts.filter((p) => p.type === 'text');
+      const lastTextPart = textParts.length > 0 ? textParts[textParts.length - 1].text : undefined;
+
+      const backupPlots = backupPlotsData.map((part) => {
+        const { toolCallId } = (part as any).toolInvocation;
+        return (
+          <BackupPlots
+            key={`tool-component-${toolCallId}`}
+            part={part as ToolInvocationUIPart}
+            lastTextPart={lastTextPart}
+          />
+        );
+      });
 
       return (
         <div className={styles.assistant}>
           <CollapsibleMessage message={value} status={isLastMessage ? status : 'ready'}>
             {children}
           </CollapsibleMessage>
-          {toolComponents}
+          {backupPlots.some((plot) => plot) && (
+            <div className="mt-4 pt-2 border-t-2 border-dotted border-gray-300">
+              <p className="text-sm text-gray-500 mb-2">Some plots were not embedded in the chat</p>
+            </div>
+          )}
+          {backupPlots}
           {debug && (
             <button
               type="button"

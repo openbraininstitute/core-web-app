@@ -3,10 +3,10 @@ import PlotInChat from '@/components/ai-assistant/message-item/backup-plots/tool
 import PlotErrorMessage from '../plot-error-message';
 import TruncableImage from '../truncable-image';
 
-const StorageImage = ({ src, alt }: { src?: string | Blob; alt?: string }) => {
+const StorageImage = ({ src }: { src?: string | Blob }) => {
   const srcString = typeof src === 'string' ? src : undefined;
   if (!srcString) {
-    return <div className="ml-20 text-red-500">Error: No image source provided</div>;
+    return <PlotErrorMessage />;
   }
 
   let isSameOrigin = false;
