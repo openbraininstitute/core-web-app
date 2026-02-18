@@ -1,11 +1,12 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
-import React from 'react';
-import Link from 'next/link';
 
-import { classNames } from '@/util/utils';
+import Link from 'next/link';
+import React from 'react';
+
 import { logError } from '@/util/logger';
+import { classNames } from '@/util/utils';
 
 import styles from './truncable-image.module.css';
 
@@ -47,9 +48,17 @@ export default function TruncableImage({ className, src }: TruncableImageProps) 
   };
   if (error && src) {
     return (
-      <Link className={styles.error} href={src} target="_blank">
-        Unable to load image!
-      </Link>
+      <div>
+        <span className="text-gray-600">Image: </span>
+        <a
+          href={src}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline"
+        >
+          {src}
+        </a>
+      </div>
     );
   }
 
