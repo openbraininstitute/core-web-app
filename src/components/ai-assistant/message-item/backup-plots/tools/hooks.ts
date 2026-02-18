@@ -20,8 +20,6 @@ export function usePlotFile(fileIdentifier: string) {
       }
     },
     staleTime: Infinity,
-    retry: 1,
-    retryDelay: 500,
   });
 
   return {
