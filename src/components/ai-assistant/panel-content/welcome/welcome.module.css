@@ -12,7 +12,7 @@
   box-shadow: rgba(0, 0, 0, 0.12) 0 6px 16px;
   border-radius: 1em;
   border: 2px solid var(--color-neutral-9);
-  background-color: var(--color-neutral-8);
+  background-color: #fafafa;
 }
 
 .welcome > div > p {
