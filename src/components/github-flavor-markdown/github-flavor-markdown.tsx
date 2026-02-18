@@ -1,13 +1,15 @@
 import Link from 'next/link';
-import React, { AnchorHTMLAttributes, useMemo } from 'react';
+import React, { type AnchorHTMLAttributes, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import TruncableImage from './truncable-image';
-import { Highlighter } from './highlighter';
 
 import { classNames } from '@/util/utils';
+
+import { Highlighter } from './highlighter';
+import PlotErrorMessage from './plot-error-message';
+import StorageImage from './storage-image/storage-image';
 
 import styles from './github-flavor-markdown.module.css';
 
@@ -35,7 +37,8 @@ function RawGithubFlavorMarkdown({
       rehypePlugins={[rehypeKatex]}
       components={{
         a: LinkComponent,
-        img: TruncableImage,
+        img: (props) => <StorageImage {...props} />,
+        p: ({ children }) => <div>{children}</div>,
         pre: Highlighter,
       }}
     >
@@ -47,6 +50,11 @@ function RawGithubFlavorMarkdown({
 function makeLink(onLinkClicked: (external: boolean, href: string) => void | boolean) {
   function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
     if (!href) return null;
+
+    // Check if this is a storage URL that should have been an image
+    if (href.includes('/storage/')) {
+      return <PlotErrorMessage />;
+    }
 
     const info = resolveLinkTarget(href);
     return (

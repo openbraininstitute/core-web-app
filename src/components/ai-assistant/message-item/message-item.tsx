@@ -1,16 +1,17 @@
 'use client';
 
 import React from 'react';
-import { ToolInvocation, UIMessage, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 
-import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
-import ToolsProgress from './tools-progress';
-import ToolsComponents from './tools-components';
-import { CollapsibleMessage } from './collapsible-message';
-
-import { classNames } from '@/util/utils';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { isString } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
+
+import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
+import BackupPlots from './backup-plots';
+import { CollapsibleMessage } from './collapsible-message';
+import ToolsProgress from './tools-progress';
+
+import type { ToolInvocation, ToolInvocationUIPart, UIMessage } from '@ai-sdk/ui-utils';
 
 import styles from './message-item.module.css';
 
@@ -23,7 +24,12 @@ interface MessageItemProps {
 
 export const MessageItem = React.memo(RawMessageItem);
 
-function RawMessageItem({ className, value, status = 'ready', isLastMessage = false }: MessageItemProps) {
+function RawMessageItem({
+  className,
+  value,
+  status = 'ready',
+  isLastMessage = false,
+}: MessageItemProps) {
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
@@ -32,8 +38,13 @@ function RawMessageItem({ className, value, status = 'ready', isLastMessage = fa
   );
 }
 
-function MessageChild({ value, debug, status, isLastMessage }: { 
-  value: UIMessage; 
+function MessageChild({
+  value,
+  debug,
+  status,
+  isLastMessage,
+}: {
+  value: UIMessage;
   debug: boolean;
   status: 'submitted' | 'streaming' | 'ready' | 'error';
   isLastMessage: boolean;
@@ -80,19 +91,23 @@ function MessageChild({ value, debug, status, isLastMessage }: {
         return null;
       });
 
-      // Collect tool components (plots, thumbnails) separately - only show when ready
-      const toolComponents = status === 'ready' 
-        ? deferredParts
-            .filter((part) => part.type === 'tool-invocation')
-            .map((part) => {
-              const { toolCallId } = (part as any).toolInvocation;
-              return (
-                <div key={`tool-component-${toolCallId}`}>
-                  <ToolsComponents part={part as ToolInvocationUIPart} />
-                </div>
-              );
-            })
-        : [];
+      // Collect tool components (plots, thumbnails) separately - only show when last message is ready
+      const toolComponents =
+        !isLastMessage || status === 'ready'
+          ? deferredParts
+              .filter((part) => part.type === 'tool-invocation')
+              .map((part) => {
+                const { toolCallId } = (part as any).toolInvocation;
+                const textParts = deferredParts.filter((p) => p.type === 'text');
+                const lastTextPart =
+                  textParts.length > 0 ? textParts[textParts.length - 1].text : undefined;
+                return (
+                  <div key={`tool-component-${toolCallId}`}>
+                    <BackupPlots part={part as ToolInvocationUIPart} lastTextPart={lastTextPart} />
+                  </div>
+                );
+              })
+          : [];
 
       return (
         <div className={styles.assistant}>
