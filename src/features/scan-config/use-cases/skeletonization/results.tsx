@@ -140,7 +140,10 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
     refetchInterval: (query) => {
       const executions = query.state.data?.data ?? [];
       const hasActiveSkeletonizations = executions.some((exec) =>
-        includes([ActivityStatus.PENDING, ActivityStatus.RUNNING], exec.status)
+        includes(
+          [ActivityStatus.CREATED, ActivityStatus.PENDING, ActivityStatus.RUNNING],
+          exec.status
+        )
       );
       return hasActiveSkeletonizations && !skeletonizationRequestInProgress
         ? STATUS_POLL_INTERVAL
@@ -156,12 +159,10 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
       const configExecutions = executions.filter((exec) =>
         exec.used?.some((used) => used.id === config.id)
       );
-      if (configExecutions.length > 0) {
-        const latestExecution = configExecutions.sort(
-          (a, b) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime()
-        )[0];
-        map.set(config.id, latestExecution.status);
-      }
+      const latestExecution = configExecutions.sort(
+        (a, b) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime()
+      )[0];
+      map.set(config.id, latestExecution?.status ?? ActivityStatus.CREATED);
     }
 
     return map;
@@ -222,7 +223,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
         fn: async () => {
           await runBatch({
             ctx: { virtualLabId, projectId },
-            skeletonizationIds: configIdsToRun,
+            configIds: configIdsToRun,
           });
           queryClient.invalidateQueries({
             queryKey: queryKeys.skeletonizationExecutions(configIds, context),

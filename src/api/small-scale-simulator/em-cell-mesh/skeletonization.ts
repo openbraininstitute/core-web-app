@@ -5,11 +5,11 @@ import type { WorkspaceContext } from '@/types/common';
 
 type Params = {
   ctx: WorkspaceContext;
-  skeletonizationIds: string[];
+  configIds: string[];
   signal?: AbortSignal;
 };
 
-export async function runBatch({ ctx, skeletonizationIds, signal }: Params) {
+export async function runBatch({ ctx, configIds, signal }: Params) {
   const api = await smallScaleSimulatorApi();
 
   return api.post<Response>('/mesh/skeletonization/run-batch', {
@@ -18,7 +18,7 @@ export async function runBatch({ ctx, skeletonizationIds, signal }: Params) {
       accept: 'application/x-ndjson',
       'Content-Type': 'application/json',
     },
-    body: { skeletonization_ids: skeletonizationIds },
+    body: { config_ids: configIds },
     signal,
   });
 }
