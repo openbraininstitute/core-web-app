@@ -6,7 +6,7 @@ import type {
   ISkeletonizationCampaignFilter,
   TCreateSkeletonizationCampaign,
   TUpdateSkeletonizationCampaign,
-} from '@/api/entitycore/types/entities/em-cell-mesh-skeletonization-campaign';
+} from '@/api/entitycore/types/entities/skeletonization-campaign';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
