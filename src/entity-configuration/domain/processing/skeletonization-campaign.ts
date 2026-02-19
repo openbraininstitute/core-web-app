@@ -22,7 +22,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import type {
   ISkeletonizationCampaign,
   ISkeletonizationCampaignFilter,
-} from '@/api/entitycore/types/entities/em-cell-mesh-skeletonization-campaign';
+} from '@/api/entitycore/types/entities/skeletonization-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
