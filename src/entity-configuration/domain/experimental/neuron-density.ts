@@ -26,10 +26,6 @@ export const NeuronDensity: EntityCoreTypeConfig<IExperimentalNeuronDensity> = {
       one: getExperimentalNeuronDensity,
     },
   },
-  explore: {
-    basePrefix: 'experimental',
-    routePrefix: 'interactive/experimental',
-  },
   asset: {
     extension: 'application/json',
   },

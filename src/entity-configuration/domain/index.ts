@@ -12,6 +12,7 @@ import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
+import { ComputationallySynthesizedCellMorphology } from '@/entity-configuration/domain/model/computationally-synthesized-morphology';
 import { Microcircuit } from '@/entity-configuration/domain/model/mirocircuit';
 import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
@@ -53,6 +54,7 @@ export const EntityCoreModelConfiguration = {
   Circuit,
   IonChannelModel,
   MEModelWithSynapsesCircuit,
+  ComputationallySynthesizedCellMorphology,
 } as const;
 
 const EntityCoreSimulationConfiguration = {

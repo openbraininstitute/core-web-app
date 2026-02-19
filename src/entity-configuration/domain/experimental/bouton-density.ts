@@ -26,10 +26,6 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
       one: getExperimentalBoutonDensity,
     },
   },
-  explore: {
-    basePrefix: 'experimental',
-    routePrefix: 'interactive/experimental',
-  },
   asset: {
     extension: 'application/json',
   },
