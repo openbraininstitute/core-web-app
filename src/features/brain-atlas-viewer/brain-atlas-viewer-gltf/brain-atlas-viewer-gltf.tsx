@@ -1,12 +1,11 @@
-import React from 'react';
 import { CameraFilled } from '@ant-design/icons';
+import React from 'react';
 
-import { usePainter, useVisibleRegions } from './hooks';
-// Temporary disabled
-// import { Settings } from './settings/settings';
-
-import { classNames } from '@/util/utils';
 import { useAccessToken } from '@/hooks/useAccessToken';
+import { classNames } from '@/util/utils';
+
+import { useAtlasViewerSettingsValues, usePainter, useVisibleRegions } from './hooks';
+import { Settings } from './settings/settings';
 
 import styles from './brain-atlas-viewer-gltf.module.css';
 
@@ -20,8 +19,7 @@ export function BrainAtlasViewerGltf({ className, dataKey, onLoading }: BrainAtl
   const [showResetCamera, setShowResetCamera] = React.useState(false);
   const accessToken = useAccessToken();
   const painter = usePainter();
-  // Temporary disabled
-  // const [values, setValues] = useAtlasViewerSettingsValues(painter);
+  const [values, setValues] = useAtlasViewerSettingsValues(painter);
   const { region, regions } = useVisibleRegions(dataKey);
   React.useEffect(() => {
     if (accessToken) {
@@ -57,10 +55,7 @@ export function BrainAtlasViewerGltf({ className, dataKey, onLoading }: BrainAtl
           <CameraFilled /> <div>Reset camera</div>
         </button>
       </header>
-      {/*
-      We disable this feature for now (dec 11th, 2025) until we agree
-      on settings ranges.
-      <Settings values={values} onChange={setValues} /> */}
+      <Settings values={values} onChange={setValues} />
     </div>
   );
 }
