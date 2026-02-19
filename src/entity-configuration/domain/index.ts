@@ -7,7 +7,6 @@ import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { UniversalCellMorphology } from '@/entity-configuration/domain/experimental/universal-cell-morphology';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
-import { EMCellMeshSkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
@@ -22,6 +21,7 @@ import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/singl
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
 import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
 import { Notebook } from '@/entity-configuration/domain/notebook';
+import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   SimulationCampaign,
   SingleNeuronSimulation,
@@ -83,7 +83,7 @@ const EntityCoreExtractionConfiguration = {
 };
 
 const EntityCoreProcessingConfiguration = {
-  EMCellMeshSkeletonizationCampaign,
+  SkeletonizationCampaign,
 };
 
 export const EntityCoreConfiguration = {

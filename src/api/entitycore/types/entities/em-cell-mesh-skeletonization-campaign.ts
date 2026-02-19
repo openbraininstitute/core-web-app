@@ -16,46 +16,42 @@ import type {
   PaginationFilter,
 } from '@/api/entitycore/types/shared/request';
 
-interface IEMCellMeshSkeletonizationCampaignBase {
+interface ISkeletonizationCampaignBase {
   name: string;
   description: string;
   scan_parameters: Record<string, unknown>;
 }
 
-export interface IEMCellMeshSkeletonizationCampaign
+export interface ISkeletonizationCampaign
   extends EntityCoreIdentifiable,
     EntityCoreBaseAsset,
-    IEMCellMeshSkeletonizationCampaignBase,
+    ISkeletonizationCampaignBase,
     Timestamps,
     EntityAuthorization,
     EntityCoreType {
   contributions?: Array<IContributor> | null;
 }
 
-export interface IEMCellMeshSkeletonizationCampaignFilter
+export interface ISkeletonizationCampaignFilter
   extends IEntityFilter,
     NameFilter,
     PaginationFilter,
     IlikeSearchFilter,
     ContributionFilter {}
 
-const CreateEMCellMeshSkeletonizationCampaignSchema = z.object({
+const CreateSkeletonizationCampaignSchema = z.object({
   name: z.string(),
   description: z.string(),
   scan_parameters: z.record(z.string(), z.unknown()),
   authorized_public: z.boolean().default(false),
 });
 
-export type TCreateEMCellMeshSkeletonizationCampaign = z.infer<
-  typeof CreateEMCellMeshSkeletonizationCampaignSchema
->;
+export type TCreateSkeletonizationCampaign = z.infer<typeof CreateSkeletonizationCampaignSchema>;
 
-const UpdateEMCellMeshSkeletonizationCampaignSchema = z.object({
+const UpdateSkeletonizationCampaignSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
   scan_parameters: z.record(z.string(), z.unknown()).optional(),
 });
 
-export type TUpdateEMCellMeshSkeletonizationCampaign = z.infer<
-  typeof UpdateEMCellMeshSkeletonizationCampaignSchema
->;
+export type TUpdateSkeletonizationCampaign = z.infer<typeof UpdateSkeletonizationCampaignSchema>;

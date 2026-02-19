@@ -24,6 +24,7 @@ import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-con
 import { TaskViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/task-activity';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { getSkeletonizationStatusCountMap } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   getStatusCountMap as getIonChannelModelingStatusCountMap,
   resolveIonChannelModelingByCampaignId,
@@ -31,7 +32,7 @@ import {
 } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import {
   type ExtendedCampaignsType,
-  getStatusCountMap,
+  getCircuitSimulationStatusCountMap,
 } from '@/entity-configuration/domain/simulation';
 import {
   getTaskCampaignStatusCountMap,
@@ -193,7 +194,9 @@ export function WorkflowActivity() {
       render: (_, record) => {
         return match({ type: record.type })
           .with({ type: EntityTypeDict.SimulationCampaign }, () => {
-            const statusCountMap = getStatusCountMap(record as ICircuitSimulationCampaign);
+            const statusCountMap = getCircuitSimulationStatusCountMap(
+              record as ICircuitSimulationCampaign
+            );
             return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
           })
           .with({ type: EntityTypeDict.TaskConfig }, () => {
@@ -206,6 +209,10 @@ export function WorkflowActivity() {
             const statusCountMap = getIonChannelModelingStatusCountMap(
               record as unknown as TExtendedIonChannelModelingCampaignsType['data'][number]
             );
+            return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+          })
+          .with({ type: EntityTypeDict.SkeletonizationCampaign }, () => {
+            const statusCountMap = getSkeletonizationStatusCountMap(record as any);
             return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
           })
           .otherwise(() => {
