@@ -1,5 +1,5 @@
-// Small circuit scale
 export { runBatch as runCircuitSimulationBatch } from './circuit/simulation';
+export { runBatch as runMeshSkeletonizationBatch } from './em-cell-mesh/skeletonization';
 export {
   type CompatibilityCheckResponse,
   checkCompatibility as checkSingleNeuronCompatibility,
@@ -8,7 +8,6 @@ export { getMorphology as getSingleNeuronMorphology } from './single-neuron/morp
 export { runSimulation as runSingleNeuronSimulation } from './single-neuron/simulation';
 export { createModel as createSingleNeuronModel } from './single-neuron/single-neuron';
 export { getStimuliPlot as getSingleNeuronStimuliPlot } from './single-neuron/stimuli-plot';
-// Single neuron scale
 export {
   createModel as createSingleNeuronSynaptome,
   getSynaptomePlacement as getSingleNeuronSynaptomePlacement,

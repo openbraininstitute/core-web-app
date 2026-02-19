@@ -12,13 +12,17 @@ type Params = {
 export async function runBatch({ ctx, configIds, signal }: Params) {
   const api = await smallScaleSimulatorApi();
 
-  return api.post<Response>('/mesh/skeletonization/run-batch', {
-    headers: {
-      ...getEntityCoreContext(ctx).headers,
-      accept: 'application/x-ndjson',
-      'Content-Type': 'application/json',
+  return api.post<Response>(
+    '/mesh/skeletonization/run-batch?stream=true',
+    {
+      headers: {
+        ...getEntityCoreContext(ctx).headers,
+        accept: 'application/x-ndjson',
+        'Content-Type': 'application/json',
+      },
+      body: { config_ids: configIds },
+      signal,
     },
-    body: { config_ids: configIds },
-    signal,
-  });
+    { asRawResponse: true }
+  );
 }
