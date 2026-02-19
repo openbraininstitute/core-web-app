@@ -102,7 +102,7 @@ export function useServiceAiAgentChat(threadId: string) {
     const toolInvocation = lastMessage?.parts.find(
       (p) =>
         p.type === 'tool-invocation' &&
-        p.toolInvocation.toolName === 'obione-generatesimulationsconfig'
+        p.toolInvocation.toolName === 'obione-designcircuitsimulationscanconfig'
     ) as ToolInvocationUIPart | undefined;
 
     //@ts-expect-error
