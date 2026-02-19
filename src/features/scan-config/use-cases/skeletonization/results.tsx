@@ -3,7 +3,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Checkbox } from 'antd';
-import { includes } from 'es-toolkit/compat';
+import { get, includes } from 'es-toolkit/compat';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -19,9 +19,14 @@ import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
 import { WorkspaceSection } from '@/constants';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
-import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  ActivityCustomFileRenderer,
+  ScanConfigActivity,
+  type TActivityCustomFile,
+} from '@/features/scan-config/types';
 import { SkeletonizationInOutFiles } from '@/features/scan-config/use-cases/skeletonization/in-out-files';
 import { SkeletonizationConfigsLeftMenu } from '@/features/scan-config/use-cases/skeletonization/left-menu';
+import { messages as textMessages } from '@/i18n/en/scan-config';
 import { runSkeletonizationBatch } from '@/services/small-scale-simulator/mesh';
 import { JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
@@ -36,13 +41,6 @@ import type { ISkeletonizationConfig } from '@/api/entitycore/types/entities/ske
 import styles from '@/features/scan-config/scan-config.module.css';
 
 const STATUS_POLL_INTERVAL = 20_000;
-const SKELETONIZATION_ERROR_KEY = 'skeletonization-config-error';
-
-const errorRegistry = {
-  AUTH_CONSENT_CANCELLED: 'Skeletonization cancelled by user',
-  AUTH_CONSENT_DENIED: 'Skeletonization consent denied',
-  AUTH_CONSENT_TIMEOUT: 'Skeletonization consent timeout',
-};
 
 type Props = {
   campaignId: string;
@@ -203,37 +201,49 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
   const runSkeletonization = async (configIdsToRun: string[]) => {
     setSkeletonizationRequestInProgress(true);
 
-    await runSkeletonizationBatch({
-      ctx: { virtualLabId, projectId },
-      configIds: configIdsToRun,
-      onInit: () => {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.skeletonizationExecutions(configIds, context),
-        });
-        setSelectedConfigIds([]);
-        setSkeletonizationRequestInProgress(false);
-      },
-      onMessage: (message) => {
-        match(message)
-          .with({ message_type: MessageType.STATUS }, (msg) => {
-            queryClient.invalidateQueries({
-              queryKey: queryKeys.skeletonizationExecutions(configIds, context),
-            });
+    const genericErrorMsg = get(
+      textMessages,
+      `${ScanConfigActivity.Process}.GenericFailed`,
+      'Unknown error'
+    );
 
-            const configId = msg.ctx?.skeletonization_config_id;
-            const config = configList.find((c) => c.id === configId);
-            if (!config) return;
+    try {
+      await runSkeletonizationBatch({
+        ctx: { virtualLabId, projectId },
+        configIds: configIdsToRun,
+        onInit: () => {
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.skeletonizationExecutions(configIds, context),
+          });
+          setSelectedConfigIds([]);
+          setSkeletonizationRequestInProgress(false);
+        },
+        onMessage: (message) => {
+          match(message)
+            .with({ message_type: MessageType.STATUS }, (msg) => {
+              queryClient.invalidateQueries({
+                queryKey: queryKeys.skeletonizationExecutions(configIds, context),
+              });
 
-            if (msg.status === JobStatus.DONE) {
-              notification.success({ message: `${config.name} done` });
-            } else if (msg.status === JobStatus.ERROR) {
-              console.log(msg);
-              notification.error({ message: `${config.name} failed` });
-            }
-          })
-          .otherwise(() => null);
-      },
-    });
+              const configId = msg.ctx?.skeletonization_config_id;
+              const config = configList.find((c) => c.id === configId);
+              if (!config) return;
+
+              if (msg.status === JobStatus.DONE) {
+                notification.success({ message: `${config.name} done` });
+              } else if (msg.status === JobStatus.ERROR) {
+                const errorMsg = msg.extra?.includes('InsufficientFundsError')
+                  ? get(textMessages, `${ScanConfigActivity.Process}.LowFunds`, 'Unknown error')
+                  : genericErrorMsg;
+                notification.error({ message: errorMsg });
+              }
+            })
+            .otherwise(() => null);
+        },
+      });
+    } catch {
+      notification.error({ message: genericErrorMsg });
+    }
   };
 
   const onSelectedAll: CheckboxProps['onChange'] = (e) => {
