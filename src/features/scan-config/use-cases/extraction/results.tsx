@@ -121,7 +121,11 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     enabled: generatedConfigIds.length > 0,
   });
 
-  const configList = configs ?? [];
+  const configList = useMemo(() => {
+    const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+    return [...(configs ?? [])].sort((a, b) => collator.compare(a.name, b.name));
+  }, [configs]);
+
   const configIds = configList.map((c) => c.id);
   const queryKey = queryKeys.extractionExecutions(configIds, context);
 

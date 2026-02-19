@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { includes } from 'es-toolkit/compat';
-import { useEffect, useMemo } from 'react';
+import { type ReactNode, useEffect, useMemo } from 'react';
 
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
@@ -91,7 +91,7 @@ export function ExtractionInOutFiles({
 
   return (
     <div className="h-full overflow-y-auto">
-      <h4 className="uppercase">Input files</h4>
+      <h4 className="uppercase">Inputs</h4>
       <div className="mt-4 mb-8 flex flex-col gap-4">
         {inputFiles.length === 0 && <div className="text-gray-400">No input files available</div>}
         {inputFiles.map((file) => (
@@ -107,13 +107,14 @@ export function ExtractionInOutFiles({
 
       {outputAvailable && (
         <>
-          <h4 className="uppercase">Output files</h4>
+          <h4 className="uppercase">Outputs</h4>
           <div className="mt-4 flex flex-col gap-4">
             {!extractedCircuit && !isLoading && (
               <div className="text-gray-400">No output files generated</div>
             )}
             {extractedCircuit && (
               <ExtractionResultItem
+                label={<small className="uppercase">Circuit</small>}
                 selected={extractedCircuit?.id === selectedFile?.entity.id}
                 key={extractedCircuit.id}
                 file={{
@@ -134,13 +135,20 @@ export function ExtractionInOutFiles({
 }
 
 type TExtractionResultItemProps = {
+  label?: ReactNode;
   name?: string;
   file: TActivityCustomFile;
   selected?: boolean;
   onSelect: (file: TActivityCustomFile) => void;
 };
 
-function ExtractionResultItem({ name, file, selected, onSelect }: TExtractionResultItemProps) {
+function ExtractionResultItem({
+  label,
+  name,
+  file,
+  selected,
+  onSelect,
+}: TExtractionResultItemProps) {
   const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
   const fileExt = fileName?.split('.').at(-1);
   const displayName = name ?? fileName;
@@ -155,14 +163,15 @@ function ExtractionResultItem({ name, file, selected, onSelect }: TExtractionRes
       )}
       onClick={() => onSelect(file)}
     >
-      <span
+      <div
         className={classNames(
           'truncate overflow-hidden font-semibold whitespace-nowrap',
           selected ? 'text-white' : 'text-primary-9'
         )}
       >
-        {displayName}
-      </span>
+        {label}
+        <div>{displayName}</div>
+      </div>
       {!name && (
         <span
           className={classNames(
