@@ -42,6 +42,7 @@ export default function Block({
   config,
   model,
   blockAIConfig,
+  hideTitle,
 }: {
   schemaName: SchemaName;
   disabled: boolean;
@@ -50,6 +51,7 @@ export default function Block({
   model: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   blockAIConfig: Record<string, ConfigValue> | null;
+  hideTitle?: boolean;
 }) {
   // Empty atom for when a block doesn't exist in the config (and the atoms map) yet, only in the AI suggested changes
   const emptyAtom = useRef(atom<Record<string, ConfigValue>>({}));
@@ -215,8 +217,15 @@ export default function Block({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-lg text-gray-500 uppercase">{blockSchema.title}</div>
-      <div className="mb-6 text-gray-500">{blockSchema.description}</div>
+      {!hideTitle && (
+        <>
+          <div className="text-lg text-gray-500 uppercase">{blockSchema.title}</div>
+          <div className="mb-6 text-gray-500">{blockSchema.description}</div>
+        </>
+      )}
+      {hideTitle && blockSchema.description && (
+        <div className="mb-6 text-gray-500">{blockSchema.description}</div>
+      )}
 
       <div className="flex flex-col gap-5">
         {blockSchema.properties &&

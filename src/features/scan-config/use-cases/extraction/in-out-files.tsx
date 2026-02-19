@@ -150,7 +150,7 @@ function ExtractionResultItem({
   onSelect,
 }: TExtractionResultItemProps) {
   const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
-  const fileExt = fileName?.split('.').at(-1);
+  const fileExt = label ?? fileName?.split('.').at(-1);
   const displayName = name ?? fileName;
 
   return (
@@ -165,23 +165,20 @@ function ExtractionResultItem({
     >
       <div
         className={classNames(
-          'truncate overflow-hidden font-semibold whitespace-nowrap',
+          'truncate overflow-hidden font-semibold whitespace-nowrap text-left',
           selected ? 'text-white' : 'text-primary-9'
         )}
       >
-        {label}
         <div>{displayName}</div>
       </div>
-      {!name && (
-        <span
-          className={classNames(
-            'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
-            selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
-          )}
-        >
-          {fileExt}
-        </span>
-      )}
+      <span
+        className={classNames(
+          'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
+          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
+        )}
+      >
+        {fileExt}
+      </span>
     </button>
   );
 }
