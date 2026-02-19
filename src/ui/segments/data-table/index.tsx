@@ -60,12 +60,13 @@ export type Props<T extends EntityCoreIdentifiable> = {
   rowClassName?: string | TableProps<T>['rowClassName'];
   tableStyle?: CSSProperties | undefined;
   allowDownload?: boolean;
+  allowDelete?: boolean;
   requireBrainRegionDropdown?: boolean;
   searchEnabled?: boolean;
   filterClassNames?: {
     container?: string;
   };
-  expandableOptions?: UseExpandableTableOptions<T, any> | undefined;
+  expandableOptions?: UseExpandableTableOptions<T, T> | undefined;
   showExpandButtons?: boolean;
   left?: ReactNode;
 };
@@ -93,6 +94,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   onCellClick,
   tableStyle,
   allowDownload,
+  allowDelete,
   requireBrainRegionDropdown = false,
   searchEnabled = true,
   filterClassNames,
@@ -180,6 +182,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           sticky={sticky}
           className={cls?.table}
           allowDownload={allowDownload}
+          allowDelete={allowDelete}
           expandableOptions={expandableOptions}
           showExpandButtons={showExpandButtons}
           controls={

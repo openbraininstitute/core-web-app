@@ -1,7 +1,9 @@
 import { Select } from 'antd';
+
+import { useObioneJsonSchema, useReferenceTypeDict } from './hooks/schema';
+
 import type { Reference as ReferenceSchema, SchemaName } from '../types';
 import type { Config } from './components';
-import { useObioneJsonSchema, useReferenceTypeDict } from './hooks/schema';
 
 export default function Reference({
   value,

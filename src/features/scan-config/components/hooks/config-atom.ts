@@ -1,9 +1,10 @@
 import { atom, useAtom } from 'jotai';
 import React from 'react';
 
-import type { AtomsMap, ConfigSchema } from '../../types';
-import type { Config } from '../components';
-import { isAtom } from '../utils';
+import { isAtom } from '@/features/scan-config/components/utils';
+
+import type { Config } from '@/features/scan-config/components/components';
+import type { AtomsMap, ConfigSchema } from '@/features/scan-config/types';
 
 export function useConfigAtom(schema: ConfigSchema | undefined, atomsMap: AtomsMap | null) {
   const configAtom = React.useMemo(() => {

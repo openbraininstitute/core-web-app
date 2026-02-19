@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query';
 import { isEmpty } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
+
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
@@ -52,7 +53,15 @@ export function buildQueryKey({
     requireBrainRegion: boolean | undefined;
   },
 ] {
-  return [{ workspace, context, queryParameters, requireBrainRegion }];
+  const entity = getEntityByExtendedType({ type: context.extendedEntityType });
+  return [
+    {
+      workspace,
+      context,
+      queryParameters: { ...(entity?.api.config.extraQueryKeyBuilder ?? {}), ...queryParameters },
+      requireBrainRegion,
+    },
+  ];
 }
 
 export type ExtendedEntityTypeQueryKey = ReturnType<typeof buildQueryKey>;

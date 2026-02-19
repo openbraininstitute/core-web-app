@@ -55,14 +55,17 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
         </div>
       </div>
       {hasChildren && (
-        <button
+        // biome-ignore lint/a11y/useSemanticElements: parent is a button, button cannot be a descendant of button
+        // biome-ignore lint/a11y/useKeyWithClickEvents: no need for keydown
+        <div
+          tabIndex={0}
           className={cn(
             'ml-auto flex shrink-0 items-center justify-center',
             'rounded-full p-0.5 hover:bg-black/10 hover:shadow-md',
             { 'text-primary-9': isSelected },
             { 'text-primary-9/60': !isSelected }
           )}
-          type="button"
+          role="button"
           onClick={onToggle}
           style={{ '--color': `#${color}` } as CSSProperties}
         >
@@ -72,7 +75,7 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
               'rotate-90': isExpanded,
             })}
           />
-        </button>
+        </div>
       )}
     </button>
   );

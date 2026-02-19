@@ -1,0 +1,41 @@
+const tiersQuery = `{
+  "features": *[_type=="featureBlocList"].featuresBloc[] {
+    title,
+    "available": isAvailable,
+    features[] {
+      title,
+      description,
+      "plans": linkedPlan[]{
+        "id": plan->_id,
+        "label": specialLabel,
+        tooltip
+      }
+    }
+  },
+  "plans": *[_type=="plan"] | order(position) {
+    "id": _id,
+    title,
+    buttonLabel,
+    notes,
+    "price": {
+      "month": monthlyPlanNormal[] {
+        "value": price,
+        currency
+      },
+      "discount": monthlyPlanDiscount[] {
+        "value": price,
+        currency
+      },
+      "yearNormal": yearlyPlanNormal[] {
+        "value": price,
+        currency
+      },
+      "yearDiscount": yearlyPlanDiscount[] {
+        "value": price,
+        currency
+      }
+    }
+  }
+}`;
+
+export default tiersQuery;

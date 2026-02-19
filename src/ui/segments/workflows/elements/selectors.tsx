@@ -1,22 +1,22 @@
+import { useFlags } from '@/features/feature-flags';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/ui/molecules/select';
 import {
   ActivityDict,
   getDropdownOptionsByCategory,
 } from '@/ui/segments/workflows/elements/helpers';
 import { cn } from '@/utils/css-class';
-import {
-  SelectContent,
-  SelectTrigger,
-  SelectGroup,
-  SelectValue,
-  SelectLabel,
-  SelectItem,
-  Select,
-} from '@/ui/molecules/select';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import { useFlags } from '@/features/feature-flags';
 
 export function EntityTypeSelectScrollable({
   value,
@@ -40,7 +40,7 @@ export function EntityTypeSelectScrollable({
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          'w-[280px] max-w-max min-w-36 rounded-full border-none text-lg',
+          'w-70 max-w-max min-w-36 rounded-full border-none text-lg',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
       >
@@ -52,23 +52,25 @@ export function EntityTypeSelectScrollable({
         sideOffset={3}
       >
         {getDropdownOptionsByCategory(category, featureFlags).enabledOptions.map(
-          ({ group, options }) => (
-            <SelectGroup key={`entity-type-group-${group}`}>
-              <SelectLabel className="text-neutral-3 text-base">{group}</SelectLabel>
-              {options.map(({ label, value: _value }) => (
-                <SelectItem
-                  key={`entity-type-${_value}`}
-                  value={_value!}
-                  className={cn(
-                    'text-primary-9 text-lg font-bold',
-                    'data-[highlighted]:text-primary-7!'
-                  )}
-                >
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          )
+          ({ group, options }) => {
+            return (
+              <SelectGroup key={`entity-type-group-${group}`}>
+                <SelectLabel className="text-neutral-3 text-base">{group}</SelectLabel>
+                {options.map(({ label, value: _value }) => (
+                  <SelectItem
+                    key={`entity-type-${_value}`}
+                    value={_value!}
+                    className={cn(
+                      'text-primary-9 text-lg font-bold',
+                      'data-highlighted:text-primary-7!'
+                    )}
+                  >
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            );
+          }
         )}
       </SelectContent>
     </Select>
@@ -82,6 +84,7 @@ export function CategorySelectScrollable({
   value: TActivityValue | null;
   onSelect: (v: TActivityValue | null) => void;
 }) {
+  const featureFlags = useFlags();
   const breakpoint = useDefaultBreakpoint();
   return (
     <Select value={value ?? undefined} onValueChange={(v: TActivityValue) => onSelect(v)}>
@@ -102,11 +105,15 @@ export function CategorySelectScrollable({
         side="bottom"
         sideOffset={3}
       >
-        {ActivityDict.filter((o) => !o.disabled).map(({ label, value: _value }) => (
+        {ActivityDict.filter(
+          (o) =>
+            !o.disabled &&
+            (!o.requiredFeatures || o.requiredFeatures.every((flag) => featureFlags[flag]))
+        ).map(({ label, value: _value }) => (
           <SelectItem
             key={`category-${_value}`}
             value={_value}
-            className={cn('text-primary-9 text-lg font-bold', 'data-[highlighted]:text-primary-7!')}
+            className={cn('text-primary-9 text-lg font-bold', 'data-highlighted:text-primary-7!')}
           >
             {label}
           </SelectItem>

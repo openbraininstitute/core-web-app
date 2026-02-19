@@ -30,8 +30,8 @@ importers:
         specifier: ^13.0.1
         version: 13.0.1
       '@bbp/morphoviewer':
-        specifier: file:tarball/bbp-morphoviewer-0.21.3.tgz
-        version: file:tarball/bbp-morphoviewer-0.21.3.tgz
+        specifier: file:tarball/bbp-morphoviewer-0.21.4.tgz
+        version: file:tarball/bbp-morphoviewer-0.21.4.tgz(react@19.2.3)
       '@bprogress/next':
         specifier: ^3.2.12
         version: 3.2.12(next@16.1.0(@babel/core@7.27.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -206,9 +206,6 @@ importers:
       next-sanity:
         specifier: ^12.0.5
         version: 12.0.5(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.6.0)(@sanity/types@3.94.2(@types/react@19.2.7))(next@16.1.0(@babel/core@7.27.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.3))(react-dom@19.2.3(react@19.2.3))(react-is@19.2.3)(react@19.2.3)(sanity@3.94.2(@emotion/is-prop-valid@1.2.2)(@types/node@22.17.2)(@types/react@19.2.7)(immer@10.1.1)(jiti@2.6.1)(lightningcss@1.30.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.3)(styled-components@6.1.17(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(terser@5.43.1)(typescript@5.5.4)(yaml@2.7.1))(styled-components@6.1.17(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.5.4)
-      next-sanity-client:
-        specifier: ^1.0.8
-        version: 1.0.8(next@16.1.0(@babel/core@7.27.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.3))
       nextstepjs:
         specifier: ^2.1.1
         version: 2.1.1(motion@12.23.12(@emotion/is-prop-valid@1.2.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.1.0(@babel/core@7.27.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -1057,9 +1054,11 @@ packages:
     resolution: {integrity: sha512-ETyHEk2VHHvl9b9jZP5IHPavHYk57EhanlRRuae9XCpb/j5bDCbPPMOBfCWhnl/7EDJz0jEMCi/RhccCE8r1+Q==}
     engines: {node: '>=6.9.0'}
 
-  '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.21.3.tgz':
-    resolution: {integrity: sha512-WDsqZzXpa7hAJpLNTLQkWyfTdQNtqG88sLlPW9LlX/aTvpUoC2BlmWENWbnY5YyzKRwW2qw+5XpQmiAwXLUx7w==, tarball: file:tarball/bbp-morphoviewer-0.21.3.tgz}
-    version: 0.21.3
+  '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.21.4.tgz':
+    resolution: {integrity: sha512-+PXFK62x6v83TTUwr7YRR2oMHIs7IQWOV1XHVQvOPkHL3hyekr64njk+p0QpIFPDJQwNT14MtPVttx3LOGheZw==, tarball: file:tarball/bbp-morphoviewer-0.21.4.tgz}
+    version: 0.21.4
+    peerDependencies:
+      react: ^19.2.4
 
   '@biomejs/biome@2.3.10':
     resolution: {integrity: sha512-/uWSUd1MHX2fjqNLHNL6zLYWBbrJeG412/8H7ESuK8ewoRoMPUgHDebqKrPTx/5n6f17Xzqc9hdg3MEqA5hXnQ==}
@@ -3921,6 +3920,9 @@ packages:
   '@tolokoban/tgd@2.0.78':
     resolution: {integrity: sha512-nEpIwkOO/bEEk0Fetpjc8iAaBYsRf9wZQgUMQLvrjCSv9VnG8bzOh4WKeRcSufkgUw7+Sqoe2kV3MVXB+lFL+w==}
 
+  '@tolokoban/tgd@2.0.90':
+    resolution: {integrity: sha512-TQmruYTRd8TGb5BAwwO14AOaNRzHJ3SPXYnRlN1TNQ1cN60mWoxekkTslvY1dl5f94bxwYgBSFHb0mNCid3xwg==}
+
   '@turf/area@7.2.0':
     resolution: {integrity: sha512-zuTTdQ4eoTI9nSSjerIy4QwgvxqwJVciQJ8tOPuMHbXJ9N/dNjI7bU8tasjhxas/Cx3NE9NxVHtNpYHL0FSzoA==}
 
@@ -5443,6 +5445,9 @@ packages:
   fflate@0.6.10:
     resolution: {integrity: sha512-IQrh3lEPM93wVCEczc9SaAOvkmcoQn/G8Bo1e8ZPlY3X3bnAxWaBdvTdvM1hP62iZp0BXWDy4vTAy4fF0+Dlpg==}
 
+  fflate@0.8.2:
+    resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
+
   file-saver@2.0.5:
     resolution: {integrity: sha512-P9bmyZ3h/PRG+Nzga+rbdI4OEpNDzAVyy74uVO9ATgzLK6VtAsYybF/+TOCvrc0MO793d6+42lLyZTw7/ArVzA==}
 
@@ -5652,7 +5657,6 @@ packages:
 
   get-random-values-esm@1.0.2:
     resolution: {integrity: sha512-HMSDTgj1HPFAuZG0FqxzHbYt5JeEGDUeT9r1RLXhS6RZQS8rLRjokgjZ0Pd28CN0lhXlRwfH6eviZqZEJ2kIoA==}
-    deprecated: use crypto.getRandomValues() instead
 
   get-random-values@1.2.2:
     resolution: {integrity: sha512-lMyPjQyl0cNNdDf2oR+IQ/fM3itDvpoHy45Ymo2r0L1EjazeSl13SfbKZs7KtZ/3MDCeueiaJiuOEfKqRTsSgA==}
@@ -7089,11 +7093,6 @@ packages:
         optional: true
       nodemailer:
         optional: true
-
-  next-sanity-client@1.0.8:
-    resolution: {integrity: sha512-vpJMIsEN9WTuciLWjaGfSfEZChivMf2522sS+tjl6GtbNI8reU+5R29Zi5FGP0/pfieGlaiS3kPF6hIrFCrhCQ==}
-    peerDependencies:
-      next: latest
 
   next-sanity@12.0.5:
     resolution: {integrity: sha512-m2EfBcg7tWF1koRPtPGTSVSR0mSNhAkhmngOtcaJ4v8oePvEZcngLxmWu/jg1mgMwwLCUQo7uzfH+QwBNb/hOw==}
@@ -10517,7 +10516,12 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
 
-  '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.21.3.tgz': {}
+  '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.21.4.tgz(react@19.2.3)':
+    dependencies:
+      '@tolokoban/tgd': 2.0.90
+      fflate: 0.8.2
+      react: 19.2.3
+      tslib: 2.8.1
 
   '@biomejs/biome@2.3.10':
     optionalDependencies:
@@ -13627,6 +13631,13 @@ snapshots:
       '@loaders.gl/gltf': 4.3.4(@loaders.gl/core@4.3.4)
       gl-matrix: 3.4.4
 
+  '@tolokoban/tgd@2.0.90':
+    dependencies:
+      '@loaders.gl/core': 4.3.4
+      '@loaders.gl/draco': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/gltf': 4.3.4(@loaders.gl/core@4.3.4)
+      gl-matrix: 3.4.4
+
   '@turf/area@7.2.0':
     dependencies:
       '@turf/helpers': 7.2.0
@@ -15281,6 +15292,8 @@ snapshots:
       picomatch: 4.0.3
 
   fflate@0.6.10: {}
+
+  fflate@0.8.2: {}
 
   file-saver@2.0.5: {}
 
@@ -17211,10 +17224,6 @@ snapshots:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
       uuid: 8.3.2
-
-  next-sanity-client@1.0.8(next@16.1.0(@babel/core@7.27.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.3)):
-    dependencies:
-      next: 16.1.0(@babel/core@7.27.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.3)
 
   next-sanity@12.0.5(@emotion/is-prop-valid@1.2.2)(@sanity/client@7.6.0)(@sanity/types@3.94.2(@types/react@19.2.7))(next@16.1.0(@babel/core@7.27.4)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.3))(react-dom@19.2.3(react@19.2.3))(react-is@19.2.3)(react@19.2.3)(sanity@3.94.2(@emotion/is-prop-valid@1.2.2)(@types/node@22.17.2)(@types/react@19.2.7)(immer@10.1.1)(jiti@2.6.1)(lightningcss@1.30.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.3)(styled-components@6.1.17(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(terser@5.43.1)(typescript@5.5.4)(yaml@2.7.1))(styled-components@6.1.17(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.5.4):
     dependencies:

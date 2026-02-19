@@ -41,14 +41,6 @@ export function Wallet() {
     });
 
   const isAdmin = roles?.isVirtualLabAdmin;
-  console.log('–– – Wallet – data, isLoading, isError, isSuccess, error––', {
-    data,
-    isLoading,
-    isError,
-    isSuccess,
-    error,
-  });
-  console.log('———', { data: roles, isLoading: loadingRoles });
 
   const content = match({ isError, isLoading, loadingRoles, isSuccess, data, error })
     .with(

@@ -36,8 +36,6 @@ export default function AiAssistant({ className, fullscreen, section }: AiAssist
   const threadId = assistant.threadId.useValue();
   const { messages, status } = useServiceAiAgentChat(threadId ?? '');
 
-  useAgentState('smc_simulation_config');
-
   const style: CSSProperties = {
     //@ts-expect-error
     '--custom-panel-width': fullscreen ? '100%' : `${panelWidth.toFixed(0)}px`,

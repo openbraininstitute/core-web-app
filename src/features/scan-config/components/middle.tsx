@@ -1,18 +1,23 @@
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { BlockUI, type Config } from '@/features/scan-config/components/components';
+import BlockDictionary from '@/features/scan-config/components/block-dictionary';
+import BlockUnion from '@/features/scan-config/components/block-union';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
-import type {
-  AtomsMap,
-  BlockDictionary as BlockDictionaryT,
-  ConfigSchema,
-  RootBlock,
-  SchemaName,
+import {
+  type AtomsMap,
+  type ConfigSchema,
+  type IBlockDictionary,
+  type IBlockSingle,
+  type IRootBlockUnion,
+  ScanConfigUIElementDict,
+  type SchemaName,
 } from '@/features/scan-config/types';
-
 import { useAIConfig } from '@/services/ai-agent';
-import BlockDictionary from './block-dictionary';
+
+import Block from './block';
+
+import type { IMEModel } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Config } from '@/features/scan-config/components/components';
 
 type MiddleProps = {
   schemaName: SchemaName;
@@ -29,7 +34,7 @@ type MiddleProps = {
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  selectedSchema: RootBlock | BlockDictionaryT;
+  selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
 };
 
 export default function Middle({
@@ -61,7 +66,7 @@ export default function Middle({
 
   return (
     <>
-      {selectedSchema.ui_element === 'block_dictionary' && (
+      {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionary
           campaignId={campaignId}
           loading={loading}
@@ -81,13 +86,29 @@ export default function Middle({
         />
       )}
 
-      {selectedSchema.ui_element === 'block_single' && isAtom(atomsMap[selectedRootElement]) && (
-        <BlockUI
+      {selectedSchema.ui_element === ScanConfigUIElementDict.BlockSingle &&
+        isAtom(atomsMap[selectedRootElement]) && (
+          <Block
+            schemaName={schemaName}
+            disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
+            config={config}
+            blockSchema={selectedSchema}
+            stateAtom={atomsMap[selectedRootElement]}
+            model={model}
+            blockAIConfig={getBlockAIConfig()}
+          />
+        )}
+
+      {selectedSchema.ui_element === ScanConfigUIElementDict.BlockUnion && (
+        <BlockUnion
           schemaName={schemaName}
-          disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
+          blockUnionSchema={selectedSchema}
+          selectedRootElement={selectedRootElement}
+          atomsMap={atomsMap}
+          setAtomsMap={setAtomsMap}
+          campaignId={campaignId}
+          loading={loading}
           config={config}
-          blockSchema={selectedSchema}
-          stateAtom={atomsMap[selectedRootElement]}
           model={model}
           blockAIConfig={getBlockAIConfig()}
         />

@@ -5,13 +5,15 @@ import {
   DeleteOutlined,
   EditOutlined,
   PlusCircleOutlined,
-  PlusOutlined,
   WarningFilled,
 } from '@ant-design/icons';
 import { Input } from 'antd';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
 
+import AIAdd from '@/components/icons/ai/add_icon';
+import AIIcon from '@/components/icons/ai/ai_icon';
+import AIEdit from '@/components/icons/ai/edit_icon';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
@@ -155,7 +157,7 @@ export default function BlockDictionaryEntries({
         }}
       >
         <div className="w-full text-left truncate max-w-[24ch]">{entry}</div>
-        <span className="text-slate-500 text-lg animate-pulse">✦</span>
+        <AIIcon />
       </button>
     );
   }
@@ -214,7 +216,7 @@ export default function BlockDictionaryEntries({
                 role="button"
                 key={subkey}
                 className={classNames(
-                  'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+                  'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
                   isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
                 )}
                 tabIndex={0}
@@ -225,7 +227,7 @@ export default function BlockDictionaryEntries({
                   }
                 }}
               >
-                <div className="w-full text-left">
+                <div className="flex-1 min-w-0 text-left">
                   {isSelected && isEditingKey && !readOnly && (
                     <>
                       <Input
@@ -378,7 +380,7 @@ export default function BlockDictionaryEntries({
         <div className="border-neutral-200 border-1 rounded-lg w-[90%] px-2 pb-4 pt-2 flex flex-col gap-2">
           {aiAddedEntries.length > 0 && (
             <div className="text-sm text-[#1690ff] flex items-center gap-1">
-              <PlusOutlined /> Added
+              <AIAdd w={12} h={12} /> Added
             </div>
           )}
 
@@ -393,8 +395,11 @@ export default function BlockDictionaryEntries({
           {aiDeletedEntries}
 
           {aiEditedEntries.length > 0 && (
-            <div className="text-sm text-[#d3951c] flex items-center gap-1">
-              <EditOutlined /> Edited
+            <div className="flex items-center gap-1">
+              <AIEdit />
+              <span className="text-sm bg-gradient-to-r from-[#ef4444] to-[#1690ff] bg-clip-text text-transparent">
+                Edited
+              </span>
             </div>
           )}
           {aiEditedEntries}

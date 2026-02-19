@@ -1,22 +1,24 @@
 import { compact } from 'es-toolkit/compat';
 import pLimit from 'p-limit';
 import pMap from 'p-map';
+
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationCampaign } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { ASSET_BASE_PATH, OUTPUT_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
-import type { FileEntry } from '@/features/entity-download/types';
 import {
   createAssetFileEntry,
   getMetadataSimulationCsvEntryBase,
 } from '@/features/entity-download/utils';
+
+import type { IExecutionActivity } from '@/api/entitycore/types/entities/activity-execution';
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { FileEntry } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
 
 const CONCURRENCY = {
@@ -27,7 +29,7 @@ const CONCURRENCY = {
 } as const;
 
 type SimulationData = {
-  executions: ICircuitSimulationExecution[];
+  executions: IExecutionActivity[];
   results: ICircuitSimulationResult[];
 };
 

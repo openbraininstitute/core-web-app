@@ -74,8 +74,13 @@ export function useServiceAiAgentChat(threadId: string) {
 
     const toolInvocation = lastMessage?.parts.find(
       (p) =>
+<<<<<<< HEAD
         p.type === "tool-invocation" &&
         p.toolInvocation.toolName === "obione-generatesimulationsconfig",
+=======
+        p.type === 'tool-invocation' &&
+        p.toolInvocation.toolName === 'obione-designcircuitsimulationscanconfig'
+>>>>>>> develop
     ) as ToolInvocationUIPart | undefined;
 
     //@ts-expect-error
@@ -130,7 +135,11 @@ export function useServiceAiAgentChat(threadId: string) {
 export const configStateAtom = atom<Config | null>(null);
 const isChatReadyAtom = atom(true);
 
+<<<<<<< HEAD
 export function useAgentState(key: "smc_simulation_config", config?: Config) {
+=======
+export function useAgentState(key: 'smc_simulation_config' | '', config?: Config) {
+>>>>>>> develop
   const [, setAIAgentState] = useAtom(agentStateAtom);
   const defaultConfig = useDefaultConfig("CircuitSimulationScanConfig");
 
@@ -138,14 +147,18 @@ export function useAgentState(key: "smc_simulation_config", config?: Config) {
     const stateConfig = config ?? defaultConfig;
     if (!stateConfig) return;
 
-    setAIAgentState({
-      [key]: stateConfig,
-    });
+    setAIAgentState(
+      key
+        ? {
+            [key]: stateConfig,
+          }
+        : {}
+    );
 
     return () => {
       if (!defaultConfig) return;
       setAIAgentState({
-        [key]: defaultConfig,
+        smc_simulation_config: defaultConfig,
       });
     };
   }, [defaultConfig, config, key, setAIAgentState]);

@@ -25,10 +25,6 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
         getCellMorphology({ id: source.exemplar_morphology.id, context: ctx }),
     },
   },
-  explore: {
-    basePrefix: 'model',
-    routePrefix: 'interactive/model',
-  },
   asset: {
     extension: undefined,
   },
