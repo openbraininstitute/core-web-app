@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Checkbox } from 'antd';
 import { includes } from 'es-toolkit/compat';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { match } from 'ts-pattern';
 
 import {
   getSkeletonizationConfig,
@@ -14,18 +15,15 @@ import {
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ApiError } from '@/api/error';
-import { runBatch } from '@/api/small-scale-simulator/em-cell-mesh/skeletonization';
 import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
 import { WorkspaceSection } from '@/constants';
-import {
-  OfflineTokenConsentModal,
-  useRunWithOfflineTokenConsent,
-} from '@/features/offline-auth-management';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { SkeletonizationInOutFiles } from '@/features/scan-config/use-cases/skeletonization/in-out-files';
 import { SkeletonizationConfigsLeftMenu } from '@/features/scan-config/use-cases/skeletonization/left-menu';
+import { runSkeletonizationBatch } from '@/services/small-scale-simulator/mesh';
+import { JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
@@ -76,20 +74,6 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
   const [activeConfig, setActiveConfig] = useState<ISkeletonizationConfig | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
-
-  const consentGate = useRunWithOfflineTokenConsent({
-    notifyError: notification.error,
-    messages: {
-      cancelled: errorRegistry.AUTH_CONSENT_CANCELLED,
-      denied: errorRegistry.AUTH_CONSENT_DENIED,
-      timeout: errorRegistry.AUTH_CONSENT_TIMEOUT,
-    },
-    useCache: false,
-  });
-
-  useEffect(() => {
-    consentGate.prime();
-  }, [consentGate.prime]);
 
   const { data: generationResponse, isLoading: generationLoading } = useQuery({
     queryKey: queryKeys.configGeneration(campaignId, context),
@@ -218,34 +202,38 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
 
   const runSkeletonization = async (configIdsToRun: string[]) => {
     setSkeletonizationRequestInProgress(true);
-    try {
-      await consentGate.runWithConsent({
-        fn: async () => {
-          await runBatch({
-            ctx: { virtualLabId, projectId },
-            configIds: configIdsToRun,
-          });
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.skeletonizationExecutions(configIds, context),
-          });
-          setSelectedConfigIds([]);
-        },
-      });
-    } catch (error) {
-      log('error', 'Failed to launch skeletonization batch', error);
-      const defaultMsg =
-        'We ran into a problem launching your skeletonization(s). Please try again later.';
-      if (error instanceof ApiError) {
-        const code = error.cause?.code;
-        const apiMessage = error.cause?.message ?? defaultMsg;
-        const message = code ? getErrorMessage(code, errorRegistry, apiMessage) : apiMessage;
-        notification.error({ message, duration: 5, key: SKELETONIZATION_ERROR_KEY });
-      } else {
-        notification.error({ message: defaultMsg, duration: 5, key: SKELETONIZATION_ERROR_KEY });
-      }
-    } finally {
-      setSkeletonizationRequestInProgress(false);
-    }
+
+    await runSkeletonizationBatch({
+      ctx: { virtualLabId, projectId },
+      configIds: configIdsToRun,
+      onInit: () => {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.skeletonizationExecutions(configIds, context),
+        });
+        setSelectedConfigIds([]);
+        setSkeletonizationRequestInProgress(false);
+      },
+      onMessage: (message) => {
+        match(message)
+          .with({ message_type: MessageType.STATUS }, (msg) => {
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.skeletonizationExecutions(configIds, context),
+            });
+
+            const configId = msg.ctx?.skeletonization_config_id;
+            const config = configList.find((c) => c.id === configId);
+            if (!config) return;
+
+            if (msg.status === JobStatus.DONE) {
+              notification.success({ message: `${config.name} done` });
+            } else if (msg.status === JobStatus.ERROR) {
+              console.log(msg);
+              notification.error({ message: `${config.name} failed` });
+            }
+          })
+          .otherwise(() => null);
+      },
+    });
   };
 
   const onSelectedAll: CheckboxProps['onChange'] = (e) => {
@@ -301,8 +289,6 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
               'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"
-            onMouseEnter={() => consentGate.prime()}
-            onFocus={() => consentGate.prime()}
             onClick={() => runSkeletonization(selectedConfigIds)}
             disabled={skeletonizationRequestInProgress || selectedConfigIds.length === 0}
           >
@@ -343,15 +329,6 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
           </div>
         )}
       </div>
-
-      <OfflineTokenConsentModal
-        open={consentGate.modal.open}
-        consentUrl={consentGate.modal.consentUrl}
-        onCancel={consentGate.cancel}
-        onOpenConsent={() => {
-          consentGate.openConsentLink(consentGate.modal.consentUrl);
-        }}
-      />
     </div>
   );
 }
