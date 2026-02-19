@@ -26,7 +26,7 @@ export const EntityTypeDict = {
   ValidationResult: 'validation_result',
   Notebook: 'analysis_notebook_template',
   EMCellMesh: 'em_cell_mesh',
-  EMCellMeshSkeletonizationCampaign: 'em_cell_mesh_skeletonization_campaign',
+  SkeletonizationCampaign: 'skeletonization_campaign',
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
   CircuitExtractionConfig: 'circuit_extraction_config',
   TaskConfig: 'task_config',

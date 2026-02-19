@@ -2,10 +2,10 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type {
-  IEMCellMeshSkeletonizationCampaign,
-  IEMCellMeshSkeletonizationCampaignFilter,
-  TCreateEMCellMeshSkeletonizationCampaign,
-  TUpdateEMCellMeshSkeletonizationCampaign,
+  ISkeletonizationCampaign,
+  ISkeletonizationCampaignFilter,
+  TCreateSkeletonizationCampaign,
+  TUpdateSkeletonizationCampaign,
 } from '@/api/entitycore/types/entities/em-cell-mesh-skeletonization-campaign';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
@@ -20,7 +20,7 @@ export async function getSkeletonizationCampaign({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<IEMCellMeshSkeletonizationCampaign>(`${baseUri}/${id}`, {
+  return await api.get<ISkeletonizationCampaign>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -35,11 +35,11 @@ export async function getSkeletonizationCampaigns({
   context,
 }: {
   withFacets?: boolean;
-  filters?: Partial<IEMCellMeshSkeletonizationCampaignFilter>;
+  filters?: Partial<ISkeletonizationCampaignFilter>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IEMCellMeshSkeletonizationCampaign>>(baseUri, {
+  return await api.get<EntityCoreResponse<ISkeletonizationCampaign>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
       with_facets: withFacets,
@@ -56,11 +56,11 @@ export async function createSkeletonizationCampaign({
   data,
   context,
 }: {
-  data: TCreateEMCellMeshSkeletonizationCampaign;
+  data: TCreateSkeletonizationCampaign;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.post<IEMCellMeshSkeletonizationCampaign>(baseUri, {
+  return await api.post<ISkeletonizationCampaign>(baseUri, {
     body: data,
     headers: {
       ...getEntityCoreContext(context).headers,
@@ -76,11 +76,11 @@ export async function updateSkeletonizationCampaign({
   context,
 }: {
   id: string;
-  data: TUpdateEMCellMeshSkeletonizationCampaign;
+  data: TUpdateSkeletonizationCampaign;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.patch<IEMCellMeshSkeletonizationCampaign>(`${baseUri}/${id}`, {
+  return await api.patch<ISkeletonizationCampaign>(`${baseUri}/${id}`, {
     body: data,
     headers: {
       ...getEntityCoreContext(context).headers,

@@ -20,8 +20,8 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type {
-  IEMCellMeshSkeletonizationCampaign,
-  IEMCellMeshSkeletonizationCampaignFilter,
+  ISkeletonizationCampaign,
+  ISkeletonizationCampaignFilter,
 } from '@/api/entitycore/types/entities/em-cell-mesh-skeletonization-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
@@ -33,7 +33,7 @@ async function resolveSkeletonizationCampaigns({
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
-  filters?: Partial<IEMCellMeshSkeletonizationCampaignFilter>;
+  filters?: Partial<ISkeletonizationCampaignFilter>;
 }) {
   filters = discardBrainRegionQueryParams(filters);
 
@@ -170,7 +170,7 @@ export async function resolveSkeletonizationByCampaignId({
 
   const rawConfig = await downloadAsset({
     entityId: campaign.id,
-    entityType: EntityTypeDict.EMCellMeshSkeletonizationCampaign,
+    entityType: EntityTypeDict.SkeletonizationCampaign,
     id: configAsset.id,
     ctx: context,
     asRawResponse: true,
@@ -200,7 +200,7 @@ export function getSkeletonizationStatus(config: TEnrichedConfig) {
   return (sorted.at(-1)?.status as ActivityStatus) ?? ActivityStatus.CREATED;
 }
 
-export function getStatusCountMap(campaign: TEnrichedSkeletonizationCampaign) {
+export function getSkeletonizationStatusCountMap(campaign: TEnrichedSkeletonizationCampaign) {
   const allConfigs = campaign.generations.flatMap((gen) => gen.configs);
 
   return allConfigs.reduce((map, config) => {
@@ -209,35 +209,34 @@ export function getStatusCountMap(campaign: TEnrichedSkeletonizationCampaign) {
   }, new Map<ActivityStatus, number>());
 }
 
-export const EMCellMeshSkeletonizationCampaign: EntityCoreTypeConfig<IEMCellMeshSkeletonizationCampaign> =
-  {
-    group: EntityTypeGroup.Processing,
-    title: 'EM Cell Mesh Skeletonization Campaign',
-    extendedType: ExtendedEntitiesTypeDict.EMCellMeshSkeletonizationCampaign,
-    type: EntityTypeDict.EMCellMeshSkeletonizationCampaign,
-    slug: EntitySlug.Skeletonization,
-    api: {
-      config: {
-        allowedFacets: true,
-        ilikeSearchEnabled: true,
-      },
-      query: {
-        list: resolveSkeletonizationCampaigns,
-        one: getSkeletonizationCampaign,
-        create: createSkeletonizationCampaign,
-      },
+export const SkeletonizationCampaign: EntityCoreTypeConfig<ISkeletonizationCampaign> = {
+  group: EntityTypeGroup.Processing,
+  title: 'Skeletonization Campaign',
+  extendedType: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+  type: EntityTypeDict.SkeletonizationCampaign,
+  slug: EntitySlug.Skeletonization,
+  api: {
+    config: {
+      allowedFacets: true,
+      ilikeSearchEnabled: true,
     },
-    explore: {
-      basePrefix: 'process',
-      routePrefix: 'process',
+    query: {
+      list: resolveSkeletonizationCampaigns,
+      one: getSkeletonizationCampaign,
+      create: createSkeletonizationCampaign,
     },
-    asset: {
-      extension: 'application/json',
-    },
-    detailViewSections: [DetailViewSectionsDict.Overview],
-    isBookmarkable: false,
-    isDownloadable: false,
-    isCopyable: true,
-    isSimulatable: false,
-    isDeletable: false,
-  } as const;
+  },
+  explore: {
+    basePrefix: 'process',
+    routePrefix: 'process',
+  },
+  asset: {
+    extension: 'application/json',
+  },
+  detailViewSections: [DetailViewSectionsDict.Overview],
+  isBookmarkable: false,
+  isDownloadable: false,
+  isCopyable: true,
+  isSimulatable: false,
+  isDeletable: false,
+} as const;

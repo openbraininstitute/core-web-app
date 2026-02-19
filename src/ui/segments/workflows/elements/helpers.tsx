@@ -331,7 +331,7 @@ export const processActivitiesConfiguration: Array<TProcessWorkflowConfig> = [
     group: EntityGroupDict.Cellular,
     disabled: false,
     label: 'Skeletonize EM Mesh',
-    value: ExtendedEntitiesTypeDict.EMCellMeshSkeletonizationCampaign,
+    value: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
   },
 ] as const;
 

@@ -23,7 +23,7 @@ export const ExtendedEntitiesTypeDict = {
   SynthesizedCellMorphology: 'synthesized_cell_morphology',
   UniversalCellMorphology: 'universal_cell_morphology',
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
-  EMCellMeshSkeletonizationCampaign: 'em_cell_mesh_skeletonization_campaign',
+  SkeletonizationCampaign: 'skeletonization_campaign',
 } as const;
 
 export type TExtendedEntitiesTypeDict =
