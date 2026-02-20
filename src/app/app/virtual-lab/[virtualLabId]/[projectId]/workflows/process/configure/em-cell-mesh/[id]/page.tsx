@@ -4,10 +4,9 @@ import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { notFound } from 'next/navigation';
 import { use } from 'react';
 
-// import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getEmCellMesh } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { resolveExtractionByCampaignId } from '@/entity-configuration/domain/extraction/extraction-campaign';
+import { resolveSkeletonizationByCampaignId } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -50,7 +49,7 @@ export default function Page({
     queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
     queryFn: async () => {
       if (!initialCampaignId) return null;
-      return await resolveExtractionByCampaignId({
+      return await resolveSkeletonizationByCampaignId({
         id: initialCampaignId,
         context: { virtualLabId, projectId },
       });
@@ -71,7 +70,7 @@ export default function Page({
           modelId={entity.id}
           virtualLabId={virtualLabId}
           projectId={projectId}
-          initialConfig={undefined}
+          initialConfig={campaignData?.config.form}
           className="px-10 pt-2"
           activity={ScanConfigActivity.Process}
         />
