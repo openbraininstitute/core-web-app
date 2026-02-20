@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { MorphologyCanvas } from '@bbp/morphoviewer';
+
+import { classNames } from '@/util/utils';
 
 import { useMorphoViewerSettings } from '../hooks/settings';
-import { classNames } from '@/util/utils';
+
+import type { MorphologyCanvas } from '@bbp/morphoviewer';
 
 import styles from './scalebar.module.css';
 
