@@ -20,6 +20,7 @@ import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getExtendedSimMap } from '@/entity-configuration/domain/simulation/utils';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
@@ -219,7 +220,7 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: ['overview'],
+  detailViewSections: [DetailViewSectionsDict.Overview],
   isBookmarkable: true,
   isDownloadable: false,
   isCopyable: true,
