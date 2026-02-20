@@ -352,7 +352,12 @@ export function WorkflowActivity() {
             id="workflow-activities-full-table"
             data-testid="workflow-activities-full-table"
           >
-            <ConfigProvider theme={{ hashed: false }}>
+            <ConfigProvider
+              theme={{
+                hashed: false,
+                components: { Table: { headerSplitColor: '#d9d9d9' } },
+              }}
+            >
               <BaseTable
                 expandableConfig={expandableConfig}
                 sticky
