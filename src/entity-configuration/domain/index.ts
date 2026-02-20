@@ -5,14 +5,15 @@ import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-m
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
+import { UniversalCellMorphology } from '@/entity-configuration/domain/experimental/universal-cell-morphology';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
+import { ComputationallySynthesizedCellMorphology } from '@/entity-configuration/domain/model/computationally-synthesized-morphology';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
-import { ComputationallySynthesizedCellMorphology } from '@/entity-configuration/domain/model/computationally-synthesized-morphology';
 import { Microcircuit } from '@/entity-configuration/domain/model/mirocircuit';
 import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
@@ -31,6 +32,10 @@ import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simu
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+
+export const UniversalTypesCoreConfiguration = {
+  UniversalCellMorphology,
+} as const;
 
 export const EntityCoreExperimentalConfiguration = {
   CellMorphology,
@@ -73,6 +78,7 @@ const EntityCoreExtractionConfiguration = {
 };
 
 export const EntityCoreConfiguration = {
+  ...UniversalTypesCoreConfiguration,
   ...EntityCoreExperimentalConfiguration,
   ...EntityCoreModelConfiguration,
   ...EntityCoreSimulationConfiguration,

@@ -8,11 +8,11 @@ You can use tarballs like this in `package.json`:
 
 ```json
     "dependencies": {
-        "@bbp/morphoviewer": "file:tarball/bbp-morphoviewer-0.21.2.tgz"
+        "@bbp/morphoviewer": "file:tarball/bbp-morphoviewer-0.21.4.tgz"
 ```
 
-And to create a tarball, just call `npm pack` in the library project.
+And to create a tarball, just call `npm run build` in the library project.
 
 ## Libraries
 
-- `bbp-morphoviewer-0.21.2.tgz`: [morphoviewer](https://github.com/openbraininstitute/morphoviewer)
+- `bbp-morphoviewer-0.21.4.tgz`: [morphoviewer](https://github.com/openbraininstitute/morphoviewer)
