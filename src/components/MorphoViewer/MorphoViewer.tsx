@@ -3,15 +3,15 @@
 /* eslint-disable no-param-reassign */
 import { FullscreenOutlined } from '@ant-design/icons';
 import { GizmoCanvas, MorphologyCanvas } from '@bbp/morphoviewer';
-import { useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { useEffect, useRef } from 'react';
 
 import { ColorRamp } from './ColorRamp';
+import { useMorphoViewerSettings } from './hooks/settings';
+import { useSignal } from './hooks/signal';
 import { Scalebar } from './Scalebar';
 import { Settings } from './Settings';
 import { Warning } from './Warning';
-import { useMorphoViewerSettings } from './hooks/settings';
-import { useSignal } from './hooks/signal';
 
 // We disable enhanced somas until they are fixed on the backend.
 // import { WaitingForSomaEnhancement } from './WaitingForSomaEnhancement';
@@ -75,6 +75,7 @@ function MorphoViewerComponent({ className, swc, mode }: MorphoViewerProps) {
   };
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: double click to go fullscreen
     <div
       className={classNames(styles.main, className, isDarkMode && styles.darkMode)}
       ref={refDiv}

@@ -36,7 +36,7 @@ export function RegionBanner({ view, onSwitchView }: Props) {
     <div
       id="brain-region-entities-switcher"
       data-testid="brain-region-entities-switcher"
-      className="flex flex-col items-center justify-between gap-2 px-4 py-5"
+      className="flex flex-col items-center justify-between gap-2 px-4 py-3"
     >
       {/** biome-ignore lint/a11y/useSemanticElements: it already include the real button */}
       <div

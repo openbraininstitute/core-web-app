@@ -26,10 +26,6 @@ export const SynapsesPerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPe
       one: getExperimentalSynapsesPerConnection,
     },
   },
-  explore: {
-    basePrefix: 'experimental',
-    routePrefix: 'interactive/experimental',
-  },
   asset: {
     extension: 'application/json',
   },

@@ -1,5 +1,8 @@
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
-import type { NestedCellMorphologyProtocolRead } from '@/api/entitycore/types/entities/cell-morphology-protocol';
+import type {
+  CellMorphologyProtocolNestedFilter,
+  NestedCellMorphologyProtocolRead,
+} from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import type { MeasurementAnnotation } from '@/api/entitycore/types/entities/measurement-annotation';
 import type {
   EntityAuthorization,
@@ -37,6 +40,7 @@ export type CellMorphologyFilter = Partial<
     MtypeFilter &
     SubjectFilter &
     SharedFilter &
+    CellMorphologyProtocolNestedFilter &
     IlikeSearchFilter
 >;
 

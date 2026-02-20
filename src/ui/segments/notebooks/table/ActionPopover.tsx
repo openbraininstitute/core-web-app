@@ -89,7 +89,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
       <div id={`notebook-actions-${index}`}>
         <Popover
           content={
-            <div className="text-primary-9 flex min-w-[120px] flex-col gap-2">
+            <div className="text-primary-9 flex min-w-30 flex-col gap-2">
               <div className="flex gap-4">
                 <button
                   data-id={`readme-btn-${index}`}
@@ -98,7 +98,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                     e.stopPropagation();
                     setOpen(true);
                   }}
-                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                  className="hover:text-primary-4 inline-flex items-center gap-2.5"
                 >
                   <EyeIconWhiteWithinBox className="text-primary-9 text-xs" aria-label="Readme" />
                   Readme
@@ -108,7 +108,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                 <button
                   data-id={`download-btn-${index}`}
                   type="button"
-                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                  className="hover:text-primary-4 inline-flex items-center gap-2.5"
                   onClick={(e) => {
                     e.stopPropagation();
                     downloadArchive(ExtendedEntitiesTypeDict.Notebook, [notebook.id]);
@@ -127,7 +127,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                   data-id={`run-btn-${index}`}
                   disabled={loading}
                   type="button"
-                  className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                  className="hover:text-primary-4 inline-flex items-center gap-2.5"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (virtualLabData == null || virtualLabData.data == null) {
@@ -150,7 +150,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                     <button
                       disabled={loading}
                       type="button"
-                      className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                      className="hover:text-primary-4 inline-flex items-center gap-2.5"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRunNotebook('aws', 0);
@@ -165,7 +165,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                     <button
                       disabled={loading}
                       type="button"
-                      className="hover:text-primary-4 inline-flex items-center gap-[10px]"
+                      className="hover:text-primary-4 inline-flex items-center gap-2.5"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRunNotebook('azure', 0);
@@ -189,7 +189,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
           placement="bottomRight"
           arrow={false}
         >
-          <PlusOutlined className="bg-primary-8 rounded-full p-2 text-lg font-bold text-white shadow-md" />
+          <PlusOutlined className="bg-primary-8! rounded-full p-2 text-lg font-bold text-white! shadow-md" />
         </Popover>
       </div>
     </>
