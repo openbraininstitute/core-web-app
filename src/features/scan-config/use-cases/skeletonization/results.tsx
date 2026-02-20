@@ -14,7 +14,6 @@ import {
 } from '@/api/entitycore/queries/processing/em-cell-mesh';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { ApiError } from '@/api/error';
 import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
 import { WorkspaceSection } from '@/constants';
@@ -31,8 +30,6 @@ import { runSkeletonizationBatch } from '@/services/small-scale-simulator/mesh';
 import { JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
 import { classNames } from '@/util/utils';
-import { getErrorMessage } from '@/utils/error';
-import { log } from '@/utils/logger';
 
 import type { CheckboxProps } from 'antd';
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';

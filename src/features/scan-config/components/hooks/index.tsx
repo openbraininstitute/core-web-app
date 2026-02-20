@@ -38,13 +38,13 @@ export function getGeneratedApiUrl({
       return path;
     })
     .with(ScanConfigActivity.Process, () => {
-      const path = match(model)
+      const path = match({ entityType })
         .with(
-          { type: EntityTypeDict.EMCellMesh },
+          { entityType: EntityTypeDict.EMCellMesh },
           () => 'skeletonization-scan-config-generate-grid'
         )
         .otherwise(() => {
-          throw new Error(`Unsupported model type ${model.type}`);
+          throw new Error(`Unsupported entity type ${entityType}`);
         });
       return path;
     })
@@ -100,10 +100,10 @@ export function getScanConfigSchemaName({
       return name as SchemaName;
     })
     .with({ activity: ScanConfigActivity.Process }, () => {
-      const name = match(model)
-        .with({ type: EntityTypeDict.EMCellMesh }, () => 'SkeletonizationScanConfig')
+      const name = match({ entityType })
+        .with({ entityType: EntityTypeDict.EMCellMesh }, () => 'SkeletonizationScanConfig')
         .otherwise(() => {
-          throw new Error(`Unsupported entity type: ${model.type}`);
+          throw new Error(`Unsupported entity type: ${entityType}`);
         });
       return name as SchemaName;
     })
