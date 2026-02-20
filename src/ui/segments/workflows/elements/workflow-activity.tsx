@@ -354,8 +354,6 @@ export function WorkflowActivity() {
 
   const shouldShowEmptyState = !activityResult?.pagination.total_items && !isFetching;
 
-  // TODO If there are other entity types that need to have expandable rows - refactor this
-  // to registry-based solution (as it is done for browse-entity)
   const expandableOptions = useMemo(() => {
     const expandableTypes: TExtendedEntitiesTypeDict[] = [
       ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
@@ -364,10 +362,14 @@ export function WorkflowActivity() {
       ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
       ExtendedEntitiesTypeDict.MicrocircuitSimulation,
       ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+      ExtendedEntitiesTypeDict.SkeletonizationCampaign,
     ];
 
     if (!entityType || !expandableTypes.includes(entityType)) return undefined;
-    if (entityType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
+    if (
+      entityType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign ||
+      entityType === ExtendedEntitiesTypeDict.SkeletonizationCampaign
+    ) {
       return {
         getRowKey: (record: TTaskCampaignRow<any>) => record.id,
         getFetchId: (record: TTaskCampaignRow<any>) => record.id,
@@ -391,20 +393,19 @@ export function WorkflowActivity() {
     return {
       getRowKey: (record: any) => record.id,
       getFetchId: (record: any) => record.id,
-      fetcher: async (record: any) => {
-        return record.simulations ?? [];
-      },
+      fetcher: async (record: any) =>
+        entity?.api.expandRow?.(record, {
+          virtualLabId,
+          projectId,
+        }),
       renderExpanded: (records: any[], originalRecord: any) =>
         simulationCampaignExpandedViewConfig.render(originalRecord, records),
       expandIconColumnIndex: 6,
       expandIcon: simulationCampaignExpandedViewConfig.expandIcon,
-      isRowExpandable: (record: any) => {
-        const simulations = record.simulations ?? [];
-        return simulations.length > 1;
-      },
+      isRowExpandable: simulationCampaignExpandedViewConfig.isExpandable,
       isTopLevel: true,
     };
-  }, [entityType]);
+  }, [entityType, entity?.api.expandRow, projectId, virtualLabId]);
 
   const { expandableConfig } = useExpandableTable(
     expandableOptions as UseExpandableTableOptions<EntityCoreObjectTypes> | undefined
