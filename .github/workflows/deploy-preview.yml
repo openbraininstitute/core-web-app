@@ -40,6 +40,7 @@ jobs:
           BRANCH_NAME="${{ github.head_ref }}"
           DOMAIN_SAFE_BRANCH="${BRANCH_NAME//\//-}"
           DOMAIN_SAFE_BRANCH="${DOMAIN_SAFE_BRANCH//./-}"
+          DOMAIN_SAFE_BRANCH="${DOMAIN_SAFE_BRANCH/_/-}"
           echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "domain-safe-branch=$DOMAIN_SAFE_BRANCH" >> $GITHUB_OUTPUT
 
