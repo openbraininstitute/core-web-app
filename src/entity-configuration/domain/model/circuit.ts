@@ -34,8 +34,8 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
           context: params[0].context,
           withFacets: params[0].withFacets,
           filters: {
-            ...circuitScaleFilter,
             ...params[0].filters,
+            ...circuitScaleFilter,
           },
         });
       },
