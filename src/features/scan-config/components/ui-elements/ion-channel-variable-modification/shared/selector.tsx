@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/molecules/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 export interface IonChannelSelection {
@@ -88,7 +89,7 @@ export function IonChannelVariableSelector({
         </SelectValue>
       </SelectTrigger>
 
-      <SelectContent position="popper" className="max-h-72 bg-white! border-gray-200">
+      <SelectContent position="popper" className="max-h-72 bg-white! border-gray-100">
         {channelGroups.map((group) => (
           <SelectGroup key={group.channel_name}>
             <ChannelHeader
@@ -130,18 +131,75 @@ function SelectedDisplay({
   group: ChannelGroupOption;
   variable: ChannelVariableOption;
 }) {
+  const sections = variable.section_lists.map((o) => o.section_list);
+
   return (
     <span className="flex items-start flex-col bg-white! gap-1.5 text-left">
-      <div className="font-semibold text-primary-8">
-        {group.channel_name}
-        {!!variable.section_lists.length && (
-          <span className="ml-1.5 text-label font-light">
-            [{variable.section_lists.map((o) => o.section_list).join(', ')}]
-          </span>
+      <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
+        <span className="shrink-0 text-sm text-gray-400">Channel</span>
+        <span className="shrink-0 font-semibold text-primary-8">{group.channel_name}</span>
+        {sections.length > 0 && <SectionListBadge sections={sections} />}
+        {group.entity_id && (
+          <a
+            href={`/app/entity/${group.entity_id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            className={cn(
+              'inline-flex items-center justify-center text-primary-9 min-w-6! min-h-6! px-1 border-gray-200 bg-white',
+              'transition-colors hover:bg-gray-100 hover:border-gray-300 rounded-full',
+              'hover:text-primary-8 pointer-events-auto [&_svg]:pointer-events-auto'
+            )}
+            aria-label={`View ion channel ${group.channel_name}`}
+          >
+            <LinkOutlined />
+          </a>
         )}
       </div>
-      <div className="text-primary-8">{variable.neuron_variable}</div>
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm text-gray-400">Variable</span>
+        <span className="font-semibold text-primary-8">{variable.neuron_variable}</span>
+      </div>
     </span>
+  );
+}
+
+/**
+ * Single rounded pill showing the first section name and a "+N" badge
+ * for the rest. Hovering reveals all sections in a tooltip.
+ */
+function SectionListBadge({ sections }: { sections: string[] }) {
+  const remaining = sections.length - 1;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex min-w-0 items-center gap-1 rounded-full border border-gray-300 bg-white px-2.5 py-0.5 text-xs capitalize text-primary-8">
+          <span className="truncate">{sections[0]}</span>
+          {remaining > 0 && (
+            <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-gray-200 px-1.5 text-[10px] font-medium text-primary-8">
+              +{remaining}
+            </span>
+          )}
+        </span>
+      </TooltipTrigger>
+      {remaining > 0 && (
+        <TooltipContent
+          side="bottom"
+          align="start"
+          className="rounded-md bg-primary-8 px-3 py-2 text-sm text-white shadow-md"
+        >
+          <ul className="flex flex-col gap-1">
+            {sections.map((s) => (
+              <li key={s} className="capitalize">
+                {s}
+              </li>
+            ))}
+          </ul>
+        </TooltipContent>
+      )}
+    </Tooltip>
   );
 }
 
@@ -174,11 +232,11 @@ function ChannelHeader({
             target="_blank"
             className={cn(
               'inline-flex items-center justify-center size-6 gap-1 rounded-full border',
-              'border-gray-200 bg-white text-gray-400 transition-colors hover:border-primary-8 hover:text-primary-8'
+              'border-gray-200 bg-white transition-colors hover:bg-gray-100 hover:border-gray-300 hover:text-primary-8'
             )}
             aria-label={`View ion channel ${group.channel_name}`}
           >
-            <LinkOutlined className="size-3" />
+            <LinkOutlined className="size-3 text-gray-400" />
           </Link>
         )}
         <ChevronDownIcon

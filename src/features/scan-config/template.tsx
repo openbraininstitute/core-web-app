@@ -128,11 +128,8 @@ export function ScanConfigTemplate({
           )}
         </div>
       </header>
-      <div className="relative mb-10">
+      <div className="relative mb-5">
         <div className="w-full border-t border-gray-200" />
-        {/* <div className="text-primary-8 absolute -top-5 left-1/2 rounded-full bg-gray-50 p-2 px-3 shadow-sm">
-          <UpOutlined onClick={() => router.back()} />
-        </div> */}
       </div>
 
       {tab.id === ScanConfigTabs[activity].configuration && (
@@ -175,7 +172,7 @@ export function ScanConfigTemplate({
           <div
             className={cn(
               styles.scrollable,
-              'h-full overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-5'
+              'h-full overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
             )}
           >
             {editing && (

@@ -59,10 +59,13 @@ export default function Block({
   }
 
   return (
-    <div className="flex flex-col gap-2" data-scan-config-block={ScanConfigUIElementDict.BlockSingle}>
+    <div
+      className="flex flex-col gap-2"
+      data-scan-config-block={ScanConfigUIElementDict.BlockSingle}
+    >
       {!hideTitle && (
         <>
-          <div className="text-lg text-gray-500 uppercase">{blockSchema.title}</div>
+          <div className="text-lg text-gray-500 uppercase wrap-break-word">{blockSchema.title}</div>
           <div className="mb-6 text-gray-500">{blockSchema.description}</div>
         </>
       )}

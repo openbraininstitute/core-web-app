@@ -103,9 +103,9 @@ export function RootElement({
             setEditing(true);
           else setEditing(false);
         }}
-        extraClass="w-full flex text-left justify-between h-[50px] min-h-[50px] items-center drop-shadow ml-0.5"
+        extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
       >
-        <span className="flex items-center gap-2 truncate">
+        <span className="flex items-center gap-2 break-words min-w-0">
           <SelectedUnionVariantLabel
             rootElementSchema={rootElementSchema}
             config={config}

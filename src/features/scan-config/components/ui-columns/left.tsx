@@ -77,7 +77,7 @@ export default function Left({
 
   return (
     <div className={styles.scrollable}>
-      <div className="flex grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
+      <div className="flex grow flex-col items-center gap-5 overflow-y-auto overflow-x-hidden secondary-scrollbar px-2 pb-5">
         {schema.group_order.map((group) => {
           return (
             <Fragment key={group}>
