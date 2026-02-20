@@ -565,6 +565,7 @@ export function WorkflowActivity() {
                       entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.CircuitExtractionCampaign &&
+                      entityType !== ExtendedEntitiesTypeDict.SkeletonizationCampaign &&
                       entityType !== ExtendedEntitiesTypeDict.IonChannelModelSimulation &&
                       (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ? (
                         <Button
