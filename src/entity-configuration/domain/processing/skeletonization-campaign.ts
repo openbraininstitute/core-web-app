@@ -188,7 +188,8 @@ export type TExtendedSkeletonizationCampaignsType = AwaitedType<
   ReturnType<typeof resolveSkeletonizationCampaigns>
 >;
 
-type TEnrichedSkeletonizationCampaign = TExtendedSkeletonizationCampaignsType['data'][number];
+export type TEnrichedSkeletonizationCampaign =
+  TExtendedSkeletonizationCampaignsType['data'][number];
 type TEnrichedConfig = TEnrichedSkeletonizationCampaign['generations'][number]['configs'][number];
 
 export function getSkeletonizationStatus(config: TEnrichedConfig) {
@@ -225,6 +226,7 @@ export const SkeletonizationCampaign: EntityCoreTypeConfig<ISkeletonizationCampa
       one: getSkeletonizationCampaign,
       create: createSkeletonizationCampaign,
     },
+    expandRow: async (record, _context) => record,
   },
   explore: {
     basePrefix: 'process',
