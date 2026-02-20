@@ -1,9 +1,9 @@
 'use client';
 
-/* eslint-disable no-param-reassign */
-import { ColoringType, MorphologyCanvas } from '@bbp/morphoviewer';
 import { atom, useAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
+
+import { atomFamilyWithExpiration } from '@/util/atoms';
 
 import {
   DARK_APICAL_DENDRITE,
@@ -17,7 +17,9 @@ import {
   LIGHT_BASAL_DENDRITE,
   LIGHT_SOMA,
 } from '../constants';
-import { atomFamilyWithExpiration } from '@/util/atoms';
+
+/* eslint-disable no-param-reassign */
+import type { ColoringType, MorphologyCanvas } from '@bbp/morphoviewer';
 
 const DEFAULT_SETTINGS: ExtendedMorphoViewerSettings = {
   darkMode: false,
