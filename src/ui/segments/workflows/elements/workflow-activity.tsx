@@ -24,7 +24,10 @@ import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-con
 import { TaskViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/task-activity';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { getSkeletonizationStatusCountMap } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import {
+  getSkeletonizationStatusCountMap,
+  type TExtendedSkeletonizationCampaignsType,
+} from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   getStatusCountMap as getIonChannelModelingStatusCountMap,
   resolveIonChannelModelingByCampaignId,
