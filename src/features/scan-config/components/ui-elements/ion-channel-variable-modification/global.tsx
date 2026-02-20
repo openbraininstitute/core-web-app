@@ -25,12 +25,6 @@ import type { ConfigValue } from '@/features/scan-config/types';
 
 type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
-// this is a fake section-list key we use to change the single new_value field
-// from ByNeuronModification into a Record<string, SectionValue> format that
-// SectionListConfigEditor needs. With this, we can reuse the same editor
-// component and don’t need to make another one just for single value.
-const NEURON_VALUE_SECTION_KEY = 'new_value';
-
 interface GlobalProps {
   data: MechanismVariablesRoot | null;
   disabled: boolean;
@@ -85,37 +79,43 @@ export function Global({
     return group?.variables.find((v) => v.neuron_variable === variableName) ?? null;
   }, [currentValue, channelGroups]);
 
-  const newValue: number | number[] | null = useMemo(() => {
+  const newValue: number | null = useMemo(() => {
     if (!isValidModification) return null;
     const v = currentModification.new_value;
     if (typeof v === 'number') return v;
-    if (Array.isArray(v) && v.every((x) => typeof x === 'number')) return v as number[];
+    // TODO: re-enable array support when multi-value sweep when supported in obi-one
+    // if (Array.isArray(v) && v.every((x) => typeof x === 'number')) return v as number[];
     return null;
   }, [isValidModification, currentModification]);
 
+  const sectionLabel = useMemo(
+    () =>
+      resolvedVariable ? resolvedVariable.section_lists.map((s) => s.section_list).join(', ') : '',
+    [resolvedVariable]
+  );
+
   const editorSectionLists: SectionListEntry[] = useMemo(() => {
-    if (!resolvedVariable) return [];
+    if (!resolvedVariable || !sectionLabel) return [];
     const first = resolvedVariable.section_lists[0];
     return [
       {
-        section_list: NEURON_VALUE_SECTION_KEY,
-        value: first?.value ?? null,
+        section_list: sectionLabel,
+        value: null,
         limits: first?.limits ?? null,
         units: first?.units ?? '',
       },
     ];
-  }, [resolvedVariable]);
+  }, [resolvedVariable, sectionLabel]);
 
   const editorValues: Record<string, SectionValue> = useMemo(() => {
-    if (!isValidModification) return {};
+    if (!isValidModification || !sectionLabel) return {};
     if (newValue === null) return {};
-    return { [NEURON_VALUE_SECTION_KEY]: newValue } as Record<string, SectionValue>;
-  }, [isValidModification, newValue]);
+    return { [sectionLabel]: newValue };
+  }, [isValidModification, newValue, sectionLabel]);
 
   if (!data) return null;
 
   const handleVariableChange = (selection: IonChannelSelection) => {
-    const defaultValue = selection.variable.section_lists[0]?.value ?? 0;
     setState({
       ...state,
       [fieldKey]: {
@@ -123,7 +123,6 @@ export function Global({
         ion_channel_id: selection.entityId ?? '',
         channel_name: selection.channelName,
         variable_name: selection.variable.neuron_variable,
-        new_value: defaultValue,
       },
     });
   };

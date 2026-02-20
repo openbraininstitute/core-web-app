@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/molecules/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 export interface IonChannelSelection {
@@ -147,7 +146,8 @@ function SelectedDisplay({
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             className={cn(
-              'inline-flex items-center justify-center text-primary-9 min-w-6! min-h-6! px-1 border-gray-200 bg-white',
+              'inline-flex items-center justify-center text-primary-9 min-w-6!',
+              'min-h-6! px-1 border-gray-200 bg-white',
               'transition-colors hover:bg-gray-100 hover:border-gray-300 rounded-full',
               'hover:text-primary-8 pointer-events-auto [&_svg]:pointer-events-auto'
             )}
@@ -166,40 +166,20 @@ function SelectedDisplay({
 }
 
 /**
- * Single rounded pill showing the first section name and a "+N" badge
- * for the rest. Hovering reveals all sections in a tooltip.
+ * a pill showing the first section name and a "+N" badge
  */
 function SectionListBadge({ sections }: { sections: string[] }) {
   const remaining = sections.length - 1;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="inline-flex min-w-0 items-center gap-1 rounded-full border border-gray-300 bg-white px-2.5 py-0.5 text-xs capitalize text-primary-8">
-          <span className="truncate">{sections[0]}</span>
-          {remaining > 0 && (
-            <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-gray-200 px-1.5 text-[10px] font-medium text-primary-8">
-              +{remaining}
-            </span>
-          )}
-        </span>
-      </TooltipTrigger>
+    <span className="inline-flex min-w-0 items-center gap-1 rounded-full border border-gray-300 bg-white px-2.5 py-0.5 text-xs capitalize text-primary-8">
+      <span className="truncate">{sections[0]}</span>
       {remaining > 0 && (
-        <TooltipContent
-          side="bottom"
-          align="start"
-          className="rounded-md bg-primary-8 px-3 py-2 text-sm text-white shadow-md"
-        >
-          <ul className="flex flex-col gap-1">
-            {sections.map((s) => (
-              <li key={s} className="capitalize">
-                {s}
-              </li>
-            ))}
-          </ul>
-        </TooltipContent>
+        <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-gray-200 px-1.5 text-[10px] font-medium text-primary-8">
+          +{remaining}
+        </span>
       )}
-    </Tooltip>
+    </span>
   );
 }
 

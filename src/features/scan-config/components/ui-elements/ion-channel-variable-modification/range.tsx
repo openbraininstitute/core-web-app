@@ -82,8 +82,9 @@ export function Range({ data, disabled, state, setState, fieldKey, modificationT
     const result: Record<string, SectionValue> = {};
     for (const [key, val] of Object.entries(mods)) {
       if (typeof val === 'number') result[key] = val;
-      else if (Array.isArray(val) && val.every((v) => typeof v === 'number'))
-        result[key] = val as number[];
+      // TODO: re-enable array support when multi-value sweep when enabled in obi-one
+      // else if (Array.isArray(val) && val.every((v) => typeof v === 'number'))
+      //   result[key] = val as number[];
     }
     return result;
   }, [isValidModification, currentModification]);

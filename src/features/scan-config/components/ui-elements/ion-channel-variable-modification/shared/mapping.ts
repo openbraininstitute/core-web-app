@@ -90,7 +90,7 @@ export function buildChannelGroups(
   return groups;
 }
 
-/** Reverse-lookup: find the channel_name key whose entity_id matches */
+/** reverse-lookup: find the channel_name key whose entity_id matches */
 export function findChannelNameByEntityId(
   data: MechanismVariablesRoot,
   entityId: string

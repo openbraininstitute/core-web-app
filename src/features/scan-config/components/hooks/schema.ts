@@ -39,7 +39,7 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
 
 export type TSchemaMappingConfiguration = {
   usability: Record<string, boolean> | null;
-  properties: Record<string, ConfigValue> | null;
+  properties: Record<string, any> | null;
 };
 
 export function useSchemaMappingConfiguration({
