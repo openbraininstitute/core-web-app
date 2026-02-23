@@ -1,56 +1,28 @@
-'use client';
+"use client";
 
-import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
-import { atom, useAtom } from 'jotai';
-import React, { use, useCallback, useEffect } from 'react';
+import { type CreateMessage, type Message, useChat } from "@ai-sdk/react";
+import type {
+  ChatRequestOptions,
+  ToolInvocationUIPart,
+} from "@ai-sdk/ui-utils";
+import { atom, useAtom, useSetAtom } from "jotai";
+import { useCallback, useEffect } from "react";
+import {
+  useAIActiveTools,
+  atomRateLimit,
+} from "@/components/ai-assistant/state";
+import type { Config } from "@/features/scan-config/components/components";
+import { useDefaultConfig } from "@/features/scan-config/components/hooks/schema";
 
-import { useAIActiveTools } from '@/components/ai-assistant/state';
-import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
-import { logError } from '@/util/logger';
+import { logError } from "@/util/logger";
 
-import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
-import { useAiAssistant } from '../assistant';
-
-import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
-import type { Config } from '@/features/scan-config/components/components';
+import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from "../api";
+import { useAiAssistant } from "../assistant";
+import type { AiAgentRateLimitEndpoint } from "./rate-limit";
 
 const agentStateAtom = atom<Record<string, Config>>({});
-let requestId = crypto.randomUUID().replace(/-/g, '');
-let returnId = '';
-
-export interface AiAgentRateLimit {
-  limit: number;
-  remaining: number;
-  /** Number of seconds before new free credits */
-  reset: number;
-}
-
-const RATE_LIMIT_STORAGE_KEY = 'ai-agent-rate-limit-remaining';
-
-function getStoredRateLimit(): number {
-  if (typeof window === 'undefined') return 0;
-  try {
-    const stored = localStorage.getItem(RATE_LIMIT_STORAGE_KEY);
-    if (stored !== null) {
-      const value = parseInt(stored, 10);
-      if (!Number.isNaN(value) && value >= 0) {
-        return value;
-      }
-    }
-  } catch (_error) {
-    // Ignore localStorage errors (e.g., in private browsing mode)
-  }
-  return 0;
-}
-
-function setStoredRateLimit(value: number): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(RATE_LIMIT_STORAGE_KEY, value.toString());
-  } catch (_error) {
-    // Ignore localStorage errors (e.g., in private browsing mode)
-  }
-}
+let requestId = crypto.randomUUID().replace(/-/g, "");
+let returnId = "";
 
 export function useServiceAiAgentChat(threadId: string) {
   const [aiAgentState] = useAtom(agentStateAtom);
@@ -58,24 +30,24 @@ export function useServiceAiAgentChat(threadId: string) {
   const initialMessages = assistant.initialMessages.useValue();
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
-  const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
+  const setRateLimit = useSetAtom(atomRateLimit);
 
   const [_, setConfig] = useAtom(configStateAtom);
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
 
   const chat = useChat({
-    api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
+    api: serviceAiAgentUrl(["qa/chat_streamed", threadId]),
     id: threadId,
     initialMessages,
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      'x-request-id': requestId,
+      "x-request-id": requestId,
     },
     experimental_prepareRequestBody: ({ messages }) => {
       const lastMessage = messages.at(-1);
 
       return {
-        content: (lastMessage?.content ?? '').trim(),
+        content: (lastMessage?.content ?? "").trim(),
         tool_selection: activeTools,
         frontend_url: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
         shared_state: aiAgentState,
@@ -83,15 +55,16 @@ export function useServiceAiAgentChat(threadId: string) {
     },
     fetch: async (url, options) => {
       const resp = await fetch(url, options);
-
-      const newRateLimit: AiAgentRateLimit = {
-        limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
-        remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
-        reset: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
+      const newRateLimit: AiAgentRateLimitEndpoint = {
+        limit: parseInt(resp.headers.get("x-ratelimit-limit") ?? "-1", 10),
+        remaining: parseInt(
+          resp.headers.get("x-ratelimit-remaining") ?? "-1",
+          10,
+        ),
+        reset_in: parseInt(resp.headers.get("x-ratelimit-reset") ?? "-1", 10),
       };
-      setRateLimitRemaining(newRateLimit.remaining);
-      setStoredRateLimit(newRateLimit.remaining);
-      returnId = resp.headers.get('x-request-id') ?? '';
+      setRateLimit(newRateLimit);
+      returnId = resp.headers.get("x-request-id") ?? "";
       return resp;
     },
   });
@@ -113,22 +86,24 @@ export function useServiceAiAgentChat(threadId: string) {
         setConfig(result.state.smc_simulation_config ?? null);
       } catch {
         logError(
-          'Failed to parse tool invocation result as JSON:',
+          "Failed to parse tool invocation result as JSON:",
           //@ts-expect-error
-          toolInvocation.toolInvocation.result
+          toolInvocation.toolInvocation.result,
         );
       }
     }
   }, [chat.messages, setConfig]);
 
   useEffect(() => {
-    setIsChatReady(chat.status === 'ready');
+    setIsChatReady(chat.status === "ready");
   }, [chat.status, setIsChatReady]);
 
   return {
-    rateLimitRemaining,
     messages: chat.messages,
-    append: (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
+    append: (
+      message: Message | CreateMessage,
+      chatRequestOptions?: ChatRequestOptions,
+    ) => {
       chat.append(message, chatRequestOptions);
       if (chat.messages.length === 0) {
         // We suggest a title for the thread based
@@ -142,7 +117,7 @@ export function useServiceAiAgentChat(threadId: string) {
         } catch (ex) {
           // Renaming the thread is not important.
           // If it fails, we just ignore it.
-          logError('Unable to rename the thread:', ex);
+          logError("Unable to rename the thread:", ex);
         }
       }
     },
@@ -157,7 +132,7 @@ const isChatReadyAtom = atom(true);
 
 export function useAgentState(key: 'smc_simulation_config' | '', config?: Config) {
   const [, setAIAgentState] = useAtom(agentStateAtom);
-  const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
+  const defaultConfig = useDefaultConfig("CircuitSimulationScanConfig");
 
   useEffect(() => {
     const stateConfig = config ?? defaultConfig;
@@ -180,7 +155,7 @@ export function useAgentState(key: 'smc_simulation_config' | '', config?: Config
   }, [defaultConfig, config, key, setAIAgentState]);
 
   return useCallback(() => {
-    requestId = crypto.randomUUID().replace(/-/g, '');
+    requestId = crypto.randomUUID().replace(/-/g, "");
   }, []);
 }
 

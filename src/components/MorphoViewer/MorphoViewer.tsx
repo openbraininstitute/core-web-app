@@ -2,7 +2,7 @@
 
 /* eslint-disable no-param-reassign */
 import { FullscreenOutlined } from '@ant-design/icons';
-import { GizmoCanvas, MorphologyCanvas } from '@bbp/morphoviewer';
+import { MorphologyCanvas } from '@bbp/morphoviewer';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
 
@@ -36,8 +36,6 @@ function MorphoViewerComponent({ className, swc, mode }: MorphoViewerProps) {
   const refDiv = useRef<HTMLDivElement | null>(null);
   const refMorphoCanvas = useRef(new MorphologyCanvas());
   const morphoCanvas = refMorphoCanvas.current;
-  const refGizmoCanvas = useRef(new GizmoCanvas());
-  const gizmoCanvas = refGizmoCanvas.current;
   const refCanvas = useRef<HTMLCanvasElement | null>(null);
   const [{ isDarkMode }] = useMorphoViewerSettings(morphoCanvas);
   const [warning, setWarning] = useSignal(10000);
@@ -53,13 +51,10 @@ function MorphoViewerComponent({ className, swc, mode }: MorphoViewerProps) {
       setWarning(true);
     };
     morphoCanvas.eventMouseWheelWithoutCtrl.addListener(handleWarning);
-    gizmoCanvas.attachCamera(morphoCanvas.camera);
-    gizmoCanvas.eventTipClick.addListener(morphoCanvas.interpolateCamera);
     return () => {
       morphoCanvas.eventMouseWheelWithoutCtrl.removeListener(handleWarning);
-      gizmoCanvas.eventTipClick.removeListener(morphoCanvas.interpolateCamera);
     };
-  }, [morphoCanvas, gizmoCanvas, swc, setWarning, mode]);
+  }, [morphoCanvas, swc, setWarning, mode]);
 
   const handleFullscreen = () => {
     const div = refDiv.current;
@@ -95,22 +90,10 @@ function MorphoViewerComponent({ className, swc, mode }: MorphoViewerProps) {
         <FullscreenOutlined />
       </button>
       <div className={styles.rightPanel}>
-        <canvas
-          className={styles.gizmo}
-          ref={(canvas) => {
-            gizmoCanvas.canvas = canvas;
-          }}
-        >
-          GizmoViewer
-        </canvas>
         <ColorRamp painter={morphoCanvas} />
       </div>
       <Scalebar painter={morphoCanvas} />
       <Warning visible={warning} />
-      {
-        // We disable enhanced somas until they are fixed on the backend.
-        // <WaitingForSomaEnhancement visible={enhancedSomaIsLoading} />
-      }
     </div>
   );
 }
