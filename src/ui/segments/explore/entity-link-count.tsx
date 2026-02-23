@@ -4,6 +4,7 @@ import { unwrap } from 'jotai/utils';
 import { useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import { match } from 'ts-pattern';
+
 import { useTabs } from '@/components/detail-view-tabs';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import {

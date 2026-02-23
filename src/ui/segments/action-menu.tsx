@@ -137,7 +137,7 @@ export default function ActionMenu({
       <Action
         icon={
           !copying ? (
-            <CopyOutlined onClick={() => copy(entity.id)} />
+            <CopyOutlined onClick={() => copy(entity.id)} className="text-primary-8" />
           ) : (
             <CheckOutlined className="text-teal-400" />
           )
@@ -158,7 +158,7 @@ export default function ActionMenu({
                 },
               }}
             >
-              <ExperimentOutlined />
+              <ExperimentOutlined className="text-primary-8" />
             </NextLink>
           }
         >
@@ -170,6 +170,7 @@ export default function ActionMenu({
         <Action
           icon={
             <DownloadOutlined
+              className="text-primary-8"
               onClick={() => {
                 if (entity.type === ExtendedEntitiesTypeDict.Circuit)
                   setCircuit(entity as ICircuit);

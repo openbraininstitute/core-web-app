@@ -68,7 +68,8 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   isCopyable?: boolean;
   isDeletable?: boolean;
   isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);
-  isUploadable?: boolean;
+  isContributionOption?: boolean;
+  isContributable?: boolean;
 };
 
 export type SerializedEntityCoreTypeConfig<T extends EntityCoreIdentifiable> = Omit<

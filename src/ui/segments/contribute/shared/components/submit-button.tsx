@@ -3,11 +3,12 @@
 import { useRouter } from '@bprogress/next';
 import { Form } from 'antd';
 
-import type { ZodObject, ZodRawShape } from 'zod';
 import { Button } from '@/ui/molecules/button';
 import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
-import type { IContributionFormConfig } from '@/ui/segments/contribute/shared/types';
 import { cn } from '@/utils/css-class';
+
+import type { ZodObject, ZodRawShape } from 'zod';
+import type { IContributionFormConfig } from '@/ui/segments/contribute/shared/types';
 
 interface ISubmitButtonProps<
   TFormValues extends Record<string, unknown>,
@@ -47,7 +48,7 @@ export function SubmitButton<
 
   if (detailsUrl) {
     return (
-      <Form.Item className="mb-0">
+      <Form.Item className="mb-0!">
         <Button
           rounded
           type="button"
@@ -66,7 +67,7 @@ export function SubmitButton<
   }
 
   return (
-    <Form.Item className="mb-0">
+    <Form.Item className="mb-0!">
       <Button
         disabled={!isValidForm || loading}
         rounded

@@ -67,5 +67,5 @@ export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphol
   isCopyable: true,
   isDeletable: true,
   isSimulatable: false,
-  isUploadable: true,
+  isContributable: true,
 } as const;
