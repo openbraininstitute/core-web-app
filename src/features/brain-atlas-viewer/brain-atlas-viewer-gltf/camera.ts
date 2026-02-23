@@ -19,8 +19,8 @@ interface CameraPreset {
   far: number;
 }
 
-const FIT_DISTANCE_MULTIPLIER = 1.7;
-const MIN_FIT_DISTANCE = 450;
+const FIT_DISTANCE_MULTIPLIER = 1.35;
+const MIN_FIT_DISTANCE = 220;
 const MIN_NEAR_PLANE = 0.1;
 const MIN_FAR_PLANE = 10000;
 
@@ -122,6 +122,9 @@ export function setCamera(
       fovy: tgdCalcDegToRad(55),
       transfo: { ...restTransformation },
     });
+    // a new camera instance invalidates the orbit controller's zoom baseline.
+    // re-sync it to avoid the first wheel zoom causing a huge jump.
+    controller.resetZoom();
     context.paint();
   };
 

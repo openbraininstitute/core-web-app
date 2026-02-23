@@ -21,6 +21,7 @@ export interface BrainAtlasViewerGltfProps {
 export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerGltfProps) {
   const [showResetCamera, setShowResetCamera] = React.useState(false);
   const accessToken = useAccessToken();
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const previousPainterRef = React.useRef<{
     start: (canvas: HTMLCanvasElement | null) => void;
@@ -81,8 +82,35 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
     };
   }, [painter, region, regions, accessToken, onLoading]);
 
+  React.useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    const preventBrowserPinchZoom = (event: WheelEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+      }
+    };
+
+    const preventGestureZoom = (event: Event) => {
+      event.preventDefault();
+    };
+
+    element.addEventListener('wheel', preventBrowserPinchZoom, { passive: false });
+    element.addEventListener('gesturestart', preventGestureZoom, { passive: false });
+    element.addEventListener('gesturechange', preventGestureZoom, { passive: false });
+    element.addEventListener('gestureend', preventGestureZoom, { passive: false });
+
+    return () => {
+      element.removeEventListener('wheel', preventBrowserPinchZoom);
+      element.removeEventListener('gesturestart', preventGestureZoom);
+      element.removeEventListener('gesturechange', preventGestureZoom);
+      element.removeEventListener('gestureend', preventGestureZoom);
+    };
+  }, []);
+
   return (
-    <div className={classNames(className, styles.brainAtlasViewerGltf)}>
+    <div ref={containerRef} className={classNames(className, styles.brainAtlasViewerGltf)}>
       <canvas
         ref={(canvas) => {
           canvasRef.current = canvas;
