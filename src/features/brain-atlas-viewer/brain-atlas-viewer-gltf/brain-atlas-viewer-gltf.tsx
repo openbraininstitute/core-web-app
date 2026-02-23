@@ -60,6 +60,12 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
   const { region, regions } = useVisibleRegions();
 
   React.useEffect(() => {
+    const handleCameraChange = () => {
+      setShowResetCamera(true);
+    };
+    painter?.eventCameraChange.addListener(handleCameraChange);
+    painter?.eventLoading.addListener(onLoading);
+
     if (accessToken && painter) {
       painter.setRegions(regions, accessToken);
       painter.setPointCloud(
@@ -68,11 +74,6 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
         accessToken
       );
     }
-    const handleCameraChange = () => {
-      setShowResetCamera(true);
-    };
-    painter?.eventCameraChange.addListener(handleCameraChange);
-    painter?.eventLoading.addListener(onLoading);
 
     return () => {
       painter?.eventCameraChange.removeListener(handleCameraChange);

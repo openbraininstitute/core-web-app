@@ -25,6 +25,11 @@ import type { ReactNode } from 'react';
 import type { SettingsValues } from './settings';
 import type { VisibleRegion } from './types';
 
+interface MeshBounds {
+  min: [number, number, number];
+  max: [number, number, number];
+}
+
 let globalId = 1;
 export class Painter {
   public readonly AtlasID: string;
@@ -145,6 +150,8 @@ export class Painter {
     this.loadingMesh = true;
     this.isAddingRegions = true;
     this.nextRegionsToAdd = null;
+    const shouldAutoFitCamera = !this.hasFittedCamera && this.AtlasID !== config.MOUSE_ATLAS__ID;
+    let mergedBounds: MeshBounds | null = null;
     const regionsKeys = new Set(regions.map((region) => region.id));
     const keysToRemove: string[] = [];
     for (const key of this.regionPainters.keys()) {
@@ -166,7 +173,10 @@ export class Painter {
           atlasId: this.AtlasID,
           regionId: region.id,
         });
-        await this.addMesh(data, region);
+        const meshBounds = await this.addMesh(data, region);
+        if (shouldAutoFitCamera && meshBounds) {
+          mergedBounds = this.mergeBounds(mergedBounds, meshBounds);
+        }
       } catch (ex) {
         logError(`Unable to load mesh for region "${region.name}":`, ex);
         this.eventError.dispatch(
@@ -176,6 +186,10 @@ export class Painter {
           </>
         );
       }
+    }
+    if (shouldAutoFitCamera && mergedBounds && this.cameraController) {
+      this.cameraController.fitToBounds(mergedBounds.min, mergedBounds.max);
+      this.hasFittedCamera = true;
     }
     this.isAddingRegions = false;
     this.loadingMesh = false;
@@ -267,18 +281,11 @@ export class Painter {
 
   private async addMesh(data: ArrayBuffer | null, region: VisibleRegion) {
     const { context, group, regionPainters } = this;
-    if (!context || !group || !data || regionPainters.has(region.id)) return;
+    if (!context || !group || !data || regionPainters.has(region.id)) return null;
     try {
       const asset = await TgdDataGlb.parse(data);
       const geometry = new TgdGeometryGltf({ data: asset });
-      // Auto-fit camera to the first loaded mesh's bounding box (non-mouse atlases)
-      if (
-        !this.hasFittedCamera &&
-        this.cameraController &&
-        this.AtlasID !== config.MOUSE_ATLAS__ID
-      ) {
-        this.fitCameraFromGltf(asset);
-      }
+      const meshBounds = this.extractBoundsFromGltf(asset);
       const painterXRay = new TgdPainterXRay(context, {
         geometry,
         color: region.color,
@@ -288,17 +295,18 @@ export class Painter {
       group.add(painterXRay);
       regionPainters.set(region.id, painterXRay);
       context.paint();
+      return meshBounds;
     } catch (ex) {
       logError(`Unable to load mesh for region ${region.name}!`, ex);
       this.eventError.dispatch(`Unable to load mesh for region "${region.name}"!`);
+      return null;
     }
   }
 
   /**
-   * Extract the POSITION accessor's min/max from the GLTF JSON
-   * and fit the camera to those bounds.
+   * Extract the POSITION accessor's min/max from the GLTF JSON.
    */
-  private fitCameraFromGltf(asset: TgdDataGlb) {
+  private extractBoundsFromGltf(asset: TgdDataGlb): MeshBounds | null {
     try {
       const json = asset.getJson();
       const accessors = json.accessors ?? [];
@@ -306,19 +314,41 @@ export class Painter {
       // referenced by the first mesh primitive's POSITION attribute.
       const meshes = json.meshes ?? [];
       const firstMesh = meshes[0];
-      if (!firstMesh) return;
+      if (!firstMesh) return null;
 
       const posAttr = firstMesh.primitives[0]?.attributes?.POSITION;
-      if (typeof posAttr !== 'number') return;
+      if (typeof posAttr !== 'number') return null;
 
       const accessor = accessors[posAttr];
-      if (!accessor?.min || !accessor?.max) return;
+      if (!accessor?.min || !accessor?.max || accessor.min.length < 3 || accessor.max.length < 3) {
+        return null;
+      }
 
-      this.cameraController?.fitToBounds(accessor.min, accessor.max);
-      this.hasFittedCamera = true;
+      return {
+        min: [accessor.min[0], accessor.min[1], accessor.min[2]],
+        max: [accessor.max[0], accessor.max[1], accessor.max[2]],
+      };
     } catch {
       // Non-critical — fall back to default camera position
+      return null;
     }
+  }
+
+  private mergeBounds(current: MeshBounds | null, next: MeshBounds): MeshBounds {
+    if (!current) return next;
+
+    return {
+      min: [
+        Math.min(current.min[0], next.min[0]),
+        Math.min(current.min[1], next.min[1]),
+        Math.min(current.min[2], next.min[2]),
+      ],
+      max: [
+        Math.max(current.max[0], next.max[0]),
+        Math.max(current.max[1], next.max[1]),
+        Math.max(current.max[2], next.max[2]),
+      ],
+    };
   }
 
   private set loadingMesh(loading: boolean) {
