@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react';
-
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 export default function Action({ children, icon }: { children: ReactNode; icon: ReactNode }) {
   return (
-    <div className="flex w-full items-center justify-between gap-3">
+    <div className="flex w-full items-center justify-between gap-3 cursor-pointer">
       <div className="min-w-max">{children}</div>
       <div
         className={cn(

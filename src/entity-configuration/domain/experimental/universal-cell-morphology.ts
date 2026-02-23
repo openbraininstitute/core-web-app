@@ -39,4 +39,6 @@ export const UniversalCellMorphology: EntityCoreTypeConfig<
       create: createCellMorphology,
     },
   },
+  isContributable: false,
+  isContributionOption: false,
 } as const;
