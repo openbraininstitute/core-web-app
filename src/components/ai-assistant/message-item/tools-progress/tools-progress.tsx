@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import Link from 'next/link';
+import { useAtom } from 'jotai';
 import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
 import { cn } from '@/utils/css-class';
@@ -11,6 +12,8 @@ import Chevron from '@/components/icons/Chevron';
 
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+import { configStateAtom } from '@/services/ai-agent/hooks/chat';
+import type { Config } from '@/features/scan-config/components/components';
 
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import styles from './tools-progress.module.css';
@@ -24,6 +27,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
+  const [, setConfig] = useAtom(configStateAtom);
 
   const toggleExpanded = (key: string) => {
     setExpandedToolKeys((prev) => {
@@ -37,6 +41,24 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
     });
   };
 
+  const handleRestore = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Extract state directly from the tool invocation result
+    if (part.toolInvocation.state !== 'result') return;
+    
+    try {
+      const result = JSON.parse(part.toolInvocation.result as string);
+      const state = result?.state?.smc_simulation_config;
+      
+      if (state) {
+        setConfig(state as Config);
+      }
+    } catch (error) {
+      console.error('Failed to restore state:', error);
+    }
+  };
+
   if (!tools) return null;
 
   const toolsState = getToolsState(part, tools);
@@ -46,6 +68,8 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const Icon = tool.icon;
   const isExpanded = expandedToolKeys.has(key);
   const isRunning = state !== 'result';
+  const isStateToolCall = invocation.toolName === 'editstate' || invocation.toolName === 'getstate';
+  const showRestore = isStateToolCall && !isRunning;
 
   return (
     <div className={cn(styles.container, className)}>
@@ -93,6 +117,39 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
           </div>
 
           <div className={styles.actions}>
+            {showRestore && (
+              <button
+                type="button"
+                className={styles.restoreButton}
+                onClick={handleRestore}
+                title="Restore this state"
+                aria-label="Restore state"
+              >
+                <svg
+                  className={styles.restoreIcon}
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3.5 8C3.5 5.51472 5.51472 3.5 8 3.5C10.4853 3.5 12.5 5.51472 12.5 8C12.5 10.4853 10.4853 12.5 8 12.5C6.5 12.5 5.2 11.8 4.5 10.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M3.5 6V8H5.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            )}
+
             <div className={styles.expandButton}>
               <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
             </div>
