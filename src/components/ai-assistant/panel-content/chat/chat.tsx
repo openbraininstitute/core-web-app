@@ -39,6 +39,59 @@ export default function Chat({ className, threadId }: ChatProps) {
 
   const [scrollHeight, setScrollHeight] = React.useState(0);
 
+  // Track state history from editstate tool invocations
+  const stateHistory = React.useMemo(() => {
+    const history: Map<number, unknown> = new Map();
+    
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      if (message.role !== 'assistant') continue;
+
+      for (const part of message.parts) {
+        if (part.type !== 'tool-invocation') continue;
+        if (part.toolInvocation.toolName !== 'editstate') continue;
+        if (part.toolInvocation.state !== 'result') continue;
+
+        try {
+          const result = JSON.parse(part.toolInvocation.result as string);
+          const state = result?.state?.smc_simulation_config;
+          
+          if (state) {
+            // Find the previous state by looking backwards
+            let previousState = null;
+            for (let j = i - 1; j >= 0; j--) {
+              const prevMessage = messages[j];
+              if (prevMessage.role !== 'assistant') continue;
+
+              for (const prevPart of prevMessage.parts) {
+                if (prevPart.type !== 'tool-invocation') continue;
+                if (prevPart.toolInvocation.state !== 'result') continue;
+
+                // Check for editstate or getstate
+                if (prevPart.toolInvocation.toolName === 'editstate') {
+                  try {
+                    const prevResult = JSON.parse(prevPart.toolInvocation.result as string);
+                    previousState = prevResult?.state?.smc_simulation_config;
+                    break;
+                  } catch {
+                    // Ignore parse errors
+                  }
+                }
+              }
+              if (previousState) break;
+            }
+            
+            history.set(i, previousState);
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    }
+    
+    return history;
+  }, [messages]);
+
   // Monitor scroll height changes for auto-scroll
   React.useEffect(() => {
     if (!refContainer.current) return;
@@ -113,8 +166,8 @@ export default function Chat({ className, threadId }: ChatProps) {
         onWheel={handleWheel}
       >
         {messages.length === 0 && <Welcome />}
-        {messages.map((item) => (
-          <MessageItem key={item.id} value={item} />
+        {messages.map((item, index) => (
+          <MessageItem key={item.id} value={item} previousState={stateHistory.get(index)} />
         ))}
 
         {status === 'ready' && messages.length > 0 && (

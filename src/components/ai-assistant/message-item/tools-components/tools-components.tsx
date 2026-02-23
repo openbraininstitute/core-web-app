@@ -1,8 +1,8 @@
-import React from 'react';
 import { ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 
 import ToolPlotGenerator from './tools/tool-plot-generator';
 import ToolThumbnailGeneration from './tools/tool-thumbnail-generation-morphology-getone';
+import ToolEditState from './tools/tool-editstate';
 import { isToolResult } from './tools/types';
 
 import { classNames } from '@/util/utils';
@@ -12,9 +12,10 @@ import styles from './tools-components.module.css';
 export interface ToolsComponentsProps {
   className?: string;
   part: ToolInvocationUIPart;
+  previousState?: unknown | null;
 }
 
-export default function ToolsComponents({ className, part }: ToolsComponentsProps) {
+export default function ToolsComponents({ className, part, previousState }: ToolsComponentsProps) {
   return (
     <div className={classNames(className, styles.toolsComponents)}>
       <ToolPlotGenerator
@@ -29,6 +30,10 @@ export default function ToolsComponents({ className, part }: ToolsComponentsProp
           ],
           isToolResult
         )}
+      />
+      <ToolEditState
+        part={part.toolInvocation.toolName === 'editstate' ? part : null}
+        previousState={previousState}
       />
     </div>
   );

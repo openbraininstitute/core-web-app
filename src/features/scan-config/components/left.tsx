@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 
 import { RootElement } from '@/features/scan-config/components/root-element';
 import {
@@ -75,6 +75,11 @@ export default function Left({
   const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig } = useAIConfig();
 
+  useEffect(() => {
+    !!aiConfig && !campaignId && 
+    handleAcceptAIChanges()
+  }), [aiConfig, campaignId, handleAcceptAIChanges]
+
   return (
     <div className={styles.scrollable}>
       <div className="flex grow flex-col items-center gap-5 overflow-y-auto pr-5 pb-5">
@@ -124,8 +129,9 @@ export default function Left({
           );
         })}
       </div>
-
+{/* 
       {!!aiConfig && !campaignId && (
+        handleAcceptAIChanges()
         <div className="flex w-[95%] min-h-12.5 gap-2">
           <button
             type="button"
@@ -142,7 +148,7 @@ export default function Left({
             Accept changes
           </button>
         </div>
-      )}
+      )} */}
 
       {!readOnly && (!aiConfig || (aiConfig && campaignId)) && (
         <GenerateConfigButton

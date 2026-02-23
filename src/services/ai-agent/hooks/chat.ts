@@ -102,7 +102,7 @@ export function useServiceAiAgentChat(threadId: string) {
     const toolInvocation = lastMessage?.parts.find(
       (p) =>
         p.type === 'tool-invocation' &&
-        p.toolInvocation.toolName === 'obione-designcircuitsimulationscanconfig'
+        p.toolInvocation.toolName === 'editstate'
     ) as ToolInvocationUIPart | undefined;
 
     //@ts-expect-error
@@ -110,7 +110,7 @@ export function useServiceAiAgentChat(threadId: string) {
       try {
         //@ts-expect-error
         const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
-        setConfig(result.smc_simulation_config ?? null);
+        setConfig(result.state.smc_simulation_config ?? null);
       } catch {
         logError(
           'Failed to parse tool invocation result as JSON:',

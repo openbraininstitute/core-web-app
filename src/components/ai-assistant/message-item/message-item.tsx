@@ -16,20 +16,29 @@ import styles from './message-item.module.css';
 interface MessageItemProps {
   className?: string;
   value: UIMessage;
+  previousState?: unknown | null;
 }
 
 export const MessageItem = React.memo(RawMessageItem);
 
-function RawMessageItem({ className, value }: MessageItemProps) {
+function RawMessageItem({ className, value, previousState }: MessageItemProps) {
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild value={value} debug={debug} />
+      <MessageChild value={value} debug={debug} previousState={previousState} />
     </div>
   );
 }
 
-function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): React.ReactNode {
+function MessageChild({
+  value,
+  debug,
+  previousState,
+}: {
+  value: UIMessage;
+  debug: boolean;
+  previousState?: unknown | null;
+}): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
 
@@ -69,7 +78,7 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
                 <div key={`tool-${toolCallId}`}>
                   <ToolsProgress part={part} />
                   <>
-                    <ToolsComponents part={part} />
+                    <ToolsComponents part={part} previousState={previousState} />
                     {/* This tool component has been disabled yet */}
                     {/* <ToolArticles message={value} /> */}
                   </>
