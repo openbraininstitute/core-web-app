@@ -5,8 +5,10 @@ import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-m
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
+import { UniversalCellMorphology } from '@/entity-configuration/domain/experimental/universal-cell-morphology';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
+import { ComputationallySynthesizedCellMorphology } from '@/entity-configuration/domain/model/computationally-synthesized-morphology';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
@@ -31,6 +33,10 @@ import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simul
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
+export const UniversalTypesCoreConfiguration = {
+  UniversalCellMorphology,
+} as const;
+
 export const EntityCoreExperimentalConfiguration = {
   CellMorphology,
   ElectricalCellRecording,
@@ -53,6 +59,7 @@ export const EntityCoreModelConfiguration = {
   Circuit,
   IonChannelModel,
   MEModelWithSynapsesCircuit,
+  ComputationallySynthesizedCellMorphology,
 } as const;
 
 const EntityCoreSimulationConfiguration = {
@@ -71,6 +78,7 @@ const EntityCoreExtractionConfiguration = {
 };
 
 export const EntityCoreConfiguration = {
+  ...UniversalTypesCoreConfiguration,
   ...EntityCoreExperimentalConfiguration,
   ...EntityCoreModelConfiguration,
   ...EntityCoreSimulationConfiguration,

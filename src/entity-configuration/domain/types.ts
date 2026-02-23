@@ -25,7 +25,9 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
   api: {
     config: {
       allowedFacets?: boolean;
-      extraRequiredListFilters?: Record<string, any>;
+      // this should be also passed to the query key builder to
+      // include it in the query key (consistency and debugging)
+      extraQueryKeyBuilder?: Record<string, any>;
       ilikeSearchEnabled?: boolean;
     };
     query: {
@@ -54,10 +56,6 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
       record: T,
       ctx?: WorkspaceContext
     ) => Promise<EntityCoreIdentifiableNamed | Array<EntityCoreIdentifiableNamed>>;
-  };
-  explore?: {
-    basePrefix?: string;
-    routePrefix?: string;
   };
   asset: {
     extension?: string;

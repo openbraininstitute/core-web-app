@@ -26,7 +26,7 @@ export const useBrainRegionAtlasQuery = ({ id }: { id?: string }) => {
     queryKey: keyBuilderAtlas.atlas({
       atlasId: id ?? '',
       page: 1,
-      page_size: 1500,
+      page_size: 2000,
     }),
     queryFn: () =>
       getBrainAtlasRegions({

@@ -16,6 +16,7 @@ import { IonChannelRecording } from '@/entity-configuration/domain/experimental/
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
+import { ComputationallySynthesizedCellMorphology } from '@/entity-configuration/domain/model/computationally-synthesized-morphology';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
@@ -50,6 +51,7 @@ export const ModelEntitiesTileTypes = {
   MEmodel,
   Circuit,
   IonChannelModel,
+  ComputationallySynthesizedCellMorphology,
 } as const;
 
 export const SimulationEntitiesTileTypes = {

@@ -37,10 +37,6 @@ export const Microcircuit: EntityCoreTypeConfig<ICircuit> = {
       one: getCircuit,
     },
   },
-  explore: {
-    basePrefix: 'model',
-    routePrefix: 'interactive/model',
-  },
   asset: {
     extension: 'application/json',
   },

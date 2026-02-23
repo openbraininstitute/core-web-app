@@ -52,7 +52,15 @@ export function buildQueryKey({
     requireBrainRegion: boolean | undefined;
   },
 ] {
-  return [{ workspace, context, queryParameters, requireBrainRegion }];
+  const entity = getEntityByExtendedType({ type: context.extendedEntityType });
+  return [
+    {
+      workspace,
+      context,
+      queryParameters: { ...(entity?.api.config.extraQueryKeyBuilder ?? {}), ...queryParameters },
+      requireBrainRegion,
+    },
+  ];
 }
 
 export type ExtendedEntityTypeQueryKey = ReturnType<typeof buildQueryKey>;

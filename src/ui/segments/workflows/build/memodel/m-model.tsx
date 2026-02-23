@@ -46,7 +46,7 @@ export function MModel({ sessionId }: Props) {
       section={WorkspaceSection.BuildWorkflow}
       requireMiniDetailView={false}
       classNames={{ container: 'max-h-full' }}
-      dataType={ExtendedEntitiesTypeDict.CellMorphology}
+      dataType={ExtendedEntitiesTypeDict.UniversalCellMorphology}
       miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
       allowDownload={false}
       allowDelete={false}

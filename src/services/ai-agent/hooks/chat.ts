@@ -1,10 +1,10 @@
 'use client';
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
-import { atom, useAtom } from 'jotai';
-import React, { useCallback, useEffect } from 'react';
+import { atom, useAtom, useSetAtom } from 'jotai';
+import { useCallback, useEffect } from 'react';
 
-import { useAIActiveTools } from '@/components/ai-assistant/state';
+import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { logError } from '@/util/logger';
 
@@ -13,44 +13,11 @@ import { useAiAssistant } from '../assistant';
 
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { Config } from '@/features/scan-config/components/components';
+import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
 const agentStateAtom = atom<Record<string, Config>>({});
 let requestId = crypto.randomUUID().replace(/-/g, '');
 let returnId = '';
-
-export interface AiAgentRateLimit {
-  limit: number;
-  remaining: number;
-  /** Number of seconds before new free credits */
-  reset: number;
-}
-
-const RATE_LIMIT_STORAGE_KEY = 'ai-agent-rate-limit-remaining';
-
-function getStoredRateLimit(): number {
-  if (typeof window === 'undefined') return 0;
-  try {
-    const stored = localStorage.getItem(RATE_LIMIT_STORAGE_KEY);
-    if (stored !== null) {
-      const value = parseInt(stored, 10);
-      if (!Number.isNaN(value) && value >= 0) {
-        return value;
-      }
-    }
-  } catch (_error) {
-    // Ignore localStorage errors (e.g., in private browsing mode)
-  }
-  return 0;
-}
-
-function setStoredRateLimit(value: number): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(RATE_LIMIT_STORAGE_KEY, value.toString());
-  } catch (_error) {
-    // Ignore localStorage errors (e.g., in private browsing mode)
-  }
-}
 
 export function useServiceAiAgentChat(threadId: string) {
   const [aiAgentState] = useAtom(agentStateAtom);
@@ -58,7 +25,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const initialMessages = assistant.initialMessages.useValue();
   const { accessToken } = assistant.useContext();
   const activeTools = useAIActiveTools();
-  const [rateLimitRemaining, setRateLimitRemaining] = React.useState(() => getStoredRateLimit());
+  const setRateLimit = useSetAtom(atomRateLimit);
 
   const [_, setConfig] = useAtom(configStateAtom);
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
@@ -83,14 +50,12 @@ export function useServiceAiAgentChat(threadId: string) {
     },
     fetch: async (url, options) => {
       const resp = await fetch(url, options);
-
-      const newRateLimit: AiAgentRateLimit = {
+      const newRateLimit: AiAgentRateLimitEndpoint = {
         limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
         remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
-        reset: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
+        reset_in: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
       };
-      setRateLimitRemaining(newRateLimit.remaining);
-      setStoredRateLimit(newRateLimit.remaining);
+      setRateLimit(newRateLimit);
       returnId = resp.headers.get('x-request-id') ?? '';
       return resp;
     },
@@ -102,7 +67,7 @@ export function useServiceAiAgentChat(threadId: string) {
     const toolInvocation = lastMessage?.parts.find(
       (p) =>
         p.type === 'tool-invocation' &&
-        p.toolInvocation.toolName === 'obione-generatesimulationsconfig'
+        p.toolInvocation.toolName === 'obione-designcircuitsimulationscanconfig'
     ) as ToolInvocationUIPart | undefined;
 
     //@ts-expect-error
@@ -126,7 +91,6 @@ export function useServiceAiAgentChat(threadId: string) {
   }, [chat.status, setIsChatReady]);
 
   return {
-    rateLimitRemaining,
     messages: chat.messages,
     append: (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
       chat.append(message, chatRequestOptions);
@@ -155,7 +119,7 @@ export function useServiceAiAgentChat(threadId: string) {
 export const configStateAtom = atom<Config | null>(null);
 const isChatReadyAtom = atom(true);
 
-export function useAgentState(key: 'smc_simulation_config', config?: Config) {
+export function useAgentState(key: 'smc_simulation_config' | '', config?: Config) {
   const [, setAIAgentState] = useAtom(agentStateAtom);
   const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
 
@@ -163,14 +127,18 @@ export function useAgentState(key: 'smc_simulation_config', config?: Config) {
     const stateConfig = config ?? defaultConfig;
     if (!stateConfig) return;
 
-    setAIAgentState({
-      [key]: stateConfig,
-    });
+    setAIAgentState(
+      key
+        ? {
+            [key]: stateConfig,
+          }
+        : {}
+    );
 
     return () => {
       if (!defaultConfig) return;
       setAIAgentState({
-        [key]: defaultConfig,
+        smc_simulation_config: defaultConfig,
       });
     };
   }, [defaultConfig, config, key, setAIAgentState]);

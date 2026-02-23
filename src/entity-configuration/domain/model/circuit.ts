@@ -1,12 +1,14 @@
 import { includes, without } from 'es-toolkit/compat';
+
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
-import type { ICircuit, TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import type { ICircuit, TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const circuitScaleFilter = {
@@ -23,7 +25,7 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
     config: {
       allowedFacets: true,
       ilikeSearchEnabled: true,
-      extraRequiredListFilters: circuitScaleFilter,
+      extraQueryKeyBuilder: circuitScaleFilter,
     },
     query: {
       list: (...params) => {
@@ -32,21 +34,15 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
           context: params[0].context,
           withFacets: params[0].withFacets,
           filters: {
-            ...circuitScaleFilter,
             ...params[0].filters,
+            ...circuitScaleFilter,
           },
         });
       },
       one: getCircuit,
     },
   },
-  explore: {
-    basePrefix: 'model',
-    routePrefix: 'interactive/model',
-  },
-  asset: {
-    extension: 'application/json',
-  },
+  asset: { extension: 'application/json' },
   detailViewSections: [
     DetailViewSectionsDict.Overview,
     DetailViewSectionsDict.Analysis,

@@ -8,7 +8,12 @@ import { match, P } from 'ts-pattern';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type TWorkspaceSection, WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
-import { type FeatureFlags, type FlagKey, microcircuitFlag } from '@/features/feature-flags/flags';
+import {
+  extractionActivityFlag,
+  type FeatureFlags,
+  type FlagKey,
+  microcircuitFlag,
+} from '@/features/feature-flags/flags';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
@@ -63,6 +68,7 @@ export type TExtractWorkflowConfig = {
   value: TExtendedEntitiesTypeDict;
   label: string;
   disabled: boolean;
+  requiredFeatures?: Array<FlagKey>;
 };
 
 export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig> = {
@@ -271,6 +277,7 @@ export const extractNewConfiguration: Array<TExtractWorkflowConfig> = [
     disabled: false,
     label: 'Circuit (beta)',
     value: ExtendedEntitiesTypeDict.Circuit,
+    requiredFeatures: [extractionActivityFlag.key],
   },
 ] as const;
 
@@ -280,6 +287,7 @@ export const extractActivitiesConfiguration: Array<TExtractWorkflowConfig> = [
     disabled: false,
     label: 'Circuit (beta)',
     value: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+    requiredFeatures: [extractionActivityFlag.key],
   },
 ] as const;
 
@@ -293,6 +301,7 @@ type ActivityDictEntry = {
   value: string;
   disabled: boolean;
   name: string;
+  requiredFeatures?: Array<FlagKey>;
 } & ActivityConfigType;
 
 export const ActivityDict: readonly ActivityDictEntry[] = [
@@ -319,6 +328,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     name: 'Extraction',
     configType: 'extract',
     config: extractNewConfiguration,
+    requiredFeatures: [extractionActivityFlag.key],
   },
   {
     label: 'Optimize',
@@ -374,7 +384,15 @@ export function getDropdownOptionsByCategory(
     return { allOptions: [], enabledOptions: [] };
   }
   if (category === WorkflowActivityDictValue.extract) {
-    const grouped = groupBy(extractActivitiesConfiguration, 'group');
+    const flaggedConfigs = extractActivitiesConfiguration.map((config) => {
+      const satisfiesFeatureRequirements =
+        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag]);
+      return {
+        ...config,
+        disabled: config.disabled || !satisfiesFeatureRequirements,
+      };
+    });
+    const grouped = groupBy(flaggedConfigs, 'group');
     const options = Object.entries(grouped).map(([k, v]) => {
       return {
         group: k,
@@ -458,7 +476,14 @@ export function getAllOptionsOrdered(
     return [];
   }
   if (category === WorkflowActivityDictValue.extract) {
-    return extractNewConfiguration;
+    return extractNewConfiguration.map((config) => {
+      const satisfiesFeatureRequirements =
+        !config.requiredFeatures || config.requiredFeatures.every((flag) => featureFlags?.[flag]);
+      return {
+        ...config,
+        disabled: config.disabled || !satisfiesFeatureRequirements,
+      };
+    });
   }
 
   if (includes([WorkflowActivityDictValue.build, WorkflowActivityDictValue.simulate], category)) {

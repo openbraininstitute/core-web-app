@@ -204,10 +204,6 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
       create: createSimulationCampaign,
     },
   },
-  explore: {
-    basePrefix: 'simulate',
-    routePrefix: 'simulate',
-  },
   asset: {
     extension: 'application/json',
   },

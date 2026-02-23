@@ -6,16 +6,17 @@ import {
   getSingleNeuronSynaptomeSimulationIOResult,
   getSingleNeuronSynaptomeSimulations,
 } from '@/api/entitycore/queries/simulation/single-neuron-synaptome-simulation';
-import type {
-  ISingleNeuronSynaptome,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import type {
+  ISingleNeuronSynaptome,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -65,10 +66,6 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
         create: createSingleNeuronSynaptomeSimulation,
       },
       expand: singleNeuronSynaptomeSimulationApiQueryExpand,
-    },
-    explore: {
-      basePrefix: 'simulate',
-      routePrefix: 'simulate',
     },
     asset: {
       extension: 'application/json',

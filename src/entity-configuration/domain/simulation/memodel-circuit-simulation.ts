@@ -1,5 +1,6 @@
 import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
+
 import { getMEModels } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
@@ -21,9 +22,11 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import { getExtendedSimMap } from './utils';
+
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
-import { getExtendedSimMap } from './utils';
 
 const ENTITY_TYPE = SimulationCampaignEntityTypeDict.memodel;
 
@@ -189,10 +192,6 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCa
       create: createSimulationCampaign,
     },
     expandRow: async (record, _context) => record,
-  },
-  explore: {
-    basePrefix: 'simulate',
-    routePrefix: 'simulate',
   },
   asset: {
     extension: 'application/json',
