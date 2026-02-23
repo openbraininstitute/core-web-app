@@ -260,8 +260,8 @@ export default async function Overview({
       {includes(
         [
           ExtendedEntitiesTypeDict.CellMorphology,
-          ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
           ExtendedEntitiesTypeDict.UniversalCellMorphology,
+          ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
         ],
         extendedType
       ) && <CellMorphologyViewer entity={entity as ICellMorphology} context={context} />}

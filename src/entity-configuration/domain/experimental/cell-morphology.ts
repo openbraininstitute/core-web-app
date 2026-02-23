@@ -16,13 +16,17 @@ import type {
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
 
-// TODO: Uncomment until entitycore support filtering by `not_in`
-// export const cellMorphologyGenerationTypeFilter = {
-//   cell_morphology_protocol__generation_type__in: without(
-//     Object.values(CellMorphologyGenerationTypeDictionary),
-//     CellMorphologyGenerationTypeDictionary.ComputationallySynthesized
-//   ),
-// };
+export const cellMorphologyGenerationTypeFilter = {
+  cell_morphology_protocol__generation_type__in: without(
+    Object.values(CellMorphologyGenerationTypeDictionary),
+    CellMorphologyGenerationTypeDictionary.ComputationallySynthesized,
+    CellMorphologyGenerationTypeDictionary.ModifiedReconstruction
+  ),
+};
+
+import { without } from 'es-toolkit/compat';
+
+import { CellMorphologyGenerationTypeDictionary } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 

@@ -17,16 +17,18 @@ import type {
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const protocolTypeFilter = {
-  cell_morphology_protocol__generation_type:
+  cell_morphology_protocol__generation_type__in: [
     CellMorphologyGenerationTypeDictionary.ComputationallySynthesized,
+    CellMorphologyGenerationTypeDictionary.ModifiedReconstruction,
+  ],
 };
 
-export const ComputationallySynthesizedCellMorphology: EntityCoreTypeConfig<
+export const SynthesizedCellMorphology: EntityCoreTypeConfig<
   ICellMorphology | ICellMorphologyExpanded
 > = {
   group: EntityTypeGroup.Models,
   title: 'Synthesized morphology',
-  extendedType: ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
+  extendedType: ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
   type: EntityTypeDict.CellMorphology,
   slug: EntitySlug.CellMorphology,
   api: {
