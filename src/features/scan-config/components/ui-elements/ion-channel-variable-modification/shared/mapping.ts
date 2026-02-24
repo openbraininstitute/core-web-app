@@ -101,6 +101,17 @@ export function findChannelNameByEntityId(
   return null;
 }
 
+/** reverse-lookup: find the channel_name that contains a given variable name */
+export function findChannelNameByVariable(
+  data: MechanismVariablesRoot,
+  variableName: string
+): string | null {
+  for (const [channelName, channel] of Object.entries(data)) {
+    if (variableName in channel.variables) return channelName;
+  }
+  return null;
+}
+
 const SEPARATOR = '::';
 
 /** channel + variable pair into a single string value for the Select */

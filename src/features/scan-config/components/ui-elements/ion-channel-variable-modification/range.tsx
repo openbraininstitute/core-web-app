@@ -12,6 +12,7 @@ import {
   decodeSelectionValue,
   encodeSelectionValue,
   findChannelNameByEntityId,
+  findChannelNameByVariable,
   type MechanismVariablesRoot,
   MechanismVariableTypeDict,
   type SectionListEntry,
@@ -43,19 +44,22 @@ export function Range({ data, disabled, state, setState, fieldKey, modificationT
     !Array.isArray(currentModification);
 
   const currentValue = useMemo(() => {
-    if (
-      !isValidModification ||
-      !data ||
-      typeof currentModification.ion_channel_id !== 'string' ||
-      typeof currentModification.variable_name !== 'string'
-    )
+    if (!isValidModification || !data || typeof currentModification.variable_name !== 'string')
       return null;
-    const channelName = findChannelNameByEntityId(
-      data,
-      currentModification.ion_channel_id as string
-    );
+
+    const variableName = currentModification.variable_name as string;
+    const ionChannelId = currentModification.ion_channel_id;
+
+    // resolve channel name: try entity_id lookup first, fall back to variable name lookup
+    let channelName: string | null = null;
+    if (typeof ionChannelId === 'string' && ionChannelId !== '') {
+      channelName = findChannelNameByEntityId(data, ionChannelId);
+    }
+    if (!channelName) {
+      channelName = findChannelNameByVariable(data, variableName);
+    }
     if (!channelName) return null;
-    return encodeSelectionValue(channelName, currentModification.variable_name as string);
+    return encodeSelectionValue(channelName, variableName);
   }, [isValidModification, currentModification, data]);
 
   const channelGroups = useMemo(
