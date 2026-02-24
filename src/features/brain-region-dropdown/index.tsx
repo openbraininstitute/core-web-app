@@ -1,21 +1,21 @@
 import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import omit from 'es-toolkit/compat/omit';
+import { omit } from 'es-toolkit/compat';
 import { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
-
-import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/types';
 
 import { BrainIcon } from '@/components/icons';
 import {
   usePrimaryExtendedHierarchySpeciesQuery,
-  usePrimaryHierarchyOfCurrentSpeciesQuery,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
+import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
+
+import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/types';
 
 export function BrainRegionDropdown({
   charsPerLine = 25,
@@ -115,7 +115,7 @@ export function BrainRegionDropdown({
           {showIcon && <BrainIcon />}
           <div className="line-clamp-1 w-full truncate text-left">
             {currentValue(selectedNode?.id)
-              ? currentValue(selectedNode?.id)?.label
+              ? normalizeBrainRegionName(currentValue(selectedNode?.id)?.label ?? '')
               : 'Select brain region...'}
           </div>
           {isLoading ? (
@@ -200,7 +200,7 @@ export function BrainRegionDropdown({
                       )}
                       title={label}
                     >
-                      <span className="line-clamp-2 w-full">{label}</span>
+                      <span className="line-clamp-2 w-full">{normalizeBrainRegionName(label)}</span>
                       <CheckOutlined
                         className={cn(
                           'ml-auto text-sm',

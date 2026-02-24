@@ -1,6 +1,5 @@
 import NextBundleAnalyzer from '@next/bundle-analyzer';
 import { type SentryBuildOptions, withSentryConfig } from '@sentry/nextjs';
-import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
 import type { NextConfig } from 'next/dist/types';
 
@@ -8,7 +7,6 @@ const withBundleAnalyzer = NextBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-const cdnUrl = process.env.CDN_URL;
 const appVersion = process.env.APP_VERSION;
 
 const isPreviewBuild = !!(process.env.AWS_APP_ID || process.env.AWS_AMPLIFY_BUILD);
@@ -36,7 +34,6 @@ const SentryOptions: SentryBuildOptions = {
 };
 
 const nextConfig = (phase: string): NextConfig => {
-  const isDev = phase === PHASE_DEVELOPMENT_SERVER;
   return {
     env: {
       APP_BUILD_TIME: new Date().toISOString(),
@@ -85,7 +82,6 @@ const nextConfig = (phase: string): NextConfig => {
             >['position']) ?? 'top-right',
         }
       : false,
-    assetPrefix: isDev || !cdnUrl ? undefined : `${cdnUrl}/${appVersion}`,
     reactStrictMode: true,
     compress: false,
     output: 'standalone',
@@ -101,7 +97,6 @@ const nextConfig = (phase: string): NextConfig => {
     },
     images: {
       loader: 'default',
-      path: `${cdnUrl ?? ''}/_next/image`,
       remotePatterns: [
         {
           protocol: 'https',
@@ -154,34 +149,6 @@ const nextConfig = (phase: string): NextConfig => {
           source: '/static/coming-soon/index.html',
           destination: '/',
           permanent: false,
-        },
-      ];
-    },
-    async headers() {
-      if (isDev) return [];
-
-      // Skip CORS headers if CDN URI is not configured or empty
-      if (!process.env.PRIMARY_HOSTNAME) {
-        return [];
-      }
-
-      return [
-        {
-          source: '/:prefix*/_next/static/media/:path*',
-          headers: [
-            {
-              key: 'Access-Control-Allow-Origin',
-              value: `https://${process.env.PRIMARY_HOSTNAME}`,
-            },
-            {
-              key: 'Access-Control-Allow-Methods',
-              value: 'GET, HEAD, OPTIONS',
-            },
-            {
-              key: 'Access-Control-Allow-Headers',
-              value: '*',
-            },
-          ],
         },
       ];
     },

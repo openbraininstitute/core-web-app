@@ -14,6 +14,7 @@ import {
   getLeavesForEachRegionExtended,
   injectHierarchyId,
   mergeHierarchyWithAtlas,
+  normalizeBrainRegionName,
 } from '@/features/brain-region-hierarchy/helpers';
 import {
   useHierarchyRuntimeMetadataQuery,
@@ -215,7 +216,7 @@ export const usePrimaryHierarchyOfCurrentSpeciesQuery = () => {
           return {
             av: region.annotation_value,
             value: region.id,
-            label: capitalize(`${region.name}`),
+            label: normalizeBrainRegionName(`${region.name}`),
             data: {
               ...region,
               children: region.children.filter((o) => !isNil(o)),

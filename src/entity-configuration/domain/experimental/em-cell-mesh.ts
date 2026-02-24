@@ -30,6 +30,6 @@ export const EmCellMesh: EntityCoreTypeConfig<IEMCellMesh> = {
   isBookmarkable: true,
   isCopyable: true,
   isSimulatable: false,
-  isUploadable: true,
+  isContributable: true,
   isDeletable: false,
 } as const;

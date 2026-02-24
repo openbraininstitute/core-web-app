@@ -1,8 +1,8 @@
 'use client';
 
 import { CaretRightFilled } from '@ant-design/icons';
-import { capitalize } from 'es-toolkit/compat';
 
+import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
 import { cn } from '@/utils/css-class';
 
 import type { CSSProperties } from 'react';
@@ -22,7 +22,7 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
   defaultColor,
 }: Props<TNode>) {
   const color = 'color' in node ? node.color : defaultColor;
-  const nodeName = capitalize(node.name);
+  const nodeName = normalizeBrainRegionName(node.name);
 
   return (
     <button
@@ -59,7 +59,7 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
       <div className="mr-1.5 flex min-w-0 shrink grow basis-0 items-center">
         <div className="flex items-baseline">
           <span className={cn('text-base text-left', { 'line-clamp-1': isSelected })}>
-            {capitalize(nodeName)}
+            {nodeName}
           </span>
         </div>
       </div>

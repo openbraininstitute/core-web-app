@@ -245,7 +245,7 @@ Properties with `public: false` are only available via `serverConfig` (imported 
 Properties with `public: true` are available in both contexts:
 
 - `APP_VERSION`, `DEPLOYMENT_ENV`
-- `API_ORIGIN`, `ROOT_ROUTE`, `CDN_URL` (optional)
+- `API_ORIGIN`, `ROOT_ROUTE` (optional)
 - `SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PRJ` (optional)
 - Platform API URLs (optional, fallback to `API_ORIGIN`):
   - `AI_AGENT_URL`, `AUTH_MANAGER_URL`, `CELL_API_URL`

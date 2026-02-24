@@ -249,3 +249,13 @@ export function transformSpecies(
     displayName: getSpeciesDisplayName(apiSpecies.name),
   };
 }
+
+export function normalizeBrainRegionName(name: string) {
+  if (!name) return name;
+
+  const first = name[0];
+  if (first === first.toUpperCase()) {
+    return name;
+  }
+  return first.toUpperCase() + name.slice(1);
+}

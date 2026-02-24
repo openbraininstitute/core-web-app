@@ -88,13 +88,13 @@ function FormContent<
   };
 
   return (
-    <div className={cn('relative mx-auto h-full w-full px-6 py-2')}>
+    <div className={cn('relative mx-auto h-full w-full px-6 py-2 flex flex-col')}>
       <Form.Item noStyle>
         <input type="hidden" />
       </Form.Item>
       <StepNavigation />
 
-      <div className="border-neutral-2 h-full max-h-[calc(100%-11rem)] min-h-0 flex-1 rounded-md border py-6 pr-1">
+      <div className="border-neutral-2 h-full max-h-full min-h-0 flex-1 rounded-md border py-6 pr-1">
         {isSubmitting ? (
           <div className="flex h-full w-full items-center justify-center">
             <SubmitEntityProgress steps={progressStepsWithStatus} />
@@ -133,7 +133,7 @@ function FormContent<
         )}
       </div>
 
-      <div className="flex w-full shrink-0 items-center justify-between gap-2 py-3">
+      <div className="flex w-full shrink-0 items-center justify-between gap-2 py-3 mt-auto">
         <Button
           rounded
           variant="outline"

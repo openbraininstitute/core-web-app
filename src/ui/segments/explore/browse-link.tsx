@@ -317,7 +317,7 @@ export function BrowseLink({
           href,
           scope,
           isLoading,
-          isUploadable: entity?.isUploadable,
+          isUploadable: entity?.isContributable,
           title: entity?.title,
           count: countRenderer,
         }}

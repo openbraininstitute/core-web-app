@@ -35,5 +35,5 @@ export const SynapsesPerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPe
   isCopyable: true,
   isSimulatable: false,
   isBookmarkable: true,
-  isUploadable: true,
+  isContributable: true,
 } as const;
