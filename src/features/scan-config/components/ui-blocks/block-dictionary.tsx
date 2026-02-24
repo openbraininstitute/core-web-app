@@ -19,6 +19,8 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
+import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -163,10 +165,17 @@ export default function BlockDictionary({
                 }}
                 data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
               >
-                <span className="text-primary-9 block text-lg font-bold">
-                  {o.title?.replace(/([a-z])([A-Z])/g, '$1\u00AD$2')}
+                <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
+                <span className="mt-3 block">
+                  <TextPatternTransformer
+                    regex={urlRegex}
+                    component={(match) => (
+                      <TransformedLink url={match} className="wrap-break-word text-primary-6" />
+                    )}
+                  >
+                    {o.description}
+                  </TextPatternTransformer>
                 </span>
-                <span className="mt-3 block">{o.description}</span>
               </button>
             </TooltipTrigger>
             {disable && (
@@ -174,6 +183,7 @@ export default function BlockDictionary({
                 avoidCollisions
                 hideWhenDetached
                 align="center"
+                side="right"
                 className={cn(
                   'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
                   'bg-primary-8 px-4 py-2 text-base text-wrap ',

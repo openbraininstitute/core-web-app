@@ -6,14 +6,15 @@ export const renderMathInText = (text: string) => {
 
   // regex to match LaTeX expressions (backslash followed by command or underscore/superscript)
   const latexRegex =
-    /\\[a-zA-Z]+(?:_\{[^}]+\}|\^\{[^}]+\}|_[a-zA-Z0-9]|\^[a-zA-Z0-9])?|[a-zA-Z0-9]+_\{[^}]+\}/g;
+    /\$(.+?)\$|\\[a-zA-Z]+(?:_\{[^}]+\}|\^\{[^}]+\}|_[a-zA-Z0-9]|\^[a-zA-Z0-9])?|[a-zA-Z0-9]+_\{[^}]+\}/g;
+  // /\\[a-zA-Z]+(?:_\{[^}]+\}|\^\{[^}]+\}|_[a-zA-Z0-9]|\^[a-zA-Z0-9])?|[a-zA-Z0-9]+_\{[^}]+\}/g;
 
-  let match;
+  let match: RegExpExecArray | null;
   const regex = new RegExp(latexRegex);
 
   // find all Latex expressions in the line
   const matches = [];
-  // eslint-disable-next-line no-cond-assign
+  // biome-ignore lint/suspicious/noAssignInExpressions: needed
   while ((match = regex.exec(text)) !== null) {
     matches.push({
       index: match.index,
@@ -59,35 +60,31 @@ export const renderMathInText = (text: string) => {
 
   return (
     <>
-      {parts.map((part, partIndex) => {
+      {parts.map((part) => {
         if (part.type === 'latex') {
           try {
-            const html = katex.renderToString(part.content, {
+            const html = katex.renderToString(part.content.replace(/^\$|\$$/g, ''), {
               throwOnError: false,
               displayMode: false,
               output: 'html',
             });
-
             return (
               <span
-                // eslint-disable-next-line react/no-array-index-key
-                key={partIndex}
-                // eslint-disable-next-line react/no-danger
+                key={html}
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: required here
                 dangerouslySetInnerHTML={{ __html: html }}
                 className="inline-block"
               />
             );
-          } catch (e) {
+          } catch {
             return (
-              // eslint-disable-next-line react/no-array-index-key
-              <span key={partIndex} className="text-red-600">
+              <span key={part.content} className="text-red-600">
                 {part.content}
               </span>
             );
           }
         } else {
-          // eslint-disable-next-line react/no-array-index-key
-          return <span key={partIndex}>{part.content}</span>;
+          return <span key={part.content}>{part.content}</span>;
         }
       })}
     </>

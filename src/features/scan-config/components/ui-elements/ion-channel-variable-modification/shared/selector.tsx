@@ -88,7 +88,12 @@ export function IonChannelVariableSelector({
         </SelectValue>
       </SelectTrigger>
 
-      <SelectContent position="popper" className="max-h-72 bg-white! border-gray-100">
+      <SelectContent
+        side="bottom"
+        align="center"
+        position="popper"
+        className="max-h-72 bg-white! border-gray-100"
+      >
         {channelGroups.map((group) => (
           <SelectGroup key={group.channel_name}>
             <ChannelHeader

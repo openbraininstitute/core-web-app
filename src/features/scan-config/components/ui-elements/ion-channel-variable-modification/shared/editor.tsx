@@ -3,6 +3,7 @@
 import { isNil } from 'es-toolkit/compat';
 import { useCallback, useEffect, useState } from 'react';
 
+import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
 import { cn } from '@/utils/css-class';
 
 import type { SectionListEntry } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
@@ -102,8 +103,8 @@ function SectionConfigRow({
         </span>
         <span className="text-sm text-gray-400">
           {!isNil(entry.value)
-            ? `Default: ${entry.value}${entry.units ? ` ${entry.units}` : ''}`
-            : entry.units || ''}
+            ? `Default: ${entry.value}${entry.units ? ` ${renderMathInText(entry.units)}` : ''}`
+            : renderMathInText(entry.units) || ''}
         </span>
       </div>
 

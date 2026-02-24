@@ -13,6 +13,8 @@ import {
   type SchemaName,
   type TBlock,
 } from '@/features/scan-config/types';
+import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
+import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -66,11 +68,29 @@ export default function Block({
       {!hideTitle && (
         <>
           <div className="text-lg text-gray-500 uppercase wrap-break-word">{blockSchema.title}</div>
-          <div className="mb-6 text-gray-500">{blockSchema.description}</div>
+          <div className="mb-6 text-gray-500">
+            <TextPatternTransformer
+              regex={urlRegex}
+              component={(match) => (
+                <TransformedLink url={match} className="wrap-break-word text-primary-6" />
+              )}
+            >
+              {blockSchema.description}
+            </TextPatternTransformer>
+          </div>
         </>
       )}
       {hideTitle && blockSchema.description && (
-        <div className="mb-6 text-gray-500">{blockSchema.description}</div>
+        <div className="mb-6 text-gray-500">
+          <TextPatternTransformer
+            regex={urlRegex}
+            component={(match) => (
+              <TransformedLink url={match} className="wrap-break-word text-primary-6" />
+            )}
+          >
+            {blockSchema.description}
+          </TextPatternTransformer>
+        </div>
       )}
 
       <div className="flex flex-col gap-5">
@@ -172,7 +192,7 @@ export default function Block({
                       avoidCollisions
                       hideWhenDetached
                       align="center"
-                      side="top"
+                      side="right"
                       className={cn(
                         'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
                         'bg-primary-8 px-4 py-2 text-base text-wrap ',
