@@ -103,7 +103,9 @@ export function Range({ data, disabled, state, setState, fieldKey, modificationT
   const handleVariableChange = (selection: IonChannelSelection) => {
     const sectionListModifications: Record<string, number> = {};
     for (const entry of selection.variable.section_lists) {
-      sectionListModifications[entry.section_list] = entry.value ?? 0;
+      if (entry.value !== null) {
+        sectionListModifications[entry.section_list] = entry.value;
+      }
     }
 
     setState({
