@@ -10,7 +10,6 @@ export type NeuronRegistered = {
   id: string;
 };
 
-// Define an interface to safely extend Error without using 'any'
 interface EnhancedError extends Error {
   code?: string | number;
 }
@@ -41,7 +40,6 @@ export async function resolveNeuronFile(file: File): Promise<NeuronResolution> {
     const ansiRegex = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
     const cleanMessage = message.replace(ansiRegex, '');
 
-    // Fix: Use the interface instead of 'any'
     const err = new Error(cleanMessage) as EnhancedError;
     err.code = typeof nested === 'object' ? nested?.code : undefined;
     throw err;
@@ -63,7 +61,6 @@ export async function createAndRegisterMorphometrics(
   formData.append('file', file, file.name);
   formData.append('metadata', JSON.stringify(payload));
 
-  // Fix: Explicitly typed the post response instead of 'any'
   const response = await api.post<{ entity_id: string }>(
     '/declared/register-morphology-with-calculated-metrics',
     {
