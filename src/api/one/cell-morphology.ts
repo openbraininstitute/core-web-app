@@ -38,7 +38,7 @@ export async function resolveNeuronFile(file: File): Promise<NeuronResolution> {
       errorData?.message ||
       `Request failed with status ${response.status}`;
 
-    const ansiRegex = new RegExp(String.fromCharCode(27) + '\\[[0-9;]*m', 'g');
+    const ansiRegex = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
     const cleanMessage = message.replace(ansiRegex, '');
 
     // Fix: Use the interface instead of 'any'
