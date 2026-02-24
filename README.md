@@ -21,9 +21,7 @@ This is the repository for the Blue Brain Open Platform's core web application.
 ## Installation
 
 ```bash
-npm install
-# or
-yarn install
+pnpm install
 ```
 
 ### Development
@@ -33,18 +31,16 @@ To spin-up a local development server, run the following terminal command.
 ```bash
 npm run dev
 # or
+pnpm run dev
+# or
 yarn dev
+# or
+bun run dev
 ```
 
 This will start a local server, which can be accessed at the following port: [http://localhost:3000](http://localhost:3000)
 
-### Testing
 
-```bash
-npm run test
-# or
-yarn test
-```
 
 ### Documentation
 
