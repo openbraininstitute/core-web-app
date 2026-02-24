@@ -1,32 +1,32 @@
 'use client';
 
-import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DownOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
 import { useQueries, useQuery } from '@tanstack/react-query';
-import { usePathname, useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useSession } from 'next-auth/react';
 import { compact } from 'es-toolkit/compat';
+import { AnimatePresence, motion } from 'framer-motion';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { Item } from '@/ui/segments/workspaces/space-switcher/item';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { UserFilled } from '@/components/icons/buttons';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Button } from '@/ui/molecules/button';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
   type TTriggerWorkspaceConfigurationClickEvent,
   useWorkspaceConfigurationClickEvent,
   WorkspaceActions,
 } from '@/ui/segments/workspaces/space-manager/event';
-import { Skeleton } from '@/ui/molecules/skeleton';
-import { Button } from '@/ui/molecules/button';
+import { Item } from '@/ui/segments/workspaces/space-switcher/item';
+import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -89,7 +89,7 @@ export function SpaceSwitcher({ className }: Props) {
       virtualLabs?.data?.virtual_lab
         ? { ...virtualLabs?.data?.virtual_lab, isMine: true }
         : undefined,
-    [virtualLabs?.data?.virtual_lab]
+    [virtualLabs]
   );
 
   const membershipLabs = useMemo(
@@ -100,7 +100,7 @@ export function SpaceSwitcher({ className }: Props) {
             isMine: false,
           }))
         : [],
-    [virtualLabs?.data?.membership_labs]
+    [virtualLabs]
   );
 
   const { isLoading: projectsLoading, data: projects } = useQuery({
@@ -250,6 +250,7 @@ export function SpaceSwitcher({ className }: Props) {
                 hidden: isExpanded,
               })}
             >
+              {/** biome-ignore lint/a11y/useSemanticElements: button can not have nested buttons */}
               <div
                 className={cn(
                   'flex items-center gap-1.5 rounded-full',
@@ -262,14 +263,14 @@ export function SpaceSwitcher({ className }: Props) {
                 title={username}
                 aria-label={username}
               >
-                <UserFilled className="hover:text-primary-6 text-primary-9 flex-shrink-0 text-lg xl:text-xl" />
+                <UserFilled className="hover:text-primary-6 text-primary-9 shrink-0 text-lg xl:text-xl" />
               </div>
               <RightOutlined className="text-primary-8 font-bold" />
               {currentVirtualLabName && !isExpanded && (
                 <div
                   className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden pl-2 select-none"
                   title={currentVirtualLabName}
-                  aria-label={currentVirtualLabName}
+                  data-label={currentVirtualLabName}
                 >
                   <h3 className="text-primary-9 min-w-0 flex-1 truncate group-hover:font-bold">
                     {currentVirtualLabName}
@@ -461,6 +462,7 @@ function ProfileButton({
   );
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: button can't have nested buttons
     <div
       className={cn(
         'flex max-w-[calc(100%-100px)] flex-row items-center gap-1.5 rounded-full bg-white px-5 py-2 shadow-md md:h-9 lg:h-10',
@@ -474,7 +476,7 @@ function ProfileButton({
       title={username}
       aria-label={username}
     >
-      <UserFilled className="flex-shrink-0 text-base text-current xl:text-lg" />
+      <UserFilled className="shrink-0 text-base text-current xl:text-lg" />
       <h3 className="line-clamp-1 min-w-0 truncate text-left text-sm font-bold">{username}</h3>
     </div>
   );
