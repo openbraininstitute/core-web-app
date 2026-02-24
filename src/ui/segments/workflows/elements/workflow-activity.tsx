@@ -450,7 +450,10 @@ export function WorkflowActivity() {
                       size={breakpoint === 'l' ? 'md' : 'lg'}
                       className="select-none"
                     >
-                      <Link href={{ pathname: configurationLink, query: query.toString() }}>
+                      <Link
+                        href={{ pathname: configurationLink, query: query.toString() }}
+                        className="text-current!"
+                      >
                         View configuration
                       </Link>
                     </Button>
@@ -466,11 +469,12 @@ export function WorkflowActivity() {
                           variant="outline"
                           size={breakpoint === 'l' ? 'md' : 'lg'}
                           disabled={activityType === ActivityValues.Build}
-                          className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed"
+                          className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed group"
                         >
                           <Link
                             href={resultsLink}
                             aria-disabled={activityType === ActivityValues.Build}
+                            className="text-current!"
                           >
                             View results
                           </Link>
