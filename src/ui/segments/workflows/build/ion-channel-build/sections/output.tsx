@@ -184,16 +184,16 @@ function getParameterDisplayName(summaryKey: string, field: string): string {
   const normalizedField = normalizeSummaryKey(field);
 
   if (normalizedKey === 'activation parameters' && normalizedField === 'steady state') {
-    return 'Steady State Activation Parameter (minf)';
+    return 'Steady State Activation Parameter';
   }
   if (normalizedKey === 'inactivation parameters' && normalizedField === 'steady state') {
-    return 'Steady State Inactivation Parameter (hinf)';
+    return 'Steady State Inactivation Parameter';
   }
   if (normalizedKey === 'activation parameters' && normalizedField === 'time constant') {
-    return 'Activation Time Activation Parameter (mtau)';
+    return 'Time Constant Activation Parameter';
   }
   if (normalizedKey === 'inactivation parameters' && normalizedField === 'time constant') {
-    return 'Inactivation Time Activation Parameter (mtau)';
+    return 'Time Constant Inactivation Parameter';
   }
 
   return `${toDisplayLabel(summaryKey)} - ${toDisplayLabel(field)}`;
