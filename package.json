@@ -23,7 +23,7 @@
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@apache-arrow/es2015-esm": "^19.0.1",
     "@apidevtools/json-schema-ref-parser": "^13.0.1",
-    "@bbp/morphoviewer": "file:tarball/bbp-morphoviewer-0.22.2.tgz",
+    "@bbp/morphoviewer": "file:tarball/bbp-morphoviewer-0.21.4.tgz",
     "@bprogress/next": "^3.2.12",
     "@next/bundle-analyzer": "16.1.0",
     "@octokit/core": "^7.0.6",

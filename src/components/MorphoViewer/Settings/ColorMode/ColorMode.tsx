@@ -1,9 +1,9 @@
-import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
-import { classNames } from '@/util/utils';
+import React from 'react';
+import { MorphologyCanvas } from '@bbp/morphoviewer';
 
 import { useMorphoViewerSettings } from '../../hooks/settings';
-
-import type { MorphologyCanvas } from '@bbp/morphoviewer';
+import { classNames } from '@/util/utils';
+import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 
 import styles from './color-mode.module.css';
 
