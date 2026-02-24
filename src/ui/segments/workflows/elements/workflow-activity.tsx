@@ -352,12 +352,7 @@ export function WorkflowActivity() {
             id="workflow-activities-full-table"
             data-testid="workflow-activities-full-table"
           >
-            <ConfigProvider
-              theme={{
-                hashed: false,
-                components: { Table: { headerSplitColor: '#d9d9d9' } },
-              }}
-            >
+            <ConfigProvider theme={{ hashed: false }}>
               <BaseTable
                 expandableConfig={expandableConfig}
                 sticky
@@ -370,7 +365,8 @@ export function WorkflowActivity() {
                   '[&_.ant-table-thead_th]:text-neutral-4!',
                   '[&_.ant-table-placeholder]:bg-background!',
                   '[&_.ant-table-sticky-holder]:shadow-none',
-                  '[&_.ant-table-body]:secondary-scrollbar!'
+                  '[&_.ant-table-body]:secondary-scrollbar!',
+                  '[&_.ant-table_th:before]:bg-neutral-2!'
                 )}
                 loading={isFetching}
                 dataSource={activityResult?.data}
