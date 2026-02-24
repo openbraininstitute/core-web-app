@@ -1,5 +1,5 @@
 import { Select } from 'antd';
-import map from 'es-toolkit/compat/map';
+import { map } from 'es-toolkit/compat';
 import { useCallback, useEffect, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
@@ -90,7 +90,7 @@ export function DropdownList({
         classNames={{
           popup: {
             root: cn(
-              'bg-primary-8 border-neutral-3 text-white!',
+              'bg-primary-8! border-neutral-3 text-white!',
               '[&_.ant-select-item]:text-white! [&_.ant-select-item-option-selected]:bg-primary-7! [&_.ant-select-item-option-state]:text-white!',
               '[&_.ant-select-item-option-active]:bg-white! [&_.ant-select-item-option-active]:text-primary-8! select-none!',
               '[&_.ant-select-item-option-active.ant-select-item-option-selected]:text-white!'
