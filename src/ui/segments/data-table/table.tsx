@@ -228,10 +228,10 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
           scroll={
             scrollable
               ? {
-                  x: 'max-content',
+                  x: 'fit-content',
                   y: Math.max(containerDimension.height - headerHeight, 0),
                 }
-              : { x: 'max-content' }
+              : { x: 'fit-content' }
           }
           expandable={expandableConfig}
         />
