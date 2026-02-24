@@ -120,7 +120,7 @@ export function Global({
       ...state,
       [fieldKey]: {
         type: modificationType,
-        ion_channel_id: selection.entityId ?? '',
+        ion_channel_id: selection.entityId,
         channel_name: selection.channelName,
         variable_name: selection.variable.neuron_variable,
       },

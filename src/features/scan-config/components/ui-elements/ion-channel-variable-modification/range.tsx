@@ -110,7 +110,7 @@ export function Range({ data, disabled, state, setState, fieldKey, modificationT
       ...state,
       [fieldKey]: {
         type: modificationType,
-        ion_channel_id: selection.entityId ?? '',
+        ion_channel_id: selection.entityId,
         variable_name: selection.variable.neuron_variable,
         section_list_modifications: sectionListModifications,
       },
