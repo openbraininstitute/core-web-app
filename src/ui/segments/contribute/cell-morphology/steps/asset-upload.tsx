@@ -90,12 +90,16 @@ export function AssetUpload({
 
       if (error) {
         setResolveNeuronFileLoading(false);
+
+        const detailMessage = (error as Error).message || 'An unknown error occurred';
+
         setState((prev) => ({
           ...prev,
-          errors: [messages.ResolveNeuronFileFailed.replace('$$', file.name)],
+          errors: [messages.ResolveNeuronFileFailed.replace('$$', file.name), detailMessage],
         }));
         return;
       }
+
       if (resolution?.isValid) {
         const zip = new JSZip();
         const unzippedData = await zip.loadAsync(resolution.buffer, {});
@@ -142,11 +146,6 @@ export function AssetUpload({
         setState((prev) => ({
           ...prev,
           files: [...prev.files, ...reject(allFiles, (o) => isNil(o.file))],
-        }));
-      } else {
-        setState((prev) => ({
-          ...prev,
-          errors: [messages.ResolveNeuronFileFailed.replace('$$', file.name)],
         }));
       }
       setResolveNeuronFileLoading(false);
@@ -330,8 +329,8 @@ export function AssetUpload({
             <AlertContent>
               <AlertTitle>File upload error(s)</AlertTitle>
               <AlertDescription>
-                {errors.map((error) => (
-                  <p key={error} className="last:mb-0">
+                {errors.map((error, idx) => (
+                  <p key={idx} className="last:mb-0 whitespace-pre-wrap font-mono text-xs">
                     {error}
                   </p>
                 ))}
