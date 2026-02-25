@@ -123,6 +123,7 @@ export function Global({
         ion_channel_id: selection.entityId,
         channel_name: selection.channelName,
         variable_name: selection.variable.neuron_variable,
+        variable_type: selection.variable.variable_type,
       },
     });
   };
