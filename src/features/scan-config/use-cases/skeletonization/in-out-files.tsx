@@ -8,8 +8,8 @@ import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { classNames } from '@/util/utils';
 
-import type { ISkeletonizationConfig } from '@/api/entitycore/types/entities/skeletonization-config';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
+import type { ISkeletonizationConfig } from '@/api/entitycore/types/entities/skeletonization-config';
 
 type Props = {
   config: ISkeletonizationConfig;
@@ -83,7 +83,7 @@ export function SkeletonizationInOutFiles({
               <div className="text-gray-400">No output files generated</div>
             )}
             {morphologies?.map((morphology) => {
-              const swcAsset = morphology.assets.find((a) => a.path.endsWith('.swc'));
+              const swcAsset = morphology.assets.find((a) => a.content_type === 'application/swc');
               if (!swcAsset) return null;
               return (
                 <FileItem
