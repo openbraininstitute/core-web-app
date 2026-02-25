@@ -119,10 +119,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
     refetchInterval: (query) => {
       const executions = query.state.data?.data ?? [];
       const hasActiveSkeletonizations = executions.some((exec) =>
-        includes(
-          [ActivityStatus.CREATED, ActivityStatus.PENDING, ActivityStatus.RUNNING],
-          exec.status
-        )
+        includes([ActivityStatus.PENDING, ActivityStatus.RUNNING], exec.status)
       );
       return hasActiveSkeletonizations && !skeletonizationRequestInProgress
         ? STATUS_POLL_INTERVAL
