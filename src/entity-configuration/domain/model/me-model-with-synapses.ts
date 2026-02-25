@@ -22,7 +22,7 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
     config: {
       allowedFacets: true,
       ilikeSearchEnabled: true,
-      extraRequiredListFilters: circuitScaleFilter,
+      extraQueryKeyBuilder: circuitScaleFilter,
     },
     query: {
       list: (...params) => {
@@ -35,9 +35,6 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
       },
       one: getCircuit,
     },
-  },
-  explore: {
-    basePrefix: 'model',
   },
   asset: {
     extension: 'application/json',

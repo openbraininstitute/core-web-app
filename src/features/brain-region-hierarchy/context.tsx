@@ -1,6 +1,6 @@
 'use client';
 
-import { capitalize, find, isNil, lowerCase, omit } from 'es-toolkit/compat';
+import { find, isNil, lowerCase, omit } from 'es-toolkit/compat';
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect, useRef } from 'react';
@@ -14,7 +14,10 @@ import {
 } from '@/components/tree/elements/helpers';
 import { config } from '@/config';
 import { brainAtlasAtom, brainRegionAtlasAtom } from '@/features/brain-atlas-viewer/context';
-import { getLeavesForEachRegion } from '@/features/brain-region-hierarchy/helpers';
+import {
+  getLeavesForEachRegion,
+  normalizeBrainRegionName,
+} from '@/features/brain-region-hierarchy/helpers';
 import { useUnwrappedValue } from '@/hooks/hooks';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { getSectionFromDataKey } from '@/utils/key-builder';
@@ -271,7 +274,7 @@ export const brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom = atom(
         .map((region) => ({
           av: region.annotation_value,
           value: region.id,
-          label: capitalize(`${region.name}`),
+          label: normalizeBrainRegionName(`${region.name}`),
           data: {
             ...region,
             children: region.children.filter((o) => !isNil(o)),
@@ -333,6 +336,7 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
   // track if config was already initialized to avoid infinite loop
   const isInitializedRef = useRef(false);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: stable id
   useEffect(() => {
     if (!brainRegions) return;
 
@@ -386,7 +390,6 @@ export const useBrainRegionHierarchy = ({ dataKey }: Props) => {
     }
 
     isInitializedRef.current = true;
-    // biome-ignore lint/correctness/useExhaustiveDependencies: updateSelectedBrainRegion is stable
   }, [brainRegions, id, annotationValue, stored, defaultSelectedBrainRegion]);
 
   // Sync localStorage when URL params change

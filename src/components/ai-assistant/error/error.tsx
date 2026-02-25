@@ -1,4 +1,5 @@
 import React from 'react';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 import { classNames } from '@/util/utils';
 import { isString, isType } from '@/util/type-guards';
@@ -11,7 +12,11 @@ interface ErrorProps {
 }
 
 export default function ErrorPanel({ className, value }: ErrorProps) {
-  return <div className={classNames(className, styles.error)}>{renderError(value)}</div>;
+  return (
+    <div className={classNames(className, styles.errorContainer)}>
+      {renderError(value)}
+    </div>
+  );
 }
 
 function extractString(error: unknown) {
@@ -32,63 +37,56 @@ function extractJSON(error: unknown) {
 function renderError(error: unknown): React.ReactNode {
   const value = extractJSON(error);
   if (isInsufficentFundsError(value)) return renderInsufficentFundsError();
-  if (isRateLimitError(value)) return renderRateLimitError(value);
-  return <pre>{JSON.stringify(value, null, '  ')}</pre>;
+  return renderGenericError();
 }
 
 interface InsufficentFundsError {
-  message: 'Error: InsufficientFundsError';
+  message: "Error: InsufficientFundsError";
 }
 
 function isInsufficentFundsError(data: unknown): data is InsufficentFundsError {
   return isType(data, {
-    message: ['literal', 'Error: InsufficientFundsError'],
+    message: [
+      "literal",
+      "Error: InsufficientFundsError",
+      "Error: AccountingReservationError",
+    ],
   });
 }
 
 function renderInsufficentFundsError() {
   return (
-    <div>
-      <div>We are sorry,</div>
-      <div>but you don&apos;t have sufficient funds to use the AI Assistant.</div>
+    <div className={styles.errorCard}>
+      <div className={styles.errorIcon}>
+        <ExclamationCircleOutlined />
+      </div>
+      <div className={styles.errorContent}>
+        <h3 className={styles.errorTitle}>Insufficient Funds</h3>
+        <p className={styles.errorMessage}>
+          We are sorry, but your project doesn&apos;t have sufficient funds to
+          use the AI Assistant.
+        </p>
+        <p className={styles.errorHint}>
+          Please contact your Virtual Lab's administrator or use free chat
+          credits when available.
+        </p>
+      </div>
     </div>
   );
 }
 
-interface RateLimitError {
-  detail: {
-    error: string;
-    retry_after: number;
-  };
-}
-
-function isRateLimitError(data: unknown): data is RateLimitError {
-  return isType(data, {
-    detail: {
-      error: 'string',
-      retry_after: 'number',
-    },
-  });
-}
-
-function renderRateLimitError(value: RateLimitError): React.ReactNode {
-  const t = Math.ceil(value.detail.retry_after / 60);
-  const minutes = t % 60;
-  const hours = Math.floor((t - minutes) / 60);
-  const when = figureWhen(hours, minutes);
+function renderGenericError() {
   return (
-    <>
-      <div>You have reached the limit of questions you can ask for free.</div>
-      <div>Please use a virtual lab, or try agin in {when}.</div>
-    </>
+    <div className={styles.errorCard}>
+      <div className={styles.errorIcon}>
+        <ExclamationCircleOutlined />
+      </div>
+      <div className={styles.errorContent}>
+        <h3 className={styles.errorTitle}>Something went wrong</h3>
+        <p className={styles.errorMessage}>
+          We encountered an unexpected error while processing your request.
+        </p>
+      </div>
+    </div>
   );
-}
-
-/**
- * Create a user friendly text of the remaining time.
- */
-function figureWhen(hours: number, minutes: number) {
-  if (hours === 0) return `${minutes} minutes`;
-  if (hours === 1) return `one hour and ${minutes} minutes`;
-  return `approximately ${hours + 1} hours`;
 }

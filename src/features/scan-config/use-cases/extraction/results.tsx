@@ -70,20 +70,6 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
 
-  const consentGate = useRunWithOfflineTokenConsent({
-    notifyError: notification.error,
-    messages: {
-      cancelled: errorRegistry.AUTH_CONSENT_CANCELLED.replace('$$', 'Extraction'),
-      denied: errorRegistry.AUTH_CONSENT_DENIED.replace('$$', 'Extraction'),
-      timeout: errorRegistry.AUTH_CONSENT_TIMEOUT,
-    },
-    useCache: false,
-  });
-
-  useEffect(() => {
-    consentGate.prime();
-  }, [consentGate.prime]);
-
   // 1. get the generation activity that used the campaign
   const { data: generationResponse, isLoading: generationLoading } = useQuery({
     queryKey: queryKeys.configGeneration(campaignId, context),
@@ -121,7 +107,11 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     enabled: generatedConfigIds.length > 0,
   });
 
-  const configList = configs ?? [];
+  const configList = useMemo(() => {
+    const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+    return [...(configs ?? [])].sort((a, b) => collator.compare(a.name, b.name));
+  }, [configs]);
+
   const configIds = configList.map((c) => c.id);
   const queryKey = queryKeys.extractionExecutions(configIds, context);
 
@@ -242,14 +232,10 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const runExtraction = async (configIdsToRun: string[]) => {
     setExtractionRequestInProgress(true);
     try {
-      await consentGate.runWithConsent({
-        fn: async () => {
-          await pMap(configIdsToRun, (c) => launchExtractionMutation.mutateAsync(c), {
-            concurrency: 3,
-          });
-          setSelectedConfigIds([]);
-        },
+      await pMap(configIdsToRun, (c) => launchExtractionMutation.mutateAsync(c), {
+        concurrency: 3,
       });
+      setSelectedConfigIds([]);
     } finally {
       setExtractionRequestInProgress(false);
     }
@@ -350,15 +336,6 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
           </div>
         )}
       </div>
-
-      <OfflineTokenConsentModal
-        open={consentGate.modal.open}
-        consentUrl={consentGate.modal.consentUrl}
-        onCancel={consentGate.cancel}
-        onOpenConsent={() => {
-          consentGate.openConsentLink(consentGate.modal.consentUrl);
-        }}
-      />
     </div>
   );
 }

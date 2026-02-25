@@ -2,12 +2,13 @@ import {
   getExperimentalSynapsesPerConnection,
   getExperimentalSynapsesPerConnections,
 } from '@/api/entitycore/queries/experimental/synapses-per-connection';
-import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
 export const SynapsesPerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPerConnection> = {
@@ -26,10 +27,6 @@ export const SynapsesPerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPe
       one: getExperimentalSynapsesPerConnection,
     },
   },
-  explore: {
-    basePrefix: 'experimental',
-    routePrefix: 'interactive/experimental',
-  },
   asset: {
     extension: 'application/json',
   },
@@ -38,5 +35,5 @@ export const SynapsesPerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPe
   isCopyable: true,
   isSimulatable: false,
   isBookmarkable: true,
-  isUploadable: true,
+  isContributable: true,
 } as const;
