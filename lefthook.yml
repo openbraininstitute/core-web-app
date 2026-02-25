@@ -2,6 +2,6 @@ pre-commit:
   parallel: true
   commands:
     check:
-      glob: "*.{js,ts,cjs,mjs,jsx,tsx,css,json,jsonc}"
+      glob: "*.{js,ts,cjs,mjs,jsx,tsx,json,jsonc}"
       run: pnpx @biomejs/biome check --write {staged_files}
       stage_fixed: true
