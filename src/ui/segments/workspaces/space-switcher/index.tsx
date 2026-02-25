@@ -212,7 +212,7 @@ export function SpaceSwitcher({ className }: Props) {
     <div className="flex items-start justify-center gap-1.5">
       <div id="workspace-switcher" className={cn('relative', className)} ref={dropdownRef}>
         <button
-          id="virtual-lab-menu-button"
+          id="virtual-lab-menu-banner"
           type="button"
           role="menubar"
           onClick={onClick}
@@ -224,10 +224,10 @@ export function SpaceSwitcher({ className }: Props) {
                 isExpanded,
             },
             {
-              'bg-background border-neutral-2 gap-2 rounded-full border text-gray-700 hover:bg-gray-50':
+              'bg-background hover:shadow-sm border-neutral-2 gap-2 rounded-full border text-gray-700 hover:bg-gray-50':
                 !isExpanded,
             },
-            { 'z-[1001]': boardModalOpen },
+            { 'z-1001': boardModalOpen },
             { 'h-12': breakpoint === 'xl' }
           )}
           aria-label={`${currentVirtualLabName}/${currentProjectName}`}

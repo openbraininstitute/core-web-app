@@ -1,14 +1,13 @@
-import { HydrateClient } from '@/query-provider/server';
-import { Shortcuts } from '@/ui/segments/project/bottom-nav-shortcuts';
+import { DiscoverList } from '@/ui/segments/project/get-started/sections/discover';
+import { MainVideo } from '@/ui/segments/project/get-started/sections/main-video';
+import { MainCards } from '@/ui/segments/project/get-started/sections/quick-access-main-cards';
 
-import type { ServerSideComponentProp } from '@/types/common';
-
-export default async function Home({
-  params: promisedParams,
-}: ServerSideComponentProp<{ virtualLabId: string; projectId: string }, null>) {
+export default function Page() {
   return (
-    <HydrateClient>
-      <div className="flex flex-col gap-6 pr-1.5">Get Started</div>
-    </HydrateClient>
+    <div className="w-full flex flex-col pr-2">
+      <MainCards />
+      <MainVideo />
+      <DiscoverList />
+    </div>
   );
 }

@@ -9,7 +9,6 @@ import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button/index';
@@ -37,12 +36,13 @@ const projectFormSchema = z.object({
 });
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
-
+// const sleep = () => new Promise((r) => setTimeout(r, 50000));
 export function ProjectCard(): ReactElement {
   const { virtualLabId, projectId } = useWorkspace();
   const [form] = Form.useForm<ProjectFormValues>();
   const [mounted, setMounted] = useState(false);
   const queryClient = useQueryClient();
+
   const { data: result, refetch } = useSuspenseQuery({
     queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
     queryFn: () => getProject({ virtualLabId, projectId }),
