@@ -24,10 +24,6 @@ export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
       create: createMEModel,
     },
   },
-  explore: {
-    basePrefix: 'model',
-    routePrefix: 'interactive/model',
-  },
   asset: {
     extension: undefined,
   },

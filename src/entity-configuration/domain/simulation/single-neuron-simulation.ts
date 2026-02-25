@@ -51,10 +51,6 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
     },
     expand: singleNeuronSimulationApiQueryExpand,
   },
-  explore: {
-    basePrefix: 'simulate',
-    routePrefix: 'simulate',
-  },
   asset: {
     extension: 'application/json',
     configfile: AssetLabel.single_neuron_simulation_data,

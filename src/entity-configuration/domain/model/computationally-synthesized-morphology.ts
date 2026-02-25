@@ -1,9 +1,8 @@
 import {
-  createCellMorphology,
-  deleteCellMorphology,
   getCellMorphologies,
   getCellMorphology,
 } from '@/api/entitycore/queries/experimental/cell-morphology';
+import { CellMorphologyGenerationTypeDictionary } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
@@ -15,55 +14,48 @@ import type {
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
-
-// TODO: Uncomment until entitycore support filtering by `not_in`
-// export const cellMorphologyGenerationTypeFilter = {
-//   cell_morphology_protocol__generation_type__in: without(
-//     Object.values(CellMorphologyGenerationTypeDictionary),
-//     CellMorphologyGenerationTypeDictionary.ComputationallySynthesized
-//   ),
-// };
-
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
-export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphologyExpanded> = {
-  group: EntityTypeGroup.Experimental,
-  title: 'Morphology',
-  extendedType: ExtendedEntitiesTypeDict.CellMorphology,
+export const protocolTypeFilter = {
+  cell_morphology_protocol__generation_type:
+    CellMorphologyGenerationTypeDictionary.ComputationallySynthesized,
+};
+
+export const ComputationallySynthesizedCellMorphology: EntityCoreTypeConfig<
+  ICellMorphology | ICellMorphologyExpanded
+> = {
+  group: EntityTypeGroup.Models,
+  title: 'Synthesized morphology',
+  extendedType: ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
   type: EntityTypeDict.CellMorphology,
   slug: EntitySlug.CellMorphology,
   api: {
     config: {
       allowedFacets: true,
-      // extraQueryKeyBuilder: { ...cellMorphologyGenerationTypeFilter },
       ilikeSearchEnabled: true,
+      extraQueryKeyBuilder: { ...protocolTypeFilter },
     },
     query: {
-      list: (...params) => {
-        return getCellMorphologies({
+      list: (params: Parameters<typeof getCellMorphologies>[0]) =>
+        getCellMorphologies({
           ...params,
-          context: params[0].context,
-          withFacets: params[0].withFacets,
           filters: {
-            ...params[0].filters,
-            // ...cellMorphologyGenerationTypeFilter,
+            ...params.filters,
+            ...protocolTypeFilter,
           },
-        });
-      },
+        }),
       one: getCellMorphology,
-      delete: deleteCellMorphology,
-      create: createCellMorphology,
     },
   },
-  asset: {
-    extension: 'application/swc',
-  },
+  asset: { extension: 'application/swc' },
   viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.CellMorphology],
   detailViewSections: [DetailViewSectionsDict.Overview],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,
-  isDeletable: true,
   isSimulatable: false,
-  isContributable: true,
+  // this is a subtype, only universal should be uploadable
+  // link: src/entity-configuration/domain/experimental/universal-cell-morphology.ts
+  isContributable: false,
+  isContributionOption: false,
 } as const;

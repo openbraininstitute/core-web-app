@@ -1,10 +1,10 @@
-import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import * as Accordion from '@radix-ui/react-accordion';
-import { ReactElement } from 'react';
 
 import { ChevronIcon } from '@/components/icons';
 import { classNames } from '@/util/utils';
 
+import type { ReactElement } from 'react';
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 import styles from '@/ui/segments/data-table/elements/listing-filter-panel/filters.module.css';
@@ -34,11 +34,21 @@ export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
     >
       {items?.map(({ content, display, label, toggleFunc }) => {
         const displayTrigger = display ? (
-          <button type="button" aria-label="filter-panel-hide-field-button" onClick={toggleFunc}>
+          <button
+            key={label}
+            type="button"
+            aria-label="filter-panel-hide-field-button"
+            onClick={toggleFunc}
+          >
             <EyeOutlined style={{ color: 'white' }} />
           </button>
         ) : (
-          <button type="button" aria-label="filter-panel-show-field-button" onClick={toggleFunc}>
+          <button
+            key={label}
+            type="button"
+            aria-label="filter-panel-show-field-button"
+            onClick={toggleFunc}
+          >
             <EyeInvisibleOutlined
               style={{ color: '#69C0FF' }}
               aria-label="filter-panel-show-field-button"

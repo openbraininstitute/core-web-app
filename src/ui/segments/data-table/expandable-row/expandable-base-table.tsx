@@ -1,19 +1,18 @@
 /* eslint-disable react/jsx-props-no-spreading */
 
-import { ReactNode, CSSProperties } from 'react';
-import { TableProps } from 'antd';
-import type { ExpandableConfig } from 'antd/es/table/interface';
-
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
+  type UseExpandableTableOptions,
   useExpandableTable,
-  UseExpandableTableOptions,
 } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import { BaseTable } from '@/ui/segments/data-table/table';
 
+import type { TableProps } from 'antd';
+import type { ExpandableConfig } from 'antd/es/table/interface';
+import type { CSSProperties, ReactNode } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
-import { TWorkspaceScope } from '@/constants';
 
 type AdditionalTableProps<T> = {
   context: {
