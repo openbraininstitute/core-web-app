@@ -11,7 +11,7 @@ const StorageImage = ({ src }: { src?: string | Blob }) => {
 
   let isSameOrigin = false;
   try {
-    isSameOrigin = new URL(srcString).origin === window.location.origin;
+    isSameOrigin = new URL(srcString).origin.includes('openbraininstitute');
   } catch {
     return <PlotErrorMessage />;
   }
