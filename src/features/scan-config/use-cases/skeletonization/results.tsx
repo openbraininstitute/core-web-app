@@ -226,10 +226,10 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
               if (msg.status === JobStatus.DONE) {
                 notification.success({ message: `${config.name} done` });
               } else if (msg.status === JobStatus.ERROR) {
-                const errorMsg = msg.extra?.includes('InsufficientFundsError')
+                const errorMsg = msg.extra?.includes('ACCOUNTING_INSUFFICIENT_FUNDS_ERROR')
                   ? get(textMessages, `${ScanConfigActivity.Process}.LowFunds`, 'Unknown error')
                   : genericErrorMsg;
-                notification.error({ message: errorMsg });
+                notification.error({ message: errorMsg, duration: null });
               }
             })
             .otherwise(() => null);
