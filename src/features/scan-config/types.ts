@@ -1,6 +1,6 @@
 import type { atom } from 'jotai';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
-import type { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { ConfigValue } from '@/features/scan-config/components/components';
 import type { Prettify } from '@/utils/type';
@@ -54,7 +54,7 @@ export const ScanConfigDefaultTab = {
   __activity: ScanConfigActivity.Simulate,
 } as const;
 
-export type SimExecStatusMap = Map<string, EntitycoreExecutionStatus>;
+export type SimExecStatusMap = Map<string, ActivityStatus>;
 export type TabType = 'configuration' | 'simulations';
 
 export type SchemaName =

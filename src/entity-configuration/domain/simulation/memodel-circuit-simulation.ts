@@ -190,10 +190,6 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCa
     },
     expandRow: async (record, _context) => record,
   },
-  explore: {
-    basePrefix: 'simulate',
-    routePrefix: 'simulate',
-  },
   asset: {
     extension: 'application/json',
   },

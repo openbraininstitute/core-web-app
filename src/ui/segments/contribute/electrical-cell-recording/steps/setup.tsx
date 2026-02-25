@@ -10,38 +10,21 @@ import {
   ElectricalRecordingOriginDictionary,
   RecordingType,
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import { BrainRegionDropdownWithFormItem } from '@/features/brain-region-dropdown/form-dropdown';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import {
   ElectricalCellRecordingSchema,
   RECORDING_LOCATION_OPTIONS,
 } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import { BrainRegionSelector } from '@/ui/segments/contribute/shared/components/brain-region-selector';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
-
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
 export function Setup() {
   const form = Form.useFormInstance();
-  const { projectId } = useWorkspace();
-
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
-
-  const BrainRegionDropdown = BrainRegionDropdownWithFormItem({
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
-    showIcon: false,
-    charsPerLine: 200,
-    defaultBrainRegion: defaultBrainRegion as IBrainRegionHierarchy,
-  });
 
   const RecordingTypeFormInput = SelectPopoverFormItem<typeof RecordingType>({
     options: Object.values(RecordingType).map(({ key, label }) => ({
@@ -123,7 +106,7 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionDropdown />
+        <BrainRegionSelector />
       </Form.Item>
 
       <Form.Item

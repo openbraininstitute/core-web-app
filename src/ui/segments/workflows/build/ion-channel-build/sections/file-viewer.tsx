@@ -1,21 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
 import { useQuery } from '@tanstack/react-query';
-import { BundledLanguage } from 'shiki';
-import { Image, Empty } from 'antd';
+import { Empty, Image } from 'antd';
+import { useEffect, useRef, useState } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
 
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { CodeBlock, CodeBlockCopyButton } from '@/ui/molecules/code-blocks';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { Skeleton } from '@/ui/molecules/skeleton';
+import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
-import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
+import type { BundledLanguage } from 'shiki';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -135,7 +135,7 @@ export function PDFViewer({ url, filename }: { url: string; filename: string }) 
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <h3 className="mb-2 flex-shrink-0 text-base font-semibold">{filename}</h3>
+      <h3 className="mb-2 shrink-0 text-base font-semibold">{filename}</h3>
       <div
         ref={containerRef}
         className="flex flex-1 items-center justify-center overflow-hidden bg-gray-50"
@@ -156,9 +156,7 @@ export function PDFViewer({ url, filename }: { url: string; filename: string }) 
         </Document>
       </div>
       {numPages > 1 && (
-        <div className="flex-shrink-0 pt-1 text-center text-xs text-gray-500">
-          Page 1 of {numPages}
-        </div>
+        <div className="shrink-0 pt-1 text-center text-xs text-gray-500">Page 1 of {numPages}</div>
       )}
     </div>
   );

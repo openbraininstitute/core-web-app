@@ -6,8 +6,8 @@ import { match } from 'ts-pattern';
 
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
-import ApiError from '@/api/error';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
+import { ApiError } from '@/api/error';
 import { runSimulation } from '@/api/one/circuit-simulation';
 import { useAppNotification } from '@/components/notification';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
@@ -113,12 +113,19 @@ export default function SimulationsTab({
   }, [simulations, statusMap]);
 
   useEffect(() => {
-    // Auto select all simulations with status "created" on page load.
+    // Auto select all valid simulations with status "created" on page load.
+    // Previously failed simulations with a valid simulation config have to be explicitly
+    // re-selected by the user.
+    const simIds = simulations
+      .filter((simulation) => [undefined, 'created'].includes(statusMap?.get(simulation.id)))
+      .filter((simulation) => hasSimConfigAsset(simulation))
+      .map((s) => s.id);
+
     if (statusMap && simulations && !initialSelectionDone) {
-      setSelectedSimulationIds(selectableSimulationIds);
+      setSelectedSimulationIds(simIds);
       setInitialSelectionDone(true);
     }
-  }, [simulations, statusMap, initialSelectionDone, selectableSimulationIds]);
+  }, [simulations, statusMap, initialSelectionDone]);
 
   useEffect(() => {
     // Select first simulation from the list
@@ -136,7 +143,7 @@ export default function SimulationsTab({
 
     const hasActiveSimulations = statusMap
       ? Array.from(statusMap.values()).some((status) =>
-          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING].includes(status)
+          [ActivityStatus.PENDING, ActivityStatus.RUNNING].includes(status)
         )
       : false;
 
@@ -187,7 +194,7 @@ export default function SimulationsTab({
           simulationId: simId,
         });
         log('info', res);
-        setSimStatus(simId, EntitycoreExecutionStatus.PENDING);
+        setSimStatus(simId, ActivityStatus.PENDING);
         nSubmissions += 1;
       } catch {
         log('error', 'Failed to submit a simulation');
@@ -221,7 +228,7 @@ export default function SimulationsTab({
         simulationIds: simIds,
         onInit: () => {
           simIds.forEach((simId) => {
-            setSimStatus(simId, EntitycoreExecutionStatus.PENDING);
+            setSimStatus(simId, ActivityStatus.PENDING);
           });
           setSelectedSimulationIds([]);
           setSimRequestInProgress(false);
@@ -231,7 +238,7 @@ export default function SimulationsTab({
             .with({ message_type: MessageType.STATUS }, (msg) => {
               const simId = msg.ctx?.simulation_id;
               if (simId) {
-                setSimStatus(simId, msg.status as unknown as EntitycoreExecutionStatus);
+                setSimStatus(simId, msg.status as unknown as ActivityStatus);
               }
               if (msg.status !== 'done') return;
               const simulation = simulations.find((s) => s.id === simId);
@@ -303,6 +310,7 @@ export default function SimulationsTab({
                   onSelectedForSimChange={onSelectedForSimChange}
                   selectedForSim={selectedSimulationIds.includes(simulation.id)}
                   selectionForSimDisabled={simRequestInProgress}
+                  canBeSelectedForSim={hasSimConfigAsset(simulation)}
                 />
               ))}
           </div>
@@ -373,12 +381,13 @@ export default function SimulationsTab({
 
 type SimulationBlockProps = {
   simulation: ICircuitSimulation;
-  execStatus?: EntitycoreExecutionStatus;
+  execStatus?: ActivityStatus;
   onSelect: (simulationId: string) => void;
   selected?: boolean;
   onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
   selectedForSim: boolean;
   selectionForSimDisabled?: boolean;
+  canBeSelectedForSim?: boolean;
 };
 
 function SimulationListItem({
@@ -389,8 +398,9 @@ function SimulationListItem({
   onSelectedForSimChange,
   selectedForSim,
   selectionForSimDisabled,
+  canBeSelectedForSim,
 }: SimulationBlockProps) {
-  const color = executionStatusColorMap[execStatus ?? EntitycoreExecutionStatus.CREATED];
+  const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED];
 
   const statusDetails = hasSimConfigAsset(simulation)
     ? undefined
@@ -412,7 +422,9 @@ function SimulationListItem({
           onClick={() => onSelect(simulation.id)}
         >
           <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
-            {!execStatus || execStatus === EntitycoreExecutionStatus.CREATED ? (
+            {!execStatus ||
+            ([ActivityStatus.CREATED, ActivityStatus.ERROR].includes(execStatus) &&
+              canBeSelectedForSim) ? (
               <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
                 <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
                   <Checkbox

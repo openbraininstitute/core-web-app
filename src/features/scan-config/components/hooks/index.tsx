@@ -12,6 +12,7 @@ import {
   type SchemaName,
   type TScanConfigActivity,
 } from '@/features/scan-config/types';
+import { log } from '@/utils/logger';
 
 import type { Config } from '@/features/scan-config/components/components';
 
@@ -111,7 +112,15 @@ export function useValidateSchema({
   if (validate && initialConfig && !initialConfigValidated.current) {
     initialConfigValidated.current = true;
     validate(initialConfig);
-    if (validate.errors) throw new Error('Invalid Simulation Campaign Configuration');
+    if (validate.errors) {
+      log(
+        'error',
+        '[schema validation failed]',
+        { initialConfig, config, schema },
+        { errors: validate.errors }
+      );
+      throw new Error('Invalid campaign configuration');
+    }
   }
 
   const errors = useMemo(() => {

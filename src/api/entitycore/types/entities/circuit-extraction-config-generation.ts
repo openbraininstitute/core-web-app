@@ -1,29 +1,8 @@
 import { z } from 'zod';
-import type { IActivityFilter } from '@/api/entitycore/types/shared/activity';
-import type {
-  ActivityType,
-  EntityAuthorization,
-  EntityCoreIdentifiable,
-  Timestamps,
-} from '@/api/entitycore/types/shared/global';
 
-interface NestedEntityRead extends EntityCoreIdentifiable {
-  type: string | null;
-}
+import type { IActivity, IActivityFilter } from '@/api/entitycore/types/shared/activity';
 
-interface ICircuitExtractionConfigGenerationBase {
-  start_time: string | null;
-  end_time: string | null;
-  used: Array<NestedEntityRead>;
-  generated: Array<NestedEntityRead>;
-}
-
-export interface ICircuitExtractionConfigGeneration
-  extends EntityCoreIdentifiable,
-    ICircuitExtractionConfigGenerationBase,
-    Timestamps,
-    EntityAuthorization,
-    ActivityType {}
+export interface ICircuitExtractionConfigGeneration extends IActivity {}
 
 export interface ICircuitExtractionConfigGenerationFilter extends IActivityFilter {}
 

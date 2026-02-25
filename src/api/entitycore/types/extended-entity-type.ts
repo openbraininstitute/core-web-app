@@ -19,6 +19,8 @@ export const ExtendedEntitiesTypeDict = {
   Metabolism: 'metabolism', // this is temporary
   NGVUnit: 'ngv_unit', // this is temporary
   MEModelWithSynapses: 'me_model_with_synapses',
+  ComputationallySynthesizedCellMorphology: 'computationally_synthesized_cell_morphology',
+  UniversalCellMorphology: 'universal_cell_morphology',
 } as const;
 
 export type TExtendedEntitiesTypeDict =

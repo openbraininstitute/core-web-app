@@ -1,19 +1,13 @@
 'use client';
 
 import { ConfigProvider, Table, type TableProps } from 'antd';
-import type { TableRef } from 'antd/es/table';
-import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
 import { isString } from 'es-toolkit/compat';
-import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 import useResizeObserver from '@/hooks/useResizeObserver';
 import useScrollComplete from '@/hooks/useScrollComplete';
-import type { WorkspaceContext } from '@/types/common';
 import TableControls from '@/ui/segments/data-table/elements/controls';
 import { useOnCellRouteHandler } from '@/ui/segments/data-table/elements/hooks';
-import styles from '@/ui/segments/data-table/elements/table.module.css';
 import {
   type RenderButtonProps,
   useRowSelection,
@@ -24,6 +18,15 @@ import {
 } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { TableRef } from 'antd/es/table';
+import type { ExpandableConfig, RowSelectionType } from 'antd/es/table/interface';
+import type { ComponentProps, CSSProperties, ReactNode } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { WorkspaceContext } from '@/types/common';
+
+import styles from '@/ui/segments/data-table/elements/table.module.css';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 
@@ -198,13 +201,10 @@ export function BaseTable<T extends EntityCoreIdentifiable>({
           style={tableStyle}
           aria-label="listing-view-table"
           className={cn(styles.table, 'grow [&_.ant-table-sticky-holder]:shadow-md', className)}
-          columns={
-            columns &&
-            columns.map((col) => ({
-              ...col,
-              ...onCellRouteHandler(col),
-            }))
-          }
+          columns={columns?.map((col) => ({
+            ...col,
+            ...onCellRouteHandler(col),
+          }))}
           components={{
             header: {
               cell: CustomTH,
@@ -262,6 +262,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   controls,
   baseTableWrapperClassname,
   allowDownload,
+  allowDelete,
   workspace,
 }: TableProps<T> &
   AdditionalTableProps<T> & {
@@ -271,7 +272,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     onRowsSelected?: (rows: Array<T>) => void;
     dataKey: string;
     expandableConfig?: ExpandableConfig<T>;
-    expandableOptions?: UseExpandableTableOptions<T, any>;
+    expandableOptions?: UseExpandableTableOptions<T, T>;
     showExpandButtons?: boolean;
     tableStyle?: CSSProperties | undefined;
     dataType: TExtendedEntitiesTypeDict;
@@ -279,6 +280,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     workspace?: WorkspaceContext;
     baseTableWrapperClassname?: ComponentProps<'div'>['className'];
     allowDownload?: boolean;
+    allowDelete?: boolean;
   }) {
   const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
     dataKey,
@@ -318,11 +320,10 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
         dataType={dataType}
         workspace={workspace}
         allowDownload={allowDownload}
+        allowDelete={allowDelete}
       >
         {controls}
       </TableControls>
-      {/* {(!autohideControls || (autohideControls && selectedRows.length > 0)) && (
-      )} */}
     </>
   );
 }

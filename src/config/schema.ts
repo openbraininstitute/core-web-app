@@ -55,8 +55,6 @@ const configFields = {
 
   ROOT_ROUTE: { schema: z.string(), public: true },
 
-  CDN_URL: { schema: z.string().url().optional(), public: true },
-
   SENTRY_DSN: {
     schema: z.preprocess((sentryDsn) => sentryDsn || undefined, z.string().url().optional()),
     public: true,

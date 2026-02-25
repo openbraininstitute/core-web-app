@@ -2,12 +2,11 @@
 
 import { ReloadOutlined } from '@ant-design/icons';
 import { Image } from 'antd';
-import kebabCase from 'es-toolkit/compat/kebabCase';
-
+import { kebabCase } from 'es-toolkit/compat';
 import { useRouter } from 'next/navigation';
+
 import { EntityTypeDict, type ICellMorphology } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import { config } from '@/config';
 import { WorkspaceSection } from '@/constants';
 import {
@@ -23,6 +22,8 @@ import { Button } from '@/ui/molecules/button';
 import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
 import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
+
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
 type Props = {
   sessionId: string;
@@ -45,9 +46,10 @@ export function MModel({ sessionId }: Props) {
       section={WorkspaceSection.BuildWorkflow}
       requireMiniDetailView={false}
       classNames={{ container: 'max-h-full' }}
-      dataType={ExtendedEntitiesTypeDict.CellMorphology}
+      dataType={ExtendedEntitiesTypeDict.UniversalCellMorphology}
       miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
       allowDownload={false}
+      allowDelete={false}
       mainTableProps={{
         selectionType: 'radio',
         onCellClick: (_, record) => {

@@ -18,6 +18,7 @@ import { SynapsesPerConnection } from '@/entity-configuration/domain/experimenta
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
+import { ComputationallySynthesizedCellMorphology } from '@/entity-configuration/domain/model/computationally-synthesized-morphology';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
@@ -50,6 +51,7 @@ export const ModelEntitiesTileTypes = {
   MEmodel,
   Circuit,
   IonChannelModel,
+  ComputationallySynthesizedCellMorphology,
 } as const;
 
 export const SimulationEntitiesTileTypes = {

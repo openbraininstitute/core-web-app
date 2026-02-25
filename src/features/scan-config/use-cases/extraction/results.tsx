@@ -12,11 +12,8 @@ import {
   getCircuitExtractionConfigGenerations,
   getCircuitExtractionExecutions,
 } from '@/api/entitycore/queries/extraction';
-import {
-  EntitycoreExecutionStatus,
-  type TEntitycoreExecutionStatus,
-} from '@/api/entitycore/types/entities/execution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ApiError } from '@/api/error';
 import { launchExtraction, ObiOneTaskTypeDict } from '@/api/one/extraction';
 import { Loader } from '@/components/loader';
@@ -73,26 +70,13 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
 
-  const consentGate = useRunWithOfflineTokenConsent({
-    notifyError: notification.error,
-    messages: {
-      cancelled: errorRegistry.AUTH_CONSENT_CANCELLED.replace('$$', 'Extraction'),
-      denied: errorRegistry.AUTH_CONSENT_DENIED.replace('$$', 'Extraction'),
-      timeout: errorRegistry.AUTH_CONSENT_TIMEOUT,
-    },
-    useCache: false,
-  });
-
-  useEffect(() => {
-    consentGate.prime();
-  }, [consentGate.prime]);
-
   // 1. get the generation activity that used the campaign
   const { data: generationResponse, isLoading: generationLoading } = useQuery({
     queryKey: queryKeys.configGeneration(campaignId, context),
     queryFn: () =>
       getCircuitExtractionConfigGenerations({
         filters: { used__id: campaignId },
+        withFacets: false,
         context,
       }),
   });
@@ -123,7 +107,11 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     enabled: generatedConfigIds.length > 0,
   });
 
-  const configList = configs ?? [];
+  const configList = useMemo(() => {
+    const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+    return [...(configs ?? [])].sort((a, b) => collator.compare(a.name, b.name));
+  }, [configs]);
+
   const configIds = configList.map((c) => c.id);
   const queryKey = queryKeys.extractionExecutions(configIds, context);
 
@@ -138,17 +126,14 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     refetchInterval: (query) => {
       const executions = query.state.data?.data ?? [];
       const hasActiveExtractions = executions.some((exec) =>
-        includes(
-          [EntitycoreExecutionStatus.PENDING, EntitycoreExecutionStatus.RUNNING],
-          exec.status
-        )
+        includes([ActivityStatus.PENDING, ActivityStatus.RUNNING], exec.status)
       );
       return hasActiveExtractions && !extractionRequestInProgress ? STATUS_POLL_INTERVAL : false;
     },
   });
 
   const statusMap = useMemo(() => {
-    const map = new Map<string, TEntitycoreExecutionStatus>();
+    const map = new Map<string, TActivityStatus>();
     const executions = executionsResponse?.data ?? [];
 
     for (const config of configList) {
@@ -196,11 +181,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     return configList
       .filter((config) => {
         const status = statusMap.get(config.id);
-        return (
-          !status ||
-          status === EntitycoreExecutionStatus.CREATED ||
-          status === EntitycoreExecutionStatus.ERROR
-        );
+        return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
       })
       .map((c) => c.id);
   }, [configList, statusMap]);
@@ -251,14 +232,10 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const runExtraction = async (configIdsToRun: string[]) => {
     setExtractionRequestInProgress(true);
     try {
-      await consentGate.runWithConsent({
-        fn: async () => {
-          await pMap(configIdsToRun, (c) => launchExtractionMutation.mutateAsync(c), {
-            concurrency: 3,
-          });
-          setSelectedConfigIds([]);
-        },
+      await pMap(configIdsToRun, (c) => launchExtractionMutation.mutateAsync(c), {
+        concurrency: 3,
       });
+      setSelectedConfigIds([]);
     } finally {
       setExtractionRequestInProgress(false);
     }
@@ -359,15 +336,6 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
           </div>
         )}
       </div>
-
-      <OfflineTokenConsentModal
-        open={consentGate.modal.open}
-        consentUrl={consentGate.modal.consentUrl}
-        onCancel={consentGate.cancel}
-        onOpenConsent={() => {
-          consentGate.openConsentLink(consentGate.modal.consentUrl);
-        }}
-      />
     </div>
   );
 }

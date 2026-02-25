@@ -1,14 +1,9 @@
-import { CheckCircleFilled, SwapOutlined, WarningFilled } from '@ant-design/icons';
+import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
 import { isEqual } from 'es-toolkit/compat';
-import { atom } from 'jotai';
 
+import AIIcon from '@/components/icons/ai/ai_icon';
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
-import {
-  Chevron,
-  type Config,
-  type ConfigValue,
-  LeftMenuTab,
-} from '@/features/scan-config/components/components';
+import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
@@ -22,7 +17,6 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-import { classNames } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
@@ -111,11 +105,16 @@ export function RootElement({
         }}
         extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
       >
-        {schema.properties?.[rootElement]?.title}
+        <span className="flex items-center gap-2 truncate">
+          <SelectedUnionVariantLabel
+            rootElementSchema={rootElementSchema}
+            config={config}
+            rootElement={rootElement}
+            fallbackTitle={schema.properties?.[rootElement]?.title}
+          />
+        </span>
         <div className="flex gap-3">
-          {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && (
-            <span className="text-slate-500! text-lg animate-pulse">✦</span>
-          )}
+          {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && <AIIcon />}
 
           {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
             <WarningFilled className="text-yellow-400!" />
@@ -160,54 +159,40 @@ export function RootElement({
         )}
 
       {/* Block Union: show selected variant with change option */}
-      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion &&
-        selectedRootElement === rootElement &&
-        (() => {
-          const unionSchema = rootElementSchema as IRootBlockUnion;
-          const discriminatorProp = unionSchema.discriminator
-            ? typeof unionSchema.discriminator === 'string'
-              ? unionSchema.discriminator
-              : (unionSchema.discriminator.propertyName ?? 'type')
-            : 'type';
-
-          const currentConfig = config[rootElement];
-          const selectedType =
-            isPlainObject(currentConfig) && typeof currentConfig[discriminatorProp] === 'string'
-              ? currentConfig[discriminatorProp]
-              : undefined;
-
-          const selectedVariant: TBlock | undefined = unionSchema.oneOf.find((o: TBlock) => {
-            const typeProp = o.properties?.[discriminatorProp];
-            return typeProp && isType(typeProp) && typeProp.const === selectedType;
-          });
-
-          if (!selectedVariant || !selectedType) return null;
-
-          return (
-            <button
-              type="button"
-              className={classNames(
-                'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center',
-                'justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow',
-                'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
-              )}
-            >
-              <span className="truncate">{selectedVariant.title}</span>
-              {!campaignId && !loading && !readOnly && (
-                <SwapOutlined
-                  className="cursor-pointer transition-transform hover:scale-110"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAtomsMap({
-                      ...atomsMap,
-                      [rootElement]: atom<Record<string, ConfigValue>>({}),
-                    });
-                  }}
-                />
-              )}
-            </button>
-          );
-        })()}
     </>
   );
+}
+
+function SelectedUnionVariantLabel({
+  rootElementSchema,
+  config,
+  rootElement,
+  fallbackTitle,
+}: {
+  rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
+  config: Config;
+  rootElement: string;
+  fallbackTitle?: string;
+}) {
+  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion) return fallbackTitle;
+
+  const unionSchema = rootElementSchema as IRootBlockUnion;
+  const discriminatorProp = unionSchema.discriminator
+    ? typeof unionSchema.discriminator === 'string'
+      ? unionSchema.discriminator
+      : (unionSchema.discriminator.propertyName ?? 'type')
+    : 'type';
+  const currentConfig = config[rootElement];
+  const selectedType =
+    isPlainObject(currentConfig) && typeof currentConfig[discriminatorProp] === 'string'
+      ? currentConfig[discriminatorProp]
+      : undefined;
+  const selectedVariant = selectedType
+    ? unionSchema.oneOf.find((o: TBlock) => {
+        const typeProp = o.properties?.[discriminatorProp];
+        return typeProp && isType(typeProp) && typeProp.const === selectedType;
+      })
+    : undefined;
+
+  return selectedVariant?.title ?? fallbackTitle;
 }

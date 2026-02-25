@@ -1,5 +1,4 @@
 import { Button } from 'antd';
-import { capitalize } from 'es-toolkit/compat';
 import get from 'es-toolkit/compat/get';
 import isNil from 'es-toolkit/compat/isNil';
 import { useAtom } from 'jotai';
@@ -23,6 +22,7 @@ import {
   renderEmptyOrValue,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
+import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ensureArray } from '@/utils/array';
 
@@ -223,7 +223,8 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.BrainRegion]: {
     title: 'Brain Region',
     filter: null,
-    render: (r) => renderEmptyOrValue('brain_region' in r ? capitalize(r.brain_region.name) : ''),
+    render: (r) =>
+      renderEmptyOrValue('brain_region' in r ? normalizeBrainRegionName(r.brain_region.name) : ''),
     vocabulary: {
       plural: 'Brain Regions',
       singular: 'Brain Region',
@@ -427,7 +428,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: false,
   },
   [EntityCoreFields.CreatedBy]: {
-    title: 'Registered by',
+    title: 'Created by',
     filter: CoreFieldFilterTypeEnum.CheckList,
     render: (r) => {
       if ('created_by' in r) return renderEmptyOrValue(r.created_by?.pref_label);

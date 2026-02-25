@@ -1,23 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { includes } from 'es-toolkit/compat';
-import { useEffect, useMemo } from 'react';
+import { type ReactNode, useEffect, useMemo } from 'react';
 
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
-import { useModelQuery } from '@/features/scan-config/components/atoms/index';
+import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { classNames } from '@/util/utils';
 
 import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
-import type { ICircuitExtractionExecution } from '@/api/entitycore/types/entities/circuit-extraction-execution';
-import type { TEntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 
 type Props = {
   config: ICircuitExtractionConfig;
-  execStatus?: TEntitycoreExecutionStatus;
-  execution?: ICircuitExtractionExecution;
+  execStatus?: TActivityStatus;
+  execution?: IExecutionActivity;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
   context: { virtualLabId: string; projectId: string };
@@ -61,8 +60,7 @@ export function ExtractionInOutFiles({
   }, [config, circuit, circuitConfigAsset, extractionConfigAsset]);
 
   const outputAvailable =
-    !!execStatus &&
-    includes([EntitycoreExecutionStatus.ERROR, EntitycoreExecutionStatus.DONE], execStatus);
+    !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
 
   const extractedCircuitId = execution?.generated?.[0]?.id;
   const { data: extractedCircuit, isLoading } = useQuery({
@@ -74,6 +72,15 @@ export function ExtractionInOutFiles({
     // biome-ignore lint/style/noNonNullAssertion: the function is enable only if extractedCircuitId is present (see useQuery/enabled)
     queryFn: () => getCircuit({ id: extractedCircuitId!, context }),
     enabled: !!extractedCircuitId,
+    // the refetch is required as the extraction upload to s3 will not be ready immediately
+    refetchInterval(query) {
+      const data = query.state.data;
+      const hasVisAsset = data?.assets?.some(
+        (asset) => asset.label === AssetLabel.circuit_visualization
+      );
+      const retry = hasVisAsset ? false : 2_000;
+      return retry;
+    },
   });
 
   useEffect(() => {
@@ -84,7 +91,7 @@ export function ExtractionInOutFiles({
 
   return (
     <div className="h-full overflow-y-auto">
-      <h4 className="uppercase">Input files</h4>
+      <h4 className="uppercase">Inputs</h4>
       <div className="mt-4 mb-8 flex flex-col gap-4">
         {inputFiles.length === 0 && <div className="text-gray-400">No input files available</div>}
         {inputFiles.map((file) => (
@@ -100,13 +107,14 @@ export function ExtractionInOutFiles({
 
       {outputAvailable && (
         <>
-          <h4 className="uppercase">Output files</h4>
+          <h4 className="uppercase">Outputs</h4>
           <div className="mt-4 flex flex-col gap-4">
             {!extractedCircuit && !isLoading && (
               <div className="text-gray-400">No output files generated</div>
             )}
             {extractedCircuit && (
               <ExtractionResultItem
+                label={<small className="uppercase">Circuit</small>}
                 selected={extractedCircuit?.id === selectedFile?.entity.id}
                 key={extractedCircuit.id}
                 file={{
@@ -127,15 +135,22 @@ export function ExtractionInOutFiles({
 }
 
 type TExtractionResultItemProps = {
+  label?: ReactNode;
   name?: string;
   file: TActivityCustomFile;
   selected?: boolean;
   onSelect: (file: TActivityCustomFile) => void;
 };
 
-function ExtractionResultItem({ name, file, selected, onSelect }: TExtractionResultItemProps) {
+function ExtractionResultItem({
+  label,
+  name,
+  file,
+  selected,
+  onSelect,
+}: TExtractionResultItemProps) {
   const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
-  const fileExt = fileName?.split('.').at(-1);
+  const fileExt = label ?? fileName?.split('.').at(-1);
   const displayName = name ?? fileName;
 
   return (
@@ -148,24 +163,22 @@ function ExtractionResultItem({ name, file, selected, onSelect }: TExtractionRes
       )}
       onClick={() => onSelect(file)}
     >
-      <span
+      <div
         className={classNames(
-          'truncate overflow-hidden font-semibold whitespace-nowrap',
+          'truncate overflow-hidden font-semibold whitespace-nowrap text-left',
           selected ? 'text-white' : 'text-primary-9'
         )}
       >
-        {displayName}
+        <div>{displayName}</div>
+      </div>
+      <span
+        className={classNames(
+          'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
+          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
+        )}
+      >
+        {fileExt}
       </span>
-      {!name && (
-        <span
-          className={classNames(
-            'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
-            selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
-          )}
-        >
-          {fileExt}
-        </span>
-      )}
     </button>
   );
 }

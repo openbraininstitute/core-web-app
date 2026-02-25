@@ -1,14 +1,15 @@
+import { CloseOutlined } from '@ant-design/icons';
 import { atom } from 'jotai';
+
+import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { isType } from '@/features/scan-config/types';
+
+import Block from './block';
+
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import {
-  BlockUI,
-  type Config,
-  type ConfigValue,
-} from '@/features/scan-config/components/components';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 import type { AtomsMap, IRootBlockUnion, SchemaName, TBlock } from '@/features/scan-config/types';
-import { isType } from '@/features/scan-config/types';
 
 type Props = {
   schemaName: SchemaName;
@@ -20,11 +21,9 @@ type Props = {
   loading: boolean;
   config: Config;
   model: ICircuit | IMEModel;
+  blockAIConfig: Record<string, ConfigValue> | null;
 };
 
-/**
- * Gets the discriminator property name from the schema
- */
 function getDiscriminatorProperty(schema: IRootBlockUnion): string {
   if (!schema.discriminator) return 'type';
   if (typeof schema.discriminator === 'string') return schema.discriminator;
@@ -41,6 +40,7 @@ export default function BlockUnion({
   loading,
   config,
   model,
+  blockAIConfig,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
 
@@ -60,19 +60,40 @@ export default function BlockUnion({
   // If a variant is selected and we have an atom, show the form
   if (selectedBlockSchema && isAtom(atomsMap[selectedRootElement])) {
     return (
-      <BlockUI
-        schemaName={schemaName}
-        key={`${selectedRootElement}_${selectedType}`}
-        disabled={!!campaignId || loading}
-        config={config}
-        blockSchema={selectedBlockSchema}
-        stateAtom={atomsMap[selectedRootElement]}
-        model={model}
-      />
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <div className="text-lg text-gray-500 uppercase">{selectedBlockSchema.title}</div>
+          {!campaignId && !loading && (
+            <button
+              type="button"
+              aria-label="Reset block selection"
+              className="cursor-pointer text-neutral-3 transition-colors hover:text-primary-8 px-2 py-1 hover:bg-neutral-3/20 rounded-full"
+              onClick={() => {
+                setAtomsMap({
+                  ...atomsMap,
+                  [selectedRootElement]: atom<Record<string, ConfigValue>>({}),
+                });
+              }}
+            >
+              <CloseOutlined />
+            </button>
+          )}
+        </div>
+        <Block
+          schemaName={schemaName}
+          key={`${selectedRootElement}_${selectedType}`}
+          disabled={!!campaignId || loading}
+          config={config}
+          blockSchema={selectedBlockSchema}
+          stateAtom={atomsMap[selectedRootElement]}
+          model={model}
+          blockAIConfig={blockAIConfig}
+          hideTitle
+        />
+      </div>
     );
   }
 
-  // Show variant selection cards
   return (
     <div className="flex flex-col items-center gap-5">
       {blockUnionSchema.oneOf.map((o) => {

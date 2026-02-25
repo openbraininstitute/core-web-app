@@ -1,9 +1,9 @@
-import sortBy from 'es-toolkit/compat/sortBy';
+import { sortBy } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
@@ -16,7 +16,7 @@ import type { WorkspaceContext } from '@/types/common';
 
 type SimulationFilesProps = {
   simulation: ICircuitSimulation;
-  execStatus: EntitycoreExecutionStatus;
+  execStatus: ActivityStatus;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
   onLoadingChange: (loading: boolean) => void;
@@ -34,8 +34,7 @@ export function SimulationFiles({
   const [inputLoading, inputFiles] = useInputFiles(simulation, context);
 
   const outputAvailable =
-    !!execStatus &&
-    [EntitycoreExecutionStatus.ERROR, EntitycoreExecutionStatus.DONE].includes(execStatus);
+    !!execStatus && [ActivityStatus.ERROR, ActivityStatus.DONE].includes(execStatus);
 
   const [outputLoading, outputFiles] = useOutputFiles(simulation, context, outputAvailable);
 

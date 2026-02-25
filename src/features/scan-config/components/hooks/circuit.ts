@@ -18,44 +18,49 @@ export function useCircuitImageURL(circuitId: string) {
     isLoading: circuitLoading,
   } = useModelQuery({ id: circuitId, context });
 
+  const asset = (circuit as ICircuit)?.assets?.find(
+    (item) => item.label === AssetLabel.simulation_designer_image
+  );
+
   const {
     data,
     error: assetError,
     isLoading: assetLoading,
   } = useQuery({
-    queryKey: ['circuit/simulation-designer-image', { context, circuitId }],
+    queryKey: ['circuit/simulation-designer-image', { context, circuitId, assetId: asset?.id }],
     queryFn: async () => {
-      const asset = (circuit as ICircuit).assets.find(
-        (item) => item.label === AssetLabel.simulation_designer_image
-      );
-      if (!asset) {
-        notifyError({
-          message: `No image found for circuit "${circuit?.name}" (${circuitId})!`,
-        });
-        return;
-      }
       const resp = await downloadAsset({
         entityType: EntityTypeDict.Circuit,
-        // biome-ignore lint/style/noNonNullAssertion: the function is enable only if circuit is present (see useQuery/enabled)
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when circuit and asset are available
         entityId: circuit!.id,
-        id: asset.id,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when circuit and asset are available
+        id: asset?.id!,
         asRawResponse: false,
       });
-
       return { buffer: resp, asset };
     },
-    enabled: !!circuit,
+    enabled: !!circuit && !!asset && !circuitLoading,
     select: (resp) => {
       if (!(resp?.buffer instanceof ArrayBuffer)) {
         throw new Error('Wrong image format: expected ArrayBuffer!');
       }
-      const blob = new Blob([resp.buffer], { type: resp.asset.content_type });
+      const blob = new Blob([resp.buffer], { type: resp.asset?.content_type });
       const url = URL.createObjectURL(blob);
       return url;
     },
+    refetchOnWindowFocus: false,
   });
   const isLoading = circuitLoading || assetLoading;
   const error = circuitError || assetError;
+
+  if ((!data && !isLoading) || error) {
+    notifyError({
+      message: `No image found for circuit "${circuit?.name}" (${circuitId})!`,
+      placement: 'topRight',
+      key: `circuit-image-error-${circuitId}`,
+    });
+    return { data: undefined, isLoading: false, error };
+  }
 
   return { data, isLoading, error };
 }

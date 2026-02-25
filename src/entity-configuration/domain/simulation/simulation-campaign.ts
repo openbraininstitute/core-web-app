@@ -1,6 +1,5 @@
-import { get, sortBy } from 'es-toolkit/compat';
-import flatMap from 'es-toolkit/compat/flatMap';
-import keyBy from 'es-toolkit/compat/keyBy';
+import { flatMap, get, keyBy, sortBy } from 'es-toolkit/compat';
+
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
@@ -12,23 +11,25 @@ import {
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type {
-  ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { ICircuitSimulationExecution } from '@/api/entitycore/types/entities/circuit-simulation-execution';
-import { EntitycoreExecutionStatus } from '@/api/entitycore/types/entities/execution';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import { getExtendedSimMap, hasSimConfigAsset, migrateConfig } from './utils';
+
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type {
+  ICircuitSimulationCampaign,
+  ICircuitSimulationCampaignFilter,
+} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
-import { getExtendedSimMap, hasSimConfigAsset, migrateConfig } from './utils';
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
@@ -40,10 +41,13 @@ async function resolveSimulationCampaigns({
   context: WorkspaceContext | undefined;
   filters?: Partial<ICircuitSimulationCampaignFilter>;
 }) {
-  // eslint-disable-next-line no-param-reassign
   filters = discardBrainRegionQueryParams(filters);
 
-  const source = await getCircuitSimulationCampaigns({ context, withFacets, filters });
+  const source = await getCircuitSimulationCampaigns({
+    context,
+    withFacets,
+    filters,
+  });
   // extract all simulation IDs
   const allSimIds = flatMap(
     source.data,
@@ -53,7 +57,7 @@ async function resolveSimulationCampaigns({
   const executionsResponse = await getCircuitSimulationExecutions({
     context,
     withFacets: false,
-    filters: { used__id__in: allSimIds.join(',') },
+    filters: { used__id__in: allSimIds },
   });
   const executions = executionsResponse.data;
 
@@ -108,7 +112,10 @@ export async function resolveSimulationByCampaignId({
     throw new Error(`No campaign with id ${id} found`);
   }
 
-  const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
+  const source = await getCircuitSimulations({
+    context,
+    filters: { simulation_campaign_id: id },
+  });
 
   const simulation = source.data.at(0);
   const assets = campaign?.assets ?? [];
@@ -152,13 +159,13 @@ export async function resolveSimulationByCampaignId({
 }
 
 export function getSimulationStatus(simulation: ICircuitSimulation) {
-  const executions = get(simulation, 'executions', []) as ICircuitSimulationExecution[];
+  const executions = get(simulation, 'executions', []) as IExecutionActivity[];
   const sortedExecutions = sortBy(executions, (exec) => exec.creation_date);
 
   // Used when there are no executions present
   const fallbackStatus = hasSimConfigAsset(simulation)
-    ? EntitycoreExecutionStatus.CREATED
-    : EntitycoreExecutionStatus.ERROR;
+    ? ActivityStatus.CREATED
+    : ActivityStatus.ERROR;
 
   const status = sortedExecutions.at(-1)?.status ?? fallbackStatus;
 
@@ -196,10 +203,6 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
       one: getCircuitSimulationCampaign,
       create: createSimulationCampaign,
     },
-  },
-  explore: {
-    basePrefix: 'simulate',
-    routePrefix: 'simulate',
   },
   asset: {
     extension: 'application/json',

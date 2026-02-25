@@ -1,13 +1,15 @@
 import { get } from 'es-toolkit/compat';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getParamLabel } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/utils';
-import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 import { getSimulationStatus } from '@/entity-configuration/domain/simulation';
 import { ExecutionStatus } from '@/ui/segments/activity-execution/status';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { cn } from '@/utils/css-class';
+
+import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 
 const className = 'text-primary-7';
 
@@ -27,6 +29,7 @@ export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
         className: cn(className, 'whitespace-nowrap'),
         dataIndex: 'name',
         key: 'name',
+        ellipsis: true,
         fixed: 'left' as const,
       },
 
@@ -34,6 +37,7 @@ export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
         title: <span title={param}>{getParamLabel(param)}</span>,
         className,
         dataIndex: ['scan_parameters', param],
+        ellipsis: true,
         key: param,
       })),
 
