@@ -9,6 +9,10 @@ const issuer = config.KEYCLOAK_ISSUER;
 const clientId = config.KEYCLOAK_CLIENT_ID;
 const clientSecret = config.KEYCLOAK_CLIENT_SECRET;
 
+// TODO: Lower this back to minutes after all tasks
+// (circuit simulations, mesh skeletonization) support token renewal via auth-manager.
+const ACCESS_TOKEN_RENEWAL_THRESHOLD = 30 * 60 * 1000; // 30 minutes
+
 function getParentDomain(hostname: string): string {
   const parts = hostname.split('.');
   return parts.length > 2 ? parts.slice(-3).join('.') : hostname;
@@ -183,7 +187,7 @@ export const authOptions: NextAuthOptions = {
       // Return previous token if the access token has not expired / is not close to expiration yet.
       if (
         typeof token.accessTokenExpires === 'number' &&
-        Date.now() < token.accessTokenExpires - 2 * 60 * 1000
+        Date.now() < token.accessTokenExpires - ACCESS_TOKEN_RENEWAL_THRESHOLD
       ) {
         return token;
       }
