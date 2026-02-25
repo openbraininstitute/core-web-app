@@ -91,7 +91,6 @@ export default function AiAssistant({
                   type="button"
                   className={classNames(styles.navBtn, tab === 'chat' && styles.navBtnActive)}
                   onClick={() => setTab('chat')}
-                  disabled={!threadId}
                   aria-label="Chat"
                   title="Chat"
                 >
@@ -102,7 +101,6 @@ export default function AiAssistant({
                   type="button"
                   className={classNames(styles.navBtn, tab === 'history' && styles.navBtnActive)}
                   onClick={() => setTab('history')}
-                  disabled={!threadId}
                   aria-label="History"
                   title="History"
                 >

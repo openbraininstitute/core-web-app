@@ -87,7 +87,6 @@ class AiAssistantClass {
     const { threadId, isEmpty } = await this.threadmanager.createThread();
     this.isEmptyThread.set(isEmpty);
     this.initialMessages.set([]);
-    this.historyManager.reset();
     this.threadId.set(threadId);
     return threadId;
   };
