@@ -1,42 +1,52 @@
 .suggestions {
   display: flex;
-  flex-wrap: nowrap;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-end;
-  gap: 0.25em;
+  gap: 0.375rem;
 }
 
 .suggestions > button {
-  --color-grey: color-mix(in srgb, var(--color-neutral-0) 20%, transparent);
-  padding: 0 0 0 0.5em;
-  background-color: transparent;
-  border: none;
-  color: var(--color-primary-3);
-  transition: all 0.3s;
+  padding: 0.5rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 0.5rem;
+  color: #595959;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
-  margin: 0.25em 0;
   display: flex;
   width: 100%;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 0.5em;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .suggestions > button > svg {
-  flex: 0 0 auto;
-  color: var(--color-grey);
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: #003a8c;
+  opacity: 0.7;
+  transition: all 0.2s ease;
 }
 
 .suggestions > button:hover {
-  color: var(--color-primary-5);
+  background: #f8fbff;
+  border-color: #d6e4ff;
+  color: #003a8c;
+}
+
+.suggestions > button:hover > svg {
+  opacity: 1;
 }
 
 .title {
-  color: #000;
-  opacity: 0.6;
+  color: #8c8c8c;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .container {
@@ -63,12 +73,12 @@
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid #e0e0e0;
-  border-top: 3px solid #333;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f0f0f0;
+  border-top: 2px solid #003a8c;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
