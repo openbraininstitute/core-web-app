@@ -7,7 +7,7 @@ import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
-import { BackupPlotsWrapper } from './backup-plots';
+import { BackupPlotsWrapper, extractStorageIdsFromMessage } from './backup-plots';
 import { CollapsibleMessage } from './collapsible-message';
 import ToolsProgress from './tools-progress';
 
@@ -65,6 +65,7 @@ function MessageChild({
         </div>
       );
     case 'assistant': {
+      const validStorageIds = extractStorageIdsFromMessage(deferredParts);
       const children = deferredParts.map((part, index) => {
         if (part.type === 'text' && part.text !== '') {
           return (
@@ -75,6 +76,7 @@ function MessageChild({
               onLinkClicked={(external) => {
                 if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
               }}
+              validStorageIds={validStorageIds}
             >
               {part.text}
             </GithubFlavorMarkdown>

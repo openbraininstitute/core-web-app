@@ -3,33 +3,27 @@ import PlotInChat from '@/components/ai-assistant/message-item/storage-plots/plo
 import PlotErrorMessage from '../plot-error-message';
 import TruncableImage from '../truncable-image';
 
-const StorageImage = ({ src }: { src?: string | Blob }) => {
+const StorageImage = ({
+  src,
+  validStorageIds,
+}: {
+  src?: string | Blob;
+  validStorageIds?: string[];
+}) => {
   const srcString = typeof src === 'string' ? src : undefined;
   if (!srcString) {
     return <PlotErrorMessage />;
   }
 
-  let isSameOrigin = false;
-  try {
-    isSameOrigin = new URL(srcString).origin.includes('openbraininstitute');
-  } catch {
-    return <PlotErrorMessage />;
-  }
-
-  if (!isSameOrigin) {
-    return <TruncableImage src={srcString} />;
-  }
-
   const storageIdMatch = srcString.match(/\/storage\/([^/]+)/);
-  const isValidUUID =
-    storageIdMatch &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(storageIdMatch[1]);
+  const isValidUUID = storageIdMatch && validStorageIds?.includes(storageIdMatch[1]);
 
-  if (!storageIdMatch || !isValidUUID) {
-    return <PlotErrorMessage />;
+  if (isValidUUID) {
+    return <PlotInChat storageId={storageIdMatch[1]} />;
   }
 
-  return <PlotInChat storageId={storageIdMatch[1]} />;
+  const isSameOrigin = srcString.includes('openbraininstitute');
+  return isSameOrigin ? <PlotErrorMessage /> : <TruncableImage src={srcString} />;
 };
 
 export default StorageImage;

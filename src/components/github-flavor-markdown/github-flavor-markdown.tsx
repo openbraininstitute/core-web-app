@@ -17,6 +17,7 @@ interface GithubFlavorMarkdownProps {
   className?: string;
   children: string;
   onLinkClicked(external: boolean): void;
+  validStorageIds?: string[];
 }
 
 export const GithubFlavorMarkdown = React.memo(
@@ -28,6 +29,7 @@ function RawGithubFlavorMarkdown({
   className,
   children,
   onLinkClicked,
+  validStorageIds,
 }: GithubFlavorMarkdownProps) {
   const LinkComponent = useMemo(() => makeLink(onLinkClicked), [onLinkClicked]);
   return (
@@ -37,7 +39,7 @@ function RawGithubFlavorMarkdown({
       rehypePlugins={[rehypeKatex]}
       components={{
         a: LinkComponent,
-        img: (props) => <StorageImage {...props} />,
+        img: (props) => <StorageImage {...props} validStorageIds={validStorageIds} />,
         p: ({ children }) => <div>{children}</div>,
         pre: Highlighter,
       }}

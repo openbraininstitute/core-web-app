@@ -8,10 +8,37 @@ import type { ToolInvocationUIPart, UIMessage } from '@ai-sdk/ui-utils';
 
 import styles from './backup-plots.module.css';
 
+function extractStorageIdsFromToolResult(result: any): string[] {
+  const fileIdentifier = result.image_link ?? result.url_link ?? result.storage_id;
+  if (!fileIdentifier) return [];
+
+  const urlLinks = Array.isArray(fileIdentifier) ? fileIdentifier : [fileIdentifier];
+  return urlLinks
+    .map((urlLink: string) => {
+      const match = urlLink.match(/\/storage\/([^/]+)/);
+      return match ? match[1] : null;
+    })
+    .filter((id): id is string => id !== null);
+}
+
+export function extractStorageIdsFromMessage(parts: UIMessage['parts']): string[] {
+  const ids: string[] = [];
+
+  parts.forEach((part) => {
+    if (part.type !== 'tool-invocation' || part.toolInvocation.state !== 'result') return;
+
+    try {
+      const result = JSON.parse(part.toolInvocation.result);
+      ids.push(...extractStorageIdsFromToolResult(result));
+    } catch {}
+  });
+
+  return ids;
+}
+
 export interface BackupPlotsProps {
   className?: string;
-  part: ToolInvocationUIPart;
-  lastTextPart?: string;
+  storageIds: string[];
 }
 
 export interface BackupPlotsWrapperProps {
@@ -46,13 +73,8 @@ export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlo
 
     if (!result) return;
 
-    const fileIdentifier = result.image_link ?? result.url_link ?? result.storage_id;
-    if (!fileIdentifier) return;
-
-    const urlLinks = Array.isArray(fileIdentifier) ? fileIdentifier : [fileIdentifier];
-    const urlLinksWithoutImageLink = urlLinks.filter((urlLink) => {
-      const storageIdMatch = urlLink.match(/\/storage\/([^/]+)/);
-      const storageId = storageIdMatch ? storageIdMatch[1] : urlLink;
+    const storageIds = extractStorageIdsFromToolResult(result);
+    const urlLinksWithoutImageLink = storageIds.filter((storageId) => {
       return !lastTextPart?.match(new RegExp(`!\\[.*?\\]\\([^)]*\\/storage\\/${storageId}\\)`));
     });
 
@@ -60,8 +82,7 @@ export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlo
       plotsWithContent.push(
         <BackupPlots
           key={(part as any).toolInvocation.toolCallId}
-          part={part as ToolInvocationUIPart}
-          lastTextPart={lastTextPart}
+          storageIds={urlLinksWithoutImageLink}
         />
       );
     }
@@ -77,42 +98,12 @@ export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlo
   );
 }
 
-export default function BackupPlots({ className, part, lastTextPart }: BackupPlotsProps) {
-  const result = extractToolResults(
-    part,
-    [
-      'run-python',
-      'thumbnail-generation-morphology-getone',
-      'thumbnail-generation-electricalcellrecording-getone',
-    ],
-    isToolResult
-  );
-
-  if (!result) return null;
-
-  const fileIdentifier = result.image_link ?? result.url_link ?? result.storage_id;
-  if (!fileIdentifier) return null;
-
-  const urlLinks = Array.isArray(fileIdentifier) ? fileIdentifier : [fileIdentifier];
-
-  const urlLinksWithoutImageLink = urlLinks.filter((urlLink) => {
-    const storageIdMatch = urlLink.match(/\/storage\/([^/]+)/);
-    const storageId = storageIdMatch ? storageIdMatch[1] : urlLink;
-
-    return !lastTextPart?.match(new RegExp(`!\\[.*?\\]\\([^)]*\\/storage\\/${storageId}\\)`));
-  });
-
-  if (urlLinksWithoutImageLink.length === 0) {
-    return null;
-  }
-
+export default function BackupPlots({ className, storageIds }: BackupPlotsProps) {
   return (
     <div className={classNames(className, styles.backupPlots)}>
-      {urlLinksWithoutImageLink.map((urlLink) => {
-        const storageIdMatch = urlLink.match(/\/storage\/([^/]+)/);
-        const storageId = storageIdMatch ? storageIdMatch[1] : urlLink;
-        return <PlotInChat key={storageId} storageId={storageId} />;
-      })}
+      {storageIds.map((storageId) => (
+        <PlotInChat key={storageId} storageId={storageId} />
+      ))}
     </div>
   );
 }
