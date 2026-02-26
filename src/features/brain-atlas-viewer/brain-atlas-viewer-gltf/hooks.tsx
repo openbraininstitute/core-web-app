@@ -1,24 +1,26 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
+
+import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
 import compact from 'es-toolkit/compat/compact';
 import find from 'es-toolkit/compat/find';
 import { useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage, unwrap } from 'jotai/utils';
-import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
+import React from 'react';
 
-import { brainRegionAtlasAtom } from '../context';
-import { Painter } from './painter';
-import { SettingsDefinitions } from './settings';
-import { VisibleRegion } from './types';
-
+import { useAppNotification } from '@/components/notification';
 import {
   brainRegionBasicCellGroupsRegionsHierarchyAtom,
   brainRegionRootHierarchyAtom,
   ROOT_BRAIN_REGION_ID,
   useBrainRegionHierarchy,
 } from '@/features/brain-region-hierarchy/context';
-import { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import { useAppNotification } from '@/components/notification';
+
+import { brainRegionAtlasAtom } from '../context';
+import { Painter } from './painter';
+
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { SettingsDefinitions } from './settings';
+import type { VisibleRegion } from './types';
 
 export function usePainter(): Painter {
   const notif = useAppNotification();
@@ -53,8 +55,12 @@ export function useVisibleRegions(dataKey: string): {
     React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
   );
   return React.useMemo(() => {
-    const rootBrainRegion = find(rootBrainRegions?.options, { value: ROOT_BRAIN_REGION_ID })?.data;
-    const currentBrainRegion = find(brainRegions?.options, { value: brainRegionNode.id })?.data;
+    const rootBrainRegion = find(rootBrainRegions?.options, {
+      value: ROOT_BRAIN_REGION_ID,
+    })?.data;
+    const currentBrainRegion = find(brainRegions?.options, {
+      value: brainRegionNode.id,
+    })?.data;
     const regions = compact(
       brainRegionNode ? [currentBrainRegion, rootBrainRegion] : [rootBrainRegion]
     );
@@ -85,6 +91,20 @@ export function getAtlasViewerDefaultSettings(): SettingsDefinitions {
       min: 0,
       max: 2,
       value: 1,
+    },
+    minSizeInPixels: {
+      label: 'Minimal size (pixel)',
+      value: 5,
+      min: 0,
+      max: 20,
+      step: 1,
+    },
+    radiusMultiplier: {
+      label: 'Radius multiplier',
+      value: 1,
+      min: 0.1,
+      max: 2,
+      step: 0.1,
     },
     specularExponent: {
       label: 'Specular exponent',
