@@ -39,7 +39,7 @@ export function Container(): JSX.Element {
   const targetWidth = useMemo<string>(() => {
     if (isCollapsed) return '3rem';
     if (isFullscreen) return 'calc(100vw - 20px)';
-    return '24rem'; // Fixed width for grid cell
+    return '400px';
   }, [isCollapsed, isFullscreen]);
 
   const targetHeight = useMemo<string>(() => {
