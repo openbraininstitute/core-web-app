@@ -18,6 +18,11 @@ export const MTypeClassIdSchema = z
   .uuid()
   .nonempty({ message: 'M-type class is required' });
 
+export const REPAIR_PIPELINE_TYPES = ['raw', 'curated', 'unraveled', 'repaired'] as const;
+export type TRepairPipelineType = (typeof REPAIR_PIPELINE_TYPES)[number];
+
+export const RepairPipelineTypeSchema = z.enum(REPAIR_PIPELINE_TYPES).optional();
+
 export const CELL_MORPHOLOGY_FILE_TYPES = [
   { type: 'swc', extension: 'swc', mimeType: 'application/swc' },
   { type: 'asc', extension: 'asc', mimeType: 'application/asc' },
@@ -32,6 +37,7 @@ export const CellMorphologySchema = z.object({
   license_id: LicenseIdSchema,
   cell_morphology_protocol_id: ProtocolSchema,
   mtype_class_id: MTypeClassIdSchema,
+  repair_pipeline_state: RepairPipelineTypeSchema,
   assets: CellMorphologyAssetsSchema,
   contribution: ContributionArraySchema,
 });

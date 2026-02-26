@@ -1,10 +1,13 @@
-import { Form } from 'antd';
-import { useMemo } from 'react';
+import { Form, Select } from 'antd';
+import { useCallback, useMemo } from 'react';
 
 import { getProtocols } from '@/api/entitycore/queries/general/protocol';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
-import { CellMorphologySchema } from '@/ui/segments/contribute/cell-morphology/schema';
+import {
+  CellMorphologySchema,
+  REPAIR_PIPELINE_TYPES,
+} from '@/ui/segments/contribute/cell-morphology/schema';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
@@ -14,10 +17,32 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { IProtocol } from '@/api/entitycore/types/shared/global';
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
+import type { AsyncSelectOption } from '@/ui/molecules/async-select';
+
+const REPAIR_PIPELINE_OPTIONS = REPAIR_PIPELINE_TYPES.map((value) => ({
+  label: value.charAt(0).toUpperCase() + value.slice(1),
+  value,
+}));
 
 export function Protocol() {
   const form = Form.useFormInstance();
   const { virtualLabId, projectId } = useWorkspace();
+
+  const selectedProtocolGenerationType = Form.useWatch('_protocol_generation_type', form);
+  const isDigitalReconstruction = selectedProtocolGenerationType === 'digital_reconstruction';
+
+  // Keep the callback outside useMemo to avoid capturing the form instance
+  // inside the memoized factory (which causes circular reference warnings).
+  const handleProtocolSelect = useCallback(
+    (option: AsyncSelectOption<IProtocol> | undefined) => {
+      const generationType = option?.data?.generation_type ?? null;
+      form.setFieldValue('_protocol_generation_type', generationType);
+      if (generationType !== 'digital_reconstruction') {
+        form.setFieldValue('repair_pipeline_state', undefined);
+      }
+    },
+    [form]
+  );
 
   const ProtocolDropdown = useMemo(
     () =>
@@ -33,26 +58,45 @@ export function Protocol() {
         searchable: true,
         searchField: 'search',
         tooltip: null,
+        onSelect: handleProtocolSelect,
       }),
-    [virtualLabId, projectId]
+    [virtualLabId, projectId, handleProtocolSelect]
   );
 
   return (
-    <Form.Item
-      name="cell_morphology_protocol_id"
-      label={renderLabel('Protocol', 'main', RequiredFieldMarker)}
-      rules={[
-        {
-          required: true,
-          validator: createZodFieldValidator(
-            CellMorphologySchema,
-            'cell_morphology_protocol_id',
-            form
-          ),
-        },
-      ]}
-    >
-      <ProtocolDropdown />
-    </Form.Item>
+    <>
+      <Form.Item
+        name="cell_morphology_protocol_id"
+        label={renderLabel('Protocol', 'main', RequiredFieldMarker)}
+        rules={[
+          {
+            required: true,
+            validator: createZodFieldValidator(
+              CellMorphologySchema,
+              'cell_morphology_protocol_id',
+              form
+            ),
+          },
+        ]}
+      >
+        <ProtocolDropdown />
+      </Form.Item>
+
+      {/* Hidden helper field — stores the selected protocol's generation_type */}
+      <Form.Item name="_protocol_generation_type" hidden noStyle>
+        <input type="hidden" />
+      </Form.Item>
+
+      {isDigitalReconstruction && (
+        <Form.Item name="repair_pipeline_state" label={renderLabel('Repair Pipeline Type', 'main')}>
+          <Select
+            placeholder="Select a repair pipeline type..."
+            options={REPAIR_PIPELINE_OPTIONS}
+            allowClear
+            popupClassName="z-[99999]"
+          />
+        </Form.Item>
+      )}
+    </>
   );
 }
