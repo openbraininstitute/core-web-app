@@ -298,7 +298,7 @@ export const renderMorphologyMeasurement = (
   const { unit } = measurement;
   let { value } = measurement;
 
-  const unitSuffix = showUnits ? `${unit}` : '';
+  const unitSuffix = showUnits ? ` ${unit}` : '';
 
   // TODO: This is a workaround to show soma diameter when a radius is provided.
   if (label === 'soma_radius') value = 2 * measurement.value;
