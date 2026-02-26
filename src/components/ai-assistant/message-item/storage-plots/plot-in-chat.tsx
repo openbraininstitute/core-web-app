@@ -2,9 +2,9 @@ import PlotErrorMessage from '@/components/github-flavor-markdown/plot-error-mes
 import { isString } from '@/util/type-guards';
 
 import { usePlotFile } from './hooks';
-import ToolPlotGenerator from './tool-plot-generator/tool-plot-generator';
-import ToolSkeleton from './tool-skeleton';
-import ToolThumbnailGeneration from './tool-thumbnail-generation-morphology-getone/tool-thumbnail-generation-morphology-getone';
+import ToolThumbnailGeneration from './renderers/image-renderer/tool-thumbnail-generation-morphology-getone';
+import ToolPlotGenerator from './renderers/plot-renderer/tool-plot-generator';
+import ToolSkeleton from './renderers/skeleton/tool-skeleton';
 
 export default function PlotInChat({ storageId }: { storageId: string }) {
   const { data, isError, isLoading } = usePlotFile(storageId);

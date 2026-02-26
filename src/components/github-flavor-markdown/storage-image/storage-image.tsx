@@ -1,4 +1,4 @@
-import PlotInChat from '@/components/ai-assistant/message-item/backup-plots/tools/plot-in-chat';
+import PlotInChat from '@/components/ai-assistant/message-item/storage-plots/plot-in-chat';
 
 import PlotErrorMessage from '../plot-error-message';
 import TruncableImage from '../truncable-image';

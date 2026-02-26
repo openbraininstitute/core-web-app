@@ -3,9 +3,9 @@ import React from 'react';
 import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
-import ToolSkeleton from '../tool-skeleton';
+import ToolSkeleton from '../skeleton/tool-skeleton';
 
-import type { ToolResult } from '../types';
+import type { ToolResult } from '../../types';
 
 import styles from './tool-thumbnail-generation-morphology-getone.module.css';
 

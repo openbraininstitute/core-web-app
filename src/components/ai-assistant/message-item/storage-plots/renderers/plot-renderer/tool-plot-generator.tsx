@@ -8,9 +8,9 @@ import { logError } from '@/util/logger';
 import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
-import ToolSkeleton from '../tool-skeleton';
+import ToolSkeleton from '../skeleton/tool-skeleton';
 
-import type { ToolResult } from '../types';
+import type { ToolResult } from '../../types';
 
 import styles from './tool-plot-generator.module.css';
 
@@ -35,7 +35,7 @@ export default function ToolPlotGenerator({
         // python-tool can return a list of storage_ids
         Array.isArray(result.storage_id)
           ? result.storage_id.map(
-              (storage_id: string, index: number) =>
+              (storage_id: string) =>
                 providedData && (
                   <CustomPlot className={className} key={storage_id} providedData={providedData} />
                 )

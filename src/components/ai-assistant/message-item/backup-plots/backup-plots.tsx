@@ -2,8 +2,7 @@ import React from 'react';
 
 import { classNames } from '@/util/utils';
 
-import PlotInChat from './tools/plot-in-chat';
-import { isToolResult } from './tools/types';
+import { isToolResult, PlotInChat } from '../storage-plots';
 
 import type { ToolInvocationUIPart, UIMessage } from '@ai-sdk/ui-utils';
 
