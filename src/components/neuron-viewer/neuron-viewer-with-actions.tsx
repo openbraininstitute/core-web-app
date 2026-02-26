@@ -15,6 +15,7 @@ import { useCleanMorphology } from '@/ui/segments/workflows/simulate/single-neur
 import { logError } from '@/utils/logger';
 
 import ReloadIcon from '../icons/Reload';
+import { DebugPanel } from './debug-panel';
 import { useElectrodes } from './hooks/electrodes';
 import { useSynapses } from './hooks/synapses';
 import { NeuronLoader } from './plugins/neuron-loader';
@@ -85,6 +86,7 @@ export function NeuronViewerContainer({
           onInjectionChange={setInjection}
           disableClick={simulationStatus?.status === SimulationStatus.LAUNCHED}
         />
+        <DebugPanel morphology={morphology} synapses={synapses} />
       </DefaultLoadingSuspense>
     </ErrorBoundary>
   );
