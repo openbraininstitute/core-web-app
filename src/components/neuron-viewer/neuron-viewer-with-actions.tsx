@@ -80,10 +80,10 @@ export function NeuronViewerContainer({
         <MorphoViewerSimul
           morphology={tree}
           synapses={synapses}
-          recordings={recordings}
-          onRecordingsChange={setRecordings}
-          injection={injection}
-          onInjectionChange={setInjection}
+          recordings={disableElectrodes ? [] : recordings}
+          onRecordingsChange={disableElectrodes ? undefined : setRecordings}
+          injection={disableElectrodes ? undefined : injection}
+          onInjectionChange={disableElectrodes ? undefined : setInjection}
           disableClick={simulationStatus?.status === SimulationStatus.LAUNCHED}
         />
         <DebugPanel morphology={morphology} synapses={synapses} />
