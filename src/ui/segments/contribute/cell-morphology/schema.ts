@@ -18,10 +18,19 @@ export const MTypeClassIdSchema = z
   .uuid()
   .nonempty({ message: 'M-type class is required' });
 
-export const REPAIR_PIPELINE_TYPES = ['raw', 'curated', 'unraveled', 'repaired'] as const;
-export type TRepairPipelineType = (typeof REPAIR_PIPELINE_TYPES)[number];
+export const RepairPipelineType = {
+  Raw: { key: 'raw', label: 'raw' },
+  Curated: { key: 'curated', label: 'curated' },
+  Unraveled: { key: 'unraveled', label: 'unraveled' },
+  Repaired: { key: 'repaired', label: 'repaired' },
+} as const;
 
-export const RepairPipelineTypeSchema = z.enum(REPAIR_PIPELINE_TYPES).optional();
+export type TRepairPipelineType =
+  (typeof RepairPipelineType)[keyof typeof RepairPipelineType]['key'];
+
+export const RepairPipelineTypeSchema = z
+  .enum(Object.values(RepairPipelineType).map((v) => v.key) as [string, ...string[]])
+  .optional();
 
 export const CELL_MORPHOLOGY_FILE_TYPES = [
   { type: 'swc', extension: 'swc', mimeType: 'application/swc' },
