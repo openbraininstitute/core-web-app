@@ -19,7 +19,9 @@ export interface DebugPanelProps {
 export function DebugPanel({ className, morphology, synapses }: DebugPanelProps) {
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const handleOpen = () => {
+    // biome-ignore lint/suspicious/noConsole: this is for the debug panel
     console.debug('Morphology:', morphology);
+    // biome-ignore lint/suspicious/noConsole: this is for the debug panel
     console.debug('Synapses:', synapses);
     const dialog = refDialog.current;
     if (!dialog) return;
@@ -51,6 +53,11 @@ export function DebugPanel({ className, morphology, synapses }: DebugPanelProps)
   );
 }
 
+/**
+ * The viewer is highlight sensitive to the data it receives.
+ * By setting any non-empty value to local storage item "@bbp/morphoviewer:debug",
+ * a debug button will appear and give you access to this data.
+ */
 function useDebugMode(): boolean {
   const [debugMode, setDebugMode] = React.useState(false);
   React.useEffect(() => {
