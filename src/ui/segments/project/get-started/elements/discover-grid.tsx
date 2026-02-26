@@ -34,7 +34,7 @@ export function DiscoverCard({
       )}
     >
       <CardTitle>{title}</CardTitle>
-      <CardDescription className="relative h-30.75 w-auto px-4">
+      <CardDescription className="relative h-30.75 w-auto px-4 mt-auto">
         <Image fill alt={title} src={image} className="rounded-md" />
         <div className="absolute inset-0 bg-black/30 rounded-md" />
         <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
@@ -60,7 +60,7 @@ export function DiscoverGrid({ tutorials }: { tutorials: TTutorial[] }) {
   const hasMore = tutorials.length > INITIAL_COUNT;
 
   return (
-    <section id="discover-tutorials" className="w-full flex flex-col my-6">
+    <section id="discover-tutorials" className="w-full flex flex-col my-6 @container">
       <div className="flex items-center justify-between w-full px-2 mb-2">
         <h2 className="font-medium text-primary-9">Discover</h2>
         {hasMore && (
@@ -78,7 +78,7 @@ export function DiscoverGrid({ tutorials }: { tutorials: TTutorial[] }) {
       </div>
       <motion.div
         layout
-        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 gap-1.5 w-full"
+        className="grid grid-cols-1 @md:grid-cols-2 @4xl:grid-cols-3  @5xl:grid-cols-5 gap-1.5 w-full"
       >
         <AnimatePresence initial={false}>
           {visible.map((p) => (

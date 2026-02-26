@@ -1,6 +1,6 @@
 import { defineQuery } from 'next-sanity';
 
-export const discoverQuery = defineQuery(
+export const DiscoverQuery = defineQuery(
   `*[_type=="documentationSettings"][0]{
         tutorialOrder[] -> {
             title,
@@ -24,6 +24,44 @@ export type TTutorial = {
   url: string;
 };
 
-export type TDiscoverTutorials = {
+export interface IDiscoverTutorialsList {
   tutorialOrder: TTutorial[];
+}
+
+export const QuickAccessQuery = defineQuery(
+  `*[_type == "quickaccess"][]{
+  group,
+  title,
+  "list": list[]{
+    description,
+    entityId,
+    isPreview,
+    title,
+    "thumbnail": select(
+      assetInfoType == "file" => assetFile.asset->url,
+      assetInfoType == "url" => assetFile.asset,
+      null
+    ),
+
+    "assetLabel": select(
+      assetInfoType == "label" => assetLabel,
+      null
+    )
+  }
+}`
+);
+
+export type TQuickAccessItem = {
+  description: string;
+  entityId: string;
+  isPreview: boolean;
+  title: string;
+  thumbnail: string | null;
+  assetLabel: string | null;
 };
+
+export interface IQuickAccessList {
+  group: string;
+  title: string;
+  list: Array<TQuickAccessItem>;
+}

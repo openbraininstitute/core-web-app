@@ -1,66 +1,92 @@
-'use client';
+import { compact, flatMap } from 'es-toolkit/compat';
 
-import Image from 'next/image';
-
+import { getEntity } from '@/api/entitycore/queries/general/entity';
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { getClient } from '@/services/sanity';
 import { Button } from '@/ui/molecules/button';
-import { Card, CardContent } from '@/ui/molecules/card';
-import { cn } from '@/utils/css-class';
+import { CardItem } from '@/ui/segments/project/get-started/elements/quic-access-card';
 
-import { QuickAccess } from '../data';
+import { type IQuickAccessList, QuickAccessQuery } from '../query';
 
-const imageStyle = {
-  borderRadius: '50%',
-  border: '1px solid #fff',
-};
+import type { WorkspaceContext } from '@/types/common';
 
-function CardItem({
-  poster,
-  title,
-  note,
-  description,
-}: {
-  note: string;
-  poster: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Card
-      className={cn(
-        'w-full bg-white border-none flex-1',
-        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]'
-      )}
-    >
-      <div className="relative h-41.75 w-auto">
-        <Image fill alt={title} src={poster} objectFit="contain" style={imageStyle} />
-      </div>
-      <CardContent>
-        <h4 className="text-neutral-400">{note}</h4>
-        <h1 className="font-black text-primary-8 text-lg 2xl:text-xl">{title}</h1>
-        <p className="text-neutral-4">{description}</p>
-      </CardContent>
-    </Card>
+export async function MainCards({ context }: { context: WorkspaceContext }) {
+  const client = getClient();
+  const quickAccessList = await client.fetch<Array<IQuickAccessList>>(QuickAccessQuery);
+  console.log('# # MainCards # quickAccessList:', JSON.stringify(quickAccessList, null, 2));
+  const entities = await Promise.allSettled(
+    flatMap(
+      quickAccessList.map((o) =>
+        o.list.filter((p) => p.isPreview).map((s) => getEntity({ id: s.entityId, context }))
+      )
+    )
   );
-}
+  const entities2 = await Promise.allSettled(
+    flatMap(
+      quickAccessList.map((o) =>
+        o.list.filter((p) => !p.isPreview).map((s) => getEntity({ id: s.entityId, context }))
+      )
+    )
+  );
+  const fullEntities2 = await Promise.allSettled(
+    compact(
+      entities2
+        .filter((p) => p.status === 'fulfilled')
+        .map((o) => {
+          const e = getEntityByCoreType({ type: o.value.type });
+          if (e)
+            return (
+              e.api.query.resolve?.({ id: o.value.id, context, populate: ['entity'] }) ??
+              e.api.query.one({ id: o.value.id, context })
+            );
+          return null;
+        })
+    )
+  );
+  console.log('# # MainCards # fullEntities2:', fullEntities2);
+  const fullEntities = await Promise.allSettled(
+    compact(
+      entities
+        .filter((p) => p.status === 'fulfilled')
+        .map((o) => {
+          const e = getEntityByCoreType({ type: o.value.type });
+          if (e) return e.api.query.one({ id: o.value.id, context });
+          return null;
+        })
+    )
+  );
 
-export function MainCards() {
+  // function getGroupUrl({ entityId, type }: { entityId: string; type: TEntityTypeDict }) {
+  //   const extendedType = getEntityByCoreType({ type });
+  //   return `${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}/workflows/view/${kebabCase(entityType)}/${entityId}`;
+  // }
+
+  const results = quickAccessList.map((k) => {
+    const preview = k.list.find((p) => p.isPreview);
+    const en = fullEntities.find((o) => o.id === preview?.entityId);
+
+    return {
+      id: en?.id,
+      title: preview?.title ?? en?.name,
+      description: preview?.description ?? en?.description,
+      poster: preview?.thumbnail,
+      groupTitle: k.title,
+      listLength: k.list.length,
+    };
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full">
-      {QuickAccess.map(({ default: dft, title: groupTitle, list }) => (
-        <div key={dft.id} className="flex flex-col gap-1.5 w-full">
-          <CardItem
-            note={groupTitle}
-            title={dft.title}
-            poster={dft.poster}
-            description={dft.description}
-          />
+      {results.map(({ groupTitle, title, id, description, poster, listLength }) => (
+        <div key={id} className="flex flex-col gap-1.5 w-full">
+          <CardItem note={groupTitle} title={title} preview={poster} description={description} />
           <Button
             rounded
             size="responsive"
             variant="outline"
             className="w-full bg-background shadow-none hover:font-bold hover:bg-white hover:shadow-md"
           >
-            View {groupTitle} examples ({list.length}){' '}
+            View {groupTitle} examples ({listLength}){' '}
           </Button>
         </div>
       ))}

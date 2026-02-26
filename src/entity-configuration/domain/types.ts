@@ -14,14 +14,19 @@ import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { FlagKey } from '@/features/feature-flags/flags';
 import type { WorkspaceContext } from '@/types/common';
 
+export type TEntityConfigDiscriminatorFilter = {
+  key: string;
+  value: Array<string>;
+};
+
 export type EntityCoreTypeConfig<
   T extends EntityCoreIdentifiable,
-  S = null, // single endpoint
+  S = null, // Single endpoint
   L = null, // List endpoint
 > = {
   group: TEntityTypeGroup;
   extendedType: TExtendedEntitiesTypeDict;
-  discriminator?: { key: string; value: Array<string> };
+  discriminator?: TEntityConfigDiscriminatorFilter;
   type: TEntityTypeDict;
   slug: EntitySlugValue;
   title: string;
