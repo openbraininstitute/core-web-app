@@ -1,9 +1,7 @@
 name: Make release
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,6 +12,12 @@ jobs:
     env:
       IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
     steps:
+      - name: Fail if branch is not main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        run: |
+          echo "This workflow should not be triggered with workflow_dispatch on a branch other than main"
+          exit 1
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
