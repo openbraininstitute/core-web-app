@@ -1,17 +1,15 @@
 import { CameraFilled } from '@ant-design/icons';
 import React from 'react';
 
-import { usePainter, useVisibleRegions } from './hooks';
-
-// Temporary disabled
-// import { Settings } from './settings/settings';
-
+import { Settings } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/settings/settings';
 import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
 import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
 
-import styles from './brain-atlas-viewer-gltf.module.css';
+import { useAtlasViewerSettingsValues, usePainter, useVisibleRegions } from './hooks';
+
+import styles from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/brain-atlas-viewer-gltf.module.css';
 
 export interface BrainAtlasViewerGltfProps {
   className?: string;
@@ -36,6 +34,7 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
     loading: loading || !resolvedAtlasId,
     atlasId: resolvedAtlasId,
   });
+  const [values, setValues] = useAtlasViewerSettingsValues(painter);
 
   React.useEffect(() => {
     const previousPainter = previousPainterRef.current;
@@ -128,10 +127,7 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
           <CameraFilled /> <div>Reset camera</div>
         </button>
       </header>
-      {/*
-      We disable this feature for now (dec 11th, 2025) until we agree
-      on settings ranges.
-      <Settings values={values} onChange={setValues} /> */}
+      <Settings values={values} onChange={setValues} />
     </div>
   );
 }

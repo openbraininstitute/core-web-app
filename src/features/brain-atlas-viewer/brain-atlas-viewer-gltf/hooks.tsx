@@ -102,6 +102,20 @@ export function getAtlasViewerDefaultSettings(): SettingsDefinitions {
       max: 2,
       value: 1,
     },
+    minSizeInPixels: {
+      label: 'Minimal size (pixel)',
+      value: 5,
+      min: 0,
+      max: 20,
+      step: 1,
+    },
+    radiusMultiplier: {
+      label: 'Radius multiplier',
+      value: 1,
+      min: 0.1,
+      max: 2,
+      step: 0.1,
+    },
     specularExponent: {
       label: 'Specular exponent',
       value: 10,
@@ -137,10 +151,11 @@ const atlasViewerSettingsAtom = atomWithStorage(
 );
 
 export function useAtlasViewerSettingsValues(
-  painter: Painter
+  painter: Painter | null
 ): [values: SettingsDefinitions, setValues: (values: SettingsDefinitions) => void] {
   const [values, setValues] = useAtom(atlasViewerSettingsAtom);
   React.useEffect(() => {
+    if (!painter) return;
     painter.uniforms = values;
   }, [values, painter]);
   return [values, setValues];

@@ -2,7 +2,7 @@
 
 /* eslint-disable no-param-reassign */
 import { FullscreenOutlined } from '@ant-design/icons';
-import { MorphologyCanvas } from '@bbp/morphoviewer';
+import { GizmoCanvas, MorphologyCanvas } from '@bbp/morphoviewer';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
 
@@ -70,7 +70,6 @@ function MorphoViewerComponent({ className, swc, mode }: MorphoViewerProps) {
   };
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: double click to go fullscreen
     <div
       className={classNames(styles.main, className, isDarkMode && styles.darkMode)}
       ref={refDiv}

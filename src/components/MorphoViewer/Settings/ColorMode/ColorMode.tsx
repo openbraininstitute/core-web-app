@@ -1,3 +1,5 @@
+import React from 'react';
+
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { classNames } from '@/util/utils';
 
