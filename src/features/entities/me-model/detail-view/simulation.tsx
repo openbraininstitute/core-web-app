@@ -2,15 +2,15 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { ErrorBoundary } from '@sentry/nextjs';
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 import { Spin } from 'antd';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
 
 import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -42,7 +42,7 @@ export default function Results({ modelId }: Props) {
     }
 
     getSimulations();
-  }, [modelId, error, virtualLabId, projectId]);
+  }, [modelId, virtualLabId, projectId]);
 
   if (loading) {
     return (
