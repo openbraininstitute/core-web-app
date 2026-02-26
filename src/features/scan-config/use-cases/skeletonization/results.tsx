@@ -29,6 +29,7 @@ import { messages as textMessages } from '@/i18n/en/scan-config';
 import { runSkeletonizationBatch } from '@/services/small-scale-simulator/mesh';
 import { JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { classNames } from '@/util/utils';
 
 import type { CheckboxProps } from 'antd';
@@ -44,6 +45,12 @@ type Props = {
   virtualLabId: string;
   projectId: string;
 };
+
+// Sorts strings which might contain indexes.
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: 'base',
+});
 
 const queryKeys = {
   configGeneration: (campaignId: string, context: { virtualLabId: string; projectId: string }) =>
@@ -104,7 +111,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
     enabled: generatedConfigIds.length > 0,
   });
 
-  const configList = configs ?? [];
+  const configList = configs?.sort((a, b) => collator.compare(a.name, b.name)) ?? [];
   const configIds = configList.map((c) => c.id);
   const queryKey = queryKeys.skeletonizationExecutions(configIds, context);
 
@@ -223,7 +230,9 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
               const config = configList.find((c) => c.id === configId);
               if (!config) return;
 
-              if (msg.status === JobStatus.DONE) {
+              if (msg.status === JobStatus.RUNNING) {
+                queryClient.invalidateQueries({ queryKey: keyBuilder.wallet(context) });
+              } else if (msg.status === JobStatus.DONE) {
                 notification.success({ message: `${config.name} done` });
               } else if (msg.status === JobStatus.ERROR) {
                 const errorMsg = msg.extra?.includes('ACCOUNTING_INSUFFICIENT_FUNDS_ERROR')
