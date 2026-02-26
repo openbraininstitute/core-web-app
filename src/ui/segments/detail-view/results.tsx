@@ -1,17 +1,19 @@
 import { notFound } from 'next/navigation';
-import {
-  EntityCoreExtendedType,
-  getEntityByExtendedType,
-} from '@/entity-configuration/domain/helpers';
 
-import { EntityTypeValue } from '@/entity-configuration/domain';
-import { WorkspaceContext, AwaitedType } from '@/types/common';
-import { ISingleNeuronSimulation, ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types';
+import SimulationResults from '@/components/simulate/SimulationDetails/recording-tab';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   singleNeuronSimulationApiQueryExpand,
   singleNeuronSynaptomeSimulationApiQueryExpand,
 } from '@/entity-configuration/domain/simulation';
-import SimulationResults from '@/components/simulate/SimulationDetails/recording-tab';
+
+import type {
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityTypeValue } from '@/entity-configuration/domain';
+import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 export default async function Results({
   entity,
@@ -19,7 +21,7 @@ export default async function Results({
   ctx,
 }: {
   entity: EntityTypeValue;
-  extendedType: EntityCoreExtendedType;
+  extendedType: TExtendedEntitiesTypeDict;
   ctx: WorkspaceContext;
 }) {
   const entityType = getEntityByExtendedType({ type: extendedType });

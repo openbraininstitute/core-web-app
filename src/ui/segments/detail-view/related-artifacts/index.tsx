@@ -1,25 +1,27 @@
-import { notFound } from 'next/navigation';
 import { includes } from 'es-toolkit/compat';
-import ICMRelatedArtifacts from './ion-channel-model';
-import {
-  EntityCoreExtendedType,
-  getEntityByExtendedType,
-} from '@/entity-configuration/domain/helpers';
+import { notFound } from 'next/navigation';
 
+import {
+  ExtendedEntitiesTypeDict,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import MEModelResults from '@/features/entities/me-model/detail-view/simulation';
 import SynaptomeResults from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
 import { RelatedCircuits } from '@/ui/segments/explore/circuit/elements/related-circuits';
-import { EntityTypeValue } from '@/entity-configuration/domain';
-import { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+
+import ICMRelatedArtifacts from './ion-channel-model';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 
 export default async function RelatedArtifacts({
   entity,
   extendedType,
 }: {
-  entity: EntityTypeValue;
-  extendedType: EntityCoreExtendedType;
+  entity: TRetrieveEntityOutput;
+  extendedType: TExtendedEntitiesTypeDict;
 }) {
   const entityType = getEntityByExtendedType({ type: extendedType });
   if (!entityType) notFound();

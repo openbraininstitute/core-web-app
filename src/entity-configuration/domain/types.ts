@@ -14,9 +14,14 @@ import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { FlagKey } from '@/features/feature-flags/flags';
 import type { WorkspaceContext } from '@/types/common';
 
-export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
+export type EntityCoreTypeConfig<
+  T extends EntityCoreIdentifiable,
+  S = null, // single endpoint
+  L = null, // List endpoint
+> = {
   group: TEntityTypeGroup;
   extendedType: TExtendedEntitiesTypeDict;
+  discriminator?: { key: string; value: Array<string> };
   type: TEntityTypeDict;
   slug: EntitySlugValue;
   title: string;
@@ -31,9 +36,20 @@ export type EntityCoreTypeConfig<T extends EntityCoreIdentifiable> = {
       ilikeSearchEnabled?: boolean;
     };
     query: {
-      list?: (query: any) => Promise<EntityCoreResponse<T>>;
-      count?: (query: any) => Promise<EntityCoreResponse<T>>;
-      one: (query: { id: string; context?: WorkspaceContext | null }) => Promise<T>;
+      list?: (query: any) => Promise<EntityCoreResponse<T> | L>;
+      count?: (query: any) => Promise<EntityCoreResponse<T> | L>;
+      one: (
+        query: {
+          id: string;
+          context?: WorkspaceContext | null;
+        } & Record<string, any>
+      ) => Promise<T>;
+      resolve?: (
+        query: {
+          id: string;
+          context?: WorkspaceContext | null;
+        } & Record<string, any>
+      ) => Promise<S>;
       create?: (body: any) => Promise<T>;
       delete?: (query: { id: string; context: WorkspaceContext | null }) => Promise<void>;
     };

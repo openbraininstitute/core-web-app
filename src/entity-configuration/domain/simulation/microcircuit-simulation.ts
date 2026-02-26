@@ -1,5 +1,4 @@
-import flatMap from 'es-toolkit/compat/flatMap';
-import keyBy from 'es-toolkit/compat/keyBy';
+import { flatMap, keyBy } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuits } from '@/api/entitycore/queries/model/circuit';
@@ -11,23 +10,24 @@ import {
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type {
-  ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { getExtendedSimMap } from '@/entity-configuration/domain/simulation/utils';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import { microcircuitFlag } from '@/features/feature-flags';
+
+import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
+import type {
+  ICircuitSimulationCampaign,
+  ICircuitSimulationCampaignFilter,
+} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
-import { getExtendedSimMap } from './utils';
 
 export async function resolveExecutions({
   context,
@@ -71,7 +71,6 @@ async function resolveSimulationCampaigns({
   filters?: Partial<ICircuitSimulationCampaignFilter>;
   circuitScaleFilter?: Partial<ICircuitFilter>;
 }) {
-  // eslint-disable-next-line no-param-reassign
   filters = discardBrainRegionQueryParams(filters);
   const source = await getCircuitSimulationCampaigns({
     context,
@@ -111,7 +110,10 @@ async function resolveSimulationCampaigns({
 
   const circuits = await getCircuits({
     context,
-    filters: { id__in: source.data.map((l) => l.entity_id), ...circuitScaleFilter },
+    filters: {
+      id__in: source.data.map((l) => l.entity_id),
+      ...circuitScaleFilter,
+    },
   });
   const circuitMap = keyBy(circuits.data, 'id');
   const result = enrichedData.map((entity) => ({
@@ -139,7 +141,10 @@ export async function resolveSimulationByCampaignId({
     throw new Error(`No campaign with id ${id} found`);
   }
 
-  const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
+  const source = await getCircuitSimulations({
+    context,
+    filters: { simulation_campaign_id: id },
+  });
 
   const simulation = source.data.at(0);
   const assets = campaign?.assets ?? [];
@@ -165,12 +170,19 @@ export async function resolveSimulationByCampaignId({
     config,
   };
 }
+type TResolvedSimulationByCampaign = Awaited<ReturnType<typeof resolveSimulationByCampaignId>>;
+type TResolvedSimulationByCampaigns = Awaited<ReturnType<typeof resolveSimulationCampaigns>>;
 
-export const MicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
+export const MicrocircuitSimulation: EntityCoreTypeConfig<
+  ICircuitSimulationCampaign,
+  TResolvedSimulationByCampaign,
+  TResolvedSimulationByCampaigns
+> = {
   group: EntityTypeGroup.Simulations,
   title: 'Microcircuit',
   extendedType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
+  discriminator: { key: 'scale', value: [SCALE] },
   slug: EntitySlug.MicrocircuitSimulation,
   requiredFeatures: [microcircuitFlag.key],
   api: {
@@ -202,10 +214,6 @@ export const MicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCamp
       create: createSimulationCampaign,
     },
     expandRow: async (record, _context) => record,
-  },
-  explore: {
-    basePrefix: 'simulate',
-    routePrefix: 'simulate',
   },
   asset: {
     extension: 'application/json',
