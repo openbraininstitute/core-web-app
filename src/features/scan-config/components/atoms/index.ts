@@ -13,8 +13,10 @@ import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulat
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
 import { EntityTypeDict, type IMEModel, type TEntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
+import {
+  hasSimConfigAsset,
+  resolveExecutions,
+} from '@/entity-configuration/domain/simulation/utils';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';

@@ -1,4 +1,4 @@
-import { flatMap, get, includes, keyBy, sortBy } from 'es-toolkit/compat';
+import { flatMap, keyBy } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
@@ -8,61 +8,59 @@ import {
   getCircuitSimulationCampaign,
   getCircuitSimulationCampaigns,
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { resolveExecutions } from '@/entity-configuration/domain/simulation/utils';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import { getExtendedSimMap, hasSimConfigAsset, migrateConfig } from './utils';
+import { getExtendedSimMap, migrateConfig } from './utils';
 
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {
   ICircuitSimulationCampaign,
   ICircuitSimulationCampaignFilter,
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import type { AwaitedType, WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
+
+const SCALE = CircuitScaleDictionary.Region;
 
 // NOTE: this is due entitycore do not support yet
 async function resolveSimulationCampaigns({
   withFacets,
   context,
   filters,
+  circuitScaleFilter,
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
   filters?: Partial<ICircuitSimulationCampaignFilter>;
+  circuitScaleFilter?: Partial<ICircuitFilter>;
 }) {
   filters = discardBrainRegionQueryParams(filters);
 
   const source = await getCircuitSimulationCampaigns({
     context,
     withFacets,
-    filters,
+    filters: { ...filters, circuit__scale: SCALE },
   });
   // extract all simulation IDs
   const allSimIds = flatMap(
     source.data,
     (campaign) => campaign.simulations?.map((sim) => sim.id) ?? []
   );
-  // fetch executions related to those simulation IDs
-  const executionsResponse = await getCircuitSimulationExecutions({
-    context,
-    withFacets: false,
-    filters: { used__id__in: allSimIds },
-  });
-  const executions = executionsResponse.data;
 
-  // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
-  const simulationMap = await getExtendedSimMap(allSimIds, context);
+  const [executions, simulationMap] = await Promise.all([
+    resolveExecutions({ context, allSimIds }),
+    // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
+    getExtendedSimMap(allSimIds, context),
+  ]);
 
   // map simulationId -> array of executions that use it
   const executionsBySimId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
@@ -84,7 +82,10 @@ async function resolveSimulationCampaigns({
 
   const circuits = await getCircuits({
     context,
-    filters: { id__in: source.data.map((l) => l.entity_id).join(',') },
+    filters: {
+      id__in: source.data.map((l) => l.entity_id),
+      ...circuitScaleFilter,
+    },
   });
   const circuitMap = keyBy(circuits.data, 'id');
   const result = enrichedData.map((entity) => ({
@@ -102,11 +103,9 @@ async function resolveSimulationCampaigns({
 export async function resolveSimulationByCampaignId({
   id,
   context,
-  populate = ['entity', 'config'],
 }: {
   id: string;
-  context?: WorkspaceContext | null;
-  populate?: Array<string>;
+  context?: WorkspaceContext | undefined | null;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
 
@@ -126,42 +125,21 @@ export async function resolveSimulationByCampaignId({
     filter: (asset) => asset.label === AssetLabel.campaign_generation_config,
   });
 
-  // if (!configAsset) throw Error('No campaign config asset found');
-  // TODO Revert this back when microcircuit simulations have obi-one generation config.
-  if (!configAsset) {
-    const circuit = await getCircuit({ id: campaign?.entity_id, context });
+  if (!configAsset) throw Error('No campaign config asset found');
 
-    if (
-      includes([CircuitScaleDictionary.Microcircuit, CircuitScaleDictionary.Region], circuit.scale)
-    ) {
-      return {
-        campaign,
-        simulation,
-        entity: circuit,
-        config: null,
-      };
-    }
-
-    throw Error('No campaign config asset found');
-  }
-
-  let config = null;
   let entity: ICircuit | null = null;
+  if (simulation?.entity_id) entity = await getCircuit({ id: simulation?.entity_id, context });
 
-  if (simulation?.entity_id && populate.includes('entity'))
-    entity = await getCircuit({ id: simulation?.entity_id, context });
+  const rawConfig = await downloadAsset({
+    entityId: campaign.id,
+    entityType: EntityTypeDict.SimulationCampaign,
+    id: configAsset?.id,
+    ctx: context,
+    asRawResponse: true,
+  });
+  const config = await rawConfig.json();
 
-  if (populate.includes('config')) {
-    const rawConfig = await downloadAsset({
-      entityId: campaign?.id,
-      entityType: EntityTypeDict.SimulationCampaign,
-      id: configAsset?.id,
-      ctx: context,
-      asRawResponse: true,
-    });
-    config = await rawConfig.json();
-    migrateConfig(config);
-  }
+  migrateConfig(config);
 
   return {
     campaign,
@@ -171,65 +149,56 @@ export async function resolveSimulationByCampaignId({
   };
 }
 
-export function getSimulationStatus(simulation: ICircuitSimulation) {
-  const executions = get(simulation, 'executions', []) as IExecutionActivity[];
-  const sortedExecutions = sortBy(executions, (exec) => exec.creation_date);
-
-  // Used when there are no executions present
-  const fallbackStatus = hasSimConfigAsset(simulation)
-    ? ActivityStatus.CREATED
-    : ActivityStatus.ERROR;
-
-  const status = sortedExecutions.at(-1)?.status ?? fallbackStatus;
-
-  return status;
-}
-
-export function getStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
-  const simulations = get(simCampaign, 'simulations', []) as ICircuitSimulation[];
-
-  const statusCountMap = simulations.reduce((map, simulation) => {
-    const status = getSimulationStatus(simulation);
-
-    return map.set(status, (map.get(status) ?? 0) + 1);
-  }, new Map());
-
-  return statusCountMap;
-}
-
-export type ExtendedCampaignsType = AwaitedType<ReturnType<typeof resolveSimulationCampaigns>>;
-
 type TResolvedSimulationByCampaign = Awaited<ReturnType<typeof resolveSimulationByCampaignId>>;
 type TResolvedSimulationByCampaigns = Awaited<ReturnType<typeof resolveSimulationCampaigns>>;
 
-export const SimulationCampaign: EntityCoreTypeConfig<
+export const RegionCircuitSimulation: EntityCoreTypeConfig<
   ICircuitSimulationCampaign,
   TResolvedSimulationByCampaign,
   TResolvedSimulationByCampaigns
 > = {
   group: EntityTypeGroup.Simulations,
-  title: 'Simulation campaign',
-  extendedType: ExtendedEntitiesTypeDict.SimulationCampaign,
+  title: 'Region circuit (beta)',
+  extendedType: ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+  discriminator: { key: 'scale', value: [SCALE] },
   type: EntityTypeDict.SimulationCampaign,
-  slug: EntitySlug.SimulationCampaign,
-  isDeletable: false,
+  slug: EntitySlug.RegionCircuitSimulation,
   api: {
     config: {
       allowedFacets: true,
       ilikeSearchEnabled: true,
     },
     query: {
-      list: resolveSimulationCampaigns,
+      count: (...params) => {
+        const filters = discardBrainRegionQueryParams(params[0].filters);
+        return getCircuitSimulationCampaigns({
+          ...params,
+          context: params[0].context,
+          withFacets: params[0].withFacets,
+          filters: {
+            ...filters,
+            circuit__scale: SCALE,
+          },
+        });
+      },
+      list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
+        resolveSimulationCampaigns({
+          ...params,
+          circuitScaleFilter: {
+            scale: SCALE,
+          },
+        }),
       one: getCircuitSimulationCampaign,
       resolve: resolveSimulationByCampaignId,
       create: createSimulationCampaign,
     },
+    expandRow: async (record, _context) => record,
   },
   asset: {
     extension: 'application/json',
   },
   detailViewSections: [DetailViewSectionsDict.Overview],
-  isBookmarkable: true,
+  isBookmarkable: false,
   isDownloadable: false,
   isCopyable: true,
   isSimulatable: false,

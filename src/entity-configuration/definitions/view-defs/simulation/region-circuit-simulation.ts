@@ -5,10 +5,10 @@ import {
 } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-export const viewDefForPairedNeuronCircuitSimulation: ViewDefinitionConfig = {
-  title: 'Paired Neurons Simulation (beta)',
+export const viewDefForRegionCircuitSimulation: ViewDefinitionConfig = {
+  title: 'Region circuit Simulation (beta)',
   group: DataTypeGroup.SimulationData,
-  name: EntitySlug.PairedNeuronCircuitSimulation,
+  name: EntitySlug.RegionCircuitSimulation,
   curated: false,
   columns: [
     EntityCoreFields.Name,

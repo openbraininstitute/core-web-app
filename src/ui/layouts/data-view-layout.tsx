@@ -62,6 +62,7 @@ export async function DataViewLayout({
         ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
         ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
         ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+        ExtendedEntitiesTypeDict.RegionCircuitSimulation,
         ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
       ],
       type

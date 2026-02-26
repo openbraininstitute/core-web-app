@@ -8,7 +8,6 @@ import {
   getCircuitSimulationCampaign,
   getCircuitSimulationCampaigns,
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -17,9 +16,12 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import {
+  getExtendedSimMap,
+  migrateConfig,
+  resolveExecutions,
+} from '@/entity-configuration/domain/simulation/utils';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-
-import { getExtendedSimMap, migrateConfig } from './utils';
 
 import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {
@@ -28,34 +30,6 @@ import type {
 } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
-
-export async function resolveExecutions({
-  context,
-  allSimIds,
-}: {
-  context: WorkspaceContext | undefined;
-  allSimIds: string[];
-}) {
-  const chunkSize = 30;
-
-  const promises: ReturnType<typeof getCircuitSimulationExecutions>[] = [];
-
-  for (let i = 0; i < allSimIds.length; i += chunkSize) {
-    const chunk = allSimIds.slice(i, i + chunkSize);
-
-    promises.push(
-      getCircuitSimulationExecutions({
-        context,
-        withFacets: false,
-        filters: { used__id__in: [...chunk] },
-      })
-    );
-  }
-
-  const executionsResponses = await Promise.all(promises);
-
-  return executionsResponses.flatMap((r) => r.data);
-}
 
 const SCALE = CircuitScaleDictionary.SmallMicrocircuit;
 

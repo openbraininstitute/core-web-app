@@ -106,7 +106,8 @@ export default async function Overview({
     extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
+    extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation ||
+    extendedType === ExtendedEntitiesTypeDict.RegionCircuitSimulation
   ) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 

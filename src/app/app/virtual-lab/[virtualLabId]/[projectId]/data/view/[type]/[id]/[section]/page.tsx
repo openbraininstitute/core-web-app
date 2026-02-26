@@ -44,6 +44,5 @@ export default async function Page({
   });
 
   if (!content) notFound();
-
   return content;
 }

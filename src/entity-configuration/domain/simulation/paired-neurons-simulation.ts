@@ -16,10 +16,12 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import {
+  getExtendedSimMap,
+  migrateConfig,
+  resolveExecutions,
+} from '@/entity-configuration/domain/simulation/utils';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-
-import { resolveExecutions } from './small-microcircuit-simulation';
-import { getExtendedSimMap, migrateConfig } from './utils';
 
 import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {

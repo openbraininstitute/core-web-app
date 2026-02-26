@@ -1,8 +1,9 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.SingleNeuronSimulation]: {
@@ -15,7 +16,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
       EntityCoreFields.SimulationModel,
       EntityCoreFields.SimulationStimulus,
       EntityCoreFields.SimulationResponse,
-      EntityCoreFields.SimulationStatus,
+      EntityCoreFields.SimulationCampaignStatus,
       EntityCoreFields.InjectionLocation,
       EntityCoreFields.RecordingLocation,
       EntityCoreFields.BrainRegion,
@@ -28,7 +29,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     ],
     miniDetailView: [
       { field: EntityCoreFields.SimulationModel },
-      { field: EntityCoreFields.SimulationStatus },
+      { field: EntityCoreFields.SimulationCampaignStatus },
       { field: EntityCoreFields.InjectionLocation },
       { field: EntityCoreFields.RecordingLocation },
       { field: EntityCoreFields.BrainRegion },
@@ -218,6 +219,37 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     title: 'Microcircuit Simulation',
     group: DataTypeGroup.SimulationData,
     name: EntitySlug.MicrocircuitSimulation,
+    curated: false,
+    columns: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Description,
+      EntityCoreFields.CircuitName,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.RegistrationDate,
+      EntityCoreFields.SimulationCampaignStatus,
+    ],
+    filterableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.RegistrationDate,
+    ],
+    displayableFields: [
+      EntityCoreFields.Name,
+      EntityCoreFields.Contributions,
+      EntityCoreFields.CreatedBy,
+      EntityCoreFields.RegistrationDate,
+    ],
+    miniDetailView: [
+      { field: EntityCoreFields.CircuitName },
+      { field: EntityCoreFields.RegistrationDate },
+      { field: EntityCoreFields.SimulationCampaignStatus },
+    ],
+  },
+  [ExtendedEntitiesTypeDict.RegionCircuitSimulation]: {
+    title: 'Region circuit simulation (beta)',
+    group: DataTypeGroup.SimulationData,
+    name: EntitySlug.RegionCircuitSimulation,
     curated: false,
     columns: [
       EntityCoreFields.Name,
