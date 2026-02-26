@@ -5,17 +5,11 @@ import sample from 'es-toolkit/compat/sample';
 import { useAtom } from 'jotai';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
-import { Color } from 'three';
 
 import {
   SingleNeuronSynaptomeBaseSchema,
   type TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import {
-  sendDisplaySynapses3DEvent,
-  sendRemoveSynapses3DEvent,
-} from '@/components/neuron-viewer/hooks/events';
-import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -31,7 +25,7 @@ import { getRandomIntInclusive } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { formatCompactNumber } from '@/utils/format';
 
-import type { SectionSynapsesWith3D } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import type { SectionSynapsesFor3D } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 type Props = { sessionId: string };
 
@@ -116,8 +110,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
     });
 
     const currentSynapsesPlacementConfig = synapsesPlacement?.[id];
-    if (currentSynapsesPlacementConfig?.meshId) {
-      sendRemoveSynapses3DEvent(id, currentSynapsesPlacementConfig.meshId);
+    if (currentSynapsesPlacementConfig?.visible) {
       setSynapsesPlacement((prev) => {
         const newValue = structuredClone(prev);
         if (newValue) delete newValue[id];
@@ -134,8 +127,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
   const onToggleVisibility = (id: string) => {
     const currentSynapsesPlacementConfig = synapsesPlacement?.[id];
     const synapseSet = sessionValue?.synapseSets?.get(id);
-    if (currentSynapsesPlacementConfig?.meshId) {
-      sendRemoveSynapses3DEvent(id, currentSynapsesPlacementConfig.meshId);
+    if (currentSynapsesPlacementConfig?.visible) {
       setSynapsesPlacement((prev) => {
         const newValue = structuredClone(prev);
         if (!newValue) return newValue;
@@ -144,25 +136,19 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
         return newValue;
       });
     } else if (currentSynapsesPlacementConfig?.sectionSynapses && synapseSet) {
-      const synapsePositions = currentSynapsesPlacementConfig.sectionSynapses
-        .flat()
-        .flatMap((p) => p.synapses)
-        .map((o) => o.coordinates);
-
-      const mesh = createBubblesInstanced(synapsePositions, new Color(synapseSet.color));
-      sendDisplaySynapses3DEvent(id, mesh);
-
+      console.log('🐞 [synapse-set-menu-item@139] synapseSet =', synapseSet); // @FIXME: Remove this line written on 2026-02-25 at 14:43
       setSynapsesPlacement((prev) => ({
         ...prev,
         [id]: {
           ...currentSynapsesPlacementConfig,
-          meshId: mesh.uuid,
+          color: synapseSet.color,
+          visible: true,
         },
       }));
     }
   };
-  const values = sessionValue?.synapseSets?.values();
-  useViewer3D(values ? Array.from(values) : [], synapsesPlacement ?? {}, sessionId);
+  // const values = sessionValue?.synapseSets?.values();
+  // useViewer3D(values ? Array.from(values) : [], synapsesPlacement ?? {}, sessionId);
 
   return (
     <div className="flex max-h-[300px] flex-col gap-1.5">
@@ -170,7 +156,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
         {Array.from(sessionValue?.synapseSets?.values() ?? [])
           ?.filter((o) => SingleNeuronSynaptomeBaseSchema.safeParse(o).success)
           .map((o) => {
-            const isVisible = !!synapsesPlacement?.[o.id]?.meshId;
+            const isVisible = !!synapsesPlacement?.[o.id]?.visible;
             const canShow = !!synapsesPlacement?.[o.id]?.sectionSynapses;
             const count = sessionValue?.synapseCount?.get(o.id);
             return (
@@ -333,7 +319,7 @@ function VisibilityButton({
 
 function useViewer3D(
   synapticInputs: { id: string; color?: string }[],
-  selection: Record<string, SectionSynapsesWith3D | null>,
+  selection: Record<string, SectionSynapsesFor3D | null>,
   sessionId: string
 ) {
   const update = useVisibleSynapsesSetter(sessionId);

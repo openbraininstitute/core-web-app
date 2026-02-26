@@ -22,22 +22,26 @@ export function useSynapses(
   const synapsesPlacement: SynapsesPlacementRecord | null = useAtomValue(
     SynapsesPlacementAtomFamily(sessionId)
   );
-  return React.useMemo(() => {
+  const result: Array<{
+    color: string;
+    sections: Record<string, number[]>;
+  }> = React.useMemo(() => {
     if (disableSynapses || !synapsesPlacement) return [];
 
     return Object.values(synapsesPlacement)
       .filter((item) => !!item)
-      .map(({ sectionSynapses, synapsePlacementConfigId }) => {
+      .map(({ sectionSynapses, synapsePlacementConfigId, color }) => {
         const sections: Record<string, number[]> = {};
         for (const { section_id, synapses } of sectionSynapses) {
           sections[section_id] = synapses.map(({ position }) => position);
         }
         return {
-          color: resolveColor(synapsePlacementConfigId, synapticInputs),
+          color: color ?? resolveColor(synapsePlacementConfigId, synapticInputs),
           sections,
         };
       });
   }, [disableSynapses, synapticInputs, synapsesPlacement]);
+  return result;
 }
 
 function resolveColor(

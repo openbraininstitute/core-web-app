@@ -14,7 +14,6 @@ import map from 'es-toolkit/compat/map';
 import { useAtom, useAtomValue } from 'jotai';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { Color } from 'three';
 
 import {
   SingleNeuronSynaptomeConfigurationSchema,
@@ -27,14 +26,9 @@ import {
 import { tryCatch } from '@/api/utils';
 import { ArrowSyncFilled } from '@/components/icons/buttons';
 import { SettingAdjustment } from '@/components/icons/SettingAdjustment';
-import {
-  sendDisplaySynapses3DEvent,
-  sendRemoveSynapses3DEvent,
-} from '@/components/neuron-viewer/hooks/events';
 import { useAppNotification } from '@/components/notification';
 import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
 import { messages } from '@/i18n/en/synaptome';
-import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
@@ -144,14 +138,13 @@ export function SynapseSet({ sessionId }: Props) {
   const onHideSynapse = () => {
     if (config?.id) {
       const currentSynapsesPlacementConfig = synapsesPlacement?.[config.id];
-      if (currentSynapsesPlacementConfig && currentSynapsesPlacementConfig.meshId) {
-        sendRemoveSynapses3DEvent(config?.id, currentSynapsesPlacementConfig.meshId);
+      if (currentSynapsesPlacementConfig?.visible) {
         setSynapsesPlacementAtom({
           ...synapsesPlacement,
           [config.id]: {
             ...currentSynapsesPlacementConfig,
             count: undefined,
-            meshId: undefined,
+            visible: false,
           },
         });
       }
@@ -283,40 +276,34 @@ export function SynapseSet({ sessionId }: Props) {
             },
           })
         );
-
         if (error) return onVisualizationError(error);
 
         const synapsePositions = data.synapses
           .flat()
           .flatMap((p) => p.synapses)
           .map((o) => o.coordinates);
-
-        const mesh = createBubblesInstanced(synapsePositions, new Color(config.color));
-        sendDisplaySynapses3DEvent(config.id, mesh);
-
         const newSynapseSet = new Map(sessionValue?.synapseSets);
         const newSynapseCount = new Map(sessionValue?.synapseCount);
         newSynapseSet.set(config.id, configSet);
         newSynapseCount.set(config.id, synapsePositions.length);
-
         setSessionValue({
           ...sessionValue,
           seed: sessionValue?.seed ?? 100,
           synapseSets: newSynapseSet,
           synapseCount: newSynapseCount,
         });
-
         setSynapsesPlacementAtom({
           ...synapsesPlacement,
           [config.id]: {
             sectionSynapses: data.synapses,
             count: synapsePositions.length,
-            meshId: mesh.uuid,
             synapsePlacementConfigId: config.id,
+            color: config.color,
+            visible: true,
           },
         });
-
         configRef.current = configSet;
+        console.log('🐞 [synapse-set-item@314] config =', config); // @FIXME: Remove this line written on 2026-02-25 at 14:18
       } catch {
         return onVisualizationError();
       } finally {
@@ -333,12 +320,6 @@ export function SynapseSet({ sessionId }: Props) {
         sessionValue?.synapseSets ?? new Map(),
         () => Number(value) + getRandomIntInclusive(0, Number(value))
       ),
-    });
-    Array.from(sessionValue?.synapseSets?.entries() ?? []).forEach(([, v]) => {
-      const mesh = synapsesPlacement?.[v.id]?.meshId;
-      if (mesh) {
-        sendRemoveSynapses3DEvent(v.id, mesh);
-      }
     });
   };
 
