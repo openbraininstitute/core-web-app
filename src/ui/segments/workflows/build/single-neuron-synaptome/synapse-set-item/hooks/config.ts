@@ -20,11 +20,12 @@ export function useConfig(sessionId: string) {
   const setId = params.get('set');
   React.useMemo(() => {
     const synapses = sessionValue?.synapseSets;
+    const id = setId ?? globalThis.crypto.randomUUID();
     setConfig(
-      synapses?.get(setId ?? '<New Config>') ?? {
+      synapses?.get(id) ?? {
         ...EMPTY_CONFIG,
         seed: sessionValue?.seed ?? 100,
-        id: setId ?? '<New Config>',
+        id,
       }
     );
   }, [setId, sessionValue]);
@@ -49,6 +50,7 @@ export function useConfig(sessionId: string) {
 
 const EMPTY_CONFIG: Config = {
   id: '<New Config>',
+  color: '#32c14e',
   name: '',
   seed: 100,
   type: 110,
