@@ -49,13 +49,12 @@ export function usePanelWidth(): {
   setPanelContainer: (container: HTMLDivElement | null) => void;
 } {
   const [container, setContainer] = useAtom(atomPanelContainer);
-  const _dimension = useContainerDimension(container);
+  const dimension = useContainerDimension(container);
   const clamp = (value: number) => {
-    const minWidth = MINIMAL_PANEL_SIZE; // Fixed minimum, not container width
-    if (value < minWidth) return minWidth;
+    if (value < MINIMAL_PANEL_SIZE) return MINIMAL_PANEL_SIZE;
 
-    const maxWidth = (globalThis.screen?.availWidth ?? 1920) - 200; // Screen width minus margin
-    if (value > maxWidth) return maxWidth;
+    const maxWidth = dimension.left + dimension.width - (globalThis.screen?.availWidth ?? 0) / 3;
+    if (maxWidth > 0 && value > maxWidth) return maxWidth;
 
     return value;
   };

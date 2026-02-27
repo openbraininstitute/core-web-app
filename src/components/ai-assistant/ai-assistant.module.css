@@ -31,25 +31,6 @@
   color: var(--color-primary-1);
   padding: 0;
   display: block;
-
-  .mask {
-    content: "";
-    position: relative;
-    width: 100%;
-    height: 0;
-    overflow: visible;
-
-    &::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 1em;
-      background-color: #fff;
-      z-index: 1;
-    }
-  }
 }
 
 .aiAssistant button.header {
@@ -86,7 +67,7 @@
   grid-template-rows: auto auto 1fr;
   gap: 0;
   border: 1px solid var(--color-neutral-4);
-  border-radius: 1em 0 1em 1em;
+  border-radius: 1em;
   overflow: hidden;
   pointer-events: auto;
 }
@@ -97,6 +78,7 @@
   justify-content: space-between;
   padding: 0.75rem 1rem;
   background: #fff;
+  border-radius: 1em 1em 0 0;
 }
 
 .headerTitle {
