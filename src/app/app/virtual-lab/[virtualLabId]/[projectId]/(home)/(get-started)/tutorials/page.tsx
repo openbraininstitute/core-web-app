@@ -15,10 +15,8 @@ export default async function Page({ searchParams }: ServerSideComponentProp<nul
     videos.tutorialOrder.find((item) => item.slug === slug) ?? videos.tutorialOrder.at(0);
 
   return (
-    <section className="tutorials pr-2">
-      <div className="relative w-full h-[522.19px] overflow-hidden rounded-xl">
-        <VideoPlayer url={video?.url} />
-      </div>
-    </section>
+    <div className="relative w-full h-[522.19px] overflow-hidden rounded-xl">
+      <VideoPlayer url={video?.url} />
+    </div>
   );
 }

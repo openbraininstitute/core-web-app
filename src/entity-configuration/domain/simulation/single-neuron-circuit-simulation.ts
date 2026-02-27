@@ -104,9 +104,11 @@ async function resolveSimulationCampaigns({
 export async function resolveSimulationByCampaignId({
   id,
   context,
+  populate = ['entity', 'config'],
 }: {
   id: string;
   context: WorkspaceContext | undefined;
+  populate?: Array<string>;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
 
@@ -128,19 +130,25 @@ export async function resolveSimulationByCampaignId({
 
   if (!configAsset) throw Error('No campaign config asset found');
 
+  let config = null;
   let entity: ICircuit | null = null;
-  if (simulation?.entity_id) entity = await getCircuit({ id: simulation?.entity_id, context });
 
-  const rawConfig = await downloadAsset({
-    entityId: campaign.id,
-    entityType: EntityTypeDict.SimulationCampaign,
-    id: configAsset?.id,
-    ctx: context,
-    asRawResponse: true,
-  });
-  const config = await rawConfig.json();
+  if (simulation?.entity_id && populate.includes('entity')) {
+    entity = await getCircuit({ id: simulation?.entity_id, context });
+  }
 
-  migrateConfig(config);
+  if (populate.includes('config')) {
+    const rawConfig = await downloadAsset({
+      entityId: campaign.id,
+      entityType: EntityTypeDict.SimulationCampaign,
+      id: configAsset?.id,
+      ctx: context,
+      asRawResponse: true,
+    });
+    config = await rawConfig.json();
+
+    migrateConfig(config);
+  }
 
   return {
     campaign,

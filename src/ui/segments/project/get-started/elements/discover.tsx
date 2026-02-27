@@ -4,6 +4,7 @@ import { RiCloseLargeFill, RiPlayFill } from '@remixicon/react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { config } from '@/config';
@@ -20,7 +21,9 @@ export function DiscoverCard({
   title,
   slug,
   image,
+  isSelected,
 }: {
+  isSelected: boolean;
   title: string;
   slug: string;
   image: string;
@@ -30,13 +33,25 @@ export function DiscoverCard({
     <Card
       className={cn(
         'w-full bg-white border-none px-4',
-        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]'
+        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
+        { 'bg-neutral-2': isSelected }
       )}
     >
       <CardTitle>{title}</CardTitle>
       <CardDescription className="relative h-30.75 w-auto px-4 mt-auto">
-        <Image fill alt={title} src={image} className="rounded-md" />
-        <div className="absolute inset-0 bg-black/30 rounded-md" />
+        <Image
+          fill
+          alt={title}
+          src={image}
+          className={cn('rounded-md', {
+            'grayscale brightness-90 contrast-60 opacity-80': isSelected,
+          })}
+        />
+        <div
+          className={cn('absolute inset-0 bg-black/30 rounded-md', {
+            'filter grayscale-50': isSelected,
+          })}
+        />
         <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
           <Button
             asChild
@@ -54,10 +69,11 @@ export function DiscoverCard({
   );
 }
 
-export function DiscoverGrid({ tutorials }: { tutorials: TTutorial[] }) {
+export function Grid({ tutorials }: { tutorials: TTutorial[] }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? tutorials : tutorials.slice(0, INITIAL_COUNT);
   const hasMore = tutorials.length > INITIAL_COUNT;
+  const slug = useSearchParams().get('t');
 
   return (
     <section id="discover-tutorials" className="w-full flex flex-col my-6 @container">
@@ -78,7 +94,7 @@ export function DiscoverGrid({ tutorials }: { tutorials: TTutorial[] }) {
       </div>
       <motion.div
         layout
-        className="grid grid-cols-1 @md:grid-cols-2 @4xl:grid-cols-3  @5xl:grid-cols-5 gap-1.5 w-full"
+        className="grid grid-cols-1 @md:grid-cols-2 @3xl:grid-cols-3  @5xl:grid-cols-4 gap-1.5 w-full"
       >
         <AnimatePresence initial={false}>
           {visible.map((p) => (
@@ -91,7 +107,12 @@ export function DiscoverGrid({ tutorials }: { tutorials: TTutorial[] }) {
               transition={{ duration: 0.25 }}
               className="w-full flex"
             >
-              <DiscoverCard title={p.title} image={p.imageURL} slug={p.slug} />
+              <DiscoverCard
+                title={p.title}
+                image={p.imageURL}
+                slug={p.slug}
+                isSelected={slug === p.slug}
+              />
             </motion.div>
           ))}
         </AnimatePresence>

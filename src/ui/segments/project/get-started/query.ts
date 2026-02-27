@@ -1,5 +1,7 @@
 import { defineQuery } from 'next-sanity';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 export const DiscoverQuery = defineQuery(
   `*[_type=="documentationSettings"][0]{
         tutorialOrder[] -> {
@@ -36,6 +38,7 @@ export const QuickAccessQuery = defineQuery(
     description,
     entityId,
     isPreview,
+    extendedType,
     title,
     "thumbnail": select(
       assetInfoType == "file" => assetFile.asset->url,
@@ -51,6 +54,13 @@ export const QuickAccessQuery = defineQuery(
 }`
 );
 
+export const QuickAccessGroupDict = {
+  Data: 'data',
+  Workflows: 'workflows',
+  Notebooks: 'notebooks',
+} as const;
+export type TQuickAccessGroup = (typeof QuickAccessGroupDict)[keyof typeof QuickAccessGroupDict];
+
 export type TQuickAccessItem = {
   description: string;
   entityId: string;
@@ -58,10 +68,11 @@ export type TQuickAccessItem = {
   title: string;
   thumbnail: string | null;
   assetLabel: string | null;
+  extendedType: TExtendedEntitiesTypeDict;
 };
 
 export interface IQuickAccessList {
-  group: string;
+  group: TQuickAccessGroup;
   title: string;
   list: Array<TQuickAccessItem>;
 }

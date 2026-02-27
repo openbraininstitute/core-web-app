@@ -1,6 +1,6 @@
 import { DiscoverList } from '@/ui/segments/project/get-started/sections/discover';
 import { MainVideo } from '@/ui/segments/project/get-started/sections/main-video';
-import { MainCards } from '@/ui/segments/project/get-started/sections/quick-access-main-cards';
+import { MainCards } from '@/ui/segments/project/get-started/sections/quick-access';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 

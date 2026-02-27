@@ -32,7 +32,7 @@ const links = [
       {
         key: 'quick-access',
         title: 'Quick access',
-        url: 'quick-access',
+        url: 'quick-access/data',
         requireRole: false,
       },
       {
@@ -89,6 +89,7 @@ export function LeftMenu({ className }: Props) {
           const isActive =
             currentActiveSection === baseUrl ||
             (children?.some((child) => !!getActiveSection(pathname, child.url)) ?? false);
+
           return (
             <div key={key} data-menu-item={title} className="w-full">
               <Button

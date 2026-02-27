@@ -146,8 +146,9 @@ export async function resolveSimulationByCampaignId({
   let config = null;
   let entity: ICircuit | null = null;
 
-  if (simulation?.entity_id && populate.includes('entity'))
+  if (simulation?.entity_id && populate.includes('entity')) {
     entity = await getCircuit({ id: simulation?.entity_id, context });
+  }
 
   if (populate.includes('config')) {
     const rawConfig = await downloadAsset({
