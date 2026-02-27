@@ -49,7 +49,8 @@ export default function AiAssistant({
   const canCreateNewChat = threadId && !isEmptyThread && status === 'ready';
 
   const style: CSSProperties = {
-    '--custom-panel-width': fullscreen ? '100%' : `${panelWidth.toFixed(0)}px`,
+    '--custom-panel-width': fullscreen ? 'calc(100vw - 20px)' : `${panelWidth}px`,
+    '--custom-panel-height': fullscreen ? 'calc(100vh - 1rem)' : '',
   };
 
   const handleNewChat = async () => {

@@ -14,7 +14,7 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container(): JSX.Element {
-  const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();
+  const { state, setState, isCollapsed, isFullscreen } = usePanelState();
   const [visualState, setVisualState] = useState(state);
 
   useAgentState('smc_simulation_config');
@@ -23,30 +23,11 @@ export function Container(): JSX.Element {
   const isReallyExpanded = visualState === PanelState.Expanded;
   const isReallyFullscreen = visualState === PanelState.Fullscreen;
 
-  useEffect(() => {
-    if (isFullscreen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isFullscreen]);
-
   const targetWidth = useMemo<string>(() => {
     if (isCollapsed) return '3rem';
-    if (isFullscreen) return 'calc(100vw - 20px)';
+    if (isFullscreen) return '400px';
     return '400px';
   }, [isCollapsed, isFullscreen]);
-
-  const targetHeight = useMemo<string>(() => {
-    if (isFullscreen) return 'calc(100vh - 1rem)';
-    if (isExpanded) return 'calc(100vh - 6rem)';
-    if (isCollapsed) return 'calc(100vh - 6rem)';
-    return 'calc(100vh - 5.2rem)';
-  }, [isFullscreen, isExpanded, isCollapsed]);
 
   function beginTransition(next: PanelState) {
     // on collapse, keep the expanded look until animation is over
@@ -67,20 +48,17 @@ export function Container(): JSX.Element {
       id="workspace-ai"
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai]',
-        { 'text-primary-9 mr-3 rounded-lg! border border-[#ddd] bg-white': isReallyExpanded },
-        { 'text-primary-9 my-2 border border-[#ddd] bg-white shadow-lg': isReallyFullscreen },
+        'text-white [grid-area:ai] z-[30]',
+        {
+          'text-primary-9 mr-3 rounded-lg! border border-[#ddd] bg-white':
+            isReallyExpanded || isReallyFullscreen,
+        },
         { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isReallyCollapsed },
         { 'rounded-full!': isReallyCollapsed }
       )}
       animate={{
         width: targetWidth,
-        height: targetHeight,
-        position: isFullscreen ? 'fixed' : 'relative',
-        top: isFullscreen ? 0 : undefined,
-        right: isFullscreen ? 10 : undefined,
-        left: isFullscreen ? 10 : undefined,
-        zIndex: isFullscreen ? 500 : 100,
+        height: 'calc(100vh - 6rem)',
       }}
       initial={false}
       transition={{ ease: ['easeIn', 'easeOut'], stiffness: 150, damping: 25 }}
