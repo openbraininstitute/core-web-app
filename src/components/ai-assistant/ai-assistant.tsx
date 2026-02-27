@@ -2,6 +2,7 @@
 
 import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { motion } from 'motion/react';
 import React, { type CSSProperties } from 'react';
 
 import { useServiceAiAgentChat } from '@/services/ai-agent';
@@ -62,13 +63,17 @@ export default function AiAssistant({
   return (
     <QueryClientProvider client={queryClient}>
       <AiContextProvider section={section}>
-        <div
+        <motion.div
           ref={(el) => {
             setPanelContainer(el);
             containerRef?.(el);
           }}
           style={style}
           className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 20 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
         >
           <div
             className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
@@ -135,7 +140,7 @@ export default function AiAssistant({
             />
             {!fullscreen && <PanelSplitter />}
           </div>
-        </div>
+        </motion.div>
       </AiContextProvider>
     </QueryClientProvider>
   );

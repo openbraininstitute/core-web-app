@@ -1,7 +1,7 @@
 'use client';
 
 import { PlusOutlined } from '@ant-design/icons';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { type JSX, useEffect, useMemo, useState } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
@@ -91,19 +91,25 @@ export function Container(): JSX.Element {
       ) : (
         <div className="flex h-full w-full flex-col rounded-lg overflow-visible">
           <div className="relative flex-1 border-none overflow-visible">
-            <HydrateWrapper>
-              <AiAssistant
-                section="explore"
-                fullscreen={isReallyFullscreen}
-                onFullscreenToggle={() =>
-                  beginTransition(
-                    state === PanelState.Fullscreen ? PanelState.Expanded : PanelState.Fullscreen
-                  )
-                }
-                aria-label={isReallyFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                onCollapse={() => beginTransition(PanelState.Collapsed)}
-              />
-            </HydrateWrapper>
+            <AnimatePresence mode="wait">
+              {!isCollapsed && (
+                <HydrateWrapper key="ai-assistant">
+                  <AiAssistant
+                    section="explore"
+                    fullscreen={isReallyFullscreen}
+                    onFullscreenToggle={() =>
+                      beginTransition(
+                        state === PanelState.Fullscreen
+                          ? PanelState.Expanded
+                          : PanelState.Fullscreen
+                      )
+                    }
+                    aria-label={isReallyFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                    onCollapse={() => beginTransition(PanelState.Collapsed)}
+                  />
+                </HydrateWrapper>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       )}
