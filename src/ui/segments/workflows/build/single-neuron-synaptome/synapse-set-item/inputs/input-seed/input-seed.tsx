@@ -9,11 +9,12 @@ import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types
 import type { SessionValue } from '../../types';
 
 export interface InputSeedProps {
+  color?: string;
   sessionValue: SessionValue;
   setSessionValue(sessionValue: SessionValue): void;
 }
 
-export function InputSeed({ sessionValue, setSessionValue }: InputSeedProps) {
+export function InputSeed({ color, sessionValue, setSessionValue }: InputSeedProps) {
   const seed = sessionValue?.seed ?? 100;
   const onChangeSeed = (value: number | null) => {
     setSessionValue({
@@ -27,7 +28,20 @@ export function InputSeed({ sessionValue, setSessionValue }: InputSeedProps) {
   };
 
   return (
-    <div className="mb-4 flex w-full items-end justify-end px-3">
+    <div className="mb-4 flex w-full items-center justify-between px-3">
+      <div className="flex items-center gap-2">
+        {color && (
+          <div
+            style={{
+              content: '',
+              background: color,
+              borderRadius: '50%',
+              width: '1.5em',
+              height: '1.5em',
+            }}
+          />
+        )}
+      </div>
       <div className="flex items-center gap-2">
         {<Label text="seed" required />}
         <InputNumber

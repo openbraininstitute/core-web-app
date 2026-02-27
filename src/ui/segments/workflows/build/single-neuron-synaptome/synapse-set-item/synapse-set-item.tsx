@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { cn } from '@/utils/css-class';
 
+import { AddNewSet } from './add-new-set';
 import { ButtonApplyChanges } from './button-apply-changes';
 import { useApplyChangesHandler } from './hooks';
 import { useConfig } from './hooks/config';
@@ -49,9 +50,15 @@ export function SynapseSet({ sessionId }: Props) {
     setVisualizeLoading
   );
 
+  if (!config) return <AddNewSet sessionId={sessionId} />;
+
   return (
     <div className="secondary-scrollbar h-full w-full overflow-x-hidden overflow-y-auto select-none">
-      <InputSeed sessionValue={sessionValue} setSessionValue={setSessionValue} />
+      <InputSeed
+        color={config.color}
+        sessionValue={sessionValue}
+        setSessionValue={setSessionValue}
+      />
       <Form
         form={form}
         onValuesChange={onValuesChange}

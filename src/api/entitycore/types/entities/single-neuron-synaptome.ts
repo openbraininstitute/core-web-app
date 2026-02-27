@@ -115,7 +115,7 @@ export const SingleNeuronSynaptomeConfigurationSchema = SingleNeuronSynaptomeBas
   }
 ).superRefine(async (synapse, ctx) => {
   if (synapse.target !== 'soma') {
-    const v = await validateSingleNeuronSynapseGenerationFormula(synapse.formula!);
+    const v = await validateSingleNeuronSynapseGenerationFormula(synapse.formula);
     if (!v) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

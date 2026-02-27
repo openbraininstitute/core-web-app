@@ -12,7 +12,7 @@ import type { Config } from '../types';
 export function useConfig(sessionId: string) {
   const [isFormValid, setIsFormValid] = React.useState(false);
   const [form] = Form.useForm<Config>();
-  const [config, setConfig] = React.useState<Config>(EMPTY_CONFIG);
+  const [config, setConfig] = React.useState<Config | undefined>(undefined);
   const { sessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
   });
@@ -30,11 +30,16 @@ export function useConfig(sessionId: string) {
     );
   }, [setId, sessionValue]);
   React.useEffect(() => {
-    form.setFieldsValue({
-      ...config,
-      exclusion_rules: config.exclusion_rules ?? undefined,
-    });
-    validateConfig(config, setIsFormValid);
+    if (!config) {
+      form.resetFields();
+      setIsFormValid(false);
+    } else {
+      form.setFieldsValue({
+        ...config,
+        exclusion_rules: config.exclusion_rules ?? undefined,
+      });
+      validateConfig(config, setIsFormValid);
+    }
   }, [config, form]);
 
   return {
@@ -43,7 +48,7 @@ export function useConfig(sessionId: string) {
     setId,
     config,
     updateConfig(value: Partial<Config>) {
-      setConfig((prev) => ({ ...prev, ...value }));
+      setConfig((prev) => ({ ...EMPTY_CONFIG, ...prev, ...value }));
     },
   };
 }
