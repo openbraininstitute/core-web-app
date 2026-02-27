@@ -11,11 +11,14 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import ApiError from '@/api/error';
 import {
   build as buildIonChannel,
   DataType,
   MessageType,
 } from '@/api/small-scale-simulator/ion-channel/build';
+import { useAppNotification } from '@/components/notification';
+import { message } from '@/i18n/en/ion-channel-build';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -311,6 +314,7 @@ function toSelectedOutputPreview(item: OutputListItem): SelectedPreview {
 
 export function Output({ sessionId }: { sessionId: string | null }) {
   const context = useWorkspace();
+  const notification = useAppNotification();
   const safeSessionId = sessionId || '';
   const [ionState] = useAtom(
     useMemo(() => IonChannelModelingSharedStateFamily(safeSessionId), [safeSessionId])
@@ -330,10 +334,22 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       queryKey: ['build-output-stream', { context, sessionId, payload }],
       queryFn: streamedQuery({
         queryFn: async () => {
-          const response = await buildIonChannel({ ctx: context, payload, stream: true });
-          const stream = await createTextStream(response);
-          if (!stream) return emptyStream();
-          return messageGenerator(createAsyncIterableStream<string>(stream));
+          try {
+            const response = await buildIonChannel({ ctx: context, payload, stream: true });
+            const stream = await createTextStream(response);
+            if (!stream) return emptyStream();
+            return messageGenerator(createAsyncIterableStream<string>(stream));
+          } catch (error) {
+            const errorMsg =
+              error instanceof ApiError &&
+              error.cause?.code === 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR'
+                ? message.LowFunds
+                : message.GenericFailed;
+
+            notification.error({ message: errorMsg, duration: null });
+
+            throw error;
+          }
         },
         refetchMode: 'append',
       }),
