@@ -322,7 +322,7 @@ export function AssetUpload({
         )}
 
         {errors.length > 0 && (
-          <Alert variant="destructive" appearance="light" className="mt-5">
+          <Alert variant="destructive" appearance="light" className="mt-5 bg-red-50 border-red-200">
             <AlertIcon>
               <AlertOutlined />
             </AlertIcon>
