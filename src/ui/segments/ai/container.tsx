@@ -5,7 +5,6 @@ import { motion } from 'motion/react';
 import { type JSX, useEffect, useMemo, useState } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
-import { usePanelWidth } from '@/components/ai-assistant/hooks';
 import { useAgentState } from '@/services/ai-agent';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
@@ -16,13 +15,13 @@ import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container(): JSX.Element {
   const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();
-  const { panelWidth } = usePanelWidth();
-  const [animationComplete, setAnimationComplete] = useState(false);
+  const [visualState, setVisualState] = useState(state);
 
-  const style: React.CSSProperties = {
-    '--custom-panel-width': isFullscreen ? '100%' : `${panelWidth}px`,
-  };
   useAgentState('smc_simulation_config');
+
+  const isReallyCollapsed = visualState === PanelState.Collapsed;
+  const isReallyExpanded = visualState === PanelState.Expanded;
+  const isReallyFullscreen = visualState === PanelState.Fullscreen;
 
   useEffect(() => {
     if (isFullscreen) {
@@ -50,21 +49,29 @@ export function Container(): JSX.Element {
   }, [isFullscreen, isExpanded, isCollapsed]);
 
   function beginTransition(next: PanelState) {
-    setAnimationComplete(false);
+    // on collapse, keep the expanded look until animation is over
+    if (next !== PanelState.Collapsed) {
+      setVisualState(next);
+    }
+    // on expand/fullscreen, change the view right away so content shows quickly
     setState(next);
+  }
+
+  // sync visual state to the actual state
+  function handleAnimationComplete() {
+    setVisualState(state);
   }
 
   return (
     <motion.div
       id="workspace-ai"
-      style={style}
       className={cn(
         styles.aiPanel,
         'text-white [grid-area:ai]',
-        { 'text-primary-9 mr-3 rounded-lg! bg-white': isExpanded },
-        { 'text-primary-9 my-2 bg-white shadow-lg': isFullscreen },
-        { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed },
-        { 'rounded-full!': isCollapsed && animationComplete }
+        { 'text-primary-9 mr-3 rounded-lg! border border-[#ddd] bg-white': isReallyExpanded },
+        { 'text-primary-9 my-2 border border-[#ddd] bg-white shadow-lg': isReallyFullscreen },
+        { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isReallyCollapsed },
+        { 'rounded-full!': isReallyCollapsed }
       )}
       animate={{
         width: targetWidth,
@@ -77,9 +84,9 @@ export function Container(): JSX.Element {
       }}
       initial={false}
       transition={{ ease: ['easeIn', 'easeOut'], stiffness: 150, damping: 25 }}
-      onAnimationComplete={() => setAnimationComplete(true)}
+      onAnimationComplete={handleAnimationComplete}
     >
-      {isCollapsed ? (
+      {isReallyCollapsed ? (
         <button
           type="button"
           onClick={() => beginTransition(PanelState.Expanded)}
@@ -109,12 +116,13 @@ export function Container(): JSX.Element {
             <HydrateWrapper>
               <AiAssistant
                 section="explore"
-                fullscreen={isFullscreen}
+                fullscreen={isReallyFullscreen}
                 onFullscreenToggle={() =>
                   beginTransition(
                     state === PanelState.Fullscreen ? PanelState.Expanded : PanelState.Fullscreen
                   )
                 }
+                aria-label={isReallyFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                 onCollapse={() => beginTransition(PanelState.Collapsed)}
               />
             </HydrateWrapper>

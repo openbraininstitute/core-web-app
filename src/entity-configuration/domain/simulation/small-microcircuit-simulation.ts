@@ -1,7 +1,7 @@
-import flatMap from 'es-toolkit/compat/flatMap';
-import keyBy from 'es-toolkit/compat/keyBy';
+import { flatMap, keyBy } from 'es-toolkit/compat';
+
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getCircuits } from '@/api/entitycore/queries/model/circuit';
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import {
   createSimulationCampaign,
@@ -10,12 +10,7 @@ import {
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type {
-  ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -23,9 +18,16 @@ import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import { getExtendedSimMap, migrateConfig } from './utils';
+
+import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
+import type {
+  ICircuitSimulationCampaign,
+  ICircuitSimulationCampaignFilter,
+} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
-import { getExtendedSimMap, migrateConfig } from './utils';
 
 export async function resolveExecutions({
   context,
@@ -132,7 +134,7 @@ export async function resolveSimulationByCampaignId({
   context,
 }: {
   id: string;
-  context: WorkspaceContext | undefined;
+  context?: WorkspaceContext | null;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
 
@@ -154,6 +156,9 @@ export async function resolveSimulationByCampaignId({
 
   if (!configAsset) throw Error('No campaign config asset found');
 
+  let entity: ICircuit | null = null;
+  if (simulation?.entity_id) entity = await getCircuit({ id: simulation?.entity_id, context });
+
   const rawConfig = await downloadAsset({
     entityId: campaign.id,
     entityType: EntityTypeDict.SimulationCampaign,
@@ -168,14 +173,23 @@ export async function resolveSimulationByCampaignId({
   return {
     campaign,
     simulation,
+    entity,
     config,
   };
 }
 
-export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
+type TResolvedSimulationByCampaign = Awaited<ReturnType<typeof resolveSimulationByCampaignId>>;
+type TResolvedSimulationByCampaigns = Awaited<ReturnType<typeof resolveSimulationCampaigns>>;
+
+export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<
+  ICircuitSimulationCampaign,
+  TResolvedSimulationByCampaign,
+  TResolvedSimulationByCampaigns
+> = {
   group: EntityTypeGroup.Simulations,
   title: 'Small microcircuit (beta)',
   extendedType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+  discriminator: { key: 'scale', value: [SCALE] },
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SmallMicrocircuitSimulation,
   api: {
@@ -204,6 +218,7 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<ICircuitSimulatio
           },
         }),
       one: getCircuitSimulationCampaign,
+      resolve: resolveSimulationByCampaignId,
       create: createSimulationCampaign,
     },
     expandRow: async (record, _context) => record,

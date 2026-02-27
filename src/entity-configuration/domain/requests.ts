@@ -1,7 +1,6 @@
-import {
-  EntityCoreExtendedType,
-  getEntityByExtendedType,
-} from '@/entity-configuration/domain/helpers';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 export async function retrieveEntity({
@@ -9,7 +8,7 @@ export async function retrieveEntity({
   id,
   ctx,
 }: {
-  type: EntityCoreExtendedType;
+  type: TExtendedEntitiesTypeDict;
   id: string;
   ctx: WorkspaceContext;
 }) {
