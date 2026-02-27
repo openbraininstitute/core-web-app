@@ -20,7 +20,7 @@ import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container(): JSX.Element {
   const { state, setState, isCollapsed, isExpanded, isFullscreen } = usePanelState();
-  const [animationComplete, setAnimationComplete] = useState(false);
+  const [animationComplete, setAnimationComplete] = useState(true);
   useAgentState('smc_simulation_config');
 
   useEffect(() => {
@@ -59,8 +59,8 @@ export function Container(): JSX.Element {
       className={cn(
         styles.aiPanel,
         'text-white [grid-area:ai]',
-        { 'text-primary-9 mr-3 rounded-lg! bg-white': isExpanded },
-        { 'text-primary-9 my-2 bg-white shadow-lg': isFullscreen },
+        { 'text-primary-9 mr-3 rounded-lg! border border-[#ddd] bg-white': isExpanded },
+        { 'text-primary-9 my-2 border border-[#ddd] bg-white shadow-lg': isFullscreen },
         { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isCollapsed },
         { 'rounded-full!': isCollapsed && animationComplete }
       )}
