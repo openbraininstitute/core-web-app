@@ -75,8 +75,16 @@ export default function AiAssistant({
           exit={{ opacity: 0, x: 20 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
-          <div
+          <motion.div
             className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
+            animate={{
+              position: fullscreen ? 'fixed' : 'absolute',
+              width: fullscreen ? 'calc(100vw - 20px)' : `${panelWidth}px`,
+              height: fullscreen ? 'calc(100vh - 1rem)' : '100%',
+              top: fullscreen ? '0.5rem' : 0,
+              right: fullscreen ? '10px' : 0,
+            }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
             <div className={styles.header}>
               <div className={styles.headerTitle}>AI assistant</div>
@@ -139,7 +147,7 @@ export default function AiAssistant({
               onTabChange={setTab}
             />
             {!fullscreen && <PanelSplitter />}
-          </div>
+          </motion.div>
         </motion.div>
       </AiContextProvider>
     </QueryClientProvider>
