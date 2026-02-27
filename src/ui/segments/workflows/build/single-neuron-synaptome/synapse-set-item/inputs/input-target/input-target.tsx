@@ -1,15 +1,38 @@
 import { Form, Select } from 'antd';
+import findIndex from 'es-toolkit/compat/findIndex';
+import groupBy from 'es-toolkit/compat/groupBy';
+import { useAtomValue } from 'jotai';
+
+import { SECTION_TARGET_MAPPING } from '@/features/entities/single-neuron-synaptome/build/elements/constants';
+import { neuronSectionNamesAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 
 import { Label } from '../../label';
 
+import type { ConfigTarget } from '../../types';
+
 export interface InputTargetProps {
-  targetOptions: { label: string; value: string }[];
-  onTargetChange: (
-    newTarget?: 'apic' | 'dend' | 'axon' | 'basal' | 'myelin' | 'soma' | undefined
-  ) => Promise<void>;
+  sessionId: string;
+  value: ConfigTarget | undefined;
+  onChange: (newTarget?: ConfigTarget) => Promise<void>;
 }
 
-export function InputTarget({ targetOptions, onTargetChange }: InputTargetProps) {
+export function InputTarget({ value, onChange, sessionId }: InputTargetProps) {
+  const secNames = useAtomValue(neuronSectionNamesAtomFamily(sessionId));
+  const groupedSections = Object.keys(
+    groupBy(secNames, (str) => {
+      const bracketIndex = findIndex(str, (char) => char === '[');
+      return bracketIndex !== -1 ? str.slice(0, bracketIndex) : str;
+    })
+  );
+  const hasApic = groupedSections.includes('apic');
+  const targetOptions = groupedSections.map((value) => ({
+    value,
+    label:
+      value === 'dend' && !hasApic
+        ? 'Dendrites'
+        : SECTION_TARGET_MAPPING[value as keyof typeof SECTION_TARGET_MAPPING],
+  }));
+
   return (
     <Form.Item
       name={['target']}
@@ -28,7 +51,8 @@ export function InputTarget({ targetOptions, onTargetChange }: InputTargetProps)
         }}
         disabled={!targetOptions.length}
         options={targetOptions}
-        onChange={onTargetChange}
+        onChange={onChange}
+        value={value}
       />
     </Form.Item>
   );

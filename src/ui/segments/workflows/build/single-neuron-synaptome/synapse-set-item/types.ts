@@ -13,20 +13,24 @@ export type SessionValue =
     })
   | null;
 
-export type Config = {
-  type: 110 | 10;
-  id: string;
-  name: string;
-  seed: number;
-  exclusion_rules:
-    | {
-        id: string;
-        distance_soma_gte?: number | null | undefined;
-        distance_soma_lte?: number | null | undefined;
-      }[]
-    | null;
-  target?: string | undefined;
-  color?: string | undefined;
-  formula?: string | undefined;
-  soma_synapse_count?: number | undefined;
-};
+export type ConfigTarget = string;
+
+export type Config = TSingleNeuronSynaptomeConfiguration;
+
+// {
+//   type: 110 | 10;
+//   id: string;
+//   name: string;
+//   seed: number;
+//   exclusion_rules?:
+//     | {
+//         id: string;
+//         distance_soma_gte?: number | null | undefined;
+//         distance_soma_lte?: number | null | undefined;
+//       }[]
+//     | null;
+//   target?: ConfigTarget;
+//   color?: string | undefined;
+//   formula?: string | undefined;
+//   soma_synapse_count?: number | undefined;
+// };

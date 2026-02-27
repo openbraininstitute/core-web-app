@@ -31,13 +31,6 @@ import SectionSynapseSets from './sections/section-synapse-sets';
 
 type Props = { sessionId: string };
 
-const mainFormSchema = z.object({
-  name: z.string().nonempty().min(1),
-  description: z.string().optional(),
-  me_model_id: z.string().uuid(),
-  seed: z.number().nonnegative(),
-});
-
 export function Menu({ sessionId }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const searchParams = useSearchParams();

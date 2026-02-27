@@ -84,7 +84,7 @@ export function NeuronViewerContainer({
           onRecordingsChange={disableElectrodes ? undefined : setRecordings}
           injection={disableElectrodes ? undefined : injection}
           onInjectionChange={disableElectrodes ? undefined : setInjection}
-          disableClick={simulationStatus?.status === SimulationStatus.LAUNCHED}
+          disableClick={disableElectrodes || simulationStatus?.status === SimulationStatus.LAUNCHED}
         />
         <DebugPanel morphology={morphology} synapses={synapses} />
       </DefaultLoadingSuspense>
