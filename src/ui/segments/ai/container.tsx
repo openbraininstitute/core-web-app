@@ -50,8 +50,10 @@ export function Container(): JSX.Element {
         styles.aiPanel,
         'text-white [grid-area:ai] z-[30]',
         {
-          'text-primary-9 mr-3 rounded-lg! border border-[#ddd] bg-white':
+          'text-primary-9 mr-3 border border-[#ddd] bg-white':
             isReallyExpanded || isReallyFullscreen,
+          'rounded-2xl!': isReallyExpanded,
+          'rounded-lg!': isReallyFullscreen,
         },
         { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isReallyCollapsed },
         { 'rounded-full!': isReallyCollapsed }

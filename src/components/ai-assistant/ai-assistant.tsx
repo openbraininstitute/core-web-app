@@ -63,27 +63,27 @@ export default function AiAssistant({
   return (
     <QueryClientProvider client={queryClient}>
       <AiContextProvider section={section}>
-        <motion.div
+        <div
           ref={(el) => {
             setPanelContainer(el);
             containerRef?.(el);
           }}
           style={style}
           className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 20 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
         >
           <motion.div
             className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
+            initial={{ opacity: 0, x: 20 }}
             animate={{
+              opacity: 1,
+              x: 0,
               position: fullscreen ? 'fixed' : 'absolute',
               width: fullscreen ? 'calc(100vw - 20px)' : `${panelWidth}px`,
               height: fullscreen ? 'calc(100vh - 1rem)' : '100%',
               top: fullscreen ? '0.5rem' : 0,
               right: fullscreen ? '10px' : 0,
             }}
+            exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
             <div className={styles.header}>
@@ -148,7 +148,7 @@ export default function AiAssistant({
             />
             {!fullscreen && <PanelSplitter />}
           </motion.div>
-        </motion.div>
+        </div>
       </AiContextProvider>
     </QueryClientProvider>
   );
