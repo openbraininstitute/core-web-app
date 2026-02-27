@@ -222,7 +222,6 @@ export function useModelQuery({
     data: entity,
     isLoading: modelLoading,
     error: modelError,
-<<<<<<< HEAD
   } = useQuery<
     ICircuit | IMEModel | IonChannelModel | IEMCellMesh,
     Error,
