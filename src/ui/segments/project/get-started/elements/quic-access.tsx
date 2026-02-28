@@ -165,7 +165,8 @@ export function SingleCardItem({
     <Card
       className={cn(
         'w-full bg-white border-none flex-1 p-2 gap-3',
-        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] w-full'
+        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] w-full',
+        'hover:shadow-bnb hover:border-gray-200 hover:border'
       )}
     >
       <Button
@@ -187,6 +188,7 @@ export function SingleCardItem({
           <Skeleton
             active={false}
             className="flex items-center justify-center w-full h-full bg-background"
+            title="No image available"
           >
             <BrokenImageIcon className="size-10 text-gray-200" />
           </Skeleton>

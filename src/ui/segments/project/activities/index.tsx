@@ -1,7 +1,7 @@
 'use client';
 
 import { RightSquareOutlined } from '@ant-design/icons';
-import { ConfigProvider, Empty, Table } from 'antd';
+import { Pagination as AntPagination, ConfigProvider, Empty, Table } from 'antd';
 import { get, kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -112,49 +112,32 @@ export function ProjectActivities() {
     data && !data.pagination.total_items && !isQueryEnabled && activity && entityType;
 
   return (
-    <Card className="w-full shadow-xs">
-      <CardHeader className="text-primary-9 flex items-center justify-between font-bold">
+    <Card className="w-full shadow-xs flex flex-col h-full overflow-hidden">
+      <CardHeader className="text-primary-9 flex items-center justify-between font-bold shrink-0 bg-background">
         <Header onScaleChange={setEntityType} onTypeChange={setActivity} onPageChange={setPage} />
       </CardHeader>
-      <CardContent>
-        <Card borderless shadowless className="flex items-center justify-center pt-5 pb-0">
-          {shouldShowEmptyState ? (
-            <Card className="text-neutral-4 shadow-xs">
-              <CardContent>You don’t have any activities yet </CardContent>
-            </Card>
-          ) : (
-            <div className="flex h-full w-full flex-col">
-              <ConfigProvider theme={{ hashed: false }}>
+      <CardContent className="flex-1 overflow-hidden flex flex-col">
+        {shouldShowEmptyState ? (
+          <Card className="text-neutral-4 shadow-xs">
+            <CardContent>You don't have any activities yet </CardContent>
+          </Card>
+        ) : (
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <ConfigProvider theme={{ hashed: false }}>
+              <div className="flex-1 overflow-hidden">
                 <Table
                   className={cn(
                     '[&_.ant-table]:bg-background! [&_.ant-table-thead_th]:bg-background!',
                     '[&_.ant-table-thead_th]:text-neutral-4!',
-                    '[&_.ant-table-placeholder]:bg-background!'
+                    '[&_.ant-table-placeholder]:bg-background!',
+                    '[&_.ant-table-body]:secondary-scrollbar!'
                   )}
+                  scroll={{ y: 'calc(100vh - 20rem)' }}
                   loading={isLoading}
                   dataSource={data?.data}
                   columns={columns}
                   rowKey={(o) => o.id}
-                  pagination={{
-                    pageSize: DEFAULT_PAGE_MEDIUM_SIZE,
-                    total: data?.pagination.total_items,
-                    defaultCurrent: 1,
-                    current: page,
-                    hideOnSinglePage: true,
-                    align: 'end',
-                    size: 'default',
-                    responsive: true,
-                    role: 'button',
-                    position: ['bottomRight'],
-                    onChange: (_page, _pageSize) => {
-                      setPage(_page);
-                    },
-                    className: cn(
-                      '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
-                      '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9',
-                      'mt-auto'
-                    ),
-                  }}
+                  pagination={false}
                   locale={{
                     emptyText: (
                       <Empty
@@ -169,10 +152,28 @@ export function ProjectActivities() {
                     ),
                   }}
                 />
-              </ConfigProvider>
-            </div>
-          )}
-        </Card>
+              </div>
+              <div className="flex shrink-0 items-center justify-end py-3">
+                <AntPagination
+                  responsive
+                  showLessItems
+                  hideOnSinglePage
+                  pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
+                  defaultPageSize={DEFAULT_PAGE_MEDIUM_SIZE}
+                  current={page}
+                  total={data?.pagination.total_items}
+                  showSizeChanger={false}
+                  size="default"
+                  onChange={(_page) => setPage(_page)}
+                  className={cn(
+                    '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
+                    '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
+                  )}
+                />
+              </div>
+            </ConfigProvider>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
