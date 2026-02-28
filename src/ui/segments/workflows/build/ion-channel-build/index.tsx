@@ -1,27 +1,35 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { match, P } from 'ts-pattern';
-import { useMemo } from 'react';
 import { useAtom } from 'jotai';
+import { useMemo } from 'react';
+import { match, P } from 'ts-pattern';
 
+import { config } from '@/config';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AutomatedFormBreadcrumb } from '@/ui/segments/workflows/build/ion-channel-build/elements/breadcrumb';
-import { Configuration } from '@/ui/segments/workflows/build/ion-channel-build/sections/configuration';
-import { Output } from '@/ui/segments/workflows/build/ion-channel-build/sections/output';
 import {
-  GenerationWorkflowFormPanelKeys,
   GenerationWorkflowFormPanel,
+  GenerationWorkflowFormPanelKeys,
 } from '@/ui/segments/workflows/build/ion-channel-build/elements/panel-tabs';
 import {
   IonChannelModelingSharedStateFamily,
   useGenerativeFormSchemaApi,
 } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { config } from '@/config';
+import { Configuration } from '@/ui/segments/workflows/build/ion-channel-build/sections/configuration';
+import { Output } from '@/ui/segments/workflows/build/ion-channel-build/sections/output';
 
 import 'katex/dist/katex.min.css';
 
-export function IonChannelModelBuilding({ sessionId }: { sessionId: string }) {
+export function IonChannelModelBuilding({
+  sessionId,
+  initialConfig,
+  readonly,
+}: {
+  sessionId: string;
+  initialConfig?: Record<string, any> | null;
+  readonly?: boolean;
+}) {
   const { virtualLabId, projectId } = useWorkspace();
   const { data: RootSchema, isLoading } = useGenerativeFormSchemaApi({
     form: 'IonChannelFittingScanConfig',
@@ -45,7 +53,9 @@ export function IonChannelModelBuilding({ sessionId }: { sessionId: string }) {
       );
     })
     .with({ isLoading: false, panel: GenerationWorkflowFormPanelKeys.configuration }, () => {
-      return <Configuration sessionId={sessionId} />;
+      return (
+        <Configuration sessionId={sessionId} initialConfig={initialConfig} readonly={readonly} />
+      );
     })
     .with({ isLoading: false, panel: GenerationWorkflowFormPanelKeys.output }, () => {
       return <Output sessionId={sessionId} />;

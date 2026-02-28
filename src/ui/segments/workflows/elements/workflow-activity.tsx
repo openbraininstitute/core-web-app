@@ -1,12 +1,13 @@
 'use client';
 
+import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { Pagination as AntPagination, Card, ConfigProvider, Empty } from 'antd';
 import { find, get, kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -15,6 +16,7 @@ import {
   type TEntityTypeDict,
 } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
@@ -24,6 +26,11 @@ import {
   type TExtendedExtractionCampaignsType,
 } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import {
+  getStatusCountMap as getIonChannelModelingStatusCountMap,
+  resolveIonChannelModelingByCampaignId,
+  type TExtendedIonChannelModelingCampaignsType,
+} from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import {
   type ExtendedCampaignsType,
   getStatusCountMap,
@@ -39,6 +46,7 @@ import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
+import { ORIGINAL_CAMPAIGN_ID_QUERY } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
 import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { renderDateAndHour } from '@/util/date';
@@ -52,6 +60,7 @@ import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [
   EntityTypeDict.SimulationCampaign,
   EntityTypeDict.CircuitExtractionCampaign,
+  EntityTypeDict.IonChannelModelingCampaign,
 ];
 export interface WorkflowActivityRef {
   dataCount: number;
@@ -70,6 +79,7 @@ export function WorkflowActivity() {
   const { push: navigate } = useRouter();
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
+  const notification = useAppNotification();
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
 
@@ -185,6 +195,12 @@ export function WorkflowActivity() {
             );
             return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
           })
+          .with({ type: EntityTypeDict.IonChannelModelingCampaign }, () => {
+            const statusCountMap = getIonChannelModelingStatusCountMap(
+              record as unknown as TExtendedIonChannelModelingCampaignsType['data'][number]
+            );
+            return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+          })
           .otherwise(() => {
             const status = get(record, 'status', 'default');
             const mapper = get(StatusMap, status, null);
@@ -227,11 +243,46 @@ export function WorkflowActivity() {
 
   const selectedRow = selectedRows.at(0);
 
+  const [isResolvingResults, setIsResolvingResults] = useState(false);
+
+  const onViewIonChannelResults = useCallback(async () => {
+    if (!selectedRow) return;
+    setIsResolvingResults(true);
+    try {
+      const resolved = await resolveIonChannelModelingByCampaignId({
+        id: selectedRow.id,
+        context: { virtualLabId, projectId },
+      });
+
+      const modelId = resolved.generatedModelIds.at(0);
+
+      if (modelId) {
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/ion-channel-model/${modelId}`
+        );
+      } else {
+        notification.info({
+          message: 'No ion channel model found',
+          description: 'This campaign has not produced any ion channel model yet.',
+        });
+      }
+    } finally {
+      setIsResolvingResults(false);
+    }
+  }, [selectedRow, navigate, virtualLabId, projectId, notification]);
+
   const configurationLink = entityType
-    ? entity?.detailViewSections?.includes('configuration')
-      ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
-      : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
+    ? entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign
+      ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/ion-channel-model`
+      : entity?.detailViewSections?.includes('configuration')
+        ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
+        : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
+
+  const configurationQuery =
+    entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign
+      ? `${query.toString()}&${ORIGINAL_CAMPAIGN_ID_QUERY}=${selectedRow?.id}&readonly=true`
+      : query.toString();
 
   const resultsPath = entity?.detailViewSections?.includes(DetailViewSectionsDict.Results)
     ? DetailViewSectionsDict.Results
@@ -246,6 +297,12 @@ export function WorkflowActivity() {
     : null;
 
   const onDuplicate = () => {
+    if (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
+      navigate(
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/ion-channel-model?${ORIGINAL_CAMPAIGN_ID_QUERY}=${selectedRow?.id}`
+      );
+      return;
+    }
     if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
@@ -453,7 +510,7 @@ export function WorkflowActivity() {
                       className="select-none"
                     >
                       <Link
-                        href={{ pathname: configurationLink, query: query.toString() }}
+                        href={{ pathname: configurationLink, query: configurationQuery }}
                         className="text-current!"
                       >
                         View configuration
@@ -464,7 +521,20 @@ export function WorkflowActivity() {
                       entityType !== ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.CircuitExtractionCampaign && (
+                      entityType !== ExtendedEntitiesTypeDict.CircuitExtractionCampaign &&
+                      (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ? (
+                        <Button
+                          rounded
+                          variant="outline"
+                          size={breakpoint === 'l' ? 'md' : 'lg'}
+                          disabled={isResolvingResults}
+                          onClick={onViewIonChannelResults}
+                          className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed"
+                        >
+                          {isResolvingResults && <LoadingOutlined />}
+                          <span>View results</span>
+                        </Button>
+                      ) : (
                         <Button
                           rounded
                           asChild={activityType !== ActivityValues.Build}
@@ -481,7 +551,7 @@ export function WorkflowActivity() {
                             View results
                           </Link>
                         </Button>
-                      )}
+                      ))}
                     <Button
                       rounded
                       variant="outline"
@@ -489,7 +559,8 @@ export function WorkflowActivity() {
                       onClick={onDuplicate}
                       className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed"
                       disabled={
-                        activityType === ActivityValues.Build ||
+                        (activityType === ActivityValues.Build &&
+                          entityType !== ExtendedEntitiesTypeDict.IonChannelModelingCampaign) ||
                         !AllowedDuplicateEntityTypes.includes(selectedRow.type)
                       }
                     >
