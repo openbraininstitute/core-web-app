@@ -21,6 +21,8 @@ import { Output } from '@/ui/segments/workflows/build/ion-channel-build/sections
 
 import 'katex/dist/katex.min.css';
 
+import useDisableElementOverflow from '@/ui/hooks/use-disable-element-overflow';
+
 export function IonChannelModelBuilding({
   sessionId,
   initialConfig,
@@ -30,6 +32,7 @@ export function IonChannelModelBuilding({
   initialConfig?: Record<string, any> | null;
   readonly?: boolean;
 }) {
+  useDisableElementOverflow({ id: 'workspace-body' });
   const { virtualLabId, projectId } = useWorkspace();
   const { data: RootSchema, isLoading } = useGenerativeFormSchemaApi({
     form: 'IonChannelFittingScanConfig',
@@ -68,6 +71,9 @@ export function IonChannelModelBuilding({
         <GenerationWorkflowFormPanel
           value={ionState.panel}
           onChange={(value) => updateIoChannelState({ ...ionState, panel: value })}
+          disabledTabs={
+            !ionState.buildRequested ? [GenerationWorkflowFormPanelKeys.output] : undefined
+          }
         />
         <AutomatedFormBreadcrumb
           category={{
@@ -82,9 +88,10 @@ export function IonChannelModelBuilding({
       {section}
     </>
   );
+
   if (readonly) return content;
   return (
-    <div className="border-neutral-2 ml-4 flex h-full w-[calc(100%-1rem)] flex-col rounded-2xl border p-3 px-2">
+    <div className="border-neutral-2 ml-4 flex h-full w-[calc(100%-1.5rem)] flex-col rounded-2xl border p-3 px-2">
       {content}
     </div>
   );

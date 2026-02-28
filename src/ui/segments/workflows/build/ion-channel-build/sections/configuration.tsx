@@ -341,6 +341,7 @@ export function Configuration({ sessionId, initialConfig, readonly }: Props) {
       updateIoChannelState({
         panel: GenerationWorkflowFormPanelKeys.output,
         schema: RootSchema,
+        buildRequested: true,
       });
     } catch (error) {
       log('error', '[Configuration]', error);
@@ -383,7 +384,14 @@ export function Configuration({ sessionId, initialConfig, readonly }: Props) {
               rounded
               type="submit"
               onClick={onFormSubmit}
-              className={cn('h-10 w-full select-none lg:h-12', { 'shadow-bnb': !disableSubmit })}
+              disabled={disableSubmit}
+              className={cn(
+                'h-10 w-full select-none lg:h-12 ',
+                'disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-label',
+                {
+                  'shadow-bnb': !disableSubmit,
+                }
+              )}
             >
               Build model
             </Button>
