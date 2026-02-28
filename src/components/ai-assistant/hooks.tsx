@@ -88,7 +88,13 @@ export function useContainerDimension(container: HTMLDivElement | null) {
     const callback = () => {
       globalThis.clearTimeout(refTimeoutId.current);
       refTimeoutId.current = globalThis.setTimeout(() => {
-        setDimension(container.getBoundingClientRect());
+        const rect = container.getBoundingClientRect();
+        setDimension({
+          left: Math.round(rect.left),
+          top: Math.round(rect.top),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        });
       }) as unknown as number;
     };
     const observer = new ResizeObserver(callback);
