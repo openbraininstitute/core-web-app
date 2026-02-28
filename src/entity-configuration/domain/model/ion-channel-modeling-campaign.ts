@@ -1,6 +1,7 @@
 import { flatMap, get, sortBy } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-model';
 import {
   getIonChannelModelingCampaign,
   getIonChannelModelingCampaigns,
@@ -186,6 +187,64 @@ export async function resolveIonChannelModelingCampaignConfig({
   const config = await rawConfig.json();
 
   return { campaign, config };
+}
+
+/**
+ * resolves the full build output for a campaign in readonly mode
+ * fetches configs → executions → generated models (with assets) so the output
+ * component can display input/output files without triggering a new build.
+ */
+export async function resolveIonChannelModelingCampaignBuilds({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+}) {
+  const { campaign, configs, generatedModelIds } = await resolveIonChannelModelingByCampaignId({
+    id,
+    context,
+  });
+
+  // Fetch configs with assets
+  const configIDs = configs.map((c) => c.id);
+  const executionsResponse =
+    configIDs.length > 0
+      ? await getIonChannelModelingExecutions({
+          context,
+          withFacets: false,
+          filters: { used__id__in: configIDs },
+        })
+      : {
+          data: [] as Awaited<ReturnType<typeof getIonChannelModelingExecutions>>['data'],
+        };
+
+  const models = await Promise.all(
+    generatedModelIds.map((modelId) => getIonChannelModel({ id: modelId, context }))
+  );
+  const modelsById = new Map(models.map((m) => [m.id, m]));
+  const configsById = new Map(configs.map((c) => [c.id, c]));
+
+  const builds = executionsResponse.data.map((execution) => {
+    const configId = execution.used.at(0)?.id;
+    const config = configId ? configsById.get(configId) : undefined;
+    const modelRef = execution.generated?.at(0);
+    const model = modelRef ? modelsById.get(modelRef.id) : undefined;
+
+    return {
+      executionId: execution.id,
+      status: execution.status,
+      executionStatus: execution.status,
+      configEntity: config
+        ? { id: config.id, type: config.type, assets: config.assets ?? [] }
+        : { id: '', type: '' as any, assets: [] },
+      modelEntity: model
+        ? { id: model.id, type: model.type, assets: model.assets ?? [] }
+        : undefined,
+    };
+  });
+
+  return { campaign, builds };
 }
 
 type TResolvedIonChannelModelingByCampaign = Awaited<
