@@ -61,7 +61,13 @@ export function IonChannelModelBuilding({
       );
     })
     .with({ isLoading: false, panel: GenerationWorkflowFormPanelKeys.output }, () => {
-      return <Output sessionId={sessionId} />;
+      return (
+        <Output
+          sessionId={sessionId}
+          readonly={readonly}
+          campaignId={readonly ? sessionId : undefined}
+        />
+      );
     })
     .otherwise(() => null);
 
@@ -72,7 +78,9 @@ export function IonChannelModelBuilding({
           value={ionState.panel}
           onChange={(value) => updateIoChannelState({ ...ionState, panel: value })}
           disabledTabs={
-            !ionState.buildRequested ? [GenerationWorkflowFormPanelKeys.output] : undefined
+            !readonly && !ionState.buildRequested
+              ? [GenerationWorkflowFormPanelKeys.output]
+              : undefined
           }
         />
         <AutomatedFormBreadcrumb

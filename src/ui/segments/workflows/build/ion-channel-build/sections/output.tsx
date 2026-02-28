@@ -17,6 +17,7 @@ import {
   MessageType,
 } from '@/api/small-scale-simulator/ion-channel/build';
 import { useAppNotification } from '@/components/notification';
+import { resolveIonChannelModelingCampaignBuilds } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { message } from '@/i18n/en/ion-channel-build';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -332,7 +333,15 @@ function toSelectedOutputPreview(item: OutputListItem): SelectedPreview {
   };
 }
 
-export function Output({ sessionId }: { sessionId: string | null }) {
+export function Output({
+  sessionId,
+  readonly,
+  campaignId,
+}: {
+  sessionId: string | null;
+  readonly?: boolean;
+  campaignId?: string;
+}) {
   const queryClient = useQueryClient();
   const context = useWorkspace();
   const notification = useAppNotification();
@@ -350,7 +359,29 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   const [selectedBuildIndex, setSelectedBuildIndex] = useState<number | null>(null);
   const [selectedPreview, setSelectedPreview] = useState<SelectedPreview | null>(null);
 
-  const { data, isFetching, isLoading } = useQuery(
+  // Readonly mode: fetch existing builds from EntityCore
+  const {
+    data: readonlyBuildsData,
+    isFetching: readonlyFetching,
+    isLoading: readonlyLoading,
+  } = useQuery({
+    queryKey: ['campaign-builds-readonly', campaignId, context],
+    queryFn: () =>
+      resolveIonChannelModelingCampaignBuilds({
+        id: campaignId!,
+        context,
+      }),
+    enabled: !!readonly && !!campaignId,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+
+  // Build mode: stream build output
+  const {
+    data: streamData,
+    isFetching: streamFetching,
+    isLoading: streamLoading,
+  } = useQuery(
     queryOptions({
       queryKey: ['build-output-stream', { context, sessionId, payload }],
       queryFn: streamedQuery({
@@ -380,6 +411,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       staleTime: Infinity,
       refetchOnWindowFocus: false,
       enabled:
+        !readonly &&
         ionState.buildRequested &&
         ionState.schema &&
         payload &&
@@ -387,10 +419,17 @@ export function Output({ sessionId }: { sessionId: string | null }) {
     })
   );
 
-  const builds = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+  const isFetching = readonly ? readonlyFetching : streamFetching;
+  const isLoading = readonly ? readonlyLoading : streamLoading;
 
-    const messages = data as Array<IonChannelBuildingStreamDataMessage>;
+  const builds: Build[] = useMemo(() => {
+    if (readonly) {
+      return readonlyBuildsData?.builds ?? [];
+    }
+
+    if (!streamData || !Array.isArray(streamData)) return [];
+
+    const messages = streamData as Array<IonChannelBuildingStreamDataMessage>;
     const buildsMap = new Map<string, Build>();
 
     messages.forEach((message) => {
@@ -442,7 +481,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
     });
 
     return Array.from(buildsMap.values());
-  }, [data]);
+  }, [readonly, readonlyBuildsData, streamData]);
 
   const selectedBuild = selectedBuildIndex !== null ? builds[selectedBuildIndex] : null;
 
@@ -453,14 +492,15 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   }, [builds.length, selectedBuildIndex]);
 
   const currentStatus = useMemo(() => {
-    if (!data || !Array.isArray(data)) return null;
+    if (readonly) return null;
+    if (!streamData || !Array.isArray(streamData)) return null;
 
-    const messages = data as Array<IonChannelBuildingStreamDataMessage>;
+    const messages = streamData as Array<IonChannelBuildingStreamDataMessage>;
     const statusMessages = messages.filter((m) => m.message_type === MessageType.STATUS);
     const lastStatus = statusMessages[statusMessages.length - 1];
 
     return 'status' in lastStatus ? lastStatus?.status : null;
-  }, [data]);
+  }, [readonly, streamData]);
 
   const isBuilding =
     currentStatus === ActivityStatus.RUNNING || currentStatus === ActivityStatus.PENDING;
