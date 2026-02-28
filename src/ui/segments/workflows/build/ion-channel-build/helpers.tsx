@@ -16,6 +16,8 @@ import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import type { RJSFSchema } from '@rjsf/utils';
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 
+export const ORIGINAL_CAMPAIGN_ID_QUERY = 'original-campaign-id';
+
 export async function dereferenceOpenApiSchema({ json, form }: { form?: string; json: any }) {
   const dereferenceObj = (await $RefParser.dereference(json)) as OpenApiSchema;
   const schema = get(dereferenceObj.components.schemas, `${form}`, null) as JSONSchema;
