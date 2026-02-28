@@ -3,7 +3,7 @@ import { snakeCase } from 'es-toolkit/compat';
 import { DataViewLayout } from '@/ui/layouts/data-view-layout';
 
 import type { ReactNode } from 'react';
-import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 interface Params {
@@ -20,7 +20,7 @@ export default async function Layout({
   const awaitedParams = await params;
 
   const { virtualLabId, projectId, id } = awaitedParams;
-  const type = snakeCase(awaitedParams.type) as EntityCoreExtendedType;
+  const type = snakeCase(awaitedParams.type) as TExtendedEntitiesTypeDict;
 
   return (
     <DataViewLayout context={{ virtualLabId, projectId }} id={id} type={type}>

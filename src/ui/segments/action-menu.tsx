@@ -16,14 +16,14 @@ import NextLink from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
 
 import { deleteCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  ExtendedEntitiesTypeDict,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import {
-  type EntityCoreExtendedType,
-  getEntityByExtendedType,
-} from '@/entity-configuration/domain/helpers';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import Action from '@/ui/molecules/side-menu-action';
@@ -47,7 +47,7 @@ export default function ActionMenu({
 }: {
   entity: EntityTypeValue;
   ctx: WorkspaceContext;
-  type: EntityCoreExtendedType;
+  type: TExtendedEntitiesTypeDict;
   parentLink: string;
   isPublicEntity: boolean;
 }) {

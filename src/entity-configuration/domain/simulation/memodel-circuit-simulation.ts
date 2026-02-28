@@ -1,8 +1,8 @@
-import flatMap from 'es-toolkit/compat/flatMap';
-import keyBy from 'es-toolkit/compat/keyBy';
+import { flatMap, keyBy } from 'es-toolkit/compat';
 
 import { getMEModels } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import {
   createSimulationCampaign,
@@ -21,10 +21,10 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { getExtendedSimMap } from '@/entity-configuration/domain/simulation/utils';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import { getExtendedSimMap } from './utils';
-
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -68,7 +68,6 @@ async function resolveSimulationCampaigns({
   context: WorkspaceContext | undefined;
   filters?: Partial<ICircuitSimulationCampaignFilter>;
 }) {
-  // eslint-disable-next-line no-param-reassign
   filters = discardBrainRegionQueryParams(filters);
   const source = await getCircuitSimulationCampaigns({
     context,
@@ -135,7 +134,10 @@ export async function resolveSimulationByCampaignId({
     throw new Error(`No campaign with id ${id} found`);
   }
 
-  const source = await getCircuitSimulations({ context, filters: { simulation_campaign_id: id } });
+  const source = await getCircuitSimulations({
+    context,
+    filters: { simulation_campaign_id: id },
+  });
 
   const simulation = source.data.at(0);
   const assets = campaign?.assets ?? [];
@@ -145,6 +147,9 @@ export async function resolveSimulationByCampaignId({
   });
 
   if (!configAsset) throw Error('No campaign config asset found');
+
+  let entity: ICircuit | null = null;
+  if (simulation?.entity_id) entity = await getCircuit({ id: simulation?.entity_id, context });
 
   const rawConfig = await downloadAsset({
     entityId: campaign.id,
@@ -158,14 +163,23 @@ export async function resolveSimulationByCampaignId({
   return {
     campaign,
     simulation,
+    entity,
     config,
   };
 }
 
-export const MEModelCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
+type TResolvedSimulationByCampaign = Awaited<ReturnType<typeof resolveSimulationByCampaignId>>;
+type TResolvedSimulationByCampaigns = Awaited<ReturnType<typeof resolveSimulationCampaigns>>;
+
+export const MEModelCircuitSimulation: EntityCoreTypeConfig<
+  ICircuitSimulationCampaign,
+  TResolvedSimulationByCampaign,
+  TResolvedSimulationByCampaigns
+> = {
   group: EntityTypeGroup.Simulations,
   title: 'Single neuron (beta)',
   extendedType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+  discriminator: { key: 'entity__type', value: [ENTITY_TYPE] },
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.MEModelCircuitSimulation,
   api: {

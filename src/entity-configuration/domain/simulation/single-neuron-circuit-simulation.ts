@@ -2,7 +2,7 @@ import flatMap from 'es-toolkit/compat/flatMap';
 import keyBy from 'es-toolkit/compat/keyBy';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getCircuits } from '@/api/entitycore/queries/model/circuit';
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import {
   createSimulationCampaign,
@@ -22,7 +22,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { resolveExecutions } from './small-microcircuit-simulation';
 import { getExtendedSimMap, migrateConfig } from './utils';
 
-import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
+import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {
   ICircuitSimulationCampaign,
   ICircuitSimulationCampaignFilter,
@@ -44,7 +44,6 @@ async function resolveSimulationCampaigns({
   filters?: Partial<ICircuitSimulationCampaignFilter>;
   circuitScaleFilter?: Partial<ICircuitFilter>;
 }) {
-  // eslint-disable-next-line no-param-reassign
   filters = discardBrainRegionQueryParams(filters);
 
   const source = await getCircuitSimulationCampaigns({
@@ -129,6 +128,9 @@ export async function resolveSimulationByCampaignId({
 
   if (!configAsset) throw Error('No campaign config asset found');
 
+  let entity: ICircuit | null = null;
+  if (simulation?.entity_id) entity = await getCircuit({ id: simulation?.entity_id, context });
+
   const rawConfig = await downloadAsset({
     entityId: campaign.id,
     entityType: EntityTypeDict.SimulationCampaign,
@@ -143,11 +145,19 @@ export async function resolveSimulationByCampaignId({
   return {
     campaign,
     simulation,
+    entity,
     config,
   };
 }
 
-export const SingeNeuronCircuitSimulation: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
+type TResolvedSimulationByCampaign = Awaited<ReturnType<typeof resolveSimulationByCampaignId>>;
+type TResolvedSimulationByCampaigns = Awaited<ReturnType<typeof resolveSimulationCampaigns>>;
+
+export const SingeNeuronCircuitSimulation: EntityCoreTypeConfig<
+  ICircuitSimulationCampaign,
+  TResolvedSimulationByCampaign,
+  TResolvedSimulationByCampaigns
+> = {
   group: EntityTypeGroup.Simulations,
   title: 'Synaptome (beta)',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,

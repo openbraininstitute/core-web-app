@@ -2,14 +2,17 @@ import { includes } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 
 import { getMEModel } from '@/api/entitycore/queries';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  ExtendedEntitiesTypeDict,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
 import { resolveExtractionByCampaignId } from '@/entity-configuration/domain/extraction/extraction-campaign';
-import { circuitTypes, type EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
+import { circuitTypes } from '@/entity-configuration/domain/helpers';
 import {
   resolveSimulationByCampaignId,
   resolveSingleNeuronSimulation,
@@ -42,7 +45,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
+import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 export default async function Overview({
@@ -51,8 +54,8 @@ export default async function Overview({
   ctx,
   isWorkflow,
 }: {
-  entity?: EntityTypeValue;
-  extendedType: EntityCoreExtendedType;
+  entity?: TRetrieveEntityOutput;
+  extendedType: TExtendedEntitiesTypeDict;
   ctx: WorkspaceContext;
   isWorkflow: boolean;
 }) {
