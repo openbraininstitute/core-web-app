@@ -1,7 +1,7 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-import type { IIonChannelModelingConfigBase } from '@/api/entitycore/types/entities/ion-channel-modeling-config';
-import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type { IIonChannelModelingConfigBase } from "@/api/entitycore/types/entities/ion-channel-modeling-config";
+import type { IIonChannelRecording } from "@/api/entitycore/types/entities/ion-channel-recording";
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
@@ -10,7 +10,7 @@ import type {
   EntityCoreType,
   IContributor,
   Timestamps,
-} from '@/api/entitycore/types/shared/global';
+} from "@/api/entitycore/types/shared/global";
 import type {
   ContributionFilter,
   IdFilter,
@@ -20,7 +20,7 @@ import type {
   PaginationFilter,
   SearchFilter,
   TimestampsFilter,
-} from '@/api/entitycore/types/shared/request';
+} from "@/api/entitycore/types/shared/request";
 
 interface NestedIonChannelRecording extends IIonChannelRecording {}
 

@@ -1,16 +1,16 @@
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-import { compactRecord } from '@/utils/dictionary';
+import { entityCoreApi, getEntityCoreContext } from "@/api/entitycore/utils";
+import { compactRecord } from "@/utils/dictionary";
 
 import type {
   IIonChannelModelingCampaign,
   IonChannelModelingCampaignFilter,
   TCreateIonChannelModelingCampaign,
   TUpdateIonChannelModelingCampaign,
-} from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { WorkspaceContext } from '@/types/common';
+} from "@/api/entitycore/types/entities/ion-channel-modeling-campaign";
+import type { EntityCoreResponse } from "@/api/entitycore/types/shared/response";
+import type { WorkspaceContext } from "@/types/common";
 
-const baseUri = '/ion-channel-modeling-campaign';
+const baseUri = "/ion-channel-modeling-campaign";
 
 /**
  * Retrieves a list of ion channel modeling campaigns from the EntityCoreAPI.
@@ -25,17 +25,20 @@ export async function getIonChannelModelingCampaigns({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IIonChannelModelingCampaign>>(baseUri, {
-    queryParams: compactRecord({
-      ...filters,
-      with_facets: withFacets,
-    }),
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      ...getEntityCoreContext(context).headers,
+  return await api.get<EntityCoreResponse<IIonChannelModelingCampaign>>(
+    baseUri,
+    {
+      queryParams: compactRecord({
+        ...filters,
+        with_facets: withFacets,
+      }),
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        ...getEntityCoreContext(context).headers,
+      },
     },
-  });
+  );
 }
 
 /**
@@ -51,8 +54,8 @@ export async function getIonChannelModelingCampaign({
   const api = await entityCoreApi();
   return await api.get<IIonChannelModelingCampaign>(`${baseUri}/${id}`, {
     headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
+      accept: "application/json",
+      "content-type": "application/json",
       ...getEntityCoreContext(context).headers,
     },
   });
@@ -73,8 +76,8 @@ export async function createIonChannelModelingCampaign({
     body: data,
     headers: {
       ...getEntityCoreContext(context).headers,
-      'content-type': 'application/json',
-      accept: 'application/json',
+      "content-type": "application/json",
+      accept: "application/json",
     },
   });
 }
@@ -96,8 +99,8 @@ export async function updateIonChannelModelingCampaign({
     body: data,
     headers: {
       ...getEntityCoreContext(context).headers,
-      'content-type': 'application/json',
-      accept: 'application/json',
+      "content-type": "application/json",
+      accept: "application/json",
     },
   });
 }
@@ -116,7 +119,7 @@ export async function deleteIonChannelModelingCampaign({
   return await api.delete(`${baseUri}/${id}`, {
     headers: {
       ...getEntityCoreContext(context).headers,
-      accept: 'application/json',
+      accept: "application/json",
     },
   });
 }
