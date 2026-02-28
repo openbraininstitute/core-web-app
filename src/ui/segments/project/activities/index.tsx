@@ -1,32 +1,28 @@
 'use client';
 
 import { RightSquareOutlined } from '@ant-design/icons';
-import { Empty, Table, ConfigProvider } from 'antd';
-import { ColumnsType } from 'antd/es/table';
-import { useState } from 'react';
-import kebabCase from 'es-toolkit/compat/kebabCase';
+import { ConfigProvider, Empty, Table } from 'antd';
+import { get, kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
-import get from 'es-toolkit/compat/get';
+import { useState } from 'react';
 
-import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
+import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
-import { Header } from '@/ui/segments/project/activities/elements/header';
-import { Card, CardHeader, CardContent } from '@/ui/molecules/card';
-import {
-  ACTIVITY_DEFAULT_PAGE_SIZE,
-  Scales,
-  StatusMap,
-} from '@/ui/segments/project/activities/elements/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Card, CardContent, CardHeader } from '@/ui/molecules/card';
+import { Header } from '@/ui/segments/project/activities/elements/header';
+import { Scales, StatusMap } from '@/ui/segments/project/activities/elements/helpers';
+import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
+import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
-import { config } from '@/config';
 
+import type { ColumnsType } from 'antd/es/table';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 export function ProjectActivities() {
   const { virtualLabId, projectId } = useWorkspace();
@@ -35,15 +31,19 @@ export function ProjectActivities() {
     ExtendedEntitiesTypeDict.Memodel
   );
 
-  const [activity, setActivity] = useState<TActivityValue>(ActivityValues.Build);
+  const [activity, setActivity] = useState<TActivityValue>(ActivityValues.Build as TActivityValue);
   const entity = getEntityByExtendedType({
     type: get(Scales, [entityType, activity], null),
   });
 
+  if (!entity?.extendedType) {
+    throw new Error(`No entity found for type: ${entityType}`);
+  }
+
   const { data, isLoading, isQueryEnabled } = useQueryActivity({
     activity,
     selectionType: entityType,
-    entityType: entity?.extendedType!,
+    entityType: entity?.extendedType,
     page,
     useKeepPreviousData: true,
   });
@@ -53,7 +53,7 @@ export function ProjectActivities() {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: (text, record) => <span className="text-primary-8">{record.name}</span>,
+      render: (_, record) => <span className="text-primary-8">{record.name}</span>,
     },
     {
       title: 'Status',
@@ -136,7 +136,7 @@ export function ProjectActivities() {
                   columns={columns}
                   rowKey={(o) => o.id}
                   pagination={{
-                    pageSize: ACTIVITY_DEFAULT_PAGE_SIZE,
+                    pageSize: DEFAULT_PAGE_MEDIUM_SIZE,
                     total: data?.pagination.total_items,
                     defaultCurrent: 1,
                     current: page,
@@ -151,7 +151,8 @@ export function ProjectActivities() {
                     },
                     className: cn(
                       '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
-                      '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
+                      '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9',
+                      'mt-auto'
                     ),
                   }}
                   locale={{

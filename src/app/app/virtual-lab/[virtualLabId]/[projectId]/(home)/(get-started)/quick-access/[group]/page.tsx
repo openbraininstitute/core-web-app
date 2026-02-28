@@ -1,4 +1,5 @@
 import { compact } from 'es-toolkit/array';
+import { findKey } from 'es-toolkit/object';
 
 import { tryCatch } from '@/api/utils';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -6,10 +7,36 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity';
 import { SingleCardItem } from '@/ui/segments/project/get-started/elements/quic-access';
-import { type IQuickAccessList, QuickAccessQuery } from '@/ui/segments/project/get-started/query';
+import {
+  type IQuickAccessList,
+  QuickAccessGroupDict,
+  QuickAccessQuery,
+} from '@/ui/segments/project/get-started/query';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
+import type { Metadata } from 'next';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+
+type PageParams = WorkspaceContext & { group: string };
+
+export async function generateMetadata({
+  params,
+}: ServerSideComponentProp<PageParams, null>): Promise<Metadata> {
+  const { group } = await params;
+  const capitalizedGroup = findKey(QuickAccessGroupDict, (p) => p === group);
+  const title = `Quick Access - ${capitalizedGroup} | Open Brain Institute`;
+  const description = `Browse curated ${group} examples to quickly get started with the Open Brain Institute.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+    },
+  };
+}
 
 export default async function Layout({
   params,

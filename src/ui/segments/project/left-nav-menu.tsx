@@ -88,7 +88,11 @@ export function LeftMenu({ className }: Props) {
           const currentActiveSection = getActiveSection(pathname);
           const isActive =
             currentActiveSection === baseUrl ||
-            (children?.some((child) => !!getActiveSection(pathname, child.url)) ?? false);
+            (children?.some((child) => {
+              const childSegments = child.url.split('/').filter(Boolean);
+              return childSegments.every((seg) => !!getActiveSection(pathname, seg));
+            }) ??
+              false);
 
           return (
             <div key={key} data-menu-item={title} className="w-full">
@@ -110,7 +114,7 @@ export function LeftMenu({ className }: Props) {
               {children && isActive && (
                 <div className="pl-2 pr-4 py-4 flex flex-col gap-1.5">
                   {children.map((child) => {
-                    const activeSubSection = getActiveSection(pathname, child.url) === child.url;
+                    const activeSubSection = !!getActiveSection(pathname, child.key);
                     return (
                       <Button
                         key={child.key}
@@ -129,9 +133,7 @@ export function LeftMenu({ className }: Props) {
                         active={activeSubSection}
                       >
                         <Link href={`${url}/${child.url}`}>
-                          {!!getActiveSection(pathname, child.url) && (
-                            <RiCircleFill className="text-primary-8 size-3" />
-                          )}
+                          {activeSubSection && <RiCircleFill className="text-primary-8 size-3" />}
                           {child.title}
                         </Link>
                       </Button>

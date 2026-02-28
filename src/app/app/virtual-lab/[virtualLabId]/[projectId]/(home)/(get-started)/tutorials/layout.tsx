@@ -14,7 +14,7 @@ export default async function Layout({
   return (
     <section id="tutorials" data-testid="tutorials" className="pr-2">
       <BackButton
-        className="sticky top-0 bg-background"
+        className="sticky top-0 bg-background w-full z-9001 pb-2"
         toBack={`${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}`}
         list={[
           {
