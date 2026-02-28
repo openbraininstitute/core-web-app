@@ -6,6 +6,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
 import { cn } from '@/utils/css-class';
 
+import 'katex/dist/katex.min.css';
+
 import type { SectionListEntry } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 
 // TODO: re-enable array support when multi-value sweep when obi-one enabled it
@@ -102,9 +104,14 @@ function SectionConfigRow({
           {entry.section_list}
         </span>
         <span className="text-sm text-gray-400">
-          {!isNil(entry.value)
-            ? `Default: ${entry.value}${entry.units ? ` ${renderMathInText(entry.units)}` : ''}`
-            : renderMathInText(entry.units) || ''}
+          {!isNil(entry.value) ? (
+            <>
+              Default: {entry.value}
+              {entry.units ? <> {renderMathInText(entry.units)}</> : null}
+            </>
+          ) : (
+            renderMathInText(entry.units) || ''
+          )}
         </span>
       </div>
 

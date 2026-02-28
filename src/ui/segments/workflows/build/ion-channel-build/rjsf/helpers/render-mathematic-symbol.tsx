@@ -63,7 +63,12 @@ export const renderMathInText = (text: string) => {
       {parts.map((part) => {
         if (part.type === 'latex') {
           try {
-            const html = katex.renderToString(part.content.replace(/^\$|\$$/g, ''), {
+            let latex = part.content.replace(/^\$|\$$/g, '');
+            // bare superscript/subscript (e.g. "^2") needs an empty base for KaTeX
+            if (/^[\^_]/.test(latex)) {
+              latex = `{}${latex}`;
+            }
+            const html = katex.renderToString(latex, {
               throwOnError: false,
               displayMode: false,
               output: 'html',
