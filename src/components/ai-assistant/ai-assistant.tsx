@@ -9,7 +9,7 @@ import { useServiceAiAgentChat } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
-import { AiContextProvider, MINIMAL_PANEL_SIZE, usePanelWidth } from './hooks';
+import { AiContextProvider, MINIMAL_PANEL_SIZE, useIsDragging, usePanelWidth } from './hooks';
 import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
@@ -41,6 +41,7 @@ export default function AiAssistant({
   onCollapse,
 }: AiAssistantProps) {
   const { panelWidth, setPanelContainer } = usePanelWidth();
+  const isDragging = useIsDragging();
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
@@ -49,16 +50,18 @@ export default function AiAssistant({
 
   const canCreateNewChat = threadId && !isEmptyThread && status === 'ready';
 
-  const style: CSSProperties = {
-    '--custom-panel-width': fullscreen ? 'calc(100vw - 20px)' : `${panelWidth}px`,
-    '--custom-panel-height': fullscreen ? 'calc(100vh - 1rem)' : '',
-  };
-
   const handleNewChat = async () => {
     assistant.threadId.set(undefined);
     setTab('chat');
     await assistant.createThread();
   };
+
+  const animationProps = {
+    position: fullscreen ? 'fixed' : 'absolute',
+    height: fullscreen ? 'calc(100vh - 1rem)' : '100%',
+    top: fullscreen ? '0.5rem' : 0,
+    right: fullscreen ? '10px' : 0,
+  } as const;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -68,23 +71,18 @@ export default function AiAssistant({
             setPanelContainer(el);
             containerRef?.(el);
           }}
-          style={style}
           className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
         >
           <motion.div
             className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, width: 0, ...animationProps }}
             animate={{
               opacity: 1,
-              x: 0,
-              position: fullscreen ? 'fixed' : 'absolute',
               width: fullscreen ? 'calc(100vw - 20px)' : `${panelWidth}px`,
-              height: fullscreen ? 'calc(100vh - 1rem)' : '100%',
-              top: fullscreen ? '0.5rem' : 0,
-              right: fullscreen ? '10px' : 0,
+              ...animationProps,
             }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            exit={{ opacity: 0, width: 0 }}
+            transition={isDragging ? { duration: 0 } : { duration: 0.3, ease: 'easeInOut' }}
           >
             <div className={styles.header}>
               <div className={styles.headerTitle}>AI assistant</div>

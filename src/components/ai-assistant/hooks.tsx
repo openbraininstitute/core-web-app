@@ -38,6 +38,17 @@ export function AiContextProvider({
 
 const atomPanelWidth = atomWithStorage('ai-assistant/panel-width', MINIMAL_PANEL_SIZE);
 const atomPanelContainer = atom<HTMLDivElement | null>(null);
+const atomIsDragging = atom<boolean>(false);
+
+export function useIsDragging(): boolean {
+  const [isDragging] = useAtom(atomIsDragging);
+  return isDragging;
+}
+
+export function useSetIsDragging(): (value: boolean) => void {
+  const [, setIsDragging] = useAtom(atomIsDragging);
+  return setIsDragging;
+}
 
 /**
  * @param container Container that defines the min width.

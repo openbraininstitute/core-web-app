@@ -2,7 +2,7 @@
 
 import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
-import { type JSX, useEffect, useMemo, useState } from 'react';
+import { type JSX, useMemo, useState } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import { useAgentState } from '@/services/ai-agent';
