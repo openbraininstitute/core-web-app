@@ -2,12 +2,15 @@
 
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import validator from '@rjsf/validator-ajv8';
-import { flatMap, isNil, map, toArray } from 'es-toolkit/compat';
+import { useQuery } from '@tanstack/react-query';
+import { flatMap, get, isNil, map, toArray } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { getIonChannelRecording } from '@/api/entitycore/queries/experimental/ion-channel-recording';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { EquationMenuItem } from '@/ui/segments/workflows/build/ion-channel-build/elements/equation-tooltip';
 import { ConfigurationSidebar } from '@/ui/segments/workflows/build/ion-channel-build/elements/menu-sidebar';
@@ -57,6 +60,7 @@ type Props = {
 
 export function Configuration({ sessionId, initialConfig, readonly }: Props) {
   const { data: session } = useSession();
+  const { virtualLabId, projectId } = useWorkspace();
   const { data: RootSchema, isLoading } = useGenerativeFormSchemaApi({
     form: 'IonChannelFittingScanConfig',
   });
@@ -74,6 +78,28 @@ export function Configuration({ sessionId, initialConfig, readonly }: Props) {
       [sessionId]
     )
   );
+
+  // When loading from a campaign, fetch the recording entity by ID from the initial config
+  // and populate the recording atom so the recording panel and input show the selected recording.
+  const initialRecordingId = initialConfig
+    ? (get(initialConfig, 'initialize.recordings.id_str') as string | undefined)
+    : undefined;
+
+  const { data: fetchedRecording } = useQuery({
+    queryKey: ['ion-channel-recording', initialRecordingId],
+    queryFn: () =>
+      getIonChannelRecording({
+        id: initialRecordingId as string,
+        context: { virtualLabId, projectId },
+      }),
+    enabled: !!initialRecordingId && !recording,
+  });
+
+  useEffect(() => {
+    if (fetchedRecording && !recording) {
+      updateRecording(fetchedRecording);
+    }
+  }, [fetchedRecording, recording, updateRecording]);
 
   const [, updateIoChannelState] = useAtom(
     useMemo(() => IonChannelModelingSharedStateFamily(sessionId), [sessionId])

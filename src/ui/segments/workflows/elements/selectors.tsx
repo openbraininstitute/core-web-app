@@ -40,7 +40,7 @@ export function EntityTypeSelectScrollable({
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          'w-70 max-w-max min-w-36 rounded-full border-none text-lg',
+          'w-70 max-w-max min-w-36 rounded-full border-none text-lg cursor-pointer',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
       >
@@ -62,7 +62,7 @@ export function EntityTypeSelectScrollable({
                     value={_value!}
                     className={cn(
                       'text-primary-9 text-lg font-bold',
-                      'data-highlighted:text-primary-7!'
+                      'data-highlighted:text-primary-7! cursor-pointer'
                     )}
                   >
                     {label}
@@ -92,7 +92,7 @@ export function CategorySelectScrollable({
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          'w-[280px] max-w-max min-w-36 rounded-full border-none text-lg',
+          'w-[280px] max-w-max min-w-36 rounded-full border-none text-lg cursor-pointer',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
       >
@@ -113,7 +113,10 @@ export function CategorySelectScrollable({
           <SelectItem
             key={`category-${_value}`}
             value={_value}
-            className={cn('text-primary-9 text-lg font-bold', 'data-highlighted:text-primary-7!')}
+            className={cn(
+              'text-primary-9 text-lg font-bold cursor-pointer',
+              'data-highlighted:text-primary-7!'
+            )}
           >
             {label}
           </SelectItem>
