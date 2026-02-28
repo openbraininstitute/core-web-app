@@ -240,11 +240,7 @@ export const IonChannelModelingCampaign: EntityCoreTypeConfig<
   asset: {
     extension: 'application/json',
   },
-  detailViewSections: [
-    DetailViewSectionsDict.Overview,
-    DetailViewSectionsDict.Configuration,
-    DetailViewSectionsDict.Results,
-  ],
+  detailViewSections: [DetailViewSectionsDict.Overview],
   isBookmarkable: false,
   isDownloadable: false,
   isCopyable: false,
