@@ -17,7 +17,7 @@ export default function Loading() {
       </div>
 
       {/* Content: sidebar + form + recording panel */}
-      <div className="flex h-[calc(100vh-11rem)] w-full">
+      <div className="flex h-[calc(100vh-13rem)] w-full">
         {/* Left sidebar */}
         <div className="flex w-80 shrink-0 flex-col gap-4 px-2">
           <Skeleton className="mb-1 h-3 w-14" />

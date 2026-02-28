@@ -13,6 +13,7 @@ import {
 } from '@/entity-configuration/definitions/view-defs';
 import { resolveExtractionByCampaignId } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { circuitTypes } from '@/entity-configuration/domain/helpers';
+import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import {
   resolveSimulationByCampaignId,
   resolveSingleNeuronSimulation,
@@ -35,6 +36,7 @@ import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-chan
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
+import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
 
 import type {
   ICellMorphology,
@@ -166,6 +168,19 @@ export default async function Overview({
         <DownloadPanel />
       </>
     );
+  }
+
+  if (extendedType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
+    const { data } = await tryCatch(
+      resolveIonChannelModelingCampaignConfig({
+        id: entity.id,
+        context: ctx,
+      })
+    );
+
+    const initialConfig = data?.config?.form ?? data?.config ?? null;
+
+    return <IonChannelModelBuilding sessionId={entity.id} initialConfig={initialConfig} readonly />;
   }
 
   return (

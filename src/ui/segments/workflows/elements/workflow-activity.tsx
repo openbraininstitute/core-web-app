@@ -272,17 +272,14 @@ export function WorkflowActivity() {
   }, [selectedRow, navigate, virtualLabId, projectId, notification]);
 
   const configurationLink = entityType
-    ? entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign
-      ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/ion-channel-model`
-      : entity?.detailViewSections?.includes('configuration')
-        ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
+    ? entity?.detailViewSections?.includes('configuration')
+      ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/configuration`
+      : entity?.detailViewSections?.includes('overview')
+        ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/overview`
         : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
 
-  const configurationQuery =
-    entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign
-      ? `${query.toString()}&${ORIGINAL_CAMPAIGN_ID_QUERY}=${selectedRow?.id}&readonly=true`
-      : query.toString();
+  const configurationQuery = query.toString();
 
   const resultsPath = entity?.detailViewSections?.includes(DetailViewSectionsDict.Results)
     ? DetailViewSectionsDict.Results
@@ -299,7 +296,7 @@ export function WorkflowActivity() {
   const onDuplicate = () => {
     if (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/ion-channel-model?${ORIGINAL_CAMPAIGN_ID_QUERY}=${selectedRow?.id}`
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/ion-channel-modeling-campaign?${ORIGINAL_CAMPAIGN_ID_QUERY}=${selectedRow?.id}`
       );
       return;
     }
@@ -416,7 +413,7 @@ export function WorkflowActivity() {
                 sticky
                 id="activities-table"
                 data-testid="activities-table"
-                wrapperClassname="max-h-[calc(100%-5rem)] h-full"
+                wrapperClassname="max-h-[calc(100%-4rem)] h-full"
                 dataType={entityType!}
                 className={cn(
                   '[&_.ant-table]:bg-background! [&_.ant-table-thead_th]:bg-background!',
@@ -476,8 +473,8 @@ export function WorkflowActivity() {
                   ),
                 }}
               />
-              <div className="relative flex h-15 w-full items-center justify-end">
-                <div className="absolute left-1/2 -translate-x-1/2">
+              <div className="relative flex h-15 w-full items-end justify-end">
+                <div className="absolute left-1/2 h-15 flex items-center justify-center -translate-x-1/2">
                   <AntPagination
                     responsive
                     showLessItems
