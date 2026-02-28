@@ -112,7 +112,7 @@ export function IonChannelVariableSelector({
                     <SelectItem
                       key={itemValue}
                       value={itemValue}
-                      className="pl-4 text-primary-8 hover:text-primary-7! cursor-pointer"
+                      className="pl-4 text-primary-8 hover:text-primary-7! text-base font-semibold cursor-pointer"
                       checkClassName="size-3 text-primary-8"
                     >
                       {variable.neuron_variable}
@@ -141,7 +141,9 @@ function SelectedDisplay({
     <span className="flex items-start flex-col bg-white! gap-1.5 text-left">
       <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
         <span className="shrink-0 text-sm text-gray-400">Channel</span>
-        <span className="shrink-0 font-semibold text-primary-8">{group.channel_name}</span>
+        <span className="shrink-0 font-semibold text-base text-primary-9">
+          {group.channel_name}
+        </span>
         {sections.length > 0 && <SectionListBadge sections={sections} />}
         {group.entity_id && (
           <a
@@ -154,7 +156,7 @@ function SelectedDisplay({
               'inline-flex items-center justify-center text-primary-9 min-w-6!',
               'min-h-6! px-1 border-gray-200 bg-white',
               'transition-colors hover:bg-gray-100 hover:border-gray-300 rounded-full',
-              'hover:text-primary-8 pointer-events-auto [&_svg]:pointer-events-auto'
+              'hover:text-primary-9 pointer-events-auto [&_svg]:pointer-events-auto'
             )}
             aria-label={`View ion channel ${group.channel_name}`}
           >
@@ -164,23 +166,31 @@ function SelectedDisplay({
       </div>
       <div className="flex items-center gap-1.5">
         <span className="text-sm text-gray-400">Variable</span>
-        <span className="font-semibold text-primary-8">{variable.neuron_variable}</span>
+        <span className="font-semibold text-base text-primary-9">{variable.neuron_variable}</span>
       </div>
     </span>
   );
 }
 
-/**
- * a pill showing the first section name and a "+N" badge
- */
 function SectionListBadge({ sections }: { sections: string[] }) {
   const remaining = sections.length - 1;
 
   return (
-    <span className="inline-flex min-w-0 items-center gap-1 rounded-full border border-gray-300 bg-white px-2.5 py-0.5 text-xs capitalize text-primary-8">
+    <span
+      className={cn(
+        'inline-flex min-w-0 items-center gap-1 rounded-full border border-gray-300 ',
+        'bg-white px-2.5 py-0.5 text-xs text-primary-9',
+        { 'pr-0.5': remaining > 0 }
+      )}
+    >
       <span className="truncate">{sections[0]}</span>
       {remaining > 0 && (
-        <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-gray-200 px-1.5 text-[10px] font-medium text-primary-8">
+        <span
+          className={cn(
+            'shrink-0 inline-flex items-center justify-center rounded-full',
+            ' bg-gray-200 px-1.5 text-[10px] font-medium text-primary-9'
+          )}
+        >
           +{remaining}
         </span>
       )}
@@ -207,8 +217,8 @@ function ChannelHeader({
       )}
     >
       <div className="flex items-center gap-2 overflow-hidden">
-        <span className="truncate text-sm font-semibold text-primary-8">{group.channel_name}</span>
-        <span className="shrink-0 text-xs text-gray-400">[{group.section_lists.join(', ')}]</span>
+        <span className="truncate text-base font-bold text-primary-9">{group.channel_name}</span>
+        <span className="shrink-0 text-sm text-gray-400">[{group.section_lists.join(', ')}]</span>
       </div>
       <div className="flex items-center justify-center gap-1.5">
         {group.entity_id && (

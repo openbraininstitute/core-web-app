@@ -96,7 +96,7 @@ function SectionConfigRow({
         <span
           className={cn(
             'inline-flex items-center rounded-full border border-gray-300 ',
-            'bg-white px-2.5 py-0.5 text-sm font-semibold capitalize text-primary-8'
+            'bg-white px-2.5 py-0.5 text-sm font-semibold text-primary-8'
           )}
         >
           {entry.section_list}
