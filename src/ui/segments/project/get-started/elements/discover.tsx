@@ -34,6 +34,7 @@ export function DiscoverCard({
       className={cn(
         'w-full bg-white border-none px-4',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
+        'hover:shadow-bnb hover:border-gray-200 hover:border',
         { 'bg-neutral-2': isSelected }
       )}
     >
@@ -73,7 +74,7 @@ export function Grid({ tutorials }: { tutorials: TTutorial[] }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? tutorials : tutorials.slice(0, INITIAL_COUNT);
   const hasMore = tutorials.length > INITIAL_COUNT;
-  const slug = useSearchParams().get('t');
+  const slug = useSearchParams().get('t') ?? 'how-to-explore-data';
 
   return (
     <section id="discover-tutorials" className="w-full flex flex-col my-6 @container">

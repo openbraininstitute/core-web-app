@@ -85,7 +85,8 @@ export function MainCardItem({
     <Card
       className={cn(
         'w-full bg-white border-none flex-1',
-        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]'
+        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
+        'hover:shadow-bnb hover:border-gray-200 hover:border'
       )}
     >
       <div className="relative h-41.75 w-auto">

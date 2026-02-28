@@ -2,16 +2,25 @@
 
 import { RightOutlined } from '@ant-design/icons';
 import { RiCircleFill } from '@remixicon/react';
-import { filter } from 'es-toolkit/compat';
+import { useQueries } from '@tanstack/react-query';
+import { filter, sumBy } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type ComponentProps, Suspense } from 'react';
 
 import { config } from '@/config';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
+import { getClient } from '@/services/sanity';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import {
+  DiscoverQuery,
+  type IDiscoverTutorialsList,
+  type IQuickAccessList,
+  QuickAccessQuery,
+} from '@/ui/segments/project/get-started/query';
+import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 
@@ -68,6 +77,7 @@ export function LeftMenu({ className }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
   const pathname = usePathname();
+  const client = getClient();
 
   const hashedLinks = filter(
     links.map((link) => ({
@@ -77,6 +87,30 @@ export function LeftMenu({ className }: Props) {
     })),
     (link) => !link.requireRole || (link.requireRole && isAdmin)
   );
+
+  const {
+    dtListCount,
+    qaListCount,
+    isLoading: loadingCounts,
+  } = useQueries({
+    queries: [
+      {
+        queryKey: keyBuilderExternal.quickAccessList(),
+        queryFn: () => client.fetch<Array<IQuickAccessList>>(QuickAccessQuery),
+      },
+      {
+        queryKey: keyBuilderExternal.discoverTutorialsList(),
+        queryFn: () => client.fetch<IDiscoverTutorialsList>(DiscoverQuery),
+      },
+    ],
+    combine: ([quickAccessList, discoverTutorialsList]) => {
+      return {
+        qaListCount: sumBy(quickAccessList.data, (item) => item.list.length),
+        dtListCount: discoverTutorialsList.data?.tutorialOrder.length ?? 0,
+        isLoading: quickAccessList.isLoading || discoverTutorialsList.isLoading,
+      };
+    },
+  });
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
@@ -88,11 +122,7 @@ export function LeftMenu({ className }: Props) {
           const currentActiveSection = getActiveSection(pathname);
           const isActive =
             currentActiveSection === baseUrl ||
-            (children?.some((child) => {
-              const childSegments = child.url.split('/').filter(Boolean);
-              return childSegments.every((seg) => !!getActiveSection(pathname, seg));
-            }) ??
-              false);
+            (children?.some((child) => !!getActiveSection(pathname, child.key)) ?? false);
 
           return (
             <div key={key} data-menu-item={title} className="w-full">
@@ -115,6 +145,10 @@ export function LeftMenu({ className }: Props) {
                 <div className="pl-2 pr-4 py-4 flex flex-col gap-1.5">
                   {children.map((child) => {
                     const activeSubSection = !!getActiveSection(pathname, child.key);
+                    let count = 0;
+                    if (child.key === 'quick-access') count = qaListCount;
+                    if (child.key === 'tutorials') count = dtListCount;
+
                     return (
                       <Button
                         key={child.key}
@@ -135,6 +169,9 @@ export function LeftMenu({ className }: Props) {
                         <Link href={`${url}/${child.url}`}>
                           {activeSubSection && <RiCircleFill className="text-primary-8 size-3" />}
                           {child.title}
+                          {!loadingCounts && (
+                            <span className="ml-auto text-gray-500 font-light">{count}</span>
+                          )}
                         </Link>
                       </Button>
                     );

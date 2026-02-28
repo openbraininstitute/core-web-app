@@ -12,6 +12,7 @@ import {
   QuickAccessGroupDict,
   QuickAccessQuery,
 } from '@/ui/segments/project/get-started/query';
+import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { Metadata } from 'next';
@@ -52,8 +53,14 @@ export default async function Layout({
     })
   );
 
-  const quickAccessList = await client.fetch<Array<IQuickAccessList>>(QuickAccessQuery);
-  const currentList = quickAccessList.find((item) => item.group === group);
+  const { data: quickAccessList } = await tryCatch(
+    queryClient.fetchQuery({
+      queryKey: keyBuilderExternal.quickAccessList(),
+      queryFn: () => client.fetch<Array<IQuickAccessList>>(QuickAccessQuery),
+    })
+  );
+
+  const currentList = quickAccessList?.find((item) => item.group === group);
 
   const settled = await Promise.allSettled(
     compact(

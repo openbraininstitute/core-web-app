@@ -5,8 +5,16 @@ import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { config } from '@/config';
 import { getQueryClient } from '@/query-provider/server';
+import { getClient } from '@/services/sanity/client';
 import { ProjectInnerLayout } from '@/ui/layouts/project-inner-layout';
+import {
+  DiscoverQuery,
+  type IDiscoverTutorialsList,
+  type IQuickAccessList,
+  QuickAccessQuery,
+} from '@/ui/segments/project/get-started/query';
 import { LeftMenu } from '@/ui/segments/project/left-nav-menu';
+import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { PropsWithChildren } from 'react';
@@ -18,7 +26,7 @@ export default async function Layout({
 }: ServerSideComponentProp<{ virtualLabId: string; projectId: string }, null> & PropsWithChildren) {
   const { virtualLabId, projectId } = await promisedParams;
   const queryClient = getQueryClient();
-
+  const client = getClient();
   queryClient.prefetchQuery({
     queryKey: keyBuilder.membership(),
     queryFn: getUserGroups,
@@ -34,6 +42,16 @@ export default async function Layout({
   if (!data || error) {
     redirect(`${config.ROOT_ROUTE}/sync`, RedirectType.replace);
   }
+
+  queryClient.prefetchQuery({
+    queryKey: keyBuilderExternal.discoverTutorialsList(),
+    queryFn: () => client.fetch<IDiscoverTutorialsList>(DiscoverQuery),
+  });
+
+  queryClient.prefetchQuery({
+    queryKey: keyBuilderExternal.quickAccessList(),
+    queryFn: () => client.fetch<Array<IQuickAccessList>>(QuickAccessQuery),
+  });
 
   return (
     <ProjectInnerLayout>
