@@ -62,10 +62,12 @@ export const IonChannelModelingSharedStateFamily = makeSessionAtomWithDefault<{
   schema: RJSFSchema | undefined;
   panel: TGenerationWorkflowFormPanelKeys;
   currentConfigId?: string | null;
+  buildRequested?: boolean;
 }>({
   schema: undefined,
   currentConfigId: null,
   panel: GenerationWorkflowFormPanelKeys.configuration,
+  buildRequested: false,
 });
 
 export const CONFIGURATION_FORM_STATE_KEY = 'form';

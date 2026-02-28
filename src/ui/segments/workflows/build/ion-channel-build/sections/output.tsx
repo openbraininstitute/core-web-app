@@ -1,5 +1,3 @@
-/* eslint-disable no-nested-ternary */
-
 import { LoadingOutlined } from '@ant-design/icons';
 import {
   queryOptions,
@@ -89,49 +87,69 @@ type TraceProtocolGroup = {
   traces: IAsset;
 };
 
+export const OutputListItemKindDict = {
+  Asset: 'asset',
+  TraceGroup: 'trace-group',
+} as const;
+export type TOutputListItemKind =
+  (typeof OutputListItemKindDict)[keyof typeof OutputListItemKindDict];
+
 type OutputListItem =
   | {
-      kind: 'asset';
+      kind: typeof OutputListItemKindDict.Asset;
       id: string;
       order: number;
       entry: OutputAssetItem;
     }
   | {
-      kind: 'trace-group';
+      kind: typeof OutputListItemKindDict.TraceGroup;
       id: string;
       order: number;
       entry: TraceProtocolGroup;
     };
 
+export const SelectedPreviewDict = {
+  Input: 'input',
+  OutputAsset: 'output-asset',
+  OutputTraceGroup: 'output-trace-group',
+} as const;
+export type TSelectedPreviewKind = (typeof SelectedPreviewDict)[keyof typeof SelectedPreviewDict];
+
 type SelectedPreview =
   | {
-      kind: 'input';
+      kind: typeof SelectedPreviewDict.Input;
       id: string;
       asset: IAsset;
       entity: Partial<EntityCoreResource>;
     }
   | {
-      kind: 'output-asset';
+      kind: typeof SelectedPreviewDict.OutputAsset;
       id: string;
       asset: IAsset;
       entity: Partial<EntityCoreResource>;
     }
   | {
-      kind: 'output-trace-group';
+      kind: typeof SelectedPreviewDict.OutputTraceGroup;
       id: string;
       protocol: TraceProtocolGroup;
       entity: Partial<EntityCoreResource>;
     };
 
+export const SummaryKindDict = {
+  Parameters: 'parameters',
+  traces: 'traces',
+} as const;
+export type TSummaryKind = (typeof SummaryKindDict)[keyof typeof SummaryKindDict];
+
 type SummaryParameterEntry = {
-  kind: 'parameters';
+  kind: typeof SummaryKindDict.Parameters;
   key: string;
   order: number;
   assets: Array<{ field: string; path: string }>;
 };
 
 type SummaryTraceEntry = {
-  kind: 'traces';
+  kind: typeof SummaryKindDict.traces;
   key: string;
   order: number;
   assets: Array<{ field: string; path: string }>;
@@ -228,10 +246,10 @@ function getParameterDisplayOrder({
   return 1 + parameterGroupCount * 2 + summaryOrder + fallbackIndex;
 }
 
-function getSummaryGroup(entry: IonChannelModelFigureSummaryEntry): 'parameters' | 'traces' {
-  return normalizeSummaryKey(String(entry.group || 'traces')) === 'parameters'
-    ? 'parameters'
-    : 'traces';
+function getSummaryGroup(entry: IonChannelModelFigureSummaryEntry): TSummaryKind {
+  return normalizeSummaryKey(String(entry.group || 'traces')) === SummaryKindDict.Parameters
+    ? SummaryKindDict.Parameters
+    : SummaryKindDict.traces;
 }
 
 function resolveSummaryAsset(assets: Array<IAsset>, rawPath?: string): IAsset | undefined {
@@ -267,9 +285,9 @@ function normalizeGroupedSummaryEntries(summaryData: IonChannelModelFigureSummar
     const order = typeof value.order === 'number' ? value.order : 0;
     const group = getSummaryGroup(value);
 
-    if (group === 'parameters') {
+    if (group === SummaryKindDict.Parameters) {
       groupedEntries.push({
-        kind: 'parameters',
+        kind: SummaryKindDict.Parameters,
         key,
         order,
         assets,
@@ -278,7 +296,7 @@ function normalizeGroupedSummaryEntries(summaryData: IonChannelModelFigureSummar
     }
 
     groupedEntries.push({
-      kind: 'traces',
+      kind: SummaryKindDict.traces,
       key,
       order,
       assets,
@@ -287,7 +305,7 @@ function normalizeGroupedSummaryEntries(summaryData: IonChannelModelFigureSummar
 
   return groupedEntries.sort((left, right) => {
     if (left.kind !== right.kind) {
-      return left.kind === 'parameters' ? -1 : 1;
+      return left.kind === SummaryKindDict.Parameters ? -1 : 1;
     }
     if (left.order !== right.order) {
       return left.order - right.order;
@@ -299,7 +317,7 @@ function normalizeGroupedSummaryEntries(summaryData: IonChannelModelFigureSummar
 function toSelectedOutputPreview(item: OutputListItem): SelectedPreview {
   if (item.kind === 'trace-group') {
     return {
-      kind: 'output-trace-group',
+      kind: SelectedPreviewDict.OutputTraceGroup,
       id: item.id,
       protocol: item.entry,
       entity: item.entry.entity,
@@ -307,7 +325,7 @@ function toSelectedOutputPreview(item: OutputListItem): SelectedPreview {
   }
 
   return {
-    kind: 'output-asset',
+    kind: SelectedPreviewDict.OutputAsset,
     id: item.id,
     asset: item.entry.asset,
     entity: item.entry.entity,
@@ -362,7 +380,10 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       staleTime: Infinity,
       refetchOnWindowFocus: false,
       enabled:
-        ionState.schema && payload && isFormValid({ data: payload, schema: ionState.schema }),
+        ionState.buildRequested &&
+        ionState.schema &&
+        payload &&
+        isFormValid({ data: payload, schema: ionState.schema }),
     })
   );
 
@@ -638,11 +659,14 @@ export function Output({ sessionId }: { sessionId: string | null }) {
     if (selectedPreview.kind === 'input') return;
 
     const selectedOutputStillExists = outputListItems.some((item) => {
-      if (item.kind === 'asset' && selectedPreview.kind === 'output-asset') {
+      if (item.kind === 'asset' && selectedPreview.kind === SelectedPreviewDict.OutputAsset) {
         return item.id === selectedPreview.id;
       }
 
-      if (item.kind === 'trace-group' && selectedPreview.kind === 'output-trace-group') {
+      if (
+        item.kind === 'trace-group' &&
+        selectedPreview.kind === SelectedPreviewDict.OutputTraceGroup
+      ) {
         return item.id === selectedPreview.id;
       }
 
@@ -723,7 +747,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
         )}
       </div>
 
-      <div className="bg-background secondary-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto pr-3">
+      <div className="bg-background secondary-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto pr-3 mb-5">
         {!selectedBuild ? (
           <div className="flex h-full items-center justify-center text-gray-400">
             {hasBuilds ? 'Select a build to view files' : 'Waiting for build execution...'}
@@ -732,7 +756,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
           <>
             {(selectedBuild.configEntity?.assets?.length ?? 0) > 0 && (
               <div>
-                <h3 className="text-label mb-3 text-lg font-semibold">Input Files</h3>
+                <h3 className="text-label mb-3 text-lg font-semibold">Inputs</h3>
                 <div className="flex flex-col gap-2">
                   {selectedBuild.configEntity.assets?.map((asset) => {
                     const fileName = getFileName(asset.path);
@@ -783,12 +807,15 @@ export function Output({ sessionId }: { sessionId: string | null }) {
             )}
 
             <div>
-              <h3 className="text-label mb-3 text-lg font-semibold">Output Files</h3>
+              <h3 className="text-label mb-3 text-lg font-semibold">Outputs</h3>
               {isOutputLoading ? (
                 <div className="flex flex-col gap-2">
-                  {['loading-1', 'loading-2', 'loading-3', 'loading-4', 'loading-5'].map((key) => (
-                    <Skeleton key={key} className="h-12 w-full rounded-full" />
-                  ))}
+                  {Array.from({ length: 8 })
+                    .fill('')
+                    .map((_, index) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: skeleton map
+                      <Skeleton key={index} className="h-12 w-full rounded-full" />
+                    ))}
                 </div>
               ) : selectedBuild.modelEntity ? (
                 <div className="flex flex-col gap-2">
@@ -801,7 +828,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
                         stimuliExt &&
                         tracesExt.toUpperCase() !== stimuliExt.toUpperCase();
                       const isActive =
-                        selectedPreview?.kind === 'output-trace-group' &&
+                        selectedPreview?.kind === SelectedPreviewDict.OutputTraceGroup &&
                         selectedPreview.id === outputItem.id;
 
                       return (
@@ -840,7 +867,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
                     }
 
                     const isActive =
-                      selectedPreview?.kind === 'output-asset' &&
+                      selectedPreview?.kind === SelectedPreviewDict.OutputAsset &&
                       selectedPreview.id === outputItem.id;
 
                     return (
@@ -889,13 +916,14 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       </div>
 
       <div className="bg-background flex flex-1 flex-col overflow-auto px-2 pb-2">
-        {selectedPreview?.kind === 'input' || selectedPreview?.kind === 'output-asset' ? (
+        {selectedPreview?.kind === 'input' ||
+        selectedPreview?.kind === SelectedPreviewDict.OutputAsset ? (
           <FileViewer
             asset={selectedPreview.asset}
             entity={selectedPreview.entity}
             context={context}
           />
-        ) : selectedPreview?.kind === 'output-trace-group' ? (
+        ) : selectedPreview?.kind === SelectedPreviewDict.OutputTraceGroup ? (
           <div className="flex h-full flex-col gap-4 overflow-hidden">
             <div className="flex flex-1 flex-col overflow-hidden">
               <FileViewer

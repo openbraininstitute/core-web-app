@@ -46,6 +46,7 @@ export function FileViewer({
       });
     },
     enabled: !!entity.id && !!asset.id,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoadingUrl) {
