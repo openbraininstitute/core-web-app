@@ -97,6 +97,7 @@ export function WorkflowActivity() {
       },
     }
   );
+
   const [{ page, pageSize }, updatePagination] = useState<{
     page: number;
     pageSize: number;
