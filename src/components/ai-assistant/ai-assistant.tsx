@@ -2,18 +2,18 @@
 
 import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React, { type CSSProperties } from 'react';
+import { motion } from 'motion/react';
+import React from 'react';
 
 import { useServiceAiAgentChat } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
-import { AiContextProvider, MINIMAL_PANEL_SIZE, usePanelWidth } from './hooks';
+import { AiContextProvider, MINIMAL_PANEL_SIZE, useIsDragging, usePanelWidth } from './hooks';
 import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
 import PanelContent from './panel-content';
-import TabTransitionLoader from './panel-content/tab-transition-loader/tab-transition-loader';
 import PanelSplitter from './panel-splitter';
 
 import type { TAppUInterfaceSection } from '@/utils/key-builder';
@@ -40,6 +40,7 @@ export default function AiAssistant({
   onCollapse,
 }: AiAssistantProps) {
   const { panelWidth, setPanelContainer } = usePanelWidth();
+  const isDragging = useIsDragging();
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
@@ -47,10 +48,6 @@ export default function AiAssistant({
   const { status } = useServiceAiAgentChat(threadId ?? '');
 
   const canCreateNewChat = status === 'ready';
-
-  const style: CSSProperties = {
-    '--custom-panel-width': fullscreen ? '100%' : `${panelWidth.toFixed(0)}px`,
-  };
 
   const handleNewChat = async () => {
     setTab('chat');
@@ -60,6 +57,13 @@ export default function AiAssistant({
     }
   };
 
+  const animationProps = {
+    position: fullscreen ? 'fixed' : 'absolute',
+    height: fullscreen ? 'calc(100vh - 1rem)' : '100%',
+    top: fullscreen ? '0.5rem' : 0,
+    right: fullscreen ? '10px' : 0,
+  } as const;
+
   return (
     <QueryClientProvider client={queryClient}>
       <AiContextProvider section={section}>
@@ -68,11 +72,18 @@ export default function AiAssistant({
             setPanelContainer(el);
             containerRef?.(el);
           }}
-          style={style}
           className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
         >
-          <div
+          <motion.div
             className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
+            initial={{ opacity: 0, width: 0, ...animationProps }}
+            animate={{
+              opacity: 1,
+              width: fullscreen ? 'calc(100vw - 20px)' : `${panelWidth}px`,
+              ...animationProps,
+            }}
+            exit={{ opacity: 0, width: 0 }}
+            transition={isDragging ? { duration: 0 } : { duration: 0.3, ease: 'easeInOut' }}
           >
             <div className={styles.header}>
               <nav className={styles.headerNav}>
@@ -143,7 +154,7 @@ export default function AiAssistant({
               onTabChange={setTab}
             />
             {!fullscreen && <PanelSplitter />}
-          </div>
+          </motion.div>
         </div>
       </AiContextProvider>
     </QueryClientProvider>

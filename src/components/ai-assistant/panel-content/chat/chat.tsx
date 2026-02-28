@@ -1,4 +1,5 @@
 import { useIsFetching } from '@tanstack/react-query';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
 import {
@@ -10,17 +11,15 @@ import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
 import ErrorPanel from '../../error';
+import FreeCreditsNotification from '../../free-credits-notification';
 import { MessageItem } from '../../message-item';
+import { atomRateLimit } from '../../state';
 import SuggestedQuestions from '../../suggested-questions';
 import Footer from '../footer';
 import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
 import Welcome from '../welcome';
 
 import styles from './chat.module.css';
-
-import { useAtomValue, useSetAtom } from "jotai";
-import { atomRateLimit } from "../../state";
-import FreeCreditsNotification from "../../free-credits-notification";
 
 export interface ChatProps {
   className?: string;
@@ -32,17 +31,16 @@ export default function Chat({ className, threadId }: ChatProps) {
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
 
-  const { messages, status, append, error, stop , isLoadingMessages} = useServiceAiAgentChat(
-    threadId ?? "",
+  const { messages, status, append, error, stop, isLoadingMessages } = useServiceAiAgentChat(
+    threadId ?? ''
   );
   const [suggestions, clearSuggestions, isLoadingSuggestions] =
-    useServiceAiAgentSuggestionFromUserJourney(threadId ?? "", status);
+    useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
   const { accessToken } = assistant.useContext();
   const rateLimit = useAtomValue(atomRateLimit);
   const setRateLimit = useSetAtom(atomRateLimit);
-  const [showExhaustedNotification, setShowExhaustedNotification] =
-    React.useState(false);
+  const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
   const prevRemainingRef = React.useRef<number | null>(null);
   const hasInitializedRef = React.useRef(false);
 
@@ -78,9 +76,9 @@ export default function Chat({ className, threadId }: ChatProps) {
   const isStorageQueryFetching = useIsFetching({
     predicate: (query) => {
       const fullQueryKey = query.queryKey.at(0);
-      return fullQueryKey === "storage";
+      return fullQueryKey === 'storage';
     },
-    fetchStatus: "fetching",
+    fetchStatus: 'fetching',
   });
 
   const [scrollHeight, setScrollHeight] = React.useState(0);
@@ -126,7 +124,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   React.useEffect(() => {
     if (isAutoScrollEnabled && refContainer.current) {
       setTimeout(() => {
-        refChatBottom.current?.scrollIntoView({ behavior: "smooth" });
+        refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
       }, 200);
     }
   }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
@@ -134,7 +132,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
     append({
-      role: "user",
+      role: 'user',
       content,
     });
   };
@@ -146,8 +144,7 @@ export default function Chat({ className, threadId }: ChatProps) {
       const container = refContainer.current;
       if (!container) return;
       const isAtBottom =
-        container.scrollHeight - container.scrollTop <=
-        container.clientHeight + 200;
+        container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
       setIsAutoScrollEnabled(isAtBottom);
     }
   };
@@ -168,12 +165,8 @@ export default function Chat({ className, threadId }: ChatProps) {
           <MessageItem key={item.id} value={item} />
         ))}
 
-        {status === "ready" && messages.length > 0 && (
-          <>
-            <div className={styles.footerButtons}></div>
-          </>
-        )}
-        {suggestions !== undefined && status === "ready" && (
+        {status === 'ready' && messages.length > 0 && <div className={styles.footerButtons}></div>}
+        {suggestions !== undefined && status === 'ready' && (
           <div className={styles.suggestedQuestionsContainer}>
             <SuggestedQuestions
               threadId={threadId}
@@ -188,7 +181,7 @@ export default function Chat({ className, threadId }: ChatProps) {
         {error && <ErrorPanel value={error} />}
         <div ref={refChatBottom} className={styles.bottom} />
       </div>
-      {showExhaustedNotification && status === "ready" && (
+      {showExhaustedNotification && status === 'ready' && (
         <div className={styles.notificationOverlay}>
           <FreeCreditsNotification
             onDismiss={() => setShowExhaustedNotification(false)}
@@ -196,10 +189,10 @@ export default function Chat({ className, threadId }: ChatProps) {
           />
         </div>
       )}
-      {rateLimit && rateLimit.remaining === 0 && status === "ready" && (
+      {rateLimit && rateLimit.remaining === 0 && status === 'ready' && (
         <div
           className={styles.creditBalanceIndicator}
-          style={{ marginTop: messages.length === 0 ? "-1.2em" : "0em" }}
+          style={{ marginTop: messages.length === 0 ? '-1.2em' : '0em' }}
         >
           Using Credit Balance
         </div>

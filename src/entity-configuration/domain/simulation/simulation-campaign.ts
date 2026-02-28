@@ -10,7 +10,7 @@ import {
 } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
@@ -102,9 +102,11 @@ async function resolveSimulationCampaigns({
 export async function resolveSimulationByCampaignId({
   id,
   context,
+  populate = ['entity', 'config'],
 }: {
   id: string;
-  context: WorkspaceContext | undefined;
+  context?: WorkspaceContext | null;
+  populate?: Array<string>;
 }) {
   const campaign = await getCircuitSimulationCampaign({ id, context });
 
@@ -133,6 +135,7 @@ export async function resolveSimulationByCampaignId({
       return {
         campaign,
         simulation,
+        entity: circuit,
         config: null,
       };
     }
@@ -140,20 +143,28 @@ export async function resolveSimulationByCampaignId({
     throw Error('No campaign config asset found');
   }
 
-  const rawConfig = await downloadAsset({
-    entityId: campaign?.id,
-    entityType: EntityTypeDict.SimulationCampaign,
-    id: configAsset?.id,
-    ctx: context,
-    asRawResponse: true,
-  });
-  const config = await rawConfig.json();
+  let config = null;
+  let entity: ICircuit | null = null;
 
-  migrateConfig(config);
+  if (simulation?.entity_id && populate.includes('entity'))
+    entity = await getCircuit({ id: simulation?.entity_id, context });
+
+  if (populate.includes('config')) {
+    const rawConfig = await downloadAsset({
+      entityId: campaign?.id,
+      entityType: EntityTypeDict.SimulationCampaign,
+      id: configAsset?.id,
+      ctx: context,
+      asRawResponse: true,
+    });
+    config = await rawConfig.json();
+    migrateConfig(config);
+  }
 
   return {
     campaign,
     simulation,
+    entity,
     config,
   };
 }
@@ -186,7 +197,14 @@ export function getStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
 
 export type ExtendedCampaignsType = AwaitedType<ReturnType<typeof resolveSimulationCampaigns>>;
 
-export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign> = {
+type TResolvedSimulationByCampaign = Awaited<ReturnType<typeof resolveSimulationByCampaignId>>;
+type TResolvedSimulationByCampaigns = Awaited<ReturnType<typeof resolveSimulationCampaigns>>;
+
+export const SimulationCampaign: EntityCoreTypeConfig<
+  ICircuitSimulationCampaign,
+  TResolvedSimulationByCampaign,
+  TResolvedSimulationByCampaigns
+> = {
   group: EntityTypeGroup.Simulations,
   title: 'Simulation campaign',
   extendedType: ExtendedEntitiesTypeDict.SimulationCampaign,
@@ -201,6 +219,7 @@ export const SimulationCampaign: EntityCoreTypeConfig<ICircuitSimulationCampaign
     query: {
       list: resolveSimulationCampaigns,
       one: getCircuitSimulationCampaign,
+      resolve: resolveSimulationByCampaignId,
       create: createSimulationCampaign,
     },
   },
