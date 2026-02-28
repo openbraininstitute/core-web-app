@@ -39,7 +39,7 @@ export function IonChannelModelBuilding({
     useMemo(() => IonChannelModelingSharedStateFamily(sessionId!), [sessionId])
   );
 
-  const content = match({ isLoading, RootSchema, panel: ionState.panel })
+  const section = match({ isLoading, RootSchema, panel: ionState.panel })
     .with({ isLoading: true }, () => (
       <div className="flex h-full w-full items-center justify-center">
         <LoadingOutlined />
@@ -62,8 +62,8 @@ export function IonChannelModelBuilding({
     })
     .otherwise(() => null);
 
-  return (
-    <div className="border-neutral-2 ml-4 flex h-full w-[calc(100%-1rem)] flex-col rounded-2xl border p-3 px-2">
+  const content = (
+    <>
       <div className="bg-background flex items-center justify-between px-2 pb-4">
         <GenerationWorkflowFormPanel
           value={ionState.panel}
@@ -79,6 +79,12 @@ export function IonChannelModelBuilding({
         />
       </div>
 
+      {section}
+    </>
+  );
+  if (readonly) return content;
+  return (
+    <div className="border-neutral-2 ml-4 flex h-full w-[calc(100%-1rem)] flex-col rounded-2xl border p-3 px-2">
       {content}
     </div>
   );
