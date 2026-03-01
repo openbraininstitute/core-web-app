@@ -8,9 +8,9 @@ import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity';
 import { SingleCardItem } from '@/ui/segments/project/get-started/elements/quic-access';
 import {
+  getQuickAccessQuery,
   type IQuickAccessList,
   QuickAccessGroupDict,
-  QuickAccessQuery,
 } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -56,7 +56,7 @@ export default async function Layout({
   const { data: quickAccessList } = await tryCatch(
     queryClient.fetchQuery({
       queryKey: keyBuilderExternal.quickAccessList(),
-      queryFn: () => client.fetch<Array<IQuickAccessList>>(QuickAccessQuery),
+      queryFn: () => client.fetch<Array<IQuickAccessList>>(getQuickAccessQuery()),
     })
   );
 

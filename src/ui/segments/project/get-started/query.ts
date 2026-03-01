@@ -1,5 +1,7 @@
 import { defineQuery } from 'next-sanity';
 
+import { config } from '@/config';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export const DiscoverQuery = defineQuery(
@@ -30,29 +32,35 @@ export interface IDiscoverTutorialsList {
   tutorialOrder: TTutorial[];
 }
 
-export const QuickAccessQuery = defineQuery(
-  `*[_type == "quickaccess"][]{
-  group,
-  title,
-  "list": list[]{
-    description,
-    entityId,
-    isPreview,
-    extendedType,
-    title,
-    "thumbnail": select(
-      assetInfoType == "file" => assetFile.asset->url,
-      assetInfoType == "url" => assetFile.asset,
-      null
-    ),
+export const getQuickAccessQuery = () => {
+  const env = config.DEPLOYMENT_ENV;
+  let _type = 'quickaccess';
+  if (env === 'production') _type = 'quickaccessproduction';
 
-    "assetLabel": select(
-      assetInfoType == "label" => assetLabel,
-      null
-    )
-  }
-}`
-);
+  return defineQuery(
+    `*[_type == "${_type}"][]{
+      group,
+      title,
+      "list": list[]{
+        description,
+        entityId,
+        isPreview,
+        extendedType,
+        title,
+        "thumbnail": select(
+          assetInfoType == "file" => assetFile.asset->url,
+          assetInfoType == "url" => assetFile.asset,
+          null
+        ),
+
+        "assetLabel": select(
+          assetInfoType == "label" => assetLabel,
+          null
+        )
+      }
+    }`
+  );
+};
 
 export const QuickAccessGroupDict = {
   Data: 'data',

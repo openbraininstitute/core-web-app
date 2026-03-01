@@ -16,9 +16,9 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import {
   DiscoverQuery,
+  getQuickAccessQuery,
   type IDiscoverTutorialsList,
   type IQuickAccessList,
-  QuickAccessQuery,
 } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
@@ -96,7 +96,7 @@ export function LeftMenu({ className }: Props) {
     queries: [
       {
         queryKey: keyBuilderExternal.quickAccessList(),
-        queryFn: () => client.fetch<Array<IQuickAccessList>>(QuickAccessQuery),
+        queryFn: () => client.fetch<Array<IQuickAccessList>>(getQuickAccessQuery()),
       },
       {
         queryKey: keyBuilderExternal.discoverTutorialsList(),

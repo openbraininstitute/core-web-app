@@ -5,7 +5,10 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity';
 import { MainCardItem, ViewExamples } from '@/ui/segments/project/get-started/elements/quic-access';
-import { type IQuickAccessList, QuickAccessQuery } from '@/ui/segments/project/get-started/query';
+import {
+  getQuickAccessQuery,
+  type IQuickAccessList,
+} from '@/ui/segments/project/get-started/query';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { WorkspaceContext } from '@/types/common';
@@ -14,7 +17,7 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
   const client = getClient();
   const queryClient = getQueryClient();
 
-  const quickAccessList = await client.fetch<Array<IQuickAccessList>>(QuickAccessQuery);
+  const quickAccessList = await client.fetch<Array<IQuickAccessList>>(getQuickAccessQuery());
 
   const virtualLab = await queryClient.fetchQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId: context.virtualLabId }),
