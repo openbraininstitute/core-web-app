@@ -87,6 +87,8 @@ function CustomPlot({
     ...props.layout,
     title: undefined,
     autosize: true,
+    width: undefined,
+    height: undefined,
     margin: props.layout?.margin,
   };
 

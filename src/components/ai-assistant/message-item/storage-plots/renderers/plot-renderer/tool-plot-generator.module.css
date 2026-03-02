@@ -61,8 +61,8 @@
   background-color: white;
   box-shadow: 0 0.5em 1em #000;
   cursor: default;
-  max-width: 95vw;
-  max-height: 95vh;
+  max-width: 90vw;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
 }
