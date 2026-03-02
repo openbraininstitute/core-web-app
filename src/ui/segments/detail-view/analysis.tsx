@@ -28,7 +28,7 @@ export default async function Configuration({
     extendedType === ExtendedEntitiesTypeDict.Memodel ||
     extendedType === ExtendedEntitiesTypeDict.Emodel
   )
-    return <Analysis />;
+    return <Analysis entity={entity} />;
 
   return notFound();
 }

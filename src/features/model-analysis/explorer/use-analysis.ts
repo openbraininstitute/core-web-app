@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
-import { getValidationResults } from '@/api/entitycore/queries/general/validation-result';
 import { getAssets } from '@/api/entitycore/queries/assets';
+import { getValidationResults } from '@/api/entitycore/queries/general/validation-result';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { DEFAULT_PAGE_XSMALL_SIZE } from '@/constants';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -38,8 +38,7 @@ export function useAnalysis({ workspace, id }: { id: string; workspace: Workspac
     if (query.hasNextPage && !query.isFetchingNextPage) {
       query.fetchNextPage();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query.hasNextPage, query.isFetchingNextPage, query.data]);
+  }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
 
   return query;
 }
@@ -51,7 +50,11 @@ function makeQueryFn(workspace: { virtualLabId: string; projectId: string }, id:
   return async ({ pageParam = 1 }) => {
     const response = await getValidationResults({
       context: workspace,
-      filters: { validated_entity_id: id, page: pageParam, page_size: DEFAULT_PAGE_XSMALL_SIZE },
+      filters: {
+        validated_entity_id: id,
+        page: pageParam,
+        page_size: DEFAULT_PAGE_XSMALL_SIZE,
+      },
     });
     const data = (
       await Promise.allSettled(
