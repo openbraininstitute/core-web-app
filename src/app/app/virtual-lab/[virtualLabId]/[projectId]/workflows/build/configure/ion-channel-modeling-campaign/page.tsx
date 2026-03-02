@@ -45,7 +45,7 @@ export default async function Page({
   return (
     <IonChannelModelBuilding
       sessionId={sessionId}
-      initialConfig={initialConfig}
+      originalConfig={initialConfig}
       readonly={readonly}
     />
   );

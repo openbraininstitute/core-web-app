@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { config } from '@/config';
+import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AutomatedFormBreadcrumb } from '@/ui/segments/workflows/build/ion-channel-build/elements/breadcrumb';
 import {
@@ -21,15 +22,13 @@ import { Output } from '@/ui/segments/workflows/build/ion-channel-build/sections
 
 import 'katex/dist/katex.min.css';
 
-import useDisableElementOverflow from '@/ui/hooks/use-disable-element-overflow';
-
 export function IonChannelModelBuilding({
   sessionId,
-  initialConfig,
+  originalConfig,
   readonly,
 }: {
   sessionId: string;
-  initialConfig?: Record<string, any> | null;
+  originalConfig?: Record<string, any> | null;
   readonly?: boolean;
 }) {
   useDisableElementOverflow({ id: 'workspace-body' });
@@ -56,18 +55,10 @@ export function IonChannelModelBuilding({
       );
     })
     .with({ isLoading: false, panel: GenerationWorkflowFormPanelKeys.configuration }, () => {
-      return (
-        <Configuration sessionId={sessionId} initialConfig={initialConfig} readonly={readonly} />
-      );
+      return <Configuration {...{ sessionId, originalConfig, readonly }} />;
     })
     .with({ isLoading: false, panel: GenerationWorkflowFormPanelKeys.output }, () => {
-      return (
-        <Output
-          sessionId={sessionId}
-          readonly={readonly}
-          campaignId={readonly ? sessionId : undefined}
-        />
-      );
+      return <Output {...{ sessionId, readonly }} campaignId={readonly ? sessionId : undefined} />;
     })
     .otherwise(() => null);
 

@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import ApiError from '@/api/error';
+import { ApiError } from '@/api/error';
 import {
   build as buildIonChannel,
   DataType,
@@ -47,11 +47,9 @@ import {
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type {
-  IonChannelModelingCampaign,
-  IonChannelModelingConfig,
-} from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
-import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
+import type { IIonChannelModelingCampaign } from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
+import type { IIonChannelModelingConfig } from '@/api/entitycore/types/entities/ion-channel-modeling-config';
+import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { TStreamMessage } from '@/api/small-scale-simulator/ion-channel/build';
 
 type IonChannelModelFigureSummaryEntry = {
@@ -68,7 +66,7 @@ type OutputAssetSourceField = 'traces' | 'stimuli' | 'steady state' | 'time cons
 type OutputAssetItem = {
   id: string;
   asset: IAsset;
-  entity: Partial<EntityCoreResource>;
+  entity: IonChannelModel;
   group: OutputAssetGroup;
   name: string;
   extension: string;
@@ -83,7 +81,7 @@ type TraceProtocolGroup = {
   id: string;
   name: string;
   order: number;
-  entity: Partial<EntityCoreResource>;
+  entity: IonChannelModel;
   stimuli: IAsset;
   traces: IAsset;
 };
@@ -121,19 +119,19 @@ type SelectedPreview =
       kind: typeof SelectedPreviewDict.Input;
       id: string;
       asset: IAsset;
-      entity: Partial<EntityCoreResource>;
+      entity: IIonChannelModelingConfig | undefined;
     }
   | {
       kind: typeof SelectedPreviewDict.OutputAsset;
       id: string;
       asset: IAsset;
-      entity: Partial<EntityCoreResource>;
+      entity: IonChannelModel | undefined;
     }
   | {
       kind: typeof SelectedPreviewDict.OutputTraceGroup;
       id: string;
       protocol: TraceProtocolGroup;
-      entity: Partial<EntityCoreResource>;
+      entity: IonChannelModel | undefined;
     };
 
 export const SummaryKindDict = {
@@ -159,17 +157,17 @@ type SummaryTraceEntry = {
 type GroupedSummaryEntry = SummaryParameterEntry | SummaryTraceEntry;
 
 type IonChannelBuildingStreamDataMessage = TStreamMessage<{
-  campaign?: IonChannelModelingCampaign;
+  campaign?: IIonChannelModelingCampaign;
   execution?: IExecutionActivity;
-  config?: IonChannelModelingConfig;
+  config?: IIonChannelModelingConfig;
   model?: IonChannelModel;
 }>;
 
-type Build = {
+type TBuild = {
   executionId: string;
   status: TActivityStatus;
-  configEntity: Partial<EntityCoreResource>;
-  modelEntity?: Partial<EntityCoreResource>;
+  config?: IIonChannelModelingConfig;
+  entity?: IonChannelModel;
   executionStatus?: string;
 };
 
@@ -359,7 +357,7 @@ export function Output({
   const [selectedBuildIndex, setSelectedBuildIndex] = useState<number | null>(null);
   const [selectedPreview, setSelectedPreview] = useState<SelectedPreview | null>(null);
 
-  // Readonly mode: fetch existing builds from EntityCore
+  // readonly mode: fetch existing builds from EntityCore
   const {
     data: readonlyBuildsData,
     isFetching: readonlyFetching,
@@ -368,6 +366,7 @@ export function Output({
     queryKey: ['campaign-builds-readonly', campaignId, context],
     queryFn: () =>
       resolveIonChannelModelingCampaignBuilds({
+        // biome-ignore lint/style/noNonNullAssertion: this request only start if original campaign is present
         id: campaignId!,
         context,
       }),
@@ -376,7 +375,7 @@ export function Output({
     refetchOnWindowFocus: false,
   });
 
-  // Build mode: stream build output
+  // build mode: stream build output
   const {
     data: streamData,
     isFetching: streamFetching,
@@ -422,7 +421,7 @@ export function Output({
   const isFetching = readonly ? readonlyFetching : streamFetching;
   const isLoading = readonly ? readonlyLoading : streamLoading;
 
-  const builds: Build[] = useMemo(() => {
+  const builds: TBuild[] = useMemo(() => {
     if (readonly) {
       return readonlyBuildsData?.builds ?? [];
     }
@@ -430,7 +429,7 @@ export function Output({
     if (!streamData || !Array.isArray(streamData)) return [];
 
     const messages = streamData as Array<IonChannelBuildingStreamDataMessage>;
-    const buildsMap = new Map<string, Build>();
+    const buildsMap = new Map<string, TBuild>();
 
     messages.forEach((message) => {
       if (message.message_type === MessageType.DATA) {
@@ -444,11 +443,7 @@ export function Output({
             executionId: execution.id,
             status: execution.status,
             executionStatus: execution.status,
-            configEntity: {
-              id: config.id,
-              type: config.type,
-              assets: config.assets || [],
-            },
+            config,
           });
         } else if (
           message.data_type === DataType.BuildOutput &&
@@ -461,11 +456,7 @@ export function Output({
           if (buildToUpdate) {
             buildsMap.set(executionId, {
               ...buildToUpdate,
-              modelEntity: {
-                id: message.data.model.id,
-                type: message.data.model.type,
-                assets: message.data.model.assets || [],
-              },
+              entity: message.data.model,
               executionStatus: message.data.execution.status,
             });
           }
@@ -505,24 +496,24 @@ export function Output({
   const isBuilding =
     currentStatus === ActivityStatus.RUNNING || currentStatus === ActivityStatus.PENDING;
   const hasBuilds = builds.length > 0;
-  const hasOutputForSelectedBuild = selectedBuild?.modelEntity !== undefined;
+  const hasOutputForSelectedBuild = selectedBuild?.entity !== undefined;
 
-  const summaryAsset = selectedBuild?.modelEntity?.assets?.find(
+  const summaryAsset = selectedBuild?.entity?.assets?.find(
     (asset) => asset.label === AssetLabel.ion_channel_model_figure_summary_json
   );
 
   const { data: summaryData, isLoading: loadingSummary } = useQuery({
     queryKey: keyBuilder.s3presignedUrl({
-      entityId: selectedBuild?.modelEntity?.id || '',
+      entityId: selectedBuild?.entity?.id || '',
       assetId: summaryAsset?.id || '',
       ...context,
     }),
     queryFn: async () => {
       if (
-        !selectedBuild?.modelEntity ||
+        !selectedBuild?.entity ||
         !summaryAsset ||
-        !selectedBuild.modelEntity.id ||
-        !selectedBuild.modelEntity.type ||
+        !selectedBuild.entity.id ||
+        !selectedBuild.entity.type ||
         !context.virtualLabId ||
         !context.projectId
       ) {
@@ -530,8 +521,8 @@ export function Output({
       }
 
       const presignedData = await getEntityCorePresignedUrl({
-        entityType: selectedBuild.modelEntity.type as TEntityTypeDict,
-        entityId: selectedBuild.modelEntity.id,
+        entityType: selectedBuild.entity.type as TEntityTypeDict,
+        entityId: selectedBuild.entity.id,
         virtualLabId: context.virtualLabId,
         projectId: context.projectId,
         configAssetId: summaryAsset.id,
@@ -542,17 +533,14 @@ export function Output({
       return json;
     },
     enabled:
-      !!selectedBuild?.modelEntity &&
-      !!summaryAsset &&
-      !!context.virtualLabId &&
-      !!context.projectId,
+      !!selectedBuild?.entity && !!summaryAsset && !!context.virtualLabId && !!context.projectId,
     staleTime: Infinity,
   });
 
   const outputListItems = useMemo(() => {
-    if (!selectedBuild?.modelEntity) return [];
+    if (!selectedBuild?.entity) return [];
 
-    const modelEntity = selectedBuild.modelEntity;
+    const modelEntity = selectedBuild.entity;
     const modelAssets = modelEntity.assets || [];
     let modOutputAsset: OutputAssetItem | null = null;
     const parameterAssets: Array<OutputAssetItem> = [];
@@ -684,10 +672,10 @@ export function Output({
       const rightName = right.kind === 'asset' ? right.entry.name : right.entry.name;
       return leftName.localeCompare(rightName);
     });
-  }, [selectedBuild?.modelEntity, summaryData]);
+  }, [selectedBuild?.entity, summaryData]);
 
   useEffect(() => {
-    if (!selectedBuild?.modelEntity) return;
+    if (!selectedBuild?.entity) return;
 
     if (!selectedPreview) {
       if (outputListItems.length > 0) {
@@ -720,13 +708,18 @@ export function Output({
         setSelectedPreview(null);
       }
     }
-  }, [selectedPreview, selectedBuild?.modelEntity, outputListItems]);
+  }, [selectedPreview, selectedBuild?.entity, outputListItems]);
 
   const isOutputLoading =
     (isBuilding && !hasOutputForSelectedBuild) || (loadingSummary && outputListItems.length === 0);
 
   return (
-    <div className="grid h-[calc(100vh-10rem)] w-full grid-cols-[20rem_25rem_1fr] gap-8 p-4">
+    <div
+      className={cn('grid w-full grid-cols-[20rem_25rem_1fr] gap-8', {
+        'h-[calc(100vh-13rem)]': readonly,
+        'h-[calc(100vh-11rem)]': !readonly,
+      })}
+    >
       <div className="bg-background flex shrink-0 flex-col gap-3 overflow-y-auto">
         {(isLoading || isFetching) && !hasBuilds ? (
           <Card key="build-0" className="p-4">
@@ -788,21 +781,34 @@ export function Output({
       </div>
 
       <div className="bg-background secondary-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto pr-3 mb-5">
-        {!selectedBuild ? (
-          <div className="flex h-full items-center justify-center text-gray-400">
-            {hasBuilds ? 'Select a build to view files' : 'Waiting for build execution...'}
+        {!selectedBuild || !hasBuilds ? (
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-4 w-2/5 rounded-full" />
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-12 w-full rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-2/5 rounded-full" />
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: 8 })
+                .fill('')
+                .map((_, index) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton map
+                  <Skeleton key={index} className="h-12 w-full rounded-full" />
+                ))}
+            </div>
           </div>
         ) : (
           <>
-            {(selectedBuild.configEntity?.assets?.length ?? 0) > 0 && (
+            {(selectedBuild.config?.assets?.length ?? 0) > 0 && (
               <div>
                 <h3 className="text-label mb-3 text-lg font-semibold">Inputs</h3>
                 <div className="flex flex-col gap-2">
-                  {selectedBuild.configEntity.assets?.map((asset) => {
+                  {selectedBuild.config?.assets?.map((asset) => {
                     const fileName = getFileName(asset.path);
                     const extension = getFileExtension(asset);
                     const isActive =
-                      selectedPreview?.kind === 'input' && selectedPreview.id === asset.id;
+                      selectedPreview?.kind === SelectedPreviewDict.Input &&
+                      selectedPreview.id === asset.id;
 
                     return (
                       <Tooltip key={asset.id}>
@@ -817,7 +823,7 @@ export function Output({
                                 kind: 'input',
                                 id: asset.id,
                                 asset,
-                                entity: selectedBuild.configEntity,
+                                entity: selectedBuild.config,
                               })
                             }
                             className={cn('w-full justify-between gap-2', {
@@ -857,7 +863,7 @@ export function Output({
                       <Skeleton key={index} className="h-12 w-full rounded-full" />
                     ))}
                 </div>
-              ) : selectedBuild.modelEntity ? (
+              ) : selectedBuild.entity ? (
                 <div className="flex flex-col gap-2">
                   {outputListItems.map((outputItem) => {
                     if (outputItem.kind === 'trace-group') {
@@ -947,6 +953,8 @@ export function Output({
                     <div className="p-4 text-center text-sm text-gray-400">No output files yet</div>
                   )}
                 </div>
+              ) : readonly ? (
+                <Skeleton />
               ) : (
                 <div className="p-4 text-center text-sm text-gray-400">No output files yet</div>
               )}
@@ -955,7 +963,7 @@ export function Output({
         )}
       </div>
 
-      <div className="bg-background flex flex-1 flex-col overflow-auto px-2 pb-2">
+      <div className="bg-background flex flex-1 flex-col overflow-auto px-2 pb-2 max-h-[calc(100%-.5rem)]">
         {selectedPreview?.kind === 'input' ||
         selectedPreview?.kind === SelectedPreviewDict.OutputAsset ? (
           <FileViewer

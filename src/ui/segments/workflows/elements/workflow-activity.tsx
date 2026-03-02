@@ -508,7 +508,7 @@ export function WorkflowActivity() {
                     >
                       <Link
                         href={{ pathname: configurationLink, query: configurationQuery }}
-                        className="text-current!"
+                        className="text-primary-9!"
                       >
                         View configuration
                       </Link>
@@ -529,7 +529,7 @@ export function WorkflowActivity() {
                           className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed"
                         >
                           {isResolvingResults && <LoadingOutlined />}
-                          <span>View results</span>
+                          <span className="text-primary-9!">View results</span>
                         </Button>
                       ) : (
                         <Button
@@ -543,7 +543,7 @@ export function WorkflowActivity() {
                           <Link
                             href={resultsLink}
                             aria-disabled={activityType === ActivityValues.Build}
-                            className="text-current!"
+                            className="text-primary-9!"
                           >
                             View results
                           </Link>
@@ -554,7 +554,7 @@ export function WorkflowActivity() {
                       variant="outline"
                       size={breakpoint === 'l' ? 'md' : 'lg'}
                       onClick={onDuplicate}
-                      className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed"
+                      className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed text-primary-9!"
                       disabled={
                         (activityType === ActivityValues.Build &&
                           entityType !== ExtendedEntitiesTypeDict.IonChannelModelingCampaign) ||

@@ -19,7 +19,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type {
-  IonChannelModelingCampaign as IIonChannelModelingCampaign,
+  IIonChannelModelingCampaign,
   IonChannelModelingCampaignFilter,
 } from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -206,7 +206,6 @@ export async function resolveIonChannelModelingCampaignBuilds({
     context,
   });
 
-  // Fetch configs with assets
   const configIDs = configs.map((c) => c.id);
   const executionsResponse =
     configIDs.length > 0
@@ -235,12 +234,8 @@ export async function resolveIonChannelModelingCampaignBuilds({
       executionId: execution.id,
       status: execution.status,
       executionStatus: execution.status,
-      configEntity: config
-        ? { id: config.id, type: config.type, assets: config.assets ?? [] }
-        : { id: '', type: '' as any, assets: [] },
-      modelEntity: model
-        ? { id: model.id, type: model.type, assets: model.assets ?? [] }
-        : undefined,
+      config: config,
+      entity: model,
     };
   });
 
