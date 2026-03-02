@@ -1,4 +1,5 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import { Checkbox, ConfigProvider, Modal } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -9,6 +10,7 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ApiError } from '@/api/error';
 import { runSimulation } from '@/api/one/circuit-simulation';
+import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { useAppNotification } from '@/components/notification';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import {
@@ -23,11 +25,14 @@ import { SimulationFiles } from '@/features/scan-config/components/simulation-fi
 import errorRegistry from '@/features/scan-config/error-registry';
 import { StatusBadge } from '@/features/scan-config/status-badge';
 import { useLastTruthyValue } from '@/hooks/hooks';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
+import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
@@ -39,6 +44,7 @@ import type { TActivityCustomFile } from '@/features/scan-config/types';
 import styles from '@/features/scan-config/scan-config.module.css';
 
 const USER_CANCELLED = 'user_cancelled';
+const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
 type SimulationTabProps = {
   campaignId: string;
@@ -88,6 +94,15 @@ export default function SimulationsTab({
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
   const [consent, setConsent] = useState<Consent | null>(null);
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
+
+  const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
+  const { data: membersData } = useQuery({
+    queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
+    queryFn: () => listVirtualLabMembers({ virtualLabId }),
+    enabled: !!virtualLabId && !isVirtualLabAdmin,
+  });
+  const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
 
   const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
 
@@ -185,9 +200,10 @@ export default function SimulationsTab({
       }
     }
 
-    for (const simId of simIds) {
-      let nSubmissions = 0;
+    let nSubmissions = 0;
+    let lowFundsError = false;
 
+    for (const simId of simIds) {
       try {
         const res = await runSimulation({
           ctx: { virtualLabId, projectId },
@@ -196,21 +212,59 @@ export default function SimulationsTab({
         log('info', res);
         setSimStatus(simId, ActivityStatus.PENDING);
         nSubmissions += 1;
-      } catch {
+      } catch (error) {
         log('error', 'Failed to submit a simulation');
+        if (error instanceof ApiError && error.cause?.code === LOW_FUNDS_ERROR_CODE) {
+          lowFundsError = true;
+        }
       }
+    }
 
-      if (nSubmissions !== simIds.length) {
-        notification.error({
-          message: 'We ran into a problem submitting your simulation(s). Please try again later.',
-          duration: 10,
-        });
-      } else {
-        notification.success({
-          message: 'Simulation(s) submitted successfully.',
-          duration: 10,
-        });
-      }
+    if (lowFundsError) {
+      const notificationKey = 'simulation-low-funds';
+      notification.error({
+        message: messages.LowFundsError,
+        description: (
+          <div className="flex flex-col gap-2">
+            {isVirtualLabAdmin ? (
+              <button
+                type="button"
+                onClick={() => {
+                  notification.destroy(notificationKey);
+                  setShowCreditsModal(true);
+                }}
+                className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 hover:underline"
+              >
+                Add credits
+              </button>
+            ) : adminEmail ? (
+              <a
+                href={`mailto:${adminEmail}?subject=Insufficient%20credits%20for%20simulation`}
+                className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 no-underline hover:underline"
+              >
+                Contact Lab admin
+              </a>
+            ) : (
+              <span className="text-sm text-gray-600">
+                Contact your virtual lab administrator to request credits.
+              </span>
+            )}
+          </div>
+        ),
+        key: notificationKey,
+        duration: 0,
+        placement: 'topRight',
+      });
+    } else if (nSubmissions !== simIds.length) {
+      notification.error({
+        message: 'We ran into a problem submitting your simulation(s). Please try again later.',
+        duration: 10,
+      });
+    } else {
+      notification.success({
+        message: 'Simulation(s) submitted successfully.',
+        duration: 10,
+      });
     }
     setConsent(null);
   };
@@ -252,6 +306,43 @@ export default function SimulationsTab({
       });
     } catch (error) {
       const defaultMsg = messages.RunningSimulationDefaultError;
+
+      if (error instanceof ApiError && error.cause?.code === LOW_FUNDS_ERROR_CODE) {
+        const notificationKey = 'simulation-low-funds';
+        return notification.error({
+          message: messages.LowFundsError,
+          description: (
+            <div className="flex flex-col gap-2">
+              {isVirtualLabAdmin ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    notification.destroy(notificationKey);
+                    setShowCreditsModal(true);
+                  }}
+                  className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 hover:underline"
+                >
+                  Add credits
+                </button>
+              ) : adminEmail ? (
+                <a
+                  href={`mailto:${adminEmail}?subject=Insufficient%20credits%20for%20simulation`}
+                  className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 no-underline hover:underline"
+                >
+                  Contact Lab admin
+                </a>
+              ) : (
+                <span className="text-sm text-gray-600">
+                  Contact your virtual lab administrator to request credits.
+                </span>
+              )}
+            </div>
+          ),
+          key: notificationKey,
+          duration: 0,
+          placement: 'topRight',
+        });
+      }
 
       if (error instanceof ApiError) {
         const message = getErrorMessage(error.cause?.code, errorRegistry, defaultMsg);
@@ -375,6 +466,8 @@ export default function SimulationsTab({
           Grant consent
         </a>
       </Modal>
+
+      <CreditsTransferModal open={showCreditsModal} onClose={() => setShowCreditsModal(false)} />
     </div>
   );
 }
