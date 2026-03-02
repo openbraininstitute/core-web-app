@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
@@ -58,11 +59,10 @@ jobs:
           echo "Using app version: ${APP_VERSION}"
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.PUBLICECR_UPLOAD_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PUBLICECR_UPLOAD_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.PUBLICECR_REGION }}
+          role-to-assume: arn:aws:iam::985539765147:role/gh_ecr_push_core-web-app
+          aws-region: us-east-1
 
       - name: Authenticate with AWS Public ECR
         uses: aws-actions/amazon-ecr-login@v2
