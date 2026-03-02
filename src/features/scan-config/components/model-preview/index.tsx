@@ -6,9 +6,9 @@ import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/en
 import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
-import type { TSupportedScanConfigurationForEntityType } from '@/features/scan-config/types';
+import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
-function ModelPreview({ model }: { model: TSupportedScanConfigurationForEntityType }) {
+function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfiguration }) {
   return match(model)
     .with({ type: EntityTypeDict.Memodel }, () => (
       <NeuronVisualizer

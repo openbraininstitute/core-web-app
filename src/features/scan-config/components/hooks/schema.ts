@@ -20,11 +20,12 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
-  type TSupportedScanConfigurationForEntityType,
+  type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { WorkspaceContext } from '@/types/common';
+import type { Nullish } from '@/utils/type';
 
 export function useObioneJsonSchema(schemaName: SchemaName) {
   const { data: schema, isLoading } = useQuery({
@@ -45,18 +46,19 @@ export type TSchemaMappingConfiguration = {
 
 export function useSchemaMappingConfiguration({
   schema,
-  circuitId,
+  entityId,
   workspace,
   endpointType,
 }: {
   workspace: WorkspaceContext;
-  circuitId: string | undefined;
+  entityId: string | undefined;
   schema: ConfigSchema | undefined;
-  endpointType: string;
+  endpointType: string | undefined;
 }) {
-  const properties_endpoint = get(schema?.property_endpoints, endpointType, '');
+  const properties_endpoint = endpointType ? get(schema?.property_endpoints, endpointType, '') : '';
+
   return useQuery({
-    queryKey: ['schema-mapping-configuration', { workspace, circuitId, endpointType }],
+    queryKey: ['schema-mapping-configuration', { workspace, circuitId: entityId, endpointType }],
     queryFn: async () => {
       const api = await obioneApi();
       return api.get<{
@@ -64,13 +66,13 @@ export function useSchemaMappingConfiguration({
           [key: string]: boolean;
         } | null;
         [key: string]: any;
-      }>(`/declared${properties_endpoint}`.replace('{circuit_id}', circuitId!), {
+      }>(`/declared${properties_endpoint}`.replace('{circuit_id}', entityId ?? ''), {
         headers: {
           ...getEntityCoreContext(workspace).headers,
         },
       });
     },
-    enabled: !!properties_endpoint && !!circuitId,
+    enabled: !!properties_endpoint && !!entityId && !!endpointType,
     refetchOnWindowFocus: false,
     staleTime: 3600, //  1 hour
     select: (resp) => {
@@ -161,7 +163,7 @@ export function useAtomsMap({
 }: {
   schema?: ConfigSchema;
   initialConfig?: Config;
-  model: TSupportedScanConfigurationForEntityType;
+  model: TSupportedEntitiesForScanConfiguration | Nullish;
 }) {
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
 
@@ -200,6 +202,7 @@ export function useAtomsMap({
           Object.entries(v.properties).forEach(([subkey, subValue]) => {
             initial[subkey] = subValue.default ?? null;
             if (
+              model &&
               !isType(subValue) &&
               subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
             ) {

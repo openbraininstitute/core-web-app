@@ -2,12 +2,12 @@ import { Input } from 'antd';
 
 import {
   ScanConfigUIElementDict,
-  type TSupportedScanConfigurationForEntityType,
+  type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 
 interface ModelDetailsProps {
   className?: string;
-  entity: TSupportedScanConfigurationForEntityType;
+  entity: TSupportedEntitiesForScanConfiguration;
 }
 
 export default function ModelDetails({ className, entity }: ModelDetailsProps) {

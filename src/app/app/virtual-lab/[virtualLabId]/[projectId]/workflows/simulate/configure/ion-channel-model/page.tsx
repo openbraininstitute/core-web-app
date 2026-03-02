@@ -1,10 +1,10 @@
 'use client';
 
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { notFound } from 'next/navigation';
 import { use } from 'react';
 
-import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-model';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigActivity } from '@/features/scan-config/types';
@@ -28,12 +28,7 @@ export default function Page({
 >) {
   const queryParams = use(searchParams);
   const { initialCampaignId } = queryParams;
-  const { virtualLabId, projectId, id: entityId } = use(pathParams);
-
-  const { data: entity } = useSuspenseQuery({
-    queryKey: keyBuilder.entity({ id: entityId, context: { virtualLabId, projectId } }),
-    queryFn: () => getIonChannelModel({ id: entityId, context: { virtualLabId, projectId } }),
-  });
+  const { virtualLabId, projectId } = use(pathParams);
 
   const {
     data: campaignData,
@@ -50,7 +45,7 @@ export default function Page({
     },
   });
 
-  if (error || !entity) {
+  if (error) {
     return notFound();
   }
 
@@ -61,7 +56,7 @@ export default function Page({
     return (
       <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
         <ScanConfiguration
-          modelId={entity.id}
+          entityType={ExtendedEntitiesTypeDict.IonChannelModel}
           virtualLabId={virtualLabId}
           projectId={projectId}
           initialConfig={campaignData?.config.form}

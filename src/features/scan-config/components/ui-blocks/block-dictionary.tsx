@@ -17,13 +17,15 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
-  type TSupportedScanConfigurationForEntityType,
+  type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
+
+import type { Nullish } from '@/utils/type';
 
 type Props = {
   schemaName: SchemaName;
@@ -38,7 +40,7 @@ type Props = {
   loading: boolean;
   config: Config;
   selectedBlockSchema?: TBlock;
-  model: TSupportedScanConfigurationForEntityType;
+  model: TSupportedEntitiesForScanConfiguration | Nullish;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   blockAIConfig: ConfigObject | null;

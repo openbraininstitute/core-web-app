@@ -2,7 +2,7 @@ div.threeColumns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
   gap: 5px;
-  height: calc(100% - 70px);
+  height: calc(100% - 80px);
 }
 
 div.threeColumns > div {

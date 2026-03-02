@@ -27,6 +27,7 @@ import type { IExecutionActivity } from '@/api/entitycore/types/entities/executi
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { SimExecStatusMap } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
+import type { Nullish } from '@/utils/type';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
@@ -195,17 +196,22 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   }
 );
 
-export function useModelQuery({ id, context }: { id: string; context: WorkspaceContext }) {
-  if (!id) {
-    throw new Error(`No model ID provided`);
-  }
+export function useModelQuery({
+  id,
+  context,
+}: {
+  id: string | Nullish;
+  context: WorkspaceContext;
+}) {
   const params = { id, context };
   const {
     data: entityType,
     isLoading: entityLoading,
     error: entityError,
   } = useQuery({
+    // @ts-expect-error this query won't start without the id
     queryKey: keyBuilder.entity({ id, context }),
+    // @ts-expect-error this query won't start without the id
     queryFn: () => getEntity(params),
     select: (r) => r.type,
     enabled: !!id,
@@ -217,15 +223,23 @@ export function useModelQuery({ id, context }: { id: string; context: WorkspaceC
     error: modelError,
   } = useQuery<ICircuit | IMEModel | IonChannelModel, Error, ICircuit | IMEModel | IonChannelModel>(
     {
+      // @ts-expect-error this query won't start without the id
       queryKey: keyBuilder.entity({ id, context, type: entityType }),
       queryFn: () => {
-        return match(entityType)
-          .with(EntityTypeDict.Circuit, () => getCircuit(params))
-          .with(EntityTypeDict.Memodel, () => getMEModel(params))
-          .with(EntityTypeDict.IonChannelModel, () => getIonChannelModel(params))
-          .otherwise((entityType) => {
-            throw new Error(`Unsupported model entity type ${entityType}`);
-          });
+        return (
+          match(entityType)
+            // @ts-expect-error this query won't start without the id
+            .with(EntityTypeDict.Circuit, () => getCircuit(params))
+            // @ts-expect-error this query won't start without the id
+            .with(EntityTypeDict.Memodel, () => getMEModel(params))
+            .with(EntityTypeDict.IonChannelModel, () =>
+              // @ts-expect-error this query won't start without the id
+              getIonChannelModel(params)
+            )
+            .otherwise((entityType) => {
+              throw new Error(`Unsupported model entity type ${entityType}`);
+            })
+        );
       },
       enabled: !!entityType && !!id,
       refetchOnWindowFocus: false,

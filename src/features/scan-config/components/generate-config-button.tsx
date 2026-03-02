@@ -10,16 +10,13 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
-  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
-import { useApiUrl } from './hooks';
-
 import type { ErrorObject } from 'ajv';
-import type { Config } from './components';
+import type { Config } from '@/features/scan-config/components/components';
 
 export default function GenerateConfigButton({
   loading,
@@ -28,9 +25,9 @@ export default function GenerateConfigButton({
   setCampaignId,
   setLoading,
   config,
-  model,
   setTab,
   activity,
+  generatedApiUrl,
 }: {
   loading: boolean;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
@@ -38,13 +35,12 @@ export default function GenerateConfigButton({
   setCampaignId: (campaignId: string) => void;
   setLoading: (loading: boolean) => void;
   config: Config;
-  model: TSupportedScanConfigurationForEntityType;
   setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
   activity: TScanConfigActivity;
+  generatedApiUrl: string;
 }) {
   const { projectId, virtualLabId } = useWorkspace();
   const notification = useAppNotification();
-  const apiUrl = useApiUrl({ model, activity });
 
   const onTabChange = () => {
     if (activity === ScanConfigActivity.Simulate)
@@ -94,7 +90,7 @@ export default function GenerateConfigButton({
             return;
           }
 
-          const res = await authFetch(apiUrl, {
+          const res = await authFetch(generatedApiUrl, {
             method: 'POST',
             body: JSON.stringify(config),
             headers: {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useModelQuery } from '@/features/scan-config/components/atoms';
-import { useSchemaName } from '@/features/scan-config/components/hooks';
+import { useGeneratedApiUrl, useSchemaName } from '@/features/scan-config/components/hooks';
 import {
   useObioneJsonSchema,
   useSchemaMappingConfiguration,
@@ -10,24 +10,20 @@ import { ScanConfigSkeleton } from '@/features/scan-config/components/loading-sk
 import { ScanConfigTemplate } from '@/features/scan-config/template';
 import {
   type Config,
+  getSupportedEntityTypesForScanConfiguration,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   type TScanConfigActivity,
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
 
-export function ScanConfiguration({
-  modelId,
-  virtualLabId,
-  projectId,
-  initialCampaignId,
-  initialConfig,
-  defaultTab = ScanConfigDefaultTab,
-  readOnly,
-  className,
-  activity = ScanConfigActivity.Simulate,
-}: {
-  modelId: string;
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { Nullish } from '@/utils/type';
+
+type Props = {
+  entityId?: string | Nullish;
+  entityType?: TExtendedEntitiesTypeDict | Nullish;
+  schemaMappingKey?: 'Circuit' | string;
   virtualLabId: string;
   projectId: string;
   initialCampaignId?: string;
@@ -36,25 +32,56 @@ export function ScanConfiguration({
   readOnly?: boolean;
   className?: string;
   activity?: TScanConfigActivity;
-}) {
+};
+
+export function ScanConfiguration({
+  entityId,
+  entityType,
+  virtualLabId,
+  projectId,
+  initialCampaignId,
+  initialConfig,
+  defaultTab = ScanConfigDefaultTab,
+  readOnly,
+  className,
+  activity = ScanConfigActivity.Simulate,
+  schemaMappingKey = 'Circuit',
+}: Props) {
   const {
     entity,
     isLoading: loadingEntity,
     error,
   } = useModelQuery({
-    id: modelId,
+    id: entityId,
     context: { virtualLabId, projectId },
   });
 
-  const schemaName = useSchemaName({ model: entity, activity });
+  const supportedType = getSupportedEntityTypesForScanConfiguration({
+    type: entity?.type ?? entityType,
+  });
+
+  const entityDiscriminator = entity && 'scale' in entity ? entity.scale : null;
+
+  const generatedApiUrl = useGeneratedApiUrl({
+    activity,
+    entityDiscriminator,
+    entityType: supportedType,
+  });
+
+  const schemaName = useSchemaName({
+    activity,
+    entityDiscriminator,
+    entityType: supportedType,
+  });
+
   const { schema, isLoading: loadingSchema } = useObioneJsonSchema(schemaName);
 
   const { data: schemaMappingConfig, isLoading: loadingConfiguration } =
     useSchemaMappingConfiguration({
       schema,
-      circuitId: entity?.id,
+      entityId: entity?.id,
       workspace: { virtualLabId, projectId },
-      endpointType: 'Circuit',
+      endpointType: schemaMappingKey,
     });
 
   const loading = loadingConfiguration || loadingEntity || loadingSchema;
@@ -73,11 +100,15 @@ export function ScanConfiguration({
     );
   }
 
-  if (entity) {
+  const aiEnabled = entity ? 'scale' in entity && entity.scale !== 'single' : false;
+
+  if (entity || entityType) {
     return (
       <ScanConfigTemplate
         {...{
           entity,
+          entityType: supportedType,
+          entityDiscriminator,
           virtualLabId,
           projectId,
           initialCampaignId,
@@ -89,6 +120,8 @@ export function ScanConfiguration({
           schema,
           schemaName,
           schemaMappingConfig,
+          aiEnabled,
+          generatedApiUrl,
         }}
       />
     );

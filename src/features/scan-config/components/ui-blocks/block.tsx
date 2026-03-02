@@ -12,7 +12,7 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
-  type TSupportedScanConfigurationForEntityType,
+  type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
@@ -37,7 +37,7 @@ export default function Block({
   disabled: boolean;
   config: Config;
   blockSchema?: TBlock;
-  entity: TSupportedScanConfigurationForEntityType | Nullish;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   blockAIConfig: Record<string, ConfigValue> | null;
   hideTitle?: boolean;

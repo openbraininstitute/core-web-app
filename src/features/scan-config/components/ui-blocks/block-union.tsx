@@ -12,8 +12,9 @@ import type {
   IRootBlockUnion,
   SchemaName,
   TBlock,
-  TSupportedScanConfigurationForEntityType,
+  TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import type { Nullish } from '@/utils/type';
 
 type Props = {
   schemaName: SchemaName;
@@ -24,7 +25,7 @@ type Props = {
   campaignId: string;
   loading: boolean;
   config: Config;
-  model: TSupportedScanConfigurationForEntityType;
+  model: TSupportedEntitiesForScanConfiguration | Nullish;
   blockAIConfig: Record<string, ConfigValue> | null;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };

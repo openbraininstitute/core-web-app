@@ -25,7 +25,7 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
-  type TSupportedScanConfigurationForEntityType,
+  type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
@@ -35,8 +35,26 @@ import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
 import type { Config } from '@/features/scan-config/components/components';
+import type { Nullish } from '@/utils/type';
 
 import styles from '@/features/scan-config/scan-config.module.css';
+
+type Props = {
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
+  virtualLabId: string;
+  projectId: string;
+  initialCampaignId?: string;
+  initialConfig?: Config;
+  defaultTab?: TScanConfigTabs;
+  readOnly?: boolean;
+  className?: string;
+  activity: TScanConfigActivity;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  schema: ConfigSchema;
+  schemaName: SchemaName;
+  aiEnabled: boolean;
+  generatedApiUrl: string;
+};
 
 export function ScanConfigTemplate({
   entity,
@@ -51,20 +69,9 @@ export function ScanConfigTemplate({
   schema,
   schemaName,
   schemaMappingConfig,
-}: {
-  entity: TSupportedScanConfigurationForEntityType;
-  virtualLabId: string;
-  projectId: string;
-  initialCampaignId?: string;
-  initialConfig?: Config;
-  defaultTab?: TScanConfigTabs;
-  readOnly?: boolean;
-  className?: string;
-  activity: TScanConfigActivity;
-  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
-  schema: ConfigSchema;
-  schemaName: SchemaName;
-}) {
+  aiEnabled,
+  generatedApiUrl,
+}: Props) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
   const [editing, setEditing] = useState(true);
@@ -76,8 +83,6 @@ export function ScanConfigTemplate({
   const allEntries = useEntries({ initialConfig, schema });
   const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model: entity });
   const config = useConfigAtom(schema, atomsMap);
-
-  const aiEnabled = 'scale' in entity && entity.scale !== 'single';
 
   const updateRequestId = useAgentState(aiEnabled ? 'smc_simulation_config' : '', config);
   const { aiConfig, setAiConfig } = useAIConfig();
@@ -148,7 +153,6 @@ export function ScanConfigTemplate({
             readOnly={readOnly}
             setCampaignId={setCampaignId}
             setLoading={setLoading}
-            model={entity}
             initialConfig={initialConfig}
             setTab={setTab}
             allEntries={allEntries}
@@ -167,6 +171,7 @@ export function ScanConfigTemplate({
               setAiConfig(null);
               updateRequestId();
             }}
+            generatedApiUrl={generatedApiUrl}
           />
           <div
             className={cn(
@@ -199,9 +204,11 @@ export function ScanConfigTemplate({
             )}
           </div>
 
-          <div className="rounded-lg">
-            <ModelPreview model={entity} />
-          </div>
+          {entity && (
+            <div className="rounded-lg">
+              <ModelPreview model={entity} />
+            </div>
+          )}
         </div>
       )}
 

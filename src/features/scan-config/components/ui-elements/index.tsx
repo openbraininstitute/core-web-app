@@ -18,7 +18,7 @@ import {
   type ParamSchema,
   ScanConfigUIElementDict,
   type SchemaName,
-  type TSupportedScanConfigurationForEntityType,
+  type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 
 import type { SetStateAction } from 'jotai';
@@ -45,7 +45,7 @@ export function UIElementRender({
   value: ConfigValue;
   config: Config;
   schemaName: SchemaName;
-  entity: TSupportedScanConfigurationForEntityType | Nullish;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
   state: Record<string, ConfigValue>;
   setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;

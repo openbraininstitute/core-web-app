@@ -117,7 +117,7 @@ export default async function Overview({
 
     return (
       <ScanConfiguration
-        modelId={config.simulation.entity_id}
+        entityId={config.simulation.entity_id}
         virtualLabId={ctx.virtualLabId}
         projectId={ctx.projectId}
         initialCampaignId={config.campaign.id}
@@ -148,7 +148,7 @@ export default async function Overview({
     return (
       <>
         <ScanConfiguration
-          modelId={extractionConfig.circuitId}
+          entityId={extractionConfig.circuitId}
           virtualLabId={ctx.virtualLabId}
           projectId={ctx.projectId}
           initialCampaignId={extractionConfig.campaign.id}

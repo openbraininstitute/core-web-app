@@ -61,7 +61,8 @@ export default function Page({
     return (
       <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
         <ScanConfiguration
-          modelId={entity.id}
+          entityType={entity.type}
+          entityId={entity.id}
           virtualLabId={virtualLabId}
           projectId={projectId}
           initialConfig={campaignData?.config.form}

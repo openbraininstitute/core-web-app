@@ -1,9 +1,22 @@
+import { match } from 'ts-pattern';
+
+import {
+  EntityTypeDict,
+  type ICircuit,
+  type IMEModel,
+  type IonChannelModel,
+} from '@/api/entitycore/types';
+// biome-ignore lint/style/useImportType: biome hallucination
+import {
+  ExtendedEntitiesTypeDict,
+  TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
+
 import type { atom } from 'jotai';
-import type { ICircuit, IMEModel, IonChannelModel } from '@/api/entitycore/types';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
-import type { Prettify } from '@/utils/type';
+import type { Nullish, Prettify } from '@/utils/type';
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -294,4 +307,19 @@ export type TActivityCustomFile = {
   renderer: TActivityCustomFileRenderer;
 };
 
-export type TSupportedScanConfigurationForEntityType = ICircuit | IMEModel | IonChannelModel;
+export type TSupportedEntitiesForScanConfiguration = ICircuit | IMEModel | IonChannelModel;
+
+export type TSupportedEntityTypesForScanConfiguration =
+  | typeof ExtendedEntitiesTypeDict.Circuit
+  | typeof ExtendedEntitiesTypeDict.Memodel
+  | typeof ExtendedEntitiesTypeDict.IonChannelModel;
+
+export const getSupportedEntityTypesForScanConfiguration = ({
+  type,
+}: {
+  type: TExtendedEntitiesTypeDict | Nullish;
+}) => {
+  return match(type)
+    .with(EntityTypeDict.Circuit, EntityTypeDict.Memodel, EntityTypeDict.IonChannelModel, (t) => t)
+    .otherwise(() => null);
+};

@@ -7,7 +7,6 @@ import {
   isType,
   type TScanConfigActivity,
   type TScanConfigTabs,
-  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
@@ -33,7 +32,6 @@ export default function Left({
   readOnly,
   setCampaignId,
   setLoading,
-  model,
   initialConfig,
   setTab,
   allEntries,
@@ -44,6 +42,7 @@ export default function Left({
   activity,
   handleAcceptAIChanges,
   handleRejectAIChanges,
+  generatedApiUrl,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -60,7 +59,6 @@ export default function Left({
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
-  model: TSupportedScanConfigurationForEntityType;
   initialConfig?: Config;
   allEntries: Set<string>;
   newKey: string;
@@ -70,6 +68,7 @@ export default function Left({
   activity: TScanConfigActivity;
   handleAcceptAIChanges: () => void;
   handleRejectAIChanges: () => void;
+  generatedApiUrl: string;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig } = useAIConfig();
@@ -150,10 +149,10 @@ export default function Left({
           setCampaignId={setCampaignId}
           errors={errors}
           config={config}
-          model={model}
           setTab={setTab}
           setLoading={setLoading}
           activity={activity}
+          generatedApiUrl={generatedApiUrl}
         />
       )}
     </div>
