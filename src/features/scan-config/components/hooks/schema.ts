@@ -81,13 +81,13 @@ export function useSchemaMappingConfiguration({
 }
 
 export function getBlockUsabilityConfig({ block }: { block: TBlock }) {
-  const usability = pick(block, ['block_usability_entity_dependent', 'block_usability_dictionary']);
+  const usability = pick(block, ['block_usability_dictionary']).block_usability_dictionary;
 
   return {
-    isDependent: usability.block_usability_entity_dependent,
-    error_message: usability.block_usability_dictionary?.false_message,
-    property: usability.block_usability_dictionary?.property,
-    property_group: usability.block_usability_dictionary?.property_group,
+    isDependent: !!usability,
+    error_message: usability?.false_message,
+    property: usability?.property,
+    property_group: usability?.property_group,
   };
 }
 
