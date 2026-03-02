@@ -8,6 +8,7 @@ import { getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-model';
 import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
 import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
@@ -23,6 +24,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
 import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { SimExecStatusMap } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -213,19 +215,22 @@ export function useModelQuery({ id, context }: { id: string; context: WorkspaceC
     data: entity,
     isLoading: modelLoading,
     error: modelError,
-  } = useQuery<ICircuit | IMEModel, Error, ICircuit | IMEModel>({
-    queryKey: keyBuilder.entity({ id, context, type: entityType }),
-    queryFn: () => {
-      return match(entityType)
-        .with(EntityTypeDict.Circuit, () => getCircuit(params))
-        .with(EntityTypeDict.Memodel, () => getMEModel(params))
-        .otherwise((entityType) => {
-          throw new Error(`Unsupported model entity type ${entityType}`);
-        });
-    },
-    enabled: !!entityType && !!id,
-    refetchOnWindowFocus: false,
-  });
+  } = useQuery<ICircuit | IMEModel | IonChannelModel, Error, ICircuit | IMEModel | IonChannelModel>(
+    {
+      queryKey: keyBuilder.entity({ id, context, type: entityType }),
+      queryFn: () => {
+        return match(entityType)
+          .with(EntityTypeDict.Circuit, () => getCircuit(params))
+          .with(EntityTypeDict.Memodel, () => getMEModel(params))
+          .with(EntityTypeDict.IonChannelModel, () => getIonChannelModel(params))
+          .otherwise((entityType) => {
+            throw new Error(`Unsupported model entity type ${entityType}`);
+          });
+      },
+      enabled: !!entityType && !!id,
+      refetchOnWindowFocus: false,
+    }
+  );
 
   const isLoading = entityLoading || modelLoading;
   const error = entityError || modelError;

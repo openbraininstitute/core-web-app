@@ -15,11 +15,9 @@ import {
   type IRootBlockUnion,
   ScanConfigUIElementDict,
   type SchemaName,
+  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type MiddleProps = {
   schemaName: SchemaName;
@@ -33,7 +31,7 @@ type MiddleProps = {
   campaignId: string;
   loading: boolean;
   config: Config;
-  model: ICircuit | IMEModel;
+  model: TSupportedScanConfigurationForEntityType;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;

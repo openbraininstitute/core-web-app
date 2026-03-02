@@ -1,4 +1,5 @@
 import type { atom } from 'jotai';
+import type { ICircuit, IMEModel, IonChannelModel } from '@/api/entitycore/types';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
@@ -292,3 +293,5 @@ export type TActivityCustomFile = {
   name?: string;
   renderer: TActivityCustomFileRenderer;
 };
+
+export type TSupportedScanConfigurationForEntityType = ICircuit | IMEModel | IonChannelModel;

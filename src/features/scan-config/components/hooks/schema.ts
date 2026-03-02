@@ -5,8 +5,8 @@ import { atom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
-import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import { config } from '@/config';
@@ -20,6 +20,7 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
+  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
@@ -160,7 +161,7 @@ export function useAtomsMap({
 }: {
   schema?: ConfigSchema;
   initialConfig?: Config;
-  model: ICircuit | IMEModel;
+  model: TSupportedScanConfigurationForEntityType;
 }) {
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
 

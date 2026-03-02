@@ -12,15 +12,15 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
+  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { Nullish } from '@/utils/type';
 
 export default function Block({
   schemaName,
@@ -37,7 +37,7 @@ export default function Block({
   disabled: boolean;
   config: Config;
   blockSchema?: TBlock;
-  entity: ICircuit | IMEModel | undefined | null;
+  entity: TSupportedScanConfigurationForEntityType | Nullish;
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   blockAIConfig: Record<string, ConfigValue> | null;
   hideTitle?: boolean;

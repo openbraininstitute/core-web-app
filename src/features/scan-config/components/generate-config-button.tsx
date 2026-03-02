@@ -10,6 +10,7 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -18,8 +19,6 @@ import { assertErrorMessage, classNames } from '@/util/utils';
 import { useApiUrl } from './hooks';
 
 import type { ErrorObject } from 'ajv';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config } from './components';
 
 export default function GenerateConfigButton({
@@ -39,7 +38,7 @@ export default function GenerateConfigButton({
   setCampaignId: (campaignId: string) => void;
   setLoading: (loading: boolean) => void;
   config: Config;
-  model: ICircuit | IMEModel;
+  model: TSupportedScanConfigurationForEntityType;
   setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
   activity: TScanConfigActivity;
 }) {
@@ -53,6 +52,7 @@ export default function GenerateConfigButton({
     if (activity === ScanConfigActivity.Extract)
       setTab({ id: ExtractScanConfigTabs.extractions, __activity: ScanConfigActivity.Extract });
   };
+
   return (
     <button
       type="button"

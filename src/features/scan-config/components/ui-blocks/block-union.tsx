@@ -5,11 +5,15 @@ import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import { isType } from '@/features/scan-config/types';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
-import type { AtomsMap, IRootBlockUnion, SchemaName, TBlock } from '@/features/scan-config/types';
+import type {
+  AtomsMap,
+  IRootBlockUnion,
+  SchemaName,
+  TBlock,
+  TSupportedScanConfigurationForEntityType,
+} from '@/features/scan-config/types';
 
 type Props = {
   schemaName: SchemaName;
@@ -20,7 +24,7 @@ type Props = {
   campaignId: string;
   loading: boolean;
   config: Config;
-  model: ICircuit | IMEModel;
+  model: TSupportedScanConfigurationForEntityType;
   blockAIConfig: Record<string, ConfigValue> | null;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };

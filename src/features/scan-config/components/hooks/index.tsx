@@ -2,8 +2,8 @@ import Ajv, { type AnySchema } from 'ajv';
 import { useEffect, useMemo, useRef } from 'react';
 import { match, P } from 'ts-pattern';
 
-import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
-import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { config as appConfig } from '@/config';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import {
@@ -12,15 +12,18 @@ import {
   ScanConfigActivity,
   type SchemaName,
   type TScanConfigActivity,
+  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 import { log } from '@/utils/logger';
+
+import type { ICircuit, IMEModel, IonChannelModel } from '@/api/entitycore/types';
 
 export function useApiUrl({
   activity = ScanConfigActivity.Simulate,
   model,
 }: {
   activity?: TScanConfigActivity;
-  model: ICircuit | IMEModel;
+  model: TSupportedScanConfigurationForEntityType;
 }) {
   const apiPath = match(activity)
     .with(ScanConfigActivity.Extract, () => {
@@ -61,7 +64,7 @@ export function useSchemaName({
   model,
   activity = ScanConfigActivity.Simulate,
 }: {
-  model: ICircuit | IMEModel | undefined;
+  model: ICircuit | IMEModel | IonChannelModel | undefined;
   activity?: TScanConfigActivity;
 }) {
   const schemaName = match({ activity, model })
@@ -79,6 +82,7 @@ export function useSchemaName({
     .with({ activity: ScanConfigActivity.Simulate }, () => {
       const name = match(model)
         .with({ type: EntityTypeDict.Memodel }, () => 'MEModelSimulationScanConfig')
+        .with({ type: EntityTypeDict.IonChannelModel }, () => 'IonChannelModelSimulationScanConfig')
         .with(
           { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
           () => 'MEModelWithSynapsesCircuitSimulationScanConfig'

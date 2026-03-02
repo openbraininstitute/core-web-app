@@ -1,12 +1,14 @@
 import { memo } from 'react';
 import { match } from 'ts-pattern';
 
-import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 
-function ModelPreview({ model }: { model: ICircuit | IMEModel }) {
+import type { TSupportedScanConfigurationForEntityType } from '@/features/scan-config/types';
+
+function ModelPreview({ model }: { model: TSupportedScanConfigurationForEntityType }) {
   return match(model)
     .with({ type: EntityTypeDict.Memodel }, () => (
       <NeuronVisualizer

@@ -25,6 +25,7 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
@@ -33,8 +34,6 @@ import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config } from '@/features/scan-config/components/components';
 
 import styles from '@/features/scan-config/scan-config.module.css';
@@ -53,7 +52,7 @@ export function ScanConfigTemplate({
   schemaName,
   schemaMappingConfig,
 }: {
-  entity: ICircuit | IMEModel;
+  entity: TSupportedScanConfigurationForEntityType;
   virtualLabId: string;
   projectId: string;
   initialCampaignId?: string;

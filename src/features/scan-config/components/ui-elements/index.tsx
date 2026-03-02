@@ -18,12 +18,12 @@ import {
   type ParamSchema,
   ScanConfigUIElementDict,
   type SchemaName,
+  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 
 import type { SetStateAction } from 'jotai';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { Nullish } from '@/utils/type';
 
 type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
@@ -45,7 +45,7 @@ export function UIElementRender({
   value: ConfigValue;
   config: Config;
   schemaName: SchemaName;
-  entity: ICircuit | IMEModel | null | undefined;
+  entity: TSupportedScanConfigurationForEntityType | Nullish;
   state: Record<string, ConfigValue>;
   setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;

@@ -1,13 +1,13 @@
 import { Input } from 'antd';
 
-import { ScanConfigUIElementDict } from '@/features/scan-config/types';
-
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import {
+  ScanConfigUIElementDict,
+  type TSupportedScanConfigurationForEntityType,
+} from '@/features/scan-config/types';
 
 interface ModelDetailsProps {
   className?: string;
-  entity: ICircuit | IMEModel;
+  entity: TSupportedScanConfigurationForEntityType;
 }
 
 export default function ModelDetails({ className, entity }: ModelDetailsProps) {

@@ -17,15 +17,13 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
+  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
-
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 type Props = {
   schemaName: SchemaName;
@@ -40,7 +38,7 @@ type Props = {
   loading: boolean;
   config: Config;
   selectedBlockSchema?: TBlock;
-  model: ICircuit | IMEModel;
+  model: TSupportedScanConfigurationForEntityType;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   blockAIConfig: ConfigObject | null;

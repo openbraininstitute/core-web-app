@@ -7,14 +7,13 @@ import {
   isType,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSupportedScanConfigurationForEntityType,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config } from '@/features/scan-config/components/components';
 
 import styles from '@/features/scan-config/scan-config.module.css';
@@ -61,7 +60,7 @@ export default function Left({
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
-  model: ICircuit | IMEModel;
+  model: TSupportedScanConfigurationForEntityType;
   initialConfig?: Config;
   allEntries: Set<string>;
   newKey: string;
