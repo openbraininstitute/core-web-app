@@ -19,7 +19,7 @@ import type {
   TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
 
-interface IIonChannelModelingConfigBase {
+export interface IIonChannelModelingConfigBase {
   name: string;
   description: string;
   ion_channel_modeling_campaign_id: string;

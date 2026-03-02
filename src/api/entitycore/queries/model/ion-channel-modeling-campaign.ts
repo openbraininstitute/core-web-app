@@ -2,7 +2,7 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type {
-  IonChannelModelingCampaign,
+  IIonChannelModelingCampaign,
   IonChannelModelingCampaignFilter,
   TCreateIonChannelModelingCampaign,
   TUpdateIonChannelModelingCampaign,
@@ -25,7 +25,7 @@ export async function getIonChannelModelingCampaigns({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IonChannelModelingCampaign>>(baseUri, {
+  return await api.get<EntityCoreResponse<IIonChannelModelingCampaign>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
       with_facets: withFacets,
@@ -49,7 +49,7 @@ export async function getIonChannelModelingCampaign({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<IonChannelModelingCampaign>(`${baseUri}/${id}`, {
+  return await api.get<IIonChannelModelingCampaign>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -69,7 +69,7 @@ export async function createIonChannelModelingCampaign({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.post<IonChannelModelingCampaign>(baseUri, {
+  return await api.post<IIonChannelModelingCampaign>(baseUri, {
     body: data,
     headers: {
       ...getEntityCoreContext(context).headers,
@@ -92,7 +92,7 @@ export async function updateIonChannelModelingCampaign({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.patch<IonChannelModelingCampaign>(`${baseUri}/${id}`, {
+  return await api.patch<IIonChannelModelingCampaign>(`${baseUri}/${id}`, {
     body: data,
     headers: {
       ...getEntityCoreContext(context).headers,

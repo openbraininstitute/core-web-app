@@ -54,11 +54,11 @@ const Recording = dynamic(
 
 type Props = {
   sessionId: string;
-  initialConfig?: Record<string, any> | null;
+  originalConfig?: Record<string, any> | null;
   readonly?: boolean;
 };
 
-export function Configuration({ sessionId, initialConfig, readonly }: Props) {
+export function Configuration({ sessionId, originalConfig, readonly }: Props) {
   const { data: session } = useSession();
   const { virtualLabId, projectId } = useWorkspace();
   const { data: RootSchema, isLoading } = useGenerativeFormSchemaApi({
@@ -79,10 +79,10 @@ export function Configuration({ sessionId, initialConfig, readonly }: Props) {
     )
   );
 
-  // When loading from a campaign, fetch the recording entity by ID from the initial config
-  // and populate the recording atom so the recording panel and input show the selected recording.
-  const initialRecordingId = initialConfig
-    ? (get(initialConfig, 'initialize.recordings.id_str') as string | undefined)
+  // when loading from a original campaign, fetch the recording entity by id from the initial config
+  // and populate the recording atom so the recording panel and input show the selected recording
+  const initialRecordingId = originalConfig
+    ? (get(originalConfig, 'initialize.recordings.id_str') as string | undefined)
     : undefined;
 
   const { data: fetchedRecording } = useQuery({
@@ -358,10 +358,10 @@ export function Configuration({ sessionId, initialConfig, readonly }: Props) {
     }
   }, [Blocks, activeBlock]);
 
-  // When initialConfig is provided, use it directly as form data.
-  // Once the RJSF form fires onChange, formDataStorage gets populated and takes over.
+  // when initialConfig is provided, use it directly as form data
+  // once the RJSF form fires onChange, formDataStorage gets populated and takes over
   const effectiveFormData =
-    initialConfig && Object.keys(formDataStorage).length === 0 ? initialConfig : formDataStorage;
+    originalConfig && Object.keys(formDataStorage).length === 0 ? originalConfig : formDataStorage;
 
   const disableSubmit = !canSubmitForm;
 

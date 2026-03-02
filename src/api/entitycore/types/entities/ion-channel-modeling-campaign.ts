@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import type { IIonChannelModelingConfigBase } from '@/api/entitycore/types/entities/ion-channel-modeling-config';
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import type {
   EntityAuthorization,
@@ -22,22 +23,8 @@ import type {
 
 interface NestedIonChannelRecording extends IIonChannelRecording {}
 
-interface IonChannelModelingConfigBase {
-  name: string;
-  description: string;
-  ion_channel_modeling_campaign_id: string;
-  scan_parameters: Record<string, any>;
-}
-
-export interface IonChannelModelingConfig
-  extends IonChannelModelingConfigBase,
-    EntityCoreIdentifiable,
-    EntityAuthorization,
-    EntityCoreOwnership,
-    EntityCoreType,
-    EntityCoreBaseAsset {}
 interface NestedIonChannelModelingConfig
-  extends IonChannelModelingConfigBase,
+  extends IIonChannelModelingConfigBase,
     EntityCoreIdentifiable,
     EntityCoreType {}
 
@@ -52,7 +39,7 @@ interface NestedIonChannelModelingCampaignRead
     EntityCoreIdentifiable,
     EntityCoreType {}
 
-export interface IonChannelModelingCampaign
+export interface IIonChannelModelingCampaign
   extends NestedIonChannelModelingCampaignRead,
     Timestamps,
     EntityCoreType,
