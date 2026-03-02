@@ -1,18 +1,19 @@
-import { cn } from '@/utils/css-class';
+import { cn } from "@/utils/css-class";
 
-import { AddSynapticSetButton } from '../../add-synaptic-set-button';
-
-import styles from './add-new-set.module.css';
+import styles from "./add-new-set.module.css";
 
 export interface AddNewSetProps {
   className?: string;
-  sessionId: string;
 }
 
-export function AddNewSet({ className, sessionId }: AddNewSetProps) {
+export function AddNewSet({ className }: AddNewSetProps) {
   return (
     <div className={cn(className, styles.addNewSet)}>
-      <AddSynapticSetButton sessionId={sessionId} />
+      <h2>Synapse sets</h2>
+      <p>
+        In order to create a new set, click on the button on the lefthand
+        column.
+      </p>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import {
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { DefaultSynapseValue } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 
-import { useBuildSingleNeuronSynaptomeSessionState } from '../../helpers';
+import { useBuildSingleNeuronSynaptomeSessionState } from '../../../helpers';
 
 export function useValidSetCount(
   synapseSets: Map<string, TSingleNeuronSynaptomeConfiguration> | undefined

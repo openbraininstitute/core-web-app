@@ -21,13 +21,13 @@ export function useConfig(sessionId: string) {
   React.useMemo(() => {
     const synapses = sessionValue?.synapseSets;
     const id = setId ?? globalThis.crypto.randomUUID();
-    setConfig(
-      synapses?.get(id) ?? {
-        ...EMPTY_CONFIG,
-        seed: sessionValue?.seed ?? 100,
-        id,
-      }
-    );
+    setConfig(synapses?.get(id));
+    //    ?? {
+    //     ...EMPTY_CONFIG,
+    //     seed: sessionValue?.seed ?? 100,
+    //     id,
+    //   }
+    // );
   }, [setId, sessionValue]);
   React.useEffect(() => {
     if (!config) {

@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from "next/navigation";
 
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useDefaultBreakpoint } from "@/ui/hooks/create-break-point";
 import {
   BuildStep,
   useBuildSingleNeuronSynaptomeSessionState,
-} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+} from "@/ui/segments/workflows/build/single-neuron-synaptome/helpers";
 
-import { useStepChangeHandler } from './hooks';
-import SectionBuildSynaptomeButton from './sections/section-build-synaptome-button';
-import SectionInfo from './sections/section-info';
-import SectionModelSelection from './sections/section-model-selection';
-import SectionSynapseSets from './sections/section-synapse-sets';
+import { useStepChangeHandler } from "./hooks";
+import SectionBuildSynaptomeButton from "./sections/section-build-synaptome-button";
+import SectionInfo from "./sections/section-info";
+import SectionModelSelection from "./sections/section-model-selection";
+import SectionSynapseSets from "./sections/section-synapse-sets";
 
 type Props = { sessionId: string };
 
 export function Menu({ sessionId }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const searchParams = useSearchParams();
-  const step = searchParams.get('step');
+  const step = searchParams.get("step");
   const { sessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
   });

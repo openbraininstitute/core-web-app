@@ -1,30 +1,40 @@
-'use client';
+"use client";
 
-import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
-import { useAtom } from 'jotai';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import React from 'react';
+import {
+  DeleteOutlined,
+  EyeInvisibleOutlined,
+  EyeOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import { useAtom } from "jotai";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React from "react";
 
 import {
   SingleNeuronSynaptomeBaseSchema,
   type TSingleNeuronSynaptomeConfiguration,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Button } from '@/ui/molecules/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+} from "@/api/entitycore/types/entities/single-neuron-synaptome";
+import { useDefaultBreakpoint } from "@/ui/hooks/create-break-point";
+import { Button } from "@/ui/molecules/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/ui/molecules/tooltip";
 import {
   DefaultSynapseValue,
   useBuildSingleNeuronSynaptomeSessionState,
-} from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import { SynapsesPlacementAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { getRandomIntInclusive } from '@/util/utils';
-import { cn } from '@/utils/css-class';
-import { formatCompactNumber } from '@/utils/format';
+} from "@/ui/segments/workflows/build/single-neuron-synaptome/helpers";
+import { SynapsesPlacementAtomFamily } from "@/ui/segments/workflows/simulate/single-neuron/shared/context";
+import { getRandomIntInclusive } from "@/util/utils";
+import { cn } from "@/utils/css-class";
+import { formatCompactNumber } from "@/utils/format";
 
-import { AddSynapticSetButton } from './add-synaptic-set-button';
-import { resetColors } from './colors';
+import { AddSynapticSetButton } from "./add-synaptic-set-button";
+import { resetColors } from "./colors";
+import { useAddSynapticButtonEnabled } from "./hooks";
 
-import type { SynapsesPlacementRecord } from '../../simulate/single-neuron/shared/types';
+import type { SynapsesPlacementRecord } from "../../simulate/single-neuron/shared/types";
 
 type Props = { sessionId: string };
 
@@ -33,10 +43,18 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
   const pathname = usePathname();
   const breakpoint = useDefaultBreakpoint();
   const { replace } = useRouter();
-  const { sessionValue, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
-    sessionId,
-  });
-  const [synapsesPlacement, setSynapsesPlacement] = useAtom(SynapsesPlacementAtomFamily(sessionId));
+  const { sessionValue, setSessionValue } =
+    useBuildSingleNeuronSynaptomeSessionState({
+      sessionId,
+    });
+  const currentSet = params.get("set");
+  const addSynapticButtonEnabled = useAddSynapticButtonEnabled(
+    sessionValue?.synapseSets,
+    currentSet,
+  );
+  const [synapsesPlacement, setSynapsesPlacement] = useAtom(
+    SynapsesPlacementAtomFamily(sessionId),
+  );
   React.useEffect(() => {
     const sets = sessionValue?.synapseSets;
     if (!sets) {
@@ -58,11 +76,9 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
     });
   }, [sessionValue?.synapseSets, setSynapsesPlacement]);
 
-  const currentSet = params.get('set');
-
   const onSelectSet = (id: string) => {
     const queryParams = new URLSearchParams(params);
-    queryParams.set('set', id);
+    queryParams.set("set", id);
     replace(`${pathname}?${queryParams.toString()}`);
   };
 
@@ -75,12 +91,14 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
     if (cloneMap.size === 0) {
       const newId = crypto.randomUUID();
       const queryParams = new URLSearchParams(params);
-      queryParams.set('set', newId);
+      queryParams.set("set", newId);
       const newMap = new Map();
       newMap.set(newId, {
         ...DefaultSynapseValue,
         id: newId,
-        seed: (sessionValue?.seed ?? 0) + getRandomIntInclusive(0, sessionValue?.seed ?? 0),
+        seed:
+          (sessionValue?.seed ?? 0) +
+          getRandomIntInclusive(0, sessionValue?.seed ?? 0),
       });
       setSessionValue({
         ...sessionValue,
@@ -108,7 +126,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
     }
     if (currentSet === id) {
       const queryParams = new URLSearchParams(params);
-      queryParams.delete('set');
+      queryParams.delete("set");
       replace(`${pathname}?${queryParams.toString()}`);
     }
   };
@@ -154,11 +172,14 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                   rounded
                   variant="ghost"
                   className={cn(
-                    'bg-neutral-1 border-neutral-2/60 hover:bg-neutral-2/20 hover:text-primary-9 active:bg-primary-7 w-full cursor-pointer border transition-all duration-300 ease-out',
-                    { 'bg-neutral-2/40 text-primary-9 border-neutral-3': currentSet === o.id },
-                    'group-hover:w-[calc(100%-80px)]'
+                    "bg-neutral-1 border-neutral-2/60 hover:bg-neutral-2/20 hover:text-primary-9 active:bg-primary-7 w-full cursor-pointer border transition-all duration-300 ease-out",
+                    {
+                      "bg-neutral-2/40 text-primary-9 border-neutral-3":
+                        currentSet === o.id,
+                    },
+                    "group-hover:w-[calc(100%-80px)]",
                   )}
-                  size={breakpoint === 'l' ? 'md' : 'lg'}
+                  size={breakpoint === "l" ? "md" : "lg"}
                   active={currentSet === o.id}
                   onClick={() => onSelectSet(o.id)}
                 >
@@ -173,7 +194,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                       {isVisible && (
                         <div
                           className="h-5 w-5 flex-shrink-0 rounded-full"
-                          style={{ background: o.color, marginRight: '-8px' }}
+                          style={{ background: o.color, marginRight: "-8px" }}
                           title="Synaptome visible"
                         />
                       )}
@@ -183,10 +204,10 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
 
                 <div
                   className={cn(
-                    'absolute right-0 flex items-center gap-1.5',
-                    'translate-x-full opacity-0',
-                    'group-hover:translate-x-0 group-hover:opacity-100',
-                    'transition-all duration-300 ease-out'
+                    "absolute right-0 flex items-center gap-1.5",
+                    "translate-x-full opacity-0",
+                    "group-hover:translate-x-0 group-hover:opacity-100",
+                    "transition-all duration-300 ease-out",
                   )}
                 >
                   <Tooltip>
@@ -207,7 +228,9 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                         className="text-primary-9 bg-white"
                         arrowClassName="bg-white"
                       >
-                        <p className={cn('text-justify text-base')}>Please apply changes again</p>
+                        <p className={cn("text-justify text-base")}>
+                          Please apply changes again
+                        </p>
                       </TooltipContent>
                     )}
                   </Tooltip>
@@ -216,13 +239,13 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                     variant="outline"
                     rounded
                     className={cn(
-                      'border-neutral-2 hover:border-red-500 hover:bg-red-500',
-                      'h-10 w-10 bg-transparent p-0 hover:text-white',
-                      'rounded-l-none',
-                      'transition-all duration-200 ease-out',
-                      'shadow-md',
-                      { 'h-8 w-8': breakpoint === 'l' },
-                      { 'h-10 w-10': breakpoint === 'xl' }
+                      "border-neutral-2 hover:border-red-500 hover:bg-red-500",
+                      "h-10 w-10 bg-transparent p-0 hover:text-white",
+                      "rounded-l-none",
+                      "transition-all duration-200 ease-out",
+                      "shadow-md",
+                      { "h-8 w-8": breakpoint === "l" },
+                      { "h-10 w-10": breakpoint === "xl" },
                     )}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -238,7 +261,10 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
           })}
       </div>
 
-      <AddSynapticSetButton sessionId={sessionId} />
+      <AddSynapticSetButton
+        enabled={addSynapticButtonEnabled}
+        sessionId={sessionId}
+      />
     </div>
   );
 }
@@ -261,18 +287,18 @@ function VisibilityButton({
       rounded
       variant="outline"
       className={cn(
-        'border-neutral-2 hover:text-white',
-        'h-10 w-10 bg-transparent p-0',
-        'rounded-r-none border-r-0',
-        'transition-all duration-200 ease-out',
-        'shadow-md',
-        { 'h-8 w-8': breakpoint === 'l' },
-        { 'h-10 w-10': breakpoint === 'xl' },
+        "border-neutral-2 hover:text-white",
+        "h-10 w-10 bg-transparent p-0",
+        "rounded-r-none border-r-0",
+        "transition-all duration-200 ease-out",
+        "shadow-md",
+        { "h-8 w-8": breakpoint === "l" },
+        { "h-10 w-10": breakpoint === "xl" },
         isVisible
-          ? 'hover:border-orange-500 hover:bg-orange-500'
+          ? "hover:border-orange-500 hover:bg-orange-500"
           : canShow
-            ? 'hover:border-secondary-4 hover:bg-secondary-3'
-            : 'opacity-50 hover:border-gray-400 hover:bg-gray-400'
+            ? "hover:border-secondary-4 hover:bg-secondary-3"
+            : "opacity-50 hover:border-gray-400 hover:bg-gray-400",
       )}
       onClick={(e) => {
         e.stopPropagation();
@@ -280,10 +306,10 @@ function VisibilityButton({
       }}
       title={
         isVisible
-          ? 'Hide synaptome'
+          ? "Hide synaptome"
           : canShow
-            ? 'Show synaptome'
-            : 'Apply changes first to generate synaptome'
+            ? "Show synaptome"
+            : "Apply changes first to generate synaptome"
       }
       disabled={!isVisible && !canShow}
     >
