@@ -75,7 +75,8 @@ export function useServiceAiAgentChat(threadId: string) {
     const toolInvocation = lastMessage?.parts.find(
       (p) =>
         p.type === 'tool-invocation' &&
-        p.toolInvocation.toolName === 'editstate'
+        p.toolInvocation.toolName === 'editstate' &&
+        p.toolInvocation.state === 'result'
     ) as ToolInvocationUIPart | undefined;
 
     //@ts-expect-error

@@ -76,9 +76,10 @@ export default function Left({
   const { aiConfig } = useAIConfig();
 
   useEffect(() => {
-    !!aiConfig && !campaignId && 
-    handleAcceptAIChanges()
-  }), [aiConfig, campaignId, handleAcceptAIChanges]
+    if (aiConfig && !campaignId) {
+      handleAcceptAIChanges();
+    }
+  }, [aiConfig, campaignId, handleAcceptAIChanges]);
 
   return (
     <div className={styles.scrollable}>
