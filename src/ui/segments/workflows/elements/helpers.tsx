@@ -420,7 +420,7 @@ export function getDropdownOptionsByCategory(
 
         return {
           group: config.group,
-          label: config.label,
+          label: propertyConfig?.label ?? config.label,
           value: propertyConfig?.type,
           disabled: disabled || !satisfiesFeatureRequirements,
         };

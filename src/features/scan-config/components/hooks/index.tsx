@@ -44,6 +44,10 @@ export function useApiUrl({
           () => 'me-model-simulation-scan-config-generate-grid'
         )
         .with(
+          { type: EntityTypeDict.IonChannelModel },
+          () => 'ion-channel-model-simulation-scan-config-generate-grid'
+        )
+        .with(
           { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
           () => 'me-model-with-synapses-circuit-simulation-scan-config-generate-grid'
         )
