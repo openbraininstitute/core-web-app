@@ -29,6 +29,7 @@ export interface ChatProps {
 export default function Chat({ className, threadId }: ChatProps) {
   const assistant = useAiAssistant();
   const isEmptyThread = assistant.isEmptyThread.useValue();
+  const healthError = assistant.healthError.useValue();
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
 
   const { messages, status, append, error, stop, isLoadingMessages } = useServiceAiAgentChat(
@@ -179,6 +180,7 @@ export default function Chat({ className, threadId }: ChatProps) {
           </div>
         )}
         {error && <ErrorPanel value={error} />}
+        {healthError && <ErrorPanel value={healthError} />}
         <div ref={refChatBottom} className={styles.bottom} />
       </div>
       {showExhaustedNotification && status === 'ready' && (

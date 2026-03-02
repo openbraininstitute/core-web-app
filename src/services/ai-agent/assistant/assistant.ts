@@ -11,6 +11,7 @@ import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
+import { useAiAgentHealthCheck } from '../hooks/health';
 import { HistoryManager } from './manager/history';
 import { MessageManager } from './manager/message';
 import { ThreadManager } from './manager/thread';
@@ -29,6 +30,8 @@ class AiAssistantClass {
   public readonly isLoadingHistory = new Signal<boolean>(false);
 
   public readonly error = new Signal<AssistantError>(null);
+
+  public readonly healthError = new Signal<string | null>(null);
 
   public readonly history = new Signal<AiAssistantHistory>([]);
 
@@ -194,6 +197,13 @@ export function useAiAssistant() {
   const accessToken = useAccessToken() ?? 'NO-TOKEN';
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
+  const { error: healthError } = useAiAgentHealthCheck(accessToken);
+
+  React.useEffect(() => {
+    if (healthError) {
+      AiAssistant.healthError.set(healthError);
+    }
+  }, [healthError]);
 
   React.useEffect(() => {
     const handleError = (err: AssistantError) => {
