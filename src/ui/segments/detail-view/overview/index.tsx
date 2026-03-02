@@ -174,7 +174,7 @@ export default async function Overview({
     const { data } = await tryCatch(
       resolveIonChannelModelingCampaignConfig({
         id: entity.id,
-        context: ctx,
+        context,
       })
     );
 
