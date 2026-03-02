@@ -93,7 +93,7 @@ export function BrowseEntityScope({
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
-
+  const scopeFilter = getWorkspaceScopeFilters(scope, { virtualLabId, projectId });
   const { dataKey } = makeDataKey({
     virtualLabId,
     projectId,
@@ -172,11 +172,11 @@ export function BrowseEntityScope({
       const filters = {
         ...queryParameters,
         ...extraQueryParams,
-        ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
+        ...scopeFilter,
       };
       return entity?.api?.query.list?.({
-        withFacets: true,
         filters,
+        withFacets: true,
         context: workspace,
       });
     },

@@ -1,7 +1,7 @@
 import {
-  TgdContext,
-  TgdPainterPointsCloud,
+  type TgdContext,
   TgdPainterGroup,
+  TgdPainterPointsCloud,
   TgdTexture2D,
   tgdCanvasCreateFill,
 } from '@tolokoban/tgd';

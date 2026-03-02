@@ -1,8 +1,9 @@
-import React from 'react';
-import { useAtom, useSetAtom } from 'jotai';
 import { useQuery } from '@tanstack/react-query';
-import { tgdFullscreenToggle } from '@tolokoban/tgd';
+import { useAtom, useSetAtom } from 'jotai';
+import React from 'react';
 
+import { getSingleNeuronMorphology } from '@/api/small-scale-simulator';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { EXPERIMENTAL_SETUP_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   ExperimentalSetupConfigurationAtomFamily,
@@ -10,12 +11,10 @@ import {
   neuronSectionNamesAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-
-import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Morphology } from '@/services/bluenaas-single-cell/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { getSingleNeuronMorphology } from '@/api/small-scale-simulator';
+
+import type { Morphology } from '@/services/bluenaas-single-cell/types';
+import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
 const THROTTLE = 1000;
 
@@ -67,7 +66,13 @@ export function useCurrentSimulationConfig(sessionId: string) {
 export function useFullscreenSwitcher() {
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
-  return { refContainer, toggleFullscreen: () => tgdFullscreenToggle(refContainer.current) };
+  const toggleFullscreen = React.useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    const { tgdFullscreenToggle } = await import('@tolokoban/tgd');
+    tgdFullscreenToggle(refContainer.current);
+  }, []);
+
+  return { refContainer, toggleFullscreen };
 }
 
 export function useCleanMorphology(meModelId: string, sessionId: string) {

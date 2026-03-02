@@ -54,5 +54,8 @@ export const ComputationallySynthesizedCellMorphology: EntityCoreTypeConfig<
   isBookmarkable: true,
   isCopyable: true,
   isSimulatable: false,
-  isUploadable: true,
+  // this is a subtype, only universal should be uploadable
+  // link: src/entity-configuration/domain/experimental/universal-cell-morphology.ts
+  isContributable: false,
+  isContributionOption: false,
 } as const;

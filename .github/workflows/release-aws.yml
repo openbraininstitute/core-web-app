@@ -1,9 +1,7 @@
 name: Make release
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,6 +12,12 @@ jobs:
     env:
       IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
     steps:
+      - name: Fail if branch is not main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        run: |
+          echo "This workflow should not be triggered with workflow_dispatch on a branch other than main"
+          exit 1
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -67,28 +71,3 @@ jobs:
 
       - name: Build and publish Docker image for AWS
         run: make publish
-
-      - name: Extract static assets from Docker image
-        run: |
-          # Remove directory for extracted assets (can be removed later)
-          rm -rf ./assets-for-s3
-
-          # Create directory for extracted assets with versioned paths
-          mkdir -p ./assets-for-s3/${APP_VERSION}/public
-          mkdir -p ./assets-for-s3/${APP_VERSION}/_next
-
-          # Create temporary container and extract static assets
-          docker create --name assets-extractor ${{ vars.PUBLICECR_URI }}:${APP_VERSION}
-          docker cp assets-extractor:/app/.next/static ./assets-for-s3/${APP_VERSION}/_next/static/
-          docker cp assets-extractor:/app/public ./assets-for-s3/${APP_VERSION}/public/
-          docker rm assets-extractor
-
-      - name: Sync static assets to S3 and invalidate CloudFront
-        run: |
-          # Uploading STAGING CDN assets
-          aws s3 sync ./assets-for-s3/${APP_VERSION}/public s3://${{ vars.STAGING_S3_BUCKET_NAME }}/${APP_VERSION}/public --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
-          aws s3 sync ./assets-for-s3/${APP_VERSION}/_next/static s3://${{ vars.STAGING_S3_BUCKET_NAME }}/${APP_VERSION}/_next/static --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
-
-          # Uploading PRODUCTION CDN assets
-          aws s3 sync ./assets-for-s3/${APP_VERSION}/public s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/${APP_VERSION}/public --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"
-          aws s3 sync ./assets-for-s3/${APP_VERSION}/_next/static s3://${{ vars.PRODUCTION_S3_BUCKET_NAME }}/${APP_VERSION}/_next/static --delete --exact-timestamps --cache-control "public, max-age=604800, immutable"

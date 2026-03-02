@@ -111,11 +111,15 @@ export class Painter {
           const specularIntensity = uniforms.specularIntensity?.value ?? 0;
           const specularExponent = uniforms.specularExponent?.value ?? 10;
           const light = uniforms.light?.value ?? 1;
+          const minSizeInPixels = uniforms.minSizeInPixels?.value ?? 5;
+          const radiusMultiplier = uniforms.radiusMultiplier?.value ?? 1;
           pointCloudPainter.shadowIntensity = shadowIntensity;
           pointCloudPainter.shadowThickness = shadowThickness;
           pointCloudPainter.specularExponent = specularExponent;
           pointCloudPainter.specularIntensity = specularIntensity;
           pointCloudPainter.light = light;
+          pointCloudPainter.minSizeInPixels = minSizeInPixels;
+          pointCloudPainter.radiusMultiplier = radiusMultiplier;
         }
       });
       context.paint();

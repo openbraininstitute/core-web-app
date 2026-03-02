@@ -1,16 +1,19 @@
-import $RefParser from '@apidevtools/json-schema-ref-parser';
-import { useQuery } from '@tanstack/react-query';
-import { get, omit, pick } from 'es-toolkit/compat';
-import { atom } from 'jotai';
-import { useEffect, useState } from 'react';
-import { match } from 'ts-pattern';
+import $RefParser from "@apidevtools/json-schema-ref-parser";
+import { useQuery } from "@tanstack/react-query";
+import { get, omit, pick } from "es-toolkit/compat";
+import { atom } from "jotai";
+import { useEffect, useState } from "react";
+import { match } from "ts-pattern";
 
-import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
-import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
-import { getEntityCoreContext } from '@/api/entitycore/utils';
-import { obioneApi } from '@/api/one/utils';
-import { config } from '@/config';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { EntityTypeDict, type IMEModel } from "@/api/entitycore/types";
+import {
+  CircuitScaleDictionary,
+  type ICircuit,
+} from "@/api/entitycore/types/entities/circuit";
+import { getEntityCoreContext } from "@/api/entitycore/utils";
+import { obioneApi } from "@/api/one/utils";
+import { config } from "@/config";
+import { isAtom, isPlainObject } from "@/features/scan-config/components/utils";
 import {
   type AtomsMap,
   type Config,
@@ -20,10 +23,10 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
-} from '@/features/scan-config/types';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+} from "@/features/scan-config/types";
+import { keyBuilder } from "@/ui/use-query-keys/data";
 
-import type { WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from "@/types/common";
 
 export function useObioneJsonSchema(schemaName: SchemaName) {
   const { data: schema, isLoading } = useQuery({
@@ -39,7 +42,7 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
 
 export type TSchemaMappingConfiguration = {
   usability: Record<string, boolean> | null;
-  properties: Record<string, any> | null;
+  properties: Record<string, ConfigValue> | null;
 };
 
 export function useSchemaMappingConfiguration({
@@ -53,9 +56,12 @@ export function useSchemaMappingConfiguration({
   schema: ConfigSchema | undefined;
   endpointType: string;
 }) {
-  const properties_endpoint = get(schema?.property_endpoints, endpointType, '');
+  const properties_endpoint = get(schema?.property_endpoints, endpointType, "");
   return useQuery({
-    queryKey: ['schema-mapping-configuration', { workspace, circuitId, endpointType }],
+    queryKey: [
+      "schema-mapping-configuration",
+      { workspace, circuitId, endpointType },
+    ],
     queryFn: async () => {
       const api = await obioneApi();
       return api.get<{
@@ -63,26 +69,32 @@ export function useSchemaMappingConfiguration({
           [key: string]: boolean;
         } | null;
         [key: string]: any;
-      }>(`/declared${properties_endpoint}`.replace('{circuit_id}', circuitId!), {
-        headers: {
-          ...getEntityCoreContext(workspace).headers,
+      }>(
+        `/declared${properties_endpoint}`.replace("{circuit_id}", circuitId!),
+        {
+          headers: {
+            ...getEntityCoreContext(workspace).headers,
+          },
         },
-      });
+      );
     },
-    enabled: !!properties_endpoint && !!circuitId,
+    enabled: !!properties_endpoint,
     refetchOnWindowFocus: false,
     staleTime: 3600, //  1 hour
     select: (resp) => {
       return {
-        properties: omit(resp, ['usability']),
-        usability: pick(resp, ['usability']).usability,
+        properties: omit(resp, ["usability"]),
+        usability: pick(resp, ["usability"]).usability,
       };
     },
   });
 }
 
 export function getBlockUsabilityConfig({ block }: { block: TBlock }) {
-  const usability = pick(block, ['block_usability_entity_dependent', 'block_usability_dictionary']);
+  const usability = pick(block, [
+    "block_usability_entity_dependent",
+    "block_usability_dictionary",
+  ]);
 
   return {
     isDependent: usability.block_usability_entity_dependent,
@@ -94,7 +106,7 @@ export function getBlockUsabilityConfig({ block }: { block: TBlock }) {
 
 export function useDefaultConfig(
   schemaName: SchemaName,
-  formModelType: 'CircuitFromId' = 'CircuitFromId'
+  formModelType: "CircuitFromId" = "CircuitFromId",
 ) {
   const { schema } = useObioneJsonSchema(schemaName);
 
@@ -111,10 +123,13 @@ export function useDefaultConfig(
 
       Object.entries(v.properties).forEach(([subkey, subValue]) => {
         initial[subkey] = subValue.default ?? null;
-        if (!isType(subValue) && subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier) {
+        if (
+          !isType(subValue) &&
+          subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
+        ) {
           initial[subkey] = {
             type: formModelType,
-            id_str: '',
+            id_str: "",
           };
         }
       });
@@ -182,7 +197,9 @@ export function useAtomsMap({
         });
 
       Object.entries(initialConfig)
-        .filter(([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k))
+        .filter(
+          ([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k),
+        )
         .forEach(([k, v]) => {
           map[k] = {};
           Object.entries(v).forEach(([subK, subV]) => {
@@ -203,15 +220,15 @@ export function useAtomsMap({
               subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
             ) {
               const formModelType = match(model)
-                .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
+                .with({ type: EntityTypeDict.Memodel }, () => "MEModelFromID")
                 .with(
                   {
                     type: EntityTypeDict.Circuit,
                     scale: CircuitScaleDictionary.Single,
                   },
-                  () => 'MEModelWithSynapsesCircuitFromID'
+                  () => "MEModelWithSynapsesCircuitFromID",
                 )
-                .with({ type: EntityTypeDict.Circuit }, () => 'CircuitFromID')
+                .with({ type: EntityTypeDict.Circuit }, () => "CircuitFromID")
                 .otherwise(() => {
                   throw new Error(`Unsupported entity type: ${model.type}`);
                 });
@@ -241,7 +258,7 @@ export function useAtomsMap({
 export function resetConfig(
   schema: ConfigSchema,
   newConfig: Config,
-  setAtomsMap: (newMap: AtomsMap) => void
+  setAtomsMap: (newMap: AtomsMap) => void,
 ) {
   const map: {
     [key: string]:
