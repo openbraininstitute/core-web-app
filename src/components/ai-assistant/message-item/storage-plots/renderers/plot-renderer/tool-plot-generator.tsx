@@ -20,12 +20,14 @@ export interface ToolPlotGeneratorProps {
   className?: string;
   result: ToolResult | null;
   data?: { content: string; type: string };
+  panelWidth?: number;
 }
 
 export default function ToolPlotGenerator({
   className,
   result,
   data: providedData,
+  panelWidth,
 }: ToolPlotGeneratorProps) {
   if (!result) return null;
 
@@ -33,16 +35,23 @@ export default function ToolPlotGenerator({
 
   return (
     providedData && (
-      <CustomPlot className={className} key={storageKey} providedData={providedData} />
+      <CustomPlot
+        className={className}
+        key={storageKey}
+        providedData={providedData}
+        panelWidth={panelWidth}
+      />
     )
   );
 }
 function CustomPlot({
   className,
   providedData,
+  panelWidth,
 }: {
   className?: string;
   providedData: { content: string; type: string };
+  panelWidth?: number;
 }) {
   const { content, type } = providedData;
   const [plotReady, setPlotReady] = React.useState(false);
@@ -121,7 +130,7 @@ function CustomPlot({
           </div>
         )}
         {!plotReady && <ToolSkeleton />}
-        <div className="overflow-y-auto" onDoubleClick={handleShow}>
+        <div key={panelWidth} className="overflow-y-auto" onDoubleClick={handleShow}>
           <Plot
             className={classNames(className, styles.toolPlotGenerator)}
             style={{

@@ -1,3 +1,6 @@
+import React, { useEffect, useState } from 'react';
+
+import { usePanelWidth } from '@/components/ai-assistant/hooks';
 import PlotErrorMessage from '@/components/github-flavor-markdown/plot-error-message';
 import { isString } from '@/util/type-guards';
 
@@ -13,6 +16,13 @@ export default function PlotInChat({
   storageId: string;
   isBackup?: boolean;
 }) {
+  const { panelWidth } = usePanelWidth();
+  const [debouncedWidth, setDebouncedWidth] = useState(panelWidth);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedWidth(panelWidth), 100);
+    return () => clearTimeout(timer);
+  }, [panelWidth]);
+
   const { data, isError, isLoading } = usePlotFile(storageId);
 
   if (isError) {
@@ -25,8 +35,16 @@ export default function PlotInChat({
   if (!isString(content)) return null;
 
   if (type === 'image') {
-    return <ToolThumbnailGeneration result={{ storage_id: storageId }} data={data} />;
+    return (
+      <ToolThumbnailGeneration
+        result={{ storage_id: storageId }}
+        data={data}
+        panelWidth={debouncedWidth}
+      />
+    );
   }
 
-  return <ToolPlotGenerator result={{ storage_id: storageId }} data={data} />;
+  return (
+    <ToolPlotGenerator result={{ storage_id: storageId }} data={data} panelWidth={debouncedWidth} />
+  );
 }

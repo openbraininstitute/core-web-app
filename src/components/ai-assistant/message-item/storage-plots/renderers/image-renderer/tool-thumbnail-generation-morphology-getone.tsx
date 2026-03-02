@@ -13,12 +13,14 @@ export interface ToolThumbnailGenerationProps {
   className?: string;
   result: ToolResult | null;
   data?: { content: string; type: string };
+  panelWidth?: number;
 }
 
 export default function ToolThumbnailGeneration({
   className,
   result,
   data: providedData,
+  panelWidth,
 }: ToolThumbnailGenerationProps) {
   if (!result) return null;
 
@@ -26,7 +28,7 @@ export default function ToolThumbnailGeneration({
     <>
       {typeof result.storage_id === 'string' && providedData && (
         <CustomThumbnail
-          key={result.storage_id}
+          key={`${result.storage_id}-${panelWidth}`}
           className={classNames(className, styles.toolThumbnailGenerationMorphologyGetone)}
           providedData={providedData}
         />
