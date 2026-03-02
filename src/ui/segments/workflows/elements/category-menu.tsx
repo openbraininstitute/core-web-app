@@ -2,7 +2,6 @@
 
 import { WheelGesturesPlugin } from 'embla-carousel-wheel-gestures';
 
-import { useFlags } from '@/features/feature-flags';
 import { Carousel, CarouselContent, CarouselItem } from '@/ui/molecules/carousel';
 import { CarouselButtons } from '@/ui/segments/workflows/elements/carousel-buttons';
 import { ActivityDict } from '@/ui/segments/workflows/elements/helpers';
@@ -16,8 +15,6 @@ type Props = {
 };
 
 export function CategoryMenu({ current, onItemClick }: Props) {
-  const featureFlags = useFlags();
-
   return (
     <Carousel
       id="workflow-category-menu"
@@ -31,9 +28,7 @@ export function CategoryMenu({ current, onItemClick }: Props) {
         <CarouselButtons />
       </div>
       <CarouselContent className="items-stretch">
-        {ActivityDict.filter(
-          (o) => !o.requiredFeatures || o.requiredFeatures.every((flag) => featureFlags[flag])
-        ).map((o) => (
+        {ActivityDict.map((o) => (
           <CarouselItem
             key={`category-selector-${o.value}`}
             className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"

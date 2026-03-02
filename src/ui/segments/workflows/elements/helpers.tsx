@@ -28,6 +28,7 @@ export const EntityGroupDict = {
 export type TEntityGroupValue = keyof typeof EntityGroupDict;
 
 type EntityTypeProperties = {
+  label?: string;
   disabled: boolean;
   type: TExtendedEntitiesTypeDict;
   requiredFeatures?: Array<FlagKey>;
@@ -78,7 +79,8 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
         type: ExtendedEntitiesTypeDict.IonChannelModel,
       },
       simulate: {
-        disabled: true,
+        label: 'Ion channel (beta)',
+        disabled: false,
         type: ExtendedEntitiesTypeDict.IonChannelModel,
       },
     },
@@ -321,7 +323,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
   {
     label: 'Extract',
     value: WorkflowActivityDictValue.extract,
-    disabled: false,
+    disabled: true,
     name: 'Extraction',
     configType: 'extract',
     config: extractNewConfiguration,
@@ -500,7 +502,7 @@ export function getAllOptionsOrdered(
 
         return {
           group: config.group,
-          label: config.label,
+          label: propertyConfig?.label ?? config.label,
           value: propertyConfig?.type,
           disabled: disabled || !satisfiesFeatureRequirements,
         };
