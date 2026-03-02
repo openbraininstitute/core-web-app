@@ -71,10 +71,7 @@ function CustomPlot({
     title: undefined,
     autosize: true,
     height: plotHeight,
-    margin: {
-      ...props.layout?.margin,
-      t: (props.layout?.margin?.t || 80) - 40,
-    },
+    margin: { ...props.layout?.margin, t: 10, l: 3, r: 3, b: 3 },
   };
 
   const fullscreenLayout = {
@@ -99,7 +96,6 @@ function CustomPlot({
       <div
         className={classNames('h-full', styles.plotContainer)}
         style={{ width: `${plotWidth}px`, maxWidth: '100%' }}
-        onDoubleClick={handleShow}
       >
         <button
           type="button"
@@ -125,22 +121,25 @@ function CustomPlot({
           </div>
         )}
         {!plotReady && <ToolSkeleton />}
-        <Plot
-          className={classNames(className, styles.toolPlotGenerator)}
-          style={{
-            width: '100%',
-            height: `${plotHeight}px`,
-            display: plotReady ? 'block' : 'none',
-          }}
-          data={props.data}
-          layout={modifiedLayout}
-          frames={props?.frames}
-          config={{ displaylogo: false, responsive: true, doubleClick: 'reset' }}
-          useResizeHandler
-          onInitialized={() => setPlotReady(true)}
-          onUpdate={() => setPlotReady(true)}
-          onDoubleClick={handleShow}
-        />
+        <div className="overflow-y-auto" onDoubleClick={handleShow}>
+          <Plot
+            className={classNames(className, styles.toolPlotGenerator)}
+            style={{
+              width: '100%',
+              minWidth: '250px',
+              height: `${plotHeight}px`,
+              display: plotReady ? 'block' : 'none',
+            }}
+            data={props.data}
+            layout={modifiedLayout}
+            frames={props?.frames}
+            config={{ displaylogo: false, responsive: true, doubleClick: 'reset' }}
+            useResizeHandler
+            onInitialized={() => setPlotReady(true)}
+            onUpdate={() => setPlotReady(true)}
+            onDoubleClick={handleShow}
+          />
+        </div>
       </div>
       <dialog ref={refDialog} className={styles.dialog}>
         <div className={styles.dialogBackdrop} onClick={handleBackdropClick}>

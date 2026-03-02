@@ -77,7 +77,7 @@ export default function BackupPlots({ className, storageIds }: BackupPlotsProps)
   return (
     <div className={classNames(className, styles.backupPlots)}>
       {storageIds.map((storageId) => (
-        <PlotInChat key={storageId} storageId={storageId} />
+        <PlotInChat key={storageId} storageId={storageId} isBackup />
       ))}
     </div>
   );
