@@ -2,9 +2,9 @@ import React from 'react';
 
 import { classNames } from '@/util/utils';
 
-import { isToolResult, PlotInChat } from '../storage-plots';
+import { PlotInChat } from '../storage-plots';
 
-import type { ToolInvocationUIPart, UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/ui-utils';
 
 import styles from './backup-plots.module.css';
 
@@ -13,12 +13,7 @@ function extractStorageIdsFromToolResult(result: any): string[] {
   if (!fileIdentifier) return [];
 
   const urlLinks = Array.isArray(fileIdentifier) ? fileIdentifier : [fileIdentifier];
-  return urlLinks
-    .map((urlLink: string) => {
-      const match = urlLink.match(/\/storage\/([^/]+)/);
-      return match ? match[1] : null;
-    })
-    .filter((id): id is string => id !== null);
+  return urlLinks.map((urlLink: string) => urlLink.match(/\/storage\/([^/]+)/)?.[1] ?? urlLink);
 }
 
 export function extractStorageIdsFromMessage(parts: UIMessage['parts']): string[] {
@@ -58,37 +53,17 @@ export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlo
   const textParts = deferredParts.filter((p) => p.type === 'text');
   const lastTextPart = textParts.length > 0 ? textParts[textParts.length - 1].text : undefined;
 
-  const plotsWithContent: React.ReactNode[] = [];
-
-  backupPlotsData.forEach((part) => {
-    const result = extractToolResults(
-      part as ToolInvocationUIPart,
-      [
-        'run-python',
-        'thumbnail-generation-morphology-getone',
-        'thumbnail-generation-electricalcellrecording-getone',
-      ],
-      isToolResult
-    );
-
-    if (!result) return;
-
-    const storageIds = extractStorageIdsFromToolResult(result);
-    const urlLinksWithoutImageLink = storageIds.filter((storageId) => {
-      return !lastTextPart?.match(new RegExp(`!\\[.*?\\]\\([^)]*\\/storage\\/${storageId}\\)`));
-    });
-
-    if (urlLinksWithoutImageLink.length > 0) {
-      plotsWithContent.push(
-        <BackupPlots
-          key={(part as any).toolInvocation.toolCallId}
-          storageIds={urlLinksWithoutImageLink}
-        />
-      );
-    }
+  const storageIds = extractStorageIdsFromMessage(backupPlotsData);
+  const urlLinksWithoutImageLink = storageIds.filter((storageId) => {
+    return !lastTextPart?.match(new RegExp(`!\\[.*?\\]\\([^)]*\\/storage\\/${storageId}\\)`));
   });
 
-  if (plotsWithContent.length === 0) return null;
+  const plotsWithContent =
+    urlLinksWithoutImageLink.length > 0 ? (
+      <BackupPlots storageIds={urlLinksWithoutImageLink} />
+    ) : null;
+
+  if (!plotsWithContent) return null;
 
   return (
     <div className="mt-4 pt-2 border-t-2 border-dotted border-gray-300">
@@ -106,23 +81,4 @@ export default function BackupPlots({ className, storageIds }: BackupPlotsProps)
       ))}
     </div>
   );
-}
-
-function extractToolResults<T>(
-  part: ToolInvocationUIPart,
-  toolsIds: string[],
-  typeGuard: (data: unknown) => data is T
-): T | null {
-  const invocation = part.toolInvocation;
-
-  if (invocation.state !== 'result' || !toolsIds.includes(invocation.toolName)) {
-    return null;
-  }
-
-  try {
-    const result = JSON.parse(invocation.result);
-    return typeGuard(result) ? result : null;
-  } catch {
-    return null;
-  }
 }
