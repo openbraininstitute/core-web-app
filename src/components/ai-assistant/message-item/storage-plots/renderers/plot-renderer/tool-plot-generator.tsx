@@ -29,26 +29,12 @@ export default function ToolPlotGenerator({
 }: ToolPlotGeneratorProps) {
   if (!result) return null;
 
+  const storageKey = Array.isArray(result.storage_id) ? result.storage_id[0] : result.storage_id;
+
   return (
-    <>
-      {
-        // python-tool can return a list of storage_ids
-        Array.isArray(result.storage_id)
-          ? result.storage_id.map(
-              (storage_id: string) =>
-                providedData && (
-                  <CustomPlot className={className} key={storage_id} providedData={providedData} />
-                )
-            )
-          : providedData && (
-              <CustomPlot
-                className={className}
-                key={result.storage_id}
-                providedData={providedData}
-              />
-            )
-      }
-    </>
+    providedData && (
+      <CustomPlot className={className} key={storageKey} providedData={providedData} />
+    )
   );
 }
 function CustomPlot({
@@ -132,6 +118,7 @@ function CustomPlot({
               fontWeight: titleFont.weight || 'bold',
               color: titleFont.color || '#333',
               lineHeight: 1.3,
+              paddingRight: '40px',
             }}
           >
             {title}
