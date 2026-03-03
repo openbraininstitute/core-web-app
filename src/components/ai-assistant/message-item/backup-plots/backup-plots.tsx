@@ -9,11 +9,17 @@ import type { UIMessage } from '@ai-sdk/ui-utils';
 import styles from './backup-plots.module.css';
 
 function extractStorageIdsFromToolResult(result: any): string[] {
-  const fileIdentifier = result.image_link ?? result.url_link ?? result.storage_id;
+  if (result.storage_id) {
+    return Array.isArray(result.storage_id) ? result.storage_id : [result.storage_id];
+  }
+
+  const fileIdentifier = result.image_link ?? result.url_link;
   if (!fileIdentifier) return [];
 
   const urlLinks = Array.isArray(fileIdentifier) ? fileIdentifier : [fileIdentifier];
-  return urlLinks.map((urlLink: string) => urlLink.match(/\/storage\/([^/]+)/)?.[1] ?? urlLink);
+  return urlLinks
+    .map((urlLink: string) => urlLink.match(/\/storage\/([^/]+)/)?.[1])
+    .filter((id): id is string => id !== undefined);
 }
 
 export function extractStorageIdsFromMessage(parts: UIMessage['parts']): string[] {
@@ -55,7 +61,9 @@ export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlo
 
   const storageIds = extractStorageIdsFromMessage(backupPlotsData);
   const urlLinksWithoutImageLink = storageIds.filter((storageId) => {
-    return !lastTextPart?.match(new RegExp(`!\\[.*?\\]\\([^)]*\\/storage\\/${storageId}\\)`));
+    return !lastTextPart?.match(
+      new RegExp(`!\\[.*?\\]\\([^)]*\\/storage\\/[^)]*${storageId}[^)]*\\)`)
+    );
   });
 
   const plotsWithContent =
@@ -64,6 +72,7 @@ export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlo
     ) : null;
 
   if (!plotsWithContent) return null;
+  if (plotsWithContent) console.log(urlLinksWithoutImageLink);
 
   return (
     <div className="mt-4 pt-2 border-t-2 border-dotted border-gray-300">
