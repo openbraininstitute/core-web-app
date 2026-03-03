@@ -3,6 +3,7 @@ import { cloneElement, Fragment, isValidElement } from 'react';
 import type { ReactNode } from 'react';
 
 export type Component = (match: string) => ReactNode;
+
 /**
  * react component type for the generic Linkify component.
  */
@@ -13,8 +14,6 @@ export type ReactLinkItProps = React.FC<
   }>
 >;
 
-let key = 0;
-export const getKey = (): number => ++key;
 export const urlRegex = /(https?:\/\/|www\.)[^\s<>'"()[\]{}]+[^\s<>'"()[\]{}.,;:!?\])}]/u;
 
 /**
@@ -92,8 +91,6 @@ export function replacePattern(
 }
 
 /**
- * TextPatternTransformer
- *
  * react component that can wrap around
  * any React component to replace any pattern using a custom regex and component.
  */

@@ -7,7 +7,6 @@ export const renderMathInText = (text: string) => {
   // regex to match LaTeX expressions (backslash followed by command or underscore/superscript)
   const latexRegex =
     /\$(.+?)\$|\\[a-zA-Z]+(?:_\{[^}]+\}|\^\{[^}]+\}|_[a-zA-Z0-9]|\^[a-zA-Z0-9])?|[a-zA-Z0-9]+_\{[^}]+\}/g;
-  // /\\[a-zA-Z]+(?:_\{[^}]+\}|\^\{[^}]+\}|_[a-zA-Z0-9]|\^[a-zA-Z0-9])?|[a-zA-Z0-9]+_\{[^}]+\}/g;
 
   let match: RegExpExecArray | null;
   const regex = new RegExp(latexRegex);
