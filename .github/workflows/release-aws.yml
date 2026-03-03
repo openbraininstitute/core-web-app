@@ -62,7 +62,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ vars.PUBLICECR_UPLOAD_ROLE_ARN }}
-          aws-region: us-east-1
+          aws-region: ${{ vars.PUBLICECR_REGION }}
 
       - name: Authenticate with AWS Public ECR
         uses: aws-actions/amazon-ecr-login@v2
