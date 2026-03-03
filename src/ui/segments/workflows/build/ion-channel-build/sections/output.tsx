@@ -5,6 +5,7 @@ import {
   queryOptions,
   experimental_streamedQuery as streamedQuery,
   useQuery,
+  useQueryClient,
 } from '@tanstack/react-query';
 import { useAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
@@ -35,6 +36,7 @@ import {
 import { isFormValid } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
 import { FileViewer } from '@/ui/segments/workflows/build/ion-channel-build/sections/file-viewer';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
+import { keyBuilder as workspaceKeyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import {
   createAsyncIterableStream,
@@ -313,6 +315,7 @@ function toSelectedOutputPreview(item: OutputListItem): SelectedPreview {
 }
 
 export function Output({ sessionId }: { sessionId: string | null }) {
+  const queryClient = useQueryClient();
   const context = useWorkspace();
   const notification = useAppNotification();
   const safeSessionId = sessionId || '';
@@ -338,6 +341,9 @@ export function Output({ sessionId }: { sessionId: string | null }) {
             const response = await buildIonChannel({ ctx: context, payload, stream: true });
             const stream = await createTextStream(response);
             if (!stream) return emptyStream();
+
+            queryClient.invalidateQueries({ queryKey: workspaceKeyBuilder.wallet(context) });
+
             return messageGenerator(createAsyncIterableStream<string>(stream));
           } catch (error) {
             const errorMsg =
