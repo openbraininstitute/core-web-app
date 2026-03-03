@@ -61,7 +61,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: arn:aws:iam::985539765147:role/gh_ecr_push_core-web-app
+          role-to-assume: ${{ vars.PUBLICECR_UPLOAD_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Authenticate with AWS Public ECR
