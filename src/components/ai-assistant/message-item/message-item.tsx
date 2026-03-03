@@ -61,6 +61,11 @@ function MessageChild({
 }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
+  const memoizedStorageIds = React.useMemo(
+    () => extractStorageIdsFromMessage(deferredParts),
+    [deferredParts]
+  );
+  const validStorageIds = useStableArray(memoizedStorageIds);
 
   switch (value.role) {
     case 'user':
@@ -75,11 +80,6 @@ function MessageChild({
         </div>
       );
     case 'assistant': {
-      const memoizedStorageIds = React.useMemo(
-        () => extractStorageIdsFromMessage(deferredParts),
-        [deferredParts]
-      );
-      const validStorageIds = useStableArray(memoizedStorageIds);
       const children = deferredParts.map((part, index) => {
         if (part.type === 'text' && part.text !== '') {
           return (
