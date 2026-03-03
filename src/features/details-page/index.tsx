@@ -34,7 +34,7 @@ export function detailPageSectionRenderer({
         <Overview
           entity={entity}
           extendedType={entityType.extendedType}
-          ctx={context}
+          context={context}
           isWorkflow={isWorkflow}
         />
       );
@@ -43,16 +43,24 @@ export function detailPageSectionRenderer({
       return <Analysis entity={entity} extendedType={entityType.extendedType} />;
     })
     .with({ section: DetailViewSectionsDict.Configuration }, () => {
-      return <Configuration entity={entity} extendedType={entityType.extendedType} ctx={context} />;
+      return (
+        <Configuration entity={entity} extendedType={entityType.extendedType} context={context} />
+      );
     })
     .with({ section: DetailViewSectionsDict.RelatedPublications }, () => {
       return <RelatedPublications entity={entity} extendedType={entityType.extendedType} />;
     })
     .with({ section: DetailViewSectionsDict.RelatedArtifacts }, () => {
-      return <RelatedArtifacts extendedType={entityType.extendedType} entity={entity} />;
+      return (
+        <RelatedArtifacts
+          extendedType={entityType.extendedType}
+          entity={entity}
+          context={context}
+        />
+      );
     })
     .with({ section: DetailViewSectionsDict.Results }, () => {
-      return <Results extendedType={entityType.extendedType} entity={entity} ctx={context} />;
+      return <Results extendedType={entityType.extendedType} entity={entity} context={context} />;
     })
     .otherwise(() => {
       return null;
