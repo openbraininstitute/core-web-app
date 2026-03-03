@@ -40,7 +40,7 @@ export default function AiAssistant({
   onFullscreenToggle,
   onCollapse,
 }: AiAssistantProps) {
-  const { panelWidth, setPanelContainer } = usePanelWidth();
+  const { panelWidth } = usePanelWidth();
   const isDragging = useIsDragging();
   const [tab, setTab] = React.useState<'chat' | 'history'>('chat');
   const assistant = useAiAssistant();
@@ -67,10 +67,7 @@ export default function AiAssistant({
     <QueryClientProvider client={queryClient}>
       <AiContextProvider section={section}>
         <div
-          ref={(el) => {
-            setPanelContainer(el);
-            containerRef?.(el);
-          }}
+          ref={containerRef}
           className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
         >
           <motion.div
@@ -82,7 +79,7 @@ export default function AiAssistant({
               ...animationProps,
             }}
             exit={{ opacity: 0, width: 0 }}
-            transition={isDragging ? { duration: 0 } : { duration: 0.3, ease: 'easeInOut' }}
+            transition={isDragging ? { duration: 0 } : { duration: 0.25, ease: 'easeInOut' }}
           >
             <div className={styles.header}>
               <div className={styles.headerTitle}>AI assistant</div>

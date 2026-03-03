@@ -37,7 +37,6 @@ export function AiContextProvider({
 }
 
 const atomPanelWidth = atomWithStorage('ai-assistant/panel-width', MINIMAL_PANEL_SIZE);
-const atomPanelContainer = atom<HTMLDivElement | null>(null);
 const atomIsDragging = atom<boolean>(false);
 
 export function useIsDragging(): boolean {
@@ -57,50 +56,23 @@ export function useSetIsDragging(): (value: boolean) => void {
 export function usePanelWidth(): {
   panelWidth: number;
   setPanelWidth: (panelWidth: number) => void;
-  setPanelContainer: (container: HTMLDivElement | null) => void;
 } {
-  const [container, setContainer] = useAtom(atomPanelContainer);
-  const dimension = useContainerDimension(container);
-  const clamp = (value: number) => {
-    if (value < MINIMAL_PANEL_SIZE) return MINIMAL_PANEL_SIZE;
-
-    const maxWidth = dimension.left + dimension.width - (globalThis.screen?.availWidth ?? 0) / 3;
-    if (maxWidth > 0 && value > maxWidth) return maxWidth;
-
-    return value;
-  };
   const [width, setWidth] = useAtom(atomPanelWidth);
-  return {
-    panelWidth: clamp(width),
-    setPanelWidth: (value: number) => setWidth(clamp(value)),
-    setPanelContainer: (value: HTMLDivElement | null) => {
-      if (value) setContainer(value);
-    },
-  };
-}
 
-export function useContainerDimension(container: HTMLDivElement | null) {
-  const refTimeoutId = React.useRef(0);
-  const [dimension, setDimension] = React.useState({ left: 0, top: 0, width: 0, height: 0 });
-  React.useEffect(() => {
-    if (!container) return;
+  const clamp = React.useCallback((value: number): number => {
+    if (value < MINIMAL_PANEL_SIZE) return MINIMAL_PANEL_SIZE;
+    const maxWidth = (globalThis.window?.innerWidth ?? Infinity) * (2 / 3);
+    if (value > maxWidth) return maxWidth;
+    return value;
+  }, []);
 
-    const callback = () => {
-      globalThis.clearTimeout(refTimeoutId.current);
-      refTimeoutId.current = globalThis.setTimeout(() => {
-        const rect = container.getBoundingClientRect();
-        setDimension({
-          left: Math.round(rect.left),
-          top: Math.round(rect.top),
-          width: Math.round(rect.width),
-          height: Math.round(rect.height),
-        });
-      }) as unknown as number;
-    };
-    const observer = new ResizeObserver(callback);
-    callback();
-    observer.observe(container);
-    return () => observer.unobserve(container);
-  }, [container]);
-  return dimension;
+  const setPanelWidth = React.useCallback(
+    (value: number) => setWidth(value), // store raw, clamp only on read
+    [setWidth]
+  );
+
+  return React.useMemo(
+    () => ({ panelWidth: clamp(width), setPanelWidth }),
+    [width, setPanelWidth, clamp]
+  );
 }
