@@ -41,8 +41,6 @@ export const SECTIONS: Readonly<Section[]> = [
     caption: 'The real digital brain story',
     slug: '/the-real-digital-brain-story',
   },
-  { index: EnumSection.Features, caption: 'Features', slug: '/features' },
-  { index: EnumSection.Showcases, caption: 'Showcases', slug: '/showcases' },
 ];
 
 export const MENU_ITEMS: Readonly<Array<{ caption: string; index: EnumSection; slug: string }>> = [
