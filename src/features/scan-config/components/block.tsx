@@ -125,38 +125,92 @@ export default function Block({
     }
 
     if (paramSchema.ui_element === ScanConfigUIElementDict.NeuronIds) {
-      const elements: number[] =
-        isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
+      // neuron_ids can be either a single NamedTuple or an array of NamedTuples
+      // Extract all elements from all NamedTuples
+      const elements: number[] = [];
+      
+      if (Array.isArray(value)) {
+        // Array of NamedTuples
+        value.forEach((namedTuple) => {
+          if (isPlainObject(namedTuple) && Array.isArray(namedTuple.elements)) {
+            elements.push(...namedTuple.elements);
+          }
+        });
+      } else if (isPlainObject(value) && Array.isArray(value.elements)) {
+        // Single NamedTuple
+        elements.push(...value.elements);
+      }
 
       return (
         <NeuronIds
           elements={elements}
           disabled={disabled}
           onDeleteElement={(i: number) => {
-            if (!isPlainObject(state[k]) || !Array.isArray(state[k].elements)) return;
+            // Handle both single NamedTuple and array of NamedTuples
+            if (Array.isArray(state[k])) {
+              // Array of NamedTuples - flatten, remove element, rebuild
+              const allElements: number[] = [];
+              state[k].forEach((nt: any) => {
+                if (isPlainObject(nt) && Array.isArray(nt.elements)) {
+                  allElements.push(...nt.elements);
+                }
+              });
+              
+              if (allElements.length === 1) {
+                setState({ ...state, [k]: null });
+                return;
+              }
+              
+              allElements.splice(i, 1);
+              
+              setState({
+                ...state,
+                [k]: [{ type: 'NamedTuple', name: 'id_list', elements: allElements }],
+              });
+            } else if (isPlainObject(state[k]) && Array.isArray(state[k].elements)) {
+              // Single NamedTuple
+              if (state[k].elements.length === 1) {
+                setState({ ...state, [k]: null });
+                return;
+              }
 
-            if (state[k].elements.length === 1) {
-              setState({ ...state, [k]: null });
-              return;
+              state[k].elements.splice(i, 1);
+
+              setState({
+                ...state,
+                [k]: { ...state[k], elements: [...state[k].elements] },
+              });
             }
-
-            state[k].elements.splice(i, 1); // delete in place
-
-            setState({
-              ...state,
-              [k]: { elements: [...state[k].elements] },
-            });
           }}
           onAddElement={(newElement: number) => {
             if (!state[k]) {
+              // Initialize as array of NamedTuples (the more common case)
               setState({
                 ...state,
-                [k]: { elements: [newElement] },
+                [k]: [{ type: 'NamedTuple', name: 'id_list', elements: [newElement] }],
               });
+            } else if (Array.isArray(state[k])) {
+              // Array of NamedTuples - add to the first one or create new
+              const firstTuple = state[k][0];
+              if (isPlainObject(firstTuple) && Array.isArray(firstTuple.elements)) {
+                setState({
+                  ...state,
+                  [k]: [
+                    { ...firstTuple, elements: [...firstTuple.elements, newElement] },
+                    ...state[k].slice(1),
+                  ],
+                });
+              } else {
+                setState({
+                  ...state,
+                  [k]: [{ type: 'NamedTuple', name: 'id_list', elements: [newElement] }],
+                });
+              }
             } else if (isPlainObject(state[k]) && Array.isArray(state[k].elements)) {
+              // Single NamedTuple
               setState({
                 ...state,
-                [k]: { elements: [...state[k].elements, newElement] },
+                [k]: { ...state[k], elements: [...state[k].elements, newElement] },
               });
             }
           }}
