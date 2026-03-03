@@ -1,7 +1,10 @@
 'use client';
 
+import { useCallback, useState } from 'react';
+
 import { useSanityContentForPage } from '@/components/LandingPage/content/content';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
+import { cn } from '@/utils/css-class';
 
 import FeatureBlock from './feature-block';
 
@@ -71,6 +74,8 @@ function isSingleFeature(item: unknown): item is ContentForSingleFeature {
 
 export default function SectionFeatures() {
   const pageContent = useSanityContentForPage(EnumSection.Features);
+  const [activeSection, setActiveSection] = useState(0);
+  const handleInView = useCallback((index: number) => setActiveSection(index), []);
 
   const featureBlocks: ContentForFeatures[] = [];
   if (pageContent?.content && Array.isArray(pageContent.content)) {
@@ -95,28 +100,44 @@ export default function SectionFeatures() {
   }
 
   const scrollToBlock = (index: number) => {
+    setActiveSection(index);
     const element = document.getElementById(`feature-block-${index}`);
     element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const activeBlock = featureBlocks[activeSection];
+  const isActiveThemeDark = activeBlock?.theme === 'dark';
+  const activeDotClass = isActiveThemeDark ? 'bg-white' : 'bg-primary-9';
+  const inactiveDotClass = isActiveThemeDark ? 'bg-primary-6' : 'bg-neutral-3';
+
   return (
     <>
-      <nav className="fixed right-5 z-40 flex flex-col gap-2">
+      <nav className="fixed right-5 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4">
         {featureBlocks.map((block, index) => (
           <button
             key={block.titleH1 ?? block.titleH2 ?? `section-${index}`}
             type="button"
             onClick={() => scrollToBlock(index)}
-            className="w-10 h-10 bg-white rounded-full hover:opacity-90 transition-opacity"
+            className="w-4 h-4 rounded-full hover:opacity-90 transition-opacity flex items-center justify-center"
             aria-label={`Scroll to section ${index + 1}`}
           >
-            {index + 1}
+            <span
+              className={cn(
+                'w-2 h-4 rounded-lg',
+                index === activeSection ? activeDotClass : inactiveDotClass
+              )}
+            />
           </button>
         ))}
       </nav>
       <div className="relative w-screen">
         {featureBlocks.map((block, index) => (
-          <FeatureBlock key={block.titleH1 ?? block.titleH2 ?? index} id={index} content={block} />
+          <FeatureBlock
+            key={block.titleH1 ?? block.titleH2 ?? index}
+            id={index}
+            content={block}
+            onInView={handleInView}
+          />
         ))}
       </div>
     </>

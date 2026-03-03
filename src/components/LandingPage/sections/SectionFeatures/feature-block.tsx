@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useInView } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
 
 export type ContentForFeatures = {
   titleH1?: string;
@@ -17,8 +18,22 @@ const LIGHT_INACTIVE = '#8C8C8C';
 const DARK_ACTIVE = '#ffffff';
 const DARK_INACTIVE = '#69C0FF';
 
-export default function FeatureBlock({ content, id }: { content: ContentForFeatures; id: number }) {
+export default function FeatureBlock({
+  content,
+  id,
+  onInView,
+}: {
+  content: ContentForFeatures;
+  id: number;
+  onInView?: (index: number) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { amount: 0.5 });
   const [activeUseCase, setActiveUseCase] = useState<number>(0);
+
+  useEffect(() => {
+    if (isInView && onInView) onInView(id);
+  }, [isInView, onInView, id]);
   const isDark = content.theme === 'dark';
   const activeColor = isDark ? DARK_ACTIVE : LIGHT_ACTIVE;
   const inactiveColor = isDark ? DARK_INACTIVE : LIGHT_INACTIVE;
@@ -34,6 +49,7 @@ export default function FeatureBlock({ content, id }: { content: ContentForFeatu
   } as React.CSSProperties;
   return (
     <div
+      ref={ref}
       className="relative w-full min-h-screen flex flex-row items-center gap-4 flex-nowrap py-[16vh] px-32"
       style={style}
       id={`feature-block-${id}`}
