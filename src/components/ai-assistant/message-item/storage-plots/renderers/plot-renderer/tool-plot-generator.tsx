@@ -118,14 +118,18 @@ function CustomPlot({
         </button>
         {title && (
           <div
-            className="px-4 py-2 text-center font-bold break-words hyphens-auto"
+            className="px-4 py-2 text-center font-bold"
+            title={title}
             style={{
-              fontSize: titleFont.size || 16,
+              fontSize: Math.min(titleFont.size || 16, 24),
               fontFamily: titleFont.family || 'Arial, sans-serif',
               fontWeight: titleFont.weight || 'bold',
               color: titleFont.color || '#333',
               lineHeight: 1.3,
               paddingRight: '40px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
           >
             {title}
@@ -157,13 +161,17 @@ function CustomPlot({
           <div className={styles.dialogContent} onClick={(e) => e.stopPropagation()}>
             {title && (
               <div
-                className="px-4 py-2 text-center font-bold break-words hyphens-auto"
+                className="px-4 py-2 text-center font-bold"
+                title={title}
                 style={{
-                  fontSize: titleFont.size || 16,
+                  fontSize: Math.min(titleFont.size || 16, 24),
                   fontFamily: titleFont.family || 'Arial, sans-serif',
                   fontWeight: titleFont.weight || 'bold',
                   color: titleFont.color || '#333',
                   lineHeight: 1.3,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {title}
