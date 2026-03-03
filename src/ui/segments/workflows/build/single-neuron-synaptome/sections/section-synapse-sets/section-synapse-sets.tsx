@@ -1,21 +1,17 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/ui/molecules/tooltip";
-import { cn } from "@/utils/css-class";
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { cn } from '@/utils/css-class';
 
-import { SynapseSetMenuItems } from "../../synapse-set-menu-item";
-import SynapticSetButton from "./synaptic-set-button";
+import { SynapseSetMenuItems } from '../../synapse-set-menu-item';
+import SynapticSetButton from './synaptic-set-button';
 
-import type { IMEModel } from "@/api/entitycore/types";
-import type { TSingleNeuronSynaptomeConfiguration } from "@/api/entitycore/types/entities/single-neuron-synaptome";
+import type { IMEModel } from '@/api/entitycore/types';
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
-import styles from "./section-synapse-sets.module.css";
+import styles from './section-synapse-sets.module.css';
 
 export interface SectionSynapseSetsProps {
   className?: string;
-  breakpoint: "l" | "mobile" | "xl";
+  breakpoint: 'l' | 'mobile' | 'xl';
   memodel?: IMEModel;
   active: boolean;
   onClick(): void;
@@ -31,7 +27,6 @@ export default function SectionSynapseSets({
   sessionId,
   synapseSets,
 }: SectionSynapseSetsProps) {
-  console.log("🐞 [section-synapse-sets@34] active =", active); // @FIXME: Remove this line written on 2026-03-02 at 10:51
   return (
     <div className={cn(className, styles.sectionSynapseSets)}>
       <Tooltip>
@@ -47,14 +42,8 @@ export default function SectionSynapseSets({
           </div>
         </TooltipTrigger>
         {!memodel && (
-          <TooltipContent
-            sideOffset={0}
-            side="bottom"
-            arrowClassName="bg-primary-9"
-          >
-            <p className={cn("text-justify text-base")}>
-              Please select me model first
-            </p>
+          <TooltipContent sideOffset={0} side="bottom" arrowClassName="bg-primary-9">
+            <p className={cn('text-justify text-base')}>Please select me model first</p>
           </TooltipContent>
         )}
       </Tooltip>
