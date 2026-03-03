@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
-import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
   type ConfigSchema,
@@ -34,7 +34,6 @@ type Props = {
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  blockAIConfig: ConfigObject | null;
 };
 
 export default function BlockDictionary({
@@ -52,7 +51,6 @@ export default function BlockDictionary({
   model,
   allEntries,
   onNewBlockClick,
-  blockAIConfig,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
 
@@ -77,12 +75,11 @@ export default function BlockDictionary({
       <Block
         schemaName={schemaName}
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={!!campaignId || loading || !!blockAIConfig || !isChatReady}
+        disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
         config={config}
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
         model={model}
-        blockAIConfig={blockAIConfig}
       />
     );
   }

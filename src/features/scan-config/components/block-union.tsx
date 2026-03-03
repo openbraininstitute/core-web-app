@@ -21,7 +21,6 @@ type Props = {
   loading: boolean;
   config: Config;
   model: ICircuit | IMEModel;
-  blockAIConfig: Record<string, ConfigValue> | null;
 };
 
 function getDiscriminatorProperty(schema: IRootBlockUnion): string {
@@ -40,7 +39,6 @@ export default function BlockUnion({
   loading,
   config,
   model,
-  blockAIConfig,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
 
@@ -87,7 +85,6 @@ export default function BlockUnion({
           blockSchema={selectedBlockSchema}
           stateAtom={atomsMap[selectedRootElement]}
           model={model}
-          blockAIConfig={blockAIConfig}
           hideTitle
         />
       </div>

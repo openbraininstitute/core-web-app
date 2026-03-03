@@ -1,7 +1,6 @@
 import BlockDictionary from '@/features/scan-config/components/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/block-union';
-import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { isAtom } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
   type ConfigSchema,
@@ -55,15 +54,6 @@ export default function Middle({
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
 
-  const getBlockAIConfig = () => {
-    if (!aiConfig) return null;
-
-    const blockConf = aiConfig[selectedRootElement];
-    if (!isPlainObject(blockConf)) return {};
-    if (isRootBlock(schema, selectedRootElement)) return blockConf;
-    return blockConf[selectedEntry] ?? {};
-  };
-
   return (
     <>
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
@@ -82,7 +72,6 @@ export default function Middle({
           blockDictionarySchema={selectedSchema}
           selectedRootElement={selectedRootElement}
           onNewBlockClick={onNewBlockClick}
-          blockAIConfig={getBlockAIConfig()}
         />
       )}
 
@@ -95,7 +84,6 @@ export default function Middle({
             blockSchema={selectedSchema}
             stateAtom={atomsMap[selectedRootElement]}
             model={model}
-            blockAIConfig={getBlockAIConfig()}
           />
         )}
 
@@ -110,7 +98,6 @@ export default function Middle({
           loading={loading}
           config={config}
           model={model}
-          blockAIConfig={getBlockAIConfig()}
         />
       )}
     </>

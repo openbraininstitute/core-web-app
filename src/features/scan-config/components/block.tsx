@@ -1,10 +1,7 @@
-import { CloseOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
-import { isEqual, isNil } from 'es-toolkit/compat';
+import { isNil } from 'es-toolkit/compat';
 import { atom, useAtom } from 'jotai';
-import { useRef } from 'react';
 
-import AIAdd from '@/components/icons/ai/add_icon';
 import BooleanInput from '@/features/scan-config/components/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/entity-property-dropdown';
 import ModelDetails from '@/features/scan-config/components/model-details';
@@ -41,7 +38,6 @@ export default function Block({
   stateAtom,
   config,
   model,
-  blockAIConfig,
   hideTitle,
 }: {
   schemaName: SchemaName;
@@ -50,12 +46,9 @@ export default function Block({
   blockSchema?: TBlock;
   model: ICircuit | IMEModel | undefined | null;
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
-  blockAIConfig: Record<string, ConfigValue> | null;
   hideTitle?: boolean;
 }) {
-  // Empty atom for when a block doesn't exist in the config (and the atoms map) yet, only in the AI suggested changes
-  const emptyAtom = useRef(atom<Record<string, ConfigValue>>({}));
-  const [state, setState] = useAtom(stateAtom ?? emptyAtom.current);
+  const [state, setState] = useAtom(stateAtom ?? atom<Record<string, ConfigValue>>({}));
 
   function renderInput(k: string, paramSchema: ParamSchema, value: ConfigValue) {
     if (paramSchema.ui_element === ScanConfigUIElementDict.StringInput) {
@@ -128,7 +121,7 @@ export default function Block({
       // neuron_ids can be either a single NamedTuple or an array of NamedTuples
       // Extract all elements from all NamedTuples
       const elements: number[] = [];
-      
+
       if (Array.isArray(value)) {
         // Array of NamedTuples
         value.forEach((namedTuple) => {
@@ -155,14 +148,14 @@ export default function Block({
                   allElements.push(...nt.elements);
                 }
               });
-              
+
               if (allElements.length === 1) {
                 setState({ ...state, [k]: null });
                 return;
               }
-              
+
               allElements.splice(i, 1);
-              
+
               setState({
                 ...state,
                 [k]: [{ type: 'NamedTuple', name: 'id_list', elements: allElements }],
@@ -257,18 +250,6 @@ export default function Block({
   }
 
   if (!blockSchema) return null;
-
-  function op(k: string) {
-    if (!blockAIConfig) return null;
-    const v1 = state[k];
-    const v2 = blockAIConfig[k];
-
-    if (v1 === undefined && v2 !== undefined) return 'add';
-    if (v1 !== undefined && v2 === undefined) return 'delete';
-    if (v1 !== undefined && v2 !== undefined && !isEqual(v1, v2)) return 'replace';
-    return null;
-  }
-
   return (
     <div className="flex flex-col gap-2">
       {!hideTitle && (
@@ -291,24 +272,8 @@ export default function Block({
               if (isType(blockElementSchema)) return null;
               const isBooleanInput =
                 blockElementSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
-              const op_ = op(k);
 
-              const patchBorderClass = () => {
-                if (op_ === 'delete' || op_ === 'replace') return 'border-red-500';
-                if (op_ === 'add') return 'border-[#1690ff]';
-                return 'border-transparent';
-              };
-
-              // Gets the value so show in the input element
-              const firstValue = () => {
-                if (!op_ || op_ === 'delete' || op_ === 'replace' || !blockAIConfig) {
-                  return state[k];
-                }
-
-                return blockAIConfig[k];
-              };
-
-              const value = firstValue();
+              const value = state[k];
 
               return (
                 <div
@@ -334,23 +299,10 @@ export default function Block({
                     <TooltipTrigger asChild>
                       <div>
                         <div className="mb-1 flex items-center gap-1">
-                          <div className={cn('border rounded-lg flex-1 mr-1', patchBorderClass())}>
+                          <div className="border rounded-lg border-transparent flex-1 mr-1">
                             {renderInput(k, blockElementSchema, value)}
                           </div>
-                          {(op_ === 'delete' || op_ === 'replace') && (
-                            <CloseOutlined className="text-red-500! text-[16px]!" />
-                          )}
-                          {op_ === 'add' && <AIAdd />}
                         </div>
-
-                        {op_ === 'replace' && !!blockAIConfig && (
-                          <div className="flex items-center gap-1">
-                            <div className="border rounded-lg border-[#1690ff] flex-1 mr-1">
-                              {renderInput(k, blockElementSchema, blockAIConfig[k])}
-                            </div>
-                            <AIAdd />
-                          </div>
-                        )}
                       </div>
                     </TooltipTrigger>
                     <TooltipContent

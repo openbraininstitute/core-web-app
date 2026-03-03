@@ -44,7 +44,6 @@ export default function Left({
   setIsEditingKey,
   activity,
   handleAcceptAIChanges,
-  handleRejectAIChanges,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -70,11 +69,11 @@ export default function Left({
   setIsEditingKey: (k: boolean) => void;
   activity: TScanConfigActivity;
   handleAcceptAIChanges: () => void;
-  handleRejectAIChanges: () => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig } = useAIConfig();
 
+  // Auto-apply AI-generated configuration changes when available
   useEffect(() => {
     if (aiConfig && !campaignId) {
       handleAcceptAIChanges();
@@ -130,26 +129,6 @@ export default function Left({
           );
         })}
       </div>
-{/* 
-      {!!aiConfig && !campaignId && (
-        handleAcceptAIChanges()
-        <div className="flex w-[95%] min-h-12.5 gap-2">
-          <button
-            type="button"
-            className="min-h-12.5 text-lg drop-shadow border-red-500 border rounded-full p-2 grow text-red-500"
-            onClick={handleRejectAIChanges}
-          >
-            Reject changes
-          </button>
-          <button
-            type="button"
-            className="min-h-12.5 text-lg bg-green-600 text-white p-2 rounded-full grow "
-            onClick={handleAcceptAIChanges}
-          >
-            Accept changes
-          </button>
-        </div>
-      )} */}
 
       {!readOnly && (!aiConfig || (aiConfig && campaignId)) && (
         <GenerateConfigButton

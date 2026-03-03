@@ -79,7 +79,7 @@ export function ScanConfigTemplate({
 
   const aiEnabled = 'scale' in entity && entity.scale !== 'single';
 
-  const updateRequestId = useAgentState(aiEnabled ? 'smc_simulation_config' : '', config);
+  useAgentState(aiEnabled ? 'smc_simulation_config' : '', config);
   const { aiConfig, setAiConfig } = useAIConfig();
 
   if (!schema || Object.keys(atomsMap).length === 0) {
@@ -172,11 +172,6 @@ export function ScanConfigTemplate({
               if (!aiConfig) return;
               resetConfig(schema, aiConfig, setAtomsMap);
               setAiConfig(null);
-              updateRequestId();
-            }}
-            handleRejectAIChanges={() => {
-              setAiConfig(null);
-              updateRequestId();
             }}
           />
           <div
