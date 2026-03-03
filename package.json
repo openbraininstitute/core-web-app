@@ -114,7 +114,7 @@
     "three": "^0.159.0",
     "ts-pattern": "^5.9.0",
     "use-breakpoint": "^4.0.10",
-    "zod": "^3.25.76"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",

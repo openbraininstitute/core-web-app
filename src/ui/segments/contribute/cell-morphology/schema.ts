@@ -8,15 +8,13 @@ import {
   SubjectIdSchema,
 } from '@/ui/segments/contribute/shared/schemas';
 
-export const ProtocolSchema = z
-  .string({ message: 'Protocol is required' })
-  .uuid()
-  .nonempty({ message: 'Protocol is required' });
+export const ProtocolSchema = z.uuid().nonempty({
+  error: 'Protocol is required',
+});
 
-export const MTypeClassIdSchema = z
-  .string({ message: 'M-type class is required' })
-  .uuid()
-  .nonempty({ message: 'M-type class is required' });
+export const MTypeClassIdSchema = z.uuid().nonempty({
+  error: 'M-type class is required',
+});
 
 export const CELL_MORPHOLOGY_FILE_TYPES = [
   { type: 'swc', extension: 'swc', mimeType: 'application/swc' },

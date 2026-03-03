@@ -61,7 +61,7 @@ const CreateSingleNeuronSynaptomeSchema = z.object({
   name: z.string(),
   description: z.string(),
   brain_region_id: z.number(),
-  me_model_id: z.string().uuid(),
+  me_model_id: z.uuid(),
   seed: z.number(),
 });
 
@@ -69,7 +69,7 @@ export type TCreateSingleNeuronSynaptome = z.infer<typeof CreateSingleNeuronSyna
 
 const SingleNeuronSynaptomeExclusionRuleSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     distance_soma_gte: z.number().nullish(),
     distance_soma_lte: z.number().nullish(),
   })
@@ -79,13 +79,13 @@ const SingleNeuronSynaptomeExclusionRuleSchema = z
       return true;
     },
     {
-      message: 'At least one of distance_soma_gte or distance_soma_lte must be provided',
       path: ['distance_soma_gte', 'distance_soma_lte'],
+      error: 'At least one of distance_soma_gte or distance_soma_lte must be provided',
     }
   );
 
 export const SingleNeuronSynaptomeBaseSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().nonempty(),
   target: z.string().optional(),
   seed: z.number(),
@@ -100,14 +100,14 @@ export const SingleNeuronSynaptomeConfigurationSchema = SingleNeuronSynaptomeBas
   (synapse, ctx) => {
     if (synapse.target !== 'soma' && isNil(synapse.formula)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'formula should be provided when target is different than "soma"',
         path: ['formula'],
       });
     }
     if (synapse.target === 'soma' && isNil(synapse.soma_synapse_count)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'soma_synapse_count must be a valid number when target is "soma"',
         path: ['soma_synapse_count'],
       });
@@ -118,7 +118,7 @@ export const SingleNeuronSynaptomeConfigurationSchema = SingleNeuronSynaptomeBas
     const v = await validateSingleNeuronSynapseGenerationFormula(synapse.formula);
     if (!v) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'formula is not valid',
         path: ['formula'],
       });

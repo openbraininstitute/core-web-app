@@ -14,11 +14,15 @@ importers:
         version: 1.2.8(react@19.2.4)(zod@3.25.76)
 =======
         specifier: ^1.2.12
+<<<<<<< HEAD
         version: 1.2.12(react@19.2.3)(zod@3.25.76)
 >>>>>>> 0e54aeeb1 (Update patch/minor versions)
+=======
+        version: 1.2.12(react@19.2.3)(zod@4.3.6)
+>>>>>>> 19719b8a8 (Migrate to Zod v4)
       '@ai-sdk/ui-utils':
         specifier: ^1.2.11
-        version: 1.2.11(zod@3.25.76)
+        version: 1.2.11(zod@4.3.6)
       '@ant-design/icons':
 <<<<<<< HEAD
         specifier: ^6.0.0
@@ -459,8 +463,8 @@ importers:
         version: 4.0.10(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
 >>>>>>> 0e54aeeb1 (Update patch/minor versions)
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@biomejs/biome':
         specifier: 2.4.5
@@ -9940,17 +9944,18 @@ snapshots:
 
   '@actions/io@3.0.2': {}
 
-  '@ai-sdk/provider-utils@2.2.8(zod@3.25.76)':
+  '@ai-sdk/provider-utils@2.2.8(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
       nanoid: 3.3.11
       secure-json-parse: 2.7.0
-      zod: 3.25.76
+      zod: 4.3.6
 
   '@ai-sdk/provider@1.1.3':
     dependencies:
       json-schema: 0.4.0
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   '@ai-sdk/react@1.2.8(react@19.2.4)(zod@3.25.76)':
     dependencies:
@@ -9960,22 +9965,25 @@ snapshots:
       swr: 2.3.3(react@19.2.4)
 =======
   '@ai-sdk/react@1.2.12(react@19.2.3)(zod@3.25.76)':
+=======
+  '@ai-sdk/react@1.2.12(react@19.2.3)(zod@4.3.6)':
+>>>>>>> 19719b8a8 (Migrate to Zod v4)
     dependencies:
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
-      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.76)
+      '@ai-sdk/provider-utils': 2.2.8(zod@4.3.6)
+      '@ai-sdk/ui-utils': 1.2.11(zod@4.3.6)
       react: 19.2.3
       swr: 2.3.3(react@19.2.3)
 >>>>>>> 0e54aeeb1 (Update patch/minor versions)
       throttleit: 2.1.0
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.3.6
 
-  '@ai-sdk/ui-utils@1.2.11(zod@3.25.76)':
+  '@ai-sdk/ui-utils@1.2.11(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.5(zod@3.25.76)
+      '@ai-sdk/provider-utils': 2.2.8(zod@4.3.6)
+      zod: 4.3.6
+      zod-to-json-schema: 3.24.5(zod@4.3.6)
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -21585,9 +21593,9 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zod-to-json-schema@3.24.5(zod@3.25.76):
+  zod-to-json-schema@3.24.5(zod@4.3.6):
     dependencies:
-      zod: 3.25.76
+      zod: 4.3.6
 
   zod@3.25.76: {}
 

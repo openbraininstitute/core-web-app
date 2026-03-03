@@ -1,6 +1,6 @@
 'use client';
 
-import { atomWithStorage, atomFamily } from 'jotai/utils';
+import { atomFamily, atomWithStorage } from 'jotai/utils';
 import superjson from 'superjson';
 import z from 'zod';
 
@@ -17,7 +17,7 @@ export const memoryStorage: Storage = {
 
 export const safeStorage: Storage = typeof window !== 'undefined' ? sessionStorage : memoryStorage;
 
-export function createZodSuperJsonStorage<T>(schema: z.ZodType<T>, storage: Storage) {
+export function createZodSuperJsonStorage<T>(schema: ZodType<T, T>, storage: Storage) {
   return {
     getItem(key: string, initialValue: T): T {
       const storedValue = storage.getItem(key);
@@ -67,7 +67,7 @@ export function createZodSuperJsonStorage<T>(schema: z.ZodType<T>, storage: Stor
 }
 
 export function makeStorageAtomWithValidationFamily<T>(
-  schema: ZodType<T>,
+  schema: ZodType<T, T>,
   initialValue: T,
   storage: Storage
 ) {

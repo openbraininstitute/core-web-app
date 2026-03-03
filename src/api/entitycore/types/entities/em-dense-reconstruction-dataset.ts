@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
@@ -98,12 +99,18 @@ export interface IEmDenseReconstructionDataset
 
 export const EMDenseReconstructionDatasetBaseSchema = z.object({
   name: z
-    .string({ message: 'EMDenseReconstructionDataset name is required' })
-    .nonempty({ message: 'EMDenseReconstructionDataset name is required' }),
-  description: z
-    .string({ message: 'EMDenseReconstructionDataset description is required' })
+    .string({
+      error: 'EMDenseReconstructionDataset name is required',
+    })
     .nonempty({
-      message: 'EMDenseReconstructionDataset description is required',
+      error: 'EMDenseReconstructionDataset name is required',
+    }),
+  description: z
+    .string({
+      error: 'EMDenseReconstructionDataset description is required',
+    })
+    .nonempty({
+      error: 'EMDenseReconstructionDataset description is required',
     }),
   protocol_document: z.string().nullish(),
   fixation: z.string().nullish(),
