@@ -216,3 +216,5 @@ export default function Block({
     </div>
   );
 }
+
+export { Block };

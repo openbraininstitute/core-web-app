@@ -5,9 +5,8 @@ import { type FieldProps, isObject } from '@rjsf/utils';
 import { compact, get, isEmpty, snakeCase } from 'es-toolkit/compat';
 import { useAtom, useSetAtom } from 'jotai';
 import { useCallback, useMemo, useState } from 'react';
-import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -26,6 +25,9 @@ import {
 } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
 import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
+
+import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 
 type RecordingFormData = {
   id_str: string;

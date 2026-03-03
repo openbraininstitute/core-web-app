@@ -5,6 +5,7 @@ import {
   type ICircuit,
   type IMEModel,
   type IonChannelModel,
+  type TEntityTypeDict,
 } from '@/api/entitycore/types';
 // biome-ignore lint/style/useImportType: biome hallucination
 import {
@@ -109,6 +110,7 @@ export const ScanConfigUIElementDict = {
   BooleanInput: 'boolean_input',
   ionChannelVariableModificationBySectionList: 'ion_channel_variable_modification_by_section_list',
   IonChannelVariableModificationByNeuron: 'ion_channel_variable_modification_by_neuron',
+  ModelSelectorSingle: 'model_selector_single',
 } as const;
 
 export interface StringInput extends TBlockElement {
@@ -175,6 +177,24 @@ export interface EntityPropertyDropdown extends TBlockElement {
   entity_type: string;
   property: string;
 }
+export interface ModelSelectorSingle extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.ModelSelectorSingle;
+  model_selector_entity_type: TEntityTypeDict;
+  model_selector_property_filter: Record<string, any>;
+  properties: {
+    id_str: {
+      type: string;
+      title: string;
+      description: string;
+    };
+    type: {
+      type: string;
+      const: 'IonChannelModelFromID';
+      title: string;
+      default: 'IonChannelModelFromID';
+    };
+  };
+}
 
 export interface NeuronIds extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronIds;
@@ -240,7 +260,8 @@ export type ParamSchema =
   | EntityPropertyDropdown
   | BooleanInput
   | IonChannelRangeVariableModification
-  | IonChannelGlobalVariableModification;
+  | IonChannelGlobalVariableModification
+  | ModelSelectorSingle;
 
 export type TBlock = {
   title: string;

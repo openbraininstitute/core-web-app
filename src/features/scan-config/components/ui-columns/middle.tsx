@@ -16,6 +16,7 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
   type TSupportedEntitiesForScanConfiguration,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
@@ -33,7 +34,8 @@ type MiddleProps = {
   campaignId: string;
   loading: boolean;
   config: Config;
-  model: TSupportedEntitiesForScanConfiguration | Nullish;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
+  entityType?: TSupportedEntityTypesForScanConfiguration;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
@@ -51,11 +53,12 @@ export default function Middle({
   campaignId,
   loading,
   config,
-  model,
+  entity,
   allEntries,
   onNewBlockClick,
   selectedSchema,
   schemaMappingConfig,
+  entityType,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
 
@@ -75,7 +78,7 @@ export default function Middle({
           campaignId={campaignId}
           loading={loading}
           config={config}
-          model={model}
+          entity={entity}
           allEntries={allEntries}
           schema={schema}
           atomsMap={atomsMap}
@@ -99,7 +102,7 @@ export default function Middle({
             config={config}
             blockSchema={selectedSchema}
             stateAtom={atomsMap[selectedRootElement]}
-            entity={model}
+            entity={entity}
             blockAIConfig={getBlockAIConfig()}
             schemaMappingConfig={schemaMappingConfig}
           />
@@ -115,7 +118,8 @@ export default function Middle({
           campaignId={campaignId}
           loading={loading}
           config={config}
-          model={model}
+          entity={entity}
+          entityType={entityType}
           blockAIConfig={getBlockAIConfig()}
           schemaMappingConfig={schemaMappingConfig}
         />

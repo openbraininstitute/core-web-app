@@ -26,6 +26,7 @@ import {
   type TScanConfigActivity,
   type TScanConfigTabs,
   type TSupportedEntitiesForScanConfiguration,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
@@ -54,6 +55,7 @@ type Props = {
   schemaName: SchemaName;
   aiEnabled: boolean;
   generatedApiUrl: string;
+  entityType?: TSupportedEntityTypesForScanConfiguration;
 };
 
 export function ScanConfigTemplate({
@@ -71,6 +73,7 @@ export function ScanConfigTemplate({
   schemaMappingConfig,
   aiEnabled,
   generatedApiUrl,
+  entityType,
 }: Props) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
@@ -172,6 +175,7 @@ export function ScanConfigTemplate({
               updateRequestId();
             }}
             generatedApiUrl={generatedApiUrl}
+            entityType={entityType}
           />
           <div
             className={cn(
@@ -192,7 +196,7 @@ export function ScanConfigTemplate({
                 campaignId={campaignId}
                 loading={loading}
                 config={config}
-                model={entity}
+                entity={entity}
                 allEntries={allEntries}
                 onNewBlockClick={() => {
                   setNewKey('');
@@ -200,6 +204,7 @@ export function ScanConfigTemplate({
                 }}
                 selectedSchema={schema.properties[selectedRootElement]}
                 schemaMappingConfig={schemaMappingConfig}
+                entityType={entityType}
               />
             )}
           </div>

@@ -1,7 +1,7 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { atom } from 'jotai';
 
-import Block from '@/features/scan-config/components/ui-blocks/block';
+import { Block } from '@/features/scan-config/components/ui-blocks/block';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import { isType } from '@/features/scan-config/types';
 
@@ -13,6 +13,7 @@ import type {
   SchemaName,
   TBlock,
   TSupportedEntitiesForScanConfiguration,
+  TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import type { Nullish } from '@/utils/type';
 
@@ -25,9 +26,10 @@ type Props = {
   campaignId: string;
   loading: boolean;
   config: Config;
-  model: TSupportedEntitiesForScanConfiguration | Nullish;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
   blockAIConfig: Record<string, ConfigValue> | null;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  entityType?: TSupportedEntityTypesForScanConfiguration;
 };
 
 function getDiscriminatorProperty(schema: IRootBlockUnion): string {
@@ -45,7 +47,7 @@ export default function BlockUnion({
   campaignId,
   loading,
   config,
-  model,
+  entity,
   blockAIConfig,
   schemaMappingConfig,
 }: Props) {
@@ -93,7 +95,7 @@ export default function BlockUnion({
           config={config}
           blockSchema={selectedBlockSchema}
           stateAtom={atomsMap[selectedRootElement]}
-          entity={model}
+          entity={entity}
           blockAIConfig={blockAIConfig}
           hideTitle
           schemaMappingConfig={schemaMappingConfig}

@@ -68,7 +68,6 @@ export default function BlockDictionaryEntries({
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
 }) {
-  console.log('–– – BlockDictionaryEntries – errors––', errors);
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
 
   const onNameChangeConfirm = (
@@ -409,7 +408,8 @@ export default function BlockDictionaryEntries({
         <button
           className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
           type="button"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             setEditing(true);
             setSelectedEntry('');
           }}

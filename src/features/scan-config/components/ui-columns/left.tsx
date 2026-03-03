@@ -7,6 +7,7 @@ import {
   isType,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
@@ -69,6 +70,7 @@ export default function Left({
   handleAcceptAIChanges: () => void;
   handleRejectAIChanges: () => void;
   generatedApiUrl: string;
+  entityType?: TSupportedEntityTypesForScanConfiguration;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig } = useAIConfig();

@@ -40,7 +40,7 @@ type Props = {
   loading: boolean;
   config: Config;
   selectedBlockSchema?: TBlock;
-  model: TSupportedEntitiesForScanConfiguration | Nullish;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   blockAIConfig: ConfigObject | null;
@@ -59,7 +59,7 @@ export default function BlockDictionary({
   campaignId,
   loading,
   config,
-  model,
+  entity,
   allEntries,
   onNewBlockClick,
   blockAIConfig,
@@ -92,7 +92,7 @@ export default function BlockDictionary({
         config={config}
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
-        entity={model}
+        entity={entity}
         blockAIConfig={blockAIConfig}
         schemaMappingConfig={schemaMappingConfig}
       />

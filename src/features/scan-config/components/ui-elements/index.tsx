@@ -8,6 +8,7 @@ import EntityPropertyDropdown from '@/features/scan-config/components/ui-element
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/global';
 import { Range } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/range';
 import { RootSelector } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
@@ -251,6 +252,22 @@ export function UIElementRender({
           />
         );
       }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.ModelSelectorSingle },
+      },
+      ({ paramSchema }) => (
+        <EntitySelectorSingle
+          entityType={paramSchema.model_selector_entity_type}
+          filters={paramSchema.model_selector_property_filter ?? {}}
+          value={value as Record<string, unknown> | null}
+          valueType={paramSchema.properties?.type?.const}
+          onChange={(v) => {
+            setState({ ...state, [k]: v ?? null });
+          }}
+        />
+      )
     )
     .otherwise(() => null);
 }

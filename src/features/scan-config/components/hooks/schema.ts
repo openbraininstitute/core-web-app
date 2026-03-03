@@ -7,6 +7,7 @@ import { match } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import { config } from '@/config';
@@ -31,7 +32,7 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
   const { data: schema, isLoading } = useQuery({
     queryKey: keyBuilder.obiOneJsonSchema(schemaName),
     queryFn: () => fetchSchema({ schemaName }),
-    // Keep data fresh indefinitely to prevent atom regeneration on window focus
+    // keep data fresh indefinitely to prevent atom regeneration on window focus
     staleTime: Infinity,
     refetchOnWindowFocus: false,
   });
@@ -156,6 +157,12 @@ async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
   return theSchema;
 }
 
+const ModelIdentifierSelector = {
+  [ExtendedEntitiesTypeDict.Memodel]: 'MEModelFromID',
+  [ExtendedEntitiesTypeDict.MEModelWithSynapses]: 'MEModelWithSynapsesCircuitFromID',
+  [ExtendedEntitiesTypeDict.Circuit]: 'CircuitFromID',
+};
+
 export function useAtomsMap({
   schema,
   initialConfig,
@@ -169,6 +176,17 @@ export function useAtomsMap({
 
   useEffect(() => {
     if (!schema?.properties) return;
+    const expectedRootKeys = Object.entries(schema.properties)
+      .filter(([_, v]) => !isType(v))
+      .map(([k]) => k);
+    const hasInitializedMapForSchema =
+      Object.keys(atomsMap).length > 0 && expectedRootKeys.every((key) => key in atomsMap);
+
+    // skip re-init when map is already complete, otherwise we wipe dictionary entry state
+    // (e.g. newly added "Ion Channel Model 0") and BlockDictionary falls back to type cards
+    if (hasInitializedMapForSchema) {
+      return;
+    }
 
     const map: {
       [key: string]:
@@ -207,15 +225,21 @@ export function useAtomsMap({
               subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
             ) {
               const formModelType = match(model)
-                .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
+                .with(
+                  { type: EntityTypeDict.Memodel },
+                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
+                )
                 .with(
                   {
                     type: EntityTypeDict.Circuit,
                     scale: CircuitScaleDictionary.Single,
                   },
-                  () => 'MEModelWithSynapsesCircuitFromID'
+                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.MEModelWithSynapses]
                 )
-                .with({ type: EntityTypeDict.Circuit }, () => 'CircuitFromID')
+                .with(
+                  { type: EntityTypeDict.Circuit },
+                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Circuit]
+                )
                 .otherwise(() => {
                   throw new Error(`Unsupported entity type: ${model.type}`);
                 });
@@ -237,7 +261,7 @@ export function useAtomsMap({
     }
 
     setAtomsMap(map);
-  }, [schema, model, initialConfig]);
+  }, [schema, model, initialConfig, atomsMap]);
 
   return [atomsMap, setAtomsMap] as const;
 }

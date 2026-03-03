@@ -80,13 +80,14 @@ export function RootElement({
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          // for block_dictionary, clicking again collapses it
-          // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
-          if (
+          const isCollapseClick =
             selectedRootElement === rootElement &&
             !isRootBlock(schema, rootElement) &&
-            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion
-          ) {
+            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
+
+          // for block_dictionary, clicking again collapses it
+          // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
+          if (isCollapseClick) {
             setEditing(false);
             setSelectedEntry('');
             setSelectedRootElement('');
@@ -105,7 +106,7 @@ export function RootElement({
         }}
         extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
       >
-        <span className="flex items-center gap-2 break-words min-w-0">
+        <span className="flex items-center gap-2 wrap-break-word min-w-0">
           <SelectedUnionVariantLabel
             rootElementSchema={rootElementSchema}
             config={config}
