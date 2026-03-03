@@ -18,6 +18,7 @@ interface GithubFlavorMarkdownProps {
   children: string;
   onLinkClicked(external: boolean): void;
   validStorageIds?: string[];
+  isStreaming?: boolean;
 }
 
 export const GithubFlavorMarkdown = React.memo(
@@ -30,10 +31,17 @@ function RawGithubFlavorMarkdown({
   children,
   onLinkClicked,
   validStorageIds,
+  isStreaming,
 }: GithubFlavorMarkdownProps) {
   const LinkComponent = useMemo(
-    () => makeLink(onLinkClicked, validStorageIds),
-    [onLinkClicked, validStorageIds]
+    () => makeLink(onLinkClicked, isStreaming),
+    [onLinkClicked, validStorageIds, isStreaming]
+  );
+  const ImageComponent = useMemo(
+    () => (props: any) => (
+      <StorageImage {...props} validStorageIds={validStorageIds} isStreaming={isStreaming} />
+    ),
+    [validStorageIds, isStreaming]
   );
   return (
     <ReactMarkdown
@@ -42,7 +50,7 @@ function RawGithubFlavorMarkdown({
       rehypePlugins={[rehypeKatex]}
       components={{
         a: LinkComponent,
-        img: (props) => <StorageImage {...props} validStorageIds={validStorageIds} />,
+        img: ImageComponent,
         p: ({ children }) => <div>{children}</div>,
         pre: Highlighter,
       }}
@@ -54,18 +62,12 @@ function RawGithubFlavorMarkdown({
 
 function makeLink(
   onLinkClicked: (external: boolean, href: string) => void | boolean,
-  validStorageIds?: string[]
+  isStreaming?: boolean
 ) {
   function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
     if (!href) return null;
 
-    // check if the LLM messed up the image and rendered a link instead.
-    const storageIdMatch = href.match(
-      /\/storage\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
-    );
-    if (storageIdMatch && !validStorageIds?.includes(storageIdMatch[1])) {
-      return <PlotErrorMessage />;
-    }
+    if (href.includes('/storage/') && isStreaming) return null;
 
     const info = resolveLinkTarget(href);
     return (

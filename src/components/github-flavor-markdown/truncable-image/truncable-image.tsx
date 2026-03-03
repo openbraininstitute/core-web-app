@@ -13,9 +13,10 @@ import styles from './truncable-image.module.css';
 export interface TruncableImageProps {
   className?: string;
   src?: string;
+  isStreaming?: boolean;
 }
 
-export default function TruncableImage({ className, src }: TruncableImageProps) {
+export default function TruncableImage({ className, src, isStreaming }: TruncableImageProps) {
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const [image, setImage] = React.useState<HTMLImageElement | null>(null);
   const [error, setError] = React.useState(false);
@@ -47,6 +48,7 @@ export default function TruncableImage({ className, src }: TruncableImageProps) 
     refDialog.current?.close();
   };
   if (error && src) {
+    if (isStreaming) return null;
     return (
       <div>
         <span className="text-gray-600">Image: </span>

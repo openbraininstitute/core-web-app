@@ -91,6 +91,7 @@ function MessageChild({
                 if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
               }}
               validStorageIds={validStorageIds}
+              isStreaming={isLastMessage && status === 'streaming'}
             >
               {part.text}
             </GithubFlavorMarkdown>

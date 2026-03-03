@@ -6,9 +6,11 @@ import TruncableImage from '../truncable-image';
 const StorageImage = ({
   src,
   validStorageIds,
+  isStreaming,
 }: {
   src?: string | Blob;
   validStorageIds?: string[];
+  isStreaming?: boolean;
 }) => {
   const srcString = typeof src === 'string' ? src : undefined;
   if (!srcString) {
@@ -25,7 +27,11 @@ const StorageImage = ({
   }
 
   const isSameOrigin = srcString.includes('openbraininstitute');
-  return isSameOrigin ? <PlotErrorMessage /> : <TruncableImage src={srcString} />;
+  return isSameOrigin ? (
+    <PlotErrorMessage />
+  ) : (
+    <TruncableImage src={srcString} isStreaming={isStreaming} />
+  );
 };
 
 export default StorageImage;
