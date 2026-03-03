@@ -5,7 +5,14 @@ import { get, uniqBy } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
-import { type ComponentProps, type ReactElement, type ReactNode, useEffect, useMemo } from 'react';
+import {
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
 
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
@@ -113,11 +120,14 @@ export function BrowseEntityScope({
     section,
   });
 
-  const onSortChange = (newSortState: TSortState) => {
-    setPageNumber(DEFAULT_PAGE_NUMBER);
-    setSortState(newSortState);
-    runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
-  };
+  const onSortChange = useCallback(
+    (newSortState: TSortState) => {
+      setPageNumber(DEFAULT_PAGE_NUMBER);
+      setSortState(newSortState);
+      runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
+    },
+    [setPageNumber, setSortState, runStorageSync]
+  );
 
   const allColumns = useDataTableColumns<EntityCoreIdentifiableNamed>({
     dataType,
