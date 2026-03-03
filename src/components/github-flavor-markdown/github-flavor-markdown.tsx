@@ -31,7 +31,10 @@ function RawGithubFlavorMarkdown({
   onLinkClicked,
   validStorageIds,
 }: GithubFlavorMarkdownProps) {
-  const LinkComponent = useMemo(() => makeLink(onLinkClicked), [onLinkClicked]);
+  const LinkComponent = useMemo(
+    () => makeLink(onLinkClicked, validStorageIds),
+    [onLinkClicked, validStorageIds]
+  );
   return (
     <ReactMarkdown
       className={classNames(className, styles.githubFlavorMarkdown)}
@@ -49,12 +52,18 @@ function RawGithubFlavorMarkdown({
   );
 }
 
-function makeLink(onLinkClicked: (external: boolean, href: string) => void | boolean) {
+function makeLink(
+  onLinkClicked: (external: boolean, href: string) => void | boolean,
+  validStorageIds?: string[]
+) {
   function LinkWithExternalTarget({ href, children }: AnchorHTMLAttributes<HTMLAnchorElement>) {
     if (!href) return null;
 
-    // Check if this is a storage URL that should have been an image
-    if (href.includes('/storage/')) {
+    // check if the LLM messed up the image and rendered a link instead.
+    const storageIdMatch = href.match(
+      /\/storage\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
+    );
+    if (storageIdMatch && !validStorageIds?.includes(storageIdMatch[1])) {
       return <PlotErrorMessage />;
     }
 

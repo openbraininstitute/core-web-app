@@ -15,7 +15,9 @@ const StorageImage = ({
     return <PlotErrorMessage />;
   }
 
-  const storageIdMatch = srcString.match(/\/storage\/([^/]+)/);
+  const storageIdMatch = srcString.match(
+    /\/storage\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
+  );
   const isValidUUID = storageIdMatch && validStorageIds?.includes(storageIdMatch[1]);
 
   if (isValidUUID) {

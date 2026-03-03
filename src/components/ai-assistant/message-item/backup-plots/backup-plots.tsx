@@ -18,7 +18,12 @@ function extractStorageIdsFromToolResult(result: any): string[] {
 
   const urlLinks = Array.isArray(fileIdentifier) ? fileIdentifier : [fileIdentifier];
   return urlLinks
-    .map((urlLink: string) => urlLink.match(/\/storage\/([^/]+)/)?.[1])
+    .map(
+      (urlLink: string) =>
+        urlLink.match(
+          /\/storage\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
+        )?.[1]
+    )
     .filter((id): id is string => id !== undefined);
 }
 
@@ -51,10 +56,7 @@ export interface BackupPlotsWrapperProps {
 export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlotsWrapperProps) {
   const deferredParts = React.useDeferredValue(message.parts);
 
-  const backupPlotsData =
-    !isLastMessage || status === 'ready'
-      ? deferredParts.filter((part) => part.type === 'tool-invocation')
-      : [];
+  const backupPlotsData = deferredParts.filter((part) => part.type === 'tool-invocation');
 
   const textParts = deferredParts.filter((p) => p.type === 'text');
   const lastTextPart = textParts.length > 0 ? textParts[textParts.length - 1].text : undefined;
@@ -66,13 +68,13 @@ export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlo
     );
   });
 
+  const shouldShowPlots = !isLastMessage || status === 'ready';
   const plotsWithContent =
-    urlLinksWithoutImageLink.length > 0 ? (
+    shouldShowPlots && urlLinksWithoutImageLink.length > 0 ? (
       <BackupPlots storageIds={urlLinksWithoutImageLink} />
     ) : null;
 
   if (!plotsWithContent) return null;
-  if (plotsWithContent) console.log(urlLinksWithoutImageLink);
 
   return (
     <div className="mt-4 pt-2 border-t-2 border-dotted border-gray-300">

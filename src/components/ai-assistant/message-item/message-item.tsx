@@ -38,6 +38,16 @@ function RawMessageItem({
   );
 }
 
+function useStableArray<T>(arr: T[]): T[] {
+  const ref = React.useRef<T[]>(arr);
+
+  if (ref.current.length !== arr.length || ref.current.some((val, idx) => val !== arr[idx])) {
+    ref.current = arr;
+  }
+
+  return ref.current;
+}
+
 function MessageChild({
   value,
   debug,
@@ -65,7 +75,11 @@ function MessageChild({
         </div>
       );
     case 'assistant': {
-      const validStorageIds = extractStorageIdsFromMessage(deferredParts);
+      const memoizedStorageIds = React.useMemo(
+        () => extractStorageIdsFromMessage(deferredParts),
+        [deferredParts]
+      );
+      const validStorageIds = useStableArray(memoizedStorageIds);
       const children = deferredParts.map((part, index) => {
         if (part.type === 'text' && part.text !== '') {
           return (
