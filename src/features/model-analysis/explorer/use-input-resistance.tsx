@@ -1,19 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getMEModel } from '@/api/entitycore/queries';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
-export function useInputResistance(entityId: string): number | undefined {
+import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
+
+export function useInputResistance({ entity }: { entity: TRetrieveEntityOutput }) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { isPending, error, data } = useQuery({
-    queryKey: keyBuilder.meModel({ projectId, virtualLabId, entityId }),
+  const { isLoading, error, data } = useQuery({
+    queryKey: keyBuilder.meModel({ projectId, virtualLabId, entityId: entity.id }),
     queryFn: async () => {
-      const model = await getMEModel({ context: { projectId, virtualLabId }, id: entityId });
+      const model = await getMEModel({ context: { projectId, virtualLabId }, id: entity.id });
       return model.calibration_result.rin;
     },
+    enabled: entity.type === EntityTypeDict.Memodel,
   });
-  if (isPending || error) return undefined;
 
-  return data;
+  return { data, isLoading, error };
 }

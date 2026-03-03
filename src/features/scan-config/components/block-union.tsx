@@ -1,14 +1,14 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { atom } from 'jotai';
 
+import Block from '@/features/scan-config/components/block';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import { isType } from '@/features/scan-config/types';
-
-import Block from './block';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config, ConfigValue } from '@/features/scan-config/components/components';
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { AtomsMap, IRootBlockUnion, SchemaName, TBlock } from '@/features/scan-config/types';
 
 type Props = {
@@ -21,6 +21,7 @@ type Props = {
   loading: boolean;
   config: Config;
   model: ICircuit | IMEModel;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };
 
 function getDiscriminatorProperty(schema: IRootBlockUnion): string {
@@ -39,6 +40,7 @@ export default function BlockUnion({
   loading,
   config,
   model,
+  schemaMappingConfig,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
 
@@ -86,19 +88,24 @@ export default function BlockUnion({
           stateAtom={atomsMap[selectedRootElement]}
           model={model}
           hideTitle
+          schemaMappingConfig={schemaMappingConfig}
         />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center gap-5">
+    <div
+      className="flex flex-col items-center gap-5"
+      data-scan-config-block={blockUnionSchema.ui_element}
+    >
       {blockUnionSchema.oneOf.map((o) => {
         return (
           <button
+            data-scan-config-block-element-item={`${blockUnionSchema.ui_element}_item`}
             key={o.title}
             type="button"
-            className="min-h-[100px] w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
+            className="min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
             onClick={() => {
               const initial: Record<string, ConfigValue> = {};
               if (o.properties) {

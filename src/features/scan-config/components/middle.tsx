@@ -1,3 +1,4 @@
+import Block from '@/features/scan-config/components/block';
 import BlockDictionary from '@/features/scan-config/components/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/block-union';
 import { isAtom } from '@/features/scan-config/components/utils';
@@ -12,11 +13,10 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
-import Block from './block';
-
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config } from '@/features/scan-config/components/components';
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
 type MiddleProps = {
   schemaName: SchemaName;
@@ -34,6 +34,7 @@ type MiddleProps = {
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };
 
 export default function Middle({
@@ -51,6 +52,7 @@ export default function Middle({
   allEntries,
   onNewBlockClick,
   selectedSchema,
+  schemaMappingConfig,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
 
@@ -72,6 +74,7 @@ export default function Middle({
           blockDictionarySchema={selectedSchema}
           selectedRootElement={selectedRootElement}
           onNewBlockClick={onNewBlockClick}
+          schemaMappingConfig={schemaMappingConfig}
         />
       )}
 
@@ -84,6 +87,7 @@ export default function Middle({
             blockSchema={selectedSchema}
             stateAtom={atomsMap[selectedRootElement]}
             model={model}
+            schemaMappingConfig={schemaMappingConfig}
           />
         )}
 
@@ -98,6 +102,7 @@ export default function Middle({
           loading={loading}
           config={config}
           model={model}
+          schemaMappingConfig={schemaMappingConfig}
         />
       )}
     </>
