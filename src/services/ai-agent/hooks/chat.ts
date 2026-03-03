@@ -85,15 +85,9 @@ export function useServiceAiAgentChat(threadId: string) {
 
     //@ts-expect-error
     if (toolInvocation?.toolInvocation?.result && returnId === requestId) {
-          console.log(returnId)
-          console.log(requestId)
-          console.log(requestId === returnId)
-          console.log(toolInvocation)
       try {
         //@ts-expect-error
         const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
-        console.log(result)
-        console.log(result.state.smc_simulation_config)
         setConfig(result.state.smc_simulation_config ?? null);
       } catch {
         logError(
@@ -167,11 +161,6 @@ export function useAgentState(key: 'smc_simulation_config' | '', config?: Config
       });
     };
   }, [defaultConfig, config, key, setAIAgentState]);
-
-  // This callback is no longer needed since requestId is managed in useServiceAiAgentChat
-  return useCallback(() => {
-    // No-op: requestId is now generated per request in append()
-  }, []);
 }
 
 export function useAIConfig() {
