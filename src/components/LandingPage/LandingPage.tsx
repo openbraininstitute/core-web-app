@@ -1,28 +1,22 @@
 'use client';
 
-import { useEffect } from 'react';
-
+import { useEffect, useState } from 'react';
 import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
 import { logError } from '@/util/logger';
 import { classNames } from '@/util/utils';
-
 import PaddedBlock from './components/PaddedBlock';
 import VerticalSpace from './components/VerticalSpace';
+import styles from './LandingPage.module.css';
 import FooterPanel from './layout/FooterPanel';
 import Hero from './layout/Hero';
 import Menu from './layout/Menu';
 import SectionContact from './sections/SectionContact';
-import SectionFeatures from './sections/SectionFeatures';
 import SectionGeneric from './sections/SectionGeneric';
 import SectionNews from './sections/SectionNews';
 import SectionPricing from './sections/SectionPricing';
-import SectionShowcases from './sections/SectionShowcases';
 import { EnumSection } from './sections/sections';
 import { getSection } from './utils';
-
-import styles from './LandingPage.module.css';
 import './global.css';
-
 import useScrollHasStarted from '@/hooks/use-scroll-has-started';
 
 export type LandingPageProps = {
@@ -77,10 +71,6 @@ function renderSection(section: EnumSection): React.ReactNode {
       return <SectionContact />;
     case EnumSection.News:
       return <SectionNews />;
-    case EnumSection.Features:
-      return <SectionFeatures />;
-    case EnumSection.Showcases:
-      return <SectionShowcases />;
     default:
       logError('This slug has NOT been implemented yet!', getSection(section));
       return null;

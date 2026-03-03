@@ -3,14 +3,13 @@
 import Link from 'next/link';
 import React, { useState } from 'react';
 
-import { classNames } from '@/util/utils';
-
 import { ID_MENU } from '../../constants';
 import { IconChevronRight } from '../../icons/IconChevronRight';
 import { IconMenu } from '../../icons/IconMenu';
 import { EnumSection } from '../../sections/sections';
 import PopupMenu from './PopupMenu/PopupMenu';
 
+import { classNames } from '@/util/utils';
 import styles from './Menu.module.css';
 
 interface MenuProps {
@@ -33,11 +32,7 @@ const MENU_ITEMS: MenuItem[] = [
     index: EnumSection.About,
     submenu: [
       { caption: 'About OBI', slug: '/about', index: EnumSection.About },
-      {
-        caption: 'Our story',
-        slug: '/the-real-digital-brain-story',
-        index: EnumSection.Story,
-      },
+      { caption: 'Our story', slug: '/the-real-digital-brain-story', index: EnumSection.Story },
       { caption: 'Mission', slug: '/mission', index: EnumSection.Mission },
       { caption: 'Team', slug: '/team', index: EnumSection.Team },
     ],
@@ -54,15 +49,7 @@ const MENU_ITEMS: MenuItem[] = [
   {
     caption: 'The Platform',
     slug: '/pricing',
-    submenu: [
-      { caption: 'Features', slug: '/features', index: EnumSection.Features },
-      {
-        caption: 'Showcases',
-        slug: '/showcases',
-        index: EnumSection.Showcases,
-      },
-      { caption: 'Pricing', slug: '/pricing', index: EnumSection.Pricing },
-    ],
+    submenu: [{ caption: 'Pricing', slug: '/pricing', index: EnumSection.Pricing }],
   },
   {
     caption: 'News',
@@ -136,16 +123,14 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
 
         <div className={styles.items}>
           {MENU_ITEMS.map((item) => (
-            <div key={item.slug} className={styles.menuItemContainer}>
+            <div
+              key={item.slug}
+              className={styles.menuItemContainer}
+              onMouseEnter={() => item.submenu && setHoveredItem(item.slug)}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
               {item.submenu ? (
-                <div
-                  role="menuitem"
-                  aria-haspopup="menu"
-                  tabIndex={0}
-                  className={styles.menuItemWithSubmenu}
-                  onMouseEnter={() => setHoveredItem(item.slug)}
-                  onMouseLeave={() => setHoveredItem(null)}
-                >
+                <div className={styles.menuItemWithSubmenu}>
                   <button
                     type="button"
                     className={classNames(
