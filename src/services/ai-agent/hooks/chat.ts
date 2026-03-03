@@ -21,8 +21,8 @@ import { useAiAssistant } from "../assistant";
 import type { AiAgentRateLimitEndpoint } from "./rate-limit";
 
 const agentStateAtom = atom<Record<string, Config>>({});
-let requestId = crypto.randomUUID().replace(/-/g, "");
-let returnId = "";
+const requestIdAtom = atom<string>(crypto.randomUUID().replace(/-/g, ""));
+const returnIdAtom = atom<string>("");
 
 export function useServiceAiAgentChat(threadId: string) {
   const [aiAgentState] = useAtom(agentStateAtom);
@@ -34,6 +34,8 @@ export function useServiceAiAgentChat(threadId: string) {
 
   const [_, setConfig] = useAtom(configStateAtom);
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
+  const [requestId, setRequestId] = useAtom(requestIdAtom);
+  const [returnId, setReturnId] = useAtom(returnIdAtom);
 
   const chat = useChat({
     api: serviceAiAgentUrl(["qa/chat_streamed", threadId]),
@@ -64,7 +66,7 @@ export function useServiceAiAgentChat(threadId: string) {
         reset_in: parseInt(resp.headers.get("x-ratelimit-reset") ?? "-1", 10),
       };
       setRateLimit(newRateLimit);
-      returnId = resp.headers.get("x-request-id") ?? "";
+      setReturnId(resp.headers.get("x-request-id") ?? "");
       return resp;
     },
   });
@@ -72,18 +74,26 @@ export function useServiceAiAgentChat(threadId: string) {
   useEffect(() => {
     const lastMessage = chat.messages[chat.messages.length - 1];
 
-    const toolInvocation = lastMessage?.parts.find(
+    // Use toReversed() or slice().reverse() to avoid mutating the original array
+    const toolInvocation = lastMessage?.parts.toReversed().find(
       (p) =>
         p.type === 'tool-invocation' &&
         p.toolInvocation.toolName === 'editstate' &&
         p.toolInvocation.state === 'result'
     ) as ToolInvocationUIPart | undefined;
 
+
     //@ts-expect-error
     if (toolInvocation?.toolInvocation?.result && returnId === requestId) {
+          console.log(returnId)
+          console.log(requestId)
+          console.log(requestId === returnId)
+          console.log(toolInvocation)
       try {
         //@ts-expect-error
         const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
+        console.log(result)
+        console.log(result.state.smc_simulation_config)
         setConfig(result.state.smc_simulation_config ?? null);
       } catch {
         logError(
@@ -105,6 +115,9 @@ export function useServiceAiAgentChat(threadId: string) {
       message: Message | CreateMessage,
       chatRequestOptions?: ChatRequestOptions,
     ) => {
+      // Generate a new requestId for each request
+      setRequestId(crypto.randomUUID().replace(/-/g, ""));
+      
       chat.append(message, chatRequestOptions);
       if (chat.messages.length === 0) {
         // We suggest a title for the thread based
@@ -155,8 +168,9 @@ export function useAgentState(key: 'smc_simulation_config' | '', config?: Config
     };
   }, [defaultConfig, config, key, setAIAgentState]);
 
+  // This callback is no longer needed since requestId is managed in useServiceAiAgentChat
   return useCallback(() => {
-    requestId = crypto.randomUUID().replace(/-/g, "");
+    // No-op: requestId is now generated per request in append()
   }, []);
 }
 
