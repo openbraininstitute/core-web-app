@@ -2,7 +2,7 @@
 
 import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import { useDebouncedCallback } from '@/hooks/hooks';
@@ -16,6 +16,9 @@ import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container() {
   const { state, setState } = usePanelState();
+  const [_, startTransition] = useTransition();
+
+  // Client state to have instant animation.
   const [sizeState, setSizeState] = useState(state);
   const [contentState, setContentState] = useState(state);
 
@@ -23,10 +26,14 @@ export function Container() {
 
   const isCollapsed = contentState === PanelState.Collapsed;
   const isFullscreen = contentState === PanelState.Fullscreen;
-
   const targetWidth = sizeState === PanelState.Collapsed ? '3rem' : '400px';
 
-  const debouncedSetState = useDebouncedCallback(setState, [setState], 300);
+  // Debounce the server action.
+  const debouncedSetState = useDebouncedCallback(
+    (next: PanelState) => startTransition(() => setState(next)),
+    [setState],
+    300
+  );
 
   function updateState(next: PanelState) {
     setSizeState(next);
