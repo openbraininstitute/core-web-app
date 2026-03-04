@@ -157,8 +157,6 @@ export function RootElement({
             errors={errors}
           />
         )}
-
-      {/* Block Union: show selected variant with change option */}
     </>
   );
 }
