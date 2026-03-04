@@ -4,6 +4,7 @@ import { match } from 'ts-pattern';
 
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
+import { SpikeViewer } from '@/features/spike-viewer';
 import { cn } from '@/utils/css-class';
 
 import { jsonFileAtomFamily } from '../atoms';
@@ -34,6 +35,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
     .with(undefined, () => null)
     .with('json', () => <JsonFileViewer file={displayFile!} context={context} />)
     .with('nwb', () => <NwbFileViewer file={displayFile!} context={context} />)
+    .with('h5', () => <H5FileViewer file={displayFile!} context={context} />)
     .otherwise(() => <PlaceholderFileViewer file={displayFile!} />);
 
   return (
@@ -138,6 +140,24 @@ function NwbFileViewer({ file, context }: NwbFileViewerProps) {
       key={asset.id}
       resource={entity as ISimulationResult}
       assetId={asset.id}
+      ctx={context}
+    />
+  );
+}
+
+type H5FileViewerProps = {
+  file: TActivityCustomFile;
+  context: WorkspaceContext;
+};
+
+function H5FileViewer({ file, context }: H5FileViewerProps) {
+  const { entity, asset } = file;
+  return (
+    <SpikeViewer
+      key={`${entity.id}-${asset.id}`}
+      entityId={entity.id}
+      entityType={entity.type}
+      asset={asset}
       ctx={context}
     />
   );
