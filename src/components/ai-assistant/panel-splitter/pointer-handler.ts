@@ -43,6 +43,7 @@ class PointerHandler {
   public readonly eventPanelWidthChange = new GenericEvent<number>();
 
   public readonly handlePointerDown = (evt: React.PointerEvent<HTMLDivElement>) => {
+    evt.preventDefault();
     const div = this.elem(evt);
     div.setPointerCapture(evt.pointerId);
     this.touching = true;
