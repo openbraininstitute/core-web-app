@@ -66,13 +66,8 @@ export function usePanelWidth(): {
     return value;
   }, []);
 
-  const setPanelWidth = React.useCallback(
-    (value: number) => setWidth(value), // store raw, clamp only on read
-    [setWidth]
-  );
-
   return React.useMemo(
-    () => ({ panelWidth: clamp(width), setPanelWidth }),
-    [width, setPanelWidth, clamp]
+    () => ({ panelWidth: clamp(width), setPanelWidth: setWidth }),
+    [width, setWidth, clamp]
   );
 }

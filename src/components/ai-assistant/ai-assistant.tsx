@@ -1,9 +1,8 @@
 'use client';
 
 import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { motion } from 'motion/react';
-import React, { type CSSProperties } from 'react';
+import React from 'react';
 
 import { useServiceAiAgentChat } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
@@ -14,7 +13,6 @@ import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
 import PanelContent from './panel-content';
-import TabTransitionLoader from './panel-content/tab-transition-loader/tab-transition-loader';
 import PanelSplitter from './panel-splitter';
 
 import type { TAppUInterfaceSection } from '@/utils/key-builder';
@@ -30,8 +28,6 @@ interface AiAssistantProps {
   onCollapse?: () => void;
   disabled?: boolean;
 }
-
-const queryClient = new QueryClient();
 
 export default function AiAssistant({
   className,
@@ -66,89 +62,87 @@ export default function AiAssistant({
   } as const;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AiContextProvider section={section}>
-        <div
-          ref={containerRef}
-          className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
+    <AiContextProvider section={section}>
+      <div
+        ref={containerRef}
+        className={classNames(className, styles.aiAssistant, 'rounded-xl! border-0!')}
+      >
+        <motion.div
+          className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
+          initial={{ opacity: 0, width: 0, ...animationProps }}
+          animate={{
+            opacity: 1,
+            width: fullscreen ? 'calc(100vw - 20px)' : `${panelWidth}px`,
+            ...animationProps,
+          }}
+          exit={{ opacity: 0, width: 0 }}
+          transition={isDragging ? { duration: 0 } : { duration: 0.25, ease: 'easeInOut' }}
         >
-          <motion.div
-            className={classNames(styles.overlay, panelWidth > MINIMAL_PANEL_SIZE && styles.shadow)}
-            initial={{ opacity: 0, width: 0, ...animationProps }}
-            animate={{
-              opacity: 1,
-              width: fullscreen ? 'calc(100vw - 20px)' : `${panelWidth}px`,
-              ...animationProps,
-            }}
-            exit={{ opacity: 0, width: 0 }}
-            transition={isDragging ? { duration: 0 } : { duration: 0.25, ease: 'easeInOut' }}
-          >
-            <div className={styles.header}>
-              <div className={styles.headerTitle}>AI assistant</div>
-              <div className={styles.headerActions}>
-                {onFullscreenToggle && (
-                  <button
-                    type="button"
-                    onClick={onFullscreenToggle}
-                    className={styles.headerBtn}
-                    aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                    disabled={disabled}
-                  >
-                    {fullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
-                  </button>
-                )}
-                {onCollapse && (
-                  <button
-                    type="button"
-                    onClick={onCollapse}
-                    className={styles.headerBtn}
-                    aria-label="Collapse"
-                    disabled={disabled}
-                  >
-                    <MinusOutlined />
-                  </button>
-                )}
-              </div>
+          <div className={styles.header}>
+            <div className={styles.headerTitle}>AI assistant</div>
+            <div className={styles.headerActions}>
+              {onFullscreenToggle && (
+                <button
+                  type="button"
+                  onClick={onFullscreenToggle}
+                  className={styles.headerBtn}
+                  aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                  disabled={disabled}
+                >
+                  {fullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+                </button>
+              )}
+              {onCollapse && (
+                <button
+                  type="button"
+                  onClick={onCollapse}
+                  className={styles.headerBtn}
+                  aria-label="Collapse"
+                  disabled={disabled}
+                >
+                  <MinusOutlined />
+                </button>
+              )}
             </div>
-            <nav>
-              <button
-                type="button"
-                className={classNames(tab === 'chat' && styles.selected)}
-                onClick={() => setTab('chat')}
-                disabled={!threadId}
-              >
-                <IconChat />
-                <div>Chat</div>
-              </button>
-              <button
-                type="button"
-                className={classNames(tab === 'history' && styles.selected)}
-                onClick={() => setTab('history')}
-                disabled={!threadId}
-              >
-                <IconHistory />
-                <div>History</div>
-              </button>
-              <button
-                type="button"
-                className={styles.newChatBtn}
-                disabled={!canCreateNewChat}
-                onClick={handleNewChat}
-              >
-                <IconNewChat />
-                <div>New Chat</div>
-              </button>
-            </nav>
-            <PanelContent
-              className={styles.content}
-              threadId={threadId}
-              tab={tab}
-              onTabChange={setTab}
-            />
-            {!fullscreen && <PanelSplitter />}
-          </motion.div>
-        </div>
-      </AiContextProvider>
-    </QueryClientProvider>
+          </div>
+          <nav>
+            <button
+              type="button"
+              className={classNames(tab === 'chat' && styles.selected)}
+              onClick={() => setTab('chat')}
+              disabled={!threadId}
+            >
+              <IconChat />
+              <div>Chat</div>
+            </button>
+            <button
+              type="button"
+              className={classNames(tab === 'history' && styles.selected)}
+              onClick={() => setTab('history')}
+              disabled={!threadId}
+            >
+              <IconHistory />
+              <div>History</div>
+            </button>
+            <button
+              type="button"
+              className={styles.newChatBtn}
+              disabled={!canCreateNewChat}
+              onClick={handleNewChat}
+            >
+              <IconNewChat />
+              <div>New Chat</div>
+            </button>
+          </nav>
+          <PanelContent
+            className={styles.content}
+            threadId={threadId}
+            tab={tab}
+            onTabChange={setTab}
+          />
+          {!fullscreen && <PanelSplitter />}
+        </motion.div>
+      </div>
+    </AiContextProvider>
   );
 }
