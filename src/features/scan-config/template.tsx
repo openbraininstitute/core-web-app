@@ -195,6 +195,7 @@ export function ScanConfigTemplate({
           >
             {editing && (
               <Middle
+                key={selectedRootElement + selectedEntry}
                 schemaName={schemaName}
                 schema={schema}
                 selectedRootElement={selectedRootElement}
