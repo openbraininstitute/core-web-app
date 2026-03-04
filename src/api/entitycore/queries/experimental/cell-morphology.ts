@@ -1,23 +1,28 @@
 import z from 'zod';
 
+import { makeListResponse } from '@/api/entitycore/schemas/base';
+import {
+  CellMorphologySchema,
+  type TCellMorphology,
+  type TCellMorphologyAnnotationExpanded,
+} from '@/api/entitycore/schemas/cell-morphology';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
   CellMorphologyFilter,
   ExpandCellMorphologyParm,
-  ICellMorphology,
-  ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/cell-morphology';
+
 /**
  * Retrieves a list of cell morphologies from the EntityCoreAPI.
  *
  * @param {Object} options - The options object
  * @param {CellMorphologyFilter} [options.filters] - Optional filters to apply to the query
- * @returns {Promise<EntityCoreResponse<ICellMorphology>>} A promise that resolves to the list of cell morphologies
+ * @returns {Promise<EntityCoreResponse<TCellMorphology>>} A promise that resolves to the list of cell morphologies
  */
 export async function getCellMorphologies({
   withFacets,
@@ -29,17 +34,23 @@ export async function getCellMorphologies({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<ICellMorphology | ICellMorphologyExpanded>>(baseUri, {
-    queryParams: {
-      ...filters,
-      with_facets: withFacets,
-    },
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      ...getEntityCoreContext(context).headers,
-    },
-  });
+  return await api.get<EntityCoreResponse<TCellMorphology | TCellMorphologyAnnotationExpanded>>(
+    baseUri,
+    {
+      queryParams: {
+        ...filters,
+        with_facets: withFacets,
+      },
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        ...getEntityCoreContext(context).headers,
+      },
+      validation: {
+        response: makeListResponse(CellMorphologySchema),
+      },
+    }
+  );
 }
 
 /**
@@ -48,7 +59,7 @@ export async function getCellMorphologies({
  * @param {Object} params - The parameters object
  * @param {string} params.id - The unique identifier of the cell morphology to retrieve
  * @param {ExpandCellMorphologyParm} params.expand - Parameter to specify if the morphology should be expanded
- * @returns {Promise<ICellMorphology | ICellMorphologyExpanded>} A promise that resolves to the requested cell morphology
+ * @returns {Promise<TCellMorphology | TCellMorphologyAnnotationExpanded>} A promise that resolves to the requested cell morphology
  */
 export async function getCellMorphology({
   id,
@@ -60,7 +71,7 @@ export async function getCellMorphology({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<ICellMorphology | ICellMorphologyExpanded>(`${baseUri}/${id}`, {
+  return await api.get<TCellMorphology | TCellMorphologyAnnotationExpanded>(`${baseUri}/${id}`, {
     queryParams: {
       expand,
     },
@@ -68,6 +79,9 @@ export async function getCellMorphology({
       accept: 'application/json',
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
+    },
+    validation: {
+      response: CellMorphologySchema,
     },
   });
 }
@@ -143,7 +157,7 @@ export async function createCellMorphology({
   payload: TCellMorphologyCreate;
 }) {
   const api = await entityCoreApi();
-  return await api.post<ICellMorphology>(baseUri, {
+  return await api.post<TCellMorphology>(baseUri, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

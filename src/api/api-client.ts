@@ -1,10 +1,13 @@
 import isNil from 'es-toolkit/compat/isNil';
 import omitBy from 'es-toolkit/compat/omitBy';
 
+import { ValidationError } from '@/api/error';
 import { parseApiError } from '@/api/utils';
 import { getSession } from '@/auth-fetch';
 import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
+
+import type { ZodType } from 'zod';
 
 type BackoffStrategy = {
   type: 'exponential' | 'custom';
@@ -20,6 +23,12 @@ type RequestConfiguration = {
   retryOnException?: boolean;
 };
 
+type ValidationSchemas = {
+  queryParams?: ZodType;
+  body?: ZodType;
+  response?: ZodType;
+};
+
 type RequestOptions = {
   headers?: Record<string, string | undefined>;
   queryParams?: Record<
@@ -30,6 +39,7 @@ type RequestOptions = {
   signal?: AbortSignal;
   cache?: RequestCache;
   next?: NextFetchRequestConfig;
+  validation?: ValidationSchemas;
 };
 
 // New cache configuration type
@@ -47,6 +57,8 @@ type ApiClientOptions = {
   config?: RequestConfiguration;
   cache?: CacheConfiguration; // Add cache configuration to options
 };
+
+export type { ValidationSchemas };
 
 export type ErrorCause<T extends Record<string, any>> = {
   status: number;
@@ -211,11 +223,35 @@ class ApiClient {
     method: string,
     endpoint: string,
     options: RequestOptions = {},
-    config: RequestConfiguration & { cache?: CacheConfiguration; asRawResponse?: boolean } = {},
+    config: RequestConfiguration & {
+      cache?: CacheConfiguration;
+      asRawResponse?: boolean;
+    } = {},
     onAbort?: () => void
   ): Promise<T> {
     let attempt = 0;
     const maxAttempts = config.attempts ?? this._attempts ?? 1;
+
+    // validate input schemas before making the request
+    if (options.validation?.queryParams && options.queryParams) {
+      const result = options.validation.queryParams.safeParse(options.queryParams);
+      if (!result.success) {
+        const error = new ValidationError('queryParams', result.error);
+        log('error', `fetch [${endpoint}] error:`, error.toJSON());
+        throw error;
+      }
+      log('info', `fetch [${endpoint}] [queryParams] succeeded`);
+    }
+
+    if (options.validation?.body && options.body) {
+      const result = options.validation.body.safeParse(options.body);
+      if (!result.success) {
+        const error = new ValidationError('body', result.error);
+        log('error', `fetch [${endpoint}] error:`, error.toJSON());
+        throw error;
+      }
+      log('info', `fetch [${endpoint}] [body] succeeded`);
+    }
 
     const url = new URL(`${this._rootUrl}${endpoint}`);
 
@@ -346,6 +382,18 @@ class ApiClient {
         throw await parseApiError(request.url, response.status, responseData);
       }
 
+      // validate response schema if provided
+      if (options.validation?.response && !config.asRawResponse) {
+        const result = options.validation.response.safeParse(responseData);
+        if (!result.success) {
+          const error = new ValidationError('response', result.error);
+          log('error', `fetch [${endpoint}] error:`, error.toJSON());
+          throw error;
+        }
+        log('info', `fetch [${endpoint}] [response] succeeded`);
+        return result.data as T;
+      }
+
       return responseData;
     };
 
@@ -361,7 +409,10 @@ class ApiClient {
         await new Promise((resolve) => {
           setTimeout(resolve, delay);
         });
-        return this._request<T>(method, endpoint, options, { ...config, attempts: attempt + 1 });
+        return this._request<T>(method, endpoint, options, {
+          ...config,
+          attempts: attempt + 1,
+        });
       }
       throw error;
     }
@@ -415,7 +466,10 @@ class ApiClient {
   get<T>(
     endpoint: string,
     options?: RequestOptions,
-    config?: RequestConfiguration & { cache?: CacheConfiguration; asRawResponse?: boolean }
+    config?: RequestConfiguration & {
+      cache?: CacheConfiguration;
+      asRawResponse?: boolean;
+    }
   ) {
     return this._request<T>('get', endpoint, options, config);
   }

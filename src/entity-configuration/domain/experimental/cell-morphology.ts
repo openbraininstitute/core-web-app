@@ -11,11 +11,6 @@ import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import type {
-  ICellMorphology,
-  ICellMorphologyExpanded,
-} from '@/api/entitycore/types/entities/cell-morphology';
-
 // TODO: Uncomment until entitycore support filtering by `not_in`
 // export const cellMorphologyGenerationTypeFilter = {
 //   cell_morphology_protocol__generation_type__in: without(
@@ -24,9 +19,15 @@ import type {
 //   ),
 // };
 
+import type {
+  TCellMorphology,
+  TCellMorphologyAnnotationExpanded,
+} from '@/api/entitycore/schemas/cell-morphology';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
-export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphologyExpanded> = {
+export const CellMorphology: EntityCoreTypeConfig<
+  TCellMorphology | TCellMorphologyAnnotationExpanded
+> = {
   group: EntityTypeGroup.Experimental,
   title: 'Morphology',
   extendedType: ExtendedEntitiesTypeDict.CellMorphology,

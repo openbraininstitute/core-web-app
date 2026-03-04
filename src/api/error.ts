@@ -18,6 +18,42 @@ export class ApiError extends Error {
     this.name = 'ApiError';
     this.cause = cause;
   }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      cause: this.cause,
+    };
+  }
+}
+
+export type ValidationTarget = 'queryParams' | 'body' | 'response';
+
+export class ValidationError extends ApiError {
+  public readonly issues: Array<{
+    path: (string | number)[];
+    message: string;
+    [key: string]: any;
+  }>;
+
+  constructor(target: ValidationTarget, zodError: { issues: ValidationError['issues'] }) {
+    const summary = zodError.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
+    super(`Validation failed for ${target}`);
+    this.name = 'ValidationError';
+    this.issues = zodError.issues;
+    this.cause = {
+      message: summary,
+      details: this.issues,
+    };
+  }
+
+  override toJSON() {
+    return {
+      ...super.toJSON(),
+      issues: this.issues,
+    };
+  }
 }
 
 export default ApiError;
