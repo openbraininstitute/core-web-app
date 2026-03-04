@@ -181,7 +181,12 @@ export default async function Overview({
     const initialConfig = data?.config?.form ?? data?.config ?? null;
 
     return (
-      <IonChannelModelBuilding sessionId={entity.id} originalConfig={initialConfig} readonly />
+      <IonChannelModelBuilding
+        readonly
+        sessionId={entity.id}
+        originalConfig={initialConfig}
+        originalCampaignId={entity.id}
+      />
     );
   }
 

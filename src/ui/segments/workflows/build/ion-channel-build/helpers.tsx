@@ -63,11 +63,13 @@ export const IonChannelModelingSharedStateFamily = makeSessionAtomWithDefault<{
   panel: TGenerationWorkflowFormPanelKeys;
   currentConfigId?: string | null;
   buildRequested?: boolean;
+  campaignId?: string | null;
 }>({
   schema: undefined,
   currentConfigId: null,
   panel: GenerationWorkflowFormPanelKeys.configuration,
   buildRequested: false,
+  campaignId: null,
 });
 
 export const CONFIGURATION_FORM_STATE_KEY = 'form';
