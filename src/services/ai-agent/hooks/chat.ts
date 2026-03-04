@@ -16,8 +16,6 @@ import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
 const agentStateAtom = atom<Record<string, Config>>({});
-const requestIdAtom = atom<string>(crypto.randomUUID().replace(/-/g, ''));
-const returnIdAtom = atom<string>('');
 
 export function useServiceAiAgentChat(threadId: string) {
   const [aiAgentState] = useAtom(agentStateAtom);
@@ -29,8 +27,6 @@ export function useServiceAiAgentChat(threadId: string) {
 
   const [_, setConfig] = useAtom(configStateAtom);
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
-  const [requestId, setRequestId] = useAtom(requestIdAtom);
-  const [returnId, setReturnId] = useAtom(returnIdAtom);
 
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
@@ -38,7 +34,6 @@ export function useServiceAiAgentChat(threadId: string) {
     initialMessages,
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      'x-request-id': requestId,
     },
     experimental_prepareRequestBody: ({ messages }) => {
       const lastMessage = messages.at(-1);
@@ -58,7 +53,6 @@ export function useServiceAiAgentChat(threadId: string) {
         reset_in: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
       };
       setRateLimit(newRateLimit);
-      setReturnId(resp.headers.get('x-request-id') ?? '');
       return resp;
     },
   });
@@ -66,7 +60,7 @@ export function useServiceAiAgentChat(threadId: string) {
   useEffect(() => {
     const lastMessage = chat.messages[chat.messages.length - 1];
 
-    // Use toReversed() or slice().reverse() to avoid mutating the original array
+    // Find the most recent editstate tool result
     const toolInvocation = lastMessage?.parts
       .toReversed()
       .find(
@@ -76,21 +70,21 @@ export function useServiceAiAgentChat(threadId: string) {
           p.toolInvocation.state === 'result'
       ) as ToolInvocationUIPart | undefined;
 
-    //@ts-expect-error
-    if (toolInvocation?.toolInvocation?.result && returnId === requestId) {
+    // @ts-expect-error
+    if (toolInvocation?.toolInvocation?.result) {
       try {
-        //@ts-expect-error
-        const result = JSON.parse(toolInvocation?.toolInvocation?.result ?? {});
+        // @ts-expect-error
+        const result = JSON.parse(toolInvocation.toolInvocation.result ?? {});
         setConfig(result.state.smc_simulation_config ?? null);
       } catch {
         logError(
           'Failed to parse tool invocation result as JSON:',
-          //@ts-expect-error
+          // @ts-expect-error - result property exists on result state but not in ToolInvocation union type
           toolInvocation.toolInvocation.result
         );
       }
     }
-  }, [chat.messages, setConfig, requestId, returnId]);
+  }, [chat.messages, setConfig]);
 
   useEffect(() => {
     setIsChatReady(chat.status === 'ready');
@@ -99,13 +93,9 @@ export function useServiceAiAgentChat(threadId: string) {
   return {
     messages: chat.messages,
     append: (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
-      // Generate a new requestId for each request
-      setRequestId(crypto.randomUUID().replace(/-/g, ''));
-
       chat.append(message, chatRequestOptions);
       if (chat.messages.length === 0) {
-        // We suggest a title for the thread based
-        // on the first message.
+        // We suggest a title for the thread based on the first message
         try {
           serviceAiAgentThreadSuggestTitle({
             accessToken,
@@ -113,8 +103,7 @@ export function useServiceAiAgentChat(threadId: string) {
             title: message.content,
           });
         } catch (ex) {
-          // Renaming the thread is not important.
-          // If it fails, we just ignore it.
+          // Renaming the thread is not important - if it fails, we just ignore it
           logError('Unable to rename the thread:', ex);
         }
       }
