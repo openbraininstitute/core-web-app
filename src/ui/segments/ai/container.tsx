@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
-import { useDebouncedCallback } from '@/hooks/hooks';
 import { useAgentState } from '@/services/ai-agent';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
@@ -16,9 +15,8 @@ import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container() {
   const { state, setState } = usePanelState();
-  const [_, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
-  // Client state to have instant animation.
   const [sizeState, setSizeState] = useState(state);
   const [contentState, setContentState] = useState(state);
 
@@ -28,17 +26,10 @@ export function Container() {
   const isFullscreen = contentState === PanelState.Fullscreen;
   const targetWidth = sizeState === PanelState.Collapsed ? '3rem' : '400px';
 
-  // Debounce the server action.
-  const debouncedSetState = useDebouncedCallback(
-    (next: PanelState) => startTransition(() => setState(next)),
-    [setState],
-    300
-  );
-
   function updateState(next: PanelState) {
     setSizeState(next);
     if (next !== PanelState.Collapsed) setContentState(next);
-    debouncedSetState(next);
+    startTransition(() => setState(next));
   }
 
   function handleAnimationComplete() {
@@ -69,6 +60,7 @@ export function Container() {
           onClick={() => updateState(PanelState.Expanded)}
           className="relative flex h-full w-full cursor-pointer items-start justify-center px-2 select-none"
           aria-label="expand AI assistant"
+          disabled={isPending}
         >
           <div className="absolute top-3 flex items-center justify-center text-white">
             <PlusOutlined className="h-5 w-5" />
@@ -104,6 +96,7 @@ export function Container() {
                   }
                   aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                   onCollapse={() => updateState(PanelState.Collapsed)}
+                  disabled={isPending}
                 />
               </HydrateWrapper>
             )}

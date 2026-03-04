@@ -28,6 +28,7 @@ interface AiAssistantProps {
   containerRef?: (el: HTMLDivElement | null) => void;
   onFullscreenToggle?: () => void;
   onCollapse?: () => void;
+  disabled?: boolean;
 }
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ export default function AiAssistant({
   containerRef,
   onFullscreenToggle,
   onCollapse,
+  disabled,
 }: AiAssistantProps) {
   const { panelWidth } = usePanelWidth();
   const isDragging = useIsDragging();
@@ -90,6 +92,7 @@ export default function AiAssistant({
                     onClick={onFullscreenToggle}
                     className={styles.headerBtn}
                     aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                    disabled={disabled}
                   >
                     {fullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                   </button>
@@ -100,6 +103,7 @@ export default function AiAssistant({
                     onClick={onCollapse}
                     className={styles.headerBtn}
                     aria-label="Collapse"
+                    disabled={disabled}
                   >
                     <MinusOutlined />
                   </button>
