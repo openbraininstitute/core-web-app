@@ -5,10 +5,7 @@ import { useAtom } from 'jotai';
 import { useMemo } from 'react';
 import { match, P } from 'ts-pattern';
 
-import { config } from '@/config';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { AutomatedFormBreadcrumb } from '@/ui/segments/workflows/build/ion-channel-build/elements/breadcrumb';
 import {
   GenerationWorkflowFormPanel,
   GenerationWorkflowFormPanelKeys,
@@ -22,17 +19,20 @@ import { Output } from '@/ui/segments/workflows/build/ion-channel-build/sections
 
 import 'katex/dist/katex.min.css';
 
+import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
+
 export function IonChannelModelBuilding({
   sessionId,
   originalConfig,
   readonly,
+  originalCampaignId,
 }: {
   sessionId: string;
   originalConfig?: Record<string, any> | null;
   readonly?: boolean;
+  originalCampaignId?: string;
 }) {
   useDisableElementOverflow({ id: 'workspace-body' });
-  const { virtualLabId, projectId } = useWorkspace();
   const { data: RootSchema, isLoading } = useGenerativeFormSchemaApi({
     form: 'IonChannelFittingScanConfig',
   });
@@ -40,6 +40,8 @@ export function IonChannelModelBuilding({
   const [ionState, updateIoChannelState] = useAtom(
     useMemo(() => IonChannelModelingSharedStateFamily(sessionId!), [sessionId])
   );
+
+  const effectiveCampaignId = readonly ? originalCampaignId : (ionState.campaignId ?? undefined);
 
   const section = match({ isLoading, RootSchema, panel: ionState.panel })
     .with({ isLoading: true }, () => (
@@ -58,7 +60,7 @@ export function IonChannelModelBuilding({
       return <Configuration {...{ sessionId, originalConfig, readonly }} />;
     })
     .with({ isLoading: false, panel: GenerationWorkflowFormPanelKeys.output }, () => {
-      return <Output {...{ sessionId, readonly }} campaignId={readonly ? sessionId : undefined} />;
+      return <Output {...{ sessionId, readonly, campaignId: effectiveCampaignId }} />;
     })
     .otherwise(() => null);
 
@@ -74,14 +76,9 @@ export function IonChannelModelBuilding({
               : undefined
           }
         />
-        <AutomatedFormBreadcrumb
-          category={{
-            label: 'Build',
-            link: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
-            isUrl: true,
-          }}
-          type={{ label: 'Ion Channel Model', link: '', isUrl: false }}
-        />
+        {effectiveCampaignId && (
+          <ButtonCopyId value={effectiveCampaignId} label="Copy build campaign ID" />
+        )}
       </div>
 
       {section}

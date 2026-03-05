@@ -344,7 +344,7 @@ export function Output({
   const context = useWorkspace();
   const notification = useAppNotification();
   const safeSessionId = sessionId || '';
-  const [ionState] = useAtom(
+  const [ionState, updateIonState] = useAtom(
     useMemo(() => IonChannelModelingSharedStateFamily(safeSessionId), [safeSessionId])
   );
   const [payload] = useAtom(
@@ -417,6 +417,21 @@ export function Output({
         isFormValid({ data: payload, schema: ionState.schema }),
     })
   );
+
+  // extract campaign id from stream and store in shared state
+  useEffect(() => {
+    if (readonly || !streamData || !Array.isArray(streamData)) return;
+    const messages = streamData as Array<IonChannelBuildingStreamDataMessage>;
+    const firstBuildInput = messages.find(
+      (m) => m.message_type === MessageType.DATA && m.data_type === DataType.BuildInput
+    ) as
+      | (IonChannelBuildingStreamDataMessage & { data: { campaign?: { id?: string } } })
+      | undefined;
+    const streamCampaignId = firstBuildInput?.data?.campaign?.id;
+    if (streamCampaignId && streamCampaignId !== ionState.campaignId) {
+      updateIonState({ ...ionState, campaignId: streamCampaignId });
+    }
+  }, [streamData, readonly, ionState, updateIonState]);
 
   const isFetching = readonly ? readonlyFetching : streamFetching;
   const isLoading = readonly ? readonlyLoading : streamLoading;
