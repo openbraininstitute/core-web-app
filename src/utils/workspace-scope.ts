@@ -1,4 +1,5 @@
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
+
 import type { WorkspaceContext } from '@/types/common';
 
 export function getWorkspaceScopeFilters(scope: TWorkspaceScope, context?: WorkspaceContext) {
@@ -10,6 +11,7 @@ export function getWorkspaceScopeFilters(scope: TWorkspaceScope, context?: Works
     [WorkspaceScope.Public]: {
       authorized_public: true,
     },
+    [WorkspaceScope.Combined]: {},
   };
 
   return filters[scope] ?? {};

@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "APP_VERSION=$(make version) next dev",
+    "dev:inspect": "APP_VERSION=$(make version) next dev --inspect",
     "build": "next build",
     "start": "next start",
     "lint": "biome check",

@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
+
 import { useSnapshot } from '@/components/ai-assistant/suggested-questions/snapshot';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
+
 import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
 
 export function useServiceAiAgentSuggestionFromUserJourney(
@@ -20,11 +22,11 @@ export function useServiceAiAgentSuggestionFromUserJourney(
   const requestIdRef = React.useRef(0);
 
   React.useEffect(() => {
-    if (status === 'ready') {
+    if (status === 'ready' && accessToken && virtualLabId && projectId && threadId) {
       const currentRequestId = ++requestIdRef.current;
 
       setIsLoading(true);
-      serviceAiAgentSuggestionFromUserJourney(accessToken ?? 'no-access-token', {
+      serviceAiAgentSuggestionFromUserJourney(accessToken, {
         threadId,
         virtualLabId,
         projectId,

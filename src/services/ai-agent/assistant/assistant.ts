@@ -1,17 +1,23 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 
-import type { Message } from '@ai-sdk/react';
+import { useQueryClient } from '@tanstack/react-query';
 import debounce from 'es-toolkit/compat/debounce';
 import React from 'react';
+
 import { useAppNotification } from '@/components/notification';
 import { useAccessToken } from '@/hooks/useAccessToken';
+import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
+
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
+import { useAiAgentHealthCheck } from '../hooks/health';
 import { HistoryManager } from './manager/history';
 import { MessageManager } from './manager/message';
 import { ThreadManager } from './manager/thread';
 import { Signal } from './signal';
+
+import type { Message } from '@ai-sdk/react';
 import type { AiAssistantHistory, AssistantContext, AssistantError } from './types';
 
 class AiAssistantClass {
@@ -19,9 +25,17 @@ class AiAssistantClass {
 
   public readonly initialMessages = new Signal<Message[]>([]);
 
+  public readonly isLoadingMessages = new Signal<boolean>(false);
+
+  public readonly isLoadingHistory = new Signal<boolean>(false);
+
   public readonly error = new Signal<AssistantError>(null);
 
+  public readonly healthError = new Signal<string | null>(null);
+
   public readonly history = new Signal<AiAssistantHistory>([]);
+
+  public readonly isEmptyThread = new Signal<boolean>(false);
 
   private readonly accessToken = new Signal('NO-TOKEN');
 
@@ -35,14 +49,34 @@ class AiAssistantClass {
 
   private readonly messageManager = new MessageManager(this);
 
+  setQueryClient(queryClient: ReturnType<typeof useQueryClient>) {
+    this.messageManager.queryClient = queryClient;
+    this.historyManager.queryClient = queryClient;
+  }
+
   constructor() {
     this.accessToken.event.addListener(this.handleInit);
     this.virtualLabId.event.addListener(this.handleInit);
     this.projectId.event.addListener(this.handleInit);
     this.threadId.event.addListener((threadId: string | undefined) => {
-      if (!threadId) return;
+      if (!threadId) {
+        this.initialMessages.set([]);
+        this.isLoadingMessages.set(false);
+        this.isEmptyThread.set(false);
+        return;
+      }
 
-      this.messageManager.loadMessages(this.context, threadId);
+      // Skip loading messages if thread is marked as empty
+      if (this.isEmptyThread.get()) {
+        this.initialMessages.set([]);
+        this.isLoadingMessages.set(false);
+        return;
+      }
+
+      this.isLoadingMessages.set(true);
+      this.messageManager.loadMessages(this.context, threadId).finally(() => {
+        this.isLoadingMessages.set(false);
+      });
     });
   }
 
@@ -53,8 +87,11 @@ class AiAssistantClass {
   }
 
   readonly createThread = async () => {
-    const threadId = await this.threadmanager.createThread();
+    const { threadId, isEmpty } = await this.threadmanager.createThread();
+    this.isEmptyThread.set(isEmpty);
+    this.initialMessages.set([]);
     this.historyManager.reset();
+    this.threadId.set(threadId);
     return threadId;
   };
 
@@ -88,19 +125,36 @@ class AiAssistantClass {
     history: AiAssistantHistory,
     hasMore: boolean,
     fetchNextPage: () => Promise<void>,
+    isLoading: boolean,
   ] {
     const history = this.history.useValue();
-    const threadId = this.threadId.useValue();
-    const context = this.useContext();
+    const accessToken = this.accessToken.useValue();
+    const virtualLabId = this.virtualLabId.useValue();
+    const projectId = this.projectId.useValue();
+    const [isLoading, setIsLoading] = React.useState(true);
+    const hasStarted = React.useRef(false);
 
     React.useEffect(() => {
-      if (threadId) this.historyManager.start(context, threadId);
+      if (hasStarted.current) return;
+      hasStarted.current = true;
+
+      const context = { accessToken, virtualLabId, projectId };
+      setIsLoading(true);
+      this.historyManager.start(context).finally(() => {
+        setIsLoading(false);
+      });
+
       return () => {
         this.historyManager.stop();
       };
-    }, [threadId, context]);
+    }, []);
 
-    return [history, this.historyManager.hasMore, () => this.historyManager.next(context)];
+    return [
+      history,
+      this.historyManager.hasMore,
+      () => this.historyManager.next({ accessToken, virtualLabId, projectId }),
+      isLoading,
+    ];
   }
 
   useContext() {
@@ -129,17 +183,27 @@ class AiAssistantClass {
   }
 
   private readonly handleInit = debounce(() => {
-    this.threadmanager.init(this.context);
+    this.threadmanager.init(this.context).then(({ isEmpty }) => {
+      this.isEmptyThread.set(isEmpty);
+    });
   }, 50);
 }
 
 const AiAssistant = new AiAssistantClass();
 
-export function useAiAssistant(): Omit<AiAssistantClass, 'init' | 'history' | 'error'> {
+export function useAiAssistant() {
   const { error } = useAppNotification();
+  const queryClient = useQueryClient();
   const accessToken = useAccessToken() ?? 'NO-TOKEN';
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
+  const { error: healthError } = useAiAgentHealthCheck(accessToken);
+
+  React.useEffect(() => {
+    if (healthError) {
+      AiAssistant.healthError.set(healthError);
+    }
+  }, [healthError]);
 
   React.useEffect(() => {
     const handleError = (err: AssistantError) => {
@@ -152,9 +216,31 @@ export function useAiAssistant(): Omit<AiAssistantClass, 'init' | 'history' | 'e
     AiAssistant.error.event.addListener(handleError);
     return () => AiAssistant.error.event.removeListener(handleError);
   }, [error]);
+
   React.useEffect(() => {
     AiAssistant.init({ accessToken, virtualLabId, projectId });
-  }, [accessToken, virtualLabId, projectId]);
+    AiAssistant.setQueryClient(queryClient);
+  }, [accessToken, virtualLabId, projectId, queryClient]);
 
-  return AiAssistant;
+  return {
+    ...AiAssistant,
+    useContext: AiAssistant.useContext.bind(AiAssistant),
+    useHistory: AiAssistant.useHistory.bind(AiAssistant),
+    renameThread: async (threadId: string, title: string) => {
+      await AiAssistant.renameThread(threadId, title);
+      queryClient.invalidateQueries({ queryKey: keyBuilderAI.history(virtualLabId, projectId) });
+    },
+    deleteThread: async (threadId: string) => {
+      await AiAssistant.deleteThread(threadId);
+      queryClient.invalidateQueries({ queryKey: keyBuilderAI.history(virtualLabId, projectId) });
+      queryClient.invalidateQueries({
+        queryKey: keyBuilderAI.messages(threadId, virtualLabId, projectId),
+      });
+    },
+    createThread: async () => {
+      const threadId = await AiAssistant.createThread();
+      queryClient.invalidateQueries({ queryKey: keyBuilderAI.history(virtualLabId, projectId) });
+      return threadId;
+    },
+  };
 }

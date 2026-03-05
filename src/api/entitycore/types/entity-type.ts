@@ -21,6 +21,8 @@ export const EntityTypeDict = {
   SimulationCampaign: 'simulation_campaign',
   Simulation: 'simulation',
   IonChannelModel: 'ion_channel_model',
+  IonChannelModelingCampaign: 'ion_channel_modeling_campaign',
+  IonChannelModelingConfig: 'ion_channel_modeling_config',
   ValidationResult: 'validation_result',
   Notebook: 'analysis_notebook_template',
   EMCellMesh: 'em_cell_mesh',
