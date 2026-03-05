@@ -30,7 +30,7 @@ export function createZodSuperJsonStorage<T>(schema: ZodType<T, T>, storage: Sto
         return schema.parse(parsed);
       } catch (error) {
         if (error instanceof z.ZodError) {
-          const errors = error.formErrors.fieldErrors;
+          const errors = error.flatten().fieldErrors;
           throw new Error('validation error', {
             cause: errors,
           });
@@ -48,7 +48,7 @@ export function createZodSuperJsonStorage<T>(schema: ZodType<T, T>, storage: Sto
         storage.setItem(key, superjson.stringify(value));
       } catch (error) {
         if (error instanceof z.ZodError) {
-          const errors = error.formErrors.fieldErrors;
+          const errors = error.flatten().fieldErrors;
           throw new Error('validation error', {
             cause: errors,
           });

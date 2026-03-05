@@ -181,29 +181,29 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
     setIsLaunching(false);
   };
 
-  const warnInfo =
-    OverviewConfigurationSchema.safeParse(overviewConfiguration).error?.formErrors.fieldErrors;
+  const fieldErrors = (result: { error?: { flatten(): { fieldErrors: unknown } } }) =>
+    result.error?.flatten().fieldErrors as Record<string, string[]> | undefined;
 
-  const warnRecordLocation = NeuronLocationArraySchema.safeParse(recordLocationConfiguration).error
-    ?.formErrors.fieldErrors;
+  const warnInfo = fieldErrors(OverviewConfigurationSchema.safeParse(overviewConfiguration));
 
-  const warnExperimentalSetup = ExperimentalSetupConfigurationSchema.safeParse(
-    experimentalSetupConfiguration
-  ).error?.formErrors.fieldErrors;
+  const warnRecordLocation = fieldErrors(
+    NeuronLocationArraySchema.safeParse(recordLocationConfiguration)
+  );
+
+  const warnExperimentalSetup = fieldErrors(
+    ExperimentalSetupConfigurationSchema.safeParse(experimentalSetupConfiguration)
+  );
 
   const warnStimulationProtocol = {
-    ...StimulationConfigurationSchema.safeParse(stimulationConfiguration).error?.formErrors
-      .fieldErrors,
-    ...AmperageStateSchema.safeParse(amperageConfiguration).error?.formErrors.fieldErrors,
+    ...fieldErrors(StimulationConfigurationSchema.safeParse(stimulationConfiguration)),
+    ...fieldErrors(AmperageStateSchema.safeParse(amperageConfiguration)),
   };
 
   const warnSynaptome =
     simulationType === SimulationType.SingleNeuronSynaptome
       ? {
-          ...SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration).error?.formErrors
-            .fieldErrors,
-          ...FrequencyInputConfigSchema.safeParse(frequencyConfiguration).error?.formErrors
-            .fieldErrors,
+          ...fieldErrors(SynapseConfigurationArraySchema.safeParse(synaptomeConfiguration)),
+          ...fieldErrors(FrequencyInputConfigSchema.safeParse(frequencyConfiguration)),
         }
       : {};
 
