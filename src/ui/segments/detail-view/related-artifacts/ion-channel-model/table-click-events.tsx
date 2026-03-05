@@ -5,13 +5,13 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import type { IEModel } from '@/api/entitycore/types';
+import type { IEModel, IIonChannelRecording } from '@/api/entitycore/types';
 
-export default function ICMRelatedArtifactEvents() {
+export function RelatedArtifactEvents() {
   const ctx = useParams<{ virtualLabId?: string; projectId?: string }>();
   const router = useRouter();
 
-  useSelectEntityClickEvent<IEModel>((event) => {
+  useSelectEntityClickEvent<IEModel | IIonChannelRecording>((event) => {
     if (!event.detail.data) return;
 
     const { id: entityId, type: dataType } = event.detail.data;
