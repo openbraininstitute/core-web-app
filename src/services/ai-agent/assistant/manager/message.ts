@@ -1,36 +1,39 @@
-import { Message } from '@ai-sdk/react';
+import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 
 import { serviceAiAgentThreadMessages } from '../../api';
-import { Signal } from '../signal';
-import { AssistantContext } from '../types';
-import { logError } from '@/util/logger';
+
+import type { Message } from '@ai-sdk/react';
+import type { useQueryClient } from '@tanstack/react-query';
+import type { Signal } from '../signal';
+import type { AssistantContext } from '../types';
 
 export class MessageManager {
   constructor(
     private readonly target: {
       initialMessages: Signal<Message[]>;
-    }
+    },
+    public queryClient?: ReturnType<typeof useQueryClient>
   ) {}
 
-  /**
-   * When the user select a thread, we need to display
-   * all the messages of this thread. not only the new ones.
-   */
   readonly loadMessages = async (context: AssistantContext, threadId: string) => {
-    const { target } = this;
     const { accessToken, virtualLabId, projectId } = context;
-    target.initialMessages.set([]);
-    try {
-      const resp = await serviceAiAgentThreadMessages({
-        accessToken,
-        virtualLabId,
-        projectId,
-        threadId,
+    this.target.initialMessages.set([]);
+
+    if (this.queryClient) {
+      const data = await this.queryClient.fetchQuery({
+        queryKey: keyBuilderAI.messages(threadId, virtualLabId, projectId),
+        queryFn: async () => {
+          const resp = await serviceAiAgentThreadMessages({
+            accessToken,
+            virtualLabId,
+            projectId,
+            threadId,
+          });
+          return { results: resp.results.reverse() };
+        },
+        staleTime: 30000,
       });
-      const initialMessages = resp.results.reverse();
-      this.target.initialMessages.set(initialMessages);
-    } catch (ex) {
-      logError('Unable to load thread initial messages!', ex);
+      this.target.initialMessages.set(data.results);
     }
   };
 }

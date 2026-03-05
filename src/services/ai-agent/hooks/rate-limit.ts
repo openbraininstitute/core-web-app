@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+
 import { serviceAiAgentUrl } from '../api';
 
 export interface AiAgentRateLimitEndpoint {
@@ -22,13 +23,13 @@ function isAiAgentRateLimitResponse(data: unknown): data is AiAgentRateLimitResp
   }
 
   const obj = data as Record<string, unknown>;
-  
+
   if (!obj.chat_streamed || typeof obj.chat_streamed !== 'object' || obj.chat_streamed === null) {
     return false;
   }
 
   const chatStreamed = obj.chat_streamed as Record<string, unknown>;
-  
+
   return (
     typeof chatStreamed.limit === 'number' &&
     typeof chatStreamed.remaining === 'number' &&
@@ -41,7 +42,7 @@ export function useAiAgentRateLimit(accessToken: string | null) {
     queryKey: ['ai-agent-rate-limit', accessToken],
     queryFn: async () => {
       const url = serviceAiAgentUrl(['rate_limit']);
-      
+
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -53,15 +54,15 @@ export function useAiAgentRateLimit(accessToken: string | null) {
       }
 
       const data = await response.json();
-      
+
       if (!isAiAgentRateLimitResponse(data)) {
         throw new Error('Invalid rate limit response');
       }
 
       return data;
     },
-    enabled: !!accessToken,
-    staleTime: Infinity, // Only fetch once on mount
+    enabled: !!accessToken && accessToken !== 'NO-TOKEN',
+    staleTime: Infinity,
     retry: false,
   });
 }
