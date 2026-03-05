@@ -89,7 +89,7 @@
     "p-map": "^7.0.4",
     "p-props": "^6.1.0",
     "performant-array-to-tree": "^1.11.0",
-    "plotly.js-dist-min": "^2.35.3",
+    "plotly.js-dist-min": "^3.4.0",
     "rc-picker": "^4.11.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
