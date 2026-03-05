@@ -34,7 +34,7 @@ header.header {
 @keyframes fadeUp {
   0% {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(10px);
   }
   100% {
     opacity: 1;
@@ -45,7 +45,7 @@ header.header {
 @keyframes fadeDown {
   0% {
     opacity: 0;
-    transform: translateY(-3px);
+    transform: translateY(-5px);
   }
   100% {
     opacity: 1;
@@ -54,9 +54,9 @@ header.header {
 }
 
 .animateFadeUp {
-  animation: fadeUp 0.25s ease-out forwards;
+  animation: fadeUp 1s linear forwards;
 }
 
 .animateFadeDown {
-  animation: fadeDown 0.25s ease-out forwards;
+  animation: fadeDown 1s linear forwards;
 }
