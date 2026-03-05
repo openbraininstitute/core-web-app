@@ -1,8 +1,10 @@
 /* eslint-disable max-classes-per-file */
-import { File, Group, Dataset, ready } from 'h5wasm';
+
 import range from 'es-toolkit/compat/range';
+import { Dataset, File, Group, ready } from 'h5wasm';
 
 const SMALL_SCALE_SIMULATOR_ID = 'obi_small_scale_simulator_v1';
+const ION_CHANNEL_SIMULATION_SESSION_ID = 'vc_hh_seclamp';
 
 enum NWBKey {
   DATA_ORGANIZATION = 'data_organization',
@@ -13,6 +15,7 @@ enum NWBKey {
   GENERAL = 'general',
   WAS_GENERATED_BY = 'was_generated_by',
   TIMESTAMPS = 'timestamps',
+  SESSION_ID = 'session_id',
 }
 
 export enum RecordingType {
@@ -83,6 +86,28 @@ export default abstract class NWBTrace {
     if (hasDataOrganization) return new NWBLNMCTrace(file);
 
     // TODO: move format detection logic outside
+
+    try {
+      // 'vc_hh_seclamp'
+      const generalGroup = file.get(NWBKey.GENERAL);
+      if (!(generalGroup instanceof Group)) {
+        throw new Error('General group not found');
+      }
+
+      const sessionIdDataset = generalGroup.get(NWBKey.SESSION_ID);
+      if (!(sessionIdDataset instanceof Dataset)) {
+        throw new Error('Can not find session_id dataset');
+      }
+
+      // TODO: check how to read value correctly, it might be a string
+      const sessionId = sessionIdDataset.to_array() as string[];
+      if (sessionId[0] === ION_CHANNEL_SIMULATION_SESSION_ID) {
+        throw new Error('The file does not seem to be produced by OBI small scale simulator');
+      }
+
+      return new IonChannelSimulationTrace(file);
+    } catch {}
+
     // Small scale circuit simulation complient
     try {
       const generalGroup = file.get(NWBKey.GENERAL);
@@ -428,6 +453,96 @@ class NWBGenericTrace extends NWBTrace {
  * retrieve protocols, repetitions, and sweep recording data from the NWB file.
  */
 class NWBCircuitSimulationTrace extends NWBTrace {
+  recordingTypes: RecordingType[] = [RecordingType.RESPONSE];
+
+  constructor(nwbFile: File) {
+    super(nwbFile);
+    this.init();
+  }
+
+  public init() {}
+
+  public getCellIds(): string[] {
+    const acquisitionGroup = this.getGroup(NWBKey.ACQUISITION);
+    return acquisitionGroup.keys().sort();
+  }
+
+  public getProtocols(): string[] {
+    return ['Custom'];
+  }
+
+  public getRepetitions(_cellId: string, _protocol: string): string[] {
+    return ['Default'];
+  }
+
+  public getSweeps(_cellId: string, _protocol: string, _repetition: string): string[] {
+    return ['Default'];
+  }
+
+  private getTimeData(cellId: string): { timeUnit: string; timeRate: number } {
+    const timeDatasetKey = `${NWBKey.ACQUISITION}/${cellId}/${NWBKey.STARTING_TIME}`;
+
+    let timeDataset;
+
+    try {
+      timeDataset = this.getDataset(timeDatasetKey);
+    } catch {
+      // TODO: consider attempting to read from the "timestamps" dataset as a fallback.
+      return { timeUnit: 's', timeRate: 1 };
+    }
+
+    const timeUnit = tryGetAttribute(timeDataset, 'unit');
+    if (typeof timeUnit !== 'string') {
+      throw new Error(`Incompatible time unit: ${timeUnit}, expected string`);
+    }
+
+    const timeRate = tryGetAttribute(timeDataset, 'rate');
+    if (typeof timeRate !== 'number') {
+      throw new Error(`Incompatible time rate: ${timeRate}, expected number`);
+    }
+
+    return { timeUnit, timeRate };
+  }
+
+  public getSweepRecordingData(
+    cellId: string,
+    _protocol: string,
+    _repetition: string,
+    _sweep: string,
+    recordingType: RecordingType
+  ): RecordingData {
+    const datasetKey = `${NWBKey.ACQUISITION}/${cellId}/${NWBKey.DATA}`;
+
+    const dataset = this.getDataset(datasetKey);
+
+    const unit = tryGetAttribute(dataset, 'unit');
+    if (typeof unit !== 'string') {
+      throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
+    }
+
+    const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
+    const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
+
+    const { timeUnit, timeRate } = this.getTimeData(cellId);
+
+    const data = dataset.to_array() as number[];
+
+    return {
+      data,
+      unit,
+      conversionFactor,
+      timeUnit,
+      timeRate,
+    };
+  }
+}
+
+/**
+ * IonChannelSimulationTrace represents a ion channel simulation report.
+ *
+ * TODO write description
+ */
+class IonChannelSimulationTrace extends NWBTrace {
   recordingTypes: RecordingType[] = [RecordingType.RESPONSE];
 
   constructor(nwbFile: File) {
