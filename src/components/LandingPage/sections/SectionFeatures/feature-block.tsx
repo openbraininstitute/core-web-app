@@ -112,23 +112,15 @@ export default function FeatureBlock({
           {content.useCases[activeUseCase] ?? ''}
         </div>
 
-        <div className="flex flex-col mb-12">
-          <div
-            className="text-base font-medium mb-2"
-            style={{ color: content.theme === 'dark' ? '#91D5FF' : '#A5A5A5' }}
-          >
-            {content.titleH2}
-          </div>
-          <p
-            className="text-base leading-1.75"
-            style={{ color: content.theme === 'dark' ? '#fff' : '#002766' }}
-          >
-            {content.description}
-          </p>
-        </div>
+        <p
+          className="text-base leading-1.75"
+          style={{ color: content.theme === 'dark' ? '#fff' : '#002766' }}
+        >
+          {content.description}
+        </p>
 
         <div
-          className="grid grid-cols-3 gap-4 border p-6 rounded-lg"
+          className="grid grid-cols-3 gap-4 border p-6 rounded-lg mt-10"
           style={{
             borderColor: content.theme === 'dark' ? '#096DD9' : '#D9D9D9',
           }}
@@ -145,7 +137,7 @@ export default function FeatureBlock({
                 {item.value}
               </div>
               <div
-                className="capitalize leading-1.2"
+                className="leading-1.2"
                 style={{ color: content.theme === 'dark' ? '#fff' : '#002766' }}
               >
                 {item.label}
