@@ -1,10 +1,11 @@
 import snakeCase from 'es-toolkit/compat/snakeCase';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { TEntityTypeDict } from '@/api/entitycore/types';
 import { auth } from '@/auth';
 import { ticketStore } from '@/features/entity-download/ticket-store';
+
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 
 // Schema for ticket creation request
 const createTicketSchema = z.object({
