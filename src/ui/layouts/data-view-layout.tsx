@@ -63,6 +63,7 @@ export async function DataViewLayout({
         ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
         ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
         ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+        ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
       ],
       type
     )
@@ -73,7 +74,7 @@ export async function DataViewLayout({
           {breadcrumbs}
           {closePage}
         </div>
-        <div className="relative flex-1 overflow-auto">{children}</div>
+        <div className="relative flex-1 overflow-y-auto">{children}</div>
       </div>
     );
   }

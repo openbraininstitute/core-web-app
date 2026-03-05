@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 import type {
   EntityAuthorization,
@@ -8,7 +8,7 @@ import type {
   EntityCoreType,
   IContributor,
   Timestamps,
-} from '@/api/entitycore/types/shared/global';
+} from "@/api/entitycore/types/shared/global";
 import type {
   ContributionFilter,
   IDFilter,
@@ -18,7 +18,7 @@ import type {
   PaginationFilter,
   SearchFilter,
   TimestampsFilter,
-} from '@/api/entitycore/types/shared/request';
+} from "@/api/entitycore/types/shared/request";
 
 export interface IIonChannelModelingConfigBase {
   name: string;
@@ -64,7 +64,9 @@ const CreateIonChannelModelingConfigSchema = z.object({
   authorized_public: z.boolean().default(false),
 });
 
-export type TCreateIonChannelModelingConfig = z.infer<typeof CreateIonChannelModelingConfigSchema>;
+export type TCreateIonChannelModelingConfig = z.infer<
+  typeof CreateIonChannelModelingConfigSchema
+>;
 
 const UpdateIonChannelModelingConfigSchema = z.object({
   name: z.string().optional(),
@@ -73,4 +75,6 @@ const UpdateIonChannelModelingConfigSchema = z.object({
   scan_parameters: z.record(z.string(), z.any()).optional(),
 });
 
-export type TUpdateIonChannelModelingConfig = z.infer<typeof UpdateIonChannelModelingConfigSchema>;
+export type TUpdateIonChannelModelingConfig = z.infer<
+  typeof UpdateIonChannelModelingConfigSchema
+>;
