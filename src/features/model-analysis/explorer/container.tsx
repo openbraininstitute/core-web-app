@@ -1,22 +1,25 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useParams } from 'next/navigation';
 import { Spin } from 'antd';
+import { useParams } from 'next/navigation';
 
-import { useInputResistance } from './use-input-resistance';
-
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { useAnalysis } from '@/features/model-analysis/explorer/use-analysis';
+import { useInputResistance } from '@/features/model-analysis/explorer/use-input-resistance';
 import { ViewerContainer } from '@/features/model-analysis/viewer/container/container';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
-export default function Analysis() {
+import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
+
+export default function Analysis({ entity }: { entity: TRetrieveEntityOutput }) {
   const workspace = useWorkspace();
   const { id } = useParams<{ id: string }>();
   const { data, error, isLoading } = useAnalysis({ workspace, id });
-  const rin = useInputResistance(id);
+  const { data: rin, isLoading: loadingRin } = useInputResistance({ entity });
+  const entityConfig = getEntityByCoreType({ type: entity.type });
 
-  if (isLoading) {
+  if (isLoading || loadingRin) {
     return (
       <div className="flex h-full min-h-64 w-full flex-col items-center justify-center gap-3">
         <Spin indicator={<LoadingOutlined />} size="large" />
@@ -28,7 +31,7 @@ export default function Analysis() {
   if (error) {
     return (
       <div className="flex h-full items-center justify-center text-xl font-bold text-red-500">
-        Error loading ME-Model analysis
+        Error loading {entityConfig?.title} analysis
       </div>
     );
   }
@@ -48,5 +51,5 @@ export default function Analysis() {
     );
   }
 
-  return <ViewerContainer rin={rin} validationResults={data?.data ?? []} />;
+  return <ViewerContainer entity={entity} rin={rin} validationResults={data?.data ?? []} />;
 }

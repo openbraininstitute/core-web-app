@@ -30,6 +30,7 @@ export function useCircuitImageURL(circuitId: string) {
     queryKey: ['circuit/simulation-designer-image', { context, circuitId, assetId: asset?.id }],
     queryFn: async () => {
       const resp = await downloadAsset({
+        ctx: context,
         entityType: EntityTypeDict.Circuit,
         // biome-ignore lint/style/noNonNullAssertion: query is only enabled when circuit and asset are available
         entityId: circuit!.id,

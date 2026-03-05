@@ -146,7 +146,7 @@ function debugToConsole(value: UIMessage) {
     try {
       // eslint-disable-next-line no-console
       console.debug(JSON.parse(result));
-    } catch (ex) {
+    } catch (_ex) {
       // eslint-disable-next-line no-console
       console.error('Not a valid JSON:', result);
     }
@@ -167,7 +167,7 @@ function formatDate(d: Date | string): string {
     });
     const date = isString(d) ? new Date(d) : d;
     return formatter.format(date);
-  } catch (ex) {
+  } catch {
     return '';
   }
 }

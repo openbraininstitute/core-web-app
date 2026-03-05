@@ -1,10 +1,10 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
-import { capitalize } from 'es-toolkit/compat';
 
 import { HierarchySquare } from '@/components/icons/buttons';
 import { useGetSelectedBrainRegion } from '@/features/brain-region-hierarchy/context';
+import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -31,7 +31,7 @@ export function RegionBanner({ view, onSwitchView }: Props) {
       </div>
     );
 
-  const name = capitalize(selectedBrainRegion.name);
+  const name = normalizeBrainRegionName(selectedBrainRegion.name);
   return (
     <div
       id="brain-region-entities-switcher"

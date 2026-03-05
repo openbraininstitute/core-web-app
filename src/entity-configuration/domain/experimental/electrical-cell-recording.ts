@@ -51,5 +51,5 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
   isBookmarkable: true,
   isCopyable: true,
   isSimulatable: false,
-  isUploadable: true,
+  isContributable: true,
 } as const;

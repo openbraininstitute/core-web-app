@@ -1,10 +1,11 @@
 'use client';
 
 import { type ChangeEvent, type HTMLProps, useState } from 'react';
+
 import { RangeIcon } from '@/components/icons';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
-import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import type { GteLteValue, ValueOrRangeFilter } from '@/entity-configuration/definitions/types';
 
 export function getFieldUnit(field: EntityCoreFields) {
@@ -113,7 +114,7 @@ export function ValueOrRange({
         <div className="flex items-center justify-between gap-2">
           <input
             type="number"
-            className="border-primary-6 flex grow gap-2 rounded-md border bg-transparent px-2 py-2 text-sm font-bold"
+            className=" flex grow gap-2 rounded-md focus-visible:border! border-primary-4 bg-white text-primary-9 px-2 py-2 text-sm font-bold! focus-visible:outline-0"
             onChange={handleValue}
             value={state.value}
           />
@@ -128,7 +129,7 @@ export function ValueOrRange({
       >
         <div className="flex items-center gap-2 text-sm">
           <input
-            className="border-primary-6 min-w-0 rounded-md border bg-transparent px-2 py-2 text-center font-bold"
+            className=" min-w-0 rounded-md focus-visible:border! border-primary-4 bg-white text-primary-9 px-2 py-2 text-center font-bold! focus-visible:outline-0"
             onChange={(e) => handleRange('gte', e)}
             step={1}
             type="number"
@@ -136,7 +137,7 @@ export function ValueOrRange({
           />
           <RangeIcon className="shrink-0" />
           <input
-            className="border-primary-6 min-w-0 rounded-md border bg-transparent px-2 py-2 text-center font-bold"
+            className=" min-w-0 rounded-md focus-visible:border! border-primary-4 bg-white text-primary-9 px-2 py-2 text-center font-bold! focus-visible:outline-0"
             onChange={(e) => handleRange('lte', e)}
             step={1}
             type="number"

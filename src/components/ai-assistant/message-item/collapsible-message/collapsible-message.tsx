@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
-import { UIMessage } from '@ai-sdk/ui-utils';
+
+import type { UIMessage } from '@ai-sdk/ui-utils';
+
 import styles from './collapsible-message.module.css';
 
 interface CollapsibleMessageProps {
@@ -20,11 +22,11 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
     const parts = message.parts;
     let count = 0;
     let inToolSequence = false;
-    
+
     for (let i = 0; i < parts.length; i++) {
       if (collapsedIndices.has(i)) {
         const part = parts[i];
-        
+
         if (part.type === 'tool-invocation') {
           // If we're not already in a tool sequence, this is a new step
           if (!inToolSequence) {
@@ -38,20 +40,20 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
         }
       }
     }
-    
+
     return count;
   }, [message.parts, collapsedIndices]);
 
   // Track which parts should be collapsed
   React.useEffect(() => {
     const parts = message.parts;
-    
+
     // Find indices that should be collapsed
     // A part should be collapsed if:
     // 1. It's a text or tool-invocation
     // 2. There's at least one more text part after it
     const newCollapsedIndices = new Set<number>();
-    
+
     // Find the last text part index
     let lastTextIndex = -1;
     for (let i = parts.length - 1; i >= 0; i--) {
@@ -67,7 +69,7 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
       // Check if the new part is a text part
       const newPartIndex = parts.length - 1;
       const newPart = parts[newPartIndex];
-      
+
       if (newPart.type === 'text' && 'text' in newPart && newPartIndex > 0) {
         // Collapse everything before this new text part
         for (let i = 0; i < newPartIndex; i++) {
@@ -101,7 +103,7 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
   children.forEach((child, index) => {
     if (collapsedIndices.has(index)) {
       collapsedChildren.push(
-        <div 
+        <div
           key={`collapsed-${index}`}
           className={index === animatingIndex ? styles.slideToCollapsible : ''}
         >
@@ -122,10 +124,7 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
   return (
     <>
       {collapsedChildren.length > 0 && (
-        <div 
-          className={styles.thinkingContainer}
-          data-receiving={animatingIndex !== null}
-        >
+        <div className={styles.thinkingContainer} data-receiving={animatingIndex !== null}>
           <button
             type="button"
             className={styles.thinkingButton}
@@ -156,11 +155,7 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
               </span>
             </div>
           </button>
-          {isExpanded && (
-            <div className={styles.thinkingContent}>
-              {collapsedChildren}
-            </div>
-          )}
+          {isExpanded && <div className={styles.thinkingContent}>{collapsedChildren}</div>}
         </div>
       )}
       {visibleChildren}

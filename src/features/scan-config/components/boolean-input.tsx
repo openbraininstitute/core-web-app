@@ -1,9 +1,12 @@
 'use client';
 
 import { Checkbox } from 'antd';
-import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { useCallback, useId } from 'react';
+
+import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { cn } from '@/utils/css-class';
+
+import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 
 export interface BooleanInputProps {
   value: boolean | null;
@@ -48,6 +51,7 @@ export default function BooleanInput({
   return (
     <Checkbox
       id={id}
+      data-scan-config-block-element={ScanConfigUIElementDict.BooleanInput}
       checked={normalizedValue}
       onChange={handleChange}
       disabled={disabled}

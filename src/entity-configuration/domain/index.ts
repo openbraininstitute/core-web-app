@@ -8,9 +8,9 @@ import { SynapsesPerConnection } from '@/entity-configuration/domain/experimenta
 import { UniversalCellMorphology } from '@/entity-configuration/domain/experimental/universal-cell-morphology';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
-import { ComputationallySynthesizedCellMorphology } from '@/entity-configuration/domain/model/computationally-synthesized-morphology';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
+import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
@@ -58,8 +58,10 @@ export const EntityCoreModelConfiguration = {
   Microcircuit,
   Circuit,
   IonChannelModel,
+  IonChannelModelingCampaign,
   MEModelWithSynapsesCircuit,
-  ComputationallySynthesizedCellMorphology,
+  // TODO: Uncomment until entitycore support filtering by `not_in`
+  //ComputationallySynthesizedCellMorphology,
 } as const;
 
 const EntityCoreSimulationConfiguration = {

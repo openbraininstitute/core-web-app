@@ -1,12 +1,9 @@
-import { without } from 'es-toolkit/compat';
-
 import {
   createCellMorphology,
   deleteCellMorphology,
   getCellMorphologies,
   getCellMorphology,
 } from '@/api/entitycore/queries/experimental/cell-morphology';
-import { CellMorphologyGenerationTypeDictionary } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
@@ -19,12 +16,13 @@ import type {
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
 
-export const cellMorphologyGenerationTypeFilter = {
-  cell_morphology_protocol__generation_type__in: without(
-    Object.values(CellMorphologyGenerationTypeDictionary),
-    CellMorphologyGenerationTypeDictionary.ComputationallySynthesized
-  ),
-};
+// TODO: Uncomment until entitycore support filtering by `not_in`
+// export const cellMorphologyGenerationTypeFilter = {
+//   cell_morphology_protocol__generation_type__in: without(
+//     Object.values(CellMorphologyGenerationTypeDictionary),
+//     CellMorphologyGenerationTypeDictionary.ComputationallySynthesized
+//   ),
+// };
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
@@ -37,7 +35,7 @@ export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphol
   api: {
     config: {
       allowedFacets: true,
-      extraQueryKeyBuilder: { ...cellMorphologyGenerationTypeFilter },
+      // extraQueryKeyBuilder: { ...cellMorphologyGenerationTypeFilter },
       ilikeSearchEnabled: true,
     },
     query: {
@@ -48,7 +46,7 @@ export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphol
           withFacets: params[0].withFacets,
           filters: {
             ...params[0].filters,
-            ...cellMorphologyGenerationTypeFilter,
+            // ...cellMorphologyGenerationTypeFilter,
           },
         });
       },
@@ -67,5 +65,5 @@ export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphol
   isCopyable: true,
   isDeletable: true,
   isSimulatable: false,
-  isUploadable: true,
+  isContributable: true,
 } as const;

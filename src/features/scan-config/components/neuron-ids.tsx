@@ -2,6 +2,8 @@ import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@a
 import { InputNumber } from 'antd';
 import { useState } from 'react';
 
+import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+
 export default function NeuronIds({
   elements,
   disabled,
@@ -17,7 +19,10 @@ export default function NeuronIds({
   const [newElement, setNewElement] = useState<number | null>(null);
 
   return (
-    <div className="text-primary-8 mt-2 flex flex-col gap-2">
+    <div
+      className="text-primary-8 mt-2 flex flex-col gap-2"
+      data-scan-config-block-element={ScanConfigUIElementDict.NeuronIds}
+    >
       <div className="flex flex-wrap gap-3">
         {elements.map((e, i) => (
           // eslint-disable-next-line
