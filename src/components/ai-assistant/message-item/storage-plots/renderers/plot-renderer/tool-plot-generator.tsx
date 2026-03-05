@@ -148,7 +148,12 @@ function CustomPlot({
             data={props.data}
             layout={modifiedLayout}
             frames={props?.frames}
-            config={{ displaylogo: false, responsive: true, doubleClick: 'reset' }}
+            config={{
+              displaylogo: false,
+              responsive: true,
+              modeBarButtons:
+                panelWidth && panelWidth < 400 ? [['pan2d', 'zoom2d', 'resetScale2d']] : undefined,
+            }}
             useResizeHandler
             onInitialized={() => setPlotReady(true)}
             onUpdate={() => setPlotReady(true)}
