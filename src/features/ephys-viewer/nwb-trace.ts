@@ -23,7 +23,7 @@ export enum RecordingType {
   RESPONSE = 'response',
 }
 
-type RecordingData = {
+export type RecordingData = {
   data: number[];
   unit: string;
   conversionFactor: number;
@@ -32,8 +32,8 @@ type RecordingData = {
 };
 
 export type SweepData = Partial<{
-  stimulus: RecordingData;
-  response: RecordingData;
+  stimulus: RecordingData[];
+  response: RecordingData[];
 }>;
 
 /**
@@ -148,7 +148,7 @@ export default abstract class NWBTrace {
     repetition: string,
     sweep: string,
     recordingType: RecordingType
-  ): RecordingData;
+  ): RecordingData[];
 
   public getGroup(key: string): Group {
     const group = this.file.get(key);
@@ -282,7 +282,7 @@ class NWBLNMCTrace extends NWBTrace {
     repetition: string,
     sweep: string,
     recordingType: RecordingType
-  ): RecordingData {
+  ): RecordingData[] {
     const sweepGroupKey = `${NWBKey.DATA_ORGANIZATION}/${cellId}/${protocol}/${repetition}/${sweep}`;
     const sweepGroup = this.getGroup(sweepGroupKey);
 
@@ -337,13 +337,15 @@ class NWBLNMCTrace extends NWBTrace {
 
     const data = dataset.to_array() as number[];
 
-    return {
-      data,
-      unit,
-      conversionFactor,
-      timeUnit,
-      timeRate,
-    };
+    return [
+      {
+        data,
+        unit,
+        conversionFactor,
+        timeUnit,
+        timeRate,
+      },
+    ];
   }
 }
 
@@ -397,7 +399,7 @@ class NWBGenericTrace extends NWBTrace {
     _repetition: string,
     sweep: string,
     recordingType: RecordingType
-  ): RecordingData {
+  ): RecordingData[] {
     const recId = this.getRecId(sweep, recordingType);
 
     const datasetKey =
@@ -434,13 +436,15 @@ class NWBGenericTrace extends NWBTrace {
 
     const data = dataset.to_array() as number[];
 
-    return {
-      data,
-      unit,
-      conversionFactor,
-      timeUnit,
-      timeRate,
-    };
+    return [
+      {
+        data,
+        unit,
+        conversionFactor,
+        timeUnit,
+        timeRate,
+      },
+    ];
   }
 }
 
@@ -510,7 +514,7 @@ class NWBCircuitSimulationTrace extends NWBTrace {
     _repetition: string,
     _sweep: string,
     recordingType: RecordingType
-  ): RecordingData {
+  ): RecordingData[] {
     const datasetKey = `${NWBKey.ACQUISITION}/${cellId}/${NWBKey.DATA}`;
 
     const dataset = this.getDataset(datasetKey);
@@ -527,13 +531,15 @@ class NWBCircuitSimulationTrace extends NWBTrace {
 
     const data = dataset.to_array() as number[];
 
-    return {
-      data,
-      unit,
-      conversionFactor,
-      timeUnit,
-      timeRate,
-    };
+    return [
+      {
+        data,
+        unit,
+        conversionFactor,
+        timeUnit,
+        timeRate,
+      },
+    ];
   }
 }
 
@@ -543,7 +549,7 @@ class NWBCircuitSimulationTrace extends NWBTrace {
  * TODO write description
  */
 class IonChannelSimulationTrace extends NWBTrace {
-  recordingTypes: RecordingType[] = [RecordingType.RESPONSE];
+  recordingTypes: RecordingType[] = [RecordingType.STIMULUS, RecordingType.RESPONSE];
 
   constructor(nwbFile: File) {
     super(nwbFile);
@@ -552,25 +558,79 @@ class IonChannelSimulationTrace extends NWBTrace {
 
   public init() {}
 
+  // stimulusKey: vcss__sweep__000, vcss__sweep__001, etc.
+  private parseStimulusKey(key: string): { sweep: string } {
+    const [, , sweep] = key.split(/_+/);
+    if (!sweep) {
+      throw new Error(`Invalid stimulus key: ${key}`);
+    }
+    return { sweep };
+  }
+
+  private createStimulusKey({ sweep }: { sweep: string }): string {
+    return `vcss__sweep__${sweep}`;
+  }
+
+  // responseKey: vcs__itotal_sweep__000, vcs__itotal_sweep__002, etc.
+  private parseResponseKey(key: string): { varName: string; sweep: string } {
+    const [, varName, , sweep] = key.split(/_+/);
+    if (!varName || !sweep) {
+      throw new Error(`Invalid response key: ${key}`);
+    }
+    return { varName, sweep };
+  }
+
+  private createResponseKey({ varName, sweep }: { varName: string; sweep: string }): string {
+    return `vcs__${varName}_sweep__${sweep}`;
+  }
+
+  private getRecVarNames(): string[] {
+    const responseGroup = this.getGroup(NWBKey.ACQUISITION);
+
+    const varNameSet = responseGroup
+      .keys()
+      .map((responseKey) => this.parseResponseKey(responseKey).varName)
+      .reduce((acc, varName) => acc.add(varName), new Set<string>());
+
+    return Array.from(varNameSet).sort();
+  }
+
   public getCellIds(): string[] {
-    const acquisitionGroup = this.getGroup(NWBKey.ACQUISITION);
-    return acquisitionGroup.keys().sort();
+    return ['Default'];
   }
 
   public getProtocols(): string[] {
-    return ['Custom'];
+    const acquisitionGroup = this.getGroup(NWBKey.ACQUISITION);
+    const responseGroupId = acquisitionGroup.keys()[0];
+
+    const datasetKey = `${NWBKey.ACQUISITION}/${responseGroupId}`;
+
+    const responseGroup = this.getGroup(datasetKey);
+    const protocol = tryGetAttribute(responseGroup, 'stimulus_description');
+    if (typeof protocol !== 'string') {
+      throw new Error(`Incompatible protocol: ${protocol}, expected string`);
+    }
+
+    return [protocol];
   }
 
   public getRepetitions(_cellId: string, _protocol: string): string[] {
-    return ['Default'];
+    return ['SEClamp'];
   }
 
   public getSweeps(_cellId: string, _protocol: string, _repetition: string): string[] {
-    return ['Default'];
+    const stimulusPresentationGroup = this.getGroup(NWBKey.STIMULUS_PRESENTATION);
+
+    const sweeps = stimulusPresentationGroup
+      .keys()
+      .map((stimulusKey) => this.parseStimulusKey(stimulusKey).sweep)
+      .sort();
+
+    return sweeps;
   }
 
-  private getTimeData(cellId: string): { timeUnit: string; timeRate: number } {
-    const timeDatasetKey = `${NWBKey.ACQUISITION}/${cellId}/${NWBKey.STARTING_TIME}`;
+  private getTimeData(): { timeUnit: string; timeRate: number } {
+    const timeDatasetKey = `${NWBKey.ACQUISITION}/${NWBKey.STARTING_TIME}`;
 
     let timeDataset;
 
@@ -578,7 +638,7 @@ class IonChannelSimulationTrace extends NWBTrace {
       timeDataset = this.getDataset(timeDatasetKey);
     } catch {
       // TODO: consider attempting to read from the "timestamps" dataset as a fallback.
-      return { timeUnit: 's', timeRate: 1 };
+      return { timeUnit: 's', timeRate: 0.000025 };
     }
 
     const timeUnit = tryGetAttribute(timeDataset, 'unit');
@@ -595,35 +655,46 @@ class IonChannelSimulationTrace extends NWBTrace {
   }
 
   public getSweepRecordingData(
-    cellId: string,
+    _cellId: string,
     _protocol: string,
     _repetition: string,
-    _sweep: string,
+    sweep: string,
     recordingType: RecordingType
-  ): RecordingData {
-    const datasetKey = `${NWBKey.ACQUISITION}/${cellId}/${NWBKey.DATA}`;
+  ): RecordingData[] {
+    console.log(recordingType);
+    const recVarNames =
+      recordingType === RecordingType.STIMULUS ? ['default'] : this.getRecVarNames();
 
-    const dataset = this.getDataset(datasetKey);
+    const recordingData = recVarNames.map((varName): RecordingData => {
+      const datasetKey =
+        recordingType === RecordingType.STIMULUS
+          ? `${NWBKey.STIMULUS_PRESENTATION}/${this.createStimulusKey({ sweep })}/${NWBKey.DATA}`
+          : `${NWBKey.ACQUISITION}/${this.createResponseKey({ varName, sweep })}/${NWBKey.DATA}`;
 
-    const unit = tryGetAttribute(dataset, 'unit');
-    if (typeof unit !== 'string') {
-      throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
-    }
+      const dataset = this.getDataset(datasetKey);
 
-    const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
-    const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
+      const unit = tryGetAttribute(dataset, 'unit');
+      if (typeof unit !== 'string') {
+        throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
+      }
 
-    const { timeUnit, timeRate } = this.getTimeData(cellId);
+      const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
+      const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
 
-    const data = dataset.to_array() as number[];
+      const { timeUnit, timeRate } = this.getTimeData();
 
-    return {
-      data,
-      unit,
-      conversionFactor,
-      timeUnit,
-      timeRate,
-    };
+      const data = dataset.to_array() as number[];
+
+      return {
+        data,
+        unit,
+        conversionFactor,
+        timeUnit,
+        timeRate,
+      };
+    });
+
+    return recordingData;
   }
 }
 
@@ -633,11 +704,11 @@ class IonChannelSimulationTrace extends NWBTrace {
  *
  * This function does.
  */
-function tryGetAttribute(dataset: Dataset, name: string) {
+function tryGetAttribute(entity: Dataset | Group, name: string) {
   try {
-    return dataset.get_attribute(name, true);
+    return entity.get_attribute(name, true);
   } catch {
-    const attributesNames = Object.keys(dataset.attrs);
+    const attributesNames = Object.keys(entity.attrs);
     throw new Error(
       `Attribute "${name}" not found in dataset!\n${
         attributesNames.length === 0

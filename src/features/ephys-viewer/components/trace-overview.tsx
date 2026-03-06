@@ -7,10 +7,13 @@ import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import NWBTrace, { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
+import { cn } from '@/utils/css-class';
+
+import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -56,6 +59,7 @@ function TraceThumbnail({
   protocol,
   repetition,
   recordingType,
+  recordingIndex,
   plotRevision,
 }: {
   trace: NWBTrace;
@@ -63,6 +67,7 @@ function TraceThumbnail({
   protocol: string;
   repetition: string;
   recordingType: RecordingType;
+  recordingIndex: number;
   plotRevision: number;
 }) {
   const sweeps = trace.getSweeps(cellId, protocol, repetition);
@@ -70,6 +75,7 @@ function TraceThumbnail({
     cellId,
     protocol,
     recordingType,
+    recordingIndex,
     repetition,
     sweeps,
     trace
@@ -90,12 +96,16 @@ function TraceThumbnailContainer({
   protocol,
   repetition,
   recordingType,
+  recordingIndex,
+  className,
 }: {
   trace: NWBTrace;
   cellId: string;
   protocol: string;
   repetition: string;
   recordingType: RecordingType;
+  recordingIndex: number;
+  className?: string;
 }) {
   const [plotRevision, setPlotRevision] = useState<number>(0);
 
@@ -115,7 +125,7 @@ function TraceThumbnailContainer({
   }, [ref, setInViewRef]);
 
   return (
-    <div ref={ref} className="relative aspect-4/3 overflow-hidden bg-gray-100 last:mt-7">
+    <div ref={ref} className={cn('relative aspect-4/3 overflow-hidden bg-gray-100', className)}>
       {inView ? (
         <TraceThumbnail
           plotRevision={plotRevision}
@@ -124,6 +134,7 @@ function TraceThumbnailContainer({
           protocol={protocol}
           repetition={repetition}
           recordingType={recordingType}
+          recordingIndex={recordingIndex}
         />
       ) : null}
     </div>
@@ -156,16 +167,27 @@ function ImageSetComponent({
         </button>
       </div>
 
-      {trace.recordingTypes.map((recordingType: RecordingType) => (
-        <TraceThumbnailContainer
-          key={recordingType}
-          trace={trace}
-          cellId={cellId}
-          protocol={protocol}
-          repetition={repetition}
-          recordingType={recordingType}
-        />
-      ))}
+      {trace.recordingTypes.flatMap((recordingType: RecordingType) => {
+        const recordings = trace.getSweepRecordingData(
+          cellId,
+          protocol,
+          repetition,
+          trace.getSweeps(cellId, protocol, repetition)[0],
+          recordingType
+        );
+        return recordings.map((_, i) => (
+          <TraceThumbnailContainer
+            key={`${recordingType}-${i}`}
+            trace={trace}
+            cellId={cellId}
+            protocol={protocol}
+            repetition={repetition}
+            recordingType={recordingType}
+            recordingIndex={i}
+            className={i === 0 && recordingType === RecordingType.RESPONSE ? 'mt-7' : ''}
+          />
+        ));
+      })}
     </div>
   ));
 
@@ -325,6 +347,7 @@ function useDataWithUnit(
   cellId: string,
   protocol: string,
   recordingType: RecordingType,
+  recordingIndex: number,
   repetition: string,
   sweeps: string[],
   trace: NWBTrace
@@ -344,7 +367,11 @@ function useDataWithUnit(
         repetition,
         sweep,
         recordingType
-      );
+      )[recordingIndex];
+
+      if (!recordingData) {
+        throw new Error(`No recording data found for sweep ${sweep} at index ${recordingIndex}`);
+      }
 
       if (idx === 0) {
         const { timeUnit, timeRate } = recordingData;
@@ -387,5 +414,5 @@ function useDataWithUnit(
     });
 
     return [optimizedPlotData, dataUnit];
-  }, [cellId, protocol, recordingType, repetition, sweeps, trace]);
+  }, [cellId, protocol, recordingType, recordingIndex, repetition, sweeps, trace]);
 }

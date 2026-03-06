@@ -29,6 +29,7 @@ const currentUnitAtom = atomWithStorage<CurrentUnit>(
 
 export default function InteractivePlot({
   recordingType,
+  recordingIndex,
   reset,
   setSelectedSweeps,
   sweeps: { selectedSweeps, previewSweep, allSweeps, colorMap, sweepDataMap },
@@ -47,6 +48,7 @@ export default function InteractivePlot({
     allSweeps,
     sweepDataMap,
     recordingType,
+    recordingIndex,
     colorMap,
     currentUnit
   );
@@ -147,6 +149,7 @@ function useData(
   allSweeps: string[],
   sweepDataMap: Map<string, SweepData>,
   recordingType: RecordingType,
+  recordingIndex: number,
   colorMap: Map<string, string>,
   currentUnit: string
 ): [
@@ -164,7 +167,7 @@ function useData(
     };
 
     const allSweepsData = allSweeps.map((sweep, idx) => {
-      const recordingData = sweepDataMap.get(sweep)?.[recordingType];
+      const recordingData = sweepDataMap.get(sweep)?.[recordingType]?.[recordingIndex];
       if (!recordingData) {
         throw new Error(`No recording data found for sweep ${sweep}`);
       }
@@ -211,5 +214,5 @@ function useData(
     });
 
     return [optimizedPlotData, dataUnit];
-  }, [zoomRanges?.x, allSweeps, sweepDataMap, recordingType, colorMap, currentUnit]);
+  }, [zoomRanges?.x, allSweeps, sweepDataMap, recordingType, recordingIndex, colorMap, currentUnit]);
 }

@@ -54,6 +54,16 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
     selectedRepetition
   );
 
+  const recordingCounts = useMemo(() => {
+    const firstSweepData = sweepDataMap.values().next().value;
+    return {
+      stimulus: firstSweepData?.stimulus?.length ?? 0,
+      response: firstSweepData?.response?.length ?? 0,
+    };
+  }, [sweepDataMap]);
+
+  const hasMultipleRecordings = recordingCounts.stimulus > 1 || recordingCounts.response > 1;
+
   const dataSetOptions = trace.getProtocols(cellId).map((protocol) => {
     const repetitionNum = trace.getRepetitions(cellId, protocol).length;
 
@@ -136,24 +146,54 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
           sweepOptions={sweepOptions}
         />
       </div>
-      <div ref={plotContainerRef} className="flex flex-col gap-10 2xl:flex-row">
-        {trace.recordingTypes.includes(RecordingType.STIMULUS) && (
-          <InteractivePlot
-            recordingType={RecordingType.STIMULUS}
-            reset={reset}
-            setSelectedSweeps={setSelectedSweeps}
-            sweeps={sweepObject}
-          />
-        )}
+      <div ref={plotContainerRef} className={hasMultipleRecordings ? 'flex flex-col gap-10' : 'flex flex-col gap-10 2xl:flex-row'}>
+        {trace.recordingTypes.includes(RecordingType.STIMULUS) &&
+          (hasMultipleRecordings ? (
+            <div className="flex flex-wrap gap-10">
+              {Array.from({ length: recordingCounts.stimulus }, (_, i) => (
+                <InteractivePlot
+                  key={`stimulus-${i}`}
+                  recordingType={RecordingType.STIMULUS}
+                  recordingIndex={i}
+                  reset={reset}
+                  setSelectedSweeps={setSelectedSweeps}
+                  sweeps={sweepObject}
+                />
+              ))}
+            </div>
+          ) : (
+            <InteractivePlot
+              recordingType={RecordingType.STIMULUS}
+              recordingIndex={0}
+              reset={reset}
+              setSelectedSweeps={setSelectedSweeps}
+              sweeps={sweepObject}
+            />
+          ))}
 
-        {trace.recordingTypes.includes(RecordingType.RESPONSE) && (
-          <InteractivePlot
-            recordingType={RecordingType.RESPONSE}
-            reset={reset}
-            setSelectedSweeps={setSelectedSweeps}
-            sweeps={sweepObject}
-          />
-        )}
+        {trace.recordingTypes.includes(RecordingType.RESPONSE) &&
+          (hasMultipleRecordings ? (
+            <div className="flex flex-wrap gap-10">
+              {Array.from({ length: recordingCounts.response }, (_, i) => (
+                <InteractivePlot
+                  key={`response-${i}`}
+                  recordingType={RecordingType.RESPONSE}
+                  recordingIndex={i}
+                  reset={reset}
+                  setSelectedSweeps={setSelectedSweeps}
+                  sweeps={sweepObject}
+                />
+              ))}
+            </div>
+          ) : (
+            <InteractivePlot
+              recordingType={RecordingType.RESPONSE}
+              recordingIndex={0}
+              reset={reset}
+              setSelectedSweeps={setSelectedSweeps}
+              sweeps={sweepObject}
+            />
+          ))}
       </div>
     </div>
   );
