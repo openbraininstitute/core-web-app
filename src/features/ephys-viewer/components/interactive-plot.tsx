@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import Plotly, { PlotData } from 'plotly.js-dist-min';
 import createPlotlyComponent from 'react-plotly.js/factory';
-import { Radio } from 'antd';
 import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 
@@ -19,10 +18,10 @@ import { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
 
 const Plot = createPlotlyComponent(Plotly);
 
-const DEFAULT_CURRENT_UNIT: CurrentUnit = 'pA';
+export const DEFAULT_CURRENT_UNIT: CurrentUnit = 'pA';
 const DEFAULT_VOLTAGE_UNIT: VoltageUnit = 'mV';
 
-const currentUnitAtom = atomWithStorage<CurrentUnit>(
+export const currentUnitAtom = atomWithStorage<CurrentUnit>(
   'ephysViewer.currentUnit',
   DEFAULT_CURRENT_UNIT
 );
@@ -34,14 +33,14 @@ export default function InteractivePlot({
   setSelectedSweeps,
   sweeps: { selectedSweeps, previewSweep, allSweeps, colorMap, sweepDataMap },
 }: PlotProps) {
-  const [currentUnit, setCurrentUnit] = useAtom(currentUnitAtom);
+  const [currentUnit] = useAtom(currentUnitAtom);
   const [zoomRanges, setZoomRanges] = useState<ZoomRanges | null>(null);
 
   useEffect(() => {
     setZoomRanges(null);
   }, [reset]);
 
-  const { config, layout, font, style, antBreakpoints } = useInteractivePlotConfig();
+  const { config, layout, font, style } = useInteractivePlotConfig();
 
   const [rawData, dataUnit] = useData(
     zoomRanges,
@@ -72,10 +71,6 @@ export default function InteractivePlot({
     [previewSweep]
   );
 
-  const onChangeStimulusUnits = (event: any) => {
-    setCurrentUnit(event.target.value);
-  };
-
   const handleClick = ({ data, curveNumber }: Readonly<Plotly.LegendClickEvent>): boolean => {
     const value: string = (data[curveNumber] as any).sweepName;
     const isSelected = selectedSweeps.includes(value);
@@ -93,54 +88,41 @@ export default function InteractivePlot({
   const isEmptySelection = !selectedSweeps.length;
   const isEmptySelectionResponse = isEmptySelection ? rawData : selectedResponse;
   return (
-    <>
-      <Plot
-        data={previewSweep ? previewDataResponse : isEmptySelectionResponse}
-        onLegendClick={handleClick}
-        onDoubleClick={() => false}
-        onRelayout={(e) => {
-          const {
-            'xaxis.range[0]': x1,
-            'xaxis.range[1]': x2,
-            'yaxis.range[0]': y1,
-            'yaxis.range[1]': y2,
-          } = e;
-          setZoomRanges({ x: [x1, x2], y: [y1, y2] });
-        }}
-        layout={{
-          title: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
-          xaxis: {
-            title: {
-              font,
-              text: `Time (ms)`,
-            },
-            range: zoomRanges?.x,
+    <Plot
+      data={previewSweep ? previewDataResponse : isEmptySelectionResponse}
+      onLegendClick={handleClick}
+      onDoubleClick={() => false}
+      onRelayout={(e) => {
+        const {
+          'xaxis.range[0]': x1,
+          'xaxis.range[1]': x2,
+          'yaxis.range[0]': y1,
+          'yaxis.range[1]': y2,
+        } = e;
+        setZoomRanges({ x: [x1, x2], y: [y1, y2] });
+      }}
+      layout={{
+        title: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
+        xaxis: {
+          title: {
+            font,
+            text: `Time (ms)`,
           },
-          yaxis: {
-            title: {
-              font,
-              text: yTitle,
-            },
-            range: zoomRanges?.y,
-            zeroline: false,
+          range: zoomRanges?.x,
+        },
+        yaxis: {
+          title: {
+            font,
+            text: yTitle,
           },
-          ...layout,
-        }}
-        style={style}
-        config={config}
-      />
-      {dataUnit === 'amperes' && antBreakpoints.md && (
-        <Radio.Group
-          onChange={onChangeStimulusUnits}
-          value={currentUnit}
-          size="small"
-          className="units"
-        >
-          <Radio.Button value={DEFAULT_CURRENT_UNIT}>{DEFAULT_CURRENT_UNIT}</Radio.Button>
-          <Radio.Button value="nA">nA</Radio.Button>
-        </Radio.Group>
-      )}
-    </>
+          range: zoomRanges?.y,
+          zeroline: false,
+        },
+        ...layout,
+      }}
+      style={style}
+      config={config}
+    />
   );
 }
 

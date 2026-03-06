@@ -1,12 +1,18 @@
-import { Select } from 'antd';
+import { Radio, Select } from 'antd';
 import DistinctColors from 'distinct-colors';
+import { useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import InteractivePlot from '@/features/ephys-viewer/components/interactive-plot';
+import InteractivePlot, {
+  currentUnitAtom,
+  DEFAULT_CURRENT_UNIT,
+} from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
+import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import NWBTrace, { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
+
+import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
 
 interface TraceDetailsViewProps {
   trace: NWBTrace;
@@ -63,6 +69,16 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
   }, [sweepDataMap]);
 
   const hasMultipleRecordings = recordingCounts.stimulus > 1 || recordingCounts.response > 1;
+
+  const hasCurrentRecordings = useMemo(() => {
+    const firstSweepData = sweepDataMap.values().next().value;
+    if (!firstSweepData) return false;
+    return [...(firstSweepData.stimulus ?? []), ...(firstSweepData.response ?? [])].some(
+      (r) => r.unit === 'amperes'
+    );
+  }, [sweepDataMap]);
+
+  const [currentUnit, setCurrentUnit] = useAtom(currentUnitAtom);
 
   const dataSetOptions = trace.getProtocols(cellId).map((protocol) => {
     const repetitionNum = trace.getRepetitions(cellId, protocol).length;
@@ -145,12 +161,30 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
           setSelectedSweeps={setSelectedSweeps}
           sweepOptions={sweepOptions}
         />
+        {hasCurrentRecordings && (
+          <Radio.Group
+            onChange={(e) => setCurrentUnit(e.target.value)}
+            value={currentUnit}
+            size="small"
+            className="ml-auto self-center"
+          >
+            <Radio.Button value={DEFAULT_CURRENT_UNIT}>{DEFAULT_CURRENT_UNIT}</Radio.Button>
+            <Radio.Button value="nA">nA</Radio.Button>
+          </Radio.Group>
+        )}
       </div>
-      <div ref={plotContainerRef} className={hasMultipleRecordings ? 'flex flex-col gap-10' : 'flex flex-col gap-10 2xl:flex-row'}>
-        {trace.recordingTypes.includes(RecordingType.STIMULUS) &&
-          (hasMultipleRecordings ? (
-            <div className="flex flex-wrap gap-10">
-              {Array.from({ length: recordingCounts.stimulus }, (_, i) => (
+      <div
+        ref={plotContainerRef}
+        className={
+          hasMultipleRecordings
+            ? 'grid grid-cols-1 gap-10 md:grid-cols-2 4xl:grid-cols-4'
+            : 'flex flex-col gap-10 2xl:flex-row'
+        }
+      >
+        {hasMultipleRecordings ? (
+          <>
+            {trace.recordingTypes.includes(RecordingType.STIMULUS) &&
+              Array.from({ length: recordingCounts.stimulus }, (_, i) => (
                 <InteractivePlot
                   key={`stimulus-${i}`}
                   recordingType={RecordingType.STIMULUS}
@@ -160,21 +194,8 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
                   sweeps={sweepObject}
                 />
               ))}
-            </div>
-          ) : (
-            <InteractivePlot
-              recordingType={RecordingType.STIMULUS}
-              recordingIndex={0}
-              reset={reset}
-              setSelectedSweeps={setSelectedSweeps}
-              sweeps={sweepObject}
-            />
-          ))}
-
-        {trace.recordingTypes.includes(RecordingType.RESPONSE) &&
-          (hasMultipleRecordings ? (
-            <div className="flex flex-wrap gap-10">
-              {Array.from({ length: recordingCounts.response }, (_, i) => (
+            {trace.recordingTypes.includes(RecordingType.RESPONSE) &&
+              Array.from({ length: recordingCounts.response }, (_, i) => (
                 <InteractivePlot
                   key={`response-${i}`}
                   recordingType={RecordingType.RESPONSE}
@@ -184,16 +205,29 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
                   sweeps={sweepObject}
                 />
               ))}
-            </div>
-          ) : (
-            <InteractivePlot
-              recordingType={RecordingType.RESPONSE}
-              recordingIndex={0}
-              reset={reset}
-              setSelectedSweeps={setSelectedSweeps}
-              sweeps={sweepObject}
-            />
-          ))}
+          </>
+        ) : (
+          <>
+            {trace.recordingTypes.includes(RecordingType.STIMULUS) && (
+              <InteractivePlot
+                recordingType={RecordingType.STIMULUS}
+                recordingIndex={0}
+                reset={reset}
+                setSelectedSweeps={setSelectedSweeps}
+                sweeps={sweepObject}
+              />
+            )}
+            {trace.recordingTypes.includes(RecordingType.RESPONSE) && (
+              <InteractivePlot
+                recordingType={RecordingType.RESPONSE}
+                recordingIndex={0}
+                reset={reset}
+                setSelectedSweeps={setSelectedSweeps}
+                sweeps={sweepObject}
+              />
+            )}
+          </>
+        )}
       </div>
     </div>
   );

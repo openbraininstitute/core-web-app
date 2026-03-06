@@ -151,45 +151,59 @@ function ImageSetComponent({
 }: ImageSetComponentProps) {
   const repetitions = repetitionMap.get(protocol) ?? [];
 
-  const content = repetitions.map((repetition) => (
-    <div className="flex flex-col gap-2" key={repetition}>
-      <div className="flex items-center justify-between">
-        <span className="text-dark indent-3 text-lg font-light capitalize">
-          {singleRecMultiCellMode ? cellId : repetition}
-        </span>
-        <button
-          className="bg-neutral-1 hover:bg-neutral-2 flex items-center rounded p-3"
-          onClick={onRepetitionClick(protocol, repetition)}
-          type="button"
-          aria-label="Toggle selection"
-        >
-          <LineChartOutlined className="stroke-primary-8" />
-        </button>
-      </div>
+  const content = repetitions.map((repetition) => {
+    const thumbnails = trace.recordingTypes.flatMap((recordingType: RecordingType) => {
+      const recordings = trace.getSweepRecordingData(
+        cellId,
+        protocol,
+        repetition,
+        trace.getSweeps(cellId, protocol, repetition)[0],
+        recordingType
+      );
+      return recordings.map((_, i) => ({
+        recordingType,
+        recordingIndex: i,
+        key: `${recordingType}-${i}`,
+      }));
+    });
 
-      {trace.recordingTypes.flatMap((recordingType: RecordingType) => {
-        const recordings = trace.getSweepRecordingData(
-          cellId,
-          protocol,
-          repetition,
-          trace.getSweeps(cellId, protocol, repetition)[0],
-          recordingType
-        );
-        return recordings.map((_, i) => (
-          <TraceThumbnailContainer
-            key={`${recordingType}-${i}`}
-            trace={trace}
-            cellId={cellId}
-            protocol={protocol}
-            repetition={repetition}
-            recordingType={recordingType}
-            recordingIndex={i}
-            className={i === 0 && recordingType === RecordingType.RESPONSE ? 'mt-7' : ''}
-          />
-        ));
-      })}
-    </div>
-  ));
+    const hasMultipleRecordings = thumbnails.length > 2;
+
+    return (
+      <div className={cn('flex flex-col gap-2', hasMultipleRecordings && 'col-span-full')} key={repetition}>
+        <div className="flex items-center justify-between">
+          <span className="text-dark indent-3 text-lg font-light capitalize">
+            {singleRecMultiCellMode ? cellId : repetition}
+          </span>
+          <button
+            className="bg-neutral-1 hover:bg-neutral-2 flex items-center rounded p-3"
+            onClick={onRepetitionClick(protocol, repetition)}
+            type="button"
+            aria-label="Toggle selection"
+          >
+            <LineChartOutlined className="stroke-primary-8" />
+          </button>
+        </div>
+
+        <div className={hasMultipleRecordings ? 'grid grid-cols-1 gap-4 @lg:grid-cols-2 @3xl:grid-cols-4 @7xl:grid-cols-6' : undefined}>
+          {thumbnails.map(({ recordingType, recordingIndex, key }) => (
+            <TraceThumbnailContainer
+              key={key}
+              trace={trace}
+              cellId={cellId}
+              protocol={protocol}
+              repetition={repetition}
+              recordingType={recordingType}
+              recordingIndex={recordingIndex}
+              className={cn(
+                !hasMultipleRecordings && recordingIndex === 0 && recordingType === RecordingType.RESPONSE && 'mt-7'
+              )}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  });
 
   if (singleRecMultiCellMode) return content;
 
