@@ -152,7 +152,7 @@ function CustomPlot({
               displaylogo: false,
               responsive: true,
               modeBarButtons:
-                panelWidth && panelWidth < 400 ? [['pan2d', 'zoom2d', 'resetScale2d']] : undefined,
+                panelWidth && panelWidth < 420 ? [['pan2d', 'zoom2d', 'resetScale2d']] : undefined,
             }}
             useResizeHandler
             onInitialized={() => setPlotReady(true)}
