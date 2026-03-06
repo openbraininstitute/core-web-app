@@ -1,42 +1,47 @@
-import { useIsFetching } from "@tanstack/react-query";
-import React from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useIsFetching } from '@tanstack/react-query';
+import { useAtomValue, useSetAtom } from 'jotai';
+import React from 'react';
+
 import {
+  useAiAgentRateLimit,
   useServiceAiAgentChat,
   useServiceAiAgentSuggestionFromUserJourney,
-  useAiAgentRateLimit,
-} from "@/services/ai-agent";
-import { classNames } from "@/util/utils";
-import { atomRateLimit } from "../../state";
-import { useAiAssistant } from "@/services/ai-agent/assistant";
-import ErrorPanel from "../../error";
-import { MessageItem } from "../../message-item";
-import SuggestedQuestions from "../../suggested-questions";
-import FreeCreditsNotification from "../../free-credits-notification";
-import Footer from "../footer";
-import Welcome from "../welcome";
-import styles from "./chat.module.css";
+} from '@/services/ai-agent';
+import { useAiAssistant } from '@/services/ai-agent/assistant';
+import { classNames } from '@/util/utils';
+
+import ErrorPanel from '../../error';
+import FreeCreditsNotification from '../../free-credits-notification';
+import { MessageItem } from '../../message-item';
+import { atomRateLimit } from '../../state';
+import SuggestedQuestions from '../../suggested-questions';
+import Footer from '../footer';
+import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
+import Welcome from '../welcome';
+
+import styles from './chat.module.css';
 
 export interface ChatProps {
   className?: string;
-  threadId: string;
+  threadId: string | undefined;
 }
 
 export default function Chat({ className, threadId }: ChatProps) {
+  const assistant = useAiAssistant();
+  const isEmptyThread = assistant.isEmptyThread.useValue();
+  const healthError = assistant.healthError.useValue();
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
 
-  const { messages, status, append, error, stop } = useServiceAiAgentChat(
-    threadId ?? "",
+  const { messages, status, append, error, stop, isLoadingMessages } = useServiceAiAgentChat(
+    threadId ?? ''
   );
   const [suggestions, clearSuggestions, isLoadingSuggestions] =
-    useServiceAiAgentSuggestionFromUserJourney(threadId ?? "", status);
+    useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
-  const assistant = useAiAssistant();
   const { accessToken } = assistant.useContext();
   const rateLimit = useAtomValue(atomRateLimit);
   const setRateLimit = useSetAtom(atomRateLimit);
-  const [showExhaustedNotification, setShowExhaustedNotification] =
-    React.useState(false);
+  const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
   const prevRemainingRef = React.useRef<number | null>(null);
   const hasInitializedRef = React.useRef(false);
 
@@ -72,9 +77,9 @@ export default function Chat({ className, threadId }: ChatProps) {
   const isStorageQueryFetching = useIsFetching({
     predicate: (query) => {
       const fullQueryKey = query.queryKey.at(0);
-      return fullQueryKey === "storage";
+      return fullQueryKey === 'storage';
     },
-    fetchStatus: "fetching",
+    fetchStatus: 'fetching',
   });
 
   const [scrollHeight, setScrollHeight] = React.useState(0);
@@ -120,7 +125,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   React.useEffect(() => {
     if (isAutoScrollEnabled && refContainer.current) {
       setTimeout(() => {
-        refChatBottom.current?.scrollIntoView({ behavior: "smooth" });
+        refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
       }, 200);
     }
   }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
@@ -128,7 +133,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
     append({
-      role: "user",
+      role: 'user',
       content,
     });
   };
@@ -140,11 +145,14 @@ export default function Chat({ className, threadId }: ChatProps) {
       const container = refContainer.current;
       if (!container) return;
       const isAtBottom =
-        container.scrollHeight - container.scrollTop <=
-        container.clientHeight + 200;
+        container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
       setIsAutoScrollEnabled(isAtBottom);
     }
   };
+
+  if (threadId && isLoadingMessages && !isEmptyThread) {
+    return <TabTransitionLoader message="Loading conversation..." />;
+  }
 
   return (
     <>
@@ -153,17 +161,13 @@ export default function Chat({ className, threadId }: ChatProps) {
         ref={refContainer}
         onWheel={handleWheel}
       >
-        {messages.length === 0 && <Welcome />}
+        {(!threadId || isEmptyThread) && <Welcome />}
         {messages.map((item) => (
           <MessageItem key={item.id} value={item} />
         ))}
 
-        {status === "ready" && messages.length > 0 && (
-          <>
-            <div className={styles.footerButtons}></div>
-          </>
-        )}
-        {suggestions !== undefined && status === "ready" && (
+        {status === 'ready' && messages.length > 0 && <div className={styles.footerButtons}></div>}
+        {suggestions !== undefined && status === 'ready' && (
           <div className={styles.suggestedQuestionsContainer}>
             <SuggestedQuestions
               threadId={threadId}
@@ -176,9 +180,10 @@ export default function Chat({ className, threadId }: ChatProps) {
           </div>
         )}
         {error && <ErrorPanel value={error} />}
+        {healthError && <ErrorPanel value={healthError} />}
         <div ref={refChatBottom} className={styles.bottom} />
       </div>
-      {showExhaustedNotification && status === "ready" && (
+      {showExhaustedNotification && status === 'ready' && (
         <div className={styles.notificationOverlay}>
           <FreeCreditsNotification
             onDismiss={() => setShowExhaustedNotification(false)}
@@ -186,10 +191,10 @@ export default function Chat({ className, threadId }: ChatProps) {
           />
         </div>
       )}
-      {rateLimit && rateLimit.remaining === 0 && status === "ready" && (
+      {rateLimit && rateLimit.remaining === 0 && status === 'ready' && (
         <div
           className={styles.creditBalanceIndicator}
-          style={{ marginTop: messages.length === 0 ? "-1.2em" : "0em" }}
+          style={{ marginTop: messages.length === 0 ? '-1.2em' : '0em' }}
         >
           Using Credit Balance
         </div>

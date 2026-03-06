@@ -30,3 +30,33 @@ header.header {
   align-items: center;
   gap: 1em;
 }
+
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animateFadeUp {
+  animation: fadeUp 0.25s ease-out forwards;
+}
+
+.animateFadeDown {
+  animation: fadeDown 0.25s ease-out forwards;
+}

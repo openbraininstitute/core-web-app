@@ -1,15 +1,15 @@
-import { getDefaultFormState, ErrorSchema, toErrorSchema } from '@rjsf/utils';
-import { RefObject, useEffect, useImperativeHandle, useRef } from 'react';
 import { withTheme } from '@rjsf/core';
+import { type ErrorSchema, getDefaultFormState, toErrorSchema } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
+import { type RefObject, useEffect, useImperativeHandle, useRef } from 'react';
 
-import type { FormProps, IChangeEvent } from '@rjsf/core';
-import type { UiSchema, RJSFSchema } from '@rjsf/utils';
-import type Form from '@rjsf/core';
-
-import { theme } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/default';
 import { useLatest } from '@/ui/hooks/use-latest';
+import { theme } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/default';
 import { log } from '@/utils/logger';
+
+import type Form from '@rjsf/core';
+import type { FormProps, IChangeEvent } from '@rjsf/core';
+import type { RJSFSchema, UiSchema } from '@rjsf/utils';
 
 const ThemedForm = withTheme(theme);
 
@@ -23,7 +23,6 @@ export interface AutomatedFormHandle {
   validate: () => boolean;
 }
 
-// export const SchemaGeneratedForm = forwardRef<AutomatedFormHandle, AutomatedFormProps>(
 export function SchemaGeneratedForm({
   onChange,
   schema,
@@ -108,7 +107,6 @@ export function SchemaGeneratedForm({
       validator={validator}
       uiSchema={mergedUiSchema}
       formData={formData}
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...rest}
       className="w-full"
     />

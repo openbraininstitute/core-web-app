@@ -23,6 +23,8 @@ import type { ErrorObject } from 'ajv';
 import type React from 'react';
 import type { AtomsMap, Config, ConfigValue } from '@/features/scan-config/types';
 
+import styles from '@/features/scan-config/scan-config.module.css';
+
 export default function BlockDictionaryEntries({
   config,
   aiConfig,
@@ -68,7 +70,6 @@ export default function BlockDictionaryEntries({
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
 }) {
-  console.log('–– – BlockDictionaryEntries – errors––', errors);
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
 
   const onNameChangeConfirm = (
@@ -198,7 +199,7 @@ export default function BlockDictionaryEntries({
     !!aiConfig && [aiAddedEntries, aiDeletedEntries, aiEditedEntries].some((a) => a.length > 0);
 
   return (
-    <>
+    <div className={cn('flex flex-col gap-3 w-full items-center', styles.animateFadeDown)}>
       {Object.entries(config[rootElement])
         // We show only those that have no AI changes
         .filter(([block_key, block_schema]) => {
@@ -418,6 +419,6 @@ export default function BlockDictionaryEntries({
           <PlusCircleOutlined />
         </button>
       )}
-    </>
+    </div>
   );
 }
