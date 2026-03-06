@@ -130,33 +130,32 @@ export function RootElement({
         </div>
       </LeftMenuTab>
 
-      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
-        selectedRootElement === rootElement &&
-        config[rootElement] && (
-          <BlockDictionaryEntries
-            config={config}
-            aiConfig={aiConfig}
-            rootElement={rootElement}
-            selectedEntry={selectedEntry}
-            selectedRootElement={selectedRootElement}
-            handleEntryClick={handleEntryClick}
-            campaignId={campaignId}
-            loading={loading}
-            readOnly={!!readOnly}
-            isChatReady={isChatReady}
-            setEditing={setEditing}
-            setSelectedEntry={setSelectedEntry}
-            singularName={rootElementSchema.singular_name}
-            allEntries={allEntries}
-            newKey={newKey}
-            setNewKey={setNewKey}
-            isEditingKey={isEditingKey}
-            setIsEditingKey={setIsEditingKey}
-            atomsMap={atomsMap}
-            setAtomsMap={setAtomsMap}
-            errors={errors}
-          />
-        )}
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
+        <BlockDictionaryEntries
+          config={config}
+          aiConfig={aiConfig}
+          rootElement={rootElement}
+          selectedEntry={selectedEntry}
+          selectedRootElement={selectedRootElement}
+          handleEntryClick={handleEntryClick}
+          campaignId={campaignId}
+          loading={loading}
+          readOnly={!!readOnly}
+          isChatReady={isChatReady}
+          setEditing={setEditing}
+          setSelectedEntry={setSelectedEntry}
+          singularName={rootElementSchema.singular_name}
+          allEntries={allEntries}
+          newKey={newKey}
+          setNewKey={setNewKey}
+          isEditingKey={isEditingKey}
+          setIsEditingKey={setIsEditingKey}
+          atomsMap={atomsMap}
+          setAtomsMap={setAtomsMap}
+          errors={errors}
+          visible={selectedRootElement === rootElement && !!config[rootElement]}
+        />
+      )}
     </>
   );
 }
