@@ -1,14 +1,14 @@
-import { InputNumber } from "antd";
-import map from "es-toolkit/compat/map";
+import { InputNumber } from 'antd';
+import map from 'es-toolkit/compat/map';
 
-import { getRandomIntInclusive } from "@/util/utils";
+import { getRandomIntInclusive } from '@/util/utils';
 
-import { Label } from "../../label";
+import { Label } from '../../label';
 
-import type { TSingleNeuronSynaptomeConfiguration } from "@/api/entitycore/types/entities/single-neuron-synaptome";
-import type { SessionValue } from "../../types";
+import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import type { SessionValue } from '../../types';
 
-import styles from "./input-seed.module.css";
+import styles from './input-seed.module.css';
 
 export interface InputSeedProps {
   color?: string;
@@ -16,11 +16,7 @@ export interface InputSeedProps {
   setSessionValue(sessionValue: SessionValue): void;
 }
 
-export function InputSeed({
-  color,
-  sessionValue,
-  setSessionValue,
-}: InputSeedProps) {
+export function InputSeed({ color, sessionValue, setSessionValue }: InputSeedProps) {
   const seed = sessionValue?.seed ?? 100;
   const onChangeSeed = (value: number | null) => {
     setSessionValue({
@@ -28,7 +24,7 @@ export function InputSeed({
       seed: value ?? 100,
       synapseSets: updateSeeds(
         sessionValue?.synapseSets ?? new Map(),
-        () => Number(value) + getRandomIntInclusive(0, Number(value)),
+        () => Number(value) + getRandomIntInclusive(0, Number(value))
       ),
     });
   };
@@ -36,12 +32,13 @@ export function InputSeed({
   return (
     <div className="mb-4 flex w-full items-center justify-between px-3">
       <div className="flex items-center gap-2">
-        {color && (
+        {/* This widget will be back later: when the stype has been decided. */}
+        {/* {color && (
           <>
             <Label text="Color of the Synaptic Set:" />
             <div className={styles.colorInput} style={{ background: color }} />
           </>
-        )}
+        )} */}
       </div>
       <div className="flex items-center gap-2">
         {<Label text="seed" required />}
@@ -62,7 +59,7 @@ export function InputSeed({
 
 function updateSeeds(
   synaptomeMap: Map<string, TSingleNeuronSynaptomeConfiguration>,
-  getNewSeed: (oldSeed: number, key: string) => number,
+  getNewSeed: (oldSeed: number, key: string) => number
 ): Map<string, TSingleNeuronSynaptomeConfiguration> {
   return new Map(
     map(Array.from(synaptomeMap.entries()), ([key, config]) => [
@@ -71,6 +68,6 @@ function updateSeeds(
         ...config,
         seed: getNewSeed(config.seed, key),
       },
-    ]),
+    ])
   );
 }
