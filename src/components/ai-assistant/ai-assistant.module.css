@@ -26,6 +26,8 @@
   height: var(--custom-panel-height, 100%);
   overflow: visible;
   pointer-events: none;
+  
+  
   background-color: transparent;
   color: var(--color-primary-1);
   padding: 0;

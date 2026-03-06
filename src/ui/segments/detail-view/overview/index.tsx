@@ -13,6 +13,7 @@ import {
 } from '@/entity-configuration/definitions/view-defs';
 import { resolveExtractionByCampaignId } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { circuitTypes } from '@/entity-configuration/domain/helpers';
+import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import {
   resolveSimulationByCampaignId,
   resolveSingleNeuronSimulation,
@@ -35,6 +36,7 @@ import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-chan
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
+import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
 
 import type {
   ICellMorphology,
@@ -51,12 +53,12 @@ import type { AwaitedType, WorkspaceContext } from '@/types/common';
 export default async function Overview({
   entity,
   extendedType,
-  ctx,
+  context,
   isWorkflow,
 }: {
   entity?: TRetrieveEntityOutput;
   extendedType: TExtendedEntitiesTypeDict;
-  ctx: WorkspaceContext;
+  context: WorkspaceContext;
   isWorkflow: boolean;
 }) {
   const commonFields = CommonSummaryViewFields;
@@ -72,7 +74,7 @@ export default async function Overview({
     | undefined;
   if (extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation) {
     try {
-      singleNeuronSimulationPayload = await resolveSingleNeuronSimulation(entity.id, ctx);
+      singleNeuronSimulationPayload = await resolveSingleNeuronSimulation(entity.id, context);
     } catch {
       notFound();
     }
@@ -86,7 +88,7 @@ export default async function Overview({
     try {
       singleNeuronSynaptomeSimulationPayload = await resolveSingleNeuronSynaptomeSimulation(
         entity.id,
-        ctx
+        context
       );
     } catch {
       notFound();
@@ -96,7 +98,7 @@ export default async function Overview({
   if (extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptome) {
     const meModel = await getMEModel({
       id: (entity as ISingleNeuronSynaptome).me_model.id,
-      context: ctx,
+      context: context,
     });
 
     (entity as ISingleNeuronSynaptome).me_model = meModel;
@@ -111,7 +113,7 @@ export default async function Overview({
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
     try {
-      config = await resolveSimulationByCampaignId({ id: entity.id, context: ctx });
+      config = await resolveSimulationByCampaignId({ id: entity.id, context: context });
     } catch (_err) {
       notFound();
     }
@@ -121,12 +123,12 @@ export default async function Overview({
     return (
       <ScanConfiguration
         modelId={config.simulation.entity_id}
-        virtualLabId={ctx.virtualLabId}
-        projectId={ctx.projectId}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
         initialCampaignId={config.campaign.id}
         initialConfig={config.config?.form}
         readOnly={!isWorkflow}
-        // This is a temporary solution to show sim campaigns not complient with obi-one gen config.
+        // This is a temporary solution to show sim campaigns not compliant with obi-one gen config.
         // TODO: remove this after microcircuit scale simulations are fully implemented.
         defaultTab={{
           __activity: ScanConfigActivity.Simulate,
@@ -141,7 +143,7 @@ export default async function Overview({
   }
   if (extendedType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
     const { data: extractionConfig, error } = await tryCatch(
-      resolveExtractionByCampaignId({ id: entity.id, context: ctx })
+      resolveExtractionByCampaignId({ id: entity.id, context: context })
     );
 
     if (error || !extractionConfig.circuitId) {
@@ -152,8 +154,8 @@ export default async function Overview({
       <>
         <ScanConfiguration
           modelId={extractionConfig.circuitId}
-          virtualLabId={ctx.virtualLabId}
-          projectId={ctx.projectId}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
           initialCampaignId={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
           readOnly={!isWorkflow}
@@ -165,6 +167,26 @@ export default async function Overview({
         />
         <DownloadPanel />
       </>
+    );
+  }
+
+  if (extendedType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
+    const { data } = await tryCatch(
+      resolveIonChannelModelingCampaignConfig({
+        id: entity.id,
+        context,
+      })
+    );
+
+    const initialConfig = data?.config?.form ?? data?.config ?? null;
+
+    return (
+      <IonChannelModelBuilding
+        readonly
+        sessionId={entity.id}
+        originalConfig={initialConfig}
+        originalCampaignId={entity.id}
+      />
     );
   }
 
@@ -182,8 +204,8 @@ export default async function Overview({
         singleNeuronSimulationPayload && (
           <MEModelDetails
             meModel={singleNeuronSimulationPayload.memodel}
-            virtualLabId={ctx.virtualLabId}
-            projectId={ctx.projectId}
+            virtualLabId={context.virtualLabId}
+            projectId={context.projectId}
           />
         )}
       {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation &&
@@ -191,8 +213,8 @@ export default async function Overview({
           <SynaptomeDetails
             meModel={singleNeuronSynaptomeSimulationPayload.memodel}
             synaptome={singleNeuronSynaptomeSimulationPayload.synaptome}
-            virtualLabId={ctx.virtualLabId}
-            projectId={ctx.projectId}
+            virtualLabId={context.virtualLabId}
+            projectId={context.projectId}
           />
         )}
       {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
@@ -204,16 +226,16 @@ export default async function Overview({
         extendedType
       ) && <CellMorphologyViewer entity={entity as ICellMorphology} />}
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
-        <EphysViewer resource={entity as IElectricalCellRecording} ctx={ctx} />
+        <EphysViewer resource={entity as IElectricalCellRecording} ctx={context} />
       )}
       {extendedType === ExtendedEntitiesTypeDict.IonChannelRecording && (
-        <IonChannelRecordingViewer resource={entity as IIonChannelRecording} ctx={ctx} />
+        <IonChannelRecordingViewer resource={entity as IIonChannelRecording} ctx={context} />
       )}
       {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
-        <IonChannelModelOverview icm={entity as IonChannelModel} ctx={ctx} />
+        <IonChannelModelOverview icm={entity as IonChannelModel} ctx={context} />
       )}
       {extendedType === ExtendedEntitiesTypeDict.EMCellMesh && (
-        <EmCellMeshMetadata id={entity.id} ctx={ctx} />
+        <EmCellMeshMetadata id={entity.id} ctx={context} />
       )}
     </>
   );

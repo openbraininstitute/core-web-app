@@ -2,7 +2,7 @@
 
 import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
-import { type JSX, useMemo, useState } from 'react';
+import { type JSX, useMemo, useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import { useAgentState } from '@/services/ai-agent';
@@ -13,34 +13,27 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import styles from '@/ui/segments/ai/container.module.css';
 
-export function Container(): JSX.Element {
-  const { state, setState, isCollapsed, isFullscreen } = usePanelState();
-  const [visualState, setVisualState] = useState(state);
+export function Container() {
+  const { state, setState } = usePanelState();
+  const [isPending, startTransition] = useTransition();
+
+  const [sizeState, setSizeState] = useState(state);
+  const [contentState, setContentState] = useState(state);
 
   useAgentState('smc_simulation_config');
 
-  const isReallyCollapsed = visualState === PanelState.Collapsed;
-  const isReallyExpanded = visualState === PanelState.Expanded;
-  const isReallyFullscreen = visualState === PanelState.Fullscreen;
+  const isCollapsed = contentState === PanelState.Collapsed;
+  const isFullscreen = contentState === PanelState.Fullscreen;
+  const targetWidth = sizeState === PanelState.Collapsed ? '3rem' : '400px';
 
-  const targetWidth = useMemo<string>(() => {
-    if (isCollapsed) return '3rem';
-    if (isFullscreen) return '400px';
-    return '400px';
-  }, [isCollapsed, isFullscreen]);
-
-  function beginTransition(next: PanelState) {
-    // on collapse, keep the expanded look until animation is over
-    if (next !== PanelState.Collapsed) {
-      setVisualState(next);
-    }
-    // on expand/fullscreen, change the view right away so content shows quickly
-    setState(next);
+  function updateState(next: PanelState) {
+    setSizeState(next);
+    if (next !== PanelState.Collapsed) setContentState(next);
+    startTransition(() => setState(next));
   }
 
-  // sync visual state to the actual state
   function handleAnimationComplete() {
-    setVisualState(state);
+    setContentState(sizeState);
   }
 
   return (
@@ -48,30 +41,26 @@ export function Container(): JSX.Element {
       id="workspace-ai"
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai] z-[30]',
-        {
-          'text-primary-9 mr-3 outline outline-1 outline-[#ddd] [outline-offset:-1px] bg-white':
-            isReallyExpanded || isReallyFullscreen,
-          'rounded-2xl!': isReallyExpanded,
-          'rounded-lg!': isReallyFullscreen,
-        },
-        { 'bg-primary-9 border-primary-9 mr-3 text-white shadow-md': isReallyCollapsed },
-        { 'rounded-full!': isReallyCollapsed }
+        'text-white [grid-area:ai] z-[30] overflow-hidden',
+        isCollapsed
+          ? 'bg-primary-9 border-primary-9 mr-3 shadow-md rounded-full!'
+          : cn(
+              'text-primary-9 mr-3 outline outline-1 outline-[#ddd] [outline-offset:-1px] bg-white',
+              isFullscreen ? 'rounded-lg!' : 'rounded-2xl!'
+            )
       )}
-      animate={{
-        width: targetWidth,
-        height: 'calc(100vh - 6rem)',
-      }}
+      animate={{ width: targetWidth, height: 'calc(100vh - 6rem)' }}
       initial={false}
-      transition={{ ease: ['easeIn', 'easeOut'], stiffness: 150, damping: 25 }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
       onAnimationComplete={handleAnimationComplete}
     >
-      {isReallyCollapsed ? (
+      {isCollapsed ? (
         <button
           type="button"
-          onClick={() => beginTransition(PanelState.Expanded)}
+          onClick={() => updateState(PanelState.Expanded)}
           className="flex h-full w-full cursor-pointer flex-col items-center px-2 select-none"
           aria-label="expand AI assistant"
+          disabled={isPending}
         >
           <div className="mt-3 flex h-8 w-8 items-center justify-center text-white">
             <PlusOutlined className="h-4 w-4" />
@@ -91,28 +80,27 @@ export function Container(): JSX.Element {
           </div>
         </button>
       ) : (
-        <div className="flex h-full w-full flex-col rounded-lg overflow-visible">
-          <div className="relative flex-1 border-none overflow-visible">
-            <AnimatePresence mode="wait">
-              {!isCollapsed && (
-                <HydrateWrapper key="ai-assistant">
-                  <AiAssistant
-                    section="explore"
-                    fullscreen={isReallyFullscreen}
-                    onFullscreenToggle={() =>
-                      beginTransition(
-                        state === PanelState.Fullscreen
-                          ? PanelState.Expanded
-                          : PanelState.Fullscreen
-                      )
-                    }
-                    aria-label={isReallyFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                    onCollapse={() => beginTransition(PanelState.Collapsed)}
-                  />
-                </HydrateWrapper>
-              )}
-            </AnimatePresence>
-          </div>
+        <div className="flex h-full w-full flex-col rounded-lg relative overflow-visible">
+          <AnimatePresence mode="wait">
+            {sizeState !== PanelState.Collapsed && (
+              <HydrateWrapper key="ai-assistant">
+                <AiAssistant
+                  section="explore"
+                  fullscreen={isFullscreen}
+                  onFullscreenToggle={() =>
+                    updateState(
+                      sizeState === PanelState.Fullscreen
+                        ? PanelState.Expanded
+                        : PanelState.Fullscreen
+                    )
+                  }
+                  aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                  onCollapse={() => updateState(PanelState.Collapsed)}
+                  disabled={isPending}
+                />
+              </HydrateWrapper>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </motion.div>

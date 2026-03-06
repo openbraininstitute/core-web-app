@@ -16,7 +16,6 @@ import { useAiAssistant } from '../assistant';
 
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { Config } from '@/features/scan-config/components/components';
-
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
 const agentStateAtom = atom<Record<string, Config>>({});

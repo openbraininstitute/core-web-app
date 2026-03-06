@@ -130,7 +130,7 @@ function formatDate(d: Date | string): string {
     });
     const date = isString(d) ? new Date(d) : d;
     return formatter.format(date);
-  } catch (_ex) {
+  } catch {
     return '';
   }
 }

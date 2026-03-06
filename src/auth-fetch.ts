@@ -36,7 +36,7 @@ export async function authFetchWithoutRetry(
   return fetch(...newArgs); // If there is an active session set Authorization and fetch
 }
 
-const authFetch = retry()(authFetchWithoutRetry); // Only retry on exceptions
+export const authFetch = retry()(authFetchWithoutRetry); // Only retry on exceptions
 export default authFetch;
 
 export const authFetchRetryOnError = retry({

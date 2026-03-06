@@ -1,6 +1,10 @@
+import Block from '@/features/scan-config/components/block';
 import BlockDictionary from '@/features/scan-config/components/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/block-union';
-import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
+import {
+  isRootBlock,
+  type TSchemaMappingConfiguration,
+} from '@/features/scan-config/components/hooks/schema';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
@@ -13,11 +17,11 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
-import Block from './block';
-
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config } from '@/features/scan-config/components/components';
+
+import styles from '@/features/scan-config/scan-config.module.css';
 
 type MiddleProps = {
   schemaName: SchemaName;
@@ -35,6 +39,7 @@ type MiddleProps = {
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };
 
 export default function Middle({
@@ -52,6 +57,7 @@ export default function Middle({
   allEntries,
   onNewBlockClick,
   selectedSchema,
+  schemaMappingConfig,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
 
@@ -65,7 +71,7 @@ export default function Middle({
   };
 
   return (
-    <>
+    <div className={styles.animateFadeUp}>
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionary
           campaignId={campaignId}
@@ -83,6 +89,7 @@ export default function Middle({
           selectedRootElement={selectedRootElement}
           onNewBlockClick={onNewBlockClick}
           blockAIConfig={getBlockAIConfig()}
+          schemaMappingConfig={schemaMappingConfig}
         />
       )}
 
@@ -96,6 +103,7 @@ export default function Middle({
             stateAtom={atomsMap[selectedRootElement]}
             model={model}
             blockAIConfig={getBlockAIConfig()}
+            schemaMappingConfig={schemaMappingConfig}
           />
         )}
 
@@ -111,8 +119,9 @@ export default function Middle({
           config={config}
           model={model}
           blockAIConfig={getBlockAIConfig()}
+          schemaMappingConfig={schemaMappingConfig}
         />
       )}
-    </>
+    </div>
   );
 }
