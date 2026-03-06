@@ -69,7 +69,6 @@ a.roundedButton {
 
   grid-column: 1 / -1;
   padding: 0;
-  padding-top: 60px;
   margin: 0;
   display: grid;
   grid-template-columns:
@@ -91,6 +90,12 @@ a.roundedButton {
   max-width: var(--S);
   margin-left: 30px;
   margin: 20px 0;
+}
+
+h1.blockSmall,
+h2.blockSmall,
+h3.blockSmall {
+  margin-top: 80px !important;
 }
 
 .layout .blockSmallExpandRight {

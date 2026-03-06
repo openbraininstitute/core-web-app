@@ -53,7 +53,7 @@ export default function ShowcaseCard({ project }: { project: OBIShowcaseProjectT
 
       <div className="p-6">
         <div className="mb-3 flex items-start justify-between">
-          <h3 className="text-primary-9 font-serif! line-clamp-2 text-4xl! font-bold group-hover:text-blue-600">
+          <h3 className="text-primary-9 font-serif! line-clamp-2 text-4xl! group-hover:text-blue-600">
             {project.name}
           </h3>
         </div>

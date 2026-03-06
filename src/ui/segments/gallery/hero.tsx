@@ -2,7 +2,6 @@
 import React from 'react';
 
 import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
-
 import { cn } from '@/utils/css-class';
 
 type HeroProps = {
@@ -36,7 +35,7 @@ export default function HeroGallery({
   }, [videoURL]);
 
   return (
-    <div className="relative flex h-screen w-screen items-center px-10 md:px-[14vw]">
+    <div className="relative flex h-screen w-screen items-center justify-center px-10 md:px-[14vw]">
       <div className="absolute top-0 left-0 z-0 h-screen w-screen">
         {posterURL && posterWidth && posterHeight && (
           <ProgressiveImage
@@ -66,7 +65,7 @@ export default function HeroGallery({
           <track kind="captions" />
         </video>
       </div>
-      <div className="relative top-0 left-0 z-10 flex flex-col">
+      <div className="relative top-0 left-0 z-10 flex flex-col items-center text-center">
         <h1 className="my-0! text-[16vmin]! text-white md:text-[10vmin]!">{title}</h1>
         <h2 className="font-gabarito text-2xl! leading-normal! font-bold hyphens-auto text-white md:text-4xl!">
           Discover image and video assets created by our team. Made with our tools and technologies.
