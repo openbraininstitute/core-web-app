@@ -207,7 +207,7 @@ export default function BlockDictionaryEntries({
         <motion.div
           key={rootElement}
           initial={{ y: -10, opacity: 0, height: 0, marginBottom: -12 }}
-          animate={{ y: 0, opacity: 1, height: 'auto' }}
+          animate={{ y: 0, opacity: 1, height: 'auto', marginBottom: 0 }}
           exit={{
             y: -10,
             height: 0,
