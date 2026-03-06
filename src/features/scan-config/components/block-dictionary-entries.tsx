@@ -11,6 +11,7 @@ import { Input } from 'antd';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { AnimatePresence, motion } from 'framer-motion';
 import { atom } from 'jotai';
+import { Fragment } from 'react';
 
 import AIAdd from '@/components/icons/ai/add_icon';
 import AIIcon from '@/components/icons/ai/ai_icon';
@@ -204,11 +205,17 @@ export default function BlockDictionaryEntries({
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
+          key={rootElement}
+          initial={{ y: -10, opacity: 0, height: 0, marginBottom: -12 }}
+          animate={{ y: 0, opacity: 1, height: 'auto' }}
+          exit={{
+            y: -10,
+            height: 0,
+            marginBottom: -12,
+            opacity: 0,
+          }}
           transition={{ duration: 0.3, ease: 'linear' }}
-          className={cn('flex flex-col gap-3 w-full items-center')}
+          className={cn('flex flex-col w-full items-center z-0')}
         >
           {Object.entries(config[rootElement])
             // We show only those that have no AI changes
@@ -221,13 +228,13 @@ export default function BlockDictionaryEntries({
               const isSelected = selectedRootElement === rootElement && subkey === selectedEntry;
 
               return (
-                <>
+                <Fragment key={subkey}>
                   {/* biome-ignore lint/a11y/useSemanticElements: input cannot be nested inside button */}
                   <div
                     role="button"
                     key={subkey}
                     className={classNames(
-                      'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
+                      'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1 mb-3',
                       isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
                     )}
                     tabIndex={0}
@@ -381,7 +388,7 @@ export default function BlockDictionaryEntries({
                       )}
                     </div>
                   </div>
-                </>
+                </Fragment>
               );
             })}
 
