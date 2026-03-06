@@ -8,15 +8,13 @@ import { Label } from '../../label';
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { SessionValue } from '../../types';
 
-import styles from './input-seed.module.css';
-
 export interface InputSeedProps {
   color?: string;
   sessionValue: SessionValue;
   setSessionValue(sessionValue: SessionValue): void;
 }
 
-export function InputSeed({ color, sessionValue, setSessionValue }: InputSeedProps) {
+export function InputSeed({ sessionValue, setSessionValue }: InputSeedProps) {
   const seed = sessionValue?.seed ?? 100;
   const onChangeSeed = (value: number | null) => {
     setSessionValue({
