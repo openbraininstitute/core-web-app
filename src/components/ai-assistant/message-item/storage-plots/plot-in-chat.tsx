@@ -2,6 +2,7 @@ import React from 'react';
 
 import { useIsDragging, usePanelWidth } from '@/components/ai-assistant/hooks';
 import PlotErrorMessage from '@/components/github-flavor-markdown/plot-error-message';
+import { usePanelState } from '@/ui/segments/ai/hooks';
 import { isString } from '@/util/type-guards';
 
 import { usePlotFile } from './hooks';
@@ -18,8 +19,10 @@ export default function PlotInChat({
 }) {
   const { panelWidth } = usePanelWidth();
   const isDragging = useIsDragging();
-  const widthRef = React.useRef(panelWidth);
-  if (!isDragging) widthRef.current = panelWidth;
+  const { isFullscreen } = usePanelState();
+  const plotRenderKeyRef = React.useRef(panelWidth);
+  if (!isDragging) plotRenderKeyRef.current = panelWidth;
+  const plotRenderKey = isFullscreen ? 'fullscreen' : plotRenderKeyRef.current;
 
   const { data, isError, isLoading } = usePlotFile(storageId);
 
@@ -33,20 +36,15 @@ export default function PlotInChat({
   if (!isString(content)) return null;
 
   if (type === 'image') {
-    return (
-      <ToolThumbnailGeneration
-        result={{ storage_id: storageId }}
-        data={data}
-        panelWidth={widthRef.current}
-      />
-    );
+    return <ToolThumbnailGeneration result={{ storage_id: storageId }} data={data} />;
   }
 
   return (
     <ToolPlotGenerator
       result={{ storage_id: storageId }}
       data={data}
-      panelWidth={widthRef.current}
+      isSmall={plotRenderKeyRef.current < 420}
+      plotRenderKey={plotRenderKey}
     />
   );
 }

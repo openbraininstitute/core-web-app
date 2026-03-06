@@ -20,14 +20,16 @@ export interface ToolPlotGeneratorProps {
   className?: string;
   result: ToolResult | null;
   data?: { content: string; type: string };
-  panelWidth?: number;
+  isSmall?: boolean;
+  plotRenderKey?: number | string;
 }
 
 export default function ToolPlotGenerator({
   className,
   result,
   data: providedData,
-  panelWidth,
+  isSmall,
+  plotRenderKey,
 }: ToolPlotGeneratorProps) {
   if (!result) return null;
 
@@ -39,7 +41,8 @@ export default function ToolPlotGenerator({
         className={className}
         key={storageKey}
         providedData={providedData}
-        panelWidth={panelWidth}
+        isSmall={isSmall}
+        plotRenderKey={plotRenderKey}
       />
     )
   );
@@ -47,11 +50,13 @@ export default function ToolPlotGenerator({
 function CustomPlot({
   className,
   providedData,
-  panelWidth,
+  isSmall,
+  plotRenderKey,
 }: {
   className?: string;
   providedData: { content: string; type: string };
-  panelWidth?: number;
+  isSmall?: boolean;
+  plotRenderKey?: number | string;
 }) {
   const { content, type } = providedData;
   const [plotReady, setPlotReady] = React.useState(false);
@@ -136,7 +141,7 @@ function CustomPlot({
           </div>
         )}
         {!plotReady && <ToolSkeleton />}
-        <div key={panelWidth} className="overflow-y-auto" onDoubleClick={handleShow}>
+        <div key={plotRenderKey} className="overflow-y-auto" onDoubleClick={handleShow}>
           <Plot
             className={classNames(className, styles.toolPlotGenerator)}
             style={{
@@ -151,8 +156,7 @@ function CustomPlot({
             config={{
               displaylogo: false,
               responsive: true,
-              modeBarButtons:
-                panelWidth && panelWidth < 420 ? [['pan2d', 'zoom2d', 'resetScale2d']] : undefined,
+              modeBarButtons: isSmall ? [['pan2d', 'zoom2d', 'resetScale2d']] : undefined,
             }}
             useResizeHandler
             onInitialized={() => setPlotReady(true)}
