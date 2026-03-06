@@ -8,13 +8,13 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { Input } from 'antd';
+import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
 
 import AIAdd from '@/components/icons/ai/add_icon';
 import AIIcon from '@/components/icons/ai/ai_icon';
 import AIEdit from '@/components/icons/ai/edit_icon';
-import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import { isAtom, isPlainObject } from './utils';
@@ -145,9 +145,11 @@ export default function BlockDictionaryEntries({
       <button
         type="button"
         key={entry}
-        className={classNames(
-          'text-primary-8 flex h-[50px] min-h-[50px] w-full min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-          isSelected ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white' : ''
+        className={cn(
+          'text-primary-8 flex h-12.5 min-h-12.5 w-full min-w-37.5 items-center justify-between rounded-full ',
+          'bg-gray-100 px-5 py-2 text-sm drop-shadow ',
+          'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+          { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected }
         )}
         tabIndex={0}
         onClick={() => handleEntryClick(entry)}
@@ -157,7 +159,7 @@ export default function BlockDictionaryEntries({
           }
         }}
       >
-        <div className="w-full text-left truncate max-w-[24ch]">{entry}</div>
+        <div className="w-full text-left truncate max-w-[24ch]">{upperFirst(lowerCase(entry))}</div>
         <AIIcon />
       </button>
     );
@@ -216,9 +218,12 @@ export default function BlockDictionaryEntries({
               <div
                 role="button"
                 key={subkey}
-                className={classNames(
-                  'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
-                  isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
+                className={cn(
+                  '',
+                  'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center justify-between ',
+                  'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
+                  'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
+                  { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected }
                 )}
                 tabIndex={0}
                 onClick={() => handleEntryClick(subkey)}
@@ -233,7 +238,7 @@ export default function BlockDictionaryEntries({
                     <>
                       <Input
                         value={newKey}
-                        className="inline-block h-[20px] w-[70%] text-sm outline-none"
+                        className="inline-block h-5 w-[70%] text-sm outline-none"
                         classNames={{
                           input: 'border-none !bg-transparent text-white',
                         }}
@@ -408,14 +413,19 @@ export default function BlockDictionaryEntries({
       )}
       {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && (
         <button
-          className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
+          className={cn(
+            'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center ',
+            'justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow'
+          )}
           type="button"
           onClick={() => {
             setEditing(true);
             setSelectedEntry('');
           }}
         >
-          Add {singularName}
+          <span>
+            Add <span className="lowercase">{singularName}</span>
+          </span>
           <PlusCircleOutlined />
         </button>
       )}
