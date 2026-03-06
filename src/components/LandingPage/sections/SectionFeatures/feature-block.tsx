@@ -137,7 +137,7 @@ export default function FeatureBlock({
                 {item.value}
               </div>
               <div
-                className="leading-1.2"
+                className="leading-1.1! hyphens-auto pr-3"
                 style={{ color: content.theme === 'dark' ? '#fff' : '#002766' }}
               >
                 {item.label}
