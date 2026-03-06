@@ -1,14 +1,11 @@
 'use client';
 
-import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import { useAtom } from 'jotai';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
 
-import {
-  SingleNeuronSynaptomeBaseSchema,
-  type TSingleNeuronSynaptomeConfiguration,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
+import { SingleNeuronSynaptomeBaseSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
