@@ -24,11 +24,12 @@ interface TraceDetailsViewProps {
 interface CellDetailsProps {
   trace: NWBTrace;
   cellId: string;
+  showCellLabel?: boolean;
   defaultProtocol?: string;
   defaultRepetition?: string;
 }
 
-function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: CellDetailsProps) {
+function CellDetails({ trace, cellId, showCellLabel, defaultProtocol, defaultRepetition }: CellDetailsProps) {
   const [reset, setReset] = useState<boolean>(false);
 
   const plotContainerRef = useRef<HTMLDivElement>(null);
@@ -138,7 +139,7 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
 
   return (
     <div className="flex flex-col gap-10">
-      <div className="text-primary-9 text-xl font-bold">{cellId}</div>
+      {showCellLabel && <div className="text-primary-9 text-xl font-bold">{cellId}</div>}
       <div className="flex flex-wrap gap-8">
         <OptionSelect
           label={{ title: 'Protocol', numberOfAvailable: trace.getProtocols(cellId).length }}
@@ -276,6 +277,7 @@ function TraceDetailsView({
             key={cellId}
             trace={trace}
             cellId={cellId}
+            showCellLabel={cellIds.length > 1}
             defaultProtocol={defaultProtocol}
             defaultRepetition={defaultRepetition}
           />

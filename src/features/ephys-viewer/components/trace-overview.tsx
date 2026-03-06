@@ -71,7 +71,7 @@ function TraceThumbnail({
   plotRevision: number;
 }) {
   const sweeps = trace.getSweeps(cellId, protocol, repetition);
-  const [rawData, dataUnit] = useDataWithUnit(
+  const [rawData, dataUnit, label] = useDataWithUnit(
     cellId,
     protocol,
     recordingType,
@@ -80,7 +80,10 @@ function TraceThumbnail({
     sweeps,
     trace
   );
-  const yTitle = `${startCase(recordingType)} (${dataUnit === 'amperes' ? 'pA' : 'mV'})`;
+  const unitStr = dataUnit === 'amperes' ? 'pA' : 'mV';
+  const yTitle = dataUnit === 'amperes'
+    ? `${label ?? 'Current'} (${unitStr})`
+    : `${startCase(recordingType)} (${unitStr})`;
   const { layout, config } = useOverviewPlotConfig({
     datarevision: plotRevision,
     yTitle,
@@ -368,11 +371,13 @@ function useDataWithUnit(
 ): [
   data: { x: any[]; y: any[]; sweepName: string; name: string; line: { color: string } }[],
   unit: string | null,
+  label: string | undefined,
 ] {
   return useMemo(() => {
     let deltaTime = 1;
     let dataUnit: string | null = null;
     let conversionFactor = 1;
+    let dataLabel: string | undefined;
 
     const plotData = sweeps.map((sweep, idx) => {
       const recordingData = trace.getSweepRecordingData(
@@ -396,6 +401,7 @@ function useDataWithUnit(
 
         dataUnit = recordingData.unit;
         conversionFactor = recordingData.conversionFactor;
+        dataLabel = recordingData.label;
       }
 
       const name = sweep;
@@ -427,6 +433,6 @@ function useDataWithUnit(
           : convertVoltageSeries(d.y, 'mV', conversionFactor);
     });
 
-    return [optimizedPlotData, dataUnit];
+    return [optimizedPlotData, dataUnit, dataLabel];
   }, [cellId, protocol, recordingType, recordingIndex, repetition, sweeps, trace]);
 }

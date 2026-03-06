@@ -24,6 +24,7 @@ export enum RecordingType {
 }
 
 export type RecordingData = {
+  label?: string;
   data: number[];
   unit: string;
   conversionFactor: number;
@@ -661,7 +662,6 @@ class IonChannelSimulationTrace extends NWBTrace {
     sweep: string,
     recordingType: RecordingType
   ): RecordingData[] {
-    console.log(recordingType);
     const recVarNames =
       recordingType === RecordingType.STIMULUS ? ['default'] : this.getRecVarNames();
 
@@ -678,6 +678,19 @@ class IonChannelSimulationTrace extends NWBTrace {
         throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
       }
 
+      let label: string | undefined;
+
+      if (recordingType === RecordingType.RESPONSE) {
+        const stimulusGroupKey = `${NWBKey.ACQUISITION}/${this.createResponseKey({ varName, sweep })}`;
+        const stimulusGroup = this.getGroup(stimulusGroupKey);
+        const description = tryGetAttribute(stimulusGroup, 'description');
+        if (typeof description !== 'string') {
+          throw new Error(`Incompatible ${recordingType} description: ${unit}, expected string`);
+        }
+
+        label = description;
+      }
+
       const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
       const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
 
@@ -686,6 +699,7 @@ class IonChannelSimulationTrace extends NWBTrace {
       const data = dataset.to_array() as number[];
 
       return {
+        label,
         data,
         unit,
         conversionFactor,

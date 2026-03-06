@@ -42,7 +42,7 @@ export default function InteractivePlot({
 
   const { config, layout, font, style } = useInteractivePlotConfig();
 
-  const [rawData, dataUnit] = useData(
+  const [rawData, dataUnit, label] = useData(
     zoomRanges,
     allSweeps,
     sweepDataMap,
@@ -83,7 +83,9 @@ export default function InteractivePlot({
     return false;
   };
 
-  const yTitle = dataUnit === 'amperes' ? `Current (${currentUnit})` : 'Membrane potential (mV)';
+  const yTitle = dataUnit === 'amperes'
+    ? `${label ?? 'Current'} (${currentUnit})`
+    : 'Membrane potential (mV)';
 
   const isEmptySelection = !selectedSweeps.length;
   const isEmptySelectionResponse = isEmptySelection ? rawData : selectedResponse;
@@ -137,11 +139,13 @@ function useData(
 ): [
   data: { x: any[]; y: any[]; sweepName: string; name: string; line: { color: string } }[],
   unit: string | null,
+  label: string | undefined,
 ] {
   return useMemo(() => {
     let deltaTime = 1;
     let dataUnit: string | null = null;
     let conversionFactor = 1;
+    let dataLabel: string | undefined;
 
     const zoom = {
       xstart: zoomRanges?.x[0],
@@ -163,6 +167,7 @@ function useData(
 
         dataUnit = recordingData.unit;
         conversionFactor = recordingData.conversionFactor;
+        dataLabel = recordingData.label;
       }
 
       const name = sweep;
@@ -195,6 +200,6 @@ function useData(
           : convertVoltageSeries(d.y, DEFAULT_VOLTAGE_UNIT, conversionFactor);
     });
 
-    return [optimizedPlotData, dataUnit];
+    return [optimizedPlotData, dataUnit, dataLabel];
   }, [zoomRanges?.x, allSweeps, sweepDataMap, recordingType, recordingIndex, colorMap, currentUnit]);
 }
