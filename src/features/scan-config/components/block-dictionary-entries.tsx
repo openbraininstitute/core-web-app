@@ -25,8 +25,6 @@ import type React from 'react';
 import type { AtomsMap } from '../types';
 import type { Config, ConfigValue } from './components';
 
-import styles from '@/features/scan-config/scan-config.module.css';
-
 export default function BlockDictionaryEntries({
   config,
   aiConfig,
