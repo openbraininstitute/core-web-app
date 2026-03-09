@@ -54,7 +54,7 @@ type Props = {
   schema: ConfigSchema;
   schemaName: SchemaName;
   aiEnabled: boolean;
-  generatedApiUrl: string;
+  generatedEndpoint: string;
   entityType?: TSupportedEntityTypesForScanConfiguration;
 };
 
@@ -72,7 +72,7 @@ export function ScanConfigTemplate({
   schemaName,
   schemaMappingConfig,
   aiEnabled,
-  generatedApiUrl,
+  generatedEndpoint,
   entityType,
 }: Props) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
@@ -174,7 +174,7 @@ export function ScanConfigTemplate({
               setAiConfig(null);
               updateRequestId();
             }}
-            generatedApiUrl={generatedApiUrl}
+            generatedEndpoint={generatedEndpoint}
             entityType={entityType}
           />
           <div

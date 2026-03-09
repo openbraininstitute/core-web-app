@@ -43,7 +43,7 @@ export default function Left({
   activity,
   handleAcceptAIChanges,
   handleRejectAIChanges,
-  generatedApiUrl,
+  generatedEndpoint,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -69,7 +69,7 @@ export default function Left({
   activity: TScanConfigActivity;
   handleAcceptAIChanges: () => void;
   handleRejectAIChanges: () => void;
-  generatedApiUrl: string;
+  generatedEndpoint: string;
   entityType?: TSupportedEntityTypesForScanConfiguration;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
@@ -154,7 +154,7 @@ export default function Left({
           setTab={setTab}
           setLoading={setLoading}
           activity={activity}
-          generatedApiUrl={generatedApiUrl}
+          generatedApiUrl={generatedEndpoint}
         />
       )}
     </div>

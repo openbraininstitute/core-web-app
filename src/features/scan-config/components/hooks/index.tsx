@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { match, P } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config as appConfig } from '@/config';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import {
@@ -18,14 +18,12 @@ import { log } from '@/utils/logger';
 
 import type { Nullish } from '@/utils/type';
 
-export function useGeneratedApiUrl({
+export function getGeneratedApiUrl({
   activity = ScanConfigActivity.Simulate,
   entityType,
-  entityDiscriminator,
 }: {
   activity?: TScanConfigActivity;
   entityType: TSupportedEntityTypesForScanConfiguration | Nullish;
-  entityDiscriminator: string | Nullish;
 }) {
   const apiPath = match(activity)
     .with(ScanConfigActivity.Extract, () => {
@@ -40,19 +38,18 @@ export function useGeneratedApiUrl({
       return path;
     })
     .with(ScanConfigActivity.Simulate, () => {
-      const path = match({ entityType, entityDiscriminator })
+      const path = match({ entityType })
         .with(
-          { entityType: EntityTypeDict.Memodel },
+          { entityType: ExtendedEntitiesTypeDict.MemodelCircuit },
           () => 'me-model-simulation-scan-config-generate-grid'
         )
         .with(
-          { entityType: EntityTypeDict.IonChannelModel },
+          { entityType: ExtendedEntitiesTypeDict.IonChannelModel },
           () => 'ion-channel-model-simulation-scan-config-generate-grid'
         )
         .with(
           {
-            entityType: EntityTypeDict.Circuit,
-            entityDiscriminator: CircuitScaleDictionary.Single,
+            entityType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
           },
           () => 'me-model-with-synapses-circuit-simulation-scan-config-generate-grid'
         )
@@ -65,18 +62,19 @@ export function useGeneratedApiUrl({
         });
       return path;
     })
-    .exhaustive();
+    .exhaustive(() => {
+      throw new Error(`No obi-one generated url found for this entity ${entityType}`);
+    });
+
   return `${appConfig.OBI_ONE_URL}/generated/${apiPath}`;
 }
 
-export function useSchemaName({
+export function getScanConfigSchemaName({
   entityType,
   activity = ScanConfigActivity.Simulate,
-  entityDiscriminator: discriminator,
 }: {
   activity?: TScanConfigActivity;
   entityType: TSupportedEntityTypesForScanConfiguration | Nullish;
-  entityDiscriminator: string | Nullish;
 }) {
   const schemaName = match({ activity, entityType })
     .with({ entityType: P.nullish }, () => {
@@ -84,24 +82,27 @@ export function useSchemaName({
     })
     .with({ activity: ScanConfigActivity.Extract }, () => {
       const name = match({ entityType })
-        .with({ entityType: EntityTypeDict.Circuit }, () => 'CircuitExtractionScanConfig')
+        .with({ entityType: ExtendedEntitiesTypeDict.Circuit }, () => 'CircuitExtractionScanConfig')
         .otherwise(() => {
           throw new Error(`Unsupported entity type: ${entityType}`);
         });
       return name as SchemaName;
     })
     .with({ activity: ScanConfigActivity.Simulate }, () => {
-      const name = match({ entityType, discriminator })
-        .with({ entityType: EntityTypeDict.Memodel }, () => 'MEModelSimulationScanConfig')
+      const name = match({ entityType })
         .with(
-          { entityType: EntityTypeDict.IonChannelModel },
+          { entityType: ExtendedEntitiesTypeDict.MemodelCircuit },
+          () => 'MEModelSimulationScanConfig'
+        )
+        .with(
+          { entityType: ExtendedEntitiesTypeDict.IonChannelModel },
           () => 'IonChannelModelSimulationScanConfig'
         )
         .with(
-          { entityType: EntityTypeDict.Circuit, discriminator: CircuitScaleDictionary.Single },
+          { entityType: ExtendedEntitiesTypeDict.MEModelWithSynapses },
           () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
         )
-        .with({ entityType: EntityTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
+        .with({ entityType: ExtendedEntitiesTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
         .otherwise(() => {
           throw new Error(`Unsupported entity type: ${entityType}`);
         });

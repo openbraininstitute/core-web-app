@@ -23,6 +23,7 @@ import {
 } from '@/features/scan-config/types';
 
 import type { SetStateAction } from 'jotai';
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
@@ -257,17 +258,27 @@ export function UIElementRender({
       {
         paramSchema: { ui_element: ScanConfigUIElementDict.ModelSelectorSingle },
       },
-      ({ paramSchema }) => (
-        <EntitySelectorSingle
-          entityType={paramSchema.model_selector_entity_type}
-          filters={paramSchema.model_selector_property_filter ?? {}}
-          value={value}
-          valueType={paramSchema.properties?.type?.const}
-          onChange={(v) => {
-            setState({ ...state, [k]: v ?? null });
-          }}
-        />
-      )
+      ({ paramSchema }) => {
+        const q = get(paramSchema, 'entity_query') as
+          | {
+              type: TEntityTypeDict;
+              filters: Record<string, any>;
+            }
+          | undefined;
+        if (q) {
+          return (
+            <EntitySelectorSingle
+              entityType={q.type}
+              filters={q.filters}
+              value={value}
+              state={state}
+              fieldKey={k}
+              valueType={paramSchema.properties?.type?.const}
+              onChange={setState}
+            />
+          );
+        }
+      }
     )
     .otherwise(() => null);
 }

@@ -28,13 +28,16 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import type { WorkspaceContext } from '@/types/common';
 import type { Nullish } from '@/utils/type';
 
-export function useObioneJsonSchema(schemaName: SchemaName) {
+export function useObioneJsonSchema({ schemaName }: { schemaName?: SchemaName | undefined }) {
   const { data: schema, isLoading } = useQuery({
-    queryKey: keyBuilder.obiOneJsonSchema(schemaName),
-    queryFn: () => fetchSchema({ schemaName }),
+    // biome-ignore lint/style/noNonNullAssertion: query only start if the schemaName is present
+    queryKey: keyBuilder.obiOneJsonSchema(schemaName!),
+    // biome-ignore lint/style/noNonNullAssertion: query only start if the schemaName is present
+    queryFn: () => fetchSchema({ schemaName: schemaName! }),
     // keep data fresh indefinitely to prevent atom regeneration on window focus
     staleTime: Infinity,
     refetchOnWindowFocus: false,
+    enabled: !!schemaName,
   });
 
   return { isLoading, schema };
@@ -50,11 +53,13 @@ export function useSchemaMappingConfiguration({
   entityId,
   workspace,
   endpointType,
+  isBoolean,
 }: {
   workspace: WorkspaceContext;
   entityId: string | undefined;
   schema: ConfigSchema | undefined;
   endpointType: string | undefined;
+  isBoolean: boolean;
 }) {
   const properties_endpoint = endpointType ? get(schema?.property_endpoints, endpointType, '') : '';
 
@@ -73,7 +78,7 @@ export function useSchemaMappingConfiguration({
         },
       });
     },
-    enabled: !!properties_endpoint && !!entityId && !!endpointType,
+    enabled: !!properties_endpoint && !!entityId && !!endpointType && isBoolean,
     refetchOnWindowFocus: false,
     staleTime: 3600, //  1 hour
     select: (resp) => {
@@ -100,7 +105,7 @@ export function useDefaultConfig(
   schemaName: SchemaName,
   formModelType: 'CircuitFromId' = 'CircuitFromId'
 ) {
-  const { schema } = useObioneJsonSchema(schemaName);
+  const { schema } = useObioneJsonSchema({ schemaName });
 
   if (!schema) return;
 
@@ -297,7 +302,7 @@ export function resetConfig(
 }
 
 export function useReferenceTypeDict(schemaName: SchemaName) {
-  const { schema } = useObioneJsonSchema(schemaName);
+  const { schema } = useObioneJsonSchema({ schemaName });
 
   const referenceTypeDict: Record<
     string,

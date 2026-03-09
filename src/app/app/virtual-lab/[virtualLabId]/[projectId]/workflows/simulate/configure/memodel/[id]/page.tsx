@@ -71,6 +71,7 @@ export default function Page({
     return (
       <ScanConfig
         entityId={entity.id}
+        entityType={ExtendedEntitiesTypeDict.MemodelCircuit}
         virtualLabId={virtualLabId}
         projectId={projectId}
         initialConfig={campaignData?.config.form}

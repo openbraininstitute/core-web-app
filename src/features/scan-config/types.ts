@@ -7,6 +7,7 @@ import {
   type IonChannelModel,
   type TEntityTypeDict,
 } from '@/api/entitycore/types';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 // biome-ignore lint/style/useImportType: biome hallucination
 import {
   ExtendedEntitiesTypeDict,
@@ -17,7 +18,9 @@ import type { atom } from 'jotai';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
-import type { Nullish, Prettify } from '@/utils/type';
+import type { Prettify } from '@/utils/type';
+
+export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 type Primitive = null | boolean | number | string;
 interface Object {
@@ -332,15 +335,35 @@ export type TSupportedEntitiesForScanConfiguration = ICircuit | IMEModel | IonCh
 
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
-  | typeof ExtendedEntitiesTypeDict.Memodel
+  | typeof ExtendedEntitiesTypeDict.MemodelCircuit
+  | typeof ExtendedEntitiesTypeDict.MEModelWithSynapses
   | typeof ExtendedEntitiesTypeDict.IonChannelModel;
 
 export const getSupportedEntityTypesForScanConfiguration = ({
-  type,
+  entity,
 }: {
-  type: TExtendedEntitiesTypeDict | Nullish;
+  entity?: TSupportedEntitiesForScanConfiguration | { type: TExtendedEntitiesTypeDict };
 }) => {
-  return match(type)
-    .with(EntityTypeDict.Circuit, EntityTypeDict.Memodel, EntityTypeDict.IonChannelModel, (t) => t)
-    .otherwise(() => null);
+  return match({ entity })
+    .with(
+      {
+        entity: {
+          type: EntityTypeDict.Circuit,
+          scale: CircuitScaleDictionary.Single,
+        },
+      },
+      () => ExtendedEntitiesTypeDict.MEModelWithSynapses
+    )
+    .with({ entity: { type: EntityTypeDict.Circuit } }, () => ExtendedEntitiesTypeDict.Circuit)
+    .with(
+      { entity: { type: EntityTypeDict.Memodel } },
+      () => ExtendedEntitiesTypeDict.MemodelCircuit
+    )
+    .with(
+      { entity: { type: EntityTypeDict.IonChannelModel } },
+      () => ExtendedEntitiesTypeDict.IonChannelModel
+    )
+    .otherwise(() => {
+      throw new Error('Not supported entity for scan configuration');
+    });
 };

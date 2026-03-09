@@ -1,7 +1,11 @@
 'use client';
 
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
-import { useGeneratedApiUrl, useSchemaName } from '@/features/scan-config/components/hooks';
+import {
+  getGeneratedApiUrl,
+  getScanConfigSchemaName,
+} from '@/features/scan-config/components/hooks';
 import {
   useObioneJsonSchema,
   useSchemaMappingConfiguration,
@@ -13,16 +17,19 @@ import {
   getSupportedEntityTypesForScanConfiguration,
   ScanConfigActivity,
   ScanConfigDefaultTab,
+  type SchemaName,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { Nullish } from '@/utils/type';
 
 type Props = {
   entityId?: string | Nullish;
-  entityType?: TExtendedEntitiesTypeDict | Nullish;
+  entityType: TExtendedEntitiesTypeDict;
   schemaMappingKey?: 'Circuit' | string;
   virtualLabId: string;
   projectId: string;
@@ -56,25 +63,31 @@ export function ScanConfiguration({
     context: { virtualLabId, projectId },
   });
 
-  const supportedType = getSupportedEntityTypesForScanConfiguration({
-    type: entity?.type ?? entityType,
+  let endpoint: string | undefined;
+  let schemaName: SchemaName | undefined;
+  let usedType: TSupportedEntityTypesForScanConfiguration | undefined;
+  let entityConfig: EntityCoreTypeConfig<any, any, any> | undefined;
+
+  if (!loadingEntity) {
+    usedType = getSupportedEntityTypesForScanConfiguration({
+      entity: entity ?? { type: entityType },
+    });
+
+    entityConfig = getEntityByExtendedType({ type: usedType });
+    endpoint = getGeneratedApiUrl({
+      activity,
+      entityType: usedType,
+    });
+
+    schemaName = getScanConfigSchemaName({
+      activity,
+      entityType: usedType,
+    });
+  }
+
+  const { schema, isLoading: loadingSchema } = useObioneJsonSchema({
+    schemaName,
   });
-
-  const entityDiscriminator = entity && 'scale' in entity ? entity.scale : null;
-
-  const generatedApiUrl = useGeneratedApiUrl({
-    activity,
-    entityDiscriminator,
-    entityType: supportedType,
-  });
-
-  const schemaName = useSchemaName({
-    activity,
-    entityDiscriminator,
-    entityType: supportedType,
-  });
-
-  const { schema, isLoading: loadingSchema } = useObioneJsonSchema(schemaName);
 
   const { data: schemaMappingConfig, isLoading: loadingConfiguration } =
     useSchemaMappingConfiguration({
@@ -82,6 +95,7 @@ export function ScanConfiguration({
       entityId: entity?.id,
       workspace: { virtualLabId, projectId },
       endpointType: schemaMappingKey,
+      isBoolean: !loadingEntity,
     });
 
   const loading = loadingConfiguration || loadingEntity || loadingSchema;
@@ -89,26 +103,35 @@ export function ScanConfiguration({
   if (loading) {
     return <ScanConfigSkeleton />;
   }
+
   if (error) {
-    return <div className="h-full w-full flex items-center justify-center">{error.message}</div>;
+    return <div className="h-full w-full flex items-center justify-center">{error?.message}</div>;
   }
+
+  if (!endpoint) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        No grid generation found for {entityConfig?.title}
+      </div>
+    );
+  }
+
   if (!schemaName || !schema) {
     return (
       <div className="h-full w-full flex items-center justify-center">
-        No schema found for {schemaName}
+        No configuration schema found for {entityConfig?.title}
       </div>
     );
   }
 
   const aiEnabled = entity ? 'scale' in entity && entity.scale !== 'single' : false;
 
-  if (entity || entityType) {
+  if (entity || usedType) {
     return (
       <ScanConfigTemplate
         {...{
           entity,
-          entityType: supportedType,
-          entityDiscriminator,
+          entityType: usedType,
           virtualLabId,
           projectId,
           initialCampaignId,
@@ -120,8 +143,8 @@ export function ScanConfiguration({
           schema,
           schemaName,
           schemaMappingConfig,
+          generatedEndpoint: endpoint,
           aiEnabled,
-          generatedApiUrl,
         }}
       />
     );

@@ -1,7 +1,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { get } from 'es-toolkit/compat';
 
-import authFetch from '@/auth-fetch';
+import { authFetch } from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
 import {
@@ -49,7 +49,7 @@ export default function GenerateConfigButton({
   const notification = useAppNotification();
   const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
 
-  const { notifyCredits } = useCreditsAccessGuard({
+  const { notifyCredits, shouldShowError } = useCreditsAccessGuard({
     context: { virtualLabId, projectId },
     message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
     description: get(
@@ -81,7 +81,10 @@ export default function GenerateConfigButton({
           setCampaignId('');
           return;
         }
-        notifyCredits();
+        if (shouldShowError) {
+          notifyCredits();
+          return;
+        }
 
         setLoading(true);
         try {
@@ -99,7 +102,7 @@ export default function GenerateConfigButton({
             }
           );
 
-          if (coordinateCountRes.status !== 200) {
+          if (!coordinateCountRes.ok) {
             const message = await coordinateCountRes.json();
             const detailStr = typeof message?.detail === 'string' ? message.detail : '';
             const isLowFunds =
@@ -142,6 +145,7 @@ export default function GenerateConfigButton({
             // misleading errors (sonata_circuit, no calibration result, etc.) when
             // the real issue is insufficient credits.
             const shouldShowCreditsMessage = isLowFundsFromApi && !isVirtualLabAdmin;
+
             if (shouldShowCreditsMessage) {
               notifyCredits();
             } else {

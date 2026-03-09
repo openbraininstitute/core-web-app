@@ -69,10 +69,9 @@ export function useCreditsAccessGuard({
 
   const projectBalance = balanceData?.balance != null ? Number(balanceData.balance) : null;
   const hasNoCredits = projectBalance !== null && projectBalance <= 0;
-  if (hasNoCredits && !isVirtualLabAdmin) {
-    showInsufficientCreditsError();
-    return { notifyCredits: showInsufficientCreditsError };
-  }
 
-  return { notifyCredits: showInsufficientCreditsError };
+  return {
+    shouldShowError: hasNoCredits && !isVirtualLabAdmin,
+    notifyCredits: showInsufficientCreditsError,
+  };
 }
