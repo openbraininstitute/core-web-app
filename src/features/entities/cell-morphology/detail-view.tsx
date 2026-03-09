@@ -1,28 +1,33 @@
 'use client';
 
-import { ErrorBoundary } from 'react-error-boundary';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useParams } from 'next/navigation';
 import { Spin } from 'antd';
+import { useParams } from 'next/navigation';
+import { ErrorBoundary } from 'react-error-boundary';
 
 // We disable enhanced somas until they are fixed on the backend.
 // import { useSwcContentUrl } from '@/util/content-url';
 
-import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
-import { useLoadCellMorphology3DAsset } from '@/state/morpho-viewer';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { MorphoViewer } from '@/components/MorphoViewer';
+import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
+import { useLoadCellMorphology3DAsset } from '@/state/morpho-viewer';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
 
-export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
+export function CellMorphologyViewer({
+  entity,
+  context,
+}: {
+  entity: ICellMorphology;
+  context: WorkspaceContext;
+}) {
   if (!entity) return null;
 
   return (
     <>
-      <Morphometrics className="mb-8" morphology={entity} />
-
+      <Morphometrics className="mb-8" morphology={entity} context={context} />
       <ErrorBoundary
         FallbackComponent={withErrorConfig({
           cls: { container: 'bg-white' },
