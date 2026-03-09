@@ -4,7 +4,6 @@ import { includes, kebabCase } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DownloadIcon } from '@/components/icons/buttons';
@@ -27,7 +26,6 @@ export function DataActions<T extends EntityCoreObjectTypes>({
   record: T;
   dataType?: TExtendedEntitiesTypeDict;
 }) {
-  const queryParams = useSearchParams();
   const { virtualLabId, projectId } = useWorkspace();
   const [, copy, , copying] = useCopyToClipboard();
   const onCopyClipboard = () => copy(record.id);
@@ -150,7 +148,6 @@ export function DataActions<T extends EntityCoreObjectTypes>({
         <Link
           href={{
             pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(dataType)}/${record.id}`,
-            query: queryParams.toString(),
           }}
         >
           View details

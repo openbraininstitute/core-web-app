@@ -1,4 +1,3 @@
-import { Spinner } from '../spinner';
 import Chat from './chat';
 import History from './history';
 
@@ -12,16 +11,8 @@ interface PanelContentProps {
 export default function PanelContent({ className, threadId, onTabChange, tab }: PanelContentProps) {
   return (
     <>
-      {threadId ? (
-        <>
-          {tab === 'chat' && <Chat className={className} threadId={threadId} />}
-          {tab === 'history' && (
-            <History className={className} onBack={() => onTabChange('chat')} />
-          )}
-        </>
-      ) : (
-        <Spinner />
-      )}
+      {tab === 'chat' && <Chat className={className} threadId={threadId} />}
+      {tab === 'history' && <History className={className} onBack={() => onTabChange('chat')} />}
     </>
   );
 }

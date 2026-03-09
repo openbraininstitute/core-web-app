@@ -1,26 +1,32 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { useQuery } from '@tanstack/react-query';
+import { get, omit, pick } from 'es-toolkit/compat';
 import { atom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { obioneApi } from '@/api/one/utils';
 import { config } from '@/config';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
+  type Config,
   type ConfigSchema,
+  type ConfigValue,
   isType,
   ScanConfigUIElementDict,
   type SchemaName,
+  type TBlock,
 } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
-import type { Config, ConfigValue } from '@/features/scan-config/components/components';
+import type { WorkspaceContext } from '@/types/common';
 
 export function useObioneJsonSchema(schemaName: SchemaName) {
-  const { data: schema } = useQuery({
+  const { data: schema, isLoading } = useQuery({
     queryKey: keyBuilder.obiOneJsonSchema(schemaName),
     queryFn: () => fetchSchema({ schemaName }),
     // Keep data fresh indefinitely to prevent atom regeneration on window focus
@@ -28,14 +34,69 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
     refetchOnWindowFocus: false,
   });
 
-  return schema;
+  return { isLoading, schema };
+}
+
+export type TSchemaMappingConfiguration = {
+  usability: Record<string, boolean> | null;
+  properties: Record<string, ConfigValue> | null;
+};
+
+export function useSchemaMappingConfiguration({
+  schema,
+  circuitId,
+  workspace,
+  endpointType,
+}: {
+  workspace: WorkspaceContext;
+  circuitId: string | undefined;
+  schema: ConfigSchema | undefined;
+  endpointType: string;
+}) {
+  const properties_endpoint = get(schema?.property_endpoints, endpointType, '');
+  return useQuery({
+    queryKey: ['schema-mapping-configuration', { workspace, circuitId, endpointType }],
+    queryFn: async () => {
+      const api = await obioneApi();
+      return api.get<{
+        usability: {
+          [key: string]: boolean;
+        } | null;
+        [key: string]: any;
+      }>(`/declared${properties_endpoint}`.replace('{circuit_id}', circuitId!), {
+        headers: {
+          ...getEntityCoreContext(workspace).headers,
+        },
+      });
+    },
+    enabled: !!properties_endpoint,
+    refetchOnWindowFocus: false,
+    staleTime: 3600, //  1 hour
+    select: (resp) => {
+      return {
+        properties: omit(resp, ['usability']),
+        usability: pick(resp, ['usability']).usability,
+      };
+    },
+  });
+}
+
+export function getBlockUsabilityConfig({ block }: { block: TBlock }) {
+  const usability = pick(block, ['block_usability_dictionary']).block_usability_dictionary;
+
+  return {
+    isDependent: !!usability,
+    error_message: usability?.false_message,
+    property: usability?.property,
+    property_group: usability?.property_group,
+  };
 }
 
 export function useDefaultConfig(
   schemaName: SchemaName,
   formModelType: 'CircuitFromId' = 'CircuitFromId'
 ) {
-  const schema = useObioneJsonSchema(schemaName);
+  const { schema } = useObioneJsonSchema(schemaName);
 
   if (!schema) return;
 
@@ -45,12 +106,12 @@ export function useDefaultConfig(
 
   Object.entries(schema.properties).forEach(([k, v]) => {
     if (isType(v)) return;
-    if (v.ui_element === 'block_single') {
+    if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
       const initial: Record<string, ConfigValue> = {};
 
       Object.entries(v.properties).forEach(([subkey, subValue]) => {
         initial[subkey] = subValue.default ?? null;
-        if (!isType(subValue) && subValue.ui_element === 'model_identifier') {
+        if (!isType(subValue) && subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier) {
           initial[subkey] = {
             type: formModelType,
             id_str: '',
@@ -208,7 +269,7 @@ export function resetConfig(
 }
 
 export function useReferenceTypeDict(schemaName: SchemaName) {
-  const schema = useObioneJsonSchema(schemaName);
+  const { schema } = useObioneJsonSchema(schemaName);
 
   const referenceTypeDict: Record<
     string,

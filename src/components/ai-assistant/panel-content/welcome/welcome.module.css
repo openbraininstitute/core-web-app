@@ -1,6 +1,7 @@
 .welcome {
   display: grid;
   place-items: center;
+  height: 100%;
 }
 
 .welcome > div {

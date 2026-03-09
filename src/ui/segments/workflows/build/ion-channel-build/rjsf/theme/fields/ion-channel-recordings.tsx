@@ -120,7 +120,6 @@ function RecordingsArrayFieldContent({
     }
   }, [disabled, readonly]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: table as is, others already memoized
   const handleModalConfirm = useCallback(() => {
     if (isSelectionValid && !isEmpty(recording)) {
       updateRecordingStorage(recording);
@@ -130,7 +129,7 @@ function RecordingsArrayFieldContent({
       );
       setIsModalOpen(false);
     }
-  }, [onChange, isSelectionValid]);
+  }, [onChange, isSelectionValid, recording, updateRecordingStorage]);
 
   const handleModalClose = () => setIsModalOpen(false);
 
@@ -149,7 +148,7 @@ function RecordingsArrayFieldContent({
 
   return (
     <div className="w-full">
-      {/** biome-ignore lint/a11y/useSemanticElements: already have a button */}
+      {/** biome-ignore lint/a11y/useSemanticElements: button can't have nested buttons */}
       <div
         className="w-full"
         role="button"

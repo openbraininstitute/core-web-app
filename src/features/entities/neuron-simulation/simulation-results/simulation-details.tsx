@@ -1,34 +1,31 @@
 import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
-import { ReactNode, useEffect, useState } from 'react';
 import { ConfigProvider, Segmented, Spin } from 'antd';
-import { SegmentedValue } from 'antd/lib/segmented';
-import { useParams } from 'next/navigation';
+import { get, some, startsWith } from 'es-toolkit/compat';
 import Link from 'next/link';
-import startsWith from 'es-toolkit/compat/startsWith';
-import some from 'es-toolkit/compat/some';
-import get from 'es-toolkit/compat/get';
+import { useParams } from 'next/navigation';
+import { type ReactNode, useEffect, useState } from 'react';
 
-import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
-
-import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
-import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { getAssetElement } from '@/api/entitycore/utils';
-import { classNames } from '@/util/utils';
 import { tryCatch } from '@/api/utils';
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { CustomPopover } from '@/features/entities/neuron-simulation/experiment/elements/popover';
+import SimulationPlot from '@/features/entities/neuron-simulation/simulation-results/simulation-plot-dynamic';
+import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
+import { classNames } from '@/util/utils';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
-import type {
-  SimulationPayload,
-  SingleNeuronModelSimulationConfig,
-} from '@/types/small-scale-simulator/single-neuron';
+import type { SegmentedValue } from 'antd/lib/segmented';
 import type {
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { WorkspaceContext } from '@/types/common';
-import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
-import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import type {
+  SimulationPayload,
+  SingleNeuronModelSimulationConfig,
+} from '@/types/small-scale-simulator/single-neuron';
 
 const subtitleStyle = 'font-thin text-neutral-4';
 type GenericSimulation = ISingleNeuronSynaptomeSimulation | ISingleNeuronSimulation;
@@ -40,7 +37,7 @@ type Props<T> = {
   children?: ({ config }: { config: SingleNeuronModelSimulationConfig }) => ReactNode;
 };
 
-export default function SimulationDetail<T extends GenericSimulation>({
+export function SimulationDetail<T extends GenericSimulation>({
   index,
   type,
   simulation,
@@ -208,6 +205,8 @@ export default function SimulationDetail<T extends GenericSimulation>({
     </div>
   );
 }
+
+export default SimulationDetail;
 
 function NameDescription({
   name,

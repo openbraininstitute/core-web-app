@@ -1,21 +1,42 @@
-import React from 'react';
-
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { Explanation } from '@/components/explanation';
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import { classNames } from '@/util/utils';
 
-import { Explanation } from '@/components/explanation';
+import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
+
 import styles from './validation-explanation.module.css';
 
 export interface ValidationExplanationProps {
   className?: string;
   passed: boolean;
+  entity: TRetrieveEntityOutput;
 }
 
-export function ValidationExplanation({ className, passed }: ValidationExplanationProps) {
+export function ValidationExplanation({ className, passed, entity }: ValidationExplanationProps) {
+  const entityConfig = getEntityByCoreType({ type: entity.type });
+
+  if (entityConfig?.type === EntityTypeDict.Emodel)
+    return (
+      <Explanation
+        title={
+          <>
+            <div>{entityConfig?.title} Validation</div>
+            <div className={passed ? styles.passed : styles.failed}>
+              {passed ? 'passed' : 'failed'}
+            </div>
+          </>
+        }
+        className={classNames(styles.validationDescription, className)}
+        hasDescription={false}
+      />
+    );
   return (
     <Explanation
+      hasDescription
       title={
         <>
-          <div>ME-Model Validation</div>
+          <div>{entityConfig?.title} Validation</div>
           <div className={passed ? styles.passed : styles.failed}>
             {passed ? 'passed' : 'failed'}
           </div>

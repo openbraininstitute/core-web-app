@@ -1,14 +1,13 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
 
-import { useRecordingsAndInjection } from '../hooks';
-import { PainterManager } from '../painter';
+import { IconClose } from '@/components/LandingPage/icons/IconClose';
+import { classNames } from '@/util/utils';
+
 import { HintContent } from '../hint';
+import { useRecordingsAndInjection } from '../hooks';
 import { useEscapeHandler } from './hooks';
 
-import { classNames } from '@/util/utils';
-import { IconClose } from '@/components/LandingPage/icons/IconClose';
+import type { PainterManager } from '../painter';
 
 import styles from './add-recording-dialog.module.css';
 
@@ -31,12 +30,14 @@ export default function AddRecordingDialog({
     item: null,
     offset: 0,
   });
+
   React.useEffect(() => {
     if (item) setOpen(true);
-  }, [item, offset]);
+  }, [item]);
+
   const handleClose = React.useCallback(() => {
     setOpen(false);
-  }, [setOpen]);
+  }, []);
   const handleMoveInjection = () => {
     handleClose();
     if (item) data.moveInjection(item.sectionName);
@@ -48,12 +49,14 @@ export default function AddRecordingDialog({
   useEscapeHandler(handleClose);
 
   return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: already have a button inside
     <div
       className={classNames(className, styles.addRecordingDialog, open && styles.open)}
       title={`y = ${y}`}
       onClick={handleClose}
       role="alertdialog"
     >
+      {/** biome-ignore lint/a11y/useKeyWithClickEvents: already have a button inside */}
       <div
         className={y < 0 ? styles.top : styles.bottom}
         onClick={(evt) => {

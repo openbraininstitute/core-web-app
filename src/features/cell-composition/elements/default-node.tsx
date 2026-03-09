@@ -78,6 +78,8 @@ export default function DefaultNode<TNode extends TTreeNode>({
   );
 }
 
+export { DefaultNode as Node };
+
 function figureOutMargin(
   hasChildren: boolean,
   isExpanded: boolean

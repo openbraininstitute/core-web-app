@@ -62,6 +62,8 @@ export type Props<T extends EntityCoreIdentifiable> = {
   tableStyle?: CSSProperties | undefined;
   allowDownload?: boolean;
   allowDelete?: boolean;
+  allowFilter?: boolean;
+  allowSearch?: boolean;
   requireBrainRegionDropdown?: boolean;
   requireScopeSelector?: boolean;
   requireSearch?: boolean;
@@ -70,6 +72,9 @@ export type Props<T extends EntityCoreIdentifiable> = {
   };
   expandableOptions?: UseExpandableTableOptions<T, T> | undefined;
   showExpandButtons?: boolean;
+  left?: ReactNode;
+  /** when false, disables vertical scroll so the table sizes to its content (use with h-max/h-fit on container) */
+  scrollable?: boolean;
 };
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
@@ -96,12 +101,16 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   tableStyle,
   allowDownload,
   allowDelete,
+  allowFilter = true,
+  allowSearch = true,
   requireBrainRegionDropdown = false,
   requireScopeSelector = false,
   requireSearch = true,
   filterClassNames,
   expandableOptions,
   showExpandButtons,
+  left,
+  scrollable = true,
 }: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -154,6 +163,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
     };
   }, [requireScopeSelector, requireBrainRegionDropdown, requireSearch]);
 
+  const allowTopMenu = allowSearch || allowFilter || left;
   return (
     <>
       <section
@@ -164,40 +174,46 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           cls?.container
         )}
       >
-        <div className="mb-5 grid w-full items-center  gap-2" style={grid.parent}>
-          {requireScopeSelector && <WorkflowScopeTabs className="max-w-max" />}
-          <div className="grid items-center gap-2 [grid-area:brain-and-search]" style={grid.left}>
-            {requireBrainRegionDropdown && (
-              <div className="[grid-area:brain-region-dropdown]">
-                <PortalRegionBanner dataKey={dataKey} className="w-87.5" />
-              </div>
-            )}
-            {requireSearch && (
-              <div className="w-full [grid-area:search]">
-                <Search
-                  {...{
-                    dataType,
-                    dataKey,
-                  }}
-                />
-              </div>
-            )}
-          </div>
-          <div className="[grid-area:filter]">
-            <div className="ml-auto flex h-12 items-stretch justify-end gap-3">
-              <FilterControls
-                filters={filters}
-                displayControlPanel={displayControlPanel}
-                setDisplayControlPanel={onDisplayControlPanel}
-                className="justify-end self-end"
-              />
+        {allowTopMenu && (
+          <div className="mb-5 grid w-full items-center  gap-2" style={grid.parent}>
+            {requireScopeSelector && <WorkflowScopeTabs className="max-w-max" />}
+            <div className="grid items-center gap-2 [grid-area:brain-and-search]" style={grid.left}>
+              {requireBrainRegionDropdown && (
+                <div className="[grid-area:brain-region-dropdown]">
+                  <PortalRegionBanner dataKey={dataKey} className="w-87.5" />
+                </div>
+              )}
+              {!!left && <div className="w-full [grid-area:left]">{left}</div>}
+              {allowSearch && (
+                <div className="w-full [grid-area:search]">
+                  <Search
+                    {...{
+                      dataType,
+                      dataKey,
+                    }}
+                  />
+                </div>
+              )}
             </div>
+            {allowFilter && (
+              <div className="[grid-area:filter]">
+                <div className="ml-auto flex h-12 items-stretch justify-end gap-3">
+                  <FilterControls
+                    filters={filters}
+                    displayControlPanel={displayControlPanel}
+                    setDisplayControlPanel={onDisplayControlPanel}
+                    className="justify-end self-end"
+                  />
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
         <WrapperTable<T>
           dataType={dataType}
           columns={columns}
           dataSource={dataSource}
+          scrollable={scrollable}
           loading={{
             indicator: <Spin indicator={<LoadingOutlined spin className="text-primary-6" />} />,
             spinning: showLoadingState && isLoading,
@@ -225,7 +241,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           }
         />
       </section>
-      {displayControlPanel && filters && (
+      {displayControlPanel && filters && allowFilter && (
         <ListingFilterPanel
           data-testid="listing-view-control-panel"
           dataScope={dataScope}

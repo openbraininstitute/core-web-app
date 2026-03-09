@@ -2,7 +2,7 @@ div.threeColumns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
   gap: 5px;
-  height: calc(100% - 100px);
+  height: calc(100% - 70px);
 }
 
 div.threeColumns > div {
@@ -19,7 +19,7 @@ div.threeColumns > div:first-child {
   display: grid;
   grid-template-rows: 1fr auto;
   gap: 1em;
-  overflow: unset;
+  overflow: hidden;
 }
 
 header.header {
@@ -29,4 +29,19 @@ header.header {
   justify-content: space-between;
   align-items: center;
   gap: 1em;
+}
+
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animateFadeUp {
+  animation: fadeUp 0.3s linear forwards;
 }

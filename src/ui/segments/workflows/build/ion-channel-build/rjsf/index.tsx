@@ -23,7 +23,6 @@ export interface AutomatedFormHandle {
   validate: () => boolean;
 }
 
-// export const SchemaGeneratedForm = forwardRef<AutomatedFormHandle, AutomatedFormProps>(
 export function SchemaGeneratedForm({
   onChange,
   schema,
@@ -108,7 +107,6 @@ export function SchemaGeneratedForm({
       validator={validator}
       uiSchema={mergedUiSchema}
       formData={formData}
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...rest}
       className="w-full"
     />

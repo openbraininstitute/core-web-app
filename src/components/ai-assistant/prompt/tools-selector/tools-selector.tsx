@@ -2,15 +2,17 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
 
-import { IconGear } from '../../icons/gear';
-import { Spinner } from '../../spinner';
-import { useAIToolsInvertedSelection } from '../../state';
-import ToolCard from './tool-card';
-import { IconClose } from './icon-close';
-import { IconUnchecked } from './tool-card/icon-unchecked';
-import { IconChecked } from './tool-card/icon-checked';
 import { classNames } from '@/util/utils';
-import { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
+
+import { IconGear } from '../../icons/gear';
+import { useAIToolsInvertedSelection } from '../../state';
+import { WaveLoader } from '../../wave-loader';
+import { IconClose } from './icon-close';
+import ToolCard from './tool-card';
+import { IconChecked } from './tool-card/icon-checked';
+import { IconUnchecked } from './tool-card/icon-unchecked';
+
+import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './tools-selector.module.css';
 
@@ -100,7 +102,7 @@ export default function ToolsSelector({ className, tools, open, onClose }: Tools
         ) : (
           <div className={styles.loading}>
             <div>Loading...</div>
-            <Spinner />
+            <WaveLoader />
           </div>
         )}
       </div>

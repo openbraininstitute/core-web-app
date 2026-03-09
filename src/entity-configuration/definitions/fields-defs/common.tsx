@@ -1,6 +1,5 @@
 import { Button } from 'antd';
-import get from 'es-toolkit/compat/get';
-import isNil from 'es-toolkit/compat/isNil';
+import { get, isNil } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 
 import { hasAssets } from '@/api/entitycore/guards';

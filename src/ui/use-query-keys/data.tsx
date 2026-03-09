@@ -23,6 +23,15 @@ export const keyBuilder = {
     'entity',
     { context, id, type, ...props },
   ],
+  entities: ({
+    context,
+    filters,
+    withFacets,
+    ...props
+  }: { context: WorkspaceContext; filters?: Record<string, any>; withFacets?: boolean } & Record<
+    string,
+    any
+  >) => ['entities', { context, filters, withFacets, ...props }],
   dataCountPerEntity: ({
     virtualLabId,
     projectId,

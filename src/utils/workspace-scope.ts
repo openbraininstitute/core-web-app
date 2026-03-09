@@ -11,6 +11,7 @@ export function getWorkspaceScopeFilters(scope: TWorkspaceScope, context?: Works
     [WorkspaceScope.Public]: {
       authorized_public: true,
     },
+    [WorkspaceScope.Combined]: {},
   };
 
   return filters[scope] ?? {};

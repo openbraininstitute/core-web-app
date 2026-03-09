@@ -61,8 +61,8 @@ export function useAiAgentRateLimit(accessToken: string | null) {
 
       return data;
     },
-    enabled: !!accessToken,
-    staleTime: Infinity, // Only fetch once on mount
+    enabled: !!accessToken && accessToken !== 'NO-TOKEN',
+    staleTime: Infinity,
     retry: false,
   });
 }

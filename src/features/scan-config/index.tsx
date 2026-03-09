@@ -1,16 +1,20 @@
 'use client';
 
 import { useModelQuery } from '@/features/scan-config/components/atoms';
+import { useSchemaName } from '@/features/scan-config/components/hooks';
+import {
+  useObioneJsonSchema,
+  useSchemaMappingConfiguration,
+} from '@/features/scan-config/components/hooks/schema';
 import { ScanConfigSkeleton } from '@/features/scan-config/components/loading-skeleton';
 import { ScanConfigTemplate } from '@/features/scan-config/template';
 import {
+  type Config,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   type TScanConfigActivity,
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
-
-import type { Config } from '@/features/scan-config/components/components';
 
 export function ScanConfiguration({
   modelId,
@@ -33,17 +37,40 @@ export function ScanConfiguration({
   className?: string;
   activity?: TScanConfigActivity;
 }) {
-  const { entity, isLoading, error } = useModelQuery({
+  const {
+    entity,
+    isLoading: loadingEntity,
+    error,
+  } = useModelQuery({
     id: modelId,
     context: { virtualLabId, projectId },
   });
 
-  if (isLoading) {
+  const schemaName = useSchemaName({ model: entity, activity });
+  const { schema, isLoading: loadingSchema } = useObioneJsonSchema(schemaName);
+
+  const { data: schemaMappingConfig, isLoading: loadingConfiguration } =
+    useSchemaMappingConfiguration({
+      schema,
+      circuitId: entity?.id,
+      workspace: { virtualLabId, projectId },
+      endpointType: 'Circuit',
+    });
+
+  const loading = loadingConfiguration || loadingEntity || loadingSchema;
+
+  if (loading) {
     return <ScanConfigSkeleton />;
   }
-
   if (error) {
     return <div className="h-full w-full flex items-center justify-center">{error.message}</div>;
+  }
+  if (!schemaName || !schema) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        No schema found for {schemaName}
+      </div>
+    );
   }
 
   if (entity) {
@@ -59,10 +86,14 @@ export function ScanConfiguration({
           readOnly,
           className,
           activity,
+          schema,
+          schemaName,
+          schemaMappingConfig,
         }}
       />
     );
   }
+
   return null;
 }
 

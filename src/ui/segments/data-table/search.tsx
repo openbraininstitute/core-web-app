@@ -83,7 +83,7 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
           className={cn(
             'focus:ring-primary-9 flex h-12 w-12 items-center justify-center bg-white transition-all duration-300 ease-in-out focus:ring-0 focus:outline-none',
             {
-              'rounded-full shadow-md hover:scale-105 hover:shadow-lg active:scale-95':
+              'rounded-full shadow-lift hover:scale-105 hover:shadow-lift-hover active:scale-95':
                 !isSearchOpen,
               'rounded-l-full shadow-none': isSearchOpen,
             }

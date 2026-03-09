@@ -110,7 +110,7 @@ export function SpeciesSelector({
               key={species.hierarchId}
               value={species.hierarchId}
               className={cn('cursor-pointer py-2.5 px-3', '[&_.select-icon-wrapper]:top-4')}
-              checkIConClassName="text-primary-8 size-5 ite"
+              checkIconClassName="text-primary-8 size-5 ite"
             >
               <div className="flex flex-col">
                 <span

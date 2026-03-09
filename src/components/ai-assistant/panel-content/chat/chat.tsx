@@ -2,6 +2,7 @@ import { useIsFetching } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
+import { useAccessToken } from '@/hooks/useAccessToken';
 import {
   useAiAgentRateLimit,
   useServiceAiAgentChat,
@@ -16,24 +17,29 @@ import { MessageItem } from '../../message-item';
 import { atomRateLimit } from '../../state';
 import SuggestedQuestions from '../../suggested-questions';
 import Footer from '../footer';
+import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
 import Welcome from '../welcome';
 
 import styles from './chat.module.css';
 
 export interface ChatProps {
   className?: string;
-  threadId: string;
+  threadId: string | undefined;
 }
 
 export default function Chat({ className, threadId }: ChatProps) {
+  const assistant = useAiAssistant();
+  const isEmptyThread = assistant.isEmptyThread.useValue();
+  const healthError = assistant.healthError.useValue();
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
 
-  const { messages, status, append, error, stop } = useServiceAiAgentChat(threadId ?? '');
+  const { messages, status, append, error, stop, isLoadingMessages } = useServiceAiAgentChat(
+    threadId ?? ''
+  );
   const [suggestions, clearSuggestions, isLoadingSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
-  const assistant = useAiAssistant();
-  const { accessToken } = assistant.useContext();
+  const accessToken = useAccessToken();
   const rateLimit = useAtomValue(atomRateLimit);
   const setRateLimit = useSetAtom(atomRateLimit);
   const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
@@ -44,7 +50,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
   // Fetch rate limit on mount and store in atom (only once)
-  const { data: fetchedRateLimit } = useAiAgentRateLimit(accessToken);
+  const { data: fetchedRateLimit } = useAiAgentRateLimit(accessToken ?? null);
 
   React.useEffect(() => {
     if (fetchedRateLimit && !hasInitializedRef.current) {
@@ -146,6 +152,10 @@ export default function Chat({ className, threadId }: ChatProps) {
     }
   };
 
+  if (threadId && isLoadingMessages && !isEmptyThread) {
+    return <TabTransitionLoader message="Loading conversation..." />;
+  }
+
   return (
     <>
       <div
@@ -153,16 +163,17 @@ export default function Chat({ className, threadId }: ChatProps) {
         ref={refContainer}
         onWheel={handleWheel}
       >
-        {messages.length === 0 && <Welcome />}
-        {messages.map((item) => (
-          <MessageItem key={item.id} value={item} />
+        {(!threadId || isEmptyThread) && <Welcome />}
+        {messages.map((item, index) => (
+          <MessageItem
+            key={item.id}
+            value={item}
+            status={status}
+            isLastMessage={index === messages.length - 1}
+          />
         ))}
 
-        {status === 'ready' && messages.length > 0 && (
-          <>
-            <div className={styles.footerButtons}></div>
-          </>
-        )}
+        {status === 'ready' && messages.length > 0 && <div className={styles.footerButtons}></div>}
         {suggestions !== undefined && status === 'ready' && (
           <div className={styles.suggestedQuestionsContainer}>
             <SuggestedQuestions
@@ -176,6 +187,7 @@ export default function Chat({ className, threadId }: ChatProps) {
           </div>
         )}
         {error && <ErrorPanel value={error} />}
+        {healthError && <ErrorPanel value={healthError} />}
         <div ref={refChatBottom} className={styles.bottom} />
       </div>
       {showExhaustedNotification && status === 'ready' && (

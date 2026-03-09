@@ -36,7 +36,7 @@ function SkeletonItem({
 
         <CaretRightFilled
           size={14}
-          className={cn('text-base text-gray-100', {
+          className={cn('text-base text-gray-200!', {
             'rotate-90': hasChildren,
           })}
         />

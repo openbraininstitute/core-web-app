@@ -31,22 +31,24 @@ export function CategoryMenu({ current, onItemClick }: Props) {
         <CarouselButtons />
       </div>
       <CarouselContent className="items-stretch">
-        {ActivityDict.filter(
-          (o) => !o.requiredFeatures || o.requiredFeatures.every((flag) => featureFlags[flag])
-        ).map((o) => (
-          <CarouselItem
-            key={`category-selector-${o.value}`}
-            className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"
-          >
-            <MenuItem<TActivityValue | null>
-              disabled={o.disabled}
-              active={current === o.value}
-              title={o.label}
-              value={o.value as TActivityValue}
-              onClick={onItemClick}
-            />
-          </CarouselItem>
-        ))}
+        {ActivityDict.map((o) => {
+          const featureFlagDisabled =
+            !!o.requiredFeatures && !o.requiredFeatures.every((flag) => featureFlags[flag]);
+          return (
+            <CarouselItem
+              key={`category-selector-${o.value}`}
+              className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"
+            >
+              <MenuItem<TActivityValue | null>
+                disabled={o.disabled || featureFlagDisabled}
+                active={current === o.value}
+                title={o.label}
+                value={o.value as TActivityValue}
+                onClick={onItemClick}
+              />
+            </CarouselItem>
+          );
+        })}
       </CarouselContent>
     </Carousel>
   );

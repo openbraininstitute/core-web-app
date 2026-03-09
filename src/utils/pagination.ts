@@ -19,7 +19,6 @@ export async function fetchAllPaginatedData<T>(options: {
     const result = await fn(page, pageSize);
     allData.push(...result.data);
 
-    // Stop if we got fewer items than requested (last page)
     if (result.data.length < pageSize) {
       hasMore = false;
     }

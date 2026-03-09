@@ -107,7 +107,7 @@ export function ScanConfigSkeleton({ className }: { className?: string }) {
         <Skeleton className="h-8 w-48 rounded" />
       </header>
 
-      <div className="relative mb-10 px-5">
+      <div className="relative mb-5 px-5">
         <div className="w-full border-t border-gray-200" />
       </div>
 

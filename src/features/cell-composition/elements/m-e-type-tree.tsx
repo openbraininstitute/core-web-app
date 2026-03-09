@@ -1,12 +1,6 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import { useParams } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { match, P } from 'ts-pattern';
-
-import type { RenderNodeProps } from '@/components/tree/types';
-import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
-import type { WorkspaceContext } from '@/types/common';
 
 import Tree from '@/components/tree';
 import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
@@ -21,6 +15,10 @@ import Node from '@/features/cell-composition/elements/default-node';
 import { getMetric, metricToUnit } from '@/features/cell-composition/elements/helpers';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { RenderNodeProps } from '@/components/tree/types';
+import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
+import type { WorkspaceContext } from '@/types/common';
 
 export function CellCompositionMETypeTree() {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();

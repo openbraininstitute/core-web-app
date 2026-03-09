@@ -1,23 +1,23 @@
-/* eslint-disable no-nested-ternary */
-
 import { LoadingOutlined } from '@ant-design/icons';
 import {
   queryOptions,
   experimental_streamedQuery as streamedQuery,
   useQuery,
+  useQueryClient,
 } from '@tanstack/react-query';
 import { useAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import ApiError from '@/api/error';
+import { ApiError } from '@/api/error';
 import {
   build as buildIonChannel,
   DataType,
   MessageType,
 } from '@/api/small-scale-simulator/ion-channel/build';
 import { useAppNotification } from '@/components/notification';
+import { resolveIonChannelModelingCampaignBuilds } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { message } from '@/i18n/en/ion-channel-build';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -35,6 +35,7 @@ import {
 import { isFormValid } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/validate-form';
 import { FileViewer } from '@/ui/segments/workflows/build/ion-channel-build/sections/file-viewer';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
+import { keyBuilder as workspaceKeyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import {
   createAsyncIterableStream,
@@ -46,11 +47,9 @@ import {
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type {
-  IonChannelModelingCampaign,
-  IonChannelModelingConfig,
-} from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
-import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
+import type { IIonChannelModelingCampaign } from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
+import type { IIonChannelModelingConfig } from '@/api/entitycore/types/entities/ion-channel-modeling-config';
+import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { TStreamMessage } from '@/api/small-scale-simulator/ion-channel/build';
 
 type IonChannelModelFigureSummaryEntry = {
@@ -67,7 +66,7 @@ type OutputAssetSourceField = 'traces' | 'stimuli' | 'steady state' | 'time cons
 type OutputAssetItem = {
   id: string;
   asset: IAsset;
-  entity: Partial<EntityCoreResource>;
+  entity: IonChannelModel;
   group: OutputAssetGroup;
   name: string;
   extension: string;
@@ -82,54 +81,74 @@ type TraceProtocolGroup = {
   id: string;
   name: string;
   order: number;
-  entity: Partial<EntityCoreResource>;
+  entity: IonChannelModel;
   stimuli: IAsset;
   traces: IAsset;
 };
 
+export const OutputListItemKindDict = {
+  Asset: 'asset',
+  TraceGroup: 'trace-group',
+} as const;
+export type TOutputListItemKind =
+  (typeof OutputListItemKindDict)[keyof typeof OutputListItemKindDict];
+
 type OutputListItem =
   | {
-      kind: 'asset';
+      kind: typeof OutputListItemKindDict.Asset;
       id: string;
       order: number;
       entry: OutputAssetItem;
     }
   | {
-      kind: 'trace-group';
+      kind: typeof OutputListItemKindDict.TraceGroup;
       id: string;
       order: number;
       entry: TraceProtocolGroup;
     };
 
+export const SelectedPreviewDict = {
+  Input: 'input',
+  OutputAsset: 'output-asset',
+  OutputTraceGroup: 'output-trace-group',
+} as const;
+export type TSelectedPreviewKind = (typeof SelectedPreviewDict)[keyof typeof SelectedPreviewDict];
+
 type SelectedPreview =
   | {
-      kind: 'input';
+      kind: typeof SelectedPreviewDict.Input;
       id: string;
       asset: IAsset;
-      entity: Partial<EntityCoreResource>;
+      entity: IIonChannelModelingConfig | undefined;
     }
   | {
-      kind: 'output-asset';
+      kind: typeof SelectedPreviewDict.OutputAsset;
       id: string;
       asset: IAsset;
-      entity: Partial<EntityCoreResource>;
+      entity: IonChannelModel | undefined;
     }
   | {
-      kind: 'output-trace-group';
+      kind: typeof SelectedPreviewDict.OutputTraceGroup;
       id: string;
       protocol: TraceProtocolGroup;
-      entity: Partial<EntityCoreResource>;
+      entity: IonChannelModel | undefined;
     };
 
+export const SummaryKindDict = {
+  Parameters: 'parameters',
+  traces: 'traces',
+} as const;
+export type TSummaryKind = (typeof SummaryKindDict)[keyof typeof SummaryKindDict];
+
 type SummaryParameterEntry = {
-  kind: 'parameters';
+  kind: typeof SummaryKindDict.Parameters;
   key: string;
   order: number;
   assets: Array<{ field: string; path: string }>;
 };
 
 type SummaryTraceEntry = {
-  kind: 'traces';
+  kind: typeof SummaryKindDict.traces;
   key: string;
   order: number;
   assets: Array<{ field: string; path: string }>;
@@ -138,17 +157,17 @@ type SummaryTraceEntry = {
 type GroupedSummaryEntry = SummaryParameterEntry | SummaryTraceEntry;
 
 type IonChannelBuildingStreamDataMessage = TStreamMessage<{
-  campaign?: IonChannelModelingCampaign;
+  campaign?: IIonChannelModelingCampaign;
   execution?: IExecutionActivity;
-  config?: IonChannelModelingConfig;
+  config?: IIonChannelModelingConfig;
   model?: IonChannelModel;
 }>;
 
-type Build = {
+type TBuild = {
   executionId: string;
   status: TActivityStatus;
-  configEntity: Partial<EntityCoreResource>;
-  modelEntity?: Partial<EntityCoreResource>;
+  config?: IIonChannelModelingConfig;
+  entity?: IonChannelModel;
   executionStatus?: string;
 };
 
@@ -226,10 +245,10 @@ function getParameterDisplayOrder({
   return 1 + parameterGroupCount * 2 + summaryOrder + fallbackIndex;
 }
 
-function getSummaryGroup(entry: IonChannelModelFigureSummaryEntry): 'parameters' | 'traces' {
-  return normalizeSummaryKey(String(entry.group || 'traces')) === 'parameters'
-    ? 'parameters'
-    : 'traces';
+function getSummaryGroup(entry: IonChannelModelFigureSummaryEntry): TSummaryKind {
+  return normalizeSummaryKey(String(entry.group || 'traces')) === SummaryKindDict.Parameters
+    ? SummaryKindDict.Parameters
+    : SummaryKindDict.traces;
 }
 
 function resolveSummaryAsset(assets: Array<IAsset>, rawPath?: string): IAsset | undefined {
@@ -265,9 +284,9 @@ function normalizeGroupedSummaryEntries(summaryData: IonChannelModelFigureSummar
     const order = typeof value.order === 'number' ? value.order : 0;
     const group = getSummaryGroup(value);
 
-    if (group === 'parameters') {
+    if (group === SummaryKindDict.Parameters) {
       groupedEntries.push({
-        kind: 'parameters',
+        kind: SummaryKindDict.Parameters,
         key,
         order,
         assets,
@@ -276,7 +295,7 @@ function normalizeGroupedSummaryEntries(summaryData: IonChannelModelFigureSummar
     }
 
     groupedEntries.push({
-      kind: 'traces',
+      kind: SummaryKindDict.traces,
       key,
       order,
       assets,
@@ -285,7 +304,7 @@ function normalizeGroupedSummaryEntries(summaryData: IonChannelModelFigureSummar
 
   return groupedEntries.sort((left, right) => {
     if (left.kind !== right.kind) {
-      return left.kind === 'parameters' ? -1 : 1;
+      return left.kind === SummaryKindDict.Parameters ? -1 : 1;
     }
     if (left.order !== right.order) {
       return left.order - right.order;
@@ -297,7 +316,7 @@ function normalizeGroupedSummaryEntries(summaryData: IonChannelModelFigureSummar
 function toSelectedOutputPreview(item: OutputListItem): SelectedPreview {
   if (item.kind === 'trace-group') {
     return {
-      kind: 'output-trace-group',
+      kind: SelectedPreviewDict.OutputTraceGroup,
       id: item.id,
       protocol: item.entry,
       entity: item.entry.entity,
@@ -305,18 +324,27 @@ function toSelectedOutputPreview(item: OutputListItem): SelectedPreview {
   }
 
   return {
-    kind: 'output-asset',
+    kind: SelectedPreviewDict.OutputAsset,
     id: item.id,
     asset: item.entry.asset,
     entity: item.entry.entity,
   };
 }
 
-export function Output({ sessionId }: { sessionId: string | null }) {
+export function Output({
+  sessionId,
+  readonly,
+  campaignId,
+}: {
+  sessionId: string | null;
+  readonly?: boolean;
+  campaignId?: string;
+}) {
+  const queryClient = useQueryClient();
   const context = useWorkspace();
   const notification = useAppNotification();
   const safeSessionId = sessionId || '';
-  const [ionState] = useAtom(
+  const [ionState, updateIonState] = useAtom(
     useMemo(() => IonChannelModelingSharedStateFamily(safeSessionId), [safeSessionId])
   );
   const [payload] = useAtom(
@@ -329,7 +357,30 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   const [selectedBuildIndex, setSelectedBuildIndex] = useState<number | null>(null);
   const [selectedPreview, setSelectedPreview] = useState<SelectedPreview | null>(null);
 
-  const { data, isFetching, isLoading } = useQuery(
+  // readonly mode: fetch existing builds from EntityCore
+  const {
+    data: readonlyBuildsData,
+    isFetching: readonlyFetching,
+    isLoading: readonlyLoading,
+  } = useQuery({
+    queryKey: ['campaign-builds-readonly', campaignId, context],
+    queryFn: () =>
+      resolveIonChannelModelingCampaignBuilds({
+        // biome-ignore lint/style/noNonNullAssertion: this request only start if original campaign is present
+        id: campaignId!,
+        context,
+      }),
+    enabled: !!readonly && !!campaignId,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+
+  // build mode: stream build output
+  const {
+    data: streamData,
+    isFetching: streamFetching,
+    isLoading: streamLoading,
+  } = useQuery(
     queryOptions({
       queryKey: ['build-output-stream', { context, sessionId, payload }],
       queryFn: streamedQuery({
@@ -338,6 +389,9 @@ export function Output({ sessionId }: { sessionId: string | null }) {
             const response = await buildIonChannel({ ctx: context, payload, stream: true });
             const stream = await createTextStream(response);
             if (!stream) return emptyStream();
+
+            queryClient.invalidateQueries({ queryKey: workspaceKeyBuilder.wallet(context) });
+
             return messageGenerator(createAsyncIterableStream<string>(stream));
           } catch (error) {
             const errorMsg =
@@ -356,15 +410,41 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       staleTime: Infinity,
       refetchOnWindowFocus: false,
       enabled:
-        ionState.schema && payload && isFormValid({ data: payload, schema: ionState.schema }),
+        !readonly &&
+        ionState.buildRequested &&
+        ionState.schema &&
+        payload &&
+        isFormValid({ data: payload, schema: ionState.schema }),
     })
   );
 
-  const builds = useMemo(() => {
-    if (!data || !Array.isArray(data)) return [];
+  // extract campaign id from stream and store in shared state
+  useEffect(() => {
+    if (readonly || !streamData || !Array.isArray(streamData)) return;
+    const messages = streamData as Array<IonChannelBuildingStreamDataMessage>;
+    const firstBuildInput = messages.find(
+      (m) => m.message_type === MessageType.DATA && m.data_type === DataType.BuildInput
+    ) as
+      | (IonChannelBuildingStreamDataMessage & { data: { campaign?: { id?: string } } })
+      | undefined;
+    const streamCampaignId = firstBuildInput?.data?.campaign?.id;
+    if (streamCampaignId && streamCampaignId !== ionState.campaignId) {
+      updateIonState({ ...ionState, campaignId: streamCampaignId });
+    }
+  }, [streamData, readonly, ionState, updateIonState]);
 
-    const messages = data as Array<IonChannelBuildingStreamDataMessage>;
-    const buildsMap = new Map<string, Build>();
+  const isFetching = readonly ? readonlyFetching : streamFetching;
+  const isLoading = readonly ? readonlyLoading : streamLoading;
+
+  const builds: TBuild[] = useMemo(() => {
+    if (readonly) {
+      return readonlyBuildsData?.builds ?? [];
+    }
+
+    if (!streamData || !Array.isArray(streamData)) return [];
+
+    const messages = streamData as Array<IonChannelBuildingStreamDataMessage>;
+    const buildsMap = new Map<string, TBuild>();
 
     messages.forEach((message) => {
       if (message.message_type === MessageType.DATA) {
@@ -378,11 +458,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
             executionId: execution.id,
             status: execution.status,
             executionStatus: execution.status,
-            configEntity: {
-              id: config.id,
-              type: config.type,
-              assets: config.assets || [],
-            },
+            config,
           });
         } else if (
           message.data_type === DataType.BuildOutput &&
@@ -395,11 +471,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
           if (buildToUpdate) {
             buildsMap.set(executionId, {
               ...buildToUpdate,
-              modelEntity: {
-                id: message.data.model.id,
-                type: message.data.model.type,
-                assets: message.data.model.assets || [],
-              },
+              entity: message.data.model,
               executionStatus: message.data.execution.status,
             });
           }
@@ -415,7 +487,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
     });
 
     return Array.from(buildsMap.values());
-  }, [data]);
+  }, [readonly, readonlyBuildsData, streamData]);
 
   const selectedBuild = selectedBuildIndex !== null ? builds[selectedBuildIndex] : null;
 
@@ -426,36 +498,37 @@ export function Output({ sessionId }: { sessionId: string | null }) {
   }, [builds.length, selectedBuildIndex]);
 
   const currentStatus = useMemo(() => {
-    if (!data || !Array.isArray(data)) return null;
+    if (readonly) return null;
+    if (!streamData || !Array.isArray(streamData)) return null;
 
-    const messages = data as Array<IonChannelBuildingStreamDataMessage>;
+    const messages = streamData as Array<IonChannelBuildingStreamDataMessage>;
     const statusMessages = messages.filter((m) => m.message_type === MessageType.STATUS);
     const lastStatus = statusMessages[statusMessages.length - 1];
 
     return 'status' in lastStatus ? lastStatus?.status : null;
-  }, [data]);
+  }, [readonly, streamData]);
 
   const isBuilding =
     currentStatus === ActivityStatus.RUNNING || currentStatus === ActivityStatus.PENDING;
   const hasBuilds = builds.length > 0;
-  const hasOutputForSelectedBuild = selectedBuild?.modelEntity !== undefined;
+  const hasOutputForSelectedBuild = selectedBuild?.entity !== undefined;
 
-  const summaryAsset = selectedBuild?.modelEntity?.assets?.find(
+  const summaryAsset = selectedBuild?.entity?.assets?.find(
     (asset) => asset.label === AssetLabel.ion_channel_model_figure_summary_json
   );
 
   const { data: summaryData, isLoading: loadingSummary } = useQuery({
     queryKey: keyBuilder.s3presignedUrl({
-      entityId: selectedBuild?.modelEntity?.id || '',
+      entityId: selectedBuild?.entity?.id || '',
       assetId: summaryAsset?.id || '',
       ...context,
     }),
     queryFn: async () => {
       if (
-        !selectedBuild?.modelEntity ||
+        !selectedBuild?.entity ||
         !summaryAsset ||
-        !selectedBuild.modelEntity.id ||
-        !selectedBuild.modelEntity.type ||
+        !selectedBuild.entity.id ||
+        !selectedBuild.entity.type ||
         !context.virtualLabId ||
         !context.projectId
       ) {
@@ -463,8 +536,8 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       }
 
       const presignedData = await getEntityCorePresignedUrl({
-        entityType: selectedBuild.modelEntity.type as TEntityTypeDict,
-        entityId: selectedBuild.modelEntity.id,
+        entityType: selectedBuild.entity.type as TEntityTypeDict,
+        entityId: selectedBuild.entity.id,
         virtualLabId: context.virtualLabId,
         projectId: context.projectId,
         configAssetId: summaryAsset.id,
@@ -475,17 +548,14 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       return json;
     },
     enabled:
-      !!selectedBuild?.modelEntity &&
-      !!summaryAsset &&
-      !!context.virtualLabId &&
-      !!context.projectId,
+      !!selectedBuild?.entity && !!summaryAsset && !!context.virtualLabId && !!context.projectId,
     staleTime: Infinity,
   });
 
   const outputListItems = useMemo(() => {
-    if (!selectedBuild?.modelEntity) return [];
+    if (!selectedBuild?.entity) return [];
 
-    const modelEntity = selectedBuild.modelEntity;
+    const modelEntity = selectedBuild.entity;
     const modelAssets = modelEntity.assets || [];
     let modOutputAsset: OutputAssetItem | null = null;
     const parameterAssets: Array<OutputAssetItem> = [];
@@ -617,10 +687,10 @@ export function Output({ sessionId }: { sessionId: string | null }) {
       const rightName = right.kind === 'asset' ? right.entry.name : right.entry.name;
       return leftName.localeCompare(rightName);
     });
-  }, [selectedBuild?.modelEntity, summaryData]);
+  }, [selectedBuild?.entity, summaryData]);
 
   useEffect(() => {
-    if (!selectedBuild?.modelEntity) return;
+    if (!selectedBuild?.entity) return;
 
     if (!selectedPreview) {
       if (outputListItems.length > 0) {
@@ -632,11 +702,14 @@ export function Output({ sessionId }: { sessionId: string | null }) {
     if (selectedPreview.kind === 'input') return;
 
     const selectedOutputStillExists = outputListItems.some((item) => {
-      if (item.kind === 'asset' && selectedPreview.kind === 'output-asset') {
+      if (item.kind === 'asset' && selectedPreview.kind === SelectedPreviewDict.OutputAsset) {
         return item.id === selectedPreview.id;
       }
 
-      if (item.kind === 'trace-group' && selectedPreview.kind === 'output-trace-group') {
+      if (
+        item.kind === 'trace-group' &&
+        selectedPreview.kind === SelectedPreviewDict.OutputTraceGroup
+      ) {
         return item.id === selectedPreview.id;
       }
 
@@ -650,13 +723,18 @@ export function Output({ sessionId }: { sessionId: string | null }) {
         setSelectedPreview(null);
       }
     }
-  }, [selectedPreview, selectedBuild?.modelEntity, outputListItems]);
+  }, [selectedPreview, selectedBuild?.entity, outputListItems]);
 
   const isOutputLoading =
     (isBuilding && !hasOutputForSelectedBuild) || (loadingSummary && outputListItems.length === 0);
 
   return (
-    <div className="grid h-[calc(100vh-10rem)] w-full grid-cols-[20rem_25rem_1fr] gap-8 p-4">
+    <div
+      className={cn('grid w-full grid-cols-[20rem_25rem_1fr] gap-8', {
+        'h-[calc(100vh-13rem)]': readonly,
+        'h-[calc(100vh-11rem)]': !readonly,
+      })}
+    >
       <div className="bg-background flex shrink-0 flex-col gap-3 overflow-y-auto">
         {(isLoading || isFetching) && !hasBuilds ? (
           <Card key="build-0" className="p-4">
@@ -717,22 +795,35 @@ export function Output({ sessionId }: { sessionId: string | null }) {
         )}
       </div>
 
-      <div className="bg-background secondary-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto pr-3">
-        {!selectedBuild ? (
-          <div className="flex h-full items-center justify-center text-gray-400">
-            {hasBuilds ? 'Select a build to view files' : 'Waiting for build execution...'}
+      <div className="bg-background secondary-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto pr-3 mb-5">
+        {!selectedBuild || !hasBuilds ? (
+          <div className="flex flex-col gap-4">
+            <Skeleton className="h-4 w-2/5 rounded-full" />
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-12 w-full rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-2/5 rounded-full" />
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: 8 })
+                .fill('')
+                .map((_, index) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: skeleton map
+                  <Skeleton key={index} className="h-12 w-full rounded-full" />
+                ))}
+            </div>
           </div>
         ) : (
           <>
-            {(selectedBuild.configEntity?.assets?.length ?? 0) > 0 && (
+            {(selectedBuild.config?.assets?.length ?? 0) > 0 && (
               <div>
-                <h3 className="text-label mb-3 text-lg font-semibold">Input Files</h3>
+                <h3 className="text-label mb-3 text-lg font-semibold">Inputs</h3>
                 <div className="flex flex-col gap-2">
-                  {selectedBuild.configEntity.assets?.map((asset) => {
+                  {selectedBuild.config?.assets?.map((asset) => {
                     const fileName = getFileName(asset.path);
                     const extension = getFileExtension(asset);
                     const isActive =
-                      selectedPreview?.kind === 'input' && selectedPreview.id === asset.id;
+                      selectedPreview?.kind === SelectedPreviewDict.Input &&
+                      selectedPreview.id === asset.id;
 
                     return (
                       <Tooltip key={asset.id}>
@@ -747,7 +838,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
                                 kind: 'input',
                                 id: asset.id,
                                 asset,
-                                entity: selectedBuild.configEntity,
+                                entity: selectedBuild.config,
                               })
                             }
                             className={cn('w-full justify-between gap-2', {
@@ -777,14 +868,17 @@ export function Output({ sessionId }: { sessionId: string | null }) {
             )}
 
             <div>
-              <h3 className="text-label mb-3 text-lg font-semibold">Output Files</h3>
+              <h3 className="text-label mb-3 text-lg font-semibold">Outputs</h3>
               {isOutputLoading ? (
                 <div className="flex flex-col gap-2">
-                  {['loading-1', 'loading-2', 'loading-3', 'loading-4', 'loading-5'].map((key) => (
-                    <Skeleton key={key} className="h-12 w-full rounded-full" />
-                  ))}
+                  {Array.from({ length: 8 })
+                    .fill('')
+                    .map((_, index) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: skeleton map
+                      <Skeleton key={index} className="h-12 w-full rounded-full" />
+                    ))}
                 </div>
-              ) : selectedBuild.modelEntity ? (
+              ) : selectedBuild.entity ? (
                 <div className="flex flex-col gap-2">
                   {outputListItems.map((outputItem) => {
                     if (outputItem.kind === 'trace-group') {
@@ -795,7 +889,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
                         stimuliExt &&
                         tracesExt.toUpperCase() !== stimuliExt.toUpperCase();
                       const isActive =
-                        selectedPreview?.kind === 'output-trace-group' &&
+                        selectedPreview?.kind === SelectedPreviewDict.OutputTraceGroup &&
                         selectedPreview.id === outputItem.id;
 
                       return (
@@ -834,7 +928,7 @@ export function Output({ sessionId }: { sessionId: string | null }) {
                     }
 
                     const isActive =
-                      selectedPreview?.kind === 'output-asset' &&
+                      selectedPreview?.kind === SelectedPreviewDict.OutputAsset &&
                       selectedPreview.id === outputItem.id;
 
                     return (
@@ -874,6 +968,8 @@ export function Output({ sessionId }: { sessionId: string | null }) {
                     <div className="p-4 text-center text-sm text-gray-400">No output files yet</div>
                   )}
                 </div>
+              ) : readonly ? (
+                <Skeleton />
               ) : (
                 <div className="p-4 text-center text-sm text-gray-400">No output files yet</div>
               )}
@@ -882,14 +978,15 @@ export function Output({ sessionId }: { sessionId: string | null }) {
         )}
       </div>
 
-      <div className="bg-background flex flex-1 flex-col overflow-auto px-2 pb-2">
-        {selectedPreview?.kind === 'input' || selectedPreview?.kind === 'output-asset' ? (
+      <div className="bg-background flex flex-1 flex-col overflow-auto px-2 pb-2 max-h-[calc(100%-.5rem)]">
+        {selectedPreview?.kind === 'input' ||
+        selectedPreview?.kind === SelectedPreviewDict.OutputAsset ? (
           <FileViewer
             asset={selectedPreview.asset}
             entity={selectedPreview.entity}
             context={context}
           />
-        ) : selectedPreview?.kind === 'output-trace-group' ? (
+        ) : selectedPreview?.kind === SelectedPreviewDict.OutputTraceGroup ? (
           <div className="flex h-full flex-col gap-4 overflow-hidden">
             <div className="flex flex-1 flex-col overflow-hidden">
               <FileViewer

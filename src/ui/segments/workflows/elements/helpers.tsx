@@ -78,7 +78,7 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
     properties: {
       build: {
         disabled: false,
-        type: ExtendedEntitiesTypeDict.IonChannelModel,
+        type: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
       },
       simulate: {
         disabled: true,
