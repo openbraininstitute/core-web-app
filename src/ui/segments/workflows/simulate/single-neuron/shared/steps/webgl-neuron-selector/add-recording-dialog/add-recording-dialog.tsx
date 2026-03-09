@@ -2,13 +2,13 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
 
+import { IconClose } from '@/components/LandingPage/icons/IconClose';
+import { classNames } from '@/util/utils';
+
+import { HintContent } from '../hint';
 import { useRecordingsAndInjection } from '../hooks';
 import { PainterManager } from '../painter';
-import { HintContent } from '../hint';
 import { useEscapeHandler } from './hooks';
-
-import { classNames } from '@/util/utils';
-import { IconClose } from '@/components/LandingPage/icons/IconClose';
 
 import styles from './add-recording-dialog.module.css';
 
