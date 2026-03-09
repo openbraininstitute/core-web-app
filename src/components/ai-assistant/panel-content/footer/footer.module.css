@@ -5,6 +5,7 @@
   justify-content: center;
   gap: 0.75em;
   padding: 0;
+  width: 100%;
 }
 
 .cancelButton {

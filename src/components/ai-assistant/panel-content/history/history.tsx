@@ -30,10 +30,12 @@ export default function History({ className, onBack }: HistoryProps) {
   const [openDelete, setOpenDelete] = React.useState(false);
   const [currentThreadId, setCurrentThreadId] = React.useState<string | undefined>(undefined);
   const [currentThreadTitle, setCurrentThreadTitle] = React.useState<string | undefined>(undefined);
+
   const handleRename = (newThreadId: string, newTitle: string) => {
     setOpenEdit(false);
     assistant.renameThread(newThreadId, newTitle);
   };
+
   const handleNext = () => {
     fetchNextPage();
   };
@@ -45,6 +47,15 @@ export default function History({ className, onBack }: HistoryProps) {
   return (
     <>
       <div className={classNames(className, styles.history)}>
+        <button
+          type="button"
+          className={styles.closeBtn}
+          onClick={onBack}
+          aria-label="Close history"
+          title="Close history"
+        >
+          ✕
+        </button>
         <div>
           {history && (
             <div>

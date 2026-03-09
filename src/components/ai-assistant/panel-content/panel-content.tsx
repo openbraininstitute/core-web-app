@@ -10,9 +10,9 @@ interface PanelContentProps {
 
 export default function PanelContent({ className, threadId, onTabChange, tab }: PanelContentProps) {
   return (
-    <>
-      {tab === 'chat' && <Chat className={className} threadId={threadId} />}
-      {tab === 'history' && <History className={className} onBack={() => onTabChange('chat')} />}
-    </>
+    <div className={className}>
+      {tab === 'chat' && <Chat threadId={threadId} />}
+      {tab === 'history' && <History onBack={() => onTabChange('chat')} />}
+    </div>
   );
 }

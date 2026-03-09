@@ -155,12 +155,8 @@ export default function Chat({ className, threadId }: ChatProps) {
   }
 
   return (
-    <>
-      <div
-        className={classNames(styles.articles, className)}
-        ref={refContainer}
-        onWheel={handleWheel}
-      >
+    <div className={classNames(styles.chatContainer, className)}>
+      <div className={styles.articles} ref={refContainer} onWheel={handleWheel}>
         {(!threadId || isEmptyThread) && <Welcome />}
         {messages.map((item) => (
           <MessageItem key={item.id} value={item} />
@@ -200,13 +196,13 @@ export default function Chat({ className, threadId }: ChatProps) {
         </div>
       )}
       <Footer
-        className={className}
+        className={styles.footer}
         status={status}
         threadId={threadId}
         onPrompt={handlePrompt}
         messagesCount={messages.length}
         stop={stop}
       />
-    </>
+    </div>
   );
 }

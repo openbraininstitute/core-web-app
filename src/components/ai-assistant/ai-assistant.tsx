@@ -1,7 +1,7 @@
 'use client';
 
 import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
 import { useServiceAiAgentChat } from '@/services/ai-agent';
@@ -9,10 +9,10 @@ import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
 import { AiContextProvider, MINIMAL_PANEL_SIZE, useIsDragging, usePanelWidth } from './hooks';
-import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
 import PanelContent from './panel-content';
+import History from './panel-content/history';
 import PanelSplitter from './panel-splitter';
 
 import type { TAppUInterfaceSection } from '@/utils/key-builder';
@@ -92,21 +92,10 @@ export default function AiAssistant({
               >
                 <IconNewChat />
               </button>
-
-              <button
-                type="button"
-                className={classNames(styles.navBtn, tab === 'chat' && styles.navBtnActive)}
-                onClick={() => setTab('chat')}
-                aria-label="Chat"
-                title="Chat"
-              >
-                <IconChat />
-              </button>
-
               <button
                 type="button"
                 className={classNames(styles.navBtn, tab === 'history' && styles.navBtnActive)}
-                onClick={() => setTab('history')}
+                onClick={() => setTab(tab === 'history' ? 'chat' : 'history')}
                 aria-label="History"
                 title="History"
               >
@@ -143,12 +132,29 @@ export default function AiAssistant({
             </div>
           </div>
 
-          <PanelContent
-            className={styles.content}
-            threadId={threadId}
-            tab={tab}
-            onTabChange={setTab}
-          />
+          <div className={styles.contentWrapper}>
+            <PanelContent
+              className={styles.content}
+              threadId={threadId}
+              tab="chat"
+              onTabChange={setTab}
+            />
+
+            <AnimatePresence>
+              {tab === 'history' && (
+                <motion.div
+                  className={styles.historyOverlay}
+                  initial={{ opacity: 0, scale: 0.985, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.985, y: 8 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                >
+                  <History onBack={() => setTab('chat')} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {!fullscreen && <PanelSplitter />}
         </motion.div>
       </div>
