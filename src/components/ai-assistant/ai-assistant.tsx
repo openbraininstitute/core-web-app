@@ -1,6 +1,6 @@
 'use client';
 
-import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
+import { FullscreenExitOutlined, FullscreenOutlined, RightOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
@@ -94,7 +94,11 @@ export default function AiAssistant({
               </button>
               <button
                 type="button"
-                className={classNames(styles.navBtn, tab === 'history' && styles.navBtnActive)}
+                className={classNames(
+                  styles.navBtn,
+                  styles.historyBtn,
+                  tab === 'history' && styles.navBtnActive
+                )}
                 onClick={() => setTab(tab === 'history' ? 'chat' : 'history')}
                 aria-label="History"
                 title="History"
@@ -126,7 +130,7 @@ export default function AiAssistant({
                   aria-label="Collapse"
                   title="Collapse"
                 >
-                  <MinusOutlined />
+                  <RightOutlined />
                 </button>
               )}
             </div>

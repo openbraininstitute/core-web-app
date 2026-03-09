@@ -120,9 +120,17 @@
   cursor: not-allowed;
 }
 
+.historyBtn {
+  font-size: 2rem;
+}
+
+.headerBtn:has(span[role="img"][aria-label*="fullscreen"]) {
+  font-size: 1.6rem;
+}
+
 .navBtnActive {
-  color: var(--color-primary-4);
-  background: color-mix(in srgb, var(--color-primary-4) 8%, transparent);
+  color: var(--color-neutral-1);
+  background: var(--color-neutral-5);
   border-radius: 0.4em;
   position: relative;
 }
@@ -134,38 +142,42 @@
   left: 0.25rem;
   right: 0.25rem;
   height: 2px;
-  background: var(--color-primary-4);
+  background: var(--color-neutral-1);
   border-radius: 2px 2px 0 0;
 }
 
 .newChatBtn {
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 2.3rem;
+  height: 2.3rem;
   flex-shrink: 0;
-  background: var(--color-primary-4);
-  color: #fff;
+  background: #e8e8e8;
+  color: var(--color-neutral-2);
   border-radius: 50%;
-  margin-right: 0.4rem;
+  margin-right: 0.1rem;
   font-size: 1.8rem;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .newChatBtn:hover:not(:disabled) {
-  background: var(--color-primary-3);
-  color: #fff;
+  background: #d0d0d0;
+  color: var(--color-primary-3);
 }
 
 .newChatBtn:disabled {
-  opacity: 1;
-  cursor: default;
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .collapseBtn {
   background: #e8e8e8;
   border-radius: 50%;
+  font-size: 1.2rem;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .collapseBtn:hover:not(:disabled) {
   background: #d0d0d0;
+  color: var(--color-primary-3);
 }
 
 .contentWrapper {
