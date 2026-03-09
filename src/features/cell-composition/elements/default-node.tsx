@@ -1,10 +1,9 @@
-import React from 'react';
 import { CaretRightFilled } from '@ant-design/icons';
 
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
-import type { TTreeNode, RenderNodeProps } from '@/components/tree/types';
+import type { RenderNodeProps, TTreeNode } from '@/components/tree/types';
 
 type Props<TNode extends TTreeNode = TTreeNode> = RenderNodeProps<TNode>;
 
@@ -24,6 +23,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
   const nodeName = node.name;
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: already have a button as child
     <div
       id={node.id.toString()}
       title={title}
@@ -48,8 +48,8 @@ export default function DefaultNode<TNode extends TTreeNode>({
             {hasChildren && (
               <button
                 className={classNames(
-                  'ml-auto flex flex-shrink-0 items-center justify-center',
-                  isSelected ? 'text-primary-8' : 'text-[var(--color)]'
+                  'ml-auto flex shrink-0 items-center justify-center',
+                  isSelected ? 'text-primary-8' : 'text-(--color)'
                 )}
                 onClick={onToggle}
                 type="button"
@@ -77,6 +77,8 @@ export default function DefaultNode<TNode extends TTreeNode>({
     </div>
   );
 }
+
+export { DefaultNode as Node };
 
 function figureOutMargin(
   hasChildren: boolean,

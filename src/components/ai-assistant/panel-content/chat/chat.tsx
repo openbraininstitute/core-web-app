@@ -2,6 +2,7 @@ import { useIsFetching } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
+import { useAccessToken } from '@/hooks/useAccessToken';
 import {
   useAiAgentRateLimit,
   useServiceAiAgentChat,
@@ -38,7 +39,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   const [suggestions, clearSuggestions, isLoadingSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
-  const { accessToken } = assistant.useContext();
+  const accessToken = useAccessToken();
   const rateLimit = useAtomValue(atomRateLimit);
   const setRateLimit = useSetAtom(atomRateLimit);
   const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
@@ -49,7 +50,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
   // Fetch rate limit on mount and store in atom (only once)
-  const { data: fetchedRateLimit } = useAiAgentRateLimit(accessToken);
+  const { data: fetchedRateLimit } = useAiAgentRateLimit(accessToken ?? null);
 
   React.useEffect(() => {
     if (fetchedRateLimit && !hasInitializedRef.current) {
@@ -158,8 +159,13 @@ export default function Chat({ className, threadId }: ChatProps) {
     <div className={classNames(styles.chatContainer, className)}>
       <div className={styles.articles} ref={refContainer} onWheel={handleWheel}>
         {(!threadId || isEmptyThread) && <Welcome />}
-        {messages.map((item) => (
-          <MessageItem key={item.id} value={item} />
+        {messages.map((item, index) => (
+          <MessageItem
+            key={item.id}
+            value={item}
+            status={status}
+            isLastMessage={index === messages.length - 1}
+          />
         ))}
 
         {status === 'ready' && messages.length > 0 && <div className={styles.footerButtons}></div>}

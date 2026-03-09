@@ -7,6 +7,7 @@ import { useCallback, useEffect } from 'react';
 
 import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
+import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
@@ -27,7 +28,7 @@ export function useServiceAiAgentChat(threadId: string) {
   const assistant = useAiAssistant();
   const assistantInitialMessages = assistant.initialMessages.useValue();
   const isLoadingMessages = assistant.isLoadingMessages.useValue();
-  const { accessToken } = assistant.useContext();
+  const accessToken = useAccessToken();
   const activeTools = useAIActiveTools();
   const queryClient = useQueryClient();
   const virtualLabId = useParamVirtualLabId();
@@ -108,7 +109,7 @@ export function useServiceAiAgentChat(threadId: string) {
         // on the first message.
         try {
           serviceAiAgentThreadSuggestTitle({
-            accessToken,
+            accessToken: accessToken ?? 'NO-TOKEN',
             threadId,
             title: message.content,
           }).then(() => {

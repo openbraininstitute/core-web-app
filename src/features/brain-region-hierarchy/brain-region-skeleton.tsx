@@ -1,7 +1,7 @@
 'use client';
 
 import { CaretRightFilled } from '@ant-design/icons';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -36,7 +36,7 @@ function SkeletonItem({
 
         <CaretRightFilled
           size={14}
-          className={cn('text-base text-gray-100', {
+          className={cn('text-base text-gray-200!', {
             'rotate-90': hasChildren,
           })}
         />

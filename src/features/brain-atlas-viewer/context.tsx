@@ -1,6 +1,6 @@
-import isNil from 'es-toolkit/compat/isNil';
+import { isNil } from 'es-toolkit/compat';
 import { atom } from 'jotai';
-import { atomFamily } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import {
@@ -12,6 +12,7 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
 import { arrayBufferToString } from '@/utils/buffer';
+import { fetchAllPaginatedData } from '@/utils/pagination';
 
 const defaultAtlasName = 'BlueBrain Atlas';
 export const brainAtlasAtom = atom(async () => {
@@ -61,12 +62,26 @@ async function resolveBrainRegionAtlasMesh({
 
 export const brainRegionAtlasAtom = atom(async (get) => {
   const brainAtlas = await get(brainAtlasAtom);
-  return await tryCatch(
-    getBrainAtlasRegions({
-      atlasId: brainAtlas?.id ?? config.DEFAULT_BRAIN_ATLAS_ID,
-      filters: { page: 1, page_size: 1500 },
+  const atlasId = brainAtlas?.id ?? config.DEFAULT_BRAIN_ATLAS_ID;
+
+  const { data, error } = await tryCatch(
+    fetchAllPaginatedData({
+      fn: async (page, pageSize) => {
+        const result = await getBrainAtlasRegions({
+          atlasId,
+          filters: { page, page_size: pageSize },
+        });
+        return { data: result.data || [] };
+      },
+      pageSize: 200,
     })
   );
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  return { data: { data: data || [] }, error: null };
 });
 
 export const getAtlasMeshAsset = atomFamily((brainRegionId: string) => {
