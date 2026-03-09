@@ -5,6 +5,7 @@ import {
   getBrainAtlasRegions,
 } from '@/api/entitycore/queries/general/brain-atlas';
 import { keyBuilderAtlas } from '@/ui/use-query-keys/atlas';
+import { fetchAllPaginatedData } from '@/utils/pagination';
 
 export const useBrainAtlasQuery = (id?: string) => {
   const { data, isError, isLoading } = useQuery({
@@ -25,14 +26,20 @@ export const useBrainRegionAtlasQuery = ({ id }: { id?: string }) => {
   const { data, isLoading, error } = useQuery({
     queryKey: keyBuilderAtlas.atlas({
       atlasId: id ?? '',
-      page: 1,
-      page_size: 2000,
     }),
-    queryFn: () =>
-      getBrainAtlasRegions({
-        atlasId: id ?? '',
-        filters: { page: 1, page_size: 1500 },
-      }),
+    queryFn: async () => {
+      const atlasData = await fetchAllPaginatedData({
+        fn: async (page: number, pageSize: number) => {
+          const result = await getBrainAtlasRegions({
+            atlasId: id ?? '',
+            filters: { page, page_size: pageSize },
+          });
+          return { data: result.data || [] };
+        },
+        pageSize: 200,
+      });
+      return { data: atlasData };
+    },
     enabled: !!id,
     staleTime: Infinity,
     gcTime: Infinity,

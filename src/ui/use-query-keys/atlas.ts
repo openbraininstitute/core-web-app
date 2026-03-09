@@ -1,9 +1,6 @@
 const prefix = 'atlas';
 export const keyBuilderAtlas = {
-  atlas: ({ atlasId, page, page_size }: { atlasId: string; page: number; page_size: number }) => [
-    prefix,
-    { atlasId, page, page_size },
-  ],
+  atlas: ({ atlasId }: { atlasId: string }) => [prefix, { atlasId }],
   byId: (atlasId: string) => [prefix, 'by-id', { atlasId }],
   all: () => [prefix, 'all'],
 };

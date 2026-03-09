@@ -100,7 +100,15 @@ const configFields = {
     public: true,
   },
   EXCLUDED_HIERARCHY_IDS: {
-    schema: z.array(z.string()).default(['e0e05eb2-421f-4133-a008-f63e7197e309']),
+    schema: z.preprocess((val) => {
+      if (typeof val === 'string') {
+        return val
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean);
+      }
+      return val;
+    }, z.array(z.string())),
     public: true,
   },
   LEGACY_DEFAULT_CIRCUIT_ID: {

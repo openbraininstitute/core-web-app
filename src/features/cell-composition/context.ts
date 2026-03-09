@@ -1,9 +1,6 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { arrayToTree } from 'performant-array-to-tree';
 
-import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
-import type { WorkspaceContext } from '@/types/common';
-
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -19,6 +16,10 @@ import { resolveBrainRegionCellComposition } from '@/features/cell-composition/c
 import { keyBuilderAnnotation } from '@/ui/use-query-keys/annotation';
 import { cellCompositionKeyBuilder } from '@/ui/use-query-keys/atlas';
 import { log } from '@/utils/logger';
+import { fetchAllPaginatedData } from '@/utils/pagination';
+
+import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
+import type { WorkspaceContext } from '@/types/common';
 
 const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
 
@@ -99,18 +100,40 @@ export const useAnnotationTypesQuery = (ctx: WorkspaceContext) => {
       {
         queryKey: keyBuilderAnnotation.annotations({
           type: 'eType',
-          page: 1,
-          page_size: 1000,
+          kind: 'all',
         }),
-        queryFn: () => getEtypes({ ctx, filters: { page: 1, page_size: 1000 } }),
+        queryFn: async () => {
+          const data = await fetchAllPaginatedData({
+            fn: async (page: number, pageSize: number) => {
+              const result = await getEtypes({
+                ctx,
+                filters: { page, page_size: pageSize },
+              });
+              return { data: result.data || [] };
+            },
+            pageSize: 200,
+          });
+          return { data };
+        },
       },
       {
         queryKey: keyBuilderAnnotation.annotations({
           type: 'mType',
-          page: 1,
-          page_size: 1000,
+          kind: 'all',
         }),
-        queryFn: () => getMtypes({ ctx, filters: { page: 1, page_size: 1000 } }),
+        queryFn: async () => {
+          const data = await fetchAllPaginatedData({
+            fn: async (page: number, pageSize: number) => {
+              const result = await getMtypes({
+                ctx,
+                filters: { page, page_size: pageSize },
+              });
+              return { data: result.data || [] };
+            },
+            pageSize: 200,
+          });
+          return { data };
+        },
       },
     ],
     combine: ([p1, p2]) => {

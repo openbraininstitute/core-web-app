@@ -6,6 +6,7 @@ import { config } from '@/config';
 import { fetchPointCloud } from '@/features/brain-atlas-viewer/api';
 import { assertType } from '@/util/type-guards';
 import { log } from '@/utils/logger';
+import { fetchAllPaginatedData } from '@/utils/pagination';
 
 const cacheMeshes = new Map<string, Promise<ArrayBuffer>>();
 
@@ -89,13 +90,22 @@ async function getAtlas(atlasId: string) {
 }
 
 async function actualGetAtlas(atlasId: string) {
-  const atlas = await getBrainAtlasRegions({
-    atlasId,
-    filters: {
-      page: 1,
-      page_size: 2000,
+  const data = await fetchAllPaginatedData({
+    fn: async (page: number, pageSize: number) => {
+      const result = await getBrainAtlasRegions({
+        atlasId,
+        filters: {
+          page,
+          page_size: pageSize,
+        },
+      });
+      return { data: result.data || [] };
     },
+    pageSize: 200,
   });
+
+  const atlas: PartialAtlas = { data };
+
   assertType<PartialAtlas>(atlas, {
     data: [
       'array',
