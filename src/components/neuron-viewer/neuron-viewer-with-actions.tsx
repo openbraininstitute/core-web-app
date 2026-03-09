@@ -1,6 +1,7 @@
 'use client';
 
 import { useAtomValue } from 'jotai';
+import dynamic from 'next/dynamic';
 import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -11,8 +12,15 @@ import {
   simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { useCleanMorphology } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
-import { WebglNeuronSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector';
 import { logError } from '@/utils/logger';
+
+const WebglNeuronSelector = dynamic(
+  () =>
+    import(
+      '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector'
+    ).then((mod) => mod.WebglNeuronSelector),
+  { ssr: false }
+);
 
 import { IconGear } from '../ai-assistant/icons/gear';
 import ReloadIcon from '../icons/Reload';
