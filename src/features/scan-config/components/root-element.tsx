@@ -1,5 +1,5 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { isEqual } from 'es-toolkit/compat';
+import { isEqual, lowerCase, upperFirst } from 'es-toolkit/compat';
 
 import AIIcon from '@/components/icons/ai/ai_icon';
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
@@ -103,9 +103,9 @@ export function RootElement({
             setEditing(true);
           else setEditing(false);
         }}
-        extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
+        extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
       >
-        <span className="flex items-center gap-2 truncate">
+        <span className="flex items-center gap-2 wrap-break-word min-w-0">
           <SelectedUnionVariantLabel
             rootElementSchema={rootElementSchema}
             config={config}
@@ -171,7 +171,8 @@ function SelectedUnionVariantLabel({
   rootElement: string;
   fallbackTitle?: string;
 }) {
-  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion) return fallbackTitle;
+  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion)
+    return upperFirst(lowerCase(fallbackTitle));
 
   const unionSchema = rootElementSchema as IRootBlockUnion;
   const discriminatorProp = unionSchema.discriminator
@@ -191,5 +192,5 @@ function SelectedUnionVariantLabel({
       })
     : undefined;
 
-  return selectedVariant?.title ?? fallbackTitle;
+  return upperFirst(lowerCase(selectedVariant?.title ?? fallbackTitle));
 }

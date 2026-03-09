@@ -8,6 +8,7 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { Input } from 'antd';
+import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { AnimatePresence, motion } from 'framer-motion';
 import { atom } from 'jotai';
@@ -16,15 +17,13 @@ import { Fragment } from 'react';
 import AIAdd from '@/components/icons/ai/add_icon';
 import AIIcon from '@/components/icons/ai/ai_icon';
 import AIEdit from '@/components/icons/ai/edit_icon';
-import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import { isAtom, isPlainObject } from './utils';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
-import type { AtomsMap } from '../types';
-import type { Config, ConfigValue } from './components';
+import type { AtomsMap, Config, ConfigValue } from '@/features/scan-config/types';
 
 export default function BlockDictionaryEntries({
   config,
@@ -148,9 +147,11 @@ export default function BlockDictionaryEntries({
       <button
         type="button"
         key={entry}
-        className={classNames(
-          'text-primary-8 flex h-[50px] min-h-[50px] w-full min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-          isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
+        className={cn(
+          'text-primary-8 flex h-12.5 min-h-12.5 w-full min-w-37.5 items-center justify-between rounded-full ',
+          'bg-gray-100 px-5 py-2 text-sm drop-shadow ',
+          'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+          { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected }
         )}
         tabIndex={0}
         onClick={() => handleEntryClick(entry)}
@@ -160,7 +161,7 @@ export default function BlockDictionaryEntries({
           }
         }}
       >
-        <div className="w-full text-left truncate max-w-[24ch]">{entry}</div>
+        <div className="w-full text-left truncate max-w-[24ch]">{upperFirst(lowerCase(entry))}</div>
         <AIIcon />
       </button>
     );
@@ -233,9 +234,11 @@ export default function BlockDictionaryEntries({
                   <div
                     role="button"
                     key={subkey}
-                    className={classNames(
-                      'text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow hover:bg-gradient-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1 mb-3',
-                      isSelected ? 'bg-gradient-to-r from-[#003A8C] to-[#001026] text-white' : ''
+                    className={cn(
+                      'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center justify-between ',
+                      'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
+                      'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
+                      { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected }
                     )}
                     tabIndex={0}
                     onClick={() => handleEntryClick(subkey)}
@@ -395,7 +398,7 @@ export default function BlockDictionaryEntries({
           {/* AI suggested changes */}
 
           {!campaignId && areThereAiEntries && (
-            <div className="border-neutral-200 border-1 rounded-lg w-[90%] px-2 pb-4 pt-2 flex flex-col gap-2">
+            <div className="border-neutral-200 border rounded-lg w-90percent px-2 pb-4 pt-2 flex flex-col gap-2">
               {aiAddedEntries.length > 0 && (
                 <div className="text-sm text-[#1690ff] flex items-center gap-1">
                   <AIAdd w={12} h={12} /> Added
@@ -415,7 +418,7 @@ export default function BlockDictionaryEntries({
               {aiEditedEntries.length > 0 && (
                 <div className="flex items-center gap-1">
                   <AIEdit />
-                  <span className="text-sm bg-gradient-to-r from-[#ef4444] to-[#1690ff] bg-clip-text text-transparent">
+                  <span className="text-sm bg-linear-to-r from-[#ef4444] to-[#1690ff] bg-clip-text text-transparent">
                     Edited
                   </span>
                 </div>
@@ -425,14 +428,19 @@ export default function BlockDictionaryEntries({
           )}
           {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && (
             <button
-              className="text-primary-8 flex h-[50px] min-h-[50px] w-[90%] min-w-[150px] items-center justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow"
+              className={cn(
+                'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center ',
+                'justify-between rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow'
+              )}
               type="button"
               onClick={() => {
                 setEditing(true);
                 setSelectedEntry('');
               }}
             >
-              Add {singularName}
+              <span>
+                Add <span className="lowercase">{singularName}</span>
+              </span>
               <PlusCircleOutlined />
             </button>
           )}

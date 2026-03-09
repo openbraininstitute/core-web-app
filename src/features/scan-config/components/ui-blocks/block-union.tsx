@@ -1,7 +1,7 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { atom } from 'jotai';
 
-import Block from '@/features/scan-config/components/block';
+import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import { isType } from '@/features/scan-config/types';
 
@@ -88,7 +88,7 @@ export default function BlockUnion({
           config={config}
           blockSchema={selectedBlockSchema}
           stateAtom={atomsMap[selectedRootElement]}
-          model={model}
+          entity={model}
           blockAIConfig={blockAIConfig}
           hideTitle
           schemaMappingConfig={schemaMappingConfig}

@@ -6,7 +6,7 @@ import {
   type SchemaName,
 } from '@/features/scan-config/types';
 
-import { useObioneJsonSchema, useReferenceTypeDict } from './hooks/schema';
+import { useObioneJsonSchema, useReferenceTypeDict } from '../hooks/schema';
 
 import type { Config } from '@/features/scan-config/components/components';
 
@@ -26,7 +26,7 @@ export default function Reference({
   disabled: boolean;
 }) {
   const referenceTypeDict = useReferenceTypeDict(schemaName);
-  const schema = useObioneJsonSchema(schemaName);
+  const { schema } = useObioneJsonSchema(schemaName);
 
   const configOptions = referenceTypeDict[referenceSchema.reference_type] ?? {
     singularName: '',

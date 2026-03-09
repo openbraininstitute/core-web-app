@@ -1,28 +1,31 @@
 import { get } from 'es-toolkit/compat';
 import { atom } from 'jotai';
 
-import Block from '@/features/scan-config/components/block';
 import {
   getBlockUsabilityConfig,
   isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
+import Block from '@/features/scan-config/components/ui-blocks/block';
 import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
+  type Config,
   type ConfigSchema,
+  type ConfigValue,
   type IBlockDictionary,
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
+import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 
 type Props = {
   schemaName: SchemaName;
@@ -89,7 +92,7 @@ export default function BlockDictionary({
         config={config}
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
-        model={model}
+        entity={model}
         blockAIConfig={blockAIConfig}
         schemaMappingConfig={schemaMappingConfig}
       />
@@ -123,7 +126,7 @@ export default function BlockDictionary({
                 type="button"
                 disabled={disable}
                 className={cn(
-                  'min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white',
+                  'min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white hover:shadow-xs',
                   { 'cursor-not-allowed opacity-50': disable }
                 )}
                 onClick={() => {
@@ -163,7 +166,16 @@ export default function BlockDictionary({
                 data-scan-config-block-element-item={`${blockDictionarySchema.ui_element}_item`}
               >
                 <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
-                <span className="mt-3 block">{o.description}</span>
+                <span className="mt-3 block">
+                  <TextPatternTransformer
+                    regex={urlRegex}
+                    component={(match) => (
+                      <TransformedLink url={match} className="wrap-break-word text-primary-6" />
+                    )}
+                  >
+                    {o.description}
+                  </TextPatternTransformer>
+                </span>
               </button>
             </TooltipTrigger>
             {disable && (
@@ -171,6 +183,7 @@ export default function BlockDictionary({
                 avoidCollisions
                 hideWhenDetached
                 align="center"
+                side="right"
                 className={cn(
                   'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
                   'bg-primary-8 px-4 py-2 text-base text-wrap ',

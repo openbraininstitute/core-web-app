@@ -1,27 +1,27 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
 import { get } from 'es-toolkit/compat';
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { useEntries, useSchemaName } from '@/features/scan-config/components/hooks';
+import { useEntries } from '@/features/scan-config/components/hooks';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import {
   resetConfig,
+  type TSchemaMappingConfiguration,
   useAtomsMap,
-  useObioneJsonSchema,
-  useSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
-import Left from '@/features/scan-config/components/left';
-import Middle from '@/features/scan-config/components/middle';
 import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
+import Left from '@/features/scan-config/components/ui-columns/left';
+import Middle from '@/features/scan-config/components/ui-columns/middle';
 import {
+  type ConfigSchema,
   ExtractScanConfigTabs,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   ScanConfigTabs,
+  type SchemaName,
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
@@ -49,6 +49,9 @@ export function ScanConfigTemplate({
   readOnly,
   className,
   activity = ScanConfigActivity.Simulate,
+  schema,
+  schemaName,
+  schemaMappingConfig,
 }: {
   entity: ICircuit | IMEModel;
   virtualLabId: string;
@@ -59,6 +62,9 @@ export function ScanConfigTemplate({
   readOnly?: boolean;
   className?: string;
   activity: TScanConfigActivity;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  schema: ConfigSchema;
+  schemaName: SchemaName;
 }) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
@@ -66,37 +72,16 @@ export function ScanConfigTemplate({
   const [selectedEntry, setSelectedEntry] = useState('');
   const [loading, setLoading] = useState(false);
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
-
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
-
-  const schemaName = useSchemaName({ model: entity, activity });
-  const schema = useObioneJsonSchema(schemaName);
-
-  const { data: schemaMappingConfig, isLoading } = useSchemaMappingConfiguration({
-    schema,
-    circuitId: entity.id,
-    workspace: { virtualLabId, projectId },
-    endpointType: 'Circuit',
-  });
-
   const allEntries = useEntries({ initialConfig, schema });
   const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model: entity });
-
   const config = useConfigAtom(schema, atomsMap);
 
   const aiEnabled = 'scale' in entity && entity.scale !== 'single';
 
   const updateRequestId = useAgentState(aiEnabled ? 'smc_simulation_config' : '', config);
   const { aiConfig, setAiConfig } = useAIConfig();
-
-  if (!schema || Object.keys(atomsMap).length === 0 || isLoading) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <LoadingOutlined />
-      </div>
-    );
-  }
 
   const results = match({ activity, tab })
     .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)
@@ -143,11 +128,8 @@ export function ScanConfigTemplate({
           )}
         </div>
       </header>
-      <div className="relative mb-10">
+      <div className="relative mb-5">
         <div className="w-full border-t border-gray-200" />
-        {/* <div className="text-primary-8 absolute -top-5 left-1/2 rounded-full bg-gray-50 p-2 px-3 shadow-sm">
-          <UpOutlined onClick={() => router.back()} />
-        </div> */}
       </div>
 
       {tab.id === ScanConfigTabs[activity].configuration && (
@@ -190,7 +172,7 @@ export function ScanConfigTemplate({
           <div
             className={cn(
               styles.scrollable,
-              'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
+              'h-full overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
             )}
           >
             {editing && (
