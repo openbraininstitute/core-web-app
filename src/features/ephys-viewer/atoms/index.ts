@@ -23,6 +23,13 @@ export const nwbArrayBufferAtomFamily = readAtomFamilyWithExpiration(
         throw new Error('No NWB file found');
       }
 
+      return fetch('/ion-channel-simulation.nwb').then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch NWB file: ${response.status} ${response.statusText}`);
+        }
+        return response.arrayBuffer();
+      });
+
       return downloadAsset<ArrayBuffer>({
         entityType: entity.type,
         entityId: entity.id,
