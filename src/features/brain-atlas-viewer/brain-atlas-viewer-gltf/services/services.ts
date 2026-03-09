@@ -4,7 +4,6 @@ import { getBrainAtlasRegions } from '@/api/entitycore/queries/general/brain-atl
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
 import { fetchPointCloud } from '@/features/brain-atlas-viewer/api';
-import { getSpeciesConfigByAtlasId } from '@/features/brain-region-hierarchy/context';
 import { assertType } from '@/util/type-guards';
 import { log } from '@/utils/logger';
 
@@ -36,7 +35,6 @@ async function getBrainRegionMeshArrayBufferQuery({
   log('info', '[GetBrainRegionMeshArrayBufferQuery]', {
     atlasId,
     regionId,
-    atlasName: getSpeciesConfigByAtlasId(atlasId).name,
   });
   const atlas = await getAtlas(atlasId);
   const entity = atlas.data.find((elem) => elem.brain_region_id === regionId);

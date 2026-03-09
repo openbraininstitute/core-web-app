@@ -86,24 +86,23 @@ const configFields = {
     schema: z.string().nonempty(),
     public: true,
   },
-  // MOUSE
+  MOUSE_ATLAS__ID: { schema: z.string().nonempty(), public: true },
   MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID: {
     schema: z.string().nonempty(),
     public: true,
   },
-  MOUSE_ATLAS__ID: { schema: z.string().nonempty(), public: true },
-  // HUMAN
   HUMAN_DEFAULT__SELECTED_BRAIN_REGION_ID: {
     schema: z.string().nonempty(),
     public: true,
   },
-  HUMAN_ATLAS__ID: { schema: z.string().nonempty(), public: true },
-  // RAT
   RAT_DEFAULT__SELECTED_BRAIN_REGION_ID: {
     schema: z.string().nonempty(),
     public: true,
   },
-  RAT_ATLAS__ID: { schema: z.string().nonempty(), public: true },
+  EXCLUDED_HIERARCHY_IDS: {
+    schema: z.array(z.string()).default(['e0e05eb2-421f-4133-a008-f63e7197e309']),
+    public: true,
+  },
   LEGACY_DEFAULT_CIRCUIT_ID: {
     schema: z.string().url().nonempty(),
     public: true,

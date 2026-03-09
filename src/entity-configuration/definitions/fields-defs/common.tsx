@@ -282,6 +282,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: 'subject__species__name__in',
       [ExtendedEntitiesTypeDict.SmallMicrocircuit]: 'subject__species__name__in',
       [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: 'subject__species__name__in',
+      [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'subject__species__name__in',
     },
     order: [
       {

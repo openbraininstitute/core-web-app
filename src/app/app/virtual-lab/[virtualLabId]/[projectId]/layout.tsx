@@ -7,6 +7,7 @@ import {
   getUserGroups,
   getWorkspaceHierarchySpeciesPreference,
 } from '@/api/virtual-lab-svc/queries/user';
+import { config } from '@/config';
 import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
@@ -30,6 +31,7 @@ export default async function Layout({ children }: Props) {
       const result = await getBrainRegionHierarchiesWithSpecies();
       result.data
         .map((o) => o.id)
+        .filter((id) => !config.EXCLUDED_HIERARCHY_IDS.includes(id))
         .forEach((id) => {
           queryClient.prefetchQuery({
             queryKey: keyBuilderHierarchy.hierarchy({ id }),

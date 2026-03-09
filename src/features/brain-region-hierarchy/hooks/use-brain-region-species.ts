@@ -27,11 +27,13 @@ const {
 function transformHierarchiesResponse(response: IBrainRegionHierarchiesResponse) {
   if (!response?.data) return [];
 
-  const result = response.data.map((hierarchy) => ({
-    id: hierarchy.id,
-    name: hierarchy.name,
-    species: transformSpecies(hierarchy.id, hierarchy.species),
-  }));
+  const result = response.data
+    .filter((hierarchy) => !config.EXCLUDED_HIERARCHY_IDS.includes(hierarchy.id))
+    .map((hierarchy) => ({
+      id: hierarchy.id,
+      name: hierarchy.name,
+      species: transformSpecies(hierarchy.id, hierarchy.species),
+    }));
 
   return result;
 }

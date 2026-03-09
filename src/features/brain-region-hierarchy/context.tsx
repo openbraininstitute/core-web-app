@@ -48,30 +48,7 @@ export const URL_PARAMS = {
   HIERARCHY_ID: 'h_id',
 } as const;
 
-export const {
-  APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
-  MOUSE_ATLAS__ID,
-  HUMAN_ATLAS__ID,
-  RAT_ATLAS__ID,
-} = config;
-
-/**
- * Get the species config by atlas ID
- * @param aId string
- * @returns species label
- */
-export function getSpeciesConfigByAtlasId(aId: string) {
-  if (aId === HUMAN_ATLAS__ID) {
-    return { name: 'Human' };
-  }
-  if (aId === RAT_ATLAS__ID) {
-    return { name: 'Rat' };
-  }
-  if (aId === MOUSE_ATLAS__ID) {
-    return { name: 'Mouse' };
-  }
-  return { name: 'Unknown' };
-}
+export const { APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID, MOUSE_ATLAS__ID } = config;
 
 export const brainRegionSidebarAtom = atom(false);
 export const selectedBrainRegionAtom = atom<BrainRegionHierarchyBase | null>(null);
