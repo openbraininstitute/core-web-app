@@ -10,6 +10,7 @@ import { useObioneJsonSchema, useReferenceTypeDict } from '../hooks/schema';
 
 import type { Config } from '@/features/scan-config/components/components';
 
+const DEFAULT_SENTINEL = '__default_as_null__';
 export default function Reference({
   value,
   onChange,
@@ -40,7 +41,7 @@ export default function Reference({
   )
     return null;
 
-  const options: { label: string; value: string | null }[] = Object.keys(
+  const options: { label: string; value: string }[] = Object.keys(
     config[configOptions.configKey] ?? {}
   ).map((k) => ({
     label: k,
@@ -49,10 +50,10 @@ export default function Reference({
 
   options.unshift({
     label: schema.default_block_reference_labels[referenceSchema.reference_type] ?? 'Default',
-    value: null,
+    value: DEFAULT_SENTINEL,
   });
 
-  // Id The AI suggested a value that is not in the options add it
+  // If The AI suggested a value that is not in the options add it
   if (typeof value === 'string' && !options.map((o) => o.value).includes(value)) {
     options.push({
       label: value,
@@ -65,8 +66,10 @@ export default function Reference({
       data-scan-config-block-element={ScanConfigUIElementDict.Reference}
       className="w-full"
       disabled={disabled}
-      onChange={(newV: string | null) => onChange(newV, configOptions.configKey)}
-      value={value}
+      onChange={(newV: string) =>
+        onChange(newV === DEFAULT_SENTINEL ? null : newV, configOptions.configKey)
+      }
+      value={value ?? DEFAULT_SENTINEL}
       options={options}
     />
   );
