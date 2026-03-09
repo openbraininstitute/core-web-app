@@ -1,13 +1,14 @@
-import Block from '@/features/scan-config/components/block';
-import BlockDictionary from '@/features/scan-config/components/block-dictionary';
-import BlockUnion from '@/features/scan-config/components/block-union';
 import {
   isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
+import Block from '@/features/scan-config/components/ui-blocks/block';
+import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
+import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
+  type Config,
   type ConfigSchema,
   type IBlockDictionary,
   type IBlockSingle,
@@ -19,7 +20,8 @@ import { useAIConfig } from '@/services/ai-agent';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Config } from '@/features/scan-config/components/components';
+
+import styles from '@/features/scan-config/scan-config.module.css';
 
 type MiddleProps = {
   schemaName: SchemaName;
@@ -69,7 +71,7 @@ export default function Middle({
   };
 
   return (
-    <>
+    <div className={styles.animateFadeUp}>
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionary
           campaignId={campaignId}
@@ -99,7 +101,7 @@ export default function Middle({
             config={config}
             blockSchema={selectedSchema}
             stateAtom={atomsMap[selectedRootElement]}
-            model={model}
+            entity={model}
             blockAIConfig={getBlockAIConfig()}
             schemaMappingConfig={schemaMappingConfig}
           />
@@ -120,6 +122,6 @@ export default function Middle({
           schemaMappingConfig={schemaMappingConfig}
         />
       )}
-    </>
+    </div>
   );
 }

@@ -1,9 +1,9 @@
 import React from 'react';
 
+import { classNames } from '@/util/utils';
+
 import { PainterManager } from '../painter';
 import { StructureItem, StructureItemType } from '../painter/structure';
-
-import { classNames } from '@/util/utils';
 
 import styles from './hint.module.css';
 
@@ -40,8 +40,10 @@ export function HintContent({ className, painterManager }: HintProps) {
 
   return (
     <div className={classNames(className, styles.hintContent)}>
+      <div>Section List:</div>
+      <div>{resolveSectionList(hovered.item)}</div>
       <div>Section:</div>
-      <div>{resolveName(hovered.item)}</div>
+      <div>{resolveSectionName(hovered.item)}</div>
       <div>Section index:</div>
       <div>{hovered.item.sectionIndex}</div>
       <div>Segment index:</div>
@@ -56,7 +58,7 @@ export function HintContent({ className, painterManager }: HintProps) {
   );
 }
 
-function resolveName(item: StructureItem): React.ReactNode {
+function resolveSectionName(item: StructureItem): React.ReactNode {
   switch (item.type) {
     case StructureItemType.Axon:
       return 'Axon';
@@ -72,5 +74,24 @@ function resolveName(item: StructureItem): React.ReactNode {
       return 'Myelin';
     default:
       return 'Unknown';
+  }
+}
+
+function resolveSectionList(item: StructureItem): React.ReactNode {
+  switch (item.type) {
+    case StructureItemType.Axon:
+      return 'Axonal';
+    case StructureItemType.Soma:
+      return 'Somatic';
+    case StructureItemType.Dendrite:
+      return 'Basal';
+    case StructureItemType.BasalDendrite:
+      return 'Basal';
+    case StructureItemType.ApicalDendrite:
+      return 'Apical';
+    case StructureItemType.Myelin:
+      return 'Myelinated';
+    default:
+      return resolveSectionName(item);
   }
 }

@@ -65,7 +65,7 @@ export default function Page({
           virtualLabId={virtualLabId}
           projectId={projectId}
           initialConfig={campaignData?.config.form}
-          className="px-10 pt-2"
+          className="px-4 pt-2"
           activity={ScanConfigActivity.Simulate}
         />
       </div>

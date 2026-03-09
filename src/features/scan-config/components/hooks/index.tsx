@@ -1,20 +1,19 @@
 import Ajv, { type AnySchema } from 'ajv';
 import { useEffect, useMemo, useRef } from 'react';
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 
 import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { config as appConfig } from '@/config';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import {
+  type Config,
   type ConfigSchema,
   ScanConfigActivity,
   type SchemaName,
   type TScanConfigActivity,
 } from '@/features/scan-config/types';
 import { log } from '@/utils/logger';
-
-import type { Config } from '@/features/scan-config/components/components';
 
 export function useApiUrl({
   activity = ScanConfigActivity.Simulate,
@@ -62,15 +61,18 @@ export function useSchemaName({
   model,
   activity = ScanConfigActivity.Simulate,
 }: {
-  model: ICircuit | IMEModel;
+  model: ICircuit | IMEModel | undefined;
   activity?: TScanConfigActivity;
 }) {
-  const schemaName = match({ activity })
+  const schemaName = match({ activity, model })
+    .with({ model: P.nullish }, () => {
+      return null;
+    })
     .with({ activity: ScanConfigActivity.Extract }, () => {
       const name = match(model)
         .with({ type: EntityTypeDict.Circuit }, () => 'CircuitExtractionScanConfig')
         .otherwise(() => {
-          throw new Error(`Unsupported entity type: ${model.type}`);
+          throw new Error(`Unsupported entity type: ${model?.type}`);
         });
       return name as SchemaName;
     })
@@ -83,7 +85,7 @@ export function useSchemaName({
         )
         .with({ type: EntityTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
         .otherwise(() => {
-          throw new Error(`Unsupported entity type: ${model.type}`);
+          throw new Error(`Unsupported entity type: ${model?.type}`);
         });
       return name as SchemaName;
     })
