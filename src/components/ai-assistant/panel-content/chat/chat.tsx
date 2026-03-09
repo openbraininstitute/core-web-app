@@ -163,8 +163,13 @@ export default function Chat({ className, threadId }: ChatProps) {
         onWheel={handleWheel}
       >
         {(!threadId || isEmptyThread) && <Welcome />}
-        {messages.map((item) => (
-          <MessageItem key={item.id} value={item} />
+        {messages.map((item, index) => (
+          <MessageItem
+            key={item.id}
+            value={item}
+            status={status}
+            isLastMessage={index === messages.length - 1}
+          />
         ))}
 
         {status === 'ready' && messages.length > 0 && <div className={styles.footerButtons}></div>}

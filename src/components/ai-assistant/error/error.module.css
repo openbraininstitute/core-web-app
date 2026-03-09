@@ -89,8 +89,7 @@
 .errorDetails pre {
   margin: 0;
   font-family:
-    "SF Mono", "Monaco", "Inconsolata", "Fira Code", "Droid Sans Mono",
-    "Source Code Pro", monospace;
+    "SF Mono", "Monaco", "Inconsolata", "Fira Code", "Droid Sans Mono", "Source Code Pro", monospace;
   font-size: 0.75rem;
   color: #7f1d1d;
   white-space: pre-wrap;
