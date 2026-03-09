@@ -1,5 +1,5 @@
 import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
-import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
+import { Empty, Radio, type RadioChangeEvent, Spin } from 'antd';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -8,8 +8,8 @@ import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-v
 import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
 
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { WorkspaceContext } from '@/types/common';
 
 import './styles/ephys-plugin-styles.css';
@@ -23,7 +23,7 @@ export default function EphysViewer({
   resource,
   ctx,
 }: {
-  resource: IElectricalCellRecording | ICircuitSimulationResult;
+  resource: IElectricalCellRecording | ISimulationResult;
   ctx?: WorkspaceContext;
 }) {
   const [trace, error] = useTrace({ resource, ctx });

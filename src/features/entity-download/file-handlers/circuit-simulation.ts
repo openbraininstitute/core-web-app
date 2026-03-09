@@ -14,10 +14,10 @@ import {
   getMetadataSimulationCsvEntryBase,
 } from '@/features/entity-download/utils';
 
-import type { IExecutionActivity } from '@/api/entitycore/types/entities/activity-execution';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
+import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
+import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { FileEntry } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -30,18 +30,18 @@ const CONCURRENCY = {
 
 type SimulationData = {
   executions: IExecutionActivity[];
-  results: ICircuitSimulationResult[];
+  results: ISimulationResult[];
 };
 
 type CampaignData = {
   campaign: ICircuitSimulationCampaign;
-  simulations: ICircuitSimulation[];
+  simulations: ISimulation[];
   idx: number;
   dataPath: string;
 };
 
 type AssetEntry = {
-  entity: ICircuitSimulation | ICircuitSimulationResult | ICircuitSimulationCampaign;
+  entity: ISimulation | ISimulationResult | ICircuitSimulationCampaign;
   asset: IAsset;
   path: string;
 };
@@ -50,7 +50,7 @@ type AssetEntry = {
  * fetches all simulation results for a given simulation concurrently.
  */
 async function fetchSimulationResults(
-  sim: ICircuitSimulation,
+  sim: ISimulation,
   ctx: WorkspaceContext | undefined,
   resultLimit: ReturnType<typeof pLimit>
 ): Promise<SimulationData> {
@@ -95,7 +95,7 @@ async function createAssetFileEntriesBatch(
  * processes a single simulation: fetches results and prepares asset entries.
  */
 async function processSimulation(
-  sim: ICircuitSimulation,
+  sim: ISimulation,
   dataPath: string,
   ctx: WorkspaceContext | undefined,
   resultLimit: ReturnType<typeof pLimit>

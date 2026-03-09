@@ -53,7 +53,7 @@ import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
 import type { ColumnsType } from 'antd/es/table/interface';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 

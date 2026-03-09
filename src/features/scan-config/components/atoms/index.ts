@@ -21,10 +21,10 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
+import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { SimExecStatusMap } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 import type { Nullish } from '@/utils/type';
@@ -151,7 +151,7 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
     context: WorkspaceContext;
     enabled?: boolean;
   }) =>
-    atom<Promise<ICircuitSimulationResult | null>>(async (get) => {
+    atom<Promise<ISimulationResult | null>>(async (get) => {
       if (!enabled) {
         return null;
       }
@@ -175,7 +175,7 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
 
 export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   ({ campaignId, context }: { campaignId: string; context: WorkspaceContext }) =>
-    atom<Promise<ICircuitSimulation[]>>(async () => {
+    atom<Promise<ISimulation[]>>(async () => {
       const filters = { simulation_campaign_id: campaignId };
       const res = await getCircuitSimulations({ filters, context });
 

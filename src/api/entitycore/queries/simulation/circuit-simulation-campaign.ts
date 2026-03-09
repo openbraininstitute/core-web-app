@@ -3,9 +3,9 @@ import { compactRecord } from '@/utils/dictionary';
 
 import type {
   ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
+  ISimulationCampaignFilter,
   TCreateCircuitSimulation,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+} from '@/api/entitycore/types/entities/simulation-campaign';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -51,7 +51,7 @@ export async function getCircuitSimulationCampaigns({
   context,
 }: {
   withFacets?: boolean;
-  filters?: Partial<ICircuitSimulationCampaignFilter>;
+  filters?: Partial<ISimulationCampaignFilter>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();

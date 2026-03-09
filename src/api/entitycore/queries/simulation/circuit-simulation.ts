@@ -2,9 +2,9 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type {
-  ICircuitSimulation,
   ICircuitSimulationFilter,
-} from '@/api/entitycore/types/entities/circuit-simulation';
+  ISimulation,
+} from '@/api/entitycore/types/entities/simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -23,7 +23,7 @@ export async function getCircuitSimulation({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<ICircuitSimulation>(`${baseUri}/${id}`, {
+  return await api.get<ISimulation>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -54,7 +54,7 @@ export async function getCircuitSimulations({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<ICircuitSimulation>>(baseUri, {
+  return await api.get<EntityCoreResponse<ISimulation>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
       with_facets: withFacets,

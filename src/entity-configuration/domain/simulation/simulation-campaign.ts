@@ -22,12 +22,12 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import { getExtendedSimMap, hasSimConfigAsset, migrateConfig } from './utils';
 
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
+import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type {
   ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
-import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
+  ISimulationCampaignFilter,
+} from '@/api/entitycore/types/entities/simulation-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
@@ -39,7 +39,7 @@ async function resolveSimulationCampaigns({
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
-  filters?: Partial<ICircuitSimulationCampaignFilter>;
+  filters?: Partial<ISimulationCampaignFilter>;
 }) {
   filters = discardBrainRegionQueryParams(filters);
 
@@ -169,7 +169,7 @@ export async function resolveSimulationByCampaignId({
   };
 }
 
-export function getSimulationStatus(simulation: ICircuitSimulation) {
+export function getSimulationStatus(simulation: ISimulation) {
   const executions = get(simulation, 'executions', []) as IExecutionActivity[];
   const sortedExecutions = sortBy(executions, (exec) => exec.creation_date);
 
@@ -184,7 +184,7 @@ export function getSimulationStatus(simulation: ICircuitSimulation) {
 }
 
 export function getStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
-  const simulations = get(simCampaign, 'simulations', []) as ICircuitSimulation[];
+  const simulations = get(simCampaign, 'simulations', []) as ISimulation[];
 
   const statusCountMap = simulations.reduce((map, simulation) => {
     const status = getSimulationStatus(simulation);

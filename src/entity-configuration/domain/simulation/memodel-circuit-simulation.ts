@@ -13,9 +13,9 @@ import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulat
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import {
   type ICircuitSimulationCampaign,
-  type ICircuitSimulationCampaignFilter,
+  type ISimulationCampaignFilter,
   SimulationCampaignEntityTypeDict,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+} from '@/api/entitycore/types/entities/simulation-campaign';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -28,7 +28,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
-const ENTITY_TYPE = SimulationCampaignEntityTypeDict.memodel;
+const ENTITY_TYPE = SimulationCampaignEntityTypeDict.Memodel;
 
 export async function resolveExecutions({
   context,
@@ -66,7 +66,7 @@ async function resolveSimulationCampaigns({
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
-  filters?: Partial<ICircuitSimulationCampaignFilter>;
+  filters?: Partial<ISimulationCampaignFilter>;
 }) {
   filters = discardBrainRegionQueryParams(filters);
   const source = await getCircuitSimulationCampaigns({

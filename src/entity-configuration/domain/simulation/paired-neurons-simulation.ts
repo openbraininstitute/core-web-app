@@ -24,8 +24,8 @@ import { getExtendedSimMap, migrateConfig } from './utils';
 import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {
   ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+  ISimulationCampaignFilter,
+} from '@/api/entitycore/types/entities/simulation-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -40,7 +40,7 @@ async function resolveSimulationCampaigns({
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
-  filters?: Partial<ICircuitSimulationCampaignFilter>;
+  filters?: Partial<ISimulationCampaignFilter>;
   circuitScaleFilter?: Partial<ICircuitFilter>;
 }) {
   filters = discardBrainRegionQueryParams(filters);
