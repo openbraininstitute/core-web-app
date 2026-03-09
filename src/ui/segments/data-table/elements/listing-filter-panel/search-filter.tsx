@@ -1,14 +1,14 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { ConfigProvider, Tag } from 'antd';
-import type { CustomTagProps } from 'rc-select/lib/BaseSelect';
-import type { DefaultOptionType } from 'antd/es/select';
 
-import { useOptions } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
 import Search from '@/components/Search';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { useOptions } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
 
-import type { FacetLabelValuePair } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
+import type { DefaultOptionType } from 'antd/es/select';
+import type { CustomTagProps } from 'rc-select/lib/BaseSelect';
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
+import type { FacetLabelValuePair } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
 
 export function SearchFilter({
   data,
@@ -71,6 +71,7 @@ export function SearchFilter({
           value: id,
         }))}
         mode="multiple"
+        className="text-primary-9 font-bold"
         placeholder={`Search for ${getFieldDefinition(filter.field)?.vocabulary?.plural}`}
         tagRender={(props) => {
           return tagRender(props);

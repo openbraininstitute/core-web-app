@@ -1,6 +1,6 @@
-import React from 'react';
 import { atom, useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import React from 'react';
 
 import { AppUInterfaceSection, type TAppUInterfaceSection } from '@/utils/key-builder';
 
@@ -19,7 +19,7 @@ export function useAiContext(): AiContextType {
   return context;
 }
 
-export const MINIMAL_PANEL_SIZE = 25;
+export const MINIMAL_PANEL_SIZE = 400;
 
 const AiContext = React.createContext<AiContextType>({
   section: AppUInterfaceSection.Data,
@@ -37,7 +37,17 @@ export function AiContextProvider({
 }
 
 const atomPanelWidth = atomWithStorage('ai-assistant/panel-width', MINIMAL_PANEL_SIZE);
-const atomPanelContainer = atom<HTMLDivElement | null>(null);
+const atomIsDragging = atom<boolean>(false);
+
+export function useIsDragging(): boolean {
+  const [isDragging] = useAtom(atomIsDragging);
+  return isDragging;
+}
+
+export function useSetIsDragging(): (value: boolean) => void {
+  const [, setIsDragging] = useAtom(atomIsDragging);
+  return setIsDragging;
+}
 
 /**
  * @param container Container that defines the min width.
@@ -46,45 +56,18 @@ const atomPanelContainer = atom<HTMLDivElement | null>(null);
 export function usePanelWidth(): {
   panelWidth: number;
   setPanelWidth: (panelWidth: number) => void;
-  setPanelContainer: (container: HTMLDivElement | null) => void;
 } {
-  const [container, setContainer] = useAtom(atomPanelContainer);
-  const dimension = useContainerDimension(container);
-  const clamp = (value: number) => {
-    const minWidth = dimension.width;
-    if (value < minWidth) return minWidth;
-
-    const maxWidth = dimension.left + dimension.width - (globalThis.screen?.availWidth ?? 0) / 3;
-    if (value > maxWidth) return maxWidth;
-
-    return value;
-  };
   const [width, setWidth] = useAtom(atomPanelWidth);
-  return {
-    panelWidth: clamp(width),
-    setPanelWidth: (value: number) => setWidth(clamp(value)),
-    setPanelContainer: (value: HTMLDivElement | null) => {
-      if (value) setContainer(value);
-    },
-  };
-}
 
-export function useContainerDimension(container: HTMLDivElement | null) {
-  const refTimeoutId = React.useRef(0);
-  const [dimension, setDimension] = React.useState({ left: 0, top: 0, width: 0, height: 0 });
-  React.useEffect(() => {
-    if (!container) return;
+  const clamp = React.useCallback((value: number): number => {
+    if (value < MINIMAL_PANEL_SIZE) return MINIMAL_PANEL_SIZE;
+    const maxWidth = (globalThis.window?.innerWidth ?? Infinity) * (2 / 3);
+    if (value > maxWidth) return maxWidth;
+    return value;
+  }, []);
 
-    const callback = () => {
-      globalThis.clearTimeout(refTimeoutId.current);
-      refTimeoutId.current = globalThis.setTimeout(() => {
-        setDimension(container.getBoundingClientRect());
-      }) as unknown as number;
-    };
-    const observer = new ResizeObserver(callback);
-    callback();
-    observer.observe(container);
-    return () => observer.unobserve(container);
-  }, [container]);
-  return dimension;
+  return React.useMemo(
+    () => ({ panelWidth: clamp(width), setPanelWidth: setWidth }),
+    [width, setWidth, clamp]
+  );
 }

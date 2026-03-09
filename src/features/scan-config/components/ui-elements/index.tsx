@@ -261,7 +261,7 @@ export function UIElementRender({
         <EntitySelectorSingle
           entityType={paramSchema.model_selector_entity_type}
           filters={paramSchema.model_selector_property_filter ?? {}}
-          value={value as Record<string, unknown> | null}
+          value={value}
           valueType={paramSchema.properties?.type?.const}
           onChange={(v) => {
             setState({ ...state, [k]: v ?? null });

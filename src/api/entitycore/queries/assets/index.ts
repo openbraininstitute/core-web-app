@@ -1,11 +1,11 @@
-import kebabCase from 'es-toolkit/compat/kebabCase';
+import { kebabCase } from 'es-toolkit/compat';
 
-import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { getEntityCoreContext } from '@/api/entitycore/utils';
-import { compactRecord } from '@/utils/dictionary';
 import { authApiClient } from '@/api/apiClient';
+import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { config } from '@/config';
+import { compactRecord } from '@/utils/dictionary';
 
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   AssetLabel,
   DirectoryListContent,
@@ -65,7 +65,7 @@ export async function getAsset({
 }
 
 export async function downloadAsset(params: {
-  ctx?: WorkspaceContext;
+  ctx?: WorkspaceContext | null;
   entityType: TEntityTypeDict;
   entityId: string;
   assetPath?: string;
@@ -105,7 +105,7 @@ export async function downloadAsset<T>({
   assetPath = '',
   signal,
 }: {
-  ctx?: WorkspaceContext;
+  ctx?: WorkspaceContext | null;
   entityType: TEntityTypeDict;
   entityId: string;
   assetPath?: string;
@@ -160,7 +160,9 @@ export async function createJsonAsset({
 }): Promise<IAsset> {
   const stringified = JSON.stringify(payload);
   const jsonBlob = new Blob([stringified], { type: 'application/json' });
-  const jsonFile = new File([jsonBlob], `${path}.json`, { type: 'application/json' });
+  const jsonFile = new File([jsonBlob], `${path}.json`, {
+    type: 'application/json',
+  });
   const formData = new FormData();
 
   if (jsonFile) formData.append('file', jsonFile);

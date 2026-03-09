@@ -19,6 +19,7 @@ export const ModelEntitySlug = {
   Microcircuit: 'microcircuit',
   Circuit: 'circuit',
   IonChannelModel: 'ion-channel-model',
+  IonChannelModelingCampaign: 'ion-channel-modeling-campaign',
   MEModelWithSynapses: 'me-model-with-synapses',
 } as const;
 

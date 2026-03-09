@@ -2,7 +2,7 @@ import { CloseOutlined } from '@ant-design/icons';
 import { isNil } from 'es-toolkit/compat';
 import { useState } from 'react';
 import { match, P } from 'ts-pattern';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -21,17 +21,20 @@ import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental
 import { ExperimentalSynapsesPerConnection } from '@/ui/segments/contribute/synapses-per-connection';
 import { cn } from '@/utils/css-class';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 interface IExtendedEntitiesSelectorProps {
   onSelectEntityType: (type: TExtendedEntitiesTypeDict) => void;
 }
 
 function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelectorProps) {
   const options = Object.entries(EntityCoreConfiguration)
+    .filter(([, p]) => p.isContributionOption ?? true)
     .map(([, value]) => ({
       label: value.title,
       value: value.extendedType,
       data: {
-        isUploadable: value.isUploadable ?? false,
+        isUploadable: value.isContributable ?? false,
       },
     }))
     .sort((a, b) => {
@@ -76,9 +79,12 @@ interface IRenderEntityTypeContentProps {
 
 function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeContentProps) {
   return match({ type })
-    .with({ type: ExtendedEntitiesTypeDict.CellMorphology }, () => (
-      <CellMorphology sessionId={sId} />
-    ))
+    .with(
+      {
+        type: ExtendedEntitiesTypeDict.CellMorphology,
+      },
+      () => <CellMorphology sessionId={sId} />
+    )
     .with({ type: ExtendedEntitiesTypeDict.ElectricalCellRecording }, () => (
       <ElectricalCellRecording sessionId={sId} />
     ))
@@ -145,8 +151,8 @@ export function ContributionModal() {
     <Modal
       open={display}
       position="center"
-      className="h-full max-h-[calc(100vh-6rem)] min-h-[400px] w-[50rem] rounded-2xl"
-      bodyClassName="flex flex-col h-full min-h-0 max-h-full overflow-hidden p-0 relative"
+      className="h-full max-h-[calc(100vh-6rem)] min-h-100 w-200 rounded-2xl"
+      bodyClassName="flex flex-col h-[calc(100%-48px)] min-h-0 max-h-full overflow-hidden p-0 relative"
       overlayClassName="bg-primary-9/80 backdrop-blur-sm!"
       headerClassName={cn('w-full rounded-t-2xl pb-2', '[&_#modal-title]:w-full')}
       onClose={onClose}

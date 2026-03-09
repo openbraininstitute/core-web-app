@@ -29,6 +29,7 @@ export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
         className: cn(className, 'whitespace-nowrap'),
         dataIndex: 'name',
         key: 'name',
+        ellipsis: true,
         fixed: 'left' as const,
       },
 
@@ -36,6 +37,7 @@ export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
         title: <span title={param}>{getParamLabel(param)}</span>,
         className,
         dataIndex: ['scan_parameters', param],
+        ellipsis: true,
         key: param,
       })),
 

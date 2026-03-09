@@ -22,6 +22,8 @@ import { useAIConfig } from '@/services/ai-agent';
 
 import type { Nullish } from '@/utils/type';
 
+import styles from '@/features/scan-config/scan-config.module.css';
+
 type MiddleProps = {
   schemaName: SchemaName;
   schema: ConfigSchema;
@@ -72,7 +74,7 @@ export default function Middle({
   };
 
   return (
-    <>
+    <div className={styles.animateFadeUp}>
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionary
           campaignId={campaignId}
@@ -124,6 +126,6 @@ export default function Middle({
           schemaMappingConfig={schemaMappingConfig}
         />
       )}
-    </>
+    </div>
   );
 }

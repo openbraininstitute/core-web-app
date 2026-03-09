@@ -19,10 +19,6 @@ import { launchExtraction, ObiOneTaskTypeDict } from '@/api/one/extraction';
 import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
 import { WorkspaceSection } from '@/constants';
-import {
-  OfflineTokenConsentModal,
-  useRunWithOfflineTokenConsent,
-} from '@/features/offline-auth-management';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { errorRegistry } from '@/features/scan-config/error-registry';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
@@ -294,8 +290,6 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
               'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"
-            onMouseEnter={() => consentGate.prime()}
-            onFocus={() => consentGate.prime()}
             onClick={() => runExtraction(selectedConfigIds)}
             disabled={extractionRequestInProgress || selectedConfigIds.length === 0}
           >

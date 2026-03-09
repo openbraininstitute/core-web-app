@@ -130,8 +130,7 @@ function RecordingsArrayFieldContent({
       );
       setIsModalOpen(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChange, isSelectionValid]);
+  }, [onChange, isSelectionValid, recording, updateRecordingStorage]);
 
   const handleModalClose = () => setIsModalOpen(false);
 
@@ -139,19 +138,18 @@ function RecordingsArrayFieldContent({
     if (readonly || disabled) return;
     onChange(undefined, undefined);
     updateRecordingStorage(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readonly, disabled]);
+  }, [readonly, disabled, onChange, updateRecordingStorage]);
 
   const handleRowsSelected = useCallback(
     (selectedRows: Array<IIonChannelRecording>) => {
       updateRecordingStorage(selectedRows.at(0) ?? null);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [updateRecordingStorage]
   );
 
   return (
     <div className="w-full">
+      {/** biome-ignore lint/a11y/useSemanticElements: button can't have nested buttons */}
       <div
         className="w-full"
         role="button"
@@ -173,7 +171,7 @@ function RecordingsArrayFieldContent({
           )}
           disabled={disabled || readonly}
         >
-          <div className="flex min-h-[2rem] flex-1 flex-wrap items-center gap-1 select-none">
+          <div className="flex min-h-8 flex-1 flex-wrap items-center gap-1 select-none">
             {recording ? (
               <Badge
                 key={recording.id}
