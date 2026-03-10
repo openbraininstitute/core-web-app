@@ -1,6 +1,6 @@
 'use client';
 
-import ArrowRightIcon from '@/components/icons/ArrowRightIcon';
+import ChevronRightIcon from '@/components/icons/ChevronRightIcon';
 import { classNames } from '@/util/utils';
 
 import styles from './suggested-questions.module.css';
@@ -55,7 +55,7 @@ export default function SuggestedQuestions({
                 }}
                 disabled={isLoading}
               >
-                <ArrowRightIcon />
+                <ChevronRightIcon />
                 <div>{prompt}</div>
               </button>
             ))}
