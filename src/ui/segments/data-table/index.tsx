@@ -64,7 +64,7 @@ export type Props<T extends EntityCoreIdentifiable> = {
   allowDelete?: boolean;
   allowFilter?: boolean;
   allowSearch?: boolean;
-  requireBrainRegionDropdown?: boolean;
+  requireSpeciesSelector?: boolean;
   requireScopeSelector?: boolean;
   requireSearch?: boolean;
   filterClassNames?: {
@@ -99,11 +99,12 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   onRowsSelected,
   onCellClick,
   tableStyle,
+  // us
   allowDownload,
   allowDelete,
   allowFilter = true,
   allowSearch = true,
-  requireBrainRegionDropdown = false,
+  requireSpeciesSelector = false,
   requireScopeSelector = false,
   requireSearch = true,
   filterClassNames,
@@ -138,15 +139,15 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
       parentColumns.push('1fr auto');
     }
 
-    if (requireBrainRegionDropdown || requireSearch) {
+    if (requireSpeciesSelector || requireSearch) {
       parentAreas.push("'brain-and-search filter'");
-      if (requireBrainRegionDropdown) {
+      if (requireSpeciesSelector) {
         leftAreas.push('brain-region-dropdown');
         leftColumns.push('max-content');
       }
       if (requireSearch) {
         leftAreas.push('search');
-        if (requireBrainRegionDropdown) leftColumns.push('max-content');
+        if (requireSpeciesSelector) leftColumns.push('max-content');
         else leftColumns.push('2fr');
       }
     }
@@ -161,7 +162,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
         gridTemplateColumns: leftColumns.join(' '),
       } as React.CSSProperties,
     };
-  }, [requireScopeSelector, requireBrainRegionDropdown, requireSearch]);
+  }, [requireScopeSelector, requireSpeciesSelector, requireSearch]);
 
   const allowTopMenu = allowSearch || allowFilter || left;
   return (
@@ -178,13 +179,13 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           <div className="mb-5 grid w-full items-center  gap-2" style={grid.parent}>
             {requireScopeSelector && <WorkflowScopeTabs className="max-w-max" />}
             <div className="grid items-center gap-2 [grid-area:brain-and-search]" style={grid.left}>
-              {requireBrainRegionDropdown && (
+              {requireSpeciesSelector && (
                 <div className="[grid-area:brain-region-dropdown]">
                   <PortalRegionBanner dataKey={dataKey} className="w-87.5" />
                 </div>
               )}
               {!!left && <div className="w-full [grid-area:left]">{left}</div>}
-              {allowSearch && (
+              {allowSearch && requireSearch && (
                 <div className="w-full [grid-area:search]">
                   <Search
                     {...{

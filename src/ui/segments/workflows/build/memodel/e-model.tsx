@@ -71,6 +71,8 @@ export function EModel({ sessionId }: Props) {
   return (
     <BrowseEntityScope
       requireBrainRegion
+      requireScopeSelector
+      requireSpeciesSelector
       allowDownload={false}
       allowDelete={false}
       id={sessionId}

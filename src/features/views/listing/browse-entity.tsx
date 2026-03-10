@@ -89,7 +89,7 @@ type Props = {
    */
   allowQuery?: boolean;
   /** whether to display the brain region dropdown */
-  requireBrainRegionDropdown?: boolean;
+  requireSpeciesSelector?: boolean;
   requireScopeSelector?: boolean;
   extraQueryParams?: Record<string, unknown>;
 };
@@ -110,7 +110,7 @@ export function BrowseEntityScope({
   allowFilter = true,
   allowSearch = true,
   allowQuery = true,
-  requireBrainRegionDropdown,
+  requireSpeciesSelector,
   requireScopeSelector,
   extraQueryParams,
 }: Props) {
@@ -291,7 +291,7 @@ export function BrowseEntityScope({
             allowDelete={allowDelete}
             allowFilter={allowFilter}
             allowSearch={allowSearch}
-            requireBrainRegionDropdown={requireBrainRegionDropdown}
+            requireSpeciesSelector={requireSpeciesSelector}
             requireScopeSelector={requireScopeSelector}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}

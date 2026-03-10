@@ -187,6 +187,7 @@ function buildQuery({
     projectId,
     extendedEntityType: extendedType,
     brainRegionId,
+    hierarchyId,
     scope,
   });
 
@@ -278,7 +279,6 @@ export function BrowseLink({
   const loadingCurrent = isActiveEntity ? tableCountLoading : loadingFallback;
   const isCurrentError = isActiveEntity ? isTableCountError : isFallbackError;
   const rootCount = root?.pagination.total_items;
-  const isLoading = loadingCurrent || loadingRoot;
 
   const countRenderer = match({
     isCurrentError,
@@ -286,18 +286,9 @@ export function BrowseLink({
     rootCount,
     isRootError,
     enabled,
-    isLoading,
+    loadingCurrent,
+    loadingRoot,
   })
-    .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (
-      <span className="flex items-center justify-center gap-1">
-        <span className="font-bold">{count}</span>
-        <span className="font-light">of</span>
-        <span className="font-bold">{rootCount}</span>
-      </span>
-    ))
-    .with(P.union({ isCurrentError: true }, { isRootError: true }), () => {
-      return <WarningOutlined className="text-warning" />;
-    })
     .with({ enabled: false }, () => (
       <span className="flex items-center justify-center gap-1">
         <span className="font-bold">0</span>
@@ -305,7 +296,31 @@ export function BrowseLink({
         <span className="font-bold">0</span>
       </span>
     ))
+    .with(P.union({ isCurrentError: true }, { isRootError: true }), () => {
+      return <WarningOutlined className="text-warning" />;
+    })
+    .with({ enabled: true }, () => (
+      <span className="flex items-center justify-center gap-1">
+        <span className="font-bold">
+          {loadingCurrent ? (
+            <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />
+          ) : (
+            (count ?? <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />)
+          )}
+        </span>
+        <span className="font-light">of</span>
+        <span className="font-bold">
+          {loadingRoot ? (
+            <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />
+          ) : (
+            (rootCount ?? <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />)
+          )}
+        </span>
+      </span>
+    ))
     .otherwise(() => null);
+
+  const isLoading = loadingCurrent && loadingRoot;
 
   if (!entity) return null;
   return (

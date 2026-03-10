@@ -36,10 +36,12 @@ export const keyBuilder = {
     virtualLabId,
     projectId,
     brainRegionId,
+    hierarchyId,
     extendedEntityType,
     scope,
   }: WorkspaceContext & {
     brainRegionId?: string;
+    hierarchyId?: string;
     scope: TWorkspaceScope;
     extendedEntityType?: TExtendedEntitiesTypeDict;
   }) => [
@@ -49,6 +51,7 @@ export const keyBuilder = {
       projectId,
       extendedEntityType,
       brainRegionId: brainRegionId ?? '',
+      hierarchyId: hierarchyId ?? '',
       scope,
     },
   ],

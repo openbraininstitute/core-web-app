@@ -39,7 +39,8 @@ export function useFilterItems(
           const content = (() => {
             if (
               section &&
-              section === WorkspaceSection.Data &&
+              // TODO: in another PR, i have a better way of handling displaying filter by section
+              (section === WorkspaceSection.Data || section === WorkspaceSection.BuildWorkflow) &&
               filter.field === EntityCoreFields.SpeciesName
             )
               return undefined;
@@ -55,7 +56,6 @@ export function useFilterItems(
                 )
               : undefined;
           })();
-
           return {
             content,
             display,

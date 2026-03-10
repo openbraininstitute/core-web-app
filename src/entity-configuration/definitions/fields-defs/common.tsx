@@ -381,18 +381,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isFilterable: false,
     isDisplayable: false,
   },
-  [EntityCoreFields.SubjectSpeciesName]: {
-    title: 'Species',
-    filter: CoreFieldFilterTypeEnum.CheckList,
-    render: (r) => renderEmptyOrValue(get(r, 'subject.species.name')),
-    vocabulary: {
-      plural: 'Species',
-      singular: 'Species',
-    },
-    isFilterable: false,
-    isDisplayable: false,
-    isSortable: false,
-  },
   [EntityCoreFields.SubjectAgeMax]: {
     title: 'Age max',
     filter: CoreFieldFilterTypeEnum.ValueRange,

@@ -57,7 +57,7 @@ export function MEModel({ sessionId }: Props) {
       <BrowseEntityScope
         requireBrainRegion
         requireScopeSelector
-        requireBrainRegionDropdown
+        requireSpeciesSelector
         allowDownload={false}
         allowDelete={false}
         id={sessionId}

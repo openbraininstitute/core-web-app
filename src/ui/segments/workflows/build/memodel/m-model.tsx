@@ -41,7 +41,7 @@ export function MModel({ sessionId }: Props) {
     <BrowseEntityScope
       requireBrainRegion
       requireScopeSelector
-      requireBrainRegionDropdown
+      requireSpeciesSelector
       id={sessionId}
       section={WorkspaceSection.BuildWorkflow}
       requireMiniDetailView={false}
