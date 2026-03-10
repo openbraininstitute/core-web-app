@@ -1,6 +1,6 @@
 'use client';
 
-import { Checkbox } from 'antd';
+import { Checkbox, Empty } from 'antd';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 
@@ -44,17 +44,6 @@ export default function RasterPlot({ data }: RasterPlotProps) {
     });
   };
 
-  const plotData: PlotData[] = useMemo(() => {
-    return data.populations
-      .filter((pop) => selectedPopulations.has(pop.name))
-      .map((pop, idx) => createRasterTrace(pop, idx));
-  }, [data.populations, selectedPopulations]);
-
-  // Calculate appropriate y-axis padding based on node ID range
-  const nodeRange = data.nodeIdRange.max - data.nodeIdRange.min;
-  // For single neuron or small range, use fixed padding; otherwise scale with range
-  const yPadding = nodeRange === 0 ? 1 : Math.max(1, nodeRange * 0.05);
-
   // Get unique node IDs for y-axis ticks when there are few neurons
   const uniqueNodeIds = useMemo(() => {
     const allNodeIds = new Set<number>();
@@ -65,6 +54,25 @@ export default function RasterPlot({ data }: RasterPlotProps) {
   }, [data.populations, selectedPopulations]);
 
   const showIndividualTicks = uniqueNodeIds.length <= 50;
+  const usePointsMode = uniqueNodeIds.length > 20;
+
+  // Check if there are any spikes to display
+  const totalSpikes = useMemo(() => {
+    return data.populations
+      .filter((pop) => selectedPopulations.has(pop.name))
+      .reduce((sum, pop) => sum + pop.timestamps.length, 0);
+  }, [data.populations, selectedPopulations]);
+
+  const plotData: PlotData[] = useMemo(() => {
+    return data.populations
+      .filter((pop) => selectedPopulations.has(pop.name))
+      .map((pop, idx) => createRasterTrace(pop, idx, usePointsMode));
+  }, [data.populations, selectedPopulations, usePointsMode]);
+
+  // Calculate appropriate y-axis padding based on node ID range
+  const nodeRange = data.nodeIdRange.max - data.nodeIdRange.min;
+  // For single neuron or small range, use fixed padding; otherwise scale with range
+  const yPadding = nodeRange === 0 ? 1 : Math.max(1, nodeRange * 0.05);
 
   // Round end time to a nice multiple if close
   const roundedEndTime = useMemo(() => {
@@ -152,24 +160,31 @@ export default function RasterPlot({ data }: RasterPlotProps) {
           </Checkbox>
         ))}
       </div>
-      <div className="min-h-0 flex-1">
-        <Plot
-          data={plotData}
-          layout={layout}
-          config={{ responsive: true, displayModeBar: true }}
-          style={{ width: '100%', height: '100%' }}
-          useResizeHandler
-        />
-      </div>
+      {totalSpikes === 0 ? (
+        <div className="flex min-h-0 flex-1 items-center justify-center">
+          <Empty description="No spikes recorded during this simulation" />
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1">
+          <Plot
+            data={plotData}
+            layout={layout}
+            config={{ responsive: true, displayModeBar: true }}
+            style={{ width: '100%', height: '100%' }}
+            useResizeHandler
+          />
+        </div>
+      )}
     </div>
   );
 }
 
 /**
  * Creates a raster plot trace where each spike is a vertical tick mark.
- * Uses 'markers' mode with 'line-ns' symbol to create vertical lines.
+ * Uses 'markers' mode with 'line-ns' symbol to create vertical lines,
+ * or simple circle points when there are many neurons.
  */
-function createRasterTrace(pop: SpikePopulation, colorIndex: number): PlotData {
+function createRasterTrace(pop: SpikePopulation, colorIndex: number, usePoints: boolean): PlotData {
   const color = POPULATION_COLORS[colorIndex % POPULATION_COLORS.length];
 
   return {
@@ -178,15 +193,20 @@ function createRasterTrace(pop: SpikePopulation, colorIndex: number): PlotData {
     mode: 'markers',
     type: 'scattergl',
     name: pop.name,
-    marker: {
-      size: 8,
-      color,
-      symbol: 'line-ns',
-      line: {
-        width: 1.5,
-        color,
-      },
-    },
+    marker: usePoints
+      ? {
+          size: 3,
+          color,
+        }
+      : {
+          size: 8,
+          color,
+          symbol: 'line-ns',
+          line: {
+            width: 1.5,
+            color,
+          },
+        },
     hovertemplate: `Neuron: %{y}<br>Time: %{x:.2f} ms<extra>${pop.name}</extra>`,
   } as PlotData;
 }
