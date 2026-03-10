@@ -88,8 +88,8 @@ a.roundedButton {
 .layout .blockSmall {
   grid-column: 5 / 6;
   max-width: var(--S);
-  margin-left: 30px;
   margin: 20px 0;
+  margin-left: 30px;
 }
 
 h1.blockSmall,
