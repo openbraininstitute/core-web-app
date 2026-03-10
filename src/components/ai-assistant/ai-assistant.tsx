@@ -114,7 +114,7 @@ export default function AiAssistant({
                 <button
                   type="button"
                   onClick={onFullscreenToggle}
-                  className={styles.headerBtn}
+                  className={classNames(styles.headerBtn, styles.fullscreenBtn)}
                   aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                   disabled={disabled}
                   title={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}

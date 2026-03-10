@@ -124,8 +124,8 @@
   font-size: 2rem;
 }
 
-.headerBtn:has(span[role="img"][aria-label*="fullscreen"]) {
-  font-size: 1.6rem;
+.fullscreenBtn {
+  font-size: 1.5rem;
 }
 
 .navBtnActive {
