@@ -50,12 +50,12 @@ export default function FeatureBlock({
   return (
     <div
       ref={ref}
-      className="relative w-full min-h-screen flex flex-row items-center gap-4 flex-nowrap py-[16vh] px-32"
+      className="relative w-full min-h-screen flex flex-col lg:flex-row items-center gap-4 flex-nowrap py-[16vh] px-32"
       style={style}
       id={`feature-block-${id}`}
     >
       <aside
-        className="relative w-1/3"
+        className="relative w-full lg:w-1/3"
         style={{ color: content.theme === 'dark' ? '#fff' : '#002766' }}
       >
         <div className="relative leading-1.2 font-normal">
@@ -74,7 +74,7 @@ export default function FeatureBlock({
         </div>
         <p>{content.headline}</p>
       </aside>
-      <section className="w-2/3">
+      <section className="w-full lg:w-2/3">
         <div className="flex flex-row gap-8">
           {content.useCases.map((useCase, index) => {
             return (
@@ -103,7 +103,7 @@ export default function FeatureBlock({
           })}
         </div>
         <div
-          className="w-full border-y py-4 text-3xl leading-1.6 font-bold my-6"
+          className="w-full h-54 flex items-center border-y py-4 text-3xl leading-[1.4] font-semibold my-6"
           style={{
             color: content.theme === 'dark' ? '#fff' : '#002766',
             borderColor: content.theme === 'dark' ? '#096DD9' : '#D9D9D9',
