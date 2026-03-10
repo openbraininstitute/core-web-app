@@ -39,10 +39,10 @@
 .footer {
   flex-shrink: 0;
   width: 100%;
-  padding: 1em;
-  background-color: var(--color-neutral-9);
-  border-top: 1px solid #d9d9d9;
-  box-shadow: 0 -3px 10px rgba(200, 200, 200, 0.2);
+  padding: 0.65em;
+  padding-top: 0.4em;
+  background-color: var(--color-neutral-8);
+  box-shadow: 0 -3px 10px var(--color-neutral-8);
   position: relative;
   z-index: 1;
 }
