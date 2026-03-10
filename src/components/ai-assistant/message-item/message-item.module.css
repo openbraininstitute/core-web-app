@@ -60,10 +60,11 @@
 }
 
 .assistant {
-  background-color: transparent;
-  border-radius: 0;
-  padding: 12px 12px;
+  background-color: var(--color-neutral-9);
+  border-radius: 0.5em;
+  padding: 12px;
   margin: 16px 0;
+  overflow: hidden;
 }
 
 .markdown {
