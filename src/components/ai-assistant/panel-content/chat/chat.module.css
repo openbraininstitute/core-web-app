@@ -44,7 +44,7 @@
   padding: 0.65em;
   padding-top: 0.4em;
   background-color: var(--color-neutral-8);
-  box-shadow: 0 -3px 10px var(--color-neutral-8);
+  box-shadow: 0 -2px 6px var(--color-neutral-8);
   position: relative;
   z-index: 1;
 }

@@ -40,92 +40,102 @@ export default function History({ className, onBack }: HistoryProps) {
     fetchNextPage();
   };
 
-  if (isLoading) {
-    return <TabTransitionLoader message="Loading conversation history..." />;
-  }
-
   return (
     <>
       <div className={classNames(className, styles.history)}>
-        <button
-          type="button"
-          className={styles.closeBtn}
-          onClick={onBack}
-          aria-label="Close history"
-          title="Close history"
-        >
-          ✕
-        </button>
-        <div>
-          {history && (
-            <div>
-              {sections.map(
-                ({ title, list }) =>
-                  list.length > 0 && (
-                    <div key={title}>
-                      <h1>{title}</h1>
-                      {list.map((thread) => (
-                        <div
-                          className={classNames(
-                            styles.card,
-                            threadId === thread.id && styles.currentThread
-                          )}
-                          key={thread.id}
-                        >
-                          <Tooltip tooltip="Rename this thread" arrow="topLeft">
-                            <button
-                              type="button"
-                              className={styles.edit}
-                              onClick={() => {
-                                setCurrentThreadId(thread.id);
-                                setCurrentThreadTitle(thread.title);
-                                setOpenEdit(true);
-                              }}
+        <div className={styles.header}>
+          <div className={styles.headerInner}>
+            <span className={styles.headerTitle}>History</span>
+          </div>
+          <button
+            type="button"
+            className={styles.closeBtn}
+            onClick={onBack}
+            aria-label="Close history"
+            title="Close history"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className={styles.content}>
+          {isLoading ? (
+            <TabTransitionLoader message="Loading conversation history..." />
+          ) : (
+            <>
+              {history && (
+                <div>
+                  {sections.map(
+                    ({ title, list }) =>
+                      list.length > 0 && (
+                        <div key={title}>
+                          <h1>{title}</h1>
+                          {list.map((thread) => (
+                            <div
+                              className={classNames(
+                                styles.card,
+                                threadId === thread.id && styles.currentThread
+                              )}
+                              key={thread.id}
                             >
-                              <IconEdit />
-                            </button>
-                          </Tooltip>
-                          <button
-                            key={thread.id}
-                            type="button"
-                            className={styles.mainButton}
-                            onClick={() => {
-                              assistant.isEmptyThread.set(false);
-                              setThreadId(thread.id);
-                              onBack();
-                            }}
-                          >
-                            <Tooltip tooltip="Click to recover this thread">{thread.title}</Tooltip>
-                          </button>
-                          <Tooltip tooltip="Delete this thread permanently" arrow="topRight">
-                            <button
-                              type="button"
-                              className={styles.delete}
-                              onClick={() => {
-                                setCurrentThreadId(thread.id);
-                                setCurrentThreadTitle(thread.title);
-                                setOpenDelete(true);
-                              }}
-                            >
-                              <IconDelete />
-                            </button>
-                          </Tooltip>
+                              <Tooltip tooltip="Rename this thread" arrow="topLeft">
+                                <button
+                                  type="button"
+                                  className={styles.edit}
+                                  onClick={() => {
+                                    setCurrentThreadId(thread.id);
+                                    setCurrentThreadTitle(thread.title);
+                                    setOpenEdit(true);
+                                  }}
+                                >
+                                  <IconEdit />
+                                </button>
+                              </Tooltip>
+                              <button
+                                key={thread.id}
+                                type="button"
+                                className={styles.mainButton}
+                                onClick={() => {
+                                  assistant.isEmptyThread.set(false);
+                                  setThreadId(thread.id);
+                                  onBack();
+                                }}
+                              >
+                                <Tooltip tooltip="Click to recover this thread">
+                                  {thread.title}
+                                </Tooltip>
+                              </button>
+                              <Tooltip tooltip="Delete this thread permanently" arrow="topRight">
+                                <button
+                                  type="button"
+                                  className={styles.delete}
+                                  onClick={() => {
+                                    setCurrentThreadId(thread.id);
+                                    setCurrentThreadTitle(thread.title);
+                                    setOpenDelete(true);
+                                  }}
+                                >
+                                  <IconDelete />
+                                </button>
+                              </Tooltip>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  )
+                      )
+                  )}
+                </div>
               )}
-            </div>
+              {hasMore && (
+                <div className={styles.loadMore}>
+                  <button type="button" onClick={handleNext}>
+                    <IconPlus />
+                    <div>Load more</div>
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
-        {hasMore && (
-          <div className={styles.loadMore}>
-            <button type="button" onClick={handleNext}>
-              <IconPlus />
-              <div>Load more</div>
-            </button>
-          </div>
-        )}
       </div>
       <DialogEdit
         open={openEdit}

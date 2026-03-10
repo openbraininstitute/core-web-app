@@ -1,10 +1,44 @@
 .history {
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1.25em 1em 2em;
-  position: relative;
+  padding: 1.5em 1em;
+  padding-right: calc(1em - 9px);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  scrollbar-gutter: stable;
+}
+
+.content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.content > div {
+  width: 100%;
+  max-width: 600px;
 }
 
 .history > div {
@@ -12,31 +46,59 @@
   max-width: 600px;
 }
 
+.header {
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem 0.8rem;
+  background: var(--color-neutral-9);
+  border-bottom: 1.5px solid var(--color-neutral-5);
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-primary-8);
+}
+
+.headerTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-primary-8);
+}
+
 .closeBtn {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.8rem;
+  height: 1.8rem;
   border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: #888;
-  font-size: 0.9rem;
+  border: 1px solid var(--color-primary-5);
+  background: #fff;
+  color: var(--color-primary-5);
+  font-size: 1rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: all 0.2s ease;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .closeBtn:hover {
-  background: #e8e8e8;
-  color: #333;
+  background:var(--color-primary-5);
+  border-color: var(--color-primary-5);
+  color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
-.history div > .card {
+.content div > .card {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -50,12 +112,12 @@
   transition: all 0.15s ease;
 }
 
-.history div > .card:hover {
+.content div > .card:hover {
   background: #f8f9fa;
   border-color: #d1d5db;
 }
 
-.history div > .card.currentThread {
+.content div > .card.currentThread {
   background: #e3f2fd;
   color: var(--color-primary-9);
   border: 1px solid var(--color-primary-5);
@@ -63,18 +125,18 @@
   font-weight: 600;
 }
 
-.history div > .card.currentThread:hover {
+.content div > .card.currentThread:hover {
   background: #d1e7f8;
   border-color: var(--color-primary-6);
   box-shadow: 0 2px 5px rgba(24, 144, 255, 0.18);
 }
 
-.history div > .card.currentThread .more,
-.history div > .card.currentThread menu {
+.content div > .card.currentThread .more,
+.content div > .card.currentThread menu {
   color: #fff;
 }
 
-.history div > .mainButton {
+.content div > .mainButton {
   border: none;
   background: none;
   text-align: left;
@@ -116,7 +178,7 @@
   opacity: 1;
 }
 
-.history > div h1 {
+.content > div h1 {
   color: var(--color-primary-8);
   font-variant: small-caps;
   font-weight: 600;
