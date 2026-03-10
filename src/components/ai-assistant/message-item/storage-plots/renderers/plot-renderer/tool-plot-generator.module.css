@@ -3,12 +3,14 @@
 }
 
 .plotContainer {
-  margin: 0;
+  margin: 5px 0;
   background-color: white;
   max-height: 400px;
   display: flex;
   flex-direction: column;
   position: relative;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .fullscreenButton {

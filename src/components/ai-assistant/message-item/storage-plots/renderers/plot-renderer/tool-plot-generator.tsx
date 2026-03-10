@@ -111,7 +111,12 @@ function CustomPlot({
     <>
       <div
         className={classNames('h-full', styles.plotContainer)}
-        style={{ width: `${plotWidth}px`, maxWidth: '100%' }}
+        style={{
+          width: `${plotWidth}px`,
+          maxWidth: '100%',
+          border: '1px solid #d9d9d9',
+          borderRadius: '8px',
+        }}
       >
         <button
           type="button"

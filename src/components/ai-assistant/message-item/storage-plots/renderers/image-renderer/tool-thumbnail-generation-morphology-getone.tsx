@@ -80,6 +80,9 @@ function CustomThumbnail({
           height: '400px',
           display: 'flex',
           alignItems: 'center',
+          border: '1px solid #d9d9d9',
+          borderRadius: '8px',
+          margin: '5px 0',
         }}
       >
         {!imageLoaded && <ToolSkeleton />}

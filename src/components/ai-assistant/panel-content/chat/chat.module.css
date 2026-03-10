@@ -15,8 +15,10 @@
   display: flex;
   flex-direction: column;
   padding: 1em;
+  padding-right: calc(1em - 9px);
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  scrollbar-gutter: stable;
 }
 
 .articles::-webkit-scrollbar {
