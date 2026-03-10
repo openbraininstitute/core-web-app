@@ -29,8 +29,8 @@ export function getDocumentation(
   return selection;
 }
 
-export function getDocumentationForInputResistance() {
-  return memodelDictionary.rin;
+export function getDocumentationForInputResistance(entityType: TEntityTypeDict) {
+  return get(validationDocumentation, entityType, null)?.rin;
 }
 
 /**
@@ -270,27 +270,27 @@ const emodelDictionary: Readonly<Record<string, IValidationDocumentation>> = {
     },
     validation_condition: 'No Validation is performed. A thumbnail figure is generated.',
   },
-  currentscape_analysis: {
+  currentscape: {
     description:
       '[Currentscape](https://github.com/openbraininstitute/Currentscape) plots are use to study the contribution of ionic currents ',
   },
-  parameter_evolution_density_analysis: {
+  evo_parameter_density: {
     description:
       'This plots displays the evolution of parameter values during multi-objective optimization.',
   },
-  optimisation_analysis: {
+  optimisation: {
     description:
       'Cumulative optimization score of all optimization features. Lower scores infers better fits of EModel features with the experimental feature values',
   },
-  parameter_distribution_analysis: {
+  parameter_distribution: {
     description:
       'The distrubtion of 10 best hall of Fame (HOF) optimization E-Model parameter values.',
   },
-  scores_analysis: {
+  scores: {
     description:
       'Z-scores of individual optimization model features. See https://doi.org/10.1016/j.patter.2023.100855 for more details.',
   },
-  traces_analysis: {
+  traces: {
     description:
       'The voltage responses of protocols used for optimization and validation during E-Model optimization.',
   },
@@ -321,11 +321,11 @@ The output figures for each validation, along with the validation protocol descr
 `;
 
 const emodelMarkdown = `
-E-Model validation and analysis results include a series of tests/analyses to assess the model quality.
+E-model validation and analysis results include a series of tests/analyses to assess the model quality.
 
-## E-Model Validation
+## E-model Validation
 
-We calculate the threshold current (rheobase, if not present) and the input resistance of the model (Rin). The validations include:
+A series of 8 validations are performed on an E-model. We first also calculate the threshold current (rheobase, if not present) and the input resistance of the model (Rin). The validations include:
 
 1. Hyperpolization Validation
 2. Input Resistance (Rin) Validation
@@ -336,17 +336,17 @@ We calculate the threshold current (rheobase, if not present) and the input resi
 7. FI (Frequency-Current) Curve Validation
 8. Back-propagating Action Potential (BPAP) Validation
 
-The output figures for each validation, along with the validation protocol descriptions and validation conditions, are provided below.
+The output figures for each validation, along with the validation protocol descriptions and validation conditions, are provided below besides each figure.
 
-## E-Model Analysis
+## E-model Analysis
 
-These are the analyses generated after the multi-objective optimization (using [BluePyEModel](https://github.com/openbraininstitute/BluePyEModel)/[BluePyOpt](https://github.com/openbraininstitute/BluePyOpt)) to build an E-Model from experimental data: 3D morphology, intracellular electrophysiology data and ion channel models. See https://doi.org/10.1016/j.patter.2023.100855 for more details.
+These are the analyses generated after the multi-objective optimization (using [BluePyEModel](https://github.com/openbraininstitute/BluePyEModel)/[BluePyOpt](https://github.com/openbraininstitute/BluePyOpt)) to build an E-model from experimental data: 3D morphology, intracellular electrophysiology data and ion channel models. See the paper [A universal workflow for creation, validation, and generalization of detailed neuronal models](https://doi.org/10.1016/j.patter.2023.100855) for more details.
 
-E-Model analyses has the following figures:
+E-model analyses has the following figures:
 
 1. [Currentscape](https://github.com/openbraininstitute/Currentscape)
 2. Parameter Evolution Density
-3. Optimisation
+3. Optimization
 4. Parameter Distribution
 5. Scores
 6. Traces
@@ -355,8 +355,8 @@ E-Model analyses has the following figures:
 
 - An E-model PASSES validation if all individual validations pass. E-model validation status only represents a qualitative assessment of the model.
 - The platform skips certain validations when a model lacks specific sections, such as AIS Validation when AIS is absent, and BPAP Validation when dendrites are missing in the model, and their figures do not appear in the list below.
-- Some E-Models may lack analysis figures as the optimization and experimental data for those that were not available on the platform.
-- E-models are NOT simulatable on the platform. To simulate an E-Model configuration, you need to create an ME-Model. To learn more, select the "Reports" tab on top left of the home screen and navigate to Single Neuron for more details.
+- Some E-models may lack analysis figures as the optimization and experimental data for those that were not available on the platform.
+- E-models are NOT simulatable on the platform. To simulate an E-model configuration, you need to create an ME-model. To learn more about the public E-models currently present on the platform, select the "Reports" tab on top right of the screen and navigate to "Single Cell" for more details.
 
 `;
 

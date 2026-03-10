@@ -1,13 +1,36 @@
+import { useId } from 'react';
+
+import { TextPatternTransformer } from '@/ui/molecules/text-pattern-transformer';
 import { classNames } from '@/util/utils';
 
 import type { FlatValidationResult } from '@/features/model-analysis/viewer/container/hooks';
 
 import styles from './documentation.module.css';
 
+export function TransformedLink({
+  url,
+  className,
+}: {
+  url: string;
+  className?: React.ComponentProps<'a'>['className'];
+}) {
+  const markdownMatch = url.match(markdownLinkRegex);
+
+  const href = markdownMatch?.[2] ?? (url.startsWith('www.') ? `https://${url}` : url);
+  const label = markdownMatch?.[1] ?? url;
+
+  const id = useId();
+  return (
+    <a key={id} href={href} target="_blank" rel="noopener noreferrer" className={className}>
+      {label}
+    </a>
+  );
+}
 export interface DocumentationProps {
   className?: string;
   value: FlatValidationResult;
 }
+const markdownLinkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/;
 
 export default function Documentation({ className, value }: DocumentationProps) {
   const { documentation } = value;
@@ -34,7 +57,12 @@ export default function Documentation({ className, value }: DocumentationProps) 
           <hr />
         </>
       )}
-      <p>{documentation.description}</p>
+      <TextPatternTransformer
+        regex={markdownLinkRegex}
+        component={(match) => <TransformedLink url={match} className="text-primary-8 underline" />}
+      >
+        {documentation.description}
+      </TextPatternTransformer>
       <div className={styles.grid}>
         {protocol?.type && (
           <>
@@ -67,10 +95,12 @@ export default function Documentation({ className, value }: DocumentationProps) 
           </>
         )}
       </div>
-      <div className="py-5">
-        <h4 className="text-primary-8 font-black">Validation condition: </h4>
-        {documentation.validation_condition}
-      </div>
+      {documentation.validation_condition && (
+        <div className="py-5">
+          <h4 className="text-primary-8 font-black">Validation condition: </h4>
+          {documentation.validation_condition}
+        </div>
+      )}
     </div>
   );
 }

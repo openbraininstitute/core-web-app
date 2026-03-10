@@ -66,7 +66,7 @@ export function useFlatValidationResults(
             entityId,
             name: 'Input Resistance Validation',
             passed: result.passed,
-            documentation: getDocumentationForInputResistance(),
+            documentation: getDocumentationForInputResistance(entityType),
             extraVariables: rin
               ? {
                   Rin: {
