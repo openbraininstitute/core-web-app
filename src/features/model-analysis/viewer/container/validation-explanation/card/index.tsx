@@ -1,13 +1,14 @@
-import React from 'react';
 import { RightOutlined } from '@ant-design/icons';
-
-import { FlatValidationResult } from '../hooks';
-import PDFViewer from '../../asset-viewers/pdf-viewer';
-import ImageViewer from '../../asset-viewers/image-viewer';
-import Documentation from './documentation';
+import React from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import ImageViewer from '@/features/model-analysis/viewer/asset-viewers/image-viewer';
+import PDFViewer from '@/features/model-analysis/viewer/asset-viewers/pdf-viewer';
 import { classNames } from '@/util/utils';
+
+import Documentation from './documentation/documentation';
+
+import type { FlatValidationResult } from '@/features/model-analysis/viewer/container/hooks';
 
 import styles from './validation-result-card.module.css';
 
@@ -21,9 +22,11 @@ export function ValidationResultCard({ className, value }: ValidationResultCardP
 
   return (
     <details key={value.id} className={classNames(className, styles.validationResultCard)} open>
-      <summary>
+      <summary className="cursor-pointer group hover:bg-gray-100/50 rounded-full hover:shadow-xs">
         <h2>
-          <RightOutlined />
+          <div className="rounded-full border border-gray-100 p-1 size-8 flex items-center justify-center group-hover:bg-gray-200">
+            <RightOutlined className="size-4" />
+          </div>
           <span className="ml-4">{value.name}</span>
           <span className={value.passed ? styles.passed : styles.failed}>
             {value.passed ? 'passed' : 'failed'}

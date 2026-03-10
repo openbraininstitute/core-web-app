@@ -1,11 +1,10 @@
-/* eslint-disable react/no-unstable-nested-components */
-
 import { Select } from 'antd';
-import React, { type ReactNode } from 'react';
-import { isType } from '@/util/type-guards';
 
+import { isType } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
-import type { FlatValidationResult } from '../hooks';
+
+import type { ReactNode } from 'react';
+import type { FlatValidationResult } from '@/features/model-analysis/viewer/container/hooks';
 
 import styles from './select-analysis.module.css';
 
@@ -37,7 +36,7 @@ export function SelectAnalysis({ className, value, onChange, results }: SelectAn
       <div className="text-neutral-3 ml-3 inline-block">SELECT ANALYSIS</div>
       <Select<string, { label: string | FlatValidationResult }>
         options={options}
-        className="min-w-[200px]"
+        className="min-w-50"
         value={value}
         onChange={onChange}
         labelRender={(option) => (
