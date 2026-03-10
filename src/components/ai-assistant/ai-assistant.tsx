@@ -107,7 +107,7 @@ export default function AiAssistant({
               </button>
             </nav>
 
-            <div className={styles.headerTitle}>AI assistant</div>
+            <div className={styles.headerTitle}>OBI assistant</div>
 
             <div className={styles.headerActions}>
               {onFullscreenToggle && (
