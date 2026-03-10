@@ -18,11 +18,11 @@ import type { AwaitedType, WorkspaceContext } from '@/types/common';
 export default async function Results({
   entity,
   extendedType,
-  ctx,
+  context,
 }: {
   entity: EntityTypeValue;
   extendedType: TExtendedEntitiesTypeDict;
-  ctx: WorkspaceContext;
+  context: WorkspaceContext;
 }) {
   const entityType = getEntityByExtendedType({ type: extendedType });
   if (!entityType) notFound();
@@ -32,7 +32,7 @@ export default async function Results({
     try {
       config = await singleNeuronSimulationApiQueryExpand.config(
         entity as ISingleNeuronSimulation,
-        ctx
+        context
       );
 
       if (!config) notFound();
@@ -51,7 +51,7 @@ export default async function Results({
     try {
       config = await singleNeuronSynaptomeSimulationApiQueryExpand.config(
         entity as ISingleNeuronSynaptomeSimulation,
-        ctx
+        context
       );
 
       if (!config) notFound();

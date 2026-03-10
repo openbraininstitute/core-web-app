@@ -28,9 +28,11 @@ export type TGenerationWorkflowFormPanelKeys =
 export function GenerationWorkflowFormPanel({
   value,
   onChange,
+  disabledTabs,
 }: {
   value: TGenerationWorkflowFormPanelKeys;
   onChange: (value: TGenerationWorkflowFormPanelKeys) => void;
+  disabledTabs?: TGenerationWorkflowFormPanelKeys[];
 }) {
   return (
     <PillTabs value={value} onValueChange={(v) => onChange(v as TGenerationWorkflowFormPanelKeys)}>
@@ -39,10 +41,12 @@ export function GenerationWorkflowFormPanel({
           <PillTabsTrigger
             key={opt.value}
             value={opt.value}
+            disabled={disabledTabs?.includes(opt.value)}
             className={cn(
               'h-10 px-10! py-3! hover:font-medium! lg:h-max!',
               'data-[state=active]:font-bold! data-[state=active]:shadow-[8px_12px_24px_0px_#0000000F,-16px_-16px_20px_0px_#FFFFFFD1]!',
-              'data-[state=inactive]:text-primary-9!'
+              'data-[state=inactive]:text-primary-9!',
+              'disabled:cursor-not-allowed disabled:bg-gray-300'
             )}
           >
             {opt.label}

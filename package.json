@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "APP_VERSION=$(make version) next dev",
+    "dev:inspect": "APP_VERSION=$(make version) next dev --inspect",
     "build": "next build",
     "start": "next start",
     "lint": "biome check",
@@ -74,6 +75,7 @@
     "input-otp": "^1.4.2",
     "jotai": "^2.16.0",
     "jotai-devtools": "^0.13.0",
+    "jotai-family": "^1.0.1",
     "jszip": "^3.10.1",
     "katex": "^0.16.25",
     "memoize-one": "^6.0.0",

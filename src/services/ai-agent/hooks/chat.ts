@@ -1,12 +1,16 @@
 'use client';
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { atom, useAtom, useSetAtom } from 'jotai';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
-import { logError } from '@/util/logger';
+import { useAccessToken } from '@/hooks/useAccessToken';
+import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
+import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
+import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
@@ -16,13 +20,19 @@ import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
 const agentStateAtom = atom<Record<string, Config>>({});
+let requestId = crypto.randomUUID().replace(/-/g, '');
+let returnId = '';
 
 export function useServiceAiAgentChat(threadId: string) {
   const [aiAgentState] = useAtom(agentStateAtom);
   const assistant = useAiAssistant();
-  const initialMessages = assistant.initialMessages.useValue();
-  const { accessToken } = assistant.useContext();
+  const assistantInitialMessages = assistant.initialMessages.useValue();
+  const isLoadingMessages = assistant.isLoadingMessages.useValue();
+  const accessToken = useAccessToken();
   const activeTools = useAIActiveTools();
+  const queryClient = useQueryClient();
+  const virtualLabId = useParamVirtualLabId();
+  const projectId = useParamProjectId();
   const setRateLimit = useSetAtom(atomRateLimit);
 
   const [_, setConfig] = useAtom(configStateAtom);
@@ -31,9 +41,10 @@ export function useServiceAiAgentChat(threadId: string) {
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
-    initialMessages,
+    initialMessages: assistantInitialMessages,
     headers: {
       Authorization: `Bearer ${accessToken}`,
+      'x-request-id': requestId,
     },
     experimental_prepareRequestBody: ({ messages }) => {
       const lastMessage = messages.at(-1);
@@ -53,6 +64,7 @@ export function useServiceAiAgentChat(threadId: string) {
         reset_in: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
       };
       setRateLimit(newRateLimit);
+      returnId = resp.headers.get('x-request-id') ?? '';
       return resp;
     },
   });
@@ -79,7 +91,7 @@ export function useServiceAiAgentChat(threadId: string) {
       } catch {
         logError(
           'Failed to parse tool invocation result as JSON:',
-          // @ts-expect-error - result property exists on result state but not in ToolInvocation union type
+          // @ts-expect-error
           toolInvocation.toolInvocation.result
         );
       }
@@ -92,18 +104,25 @@ export function useServiceAiAgentChat(threadId: string) {
 
   return {
     messages: chat.messages,
+    isLoadingMessages,
     append: (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
+      assistant.isEmptyThread.set(false);
       chat.append(message, chatRequestOptions);
       if (chat.messages.length === 0) {
         // We suggest a title for the thread based on the first message
         try {
           serviceAiAgentThreadSuggestTitle({
-            accessToken,
+            accessToken: accessToken ?? 'NO-TOKEN',
             threadId,
             title: message.content,
+          }).then(() => {
+            queryClient.invalidateQueries({
+              queryKey: keyBuilderAI.history(virtualLabId, projectId),
+            });
           });
         } catch (ex) {
-          // Renaming the thread is not important - if it fails, we just ignore it
+          // Renaming the thread is not important.
+          // If it fails, we just ignore it.
           logError('Unable to rename the thread:', ex);
         }
       }

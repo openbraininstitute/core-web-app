@@ -74,7 +74,7 @@ export default function Page({
         virtualLabId={virtualLabId}
         projectId={projectId}
         initialConfig={campaignData?.config.form}
-        className="px-8 pt-1"
+        className="px-4 pt-2"
       />
     );
   }

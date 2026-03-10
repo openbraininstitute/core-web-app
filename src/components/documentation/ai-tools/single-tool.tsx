@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
+import { WaveLoader } from '@/components/ai-assistant/wave-loader';
 import { useAITool } from '@/services/ai-agent/tools/tools';
-import { Spinner } from '@/components/ai-assistant/spinner';
 
 export default function SingleAIToolsContent() {
   const { toolId } = useParams<{ toolId: string }>();
@@ -22,7 +22,7 @@ export default function SingleAIToolsContent() {
         </Link>
         <h1 className="text-4xl font-bold">Chat Tool {toolId}</h1>
       </div>
-      {!selectedTool && <Spinner />}
+      {!selectedTool && <WaveLoader />}
       <p className="text-lg leading-normal whitespace-pre-wrap">{selectedTool?.description}</p>
     </div>
   );

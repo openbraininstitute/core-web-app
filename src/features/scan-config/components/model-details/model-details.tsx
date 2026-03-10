@@ -7,17 +7,17 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 interface ModelDetailsProps {
   className?: string;
-  model: ICircuit | IMEModel;
+  entity: ICircuit | IMEModel;
 }
 
-export default function ModelDetails({ className, model }: ModelDetailsProps) {
+export default function ModelDetails({ className, entity }: ModelDetailsProps) {
   return (
     <div
       className={className}
       data-scan-config-block-element={ScanConfigUIElementDict.ModelIdentifier}
     >
-      <Input value={model.id} disabled />
-      <Input value={model.name} disabled />
+      <Input value={entity.id} disabled />
+      <Input value={entity.name} disabled />
     </div>
   );
 }

@@ -2,16 +2,17 @@
 
 import React from 'react';
 
-import { IconEdit } from '../../icons/edit';
-import { IconDelete } from '../../icons/delete';
-import DialogEdit from './dialog-edit';
-import DialogDelete from './dialog-delete';
-import { useSections } from './hooks';
-
-import Tooltip from '@/components/tooltip';
-import { classNames } from '@/util/utils';
-import { useAiAssistant } from '@/services/ai-agent/assistant';
 import IconPlus from '@/components/icons/Plus';
+import Tooltip from '@/components/tooltip';
+import { useAiAssistant } from '@/services/ai-agent/assistant';
+import { classNames } from '@/util/utils';
+
+import { IconDelete } from '../../icons/delete';
+import { IconEdit } from '../../icons/edit';
+import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
+import DialogDelete from './dialog-delete';
+import DialogEdit from './dialog-edit';
+import { useSections } from './hooks';
 
 import styles from './history.module.css';
 
@@ -23,7 +24,7 @@ export interface HistoryProps {
 export default function History({ className, onBack }: HistoryProps) {
   const assistant = useAiAssistant();
   const [threadId, setThreadId] = assistant.threadId.use();
-  const [history, hasMore, next] = assistant.useHistory();
+  const [history, hasMore, fetchNextPage, isLoading] = assistant.useHistory();
   const sections = useSections(history);
   const [openEdit, setOpenEdit] = React.useState(false);
   const [openDelete, setOpenDelete] = React.useState(false);
@@ -34,8 +35,12 @@ export default function History({ className, onBack }: HistoryProps) {
     assistant.renameThread(newThreadId, newTitle);
   };
   const handleNext = () => {
-    next();
+    fetchNextPage();
   };
+
+  if (isLoading) {
+    return <TabTransitionLoader message="Loading conversation history..." />;
+  }
 
   return (
     <>
@@ -74,6 +79,7 @@ export default function History({ className, onBack }: HistoryProps) {
                             type="button"
                             className={styles.mainButton}
                             onClick={() => {
+                              assistant.isEmptyThread.set(false);
                               setThreadId(thread.id);
                               onBack();
                             }}
