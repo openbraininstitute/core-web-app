@@ -1,18 +1,18 @@
 .welcome {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   height: 100%;
-  padding-top: 2em;
+  padding: 0.2em;
 }
 
 .welcome > div {
   font-size: 120%;
-  padding: 1em;
-  box-shadow: rgba(0, 0, 0, 0.12) 0 6px 16px;
+  padding: 1.5em;
+  background-color: #fff;
+  border: 1px solid #d9d9d9;
   border-radius: 1em;
-  border: 2px solid var(--color-neutral-9);
-  background-color: #fafafa;
+  box-shadow: var(--shadow-lift);
 }
 
 .welcome > div > p {

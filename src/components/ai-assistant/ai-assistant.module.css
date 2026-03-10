@@ -62,7 +62,7 @@
   background: var(--color-neutral-9);
   border-radius: 1em 1em 0 0;
   border-bottom: 1px solid #d9d9d9;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
   position: relative;
   z-index: 1;
 }
@@ -122,21 +122,22 @@
 
 .historyBtn {
   font-size: 2.2rem;
-  padding-right: 1px;
+  padding: 1px;
+  padding-right: 2px;
   background: var(--color-neutral-8);
-  border-radius: 0.4rem;
+  border-radius: 0.5rem;
 }
 
 .fullscreenBtn {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   background: var(--color-neutral-8);
-  border-radius: 0.4rem;
+  border-radius: 0.5rem;
 }
 
 .navBtnActive {
   color: var(--color-light);
   background: var(--color-primary-8);
-  border-radius: 0.4rem;
+  border-radius: 0.5rem;
   position: relative;
 }
 
