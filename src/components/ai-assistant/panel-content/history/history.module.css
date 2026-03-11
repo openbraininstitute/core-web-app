@@ -40,11 +40,6 @@
   max-width: 600px;
 }
 
-.history > div {
-  width: 100%;
-  max-width: 600px;
-}
-
 .header {
   flex-shrink: 0;
   width: 100%;
