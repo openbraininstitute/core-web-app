@@ -130,7 +130,7 @@ export default function Left({
         })}
       </div>
 
-      {!readOnly && (!aiConfig || (aiConfig && campaignId)) && (
+      {!readOnly &&
         <GenerateConfigButton
           loading={loading}
           campaignId={campaignId}
@@ -142,7 +142,7 @@ export default function Left({
           setLoading={setLoading}
           activity={activity}
         />
-      )}
+      }
     </div>
   );
 }
