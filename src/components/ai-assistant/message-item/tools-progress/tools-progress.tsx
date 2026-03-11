@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useAtom } from 'jotai';
+import { RiResetLeftLine } from '@remixicon/react';
 
 import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
@@ -126,28 +127,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
                 title="Restore this state"
                 aria-label="Restore state"
               >
-                <svg
-                  className={styles.restoreIcon}
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M3.5 8C3.5 5.51472 5.51472 3.5 8 3.5C10.4853 3.5 12.5 5.51472 12.5 8C12.5 10.4853 10.4853 12.5 8 12.5C6.5 12.5 5.2 11.8 4.5 10.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M3.5 6V8H5.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <RiResetLeftLine className={styles.restoreIcon} size={16} />
               </button>
             )}
 
