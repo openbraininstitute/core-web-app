@@ -237,7 +237,7 @@ export default function BlockDictionaryEntries({
                     className={cn(
                       'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center justify-between ',
                       'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
-                      'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
+                      'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1 mb-3',
                       { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected }
                     )}
                     tabIndex={0}
