@@ -47,3 +47,10 @@ export const expandedRootElementsAtom = atom<Set<string>>(new Set(['info']));
  * Used to control which entry is shown in the middle panel
  */
 export const selectedEntryAtom = atom<string>('');
+
+/**
+ * Atom to track which message has the diff view active
+ * Only one message can have diffs shown at a time
+ * Value is the message ID, or null if no diffs are shown
+ */
+export const activeDiffMessageIdAtom = atom<string | null>(null);

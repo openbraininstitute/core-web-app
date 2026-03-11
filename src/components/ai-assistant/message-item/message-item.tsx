@@ -14,6 +14,7 @@ import {
   configDiffsAtom,
   expandedRootElementsAtom,
   oldConfigAtom,
+  activeDiffMessageIdAtom,
 } from '@/state/config-highlights';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
@@ -87,7 +88,10 @@ function MessageChild({
   const [, setConfigDiffs] = useAtom(configDiffsAtom);
   const [, setExpandedRootElements] = useAtom(expandedRootElementsAtom);
   const [, setOldConfig] = useAtom(oldConfigAtom);
-  const [showDiff, setShowDiff] = React.useState(false);
+  const [activeDiffMessageId, setActiveDiffMessageId] = useAtom(activeDiffMessageIdAtom);
+  
+  // Check if this message has the diff view active
+  const showDiff = activeDiffMessageId === value.id;
 
   // Accumulate diffs from all editstate calls in this message
   const accumulatedDiffs = React.useMemo(() => {
@@ -213,10 +217,12 @@ function MessageChild({
   // Handler for view diffs button (toggle)
   const handleViewDiffs = React.useCallback(() => {
     const newShowDiff = !showDiff;
-    setShowDiff(newShowDiff);
-
+    
     if (newShowDiff) {
-      // Turning on - apply diffs
+      // Turning on - set this message as the active diff message
+      setActiveDiffMessageId(value.id);
+      
+      // Apply diffs
       setOldConfig(firstOldConfig);
 
       // Set highlights for the config UI
@@ -253,7 +259,10 @@ function MessageChild({
       // Set all modified blocks as expanded
       setExpandedRootElements(modifiedBlocks);
     } else {
-      // Turning off - clear highlights
+      // Turning off - clear the active diff message
+      setActiveDiffMessageId(null);
+      
+      // Clear highlights
       setConfigHighlights([]);
       setConfigDiffs([]);
       setOldConfig(null);
@@ -261,8 +270,10 @@ function MessageChild({
     }
   }, [
     showDiff,
+    value.id,
     accumulatedDiffs,
     firstOldConfig,
+    setActiveDiffMessageId,
     setOldConfig,
     setConfigHighlights,
     setConfigDiffs,
@@ -303,6 +314,19 @@ function MessageChild({
     );
     setExpandedRootElements(modifiedBlocks);
   }, [showDiff, accumulatedDiffs, setConfigHighlights, setConfigDiffs, setExpandedRootElements]);
+
+  // Clear highlights when showDiff is turned off (only if this message was showing diffs)
+  const prevShowDiffRef = React.useRef(showDiff);
+  React.useEffect(() => {
+    // Only clear if this message was showing diffs and now isn't
+    if (prevShowDiffRef.current && !showDiff) {
+      setConfigHighlights([]);
+      setConfigDiffs([]);
+      setOldConfig(null);
+      setExpandedRootElements(new Set(['info']));
+    }
+    prevShowDiffRef.current = showDiff;
+  }, [showDiff, value.id, setConfigHighlights, setConfigDiffs, setOldConfig, setExpandedRootElements]);
 
   switch (value.role) {
     case 'user':

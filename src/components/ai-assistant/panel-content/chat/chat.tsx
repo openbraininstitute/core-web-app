@@ -9,6 +9,7 @@ import {
   useServiceAiAgentSuggestionFromUserJourney,
 } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
+import { activeDiffMessageIdAtom } from '@/state/config-highlights';
 import { classNames } from '@/util/utils';
 
 import ErrorPanel from '../../error';
@@ -42,6 +43,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   const accessToken = useAccessToken();
   const rateLimit = useAtomValue(atomRateLimit);
   const setRateLimit = useSetAtom(atomRateLimit);
+  const setActiveDiffMessageId = useSetAtom(activeDiffMessageIdAtom);
   const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
   const prevRemainingRef = React.useRef<number | null>(null);
   const hasInitializedRef = React.useRef(false);
@@ -84,6 +86,13 @@ export default function Chat({ className, threadId }: ChatProps) {
   });
 
   const [scrollHeight, setScrollHeight] = React.useState(0);
+
+  // Clear active diff view when a new message is submitted
+  React.useEffect(() => {
+    if (status === 'submitted') {
+      setActiveDiffMessageId(null);
+    }
+  }, [status, setActiveDiffMessageId]);
 
   // Monitor scroll height changes for auto-scroll
   React.useEffect(() => {
