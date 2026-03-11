@@ -151,38 +151,42 @@ export default function Chat({ className, threadId }: ChatProps) {
     }
   };
 
-  if (threadId && isLoadingMessages && !isEmptyThread) {
-    return <TabTransitionLoader message="Loading conversation..." />;
-  }
-
   return (
     <div className={classNames(styles.chatContainer, className)}>
       <div className={styles.articles} ref={refContainer} onWheel={handleWheel}>
-        {(!threadId || isEmptyThread) && <Welcome />}
-        {messages.map((item, index) => (
-          <MessageItem
-            key={item.id}
-            value={item}
-            status={status}
-            isLastMessage={index === messages.length - 1}
-          />
-        ))}
+        {threadId && isLoadingMessages && !isEmptyThread ? (
+          <TabTransitionLoader message="Loading conversation..." />
+        ) : (
+          <>
+            {(!threadId || isEmptyThread) && <Welcome />}
+            {messages.map((item, index) => (
+              <MessageItem
+                key={item.id}
+                value={item}
+                status={status}
+                isLastMessage={index === messages.length - 1}
+              />
+            ))}
 
-        {status === 'ready' && messages.length > 0 && <div className={styles.footerButtons}></div>}
-        {suggestions !== undefined && status === 'ready' && (
-          <div className={styles.suggestedQuestionsContainer}>
-            <SuggestedQuestions
-              threadId={threadId}
-              messagesLength={messages.length}
-              onClick={handlePrompt}
-              suggestions={suggestions}
-              clearSuggestions={clearSuggestions}
-              isLoading={isLoadingSuggestions}
-            />
-          </div>
+            {status === 'ready' && messages.length > 0 && (
+              <div className={styles.footerButtons}></div>
+            )}
+            {suggestions !== undefined && status === 'ready' && (
+              <div className={styles.suggestedQuestionsContainer}>
+                <SuggestedQuestions
+                  threadId={threadId}
+                  messagesLength={messages.length}
+                  onClick={handlePrompt}
+                  suggestions={suggestions}
+                  clearSuggestions={clearSuggestions}
+                  isLoading={isLoadingSuggestions}
+                />
+              </div>
+            )}
+            {error && <ErrorPanel value={error} />}
+            {healthError && <ErrorPanel value={healthError} />}
+          </>
         )}
-        {error && <ErrorPanel value={error} />}
-        {healthError && <ErrorPanel value={healthError} />}
         <div ref={refChatBottom} className={styles.bottom} />
       </div>
       {showExhaustedNotification && status === 'ready' && (

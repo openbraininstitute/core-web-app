@@ -80,7 +80,7 @@
 .prompt > button[disabled] {
   cursor: default;
   color: var(--color-neutral-9);
-  background-color: color-mix(in srgb, var(--color-primary-6) 15%, var(--color-neutral-7));
+  background-color: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
 }
 
 .spinner {
