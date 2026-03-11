@@ -48,19 +48,13 @@
 .header {
   flex-shrink: 0;
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 5fr 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.75rem 1rem 0.8rem;
   background: var(--color-neutral-9);
   border-bottom: 1.5px solid var(--color-neutral-5);
-}
-
-.headerInner {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: var(--color-primary-8);
 }
 
 .headerTitle {
@@ -69,9 +63,18 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-primary-8);
+  justify-self: start;
+}
+
+.headerSearch {
+  padding-left: 1.4em;
+  justify-self: center;
+  width: 100%;
+  max-width: 400px;
 }
 
 .closeBtn {
+  justify-self: end;
   display: inline-flex;
   align-items: center;
   justify-content: center;

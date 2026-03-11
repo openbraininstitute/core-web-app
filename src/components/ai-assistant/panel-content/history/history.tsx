@@ -13,6 +13,7 @@ import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader'
 import DialogDelete from './dialog-delete';
 import DialogEdit from './dialog-edit';
 import { useSections } from './hooks';
+import Search from './search';
 
 import styles from './history.module.css';
 
@@ -40,12 +41,19 @@ export default function History({ className, onBack }: HistoryProps) {
     fetchNextPage();
   };
 
+  const handleSelectThread = (selectedThreadId: string) => {
+    assistant.isEmptyThread.set(false);
+    setThreadId(selectedThreadId);
+    onBack();
+  };
+
   return (
     <>
       <div className={classNames(className, styles.history)}>
         <div className={styles.header}>
-          <div className={styles.headerInner}>
-            <span className={styles.headerTitle}>History</span>
+          <span className={styles.headerTitle}>History</span>
+          <div className={styles.headerSearch}>
+            <Search onSelectThread={handleSelectThread} />
           </div>
           <button
             type="button"
