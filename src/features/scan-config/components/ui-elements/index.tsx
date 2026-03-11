@@ -7,7 +7,10 @@ import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-
 import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/global';
 import { Range } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/range';
-import { RootSelector } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import {
+  type MechanismVariablesRoot,
+  RootSelector,
+} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
@@ -19,6 +22,7 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
 } from '@/features/scan-config/types';
+import { isObject } from '@/util/type-guards';
 
 import type { SetStateAction } from 'jotai';
 import type { IMEModel } from '@/api/entitycore/types';
@@ -267,11 +271,15 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.IonChannelVariableModificationByNeuron },
       },
       ({ paramSchema }) => {
-        const mechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
+        const rawMechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
+        const mechanismConfig: MechanismVariablesRoot | null =
+          rawMechanismConfig && isObject(rawMechanismConfig)
+            ? (rawMechanismConfig as unknown as MechanismVariablesRoot)
+            : null;
         const modificationType = get(paramSchema, 'properties.type.const', 'ByNeuronModification');
         return (
           <Global
-            data={mechanismConfig as any}
+            data={mechanismConfig}
             disabled={disabled}
             state={state}
             setState={setState}
@@ -288,7 +296,11 @@ export function UIElementRender({
         },
       },
       ({ paramSchema }) => {
-        const mechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
+        const rawMechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
+        const mechanismConfig: MechanismVariablesRoot | null =
+          rawMechanismConfig && isObject(rawMechanismConfig)
+            ? (rawMechanismConfig as unknown as MechanismVariablesRoot)
+            : null;
         const modificationType = get(
           paramSchema,
           'properties.type.const',
@@ -296,7 +308,7 @@ export function UIElementRender({
         );
         return (
           <Range
-            data={mechanismConfig as any}
+            data={mechanismConfig}
             disabled={disabled}
             state={state}
             setState={setState}
