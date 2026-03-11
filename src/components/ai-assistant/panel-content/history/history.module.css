@@ -13,7 +13,6 @@
   flex-direction: column;
   align-items: center;
   padding: 1.5em 1em;
-  padding-right: calc(1em - 9px);
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
   scrollbar-gutter: stable;

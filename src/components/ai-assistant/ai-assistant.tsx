@@ -11,7 +11,7 @@ import { classNames } from '@/util/utils';
 import { AiContextProvider, MINIMAL_PANEL_SIZE, useIsDragging, usePanelWidth } from './hooks';
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
-import PanelContent from './panel-content';
+import Chat from './panel-content/chat';
 import History from './panel-content/history';
 import PanelSplitter from './panel-splitter';
 
@@ -137,20 +137,15 @@ export default function AiAssistant({
           </div>
 
           <div className={styles.contentWrapper}>
-            <PanelContent
-              className={styles.content}
-              threadId={threadId}
-              tab="chat"
-              onTabChange={setTab}
-            />
+            <Chat className={styles.content} threadId={threadId} />
 
             <AnimatePresence>
               {tab === 'history' && (
                 <motion.div
                   className={styles.historyOverlay}
-                  initial={{ opacity: 0, scale: 0.985, y: 8 }}
+                  initial={{ opacity: 0, scale: 0.985, y: 200 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.985, y: 8 }}
+                  exit={{ opacity: 0, scale: 0.985, y: 200 }}
                   transition={{ duration: 0.22, ease: 'easeOut' }}
                 >
                   <History onBack={() => setTab('chat')} />

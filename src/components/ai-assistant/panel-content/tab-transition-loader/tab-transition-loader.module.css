@@ -7,6 +7,16 @@
   gap: 16px;
   padding: 40px 20px;
   background-color: #fafafa;
+  animation: fadeInDelayed 0.6s ease-in;
+}
+
+@keyframes fadeInDelayed {
+  0%, 50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .spinner {
