@@ -70,6 +70,9 @@ export function useServiceAiAgentChat(threadId: string) {
   });
 
   useEffect(() => {
+    if (assistantInitialMessages.length === chat.messages.length){
+      return
+    }
     const lastMessage = chat.messages[chat.messages.length - 1];
 
     // Find the most recent editstate tool result
