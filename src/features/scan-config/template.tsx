@@ -6,11 +6,7 @@ import { match } from 'ts-pattern';
 
 import { useEntries } from '@/features/scan-config/components/hooks';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
-import {
-  resetConfig,
-  type TSchemaMappingConfiguration,
-  useAtomsMap,
-} from '@/features/scan-config/components/hooks/schema';
+import { type TSchemaMappingConfiguration, useAtomsMap } from '@/features/scan-config/components/hooks/schema';
 import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import Left from '@/features/scan-config/components/ui-columns/left';
@@ -29,7 +25,7 @@ import {
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { messages } from '@/i18n/en/scan-config';
-import { useAgentState, useAIConfig } from '@/services/ai-agent';
+import { useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -81,7 +77,6 @@ export function ScanConfigTemplate({
   const aiEnabled = 'scale' in entity && entity.scale !== 'single';
 
   useAgentState(aiEnabled ? 'smc_simulation_config' : '', config);
-  const { aiConfig, setAiConfig } = useAIConfig();
 
   const results = match({ activity, tab })
     .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)
@@ -158,11 +153,6 @@ export function ScanConfigTemplate({
             isEditingKey={isEditingKey}
             setIsEditingKey={setIsEditingKey}
             activity={activity}
-            handleAcceptAIChanges={() => {
-              if (!aiConfig) return;
-              resetConfig(schema, aiConfig, setAtomsMap);
-              setAiConfig(null);
-            }}
           />
           <div
             className={cn(

@@ -12,6 +12,7 @@ import { useAIConfig } from '@/services/ai-agent';
 
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
+import { resetConfig } from '../hooks/schema';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -43,7 +44,6 @@ export default function Left({
   isEditingKey,
   setIsEditingKey,
   activity,
-  handleAcceptAIChanges,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -68,17 +68,17 @@ export default function Left({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
   activity: TScanConfigActivity;
-  handleAcceptAIChanges: () => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
-  const { aiConfig } = useAIConfig();
+  const { aiConfig, setAiConfig } = useAIConfig();
 
   // Auto-apply AI-generated configuration changes when available
   useEffect(() => {
     if (aiConfig && !campaignId) {
-      handleAcceptAIChanges();
+      resetConfig(schema, aiConfig, setAtomsMap);
+      setAiConfig(null);
     }
-  }, [aiConfig, campaignId, handleAcceptAIChanges]);
+  }, [aiConfig, campaignId, schema, setAtomsMap, setAiConfig]);
 
   return (
     <div className={styles.scrollable}>
