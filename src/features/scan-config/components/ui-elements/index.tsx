@@ -7,7 +7,10 @@ import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-
 import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/global';
 import { Range } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/range';
-import { RootSelector } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import {
+  type MechanismVariablesRoot,
+  RootSelector,
+} from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
@@ -19,6 +22,7 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
 } from '@/features/scan-config/types';
+import { isObject } from '@/util/type-guards';
 
 import type { SetStateAction } from 'jotai';
 import type { IMEModel } from '@/api/entitycore/types';
@@ -127,38 +131,92 @@ export function UIElementRender({
       );
     })
     .with({ paramSchema: { ui_element: ScanConfigUIElementDict.NeuronIds } }, () => {
-      const elements: number[] =
-        isPlainObject(value) && Array.isArray(value.elements) ? value.elements : [];
+      // neuron_ids can be either a single NamedTuple or an array of NamedTuples
+      // Extract all elements from all NamedTuples
+      const elements: number[] = [];
+
+      if (Array.isArray(value)) {
+        // Array of NamedTuples
+        value.forEach((namedTuple) => {
+          if (isPlainObject(namedTuple) && Array.isArray(namedTuple.elements)) {
+            elements.push(...namedTuple.elements);
+          }
+        });
+      } else if (isPlainObject(value) && Array.isArray(value.elements)) {
+        // Single NamedTuple
+        elements.push(...value.elements);
+      }
 
       return (
         <NeuronIds
           elements={elements}
           disabled={disabled}
           onDeleteElement={(i: number) => {
-            if (!isPlainObject(state[k]) || !Array.isArray(state[k].elements)) return;
+            // Handle both single NamedTuple and array of NamedTuples
+            if (Array.isArray(state[k])) {
+              // Array of NamedTuples - flatten, remove element, rebuild
+              const allElements: number[] = [];
+              state[k].forEach((nt: any) => {
+                if (isPlainObject(nt) && Array.isArray(nt.elements)) {
+                  allElements.push(...nt.elements);
+                }
+              });
 
-            if (state[k].elements.length === 1) {
-              setState({ ...state, [k]: null });
-              return;
+              if (allElements.length === 1) {
+                setState({ ...state, [k]: null });
+                return;
+              }
+
+              allElements.splice(i, 1);
+
+              setState({
+                ...state,
+                [k]: [{ type: 'NamedTuple', name: 'id_list', elements: allElements }] as unknown as ConfigValue,
+              });
+            } else if (isPlainObject(state[k]) && Array.isArray(state[k].elements)) {
+              // Single NamedTuple
+              if (state[k].elements.length === 1) {
+                setState({ ...state, [k]: null });
+                return;
+              }
+
+              state[k].elements.splice(i, 1);
+
+              setState({
+                ...state,
+                [k]: { ...state[k], elements: [...state[k].elements] },
+              });
             }
-
-            state[k].elements.splice(i, 1); // delete in place
-
-            setState({
-              ...state,
-              [k]: { elements: [...state[k].elements] },
-            });
           }}
           onAddElement={(newElement: number) => {
             if (!state[k]) {
+              // Initialize as array of NamedTuples (the more common case)
               setState({
                 ...state,
-                [k]: { elements: [newElement] },
+                [k]: [{ type: 'NamedTuple', name: 'id_list', elements: [newElement] }] as unknown as ConfigValue,
               });
+            } else if (Array.isArray(state[k])) {
+              // Array of NamedTuples - add to the first one or create new
+              const firstTuple = state[k][0] as any;
+              if (isPlainObject(firstTuple) && Array.isArray(firstTuple.elements)) {
+                setState({
+                  ...state,
+                  [k]: [
+                    { ...firstTuple, elements: [...firstTuple.elements, newElement] },
+                    ...(state[k] as any[]).slice(1),
+                  ] as unknown as ConfigValue,
+                });
+              } else {
+                setState({
+                  ...state,
+                  [k]: [{ type: 'NamedTuple', name: 'id_list', elements: [newElement] }] as unknown as ConfigValue,
+                });
+              }
             } else if (isPlainObject(state[k]) && Array.isArray(state[k].elements)) {
+              // Single NamedTuple
               setState({
                 ...state,
-                [k]: { elements: [...state[k].elements, newElement] },
+                [k]: { ...state[k], elements: [...state[k].elements, newElement] },
               });
             }
           }}
@@ -213,7 +271,11 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.IonChannelVariableModificationByNeuron },
       },
       ({ paramSchema }) => {
-        const mechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
+        const rawMechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
+        const mechanismConfig: MechanismVariablesRoot | null =
+          rawMechanismConfig && isObject(rawMechanismConfig)
+            ? (rawMechanismConfig as unknown as MechanismVariablesRoot)
+            : null;
         const modificationType = get(paramSchema, 'properties.type.const', 'ByNeuronModification');
         return (
           <Global
@@ -234,7 +296,11 @@ export function UIElementRender({
         },
       },
       ({ paramSchema }) => {
-        const mechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
+        const rawMechanismConfig = get(schemaMappingConfig?.properties, RootSelector, null);
+        const mechanismConfig: MechanismVariablesRoot | null =
+          rawMechanismConfig && isObject(rawMechanismConfig)
+            ? (rawMechanismConfig as unknown as MechanismVariablesRoot)
+            : null;
         const modificationType = get(
           paramSchema,
           'properties.type.const',
