@@ -15,6 +15,14 @@ export default function Search({ onSelectThread }: SearchProps) {
   const { results, isLoading, hasQuery } = useThreadSearch(searchQuery);
   const searchRef = React.useRef<HTMLDivElement>(null);
 
+  const highlightText = (text: string, query: string) => {
+    if (!query.trim()) return text;
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return parts.map((part, i) =>
+      part.toLowerCase() === query.toLowerCase() ? <mark key={i}>{part}</mark> : part
+    );
+  };
+
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && searchQuery) {
@@ -74,10 +82,14 @@ export default function Search({ onSelectThread }: SearchProps) {
                   setSearchQuery('');
                 }}
               >
-                <div className={styles.searchResultTitle}>{result.title}</div>
+                <div className={styles.searchResultTitle}>
+                  {highlightText(result.title, searchQuery)}
+                </div>
                 <div className={styles.searchResultContent}>
-                  {result.content.substring(0, 100)}
-                  {result.content.length > 100 && '...'}
+                  {highlightText(
+                    result.content.substring(0, 100) + (result.content.length > 100 ? '...' : ''),
+                    searchQuery
+                  )}
                 </div>
               </button>
             ))

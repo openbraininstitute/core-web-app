@@ -99,6 +99,15 @@
   color: var(--color-neutral-2);
 }
 
+.searchResultTitle mark,
+.searchResultContent mark {
+  background-color: rgba(var(--color-primary-5-rgb, 100, 150, 200), 0.25);
+  color: inherit;
+  padding: 0.1rem 0.2rem;
+  border-radius: 0.2rem;
+  font-weight: 500;
+}
+
 .searchLoading,
 .searchEmpty {
   padding: 2rem 1rem;

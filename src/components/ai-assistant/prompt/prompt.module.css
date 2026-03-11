@@ -54,11 +54,12 @@
 .prompt > button {
   flex: 0 0 auto;
   transition: 0.2s all;
-  background-color: var(--color-primary-8);
-  color: #fff;
+  background-color: var(--color-neutral-8);
+  color: var(--color-neutral-3);
   border: none;
   border-radius: 50%;
   padding: 0.5em;
+  padding-left: 0.6em;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -67,12 +68,17 @@
   height: 2.5em;
 }
 
+.prompt > button:not([disabled]) {
+  background-color: var(--color-primary-8);
+  color: var(--color-neutral-9);
+}
+
 .prompt > button:hover:not([disabled]) {
   background-color: var(--color-primary-6);
 }
 
 .prompt > button[disabled] {
-  cursor: not-allowed;
+  cursor: default;
 }
 
 .spinner {
