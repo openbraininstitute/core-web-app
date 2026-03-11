@@ -136,7 +136,7 @@ export function useServiceAiAgentChat(threadId: string) {
 export const configStateAtom = atom<Config | null>(null);
 const isChatReadyAtom = atom(true);
 
-export function useAgentState(key: 'smc_simulation_config' | '', config?: Config) {
+export function useAgentState(key: string, config?: Config) {
   const [, setAIAgentState] = useAtom(agentStateAtom);
   const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
 

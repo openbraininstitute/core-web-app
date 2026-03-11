@@ -11,6 +11,7 @@ import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import Left from '@/features/scan-config/components/ui-columns/left';
 import Middle from '@/features/scan-config/components/ui-columns/middle';
+import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
   ExtractScanConfigTabs,
@@ -76,7 +77,7 @@ export function ScanConfigTemplate({
 
   const aiEnabled = 'scale' in entity && entity.scale !== 'single';
 
-  useAgentState(aiEnabled ? 'smc_simulation_config' : '', config);
+  useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
 
   const results = match({ activity, tab })
     .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)
