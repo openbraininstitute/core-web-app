@@ -1,7 +1,8 @@
 import { isNil } from 'es-toolkit/compat';
-import { atom, useAtom } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type Config,
   type ConfigValue,
@@ -10,6 +11,7 @@ import {
   type SchemaName,
   type TBlock,
 } from '@/features/scan-config/types';
+import { configDiffsAtom, oldConfigAtom } from '@/state/config-highlights';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -28,6 +30,8 @@ export default function Block({
   entity,
   hideTitle,
   schemaMappingConfig,
+  rootElement,
+  selectedEntry,
 }: {
   schemaName: SchemaName;
   disabled: boolean;
@@ -37,8 +41,66 @@ export default function Block({
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   hideTitle?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  rootElement?: string;
+  selectedEntry?: string;
 }) {
   const [state, setState] = useAtom(stateAtom ?? atom<Record<string, ConfigValue>>({}));
+  const diffs = useAtomValue(configDiffsAtom);
+  const oldConfig = useAtomValue(oldConfigAtom);
+  
+  // Helper function to get field change type
+  const getFieldChangeType = (fieldName: string): 'add' | 'remove' | 'replace' | null => {
+    if (!rootElement || !selectedEntry || diffs.length === 0) return null;
+    
+    // Check if entire entry was added/removed
+    const entryChange = diffs.find(
+      (d) => d.path.length === 2 && d.path[0] === rootElement && d.path[1] === selectedEntry
+    );
+    if (entryChange) {
+      return entryChange.type;
+    }
+    
+    // Check for field-level change
+    const fieldChange = diffs.find(
+      (d) => 
+        d.path.length === 3 && 
+        d.path[0] === rootElement && 
+        d.path[1] === selectedEntry && 
+        d.path[2] === fieldName
+    );
+    
+    return fieldChange ? fieldChange.type : null;
+  };
+  
+  // Helper function to get old value for a field
+  const getOldValue = (fieldName: string): unknown => {
+    console.log('[Block] getOldValue called:', { 
+      fieldName, 
+      hasOldConfig: !!oldConfig, 
+      rootElement, 
+      selectedEntry,
+      oldConfig: oldConfig ? JSON.stringify(oldConfig).substring(0, 200) : 'null'
+    });
+    
+    if (!oldConfig || !rootElement || !selectedEntry) {
+      return undefined;
+    }
+    
+    try {
+      const oldEntry = oldConfig[rootElement]?.[selectedEntry];
+      console.log('[Block] oldEntry:', oldEntry);
+      
+      if (isPlainObject(oldEntry)) {
+        const value = oldEntry[fieldName];
+        console.log('[Block] Found old value for', fieldName, ':', value);
+        return value;
+      }
+    } catch (error) {
+      console.error('Error getting old value:', error);
+    }
+    
+    return undefined;
+  };
 
   if (!blockSchema) return null;
 
@@ -87,6 +149,27 @@ export default function Block({
                 blockElementSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
 
               const value = state[k];
+              const changeType = getFieldChangeType(k);
+              const oldValue = changeType === 'replace' ? getOldValue(k) : undefined;
+              
+              // Determine styling based on change type
+              const fieldStyle = changeType
+                ? {
+                    backgroundColor:
+                      changeType === 'add'
+                        ? 'rgba(16, 185, 129, 0.08)' // green with 8% opacity
+                        : changeType === 'remove'
+                        ? 'rgba(239, 68, 68, 0.08)' // red with 8% opacity
+                        : 'rgba(245, 158, 11, 0.08)', // yellow with 8% opacity
+                    borderColor:
+                      changeType === 'add'
+                        ? 'rgba(16, 185, 129, 0.4)' // green with 40% opacity
+                        : changeType === 'remove'
+                        ? 'rgba(239, 68, 68, 0.4)' // red with 40% opacity
+                        : 'rgba(245, 158, 11, 0.4)', // yellow with 40% opacity
+                    borderWidth: '1px',
+                  }
+                : undefined;
 
               return (
                 <div
@@ -109,11 +192,21 @@ export default function Block({
                     )}
                   </div>
 
+                  {/* Show old value for modified fields */}
+                  {changeType === 'replace' && oldValue !== undefined && (
+                    <div className="text-xs text-gray-600 mb-1 italic">
+                      Previous value: <code className="bg-gray-100 px-1 py-0.5 rounded">{JSON.stringify(oldValue)}</code>
+                    </div>
+                  )}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div>
                         <div className="mb-1 flex items-center gap-1">
-                          <div className="border rounded-lg border-transparent flex-1 mr-1">
+                          <div 
+                            className="border rounded-lg border-transparent flex-1 mr-1"
+                            style={fieldStyle}
+                          >
                             <UIElementRender
                               k={k}
                               disabled={disabled}

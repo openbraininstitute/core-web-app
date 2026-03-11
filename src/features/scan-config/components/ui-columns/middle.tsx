@@ -2,7 +2,7 @@ import {
   isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
-import Block from '@/features/scan-config/components/ui-blocks/block';
+import Block from '@/features/scan-config/components/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
 import { isAtom } from '@/features/scan-config/components/utils';

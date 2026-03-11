@@ -1,6 +1,7 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
+import { useAtom } from 'jotai';
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -26,7 +27,8 @@ import {
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { messages } from '@/i18n/en/scan-config';
-import { useAgentState } from '@/services/ai-agent';
+import { useAgentState, useAIConfig } from '@/services/ai-agent';
+import { editingAtom, selectedEntryAtom, selectedRootElementAtom } from '@/state/config-highlights';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -64,9 +66,9 @@ export function ScanConfigTemplate({
   schemaName: SchemaName;
 }) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
-  const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
-  const [editing, setEditing] = useState(true);
-  const [selectedEntry, setSelectedEntry] = useState('');
+  const [selectedRootElement, setSelectedRootElement] = useAtom(selectedRootElementAtom);
+  const [editing, setEditing] = useAtom(editingAtom);
+  const [selectedEntry, setSelectedEntry] = useAtom(selectedEntryAtom);
   const [loading, setLoading] = useState(false);
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const [isEditingKey, setIsEditingKey] = useState(false);
@@ -78,6 +80,7 @@ export function ScanConfigTemplate({
   const aiEnabled = 'scale' in entity && entity.scale !== 'single';
 
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
+  const { aiConfig } = useAIConfig();
 
   const results = match({ activity, tab })
     .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)

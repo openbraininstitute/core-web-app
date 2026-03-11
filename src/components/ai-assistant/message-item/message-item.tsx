@@ -20,6 +20,7 @@ interface MessageItemProps {
   value: UIMessage;
   status?: 'submitted' | 'streaming' | 'ready' | 'error';
   isLastMessage?: boolean;
+  allMessages?: UIMessage[];
 }
 
 export const MessageItem = React.memo(RawMessageItem);
@@ -29,11 +30,12 @@ function RawMessageItem({
   value,
   status = 'ready',
   isLastMessage = false,
+  allMessages = [],
 }: MessageItemProps) {
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} />
+      <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} allMessages={allMessages} />
     </div>
   );
 }
@@ -53,11 +55,13 @@ function MessageChild({
   debug,
   status,
   isLastMessage,
+  allMessages,
 }: {
   value: UIMessage;
   debug: boolean;
   status: 'submitted' | 'streaming' | 'ready' | 'error';
   isLastMessage: boolean;
+  allMessages: UIMessage[];
 }): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
@@ -101,7 +105,7 @@ function MessageChild({
           const { toolCallId } = part.toolInvocation;
           return (
             <div key={`tool-${toolCallId}`}>
-              <ToolsProgress part={part} />
+              <ToolsProgress part={part} allMessages={allMessages} />
             </div>
           );
         }

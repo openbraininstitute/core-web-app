@@ -10,7 +10,6 @@ import {
 import { Input } from 'antd';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
-import { AnimatePresence, motion } from 'framer-motion';
 import { atom } from 'jotai';
 import { Fragment } from 'react';
 
@@ -23,7 +22,9 @@ import { isAtom, isPlainObject } from './utils';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
-import type { AtomsMap, Config, ConfigValue } from '@/features/scan-config/types';
+import type { AtomsMap } from '../types';
+import type { Config, ConfigValue } from './components';
+import type { ConfigHighlight } from '@/state/config-highlights';
 
 export default function BlockDictionaryEntries({
   config,
@@ -47,7 +48,7 @@ export default function BlockDictionaryEntries({
   atomsMap,
   setAtomsMap,
   errors,
-  visible,
+  highlights = [],
 }: {
   config: Config;
   aiConfig: Config | null;
@@ -70,7 +71,7 @@ export default function BlockDictionaryEntries({
   atomsMap: AtomsMap;
   setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
-  visible: boolean;
+  highlights?: ConfigHighlight[];
 }) {
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
 
@@ -140,19 +141,41 @@ export default function BlockDictionaryEntries({
     setNewKey('');
   };
 
-  function renderBlockTab(entry: string) {
+  function renderBlockTab(entry: string, isDeleted = false) {
     const isSelected = selectedRootElement === rootElement && entry === selectedEntry;
+    
+    // Check if this entry has highlights - check if any highlight path starts with [rootElement, entry]
+    const entryHighlights = highlights.filter((h) => 
+      h.path.length >= 2 && h.path[0] === rootElement && h.path[1] === entry
+    );
+    const hasHighlights = entryHighlights.length > 0;
+    
+    // Determine highlight color - if mixed types or replace, use yellow/amber
+    const highlightTypes = new Set(entryHighlights.map((h) => h.type));
+    const highlightColor = highlightTypes.size > 1 || highlightTypes.has('replace')
+      ? 'rgb(245, 158, 11)' // amber/yellow for mixed or replace
+      : highlightTypes.has('add')
+      ? 'rgb(16, 185, 129)' // green for add
+      : highlightTypes.has('remove')
+      ? 'rgb(239, 68, 68)' // red for remove
+      : undefined;
 
     return (
       <button
         type="button"
         key={entry}
         className={cn(
-          'text-primary-8 flex h-12.5 min-h-12.5 w-full min-w-37.5 items-center justify-between rounded-full ',
+          'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center justify-between rounded-full ',
           'bg-gray-100 px-5 py-2 text-sm drop-shadow ',
           'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
           { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected }
         )}
+        style={hasHighlights ? {
+          border: `1px solid ${highlightColor}`,
+          boxShadow: `0 0 0 1px ${highlightColor}20`,
+          boxSizing: 'border-box',
+          transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
+        } : undefined}
         tabIndex={0}
         onClick={() => handleEntryClick(entry)}
         onKeyDown={(evt) => {
@@ -162,7 +185,7 @@ export default function BlockDictionaryEntries({
         }}
       >
         <div className="w-full text-left truncate max-w-[24ch]">{upperFirst(lowerCase(entry))}</div>
-        <AIIcon />
+        {!isDeleted && <AIIcon />}
       </button>
     );
   }
@@ -202,23 +225,25 @@ export default function BlockDictionaryEntries({
   const areThereAiEntries =
     !!aiConfig && [aiAddedEntries, aiDeletedEntries, aiEditedEntries].some((a) => a.length > 0);
 
+  // Get deleted entries from highlights (entries with 'remove' type that don't exist in current config)
+  // Extract unique second-level entries (the child entry names)
+  const deletedEntriesFromHighlights = Array.from(
+    new Set(
+      highlights
+        .filter((h) => h.path.length >= 2 && h.path[0] === rootElement && h.type === 'remove')
+        .map((h) => h.path[1])
+    )
+  ).filter((entry) => {
+    const rootConfig = config[rootElement];
+    return !rootConfig || typeof rootConfig !== 'object' || !rootConfig[entry];
+  });
+
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          key={rootElement}
-          initial={{ y: -10, opacity: 0, height: 0, marginBottom: -12 }}
-          animate={{ y: 0, opacity: 1, height: 'auto', marginBottom: 0 }}
-          exit={{
-            y: -10,
-            height: 0,
-            marginBottom: -12,
-            opacity: 0,
-          }}
-          transition={{ duration: 0.3, ease: 'linear' }}
-          className={cn('flex flex-col w-full items-center z-0')}
-        >
-          {Object.entries(config[rootElement])
+    <>
+      {/* Render deleted entries first with red border */}
+      {deletedEntriesFromHighlights.map((entry) => renderBlockTab(entry, true))}
+      
+      {Object.entries(config[rootElement])
             // We show only those that have no AI changes
             .filter(([block_key, block_schema]) => {
               if (!aiConfig) return true;
@@ -227,6 +252,22 @@ export default function BlockDictionaryEntries({
             })
             .map(([subkey]) => {
               const isSelected = selectedRootElement === rootElement && subkey === selectedEntry;
+              
+              // Check if this entry has highlights
+              const entryHighlights = highlights.filter((h) => 
+                h.path.length >= 2 && h.path[0] === rootElement && h.path[1] === subkey
+              );
+              const hasHighlights = entryHighlights.length > 0;
+              
+              // Determine highlight color
+              const highlightTypes = new Set(entryHighlights.map((h) => h.type));
+              const highlightColor = highlightTypes.size > 1 || highlightTypes.has('replace')
+                ? 'rgb(245, 158, 11)' // amber/yellow for mixed or replace
+                : highlightTypes.has('add')
+                ? 'rgb(16, 185, 129)' // green for add
+                : highlightTypes.has('remove')
+                ? 'rgb(239, 68, 68)' // red for remove
+                : undefined;
 
               return (
                 <Fragment key={subkey}>
@@ -240,6 +281,12 @@ export default function BlockDictionaryEntries({
                       'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
                       { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected }
                     )}
+                    style={hasHighlights ? {
+                      border: `1px solid ${highlightColor}`,
+                      boxShadow: `0 0 0 1px ${highlightColor}20`,
+                      boxSizing: 'border-box',
+                      transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
+                    } : undefined}
                     tabIndex={0}
                     onClick={() => handleEntryClick(subkey)}
                     onKeyDown={(evt) => {
@@ -444,8 +491,6 @@ export default function BlockDictionaryEntries({
               <PlusCircleOutlined />
             </button>
           )}
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </>
   );
 }

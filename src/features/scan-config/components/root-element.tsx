@@ -1,4 +1,5 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
@@ -16,6 +17,7 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { configHighlightsAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
@@ -64,9 +66,34 @@ export function RootElement({
   setIsEditingKey: (k: boolean) => void;
 }) {
   const { aiConfig, isChatReady } = useAIConfig();
+  const highlights = useAtomValue(configHighlightsAtom);
+  const expandedRootElements = useAtomValue(expandedRootElementsAtom);
+  const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
+  
+  // Check if this block should be expanded (either selected OR in the expanded set)
+  const isExpanded = selectedRootElement === rootElement || expandedRootElements.has(rootElement);
+  
   if (!schema || !schema?.properties) return;
 
+  // Check if this root element has any highlights
+  const hasHighlights = highlights.some((h) => h.path[0] === rootElement);
+  
+  // Determine highlight color based on operation type
+  // If there are multiple different types of changes, show as "edited" (yellow/amber)
+  const rootHighlightTypes = new Set(
+    highlights.filter((h) => h.path[0] === rootElement).map((h) => h.type)
+  );
+  
+  const highlightColor = rootHighlightTypes.size > 1 || rootHighlightTypes.has('replace')
+    ? 'rgb(245, 158, 11)' // amber/yellow for mixed or replace
+    : rootHighlightTypes.has('add')
+    ? 'rgb(16, 185, 129)' // green for add
+    : rootHighlightTypes.has('remove')
+    ? 'rgb(239, 68, 68)' // red for remove
+    : undefined;
+
   const handleEntryClick = (subkey: string) => {
+    setSelectedRootElement(rootElement); // Select the parent block
     setSelectedEntry(subkey);
     setEditing(true);
     setIsEditingKey(false);
@@ -79,18 +106,32 @@ export function RootElement({
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          // for block_dictionary, clicking again collapses it
-          // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
-          if (
-            selectedRootElement === rootElement &&
-            !isRootBlock(schema, rootElement) &&
-            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion
-          ) {
-            setEditing(false);
-            setSelectedEntry('');
-            setSelectedRootElement('');
-            return;
+          // For dictionary blocks, toggle expansion on click
+          if (!isRootBlock(schema, rootElement) &&
+              rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion) {
+            if (isExpanded) {
+              // Close: remove from expanded set
+              setExpandedRootElements((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(rootElement);
+                return newSet;
+              });
+              // If this was the selected block, clear selection
+              if (selectedRootElement === rootElement) {
+                setEditing(false);
+                setSelectedEntry('');
+                setSelectedRootElement('');
+              }
+              return;
+            }
           }
+
+          // Open: add to expanded set and select
+          setExpandedRootElements((prev) => {
+            const newSet = new Set(prev);
+            newSet.add(rootElement);
+            return newSet;
+          });
 
           setSelectedRootElement(rootElement);
           setSelectedEntry('');
@@ -103,6 +144,11 @@ export function RootElement({
           else setEditing(false);
         }}
         extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
+        style={hasHighlights ? { 
+          border: `1px solid ${highlightColor}`, 
+          boxShadow: `0 0 0 1px ${highlightColor}20`,
+          transition: 'border-color 0.3s ease, box-shadow 0.3s ease' 
+        } : undefined}
       >
         <span className="flex items-center gap-2 wrap-break-word min-w-0">
           <SelectedUnionVariantLabel
@@ -127,7 +173,9 @@ export function RootElement({
         </div>
       </LeftMenuTab>
 
-      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
+        isExpanded &&
+        config[rootElement] && (
         <BlockDictionaryEntries
           config={config}
           aiConfig={aiConfig}
@@ -150,7 +198,7 @@ export function RootElement({
           atomsMap={atomsMap}
           setAtomsMap={setAtomsMap}
           errors={errors}
-          visible={selectedRootElement === rootElement && !!config[rootElement]}
+          highlights={highlights}
         />
       )}
     </>

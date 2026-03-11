@@ -169,6 +169,7 @@ export default function Chat({ className, threadId }: ChatProps) {
             value={item}
             status={status}
             isLastMessage={index === messages.length - 1}
+            allMessages={messages}
           />
         ))}
 

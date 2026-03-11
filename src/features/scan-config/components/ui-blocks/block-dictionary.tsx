@@ -6,7 +6,7 @@ import {
   isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
-import Block from '@/features/scan-config/components/ui-blocks/block';
+import Block from '@/features/scan-config/components/block';
 import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
@@ -19,10 +19,12 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { configDiffsAtom } from '@/state/config-highlights';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
+import { useAtomValue } from 'jotai';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -64,6 +66,7 @@ export default function BlockDictionary({
   schemaMappingConfig,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
+  const diffs = useAtomValue(configDiffsAtom);
 
   const selectedBlockLocal = isPlainObject(config[selectedRootElement])
     ? config[selectedRootElement][selectedEntry]?.type
@@ -80,6 +83,15 @@ export default function BlockDictionary({
     blockDictionarySchema.additionalProperties.oneOf.find(
       (o: TBlock) => o.properties?.type.const === selectedBlock
     );
+  
+  // Check if this entry was deleted
+  const isDeleted = diffs.some(
+    (d) => 
+      d.type === 'remove' && 
+      d.path.length === 2 && 
+      d.path[0] === selectedRootElement && 
+      d.path[1] === selectedEntry
+  );
 
   if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement])) {
     return (
@@ -92,7 +104,22 @@ export default function BlockDictionary({
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
         entity={model}
         schemaMappingConfig={schemaMappingConfig}
+        rootElement={selectedRootElement}
+        selectedEntry={selectedEntry}
       />
+    );
+  }
+  
+  // Show deleted message if entry was deleted
+  if (isDeleted && selectedEntry) {
+    return (
+      <div className="flex items-center justify-center h-full p-8">
+        <div className="text-center max-w-md">
+          <p className="text-gray-600 text-base">
+            <span className="font-semibold">{selectedEntry}</span> has been deleted
+          </p>
+        </div>
+      </div>
     );
   }
 
