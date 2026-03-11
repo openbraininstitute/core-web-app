@@ -1,16 +1,10 @@
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { useAtom } from 'jotai';
-import { RiResetLeftLine } from '@remixicon/react';
+import { useState } from 'react';
 
 import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
 import HelpIconI from '@/components/icons/HelpIcon';
 import { useAITools } from '@/services/ai-agent/tools/tools';
-import { configStateAtom } from '@/services/ai-agent/hooks/chat';
-import type { Config } from '@/features/scan-config/components/components';
-import { parseJSONPatches, type JSONPatchOperation } from '@/utils/diff';
-import { configHighlightsAtom, configDiffsAtom, expandedRootElementsAtom, oldConfigAtom } from '@/state/config-highlights';
 
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
@@ -26,19 +20,12 @@ import styles from './tools-progress.module.css';
 interface ToolsProgressProps {
   className?: string;
   part: ToolInvocationUIPart;
-  allMessages: any[];
 }
 
-export default function ToolsProgress({ className, part, allMessages }: ToolsProgressProps) {
+export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
-  const [showDiff, setShowDiff] = useState(false);
-  const [, setConfig] = useAtom(configStateAtom);
-  const [, setConfigHighlights] = useAtom(configHighlightsAtom);
-  const [, setConfigDiffs] = useAtom(configDiffsAtom);
-  const [, setExpandedRootElements] = useAtom(expandedRootElementsAtom);
-  const [, setOldConfig] = useAtom(oldConfigAtom);
 
   const toggleExpanded = (key: string) => {
     setExpandedToolKeys((prev) => {
@@ -52,128 +39,6 @@ export default function ToolsProgress({ className, part, allMessages }: ToolsPro
     });
   };
 
-  const handleRestore = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // Extract state directly from the tool invocation result
-    if (part.toolInvocation.state !== 'result') return;
-    
-    try {
-      const result = JSON.parse(part.toolInvocation.result as string);
-      const state = result?.state?.smc_simulation_config;
-      
-      if (state) {
-        setConfig(state as Config);
-      }
-    } catch (error) {
-      console.error('Failed to restore state:', error);
-    }
-  };
-
-  const findPreviousState = (): Record<string, any> | null => {
-    const allToolInvocations: Array<{ toolInvocation: any }> = [];
-    
-    for (let i = allMessages.length - 1; i >= 0; i--) {
-      const message = allMessages[i];
-      if (message.parts) {
-        for (let j = message.parts.length - 1; j >= 0; j--) {
-          const p = message.parts[j];
-          if (p.type === 'tool-invocation') {
-            allToolInvocations.push({ toolInvocation: p.toolInvocation });
-          }
-        }
-      }
-    }
-    
-    let foundCurrent = false;
-    for (const item of allToolInvocations) {
-      if (foundCurrent) {
-        const toolName = item.toolInvocation.toolName;
-        if ((toolName === 'editstate' || toolName === 'getstate') && item.toolInvocation.state === 'result') {
-          try {
-            const result = JSON.parse(item.toolInvocation.result as string);
-            return result?.state?.smc_simulation_config || null;
-          } catch (error) {
-            return null;
-          }
-        }
-      }
-      
-      if (item.toolInvocation === part.toolInvocation) {
-        foundCurrent = true;
-      }
-    }
-    
-    return null;
-  };
-
-  const handleViewDiffs = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newShowDiff = !showDiff;
-    setShowDiff(newShowDiff);
-    
-    if (newShowDiff) {
-      const oldState = findPreviousState();
-      setOldConfig(oldState);
-      
-      // Set highlights for the config UI
-      // Skip the first path element (smc_simulation_config wrapper) and use the second as root
-      const highlights = diffs.map((diff) => {
-        // Remove 'smc_simulation_config' wrapper from path
-        const adjustedPath = diff.path[0] === 'smc_simulation_config' && diff.path.length > 1
-          ? diff.path.slice(1)
-          : diff.path;
-        
-        return {
-          path: adjustedPath,
-          type: diff.type,
-        };
-      });
-      
-      setConfigHighlights(highlights);
-      
-      // Also store the full diffs for field-level comparisons
-      const adjustedDiffs = diffs.map((diff) => ({
-        ...diff,
-        path: diff.path[0] === 'smc_simulation_config' && diff.path.length > 1
-          ? diff.path.slice(1)
-          : diff.path,
-      }));
-      setConfigDiffs(adjustedDiffs);
-      
-      // Collect all modified root blocks
-      const modifiedBlocks = new Set(
-        highlights.map((h) => h.path[0]).filter((b): b is string => b !== undefined)
-      );
-      
-      // Set all modified blocks as expanded
-      setExpandedRootElements(modifiedBlocks);
-    } else {
-      // Clear highlights when hiding diffs
-      setConfigHighlights([]);
-      setConfigDiffs([]);
-      setOldConfig(null);
-      setExpandedRootElements(new Set(['info'])); // Reset to default
-    }
-  };
-
-  // Parse JSONPatch operations from editstate arguments
-  const diffs = useMemo(() => {
-    if (part.toolInvocation.state !== 'result') return [];
-    
-    try {
-      const args = part.toolInvocation.args as { patches?: JSONPatchOperation[] };
-      const patches = args?.patches;
-      
-      if (!patches || !Array.isArray(patches)) return [];
-      
-      return parseJSONPatches(patches);
-    } catch (error) {
-      console.error('Failed to parse JSONPatch operations:', error);
-      return [];
-    }
-  }, [part.toolInvocation]);
-
   if (!tools) return null;
 
   const toolsState = getToolsState(part, tools);
@@ -183,9 +48,6 @@ export default function ToolsProgress({ className, part, allMessages }: ToolsPro
   const Icon = tool.icon;
   const isExpanded = expandedToolKeys.has(key);
   const isRunning = state !== 'result';
-  const isStateToolCall = invocation.toolName === 'editstate' || invocation.toolName === 'getstate';
-  const showRestore = isStateToolCall && !isRunning;
-  const hasDiffs = diffs.length > 0;
 
   return (
     <div className={cn(styles.container, className)}>
@@ -233,49 +95,6 @@ export default function ToolsProgress({ className, part, allMessages }: ToolsPro
           </div>
 
           <div className={styles.actions}>
-            {showRestore && (
-              <>
-                <button
-                  type="button"
-                  className={styles.restoreButton}
-                  onClick={handleRestore}
-                  title="Restore this state"
-                  aria-label="Restore state"
-                >
-                  <RiResetLeftLine className={styles.restoreIcon} size={16} />
-                </button>
-                
-                {hasDiffs && (
-                  <button
-                    type="button"
-                    className={cn(styles.diffButton, showDiff && styles.diffButtonActive)}
-                    onClick={handleViewDiffs}
-                    title="View differences"
-                    aria-label="View differences"
-                  >
-                    <svg
-                      className={styles.diffIcon}
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M2 4h12M2 8h12M2 12h12"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                      />
-                      <circle cx="5" cy="4" r="1.5" fill="currentColor" />
-                      <circle cx="11" cy="8" r="1.5" fill="currentColor" />
-                      <circle cx="8" cy="12" r="1.5" fill="currentColor" />
-                    </svg>
-                  </button>
-                )}
-              </>
-            )}
-
             <div className={styles.expandButton}>
               <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
             </div>

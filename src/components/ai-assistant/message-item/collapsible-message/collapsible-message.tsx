@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
+import { RiResetLeftLine, RiFileCodeLine } from '@remixicon/react';
 
 import type { UIMessage } from '@ai-sdk/ui-utils';
+import { cn } from '@/utils/css-class';
 
 import styles from './collapsible-message.module.css';
 
@@ -10,9 +12,21 @@ interface CollapsibleMessageProps {
   message: UIMessage;
   status: 'submitted' | 'streaming' | 'ready' | 'error';
   children: React.ReactNode[];
+  onRestoreState?: () => void;
+  onViewDiffs?: () => void;
+  hasEditStateCalls?: boolean;
+  showDiff?: boolean;
 }
 
-export function CollapsibleMessage({ message, status, children }: CollapsibleMessageProps) {
+export function CollapsibleMessage({ 
+  message, 
+  status, 
+  children,
+  onRestoreState,
+  onViewDiffs,
+  hasEditStateCalls = false,
+  showDiff = false,
+}: CollapsibleMessageProps) {
   const [collapsedIndices, setCollapsedIndices] = React.useState<Set<number>>(new Set());
   const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(null);
   const previousPartsLength = React.useRef(0);
@@ -43,6 +57,25 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
 
     return count;
   }, [message.parts, collapsedIndices]);
+
+  // Check if there are editstate calls in the collapsed steps
+  const hasEditStateInCollapsed = React.useMemo(() => {
+    if (!hasEditStateCalls) return false;
+
+    const parts = message.parts;
+    for (let i = 0; i < parts.length; i++) {
+      if (collapsedIndices.has(i)) {
+        const part = parts[i];
+        if (
+          part.type === 'tool-invocation' &&
+          part.toolInvocation.toolName === 'editstate'
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }, [message.parts, collapsedIndices, hasEditStateCalls]);
 
   // Track which parts should be collapsed
   React.useEffect(() => {
@@ -153,6 +186,37 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
               <span className={styles.thinkingLabel}>
                 {isExpanded ? `Hide steps (${stepCount})` : `Show steps (${stepCount})`}
               </span>
+              {hasEditStateInCollapsed && (
+                <div className={styles.actionButtons}>
+                  <button
+                    type="button"
+                    className={styles.actionButton}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRestoreState?.();
+                    }}
+                    aria-label="Restore state"
+                    title="Restore state"
+                  >
+                    <RiResetLeftLine size={16} />
+                    <span>Restore State</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={cn(styles.actionButton, showDiff && styles.actionButtonActive)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewDiffs?.();
+                    }}
+                    aria-label={showDiff ? 'Hide diffs' : 'View diffs'}
+                    title={showDiff ? 'Hide diffs' : 'View diffs'}
+                    aria-pressed={showDiff}
+                  >
+                    <RiFileCodeLine size={16} />
+                    <span>{showDiff ? 'Hide Diffs' : 'View Diffs'}</span>
+                  </button>
+                </div>
+              )}
             </div>
           </button>
           {isExpanded && <div className={styles.thinkingContent}>{collapsedChildren}</div>}

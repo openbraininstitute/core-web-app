@@ -204,3 +204,53 @@
     margin-bottom: 0;
   }
 }
+
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  background: var(--action-button-bg, rgba(59, 130, 246, 0.08));
+  border: 1px solid var(--action-button-border, rgba(59, 130, 246, 0.2));
+  border-radius: 6px;
+  color: var(--action-button-text, #3b82f6);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.actionButton:hover {
+  background: var(--action-button-hover-bg, rgba(59, 130, 246, 0.12));
+  border-color: var(--action-button-hover-border, rgba(59, 130, 246, 0.3));
+  transform: translateY(-1px);
+}
+
+.actionButton:active {
+  background: var(--action-button-active-bg, rgba(59, 130, 246, 0.16));
+  transform: translateY(0);
+}
+
+.actionButton svg {
+  flex-shrink: 0;
+}
+
+.actionButtonActive {
+  background: var(--action-button-active-bg, rgba(59, 130, 246, 0.16));
+  border-color: var(--action-button-active-border, rgba(59, 130, 246, 0.4));
+  color: var(--action-button-active-text, #2563eb);
+  font-weight: 600;
+}
+
+.actionButtonActive:hover {
+  background: var(--action-button-active-hover-bg, rgba(59, 130, 246, 0.2));
+  border-color: var(--action-button-active-hover-border, rgba(59, 130, 246, 0.5));
+}

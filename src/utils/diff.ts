@@ -86,3 +86,53 @@ export function getFieldChangesForEntry(
       newValue: diff.type === 'add' || diff.type === 'replace' ? diff.value : undefined,
     }));
 }
+
+/**
+ * Merge two sets of diffs, with later changes overriding earlier ones
+ * This is useful for accumulating diffs across multiple editstate calls
+ * 
+ * @param diffs1 - Earlier set of diffs
+ * @param diffs2 - Later set of diffs (takes precedence)
+ * @returns Merged diffs with later changes overriding earlier ones
+ */
+export function mergeDiffs(diffs1: DiffResult[], diffs2: DiffResult[]): DiffResult[] {
+  // Create a map of path -> diff for quick lookup
+  const pathToDiff = new Map<string, DiffResult>();
+  
+  // Helper to create a unique key from a path array
+  const pathKey = (path: string[]): string => path.join('/');
+  
+  // Add all diffs from the first set
+  for (const diff of diffs1) {
+    pathToDiff.set(pathKey(diff.path), diff);
+  }
+  
+  // Add/override with diffs from the second set
+  for (const diff of diffs2) {
+    const key = pathKey(diff.path);
+    const existingDiff = pathToDiff.get(key);
+    
+    if (existingDiff) {
+      // Handle operation combinations
+      if (existingDiff.type === 'add' && diff.type === 'remove') {
+        // Add followed by remove = no change, remove both
+        pathToDiff.delete(key);
+      } else if (existingDiff.type === 'remove' && diff.type === 'add') {
+        // Remove followed by add = replace
+        pathToDiff.set(key, {
+          ...diff,
+          type: 'replace',
+        });
+      } else {
+        // For all other cases, later operation wins
+        pathToDiff.set(key, diff);
+      }
+    } else {
+      // New path, just add it
+      pathToDiff.set(key, diff);
+    }
+  }
+  
+  // Convert map back to array
+  return Array.from(pathToDiff.values());
+}
