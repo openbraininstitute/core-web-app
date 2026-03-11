@@ -113,12 +113,40 @@ export function getValidationStatus<T>(
 }
 
 /**
- * gets dirty fields from an Ant Design form
+ * gets dirty fields from an Ant Design form.
+ * checks nested fields (e.g. ['setup', 'name']) and returns the top-level key
+ * ('setup') as dirty if any of its children have been touched.
  */
 export function getDirtyFields<TFormValues>(form: FormInstance<TFormValues>): Array<string> {
   const allFields = form.getFieldsValue(true) as Record<string, unknown>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return Object.keys(allFields).filter((field) => (form as any).isFieldTouched(field));
+  const antForm = form as any;
+
+  return Object.keys(allFields).filter((topLevelKey) => {
+    if (antForm.isFieldTouched(topLevelKey)) return true;
+
+    const value = allFields[topLevelKey];
+
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      return Object.keys(value as Record<string, unknown>).some((nestedKey) =>
+        antForm.isFieldTouched([topLevelKey, nestedKey])
+      );
+    }
+
+    if (Array.isArray(value)) {
+      return value.some((item, index) => {
+        if (antForm.isFieldTouched([topLevelKey, index])) return true;
+        if (item !== null && typeof item === 'object') {
+          return Object.keys(item as Record<string, unknown>).some((nestedKey) =>
+            antForm.isFieldTouched([topLevelKey, index, nestedKey])
+          );
+        }
+        return false;
+      });
+    }
+
+    return false;
+  });
 }
 
 export interface IFileTypeConfig {

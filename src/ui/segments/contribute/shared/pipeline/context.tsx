@@ -31,6 +31,7 @@ interface IContributionPipelineContextValue<TFormValues extends Record<string, u
   stepValidationStatus: Record<string, TStepValidationStatus>;
   progressSteps: Array<IContributionStep<TFormValues>>;
   config: IContributionFormConfig<TFormValues, ZodObject<ZodRawShape>>;
+  notifyChange: () => void;
 }
 
 const ContributionPipelineContext = createContext<IContributionPipelineContextValue<
@@ -57,20 +58,21 @@ export function ContributionPipelineProvider<
   children,
 }: IContributionPipelineProviderProps<TFormValues, TSchema>): ReactNode {
   const [form] = Form.useForm<TFormValues>();
-  const allValues = Form.useWatch([], form);
+  const [formSnapshot, setFormSnapshot] = useState<Record<string, unknown>>({});
+  const [extraDirtyFields, setExtraDirtyFields] = useState<Array<string>>([]);
   const [activeStep, setActiveStepState] = useState<string>(config.progressSteps[0].key);
 
   const { progressSteps, schema } = config;
 
   const stepValidationStatus = useMemo(() => {
-    const dirtyFields = getDirtyFields(form);
+    const allValues = formSnapshot;
+    const dirtyFields = [...new Set([...getDirtyFields(form), ...extraDirtyFields])];
     const statusMap: Record<string, TStepValidationStatus> = {};
 
     progressSteps.forEach((step) => {
       const fieldKey = step.schemaFieldKey;
 
       if (Array.isArray(fieldKey)) {
-        // Create a pick object with all fields set to true
         const pickObject = fieldKey.reduce(
           (acc, key) => {
             acc[key] = true;
@@ -82,7 +84,6 @@ export function ContributionPipelineProvider<
         const partialSchema = schema.pick(pickObject);
         const parseResult = partialSchema.safeParse(allValues);
 
-        // For array fields, check if ANY field is dirty
         const isDirty = fieldKey.some((key) => dirtyFields.includes(key));
         const hasErrors = !parseResult.success;
 
@@ -101,7 +102,7 @@ export function ContributionPipelineProvider<
     });
 
     return statusMap;
-  }, [progressSteps, schema, allValues, form]);
+  }, [progressSteps, schema, formSnapshot, form, extraDirtyFields]);
 
   const currentStepIndex = useMemo(
     () => getCurrentStepIndex(progressSteps, activeStep),
@@ -132,6 +133,32 @@ export function ContributionPipelineProvider<
     }
   }, [currentStepIndex, progressSteps]);
 
+  const notifyChange = useCallback(() => {
+    const raw = form.getFieldsValue(true) as Record<string, unknown>;
+    const safe: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(raw)) {
+      if (v instanceof File) continue;
+      if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+        const nested: Record<string, unknown> = {};
+        for (const [nk, nv] of Object.entries(v as Record<string, unknown>)) {
+          if (!(nv instanceof File)) nested[nk] = nv;
+        }
+        safe[k] = nested;
+      } else {
+        safe[k] = v;
+      }
+    }
+    setFormSnapshot(safe);
+    setExtraDirtyFields(Object.keys(safe).filter((k) => {
+      const v = safe[k];
+      if (v === null || v === undefined) return false;
+      if (typeof v === 'object' && !Array.isArray(v)) {
+        return Object.values(v as Record<string, unknown>).some((nv) => nv !== undefined && nv !== null && nv !== '');
+      }
+      return true;
+    }));
+  }, [form]);
+
   const contextValue = useMemo(
     (): IContributionPipelineContextValue<TFormValues> => ({
       form,
@@ -145,6 +172,7 @@ export function ContributionPipelineProvider<
       stepValidationStatus,
       progressSteps,
       config: config as IContributionFormConfig<TFormValues, ZodObject<ZodRawShape>>,
+      notifyChange,
     }),
     [
       form,
@@ -158,6 +186,7 @@ export function ContributionPipelineProvider<
       stepValidationStatus,
       progressSteps,
       config,
+      notifyChange,
     ]
   );
   const initialValues = useMemo(
@@ -179,6 +208,7 @@ export function ContributionPipelineProvider<
         layout="vertical"
         requiredMark={false}
         className="h-full"
+        onValuesChange={notifyChange}
         validateTrigger={['onChange', 'onBlur']}
         autoComplete="off"
         initialValues={initialValues}

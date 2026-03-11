@@ -17,6 +17,7 @@ import {
   useContributionEntityClickEvent,
 } from '@/ui/segments/contribute/event';
 import { ExperimentalBoutonDensity } from '@/ui/segments/contribute/experimental-bouton-density';
+import { AnalysisNotebookTemplate } from '@/ui/segments/contribute/analysis-notebook-template';
 import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental-neuron-density';
 import { ExperimentalSynapsesPerConnection } from '@/ui/segments/contribute/synapses-per-connection';
 import { cn } from '@/utils/css-class';
@@ -98,6 +99,7 @@ function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeCont
       <ExperimentalSynapsesPerConnection sessionId={sId} />
     ))
     .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
+    .with({ type: ExtendedEntitiesTypeDict.Notebook }, () => <AnalysisNotebookTemplate sessionId={sId} />)
     .otherwise(() => null);
 }
 
