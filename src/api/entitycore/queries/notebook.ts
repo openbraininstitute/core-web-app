@@ -1,7 +1,7 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { INotebook, NotebookFilter } from '@/api/entitycore/types/entities/notebook';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/analysis-notebook-template';
