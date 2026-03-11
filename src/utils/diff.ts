@@ -136,3 +136,53 @@ export function mergeDiffs(diffs1: DiffResult[], diffs2: DiffResult[]): DiffResu
   // Convert map back to array
   return Array.from(pathToDiff.values());
 }
+
+/**
+ * Adjust parent node types based on their children
+ * If a parent has type 'add', all its children should also be 'add'
+ * This handles the case where a node is added and then modified in the same message
+ */
+export function adjustParentTypes(diffs: DiffResult[]): DiffResult[] {
+  const pathKey = (path: string[]): string => path.join('/');
+  const diffMap = new Map<string, DiffResult>();
+  
+  // Build a map of all diffs
+  for (const diff of diffs) {
+    diffMap.set(pathKey(diff.path), diff);
+  }
+  
+  // Find all parent nodes with 'add' type
+  const addedParents = diffs.filter((diff) => diff.type === 'add');
+  
+  // For each added parent, change all its descendants to 'add' as well
+  const adjustedDiffs = diffs.map((diff) => {
+    // Check if this diff is a descendant of any added parent
+    for (const parent of addedParents) {
+      // Skip if this is the parent itself
+      if (pathKey(diff.path) === pathKey(parent.path)) continue;
+      
+      // Check if this diff's path starts with the parent's path
+      if (diff.path.length > parent.path.length) {
+        let isDescendant = true;
+        for (let i = 0; i < parent.path.length; i++) {
+          if (diff.path[i] !== parent.path[i]) {
+            isDescendant = false;
+            break;
+          }
+        }
+        
+        // If this is a descendant of an added parent, change it to 'add'
+        if (isDescendant) {
+          return {
+            ...diff,
+            type: 'add' as DiffType,
+          };
+        }
+      }
+    }
+    
+    return diff;
+  });
+  
+  return adjustedDiffs;
+}

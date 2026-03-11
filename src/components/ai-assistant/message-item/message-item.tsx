@@ -6,7 +6,7 @@ import { useAtom } from 'jotai';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
-import { parseJSONPatches, mergeDiffs, type JSONPatchOperation, type DiffResult } from '@/utils/diff';
+import { parseJSONPatches, mergeDiffs, adjustParentTypes, type JSONPatchOperation, type DiffResult } from '@/utils/diff';
 import { configStateAtom } from '@/services/ai-agent/hooks/chat';
 import type { Config } from '@/features/scan-config/components/components';
 import {
@@ -119,8 +119,10 @@ function MessageChild({
         console.error('Failed to parse editstate call:', error);
       }
     }
-
-    return allDiffs;
+    
+    // Adjust parent types based on children
+    // If a parent is 'add', all its descendants should also be 'add'
+    return adjustParentTypes(allDiffs);
   }, [value.parts]);
 
   // Get the first old config state (before any edits)
