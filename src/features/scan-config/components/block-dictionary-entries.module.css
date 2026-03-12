@@ -1,0 +1,34 @@
+.entryButton {
+  box-sizing: border-box;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.entryHighlightAdded {
+  border: 1.5px solid rgba(34, 197, 94, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08) !important;
+}
+
+.entryHighlightAddedSelected {
+  border: 1.5px solid rgba(34, 197, 94, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08), inset 0 0 0 1px rgba(34, 197, 94, 0.5) !important;
+}
+
+.entryHighlightRemoved {
+  border: 1.5px solid rgba(239, 68, 68, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08) !important;
+}
+
+.entryHighlightRemovedSelected {
+  border: 1.5px solid rgba(239, 68, 68, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08), inset 0 0 0 1px rgba(239, 68, 68, 0.5) !important;
+}
+
+.entryHighlightModified {
+  border: 1.5px solid rgba(245, 158, 11, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08) !important;
+}
+
+.entryHighlightModifiedSelected {
+  border: 1.5px solid rgba(245, 158, 11, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08), inset 0 0 0 1px rgba(245, 158, 11, 0.5) !important;
+}

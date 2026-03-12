@@ -145,8 +145,16 @@ export function RootElement({
         }}
         extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
         style={hasHighlights ? { 
-          border: `1px solid ${highlightColor}`, 
-          boxShadow: `0 0 0 1px ${highlightColor}20`,
+          border: rootHighlightTypes.size > 1 || rootHighlightTypes.has('replace')
+            ? '1.5px solid rgba(245, 158, 11, 0.55)'
+            : rootHighlightTypes.has('add')
+            ? '1.5px solid rgba(34, 197, 94, 0.55)'
+            : '1.5px solid rgba(239, 68, 68, 0.55)',
+          boxShadow: rootHighlightTypes.size > 1 || rootHighlightTypes.has('replace')
+            ? '0 0 0 3px rgba(245, 158, 11, 0.08)'
+            : rootHighlightTypes.has('add')
+            ? '0 0 0 3px rgba(34, 197, 94, 0.08)'
+            : '0 0 0 3px rgba(239, 68, 68, 0.08)',
           transition: 'border-color 0.3s ease, box-shadow 0.3s ease' 
         } : undefined}
       >
@@ -176,7 +184,13 @@ export function RootElement({
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
         isExpanded &&
         config[rootElement] && (
-        <BlockDictionaryEntries
+        <>
+          {console.log('[RootElement] Passing highlights to BlockDictionaryEntries:', {
+            rootElement,
+            highlights,
+            filteredHighlights: highlights.filter((h) => h.path[0] === rootElement)
+          })}
+          <BlockDictionaryEntries
           config={config}
           aiConfig={aiConfig}
           rootElement={rootElement}
@@ -200,6 +214,7 @@ export function RootElement({
           errors={errors}
           highlights={highlights}
         />
+        </>
       )}
     </>
   );

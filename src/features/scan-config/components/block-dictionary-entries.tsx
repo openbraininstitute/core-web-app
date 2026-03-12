@@ -26,6 +26,8 @@ import type { AtomsMap } from '../types';
 import type { Config, ConfigValue } from './components';
 import type { ConfigHighlight } from '@/state/config-highlights';
 
+import styles from './block-dictionary-entries.module.css';
+
 export default function BlockDictionaryEntries({
   config,
   aiConfig,
@@ -73,6 +75,11 @@ export default function BlockDictionaryEntries({
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
   highlights?: ConfigHighlight[];
 }) {
+  console.log('[BlockDictionaryEntries] Component rendered:', {
+    rootElement,
+    highlights,
+    highlightsForThisRoot: highlights.filter((h) => h.path[0] === rootElement)
+  });
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
 
   const onNameChangeConfirm = (
@@ -152,13 +159,56 @@ export default function BlockDictionaryEntries({
     
     // Determine highlight color - if mixed types or replace, use yellow/amber
     const highlightTypes = new Set(entryHighlights.map((h) => h.type));
-    const highlightColor = highlightTypes.size > 1 || highlightTypes.has('replace')
-      ? 'rgb(245, 158, 11)' // amber/yellow for mixed or replace
-      : highlightTypes.has('add')
-      ? 'rgb(16, 185, 129)' // green for add
-      : highlightTypes.has('remove')
-      ? 'rgb(239, 68, 68)' // red for remove
+    const isModified = highlightTypes.size > 1 || highlightTypes.has('replace');
+    const isAdded = !isModified && highlightTypes.has('add');
+    const isRemoved = !isModified && highlightTypes.has('remove');
+    
+    // Determine CSS class based on highlight type and selection state
+    const highlightClassName = hasHighlights
+      ? isModified
+        ? isSelected ? styles.entryHighlightModifiedSelected : styles.entryHighlightModified
+        : isAdded
+        ? isSelected ? styles.entryHighlightAddedSelected : styles.entryHighlightAdded
+        : isRemoved
+        ? isSelected ? styles.entryHighlightRemovedSelected : styles.entryHighlightRemoved
+        : undefined
       : undefined;
+    
+    // Debug logging
+    if (hasHighlights) {
+      console.log('[BlockDictionaryEntries] Entry highlight:', {
+        entry,
+        highlightTypes: Array.from(highlightTypes),
+        isModified,
+        isAdded,
+        isRemoved,
+        isSelected,
+        highlightClassName,
+        stylesObject: styles
+      });
+    }
+
+    // For deleted entries, preserve the original name exactly as it was
+    const displayName = isDeleted
+      ? entry // Use the original key name as-is for deleted entries
+      : upperFirst(lowerCase(entry)); // Format normally for non-deleted entries
+
+    // Debug: log the className being applied
+    if (hasHighlights) {
+      console.log('[BlockDictionaryEntries] Rendering button for:', entry, {
+        highlightClassName,
+        hasHighlights,
+        isSelected,
+        fullClassList: cn(
+          'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center justify-between rounded-full ',
+          'bg-gray-100 px-5 py-2 text-sm drop-shadow ',
+          'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
+          { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected },
+          styles.entryButton,
+          highlightClassName
+        )
+      });
+    }
 
     return (
       <button
@@ -168,14 +218,10 @@ export default function BlockDictionaryEntries({
           'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center justify-between rounded-full ',
           'bg-gray-100 px-5 py-2 text-sm drop-shadow ',
           'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-          { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected }
+          { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected },
+          styles.entryButton,
+          highlightClassName
         )}
-        style={hasHighlights ? {
-          border: `1px solid ${highlightColor}`,
-          boxShadow: `0 0 0 1px ${highlightColor}20`,
-          boxSizing: 'border-box',
-          transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
-        } : undefined}
         tabIndex={0}
         onClick={() => handleEntryClick(entry)}
         onKeyDown={(evt) => {
@@ -184,7 +230,7 @@ export default function BlockDictionaryEntries({
           }
         }}
       >
-        <div className="w-full text-left truncate max-w-[24ch]">{upperFirst(lowerCase(entry))}</div>
+        <div className="w-full text-left truncate max-w-[24ch]">{displayName}</div>
         {!isDeleted && <AIIcon />}
       </button>
     );
@@ -259,14 +305,20 @@ export default function BlockDictionaryEntries({
               );
               const hasHighlights = entryHighlights.length > 0;
               
-              // Determine highlight color
+              // Determine highlight type and CSS class
               const highlightTypes = new Set(entryHighlights.map((h) => h.type));
-              const highlightColor = highlightTypes.size > 1 || highlightTypes.has('replace')
-                ? 'rgb(245, 158, 11)' // amber/yellow for mixed or replace
-                : highlightTypes.has('add')
-                ? 'rgb(16, 185, 129)' // green for add
-                : highlightTypes.has('remove')
-                ? 'rgb(239, 68, 68)' // red for remove
+              const isModified = highlightTypes.size > 1 || highlightTypes.has('replace');
+              const isAdded = !isModified && highlightTypes.has('add');
+              const isRemoved = !isModified && highlightTypes.has('remove');
+              
+              const highlightClassName = hasHighlights
+                ? isModified
+                  ? isSelected ? styles.entryHighlightModifiedSelected : styles.entryHighlightModified
+                  : isAdded
+                  ? isSelected ? styles.entryHighlightAddedSelected : styles.entryHighlightAdded
+                  : isRemoved
+                  ? isSelected ? styles.entryHighlightRemovedSelected : styles.entryHighlightRemoved
+                  : undefined
                 : undefined;
 
               return (
@@ -279,14 +331,10 @@ export default function BlockDictionaryEntries({
                       'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center justify-between ',
                       'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
                       'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
-                      { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected }
+                      { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected },
+                      styles.entryButton,
+                      highlightClassName
                     )}
-                    style={hasHighlights ? {
-                      border: `1px solid ${highlightColor}`,
-                      boxShadow: `0 0 0 1px ${highlightColor}20`,
-                      boxSizing: 'border-box',
-                      transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
-                    } : undefined}
                     tabIndex={0}
                     onClick={() => handleEntryClick(subkey)}
                     onKeyDown={(evt) => {

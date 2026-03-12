@@ -21,6 +21,8 @@ import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
+import styles from './block.module.css';
+
 export default function Block({
   schemaName,
   disabled,
@@ -152,23 +154,26 @@ export default function Block({
               const changeType = getFieldChangeType(k);
               const oldValue = changeType === 'replace' ? getOldValue(k) : undefined;
               
-              // Determine styling based on change type
-              const fieldStyle = changeType
-                ? {
-                    backgroundColor:
-                      changeType === 'add'
-                        ? 'rgba(16, 185, 129, 0.08)' // green with 8% opacity
-                        : changeType === 'remove'
-                        ? 'rgba(239, 68, 68, 0.08)' // red with 8% opacity
-                        : 'rgba(245, 158, 11, 0.08)', // yellow with 8% opacity
-                    borderColor:
-                      changeType === 'add'
-                        ? 'rgba(16, 185, 129, 0.4)' // green with 40% opacity
-                        : changeType === 'remove'
-                        ? 'rgba(239, 68, 68, 0.4)' // red with 40% opacity
-                        : 'rgba(245, 158, 11, 0.4)', // yellow with 40% opacity
-                    borderWidth: '1px',
-                  }
+              // Debug logging
+              if (changeType) {
+                console.log('[Block] Field diff:', { 
+                  field: k, 
+                  changeType, 
+                  rootElement, 
+                  selectedEntry,
+                  diffClassName,
+                  actualClassName: changeType === 'add' ? styles.diffAdded : changeType === 'remove' ? styles.diffRemoved : styles.diffModified,
+                  stylesObject: styles
+                });
+              }
+              
+              // Determine CSS class based on change type
+              const diffClassName = changeType
+                ? changeType === 'add'
+                  ? styles.diffAdded
+                  : changeType === 'remove'
+                  ? styles.diffRemoved
+                  : styles.diffModified
                 : undefined;
 
               return (
@@ -204,8 +209,11 @@ export default function Block({
                       <div>
                         <div className="mb-1 flex items-center gap-1">
                           <div 
-                            className="border rounded-lg border-transparent flex-1 mr-1"
-                            style={fieldStyle}
+                            className={cn(
+                              'border rounded-lg flex-1 mr-1',
+                              diffClassName,
+                              !diffClassName && 'border-transparent'
+                            )}
                           >
                             <UIElementRender
                               k={k}

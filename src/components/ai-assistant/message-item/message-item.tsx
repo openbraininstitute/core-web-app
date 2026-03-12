@@ -241,6 +241,9 @@ function MessageChild({
         };
       });
 
+      console.log('[MessageItem] Generated highlights:', highlights);
+      console.log('[MessageItem] Accumulated diffs:', accumulatedDiffs);
+
       setConfigHighlights(highlights);
 
       // Also store the full diffs for field-level comparisons

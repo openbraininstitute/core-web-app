@@ -1,0 +1,21 @@
+.diffHighlight {
+  border-style: solid !important;
+  border-width: 1.5px !important;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.diffAdded {
+  border-color: rgba(34, 197, 94, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08) !important;
+}
+
+.diffRemoved {
+  border-color: rgba(239, 68, 68, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08) !important;
+}
+
+.diffModified {
+  border-color: rgba(245, 158, 11, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08) !important;
+}
