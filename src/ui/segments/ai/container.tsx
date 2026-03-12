@@ -13,27 +13,40 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import styles from '@/ui/segments/ai/container.module.css';
 export function Container() {
   const { state, setState } = usePanelState();
+  console.log('state:', state);
   const [isPending, startTransition] = useTransition();
+  console.log('isPending:', isPending);
   const [contentState, setContentState] = useState(state);
+  console.log('contentState:', contentState);
   const isUpdating = useRef(false);
+  console.log('isUpdating.current:', isUpdating.current);
 
   useEffect(() => {
+    console.log('useEffect - state changed:', state);
     setContentState(state);
   }, [state]);
 
   useAgentState('smc_simulation_config');
 
   const isCollapsed = contentState === PanelState.Collapsed;
+  console.log('isCollapsed:', isCollapsed);
   const isFullscreen = contentState === PanelState.Fullscreen;
+  console.log('isFullscreen:', isFullscreen);
   const targetWidth = contentState === PanelState.Collapsed ? '3rem' : '400px';
+  console.log('targetWidth:', targetWidth);
 
   function updateState(next: PanelState) {
+    console.log('updateState called with next:', next);
     if (next === contentState || isUpdating.current) return;
     isUpdating.current = true;
+    console.log('isUpdating.current set to:', isUpdating.current);
     setContentState(next);
+    console.log('setContentState called with:', next);
     startTransition(() => {
       setState(next);
+      console.log('setState called with:', next);
       isUpdating.current = false;
+      console.log('isUpdating.current set to:', isUpdating.current);
     });
   }
 
