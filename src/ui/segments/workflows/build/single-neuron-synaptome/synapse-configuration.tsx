@@ -1,6 +1,6 @@
-import { SynapseSet } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-item';
-import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
+import { useBuildSingleNeuronSynaptomeSessionState } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { SynapseSet } from '@/ui/segments/workflows/build/single-neuron-synaptome/synapse-set-item/synapse-set-item';
 
 type Props = {
   sessionId: string;

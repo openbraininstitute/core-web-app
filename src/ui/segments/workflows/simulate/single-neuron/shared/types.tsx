@@ -382,11 +382,12 @@ export type SectionSynapses = {
   synapses: Array<SynapsePosition>;
 };
 
-export type SectionSynapsesWith3D = {
+export type SectionSynapsesFor3D = {
   sectionSynapses: Array<SectionSynapses>;
   synapsePlacementConfigId: string;
   count?: number;
-  meshId?: string;
+  color?: string;
+  visible: boolean;
 };
 
-export type SynapsesPlacementRecord = Record<string, SectionSynapsesWith3D | null>;
+export type SynapsesPlacementRecord = Record<string, SectionSynapsesFor3D | null>;
