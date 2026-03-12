@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 
 import { RootElement } from '@/features/scan-config/components/root-element';
 import {
@@ -12,6 +12,7 @@ import { useAIConfig } from '@/services/ai-agent';
 
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
+import { resetConfig } from '../hooks/schema';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -43,8 +44,6 @@ export default function Left({
   isEditingKey,
   setIsEditingKey,
   activity,
-  handleAcceptAIChanges,
-  handleRejectAIChanges,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -69,11 +68,17 @@ export default function Left({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
   activity: TScanConfigActivity;
-  handleAcceptAIChanges: () => void;
-  handleRejectAIChanges: () => void;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
-  const { aiConfig } = useAIConfig();
+  const { aiConfig, setAiConfig } = useAIConfig();
+
+  // Auto-apply AI-generated configuration changes when available
+  useEffect(() => {
+    if (aiConfig && !campaignId) {
+      resetConfig(schema, aiConfig, setAtomsMap);
+      setAiConfig(null);
+    }
+  }, [aiConfig, campaignId, schema, setAtomsMap, setAiConfig]);
 
   return (
     <div className={styles.scrollable}>
@@ -125,26 +130,7 @@ export default function Left({
         })}
       </div>
 
-      {!!aiConfig && !campaignId && (
-        <div className="flex w-[95%] min-h-12.5 gap-2">
-          <button
-            type="button"
-            className="min-h-12.5 text-lg drop-shadow border-red-500 border rounded-full p-2 grow text-red-500"
-            onClick={handleRejectAIChanges}
-          >
-            Reject changes
-          </button>
-          <button
-            type="button"
-            className="min-h-12.5 text-lg bg-green-600 text-white p-2 rounded-full grow "
-            onClick={handleAcceptAIChanges}
-          >
-            Accept changes
-          </button>
-        </div>
-      )}
-
-      {!readOnly && (!aiConfig || (aiConfig && campaignId)) && (
+      {!readOnly &&
         <GenerateConfigButton
           loading={loading}
           campaignId={campaignId}
@@ -156,7 +142,7 @@ export default function Left({
           setLoading={setLoading}
           activity={activity}
         />
-      )}
+      }
     </div>
   );
 }

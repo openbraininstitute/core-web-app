@@ -1,0 +1,10 @@
+import { ScanConfigActivity, type TScanConfigActivity } from '@/features/scan-config/types';
+
+/**
+ * Maps scan config activities to their AI agent state configuration names.
+ * Used to sync configuration state with the AI assistant for different activities.
+ */
+export const ACTIVITY_AI_CONFIG_MAP: Record<TScanConfigActivity, string> = {
+  [ScanConfigActivity.Simulate]: 'smc_simulation_config',
+  [ScanConfigActivity.Extract]: 'smc_extraction_config',
+};

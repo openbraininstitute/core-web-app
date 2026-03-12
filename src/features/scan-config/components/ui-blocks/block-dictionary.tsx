@@ -43,7 +43,6 @@ type Props = {
   model: ICircuit | IMEModel;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  blockAIConfig: ConfigObject | null;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };
 
@@ -62,7 +61,6 @@ export default function BlockDictionary({
   model,
   allEntries,
   onNewBlockClick,
-  blockAIConfig,
   schemaMappingConfig,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
@@ -88,12 +86,11 @@ export default function BlockDictionary({
       <Block
         schemaName={schemaName}
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={!!campaignId || loading || !!blockAIConfig || !isChatReady}
+        disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
         config={config}
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
         entity={model}
-        blockAIConfig={blockAIConfig}
         schemaMappingConfig={schemaMappingConfig}
       />
     );

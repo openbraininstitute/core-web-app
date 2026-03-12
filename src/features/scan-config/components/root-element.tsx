@@ -1,7 +1,6 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { isEqual, lowerCase, upperFirst } from 'es-toolkit/compat';
+import { lowerCase, upperFirst } from 'es-toolkit/compat';
 
-import AIIcon from '@/components/icons/ai/ai_icon';
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
@@ -114,8 +113,6 @@ export function RootElement({
           />
         </span>
         <div className="flex gap-3">
-          {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && <AIIcon />}
-
           {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
             <WarningFilled className="text-yellow-400!" />
           ) : (

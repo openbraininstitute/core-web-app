@@ -259,6 +259,7 @@ export function resetConfig(
     .filter(([k]) => !isRootBlock(schema, k))
     .forEach(([k, v]) => {
       map[k] = {};
+      if (!v || !isPlainObject(v)) return;
       Object.entries(v).forEach(([subK, subV]) => {
         if (!isPlainObject(subV) || isAtom(map[k])) return;
         map[k][subK] = atom<Record<string, ConfigValue>>(subV);

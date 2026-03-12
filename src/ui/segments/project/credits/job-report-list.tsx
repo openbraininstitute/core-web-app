@@ -78,7 +78,9 @@ function scaleRenderFn(subtype: ServiceSubtype) {
 }
 
 function costRenderFn(amount: string) {
-  return <span>{amount}</span>;
+  const numericAmount = parseFloat(amount);
+  const formattedAmount = Number.isNaN(numericAmount) ? amount : numericAmount.toFixed(2);
+  return <span>{formattedAmount}</span>;
 }
 
 export function JobReportList() {

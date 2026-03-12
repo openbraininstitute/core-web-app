@@ -21,7 +21,6 @@ type Props = {
   loading: boolean;
   config: Config;
   model: ICircuit | IMEModel;
-  blockAIConfig: Record<string, ConfigValue> | null;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };
 
@@ -41,7 +40,6 @@ export default function BlockUnion({
   loading,
   config,
   model,
-  blockAIConfig,
   schemaMappingConfig,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
@@ -89,7 +87,6 @@ export default function BlockUnion({
           blockSchema={selectedBlockSchema}
           stateAtom={atomsMap[selectedRootElement]}
           entity={model}
-          blockAIConfig={blockAIConfig}
           hideTitle
           schemaMappingConfig={schemaMappingConfig}
         />
