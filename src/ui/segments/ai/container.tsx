@@ -15,42 +15,22 @@ import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container() {
   const { state, setState } = usePanelState();
-  console.log('[Container] usePanelState:', state);
-
   const [isPending, startTransition] = useTransition();
-  console.log('[Container] isPending:', isPending);
-
-  const [sizeState, setSizeState] = useState(state);
-  console.log('[Container] sizeState:', sizeState);
-
   const [contentState, setContentState] = useState(state);
-  console.log('[Container] contentState:', contentState);
 
   useAgentState('smc_simulation_config');
 
   const isCollapsed = contentState === PanelState.Collapsed;
   const isFullscreen = contentState === PanelState.Fullscreen;
-  const targetWidth = sizeState === PanelState.Collapsed ? '3rem' : '400px';
-
-  console.log(
-    '[Container] isCollapsed:',
-    isCollapsed,
-    'isFullscreen:',
-    isFullscreen,
-    'targetWidth:',
-    targetWidth
-  );
+  const targetWidth = contentState === PanelState.Collapsed ? '3rem' : '400px';
 
   function updateState(next: PanelState) {
-    console.log('[Container] updateState called with:', next);
-    setSizeState(next);
-    if (next !== PanelState.Collapsed) setContentState(next);
+    setContentState(next);
     startTransition(() => setState(next));
   }
 
   function handleAnimationComplete() {
-    console.log('[Container] handleAnimationComplete - setting contentState to:', sizeState);
-    setContentState(sizeState);
+    setContentState(contentState);
   }
 
   return (
@@ -58,7 +38,7 @@ export function Container() {
       id="workspace-ai"
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai] z-[30] overflow-hidden',
+        'text-white [grid-area:ai] z-[30]',
         isCollapsed
           ? 'bg-primary-9 border-primary-9 mr-3 shadow-md rounded-full!'
           : cn(
@@ -99,14 +79,14 @@ export function Container() {
       ) : (
         <div className="flex h-full w-full flex-col rounded-lg relative overflow-visible">
           <AnimatePresence mode="wait">
-            {sizeState !== PanelState.Collapsed && (
+            {contentState !== PanelState.Collapsed && (
               <HydrateWrapper key="ai-assistant">
                 <AiAssistant
                   section="explore"
                   fullscreen={isFullscreen}
                   onFullscreenToggle={() =>
                     updateState(
-                      sizeState === PanelState.Fullscreen
+                      contentState === PanelState.Fullscreen
                         ? PanelState.Expanded
                         : PanelState.Fullscreen
                     )
