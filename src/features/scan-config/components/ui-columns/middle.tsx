@@ -1,11 +1,7 @@
-import {
-  isRootBlock,
-  type TSchemaMappingConfiguration,
-} from '@/features/scan-config/components/hooks/schema';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { isAtom } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
   type Config,
@@ -20,6 +16,7 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
 import styles from '@/features/scan-config/scan-config.module.css';
@@ -64,15 +61,6 @@ export default function Middle({
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
 
-  const getBlockAIConfig = () => {
-    if (!aiConfig) return null;
-
-    const blockConf = aiConfig[selectedRootElement];
-    if (!isPlainObject(blockConf)) return {};
-    if (isRootBlock(schema, selectedRootElement)) return blockConf;
-    return blockConf[selectedEntry] ?? {};
-  };
-
   return (
     <div className={styles.animateFadeUp}>
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
@@ -91,7 +79,6 @@ export default function Middle({
           blockDictionarySchema={selectedSchema}
           selectedRootElement={selectedRootElement}
           onNewBlockClick={onNewBlockClick}
-          blockAIConfig={getBlockAIConfig()}
           schemaMappingConfig={schemaMappingConfig}
         />
       )}
@@ -106,7 +93,6 @@ export default function Middle({
             blockSchema={selectedSchema}
             stateAtom={atomsMap[selectedRootElement]}
             entity={entity}
-            blockAIConfig={getBlockAIConfig()}
             schemaMappingConfig={schemaMappingConfig}
           />
         )}
@@ -124,7 +110,6 @@ export default function Middle({
           config={config}
           entity={entity}
           entityType={entityType}
-          blockAIConfig={getBlockAIConfig()}
           schemaMappingConfig={schemaMappingConfig}
         />
       )}

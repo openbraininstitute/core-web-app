@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { RootElement } from '@/features/scan-config/components/root-element';
 import {
   type AtomsMap,
@@ -11,6 +13,7 @@ import { useAIConfig } from '@/services/ai-agent';
 
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
+import { resetConfig } from '../hooks/schema';
 
 import type { Config } from '@/features/scan-config/components/components';
 
@@ -39,8 +42,6 @@ export default function Left({
   isEditingKey,
   setIsEditingKey,
   activity,
-  handleAcceptAIChanges,
-  handleRejectAIChanges,
   generatedEndpoint,
   entityType,
 }: {
@@ -66,20 +67,26 @@ export default function Left({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
   activity: TScanConfigActivity;
-  handleAcceptAIChanges: () => void;
-  handleRejectAIChanges: () => void;
   generatedEndpoint: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
-  const { aiConfig } = useAIConfig();
+  const { aiConfig, setAiConfig } = useAIConfig();
+
+  // Auto-apply AI-generated configuration changes when available
+  useEffect(() => {
+    if (aiConfig && !campaignId) {
+      resetConfig(schema, aiConfig, setAtomsMap);
+      setAiConfig(null);
+    }
+  }, [aiConfig, campaignId, schema, setAtomsMap, setAiConfig]);
 
   return (
     <div className={styles.scrollable}>
       <div className="flex grow flex-col items-center gap-5 overflow-y-auto overflow-x-hidden secondary-scrollbar px-2 pb-5">
         {schema.group_order.map((group) => {
           return (
-            <div key={group} className="w-full flex flex-col gap-2">
+            <div key={group} className="w-full flex flex-col gap-1.5">
               <h4 className="self-start text-gray-500 uppercase">{group}</h4>
               {schema.properties &&
                 Object.entries(schema.properties)
@@ -124,26 +131,7 @@ export default function Left({
         })}
       </div>
 
-      {!!aiConfig && !campaignId && (
-        <div className="flex w-[95%] min-h-12.5 gap-2">
-          <button
-            type="button"
-            className="min-h-12.5 text-lg drop-shadow border-red-500 border rounded-full p-2 grow text-red-500"
-            onClick={handleRejectAIChanges}
-          >
-            Reject changes
-          </button>
-          <button
-            type="button"
-            className="min-h-12.5 text-lg bg-green-600 text-white p-2 rounded-full grow "
-            onClick={handleAcceptAIChanges}
-          >
-            Accept changes
-          </button>
-        </div>
-      )}
-
-      {!readOnly && (!aiConfig || (aiConfig && campaignId)) && (
+      {!readOnly && (
         <GenerateConfigButton
           loading={loading}
           campaignId={campaignId}

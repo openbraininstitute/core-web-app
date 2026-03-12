@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import { compactRecord } from '@/utils/dictionary';
 import { getSession } from '@/auth-fetch';
+import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
 
 import type { WorkspaceContext } from '@/types/common';
@@ -42,6 +42,7 @@ export const useClientCachedUrl = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: cacheUrl is stable
   useEffect(() => {
     if (!url) {
       setLoading(false);
@@ -126,11 +127,10 @@ export const useClientCachedUrl = ({
 
     return () => {
       isMounted = false;
-      if (cachedUrl && cachedUrl.startsWith('blob:')) {
+      if (cachedUrl?.startsWith('blob:')) {
         URL.revokeObjectURL(cachedUrl);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, expireAfter, cacheKey, urlKey, virtualLabId, projectId]);
 
   return { cachedUrl, loading, error };

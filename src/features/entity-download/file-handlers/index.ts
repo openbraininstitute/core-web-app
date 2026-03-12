@@ -1,6 +1,5 @@
 import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types';
-import type { FileEntry } from '@/features/entity-download/types';
-import type { WorkspaceContext } from '@/types/common';
+
 import { getCellMorphologyFiles } from './cell-morphology';
 import { getCircuitFiles } from './circuit';
 import { getCircuitSimulationFiles } from './circuit-simulation';
@@ -17,6 +16,9 @@ import { getNotebookFiles } from './notebook';
 import { getSingleNeuronSimulationFiles } from './single-neuron-simulation';
 import { getSingleNeuronSynaptomeFiles } from './single-neuron-synaptome';
 import { getSingleNeuronSynaptomeSimulationFiles } from './single-neuron-synaptome-simulation';
+
+import type { FileEntry } from '@/features/entity-download/types';
+import type { WorkspaceContext } from '@/types/common';
 
 type GetEntityFilesHandler = (
   entityIds: string[],

@@ -261,9 +261,10 @@ export default async function Overview({
         [
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
+          ExtendedEntitiesTypeDict.UniversalCellMorphology,
         ],
         extendedType
-      ) && <CellMorphologyViewer entity={entity as ICellMorphology} />}
+      ) && <CellMorphologyViewer entity={entity as ICellMorphology} context={context} />}
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
         <EphysViewer resource={entity as IElectricalCellRecording} ctx={context} />
       )}

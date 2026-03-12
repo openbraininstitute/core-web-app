@@ -29,7 +29,6 @@ type Props = {
   loading: boolean;
   config: Config;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  blockAIConfig: Record<string, ConfigValue> | null;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   entityType: TSupportedEntityTypesForScanConfiguration;
 };
@@ -51,7 +50,6 @@ export default function BlockUnion({
   loading,
   config,
   entity,
-  blockAIConfig,
   schemaMappingConfig,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
@@ -92,6 +90,7 @@ export default function BlockUnion({
           )}
         </div>
         <Block
+          hideTitle
           schema={schema}
           schemaName={schemaName}
           key={`${selectedRootElement}_${selectedType}`}
@@ -100,8 +99,6 @@ export default function BlockUnion({
           blockSchema={selectedBlockSchema}
           stateAtom={atomsMap[selectedRootElement]}
           entity={entity}
-          blockAIConfig={blockAIConfig}
-          hideTitle
           schemaMappingConfig={schemaMappingConfig}
         />
       </div>

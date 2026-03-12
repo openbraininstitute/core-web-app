@@ -7,7 +7,6 @@ import { match } from 'ts-pattern';
 import { useEntries } from '@/features/scan-config/components/hooks';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import {
-  resetConfig,
   type TSchemaMappingConfiguration,
   useAtomsMap,
 } from '@/features/scan-config/components/hooks/schema';
@@ -15,6 +14,7 @@ import ModelPreview from '@/features/scan-config/components/model-preview';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import Left from '@/features/scan-config/components/ui-columns/left';
 import Middle from '@/features/scan-config/components/ui-columns/middle';
+import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
   ExtractScanConfigTabs,
@@ -31,7 +31,7 @@ import {
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { messages } from '@/i18n/en/scan-config';
-import { useAgentState, useAIConfig } from '@/services/ai-agent';
+import { useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -84,16 +84,22 @@ export function ScanConfigTemplate({
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
   const allEntries = useEntries({ initialConfig, schema });
-  const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model: entity });
+  const [atomsMap, setAtomsMap] = useAtomsMap({
+    schema,
+    initialConfig,
+    model: entity,
+  });
   const config = useConfigAtom(schema, atomsMap);
 
-  const updateRequestId = useAgentState(aiEnabled ? 'smc_simulation_config' : '', config);
-  const { aiConfig, setAiConfig } = useAIConfig();
+  useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
 
   const results = match({ activity, tab })
     .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)
     .with(
-      { activity: ScanConfigActivity.Simulate, tab: { id: SimulateScanConfigTabs.simulations } },
+      {
+        activity: ScanConfigActivity.Simulate,
+        tab: { id: SimulateScanConfigTabs.simulations },
+      },
       () => (
         <Suspense>
           <SimulationsTab
@@ -105,7 +111,10 @@ export function ScanConfigTemplate({
       )
     )
     .with(
-      { activity: ScanConfigActivity.Extract, tab: { id: ExtractScanConfigTabs.extractions } },
+      {
+        activity: ScanConfigActivity.Extract,
+        tab: { id: ExtractScanConfigTabs.extractions },
+      },
       () => (
         <Suspense>
           <ExtractionTab
@@ -164,16 +173,6 @@ export function ScanConfigTemplate({
             isEditingKey={isEditingKey}
             setIsEditingKey={setIsEditingKey}
             activity={activity}
-            handleAcceptAIChanges={() => {
-              if (!aiConfig) return;
-              resetConfig(schema, aiConfig, setAtomsMap);
-              setAiConfig(null);
-              updateRequestId();
-            }}
-            handleRejectAIChanges={() => {
-              setAiConfig(null);
-              updateRequestId();
-            }}
             generatedEndpoint={generatedEndpoint}
             entityType={entityType}
           />

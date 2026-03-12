@@ -157,23 +157,6 @@ class AiAssistantClass {
     ];
   }
 
-  useContext() {
-    const accessToken = this.accessToken.useValue();
-    const virtualLabId = this.virtualLabId.useValue();
-    const projectId = this.projectId.useValue();
-    const [context, setContext] = React.useState<AssistantContext>({
-      accessToken,
-      virtualLabId,
-      projectId,
-    });
-
-    React.useEffect(() => {
-      setContext({ accessToken, virtualLabId, projectId });
-    }, [accessToken, virtualLabId, projectId]);
-
-    return context;
-  }
-
   private get context(): AssistantContext {
     return {
       accessToken: this.accessToken.get(),
@@ -224,7 +207,6 @@ export function useAiAssistant() {
 
   return {
     ...AiAssistant,
-    useContext: AiAssistant.useContext.bind(AiAssistant),
     useHistory: AiAssistant.useHistory.bind(AiAssistant),
     renameThread: async (threadId: string, title: string) => {
       await AiAssistant.renameThread(threadId, title);

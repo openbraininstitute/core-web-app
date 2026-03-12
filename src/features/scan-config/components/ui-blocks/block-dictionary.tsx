@@ -43,7 +43,6 @@ type Props = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
-  blockAIConfig: ConfigObject | null;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 };
 
@@ -62,7 +61,6 @@ export default function BlockDictionary({
   entity,
   allEntries,
   onNewBlockClick,
-  blockAIConfig,
   schemaMappingConfig,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
@@ -89,12 +87,11 @@ export default function BlockDictionary({
         schemaName={schemaName}
         schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={!!campaignId || loading || !!blockAIConfig || !isChatReady}
+        disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
         config={config}
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
         entity={entity}
-        blockAIConfig={blockAIConfig}
         schemaMappingConfig={schemaMappingConfig}
       />
     );
