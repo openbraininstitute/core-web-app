@@ -1,6 +1,6 @@
 'use client';
 
-import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
+import { CloseOutlined, LinkOutlined, SearchOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { type SetStateAction, useAtom } from 'jotai';
 import { useCallback, useId, useRef, useState } from 'react';
@@ -142,16 +142,33 @@ export function EntitySelectorSingle({
               >
                 <div
                   className={cn('flex flex-col items-start min-w-0 w-full', {
-                    'max-w-[calc(100%-0.75rem)]': !disabled,
+                    'max-w-[calc(100%-1.75rem)]': !disabled,
                   })}
                 >
                   <div
-                    className={cn('text-primary-9 min-w-0 max-w-full  text-xs lg:text-sm', {
-                      truncate: !disabled,
-                    })}
+                    className={cn(
+                      'flex items-center justify-between gap-1',
+                      'text-primary-9 min-w-0 max-w-full text-xs lg:text-sm'
+                    )}
                     title={data?.id}
                   >
-                    {data?.id}
+                    <span className="truncate max-w-[calc(100%-30px)]">{data?.id}</span>
+                    <a
+                      href={`/app/entity/${data?.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className={cn(
+                        'inline-flex items-center justify-center text-primary-9 min-w-6!',
+                        'min-h-6! px-1 border-gray-200 bg-white',
+                        'transition-colors hover:bg-gray-100 hover:border-gray-300 rounded-full',
+                        'hover:text-primary-9 pointer-events-auto [&_svg]:pointer-events-auto'
+                      )}
+                      aria-label={`View ion channel ${data?.name}`}
+                    >
+                      <LinkOutlined />
+                    </a>
                   </div>
                   <div className="text-sm lg:text-base font-semibold">{data?.name}</div>
                 </div>
