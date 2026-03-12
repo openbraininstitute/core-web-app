@@ -4,7 +4,7 @@ import range from 'es-toolkit/compat/range';
 import { Dataset, File, Group, ready } from 'h5wasm';
 
 const SMALL_SCALE_SIMULATOR_ID = 'obi_small_scale_simulator_v1';
-const ION_CHANNEL_SIMULATION_SESSION_ID = 'vc_hh_seclamp';
+const CURRENT_REPORT_WRITER_AGENT_ID = 'obi_small_scale_simulator_v1__current_report_writer';
 
 enum NWBKey {
   DATA_ORGANIZATION = 'data_organization',
@@ -95,14 +95,14 @@ export default abstract class NWBTrace {
         throw new Error('General group not found');
       }
 
-      const sessionIdDataset = generalGroup.get(NWBKey.SESSION_ID);
-      if (!(sessionIdDataset instanceof Dataset)) {
-        throw new Error('Can not find session_id dataset');
+      const wasGeneratedByDataset = generalGroup.get(NWBKey.WAS_GENERATED_BY);
+      if (!(wasGeneratedByDataset instanceof Dataset)) {
+        throw new Error('Can not find was_generated_by dataset');
       }
 
-      const sessionId = sessionIdDataset.to_array() as string[];
-      if (sessionId[0] === ION_CHANNEL_SIMULATION_SESSION_ID) {
-        throw new Error('The file does not seem to be produced by OBI small scale simulator');
+      const wasGeneratedBy = wasGeneratedByDataset.to_array() as string[];
+      if (!wasGeneratedBy.includes(CURRENT_REPORT_WRITER_AGENT_ID)) {
+        throw new Error(`Writer agent is not ${CURRENT_REPORT_WRITER_AGENT_ID}`);
       }
 
       return new IonChannelSimulationTrace(file);
@@ -548,13 +548,13 @@ class NWBCircuitSimulationTrace extends NWBTrace {
  * an ion channel simulation (session ID: `vc_hh_seclamp`).
  *
  * This class handles NWB files where all recordings belong to a single cell
- * under a single SEClamp repetition. Sweeps are derived from stimulus keys
- * (e.g. `vcss__sweep__000`), and responses can contain multiple recorded
- * variables per sweep (e.g. `vcs__itotal_sweep__000`, `vcs__ina_sweep__000`),
- * each exposed as a labelled `RecordingData` entry.
+ * under a single SEClamp repetition. Sweeps and variable names are read from
+ * the `sweep_number` and `description` attributes of each group inside
+ * `acquisition` and `stimulus/presentation`, allowing stimuli and responses
+ * to be matched without relying on key naming conventions.
  *
  * Key Responsibilities:
- * - Parses stimulus and response keys to extract sweep identifiers and variable names.
+ * - Reads `sweep_number` and `description` attributes to identify sweeps and variables.
  * - Returns one `RecordingData` per recorded variable for response data.
  * - Reads the protocol name from the `stimulus_description` attribute of the first acquisition entry.
  *
@@ -571,45 +571,46 @@ class IonChannelSimulationTrace extends NWBTrace {
 
   public init() {}
 
-  // stimulusKey: vcss__sweep__000, vcss__sweep__001, etc.
-  private parseStimulusKey(key: string): { sweep: string } {
-    const [, , sweep] = key.split(/_+/);
-    if (!sweep) {
-      throw new Error(`Invalid stimulus key: ${key}`);
+  private getGroupEntries(
+    parentKey: string
+  ): { key: string; description: string; sweepNumber: number }[] {
+    const parent = this.getGroup(parentKey);
+    return parent.keys().map((key) => {
+      const group = this.getGroup(`${parentKey}/${key}`);
+      const description = tryGetAttribute(group, 'description');
+      const sweepNumber = tryGetAttribute(group, 'sweep_number');
+      if (typeof description !== 'string') {
+        throw new Error(`Missing description on ${parentKey}/${key}`);
+      }
+      if (typeof sweepNumber !== 'number') {
+        throw new Error(`Missing sweep_number on ${parentKey}/${key}`);
+      }
+      return { key, description, sweepNumber };
+    });
+  }
+
+  private findGroupKey(parentKey: string, sweepNumber: number, description?: string): string {
+    const entries = this.getGroupEntries(parentKey);
+    const match = entries.find(
+      (e) =>
+        e.sweepNumber === sweepNumber &&
+        (description === undefined || e.description === description)
+    );
+    if (!match) {
+      throw new Error(
+        `No group found in ${parentKey} with sweep_number=${sweepNumber}${description !== undefined ? ` and description=${description}` : ''}`
+      );
     }
-    return { sweep };
-  }
-
-  private createStimulusKey({ sweep }: { sweep: string }): string {
-    return `vcss__sweep__${sweep}`;
-  }
-
-  // responseKey: vcs__itotal_sweep__000, vcs__itotal_sweep__002, etc.
-  private parseResponseKey(key: string): { varName: string; sweep: string } {
-    const [, varName, , sweep] = key.split(/_+/);
-    if (!varName || !sweep) {
-      throw new Error(`Invalid response key: ${key}`);
-    }
-    return { varName, sweep };
-  }
-
-  private createResponseKey({ varName, sweep }: { varName: string; sweep: string }): string {
-    return `vcs__${varName}_sweep__${sweep}`;
+    return match.key;
   }
 
   private getRecVarNames(): string[] {
-    const responseGroup = this.getGroup(NWBKey.ACQUISITION);
-
-    const varNameSet = responseGroup
-      .keys()
-      .map((responseKey) => this.parseResponseKey(responseKey).varName)
-      .reduce((acc, varName) => acc.add(varName), new Set<string>());
-
-    return Array.from(varNameSet).sort();
+    const entries = this.getGroupEntries(NWBKey.ACQUISITION);
+    return Array.from(new Set(entries.map((e) => e.description))).sort();
   }
 
   public getCellIds(): string[] {
-    return ['Default'];
+    return ['SEClamp'];
   }
 
   public getProtocols(): string[] {
@@ -632,14 +633,11 @@ class IonChannelSimulationTrace extends NWBTrace {
   }
 
   public getSweeps(_cellId: string, _protocol: string, _repetition: string): string[] {
-    const stimulusPresentationGroup = this.getGroup(NWBKey.STIMULUS_PRESENTATION);
-
-    const sweeps = stimulusPresentationGroup
-      .keys()
-      .map((stimulusKey) => this.parseStimulusKey(stimulusKey).sweep)
-      .sort();
-
-    return sweeps;
+    const entries = this.getGroupEntries(NWBKey.STIMULUS_PRESENTATION);
+    const sweepNumbers = Array.from(new Set(entries.map((e) => e.sweepNumber))).sort(
+      (a, b) => a - b
+    );
+    return sweepNumbers.map(String);
   }
 
   private getTimeData(): { timeUnit: string; timeRate: number } {
@@ -674,15 +672,23 @@ class IonChannelSimulationTrace extends NWBTrace {
     sweep: string,
     recordingType: RecordingType
   ): RecordingData[] {
+    const sweepNumber = parseInt(sweep, 10);
     const recVarNames =
       recordingType === RecordingType.STIMULUS ? ['default'] : this.getRecVarNames();
 
     const recordingData = recVarNames.map((varName): RecordingData => {
-      const datasetKey =
+      const parentKey =
         recordingType === RecordingType.STIMULUS
-          ? `${NWBKey.STIMULUS_PRESENTATION}/${this.createStimulusKey({ sweep })}/${NWBKey.DATA}`
-          : `${NWBKey.ACQUISITION}/${this.createResponseKey({ varName, sweep })}/${NWBKey.DATA}`;
+          ? NWBKey.STIMULUS_PRESENTATION
+          : NWBKey.ACQUISITION;
 
+      const groupKey = this.findGroupKey(
+        parentKey,
+        sweepNumber,
+        recordingType === RecordingType.STIMULUS ? undefined : varName
+      );
+
+      const datasetKey = `${parentKey}/${groupKey}/${NWBKey.DATA}`;
       const dataset = this.getDataset(datasetKey);
 
       const unit = tryGetAttribute(dataset, 'unit');
@@ -693,11 +699,12 @@ class IonChannelSimulationTrace extends NWBTrace {
       let label: string | undefined;
 
       if (recordingType === RecordingType.RESPONSE) {
-        const stimulusGroupKey = `${NWBKey.ACQUISITION}/${this.createResponseKey({ varName, sweep })}`;
-        const stimulusGroup = this.getGroup(stimulusGroupKey);
-        const description = tryGetAttribute(stimulusGroup, 'description');
+        const responseGroup = this.getGroup(`${NWBKey.ACQUISITION}/${groupKey}`);
+        const description = tryGetAttribute(responseGroup, 'description');
         if (typeof description !== 'string') {
-          throw new Error(`Incompatible ${recordingType} description: ${unit}, expected string`);
+          throw new Error(
+            `Incompatible ${recordingType} description: ${description}, expected string`
+          );
         }
 
         label = description;
