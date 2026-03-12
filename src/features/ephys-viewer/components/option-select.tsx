@@ -1,4 +1,5 @@
 import { Select } from 'antd';
+
 import type { JSX } from 'react';
 
 interface OptionSelectProps {
@@ -31,19 +32,16 @@ function OptionSelect({
         </small>
       </label>
 
-      {numberOfAvailable > 1 ? (
-        <Select
-          id="optionSelect"
-          className="w-[180px]"
-          value={value}
-          placeholder="Please select"
-          onChange={handleChange}
-        >
-          {options}
-        </Select>
-      ) : (
-        <>:&nbsp;{value}</>
-      )}
+      <Select
+        id="optionSelect"
+        className="w-[180px]"
+        value={value}
+        placeholder="Please select"
+        onChange={handleChange}
+        disabled={numberOfAvailable === 1}
+      >
+        {options}
+      </Select>
     </div>
   );
 }
