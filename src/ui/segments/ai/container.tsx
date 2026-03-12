@@ -1,5 +1,4 @@
 'use client';
-
 import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { type JSX, useMemo, useState, useTransition } from 'react';
@@ -12,27 +11,21 @@ import { cn } from '@/utils/css-class';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import styles from '@/ui/segments/ai/container.module.css';
-
 export function Container() {
   const { state, setState } = usePanelState();
   const [isPending, startTransition] = useTransition();
   const [contentState, setContentState] = useState(state);
-
   useAgentState('smc_simulation_config');
-
   const isCollapsed = contentState === PanelState.Collapsed;
   const isFullscreen = contentState === PanelState.Fullscreen;
   const targetWidth = contentState === PanelState.Collapsed ? '3rem' : '400px';
-
   function updateState(next: PanelState) {
     setContentState(next);
     startTransition(() => setState(next));
   }
-
   function handleAnimationComplete() {
     setContentState(contentState);
   }
-
   return (
     <motion.div
       id="workspace-ai"
@@ -40,9 +33,9 @@ export function Container() {
         styles.aiPanel,
         'text-white [grid-area:ai] z-[30]',
         isCollapsed
-          ? 'bg-primary-9 border-primary-9 mr-3 shadow-md rounded-full!'
+          ? 'bg-primary-9 border-primary-9 mr-3 shadow-md rounded-full! [transition:background-color_150ms_ease_200ms,border-color_150ms_ease_200ms]'
           : cn(
-              'text-primary-9 mr-3 outline outline-1 outline-[#ddd] [outline-offset:-1px] bg-white',
+              'text-primary-9 mr-3 outline outline-1 outline-[#ddd] [outline-offset:-1px] bg-white [transition:none]',
               isFullscreen ? 'rounded-lg!' : 'rounded-2xl!'
             )
       )}
@@ -103,5 +96,4 @@ export function Container() {
     </motion.div>
   );
 }
-
 export default Container;
