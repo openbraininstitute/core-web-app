@@ -58,24 +58,23 @@ export function CollapsibleMessage({
     return count;
   }, [message.parts, collapsedIndices]);
 
-  // Check if there are editstate calls in the collapsed steps
-  const hasEditStateInCollapsed = React.useMemo(() => {
+  // Check if there are COMPLETED editstate calls in the entire message
+  const hasCompletedEditState = React.useMemo(() => {
     if (!hasEditStateCalls) return false;
 
     const parts = message.parts;
     for (let i = 0; i < parts.length; i++) {
-      if (collapsedIndices.has(i)) {
-        const part = parts[i];
-        if (
-          part.type === 'tool-invocation' &&
-          part.toolInvocation.toolName === 'editstate'
-        ) {
-          return true;
-        }
+      const part = parts[i];
+      if (
+        part.type === 'tool-invocation' &&
+        part.toolInvocation.toolName === 'editstate' &&
+        part.toolInvocation.state === 'result'
+      ) {
+        return true;
       }
     }
     return false;
-  }, [message.parts, collapsedIndices, hasEditStateCalls]);
+  }, [message.parts, hasEditStateCalls]);
 
   // Track which parts should be collapsed
   React.useEffect(() => {
@@ -184,9 +183,9 @@ export function CollapsibleMessage({
                 />
               </svg>
               <span className={styles.thinkingLabel}>
-                {isExpanded ? `Hide steps (${stepCount})` : `Show steps (${stepCount})`}
+                {isExpanded ? `Hide Steps (${stepCount})` : `Show Steps (${stepCount})`}
               </span>
-              {hasEditStateInCollapsed && (
+              {hasCompletedEditState && (
                 <div className={styles.actionButtons}>
                   <button
                     type="button"
