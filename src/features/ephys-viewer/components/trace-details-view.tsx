@@ -29,7 +29,13 @@ interface CellDetailsProps {
   defaultRepetition?: string;
 }
 
-function CellDetails({ trace, cellId, showCellLabel, defaultProtocol, defaultRepetition }: CellDetailsProps) {
+function CellDetails({
+  trace,
+  cellId,
+  showCellLabel,
+  defaultProtocol,
+  defaultRepetition,
+}: CellDetailsProps) {
   const [reset, setReset] = useState<boolean>(false);
 
   const plotContainerRef = useRef<HTMLDivElement>(null);
@@ -178,7 +184,7 @@ function CellDetails({ trace, cellId, showCellLabel, defaultProtocol, defaultRep
         ref={plotContainerRef}
         className={
           hasMultipleRecordings
-            ? 'grid grid-cols-1 gap-10 md:grid-cols-2 4xl:grid-cols-4'
+            ? 'grid grid-cols-1 gap-10 lg:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4'
             : 'flex flex-col gap-10 2xl:flex-row'
         }
       >
