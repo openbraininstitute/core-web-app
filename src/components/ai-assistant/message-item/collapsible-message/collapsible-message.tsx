@@ -165,26 +165,28 @@ export function CollapsibleMessage({
             data-collapsed={!isExpanded}
           >
             <div className={styles.thinkingHeader}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className={styles.chevron}
-                data-collapsed={!isExpanded}
-              >
-                <path
-                  d="M4 6L8 10L12 6"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className={styles.thinkingLabel}>
-                {isExpanded ? `Hide Steps (${stepCount})` : `Show Steps (${stepCount})`}
-              </span>
+              <div className={styles.thinkingLabelContainer}>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={styles.chevron}
+                  data-collapsed={!isExpanded}
+                >
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className={styles.thinkingLabel}>
+                  {isExpanded ? `Hide Steps (${stepCount})` : `Show Steps (${stepCount})`}
+                </span>
+              </div>
               {hasCompletedEditState && (
                 <div className={styles.actionButtons}>
                   <button
