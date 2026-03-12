@@ -2,7 +2,7 @@
 
 import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
-import { useState, useTransition } from 'react';
+import { type JSX, useMemo, useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import { useAgentState } from '@/services/ai-agent';
@@ -15,10 +15,16 @@ import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container() {
   const { state, setState } = usePanelState();
+  console.log('[Container] usePanelState:', state);
+
   const [isPending, startTransition] = useTransition();
+  console.log('[Container] isPending:', isPending);
 
   const [sizeState, setSizeState] = useState(state);
+  console.log('[Container] sizeState:', sizeState);
+
   const [contentState, setContentState] = useState(state);
+  console.log('[Container] contentState:', contentState);
 
   useAgentState('smc_simulation_config');
 
@@ -26,13 +32,24 @@ export function Container() {
   const isFullscreen = contentState === PanelState.Fullscreen;
   const targetWidth = sizeState === PanelState.Collapsed ? '3rem' : '400px';
 
+  console.log(
+    '[Container] isCollapsed:',
+    isCollapsed,
+    'isFullscreen:',
+    isFullscreen,
+    'targetWidth:',
+    targetWidth
+  );
+
   function updateState(next: PanelState) {
+    console.log('[Container] updateState called with:', next);
     setSizeState(next);
     if (next !== PanelState.Collapsed) setContentState(next);
     startTransition(() => setState(next));
   }
 
   function handleAnimationComplete() {
+    console.log('[Container] handleAnimationComplete - setting contentState to:', sizeState);
     setContentState(sizeState);
   }
 
@@ -58,12 +75,12 @@ export function Container() {
         <button
           type="button"
           onClick={() => updateState(PanelState.Expanded)}
-          className="relative flex h-full w-full cursor-pointer items-start justify-center px-2 select-none"
+          className="flex h-full w-full cursor-pointer flex-col items-center px-2 select-none"
           aria-label="expand AI assistant"
           disabled={isPending}
         >
-          <div className="absolute top-3 flex items-center justify-center text-white">
-            <PlusOutlined className="h-5 w-5" />
+          <div className="mt-3 flex h-8 w-8 items-center justify-center text-white">
+            <PlusOutlined className="h-4 w-4" />
           </div>
           <div
             className="text-xl font-bold"
@@ -72,7 +89,7 @@ export function Container() {
               transformOrigin: 'center',
               whiteSpace: 'nowrap',
               position: 'relative',
-              top: '80px',
+              top: '45px',
               margin: 0,
             }}
           >
