@@ -1,7 +1,7 @@
 'use client';
 import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
-import { type JSX, useMemo, useState, useTransition } from 'react';
+import { type JSX, useEffect, useMemo, useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import { useAgentState } from '@/services/ai-agent';
@@ -15,17 +15,22 @@ export function Container() {
   const { state, setState } = usePanelState();
   const [isPending, startTransition] = useTransition();
   const [contentState, setContentState] = useState(state);
+
+  useEffect(() => {
+    setContentState(state);
+  }, [state]);
+
   useAgentState('smc_simulation_config');
+
   const isCollapsed = contentState === PanelState.Collapsed;
   const isFullscreen = contentState === PanelState.Fullscreen;
   const targetWidth = contentState === PanelState.Collapsed ? '3rem' : '400px';
+
   function updateState(next: PanelState) {
     setContentState(next);
     startTransition(() => setState(next));
   }
-  function handleAnimationComplete() {
-    setContentState(contentState);
-  }
+
   return (
     <motion.div
       id="workspace-ai"
@@ -42,7 +47,6 @@ export function Container() {
       animate={{ width: targetWidth, height: 'calc(100vh - 6rem)' }}
       initial={false}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      onAnimationComplete={handleAnimationComplete}
     >
       <AnimatePresence>
         {isCollapsed ? (
