@@ -75,7 +75,7 @@ export function RootElement({
   };
 
   return (
-    <>
+    <div className="w-full flex flex-col gap-0.5">
       <LeftMenuTab
         tab={rootElement}
         selectedTab={selectedRootElement}
@@ -157,7 +157,7 @@ export function RootElement({
           visible={selectedRootElement === rootElement && !!config[rootElement]}
         />
       )}
-    </>
+    </div>
   );
 }
 

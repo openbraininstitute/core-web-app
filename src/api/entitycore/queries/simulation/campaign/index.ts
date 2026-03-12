@@ -16,7 +16,7 @@ const baseUri = '/simulation-campaign';
  *
  *
  */
-export async function getCircuitSimulationCampaign({
+export async function getSimulationCampaign({
   id,
   context,
 }: {
@@ -45,7 +45,7 @@ export async function getCircuitSimulationCampaign({
  *
  * @throws Will throw an error if the API request fails.
  */
-export async function getCircuitSimulationCampaigns({
+export async function getSimulationCampaigns({
   withFacets,
   filters,
   context,

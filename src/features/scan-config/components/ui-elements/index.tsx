@@ -11,10 +11,12 @@ import { RootSelector } from '@/features/scan-config/components/ui-elements/ion-
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
+import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type Config,
+  type ConfigSchema,
   type ConfigValue,
   type ParamSchema,
   ScanConfigUIElementDict,
@@ -36,7 +38,7 @@ export function UIElementRender({
   value,
   state,
   config,
-  schemaName,
+  schema,
   setState,
   entity,
   schemaMappingConfig,
@@ -47,6 +49,7 @@ export function UIElementRender({
   value: ConfigValue;
   config: Config;
   schemaName: SchemaName;
+  schema: ConfigSchema;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   state: Record<string, ConfigValue>;
   setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
@@ -107,7 +110,7 @@ export function UIElementRender({
       return (
         <Reference
           config={config}
-          schemaName={schemaName}
+          schema={schema}
           referenceSchema={paramSchema}
           value={defaultV}
           disabled={disabled}
@@ -269,6 +272,7 @@ export function UIElementRender({
           return (
             <EntitySelectorSingle
               entityType={q.type}
+              disabled={disabled}
               filters={q.filters}
               value={value}
               state={state}
@@ -278,6 +282,45 @@ export function UIElementRender({
             />
           );
         }
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.SelectRecordableIonChannelVariable },
+      },
+      ({ paramSchema }) => {
+        const currentValue =
+          isPlainObject(value) && typeof value.variable_name === 'string'
+            ? (value as unknown as {
+                ion_channel_id: string | null;
+                variable_name: string;
+                type: string;
+              })
+            : null;
+
+        return (
+          <SelectRecordableIonChannelVariable
+            value={currentValue}
+            disabled={disabled}
+            config={config}
+            paramSchema={paramSchema}
+            schema={schema}
+            onChange={(v) => {
+              if (v === null) {
+                setState({ ...state, [k]: null });
+                return;
+              }
+              setState({
+                ...state,
+                [k]: {
+                  ion_channel_id: v.ion_channel_id,
+                  variable_name: v.variable_name,
+                  type: v.type,
+                },
+              });
+            }}
+          />
+        );
       }
     )
     .otherwise(() => null);

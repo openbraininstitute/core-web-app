@@ -37,7 +37,7 @@ type MiddleProps = {
   loading: boolean;
   config: Config;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  entityType?: TSupportedEntityTypesForScanConfiguration;
+  entityType: TSupportedEntityTypesForScanConfiguration;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
@@ -99,6 +99,7 @@ export default function Middle({
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockSingle &&
         isAtom(atomsMap[selectedRootElement]) && (
           <Block
+            schema={schema}
             schemaName={schemaName}
             disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
             config={config}
@@ -112,6 +113,7 @@ export default function Middle({
 
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockUnion && (
         <BlockUnion
+          schema={schema}
           schemaName={schemaName}
           blockUnionSchema={selectedSchema}
           selectedRootElement={selectedRootElement}

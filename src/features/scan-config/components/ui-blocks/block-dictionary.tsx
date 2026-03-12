@@ -87,6 +87,7 @@ export default function BlockDictionary({
     return (
       <Block
         schemaName={schemaName}
+        schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
         disabled={!!campaignId || loading || !!blockAIConfig || !isChatReady}
         config={config}

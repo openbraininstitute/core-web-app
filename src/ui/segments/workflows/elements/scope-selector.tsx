@@ -1,5 +1,7 @@
 'use client';
 
+import { useImperativeHandle } from 'react';
+
 import { useScope } from '@/ui/hooks/use-scope';
 import {
   makeSelectEntityClickEvent,
@@ -12,9 +14,11 @@ import type { TWorkspaceScope } from '@/constants';
 export function WorkflowScopeTabs({
   className,
   defaultScope,
+  ref,
 }: {
   className?: string;
   defaultScope?: TWorkspaceScope;
+  ref?: React.RefObject<{ changeScope: (value: TWorkspaceScope | null) => void } | null>;
 }) {
   const { setMdv } = useMiniDetailView();
   const { scope: activeTab, changeScope } = useScope({ clearOnDefault: false, defaultScope });
@@ -28,6 +32,14 @@ export function WorkflowScopeTabs({
   const onValueChange = (value: string) => {
     onTabClick(value as TWorkspaceScope);
   };
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      changeScope,
+    }),
+    [changeScope]
+  );
 
   return (
     <WorkspaceScopeSelector

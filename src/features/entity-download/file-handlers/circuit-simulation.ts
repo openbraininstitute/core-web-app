@@ -2,10 +2,10 @@ import { compact } from 'es-toolkit/compat';
 import pLimit from 'p-limit';
 import pMap from 'p-map';
 
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
-import { getCircuitSimulationCampaign } from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
-import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
+import { getSimulationCampaign } from '@/api/entitycore/queries/simulation/campaign';
+import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
+import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
+import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaign/simulation-result';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { ASSET_BASE_PATH, OUTPUT_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
@@ -54,7 +54,7 @@ async function fetchSimulationResults(
   ctx: WorkspaceContext | undefined,
   resultLimit: ReturnType<typeof pLimit>
 ): Promise<SimulationData> {
-  const executions = await getCircuitSimulationExecutions({
+  const executions = await getSimulationExecutions({
     context: ctx,
     withFacets: false,
     filters: { used__id__in: sim.id },
@@ -64,7 +64,7 @@ async function fetchSimulationResults(
 
   const results = await pMap(
     generatedIds,
-    (id) => resultLimit(() => getCircuitSimulationResult({ id, context: ctx })),
+    (id) => resultLimit(() => getSimulationResult({ id, context: ctx })),
     { concurrency: CONCURRENCY.RESULTS }
   );
 
@@ -140,7 +140,7 @@ async function fetchCampaignData(
   idx: number,
   ctx: WorkspaceContext | undefined
 ): Promise<CampaignData | null> {
-  const campaign = await getCircuitSimulationCampaign({
+  const campaign = await getSimulationCampaign({
     id: entityId,
     context: ctx,
   });
@@ -148,7 +148,7 @@ async function fetchCampaignData(
   const configAsset = campaign.assets.find((asset) => asset.label === 'campaign_generation_config');
   if (!configAsset) return null;
 
-  const simulations = await getCircuitSimulations({
+  const simulations = await getSimulations({
     context: ctx,
     filters: { simulation_campaign_id: campaign.id },
   });

@@ -55,7 +55,7 @@ type Props = {
   schemaName: SchemaName;
   aiEnabled: boolean;
   generatedEndpoint: string;
-  entityType?: TSupportedEntityTypesForScanConfiguration;
+  entityType: TSupportedEntityTypesForScanConfiguration;
 };
 
 export function ScanConfigTemplate({

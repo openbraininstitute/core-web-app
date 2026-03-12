@@ -10,7 +10,7 @@ const baseUri = '/simulation-result';
  *
  *
  */
-export async function getCircuitSimulationResult({
+export async function getSimulationResult({
   id,
   context,
 }: {

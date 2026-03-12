@@ -9,9 +9,9 @@ import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-model';
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
-import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
+import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
+import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
+import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaign/simulation-result';
 import { EntityTypeDict, type IMEModel, type TEntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
@@ -33,7 +33,7 @@ const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
     atom<Promise<IExecutionActivity>>(async () => {
       const simulationExecutionFilters = { used__id: simulationId };
-      const res = await getCircuitSimulationExecutions({
+      const res = await getSimulationExecutions({
         filters: simulationExecutionFilters,
         context,
       });
@@ -162,7 +162,7 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
         return null;
       }
 
-      return getCircuitSimulationResult({
+      return getSimulationResult({
         id: execution.generated[0].id,
         context,
       });
@@ -177,7 +177,7 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   ({ campaignId, context }: { campaignId: string; context: WorkspaceContext }) =>
     atom<Promise<ISimulation[]>>(async () => {
       const filters = { simulation_campaign_id: campaignId };
-      const res = await getCircuitSimulations({ filters, context });
+      const res = await getSimulations({ filters, context });
 
       const simulations = res.data;
 

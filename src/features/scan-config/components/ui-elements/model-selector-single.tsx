@@ -3,10 +3,15 @@
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { type SetStateAction, useAtom } from 'jotai';
-import { useCallback, useId, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { type TWorkspaceScope, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import {
+  type ConfigValue,
+  ScanConfigUIElementDict,
+  type SetAtom,
+} from '@/features/scan-config/types';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge, BadgeButton } from '@/ui/molecules/badge';
@@ -21,7 +26,6 @@ import { cn } from '@/utils/css-class';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { ConfigValue, SetAtom } from '@/features/scan-config/types';
 
 export type SelectorValue = { id_str: string; type: string };
 interface SelectorModalProps {
@@ -60,6 +64,7 @@ export function EntitySelectorSingle({
   const [selectedRows, setSelectedRows] = useAtom(coreSelectedRowsAtom(dataKey));
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [usedRow, setUsedRow] = useState<EntityCoreIdentifiableNamed | null>(null);
+  const scopeRef = useRef<{ changeScope: (value: TWorkspaceScope | null) => void } | null>(null);
 
   const displayEntity =
     usedRow ??
@@ -76,7 +81,7 @@ export function EntitySelectorSingle({
       return entityConfig?.api.query.one({ context: { virtualLabId, projectId }, id: usedKey });
     },
     enabled: !!usedKey,
-    staleTime: 600,
+    staleTime: 600, // 10 minutes
   });
 
   const onDisplay = useCallback(() => setIsModalOpen(true), []);
@@ -88,7 +93,8 @@ export function EntitySelectorSingle({
       setUsedRow(selected);
       onChange({ ...state, [fieldKey]: { id_str: selected.id, type: valueType } });
     }
-    setIsModalOpen(false);
+    onClose();
+    scopeRef.current?.changeScope(null);
   };
 
   const onRemoveRecording = useCallback(() => {
@@ -105,6 +111,7 @@ export function EntitySelectorSingle({
     <div className="w-full">
       <div className="w-full">
         <Button
+          data-scan-config-block-element={ScanConfigUIElementDict.ModelSelectorSingle}
           type="button"
           variant="outline"
           onClick={data?.id ? undefined : onDisplay}
@@ -112,8 +119,10 @@ export function EntitySelectorSingle({
             'border-label relative h-auto min-h-10 w-full items-start justify-start p-1 focus-within:bg-white',
             'lg:min-h-12 active:border-primary-8 active:border-2! active:bg-white',
             'focus-within:bg-white focus-within:shadow-none! focus-within:ring-0!',
-            'has-[.placeholder]:items-center'
+            'has-[.placeholder]:items-center',
+            { 'pointer-events-none': disabled }
           )}
+          aria-disabled={disabled}
           disabled={disabled}
         >
           <div className="flex flex-1 flex-wrap items-center gap-1 select-none">
@@ -125,22 +134,35 @@ export function EntitySelectorSingle({
                 variant="outline"
                 className={cn(
                   'relative flex h-auto items-start justify-start gap-1 py-1!',
-                  'hover:bg-gray-100 hover:text-primary-8 min-w-0 w-full max-w-[calc(100%-30px)]'
+                  'hover:bg-gray-100 hover:text-primary-8 min-w-0 w-full',
+                  { 'pointer-events-none': disabled },
+                  { 'max-w-[calc(100%-30px)]': !disabled }
                 )}
+                aria-disabled={disabled}
               >
-                <div className="flex flex-col items-start">
-                  <div className="text-primary-9 line-clamp-1 min-w-0 max-w-full overflow-hidden text-xs lg:text-sm">
+                <div
+                  className={cn('flex flex-col items-start min-w-0 w-full', {
+                    'max-w-[calc(100%-0.75rem)]': !disabled,
+                  })}
+                >
+                  <div
+                    className={cn('text-primary-9 min-w-0 max-w-full  text-xs lg:text-sm', {
+                      truncate: !disabled,
+                    })}
+                    title={data?.id}
+                  >
                     {data?.id}
                   </div>
-                  <div className="text-lg lg:text-xl font-semibold">{data?.name}</div>
+                  <div className="text-sm lg:text-base font-semibold">{data?.name}</div>
                 </div>
-                <BadgeButton
-                  onClick={onRemoveRecording}
-                  disabled={disabled}
-                  className="absolute end-3 top-1/2 -translate-y-1/2"
-                >
-                  <CloseOutlined className="text-xs! [&>svg]:size-3!" />
-                </BadgeButton>
+                {!disabled && (
+                  <BadgeButton
+                    onClick={onRemoveRecording}
+                    className="absolute end-3 top-1/2 -translate-y-1/2"
+                  >
+                    <CloseOutlined className="text-xs! [&>svg]:size-3!" />
+                  </BadgeButton>
+                )}
               </Badge>
             ) : (
               <span className="placeholder px-2.5 text-slate-500">
@@ -148,9 +170,11 @@ export function EntitySelectorSingle({
               </span>
             )}
           </div>
-          <div className={cn('absolute end-3 top-1/2 ', '-translate-y-1/2 [&_svg]:size-3.5!')}>
-            <SearchOutlined className={cn('text-primary-9 ')} />
-          </div>
+          {!disabled && (
+            <div className={cn('absolute end-3 top-1/2 ', '-translate-y-1/2 [&_svg]:size-3.5!')}>
+              <SearchOutlined className={cn('text-primary-9 ')} />
+            </div>
+          )}
         </Button>
       </div>
 
@@ -206,7 +230,13 @@ export function EntitySelectorSingle({
                 container: 'w-2/5 min-h-full',
               },
             }}
-            left={<WorkflowScopeTabs className="max-w-max" defaultScope={WorkspaceScope.Public} />}
+            left={
+              <WorkflowScopeTabs
+                className="max-w-max"
+                defaultScope={WorkspaceScope.Public}
+                ref={scopeRef}
+              />
+            }
           />
         </div>
       </Modal>

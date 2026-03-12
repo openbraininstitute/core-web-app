@@ -408,7 +408,7 @@ export default function SimulationsTab({
           <button
             className={classNames(
               'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
-              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
+              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)] rounded-full',
               'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"

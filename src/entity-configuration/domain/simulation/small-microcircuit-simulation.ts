@@ -2,13 +2,13 @@ import { flatMap, keyBy } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import {
   createSimulationCampaign,
-  getCircuitSimulationCampaign,
-  getCircuitSimulationCampaigns,
-} from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
+  getSimulationCampaign,
+  getSimulationCampaigns,
+} from '@/api/entitycore/queries/simulation/campaign';
+import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
+import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -38,13 +38,13 @@ export async function resolveExecutions({
 }) {
   const chunkSize = 30;
 
-  const promises: ReturnType<typeof getCircuitSimulationExecutions>[] = [];
+  const promises: ReturnType<typeof getSimulationExecutions>[] = [];
 
   for (let i = 0; i < allSimIds.length; i += chunkSize) {
     const chunk = allSimIds.slice(i, i + chunkSize);
 
     promises.push(
-      getCircuitSimulationExecutions({
+      getSimulationExecutions({
         context,
         withFacets: false,
         filters: { used__id__in: [...chunk] },
@@ -73,7 +73,7 @@ async function resolveSimulationCampaigns({
 }) {
   // eslint-disable-next-line no-param-reassign
   filters = discardBrainRegionQueryParams(filters);
-  const source = await getCircuitSimulationCampaigns({
+  const source = await getSimulationCampaigns({
     context,
     withFacets,
     filters: { ...filters, circuit__scale: SCALE },
@@ -136,13 +136,13 @@ export async function resolveSimulationByCampaignId({
   id: string;
   context?: WorkspaceContext | null;
 }) {
-  const campaign = await getCircuitSimulationCampaign({ id, context });
+  const campaign = await getSimulationCampaign({ id, context });
 
   if (!campaign) {
     throw new Error(`No campaign with id ${id} found`);
   }
 
-  const source = await getCircuitSimulations({
+  const source = await getSimulations({
     context,
     filters: { simulation_campaign_id: id },
   });
@@ -200,7 +200,7 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<
     query: {
       count: (...params) => {
         const filters = discardBrainRegionQueryParams(params[0].filters);
-        return getCircuitSimulationCampaigns({
+        return getSimulationCampaigns({
           ...params,
           context: params[0].context,
           withFacets: params[0].withFacets,
@@ -217,7 +217,7 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<
             scale: SCALE,
           },
         }),
-      one: getCircuitSimulationCampaign,
+      one: getSimulationCampaign,
       resolve: resolveSimulationByCampaignId,
       create: createSimulationCampaign,
     },

@@ -36,6 +36,13 @@ export interface AtomsMap {
     | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
 }
 
+export const SchemaMappingKeyDict = {
+  Circuit: 'Circuit',
+  IonChannelModel: 'IonChannelModel',
+} as const;
+
+export type TSchemaMappingKey = (typeof SchemaMappingKeyDict)[keyof typeof SchemaMappingKeyDict];
+
 export const ScanConfigActivity = {
   Simulate: 'simulate',
   Extract: 'extract',
@@ -114,6 +121,7 @@ export const ScanConfigUIElementDict = {
   ionChannelVariableModificationBySectionList: 'ion_channel_variable_modification_by_section_list',
   IonChannelVariableModificationByNeuron: 'ion_channel_variable_modification_by_neuron',
   ModelSelectorSingle: 'model_selector_single',
+  SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
 } as const;
 
 export interface StringInput extends TBlockElement {
@@ -199,6 +207,29 @@ export interface ModelSelectorSingle extends TBlockElement {
   };
 }
 
+export interface SelectRecordableIonChannelVariable extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.SelectRecordableIonChannelVariable;
+  property: string;
+  property_group: string;
+  properties: {
+    ion_channel_id: {
+      anyOf: [{ type: 'string'; format: 'uuid'; description: string }, { type: 'null' }];
+      title: string;
+    };
+    variable_name: {
+      type: 'string';
+      title: string;
+      description: string;
+    };
+    type: {
+      type: 'string';
+      const: 'IonChannelVariableForRecording';
+      title: string;
+      default: 'IonChannelVariableForRecording';
+    };
+  };
+}
+
 export interface NeuronIds extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronIds;
 }
@@ -264,7 +295,8 @@ export type ParamSchema =
   | BooleanInput
   | IonChannelRangeVariableModification
   | IonChannelGlobalVariableModification
-  | ModelSelectorSingle;
+  | ModelSelectorSingle
+  | SelectRecordableIonChannelVariable;
 
 export type TBlock = {
   title: string;

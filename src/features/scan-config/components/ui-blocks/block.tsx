@@ -7,6 +7,7 @@ import AIAdd from '@/components/icons/ai/add_icon';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
   type Config,
+  type ConfigSchema,
   type ConfigValue,
   isType,
   ScanConfigUIElementDict,
@@ -24,6 +25,7 @@ import type { Nullish } from '@/utils/type';
 
 export default function Block({
   schemaName,
+  schema,
   disabled,
   blockSchema,
   stateAtom,
@@ -34,6 +36,7 @@ export default function Block({
   schemaMappingConfig,
 }: {
   schemaName: SchemaName;
+  schema: ConfigSchema;
   disabled: boolean;
   config: Config;
   blockSchema?: TBlock;
@@ -154,6 +157,7 @@ export default function Block({
                               paramSchema={blockElementSchema}
                               value={value}
                               config={config}
+                              schema={schema}
                               schemaName={schemaName}
                               entity={entity}
                               schemaMappingConfig={schemaMappingConfig}
@@ -177,6 +181,7 @@ export default function Block({
                                 value={blockAIConfig[k]}
                                 config={config}
                                 schemaName={schemaName}
+                                schema={schema}
                                 entity={entity}
                                 schemaMappingConfig={schemaMappingConfig}
                                 state={state}

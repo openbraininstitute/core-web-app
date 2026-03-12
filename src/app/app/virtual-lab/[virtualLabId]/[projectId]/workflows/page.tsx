@@ -75,7 +75,7 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
       )
       .with({ activity: WorkflowActivityDictValue.simulate, value: P.nonNullable }, ({ value }) => {
         return match({ value })
-          .with({ value: ExtendedEntitiesTypeDict.IonChannelModel }, () =>
+          .with({ value: ExtendedEntitiesTypeDict.IonChannelModelSimulation }, () =>
             navigate(
               `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}`
             )

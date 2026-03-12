@@ -1,6 +1,6 @@
 import { get, set } from 'es-toolkit/compat';
 
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
+import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
@@ -21,13 +21,13 @@ export function hasSimConfigAsset(simulation: ISimulation) {
 export async function getExtendedSimMap(simIds: string[], context: WorkspaceContext | undefined) {
   const chunkSize = 30;
 
-  const promises: ReturnType<typeof getCircuitSimulations>[] = [];
+  const promises: ReturnType<typeof getSimulations>[] = [];
 
   for (let i = 0; i < simIds.length; i += chunkSize) {
     const chunk = simIds.slice(i, i + chunkSize);
 
     promises.push(
-      getCircuitSimulations({
+      getSimulations({
         context,
         withFacets: false,
         filters: { id__in: [...chunk] },

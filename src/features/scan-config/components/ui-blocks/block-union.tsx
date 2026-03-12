@@ -9,6 +9,7 @@ import type { Config, ConfigValue } from '@/features/scan-config/components/comp
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type {
   AtomsMap,
+  ConfigSchema,
   IRootBlockUnion,
   SchemaName,
   TBlock,
@@ -19,6 +20,7 @@ import type { Nullish } from '@/utils/type';
 
 type Props = {
   schemaName: SchemaName;
+  schema: ConfigSchema;
   blockUnionSchema: IRootBlockUnion;
   selectedRootElement: string;
   atomsMap: AtomsMap;
@@ -29,7 +31,7 @@ type Props = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   blockAIConfig: Record<string, ConfigValue> | null;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
-  entityType?: TSupportedEntityTypesForScanConfiguration;
+  entityType: TSupportedEntityTypesForScanConfiguration;
 };
 
 function getDiscriminatorProperty(schema: IRootBlockUnion): string {
@@ -40,6 +42,7 @@ function getDiscriminatorProperty(schema: IRootBlockUnion): string {
 
 export default function BlockUnion({
   schemaName,
+  schema,
   blockUnionSchema,
   selectedRootElement,
   atomsMap,
@@ -89,6 +92,7 @@ export default function BlockUnion({
           )}
         </div>
         <Block
+          schema={schema}
           schemaName={schemaName}
           key={`${selectedRootElement}_${selectedType}`}
           disabled={!!campaignId || loading}

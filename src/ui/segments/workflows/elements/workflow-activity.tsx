@@ -309,6 +309,14 @@ export function WorkflowActivity() {
 
       return;
     }
+    if (
+      selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign &&
+      entityType === ExtendedEntitiesTypeDict.IonChannelModelSimulation
+    ) {
+      navigate(
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(ExtendedEntitiesTypeDict.IonChannelModelSimulation)}?initialCampaignId=${selectedRow.id}`
+      );
+    }
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
@@ -519,6 +527,7 @@ export function WorkflowActivity() {
                       entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.CircuitExtractionCampaign &&
+                      entityType !== ExtendedEntitiesTypeDict.IonChannelModelSimulation &&
                       (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ? (
                         <Button
                           rounded

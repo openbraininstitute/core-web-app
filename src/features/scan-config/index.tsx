@@ -1,5 +1,7 @@
 'use client';
 
+import { get } from 'es-toolkit/compat';
+
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import {
@@ -17,9 +19,11 @@ import {
   getSupportedEntityTypesForScanConfiguration,
   ScanConfigActivity,
   ScanConfigDefaultTab,
+  SchemaMappingKeyDict,
   type SchemaName,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSchemaMappingKey,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 
@@ -30,7 +34,7 @@ import type { Nullish } from '@/utils/type';
 type Props = {
   entityId?: string | Nullish;
   entityType: TExtendedEntitiesTypeDict;
-  schemaMappingKey?: 'Circuit' | string;
+  schemaMappingKey?: TSchemaMappingKey;
   virtualLabId: string;
   projectId: string;
   initialCampaignId?: string;
@@ -52,8 +56,13 @@ export function ScanConfiguration({
   readOnly,
   className,
   activity = ScanConfigActivity.Simulate,
-  schemaMappingKey = 'Circuit',
+  schemaMappingKey = SchemaMappingKeyDict.Circuit,
 }: Props) {
+  let endpoint: string | undefined;
+  let schemaName: SchemaName | undefined;
+  let usedType: TSupportedEntityTypesForScanConfiguration | undefined;
+  let entityConfig: EntityCoreTypeConfig<any, any, any> | undefined;
+
   const {
     entity,
     isLoading: loadingEntity,
@@ -62,11 +71,6 @@ export function ScanConfiguration({
     id: entityId,
     context: { virtualLabId, projectId },
   });
-
-  let endpoint: string | undefined;
-  let schemaName: SchemaName | undefined;
-  let usedType: TSupportedEntityTypesForScanConfiguration | undefined;
-  let entityConfig: EntityCoreTypeConfig<any, any, any> | undefined;
 
   if (!loadingEntity) {
     usedType = getSupportedEntityTypesForScanConfiguration({
@@ -89,13 +93,18 @@ export function ScanConfiguration({
     schemaName,
   });
 
+  const property_endpoints = schemaMappingKey
+    ? get(schema?.property_endpoints, schemaMappingKey, '')
+    : '';
+
+  // TODO: discussed with @James to refactor this endpoint to purpose-based endpoints
+  // one for usage and one for property mapping
   const { data: schemaMappingConfig, isLoading: loadingConfiguration } =
     useSchemaMappingConfiguration({
-      schema,
       entityId: entity?.id,
       workspace: { virtualLabId, projectId },
-      endpointType: schemaMappingKey,
-      isBoolean: !loadingEntity,
+      endpoint: property_endpoints,
+      isSchemaLoaded: !loadingSchema && !!schema && schemaMappingKey === 'Circuit',
     });
 
   const loading = loadingConfiguration || loadingEntity || loadingSchema;
@@ -106,6 +115,14 @@ export function ScanConfiguration({
 
   if (error) {
     return <div className="h-full w-full flex items-center justify-center">{error?.message}</div>;
+  }
+
+  if (!usedType || !entityConfig) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        Could not resolve the entity or the entity configuration
+      </div>
+    );
   }
 
   if (!endpoint) {

@@ -1,5 +1,6 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import { get } from 'es-toolkit/compat';
+import { useQueryClient } from '@tanstack/react-query';
+import { get, isEqual, isString, pick } from 'es-toolkit/compat';
 
 import { authFetch } from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
@@ -10,11 +11,16 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useCreditsAccessGuard } from '@/hooks/use-credits-access-guard';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import {
+  getSourceTypeByActivityAndType,
+  getTypeByActivityAndSourceType,
+} from '@/ui/segments/workflows/elements/helpers';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
@@ -34,6 +40,7 @@ export default function GenerateConfigButton({
   setTab,
   activity,
   generatedApiUrl,
+  entityType,
 }: {
   loading: boolean;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
@@ -44,11 +51,12 @@ export default function GenerateConfigButton({
   setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
   activity: TScanConfigActivity;
   generatedApiUrl: string;
+  entityType: TSupportedEntityTypesForScanConfiguration;
 }) {
   const { projectId, virtualLabId } = useWorkspace();
   const notification = useAppNotification();
   const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
-
+  const queryClient = useQueryClient();
   const { notifyCredits, shouldShowError } = useCreditsAccessGuard({
     context: { virtualLabId, projectId },
     message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
@@ -61,9 +69,15 @@ export default function GenerateConfigButton({
 
   const onTabChange = () => {
     if (activity === ScanConfigActivity.Simulate)
-      setTab({ id: SimulateScanConfigTabs.simulations, __activity: ScanConfigActivity.Simulate });
+      setTab({
+        id: SimulateScanConfigTabs.simulations,
+        __activity: ScanConfigActivity.Simulate,
+      });
     if (activity === ScanConfigActivity.Extract)
-      setTab({ id: ExtractScanConfigTabs.extractions, __activity: ScanConfigActivity.Extract });
+      setTab({
+        id: ExtractScanConfigTabs.extractions,
+        __activity: ScanConfigActivity.Extract,
+      });
   };
 
   return (
@@ -166,7 +180,28 @@ export default function GenerateConfigButton({
             });
             return;
           }
-
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const baseQueryKey = query.queryKey.at(0);
+              const filtersQueryKey = query.queryKey.at(1);
+              if (
+                isString(baseQueryKey) &&
+                baseQueryKey.startsWith('workspace/activities') &&
+                isEqual(
+                  pick(filtersQueryKey, ['virtualLabId', 'projectId', 'activity', 'entityType']),
+                  {
+                    virtualLabId,
+                    projectId,
+                    activity,
+                    entityType: getTypeByActivityAndSourceType(activity, entityType),
+                  }
+                )
+              ) {
+                return true;
+              }
+              return false;
+            },
+          });
           setCampaignId(returnedCampaignId);
           onTabChange();
         } catch (e) {
@@ -187,3 +222,17 @@ export default function GenerateConfigButton({
     </button>
   );
 }
+
+// [
+//   "workspace/activities",
+//   {
+//     "virtualLabId": "bd46efb5-eb8e-447c-8752-b30fd41791a2",
+//     "projectId": "819cd2ae-05c1-4b8a-ab53-e8bf3d8ca781",
+//     "page": 1,
+//     "pageSize": 15,
+//     "selectionType": "ion_channel_model_simulation",
+//     "entityType": "ion_channel_model_simulation",
+//     "activity": "simulate",
+//     "authorizedPublic": false
+//   }
+// ]

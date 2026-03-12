@@ -48,23 +48,21 @@ export type TSchemaMappingConfiguration = {
   properties: Record<string, any> | null;
 };
 
+const SCHEMA_MAPPING_CONFIGURATION_STALE_TIME_MS = 60 * 60 * 1000;
+
 export function useSchemaMappingConfiguration({
-  schema,
   entityId,
   workspace,
-  endpointType,
-  isBoolean,
+  endpoint,
+  isSchemaLoaded,
 }: {
   workspace: WorkspaceContext;
   entityId: string | undefined;
-  schema: ConfigSchema | undefined;
-  endpointType: string | undefined;
-  isBoolean: boolean;
+  endpoint: string | undefined;
+  isSchemaLoaded: boolean;
 }) {
-  const properties_endpoint = endpointType ? get(schema?.property_endpoints, endpointType, '') : '';
-
   return useQuery({
-    queryKey: ['schema-mapping-configuration', { workspace, circuitId: entityId, endpointType }],
+    queryKey: ['schema-mapping-configuration', { workspace, entityId, endpoint }],
     queryFn: async () => {
       const api = await obioneApi();
       return api.get<{
@@ -72,15 +70,15 @@ export function useSchemaMappingConfiguration({
           [key: string]: boolean;
         } | null;
         [key: string]: any;
-      }>(`/declared${properties_endpoint}`.replace('{circuit_id}', entityId ?? ''), {
+      }>(`/declared${endpoint}`.replace('{circuit_id}', entityId ?? ''), {
         headers: {
           ...getEntityCoreContext(workspace).headers,
         },
       });
     },
-    enabled: !!properties_endpoint && !!entityId && !!endpointType && isBoolean,
+    enabled: !!endpoint && isSchemaLoaded,
     refetchOnWindowFocus: false,
-    staleTime: 3600, //  1 hour
+    staleTime: SCHEMA_MAPPING_CONFIGURATION_STALE_TIME_MS,
     select: (resp) => {
       return {
         properties: omit(resp, ['usability']),
@@ -301,9 +299,7 @@ export function resetConfig(
   setAtomsMap(map);
 }
 
-export function useReferenceTypeDict(schemaName: SchemaName) {
-  const { schema } = useObioneJsonSchema({ schemaName });
-
+export function useReferenceTypeDict(schema: ConfigSchema) {
   const referenceTypeDict: Record<
     string,
     {

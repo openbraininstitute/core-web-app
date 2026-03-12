@@ -3,32 +3,31 @@ import { Select } from 'antd';
 import {
   type Reference as ReferenceSchema,
   ScanConfigUIElementDict,
-  type SchemaName,
 } from '@/features/scan-config/types';
 
-import { useObioneJsonSchema, useReferenceTypeDict } from '../hooks/schema';
+import { useReferenceTypeDict } from '../hooks/schema';
 
 import type { Config } from '@/features/scan-config/components/components';
+import type { ConfigSchema } from '@/features/scan-config/types';
 
 const DEFAULT_SENTINEL = '__default_as_null__';
+
 export default function Reference({
   value,
   onChange,
   disabled,
-  schemaName,
+  schema,
   referenceSchema,
   config,
 }: {
-  schemaName: SchemaName;
+  schema: ConfigSchema;
   referenceSchema: ReferenceSchema;
   config: Config;
   value: string | null;
   onChange: (block_name: string | null, block_dict_name: string | null) => void;
   disabled: boolean;
 }) {
-  const referenceTypeDict = useReferenceTypeDict(schemaName);
-  const { schema } = useObioneJsonSchema({ schemaName });
-
+  const referenceTypeDict = useReferenceTypeDict(schema);
   const configOptions = referenceTypeDict[referenceSchema.reference_type] ?? {
     singularName: '',
     configKey: '',
@@ -53,7 +52,7 @@ export default function Reference({
     value: DEFAULT_SENTINEL,
   });
 
-  // If The AI suggested a value that is not in the options add it
+  // if The AI suggested a value that is not in the options add it
   if (typeof value === 'string' && !options.map((o) => o.value).includes(value)) {
     options.push({
       label: value,

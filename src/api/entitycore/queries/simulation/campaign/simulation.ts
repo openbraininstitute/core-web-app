@@ -2,20 +2,20 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type {
-  IExecutionActivity,
-  IExecutionActivityFilter,
-} from '@/api/entitycore/types/entities/execution';
+  ICircuitSimulationFilter,
+  ISimulation,
+} from '@/api/entitycore/types/entities/simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
-const baseUri = '/simulation-execution';
+const baseUri = '/simulation';
 
 /**
- * Retrieves a specific circuit simulation execution by its ID from the EntityCoreAPI.
+ * Retrieves a specific simulation by its ID from the EntityCoreAPI.
  *
  *
  */
-export async function getCircuitSimulationExecution({
+export async function getSimulation({
   id,
   context,
 }: {
@@ -23,7 +23,7 @@ export async function getCircuitSimulationExecution({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<IExecutionActivity>(`${baseUri}/${id}`, {
+  return await api.get<ISimulation>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -33,29 +33,28 @@ export async function getCircuitSimulationExecution({
 }
 
 /**
- * Retrieves a list of circuit simulation executions from the Entity Core API.
+ * Retrieves a list of circuit simulations from the Entity Core API.
  *
  * @param params - The parameters for the API request.
  * @param params.withFacets - Optional flag to include facets in the response.
  * @param params.filters - Optional filters to apply to the query.
  * @param params.context - Optional workspace context for the API request.
  *
- * @returns A promise that resolves to an array of circuit simulation executions.
+ * @returns A promise that resolves to an array of circuit simulations.
  *
  * @throws Will throw an error if the API request fails.
  */
-export async function getCircuitSimulationExecutions({
+export async function getSimulations({
   withFacets,
   filters,
   context,
 }: {
   withFacets?: boolean;
-  filters?: Partial<IExecutionActivityFilter>;
+  filters?: Partial<ICircuitSimulationFilter>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-
-  return await api.get<EntityCoreResponse<IExecutionActivity>>(baseUri, {
+  return await api.get<EntityCoreResponse<ISimulation>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
       with_facets: withFacets,

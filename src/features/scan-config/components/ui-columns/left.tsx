@@ -1,5 +1,3 @@
-import { Fragment } from 'react';
-
 import { RootElement } from '@/features/scan-config/components/root-element';
 import {
   type AtomsMap,
@@ -44,6 +42,7 @@ export default function Left({
   handleAcceptAIChanges,
   handleRejectAIChanges,
   generatedEndpoint,
+  entityType,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -70,7 +69,7 @@ export default function Left({
   handleAcceptAIChanges: () => void;
   handleRejectAIChanges: () => void;
   generatedEndpoint: string;
-  entityType?: TSupportedEntityTypesForScanConfiguration;
+  entityType: TSupportedEntityTypesForScanConfiguration;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig } = useAIConfig();
@@ -80,8 +79,8 @@ export default function Left({
       <div className="flex grow flex-col items-center gap-5 overflow-y-auto overflow-x-hidden secondary-scrollbar px-2 pb-5">
         {schema.group_order.map((group) => {
           return (
-            <Fragment key={group}>
-              <div className="self-start text-gray-500 uppercase">{group}</div>
+            <div key={group} className="w-full flex flex-col gap-2">
+              <h4 className="self-start text-gray-500 uppercase">{group}</h4>
               {schema.properties &&
                 Object.entries(schema.properties)
                   .filter(
@@ -120,7 +119,7 @@ export default function Left({
                       />
                     );
                   })}
-            </Fragment>
+            </div>
           );
         })}
       </div>
@@ -154,6 +153,7 @@ export default function Left({
           setTab={setTab}
           setLoading={setLoading}
           activity={activity}
+          entityType={entityType}
           generatedApiUrl={generatedEndpoint}
         />
       )}

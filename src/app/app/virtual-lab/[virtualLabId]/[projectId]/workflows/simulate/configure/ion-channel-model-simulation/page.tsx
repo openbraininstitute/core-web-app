@@ -5,9 +5,9 @@ import { notFound } from 'next/navigation';
 import { use } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { ScanConfiguration } from '@/features/scan-config';
-import { ScanConfigActivity } from '@/features/scan-config/types';
+import { ScanConfigActivity, SchemaMappingKeyDict } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -62,6 +62,7 @@ export default function Page({
           initialConfig={campaignData?.config.form}
           className="px-4 pt-2"
           activity={ScanConfigActivity.Simulate}
+          schemaMappingKey={SchemaMappingKeyDict.IonChannelModel}
         />
       </div>
     );

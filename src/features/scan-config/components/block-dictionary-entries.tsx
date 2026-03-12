@@ -206,6 +206,8 @@ export default function BlockDictionaryEntries({
     <AnimatePresence>
       {visible && (
         <motion.div
+          data-scan-config-menu="menu-block-dictionary-sub-entry"
+          data-active={visible}
           key={rootElement}
           initial={{ y: -10, opacity: 0, height: 0, marginBottom: -12 }}
           animate={{ y: 0, opacity: 1, height: 'auto', marginBottom: 0 }}
@@ -216,7 +218,7 @@ export default function BlockDictionaryEntries({
             opacity: 0,
           }}
           transition={{ duration: 0.3, ease: 'linear' }}
-          className={cn('flex flex-col w-full items-center z-0')}
+          className={cn('flex flex-col w-full items-center z-0 mb-4!')}
         >
           <div className="flex flex-col w-full gap-1.5 px-4">
             {Object.entries(config[rootElement])
