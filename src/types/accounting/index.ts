@@ -1,4 +1,4 @@
-import { VlmResponse } from '@/types/virtual-lab/common';
+import type { VlmResponse } from '@/types/virtual-lab/common';
 
 type Meta = {
   total_items: number;
@@ -39,6 +39,7 @@ export enum ServiceType {
 export enum ServiceSubtype {
   Storage = 'storage',
   IonChannelBuild = 'ion-channel-build',
+  IonChannelSim = 'ion-channel-sim',
   NeuronMeshSkeletonization = 'neuron-mesh-skeletonization',
   SingleCellSim = 'single-cell-sim',
   SingleCellBuild = 'single-cell-build',
