@@ -36,6 +36,7 @@ interface CellComponentProps {
   cellId: string;
   protocols: string[];
   singleRecMultiCellMode: boolean;
+  showCellLabel?: boolean;
   onRepetitionClick: (stimulusType: string, rep: string) => () => void;
 }
 
@@ -81,9 +82,10 @@ function TraceThumbnail({
     trace
   );
   const unitStr = dataUnit === 'amperes' ? 'pA' : 'mV';
-  const yTitle = dataUnit === 'amperes'
-    ? `${label ?? 'Current'} (${unitStr})`
-    : `${startCase(recordingType)} (${unitStr})`;
+  const yTitle =
+    dataUnit === 'amperes'
+      ? `${label ?? 'Current'} (${unitStr})`
+      : `${startCase(recordingType)} (${unitStr})`;
   const { layout, config } = useOverviewPlotConfig({
     datarevision: plotRevision,
     yTitle,
@@ -173,7 +175,10 @@ function ImageSetComponent({
     const hasMultipleRecordings = thumbnails.length > 2;
 
     return (
-      <div className={cn('flex flex-col gap-2', hasMultipleRecordings && 'col-span-full')} key={repetition}>
+      <div
+        className={cn('flex flex-col gap-2', hasMultipleRecordings && 'col-span-full')}
+        key={repetition}
+      >
         <div className="flex items-center justify-between">
           <span className="text-dark indent-3 text-lg font-light capitalize">
             {singleRecMultiCellMode ? cellId : repetition}
@@ -188,7 +193,13 @@ function ImageSetComponent({
           </button>
         </div>
 
-        <div className={hasMultipleRecordings ? 'grid grid-cols-1 gap-4 @lg:grid-cols-2 @3xl:grid-cols-4 @7xl:grid-cols-6' : undefined}>
+        <div
+          className={
+            hasMultipleRecordings
+              ? 'grid grid-cols-1 gap-4 @lg:grid-cols-2 @3xl:grid-cols-4 @7xl:grid-cols-6'
+              : undefined
+          }
+        >
           {thumbnails.map(({ recordingType, recordingIndex, key }) => (
             <TraceThumbnailContainer
               key={key}
@@ -199,7 +210,10 @@ function ImageSetComponent({
               recordingType={recordingType}
               recordingIndex={recordingIndex}
               className={cn(
-                !hasMultipleRecordings && recordingIndex === 0 && recordingType === RecordingType.RESPONSE && 'mt-7'
+                !hasMultipleRecordings &&
+                  recordingIndex === 0 &&
+                  recordingType === RecordingType.RESPONSE &&
+                  'mt-7'
               )}
             />
           ))}
@@ -230,6 +244,7 @@ function CellComponent({
   protocols,
   onRepetitionClick,
   singleRecMultiCellMode,
+  showCellLabel,
 }: CellComponentProps) {
   const repetitionMap = useMemo(
     () =>
@@ -256,7 +271,7 @@ function CellComponent({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="text-primary-9 text-xl font-bold">{cellId}</div>
+      {showCellLabel && <div className="text-primary-9 text-xl font-bold">{cellId}</div>}
       {content}
     </div>
   );
@@ -353,6 +368,7 @@ export default function TraceOverview({
             protocols={filteredProtocols}
             onRepetitionClick={onRepetitionClick}
             singleRecMultiCellMode={singleRecMultiCellMode}
+            showCellLabel={cellIds.length > 1}
           />
         ))}
       </div>
