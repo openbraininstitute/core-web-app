@@ -93,6 +93,8 @@ export default function Middle({
             stateAtom={atomsMap[selectedRootElement]}
             entity={model}
             schemaMappingConfig={schemaMappingConfig}
+            rootElement={selectedRootElement}
+            selectedEntry={selectedEntry}
           />
         )}
 

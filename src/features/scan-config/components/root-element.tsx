@@ -184,12 +184,6 @@ export function RootElement({
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
         isExpanded &&
         config[rootElement] && (
-        <>
-          {console.log('[RootElement] Passing highlights to BlockDictionaryEntries:', {
-            rootElement,
-            highlights,
-            filteredHighlights: highlights.filter((h) => h.path[0] === rootElement)
-          })}
           <BlockDictionaryEntries
           config={config}
           aiConfig={aiConfig}
@@ -214,7 +208,6 @@ export function RootElement({
           errors={errors}
           highlights={highlights}
         />
-        </>
       )}
     </>
   );

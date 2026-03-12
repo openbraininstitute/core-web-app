@@ -75,11 +75,6 @@ export default function BlockDictionaryEntries({
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
   highlights?: ConfigHighlight[];
 }) {
-  console.log('[BlockDictionaryEntries] Component rendered:', {
-    rootElement,
-    highlights,
-    highlightsForThisRoot: highlights.filter((h) => h.path[0] === rootElement)
-  });
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
 
   const onNameChangeConfirm = (
@@ -173,42 +168,11 @@ export default function BlockDictionaryEntries({
         ? isSelected ? styles.entryHighlightRemovedSelected : styles.entryHighlightRemoved
         : undefined
       : undefined;
-    
-    // Debug logging
-    if (hasHighlights) {
-      console.log('[BlockDictionaryEntries] Entry highlight:', {
-        entry,
-        highlightTypes: Array.from(highlightTypes),
-        isModified,
-        isAdded,
-        isRemoved,
-        isSelected,
-        highlightClassName,
-        stylesObject: styles
-      });
-    }
 
     // For deleted entries, preserve the original name exactly as it was
     const displayName = isDeleted
       ? entry // Use the original key name as-is for deleted entries
       : upperFirst(lowerCase(entry)); // Format normally for non-deleted entries
-
-    // Debug: log the className being applied
-    if (hasHighlights) {
-      console.log('[BlockDictionaryEntries] Rendering button for:', entry, {
-        highlightClassName,
-        hasHighlights,
-        isSelected,
-        fullClassList: cn(
-          'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center justify-between rounded-full ',
-          'bg-gray-100 px-5 py-2 text-sm drop-shadow ',
-          'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-          { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected },
-          styles.entryButton,
-          highlightClassName
-        )
-      });
-    }
 
     return (
       <button

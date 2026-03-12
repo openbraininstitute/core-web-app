@@ -11,7 +11,7 @@ import {
   type SchemaName,
   type TBlock,
 } from '@/features/scan-config/types';
-import { configDiffsAtom, oldConfigAtom } from '@/state/config-highlights';
+import { configDiffsAtom } from '@/state/config-highlights';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -48,13 +48,23 @@ export default function Block({
 }) {
   const [state, setState] = useAtom(stateAtom ?? atom<Record<string, ConfigValue>>({}));
   const diffs = useAtomValue(configDiffsAtom);
-  const oldConfig = useAtomValue(oldConfigAtom);
   
   // Helper function to get field change type
   const getFieldChangeType = (fieldName: string): 'add' | 'remove' | 'replace' | null => {
-    if (!rootElement || !selectedEntry || diffs.length === 0) return null;
+    if (!rootElement || diffs.length === 0) return null;
     
-    // Check if entire entry was added/removed
+    // For root-level blocks (no selectedEntry), check path length 2: [rootElement, fieldName]
+    if (!selectedEntry) {
+      const fieldChange = diffs.find(
+        (d) => 
+          d.path.length === 2 && 
+          d.path[0] === rootElement && 
+          d.path[1] === fieldName
+      );
+      return fieldChange ? fieldChange.type : null;
+    }
+    
+    // For dictionary entries, check if entire entry was added/removed
     const entryChange = diffs.find(
       (d) => d.path.length === 2 && d.path[0] === rootElement && d.path[1] === selectedEntry
     );
@@ -62,7 +72,7 @@ export default function Block({
       return entryChange.type;
     }
     
-    // Check for field-level change
+    // Check for field-level change in dictionary entries
     const fieldChange = diffs.find(
       (d) => 
         d.path.length === 3 && 
@@ -72,36 +82,6 @@ export default function Block({
     );
     
     return fieldChange ? fieldChange.type : null;
-  };
-  
-  // Helper function to get old value for a field
-  const getOldValue = (fieldName: string): unknown => {
-    console.log('[Block] getOldValue called:', { 
-      fieldName, 
-      hasOldConfig: !!oldConfig, 
-      rootElement, 
-      selectedEntry,
-      oldConfig: oldConfig ? JSON.stringify(oldConfig).substring(0, 200) : 'null'
-    });
-    
-    if (!oldConfig || !rootElement || !selectedEntry) {
-      return undefined;
-    }
-    
-    try {
-      const oldEntry = oldConfig[rootElement]?.[selectedEntry];
-      console.log('[Block] oldEntry:', oldEntry);
-      
-      if (isPlainObject(oldEntry)) {
-        const value = oldEntry[fieldName];
-        console.log('[Block] Found old value for', fieldName, ':', value);
-        return value;
-      }
-    } catch (error) {
-      console.error('Error getting old value:', error);
-    }
-    
-    return undefined;
   };
 
   if (!blockSchema) return null;
@@ -152,20 +132,6 @@ export default function Block({
 
               const value = state[k];
               const changeType = getFieldChangeType(k);
-              const oldValue = changeType === 'replace' ? getOldValue(k) : undefined;
-              
-              // Debug logging
-              if (changeType) {
-                console.log('[Block] Field diff:', { 
-                  field: k, 
-                  changeType, 
-                  rootElement, 
-                  selectedEntry,
-                  diffClassName,
-                  actualClassName: changeType === 'add' ? styles.diffAdded : changeType === 'remove' ? styles.diffRemoved : styles.diffModified,
-                  stylesObject: styles
-                });
-              }
               
               // Determine CSS class based on change type
               const diffClassName = changeType
@@ -196,13 +162,6 @@ export default function Block({
                       <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
                     )}
                   </div>
-
-                  {/* Show old value for modified fields */}
-                  {changeType === 'replace' && oldValue !== undefined && (
-                    <div className="text-xs text-gray-600 mb-1 italic">
-                      Previous value: <code className="bg-gray-100 px-1 py-0.5 rounded">{JSON.stringify(oldValue)}</code>
-                    </div>
-                  )}
 
                   <Tooltip>
                     <TooltipTrigger asChild>
