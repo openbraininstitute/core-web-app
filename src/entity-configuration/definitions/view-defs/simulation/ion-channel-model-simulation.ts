@@ -5,15 +5,14 @@ import {
 } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-export const viewDefForSmallMicrocircuitSimulation: ViewDefinitionConfig = {
-  title: 'Small microcircuit Simulation (beta)',
+export const viewDefForIonChannelModelSimulation: ViewDefinitionConfig = {
+  title: 'Ion channel model simulation',
   group: DataTypeGroup.SimulationData,
-  name: EntitySlug.SmallMicrocircuitSimulation,
+  name: EntitySlug.IonChannelModelSimulation,
   curated: false,
   columns: [
     EntityCoreFields.Name,
     EntityCoreFields.Description,
-    EntityCoreFields.CircuitName,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
     EntityCoreFields.SimulationCampaignStatus,
@@ -31,8 +30,7 @@ export const viewDefForSmallMicrocircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.RegistrationDate,
   ],
   miniDetailView: [
-    { field: EntityCoreFields.CircuitName },
-    { field: EntityCoreFields.SimulationCampaignStatus },
     { field: EntityCoreFields.RegistrationDate },
+    { field: EntityCoreFields.SimulationCampaignStatus },
   ],
 };

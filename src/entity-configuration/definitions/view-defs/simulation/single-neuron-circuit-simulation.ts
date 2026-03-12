@@ -1,9 +1,9 @@
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   DataTypeGroup,
   type ViewDefinitionConfig,
 } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export const viewDefForSingleNeuronCircuitSimulation: ViewDefinitionConfig = {
   title: 'Single Neuron Simulation',
@@ -14,9 +14,9 @@ export const viewDefForSingleNeuronCircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.CircuitName,
-    EntityCoreFields.SimulationCampaignStatus,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.SimulationCampaignStatus,
   ],
   filterableFields: [
     EntityCoreFields.Name,

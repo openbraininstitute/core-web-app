@@ -1,10 +1,10 @@
 import { find, findKey, get, pick } from 'es-toolkit/compat';
 
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { ViewsDefinition as ExperimentViewDefinition } from '@/entity-configuration/definitions/view-defs/experiment';
 import { ViewsDefinition as ExperimentalViewDefinition } from '@/entity-configuration/definitions/view-defs/experimental';
 import { ViewsDefinition as ModelViewDefinition } from '@/entity-configuration/definitions/view-defs/model';
 import { ViewsDefinition as NotebookViewDefinition } from '@/entity-configuration/definitions/view-defs/notebook';
+import { ViewsDefinition as ExperimentViewDefinition } from '@/entity-configuration/definitions/view-defs/simulation';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
