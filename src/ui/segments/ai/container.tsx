@@ -51,45 +51,45 @@ export function Container() {
       transition={{ duration: 0.3, ease: 'easeInOut' }}
       onAnimationComplete={handleAnimationComplete}
     >
-      {isCollapsed ? (
-        <button
-          type="button"
-          onClick={() => updateState(PanelState.Expanded)}
-          className="flex h-full w-full cursor-pointer flex-col items-center px-2 select-none"
-          aria-label="expand AI assistant"
-          disabled={isPending}
-        >
-          <div className="mt-3 flex h-8 w-8 items-center justify-center text-white">
-            <PlusOutlined className="h-4 w-4" />
-          </div>
-          <div
-            className="text-xl font-bold"
-            style={{
-              transform: 'rotate(-90deg)',
-              transformOrigin: 'center',
-              whiteSpace: 'nowrap',
-              position: 'relative',
-              top: '45px',
-              margin: 0,
-            }}
+      <AnimatePresence>
+        {isCollapsed ? (
+          <button
+            key="collapsed"
+            type="button"
+            onClick={() => updateState(PanelState.Expanded)}
+            className="flex h-full w-full cursor-pointer flex-col items-center px-2 select-none"
+            aria-label="expand AI assistant"
+            disabled={isPending}
           >
-            AI Assistant
-          </div>
-        </button>
-      ) : (
-        <div className="flex h-full w-full flex-col rounded-lg relative overflow-visible">
-          <AnimatePresence mode="wait">
-            {contentState !== PanelState.Collapsed && (
+            <div className="mt-3 flex h-8 w-8 items-center justify-center text-white">
+              <PlusOutlined className="h-4 w-4" />
+            </div>
+            <div
+              className="text-xl font-bold"
+              style={{
+                transform: 'rotate(-90deg)',
+                transformOrigin: 'center',
+                whiteSpace: 'nowrap',
+                position: 'relative',
+                top: '45px',
+                margin: 0,
+              }}
+            >
+              AI Assistant
+            </div>
+          </button>
+        ) : (
+          <div
+            key="expanded"
+            className="flex h-full w-full flex-col rounded-lg relative overflow-visible"
+          >
+            {!isCollapsed && (
               <HydrateWrapper key="ai-assistant">
                 <AiAssistant
                   section="explore"
                   fullscreen={isFullscreen}
                   onFullscreenToggle={() =>
-                    updateState(
-                      contentState === PanelState.Fullscreen
-                        ? PanelState.Expanded
-                        : PanelState.Fullscreen
-                    )
+                    updateState(isFullscreen ? PanelState.Expanded : PanelState.Fullscreen)
                   }
                   aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                   onCollapse={() => updateState(PanelState.Collapsed)}
@@ -97,9 +97,9 @@ export function Container() {
                 />
               </HydrateWrapper>
             )}
-          </AnimatePresence>
-        </div>
-      )}
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
