@@ -9,7 +9,13 @@ import {
   useServiceAiAgentSuggestionFromUserJourney,
 } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
-import { activeDiffMessageIdAtom } from '@/state/config-highlights';
+import {
+  activeDiffMessageIdAtom,
+  configHighlightsAtom,
+  configDiffsAtom,
+  oldConfigAtom,
+  expandedRootElementsAtom,
+} from '@/state/config-highlights';
 import { classNames } from '@/util/utils';
 
 import ErrorPanel from '../../error';
@@ -44,6 +50,10 @@ export default function Chat({ className, threadId }: ChatProps) {
   const rateLimit = useAtomValue(atomRateLimit);
   const setRateLimit = useSetAtom(atomRateLimit);
   const setActiveDiffMessageId = useSetAtom(activeDiffMessageIdAtom);
+  const setConfigHighlights = useSetAtom(configHighlightsAtom);
+  const setConfigDiffs = useSetAtom(configDiffsAtom);
+  const setOldConfig = useSetAtom(oldConfigAtom);
+  const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
   const prevRemainingRef = React.useRef<number | null>(null);
   const hasInitializedRef = React.useRef(false);
@@ -91,8 +101,21 @@ export default function Chat({ className, threadId }: ChatProps) {
   React.useEffect(() => {
     if (status === 'submitted') {
       setActiveDiffMessageId(null);
+      setConfigHighlights([]);
+      setConfigDiffs([]);
+      setOldConfig(null);
+      setExpandedRootElements(new Set(['info']));
     }
-  }, [status, setActiveDiffMessageId]);
+  }, [status, setActiveDiffMessageId, setConfigHighlights, setConfigDiffs, setOldConfig, setExpandedRootElements]);
+
+  // Clear active diff view when switching conversations
+  React.useEffect(() => {
+    setActiveDiffMessageId(null);
+    setConfigHighlights([]);
+    setConfigDiffs([]);
+    setOldConfig(null);
+    setExpandedRootElements(new Set(['info']));
+  }, [threadId, setActiveDiffMessageId, setConfigHighlights, setConfigDiffs, setOldConfig, setExpandedRootElements]);
 
   // Monitor scroll height changes for auto-scroll
   React.useEffect(() => {
