@@ -12,10 +12,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1.5em 1em;
+  padding: 1em 0.3em;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: stable both-edges;
 }
 
 .content::-webkit-scrollbar {
