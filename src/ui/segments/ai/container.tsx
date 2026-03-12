@@ -1,7 +1,7 @@
 'use client';
 import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
-import { type JSX, useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import { useAgentState } from '@/services/ai-agent';
@@ -15,6 +15,7 @@ export function Container() {
   const { state, setState } = usePanelState();
   const [isPending, startTransition] = useTransition();
   const [contentState, setContentState] = useState(state);
+  const isUpdating = useRef(false);
 
   useEffect(() => {
     setContentState(state);
@@ -27,8 +28,13 @@ export function Container() {
   const targetWidth = contentState === PanelState.Collapsed ? '3rem' : '400px';
 
   function updateState(next: PanelState) {
+    if (next === contentState || isUpdating.current) return;
+    isUpdating.current = true;
     setContentState(next);
-    startTransition(() => setState(next));
+    startTransition(() => {
+      setState(next);
+      isUpdating.current = false;
+    });
   }
 
   return (
