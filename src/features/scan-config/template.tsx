@@ -4,6 +4,7 @@ import { get } from 'es-toolkit/compat';
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useEntries } from '@/features/scan-config/components/hooks';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import {
@@ -11,6 +12,7 @@ import {
   useAtomsMap,
 } from '@/features/scan-config/components/hooks/schema';
 import ModelPreview from '@/features/scan-config/components/model-preview';
+import { IonChannelModelRecordingRender } from '@/features/scan-config/components/model-preview/ion-channel-figure-viewer';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import Left from '@/features/scan-config/components/ui-columns/left';
 import Middle from '@/features/scan-config/components/ui-columns/middle';
@@ -209,14 +211,25 @@ export function ScanConfigTemplate({
             )}
           </div>
 
-          {entity && (
-            <div className="rounded-lg">
-              <ModelPreview model={entity} />
-            </div>
-          )}
+          {activity === ScanConfigActivity.Simulate &&
+            entityType === ExtendedEntitiesTypeDict.IonChannelModel && (
+              <IonChannelModelRecordingRender
+                selectedRootElement={selectedRootElement}
+                selectedEntry={selectedEntry}
+                config={config}
+              />
+            )}
+          {activity === ScanConfigActivity.Simulate &&
+            (entityType === ExtendedEntitiesTypeDict.Circuit ||
+              entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
+              entityType === ExtendedEntitiesTypeDict.MEModelWithSynapses) &&
+            entity && (
+              <div className="rounded-lg">
+                <ModelPreview model={entity} />
+              </div>
+            )}
         </div>
       )}
-
       {results}
     </div>
   );
