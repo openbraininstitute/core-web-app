@@ -1,5 +1,5 @@
 import { FileImageOutlined, LineChartOutlined } from '@ant-design/icons';
-import { Empty, Radio, RadioChangeEvent, Spin } from 'antd';
+import { Empty, Radio, type RadioChangeEvent, Spin } from 'antd';
 import { useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -21,12 +21,14 @@ enum VIEW {
 
 export default function EphysViewer({
   resource,
+  assetId,
   ctx,
 }: {
   resource: IElectricalCellRecording | ICircuitSimulationResult;
+  assetId?: string;
   ctx?: WorkspaceContext;
 }) {
-  const [trace, error] = useTrace({ resource, ctx });
+  const [trace, error] = useTrace({ resource, assetId, ctx });
 
   const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
   const [repetition, setRepetition] = useState<string>();

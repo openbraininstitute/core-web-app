@@ -11,13 +11,17 @@ import type { WorkspaceContext } from '@/types/common';
 export const nwbArrayBufferAtomFamily = readAtomFamilyWithExpiration(
   ({
     entity,
+    assetId,
     ctx,
   }: {
     entity: IElectricalCellRecording | ICircuitSimulationResult;
+    assetId?: string;
     ctx?: WorkspaceContext;
   }) =>
     atom<Promise<ArrayBuffer>>(() => {
-      const asset = entity.assets?.find((a) => a.content_type === 'application/nwb');
+      const asset = assetId
+        ? entity.assets?.find((a) => a.id === assetId)
+        : entity.assets?.find((a) => a.content_type === 'application/nwb');
 
       if (!asset) {
         throw new Error('No NWB file found');
