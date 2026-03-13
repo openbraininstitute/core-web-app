@@ -44,14 +44,15 @@
 .userContent {
   position: relative;
   max-width: 70%;
-  padding: 12px 16px;
-  border-radius: 18px;
+  padding: 8px 15px;
+  border-radius: 18px 18px 3px 18px;
   background-color: var(--color-primary-5);
   display: flex;
   flex-wrap: nowrap;
   flex-direction: column;
   justify-content: space-around;
   align-items: stretch;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16);
 }
 
 .userContent > div {
@@ -60,17 +61,21 @@
 }
 
 .assistant {
+  position: relative;
   background-color: var(--color-neutral-9);
-  border: 1px solid color-mix(in srgb, var(--color-primary-9) 25%, var(--color-neutral-9));
-  border-radius: 0.5em;
-  padding: 12px;
+  border: 1px solid #ccd9f5;
+  border-radius: 18px;
+  padding: 0;
   margin: 16px 0;
   overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  isolation: isolate;
 }
 
 .markdown {
   padding: 0;
   margin: 0;
+  line-height: 1.5;
 }
 
 .markdown ul {
@@ -140,4 +145,8 @@ div.price {
 
 div.price > svg {
   font-size: 1em;
+}
+
+.backupPlotsWrapper {
+  padding: 0 12px 8px 16px;
 }

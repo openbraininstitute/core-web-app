@@ -123,6 +123,7 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
 
   return (
     <>
+      <div className={styles.accentBar} />
       {collapsedChildren.length > 0 && (
         <div className={styles.thinkingContainer} data-receiving={animatingIndex !== null}>
           <button
@@ -158,7 +159,7 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
           {isExpanded && <div className={styles.thinkingContent}>{collapsedChildren}</div>}
         </div>
       )}
-      {visibleChildren}
+      <div className={styles.contentWrapper}>{visibleChildren}</div>
     </>
   );
 }

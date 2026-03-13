@@ -74,9 +74,6 @@ function MessageChild({
           <div className={styles.userContent}>
             <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
           </div>
-          <div className={styles.info}>
-            <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
-          </div>
         </div>
       );
     case 'assistant': {
@@ -113,7 +110,9 @@ function MessageChild({
           <CollapsibleMessage message={value} status={isLastMessage ? status : 'ready'}>
             {children}
           </CollapsibleMessage>
-          <BackupPlotsWrapper message={value} isLastMessage={isLastMessage} status={status} />
+          <div className={styles.backupPlotsWrapper}>
+            <BackupPlotsWrapper message={value} isLastMessage={isLastMessage} status={status} />
+          </div>
           {debug && (
             <button
               type="button"
