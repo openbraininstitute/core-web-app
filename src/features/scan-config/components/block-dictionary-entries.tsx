@@ -11,7 +11,7 @@ import { Input } from 'antd';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 
 import AIAdd from '@/components/icons/ai/add_icon';
 import AIIcon from '@/components/icons/ai/ai_icon';
@@ -27,6 +27,13 @@ import type { Config, ConfigValue } from './components';
 import type { ConfigHighlight } from '@/state/config-highlights';
 
 import styles from './block-dictionary-entries.module.css';
+
+interface JSONPatchOperation {
+  op: 'add' | 'remove' | 'replace' | 'move' | 'copy' | 'test';
+  path: string;
+  value?: any;
+  from?: string;
+}
 
 export default function BlockDictionaryEntries({
   config,
@@ -76,6 +83,80 @@ export default function BlockDictionaryEntries({
   highlights?: ConfigHighlight[];
 }) {
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
+  
+  // State for flash animations - map of entry name to flash state
+  const [flashingEntries, setFlashingEntries] = useState<Map<string, { type: 'add' | 'remove' | 'replace' }>>(new Map());
+  const flashTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  
+  // Listen for config updates from the chat
+  useEffect(() => {
+    const handleConfigUpdate = (event: CustomEvent<{ patches: JSONPatchOperation[] }>) => {
+      const { patches } = event.detail;
+      
+      // Find patches that affect entries in this root element
+      const affectedEntries = new Map<string, 'add' | 'remove' | 'replace'>();
+      
+      patches.forEach((patch) => {
+        const pathParts = patch.path.split('/').filter(Boolean);
+        // Remove 'smc_simulation_config' wrapper if present
+        const adjustedPath = pathParts[0] === 'smc_simulation_config' ? pathParts.slice(1) : pathParts;
+        
+        // Check if this patch affects an entry in this root element
+        // Path format: [rootElement, entryName, ...] or [rootElement, entryName]
+        if (adjustedPath.length >= 2 && adjustedPath[0] === rootElement) {
+          const entryName = adjustedPath[1];
+          const existingOp = affectedEntries.get(entryName);
+          
+          // Determine operation type - if mixed, use 'replace'
+          if (existingOp && existingOp !== patch.op) {
+            affectedEntries.set(entryName, 'replace');
+          } else if (!existingOp) {
+            affectedEntries.set(entryName, patch.op as 'add' | 'remove' | 'replace');
+          }
+        }
+      });
+      
+      if (affectedEntries.size > 0) {
+        // Clear any existing timeouts for these entries
+        affectedEntries.forEach((_, entryName) => {
+          const existingTimeout = flashTimeoutsRef.current.get(entryName);
+          if (existingTimeout) {
+            clearTimeout(existingTimeout);
+          }
+        });
+        
+        // Set flashing state - convert to the correct format
+        const flashMap = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
+        affectedEntries.forEach((type, entryName) => {
+          flashMap.set(entryName, { type });
+        });
+        setFlashingEntries(flashMap);
+        
+        // Clear flashing state after animation completes (add small buffer for animation to finish)
+        affectedEntries.forEach((type, entryName) => {
+          const timeout = setTimeout(() => {
+            setFlashingEntries((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(entryName);
+              return newMap;
+            });
+            flashTimeoutsRef.current.delete(entryName);
+          }, 1300);
+          
+          flashTimeoutsRef.current.set(entryName, timeout);
+        });
+      }
+    };
+    
+    window.addEventListener('config-updated', handleConfigUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('config-updated', handleConfigUpdate as EventListener);
+      // Clear all timeouts
+      flashTimeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+      flashTimeoutsRef.current.clear();
+    };
+  }, [rootElement]);
 
   const onNameChangeConfirm = (
     e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>
@@ -146,6 +227,10 @@ export default function BlockDictionaryEntries({
   function renderBlockTab(entry: string, isDeleted = false) {
     const isSelected = selectedRootElement === rootElement && entry === selectedEntry;
     
+    // Check if this entry is currently flashing
+    const flashState = flashingEntries.get(entry);
+    const isFlashing = !!flashState;
+    
     // Check if this entry has highlights - check if any highlight path starts with [rootElement, entry]
     const entryHighlights = highlights.filter((h) => 
       h.path.length >= 2 && h.path[0] === rootElement && h.path[1] === entry
@@ -168,6 +253,15 @@ export default function BlockDictionaryEntries({
         ? isSelected ? styles.entryHighlightRemovedSelected : styles.entryHighlightRemoved
         : undefined
       : undefined;
+    
+    // Determine flash class based on flash state
+    const flashClassName = isFlashing
+      ? flashState.type === 'add'
+        ? styles.entryFlashAdded
+        : flashState.type === 'remove'
+        ? styles.entryFlashRemoved
+        : styles.entryFlashModified
+      : undefined;
 
     // For deleted entries, preserve the original name exactly as it was
     const displayName = isDeleted
@@ -184,7 +278,7 @@ export default function BlockDictionaryEntries({
           'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
           { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected },
           styles.entryButton,
-          highlightClassName
+          flashClassName || highlightClassName
         )}
         tabIndex={0}
         onClick={() => handleEntryClick(entry)}
@@ -263,6 +357,10 @@ export default function BlockDictionaryEntries({
             .map(([subkey]) => {
               const isSelected = selectedRootElement === rootElement && subkey === selectedEntry;
               
+              // Check if this entry is currently flashing
+              const flashState = flashingEntries.get(subkey);
+              const isFlashing = !!flashState;
+              
               // Check if this entry has highlights
               const entryHighlights = highlights.filter((h) => 
                 h.path.length >= 2 && h.path[0] === rootElement && h.path[1] === subkey
@@ -284,6 +382,15 @@ export default function BlockDictionaryEntries({
                   ? isSelected ? styles.entryHighlightRemovedSelected : styles.entryHighlightRemoved
                   : undefined
                 : undefined;
+              
+              // Determine flash class based on flash state
+              const flashClassName = isFlashing
+                ? flashState.type === 'add'
+                  ? styles.entryFlashAdded
+                  : flashState.type === 'remove'
+                  ? styles.entryFlashRemoved
+                  : styles.entryFlashModified
+                : undefined;
 
               return (
                 <Fragment key={subkey}>
@@ -297,7 +404,7 @@ export default function BlockDictionaryEntries({
                       'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
                       { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected },
                       styles.entryButton,
-                      highlightClassName
+                      flashClassName || highlightClassName
                     )}
                     tabIndex={0}
                     onClick={() => handleEntryClick(subkey)}

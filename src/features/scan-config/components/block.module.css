@@ -19,3 +19,27 @@
   border-color: rgba(245, 158, 11, 0.55) !important;
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08) !important;
 }
+
+/* Flash animation for live updates */
+@keyframes flashBorder {
+  0% {
+    border-color: transparent;
+    box-shadow: none;
+  }
+  15% {
+    border-color: inherit;
+    box-shadow: inherit;
+  }
+  85% {
+    border-color: inherit;
+    box-shadow: inherit;
+  }
+  100% {
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+
+.flashAnimation {
+  animation: flashBorder 2s ease-in-out;
+}

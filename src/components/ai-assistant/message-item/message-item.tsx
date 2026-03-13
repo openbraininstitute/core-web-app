@@ -213,8 +213,23 @@ function MessageChild({
     const latestState = getLatestState();
     if (latestState) {
       setConfig(latestState as Config);
+      
+      // Trigger visual feedback for the restored state
+      // Dispatch event with the accumulated diffs from this message
+      if (accumulatedDiffs.length > 0) {
+        // Convert diffs back to patch format for the event
+        const patches = accumulatedDiffs.map((diff) => ({
+          op: diff.type === 'add' ? 'add' : diff.type === 'remove' ? 'remove' : 'replace',
+          path: '/' + diff.path.join('/'),
+          value: diff.newValue,
+        }));
+        
+        window.dispatchEvent(new CustomEvent('config-updated', { 
+          detail: { patches } 
+        }));
+      }
     }
-  }, [getLatestState, setConfig]);
+  }, [getLatestState, setConfig, accumulatedDiffs]);
 
   // Handler for view diffs button (toggle)
   const handleViewDiffs = React.useCallback(() => {

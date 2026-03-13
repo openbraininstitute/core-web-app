@@ -477,3 +477,19 @@ dialog {
   border: 0;
   padding: 0;
 }
+
+/* Flash animation for config updates from AI chat */
+@keyframes flashBorder {
+  0% {
+    opacity: 1;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

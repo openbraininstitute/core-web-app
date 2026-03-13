@@ -85,16 +85,28 @@ export function useServiceAiAgentChat(threadId: string) {
           p.toolInvocation.state === 'result'
       ) as ToolInvocationUIPart | undefined;
 
-    // @ts-expect-error
+    // @ts-expect-error - toolInvocation result type is not properly typed
     if (toolInvocation?.toolInvocation?.result) {
       try {
-        // @ts-expect-error
-        const result = JSON.parse(toolInvocation.toolInvocation.result ?? {});
-        setConfig(result.state.smc_simulation_config ?? null);
+        // @ts-expect-error - result needs to be parsed as JSON
+        const result = JSON.parse(toolInvocation.toolInvocation.result);
+        const newConfig = result.state.smc_simulation_config ?? null;
+        setConfig(newConfig);
+        
+        // Trigger visual feedback for the updated nodes
+        if (newConfig && toolInvocation.toolInvocation.args) {
+          const patches = (toolInvocation.toolInvocation.args as any).patches;
+          if (patches && Array.isArray(patches)) {
+            // Dispatch a custom event with the patches so the UI can highlight the changes
+            window.dispatchEvent(new CustomEvent('config-updated', { 
+              detail: { patches } 
+            }));
+          }
+        }
       } catch {
         logError(
           'Failed to parse tool invocation result as JSON:',
-          // @ts-expect-error
+          // @ts-expect-error - result type is not properly typed
           toolInvocation.toolInvocation.result
         );
       }
