@@ -8,7 +8,7 @@ import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron
 
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 
-function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfiguration }) {
+export function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfiguration }) {
   return match(model)
     .with({ type: EntityTypeDict.Memodel }, () => (
       <NeuronVisualizer

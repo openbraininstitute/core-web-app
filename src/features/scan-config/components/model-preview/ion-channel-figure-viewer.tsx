@@ -7,6 +7,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
+import { BrokenImageIcon } from '@/components/icons/image-states';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
@@ -218,7 +219,7 @@ export function IonChannelFigureViewer({ entity }: { entity: IonChannelModel }) 
     (a) => a.label === AssetLabel.ion_channel_model_figure_summary_json
   );
 
-  const { data: summaryData, isLoading: loadingSummary } = useQuery<FigureSummaryJson | null>({
+  const { data: grouped, isLoading: loadingSummary } = useQuery({
     queryKey: [
       'ion-channel-figure-summary',
       entity.id,
@@ -241,9 +242,10 @@ export function IonChannelFigureViewer({ entity }: { entity: IonChannelModel }) 
     enabled: !!summaryAsset && !!context.virtualLabId && !!context.projectId,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
+    select(data) {
+      return data ? parseSummary(data) : null;
+    },
   });
-
-  const grouped = useMemo(() => (summaryData ? parseSummary(summaryData) : null), [summaryData]);
 
   const groupOptions = useMemo(() => {
     if (!grouped) return [];
@@ -281,18 +283,17 @@ export function IonChannelFigureViewer({ entity }: { entity: IonChannelModel }) 
     setSelectedCategory(category);
   }, []);
 
+  // Initialize or reset when entity or grouped data changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional reset on entity.id change
   useEffect(() => {
-    if (grouped && !selectedCategory) {
-      const group: GroupKey = grouped.traces.length > 0 ? 'traces' : 'parameters';
-      setSelectedGroup(group);
-      setSelectedCategory(grouped[group][0]?.key ?? '');
+    if (!grouped) {
+      setSelectedCategory('');
+      return;
     }
-  }, [grouped, selectedCategory]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reset on entity change
-  useEffect(() => {
-    setSelectedCategory('');
-  }, [entity.id]);
+    const group: GroupKey = grouped.traces.length > 0 ? 'traces' : 'parameters';
+    setSelectedGroup(group);
+    setSelectedCategory(grouped[group][0]?.key ?? '');
+  }, [entity.id, grouped]);
 
   const resolvedAssets = useMemo(() => {
     if (!currentCategory) return [];
@@ -334,8 +335,11 @@ export function IonChannelFigureViewer({ entity }: { entity: IonChannelModel }) 
 
   if (!grouped || groupOptions.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-gray-400 p-4">
-        No figures available for this model
+      <div className="flex h-full flex-col items-center justify-center gap-3 overflow-hidden p-3 bg-white ml-4 rounded-md">
+        <BrokenImageIcon className="text-gray-300 size-16" />
+        <div className="text-primary-8 font-light text-lg select-none">
+          No figures available for this model
+        </div>
       </div>
     );
   }

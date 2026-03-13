@@ -4,18 +4,14 @@ import { get } from 'es-toolkit/compat';
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useEntries } from '@/features/scan-config/components/hooks';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
 import {
   type TSchemaMappingConfiguration,
   useAtomsMap,
 } from '@/features/scan-config/components/hooks/schema';
-import ModelPreview from '@/features/scan-config/components/model-preview';
-import { IonChannelModelRecordingRender } from '@/features/scan-config/components/model-preview/ion-channel-figure-viewer';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
-import Left from '@/features/scan-config/components/ui-columns/left';
-import Middle from '@/features/scan-config/components/ui-columns/middle';
+import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
@@ -211,25 +207,17 @@ export function ScanConfigTemplate({
             )}
           </div>
 
-          {activity === ScanConfigActivity.Simulate &&
-            entityType === ExtendedEntitiesTypeDict.IonChannelModel && (
-              <IonChannelModelRecordingRender
-                selectedRootElement={selectedRootElement}
-                selectedEntry={selectedEntry}
-                config={config}
-              />
-            )}
-          {activity === ScanConfigActivity.Simulate &&
-            (entityType === ExtendedEntitiesTypeDict.Circuit ||
-              entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
-              entityType === ExtendedEntitiesTypeDict.MEModelWithSynapses) &&
-            entity && (
-              <div className="rounded-lg">
-                <ModelPreview model={entity} />
-              </div>
-            )}
+          <Right
+            activity={activity}
+            entityType={entityType}
+            entity={entity}
+            selectedEntry={selectedEntry}
+            selectedRootElement={selectedRootElement}
+            config={config}
+          />
         </div>
       )}
+
       {results}
     </div>
   );
