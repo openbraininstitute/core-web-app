@@ -132,8 +132,15 @@ type NwbFileViewerProps = {
 };
 
 function NwbFileViewer({ file, context }: NwbFileViewerProps) {
-  const { entity } = file;
-  return <EphysViewer key={entity.id} resource={entity as ISimulationResult} ctx={context} />;
+  const { entity, asset } = file;
+  return (
+    <EphysViewer
+      key={asset.id}
+      resource={entity as ISimulationResult}
+      assetId={asset.id}
+      ctx={context}
+    />
+  );
 }
 
 type PlaceholderFileViewerProps = {

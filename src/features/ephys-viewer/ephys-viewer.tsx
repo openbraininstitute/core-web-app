@@ -21,12 +21,14 @@ enum VIEW {
 
 export default function EphysViewer({
   resource,
+  assetId,
   ctx,
 }: {
   resource: IElectricalCellRecording | ISimulationResult;
+  assetId?: string;
   ctx?: WorkspaceContext;
 }) {
-  const [trace, error] = useTrace({ resource, ctx });
+  const [trace, error] = useTrace({ resource, assetId, ctx });
 
   const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
   const [repetition, setRepetition] = useState<string>();
