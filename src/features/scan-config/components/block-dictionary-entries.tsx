@@ -10,12 +10,13 @@ import {
 import { Input } from 'antd';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
-import { atom } from 'jotai';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { atom, useAtomValue } from 'jotai';
+import { Fragment } from 'react';
 
 import AIAdd from '@/components/icons/ai/add_icon';
 import AIIcon from '@/components/icons/ai/ai_icon';
 import AIEdit from '@/components/icons/ai/edit_icon';
+import { activeFlashesAtom } from '@/state/config-highlights';
 import { cn } from '@/utils/css-class';
 
 import { isAtom, isPlainObject } from './utils';
@@ -27,13 +28,6 @@ import type { Config, ConfigValue } from './components';
 import type { ConfigHighlight } from '@/state/config-highlights';
 
 import styles from './block-dictionary-entries.module.css';
-
-interface JSONPatchOperation {
-  op: 'add' | 'remove' | 'replace' | 'move' | 'copy' | 'test';
-  path: string;
-  value?: any;
-  from?: string;
-}
 
 export default function BlockDictionaryEntries({
   config,
@@ -84,79 +78,10 @@ export default function BlockDictionaryEntries({
 }) {
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
   
-  // State for flash animations - map of entry name to flash state
-  const [flashingEntries, setFlashingEntries] = useState<Map<string, { type: 'add' | 'remove' | 'replace' }>>(new Map());
-  const flashTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  
-  // Listen for config updates from the chat
-  useEffect(() => {
-    const handleConfigUpdate = (event: CustomEvent<{ patches: JSONPatchOperation[] }>) => {
-      const { patches } = event.detail;
-      
-      // Find patches that affect entries in this root element
-      const affectedEntries = new Map<string, 'add' | 'remove' | 'replace'>();
-      
-      patches.forEach((patch) => {
-        const pathParts = patch.path.split('/').filter(Boolean);
-        // Remove 'smc_simulation_config' wrapper if present
-        const adjustedPath = pathParts[0] === 'smc_simulation_config' ? pathParts.slice(1) : pathParts;
-        
-        // Check if this patch affects an entry in this root element
-        // Path format: [rootElement, entryName, ...] or [rootElement, entryName]
-        if (adjustedPath.length >= 2 && adjustedPath[0] === rootElement) {
-          const entryName = adjustedPath[1];
-          const existingOp = affectedEntries.get(entryName);
-          
-          // Determine operation type - if mixed, use 'replace'
-          if (existingOp && existingOp !== patch.op) {
-            affectedEntries.set(entryName, 'replace');
-          } else if (!existingOp) {
-            affectedEntries.set(entryName, patch.op as 'add' | 'remove' | 'replace');
-          }
-        }
-      });
-      
-      if (affectedEntries.size > 0) {
-        // Clear any existing timeouts for these entries
-        affectedEntries.forEach((_, entryName) => {
-          const existingTimeout = flashTimeoutsRef.current.get(entryName);
-          if (existingTimeout) {
-            clearTimeout(existingTimeout);
-          }
-        });
-        
-        // Set flashing state - convert to the correct format
-        const flashMap = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
-        affectedEntries.forEach((type, entryName) => {
-          flashMap.set(entryName, { type });
-        });
-        setFlashingEntries(flashMap);
-        
-        // Clear flashing state after animation completes (add small buffer for animation to finish)
-        affectedEntries.forEach((type, entryName) => {
-          const timeout = setTimeout(() => {
-            setFlashingEntries((prev) => {
-              const newMap = new Map(prev);
-              newMap.delete(entryName);
-              return newMap;
-            });
-            flashTimeoutsRef.current.delete(entryName);
-          }, 1300);
-          
-          flashTimeoutsRef.current.set(entryName, timeout);
-        });
-      }
-    };
-    
-    window.addEventListener('config-updated', handleConfigUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('config-updated', handleConfigUpdate as EventListener);
-      // Clear all timeouts
-      flashTimeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
-      flashTimeoutsRef.current.clear();
-    };
-  }, [rootElement]);
+  // Read flash state from shared atom (same atom parent writes to = perfect sync)
+  const activeFlashes = useAtomValue(activeFlashesAtom);
+  const activeFlash = activeFlashes.get(rootElement);
+  const flashingEntries = activeFlash?.entries ?? new Map();
 
   const onNameChangeConfirm = (
     e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>

@@ -49,6 +49,24 @@ export const expandedRootElementsAtom = atom<Set<string>>(new Set(['info']));
 export const selectedEntryAtom = atom<string>('');
 
 /**
+ * Atom to track active flash animations.
+ * Map of rootElement -> { rootFlashType, entries }
+ * Both parent and child components read from this atom.
+ * Presence in the map = should flash. Removal = stop flashing.
+ * No TTL checks — the event handler sets a timeout to remove the entry.
+ */
+export interface FlashEntry {
+  type: 'add' | 'remove' | 'replace';
+}
+
+export interface ActiveFlash {
+  rootFlashType: 'add' | 'remove' | 'replace';
+  entries: Map<string, FlashEntry>;
+}
+
+export const activeFlashesAtom = atom<Map<string, ActiveFlash>>(new Map());
+
+/**
  * Atom to track which message has the diff view active
  * Only one message can have diffs shown at a time
  * Value is the message ID, or null if no diffs are shown

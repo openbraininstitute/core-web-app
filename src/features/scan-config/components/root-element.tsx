@@ -1,7 +1,7 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
@@ -18,7 +18,7 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-import { configHighlightsAtom, expandedRootElementsAtom } from '@/state/config-highlights';
+import { activeFlashesAtom, configHighlightsAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 import { cn } from '@/utils/css-class';
 
 import type { ErrorObject } from 'ajv';
@@ -80,16 +80,19 @@ export function RootElement({
   const highlights = useAtomValue(configHighlightsAtom);
   const expandedRootElements = useAtomValue(expandedRootElementsAtom);
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
+  const [activeFlashes, setActiveFlashes] = useAtom(activeFlashesAtom);
   
-  // State for flash animation
-  const [shouldFlash, setShouldFlash] = useState(false);
-  const [flashType, setFlashType] = useState<'add' | 'remove' | 'replace'>('replace');
   const flashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const expandedRef = useRef(expandedRootElements);
   expandedRef.current = expandedRootElements;
   
   // Check if this block should be expanded (either selected OR in the expanded set)
   const isExpanded = selectedRootElement === rootElement || expandedRootElements.has(rootElement);
+  
+  // Read flash state from shared atom — presence in map = flash, no TTL check
+  const activeFlash = activeFlashes.get(rootElement);
+  const shouldFlash = !!activeFlash;
+  const flashType = activeFlash?.rootFlashType ?? 'replace';
   
   // Listen for config updates from the chat
   useEffect(() => {
@@ -99,13 +102,12 @@ export function RootElement({
       // Check if any patch affects this root element
       const affectsThisBlock = patches.some((patch) => {
         const pathParts = patch.path.split('/').filter(Boolean);
-        // Remove 'smc_simulation_config' wrapper if present
         const adjustedPath = pathParts[0] === 'smc_simulation_config' ? pathParts.slice(1) : pathParts;
         return adjustedPath[0] === rootElement;
       });
       
       if (affectsThisBlock) {
-        // Expand this block (only if not already expanded to avoid re-render that restarts animation)
+        // Expand this block if collapsed
         if (!expandedRef.current.has(rootElement)) {
           setExpandedRootElements((prev) => {
             const newSet = new Set(prev);
@@ -121,30 +123,53 @@ export function RootElement({
           return adjustedPath[0] === rootElement;
         });
         
-        // Use the most prominent operation type
         const hasAdd = blockPatches.some((p) => p.op === 'add');
         const hasRemove = blockPatches.some((p) => p.op === 'remove');
         const hasReplace = blockPatches.some((p) => p.op === 'replace');
         
         const operationType = hasAdd && !hasRemove && !hasReplace 
-          ? 'add' 
+          ? 'add' as const
           : hasRemove && !hasAdd && !hasReplace
-          ? 'remove'
-          : 'replace';
+          ? 'remove' as const
+          : 'replace' as const;
         
-        setFlashType(operationType);
+        // Build entries map for children
+        const entries = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
+        blockPatches.forEach((patch) => {
+          const pathParts = patch.path.split('/').filter(Boolean);
+          const adjustedPath = pathParts[0] === 'smc_simulation_config' ? pathParts.slice(1) : pathParts;
+          if (adjustedPath.length >= 2) {
+            const entryName = adjustedPath[1];
+            const existing = entries.get(entryName);
+            if (existing && existing.type !== patch.op) {
+              entries.set(entryName, { type: 'replace' });
+            } else if (!existing) {
+              entries.set(entryName, { type: patch.op as 'add' | 'remove' | 'replace' });
+            }
+          }
+        });
         
-        // Trigger flash animation
-        setShouldFlash(true);
+        const flashData = { rootFlashType: operationType, entries };
         
-        // Clear any existing timeout
+        // Write flash state to shared atom synchronously.
+        // Even if children aren't mounted yet (parent was collapsed),
+        // they'll read this value when they mount since Jotai atoms are global.
+        setActiveFlashes((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(rootElement, flashData);
+          return newMap;
+        });
+        
+        // Clear flash after animation completes
         if (flashTimeoutRef.current) {
           clearTimeout(flashTimeoutRef.current);
         }
-        
-        // Remove flash after animation completes
         flashTimeoutRef.current = setTimeout(() => {
-          setShouldFlash(false);
+          setActiveFlashes((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(rootElement);
+            return newMap;
+          });
         }, 1300);
       }
     };
@@ -157,26 +182,18 @@ export function RootElement({
         clearTimeout(flashTimeoutRef.current);
       }
     };
-  }, [rootElement, setExpandedRootElements]);
+  }, [rootElement, setExpandedRootElements, setActiveFlashes]);
   
   if (!schema || !schema?.properties) return;
 
   // Check if this root element has any highlights
   const hasHighlights = highlights.some((h) => h.path[0] === rootElement);
   
-  // Determine highlight color based on operation type
+  // Determine highlight type based on operation types
   // If there are multiple different types of changes, show as "edited" (yellow/amber)
   const rootHighlightTypes = new Set(
     highlights.filter((h) => h.path[0] === rootElement).map((h) => h.type)
   );
-  
-  const highlightColor = rootHighlightTypes.size > 1 || rootHighlightTypes.has('replace')
-    ? 'rgb(245, 158, 11)' // amber/yellow for mixed or replace
-    : rootHighlightTypes.has('add')
-    ? 'rgb(16, 185, 129)' // green for add
-    : rootHighlightTypes.has('remove')
-    ? 'rgb(239, 68, 68)' // red for remove
-    : undefined;
 
   const handleEntryClick = (subkey: string) => {
     setSelectedRootElement(rootElement); // Select the parent block
@@ -231,6 +248,7 @@ export function RootElement({
         }}
         extraClass={cn(
           "w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5",
+          styles.rootBase,
           shouldFlash
             ? flashType === 'add'
               ? styles.rootFlashAdded
