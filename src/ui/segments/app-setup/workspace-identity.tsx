@@ -12,9 +12,9 @@ import {
 } from '@ant-design/icons';
 import { useMutation } from '@tanstack/react-query';
 import { Alert, Form, Popover } from 'antd';
-import type { RuleObject } from 'antd/es/form';
 import { type ComponentProps, type ReactNode, useEffect, useState } from 'react';
 import z from 'zod';
+
 import {
   getEmailVerificationCode,
   verifyOtpCode,
@@ -25,9 +25,11 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Card, CardContent } from '@/ui/molecules/card';
 import { Input } from '@/ui/molecules/input';
-import type { TResolvedWorkspace } from '@/ui/segments/app-setup/helpers';
 import { cn } from '@/utils/css-class';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
+
+import type { RuleObject } from 'antd/es/form';
+import type { TResolvedWorkspace } from '@/ui/segments/app-setup/helpers';
 
 export const WorkspaceIdentitySchema = z.object({
   name: z.string({ message: 'Virtual lab name is required' }).min(1),

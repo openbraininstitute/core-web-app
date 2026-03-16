@@ -1,4 +1,5 @@
 import { log } from '@/utils/logger';
+
 import type { TWorkspaceBootstrapStepStatus } from '@/ui/segments/app-setup/helpers';
 
 export interface StreamItem {
