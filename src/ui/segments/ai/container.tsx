@@ -76,7 +76,7 @@ export function Container() {
               margin: 0,
             }}
           >
-            AI Assistant
+            OBI Assistant
           </div>
         </button>
       ) : (
