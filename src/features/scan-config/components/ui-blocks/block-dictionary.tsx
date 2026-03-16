@@ -6,7 +6,7 @@ import {
   isRootBlock,
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
-import Block from '@/features/scan-config/components/block';
+import Block from '@/features/scan-config/components/ui-blocks/block';
 import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
