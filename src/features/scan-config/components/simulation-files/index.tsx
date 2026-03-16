@@ -11,11 +11,11 @@ import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { WorkspaceContext } from '@/types/common';
 
 type SimulationFilesProps = {
-  simulation: ICircuitSimulation;
+  simulation: ISimulation;
   execStatus: ActivityStatus;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
@@ -133,7 +133,7 @@ export function SimulationFiles({
 }
 
 function useInputFiles(
-  simulation: ICircuitSimulation,
+  simulation: ISimulation,
   context: WorkspaceContext
 ): [boolean, TActivityCustomFile[]] {
   const { entity, isLoading } = useModelQuery({ id: simulation.entity_id, context });
@@ -169,7 +169,7 @@ function useInputFiles(
 }
 
 function useOutputFiles(
-  simulation: ICircuitSimulation,
+  simulation: ISimulation,
   context: WorkspaceContext,
   enabled: boolean
 ): [boolean, TActivityCustomFile[]] {

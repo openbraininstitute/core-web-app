@@ -5,7 +5,7 @@ import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { WorkspaceContext } from '@/types/common';
 
 export const nwbArrayBufferAtomFamily = readAtomFamilyWithExpiration(
@@ -14,7 +14,7 @@ export const nwbArrayBufferAtomFamily = readAtomFamilyWithExpiration(
     assetId,
     ctx,
   }: {
-    entity: IElectricalCellRecording | ICircuitSimulationResult;
+    entity: IElectricalCellRecording | ISimulationResult;
     assetId?: string;
     ctx?: WorkspaceContext;
   }) =>

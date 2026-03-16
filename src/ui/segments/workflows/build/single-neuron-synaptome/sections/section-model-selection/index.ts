@@ -1,1 +1,1 @@
-export { default } from "./section-model-selection"
+export { default } from './section-model-selection';

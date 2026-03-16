@@ -5,7 +5,7 @@ import type {
   EntityCoreType,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
-import type { ICircuitSimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
+import type { ISimulationBase } from '@/api/entitycore/types/shared/neuron-simulation';
 import type {
   ContributionFilter,
   IDFilter,
@@ -15,21 +15,21 @@ import type {
   SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 
-export interface ICircuitSimulation
+export interface ISimulation
   extends EntityCoreIdentifiable,
     EntityCoreBaseAsset,
-    ICircuitSimulationBase,
+    ISimulationBase,
     Timestamps,
     EntityAuthorization,
     EntityCoreType {}
 
-interface ICircuitSimulationFilterBase {
+interface ISimulationFilterBase {
   simulation_campaign_id?: string | null;
   simulation_campaign_id__in?: string[] | null;
 }
 
 export interface ICircuitSimulationFilter
-  extends ICircuitSimulationFilterBase,
+  extends ISimulationFilterBase,
     ContributionFilter,
     IDFilter,
     SharedFilter,

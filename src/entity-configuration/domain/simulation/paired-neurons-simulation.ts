@@ -2,12 +2,12 @@ import { flatMap, keyBy } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import {
   createSimulationCampaign,
-  getCircuitSimulationCampaign,
-  getCircuitSimulationCampaigns,
-} from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
+  getSimulationCampaign,
+  getSimulationCampaigns,
+} from '@/api/entitycore/queries/simulation/campaign';
+import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -24,8 +24,8 @@ import { getExtendedSimMap, migrateConfig } from './utils';
 import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {
   ICircuitSimulationCampaign,
-  ICircuitSimulationCampaignFilter,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+  ISimulationCampaignFilter,
+} from '@/api/entitycore/types/entities/simulation-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -40,12 +40,12 @@ async function resolveSimulationCampaigns({
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
-  filters?: Partial<ICircuitSimulationCampaignFilter>;
+  filters?: Partial<ISimulationCampaignFilter>;
   circuitScaleFilter?: Partial<ICircuitFilter>;
 }) {
   filters = discardBrainRegionQueryParams(filters);
 
-  const source = await getCircuitSimulationCampaigns({
+  const source = await getSimulationCampaigns({
     context,
     withFacets,
     filters: { ...filters, circuit__scale: SCALE },
@@ -107,13 +107,13 @@ export async function resolveSimulationByCampaignId({
   id: string;
   context?: WorkspaceContext | undefined | null;
 }) {
-  const campaign = await getCircuitSimulationCampaign({ id, context });
+  const campaign = await getSimulationCampaign({ id, context });
 
   if (!campaign) {
     throw new Error(`No campaign with id ${id} found`);
   }
 
-  const source = await getCircuitSimulations({
+  const source = await getSimulations({
     context,
     filters: { simulation_campaign_id: id },
   });
@@ -171,7 +171,7 @@ export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<
     query: {
       count: (...params) => {
         const filters = discardBrainRegionQueryParams(params[0].filters);
-        return getCircuitSimulationCampaigns({
+        return getSimulationCampaigns({
           ...params,
           context: params[0].context,
           withFacets: params[0].withFacets,
@@ -188,7 +188,7 @@ export const PairedNeuronCircuitSimulation: EntityCoreTypeConfig<
             scale: SCALE,
           },
         }),
-      one: getCircuitSimulationCampaign,
+      one: getSimulationCampaign,
       resolve: resolveSimulationByCampaignId,
       create: createSimulationCampaign,
     },

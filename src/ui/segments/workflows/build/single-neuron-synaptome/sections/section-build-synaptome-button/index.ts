@@ -1,1 +1,1 @@
-export { default } from "./section-build-synaptome-button"
+export { default } from './section-build-synaptome-button';

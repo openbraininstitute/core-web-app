@@ -1,7 +1,7 @@
 {
   "all": ["pas"],
   "allact": ["CaDynamics_DC0", "Ca_HVA2", "Ca_LVAst"],
-  "somaxon": ["SKv3_1", "SK_E2", "K_Pst", "K_Tst"],
+  "somaxon": ["SKv3_1", "SK_E2", "K_Pst", "K_Tst", "kv_7_2"],
   "axonal": ["NaTg", "Nap_Et2"],
   "somatic": ["NaTg"],
   "apical": ["NaTg", "SKv3_1", "SK_E2"],

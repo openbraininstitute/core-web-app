@@ -1,1 +1,1 @@
-export { default } from "./synaptic-set-button"
+export { default } from './synaptic-set-button';

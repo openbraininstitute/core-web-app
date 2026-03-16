@@ -27,8 +27,10 @@ export const EntityGroupDict = {
 
 export type TEntityGroupValue = keyof typeof EntityGroupDict;
 
-type EntityTypeProperties = {
+type TEntityTypeProperties = {
+  label?: string;
   disabled: boolean;
+  sourceType?: TExtendedEntitiesTypeDict;
   type: TExtendedEntitiesTypeDict;
   requiredFeatures?: Array<FlagKey>;
 };
@@ -49,8 +51,8 @@ type TBuildSimulateWorkflowConfigProperties = {
   group: TEntityGroupValue;
   label: string;
   properties: {
-    build?: EntityTypeProperties;
-    simulate?: EntityTypeProperties;
+    build?: TEntityTypeProperties;
+    simulate?: TEntityTypeProperties;
   };
   requiredFeatures?: Array<FlagKey>;
 };
@@ -65,6 +67,7 @@ export type TExtractWorkflowConfig = {
   value: TExtendedEntitiesTypeDict;
   label: string;
   disabled: boolean;
+  properties?: null;
   requiredFeatures?: Array<FlagKey>;
 };
 
@@ -78,8 +81,10 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
         type: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
       },
       simulate: {
-        disabled: true,
-        type: ExtendedEntitiesTypeDict.IonChannelModel,
+        label: 'Ion channel (beta)',
+        disabled: false,
+        sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
+        type: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
       },
     },
   },
@@ -291,7 +296,7 @@ export const extractActivitiesConfiguration: Array<TExtractWorkflowConfig> = [
 type ActivityConfigType =
   | { configType: 'buildSimulate'; config: Partial<TBuildSimulateWorkflowConfig> }
   | { configType: 'extract'; config: Array<TExtractWorkflowConfig> }
-  | { configType: 'none' };
+  | { configType: 'none'; config: null };
 
 type ActivityDictEntry = {
   label: string;
@@ -321,7 +326,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
   {
     label: 'Extract',
     value: WorkflowActivityDictValue.extract,
-    disabled: false,
+    disabled: true,
     name: 'Extraction',
     configType: 'extract',
     config: extractNewConfiguration,
@@ -333,6 +338,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     disabled: true,
     name: 'Optimization',
     configType: 'none',
+    config: null,
   },
   {
     label: 'Validate',
@@ -340,6 +346,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     disabled: true,
     name: 'Validation',
     configType: 'none',
+    config: null,
   },
   {
     label: 'Process Data',
@@ -347,6 +354,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     disabled: true,
     name: 'Processing Data',
     configType: 'none',
+    config: null,
   },
 ] as const;
 
@@ -418,7 +426,7 @@ export function getDropdownOptionsByCategory(
 
         return {
           group: config.group,
-          label: config.label,
+          label: propertyConfig?.label ?? config.label,
           value: propertyConfig?.type,
           disabled: disabled || !satisfiesFeatureRequirements,
         };
@@ -500,7 +508,7 @@ export function getAllOptionsOrdered(
 
         return {
           group: config.group,
-          label: config.label,
+          label: propertyConfig?.label ?? config.label,
           value: propertyConfig?.type,
           disabled: disabled || !satisfiesFeatureRequirements,
         };
@@ -573,3 +581,31 @@ export function getBaseModelTypeFromActivityType({
     )
     .otherwise(() => undefined);
 }
+
+export const getSourceTypeByActivityAndType = (
+  activity: TActivityValue,
+  type: TExtendedEntitiesTypeDict
+) => {
+  const config = ActivityDict.find((a) => a.value === activity)?.config;
+  if (!config || Array.isArray(config)) return undefined;
+  const activityKey = activity as 'build' | 'simulate';
+
+  return find(values(config), (c) => {
+    const props = c?.properties[activityKey];
+    return props?.type === type;
+  })?.properties[activityKey]?.sourceType;
+};
+
+export const getTypeByActivityAndSourceType = (
+  activity: TActivityValue,
+  sourceType: TExtendedEntitiesTypeDict
+) => {
+  const config = ActivityDict.find((a) => a.value === activity)?.config;
+  if (!config || Array.isArray(config)) return undefined;
+  const activityKey = activity as 'build' | 'simulate';
+
+  return find(values(config), (c) => {
+    const props = c?.properties[activityKey];
+    return props?.sourceType === sourceType;
+  })?.properties[activityKey]?.type;
+};

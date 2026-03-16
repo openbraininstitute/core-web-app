@@ -20,7 +20,7 @@ import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
 const agentStateAtom = atom<Record<string, Config>>({});
-let requestId = crypto.randomUUID().replace(/-/g, '');
+const requestId = crypto.randomUUID().replace(/-/g, '');
 let returnId = '';
 
 export function useServiceAiAgentChat(threadId: string) {
@@ -70,8 +70,8 @@ export function useServiceAiAgentChat(threadId: string) {
   });
 
   useEffect(() => {
-    if (assistantInitialMessages.length === chat.messages.length){
-      return
+    if (assistantInitialMessages.length === chat.messages.length) {
+      return;
     }
     const lastMessage = chat.messages[chat.messages.length - 1];
 

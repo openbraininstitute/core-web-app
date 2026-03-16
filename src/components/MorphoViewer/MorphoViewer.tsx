@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable no-param-reassign */
 import { FullscreenOutlined } from '@ant-design/icons';
 import { MorphologyCanvas } from '@bbp/morphoviewer';
 import dynamic from 'next/dynamic';

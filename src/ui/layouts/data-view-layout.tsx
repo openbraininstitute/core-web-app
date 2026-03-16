@@ -64,6 +64,7 @@ export async function DataViewLayout({
         ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
         ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
         ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+        ExtendedEntitiesTypeDict.IonChannelModelSimulation,
       ],
       type
     )

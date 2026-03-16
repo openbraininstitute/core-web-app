@@ -17,6 +17,7 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
+  type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
@@ -24,8 +25,7 @@ import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-it
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { Nullish } from '@/utils/type';
 
 type Props = {
   schemaName: SchemaName;
@@ -40,7 +40,7 @@ type Props = {
   loading: boolean;
   config: Config;
   selectedBlockSchema?: TBlock;
-  model: ICircuit | IMEModel;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
@@ -58,7 +58,7 @@ export default function BlockDictionary({
   campaignId,
   loading,
   config,
-  model,
+  entity,
   allEntries,
   onNewBlockClick,
   schemaMappingConfig,
@@ -85,12 +85,13 @@ export default function BlockDictionary({
     return (
       <Block
         schemaName={schemaName}
+        schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
         disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
         config={config}
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
-        entity={model}
+        entity={entity}
         schemaMappingConfig={schemaMappingConfig}
       />
     );

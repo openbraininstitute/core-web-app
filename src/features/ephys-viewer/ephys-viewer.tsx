@@ -8,8 +8,8 @@ import TraceDetailsView from '@/features/ephys-viewer/components/trace-details-v
 import TraceOverview from '@/features/ephys-viewer/components/trace-overview';
 import useTrace from '@/features/ephys-viewer/hooks/use-nwb-trace';
 
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { WorkspaceContext } from '@/types/common';
 
 import './styles/ephys-plugin-styles.css';
@@ -24,7 +24,7 @@ export default function EphysViewer({
   assetId,
   ctx,
 }: {
-  resource: IElectricalCellRecording | ICircuitSimulationResult;
+  resource: IElectricalCellRecording | ISimulationResult;
   assetId?: string;
   ctx?: WorkspaceContext;
 }) {

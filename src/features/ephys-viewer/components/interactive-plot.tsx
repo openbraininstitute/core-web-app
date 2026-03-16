@@ -1,20 +1,21 @@
-import { useState, useMemo, useEffect } from 'react';
-import Plotly, { PlotData } from 'plotly.js-dist-min';
-import createPlotlyComponent from 'react-plotly.js/factory';
 import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import Plotly, { type PlotData } from 'plotly.js-dist-min';
+import { useEffect, useMemo, useState } from 'react';
+import createPlotlyComponent from 'react-plotly.js/factory';
 
-import { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
+import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
+import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import {
+  type CurrentUnit,
   convertCurrentSeries,
   convertVoltageSeries,
-  CurrentUnit,
   ensureCurrentUnit,
-  VoltageUnit,
+  type VoltageUnit,
 } from '@/util/explore-section/plotHelpers';
-import optimizePlotData from '@/util/explore-section/optimizeTrace';
-import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
-import { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
+
+import type { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -83,9 +84,8 @@ export default function InteractivePlot({
     return false;
   };
 
-  const yTitle = dataUnit === 'amperes'
-    ? `${label ?? 'Current'} (${currentUnit})`
-    : 'Membrane potential (mV)';
+  const yTitle =
+    dataUnit === 'amperes' ? `${label ?? 'Current'} (${currentUnit})` : 'Membrane potential (mV)';
 
   const isEmptySelection = !selectedSweeps.length;
   const isEmptySelectionResponse = isEmptySelection ? rawData : selectedResponse;
@@ -201,5 +201,13 @@ function useData(
     });
 
     return [optimizedPlotData, dataUnit, dataLabel];
-  }, [zoomRanges?.x, allSweeps, sweepDataMap, recordingType, recordingIndex, colorMap, currentUnit]);
+  }, [
+    zoomRanges?.x,
+    allSweeps,
+    sweepDataMap,
+    recordingType,
+    recordingIndex,
+    colorMap,
+    currentUnit,
+  ]);
 }

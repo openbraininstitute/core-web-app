@@ -1,18 +1,26 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { atom } from 'jotai';
 
-import Block from '@/features/scan-config/components/ui-blocks/block';
+import { Block } from '@/features/scan-config/components/ui-blocks/block';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import { isType } from '@/features/scan-config/types';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
-import type { AtomsMap, IRootBlockUnion, SchemaName, TBlock } from '@/features/scan-config/types';
+import type {
+  AtomsMap,
+  ConfigSchema,
+  IRootBlockUnion,
+  SchemaName,
+  TBlock,
+  TSupportedEntitiesForScanConfiguration,
+  TSupportedEntityTypesForScanConfiguration,
+} from '@/features/scan-config/types';
+import type { Nullish } from '@/utils/type';
 
 type Props = {
   schemaName: SchemaName;
+  schema: ConfigSchema;
   blockUnionSchema: IRootBlockUnion;
   selectedRootElement: string;
   atomsMap: AtomsMap;
@@ -20,8 +28,9 @@ type Props = {
   campaignId: string;
   loading: boolean;
   config: Config;
-  model: ICircuit | IMEModel;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  entityType: TSupportedEntityTypesForScanConfiguration;
 };
 
 function getDiscriminatorProperty(schema: IRootBlockUnion): string {
@@ -32,6 +41,7 @@ function getDiscriminatorProperty(schema: IRootBlockUnion): string {
 
 export default function BlockUnion({
   schemaName,
+  schema,
   blockUnionSchema,
   selectedRootElement,
   atomsMap,
@@ -39,7 +49,7 @@ export default function BlockUnion({
   campaignId,
   loading,
   config,
-  model,
+  entity,
   schemaMappingConfig,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
@@ -80,14 +90,15 @@ export default function BlockUnion({
           )}
         </div>
         <Block
+          hideTitle
+          schema={schema}
           schemaName={schemaName}
           key={`${selectedRootElement}_${selectedType}`}
           disabled={!!campaignId || loading}
           config={config}
           blockSchema={selectedBlockSchema}
           stateAtom={atomsMap[selectedRootElement]}
-          entity={model}
-          hideTitle
+          entity={entity}
           schemaMappingConfig={schemaMappingConfig}
         />
       </div>

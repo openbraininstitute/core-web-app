@@ -1,1 +1,1 @@
-export { default } from "./section-synapse-sets"
+export { default } from './section-synapse-sets';
