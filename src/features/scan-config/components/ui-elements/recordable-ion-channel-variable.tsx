@@ -6,9 +6,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Empty } from 'antd';
 import { useMemo, useState } from 'react';
 
+import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   Select,
   SelectContent,
@@ -194,6 +196,7 @@ export function SelectRecordableIonChannelVariable({
   paramSchema: SelectRecordableIonChannelVariableSchema;
   schema: ConfigSchema;
 }) {
+  const context = useWorkspace();
   const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
   const ionChannelIds = useMemo(() => extractIonChannelIds(config), [config]);
   const endpoint = useMemo(() => resolveEndpoint(schema, 'IonChannelModel'), [schema]);
@@ -209,6 +212,11 @@ export function SelectRecordableIonChannelVariable({
       const api = await obioneApi();
       return api.get<Record<string, Record<string, IonChannelVariable[]>>>(`/declared${endpoint}`, {
         queryParams: { ion_channel_ids: ionChannelIds },
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          ...getEntityCoreContext(context).headers,
+        },
       });
     },
     select: (resp) => {

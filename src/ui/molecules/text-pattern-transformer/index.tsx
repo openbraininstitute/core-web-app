@@ -90,11 +90,6 @@ export function replacePattern(
 }
 
 /**
-<<<<<<< HEAD
- * TextPatternTransformer
- *
-=======
->>>>>>> main
  * react component that can wrap around
  * any React component to replace any pattern using a custom regex and component.
  */

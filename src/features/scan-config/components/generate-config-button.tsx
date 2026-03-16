@@ -17,10 +17,7 @@ import { useCreditsAccessGuard } from '@/hooks/use-credits-access-guard';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import {
-  getSourceTypeByActivityAndType,
-  getTypeByActivityAndSourceType,
-} from '@/ui/segments/workflows/elements/helpers';
+import { getTypeByActivityAndSourceType } from '@/ui/segments/workflows/elements/helpers';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
@@ -222,17 +219,3 @@ export default function GenerateConfigButton({
     </button>
   );
 }
-
-// [
-//   "workspace/activities",
-//   {
-//     "virtualLabId": "bd46efb5-eb8e-447c-8752-b30fd41791a2",
-//     "projectId": "819cd2ae-05c1-4b8a-ab53-e8bf3d8ca781",
-//     "page": 1,
-//     "pageSize": 15,
-//     "selectionType": "ion_channel_model_simulation",
-//     "entityType": "ion_channel_model_simulation",
-//     "activity": "simulate",
-//     "authorizedPublic": false
-//   }
-// ]
