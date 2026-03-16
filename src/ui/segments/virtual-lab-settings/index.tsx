@@ -22,7 +22,7 @@ import { TeamTable } from '@/ui/segments/virtual-lab-settings/sections/team';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
-import type { VirtualLab, VirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { TVirtualLab, TVirtualLabListResponse } from '@/api/virtual-lab-svc/queries/types';
 
 const baseNameSchema = z
   .string()
@@ -87,10 +87,10 @@ function EditableName({
 
       const previousData = queryClient.getQueryData(
         keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] })
-      ) as VirtualLabListResponse;
+      ) as TVirtualLabListResponse;
       queryClient.setQueryData(
         keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
-        (old: VirtualLabListResponse) => {
+        (old: TVirtualLabListResponse) => {
           if (!old?.data) return old;
           const updatedVirtualLab = {
             ...old.data.virtual_lab,
@@ -118,7 +118,7 @@ function EditableName({
 
       return { previousData };
     },
-    onError: (__, _, context: { previousData?: VirtualLabListResponse } | undefined) => {
+    onError: (__, _, context: { previousData?: TVirtualLabListResponse } | undefined) => {
       if (context?.previousData) {
         queryClient.setQueryData(
           keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
@@ -359,7 +359,7 @@ function Header({
   virtualLab,
 }: {
   onClose: () => void;
-  virtualLab?: (VirtualLab & { isMine: boolean }) | null;
+  virtualLab?: (TVirtualLab & { isMine: boolean }) | null;
 }) {
   const name = virtualLab?.name || '';
   const numberOfProjects = virtualLab?.projects_count ?? 0;
@@ -487,7 +487,7 @@ type Props = {
   onClose: () => void;
   payload: {
     virtualLabId: string | null;
-    data: (VirtualLab & { isMine: boolean }) | null;
+    data: (TVirtualLab & { isMine: boolean }) | null;
   } | null;
 };
 

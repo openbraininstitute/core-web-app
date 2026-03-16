@@ -10,20 +10,20 @@ import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import type {
   Project,
   RecentWorkspace,
+  TVirtualLab,
   UserProfileResponse,
-  VirtualLab,
 } from '@/api/virtual-lab-svc/queries/types';
 
 export type TResolvedWorkspace = {
   project: Project | null;
-  virtualLab: VirtualLab | null;
+  virtualLab: TVirtualLab | null;
   profile: UserProfileResponse | null;
 };
 
 export const resolveWorkspace = async () => {
   let virtualLabId: string | undefined;
   let project: Project | null = null;
-  let virtualLab: VirtualLab | null = null;
+  let virtualLab: TVirtualLab | null = null;
   let recentWorkspace: RecentWorkspace['recent_workspace']['workspace'] | null = null;
 
   const [virtualLabResult, profileResult, recentWorkspaceResult] = await Promise.all([

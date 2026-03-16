@@ -1,4 +1,4 @@
-import { Role } from '@/api/virtual-lab-svc/queries/types';
+import type { TRole } from '@/api/virtual-lab-svc/queries/types';
 
 export const MemberRoleMap = {
   member: 'member',
@@ -8,7 +8,7 @@ export const MemberRoleMap = {
 export type TMember = {
   index: number;
   id: string;
-  role: Role;
+  role: TRole;
   initials: string;
   name: string;
   email: string;

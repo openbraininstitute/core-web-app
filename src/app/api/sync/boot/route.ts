@@ -1,7 +1,4 @@
-/* eslint-disable prefer-destructuring */
-
-import pick from 'es-toolkit/compat/pick';
-import { NextRequest } from 'next/server';
+import { pick } from 'es-toolkit/compat';
 
 import { tryCatch } from '@/api/utils';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
@@ -15,7 +12,12 @@ import {
 } from '@/ui/segments/app-setup/helpers';
 import { log } from '@/utils/logger';
 
-import type { Project, UserProfileResponse, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type { NextRequest } from 'next/server';
+import type {
+  Project,
+  TVirtualLab,
+  UserProfileResponse,
+} from '@/api/virtual-lab-svc/queries/types';
 import type { TEmailStatus } from '@/api/virtual-lab-svc/validation';
 import type {
   TResolvedWorkspace,
@@ -70,7 +72,7 @@ const makeStream = <T extends StreamItem>(generator: AsyncGenerator<T, void, unk
 };
 
 async function* fetchItems<T>(body: Body) {
-  let virtualLab: VirtualLab | null = body.workspaceResolution.virtualLab;
+  let virtualLab: TVirtualLab | null = body.workspaceResolution.virtualLab;
   let profile: UserProfileResponse | null = body.workspaceResolution.profile;
   let project: Project | null = body.workspaceResolution.project;
 
@@ -118,9 +120,7 @@ async function* fetchItems<T>(body: Body) {
       if (shouldCreateVirtualLab && accountPayload) {
         const { data, error } = await tryCatch(
           createVirtualLab({
-            email_status: accountPayload?.email_status as TEmailStatus,
             entity: accountPayload.entity,
-            reference_email: accountPayload.email,
             name: accountPayload.name,
             description: '',
           })
