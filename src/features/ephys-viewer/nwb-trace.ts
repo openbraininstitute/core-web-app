@@ -573,19 +573,20 @@ class IonChannelSimulationTrace extends NWBTrace {
 
   private getGroupEntries(
     parentKey: string
-  ): { key: string; description: string; sweepNumber: number }[] {
+  ): { key: string; description: string | undefined; sweepNumber: number }[] {
     const parent = this.getGroup(parentKey);
     return parent.keys().map((key) => {
       const group = this.getGroup(`${parentKey}/${key}`);
       const description = tryGetAttribute(group, 'description');
       const sweepNumber = tryGetAttribute(group, 'sweep_number');
-      if (typeof description !== 'string') {
-        throw new Error(`Missing description on ${parentKey}/${key}`);
-      }
       if (typeof sweepNumber !== 'number') {
         throw new Error(`Missing sweep_number on ${parentKey}/${key}`);
       }
-      return { key, description, sweepNumber };
+      return {
+        key,
+        description: typeof description === 'string' ? description : undefined,
+        sweepNumber,
+      };
     });
   }
 
@@ -606,7 +607,9 @@ class IonChannelSimulationTrace extends NWBTrace {
 
   private getRecVarNames(): string[] {
     const entries = this.getGroupEntries(NWBKey.ACQUISITION);
-    return Array.from(new Set(entries.map((e) => e.description))).sort();
+    return Array.from(
+      new Set(entries.map((e) => e.description).filter((d): d is string => d !== undefined))
+    ).sort();
   }
 
   public getCellIds(): string[] {
@@ -640,17 +643,13 @@ class IonChannelSimulationTrace extends NWBTrace {
     return sweepNumbers.map(String);
   }
 
-  private getTimeData(): { timeUnit: string; timeRate: number } {
-    const timeDatasetKey = `${NWBKey.ACQUISITION}/${NWBKey.STARTING_TIME}`;
+  private getTimeData(
+    parentKey: string,
+    groupKey: string
+  ): { timeUnit: string; timeRate: number } {
+    const timeDatasetKey = `${parentKey}/${groupKey}/${NWBKey.STARTING_TIME}`;
 
-    let timeDataset;
-
-    try {
-      timeDataset = this.getDataset(timeDatasetKey);
-    } catch {
-      // TODO: consider attempting to read from the "timestamps" dataset as a fallback.
-      return { timeUnit: 's', timeRate: 0.000025 };
-    }
+    const timeDataset = this.getDataset(timeDatasetKey);
 
     const timeUnit = tryGetAttribute(timeDataset, 'unit');
     if (typeof timeUnit !== 'string') {
@@ -673,61 +672,54 @@ class IonChannelSimulationTrace extends NWBTrace {
     recordingType: RecordingType
   ): RecordingData[] {
     const sweepNumber = parseInt(sweep, 10);
-    const recVarNames =
-      recordingType === RecordingType.STIMULUS ? ['default'] : this.getRecVarNames();
 
-    const recordingData = recVarNames.map((varName): RecordingData => {
-      const parentKey =
-        recordingType === RecordingType.STIMULUS
-          ? NWBKey.STIMULUS_PRESENTATION
-          : NWBKey.ACQUISITION;
+    const parentKey =
+      recordingType === RecordingType.STIMULUS
+        ? NWBKey.STIMULUS_PRESENTATION
+        : NWBKey.ACQUISITION;
 
-      const groupKey = this.findGroupKey(
-        parentKey,
-        sweepNumber,
-        recordingType === RecordingType.STIMULUS ? undefined : varName
-      );
+    if (recordingType === RecordingType.STIMULUS) {
+      const groupKey = this.findGroupKey(parentKey, sweepNumber);
+      return [this.buildRecordingData(parentKey, groupKey, recordingType)];
+    }
 
-      const datasetKey = `${parentKey}/${groupKey}/${NWBKey.DATA}`;
-      const dataset = this.getDataset(datasetKey);
+    const recVarNames = this.getRecVarNames();
 
-      const unit = tryGetAttribute(dataset, 'unit');
-      if (typeof unit !== 'string') {
-        throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
-      }
-
-      let label: string | undefined;
-
-      if (recordingType === RecordingType.RESPONSE) {
-        const responseGroup = this.getGroup(`${NWBKey.ACQUISITION}/${groupKey}`);
-        const description = tryGetAttribute(responseGroup, 'description');
-        if (typeof description !== 'string') {
-          throw new Error(
-            `Incompatible ${recordingType} description: ${description}, expected string`
-          );
-        }
-
-        label = description;
-      }
-
-      const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
-      const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
-
-      const { timeUnit, timeRate } = this.getTimeData();
-
-      const data = dataset.to_array() as number[];
-
-      return {
-        label,
-        data,
-        unit,
-        conversionFactor,
-        timeUnit,
-        timeRate,
-      };
+    return recVarNames.map((varName): RecordingData => {
+      const groupKey = this.findGroupKey(parentKey, sweepNumber, varName);
+      return this.buildRecordingData(parentKey, groupKey, recordingType, varName);
     });
+  }
 
-    return recordingData;
+  private buildRecordingData(
+    parentKey: string,
+    groupKey: string,
+    recordingType: RecordingType,
+    label?: string
+  ): RecordingData {
+    const datasetKey = `${parentKey}/${groupKey}/${NWBKey.DATA}`;
+    const dataset = this.getDataset(datasetKey);
+
+    const unit = tryGetAttribute(dataset, 'unit');
+    if (typeof unit !== 'string') {
+      throw new Error(`Incompatible ${recordingType} unit: ${unit}, expected string`);
+    }
+
+    const conversionFactorRaw = tryGetAttribute(dataset, 'conversion');
+    const conversionFactor = typeof conversionFactorRaw === 'number' ? conversionFactorRaw : 1;
+
+    const { timeUnit, timeRate } = this.getTimeData(parentKey, groupKey);
+
+    const data = dataset.to_array() as number[];
+
+    return {
+      label,
+      data,
+      unit,
+      conversionFactor,
+      timeUnit,
+      timeRate,
+    };
   }
 }
 
