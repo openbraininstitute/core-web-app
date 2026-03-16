@@ -6,8 +6,8 @@ import { useAtom } from 'jotai';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
-import { parseJSONPatches, mergeDiffs, adjustParentTypes, type JSONPatchOperation, type DiffResult } from '@/utils/diff';
-import { configStateAtom } from '@/services/ai-agent/hooks/chat';
+import { parseJSONPatches, mergeDiffs, adjustParentTypes, computeLiveDiffs, type JSONPatchOperation, type DiffResult } from '@/utils/diff';
+import { configStateAtom, agentStateAtom } from '@/services/ai-agent/hooks/chat';
 import type { Config } from '@/features/scan-config/components/components';
 import {
   configHighlightsAtom,
@@ -84,6 +84,7 @@ function MessageChild({
 
   // State management for accumulated diffs
   const [, setConfig] = useAtom(configStateAtom);
+  const [agentState] = useAtom(agentStateAtom);
   const [, setConfigHighlights] = useAtom(configHighlightsAtom);
   const [, setConfigDiffs] = useAtom(configDiffsAtom);
   const [, setExpandedRootElements] = useAtom(expandedRootElementsAtom);
@@ -211,25 +212,51 @@ function MessageChild({
   // Handler for restore state button
   const handleRestoreState = React.useCallback(() => {
     const latestState = getLatestState();
-    if (latestState) {
-      setConfig(latestState as Config);
-      
-      // Trigger visual feedback for the restored state
-      // Dispatch event with the accumulated diffs from this message
-      if (accumulatedDiffs.length > 0) {
-        // Convert diffs back to patch format for the event
-        const patches = accumulatedDiffs.map((diff) => ({
-          op: diff.type === 'add' ? 'add' : diff.type === 'remove' ? 'remove' : 'replace',
-          path: '/' + diff.path.join('/'),
-          value: diff.newValue,
-        }));
-        
-        window.dispatchEvent(new CustomEvent('config-updated', { 
-          detail: { patches } 
-        }));
-      }
+    if (!latestState) return;
+
+    // Read the current live config from the agent state atom.
+    // This reflects any manual UI changes the user may have made.
+    const currentLiveConfig =
+      (agentState as Record<string, unknown>)?.smc_simulation_config ?? null;
+
+    // Compute real-time diffs between current live state and the state being restored
+    let liveDiffs: DiffResult[] = [];
+    if (currentLiveConfig && typeof currentLiveConfig === 'object') {
+      liveDiffs = computeLiveDiffs(
+        currentLiveConfig as Record<string, unknown>,
+        latestState as Record<string, unknown>
+      );
     }
-  }, [getLatestState, setConfig, accumulatedDiffs]);
+
+    // Store the current config as the "old" config before overwriting
+    if (currentLiveConfig) {
+      setOldConfig(currentLiveConfig as Record<string, any>);
+    }
+
+    // Apply the restored state
+    setConfig(latestState as Config);
+
+    // If there are real diffs, show them
+    if (liveDiffs.length > 0) {
+      const adjustedDiffs = adjustParentTypes(liveDiffs);
+
+      // Dispatch event for flash animations (temporary visual feedback only)
+      const patches = adjustedDiffs.map((diff) => ({
+        op: diff.type,
+        path: '/' + diff.path.join('/'),
+        value: diff.value,
+      }));
+
+      window.dispatchEvent(
+        new CustomEvent('config-updated', { detail: { patches } })
+      );
+    }
+  }, [
+    getLatestState,
+    agentState,
+    setConfig,
+    setOldConfig,
+  ]);
 
   // Handler for view diffs button (toggle)
   const handleViewDiffs = React.useCallback(() => {

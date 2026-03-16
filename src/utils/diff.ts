@@ -2,6 +2,8 @@
  * Utility functions for parsing JSONPatch operations from editstate tool calls
  */
 
+import { compare } from 'fast-json-patch';
+
 export type DiffType = 'add' | 'remove' | 'replace';
 
 export interface JSONPatchOperation {
@@ -185,4 +187,32 @@ export function adjustParentTypes(diffs: DiffResult[]): DiffResult[] {
   });
   
   return adjustedDiffs;
+}
+
+/**
+ * Compute live diffs between two config objects using fast-json-patch.
+ * Used when restoring state to show the real difference between the
+ * current (possibly user-modified) config and the state being restored.
+ *
+ * @param currentConfig - The current live config (before restore)
+ * @param restoredConfig - The config being restored
+ * @returns DiffResult[] with real-time diffs
+ */
+export function computeLiveDiffs(
+  currentConfig: Record<string, unknown>,
+  restoredConfig: Record<string, unknown>
+): DiffResult[] {
+  const patches = compare(currentConfig, restoredConfig);
+
+  // Filter to only add/remove/replace (skip move/copy/test)
+  return patches
+    .filter((p): p is { op: DiffType; path: string; value?: unknown } =>
+      p.op === 'add' || p.op === 'remove' || p.op === 'replace'
+    )
+    .map((patch) => ({
+      path: parseJSONPointer(patch.path),
+      type: patch.op,
+      value: patch.value,
+      operation: patch as JSONPatchOperation,
+    }));
 }
