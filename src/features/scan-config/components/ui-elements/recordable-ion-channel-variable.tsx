@@ -3,6 +3,7 @@
 import { LinkOutlined, LoadingOutlined } from '@ant-design/icons';
 import { RiArrowDownSLine } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
+import { Empty } from 'antd';
 import { useMemo, useState } from 'react';
 
 import { obioneApi } from '@/api/one/utils';
@@ -198,7 +199,11 @@ export function SelectRecordableIonChannelVariable({
   const endpoint = useMemo(() => resolveEndpoint(schema, 'IonChannelModel'), [schema]);
   const valueTypeConst = paramSchema.properties?.type?.const;
 
-  const { data: channelGroups = [], isLoading } = useQuery({
+  const {
+    data: channelGroups = [],
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['mapped-ion-channel-properties', { endpoint, ionChannelIds }],
     queryFn: async () => {
       const api = await obioneApi();
@@ -301,35 +306,50 @@ export function SelectRecordableIonChannelVariable({
           position="popper"
           className="max-h-72 bg-white! border-gray-100"
         >
-          {channelGroups.map((group) => (
-            <SelectGroup key={group.key}>
-              <ChannelHeader
-                group={group}
-                isExpanded={expandedChannels.has(group.key)}
-                onToggle={() => toggleChannel(group.key)}
+          {isError && (
+            <div className="flex flex-col items-center justify-center">
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                className="[&_.ant-empty-description]:text-red-500"
+                description={
+                  <div>
+                    <div>Data for ion channel variables</div>
+                    <div>could not be loaded.</div>
+                  </div>
+                }
               />
-              {expandedChannels.has(group.key) && (
-                <div className="ml-2 border-l-2 border-gray-300">
-                  {group.variables.map((variable) => {
-                    const itemValue = encodeValue(group.key, variable.variable_name);
-                    return (
-                      <SelectItem
-                        key={itemValue}
-                        value={itemValue}
-                        className="pl-4 text-primary-8 hover:text-primary-7! text-base font-semibold cursor-pointer"
-                        checkClassName="size-3 text-primary-8"
-                      >
-                        <span>{variable.variable_name}</span>
-                        <span className="ml-1.5 text-xs text-gray-400 font-normal">
-                          ({variable.unit})
-                        </span>
-                      </SelectItem>
-                    );
-                  })}
-                </div>
-              )}
-            </SelectGroup>
-          ))}
+            </div>
+          )}
+          {!isError &&
+            channelGroups.map((group) => (
+              <SelectGroup key={group.key}>
+                <ChannelHeader
+                  group={group}
+                  isExpanded={expandedChannels.has(group.key)}
+                  onToggle={() => toggleChannel(group.key)}
+                />
+                {expandedChannels.has(group.key) && (
+                  <div className="ml-2 border-l-2 border-gray-300">
+                    {group.variables.map((variable) => {
+                      const itemValue = encodeValue(group.key, variable.variable_name);
+                      return (
+                        <SelectItem
+                          key={itemValue}
+                          value={itemValue}
+                          className="pl-4 text-primary-8 hover:text-primary-7! text-base font-semibold cursor-pointer"
+                          checkClassName="size-3 text-primary-8"
+                        >
+                          <span>{variable.variable_name}</span>
+                          <span className="ml-1.5 text-xs text-gray-400 font-normal">
+                            ({variable.unit})
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
+                  </div>
+                )}
+              </SelectGroup>
+            ))}
         </SelectContent>
       </Select>
     </div>
