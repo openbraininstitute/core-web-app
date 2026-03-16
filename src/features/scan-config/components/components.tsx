@@ -76,17 +76,20 @@ export function LeftMenuTab({
   disabled?: boolean;
   style?: React.CSSProperties;
 }) {
+  const isSelected = tab === selectedTab;
   return (
     <button
+      data-scan-config-menu="left-menu-top-item"
+      data-active={isSelected}
       onClick={!disabled ? onClick : undefined}
       type="button"
       style={disabled ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' } : style}
       className={classNames(
-        'min-w-37.5 px-5 py-2',
+        'min-w-37.5 px-5',
         extraClass,
         rounded,
-        tab === selectedTab
-          ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
+        isSelected
+          ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white mb-1'
           : 'text-primary-8 bg-white'
       )}
     >

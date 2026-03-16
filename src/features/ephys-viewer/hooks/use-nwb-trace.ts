@@ -1,23 +1,28 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { loadable } from 'jotai/utils';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { nwbArrayBufferAtomFamily } from '@/features/ephys-viewer/atoms';
 import NWBTrace from '@/features/ephys-viewer/nwb-trace';
 
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { WorkspaceContext } from '@/types/common';
 
 type UseTraceArgs = {
-  resource: IElectricalCellRecording | ICircuitSimulationResult;
+  resource: IElectricalCellRecording | ISimulationResult;
+  assetId?: string;
   ctx?: WorkspaceContext;
 };
 
-export default function useTrace({ resource, ctx }: UseTraceArgs): [NWBTrace | null, Error | null] {
+export default function useTrace({
+  resource,
+  assetId,
+  ctx,
+}: UseTraceArgs): [NWBTrace | null, Error | null] {
   const nwbAtom = useMemo(
-    () => loadable(nwbArrayBufferAtomFamily({ entity: resource, ctx })),
-    [ctx, resource]
+    () => loadable(nwbArrayBufferAtomFamily({ entity: resource, assetId, ctx })),
+    [ctx, resource, assetId]
   );
   const nwb = useAtomValue(nwbAtom);
 
@@ -41,7 +46,9 @@ export default function useTrace({ resource, ctx }: UseTraceArgs): [NWBTrace | n
 
     initialized.current = true;
 
-    NWBTrace.create(resource.id, nwbArrayBuffer)
+    const traceId = assetId ?? resource.id;
+
+    NWBTrace.create(traceId, nwbArrayBuffer)
       .then((t) => {
         traceRef.current = t;
         setTrace(t);
@@ -52,7 +59,7 @@ export default function useTrace({ resource, ctx }: UseTraceArgs): [NWBTrace | n
       traceRef.current?.destroy();
       initialized.current = false;
     };
-  }, [nwbArrayBuffer, resource]);
+  }, [nwbArrayBuffer, resource, assetId]);
 
   return [trace, error];
 }

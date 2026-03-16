@@ -13,23 +13,21 @@ import type {
   SharedFilter,
 } from '@/api/entitycore/types/shared/request';
 
-interface ICircuitSimulationResultBase {
+interface ISimulationResultBase {
   name: string;
   description: string;
   simulation_id: string;
 }
 
-export interface ICircuitSimulationResult
+export interface ISimulationResult
   extends EntityCoreIdentifiable,
     EntityCoreBaseAsset,
-    ICircuitSimulationResultBase,
+    ISimulationResultBase,
     Timestamps,
     EntityAuthorization,
     EntityCoreType {}
 
-// TODO: Add ICircuitSimulationResultBaseFilter
-
-export interface ICircuitSimulationResultFilter
+export interface ISimulationResultFilter
   extends ContributionFilter,
     BrainRegionHierarchyFilter, // Entitycore API doesn't support brain_region_id filtering, to be removed
     SharedFilter,

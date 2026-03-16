@@ -225,16 +225,20 @@ export function RootElement({
   };
 
   return (
-    <>
+    <div className="w-full flex flex-col gap-0.5">
       <LeftMenuTab
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          // For dictionary blocks: always select and toggle expand/collapse
-          if (!isRootBlock(schema, rootElement) &&
-              rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion) {
-            // Always select this block
-            setSelectedRootElement(rootElement);
+          const isCollapseClick =
+            selectedRootElement === rootElement &&
+            !isRootBlock(schema, rootElement) &&
+            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
+
+          // for block_dictionary, clicking again collapses it
+          // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
+          if (isCollapseClick) {
+            setEditing(false);
             setSelectedEntry('');
 
             // Toggle expansion
@@ -315,7 +319,6 @@ export function RootElement({
       </LeftMenuTab>
 
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
-        isExpanded &&
         config[rootElement] && (
           <BlockDictionaryEntries
           config={config}
@@ -340,9 +343,10 @@ export function RootElement({
           setAtomsMap={setAtomsMap}
           errors={errors}
           highlights={highlights}
+          visible={isExpanded}
         />
       )}
-    </>
+    </div>
   );
 }
 

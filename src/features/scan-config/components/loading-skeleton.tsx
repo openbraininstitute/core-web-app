@@ -104,7 +104,7 @@ export function ScanConfigSkeleton({ className }: { className?: string }) {
     <div className={cn('flex h-full flex-col space-y-5', className)}>
       <header className={cn(styles.header, 'px-5')}>
         <TabsSkeleton />
-        <Skeleton className="h-8 w-48 rounded" />
+        <Skeleton className="h-10 w-48 rounded-full" />
       </header>
 
       <div className="relative mb-5 px-5">

@@ -53,7 +53,7 @@ import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
 import type { ColumnsType } from 'antd/es/table/interface';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
@@ -309,6 +309,14 @@ export function WorkflowActivity() {
 
       return;
     }
+    if (
+      selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign &&
+      entityType === ExtendedEntitiesTypeDict.IonChannelModelSimulation
+    ) {
+      navigate(
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(ExtendedEntitiesTypeDict.IonChannelModelSimulation)}?initialCampaignId=${selectedRow.id}`
+      );
+    }
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
@@ -519,6 +527,7 @@ export function WorkflowActivity() {
                       entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.CircuitExtractionCampaign &&
+                      entityType !== ExtendedEntitiesTypeDict.IonChannelModelSimulation &&
                       (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ? (
                         <Button
                           rounded

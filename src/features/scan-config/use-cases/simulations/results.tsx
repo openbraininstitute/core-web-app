@@ -38,7 +38,7 @@ import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
 import type { CheckboxProps } from 'antd';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
 import styles from '@/features/scan-config/scan-config.module.css';
@@ -89,7 +89,7 @@ export default function SimulationsTab({
 
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
   const [selectedSimulationIds, setSelectedSimulationIds] = useState<string[]>([]);
-  const [activeSimulation, setActiveSimulation] = useState<null | ICircuitSimulation>(null);
+  const [activeSimulation, setActiveSimulation] = useState<null | ISimulation>(null);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
@@ -106,7 +106,7 @@ export default function SimulationsTab({
 
   const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
 
-  const onActiveSimulationChange = useCallback((simulation: ICircuitSimulation) => {
+  const onActiveSimulationChange = useCallback((simulation: ISimulation) => {
     setActiveSimulation(simulation);
   }, []);
 
@@ -408,7 +408,7 @@ export default function SimulationsTab({
           <button
             className={classNames(
               'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
-              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
+              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)] rounded-full',
               'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"
@@ -473,7 +473,7 @@ export default function SimulationsTab({
 }
 
 type SimulationBlockProps = {
-  simulation: ICircuitSimulation;
+  simulation: ISimulation;
   execStatus?: ActivityStatus;
   onSelect: (simulationId: string) => void;
   selected?: boolean;

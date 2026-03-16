@@ -1,0 +1,17 @@
+.sectionInfo {
+  span.hoverFalse {
+    display: inline;
+  }
+  span.hoverTrue {
+    display: none;
+  }
+}
+
+.sectionInfo:hover {
+  span.hoverFalse {
+    display: none;
+  }
+  span.hoverTrue {
+    display: inline;
+  }
+}

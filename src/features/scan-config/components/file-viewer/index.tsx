@@ -9,7 +9,7 @@ import { cn } from '@/utils/css-class';
 import { jsonFileAtomFamily } from '../atoms';
 import { CodeFileViewer } from './code-viewer';
 
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -132,9 +132,14 @@ type NwbFileViewerProps = {
 };
 
 function NwbFileViewer({ file, context }: NwbFileViewerProps) {
-  const { entity } = file;
+  const { entity, asset } = file;
   return (
-    <EphysViewer key={entity.id} resource={entity as ICircuitSimulationResult} ctx={context} />
+    <EphysViewer
+      key={asset.id}
+      resource={entity as ISimulationResult}
+      assetId={asset.id}
+      ctx={context}
+    />
   );
 }
 
