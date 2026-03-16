@@ -86,8 +86,8 @@ export function RootElement({
   const expandedRef = useRef(expandedRootElements);
   expandedRef.current = expandedRootElements;
   
-  // Check if this block should be expanded (either selected OR in the expanded set)
-  const isExpanded = selectedRootElement === rootElement || expandedRootElements.has(rootElement);
+  // Check if this block should be expanded (driven solely by the expanded set)
+  const isExpanded = expandedRootElements.has(rootElement);
   
   // Read flash state from shared atom — presence in map = flash, no TTL check
   const activeFlash = activeFlashes.get(rootElement);
@@ -230,24 +230,29 @@ export function RootElement({
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          // For dictionary blocks, toggle expansion on click
+          // For dictionary blocks: always select and toggle expand/collapse
           if (!isRootBlock(schema, rootElement) &&
               rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion) {
-            if (isExpanded) {
-              // Close: remove from expanded set
+            // Always select this block
+            setSelectedRootElement(rootElement);
+            setSelectedEntry('');
+
+            // Toggle expansion
+            if (expandedRootElements.has(rootElement)) {
               setExpandedRootElements((prev) => {
                 const newSet = new Set(prev);
                 newSet.delete(rootElement);
                 return newSet;
               });
-              // If this was the selected block, clear selection
-              if (selectedRootElement === rootElement) {
-                setEditing(false);
-                setSelectedEntry('');
-                setSelectedRootElement('');
-              }
-              return;
+            } else {
+              setExpandedRootElements((prev) => {
+                const newSet = new Set(prev);
+                newSet.add(rootElement);
+                return newSet;
+              });
             }
+            setEditing(false);
+            return;
           }
 
           // Open: add to expanded set and select
