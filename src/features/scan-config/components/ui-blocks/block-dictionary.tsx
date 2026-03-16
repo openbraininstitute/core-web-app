@@ -113,9 +113,9 @@ export default function BlockDictionary({
   // Show deleted message if entry was deleted
   if (isDeleted && selectedEntry) {
     return (
-      <div className="flex items-center justify-center h-full p-8">
+      <div className="flex items-center justify-center min-h-[50vh] p-8">
         <div className="text-center max-w-md">
-          <p className="text-gray-600 text-base">
+          <p className="text-gray-500 text-xl">
             <span className="font-semibold">{selectedEntry}</span> has been deleted
           </p>
         </div>

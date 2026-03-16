@@ -76,6 +76,12 @@ export const activeFlashesAtom = atom<Map<string, ActiveFlash>>(new Map());
 export const activeDiffMessageIdAtom = atom<string | null>(null);
 
 /**
+ * Counter that increments each time a new message is submitted.
+ * Used by CollapsibleMessage to cancel pending restore confirmations.
+ */
+export const messageSubmittedCounterAtom = atom(0);
+
+/**
  * Data needed to show/toggle diffs from the diff bar.
  * Populated by message-item when a message with editstate calls is ready.
  */

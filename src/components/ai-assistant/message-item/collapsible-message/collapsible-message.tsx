@@ -1,10 +1,13 @@
 'use client';
 
 import React from 'react';
+import { useAtomValue } from 'jotai';
 import { RiResetLeftLine, RiCheckLine, RiCloseLine } from '@remixicon/react';
 
 import type { UIMessage } from '@ai-sdk/ui-utils';
 import { cn } from '@/utils/css-class';
+import { messageSubmittedCounterAtom } from '@/state/config-highlights';
+import { isChatReadyAtom } from '@/services/ai-agent/hooks/chat';
 
 import styles from './collapsible-message.module.css';
 
@@ -31,6 +34,21 @@ export function CollapsibleMessage({
   const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(null);
   const [isConfirmingRestore, setIsConfirmingRestore] = React.useState(false);
   const previousPartsLength = React.useRef(0);
+
+  // Cancel pending restore when a new message is submitted (counter increments)
+  const submittedCounter = useAtomValue(messageSubmittedCounterAtom);
+  const isChatReady = useAtomValue(isChatReadyAtom);
+  const prevCounterRef = React.useRef(submittedCounter);
+  const onCancelRestoreRef = React.useRef(onCancelRestore);
+  onCancelRestoreRef.current = onCancelRestore;
+
+  React.useEffect(() => {
+    if (submittedCounter > prevCounterRef.current) {
+      setIsConfirmingRestore(false);
+      onCancelRestoreRef.current?.();
+    }
+    prevCounterRef.current = submittedCounter;
+  }, [submittedCounter]);
 
   // Count steps in collapsed content (consecutive tool calls = 1 step)
   const stepCount = React.useMemo(() => {
@@ -192,7 +210,7 @@ export function CollapsibleMessage({
                       : `Show Steps (${stepCount})`}
                 </span>
               </div>
-              {hasCompletedEditState && status === 'ready' && (
+              {hasCompletedEditState && isChatReady && (
                 <div className={styles.actionButtons}>
                   {isConfirmingRestore ? (
                     <>

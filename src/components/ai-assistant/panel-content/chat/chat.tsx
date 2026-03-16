@@ -16,6 +16,7 @@ import {
   oldConfigAtom,
   expandedRootElementsAtom,
   diffBarDataAtom,
+  messageSubmittedCounterAtom,
 } from '@/state/config-highlights';
 import { classNames } from '@/util/utils';
 
@@ -57,6 +58,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   const setOldConfig = useSetAtom(oldConfigAtom);
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const [diffBarData, setDiffBarData] = useAtom(diffBarDataAtom);
+  const setMessageSubmittedCounter = useSetAtom(messageSubmittedCounterAtom);
   const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
   const prevRemainingRef = React.useRef<number | null>(null);
   const hasInitializedRef = React.useRef(false);
@@ -109,8 +111,9 @@ export default function Chat({ className, threadId }: ChatProps) {
       setConfigDiffs([]);
       setOldConfig(null);
       setExpandedRootElements(new Set(['info']));
+      setMessageSubmittedCounter((c) => c + 1);
     }
-  }, [status, setActiveDiffMessageId, setDiffBarData, setConfigHighlights, setConfigDiffs, setOldConfig, setExpandedRootElements]);
+  }, [status, setActiveDiffMessageId, setDiffBarData, setConfigHighlights, setConfigDiffs, setOldConfig, setExpandedRootElements, setMessageSubmittedCounter]);
 
   // Clear active diff view when switching conversations
   React.useEffect(() => {

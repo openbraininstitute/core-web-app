@@ -154,7 +154,7 @@ export function useServiceAiAgentChat(threadId: string) {
 }
 
 export const configStateAtom = atom<Config | null>(null);
-const isChatReadyAtom = atom(true);
+export const isChatReadyAtom = atom(true);
 
 export function useAgentState(key: string, config?: Config) {
   const [, setAIAgentState] = useAtom(agentStateAtom);
