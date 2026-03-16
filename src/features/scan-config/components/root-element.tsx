@@ -191,7 +191,7 @@ export function RootElement({
             newMap.delete(rootElement);
             return newMap;
           });
-        }, 1300);
+        }, 2100);
       }
     };
     

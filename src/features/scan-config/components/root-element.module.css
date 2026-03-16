@@ -6,45 +6,69 @@
 }
 
 .rootFlashAdded {
-  animation: flashBorderAdded 1.2s ease-in-out forwards !important;
+  animation: flashBorderAdded 2s linear forwards !important;
 }
 
 .rootFlashRemoved {
-  animation: flashBorderRemoved 1.2s ease-in-out forwards !important;
+  animation: flashBorderRemoved 2s linear forwards !important;
 }
 
 .rootFlashModified {
-  animation: flashBorderModified 1.2s ease-in-out forwards !important;
+  animation: flashBorderModified 2s linear forwards !important;
 }
 
 @keyframes flashBorderAdded {
-  0%, 15% {
+  0% {
+    border: 1.5px solid rgba(34, 197, 94, 0);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0);
+  }
+  8% {
     border: 1.5px solid rgba(34, 197, 94, 0.55);
     box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08);
   }
-  85%, 100% {
+  75% {
+    border: 1.5px solid rgba(34, 197, 94, 0.55);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08);
+  }
+  100% {
     border: 1.5px solid rgba(34, 197, 94, 0);
     box-shadow: 0 0 0 3px rgba(34, 197, 94, 0);
   }
 }
 
 @keyframes flashBorderRemoved {
-  0%, 15% {
+  0% {
+    border: 1.5px solid rgba(239, 68, 68, 0);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0);
+  }
+  8% {
     border: 1.5px solid rgba(239, 68, 68, 0.55);
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
   }
-  85%, 100% {
+  75% {
+    border: 1.5px solid rgba(239, 68, 68, 0.55);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+  }
+  100% {
     border: 1.5px solid rgba(239, 68, 68, 0);
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0);
   }
 }
 
 @keyframes flashBorderModified {
-  0%, 15% {
+  0% {
+    border: 1.5px solid rgba(245, 158, 11, 0);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0);
+  }
+  8% {
     border: 1.5px solid rgba(245, 158, 11, 0.55);
     box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08);
   }
-  85%, 100% {
+  75% {
+    border: 1.5px solid rgba(245, 158, 11, 0.55);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08);
+  }
+  100% {
     border: 1.5px solid rgba(245, 158, 11, 0);
     box-shadow: 0 0 0 3px rgba(245, 158, 11, 0);
   }
