@@ -75,8 +75,8 @@ export function useServiceAiAgentChat(threadId: string) {
     }
     const lastMessage = chat.messages[chat.messages.length - 1];
 
-    // Find the most recent editstate tool result
-    const toolInvocation = lastMessage?.parts
+    // Find the most recent editstate tool result to update config
+    const editstateResult = lastMessage?.parts
       .toReversed()
       .find(
         (p) =>
@@ -86,30 +86,35 @@ export function useServiceAiAgentChat(threadId: string) {
       ) as ToolInvocationUIPart | undefined;
 
     // @ts-expect-error - toolInvocation result type is not properly typed
-    if (toolInvocation?.toolInvocation?.result) {
-      try {
-        // @ts-expect-error - result needs to be parsed as JSON
-        const result = JSON.parse(toolInvocation.toolInvocation.result);
-        const newConfig = result.state.smc_simulation_config ?? null;
-        setConfig(newConfig);
-        
-        // Trigger visual feedback for the updated nodes
-        if (newConfig && toolInvocation.toolInvocation.args) {
-          const patches = (toolInvocation.toolInvocation.args as any).patches;
-          if (patches && Array.isArray(patches)) {
-            // Dispatch a custom event with the patches so the UI can highlight the changes
-            window.dispatchEvent(new CustomEvent('config-updated', { 
-              detail: { patches } 
-            }));
-          }
+    if (!editstateResult?.toolInvocation?.result) return;
+
+    try {
+      // @ts-expect-error - result needs to be parsed as JSON
+      const result = JSON.parse(editstateResult.toolInvocation.result);
+      const newConfig = result.state.smc_simulation_config ?? null;
+      setConfig(newConfig);
+
+      // Only flash when the very last part is the editstate result itself
+      const lastPart = lastMessage.parts[lastMessage.parts.length - 1];
+      const isLastPartEditState =
+        lastPart?.type === 'tool-invocation' &&
+        lastPart.toolInvocation.toolName === 'editstate' &&
+        lastPart.toolInvocation.state === 'result';
+
+      if (isLastPartEditState && newConfig && editstateResult.toolInvocation.args) {
+        const patches = (editstateResult.toolInvocation.args as any).patches;
+        if (patches && Array.isArray(patches)) {
+          window.dispatchEvent(new CustomEvent('config-updated', { 
+            detail: { patches } 
+          }));
         }
-      } catch {
-        logError(
-          'Failed to parse tool invocation result as JSON:',
-          // @ts-expect-error - result type is not properly typed
-          toolInvocation.toolInvocation.result
-        );
       }
+    } catch {
+      logError(
+        'Failed to parse tool invocation result as JSON:',
+        // @ts-expect-error - result type is not properly typed
+        editstateResult.toolInvocation.result
+      );
     }
   }, [chat.messages, setConfig]);
 

@@ -182,7 +182,7 @@ export function CollapsibleMessage({
                   {isExpanded ? `Hide Steps (${stepCount})` : `Show Steps (${stepCount})`}
                 </span>
               </div>
-              {hasCompletedEditState && (
+              {hasCompletedEditState && status === 'ready' && (
                 <div className={styles.actionButtons}>
                   <button
                     type="button"
