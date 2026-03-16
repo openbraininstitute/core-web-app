@@ -18,7 +18,6 @@ import type {
   TVirtualLab,
   UserProfileResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import type { TEmailStatus } from '@/api/virtual-lab-svc/validation';
 import type {
   TResolvedWorkspace,
   TWorkspaceBootstrapStepStatus,
@@ -63,7 +62,7 @@ const makeStream = <T extends StreamItem>(generator: AsyncGenerator<T, void, unk
   return new ReadableStream<any>({
     async start(controller) {
       for await (const chunk of generator) {
-        const chunkData = encoder.encode(JSON.stringify(chunk) + '\n');
+        const chunkData = encoder.encode(`${JSON.stringify(chunk)}\n`);
         controller.enqueue(chunkData);
       }
       controller.close();
@@ -77,14 +76,33 @@ async function* fetchItems<T>(body: Body) {
   let project: Project | null = body.workspaceResolution.project;
 
   for (const sequence of WorkspaceBootstrap) {
+    const { shouldCreateProject, shouldCreateVirtualLab, accountPayload, workspaceResolution } =
+      body;
+
+    // Early exit: skip project step entirely if there's no virtual lab to attach it to
+    if (
+      sequence.step === WorkspaceBootstrapStep.Project &&
+      shouldCreateProject &&
+      !workspaceResolution.virtualLab?.id &&
+      !virtualLab?.id
+    ) {
+      const chunk = {
+        message: 'No virtual lab available to create the project',
+        step: sequence.step,
+        status: WorkspaceBootstrapStepStatus.Error,
+        progress: WorkspaceBootstrap[1].progress,
+        data: { virtualLab, project, profile },
+      } as T;
+      yield chunk;
+      return;
+    }
+
     yield {
       step: sequence.step,
       status: WorkspaceBootstrapStepStatus.InProgress,
       message: sequence.message,
       progress: sequence.progress,
     } as T;
-    const { shouldCreateProject, shouldCreateVirtualLab, accountPayload, workspaceResolution } =
-      body;
 
     if (sequence.step === WorkspaceBootstrapStep.Identity) {
       let IdentityStatus: TWorkspaceBootstrapStepStatus = WorkspaceBootstrapStepStatus.Passed;
@@ -92,7 +110,7 @@ async function* fetchItems<T>(body: Body) {
       if (shouldCreateVirtualLab && accountPayload) {
         const { data, error } = await tryCatch(
           updateUserProfile({
-            ...pick(workspaceResolution?.profile, ['first_name', 'last_name', 'address', 'email']),
+            ...pick(workspaceResolution?.profile, ['first_name', 'last_name', 'address']),
             ...pick(accountPayload, ['first_name', 'last_name', 'email']),
           })
         );
@@ -113,6 +131,7 @@ async function* fetchItems<T>(body: Body) {
       } as T;
       log('debug', WorkspaceBootstrapStep.Identity, chunk);
       yield chunk;
+      if (IdentityStatus === WorkspaceBootstrapStepStatus.Error) return;
     }
     if (sequence.step === WorkspaceBootstrapStep.VirtualLab) {
       let VirtualLabStatus: TWorkspaceBootstrapStepStatus = WorkspaceBootstrapStepStatus.Passed;
@@ -125,7 +144,7 @@ async function* fetchItems<T>(body: Body) {
             description: '',
           })
         );
-        if (data && data.data?.virtual_lab) {
+        if (data?.data?.virtual_lab) {
           virtualLab = data.data?.virtual_lab;
           VirtualLabStatus = WorkspaceBootstrapStepStatus.Completed;
         } else {
@@ -142,15 +161,16 @@ async function* fetchItems<T>(body: Body) {
       } as T;
       log('debug', WorkspaceBootstrapStep.VirtualLab, chunk);
       yield chunk;
+      if (VirtualLabStatus === WorkspaceBootstrapStepStatus.Error) return;
     }
     if (sequence.step === WorkspaceBootstrapStep.Project) {
       let ProjectStatus: TWorkspaceBootstrapStepStatus = WorkspaceBootstrapStepStatus.Passed;
       let message: string = `${sequence.message.replace('...', '')} completed!`;
       if (shouldCreateProject && (workspaceResolution || virtualLab)) {
-        const ID = workspaceResolution.virtualLab?.id ?? virtualLab?.id;
+        const ID = (workspaceResolution.virtualLab?.id ?? virtualLab?.id)!;
         const fullName = profile?.last_name || profile?.preferred_username || '';
         const { data, error } = await tryCatch(
-          createProject(ID!, {
+          createProject(ID, {
             name: `${fullName} first project`,
             description: `
               Your initial project has been set up as a ready-to-use workspace to jumpstart your work.
@@ -159,7 +179,7 @@ async function* fetchItems<T>(body: Body) {
             include_members: [],
           })
         );
-        if (data && data.data?.project) {
+        if (data?.data?.project) {
           project = data.data?.project;
           ProjectStatus = WorkspaceBootstrapStepStatus.Completed;
         } else {
@@ -181,6 +201,7 @@ async function* fetchItems<T>(body: Body) {
 
       log('debug', WorkspaceBootstrapStep.Project, chunk);
       yield chunk;
+      if (ProjectStatus === WorkspaceBootstrapStepStatus.Error) return;
     }
     yield {
       step: sequence.step,

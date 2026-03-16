@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { match, P } from 'ts-pattern';
 
 import {
@@ -31,15 +31,15 @@ export function WorkspaceWizard({
   const [accountSetupPayload, setAccountSetupPayload] = useState<TWorkspaceIdentitySchema>();
   const [customizationPayload, setCustomizationPayload] = useState<TWorkspaceCustomization>();
 
-  const toProvision = (value: TWorkspaceIdentitySchema) => {
+  const toProvision = useCallback((value: TWorkspaceIdentitySchema) => {
     setAccountSetupPayload(value);
     setSequence(WizardSteps.Provision);
-  };
+  }, []);
 
-  const toCustomization = (values: TWorkspaceCustomization) => {
+  const toCustomization = useCallback((values: TWorkspaceCustomization) => {
     setCustomizationPayload(values);
     setSequence(WizardSteps.Customization);
-  };
+  }, []);
 
   return match({
     current: sequence,

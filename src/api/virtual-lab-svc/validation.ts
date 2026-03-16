@@ -16,9 +16,7 @@ export const UserRoleSchema = z.enum(['admin', 'member']);
 export const VirtualLabPayloadSchema = z.object({
   name: z.string().describe('name of the virtual lab'),
   description: z.string().optional().describe('optional description of the virtual lab'),
-  reference_email: z.email().describe('reference email associated with the virtual lab'),
   entity: z.string().describe('entity or organization associated with the virtual lab'),
-  email_status: EmailStatusSchema.describe('status of the reference email verification'),
 });
 
 export type TVirtualLabPayload = z.infer<typeof VirtualLabPayloadSchema>;

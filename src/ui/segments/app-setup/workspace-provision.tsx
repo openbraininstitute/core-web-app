@@ -49,6 +49,8 @@ export function WorkspaceProvision({
   const session = useSession();
 
   useEffect(() => {
+    let cancelled = false;
+
     const asyncFetch = async () => {
       setProgress(0);
       setCompletedSteps([]);
@@ -69,8 +71,10 @@ export function WorkspaceProvision({
         });
 
         for await (const value of it) {
+          if (cancelled) return;
           try {
             const chunk = value as StreamItem;
+            console.log('# # asyncFetch # chunk:', chunk);
             setProgress(chunk.progress);
             setCompletedSteps((prev) => {
               const existingStep = prev.find((p) => p.step === chunk.step);
@@ -112,11 +116,17 @@ export function WorkspaceProvision({
           }
         }
       } catch (error) {
-        log('error', 'Streaming error:', error);
+        if (!cancelled) {
+          log('error', 'Streaming error:', error);
+        }
       }
     };
 
     asyncFetch();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     accountPayload,
     move,

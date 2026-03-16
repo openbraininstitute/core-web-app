@@ -5,7 +5,6 @@ import { Form, Popover } from 'antd';
 import { type ComponentProps, type ReactNode, useEffect, useState } from 'react';
 import z from 'zod';
 
-import { EmailStatusSchema } from '@/api/virtual-lab-svc/validation';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Card, CardContent } from '@/ui/molecules/card';
