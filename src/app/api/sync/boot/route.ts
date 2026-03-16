@@ -134,7 +134,7 @@ async function processVirtualLab(body: BootstrapBody, state: BootstrapState): Pr
     if (cause?.error_code === 'ENTITY_ALREADY_EXISTS') {
       return {
         status: WorkspaceBootstrapStepStatus.Retryable,
-        message: 'That name is already taken. Please choose a different name for your Virtual Lab.',
+        message: 'The name is already taken. Please choose a different name for your Virtual Lab.',
         errorCode: 'ENTITY_ALREADY_EXISTS',
       };
     }

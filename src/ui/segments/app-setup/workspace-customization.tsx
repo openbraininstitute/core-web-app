@@ -372,43 +372,6 @@ export function WorkspaceCustomization({
             </Form>
           </CardContent>
         </Card>
-
-        {/* <div className="w-full">
-          <p className="mb-2 text-left text-sm text-[#8C8C8C]">Just before you go</p>
-          <div className="grid justify-items-stretch gap-4 md:grid-cols-2">
-            <Link href="/">
-              <Card
-                borderless
-                className="h-full cursor-pointer bg-white/95 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl"
-              >
-                <CardContent>
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="text-xs tracking-wide text-[#8C8C8C] uppercase">Video</span>
-                  </div>
-                  <h3 className="text-xl leading-tight font-bold text-blue-900">
-                    How to use the OBI platform?
-                  </h3>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/">
-              <Card
-                borderless
-                className="h-full cursor-pointer bg-white/95 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl"
-              >
-                <CardContent>
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="text-xs tracking-wide text-[#8C8C8C] uppercase">Guides</span>
-                  </div>
-                  <h3 className="text-xl leading-tight font-bold text-blue-900">
-                    How to launch workflows?
-                  </h3>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-        </div> */}
       </div>
     </HydrateWrapper>
   );

@@ -79,8 +79,9 @@ export function WorkspaceIdentity({
   move: (v: TWorkspaceIdentitySchema & { name: string }) => void;
 }) {
   const breakpoint = useDefaultBreakpoint();
-  const [submittable, setSubmittable] = useState<boolean>(true);
+  const [submittable, setSubmittable] = useState<boolean>(false);
   const [form] = Form.useForm<TWorkspaceIdentitySchema>();
+  const formValues = Form.useWatch([], form);
 
   const [editableField, setEditableField] = useState<{
     firstName: boolean;
@@ -100,11 +101,12 @@ export function WorkspaceIdentity({
   };
 
   useEffect(() => {
+    void formValues;
     form
       .validateFields({ validateOnly: true })
       .then(() => setSubmittable(true))
       .catch(() => setSubmittable(false));
-  }, [form]);
+  }, [form, formValues]);
 
   const fullName =
     [data?.profile?.first_name, data?.profile?.last_name].filter(Boolean).join(' ') ||

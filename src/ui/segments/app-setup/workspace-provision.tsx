@@ -394,7 +394,7 @@ export function WorkspaceProvision({
                       <span className="text-error text-sm">{cs.message}</span>
                     )}
                     {retryable && cs?.message && (
-                      <span className="text-amber-600 text-sm">{cs.message}</span>
+                      <span className="text-amber-600 text-sm max-w-80">{cs.message}</span>
                     )}
                     {isRetryTarget && !isResuming && (
                       <RetryRenameInput onConfirm={handleRetryWithNewName} />
