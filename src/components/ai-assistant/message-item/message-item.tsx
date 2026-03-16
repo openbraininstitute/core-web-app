@@ -296,7 +296,6 @@ function MessageChild({
 
   // Confirm restore: keep the already-applied state and flash
   const handleConfirmRestore = React.useCallback(() => {
-    const savedConfig = preRestoreConfigRef.current;
     preRestoreConfigRef.current = null;
 
     // Clear diff highlights
@@ -304,30 +303,7 @@ function MessageChild({
     setConfigDiffs([]);
     setOldConfig(null);
     setExpandedRootElements(new Set(['info']));
-
-    // Flash the changes if there was a previous config to diff against
-    if (savedConfig) {
-      const latestState = getLatestState();
-      if (latestState) {
-        const liveDiffs = computeLiveDiffs(
-          savedConfig as Record<string, unknown>,
-          latestState as Record<string, unknown>
-        );
-        if (liveDiffs.length > 0) {
-          const adjustedDiffs = adjustParentTypes(liveDiffs);
-          const patches = adjustedDiffs.map((diff) => ({
-            op: diff.type,
-            path: '/' + diff.path.join('/'),
-            value: diff.value,
-          }));
-          window.dispatchEvent(
-            new CustomEvent('config-updated', { detail: { patches } })
-          );
-        }
-      }
-    }
   }, [
-    getLatestState,
     setConfigHighlights,
     setConfigDiffs,
     setOldConfig,
