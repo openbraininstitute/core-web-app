@@ -196,9 +196,14 @@ function MessageChild({
   }, [value.parts]);
 
   // Populate the diff bar data when the last message with editstate calls becomes ready
+  // Only on a real streaming→ready transition, not when loading old conversations
+  const prevStatusRef = React.useRef(status);
   React.useEffect(() => {
+    const wasStreaming = prevStatusRef.current === 'streaming' || prevStatusRef.current === 'submitted';
+    prevStatusRef.current = status;
+
     if (!isLastMessage || !hasCompletedEditStateCalls) return;
-    if (status !== 'ready') return;
+    if (status !== 'ready' || !wasStreaming) return;
 
     setDiffBarData({
       messageId: value.id,
