@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { RiResetLeftLine, RiFileCodeLine } from '@remixicon/react';
+import { RiResetLeftLine } from '@remixicon/react';
 
 import type { UIMessage } from '@ai-sdk/ui-utils';
-import { cn } from '@/utils/css-class';
 
 import styles from './collapsible-message.module.css';
 
@@ -13,9 +12,7 @@ interface CollapsibleMessageProps {
   status: 'submitted' | 'streaming' | 'ready' | 'error';
   children: React.ReactNode[];
   onRestoreState?: () => void;
-  onViewDiffs?: () => void;
   hasEditStateCalls?: boolean;
-  showDiff?: boolean;
 }
 
 export function CollapsibleMessage({ 
@@ -23,9 +20,7 @@ export function CollapsibleMessage({
   status, 
   children,
   onRestoreState,
-  onViewDiffs,
   hasEditStateCalls = false,
-  showDiff = false,
 }: CollapsibleMessageProps) {
   const [collapsedIndices, setCollapsedIndices] = React.useState<Set<number>>(new Set());
   const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(null);
@@ -201,20 +196,6 @@ export function CollapsibleMessage({
                   >
                     <RiResetLeftLine size={16} />
                     <span>Restore State</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={cn(styles.actionButton, showDiff && styles.actionButtonActive)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onViewDiffs?.();
-                    }}
-                    aria-label={showDiff ? 'Hide diffs' : 'View diffs'}
-                    title={showDiff ? 'Hide diffs' : 'View diffs'}
-                    aria-pressed={showDiff}
-                  >
-                    <RiFileCodeLine size={16} />
-                    <span>{showDiff ? 'Hide Diffs' : 'View Diffs'}</span>
                   </button>
                 </div>
               )}

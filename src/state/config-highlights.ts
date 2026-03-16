@@ -74,3 +74,20 @@ export const activeFlashesAtom = atom<Map<string, ActiveFlash>>(new Map());
  * Value is the message ID, or null if no diffs are shown
  */
 export const activeDiffMessageIdAtom = atom<string | null>(null);
+
+/**
+ * Data needed to show/toggle diffs from the diff bar.
+ * Populated by message-item when a message with editstate calls is ready.
+ */
+export interface DiffBarData {
+  messageId: string;
+  accumulatedDiffs: DiffResult[];
+  oldConfig: Record<string, any> | null;
+}
+
+/**
+ * Atom to store precomputed diff data for the sticky diff bar.
+ * When non-null, the diff bar is visible above the chat input.
+ * Cleared when the user dismisses the bar or sends a new message.
+ */
+export const diffBarDataAtom = atom<DiffBarData | null>(null);

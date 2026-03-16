@@ -15,6 +15,7 @@ import {
   expandedRootElementsAtom,
   oldConfigAtom,
   activeDiffMessageIdAtom,
+  diffBarDataAtom,
 } from '@/state/config-highlights';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
@@ -89,7 +90,8 @@ function MessageChild({
   const [, setConfigDiffs] = useAtom(configDiffsAtom);
   const [, setExpandedRootElements] = useAtom(expandedRootElementsAtom);
   const [, setOldConfig] = useAtom(oldConfigAtom);
-  const [activeDiffMessageId, setActiveDiffMessageId] = useAtom(activeDiffMessageIdAtom);
+  const [activeDiffMessageId] = useAtom(activeDiffMessageIdAtom);
+  const [, setDiffBarData] = useAtom(diffBarDataAtom);
   
   // Check if this message has the diff view active
   const showDiff = activeDiffMessageId === value.id;
@@ -183,6 +185,28 @@ function MessageChild({
     );
   }, [value.parts]);
 
+  // Check if this message has COMPLETED editstate calls
+  const hasCompletedEditStateCalls = React.useMemo(() => {
+    return value.parts.some(
+      (part) =>
+        part.type === 'tool-invocation' &&
+        part.toolInvocation.toolName === 'editstate' &&
+        part.toolInvocation.state === 'result'
+    );
+  }, [value.parts]);
+
+  // Populate the diff bar data when the last message with editstate calls becomes ready
+  React.useEffect(() => {
+    if (!isLastMessage || !hasCompletedEditStateCalls) return;
+    if (status !== 'ready') return;
+
+    setDiffBarData({
+      messageId: value.id,
+      accumulatedDiffs: accumulatedDiffs,
+      oldConfig: firstOldConfig,
+    });
+  }, [isLastMessage, hasCompletedEditStateCalls, status, value.id, accumulatedDiffs, firstOldConfig, setDiffBarData]);
+
   // Get the latest state from the last editstate call
   const getLatestState = React.useCallback((): Config | null => {
     const editStateCalls = value.parts
@@ -258,78 +282,16 @@ function MessageChild({
     setOldConfig,
   ]);
 
-  // Handler for view diffs button (toggle)
-  const handleViewDiffs = React.useCallback(() => {
-    const newShowDiff = !showDiff;
-    
-    if (newShowDiff) {
-      // Turning on - set this message as the active diff message
-      setActiveDiffMessageId(value.id);
-      
-      // Apply diffs
-      setOldConfig(firstOldConfig);
+  // Handler for view diffs - now triggered by the diff bar via activeDiffMessageIdAtom
+  // The diff bar sets activeDiffMessageIdAtom, and this effect reacts to showDiff changes
+  // to apply or clear the diff highlights.
 
-      // Set highlights for the config UI
-      const highlights = accumulatedDiffs.map((diff) => {
-        // Remove 'smc_simulation_config' wrapper from path
-        const adjustedPath =
-          diff.path[0] === 'smc_simulation_config' && diff.path.length > 1
-            ? diff.path.slice(1)
-            : diff.path;
-
-        return {
-          path: adjustedPath,
-          type: diff.type,
-        };
-      });
-
-      console.log('[MessageItem] Generated highlights:', highlights);
-      console.log('[MessageItem] Accumulated diffs:', accumulatedDiffs);
-
-      setConfigHighlights(highlights);
-
-      // Also store the full diffs for field-level comparisons
-      const adjustedDiffs = accumulatedDiffs.map((diff) => ({
-        ...diff,
-        path:
-          diff.path[0] === 'smc_simulation_config' && diff.path.length > 1
-            ? diff.path.slice(1)
-            : diff.path,
-      }));
-      setConfigDiffs(adjustedDiffs);
-
-      // Collect all modified root blocks
-      const modifiedBlocks = new Set(
-        highlights.map((h) => h.path[0]).filter((b): b is string => b !== undefined)
-      );
-
-      // Set all modified blocks as expanded
-      setExpandedRootElements(modifiedBlocks);
-    } else {
-      // Turning off - clear the active diff message
-      setActiveDiffMessageId(null);
-      
-      // Clear highlights
-      setConfigHighlights([]);
-      setConfigDiffs([]);
-      setOldConfig(null);
-      setExpandedRootElements(new Set(['info'])); // Reset to default
-    }
-  }, [
-    showDiff,
-    value.id,
-    accumulatedDiffs,
-    firstOldConfig,
-    setActiveDiffMessageId,
-    setOldConfig,
-    setConfigHighlights,
-    setConfigDiffs,
-    setExpandedRootElements,
-  ]);
-
-  // Update diffs live when showDiff is on and diffs change
+  // Apply/update diffs when showDiff is on
   React.useEffect(() => {
     if (!showDiff || accumulatedDiffs.length === 0) return;
+
+    // Set old config for field-level comparisons
+    setOldConfig(firstOldConfig);
 
     // Update highlights with the latest accumulated diffs
     const highlights = accumulatedDiffs.map((diff) => {
@@ -360,7 +322,7 @@ function MessageChild({
       highlights.map((h) => h.path[0]).filter((b): b is string => b !== undefined)
     );
     setExpandedRootElements(modifiedBlocks);
-  }, [showDiff, accumulatedDiffs, setConfigHighlights, setConfigDiffs, setExpandedRootElements]);
+  }, [showDiff, accumulatedDiffs, firstOldConfig, setOldConfig, setConfigHighlights, setConfigDiffs, setExpandedRootElements]);
 
   // Clear highlights when showDiff is turned off (only if this message was showing diffs)
   const prevShowDiffRef = React.useRef(showDiff);
@@ -422,9 +384,7 @@ function MessageChild({
             message={value}
             status={isLastMessage ? status : 'ready'}
             onRestoreState={handleRestoreState}
-            onViewDiffs={handleViewDiffs}
             hasEditStateCalls={hasEditStateCalls}
-            showDiff={showDiff}
           >
             {children}
           </CollapsibleMessage>
