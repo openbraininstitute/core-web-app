@@ -82,7 +82,7 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       },
       simulate: {
         label: 'Ion channel (beta)',
-        disabled: false,
+        disabled: true,
         sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
         type: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
       },

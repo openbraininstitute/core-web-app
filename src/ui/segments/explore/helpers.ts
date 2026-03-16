@@ -61,7 +61,7 @@ export const SimulationEntitiesTileTypes = {
   PairedNeuronCircuitSimulation,
   SmallMicrocircuitSimulation,
   MicrocircuitSimulation,
-  IonChannelModelSimulation,
+  // IonChannelModelSimulation,
 } as const;
 
 export function getEntityTypeFromUrlOnEntityScope(url: string) {
