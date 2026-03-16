@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
-import { WaveLoader } from '@/components/ai-assistant/wave-loader';
 import { useAITool } from '@/services/ai-agent/tools/tools';
 
 export default function SingleAIToolsContent() {
@@ -22,7 +21,7 @@ export default function SingleAIToolsContent() {
         </Link>
         <h1 className="text-4xl font-bold">Chat Tool {toolId}</h1>
       </div>
-      {!selectedTool && <WaveLoader />}
+      {!selectedTool && <div>Loading...</div>}
       <p className="text-lg leading-normal whitespace-pre-wrap">{selectedTool?.description}</p>
     </div>
   );

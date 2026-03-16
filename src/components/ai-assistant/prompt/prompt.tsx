@@ -3,6 +3,7 @@
 import React from 'react';
 
 import SendIcon from '@/components/icons/Send';
+import StopIcon from '@/components/icons/Stop';
 import { classNames } from '@/util/utils';
 
 // import { IconGear } from '../icons/gear';
@@ -19,6 +20,8 @@ interface PromptProps {
   onChange(value: string): void;
   onClick(value: string): void;
   disabled?: boolean;
+  isStreaming?: boolean;
+  onCancel?(): void;
 }
 
 export default function Prompt({
@@ -28,6 +31,8 @@ export default function Prompt({
   onChange,
   onClick,
   disabled,
+  isStreaming,
+  onCancel,
 }: PromptProps) {
   const [showToolsSelector, setShowToolsSelector] = React.useState(false);
 
@@ -39,7 +44,9 @@ export default function Prompt({
     if (evt.key === 'Enter' && !evt.shiftKey && !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
       evt.preventDefault();
       evt.stopPropagation();
-      handleSendClick();
+      if (!isStreaming) {
+        handleSendClick();
+      }
     }
   };
   // const handleToolsClick = () => {
@@ -66,11 +73,18 @@ export default function Prompt({
         </button> */}
         <button
           type="button"
-          onClick={handleSendClick}
-          aria-label="Send prompt"
-          disabled={value.trim().length === 0 || disabled}
+          onClick={isStreaming ? onCancel : handleSendClick}
+          aria-label={isStreaming ? 'Cancel' : 'Send prompt'}
+          disabled={isStreaming ? false : value.trim().length === 0 || disabled}
+          className={isStreaming ? styles.cancelButton : undefined}
         >
-          {disabled ? <div className={styles.spinner} /> : <SendIcon />}
+          {isStreaming ? (
+            <StopIcon />
+          ) : disabled ? (
+            <div className={styles.spinner} />
+          ) : (
+            <SendIcon />
+          )}
         </button>
       </div>
       <ToolsSelector
