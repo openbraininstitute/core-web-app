@@ -185,14 +185,17 @@ export function CollapsibleMessage({
                   />
                 </svg>
                 <span className={styles.thinkingLabel}>
-                  {isExpanded ? `Hide Steps (${stepCount})` : `Show Steps (${stepCount})`}
+                  {isConfirmingRestore
+                    ? 'Restore this state?'
+                    : isExpanded
+                      ? `Hide Steps (${stepCount})`
+                      : `Show Steps (${stepCount})`}
                 </span>
               </div>
               {hasCompletedEditState && status === 'ready' && (
                 <div className={styles.actionButtons}>
                   {isConfirmingRestore ? (
                     <>
-                      <span className={styles.confirmLabel}>Restore this state?</span>
                       <button
                         type="button"
                         className={cn(styles.actionButton, styles.confirmYes)}
