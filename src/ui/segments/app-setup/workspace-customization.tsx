@@ -111,7 +111,6 @@ function CustomInput({
           'placeholder:text-sm placeholder:font-light disabled:font-black disabled:opacity-70',
           'focus-visible:text-primary-9! font-black! focus-visible:font-bold!'
         )}
-        // eslint-disable-next-line react/jsx-props-no-spreading
         {...rest}
       />
       <span className="absolute top-1/2 right-5 -translate-y-1/2 transform">
@@ -250,7 +249,7 @@ export function WorkspaceCustomization({
         </div>
         <Card className="flex w-full flex-col bg-transparent shadow-none backdrop-blur-sm">
           <div className="mx-auto mb-2 flex w-full max-w-sm items-start justify-center gap-3 px-1.5">
-            <CheckCircleFilled className="mt-1.5 flex-shrink-0 text-green-600" />
+            <CheckCircleFilled className="mt-1.5 shrink-0 text-green-600" />
             <p className="text-primary-9 text-left">
               Congratulations! Your virtual lab{' '}
               <strong className="font-bold">{virtualLabName}</strong> has been created. We have

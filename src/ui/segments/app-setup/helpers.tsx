@@ -1,4 +1,4 @@
-import head from 'es-toolkit/compat/head';
+import { head } from 'es-toolkit/compat';
 import { isMatching, P } from 'ts-pattern';
 
 import { tryCatch } from '@/api/utils';
@@ -111,6 +111,7 @@ export const WorkspaceBootstrapStepStatus = {
   Completed: 'completed',
   Passed: 'passed',
   Error: 'error',
+  Retryable: 'retryable',
 } as const;
 
 export type TWorkspaceBootstrapStepStatus =

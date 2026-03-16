@@ -1,10 +1,20 @@
 'use client';
 
-import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import {
+  CheckCircleFilled,
+  CheckOutlined,
+  CloseCircleFilled,
+  CloseOutlined,
+  LoadingOutlined,
+} from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import { delay, find, unionBy } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { Button } from '@/ui/molecules/button';
+import { Input } from '@/ui/molecules/input';
 import {
   WorkspaceBootstrap,
   WorkspaceBootstrapStep,
@@ -31,6 +41,201 @@ type Props = {
   move: (v: TWorkspaceCustomization) => void;
 };
 
+type CompletedStep = {
+  status: TWorkspaceBootstrapStepStatus;
+  step: TWorkspaceBootstrapStep;
+  message: string;
+  errorCode?: string;
+};
+
+type RetryState = {
+  step: TWorkspaceBootstrapStep;
+  errorCode: string;
+} | null;
+
+function useDebouncedValue(value: string, delayMs = 400) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
+
+function RetryRenameInput({ onConfirm }: { onConfirm: (newName: string) => void }) {
+  const [value, setValue] = useState('');
+  const debouncedName = useDebouncedValue(value.trim());
+  const enabled = debouncedName.length >= 2;
+
+  const { data: exists, isLoading } = useQuery({
+    queryKey: ['check-virtual-lab-name', debouncedName],
+    queryFn: async () => {
+      return await checkVirtualLabExists({ name: debouncedName });
+    },
+    enabled,
+  });
+
+  const available = enabled && exists === false;
+  const taken = enabled && exists === true;
+  const canSubmit = available && !isLoading;
+
+  return (
+    <div className="mt-3 w-full flex flex-col gap-2">
+      <div className="flex w-full items-center gap-2">
+        <div className="relative w-full">
+          <Input
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="Enter a new name"
+            className={cn(
+              'border-neutral-1 h-auto rounded-full bg-white shadow-sm',
+              'placeholder:text-sm placeholder:font-light disabled:font-black disabled:opacity-70',
+              'focus-visible:text-primary-8! font-black! focus-visible:font-bold! text-primary-8!',
+              'h-10 gap-1.5 text-base py-3 px-4 rounded-full focus-within:border-none',
+              taken && 'border-error',
+              available && 'border-secondary-2'
+            )}
+            aria-label="New virtual lab name"
+          />
+          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+            {isLoading && <LoadingOutlined className="text-primary-8 h-4 w-4 animate-spin" />}
+            {!isLoading && available && <CheckCircleFilled className="text-secondary-2 h-4 w-4" />}
+            {!isLoading && taken && <CloseCircleFilled className="text-error h-4 w-4" />}
+          </div>
+        </div>
+        <Button
+          type="button"
+          rounded
+          size="md"
+          variant="outline"
+          disabled={!canSubmit}
+          onClick={() => onConfirm(value.trim())}
+          className={cn('transition-colors cursor-pointer', {
+            'bg-gray-100 text-gray-400 pointer-events-none': !canSubmit,
+          })}
+        >
+          Confirm
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function StepIcon({
+  done,
+  failed,
+  retryable,
+  inProgress,
+}: {
+  done: boolean;
+  failed: boolean;
+  retryable: boolean;
+  inProgress: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'border-neutral-2 mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border bg-gray-50 transition-all duration-300',
+        {
+          'bg-secondary-2 border-secondary-2': done,
+          'bg-error border-error': failed,
+          'border-amber-500 bg-amber-500': retryable,
+          'border-primary-8 bg-primary-8': inProgress,
+        }
+      )}
+    >
+      {done && <CheckOutlined className="h-3 w-3 text-white" />}
+      {failed && <CloseOutlined className="h-3 w-3 text-white" />}
+      {retryable && <CloseOutlined className="h-3 w-3 text-white" />}
+      {inProgress && <LoadingOutlined className="h-3 w-3 animate-spin text-white" />}
+    </div>
+  );
+}
+
+function StepLabel({
+  message,
+  done,
+  failed,
+  retryable,
+}: {
+  message: string;
+  done: boolean;
+  failed: boolean;
+  retryable: boolean;
+}) {
+  return (
+    <span
+      className={cn('text-primary-8 text-lg font-light transition-colors duration-300', {
+        'text-secondary-2 font-bold': done,
+        'text-error font-bold': failed,
+        'text-amber-600 font-bold': retryable,
+      })}
+    >
+      {message}
+    </span>
+  );
+}
+
+function processChunk(
+  chunk: StreamItem,
+  setProgress: (p: number) => void,
+  setCompletedSteps: React.Dispatch<React.SetStateAction<CompletedStep[]>>,
+  setRetryState: React.Dispatch<React.SetStateAction<RetryState>>,
+  move: (v: TWorkspaceCustomization) => void
+) {
+  if (
+    chunk.status === WorkspaceBootstrapStepStatus.Completed ||
+    chunk.status === WorkspaceBootstrapStepStatus.Passed
+  ) {
+    setProgress(chunk.progress);
+  }
+
+  setCompletedSteps((prev) => {
+    const existingStep = prev.find((p) => p.step === chunk.step);
+    if (!existingStep || existingStep.status !== chunk.status) {
+      return unionBy(
+        [
+          {
+            status: chunk.status,
+            message: chunk.message,
+            step: chunk.step as TWorkspaceBootstrapStep,
+            errorCode: chunk.errorCode,
+          },
+        ],
+        prev ?? [],
+        'step'
+      );
+    }
+    return prev;
+  });
+
+  if (chunk.status === WorkspaceBootstrapStepStatus.Retryable && chunk.errorCode) {
+    setRetryState({
+      step: chunk.step as TWorkspaceBootstrapStep,
+      errorCode: chunk.errorCode,
+    });
+  }
+
+  if (
+    chunk.step === WorkspaceBootstrapStep.Project &&
+    chunk.status === WorkspaceBootstrapStepStatus.Completed &&
+    chunk.data?.virtualLab &&
+    chunk.data?.project
+  ) {
+    delay(
+      () =>
+        move({
+          virtualLabId: chunk.data.virtualLab.id,
+          virtualLabName: chunk.data.virtualLab.name,
+          projectId: chunk.data.project.id,
+          projectName: chunk.data.project.name,
+        }),
+      2000
+    );
+  }
+}
+
 export function WorkspaceProvision({
   accountPayload,
   workspaceResolution,
@@ -39,22 +244,17 @@ export function WorkspaceProvision({
   move,
 }: Props) {
   const [progress, setProgress] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<
-    Array<{
-      status: TWorkspaceBootstrapStepStatus;
-      step: TWorkspaceBootstrapStep;
-      message: string;
-    }>
-  >([]);
+  const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
+  const [retryState, setRetryState] = useState<RetryState>(null);
+  const [isResuming, setIsResuming] = useState(false);
   const session = useSession();
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const asyncFetch = async () => {
-      setProgress(0);
-      setCompletedSteps([]);
-
+  const streamBootstrap = useCallback(
+    async (
+      cancelled: { current: boolean },
+      payload: TWorkspaceIdentitySchema | undefined,
+      resumeFromStep?: string
+    ) => {
       try {
         const it = streamingFetch('/api/sync/boot', {
           method: 'post',
@@ -63,83 +263,84 @@ export function WorkspaceProvision({
             Authorization: `Bearer ${session.data?.accessToken}`,
           },
           body: JSON.stringify({
-            accountPayload,
+            accountPayload: payload,
             workspaceResolution,
             shouldCreateVirtualLab,
             shouldCreateProject,
+            ...(resumeFromStep && { resumeFromStep }),
           }),
         });
 
         for await (const value of it) {
-          if (cancelled) return;
+          if (cancelled.current) return;
           try {
-            const chunk = value as StreamItem;
-            console.log('# # asyncFetch # chunk:', chunk);
-            if (
-              chunk.status === WorkspaceBootstrapStepStatus.Completed ||
-              chunk.status === WorkspaceBootstrapStepStatus.Passed
-            ) {
-              setProgress(chunk.progress);
-            }
-            setCompletedSteps((prev) => {
-              const existingStep = prev.find((p) => p.step === chunk.step);
-              // Only update if status changed or if it's the first time we see this step
-              if (!existingStep || existingStep.status !== chunk.status) {
-                return unionBy(
-                  [
-                    {
-                      status: chunk.status,
-                      message: chunk.message,
-                      step: chunk.step as TWorkspaceBootstrapStep,
-                    },
-                  ],
-                  prev ?? [],
-                  'step'
-                );
-              }
-              return prev;
-            });
-            if (
-              chunk.step === WorkspaceBootstrapStep.Project &&
-              chunk.status === WorkspaceBootstrapStepStatus.Completed &&
-              chunk.data?.virtualLab &&
-              chunk.data?.project
-            ) {
-              delay(
-                () =>
-                  move({
-                    virtualLabId: chunk.data.virtualLab.id,
-                    virtualLabName: chunk.data.virtualLab.name,
-                    projectId: chunk.data.project.id,
-                    projectName: chunk.data.project.name,
-                  }),
-                2000
-              );
-            }
-          } catch (e: any) {
-            log('error', e.message);
+            processChunk(value as StreamItem, setProgress, setCompletedSteps, setRetryState, move);
+          } catch (e: unknown) {
+            log('error', (e as Error).message);
           }
         }
       } catch (error) {
-        if (!cancelled) {
+        if (!cancelled.current) {
           log('error', 'Streaming error:', error);
         }
       }
-    };
+    },
+    [
+      session.data?.accessToken,
+      workspaceResolution,
+      shouldCreateVirtualLab,
+      shouldCreateProject,
+      move,
+    ]
+  );
 
-    asyncFetch();
+  const streamRef = useRef(streamBootstrap);
+  streamRef.current = streamBootstrap;
 
+  const payloadRef = useRef(accountPayload);
+  payloadRef.current = accountPayload;
+
+  useEffect(() => {
+    const cancelled = { current: false };
+    setProgress(0);
+    setCompletedSteps([]);
+    setRetryState(null);
+    streamRef.current(cancelled, payloadRef.current);
     return () => {
-      cancelled = true;
+      cancelled.current = true;
     };
-  }, [
-    accountPayload,
-    move,
-    session.data?.accessToken,
-    shouldCreateVirtualLab,
-    shouldCreateProject,
-    workspaceResolution,
-  ]);
+  }, []);
+
+  const handleRetryWithNewName = useCallback(
+    async (newName: string) => {
+      if (!accountPayload || !retryState) return;
+
+      const resumeStep = retryState.step;
+      const updatedPayload = { ...accountPayload, name: newName };
+
+      setRetryState(null);
+      setIsResuming(true);
+      setCompletedSteps((prev) =>
+        prev.map((s) =>
+          s.step === resumeStep
+            ? {
+                ...s,
+                status: WorkspaceBootstrapStepStatus.InProgress,
+                message: '',
+                errorCode: undefined,
+              }
+            : s
+        )
+      );
+
+      await new Promise((r) => setTimeout(r, 300));
+
+      const cancelled = { current: false };
+      await streamBootstrap(cancelled, updatedPayload, resumeStep);
+      setIsResuming(false);
+    },
+    [accountPayload, retryState, streamBootstrap]
+  );
 
   return (
     <HydrateWrapper>
@@ -170,35 +371,33 @@ export function WorkspaceProvision({
                 cs?.status === WorkspaceBootstrapStepStatus.Completed ||
                 cs?.status === WorkspaceBootstrapStepStatus.Passed;
               const failed = cs?.status === WorkspaceBootstrapStepStatus.Error;
+              const retryable = cs?.status === WorkspaceBootstrapStepStatus.Retryable;
+              const inProgress = cs?.status === WorkspaceBootstrapStepStatus.InProgress;
+              const isRetryTarget = retryState?.step === step;
 
               return (
                 <div key={step} className="flex items-start gap-3">
-                  <div
-                    className={cn(
-                      'border-neutral-2 mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border bg-gray-50 transition-colors duration-300',
-                      {
-                        'bg-secondary-2': done,
-                        'bg-error': failed,
-                      }
-                    )}
-                  >
-                    {done && <CheckOutlined className="h-3 w-3 text-white" />}
-                    {failed && <CloseOutlined className="h-3 w-3 text-white" />}
-                  </div>
+                  <StepIcon
+                    done={done}
+                    failed={failed}
+                    retryable={retryable}
+                    inProgress={inProgress}
+                  />
                   <div className="flex flex-col">
-                    <span
-                      className={cn(
-                        'text-primary-8 text-lg font-light transition-colors duration-300',
-                        {
-                          'text-secondary-2 font-bold': done,
-                          'text-error font-bold': failed,
-                        }
-                      )}
-                    >
-                      {message}
-                    </span>
+                    <StepLabel
+                      message={message}
+                      done={done}
+                      failed={failed}
+                      retryable={retryable}
+                    />
                     {failed && cs?.message && (
                       <span className="text-error text-sm">{cs.message}</span>
+                    )}
+                    {retryable && cs?.message && (
+                      <span className="text-amber-600 text-sm">{cs.message}</span>
+                    )}
+                    {isRetryTarget && !isResuming && (
+                      <RetryRenameInput onConfirm={handleRetryWithNewName} />
                     )}
                   </div>
                 </div>

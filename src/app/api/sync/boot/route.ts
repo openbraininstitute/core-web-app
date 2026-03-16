@@ -32,6 +32,7 @@ type BootstrapBody = {
   workspaceResolution: TResolvedWorkspace;
   shouldCreateVirtualLab: boolean;
   shouldCreateProject: boolean;
+  resumeFromStep?: string;
 };
 
 type BootstrapState = {
@@ -46,11 +47,13 @@ export type StreamChunk = {
   message: string;
   progress: number;
   data?: BootstrapState;
+  errorCode?: string;
 };
 
 type StepResult = {
   status: TWorkspaceBootstrapStepStatus;
   message: string;
+  errorCode?: string;
 };
 
 function createStreamingResponse(stream: ReadableStream<Uint8Array>) {
@@ -118,13 +121,21 @@ async function processVirtualLab(body: BootstrapBody, state: BootstrapState): Pr
         description: '',
       })
     );
-    console.log('–– – processVirtualLab – error––', error?.cause);
 
     if (data?.data?.virtual_lab) {
       state.virtualLab = data.data.virtual_lab;
       return {
         status: WorkspaceBootstrapStepStatus.Completed,
         message: 'Setting up your Virtual Lab  completed!',
+      };
+    }
+
+    const cause = (error as Error & { cause?: Record<string, string> })?.cause;
+    if (cause?.error_code === 'ENTITY_ALREADY_EXISTS') {
+      return {
+        status: WorkspaceBootstrapStepStatus.Retryable,
+        message: 'That name is already taken. Please choose a different name for your Virtual Lab.',
+        errorCode: 'ENTITY_ALREADY_EXISTS',
       };
     }
 
@@ -209,7 +220,27 @@ async function* bootstrapWorkspace(
     project: body.workspaceResolution.project,
   };
 
+  const { resumeFromStep } = body;
+  let shouldProcess = !resumeFromStep;
+
   for (const sequence of WorkspaceBootstrap) {
+    // When resuming, skip steps until we reach the resume point
+    if (!shouldProcess) {
+      if (sequence.step === resumeFromStep) {
+        shouldProcess = true;
+      } else {
+        // Emit the skipped step as passed so the client sees it as done
+        yield {
+          step: sequence.step,
+          status: WorkspaceBootstrapStepStatus.Passed,
+          message: `${sequence.message.replace('...', '')} completed!`,
+          progress: sequence.progress,
+          data: { ...state },
+        };
+        continue;
+      }
+    }
+
     const processor = stepProcessors[sequence.step];
     if (!processor) continue;
 
@@ -228,12 +259,17 @@ async function* bootstrapWorkspace(
       message: result.message,
       progress: sequence.progress,
       data: { ...state },
+      ...(result.errorCode && { errorCode: result.errorCode }),
     };
 
     log('debug', sequence.step, chunk);
     yield chunk;
 
-    if (result.status === WorkspaceBootstrapStepStatus.Error) return;
+    if (
+      result.status === WorkspaceBootstrapStepStatus.Error ||
+      result.status === WorkspaceBootstrapStepStatus.Retryable
+    )
+      return;
   }
 }
 
