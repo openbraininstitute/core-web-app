@@ -11,7 +11,7 @@ import {
   type SchemaName,
   type TBlock,
 } from '@/features/scan-config/types';
-import { configDiffsAtom } from '@/state/config-highlights';
+import { activeFlashesAtom, configDiffsAtom } from '@/state/config-highlights';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -48,6 +48,28 @@ export default function Block({
 }) {
   const [state, setState] = useAtom(stateAtom ?? atom<Record<string, ConfigValue>>({}));
   const diffs = useAtomValue(configDiffsAtom);
+  const activeFlashes = useAtomValue(activeFlashesAtom);
+
+  // Helper to get flash type for a field (temporary animation from config-updated events)
+  const getFieldFlashType = (fieldName: string): 'add' | 'remove' | 'replace' | null => {
+    if (!rootElement) return null;
+    const flash = activeFlashes.get(rootElement);
+    if (!flash?.fields) return null;
+
+    // For dictionary entries: key is "entryName/fieldName"
+    if (selectedEntry) {
+      const fieldFlash = flash.fields.get(selectedEntry + '/' + fieldName);
+      if (fieldFlash) return fieldFlash.type;
+      // Also check if the whole entry was added/removed (depth 2 stored as plain entryName)
+      const entryFlash = flash.entries.get(selectedEntry);
+      if (entryFlash) return entryFlash.type;
+      return null;
+    }
+
+    // For single blocks: key is just "fieldName"
+    const fieldFlash = flash.fields.get(fieldName);
+    return fieldFlash ? fieldFlash.type : null;
+  };
   
   // Helper function to get field change type
   const getFieldChangeType = (fieldName: string): 'add' | 'remove' | 'replace' | null => {
@@ -132,8 +154,9 @@ export default function Block({
 
               const value = state[k];
               const changeType = getFieldChangeType(k);
+              const flashType = getFieldFlashType(k);
               
-              // Determine CSS class based on change type
+              // Persistent diff highlight (from "View Diffs" toggle)
               const diffClassName = changeType
                 ? changeType === 'add'
                   ? styles.diffAdded
@@ -141,6 +164,18 @@ export default function Block({
                   ? styles.diffRemoved
                   : styles.diffModified
                 : undefined;
+
+              // Temporary flash animation (from live tool calls / restore state)
+              const flashClassName = flashType
+                ? flashType === 'add'
+                  ? styles.fieldFlashAdded
+                  : flashType === 'remove'
+                  ? styles.fieldFlashRemoved
+                  : styles.fieldFlashModified
+                : undefined;
+
+              // Flash takes priority over persistent diff when both are present
+              const fieldBorderClass = flashClassName ?? diffClassName;
 
               return (
                 <div
@@ -170,8 +205,8 @@ export default function Block({
                           <div 
                             className={cn(
                               'border rounded-lg flex-1 mr-1',
-                              diffClassName,
-                              !diffClassName && 'border-transparent'
+                              fieldBorderClass,
+                              !fieldBorderClass && 'border-transparent'
                             )}
                           >
                             <UIElementRender

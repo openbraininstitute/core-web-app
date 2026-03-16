@@ -62,6 +62,8 @@ export interface FlashEntry {
 export interface ActiveFlash {
   rootFlashType: 'add' | 'remove' | 'replace';
   entries: Map<string, FlashEntry>;
+  /** Field-level flashes: Map of "entryName/fieldName" -> FlashEntry (or just "fieldName" for single blocks) */
+  fields: Map<string, FlashEntry>;
 }
 
 export const activeFlashesAtom = atom<Map<string, ActiveFlash>>(new Map());

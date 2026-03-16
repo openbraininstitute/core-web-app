@@ -20,26 +20,48 @@
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08) !important;
 }
 
-/* Flash animation for live updates */
-@keyframes flashBorder {
-  0% {
-    border-color: transparent;
-    box-shadow: none;
+/* Flash animations for live updates */
+.fieldFlashAdded {
+  animation: flashBorderAdded 1.2s ease-in-out forwards !important;
+}
+
+.fieldFlashRemoved {
+  animation: flashBorderRemoved 1.2s ease-in-out forwards !important;
+}
+
+.fieldFlashModified {
+  animation: flashBorderModified 1.2s ease-in-out forwards !important;
+}
+
+@keyframes flashBorderAdded {
+  0%, 15% {
+    border: 1.5px solid rgba(34, 197, 94, 0.55);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08);
   }
-  15% {
-    border-color: inherit;
-    box-shadow: inherit;
-  }
-  85% {
-    border-color: inherit;
-    box-shadow: inherit;
-  }
-  100% {
-    border-color: transparent;
-    box-shadow: none;
+  85%, 100% {
+    border: 1.5px solid rgba(34, 197, 94, 0);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0);
   }
 }
 
-.flashAnimation {
-  animation: flashBorder 2s ease-in-out;
+@keyframes flashBorderRemoved {
+  0%, 15% {
+    border: 1.5px solid rgba(239, 68, 68, 0.55);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+  }
+  85%, 100% {
+    border: 1.5px solid rgba(239, 68, 68, 0);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes flashBorderModified {
+  0%, 15% {
+    border: 1.5px solid rgba(245, 158, 11, 0.55);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08);
+  }
+  85%, 100% {
+    border: 1.5px solid rgba(245, 158, 11, 0);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0);
+  }
 }

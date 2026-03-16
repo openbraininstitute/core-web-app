@@ -135,6 +135,7 @@ export function RootElement({
         
         // Build entries map for children
         const entries = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
+        const fields = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
         blockPatches.forEach((patch) => {
           const pathParts = patch.path.split('/').filter(Boolean);
           const adjustedPath = pathParts[0] === 'smc_simulation_config' ? pathParts.slice(1) : pathParts;
@@ -147,9 +148,29 @@ export function RootElement({
               entries.set(entryName, { type: patch.op as 'add' | 'remove' | 'replace' });
             }
           }
+          // Track field-level flashes (depth 3+)
+          if (adjustedPath.length >= 3) {
+            const fieldKey = adjustedPath[1] + '/' + adjustedPath[2];
+            const existingField = fields.get(fieldKey);
+            if (existingField && existingField.type !== patch.op) {
+              fields.set(fieldKey, { type: 'replace' });
+            } else if (!existingField) {
+              fields.set(fieldKey, { type: patch.op as 'add' | 'remove' | 'replace' });
+            }
+          }
+          // For single blocks (depth 2), field is the second segment directly
+          if (adjustedPath.length === 2) {
+            const fieldKey = adjustedPath[1];
+            const existingField = fields.get(fieldKey);
+            if (existingField && existingField.type !== patch.op) {
+              fields.set(fieldKey, { type: 'replace' });
+            } else if (!existingField) {
+              fields.set(fieldKey, { type: patch.op as 'add' | 'remove' | 'replace' });
+            }
+          }
         });
         
-        const flashData = { rootFlashType: operationType, entries };
+        const flashData = { rootFlashType: operationType, entries, fields };
         
         // Write flash state to shared atom synchronously.
         // Even if children aren't mounted yet (parent was collapsed),
