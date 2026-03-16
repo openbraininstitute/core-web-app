@@ -66,9 +66,7 @@ export const isAccountPayload = isMatching({
   name: P.string,
   first_name: P.string,
   last_name: P.string,
-  email: P.string,
   entity: P.string,
-  email_status: P.string.regex(/^verified$/),
 });
 
 export const isCustomizationPayload = isMatching({

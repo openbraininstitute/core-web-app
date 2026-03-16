@@ -75,7 +75,12 @@ export function WorkspaceProvision({
           try {
             const chunk = value as StreamItem;
             console.log('# # asyncFetch # chunk:', chunk);
-            setProgress(chunk.progress);
+            if (
+              chunk.status === WorkspaceBootstrapStepStatus.Completed ||
+              chunk.status === WorkspaceBootstrapStepStatus.Passed
+            ) {
+              setProgress(chunk.progress);
+            }
             setCompletedSteps((prev) => {
               const existingStep = prev.find((p) => p.step === chunk.step);
               // Only update if status changed or if it's the first time we see this step
@@ -161,15 +166,16 @@ export function WorkspaceProvision({
           <div className="space-y-3">
             {WorkspaceBootstrap.map(({ step, message }) => {
               const cs = find(completedSteps, { step });
-              const done = cs?.status === WorkspaceBootstrapStepStatus.Completed;
+              const done =
+                cs?.status === WorkspaceBootstrapStepStatus.Completed ||
+                cs?.status === WorkspaceBootstrapStepStatus.Passed;
               const failed = cs?.status === WorkspaceBootstrapStepStatus.Error;
-              const text = failed ? cs?.message : message;
 
               return (
-                <div key={step} className="flex items-center gap-3">
+                <div key={step} className="flex items-start gap-3">
                   <div
                     className={cn(
-                      'border-neutral-2 flex h-5 w-5 items-center justify-center rounded-full border bg-gray-50 transition-colors duration-300',
+                      'border-neutral-2 mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border bg-gray-50 transition-colors duration-300',
                       {
                         'bg-secondary-2': done,
                         'bg-error': failed,
@@ -179,17 +185,22 @@ export function WorkspaceProvision({
                     {done && <CheckOutlined className="h-3 w-3 text-white" />}
                     {failed && <CloseOutlined className="h-3 w-3 text-white" />}
                   </div>
-                  <span
-                    className={cn(
-                      'text-primary-8 text-lg font-light transition-colors duration-300',
-                      {
-                        'text-secondary-2 font-bold': done,
-                        'text-error font-bold': failed,
-                      }
+                  <div className="flex flex-col">
+                    <span
+                      className={cn(
+                        'text-primary-8 text-lg font-light transition-colors duration-300',
+                        {
+                          'text-secondary-2 font-bold': done,
+                          'text-error font-bold': failed,
+                        }
+                      )}
+                    >
+                      {message}
+                    </span>
+                    {failed && cs?.message && (
+                      <span className="text-error text-sm">{cs.message}</span>
                     )}
-                  >
-                    {text}
-                  </span>
+                  </div>
                 </div>
               );
             })}
