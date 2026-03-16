@@ -20,7 +20,7 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-import { configDiffsAtom } from '@/state/config-highlights';
+import { configDiffsAtom, configHighlightsAtom } from '@/state/config-highlights';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -67,6 +67,8 @@ export default function BlockDictionary({
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
   const diffs = useAtomValue(configDiffsAtom);
+  const highlights = useAtomValue(configHighlightsAtom);
+  const showingDiffs = highlights.length > 0;
 
   const selectedBlockLocal = isPlainObject(config[selectedRootElement])
     ? config[selectedRootElement][selectedEntry]?.type
@@ -99,7 +101,7 @@ export default function BlockDictionary({
         schemaName={schemaName}
         schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
+        disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
         config={config}
         blockSchema={selectedBlockSchema}
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
@@ -122,6 +124,11 @@ export default function BlockDictionary({
         </div>
       </div>
     );
+  }
+
+  // Hide block type picker during diff mode
+  if (showingDiffs) {
+    return null;
   }
 
   return (

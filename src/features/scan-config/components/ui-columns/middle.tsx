@@ -15,6 +15,8 @@ import {
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { configHighlightsAtom } from '@/state/config-highlights';
+import { useAtomValue } from 'jotai';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
@@ -60,6 +62,8 @@ export default function Middle({
   entityType,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
+  const highlights = useAtomValue(configHighlightsAtom);
+  const showingDiffs = highlights.length > 0;
 
   return (
     <div className={styles.animateFadeUp}>
@@ -88,7 +92,7 @@ export default function Middle({
           <Block
             schema={schema}
             schemaName={schemaName}
-            disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
+            disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
             config={config}
             blockSchema={selectedSchema}
             stateAtom={atomsMap[selectedRootElement]}

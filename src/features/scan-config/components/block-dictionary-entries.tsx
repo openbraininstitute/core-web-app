@@ -197,14 +197,17 @@ export default function BlockDictionaryEntries({
       : upperFirst(lowerCase(entry)); // Format normally for non-deleted entries
 
     return (
-      <button
-        type="button"
+      <div
+        role="button"
         key={entry}
         className={cn(
-          'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center justify-between rounded-full ',
-          'bg-gray-100 px-5 py-2 text-sm drop-shadow ',
-          'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white',
-          { 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white': isSelected },
+          'text-primary-8 flex h-12.5 min-h-12.5 min-w-37.5 items-center justify-between ',
+          'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
+          'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
+          {
+            'bg-linear-to-r from-[#003A8C] to-[#001026] text-white shadow-bnb':
+              isSelected,
+          },
           styles.entryButton,
           flashClassName || highlightClassName
         )}
@@ -216,9 +219,13 @@ export default function BlockDictionaryEntries({
           }
         }}
       >
-        <div className="w-full text-left truncate max-w-[24ch]">{displayName}</div>
+        <div className="flex-1 min-w-0 text-left">
+          <div className="flex items-center">
+            <div className="inline-block truncate max-w-[24ch]">{displayName}</div>
+          </div>
+        </div>
         {!isDeleted && <AIIcon />}
-      </button>
+      </div>
     );
   }
 
@@ -415,7 +422,7 @@ export default function BlockDictionaryEntries({
                         {(!isSelected || (isSelected && !isEditingKey)) && (
                           <div className="flex items-center">
                             <div className="inline-block truncate max-w-[24ch]">{subkey}</div>
-                            {!readOnly && !campaignId && !aiConfig && isChatReady && (
+                            {!readOnly && !campaignId && !aiConfig && isChatReady && highlights.length === 0 && (
                               <EditOutlined
                                 className="ml-3"
                                 onClick={(e) => {
@@ -439,7 +446,7 @@ export default function BlockDictionaryEntries({
                           <CheckCircleFilled className="text-green-600!" />
                         )}
 
-                        {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && (
+                        {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && highlights.length === 0 && (
                           <DeleteOutlined
                             className="cursor-pointer"
                             onClick={(e) => {
@@ -549,7 +556,7 @@ export default function BlockDictionaryEntries({
             </div>
           )}
 
-          {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && (
+          {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && highlights.length === 0 && (
             <button
               className={cn(
                 'text-primary-8 flex h-12.5 min-h-12.5 w-90percent min-w-37.5 items-center ',
