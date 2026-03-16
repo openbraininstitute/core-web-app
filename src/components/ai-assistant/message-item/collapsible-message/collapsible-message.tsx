@@ -125,7 +125,11 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
     <>
       <div className={styles.accentBar} />
       {collapsedChildren.length > 0 && (
-        <div className={styles.thinkingContainer} data-receiving={animatingIndex !== null}>
+        <div
+          className={styles.thinkingContainer}
+          data-receiving={animatingIndex !== null}
+          data-collapsible="true"
+        >
           <button
             type="button"
             className={styles.thinkingButton}

@@ -3,34 +3,18 @@
   border: none;
   border-bottom: 1px solid #ccd9f5;
   border-radius: 0;
-  background: #f0f5ff;
+  background: color-mix(in srgb, var(--color-primary-6) 12%, var(--color-neutral-9));
   overflow: hidden;
   transition: all 0.2s ease;
 }
 
 .thinkingContainer[data-receiving="true"] {
   border-color: #ccd9f5;
-  background: #f0f5ff;
+  background: color-mix(in srgb, var(--color-primary-6) 5%, var(--color-neutral-9));
   box-shadow: none;
 }
 
-.thinkingContainer:hover {
-  border-color: #ccd9f5;
-  background: #f0f5ff;
-}
-
 .thinkingButton[data-collapsed="true"] {
-  width: 100%;
-  padding: 8px 12px;
-  background: #f0f5ff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: background 0.15s ease;
-}
-
-.thinkingButton[data-collapsed="false"] {
   width: 100%;
   padding: 8px 12px;
   background: transparent;
@@ -41,12 +25,23 @@
   transition: background 0.15s ease;
 }
 
+.thinkingButton[data-collapsed="false"] {
+  width: 100%;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--color-primary-6) 12%, var(--color-neutral-7));
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s ease;
+}
+
 .thinkingButton[data-collapsed="true"]:hover {
-  background: rgba(0, 63, 136, 0.08);
+  background: color-mix(in srgb, var(--color-primary-6) 12%, var(--color-neutral-6));
 }
 
 .thinkingButton[data-collapsed="false"]:hover {
-  background: rgba(0, 0, 0, 0.02);
+  background: color-mix(in srgb, var(--color-primary-6) 12%, var(--color-neutral-5));
 }
 
 .thinkingButton:active {
@@ -149,7 +144,7 @@
 
 .thinkingContent {
   padding: 8px 12px 8px 16px;
-  background: #f0f5ff;
+  background: transparent;
   overflow: hidden;
   transform-origin: top;
   animation: expandContent 0.2s ease-out;
@@ -223,12 +218,12 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 2px;
+  width: 1px;
   background: var(--color-primary-8);
   border-radius: 18px 0 0 18px;
   z-index: 1;
 }
 
 .contentWrapper {
-  padding: 8px 12px 8px 16px;
+  padding: 8px 12px;
 }

@@ -1,21 +1,24 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 8px 0;
-  margin: 8px 0;
+  padding: 1px 0;
+  margin: 4px 0;
 }
 
 .card {
   overflow: visible;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.2);
-  background-color: #ffffff;
+  background-color: var(--color-neutral-9);
   transition:
     box-shadow 200ms ease-out,
     border-color 200ms ease-out,
     background-color 200ms ease-out;
   animation: tp-card-entrance 260ms ease-out both;
+}
+
+[data-collapsible="true"] .card {
+  background-color: color-mix(in srgb, var(--color-primary-6) 3%, var(--color-neutral-9));
 }
 
 .card:hover {

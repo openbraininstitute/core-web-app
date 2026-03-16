@@ -45,37 +45,36 @@
   position: relative;
   max-width: 70%;
   padding: 8px 15px;
-  border-radius: 18px 18px 3px 18px;
+  border-radius: 16px 16px 2px 16px;
   background-color: var(--color-primary-5);
   display: flex;
   flex-wrap: nowrap;
   flex-direction: column;
   justify-content: space-around;
   align-items: stretch;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16);
 }
 
 .userContent > div {
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.4;
 }
 
 .assistant {
   position: relative;
   background-color: var(--color-neutral-9);
-  border: 1px solid #ccd9f5;
-  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
+  border-radius: 16px;
   padding: 0;
   margin: 16px 0;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   isolation: isolate;
 }
 
 .markdown {
   padding: 0;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .markdown ul {
@@ -88,7 +87,7 @@
 
 .markdown ul,
 .markdown ol {
-  margin: 0.5em 0;
+  margin: 0.4em 0;
   padding: 0 2em;
 }
 
@@ -103,7 +102,7 @@
 .markdown h3 {
   font-weight: bolder;
   font-size: 120%;
-  margin: 0.5em 0;
+  margin: 0.4em 0;
 }
 
 .markdown a {

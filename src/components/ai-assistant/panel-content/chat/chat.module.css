@@ -14,9 +14,9 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 1em 0.3em;
+  padding: 12px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
   scrollbar-gutter: stable both-edges;
 }
 
@@ -29,12 +29,12 @@
 }
 
 .articles::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
 }
 
 .articles::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .footer {

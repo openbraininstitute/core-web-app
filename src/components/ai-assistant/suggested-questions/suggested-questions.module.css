@@ -6,10 +6,10 @@
 
 .suggestions > button {
   padding: 0.35rem 0.45rem;
-  background: var(--color-neutral-9);
-  border: 1px solid color-mix(in srgb, var(--color-primary-9) 10%, #e8e8e8);
+  background: white;
+  border: 1px solid color-mix(in srgb, var(--color-primary-9) 25%, transparent);
   border-radius: 6px;
-  color: color-mix(in srgb, var(--color-primary-9) 70%, #e8e8e8);
+  color: var(--color-primary-9);
   transition: all 0.15s ease;
   text-align: left;
   display: flex;
@@ -24,9 +24,8 @@
   flex-shrink: 0;
   width: 1.25rem;
   height: 1.25rem;
-  color: var(--color-primary-9);
+  color: color-mix(in srgb, var(--color-primary-9) 90%, transparent);
   transition: transform 0.15s ease;
-
 }
 
 .suggestions > button > div {
@@ -35,19 +34,19 @@
 }
 
 .suggestions > button:hover {
-  border-color: var(--color-primary-6);
-  background: var(--color-neutral-9);
-  color: #262626;
+  border-color: color-mix(in srgb, var(--color-primary-6) 70%, transparent);
+  background: color-mix(in srgb, var(--color-primary-9) 8%, white);
+  color: var(--color-primary-9);
 }
 
 .suggestions > button:hover > svg {
   transform: translateX(2px);
-  color: var(--color-primary-6);
+  color: var(--color-primary-9);
 }
 
 .title {
-  color: #8c8c8c;
-  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--color-primary-9) 50%, #8c8c8c);
+  font-size: 0.9rem;
   font-weight: 400;
   margin-bottom: 0.4rem;
 }
