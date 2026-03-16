@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { RiResetLeftLine } from '@remixicon/react';
+import { RiResetLeftLine, RiCheckLine, RiCloseLine } from '@remixicon/react';
 
 import type { UIMessage } from '@ai-sdk/ui-utils';
+import { cn } from '@/utils/css-class';
 
 import styles from './collapsible-message.module.css';
 
@@ -11,7 +12,9 @@ interface CollapsibleMessageProps {
   message: UIMessage;
   status: 'submitted' | 'streaming' | 'ready' | 'error';
   children: React.ReactNode[];
-  onRestoreState?: () => void;
+  onPreviewRestore?: () => void;
+  onConfirmRestore?: () => void;
+  onCancelRestore?: () => void;
   hasEditStateCalls?: boolean;
 }
 
@@ -19,11 +22,14 @@ export function CollapsibleMessage({
   message, 
   status, 
   children,
-  onRestoreState,
+  onPreviewRestore,
+  onConfirmRestore,
+  onCancelRestore,
   hasEditStateCalls = false,
 }: CollapsibleMessageProps) {
   const [collapsedIndices, setCollapsedIndices] = React.useState<Set<number>>(new Set());
   const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(null);
+  const [isConfirmingRestore, setIsConfirmingRestore] = React.useState(false);
   const previousPartsLength = React.useRef(0);
 
   // Count steps in collapsed content (consecutive tool calls = 1 step)
@@ -184,19 +190,52 @@ export function CollapsibleMessage({
               </div>
               {hasCompletedEditState && status === 'ready' && (
                 <div className={styles.actionButtons}>
-                  <button
-                    type="button"
-                    className={styles.actionButton}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRestoreState?.();
-                    }}
-                    aria-label="Restore state"
-                    title="Restore state"
-                  >
-                    <RiResetLeftLine size={16} />
-                    <span>Restore State</span>
-                  </button>
+                  {isConfirmingRestore ? (
+                    <>
+                      <span className={styles.confirmLabel}>Restore this state?</span>
+                      <button
+                        type="button"
+                        className={cn(styles.actionButton, styles.confirmYes)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsConfirmingRestore(false);
+                          onConfirmRestore?.();
+                        }}
+                        aria-label="Confirm restore"
+                      >
+                        <RiCheckLine size={16} />
+                        <span>Yes</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={cn(styles.actionButton, styles.confirmNo)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsConfirmingRestore(false);
+                          onCancelRestore?.();
+                        }}
+                        aria-label="Cancel restore"
+                      >
+                        <RiCloseLine size={16} />
+                        <span>No</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.actionButton}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsConfirmingRestore(true);
+                        onPreviewRestore?.();
+                      }}
+                      aria-label="Restore state"
+                      title="Restore state"
+                    >
+                      <RiResetLeftLine size={16} />
+                      <span>Restore State</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>

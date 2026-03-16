@@ -233,17 +233,18 @@ function MessageChild({
     }
   }, [value.parts]);
 
-  // Handler for restore state button
-  const handleRestoreState = React.useCallback(() => {
+  // Ref to store the config before preview, so cancel can revert
+  const preRestoreConfigRef = React.useRef<Config | null>(null);
+
+  // Preview restore: temporarily apply the target state so additions are visible,
+  // and show diffs between current and target on the config panel
+  const handlePreviewRestore = React.useCallback(() => {
     const latestState = getLatestState();
     if (!latestState) return;
 
-    // Read the current live config from the agent state atom.
-    // This reflects any manual UI changes the user may have made.
     const currentLiveConfig =
       (agentState as Record<string, unknown>)?.smc_simulation_config ?? null;
 
-    // Compute real-time diffs between current live state and the state being restored
     let liveDiffs: DiffResult[] = [];
     if (currentLiveConfig && typeof currentLiveConfig === 'object') {
       liveDiffs = computeLiveDiffs(
@@ -252,35 +253,93 @@ function MessageChild({
       );
     }
 
-    // Store the current config as the "old" config before overwriting
+    if (liveDiffs.length === 0) return;
+
+    const adjustedDiffs = adjustParentTypes(liveDiffs);
+
+    // Save current config so we can revert on cancel
+    preRestoreConfigRef.current = currentLiveConfig as Config | null;
+
+    // Store current config as "old" for field-level comparisons
     if (currentLiveConfig) {
       setOldConfig(currentLiveConfig as Record<string, any>);
     }
 
-    // Apply the restored state
+    // Temporarily apply the target state so the panel renders additions
     setConfig(latestState as Config);
 
-    // If there are real diffs, show them
-    if (liveDiffs.length > 0) {
-      const adjustedDiffs = adjustParentTypes(liveDiffs);
+    const highlights = adjustedDiffs.map((diff) => ({
+      path: diff.path,
+      type: diff.type,
+    }));
+    setConfigHighlights(highlights);
+    setConfigDiffs(adjustedDiffs);
 
-      // Dispatch event for flash animations (temporary visual feedback only)
-      const patches = adjustedDiffs.map((diff) => ({
-        op: diff.type,
-        path: '/' + diff.path.join('/'),
-        value: diff.value,
-      }));
-
-      window.dispatchEvent(
-        new CustomEvent('config-updated', { detail: { patches } })
-      );
-    }
+    const modifiedBlocks = new Set(
+      highlights.map((h) => h.path[0]).filter((b): b is string => b !== undefined)
+    );
+    setExpandedRootElements(modifiedBlocks);
   }, [
     getLatestState,
     agentState,
-    setConfig,
     setOldConfig,
+    setConfig,
+    setConfigHighlights,
+    setConfigDiffs,
+    setExpandedRootElements,
   ]);
+
+  // Confirm restore: keep the already-applied state and flash
+  const handleConfirmRestore = React.useCallback(() => {
+    const savedConfig = preRestoreConfigRef.current;
+    preRestoreConfigRef.current = null;
+
+    // Clear diff highlights
+    setConfigHighlights([]);
+    setConfigDiffs([]);
+    setOldConfig(null);
+    setExpandedRootElements(new Set(['info']));
+
+    // Flash the changes if there was a previous config to diff against
+    if (savedConfig) {
+      const latestState = getLatestState();
+      if (latestState) {
+        const liveDiffs = computeLiveDiffs(
+          savedConfig as Record<string, unknown>,
+          latestState as Record<string, unknown>
+        );
+        if (liveDiffs.length > 0) {
+          const adjustedDiffs = adjustParentTypes(liveDiffs);
+          const patches = adjustedDiffs.map((diff) => ({
+            op: diff.type,
+            path: '/' + diff.path.join('/'),
+            value: diff.value,
+          }));
+          window.dispatchEvent(
+            new CustomEvent('config-updated', { detail: { patches } })
+          );
+        }
+      }
+    }
+  }, [
+    getLatestState,
+    setConfigHighlights,
+    setConfigDiffs,
+    setOldConfig,
+    setExpandedRootElements,
+  ]);
+
+  // Cancel restore: revert to the saved config and clear highlights
+  const handleCancelRestore = React.useCallback(() => {
+    if (preRestoreConfigRef.current) {
+      setConfig(preRestoreConfigRef.current);
+      preRestoreConfigRef.current = null;
+    }
+    setConfigHighlights([]);
+    setConfigDiffs([]);
+    setOldConfig(null);
+    setExpandedRootElements(new Set(['info']));
+  }, [setConfig, setConfigHighlights, setConfigDiffs, setOldConfig, setExpandedRootElements]);
 
   // Handler for view diffs - now triggered by the diff bar via activeDiffMessageIdAtom
   // The diff bar sets activeDiffMessageIdAtom, and this effect reacts to showDiff changes
@@ -383,7 +442,9 @@ function MessageChild({
           <CollapsibleMessage
             message={value}
             status={isLastMessage ? status : 'ready'}
-            onRestoreState={handleRestoreState}
+            onPreviewRestore={handlePreviewRestore}
+            onConfirmRestore={handleConfirmRestore}
+            onCancelRestore={handleCancelRestore}
             hasEditStateCalls={hasEditStateCalls}
           >
             {children}
