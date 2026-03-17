@@ -3,8 +3,6 @@ frontend:
   phases:
     preBuild:
       commands:
-        - nvm install 24
-        - nvm use 24
         - echo "Node.js $(node -v)"
         - corepack enable
         - corepack prepare pnpm@latest --activate
