@@ -80,7 +80,7 @@ const config = {
   compress: false,
   output: 'standalone',
   outputFileTracingIncludes: {
-    '/': ['./node_modules/debug/**', './node_modules/require-in-the-middle/**'],
+    '/': ['./node_modules/require-in-the-middle/**'],
   },
   transpilePackages: ['jotai-devtools'],
   typescript: {
