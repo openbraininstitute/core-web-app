@@ -63,7 +63,7 @@ export function RootElement({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
 }) {
-  const { aiConfig, isChatReady } = useAIConfig();
+  const { isChatReady } = useAIConfig();
   if (!schema || !schema?.properties) return;
 
   const handleEntryClick = (subkey: string) => {
@@ -131,7 +131,6 @@ export function RootElement({
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionaryEntries
           config={config}
-          aiConfig={aiConfig}
           rootElement={rootElement}
           selectedEntry={selectedEntry}
           selectedRootElement={selectedRootElement}
