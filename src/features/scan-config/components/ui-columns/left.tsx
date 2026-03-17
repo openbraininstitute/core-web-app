@@ -10,6 +10,7 @@ import {
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
@@ -101,50 +102,56 @@ export default function Left({
                   .map(([k, rootElementSchema]) => {
                     if (isType(rootElementSchema)) return null;
                     return (
-                      <RootElement
-                        key={k}
-                        rootElement={k}
-                        schema={schema}
-                        rootElementSchema={rootElementSchema}
-                        atomsMap={atomsMap}
-                        setAtomsMap={setAtomsMap}
-                        selectedRootElement={selectedRootElement}
-                        setSelectedRootElement={setSelectedRootElement}
-                        config={config}
-                        campaignId={campaignId}
-                        loading={loading}
-                        errors={errors}
-                        selectedEntry={selectedEntry}
-                        setSelectedEntry={setSelectedEntry}
-                        setEditing={setEditing}
-                        readOnly={readOnly}
-                        allEntries={allEntries}
-                        newKey={newKey}
-                        setNewKey={setNewKey}
-                        isEditingKey={isEditingKey}
-                        setIsEditingKey={setIsEditingKey}
-                      />
+                      <Tooltip key={k}>
+                        <TooltipTrigger>
+                          <RootElement
+                            key={k}
+                            rootElement={k}
+                            schema={schema}
+                            rootElementSchema={rootElementSchema}
+                            atomsMap={atomsMap}
+                            setAtomsMap={setAtomsMap}
+                            selectedRootElement={selectedRootElement}
+                            setSelectedRootElement={setSelectedRootElement}
+                            config={config}
+                            campaignId={campaignId}
+                            loading={loading}
+                            errors={errors}
+                            selectedEntry={selectedEntry}
+                            setSelectedEntry={setSelectedEntry}
+                            setEditing={setEditing}
+                            readOnly={readOnly}
+                            allEntries={allEntries}
+                            newKey={newKey}
+                            setNewKey={setNewKey}
+                            isEditingKey={isEditingKey}
+                            setIsEditingKey={setIsEditingKey}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <div className="text-base">{rootElementSchema.description}</div>
+                        </TooltipContent>
+                      </Tooltip>
                     );
                   })}
             </div>
           );
         })}
       </div>
-
-      {!readOnly && (
-        <GenerateConfigButton
-          loading={loading}
-          campaignId={campaignId}
-          setCampaignId={setCampaignId}
-          errors={errors}
-          config={config}
-          setTab={setTab}
-          setLoading={setLoading}
-          activity={activity}
-          entityType={entityType}
-          generatedApiUrl={generatedEndpoint}
-        />
-      )}
+      !readOnly && (
+      <GenerateConfigButton
+        loading={loading}
+        campaignId={campaignId}
+        setCampaignId={setCampaignId}
+        errors={errors}
+        config={config}
+        setTab={setTab}
+        setLoading={setLoading}
+        activity={activity}
+        entityType={entityType}
+        generatedApiUrl={generatedEndpoint}
+      />
+      )
     </div>
   );
 }

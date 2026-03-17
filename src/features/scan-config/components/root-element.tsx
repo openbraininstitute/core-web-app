@@ -151,6 +151,7 @@ export function RootElement({
           setAtomsMap={setAtomsMap}
           errors={errors}
           visible={selectedRootElement === rootElement && !!config[rootElement]}
+          rootElementSchema={rootElementSchema}
         />
       )}
     </div>
