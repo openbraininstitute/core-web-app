@@ -62,6 +62,23 @@ async function upsertRefreshTokenInAuthManager({
   }
 }
 
+async function ensureUserRecord({ accessToken }: { accessToken: string }) {
+  try {
+    const response = await fetch(`${config.VIRTUAL_LAB_API_URL}/users`, {
+      method: 'post',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json',
+        authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const result = await response.json();
+    log('debug', 'update refresh token for auth manager succeed', result);
+  } catch (error) {
+    log('error', 'failed to update refresh token for auth manager', error);
+  }
+}
+
 /**
  * Takes a token, and returns a new token with updated
  * `accessToken` and `accessTokenExpires`. If an error occurs,
@@ -89,7 +106,6 @@ export async function refreshAccessToken(token: TokenSet) {
     if (!response.ok) {
       throw refreshedTokens;
     }
-    // eslint-disable-next-line no-void
     void (async () => {
       await upsertRefreshTokenInAuthManager({
         accessToken: refreshedTokens.access_token,
@@ -105,7 +121,6 @@ export async function refreshAccessToken(token: TokenSet) {
     };
   } catch (error) {
     // TODO: log to Sentry once it's enabled
-    // eslint-disable-next-line no-console
     log('error', error);
 
     return {
@@ -159,15 +174,23 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, account, user, profile }) {
       // Initial sign in
+
       if (account && user) {
-        // eslint-disable-next-line no-void
+        console.log('——— first signing');
         void (async () => {
-          if (account && account.access_token && account.refresh_token)
+          if (account?.access_token && account?.refresh_token)
             await upsertRefreshTokenInAuthManager({
               accessToken: account.access_token,
               refreshToken: account.refresh_token,
             });
         })();
+        void (async () => {
+          if (account?.access_token && account?.refresh_token)
+            await ensureUserRecord({
+              accessToken: account.access_token,
+            });
+        })();
+
         return {
           ...token,
           accessToken: account.access_token,
@@ -183,7 +206,7 @@ export const authOptions: NextAuthOptions = {
           idToken: account.id_token,
         };
       }
-
+      console.log('——— keep getting token');
       // Return previous token if the access token has not expired / is not close to expiration yet.
       if (
         typeof token.accessTokenExpires === 'number' &&
