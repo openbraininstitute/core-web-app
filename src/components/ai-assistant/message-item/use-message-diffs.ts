@@ -4,11 +4,8 @@ import React from 'react';
 import { useAtom } from 'jotai';
 
 import {
-  parseJSONPatches,
-  mergeDiffs,
   adjustParentTypes,
   computeLiveDiffs,
-  type JSONPatchOperation,
   type DiffResult,
 } from '@/utils/diff';
 import { configStateAtom, agentStateAtom } from '@/services/ai-agent/hooks/chat';
@@ -20,6 +17,8 @@ import {
   oldConfigAtom,
   activeDiffMessageIdAtom,
   diffBarDataAtom,
+  pendingRestoreConfigAtom,
+  restorePreviewActiveAtom,
 } from '@/state/config-highlights';
 
 import type { UIMessage, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
@@ -103,6 +102,8 @@ export function useMessageDiffs({
   const [, setOldConfig] = useAtom(oldConfigAtom);
   const [activeDiffMessageId] = useAtom(activeDiffMessageIdAtom);
   const [, setDiffBarData] = useAtom(diffBarDataAtom);
+  const [, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
+  const [, setRestorePreviewActive] = useAtom(restorePreviewActiveAtom);
 
   const clearDiffState = useClearDiffState();
 
@@ -120,31 +121,13 @@ export function useMessageDiffs({
     [message.parts]
   );
 
-  /** Accumulated & parent-adjusted diffs across all editstate calls in this message. */
-  const accumulatedDiffs = React.useMemo(() => {
-    const calls = completedEditStateParts(message.parts);
-    if (calls.length === 0) return [];
-
-    let all: DiffResult[] = [];
-    for (const call of calls) {
-      try {
-        const patches = (call.toolInvocation.args as { patches?: JSONPatchOperation[] })?.patches;
-        if (patches && Array.isArray(patches)) {
-          all = mergeDiffs(all, parseJSONPatches(patches));
-        }
-      } catch (error) {
-        console.error('Failed to parse editstate call:', error);
-      }
-    }
-    return adjustParentTypes(all);
-  }, [message.parts]);
-
   /** The config state captured *before* the first editstate call in this message. */
   const firstOldConfig = React.useMemo(() => {
     const calls = completedEditStateParts(message.parts);
     if (calls.length === 0) return null;
 
-    const firstInvocation = calls[0].toolInvocation;
+    // Collect all editstate invocations from this message so we can skip them
+    const thisMessageEditStates = new Set(calls.map((c) => c.toolInvocation));
 
     for (let i = allMessages.length - 1; i >= 0; i--) {
       const msg = allMessages[i];
@@ -155,7 +138,8 @@ export function useMessageDiffs({
         if (part.type !== 'tool-invocation') continue;
 
         const inv = part.toolInvocation;
-        if (inv === firstInvocation) return null;
+        // Skip all editstate calls from the current message
+        if (thisMessageEditStates.has(inv)) continue;
 
         if (
           (inv.toolName === 'editstate' || inv.toolName === 'getstate') &&
@@ -173,8 +157,8 @@ export function useMessageDiffs({
     return null;
   }, [message.parts, allMessages]);
 
-  /** Extract the config from the *last* completed editstate call. */
-  const getLatestState = React.useCallback((): Config | null => {
+  /** The config from the *last* completed editstate call in this message. */
+  const lastNewConfig = React.useMemo((): Record<string, unknown> | null => {
     const calls = completedEditStateParts(message.parts).reverse();
     if (calls.length === 0) return null;
 
@@ -189,6 +173,20 @@ export function useMessageDiffs({
     }
     return null;
   }, [message.parts]);
+
+  /** True diff between old and new config via fast-json-patch compare. */
+  const accumulatedDiffs = React.useMemo(() => {
+    if (!firstOldConfig || !lastNewConfig) return [];
+    return computeLiveDiffs(
+      firstOldConfig as Record<string, unknown>,
+      lastNewConfig as Record<string, unknown>
+    );
+  }, [firstOldConfig, lastNewConfig]);
+
+  /** Extract the config from the *last* completed editstate call (for restore). */
+  const getLatestState = React.useCallback((): Config | null => {
+    return (lastNewConfig as Config) ?? null;
+  }, [lastNewConfig]);
 
   // ── Diff bar population (streaming → ready transition) ───────────────────
 
@@ -263,6 +261,7 @@ export function useMessageDiffs({
         latestState as Record<string, unknown>
       );
     }
+
     if (liveDiffs.length === 0) return;
 
     const adjustedDiffs = adjustParentTypes(liveDiffs);
@@ -273,6 +272,9 @@ export function useMessageDiffs({
       setOldConfig(currentLiveConfig as Record<string, any>);
     }
 
+    // Set the preview guard BEFORE setting configStateAtom so the aiConfig
+    // auto-apply effect in left.tsx skips this update.
+    setRestorePreviewActive(true);
     setConfig(latestState as Config);
 
     const highlights = adjustedDiffs.map((d) => ({ path: d.path, type: d.type }));
@@ -283,6 +285,7 @@ export function useMessageDiffs({
     getLatestState,
     agentState,
     setOldConfig,
+    setRestorePreviewActive,
     setConfig,
     setConfigHighlights,
     setConfigDiffs,
@@ -290,17 +293,22 @@ export function useMessageDiffs({
   ]);
 
   const handleConfirmRestore = React.useCallback(() => {
+    const latestState = getLatestState();
+    if (latestState) {
+      setConfig(null);
+      setRestorePreviewActive(false);
+      setPendingRestoreConfig(latestState as Record<string, any>);
+    }
     preRestoreConfigRef.current = null;
     clearDiffState();
-  }, [clearDiffState]);
+  }, [getLatestState, setConfig, setRestorePreviewActive, setPendingRestoreConfig, clearDiffState]);
 
   const handleCancelRestore = React.useCallback(() => {
-    if (preRestoreConfigRef.current) {
-      setConfig(preRestoreConfigRef.current);
-      preRestoreConfigRef.current = null;
-    }
+    preRestoreConfigRef.current = null;
+    setConfig(null);
+    setRestorePreviewActive(false);
     clearDiffState();
-  }, [setConfig, clearDiffState]);
+  }, [setConfig, setRestorePreviewActive, clearDiffState]);
 
   return {
     hasEditStateCalls,

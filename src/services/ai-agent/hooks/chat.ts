@@ -182,14 +182,12 @@ export function useAIConfig() {
   const [aiAgentState] = useAtom(agentStateAtom);
   const [isChatReady] = useAtom(isChatReadyAtom);
 
+  const aiCircuitId = (aiConfig as any)?.initialize?.circuit?.id_str;
+  const agentCircuitId = (aiAgentState as any)?.smc_simulation_config?.initialize?.circuit?.id_str;
+  const guardPassed = aiCircuitId === agentCircuitId;
+
   return {
-    aiConfig:
-      // @ts-expect-error
-      aiConfig?.initialize?.circuit?.id_str ===
-      // @ts-expect-error
-      aiAgentState?.smc_simulation_config?.initialize?.circuit?.id_str
-        ? aiConfig
-        : null,
+    aiConfig: guardPassed ? aiConfig : null,
     setAiConfig,
     isChatReady,
   };

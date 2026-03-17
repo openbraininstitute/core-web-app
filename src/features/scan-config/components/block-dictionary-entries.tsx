@@ -152,7 +152,7 @@ export default function BlockDictionaryEntries({
     setNewKey('');
   };
 
-  function renderBlockTab(entry: string, isDeleted = false) {
+  function renderBlockTab(entry: string, isDeleted = false, isHighlightOnly = false) {
     const isSelected = selectedRootElement === rootElement && entry === selectedEntry;
     
     // Check if this entry is currently flashing
@@ -224,13 +224,13 @@ export default function BlockDictionaryEntries({
             <div className="inline-block truncate max-w-[24ch]">{displayName}</div>
           </div>
         </div>
-        {!isDeleted && <AIIcon />}
+        {!isDeleted && !isHighlightOnly && <AIIcon />}
       </div>
     );
   }
 
   const aiAddedEntries = aiConfig
-    ? Object.entries(aiConfig[rootElement])
+    ? Object.entries(aiConfig[rootElement] ?? {})
         .filter(([block_key, _]) => {
           if (!isPlainObject(config[rootElement])) return false;
           const currentBlockConfig = config[rootElement][block_key];
@@ -240,7 +240,7 @@ export default function BlockDictionaryEntries({
     : [];
 
   const aiDeletedEntries = aiConfig
-    ? Object.entries(config[rootElement])
+    ? Object.entries(config[rootElement] ?? {})
         .filter(([block_key, _]) => {
           if (!aiConfig) return false;
           if (!isPlainObject(aiConfig[rootElement])) return false;
@@ -251,7 +251,7 @@ export default function BlockDictionaryEntries({
     : [];
 
   const aiEditedEntries = aiConfig
-    ? Object.entries(config[rootElement])
+    ? Object.entries(config[rootElement] ?? {})
         .filter(([block_key, block_schema]) => {
           if (!aiConfig) return false;
           if (!isPlainObject(aiConfig[rootElement])) return false;
@@ -264,18 +264,34 @@ export default function BlockDictionaryEntries({
   const areThereAiEntries =
     !!aiConfig && [aiAddedEntries, aiDeletedEntries, aiEditedEntries].some((a) => a.length > 0);
 
-  // Get deleted entries from highlights (entries with 'remove' type that don't exist in current config)
-  // Extract unique second-level entries (the child entry names)
+  // Get deleted entries from highlights (entries with 'remove' type)
+  // computeLiveDiffs expands section-level removes into child-level diffs,
+  // so path.length >= 2 catches both individual and whole-section removes.
   const deletedEntriesFromHighlights = Array.from(
     new Set(
       highlights
         .filter((h) => h.path.length >= 2 && h.path[0] === rootElement && h.type === 'remove')
         .map((h) => h.path[1])
     )
-  ).filter((entry) => {
-    const rootConfig = config[rootElement];
-    return !rootConfig || typeof rootConfig !== 'object' || !rootConfig[entry];
-  });
+  );
+
+  // Get added entries from highlights that don't exist in the live config.
+  // This covers the restore flow where aiConfig is null (circuit ID mismatch)
+  // but highlights correctly identify new entries.
+  const configKeys = new Set(Object.keys(config[rootElement] ?? {}));
+  const addedEntriesFromHighlights = Array.from(
+    new Set(
+      highlights
+        .filter(
+          (h) =>
+            h.path.length >= 2 &&
+            h.path[0] === rootElement &&
+            h.type === 'add' &&
+            !configKeys.has(h.path[1])
+        )
+        .map((h) => h.path[1])
+    )
+  );
 
   return (
     <AnimatePresence>
@@ -299,9 +315,13 @@ export default function BlockDictionaryEntries({
             {/* Render deleted entries first with red border */}
             {deletedEntriesFromHighlights.map((entry) => renderBlockTab(entry, true))}
 
-            {Object.entries(config[rootElement])
-              // We show only those that have no AI changes
+            {/* Render added entries from highlights (restore flow, aiConfig may be null) */}
+            {addedEntriesFromHighlights.map((entry) => renderBlockTab(entry, false, true))}
+
+            {Object.entries(config[rootElement] ?? {})
+              // We show only those that have no AI changes and are not marked as deleted
               .filter(([block_key, block_schema]) => {
+                if (deletedEntriesFromHighlights.includes(block_key)) return false;
                 if (!aiConfig) return true;
                 if (!isPlainObject(aiConfig[rootElement])) return true;
                 return isEqual(block_schema, aiConfig[rootElement][block_key]);
@@ -524,9 +544,9 @@ export default function BlockDictionaryEntries({
                 );
               })}
           </div>
-          {/* AI suggested changes */}
+          {/* AI suggested changes — hidden when highlights are active (restore preview uses highlights instead) */}
 
-          {!campaignId && areThereAiEntries && (
+          {!campaignId && areThereAiEntries && highlights.length === 0 && (
             <div className="border-neutral-200 border rounded-lg w-90percent px-2 pb-4 pt-2 flex flex-col gap-2">
               {aiAddedEntries.length > 0 && (
                 <div className="text-sm text-[#1690ff] flex items-center gap-1">

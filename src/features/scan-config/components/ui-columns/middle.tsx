@@ -1,11 +1,12 @@
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
-import { isAtom } from '@/features/scan-config/components/utils';
+import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
   type Config,
   type ConfigSchema,
+  type ConfigValue,
   type IBlockDictionary,
   type IBlockSingle,
   type IRootBlockUnion,
@@ -16,7 +17,8 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { configHighlightsAtom } from '@/state/config-highlights';
-import { useAtomValue } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
+import { useMemo } from 'react';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
@@ -65,6 +67,18 @@ export default function Middle({
   const highlights = useAtomValue(configHighlightsAtom);
   const showingDiffs = highlights.length > 0;
 
+  // When showing diffs and aiConfig has data for the selected root element,
+  // create a read-only atom with the preview values so the Block displays
+  // the new/restored values instead of the current live values.
+  const previewData =
+    showingDiffs && aiConfig && isPlainObject((aiConfig as Record<string, unknown>)[selectedRootElement])
+      ? (aiConfig as Record<string, Record<string, ConfigValue>>)[selectedRootElement]
+      : null;
+  const previewAtom = useMemo(
+    () => (previewData ? atom<Record<string, ConfigValue>>(previewData) : null),
+    [previewData]
+  );
+
   return (
     <div className={styles.animateFadeUp}>
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
@@ -95,7 +109,7 @@ export default function Middle({
             disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
             config={config}
             blockSchema={selectedSchema}
-            stateAtom={atomsMap[selectedRootElement]}
+            stateAtom={previewAtom ?? atomsMap[selectedRootElement]}
             entity={entity}
             schemaMappingConfig={schemaMappingConfig}
             rootElement={selectedRootElement}

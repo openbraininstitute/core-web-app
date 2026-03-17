@@ -2,7 +2,6 @@ import { isNil } from 'es-toolkit/compat';
 import { atom, useAtom, useAtomValue } from 'jotai';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
-import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type Config,
   type ConfigSchema,
@@ -78,11 +77,13 @@ export default function Block({
   const getFieldChangeType = (fieldName: string): 'add' | 'remove' | 'replace' | null => {
     if (!rootElement || diffs.length === 0) return null;
     
-    // For root-level blocks (no selectedEntry), check path length 2: [rootElement, fieldName]
+    // For root-level blocks (no selectedEntry), check if any diff touches this field.
+    // This covers both direct changes (path.length === 2) and nested changes
+    // like initialize/circuit/id_str where fieldName is "circuit".
     if (!selectedEntry) {
       const fieldChange = diffs.find(
         (d) => 
-          d.path.length === 2 && 
+          d.path.length >= 2 && 
           d.path[0] === rootElement && 
           d.path[1] === fieldName
       );

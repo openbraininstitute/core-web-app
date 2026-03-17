@@ -319,7 +319,7 @@ export function RootElement({
       </LeftMenuTab>
 
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
-        config[rootElement] && (
+        (config[rootElement] || hasHighlights) && (
           <BlockDictionaryEntries
           config={config}
           aiConfig={aiConfig}

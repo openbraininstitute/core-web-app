@@ -97,3 +97,17 @@ export interface DiffBarData {
  * Cleared when the user dismisses the bar or sends a new message.
  */
 export const diffBarDataAtom = atom<DiffBarData | null>(null);
+
+/**
+ * Atom to hold a config that should be applied to the live atoms.
+ * Set by handleConfirmRestore, consumed by left.tsx to call resetConfig.
+ * Cleared after consumption.
+ */
+export const pendingRestoreConfigAtom = atom<Record<string, any> | null>(null);
+
+/**
+ * When true, the aiConfig auto-apply effect in left.tsx is suppressed.
+ * Set during restore preview so configStateAtom can hold the preview config
+ * without it being immediately applied to the live atoms.
+ */
+export const restorePreviewActiveAtom = atom(false);

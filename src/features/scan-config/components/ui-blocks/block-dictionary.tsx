@@ -96,6 +96,15 @@ export default function BlockDictionary({
   );
 
   if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement])) {
+    // When showing diffs and aiConfig has data for this entry (e.g. restore preview),
+    // use a preview atom so the Block displays the new/restored values.
+    const liveAtom = atomsMap[selectedRootElement]?.[selectedEntry];
+    const previewData =
+      showingDiffs && aiConfig && isPlainObject((aiConfig as Record<string, any>)[selectedRootElement])
+        ? (aiConfig as Record<string, any>)[selectedRootElement][selectedEntry]
+        : null;
+    const stateAtom = liveAtom ?? (previewData ? atom<Record<string, ConfigValue>>(previewData) : null);
+
     return (
       <Block
         schemaName={schemaName}
@@ -104,7 +113,7 @@ export default function BlockDictionary({
         disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
         config={config}
         blockSchema={selectedBlockSchema}
-        stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
+        stateAtom={stateAtom}
         entity={entity}
         schemaMappingConfig={schemaMappingConfig}
         rootElement={selectedRootElement}
