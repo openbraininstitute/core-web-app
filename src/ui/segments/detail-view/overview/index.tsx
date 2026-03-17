@@ -266,7 +266,7 @@ export default async function Overview({
         extendedType
       ) && <CellMorphologyViewer entity={entity as ICellMorphology} context={context} />}
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
-        <EphysViewer resource={entity as IElectricalCellRecording} ctx={context} />
+        <EphysViewer entity={entity as IElectricalCellRecording} ctx={context} />
       )}
       {extendedType === ExtendedEntitiesTypeDict.IonChannelRecording && (
         <IonChannelRecordingViewer resource={entity as IIonChannelRecording} ctx={context} />

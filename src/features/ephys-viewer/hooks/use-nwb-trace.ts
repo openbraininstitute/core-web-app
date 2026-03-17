@@ -1,43 +1,65 @@
-import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 
-import { nwbArrayBufferAtomFamily } from '@/features/ephys-viewer/atoms';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 import NWBTrace from '@/features/ephys-viewer/nwb-trace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { WorkspaceContext } from '@/types/common';
 
 type UseTraceArgs = {
-  resource: IElectricalCellRecording | ISimulationResult;
+  entity: IElectricalCellRecording | ISimulationResult;
   assetId?: string;
   ctx?: WorkspaceContext;
 };
 
 export default function useTrace({
-  resource,
+  entity,
   assetId,
   ctx,
 }: UseTraceArgs): [NWBTrace | null, Error | null] {
-  const nwbAtom = useMemo(
-    () => loadable(nwbArrayBufferAtomFamily({ entity: resource, assetId, ctx })),
-    [ctx, resource, assetId]
-  );
-  const nwb = useAtomValue(nwbAtom);
-
   const [trace, setTrace] = useState<NWBTrace | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const initialized = useRef<boolean>(false);
   const traceRef = useRef<NWBTrace | null>(null);
 
-  const nwbArrayBuffer = nwb.state === 'hasData' ? nwb.data : null;
+  const asset = assetId
+    ? entity.assets?.find((a) => a.id === assetId)
+    : entity.assets?.find((a) => a.content_type === 'application/nwb');
+
+  if (!asset) {
+    throw new Error('No NWB file found');
+  }
+
+  const {
+    data: nwbArrayBuffer,
+    isError,
+    error: fetchError,
+  } = useQuery({
+    queryKey: keyBuilder.asset({
+      context: ctx,
+      entityId: entity.id,
+      assetId: asset.id,
+      assetPath: asset.path,
+      assetType: entity.type,
+      asRawResponse: false,
+    }),
+    queryFn: () =>
+      downloadAsset<ArrayBuffer>({
+        entityType: entity.type,
+        entityId: entity.id,
+        id: asset.id,
+        ctx,
+      }),
+  });
 
   useEffect(() => {
-    if (nwb.state === 'hasError') {
-      setError(nwb.error as Error);
+    if (isError) {
+      setError(fetchError as Error);
     }
-  }, [nwb]);
+  }, [isError, fetchError]);
 
   useEffect(() => {
     if (initialized.current || !nwbArrayBuffer) {
@@ -46,7 +68,7 @@ export default function useTrace({
 
     initialized.current = true;
 
-    const traceId = assetId ?? resource.id;
+    const traceId = asset.id ?? entity.id;
 
     NWBTrace.create(traceId, nwbArrayBuffer)
       .then((t) => {
@@ -59,7 +81,7 @@ export default function useTrace({
       traceRef.current?.destroy();
       initialized.current = false;
     };
-  }, [nwbArrayBuffer, resource, assetId]);
+  }, [nwbArrayBuffer, entity.id, asset.id]);
 
   return [trace, error];
 }
