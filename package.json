@@ -135,6 +135,6 @@
     "raw-loader": "^4.0.2",
     "sass": "^1.98.0",
     "tailwindcss": "^4.2.1",
-    "typescript": "5.5.4"
+    "typescript": "5.9.3"
   }
 }
