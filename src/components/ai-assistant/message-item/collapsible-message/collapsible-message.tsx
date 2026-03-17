@@ -123,7 +123,6 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
 
   return (
     <>
-      <div className={styles.accentBar} />
       {collapsedChildren.length > 0 && (
         <div
           className={styles.thinkingContainer}

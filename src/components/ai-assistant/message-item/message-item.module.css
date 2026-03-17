@@ -10,7 +10,7 @@
   align-items: flex-end;
   gap: 4px;
   color: var(--color-on-primary);
-  margin: 16px 0;
+  margin: 14px 0;
 }
 
 .timestamp {
@@ -45,7 +45,7 @@
   position: relative;
   max-width: 70%;
   padding: 8px 15px;
-  border-radius: 16px 16px 2px 16px;
+  border-radius: 14px 14px 1px 14px;
   background-color: var(--color-primary-5);
   display: flex;
   flex-wrap: nowrap;
@@ -64,13 +64,26 @@
   position: relative;
   background-color: var(--color-neutral-9);
   border: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
+  border-left: none;
   border-radius: 16px;
   padding: 0;
-  margin: 16px 0;
+  margin: 14px 0;
+  border-radius: 14px;
   overflow: hidden;
   isolation: isolate;
 }
 
+.assistant::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--color-primary-8);
+  border-radius: 40px;
+  z-index: 1;
+}
 
 .markdown {
   padding: 0;

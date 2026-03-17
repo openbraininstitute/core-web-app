@@ -1,16 +1,16 @@
 .thinkingContainer {
   margin: 0;
   border: none;
-  border-bottom: 1px solid #ccd9f5;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));;
   border-radius: 0;
-  background: color-mix(in srgb, var(--color-primary-6) 12%, var(--color-neutral-9));
+  background: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-9));
   overflow: hidden;
   transition: all 0.2s ease;
 }
 
 .thinkingContainer[data-receiving="true"] {
   border-color: #ccd9f5;
-  background: color-mix(in srgb, var(--color-primary-6) 5%, var(--color-neutral-9));
+  background: var(--color-neutral-9);
   box-shadow: none;
 }
 
@@ -28,7 +28,7 @@
 .thinkingButton[data-collapsed="false"] {
   width: 100%;
   padding: 8px 12px;
-  background: color-mix(in srgb, var(--color-primary-6) 12%, var(--color-neutral-7));
+  background: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
   border: none;
   cursor: pointer;
   display: flex;
@@ -211,10 +211,6 @@
     margin-top: 0;
     margin-bottom: 0;
   }
-}
-
-.accentBar {
-  display: none;
 }
 
 .contentWrapper {
