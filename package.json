@@ -60,6 +60,7 @@
     "comlink": "^4.4.1",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
+    "debug": "^4.4.3",
     "distinct-colors": "^3.0.0",
     "dom-to-image": "^2.6.0",
     "embla-carousel-fade": "^8.6.0",
