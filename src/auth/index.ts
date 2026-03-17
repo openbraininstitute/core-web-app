@@ -1,8 +1,7 @@
 import { getServerSession, type NextAuthOptions, type Session, type TokenSet } from 'next-auth';
 
 import { serverConfig as config } from '@/config/server';
-
-import { log } from '../utils/logger';
+import { log } from '@/utils/logger';
 
 import type { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
 
@@ -54,23 +53,6 @@ async function upsertRefreshTokenInAuthManager({
       body: JSON.stringify({
         refresh_token: refreshToken,
       }),
-    });
-    const result = await response.json();
-    log('debug', 'update refresh token for auth manager succeed', result);
-  } catch (error) {
-    log('error', 'failed to update refresh token for auth manager', error);
-  }
-}
-
-async function ensureUserRecord({ accessToken }: { accessToken: string }) {
-  try {
-    const response = await fetch(`${config.VIRTUAL_LAB_API_URL}/users`, {
-      method: 'post',
-      headers: {
-        'content-type': 'application/json',
-        accept: 'application/json',
-        authorization: `Bearer ${accessToken}`,
-      },
     });
     const result = await response.json();
     log('debug', 'update refresh token for auth manager succeed', result);
@@ -174,20 +156,12 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, account, user, profile }) {
       // Initial sign in
-
       if (account && user) {
-        console.log('——— first signing');
         void (async () => {
           if (account?.access_token && account?.refresh_token)
             await upsertRefreshTokenInAuthManager({
               accessToken: account.access_token,
               refreshToken: account.refresh_token,
-            });
-        })();
-        void (async () => {
-          if (account?.access_token && account?.refresh_token)
-            await ensureUserRecord({
-              accessToken: account.access_token,
             });
         })();
 
@@ -206,7 +180,6 @@ export const authOptions: NextAuthOptions = {
           idToken: account.id_token,
         };
       }
-      console.log('——— keep getting token');
       // Return previous token if the access token has not expired / is not close to expiration yet.
       if (
         typeof token.accessTokenExpires === 'number' &&

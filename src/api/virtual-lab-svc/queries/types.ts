@@ -63,6 +63,7 @@ export type TVirtualLab = {
   name: string;
   description: string;
   reference_email: string;
+  email_verified: boolean;
   entity: string;
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp

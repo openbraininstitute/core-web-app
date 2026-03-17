@@ -1,29 +1,45 @@
 'use client';
 
-import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
-import { useQueries, useQueryClient } from '@tanstack/react-query';
-import { StripeElementsOptions } from '@stripe/stripe-js';
 import { LoadingOutlined } from '@ant-design/icons';
-import { useState, useTransition } from 'react';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Form, Spin } from 'antd';
+import Timer from 'antd/es/statistic/Timer';
 import { isObject } from 'es-toolkit/compat';
+import { useState, useTransition } from 'react';
 import { match, P } from 'ts-pattern';
-import { Spin } from 'antd';
+import z from 'zod';
 
+import { ApiError } from '@/api/error';
+import { tryCatch } from '@/api/utils';
+import {
+  EmailVerificationCodeStatusDict,
+  generateEmailVerificationCode,
+  getEmailVerificationInitialStatus,
+  getEmailVerificationStatus,
+  getEmailVerificationVerifyStatus,
+  verifyOtpCode,
+} from '@/api/virtual-lab-svc/queries/email-verification';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { CoinsIcon } from '@/components/icons/buttons';
+import { MailInboxArrowRight } from '@/components/icons/email';
+import { useAppNotification } from '@/components/notification';
+import { getStripe } from '@/components/VirtualLab/Billing/utils';
+import { VerificationCode } from '@/components/VirtualLab/create-entity-flows/common/otp-code';
+import { Button, Button as UiButton } from '@/ui/molecules/button';
+import { Input } from '@/ui/molecules/input';
+import { createZodFieldValidator } from '@/ui/segments/contribute/shared/helpers';
 import { CONVERSION_RATE } from '@/ui/segments/virtual-lab-settings/elements/helpers';
-import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import {
   PurchaseModeDictionary,
   type TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
-import { Button, Button as UiButton } from '@/ui/molecules/button';
-import { getStripe } from '@/components/VirtualLab/Billing/utils';
-import { useAppNotification } from '@/components/notification';
+import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { CoinsIcon } from '@/components/icons/buttons';
-import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
-import { tryCatch } from '@/api/utils';
+
+import type { StripeElementsOptions } from '@stripe/stripe-js';
 
 export const PaymentMode = {
   SetCredits: {
@@ -56,7 +72,7 @@ const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => 
   ],
   appearance: {
     theme: 'stripe', // or 'flat', 'night', etc.
-    labels: 'floating', // or 'inline'
+    labels: 'above', // or 'above'
     variables: {
       fontFamily: 'Titillium Web',
       fontSizeSm: '1rem',
@@ -105,7 +121,7 @@ function AmountForm({
   showControls: boolean;
 }) {
   return (
-    <div className="rounded-2xl bg-[#0a3a76] p-6 backdrop-blur-lg md:p-8">
+    <div className="rounded-2xl bg-[#0a3a76] p-4 backdrop-blur-lg px-4">
       <div className="flex w-full flex-col gap-2">
         <div className="relative w-full">
           <Input
@@ -135,27 +151,31 @@ function AmountForm({
         </div>
 
         {showControls && (
-          <div className="mt-6 flex gap-3">
-            <Button
-              onClick={() => onModeChange?.(PurchaseModeDictionary.Selection)}
-              variant="outline"
-              className="h-12 flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => onStepChange?.(PaymentModeDictionary.Apply)}
-              disabled={!credits || credits <= 0}
-              className={cn(
-                'h-12 flex-1 bg-white text-base font-semibold',
-                'text-blue-900 hover:bg-white/90 disabled:opacity-50'
-              )}
-            >
-              Continue to Payment
-            </Button>
-          </div>
+          <>
+            <div className="mt-6 flex gap-3">
+              <Button
+                rounded
+                onClick={() => onModeChange?.(PurchaseModeDictionary.Selection)}
+                variant="outline"
+                className="h-12 flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                rounded
+                onClick={() => onStepChange?.(PaymentModeDictionary.Apply)}
+                disabled={!credits || credits <= 0}
+                className={cn(
+                  'h-12 flex-1 bg-white text-base font-semibold',
+                  'text-blue-900 hover:bg-white/90 disabled:opacity-50'
+                )}
+              >
+                Continue to Payment
+              </Button>
+            </div>
+            <p className="text-center text-sm text-white/60">Secure payment powered by Stripe</p>
+          </>
         )}
-        <p className="text-center text-sm text-white/60">Secure payment powered by Stripe</p>
       </div>
     </div>
   );
@@ -269,17 +289,17 @@ function PaymentForm({
   };
 
   return (
-    <div className="flex h-full w-full flex-col gap-6">
+    <div className="flex h-full w-full flex-col gap-3">
       <AmountForm {...{ credits, onCreditsChange, formLoading, showControls: false }} />
-      <div className="rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white">
-        <div className="mb-3 p-2 text-lg font-semibold select-none">Payment Details</div>
-        <div className="rounded-lg bg-[#0a3a76] p-2">
-          <PaymentElement id="credits-form" onReady={onReady} />
-        </div>
+      <div className="rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white mb-5">
+        <PaymentElement
+          id="credits-form"
+          onReady={onReady}
+          options={{ layout: { type: 'auto' } }}
+        />
       </div>
-
       {stripeElementsReady && (
-        <div className="mt-auto ml-auto flex items-center justify-end gap-4">
+        <div className="ml-auto flex items-center justify-end gap-4">
           <UiButton
             rounded
             type="button"
@@ -369,6 +389,8 @@ function StripePayment({
   );
 }
 
+const emailSchema = z.object({ email: z.string().email('Please enter a valid email address') });
+
 export function StripePaymentFlow({
   virtualLabId,
   onModeChange,
@@ -381,8 +403,17 @@ export function StripePaymentFlow({
   const onCreditsChange = (c: number | undefined) => {
     setCredits(c);
   };
+  const { data: virtualLabData, isLoading } = useQuery({
+    queryKey: keyBuilder.getOneLab({ virtualLabId }),
+    queryFn: () => getVirtualLab(virtualLabId),
+    enabled: Boolean(virtualLabId),
+  });
 
   const onStepChange = (s: TPaymentModeDictionary) => setStep(s);
+
+  if (!isLoading && !virtualLabData?.data?.virtual_lab.email_verified) {
+    return <EmailVerification virtualLabId={virtualLabId} />;
+  }
 
   const content = match({ mode: step, credits })
     .with({ mode: PaymentModeDictionary.SetCredits }, () => (
@@ -408,4 +439,344 @@ export function StripePaymentFlow({
     .otherwise(() => null);
 
   return content;
+}
+
+function EmailVerification({ virtualLabId }: { virtualLabId: string }) {
+  const [email, setEmail] = useState<string | null>(null);
+  const [codeSent, setCodeSent] = useState(false);
+  console.log('# # EmailVerification # email:', email);
+  console.log('# # EmailVerification # codeSent:', codeSent);
+
+  const onCodeSent = (v: boolean) => setCodeSent(v);
+  const onEmailChange = (e: string) => setEmail(e);
+
+  if (codeSent && email) {
+    return <Verification virtualLabId={virtualLabId} email={email} />;
+  }
+
+  return (
+    <RequestCode
+      virtualLabId={virtualLabId}
+      onCodeSent={onCodeSent}
+      onEmailChange={onEmailChange}
+    />
+  );
+}
+
+function RequestCode({
+  virtualLabId,
+  onCodeSent,
+  onEmailChange,
+}: {
+  virtualLabId: string;
+  onCodeSent: (v: boolean) => void;
+  onEmailChange: (e: string) => void;
+}) {
+  const queryClient = useQueryClient();
+  const [form] = Form.useForm();
+  const email = Form.useWatch('email', form);
+
+  const { data: virtualLabData } = useQuery({
+    queryKey: keyBuilder.getOneLab({ virtualLabId }),
+    queryFn: () => getVirtualLab(virtualLabId),
+    enabled: Boolean(virtualLabId),
+  });
+
+  const {
+    mutate: generateNewCode,
+    isPending,
+    data: generationData,
+  } = useMutation({
+    mutationKey: ['generate-email-verification-code', { virtualLabId }],
+    mutationFn: ({ email }: { email: string }) =>
+      generateEmailVerificationCode({ virtualLabId, email }),
+    onSuccess: (response) => {
+      if (response?.data?.status === 'code_sent') {
+        onCodeSent(true);
+      }
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: ['get-email-verification-status', { virtualLabId, email, }],
+      }),
+  });
+
+  const result = useQuery({
+    queryKey: ['get-email-initial-verification-status', { virtualLabId, email: email }],
+    queryFn: () => getEmailVerificationInitialStatus({ virtualLabId, email: email! }),
+    enabled:
+      (!virtualLabData?.data?.virtual_lab.email_verified &&
+        !!email &&
+        emailSchema.safeParse({ email: email }).success) ||
+      (!!email && emailSchema.safeParse({ email }).success),
+    refetchInterval: 10_000,
+  });
+
+  const LockDeadline = Date.now() + (result?.data?.data.remaining_time ?? 0) * 1000;
+  const CodeLocked =
+    result.data?.data.status === EmailVerificationCodeStatusDict.Locked ||
+    generationData?.data.status === EmailVerificationCodeStatusDict.Locked;
+
+
+  return (
+    <div className="text-white w-full px-10">
+      <h4 className="text-lg font-bold ">Verify your email to continue</h4>
+      <p className="text-base font-light">
+        We’ll send a one-time code to your email. Enter it to confirm your identity and proceed with
+        your purchase
+      </p>
+      <div className="w-full mx-auto flex items-center justify-center mt-5!">
+        <Form
+          form={form}
+          name="basic"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          style={{ maxWidth: 600 }}
+          onFieldsChange={(c, v) => {
+            const name = c.at(0)?.name;
+            const value = v.find((o) => o.name === name)?.value;
+            onEmailChange(value);
+          }}
+          onFinish={generateNewCode}
+          className="w-3/4 mx-auto relative"
+          autoFocus
+        >
+          <Form.Item
+            name="email"
+            className={cn(
+              ' border border-white rounded-full w-full',
+              '[&_.ant-row]:w-full [&_.ant-row]:relative',
+              '[&_.ant-form-item-row]:w-full! [&_.ant-form-item-row]:flex!',
+              '[&_.ant-form-item-control]:max-w-full! [&_.ant-form-item-control]:flex!',
+              '[&_.ant-form-item-control-input-content]:w-full!',
+              '[&_.ant-form-item-control-input]:w-full!'
+            )}
+            rules={[
+              {
+                required: true,
+                validator: createZodFieldValidator(emailSchema, 'email', form),
+              },
+            ]}
+          >
+            <Input
+              autoFocus
+              className={cn(
+                'h-12 border-none focus-visible:ring-0 pr-52! w-full placeholder:text-white/80',
+                'text-white text-lg!',
+                '[&:-webkit-autofill]:rounded-full'
+              )}
+              placeholder="Enter the reference email"
+              disabled={CodeLocked}
+            />
+          </Form.Item>
+          <Button
+            rounded
+            variant="outline"
+            className="absolute right-1.5 top-[calc(50%-12px)] -translate-y-1/2 border-white"
+            disabled={CodeLocked}
+          >
+            {isPending ? <LoadingOutlined /> : <MailInboxArrowRight className="text-red-400" />}
+            <span>Send verification email</span>
+          </Button>
+        </Form>
+      </div>
+      {result?.data?.data.status === EmailVerificationCodeStatusDict.Locked && (
+        <div className="flex flex-col items-center justify-center">
+          <p>Too many attempts. Please wait before trying again ⏳</p>
+          <Timer
+            className="text-white"
+            type="countdown"
+            value={LockDeadline}
+            valueStyle={{ color: 'white' }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Verification({ email, virtualLabId }: { email?: string; virtualLabId: string }) {
+  const queryClient = useQueryClient();
+  const [otpKey, setOtpKey] = useState(0);
+  const [code, setCode] = useState<string | null>(null);
+
+  const { data: virtualLabData } = useQuery({
+    queryKey: keyBuilder.getOneLab({ virtualLabId }),
+    queryFn: () => getVirtualLab(virtualLabId),
+    enabled: Boolean(virtualLabId),
+  });
+
+  const {
+    mutate: generateNewCode,
+    data: generationData,
+    isPending: pendingGeneration,
+    error: errorGeneration,
+  } = useMutation({
+    mutationKey: ['generate-email-verification-code', { virtualLabId }],
+    mutationFn: ({ email }: { email: string }) =>
+      generateEmailVerificationCode({ virtualLabId, email }),
+
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey: ['get-email-verification-status', { virtualLabId, email }],
+      }),
+  });
+
+  const {
+    mutate: onSubmitCode,
+    isPending: pendingSubmit,
+    error: confirmError,
+    reset: resetSubmit,
+  } = useMutation({
+    mutationKey: ['verify-email-verification-code', { virtualLabId }],
+    mutationFn: ({ email, c }: { email: string; c: string }) =>
+      verifyOtpCode({ virtualLabId, email, code: c }),
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['get-email-verification-status', { virtualLabId, email }],
+      });
+      queryClient.invalidateQueries({
+        queryKey: keyBuilder.getOneLab({ virtualLabId }),
+      });
+    },
+  });
+
+  
+
+  const result = useQuery({
+    queryKey: ['get-email-verify-verification-status', { virtualLabId, email: email }],
+    queryFn: () => getEmailVerificationVerifyStatus({ virtualLabId, email: email! }),
+    enabled:
+      !virtualLabData?.data?.virtual_lab.email_verified &&
+      !!email &&
+      emailSchema.safeParse({ email }).success,
+    refetchInterval: 10_000,
+  });
+
+  const submitError = confirmError as ApiError;
+  const LockDeadline = Date.now() + (result?.data?.data.remaining_time ?? 0) * 1000;
+
+  const CodeNotMatch =
+    submitError?.cause?.details?.status === EmailVerificationCodeStatusDict.NotMatch;
+
+  const CodeGenerationLocked =
+    result.data?.data.status === EmailVerificationCodeStatusDict.Locked ||
+    generationData?.data.status === EmailVerificationCodeStatusDict.Locked ||
+    (errorGeneration as ApiError)?.cause?.details?.status ===
+      EmailVerificationCodeStatusDict.Locked;
+
+  const CodeSubmissionLocked =
+    (submitError as ApiError)?.cause?.details?.status === EmailVerificationCodeStatusDict.Locked &&
+    !(result.data?.data.status === EmailVerificationCodeStatusDict.Locked);
+
+  const CodeSent = result.data?.data.status === EmailVerificationCodeStatusDict.CodeSent;
+
+  const CodeExpired = result.data?.data.status === EmailVerificationCodeStatusDict.Expired;
+
+  return (
+    <div className="flex flex-col gap-8 items-center justify-center w-3/4 mx-auto relative rounded-md p-10">
+      <div className="flex flex-col items-center justify-center text-white">
+        <h4 className="font-bold text-2xl">Enter Verification Code</h4>
+        {email && (
+          <p className="text-lg">
+            We sent a 6-digit code to <strong className="text-white">{email}</strong>
+          </p>
+        )}
+      </div>
+      <div className="flex flex-col gap-2.5">
+        <form id="verification-otp-code" className="flex items-center justify-center">
+          <VerificationCode
+            key={otpKey}
+            cls={{
+              container: cn('bg-white'),
+              slot: cn('bg-white h-18 w-13 font-bold text-primary-8', {
+                'bg-destructive/40 text-white border-none': CodeNotMatch && !!(code?.length === 6),
+              }),
+              caret: 'text-primary-9 [&_#caret]:bg-primary-8!',
+            }}
+            disabled={CodeSubmissionLocked}
+            onChange={(v) => {
+              if (submitError) resetSubmit();
+              setCode(v);
+            }}
+            onComplete={(code) => {
+              setCode(code);
+            }}
+          />
+        </form>
+        {CodeExpired && !CodeGenerationLocked && (
+          <div className="flex flex-col items-center justify-center text-white">
+            <p> your code expires, please request new one </p>
+            <Button
+              rounded
+              type="button"
+              form="verification-otp-code"
+              onClick={() => {
+                if (email) {
+                  generateNewCode({ email });
+                }
+              }}
+              variant="outline"
+              size="lg"
+              className="border-white w-82"
+            >
+              {pendingGeneration && <LoadingOutlined />}
+              <span>Send verification email</span>
+            </Button>
+          </div>
+        )}
+        {CodeSubmissionLocked && !CodeSent && (
+          <div className="flex flex-col items-center justify-center text-white">
+            <p>Too many attempts. Please wait before trying again</p>
+            <Timer
+              className="text-white!"
+              type="countdown"
+              value={LockDeadline}
+              valueStyle={{ color: 'white' }}
+            />
+          </div>
+        )}
+        {CodeSent && (
+          <Button
+            rounded
+            type="button"
+            form="verification-otp-code"
+            onClick={() => {
+              if (code && email) {
+                onSubmitCode({ email, c: code });
+              }
+            }}
+            variant="outline"
+            size="lg"
+            className="border-white w-82"
+            disabled={code?.length !== 6 || CodeSubmissionLocked}
+          >
+            {pendingSubmit && <LoadingOutlined />}
+            <span>Send verification code</span>
+          </Button>
+        )}
+      </div>
+
+      {!CodeGenerationLocked && !CodeExpired && (
+        <div className="flex flex-col items-center justify-center gap-2.5 text-white">
+          Didn't receive the code?
+          <Button
+            rounded
+            onClick={() => {
+              setCode(null);
+              setOtpKey((k) => k + 1);
+              if (email) {
+                generateNewCode({ email });
+              }
+            }}
+            variant="ghost"
+            size="sm"
+            className="w-max underline disabled:pointer-events-none disabled:cursor-not-allowed"
+          >
+            Resend Code
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 }

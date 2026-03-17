@@ -1,20 +1,20 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Form } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { useState } from 'react';
-import { Form } from 'antd';
 import z from 'zod';
 
 import { redeemPromotionCode } from '@/api/virtual-lab-svc/queries/promotion';
+import { SparklesFill } from '@/components/icons/sparkles';
+import { Button } from '@/ui/molecules/button';
+import { Input } from '@/ui/molecules/input';
 import {
   PurchaseModeDictionary,
   type TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
-import { SparklesFill } from '@/components/icons/sparkles';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { Button } from '@/ui/molecules/button';
-import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 
 const PromoCodeSchema = z.object({
@@ -132,6 +132,7 @@ export function PromotionCode({
 
         <div className="flex gap-3">
           <Button
+            rounded
             type="button"
             onClick={() => onModeChange(PurchaseModeDictionary.Selection)}
             variant="outline"
@@ -140,6 +141,7 @@ export function PromotionCode({
             Cancel
           </Button>
           <Button
+            rounded
             type="submit"
             variant="success"
             className="h-12 flex-1 text-base font-semibold disabled:opacity-50"
