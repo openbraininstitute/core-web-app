@@ -136,7 +136,7 @@ export function RootElement({
           avoidCollisions
           hideWhenDetached
           align="center"
-          side="bottom"
+          side="right"
           className={cn(
             'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
             'bg-primary-8 px-4 py-2 text-base text-wrap ',
