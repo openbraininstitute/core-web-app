@@ -20,18 +20,12 @@ import {
 import { useAIConfig } from '@/services/ai-agent';
 import { activeFlashesAtom, configHighlightsAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 import { cn } from '@/utils/css-class';
+import { computeLiveDiffs } from '@/utils/diff';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
 
 import styles from './root-element.module.css';
-
-interface JSONPatchOperation {
-  op: 'add' | 'remove' | 'replace' | 'move' | 'copy' | 'test';
-  path: string;
-  value?: any;
-  from?: string;
-}
 
 export function RootElement({
   schema,
@@ -96,103 +90,87 @@ export function RootElement({
   
   // Listen for config updates from the chat
   useEffect(() => {
-    const handleConfigUpdate = (event: CustomEvent<{ patches: JSONPatchOperation[] }>) => {
-      const { patches } = event.detail;
-      
-      // Check if any patch affects this root element
-      const affectsThisBlock = patches.some((patch) => {
-        const pathParts = patch.path.split('/').filter(Boolean);
-        const adjustedPath = pathParts[0] === 'smc_simulation_config' ? pathParts.slice(1) : pathParts;
-        return adjustedPath[0] === rootElement;
-      });
-      
-      if (affectsThisBlock) {
-        // Expand this block if collapsed
-        if (!expandedRef.current.has(rootElement)) {
-          setExpandedRootElements((prev) => {
-            const newSet = new Set(prev);
-            newSet.add(rootElement);
-            return newSet;
-          });
+    const handleConfigUpdate = (event: CustomEvent<{ oldConfig: Record<string, unknown> | null; newConfig: Record<string, unknown> }>) => {
+      const { oldConfig, newConfig } = event.detail;
+
+      // Compute granular diffs using the same logic as view-diffs/restore
+      const diffs = oldConfig
+        ? computeLiveDiffs(oldConfig, newConfig)
+        : [];
+
+      // Filter diffs that affect this root element
+      const blockDiffs = diffs.filter((d) => d.path[0] === rootElement);
+      if (blockDiffs.length === 0) return;
+
+      // Expand this block if collapsed
+      if (!expandedRef.current.has(rootElement)) {
+        setExpandedRootElements((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(rootElement);
+          return newSet;
+        });
+      }
+
+      // Derive root flash type from child diff types
+      const diffTypes = new Set(blockDiffs.filter((d) => d.path.length >= 1).map((d) => d.type));
+      const rootFlashType: 'add' | 'remove' | 'replace' =
+        diffTypes.size > 1 || diffTypes.has('replace')
+          ? 'replace'
+          : diffTypes.has('add')
+            ? 'add'
+            : 'remove';
+
+      // Build entries map (path length >= 2 → child entry)
+      const entries = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
+      const fields = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
+      for (const diff of blockDiffs) {
+        if (diff.path.length >= 2) {
+          const entryName = diff.path[1];
+          const existing = entries.get(entryName);
+          if (existing && existing.type !== diff.type) {
+            entries.set(entryName, { type: 'replace' });
+          } else if (!existing) {
+            entries.set(entryName, { type: diff.type });
+          }
         }
-        
-        // Determine the operation type for this block
-        const blockPatches = patches.filter((patch) => {
-          const pathParts = patch.path.split('/').filter(Boolean);
-          const adjustedPath = pathParts[0] === 'smc_simulation_config' ? pathParts.slice(1) : pathParts;
-          return adjustedPath[0] === rootElement;
-        });
-        
-        const hasAdd = blockPatches.some((p) => p.op === 'add');
-        const hasRemove = blockPatches.some((p) => p.op === 'remove');
-        const hasReplace = blockPatches.some((p) => p.op === 'replace');
-        
-        const operationType = hasAdd && !hasRemove && !hasReplace 
-          ? 'add' as const
-          : hasRemove && !hasAdd && !hasReplace
-          ? 'remove' as const
-          : 'replace' as const;
-        
-        // Build entries map for children
-        const entries = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
-        const fields = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
-        blockPatches.forEach((patch) => {
-          const pathParts = patch.path.split('/').filter(Boolean);
-          const adjustedPath = pathParts[0] === 'smc_simulation_config' ? pathParts.slice(1) : pathParts;
-          if (adjustedPath.length >= 2) {
-            const entryName = adjustedPath[1];
-            const existing = entries.get(entryName);
-            if (existing && existing.type !== patch.op) {
-              entries.set(entryName, { type: 'replace' });
-            } else if (!existing) {
-              entries.set(entryName, { type: patch.op as 'add' | 'remove' | 'replace' });
-            }
+        // Field-level flashes (depth 3+): "entry/field"
+        if (diff.path.length >= 3) {
+          const fieldKey = diff.path[1] + '/' + diff.path[2];
+          const existingField = fields.get(fieldKey);
+          if (existingField && existingField.type !== diff.type) {
+            fields.set(fieldKey, { type: 'replace' });
+          } else if (!existingField) {
+            fields.set(fieldKey, { type: diff.type });
           }
-          // Track field-level flashes (depth 3+)
-          if (adjustedPath.length >= 3) {
-            const fieldKey = adjustedPath[1] + '/' + adjustedPath[2];
-            const existingField = fields.get(fieldKey);
-            if (existingField && existingField.type !== patch.op) {
-              fields.set(fieldKey, { type: 'replace' });
-            } else if (!existingField) {
-              fields.set(fieldKey, { type: patch.op as 'add' | 'remove' | 'replace' });
-            }
+        }
+        // Single blocks (depth 2): field is the second segment
+        if (diff.path.length === 2) {
+          const fieldKey = diff.path[1];
+          const existingField = fields.get(fieldKey);
+          if (existingField && existingField.type !== diff.type) {
+            fields.set(fieldKey, { type: 'replace' });
+          } else if (!existingField) {
+            fields.set(fieldKey, { type: diff.type });
           }
-          // For single blocks (depth 2), field is the second segment directly
-          if (adjustedPath.length === 2) {
-            const fieldKey = adjustedPath[1];
-            const existingField = fields.get(fieldKey);
-            if (existingField && existingField.type !== patch.op) {
-              fields.set(fieldKey, { type: 'replace' });
-            } else if (!existingField) {
-              fields.set(fieldKey, { type: patch.op as 'add' | 'remove' | 'replace' });
-            }
-          }
-        });
-        
-        const flashData = { rootFlashType: operationType, entries, fields };
-        
-        // Write flash state to shared atom synchronously.
-        // Even if children aren't mounted yet (parent was collapsed),
-        // they'll read this value when they mount since Jotai atoms are global.
+        }
+      }
+
+      setActiveFlashes((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(rootElement, { rootFlashType, entries, fields });
+        return newMap;
+      });
+
+      if (flashTimeoutRef.current) {
+        clearTimeout(flashTimeoutRef.current);
+      }
+      flashTimeoutRef.current = setTimeout(() => {
         setActiveFlashes((prev) => {
           const newMap = new Map(prev);
-          newMap.set(rootElement, flashData);
+          newMap.delete(rootElement);
           return newMap;
         });
-        
-        // Clear flash after animation completes
-        if (flashTimeoutRef.current) {
-          clearTimeout(flashTimeoutRef.current);
-        }
-        flashTimeoutRef.current = setTimeout(() => {
-          setActiveFlashes((prev) => {
-            const newMap = new Map(prev);
-            newMap.delete(rootElement);
-            return newMap;
-          });
-        }, 2100);
-      }
+      }, 2100);
     };
     
     window.addEventListener('config-updated', handleConfigUpdate as EventListener);

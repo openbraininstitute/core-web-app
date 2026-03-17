@@ -3,7 +3,7 @@
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { atom, useAtom, useSetAtom } from 'jotai';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
@@ -33,8 +33,16 @@ export function useServiceAiAgentChat(threadId: string) {
   const projectId = useParamProjectId();
   const setRateLimit = useSetAtom(atomRateLimit);
 
-  const [_, setConfig] = useAtom(configStateAtom);
+  const [, setConfig] = useAtom(configStateAtom);
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
+
+  // Keep a ref to aiAgentState so the React Compiler doesn't add it
+  // to the effect dependency array below (which would cause re-runs
+  // every time the live config changes, creating a stale-data loop).
+  const aiAgentStateRef = useRef(aiAgentState);
+  useEffect(() => {
+    aiAgentStateRef.current = aiAgentState;
+  }, [aiAgentState]);
 
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
@@ -88,6 +96,9 @@ export function useServiceAiAgentChat(threadId: string) {
       // @ts-expect-error - result needs to be parsed as JSON
       const result = JSON.parse(editstateResult.toolInvocation.result);
       const newConfig = result.state.smc_simulation_config ?? null;
+      // Use the live config (agentStateAtom) as the "before" snapshot for flash diffs.
+      // Read from ref so the React Compiler won't add it to the effect deps.
+      const oldConfig = (aiAgentStateRef.current as Record<string, unknown>)?.smc_simulation_config ?? null;
       setConfig(newConfig);
 
       // Only flash when the very last part is the editstate result itself
@@ -98,12 +109,9 @@ export function useServiceAiAgentChat(threadId: string) {
         lastPart.toolInvocation.state === 'result';
 
       if (isLastPartEditState && newConfig && editstateResult.toolInvocation.args) {
-        const patches = (editstateResult.toolInvocation.args as any).patches;
-        if (patches && Array.isArray(patches)) {
-          window.dispatchEvent(new CustomEvent('config-updated', { 
-            detail: { patches } 
-          }));
-        }
+        window.dispatchEvent(new CustomEvent('config-updated', { 
+          detail: { oldConfig, newConfig } 
+        }));
       }
     } catch {
       logError(
