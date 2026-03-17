@@ -14,6 +14,7 @@ import { classNames } from '@/util/utils';
 import ErrorPanel from '../../error';
 import FreeCreditsNotification from '../../free-credits-notification';
 import { MessageItem } from '../../message-item';
+import { ThinkingIndicator } from '../../message-item/thinking-indicator';
 import { atomRateLimit } from '../../state';
 import SuggestedQuestions from '../../suggested-questions';
 import Footer from '../footer';
@@ -168,6 +169,7 @@ export default function Chat({ className, threadId }: ChatProps) {
               />
             ))}
 
+            {status === 'submitted' && <ThinkingIndicator />}
             {status === 'ready' && messages.length > 0 && (
               <div className={styles.footerButtons}></div>
             )}

@@ -1,39 +1,36 @@
 .thinkingContainer {
   margin: 0;
   border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
   border-radius: 0;
   background: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-9));
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: border-color 300ms ease, background-color 300ms ease;
+  will-change: border-color, background-color;
 }
 
 .thinkingContainer[data-receiving="true"] {
-  border-color: #ccd9f5;
-  background: var(--color-neutral-9);
-  box-shadow: none;
+  border-color: rgba(191, 219, 254, 0.5);
+  background: #eff6ff;
+}
+
+.thinkingButton {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 200ms ease;
+  will-change: background-color;
 }
 
 .thinkingButton[data-collapsed="true"] {
-  width: 100%;
-  padding: 8px 12px;
   background: transparent;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: background 0.15s ease;
 }
 
 .thinkingButton[data-collapsed="false"] {
-  width: 100%;
-  padding: 8px 12px;
   background: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: background 0.15s ease;
 }
 
 .thinkingButton[data-collapsed="true"]:hover {
@@ -143,15 +140,16 @@
 }
 
 .thinkingContent {
-  padding: 8px 12px 8px 16px;
+  padding: 8px 12px 8px 12px;
   background: transparent;
   overflow: hidden;
   transform-origin: top;
-  animation: expandContent 0.2s ease-out;
+  animation: expandContent 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slideToCollapsible {
-  animation: slideUpToCollapsible 0.4s ease-out forwards;
+  animation: slideUpToCollapsible 350ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
 }
 
 @keyframes fadeIn {
@@ -168,30 +166,28 @@
 @keyframes expandContent {
   from {
     opacity: 0;
-    transform: scaleY(0.95);
+    max-height: 0;
+    transform: translateY(-8px);
   }
   to {
     opacity: 1;
-    transform: scaleY(1);
+    max-height: 2000px;
+    transform: translateY(0);
   }
 }
 
 @keyframes slideUpToCollapsible {
   0% {
     opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: translateY(-20px) scale(0.98);
+    transform: translateY(0);
+    max-height: 500px;
+    margin: 4px 0;
   }
   100% {
     opacity: 0;
-    transform: translateY(-40px) scale(0.95);
+    transform: translateY(-12px);
     max-height: 0;
-    overflow: hidden;
     margin: 0;
-    padding: 0;
   }
 }
 
@@ -215,4 +211,16 @@
 
 .contentWrapper {
   padding: 8px 12px;
+  animation: fadeInContent 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes fadeInContent {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
