@@ -151,7 +151,7 @@ export default function BlockDictionaryEntries({
           transition={{ duration: 0.3, ease: 'linear' }}
           className={cn('flex flex-col w-full items-center z-0 mb-4!')}
         >
-          <div className="flex flex-col w-full gap-1.5 px-4">
+          <div className="flex flex-col w-full px-4">
             {Object.entries(config[rootElement]).map(([subkey, subValue]) => {
               const isSelected = selectedRootElement === rootElement && subkey === selectedEntry;
 
@@ -164,7 +164,7 @@ export default function BlockDictionaryEntries({
                     className={cn(
                       'text-primary-8 flex flex-col h-15 min-h-12.5 min-w-37.5',
                       'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
-                      'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
+                      'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white mb-3',
                       {
                         'bg-linear-to-r from-[#003A8C] to-[#001026] text-white shadow-bnb':
                           isSelected,
