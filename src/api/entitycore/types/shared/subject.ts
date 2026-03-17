@@ -24,19 +24,11 @@ export interface ISubjectFilter
 
 export const SubjectBaseSchema = z.object({
   name: z
-    .string({
-      error: 'Subject name is required',
-    })
-    .nonempty({
-      error: 'Subject name is required',
-    }),
+    .string({ error: 'Subject name is required' })
+    .nonempty({ error: 'Subject name is required' }),
   description: z
-    .string({
-      error: 'Subject description is required',
-    })
-    .nonempty({
-      error: 'Subject description is required',
-    }),
+    .string({ error: 'Subject description is required' })
+    .nonempty({ error: 'Subject description is required' }),
   sex: SexEnum,
   weight: z.number().positive().nullish(),
   age_value: z.number().positive().nullish(),

@@ -14,12 +14,8 @@ export const ContributionSchema = z.object({
       error: 'Contributor type is required',
     }
   ),
-  agent_id: z.uuid({
-    error: 'Contributor must be a valid UUID',
-  }),
-  role_id: z.uuid({
-    error: 'Role must be a valid UUID',
-  }),
+  agent_id: z.uuid({ error: 'Contributor must be a valid UUID' }),
+  role_id: z.uuid({ error: 'Role must be a valid UUID' }),
 });
 
 export type TContribution = z.infer<typeof ContributionSchema>;
@@ -91,21 +87,9 @@ export const ContributionArraySchema = z
 
 export const LocationSchema = z
   .object({
-    x: z
-      .number({
-        error: 'X coordinate should be a number',
-      })
-      .nullish(),
-    y: z
-      .number({
-        error: 'Y coordinate should be a number',
-      })
-      .nullish(),
-    z: z
-      .number({
-        error: 'Z coordinate should be a number',
-      })
-      .nullish(),
+    x: z.number({ error: 'X coordinate should be a number' }).nullish(),
+    y: z.number({ error: 'Y coordinate should be a number' }).nullish(),
+    z: z.number({ error: 'Z coordinate should be a number' }).nullish(),
   })
   .nullable()
   .refine(
@@ -145,29 +129,13 @@ export const ExperimentDateSchema = z
   .nullish();
 
 export const BaseSetupSchema = z.object({
-  name: z
-    .string({
-      error: 'Name is required',
-    })
-    .nonempty({
-      error: 'Name is required',
-    }),
+  name: z.string({ error: 'Name is required' }).nonempty({ error: 'Name is required' }),
   description: z
-    .string({
-      error: 'Description is required',
-    })
-    .nonempty({
-      error: 'Description is required',
-    }),
-  brain_region_id: z.uuid().nonempty({
-    error: 'Brain region is required',
-  }),
+    .string({ error: 'Description is required' })
+    .nonempty({ error: 'Description is required' }),
+  brain_region_id: z.uuid().nonempty({ error: 'Brain region is required' }),
   experiment_date: ExperimentDateSchema,
-  contact_email: z
-    .email({
-      error: 'Contact email should be a valid email',
-    })
-    .nullish(),
+  contact_email: z.email({ error: 'Contact email should be a valid email' }).nullish(),
   published_in: z.string().nullish(),
   location: LocationSchema,
 });

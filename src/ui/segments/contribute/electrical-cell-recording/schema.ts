@@ -33,17 +33,11 @@ export const ElectricalCellRecordingSetupExtension = z.object({
     })
     .optional()
     .nullable(),
-  recording_location: z.string({
-    error: 'Cell recording location is required',
-  }),
-  recording_type: z.string().nonempty({
-    error: 'Cell recording type is required',
-  }),
+  recording_location: z.string({ error: 'Cell recording location is required' }),
+  recording_type: z.string().nonempty({ error: 'Cell recording type is required' }),
   recording_origin: z
     .string()
-    .nonempty({
-      error: 'Cell recording origin is required',
-    })
+    .nonempty({ error: 'Cell recording origin is required' })
     .prefault('in_vitro'),
   comment: z.string().optional().nullable(),
 });

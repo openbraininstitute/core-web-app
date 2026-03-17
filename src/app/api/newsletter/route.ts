@@ -5,16 +5,10 @@ import { z } from 'zod';
 import { serverConfig as config } from '@/config/server';
 
 const newsletterFormSchema = z.object({
-  email: z.email({
-    error: 'Please enter a valid email address.',
-  }),
+  email: z.email({ error: 'Please enter a valid email address.' }),
   name: z
-    .string({
-      error: 'Please enter a name.',
-    })
-    .min(2, {
-      error: 'Please a correct name',
-    })
+    .string({ error: 'Please enter a name.' })
+    .min(2, { error: 'Please a correct name' })
     .optional(),
   tags: z.array(z.string()).optional(),
 });

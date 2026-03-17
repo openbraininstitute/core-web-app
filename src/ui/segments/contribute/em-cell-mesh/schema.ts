@@ -19,36 +19,20 @@ const ExperimentDateSchema = z.custom<dayjs.Dayjs | Date | string>((val) => !!va
 });
 
 export const SetupSchema = z.object({
-  name: z
-    .string({
-      error: 'Name is required',
-    })
-    .nonempty({
-      error: 'Name is required',
-    }),
+  name: z.string({ error: 'Name is required' }).nonempty({ error: 'Name is required' }),
   description: z
-    .string({
-      error: 'Description is required',
-    })
-    .nonempty({
-      error: 'Description is required',
-    }),
-  brain_region_id: z.uuid().nonempty({
-    error: 'Brain region is required',
-  }),
+    .string({ error: 'Description is required' })
+    .nonempty({ error: 'Description is required' }),
+  brain_region_id: z.uuid().nonempty({ error: 'Brain region is required' }),
   experiment_date: ExperimentDateSchema,
   contact_email: z
-    .email({
-      error: 'Contact email should be a valid email',
-    })
+    .email({ error: 'Contact email should be a valid email' })
     .nullish()
     .or(z.literal('')),
   published_in: z.string().nullish().or(z.literal('')),
   notice_text: z.string().nullish().or(z.literal('')),
 
-  em_dense_reconstruction_dataset_id: z.uuid({
-    error: 'Dataset ID is required',
-  }),
+  em_dense_reconstruction_dataset_id: z.uuid({ error: 'Dataset ID is required' }),
   dense_reconstruction_cell_id: z.coerce.number().int(),
 
   release_version: z.coerce.number().int().nullish(),

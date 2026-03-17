@@ -99,19 +99,11 @@ export interface IEmDenseReconstructionDataset
 
 export const EMDenseReconstructionDatasetBaseSchema = z.object({
   name: z
-    .string({
-      error: 'EMDenseReconstructionDataset name is required',
-    })
-    .nonempty({
-      error: 'EMDenseReconstructionDataset name is required',
-    }),
+    .string({ message: 'EMDenseReconstructionDataset name is required' })
+    .nonempty({ message: 'EMDenseReconstructionDataset name is required' }),
   description: z
-    .string({
-      error: 'EMDenseReconstructionDataset description is required',
-    })
-    .nonempty({
-      error: 'EMDenseReconstructionDataset description is required',
-    }),
+    .string({ message: 'EMDenseReconstructionDataset description is required' })
+    .nonempty({ message: 'EMDenseReconstructionDataset description is required' }),
   protocol_document: z.string().nullish(),
   fixation: z.string().nullish(),
   staining_type: z.string().nullish(),
