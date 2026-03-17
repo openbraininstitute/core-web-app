@@ -136,11 +136,9 @@ export function UIElementRender({
       );
     })
     .with({ paramSchema: { ui_element: ScanConfigUIElementDict.NeuronIds } }, () => {
-      // neuron_ids can be either a single NamedTuple or an array of NamedTuples
-      // Extract all elements from all NamedTuples
-
       const namedTupleArray = Array.isArray(value) ? value : [value];
 
+      // If it's an array of named tuples flatten it to a single array.
       const elements: number[] = namedTupleArray.flatMap((v) => {
         if (isPlainObject(v) && Array.isArray(v.elements)) {
           return v.elements;
