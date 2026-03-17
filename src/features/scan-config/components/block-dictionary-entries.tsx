@@ -10,7 +10,6 @@ import {
 import { Input } from 'antd';
 import { AnimatePresence, motion } from 'framer-motion';
 import { atom } from 'jotai';
-import { isPageStatic } from 'next/dist/build/utils';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
@@ -135,8 +134,6 @@ export default function BlockDictionaryEntries({
     setSelectedEntry(newKey);
     setNewKey('');
   };
-
-  console.log(rootElementSchema);
 
   return (
     <AnimatePresence>
@@ -329,14 +326,25 @@ export default function BlockDictionaryEntries({
                         </div>
                       </div>
 
-                      <div className="flex justify">
+                      <div className="inline-block truncate max-w-[24ch]">
                         {isPlainObject(subValue) &&
                           typeof subValue.type === 'string' &&
                           subValue.type}
                       </div>
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent side="right">
+                  <TooltipContent
+                    avoidCollisions
+                    hideWhenDetached
+                    align="center"
+                    side="bottom"
+                    className={cn(
+                      'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
+                      'bg-primary-8 px-4 py-2 text-base text-wrap ',
+                      'overflow-y-auto max-h-50 primary-scrollbar'
+                    )}
+                    arrowClassName="bg-primary-8"
+                  >
                     <div className="text-base">
                       {
                         rootElementSchema.additionalProperties.oneOf.find((v) => {

@@ -5,6 +5,7 @@ import {
   type AtomsMap,
   type ConfigSchema,
   isType,
+  ScanConfigUIElementDict,
   type TScanConfigActivity,
   type TScanConfigTabs,
   type TSupportedEntityTypesForScanConfiguration,
@@ -102,56 +103,50 @@ export default function Left({
                   .map(([k, rootElementSchema]) => {
                     if (isType(rootElementSchema)) return null;
                     return (
-                      <Tooltip key={k}>
-                        <TooltipTrigger>
-                          <RootElement
-                            key={k}
-                            rootElement={k}
-                            schema={schema}
-                            rootElementSchema={rootElementSchema}
-                            atomsMap={atomsMap}
-                            setAtomsMap={setAtomsMap}
-                            selectedRootElement={selectedRootElement}
-                            setSelectedRootElement={setSelectedRootElement}
-                            config={config}
-                            campaignId={campaignId}
-                            loading={loading}
-                            errors={errors}
-                            selectedEntry={selectedEntry}
-                            setSelectedEntry={setSelectedEntry}
-                            setEditing={setEditing}
-                            readOnly={readOnly}
-                            allEntries={allEntries}
-                            newKey={newKey}
-                            setNewKey={setNewKey}
-                            isEditingKey={isEditingKey}
-                            setIsEditingKey={setIsEditingKey}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          <div className="text-base">{rootElementSchema.description}</div>
-                        </TooltipContent>
-                      </Tooltip>
+                      <RootElement
+                        key={k}
+                        rootElement={k}
+                        schema={schema}
+                        rootElementSchema={rootElementSchema}
+                        atomsMap={atomsMap}
+                        setAtomsMap={setAtomsMap}
+                        selectedRootElement={selectedRootElement}
+                        setSelectedRootElement={setSelectedRootElement}
+                        config={config}
+                        campaignId={campaignId}
+                        loading={loading}
+                        errors={errors}
+                        selectedEntry={selectedEntry}
+                        setSelectedEntry={setSelectedEntry}
+                        setEditing={setEditing}
+                        readOnly={readOnly}
+                        allEntries={allEntries}
+                        newKey={newKey}
+                        setNewKey={setNewKey}
+                        isEditingKey={isEditingKey}
+                        setIsEditingKey={setIsEditingKey}
+                      />
                     );
                   })}
             </div>
           );
         })}
       </div>
-      !readOnly && (
-      <GenerateConfigButton
-        loading={loading}
-        campaignId={campaignId}
-        setCampaignId={setCampaignId}
-        errors={errors}
-        config={config}
-        setTab={setTab}
-        setLoading={setLoading}
-        activity={activity}
-        entityType={entityType}
-        generatedApiUrl={generatedEndpoint}
-      />
-      )
+
+      {!readOnly && (
+        <GenerateConfigButton
+          loading={loading}
+          campaignId={campaignId}
+          setCampaignId={setCampaignId}
+          errors={errors}
+          config={config}
+          setTab={setTab}
+          setLoading={setLoading}
+          activity={activity}
+          entityType={entityType}
+          generatedApiUrl={generatedEndpoint}
+        />
+      )}
     </div>
   );
 }
