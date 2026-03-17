@@ -1,16 +1,17 @@
-import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 
-import { spikeArrayBufferAtomFamily } from '@/features/spike-viewer/atoms';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
 import SpikeTrace from '@/features/spike-viewer/spike-trace';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
 type UseSpikeTraceArgs = {
   entityId: string;
-  entityType: string;
+  entityType: TEntityTypeDict;
   asset: IAsset;
   ctx?: WorkspaceContext;
 };
@@ -26,19 +27,33 @@ export default function useSpikeTrace({
   const initialized = useRef<boolean>(false);
   const traceRef = useRef<SpikeTrace | null>(null);
 
-  const spikeAtom = useMemo(
-    () => loadable(spikeArrayBufferAtomFamily({ entityId, entityType, asset, ctx })),
-    [entityId, entityType, asset, ctx]
-  );
-  const spike = useAtomValue(spikeAtom);
-
-  const spikeArrayBuffer = spike.state === 'hasData' ? spike.data : null;
+  const {
+    data: spikeArrayBuffer,
+    isError,
+    error: fetchError,
+  } = useQuery({
+    queryKey: keyBuilder.asset({
+      context: ctx,
+      entityId,
+      assetId: asset.id,
+      assetPath: asset.path,
+      assetType: entityType,
+      asRawResponse: false,
+    }),
+    queryFn: () =>
+      downloadAsset<ArrayBuffer>({
+        entityType,
+        entityId,
+        id: asset.id,
+        ctx,
+      }),
+  });
 
   useEffect(() => {
-    if (spike.state === 'hasError') {
-      setError(spike.error as Error);
+    if (isError) {
+      setError(fetchError);
     }
-  }, [spike]);
+  }, [fetchError, isError]);
 
   useEffect(() => {
     if (initialized.current || !spikeArrayBuffer) {
