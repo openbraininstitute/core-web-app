@@ -79,6 +79,9 @@ const config = {
   reactStrictMode: true,
   compress: false,
   output: 'standalone',
+  outputFileTracingIncludes: {
+    '/': ['./node_modules/debug/**', './node_modules/require-in-the-middle/**'],
+  },
   transpilePackages: ['jotai-devtools'],
   typescript: {
     ignoreBuildErrors: true,
