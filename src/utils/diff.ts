@@ -74,7 +74,21 @@ export function computeLiveDiffs(
   currentConfig: Record<string, unknown>,
   restoredConfig: Record<string, unknown>
 ): DiffResult[] {
-  const patches = compare(currentConfig, restoredConfig);
+  // Normalize: treat null and {} as equivalent for top-level sections.
+  // The LLM may set a section to null while resetConfig materialises it as {}.
+  const normalise = (cfg: Record<string, unknown>): Record<string, unknown> => {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(cfg)) {
+      if (v === null || v === undefined) {
+        out[k] = {};
+      } else {
+        out[k] = v;
+      }
+    }
+    return out;
+  };
+
+  const patches = compare(normalise(currentConfig), normalise(restoredConfig));
   const results: DiffResult[] = [];
 
   for (const patch of patches) {
