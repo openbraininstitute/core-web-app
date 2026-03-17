@@ -326,7 +326,7 @@ export default function BlockDictionaryEntries({
                         </div>
                       </div>
 
-                      <div className="inline-block truncate max-w-[24ch]">
+                      <div className="inline-block text-left truncate max-w-[24ch]">
                         {isPlainObject(subValue) &&
                           typeof subValue.type === 'string' &&
                           subValue.type}
