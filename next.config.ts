@@ -79,6 +79,11 @@ const config = {
   reactStrictMode: true,
   compress: false,
   output: 'standalone',
+  serverExternalPackages: [
+    '@sentry/nextjs',
+    '@opentelemetry/instrumentation',
+    'require-in-the-middle',
+  ],
   transpilePackages: ['jotai-devtools'],
   typescript: {
     ignoreBuildErrors: true,
