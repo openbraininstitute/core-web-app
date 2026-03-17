@@ -96,7 +96,7 @@ export function computeLiveDiffs(
       }
     }
 
-    // Expand root-level add/remove into child-level diffs
+    // Expand root-level add/remove/replace into child-level diffs
     if ((op === 'remove' || op === 'add') && path.length === 1) {
       const sourceObj =
         op === 'remove' ? currentConfig[path[0]] : (patch as { value?: unknown }).value;
@@ -120,6 +120,79 @@ export function computeLiveDiffs(
           });
         }
         continue;
+      }
+    }
+
+    // Expand root-level replace: compare old vs new children
+    if (op === 'replace' && path.length === 1) {
+      const oldObj = currentConfig[path[0]];
+      const newVal = (patch as { value?: unknown }).value;
+
+      const oldIsObj =
+        oldObj && typeof oldObj === 'object' && !Array.isArray(oldObj);
+      const newIsObj =
+        newVal && typeof newVal === 'object' && !Array.isArray(newVal);
+
+      if (oldIsObj || newIsObj) {
+        const oldChildren = oldIsObj
+          ? (oldObj as Record<string, unknown>)
+          : {};
+        const newChildren = newIsObj
+          ? (newVal as Record<string, unknown>)
+          : {};
+        const oldKeys = new Set(Object.keys(oldChildren));
+        const newKeys = new Set(Object.keys(newChildren));
+        const childDiffs: DiffResult[] = [];
+
+        for (const key of oldKeys) {
+          if (!newKeys.has(key)) {
+            childDiffs.push({
+              path: [...path, key],
+              type: 'remove',
+              value: undefined,
+              operation: patch as JSONPatchOperation,
+            });
+          }
+        }
+        for (const key of newKeys) {
+          if (!oldKeys.has(key)) {
+            childDiffs.push({
+              path: [...path, key],
+              type: 'add',
+              value: newChildren[key],
+              operation: patch as JSONPatchOperation,
+            });
+          }
+        }
+        for (const key of oldKeys) {
+          if (!newKeys.has(key)) continue;
+          if (JSON.stringify(oldChildren[key]) !== JSON.stringify(newChildren[key])) {
+            childDiffs.push({
+              path: [...path, key],
+              type: 'replace',
+              value: newChildren[key],
+              operation: patch as JSONPatchOperation,
+            });
+          }
+        }
+
+        if (childDiffs.length > 0) {
+          const childTypes = new Set(childDiffs.map((c) => c.type));
+          const parentType: DiffType =
+            childTypes.size > 1 || childTypes.has('replace')
+              ? 'replace'
+              : childTypes.has('add')
+                ? 'add'
+                : 'remove';
+          results.push({
+            path,
+            type: parentType,
+            value: newVal,
+            operation: patch as JSONPatchOperation,
+          });
+          results.push(...childDiffs);
+          continue;
+        }
       }
     }
 
