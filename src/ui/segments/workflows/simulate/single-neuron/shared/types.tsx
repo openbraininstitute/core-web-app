@@ -245,8 +245,6 @@ export const SynapseConfigSchema = z.object({
           }
           return;
         },
-        error:
-          'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used',
       }
     )
     .refine((val) => !isNil(val), { error: 'Synapse frequency is required' }),
