@@ -137,3 +137,20 @@ export const pendingRestoreConfigAtom = atom<Record<string, any> | null>(null);
  * without it being immediately applied to the live atoms.
  */
 export const restorePreviewActiveAtom = atom(false);
+
+/**
+ * Atom written by chat.ts when an editstate tool call produces a new config.
+ * A single top-level hook (useConfigUpdateFlashes) reacts to changes and
+ * computes flash animations + auto-expands affected blocks, replacing the
+ * old window CustomEvent approach.
+ *
+ * Bumping the counter ensures Jotai triggers subscribers even when the same
+ * old/new pair is written twice in a row (e.g. rapid undo/redo).
+ */
+export interface ConfigUpdate {
+  oldConfig: Record<string, unknown> | null;
+  newConfig: Record<string, unknown>;
+  counter: number;
+}
+
+export const lastConfigUpdateAtom = atom<ConfigUpdate | null>(null);

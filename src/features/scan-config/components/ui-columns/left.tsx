@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
 import { RootElement } from '@/features/scan-config/components/root-element';
+import { useConfigUpdateFlashes } from '@/features/scan-config/hooks/use-config-update-flashes';
 import {
   type AtomsMap,
   type ConfigSchema,
@@ -76,6 +77,9 @@ export default function Left({
   const { aiConfig, setAiConfig } = useAIConfig();
   const [pendingRestoreConfig, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
   const [restorePreviewActive] = useAtom(restorePreviewActiveAtom);
+
+  // Compute flash animations from config updates (replaces per-RootElement CustomEvent listeners)
+  useConfigUpdateFlashes();
 
   // Auto-apply AI-generated configuration changes when available
   // Skip when a restore preview is active — the config overlay is for display only.

@@ -1,7 +1,6 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
-import { useEffect, useRef } from 'react';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
@@ -21,7 +20,6 @@ import { useAIConfig } from '@/services/ai-agent';
 import { activeFlashesAtom, configHighlightsAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 import { cn } from '@/utils/css-class';
 import { getDiffClassName } from '@/utils/diff-class';
-import { computeLiveDiffs } from '@/utils/diff';
 
 import type { DiffType } from '@/utils/diff';
 import type { ErrorObject } from 'ajv';
@@ -76,11 +74,7 @@ export function RootElement({
   const highlights = useAtomValue(configHighlightsAtom);
   const expandedRootElements = useAtomValue(expandedRootElementsAtom);
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
-  const [activeFlashes, setActiveFlashes] = useAtom(activeFlashesAtom);
-  
-  const flashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const expandedRef = useRef(expandedRootElements);
-  expandedRef.current = expandedRootElements;
+  const activeFlashes = useAtomValue(activeFlashesAtom);
   
   // Check if this block should be expanded (driven solely by the expanded set)
   const isExpanded = expandedRootElements.has(rootElement);
@@ -89,101 +83,6 @@ export function RootElement({
   const activeFlash = activeFlashes.get(rootElement);
   const shouldFlash = !!activeFlash;
   const flashType = activeFlash?.rootFlashType ?? 'replace';
-  
-  // Listen for config updates from the chat
-  useEffect(() => {
-    const handleConfigUpdate = (event: CustomEvent<{ oldConfig: Record<string, unknown> | null; newConfig: Record<string, unknown> }>) => {
-      const { oldConfig, newConfig } = event.detail;
-
-      // Compute granular diffs using the same logic as view-diffs/restore
-      const diffs = oldConfig
-        ? computeLiveDiffs(oldConfig, newConfig)
-        : [];
-
-      // Filter diffs that affect this root element
-      const blockDiffs = diffs.filter((d) => d.path[0] === rootElement);
-      if (blockDiffs.length === 0) return;
-
-      // Expand this block if collapsed
-      if (!expandedRef.current.has(rootElement)) {
-        setExpandedRootElements((prev) => {
-          const newSet = new Set(prev);
-          newSet.add(rootElement);
-          return newSet;
-        });
-      }
-
-      // Derive root flash type from child diff types
-      const diffTypes = new Set(blockDiffs.filter((d) => d.path.length >= 1).map((d) => d.type));
-      const rootFlashType: 'add' | 'remove' | 'replace' =
-        diffTypes.size > 1 || diffTypes.has('replace')
-          ? 'replace'
-          : diffTypes.has('add')
-            ? 'add'
-            : 'remove';
-
-      // Build entries map (path length >= 2 → child entry)
-      const entries = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
-      const fields = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
-      for (const diff of blockDiffs) {
-        if (diff.path.length >= 2) {
-          const entryName = diff.path[1];
-          const existing = entries.get(entryName);
-          if (existing && existing.type !== diff.type) {
-            entries.set(entryName, { type: 'replace' });
-          } else if (!existing) {
-            entries.set(entryName, { type: diff.type });
-          }
-        }
-        // Field-level flashes (depth 3+): "entry/field"
-        if (diff.path.length >= 3) {
-          const fieldKey = diff.path[1] + '/' + diff.path[2];
-          const existingField = fields.get(fieldKey);
-          if (existingField && existingField.type !== diff.type) {
-            fields.set(fieldKey, { type: 'replace' });
-          } else if (!existingField) {
-            fields.set(fieldKey, { type: diff.type });
-          }
-        }
-        // Single blocks (depth 2): field is the second segment
-        if (diff.path.length === 2) {
-          const fieldKey = diff.path[1];
-          const existingField = fields.get(fieldKey);
-          if (existingField && existingField.type !== diff.type) {
-            fields.set(fieldKey, { type: 'replace' });
-          } else if (!existingField) {
-            fields.set(fieldKey, { type: diff.type });
-          }
-        }
-      }
-
-      setActiveFlashes((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(rootElement, { rootFlashType, entries, fields });
-        return newMap;
-      });
-
-      if (flashTimeoutRef.current) {
-        clearTimeout(flashTimeoutRef.current);
-      }
-      flashTimeoutRef.current = setTimeout(() => {
-        setActiveFlashes((prev) => {
-          const newMap = new Map(prev);
-          newMap.delete(rootElement);
-          return newMap;
-        });
-      }, 2100);
-    };
-    
-    window.addEventListener('config-updated', handleConfigUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('config-updated', handleConfigUpdate as EventListener);
-      if (flashTimeoutRef.current) {
-        clearTimeout(flashTimeoutRef.current);
-      }
-    };
-  }, [rootElement, setExpandedRootElements, setActiveFlashes]);
   
   if (!schema || !schema?.properties) return;
 

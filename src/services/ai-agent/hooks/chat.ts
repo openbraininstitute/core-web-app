@@ -15,6 +15,8 @@ import { logError } from '@/utils/logger';
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
 
+import { lastConfigUpdateAtom } from '@/state/config-highlights';
+
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
@@ -35,6 +37,8 @@ export function useServiceAiAgentChat(threadId: string) {
 
   const [, setConfig] = useAtom(configStateAtom);
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
+  const setLastConfigUpdate = useSetAtom(lastConfigUpdateAtom);
+  const configUpdateCounterRef = useRef(0);
 
   // Keep a ref to aiAgentState so the React Compiler doesn't add it
   // to the effect dependency array below (which would cause re-runs
@@ -158,9 +162,8 @@ export function useServiceAiAgentChat(threadId: string) {
         lastPart.toolInvocation.state === 'result';
 
       if (isLastPartEditState && newConfig && editstateResult.toolInvocation.args) {
-        window.dispatchEvent(new CustomEvent('config-updated', { 
-          detail: { oldConfig, newConfig } 
-        }));
+        configUpdateCounterRef.current += 1;
+        setLastConfigUpdate({ oldConfig: oldConfig as Record<string, unknown> | null, newConfig, counter: configUpdateCounterRef.current });
       }
     } catch {
       logError(
