@@ -1,5 +1,5 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useSetAtom } from 'jotai';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
@@ -17,11 +17,10 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-import { activeFlashesAtom, configHighlightsAtom, expandedRootElementsAtom } from '@/state/config-highlights';
+import { expandedRootElementsAtom } from '@/state/config-highlights';
+import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-element-diff';
 import { cn } from '@/utils/css-class';
-import { getDiffClassName } from '@/utils/diff-class';
 
-import type { DiffType } from '@/utils/diff';
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
 
@@ -71,40 +70,10 @@ export function RootElement({
   setIsEditingKey: (k: boolean) => void;
 }) {
   const { aiConfig, isChatReady } = useAIConfig();
-  const highlights = useAtomValue(configHighlightsAtom);
-  const expandedRootElements = useAtomValue(expandedRootElementsAtom);
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
-  const activeFlashes = useAtomValue(activeFlashesAtom);
-  
-  // Check if this block should be expanded (driven solely by the expanded set)
-  const isExpanded = expandedRootElements.has(rootElement);
-  
-  // Read flash state from shared atom — presence in map = flash, no TTL check
-  const activeFlash = activeFlashes.get(rootElement);
-  const shouldFlash = !!activeFlash;
-  const flashType = activeFlash?.rootFlashType ?? 'replace';
+  const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
   
   if (!schema || !schema?.properties) return;
-
-  // Check if this root element has any highlights
-  const hasHighlights = highlights.some((h) => h.path[0] === rootElement);
-  
-  // Determine the dominant highlight type for this root element
-  const rootHighlightTypes = new Set(
-    highlights.filter((h) => h.path[0] === rootElement).map((h) => h.type)
-  );
-  const resolvedHighlightType: DiffType | null = !hasHighlights
-    ? null
-    : rootHighlightTypes.size > 1 || rootHighlightTypes.has('replace')
-      ? 'replace'
-      : rootHighlightTypes.has('add')
-        ? 'add'
-        : 'remove';
-
-  // Pick the right CSS class: flash takes priority over static highlight
-  const diffClass = shouldFlash
-    ? getDiffClassName(flashType, 'flash-slow')
-    : getDiffClassName(resolvedHighlightType, 'highlight');
 
   const handleEntryClick = (subkey: string) => {
     setSelectedRootElement(rootElement); // Select the parent block
@@ -132,7 +101,7 @@ export function RootElement({
             setSelectedEntry('');
 
             // Toggle expansion
-            if (expandedRootElements.has(rootElement)) {
+            if (isExpanded) {
               setExpandedRootElements((prev) => {
                 const newSet = new Set(prev);
                 newSet.delete(rootElement);

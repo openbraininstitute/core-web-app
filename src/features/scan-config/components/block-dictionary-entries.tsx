@@ -9,13 +9,12 @@ import {
 } from '@ant-design/icons';
 import { Input } from 'antd';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
-import { atom, useAtomValue } from 'jotai';
+import { atom } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
-import { Fragment } from 'react';
+import { Fragment, useMemo } from 'react';
 
-import { activeFlashesAtom } from '@/state/config-highlights';
+import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
 import { cn } from '@/utils/css-class';
-import { getDiffClassName } from '@/utils/diff-class';
 
 import { isAtom, isPlainObject } from './utils';
 
@@ -24,7 +23,6 @@ import type React from 'react';
 import type { AtomsMap } from '../types';
 import type { Config, ConfigValue } from './components';
 import type { ConfigHighlight } from '@/state/config-highlights';
-import type { DiffType } from '@/utils/diff';
 
 import styles from './block-dictionary-entries.module.css';
 
@@ -129,28 +127,9 @@ export default function BlockDictionaryEntries({
 }) {
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
   
-  // Read flash state from shared atom (same atom parent writes to = perfect sync)
-  const activeFlashes = useAtomValue(activeFlashesAtom);
-  const activeFlash = activeFlashes.get(rootElement);
-  const flashingEntries = activeFlash?.entries ?? new Map();
-
-  /** Resolve the dominant highlight type for a given entry. */
-  const getEntryHighlightType = (entry: string): DiffType | null => {
-    const entryHighlights = highlights.filter(
-      (h) => h.path.length >= 2 && h.path[0] === rootElement && h.path[1] === entry
-    );
-    if (entryHighlights.length === 0) return null;
-    const types = new Set(entryHighlights.map((h) => h.type));
-    return types.size > 1 || types.has('replace') ? 'replace' : types.has('add') ? 'add' : 'remove';
-  };
-
-  /** Get the CSS class for an entry's diff styling (flash takes priority). */
-  const getEntryDiffClass = (entry: string, isSelected: boolean): string | undefined => {
-    const flashState = flashingEntries.get(entry);
-    if (flashState) return getDiffClassName(flashState.type, 'flash-slow');
-    const hlType = getEntryHighlightType(entry);
-    return getDiffClassName(hlType, isSelected ? 'highlight-selected' : 'highlight');
-  };
+  const configKeys = useMemo(() => new Set(Object.keys(config[rootElement] ?? {})), [config, rootElement]);
+  const { getEntryDiffClass, deletedEntries: deletedEntriesFromHighlights, addedEntries: addedEntriesFromHighlights } =
+    useEntryDiff(rootElement, highlights, configKeys);
 
   const onNameChangeConfirm = (
     e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>
@@ -239,9 +218,7 @@ export default function BlockDictionaryEntries({
     );
   }
 
-  const deletedEntriesFromHighlights = highlightedEntries(highlights, rootElement, 'remove');
-  const configKeys = new Set(Object.keys(config[rootElement] ?? {}));
-  const addedEntriesFromHighlights = highlightedEntries(highlights, rootElement, 'add', configKeys);
+  const deletedConfigKeys = new Set(deletedEntriesFromHighlights);
 
   return (
     <AnimatePresence>
@@ -270,7 +247,7 @@ export default function BlockDictionaryEntries({
 
             {Object.entries(config[rootElement] ?? {})
               .filter(([block_key]) => {
-                if (deletedEntriesFromHighlights.includes(block_key)) return false;
+                if (deletedConfigKeys.has(block_key)) return false;
                 return true;
               })
               .map(([subkey]) => {
@@ -457,20 +434,4 @@ export default function BlockDictionaryEntries({
       )}
     </AnimatePresence>
   );
-}
-/** Collect unique entry names from highlights matching a given diff type. */
-function highlightedEntries(
-  highlights: ConfigHighlight[],
-  rootElement: string,
-  type: DiffType,
-  exclude?: Set<string>
-): string[] {
-  const set = new Set<string>();
-  for (const h of highlights) {
-    if (h.path.length >= 2 && h.path[0] === rootElement && h.type === type) {
-      const entry = h.path[1];
-      if (!exclude || !exclude.has(entry)) set.add(entry);
-    }
-  }
-  return Array.from(set);
 }

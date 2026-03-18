@@ -4,8 +4,7 @@ import { atom } from 'jotai';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import { isType } from '@/features/scan-config/types';
-import { useAtomValue } from 'jotai';
-import { configHighlightsAtom } from '@/state/config-highlights';
+import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 
 import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -55,8 +54,7 @@ export default function BlockUnion({
   schemaMappingConfig,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
-  const highlights = useAtomValue(configHighlightsAtom);
-  const showingDiffs = highlights.length > 0;
+  const showingDiffs = useShowingDiffs();
 
   // Get current selected type from config
   const currentConfig = config[selectedRootElement];

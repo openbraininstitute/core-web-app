@@ -20,7 +20,9 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-import { configDiffsAtom, configHighlightsAtom } from '@/state/config-highlights';
+import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
+import { useDiffPreviewAtom } from '@/features/scan-config/hooks/use-diff-preview-atom';
+import { configDiffsAtom } from '@/state/config-highlights';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -67,8 +69,8 @@ export default function BlockDictionary({
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
   const diffs = useAtomValue(configDiffsAtom);
-  const highlights = useAtomValue(configHighlightsAtom);
-  const showingDiffs = highlights.length > 0;
+  const showingDiffs = useShowingDiffs();
+  const previewAtom = useDiffPreviewAtom(selectedRootElement, selectedEntry);
 
   const selectedBlockLocal = isPlainObject(config[selectedRootElement])
     ? config[selectedRootElement][selectedEntry]?.type
@@ -96,18 +98,9 @@ export default function BlockDictionary({
   );
 
   if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement])) {
-    // When showing diffs and aiConfig has data for this entry (e.g. restore preview),
-    // use a preview atom so the Block displays the new/restored values.
     const liveAtom = atomsMap[selectedRootElement]?.[selectedEntry];
-    const previewData =
-      showingDiffs && aiConfig && isPlainObject((aiConfig as Record<string, any>)[selectedRootElement])
-        ? (aiConfig as Record<string, any>)[selectedRootElement][selectedEntry]
-        : null;
     // Preview atom takes priority when showing diffs so the Block displays
     // the new/restored values instead of the current live values.
-    const previewAtom = previewData
-      ? (atom<Record<string, ConfigValue>>(previewData) as ReturnType<typeof atom<Record<string, ConfigValue>>>)
-      : null;
     const stateAtom = previewAtom ?? liveAtom ?? null;
 
     return (

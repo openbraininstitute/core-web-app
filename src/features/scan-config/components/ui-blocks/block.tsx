@@ -1,5 +1,5 @@
 import { isNil } from 'es-toolkit/compat';
-import { atom, useAtom, useAtomValue } from 'jotai';
+import { atom, useAtom } from 'jotai';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
@@ -12,40 +12,14 @@ import {
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
-import { activeFlashesAtom, configDiffsAtom } from '@/state/config-highlights';
+import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
-import { getDiffClassName } from '@/utils/diff-class';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
-
-/**
- * Look up the diff/flash type for a specific field.
- * Works for both dictionary entries (selectedEntry set) and single blocks.
- */
-function lookupFieldType(
-  fieldName: string,
-  rootElement: string | undefined,
-  selectedEntry: string | undefined,
-  entryLookup: (entry: string) => { type: 'add' | 'remove' | 'replace' } | undefined,
-  fieldLookup: (key: string) => { type: 'add' | 'remove' | 'replace' } | undefined,
-): 'add' | 'remove' | 'replace' | null {
-  if (!rootElement) return null;
-
-  if (selectedEntry) {
-    const fieldResult = fieldLookup(selectedEntry + '/' + fieldName);
-    if (fieldResult) return fieldResult.type;
-    const entryResult = entryLookup(selectedEntry);
-    if (entryResult && entryResult.type !== 'replace') return entryResult.type;
-    return null;
-  }
-
-  const fieldResult = fieldLookup(fieldName);
-  return fieldResult ? fieldResult.type : null;
-}
 
 export default function Block({
   schemaName,
@@ -73,50 +47,7 @@ export default function Block({
   selectedEntry?: string;
 }) {
   const [state, setState] = useAtom(stateAtom ?? atom<Record<string, ConfigValue>>({}));
-  const diffs = useAtomValue(configDiffsAtom);
-  const activeFlashes = useAtomValue(activeFlashesAtom);
-
-  // Helper to get flash type for a field (temporary animation from config-updated events)
-  const getFieldFlashType = (fieldName: string): 'add' | 'remove' | 'replace' | null => {
-    const flash = rootElement ? activeFlashes.get(rootElement) : undefined;
-    if (!flash?.fields) return null;
-    return lookupFieldType(
-      fieldName,
-      rootElement,
-      selectedEntry,
-      (entry) => flash.entries.get(entry),
-      (key) => flash.fields.get(key),
-    );
-  };
-
-  // Helper to get field change type from persistent diffs
-  const getFieldChangeType = (fieldName: string): 'add' | 'remove' | 'replace' | null => {
-    if (diffs.length === 0) return null;
-    return lookupFieldType(
-      fieldName,
-      rootElement,
-      selectedEntry,
-      (entry) =>
-        diffs.find(
-          (d) => d.path.length === 2 && d.path[0] === rootElement && d.path[1] === entry,
-        ),
-      selectedEntry
-        ? (key) => {
-            const field = key.slice(key.indexOf('/') + 1);
-            return diffs.find(
-              (d) =>
-                d.path.length >= 3 &&
-                d.path[0] === rootElement &&
-                d.path[1] === selectedEntry &&
-                d.path[2] === field,
-            );
-          }
-        : (key) =>
-            diffs.find(
-              (d) => d.path.length >= 2 && d.path[0] === rootElement && d.path[1] === key,
-            ),
-    );
-  };
+  const { getFieldDiffClass } = useBlockDiff(rootElement, selectedEntry);
 
   if (!blockSchema) return null;
 
@@ -165,13 +96,7 @@ export default function Block({
                 blockElementSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
 
               const value = state[k];
-              const changeType = getFieldChangeType(k);
-              const flashType = getFieldFlashType(k);
-              
-              // Flash takes priority over persistent diff when both are present
-              const fieldBorderClass =
-                getDiffClassName(flashType, 'flash-fast') ??
-                getDiffClassName(changeType, 'highlight');
+              const fieldBorderClass = getFieldDiffClass(k);
 
               return (
                 <div
