@@ -12,9 +12,10 @@ import {
 /**
  * e-type
  */
-export const ETypeClassIdSchema = z.uuid().nonempty({
-  error: 'E-type class is required',
-});
+export const ETypeClassIdSchema = z
+  .string({ message: 'E-type class is required' })
+  .uuid()
+  .nonempty({ message: 'E-type class is required' });
 
 /**
  * additional fields specific to electrical cell recording
@@ -22,31 +23,30 @@ export const ETypeClassIdSchema = z.uuid().nonempty({
 export const ElectricalCellRecordingSetupExtension = z.object({
   ljp: z
     .number({
-      error: (issue) =>
-        issue.input === undefined ? undefined : 'Liquid junction potential (ljp) must be a number',
+      invalid_type_error: 'Liquid junction potential (ljp) must be a number',
     })
     .optional()
-    .prefault(0.0),
+    .default(0.0),
   temperature: z
-    .number({
-      error: (issue) => (issue.input === undefined ? undefined : 'Temperature must be a number'),
-    })
+    .number({ invalid_type_error: 'Temperature must be a number' })
     .optional()
     .nullable(),
-  recording_location: z.string({ error: 'Cell recording location is required' }),
-  recording_type: z.string().nonempty({ error: 'Cell recording type is required' }),
+  recording_location: z.string({
+    message: 'Cell recording location is required',
+  }),
+  recording_type: z.string().nonempty({ message: 'Cell recording type is required' }),
   recording_origin: z
     .string()
-    .nonempty({ error: 'Cell recording origin is required' })
-    .prefault('in_vitro'),
+    .nonempty({ message: 'Cell recording origin is required' })
+    .default('in_vitro'),
   comment: z.string().optional().nullable(),
 });
 
 /**
  * extended setup schema for electrical cell recording
  */
-export const ElectricalCellRecordingSetupSchema = BaseSetupSchema.extend(
-  ElectricalCellRecordingSetupExtension.shape
+export const ElectricalCellRecordingSetupSchema = BaseSetupSchema.merge(
+  ElectricalCellRecordingSetupExtension
 );
 
 /**

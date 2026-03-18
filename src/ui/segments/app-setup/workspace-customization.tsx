@@ -293,7 +293,7 @@ export function WorkspaceCustomization({
                         } catch (error) {
                           return Promise.reject(
                             error instanceof z.ZodError
-                              ? error.issues.at(0)?.message
+                              ? error.errors.at(0)?.message
                               : 'Virtual lab name is required !'
                           );
                         }
@@ -334,7 +334,7 @@ export function WorkspaceCustomization({
                         } catch (error) {
                           return Promise.reject(
                             error instanceof z.ZodError
-                              ? error.issues.at(0)?.message
+                              ? error.errors.at(0)?.message
                               : 'Project name is required !'
                           );
                         }

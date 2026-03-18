@@ -37,13 +37,13 @@ function buildAsyncNameSchema(currentName: string) {
       const exists = await checkVirtualLabExists({ name: val });
       if (exists) {
         ctx.addIssue({
-          code: 'custom',
+          code: z.ZodIssueCode.custom,
           message: messages.RenameVirtualLabNameAlreadyExists,
         });
       }
     } catch (_e) {
       ctx.addIssue({
-        code: 'custom',
+        code: z.ZodIssueCode.custom,
         message: messages.RenameVirtualLabNameValidationFailed,
       });
     }

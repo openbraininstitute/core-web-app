@@ -149,9 +149,9 @@ export function WorkspaceIdentity({
     !form.isFieldsTouched(['email']);
 
   // const errors =
-  //   WorkspaceIdentitySchema.safeParse(fields).error?.flatten().fieldErrors &&
+  //   WorkspaceIdentitySchema.safeParse(fields).error?.formErrors.fieldErrors &&
   //   Object.entries(
-  //     WorkspaceIdentitySchema.safeParse(fields ?? {}).error?.flatten().fieldErrors ?? {}
+  //     WorkspaceIdentitySchema.safeParse(fields ?? {}).error?.formErrors.fieldErrors ?? {}
   //   ).map(([key, value]) => (
   //     <li className="text-destructive/80 list-disc" key={key}>
   //       {value}
@@ -302,7 +302,7 @@ export function WorkspaceIdentity({
                           } catch (error) {
                             return Promise.reject(
                               error instanceof z.ZodError
-                                ? error.issues.at(0)?.message
+                                ? error.errors.at(0)?.message
                                 : 'First name is required'
                             );
                           }
@@ -335,7 +335,7 @@ export function WorkspaceIdentity({
                           } catch (error) {
                             return Promise.reject(
                               error instanceof z.ZodError
-                                ? error.issues.at(0)?.message
+                                ? error.errors.at(0)?.message
                                 : 'Last name is required'
                             );
                           }
@@ -385,7 +385,7 @@ export function WorkspaceIdentity({
                           } catch (error) {
                             return Promise.reject(
                               error instanceof z.ZodError
-                                ? error.issues.at(0)?.message
+                                ? error.errors.at(0)?.message
                                 : 'Affiliation is required'
                             );
                           }
@@ -414,7 +414,7 @@ export function WorkspaceIdentity({
                           } catch (error) {
                             return Promise.reject(
                               error instanceof z.ZodError
-                                ? error.issues.at(0)?.message
+                                ? error.errors.at(0)?.message
                                 : 'Email must be in a valid format'
                             );
                           }

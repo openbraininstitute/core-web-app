@@ -114,7 +114,7 @@ export function FrequencyFormItem({
     // Validate using Zod schema
     const validation = FrequencyInputConfigSchema.safeParse(newConfig);
     if (!validation.success) {
-      setValidationError(validation.error.issues[0]?.message || 'Invalid frequency configuration');
+      setValidationError(validation.error.errors[0]?.message || 'Invalid frequency configuration');
     } else {
       setValidationError(null);
     }

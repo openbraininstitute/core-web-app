@@ -115,26 +115,27 @@ export const SynapseTypeDict = Object.fromEntries(
 
 export const ExperimentalSetupConfigurationSchema = z.object({
   celsius: z
-    .number({ error: 'Please enter a valid numeric value for Temperature (°C).' })
+    .number({ message: 'Please enter a valid numeric value for Temperature (°C).' })
     .min(0, 'Temperature must be between 0 and 50°C')
     .max(50, 'Temperature must be between 0 and 50°C'),
   vinit: z
-    .number({ error: 'Please enter a valid numeric value for initial membrane voltage (mV).' })
+    .number({ message: 'Please enter a valid numeric value for initial membrane voltage (mV).' })
     .min(-200, 'Initial voltage must be between -200 and 100 mV')
     .max(100, 'Initial voltage must be between -200 and 100 mV'),
   hypamp: z
-    .number({ error: 'Please enter a valid numeric value for holding current (nA).' })
+    .number({ message: 'Please enter a valid numeric value for holding current (nA).' })
     .min(-20, 'Holding current must be between -20 and 20 nA')
     .max(20, 'Holding current must be between -20 and 20 nA'),
   max_time: z
-    .number({ error: 'Please enter a valid numeric value for simulation duration (ms).' })
+    .number({ message: 'Please enter a valid numeric value for simulation duration (ms).' })
     .min(0, 'Simulation duration must be between 0 and 3000 ms')
     .max(3000, 'Simulation duration must be between 0 and 3000 ms'),
   time_step: z
-    .number({ error: 'Please enter a valid numeric value for time step (ms).' })
+    .number({ message: 'Please enter a valid numeric value for time step (ms).' })
     .min(0.001, 'Time step must be between 0.001 and 10 ms')
     .max(10, 'Time step must be between 0.001 and 10 ms'),
   seed: z
+    .number({ message: 'Please enter a valid numeric value for random seed.' })
     .int()
     .min(0, 'Seed must be a positive integer')
     .max(Infinity, 'Seed must be a positive integer'),
@@ -151,7 +152,7 @@ export const StimulusConfigSchema = z.object({
       StimulationMode.Conductance.value,
     ],
     {
-      error:
+      message:
         'Stimulation mode must be one of the following: Current Clamp, Voltage Clamp, Conductance.',
     }
   ),
@@ -164,22 +165,22 @@ export const StimulusConfigSchema = z.object({
         StimulusModule.FirePattern.value,
       ],
       {
-        error:
+        message:
           'Stimulus protocol must be one of the following: AP Waveform, Idrest, IV, Fire Pattern',
       }
     )
     .nullable(),
   amplitudes: z.union([z.array(z.number()), z.number()], {
-    error: 'Amplitudes must be an array of numbers or a single number',
+    message: 'Amplitudes must be an array of numbers or a single number',
   }),
 });
 
 export type StimulusConfig = z.infer<typeof StimulusConfigSchema>;
 
 export const StimulationConfigurationSchema = z.object({
-  id: z.number({ error: 'Id cannot be empty' }),
-  config_id: z.uuid('Cannot be empty'),
-  inject_to: z.string({ error: 'Injection target section cannot be empty' }),
+  id: z.number({ message: 'Id cannot be empty' }),
+  config_id: z.string().uuid('Cannot be empty'),
+  inject_to: z.string({ message: 'Injection target section cannot be empty' }),
   stimulus: StimulusConfigSchema,
 });
 
@@ -193,10 +194,10 @@ export const NeuronLocationOriginDict = Object.fromEntries(
 ) as Record<TNeuronLocationOrigin, TNeuronLocationOrigin>;
 
 export const NeuronLocationSchema = z.object({
-  section: z.string({ error: 'Recording section name is required' }),
+  section: z.string({ message: 'Recording section name is required' }),
   offset: z
     .number({
-      error: 'Recording position offset is required and must be a number between 0 and 1',
+      message: 'Recording position offset is required and must be a number between 0 and 1',
     })
     .min(
       0,
@@ -219,45 +220,48 @@ export type NeuronLocationArray = z.infer<typeof NeuronLocationArraySchema>;
 
 export const SynapseConfigSchema = z.object({
   id: z.string(),
-  config_id: z.string({ error: 'Synapse configuration ID is required' }),
-  delay: z.number({ error: 'Synapse delay (ms) is required and must be a number' }),
-  duration: z.number({ error: 'Synapse duration (ms) is required and must be a number' }),
+  config_id: z.string({ message: 'Synapse configuration ID is required' }),
+  delay: z.number({ message: 'Synapse delay (ms) is required and must be a number' }),
+  duration: z.number({ message: 'Synapse duration (ms) is required and must be a number' }),
   frequency: z
     .union(
       [
         z
-          .number({
-            error: 'Synapse frequency (Hz) must be a positive number',
-          })
+          .number({ message: 'Synapse frequency (Hz) must be a positive number' })
           .min(0, 'Synapse frequency must be a positive number'),
         z.array(
           z
-            .number({
-              error: 'Synapse frequencies must be positive numbers',
-            })
+            .number({ message: 'Synapse frequencies must be positive numbers' })
             .min(0, 'Synapse frequencies must be positive numbers')
         ),
       ],
       {
-        error: (issue) => {
+        message:
+          'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used',
+        errorMap: (issue, ctx) => {
           if (issue.code === 'invalid_union') {
-            return 'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used';
+            return {
+              message:
+                'Synapse frequency must be a single positive number (Hz) or a list of positive numbers if steps are used',
+            };
           }
-          return;
+          return { message: ctx.defaultError };
         },
       }
     )
-    .refine((val) => !isNil(val), { error: 'Synapse frequency is required' }),
-  weight_scalar: z.number({
-    error: 'Synapse weight scalar is required and must be a number',
-  }),
-  color: z.string({ error: 'Synapse color is required' }).prefault(DefaultColor).optional(),
+    .refine((val) => !isNil(val), {
+      message: 'Synapse frequency is required',
+    }),
+  weight_scalar: z.number({ message: 'Synapse weight scalar is required and must be a number' }),
+  color: z.string({ message: 'Synapse color is required' }).default(DefaultColor).optional(),
 });
 
 export const OverviewConfigurationSchema = z.object({
   name: z
-    .string({ error: 'The simulation name cannot be empty.' })
-    .nonempty({ error: 'The simulation name cannot be empty.' })
+    .string({ message: 'The simulation name cannot be empty.' })
+    .nonempty({
+      message: 'The simulation name cannot be empty.',
+    })
     .min(1, 'Please enter a simulation name (minimum 1 character).'),
   description: z.string().optional(),
 });
@@ -317,14 +321,14 @@ export const FrequencyInputConfigSchema = z.object({
   constantOrSteps: z.enum(['constant', 'step']),
   stepFrequencyState: z
     .object({
-      start: z.number({ error: 'Start frequency (Hz) is required and must be a number' }),
-      stop: z.number({ error: 'Stop frequency (Hz) is required and must be a number' }),
-      step: z.number({ error: 'Number of frequency steps is required and must be a number' }),
+      start: z.number({ message: 'Start frequency (Hz) is required and must be a number' }),
+      stop: z.number({ message: 'Stop frequency (Hz) is required and must be a number' }),
+      step: z.number({ message: 'Number of frequency steps is required and must be a number' }),
     })
     .nullable()
     .refine((value) => value === null || value.start < value.stop, {
+      message: 'Start frequency must be less than stop frequency',
       path: ['stepFrequencyState', 'start'],
-      error: 'Start frequency must be less than stop frequency',
     }),
 });
 
@@ -338,10 +342,10 @@ export const AmperageBaseSchema = z.object({
     StimulusModule.IV.value,
     StimulusModule.FirePattern.value,
   ]),
-  start: z.number({ error: 'Start current amplitude (nA) is required and must be a number' }),
-  end: z.number({ error: 'End current amplitude (nA) is required and must be a number' }),
+  start: z.number({ message: 'Start current amplitude (nA) is required and must be a number' }),
+  end: z.number({ message: 'End current amplitude (nA) is required and must be a number' }),
   stepValue: z.number({
-    error: 'Number of current amplitude steps is required and must be a number',
+    message: 'Number of current amplitude steps is required and must be a number',
   }),
   computed: z.array(z.number()),
   error: z.string().nullable(),
@@ -358,8 +362,8 @@ export const AmperageStateSchema = AmperageBaseSchema.refine(
     return data.start < data.end;
   },
   {
+    message: 'Start current amplitude must be less than end current amplitude',
     path: ['start'],
-    error: 'Start current amplitude must be less than end current amplitude',
   }
 );
 

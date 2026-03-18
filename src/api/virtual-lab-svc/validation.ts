@@ -16,7 +16,7 @@ export const RoleSchema = z.enum(['admin', 'member']);
 export const VirtualLabPayloadSchema = z.object({
   name: z.string().describe('name of the virtual lab'),
   description: z.string().optional().describe('optional description of the virtual lab'),
-  reference_email: z.email().describe('reference email associated with the virtual lab'),
+  reference_email: z.string().email().describe('reference email associated with the virtual lab'),
   entity: z.string().describe('entity or organization associated with the virtual lab'),
   email_status: EmailStatusSchema.describe('status of the reference email verification'),
 });
@@ -27,8 +27,8 @@ export const ProjectPayloadSchema = z.object({
   include_members: z
     .array(
       z.object({
-        id: z.uuid().optional().describe('ID of the member to be included'),
-        email: z.email().describe('Email of the member to be included'),
+        id: z.string().uuid().optional().describe('ID of the member to be included'),
+        email: z.string().email().describe('Email of the member to be included'),
         role: RoleSchema.describe('Role assigned to the member'),
       })
     )
@@ -37,11 +37,8 @@ export const ProjectPayloadSchema = z.object({
 });
 
 export const CreateSubscriptionRequestSchema = z.object({
-  virtualLabId: z.uuid().describe('id of the virtual lab to subscribe'),
+  virtualLabId: z.string().uuid().describe('id of the virtual lab to subscribe'),
   priceId: z.string().describe('selected stripe price id'),
   paymentMethodId: z.string().describe('stripe payment method id to use for billing'),
-  metadata: z
-    .record(z.string(), z.string())
-    .optional()
-    .describe('additional metadata for the subscription'),
+  metadata: z.record(z.string()).optional().describe('additional metadata for the subscription'),
 });
