@@ -5,12 +5,13 @@ import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import useSpikeTrace from '@/features/spike-viewer/hooks/use-spike-trace';
 
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
 type SpikeViewerProps = {
   entityId: string;
-  entityType: string;
+  entityType: TEntityTypeDict;
   asset: IAsset;
   ctx?: WorkspaceContext;
 };
