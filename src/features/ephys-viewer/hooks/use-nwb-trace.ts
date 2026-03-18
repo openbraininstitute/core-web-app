@@ -21,7 +21,7 @@ export default function useTrace({
   ctx,
 }: UseTraceArgs): [NWBTrace | null, Error | null] {
   const [trace, setTrace] = useState<NWBTrace | null>(null);
-  const [error, setError] = useState<Error | null>(null);
+  const [nwbError, setNwbError] = useState<Error | null>(null);
   const initialized = useRef<boolean>(false);
   const traceRef = useRef<NWBTrace | null>(null);
 
@@ -33,11 +33,7 @@ export default function useTrace({
     throw new Error('No NWB file found');
   }
 
-  const {
-    data: nwbArrayBuffer,
-    isError,
-    error: fetchError,
-  } = useQuery({
+  const { data: nwbArrayBuffer, error: fetchError } = useQuery({
     queryKey: keyBuilder.asset({
       context: ctx,
       entityId: entity.id,
@@ -56,12 +52,6 @@ export default function useTrace({
   });
 
   useEffect(() => {
-    if (isError) {
-      setError(fetchError as Error);
-    }
-  }, [isError, fetchError]);
-
-  useEffect(() => {
     if (initialized.current || !nwbArrayBuffer) {
       return;
     }
@@ -75,13 +65,15 @@ export default function useTrace({
         traceRef.current = t;
         setTrace(t);
       })
-      .catch((e) => setError(e));
+      .catch((e) => setNwbError(e));
 
     return () => {
       traceRef.current?.destroy();
       initialized.current = false;
     };
   }, [nwbArrayBuffer, entity.id, asset.id]);
+
+  const error = fetchError || nwbError;
 
   return [trace, error];
 }
