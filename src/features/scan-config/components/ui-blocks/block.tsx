@@ -61,9 +61,10 @@ export default function Block({
     if (selectedEntry) {
       const fieldFlash = flash.fields.get(selectedEntry + '/' + fieldName);
       if (fieldFlash) return fieldFlash.type;
-      // Also check if the whole entry was added/removed (depth 2 stored as plain entryName)
+      // If the whole entry was added or removed, all fields inherit that flash.
+      // But if the entry is 'replace' (partial change), only field-level flashes apply.
       const entryFlash = flash.entries.get(selectedEntry);
-      if (entryFlash) return entryFlash.type;
+      if (entryFlash && entryFlash.type !== 'replace') return entryFlash.type;
       return null;
     }
 
@@ -89,18 +90,22 @@ export default function Block({
       return fieldChange ? fieldChange.type : null;
     }
     
-    // For dictionary entries, check if entire entry was added/removed
+    // For dictionary entries, check if entire entry was added/removed.
+    // Only cascade to all fields for add/remove — 'replace' means partial
+    // change, so individual field-level diffs should be used instead.
     const entryChange = diffs.find(
       (d) => d.path.length === 2 && d.path[0] === rootElement && d.path[1] === selectedEntry
     );
-    if (entryChange) {
+    if (entryChange && entryChange.type !== 'replace') {
       return entryChange.type;
     }
     
-    // Check for field-level change in dictionary entries
+    // Check for field-level change in dictionary entries.
+    // Use >= 3 because fast-json-patch may produce deeper paths when only a
+    // nested property of a field object changes (e.g. source_neuron_set/block_name).
     const fieldChange = diffs.find(
       (d) => 
-        d.path.length === 3 && 
+        d.path.length >= 3 && 
         d.path[0] === rootElement && 
         d.path[1] === selectedEntry && 
         d.path[2] === fieldName

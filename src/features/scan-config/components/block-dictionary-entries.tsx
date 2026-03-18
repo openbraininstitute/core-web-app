@@ -307,6 +307,10 @@ export default function BlockDictionaryEntries({
               // We show only those that have no AI changes and are not marked as deleted
               .filter(([block_key, block_schema]) => {
                 if (deletedEntriesFromHighlights.includes(block_key)) return false;
+                // When highlights are active (restore preview / view diffs),
+                // skip the aiConfig equality filter — entries stay in the main
+                // list and get highlighted instead of moving to the AI section.
+                if (highlights.length > 0) return true;
                 if (!aiConfig) return true;
                 if (!isPlainObject(aiConfig[rootElement])) return true;
                 return isEqual(block_schema, aiConfig[rootElement][block_key]);

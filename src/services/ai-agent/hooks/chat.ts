@@ -44,6 +44,28 @@ export function useServiceAiAgentChat(threadId: string) {
     aiAgentStateRef.current = aiAgentState;
   }, [aiAgentState]);
 
+  // Track the last config we applied via setConfig so flash diffs are
+  // computed incrementally. agentStateAtom updates asynchronously through
+  // the Jotai chain, so reading it directly would produce stale oldConfig
+  // when multiple editstate calls arrive in rapid succession.
+  const lastAppliedConfigRef = useRef<Record<string, unknown> | null>(null);
+
+  // Track the last editstate tool invocation ID we processed to avoid
+  // re-processing cached messages on conversation switch while still
+  // detecting new editstate results during streaming (where the message
+  // ID stays the same but new tool invocations appear).
+  const lastProcessedInvocationIdRef = useRef<string | null>(null);
+
+  // Reset the tracker when the thread changes.
+  const prevThreadIdRef = useRef(threadId);
+  useEffect(() => {
+    if (prevThreadIdRef.current !== threadId) {
+      lastProcessedInvocationIdRef.current = null;
+      lastAppliedConfigRef.current = null;
+      prevThreadIdRef.current = threadId;
+    }
+  }, [threadId]);
+
   const chat = useChat({
     api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
@@ -74,13 +96,16 @@ export function useServiceAiAgentChat(threadId: string) {
   });
 
   useEffect(() => {
-    if (assistantInitialMessages.length === chat.messages.length) {
-      return;
-    }
     const lastMessage = chat.messages[chat.messages.length - 1];
+    if (!lastMessage) return;
 
-    // Find the most recent editstate tool result to update config
-    const editstateResult = lastMessage?.parts
+    // While initial messages are still loading, don't process anything.
+    // This prevents the useChat cache from triggering setConfig before
+    // the assistant has finished hydrating the thread.
+    if (isLoadingMessages) return;
+
+    // Find the most recent editstate tool result in the last message.
+    const editstateResult = lastMessage.parts
       .toReversed()
       .find(
         (p) =>
@@ -89,6 +114,25 @@ export function useServiceAiAgentChat(threadId: string) {
           p.toolInvocation.state === 'result'
       ) as ToolInvocationUIPart | undefined;
 
+    // Derive a stable ID for the invocation we found (if any).
+    const invocationId = editstateResult?.toolInvocation?.toolCallId ?? null;
+
+    // If the messages array matches the initial load exactly, mark the
+    // latest invocation as processed so we don't re-handle it, but don't
+    // actually run the editstate logic (these are historical messages).
+    if (assistantInitialMessages.length === chat.messages.length) {
+      if (invocationId) lastProcessedInvocationIdRef.current = invocationId;
+      return;
+    }
+
+    // Skip if we already processed this exact invocation.
+    if (!invocationId || invocationId === lastProcessedInvocationIdRef.current) {
+      return;
+    }
+
+    // Mark as processed before doing work to avoid double-firing.
+    lastProcessedInvocationIdRef.current = invocationId;
+
     // @ts-expect-error - toolInvocation result type is not properly typed
     if (!editstateResult?.toolInvocation?.result) return;
 
@@ -96,10 +140,15 @@ export function useServiceAiAgentChat(threadId: string) {
       // @ts-expect-error - result needs to be parsed as JSON
       const result = JSON.parse(editstateResult.toolInvocation.result);
       const newConfig = result.state.smc_simulation_config ?? null;
-      // Use the live config (agentStateAtom) as the "before" snapshot for flash diffs.
-      // Read from ref so the React Compiler won't add it to the effect deps.
-      const oldConfig = (aiAgentStateRef.current as Record<string, unknown>)?.smc_simulation_config ?? null;
+      // Use lastAppliedConfigRef for incremental flash diffs. Falls back
+      // to the live agentStateAtom for the very first editstate call.
+      const oldConfig =
+        lastAppliedConfigRef.current ??
+        (aiAgentStateRef.current as Record<string, unknown>)?.smc_simulation_config ??
+        null;
       setConfig(newConfig);
+      // Update the ref so the next editstate call diffs against this config.
+      if (newConfig) lastAppliedConfigRef.current = newConfig;
 
       // Only flash when the very last part is the editstate result itself
       const lastPart = lastMessage.parts[lastMessage.parts.length - 1];
@@ -120,7 +169,7 @@ export function useServiceAiAgentChat(threadId: string) {
         editstateResult.toolInvocation.result
       );
     }
-  }, [chat.messages, setConfig]);
+  }, [chat.messages, setConfig, isLoadingMessages]);
 
   useEffect(() => {
     setIsChatReady(chat.status === 'ready');

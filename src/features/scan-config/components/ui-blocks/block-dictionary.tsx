@@ -103,7 +103,12 @@ export default function BlockDictionary({
       showingDiffs && aiConfig && isPlainObject((aiConfig as Record<string, any>)[selectedRootElement])
         ? (aiConfig as Record<string, any>)[selectedRootElement][selectedEntry]
         : null;
-    const stateAtom = liveAtom ?? (previewData ? atom<Record<string, ConfigValue>>(previewData) : null);
+    // Preview atom takes priority when showing diffs so the Block displays
+    // the new/restored values instead of the current live values.
+    const previewAtom = previewData
+      ? (atom<Record<string, ConfigValue>>(previewData) as ReturnType<typeof atom<Record<string, ConfigValue>>>)
+      : null;
+    const stateAtom = previewAtom ?? liveAtom ?? null;
 
     return (
       <Block
