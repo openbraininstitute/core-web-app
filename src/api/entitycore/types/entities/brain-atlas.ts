@@ -1,11 +1,11 @@
 import type {
-  EntityCoreIdentifiable,
-  Timestamps,
-  ISpecies,
-  IAsset,
   EntityAuthorization,
+  EntityCoreIdentifiable,
+  IAsset,
+  ISpecies,
+  Timestamps,
 } from '@/api/entitycore/types/shared/global';
-import {
+import type {
   PaginationFilter,
   SharedFilter,
   SpeciesFilter,

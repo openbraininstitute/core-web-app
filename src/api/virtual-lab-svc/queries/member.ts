@@ -1,12 +1,12 @@
-import {
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
+
+import type {
   MemberResponse,
   MembersResponse,
   Role,
   VlmDeleteProjectMemberResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import { getSession } from '@/auth-fetch';
-import { config } from '@/config';
-
 import type { VlmResponse } from '@/types/virtual-lab/common';
 
 const baseUri = `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;

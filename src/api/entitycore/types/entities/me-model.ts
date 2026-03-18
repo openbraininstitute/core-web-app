@@ -1,6 +1,6 @@
 import z from 'zod';
-import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {

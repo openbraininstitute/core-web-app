@@ -1,8 +1,8 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { IRoleFilter, IRole } from '@/api/entitycore/types/shared/role';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { IRole, IRoleFilter } from '@/api/entitycore/types/shared/role';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/role';

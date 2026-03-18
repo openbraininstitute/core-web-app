@@ -1,11 +1,12 @@
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
+
 import type { WorkspaceContext } from '@/types/common';
 import type {
   CurrentInjectionGraphRequest,
   CurrentInjectionGraphResponse,
 } from '@/types/small-scale-simulator/graph';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
 
 type Params = {
   ctx: WorkspaceContext;

@@ -1,9 +1,9 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { ISubjectFilter, TSubjectCreate } from '@/api/entitycore/types/shared/subject';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { ISubject } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { ISubjectFilter, TSubjectCreate } from '@/api/entitycore/types/shared/subject';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/subject';
