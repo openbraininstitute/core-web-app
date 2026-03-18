@@ -6,7 +6,7 @@ import { RiResetLeftLine, RiCheckLine, RiCloseLine, RiArrowDownSLine } from '@re
 
 import type { UIMessage } from '@ai-sdk/ui-utils';
 import { cn } from '@/utils/css-class';
-import { messageSubmittedCounterAtom } from '@/state/config-highlights';
+import { messageSubmittedCounterAtom, restorePreviewMessageIdAtom } from '@/state/config-highlights';
 import { isChatReadyAtom } from '@/services/ai-agent/hooks/chat';
 
 import styles from './collapsible-message.module.css';
@@ -38,6 +38,7 @@ export function CollapsibleMessage({
   // Cancel pending restore when a new message is submitted (counter increments)
   const submittedCounter = useAtomValue(messageSubmittedCounterAtom);
   const isChatReady = useAtomValue(isChatReadyAtom);
+  const restorePreviewMessageId = useAtomValue(restorePreviewMessageIdAtom);
   const prevCounterRef = React.useRef(submittedCounter);
   const onCancelRestoreRef = React.useRef(onCancelRestore);
   onCancelRestoreRef.current = onCancelRestore;
@@ -49,6 +50,13 @@ export function CollapsibleMessage({
     }
     prevCounterRef.current = submittedCounter;
   }, [submittedCounter]);
+
+  // Cancel this message's restore confirmation if another message took over
+  React.useEffect(() => {
+    if (isConfirmingRestore && restorePreviewMessageId && restorePreviewMessageId !== message.id) {
+      setIsConfirmingRestore(false);
+    }
+  }, [restorePreviewMessageId, isConfirmingRestore, message.id]);
 
   // Count steps in collapsed content (consecutive tool calls = 1 step)
   const stepCount = React.useMemo(() => {

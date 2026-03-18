@@ -17,6 +17,7 @@ import {
   diffBarDataAtom,
   pendingRestoreConfigAtom,
   restorePreviewActiveAtom,
+  restorePreviewMessageIdAtom,
 } from '@/state/config-highlights';
 
 import type { UIMessage, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
@@ -93,6 +94,7 @@ export function useMessageDiffs({
   const [, setDiffBarData] = useAtom(diffBarDataAtom);
   const [, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
   const [, setRestorePreviewActive] = useAtom(restorePreviewActiveAtom);
+  const [, setRestorePreviewMessageId] = useAtom(restorePreviewMessageIdAtom);
 
   const clearDiffState = useClearDiffState();
 
@@ -260,6 +262,7 @@ export function useMessageDiffs({
     // Set the preview guard BEFORE setting configStateAtom so the aiConfig
     // auto-apply effect in left.tsx skips this update.
     setRestorePreviewActive(true);
+    setRestorePreviewMessageId(message.id);
     setConfig(latestState as Config);
 
     const highlights = adjustedDiffs.map((d) => ({ path: d.path, type: d.type }));
@@ -273,6 +276,8 @@ export function useMessageDiffs({
     getLatestState,
     agentState,
     setRestorePreviewActive,
+    setRestorePreviewMessageId,
+    message.id,
     setConfig,
     setDiffState,
   ]);
@@ -282,18 +287,20 @@ export function useMessageDiffs({
     if (latestState) {
       setConfig(null);
       setRestorePreviewActive(false);
+      setRestorePreviewMessageId(null);
       setPendingRestoreConfig(latestState as Record<string, any>);
     }
     preRestoreConfigRef.current = null;
     clearDiffState();
-  }, [getLatestState, setConfig, setRestorePreviewActive, setPendingRestoreConfig, clearDiffState]);
+  }, [getLatestState, setConfig, setRestorePreviewActive, setRestorePreviewMessageId, setPendingRestoreConfig, clearDiffState]);
 
   const handleCancelRestore = React.useCallback(() => {
     preRestoreConfigRef.current = null;
     setConfig(null);
     setRestorePreviewActive(false);
+    setRestorePreviewMessageId(null);
     clearDiffState();
-  }, [setConfig, setRestorePreviewActive, clearDiffState]);
+  }, [setConfig, setRestorePreviewActive, setRestorePreviewMessageId, clearDiffState]);
 
   return {
     hasEditStateCalls,

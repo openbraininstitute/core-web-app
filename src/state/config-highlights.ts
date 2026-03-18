@@ -139,6 +139,15 @@ export const pendingRestoreConfigAtom = atom<Record<string, any> | null>(null);
 export const restorePreviewActiveAtom = atom(false);
 
 /**
+ * Tracks which message ID currently owns the restore preview.
+ * When a new message triggers "Restore State", it writes its ID here.
+ * Other CollapsibleMessage instances react by cancelling their pending
+ * confirmation (equivalent of the user clicking "No").
+ */
+export const restorePreviewMessageIdAtom = atom<string | null>(null);
+
+
+/**
  * Atom written by chat.ts when an editstate tool call produces a new config.
  * A single top-level hook (useConfigUpdateFlashes) reacts to changes and
  * computes flash animations + auto-expands affected blocks, replacing the
