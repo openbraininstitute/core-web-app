@@ -19,6 +19,7 @@ import AIIcon from '@/components/icons/ai/ai_icon';
 import AIEdit from '@/components/icons/ai/edit_icon';
 import { activeFlashesAtom } from '@/state/config-highlights';
 import { cn } from '@/utils/css-class';
+import { getDiffClassName } from '@/utils/diff-class';
 
 import { isAtom, isPlainObject } from './utils';
 
@@ -27,6 +28,7 @@ import type React from 'react';
 import type { AtomsMap } from '../types';
 import type { Config, ConfigValue } from './components';
 import type { ConfigHighlight } from '@/state/config-highlights';
+import type { DiffType } from '@/utils/diff';
 
 import styles from './block-dictionary-entries.module.css';
 
@@ -85,6 +87,24 @@ export default function BlockDictionaryEntries({
   const activeFlashes = useAtomValue(activeFlashesAtom);
   const activeFlash = activeFlashes.get(rootElement);
   const flashingEntries = activeFlash?.entries ?? new Map();
+
+  /** Resolve the dominant highlight type for a given entry. */
+  const getEntryHighlightType = (entry: string): DiffType | null => {
+    const entryHighlights = highlights.filter(
+      (h) => h.path.length >= 2 && h.path[0] === rootElement && h.path[1] === entry
+    );
+    if (entryHighlights.length === 0) return null;
+    const types = new Set(entryHighlights.map((h) => h.type));
+    return types.size > 1 || types.has('replace') ? 'replace' : types.has('add') ? 'add' : 'remove';
+  };
+
+  /** Get the CSS class for an entry's diff styling (flash takes priority). */
+  const getEntryDiffClass = (entry: string, isSelected: boolean): string | undefined => {
+    const flashState = flashingEntries.get(entry);
+    if (flashState) return getDiffClassName(flashState.type, 'flash-slow');
+    const hlType = getEntryHighlightType(entry);
+    return getDiffClassName(hlType, isSelected ? 'highlight-selected' : 'highlight');
+  };
 
   const onNameChangeConfirm = (
     e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>
@@ -154,42 +174,7 @@ export default function BlockDictionaryEntries({
 
   function renderBlockTab(entry: string, isDeleted = false, isHighlightOnly = false) {
     const isSelected = selectedRootElement === rootElement && entry === selectedEntry;
-    
-    // Check if this entry is currently flashing
-    const flashState = flashingEntries.get(entry);
-    const isFlashing = !!flashState;
-    
-    // Check if this entry has highlights - check if any highlight path starts with [rootElement, entry]
-    const entryHighlights = highlights.filter((h) => 
-      h.path.length >= 2 && h.path[0] === rootElement && h.path[1] === entry
-    );
-    const hasHighlights = entryHighlights.length > 0;
-    
-    // Determine highlight color - if mixed types or replace, use yellow/amber
-    const highlightTypes = new Set(entryHighlights.map((h) => h.type));
-    const isModified = highlightTypes.size > 1 || highlightTypes.has('replace');
-    const isAdded = !isModified && highlightTypes.has('add');
-    const isRemoved = !isModified && highlightTypes.has('remove');
-    
-    // Determine CSS class based on highlight type and selection state
-    const highlightClassName = hasHighlights
-      ? isModified
-        ? isSelected ? styles.entryHighlightModifiedSelected : styles.entryHighlightModified
-        : isAdded
-        ? isSelected ? styles.entryHighlightAddedSelected : styles.entryHighlightAdded
-        : isRemoved
-        ? isSelected ? styles.entryHighlightRemovedSelected : styles.entryHighlightRemoved
-        : undefined
-      : undefined;
-    
-    // Determine flash class based on flash state
-    const flashClassName = isFlashing
-      ? flashState.type === 'add'
-        ? styles.entryFlashAdded
-        : flashState.type === 'remove'
-        ? styles.entryFlashRemoved
-        : styles.entryFlashModified
-      : undefined;
+    const entryDiffClass = getEntryDiffClass(entry, isSelected);
 
     // For deleted entries, preserve the original name exactly as it was
     const displayName = isDeleted
@@ -209,7 +194,7 @@ export default function BlockDictionaryEntries({
               isSelected,
           },
           styles.entryButton,
-          flashClassName || highlightClassName
+          entryDiffClass
         )}
         tabIndex={0}
         onClick={() => handleEntryClick(entry)}
@@ -329,48 +314,7 @@ export default function BlockDictionaryEntries({
               .map(([subkey]) => {
                 const isSelected =
                   selectedRootElement === rootElement && subkey === selectedEntry;
-
-                // Check if this entry is currently flashing
-                const flashState = flashingEntries.get(subkey);
-                const isFlashing = !!flashState;
-
-                // Check if this entry has highlights
-                const entryHighlights = highlights.filter(
-                  (h) =>
-                    h.path.length >= 2 && h.path[0] === rootElement && h.path[1] === subkey
-                );
-                const hasHighlights = entryHighlights.length > 0;
-
-                // Determine highlight type and CSS class
-                const highlightTypes = new Set(entryHighlights.map((h) => h.type));
-                const isModified = highlightTypes.size > 1 || highlightTypes.has('replace');
-                const isAdded = !isModified && highlightTypes.has('add');
-                const isRemoved = !isModified && highlightTypes.has('remove');
-
-                const highlightClassName = hasHighlights
-                  ? isModified
-                    ? isSelected
-                      ? styles.entryHighlightModifiedSelected
-                      : styles.entryHighlightModified
-                    : isAdded
-                      ? isSelected
-                        ? styles.entryHighlightAddedSelected
-                        : styles.entryHighlightAdded
-                      : isRemoved
-                        ? isSelected
-                          ? styles.entryHighlightRemovedSelected
-                          : styles.entryHighlightRemoved
-                        : undefined
-                  : undefined;
-
-                // Determine flash class based on flash state
-                const flashClassName = isFlashing
-                  ? flashState.type === 'add'
-                    ? styles.entryFlashAdded
-                    : flashState.type === 'remove'
-                      ? styles.entryFlashRemoved
-                      : styles.entryFlashModified
-                  : undefined;
+                const entryDiffClass = getEntryDiffClass(subkey, isSelected);
 
                 return (
                   <Fragment key={subkey}>
@@ -387,7 +331,7 @@ export default function BlockDictionaryEntries({
                             isSelected,
                         },
                         styles.entryButton,
-                        flashClassName || highlightClassName
+                        entryDiffClass
                       )}
                       tabIndex={0}
                       onClick={() => handleEntryClick(subkey)}

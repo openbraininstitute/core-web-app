@@ -20,8 +20,10 @@ import {
 import { useAIConfig } from '@/services/ai-agent';
 import { activeFlashesAtom, configHighlightsAtom, expandedRootElementsAtom } from '@/state/config-highlights';
 import { cn } from '@/utils/css-class';
+import { getDiffClassName } from '@/utils/diff-class';
 import { computeLiveDiffs } from '@/utils/diff';
 
+import type { DiffType } from '@/utils/diff';
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
 
@@ -188,11 +190,22 @@ export function RootElement({
   // Check if this root element has any highlights
   const hasHighlights = highlights.some((h) => h.path[0] === rootElement);
   
-  // Determine highlight type based on operation types
-  // If there are multiple different types of changes, show as "edited" (yellow/amber)
+  // Determine the dominant highlight type for this root element
   const rootHighlightTypes = new Set(
     highlights.filter((h) => h.path[0] === rootElement).map((h) => h.type)
   );
+  const resolvedHighlightType: DiffType | null = !hasHighlights
+    ? null
+    : rootHighlightTypes.size > 1 || rootHighlightTypes.has('replace')
+      ? 'replace'
+      : rootHighlightTypes.has('add')
+        ? 'add'
+        : 'remove';
+
+  // Pick the right CSS class: flash takes priority over static highlight
+  const diffClass = shouldFlash
+    ? getDiffClassName(flashType, 'flash-slow')
+    : getDiffClassName(resolvedHighlightType, 'highlight');
 
   const handleEntryClick = (subkey: string) => {
     setSelectedRootElement(rootElement); // Select the parent block
@@ -257,19 +270,7 @@ export function RootElement({
         extraClass={cn(
           "w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5",
           styles.rootBase,
-          shouldFlash
-            ? flashType === 'add'
-              ? styles.rootFlashAdded
-              : flashType === 'remove'
-              ? styles.rootFlashRemoved
-              : styles.rootFlashModified
-            : hasHighlights
-            ? rootHighlightTypes.size > 1 || rootHighlightTypes.has('replace')
-              ? styles.rootHighlightModified
-              : rootHighlightTypes.has('add')
-              ? styles.rootHighlightAdded
-              : styles.rootHighlightRemoved
-            : undefined
+          diffClass
         )}
         style={undefined}
       >

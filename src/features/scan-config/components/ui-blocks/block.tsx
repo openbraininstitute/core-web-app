@@ -17,11 +17,10 @@ import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-tr
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
+import { getDiffClassName } from '@/utils/diff-class';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
-
-import styles from './block.module.css';
 
 export default function Block({
   schemaName,
@@ -160,26 +159,10 @@ export default function Block({
               const changeType = getFieldChangeType(k);
               const flashType = getFieldFlashType(k);
               
-              // Persistent diff highlight (from "View Diffs" toggle)
-              const diffClassName = changeType
-                ? changeType === 'add'
-                  ? styles.diffAdded
-                  : changeType === 'remove'
-                  ? styles.diffRemoved
-                  : styles.diffModified
-                : undefined;
-
-              // Temporary flash animation (from live tool calls / restore state)
-              const flashClassName = flashType
-                ? flashType === 'add'
-                  ? styles.fieldFlashAdded
-                  : flashType === 'remove'
-                  ? styles.fieldFlashRemoved
-                  : styles.fieldFlashModified
-                : undefined;
-
               // Flash takes priority over persistent diff when both are present
-              const fieldBorderClass = flashClassName ?? diffClassName;
+              const fieldBorderClass =
+                getDiffClassName(flashType, 'flash-fast') ??
+                getDiffClassName(changeType, 'highlight');
 
               return (
                 <div
