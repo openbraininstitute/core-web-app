@@ -1,40 +1,55 @@
 .container {
-  display: flex;
-  align-items: center;
+  position: relative;
+  background-color: var(--color-neutral-9);
+  border: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
+  border-left: none;
+  border-radius: 14px;
   padding: 12px 16px;
-  margin: 8px 0;
-  animation: fadeInSlide 0.3s ease-out;
+  margin: 14px 0;
+  overflow: hidden;
+  isolation: isolate;
+  opacity: 0;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.container::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--color-primary-8);
+  border-radius: 40px;
+  z-index: 1;
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .content {
   display: flex;
-  align-items: baseline;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
 }
 
 .text {
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: #6b7280;
-  letter-spacing: 0.01em;
-  background: linear-gradient(90deg, #9ca3af 25%, #6b7280 50%, #9ca3af 75%);
-  background-size: 200% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: textShimmer 3s linear infinite;
+  color: var(--color-primary-5);
+  letter-spacing: 0.02em;
 }
 
 .dots {
   display: inline-flex;
-  gap: 1px;
-  margin-left: 2px;
+  gap: 3px;
+  align-items: center;
 }
 
 .dot {
-  animation: dotBounce 1.4s ease-in-out infinite;
-  color: #6b7280;
-  font-weight: bold;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary-6);
+  animation: dotPulse 1.4s ease-in-out infinite;
 }
 
 .dot:nth-child(1) {
@@ -49,33 +64,31 @@
   animation-delay: 0.4s;
 }
 
-@keyframes fadeInSlide {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
-@keyframes dotBounce {
+@keyframes dotPulse {
   0%, 60%, 100% {
     opacity: 0.3;
-    transform: translateY(0);
+    transform: scale(0.8);
   }
   30% {
     opacity: 1;
-    transform: translateY(-4px);
+    transform: scale(1.2);
   }
 }
 
-@keyframes textShimmer {
-  0% {
-    background-position: 200% 0;
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
   }
-  100% {
-    background-position: -200% 0;
+  50% {
+    opacity: 0.6;
   }
 }

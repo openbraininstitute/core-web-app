@@ -10,9 +10,9 @@ export function ThinkingIndicator() {
       <div className={styles.content}>
         <span className={styles.text}>Thinking</span>
         <span className={styles.dots}>
-          <span className={styles.dot}>.</span>
-          <span className={styles.dot}>.</span>
-          <span className={styles.dot}>.</span>
+          <span className={styles.dot} />
+          <span className={styles.dot} />
+          <span className={styles.dot} />
         </span>
       </div>
     </div>
