@@ -239,34 +239,9 @@ export default function BlockDictionaryEntries({
     );
   }
 
-  // Get deleted entries from highlights (entries with 'remove' type)
-  // computeLiveDiffs expands section-level removes into child-level diffs,
-  // so path.length >= 2 catches both individual and whole-section removes.
-  const deletedEntriesFromHighlights = Array.from(
-    new Set(
-      highlights
-        .filter((h) => h.path.length >= 2 && h.path[0] === rootElement && h.type === 'remove')
-        .map((h) => h.path[1])
-    )
-  );
-
-  // Get added entries from highlights that don't exist in the live config.
-  // This covers the restore flow where aiConfig is null (circuit ID mismatch)
-  // but highlights correctly identify new entries.
+  const deletedEntriesFromHighlights = highlightedEntries(highlights, rootElement, 'remove');
   const configKeys = new Set(Object.keys(config[rootElement] ?? {}));
-  const addedEntriesFromHighlights = Array.from(
-    new Set(
-      highlights
-        .filter(
-          (h) =>
-            h.path.length >= 2 &&
-            h.path[0] === rootElement &&
-            h.type === 'add' &&
-            !configKeys.has(h.path[1])
-        )
-        .map((h) => h.path[1])
-    )
-  );
+  const addedEntriesFromHighlights = highlightedEntries(highlights, rootElement, 'add', configKeys);
 
   return (
     <AnimatePresence>
@@ -482,4 +457,20 @@ export default function BlockDictionaryEntries({
       )}
     </AnimatePresence>
   );
+}
+/** Collect unique entry names from highlights matching a given diff type. */
+function highlightedEntries(
+  highlights: ConfigHighlight[],
+  rootElement: string,
+  type: DiffType,
+  exclude?: Set<string>
+): string[] {
+  const set = new Set<string>();
+  for (const h of highlights) {
+    if (h.path.length >= 2 && h.path[0] === rootElement && h.type === type) {
+      const entry = h.path[1];
+      if (!exclude || !exclude.has(entry)) set.add(entry);
+    }
+  }
+  return Array.from(set);
 }

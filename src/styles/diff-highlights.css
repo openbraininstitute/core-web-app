@@ -10,6 +10,9 @@
  *   - "slow" (2s linear)  used by root elements & dictionary entries
  *   - "fast" (1.2s ease)  used by individual fields inside blocks
  *
+ * All colour channels share a single `--diff-color` custom property
+ * (comma-separated RGB) so keyframes and declarations are defined once.
+ *
  * Consumed via CSS-module `composes` or plain class references.
  */
 
@@ -21,98 +24,71 @@
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* ── Colour tokens ────────────────────────────────────────────────────────── */
+
+.diff-highlight-added,
+.diff-highlight-added-selected,
+.diff-flash-slow-added,
+.diff-flash-fast-added {
+  --diff-color: 34, 197, 94;
+}
+
+.diff-highlight-removed,
+.diff-highlight-removed-selected,
+.diff-flash-slow-removed,
+.diff-flash-fast-removed {
+  --diff-color: 239, 68, 68;
+}
+
+.diff-highlight-modified,
+.diff-highlight-modified-selected,
+.diff-flash-slow-modified,
+.diff-flash-fast-modified {
+  --diff-color: 245, 158, 11;
+}
+
 /* ── Static highlights ────────────────────────────────────────────────────── */
 
-.diff-highlight-added {
-  border: 1.5px solid rgba(34, 197, 94, 0.55) !important;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08) !important;
-}
-
-.diff-highlight-added-selected {
-  border: 1.5px solid rgba(34, 197, 94, 0.55) !important;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08), inset 0 0 0 1px rgba(34, 197, 94, 0.5) !important;
-}
-
-.diff-highlight-removed {
-  border: 1.5px solid rgba(239, 68, 68, 0.55) !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08) !important;
-}
-
-.diff-highlight-removed-selected {
-  border: 1.5px solid rgba(239, 68, 68, 0.55) !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08), inset 0 0 0 1px rgba(239, 68, 68, 0.5) !important;
-}
-
+.diff-highlight-added,
+.diff-highlight-removed,
 .diff-highlight-modified {
-  border: 1.5px solid rgba(245, 158, 11, 0.55) !important;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08) !important;
+  border: 1.5px solid rgba(var(--diff-color), 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08) !important;
 }
 
+.diff-highlight-added-selected,
+.diff-highlight-removed-selected,
 .diff-highlight-modified-selected {
-  border: 1.5px solid rgba(245, 158, 11, 0.55) !important;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08), inset 0 0 0 1px rgba(245, 158, 11, 0.5) !important;
+  border: 1.5px solid rgba(var(--diff-color), 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08), inset 0 0 0 1px rgba(var(--diff-color), 0.5) !important;
+}
+
+/* ── Shared keyframes ─────────────────────────────────────────────────────── */
+
+@keyframes diff-flash-slow {
+  0%    { border: 1.5px solid rgba(var(--diff-color), 0);    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0); }
+  8%    { border: 1.5px solid rgba(var(--diff-color), 0.55); box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08); }
+  75%   { border: 1.5px solid rgba(var(--diff-color), 0.55); box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08); }
+  100%  { border: 1.5px solid rgba(var(--diff-color), 0);    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0); }
+}
+
+@keyframes diff-flash-fast {
+  0%, 15%   { border: 1.5px solid rgba(var(--diff-color), 0.55); box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08); }
+  85%, 100% { border: 1.5px solid rgba(var(--diff-color), 0);    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0); }
 }
 
 /* ── Slow flash (2 s linear) — root elements & dictionary entries ─────── */
 
-.diff-flash-slow-added {
-  animation: diff-flash-slow-added 2s linear forwards !important;
-}
-
-.diff-flash-slow-removed {
-  animation: diff-flash-slow-removed 2s linear forwards !important;
-}
-
+.diff-flash-slow-added,
+.diff-flash-slow-removed,
 .diff-flash-slow-modified {
-  animation: diff-flash-slow-modified 2s linear forwards !important;
-}
-
-@keyframes diff-flash-slow-added {
-  0%    { border: 1.5px solid rgba(34, 197, 94, 0);    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0); }
-  8%    { border: 1.5px solid rgba(34, 197, 94, 0.55); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08); }
-  75%   { border: 1.5px solid rgba(34, 197, 94, 0.55); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08); }
-  100%  { border: 1.5px solid rgba(34, 197, 94, 0);    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0); }
-}
-
-@keyframes diff-flash-slow-removed {
-  0%    { border: 1.5px solid rgba(239, 68, 68, 0);    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0); }
-  8%    { border: 1.5px solid rgba(239, 68, 68, 0.55); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08); }
-  75%   { border: 1.5px solid rgba(239, 68, 68, 0.55); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08); }
-  100%  { border: 1.5px solid rgba(239, 68, 68, 0);    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0); }
-}
-
-@keyframes diff-flash-slow-modified {
-  0%    { border: 1.5px solid rgba(245, 158, 11, 0);    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0); }
-  8%    { border: 1.5px solid rgba(245, 158, 11, 0.55); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08); }
-  75%   { border: 1.5px solid rgba(245, 158, 11, 0.55); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08); }
-  100%  { border: 1.5px solid rgba(245, 158, 11, 0);    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0); }
+  animation: diff-flash-slow 2s linear forwards !important;
 }
 
 /* ── Fast flash (1.2 s ease) — individual block fields ────────────────── */
 
-.diff-flash-fast-added {
-  animation: diff-flash-fast-added 1.2s ease-in-out forwards !important;
-}
-
-.diff-flash-fast-removed {
-  animation: diff-flash-fast-removed 1.2s ease-in-out forwards !important;
-}
-
+.diff-flash-fast-added,
+.diff-flash-fast-removed,
 .diff-flash-fast-modified {
-  animation: diff-flash-fast-modified 1.2s ease-in-out forwards !important;
-}
-
-@keyframes diff-flash-fast-added {
-  0%, 15%   { border: 1.5px solid rgba(34, 197, 94, 0.55); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.08); }
-  85%, 100% { border: 1.5px solid rgba(34, 197, 94, 0);    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0); }
-}
-
-@keyframes diff-flash-fast-removed {
-  0%, 15%   { border: 1.5px solid rgba(239, 68, 68, 0.55); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08); }
-  85%, 100% { border: 1.5px solid rgba(239, 68, 68, 0);    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0); }
-}
-
-@keyframes diff-flash-fast-modified {
-  0%, 15%   { border: 1.5px solid rgba(245, 158, 11, 0.55); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08); }
-  85%, 100% { border: 1.5px solid rgba(245, 158, 11, 0);    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0); }
+  animation: diff-flash-fast 1.2s ease-in-out forwards !important;
 }

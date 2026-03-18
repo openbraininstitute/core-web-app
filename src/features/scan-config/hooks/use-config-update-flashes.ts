@@ -13,6 +13,20 @@ import { computeLiveDiffs } from '@/utils/diff';
 
 const FLASH_DURATION_MS = 2100;
 
+/** Merge a flash entry into a map, upgrading to 'replace' on type conflict. */
+function mergeFlash(
+  map: Map<string, { type: 'add' | 'remove' | 'replace' }>,
+  key: string,
+  type: 'add' | 'remove' | 'replace'
+) {
+  const existing = map.get(key);
+  if (existing && existing.type !== type) {
+    map.set(key, { type: 'replace' });
+  } else if (!existing) {
+    map.set(key, { type });
+  }
+}
+
 /**
  * Reacts to lastConfigUpdateAtom changes, computes flash maps for ALL
  * affected root elements at once, writes to activeFlashesAtom, and
@@ -61,35 +75,14 @@ export function useConfigUpdateFlashes() {
       const fields = new Map<string, { type: 'add' | 'remove' | 'replace' }>();
 
       for (const diff of blockDiffs) {
-        // Entry-level (path length >= 2)
         if (diff.path.length >= 2) {
-          const entryName = diff.path[1];
-          const existing = entries.get(entryName);
-          if (existing && existing.type !== diff.type) {
-            entries.set(entryName, { type: 'replace' });
-          } else if (!existing) {
-            entries.set(entryName, { type: diff.type });
-          }
+          mergeFlash(entries, diff.path[1], diff.type);
         }
-        // Field-level for dictionary entries (depth 3+): "entry/field"
         if (diff.path.length >= 3) {
-          const fieldKey = diff.path[1] + '/' + diff.path[2];
-          const existingField = fields.get(fieldKey);
-          if (existingField && existingField.type !== diff.type) {
-            fields.set(fieldKey, { type: 'replace' });
-          } else if (!existingField) {
-            fields.set(fieldKey, { type: diff.type });
-          }
+          mergeFlash(fields, diff.path[1] + '/' + diff.path[2], diff.type);
         }
-        // Single blocks (depth 2): field is the second segment
         if (diff.path.length === 2) {
-          const fieldKey = diff.path[1];
-          const existingField = fields.get(fieldKey);
-          if (existingField && existingField.type !== diff.type) {
-            fields.set(fieldKey, { type: 'replace' });
-          } else if (!existingField) {
-            fields.set(fieldKey, { type: diff.type });
-          }
+          mergeFlash(fields, diff.path[1], diff.type);
         }
       }
 
@@ -128,3 +121,4 @@ export function useConfigUpdateFlashes() {
     };
   }, [configUpdate, setActiveFlashes, setExpandedRootElements]);
 }
+

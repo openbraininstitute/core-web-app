@@ -111,49 +111,16 @@ export function computeLiveDiffs(
     }
 
     // Expand root-level add/remove/replace into child-level diffs
-    if ((op === 'remove' || op === 'add') && path.length === 1) {
-      const sourceObj =
-        op === 'remove' ? currentConfig[path[0]] : (patch as { value?: unknown }).value;
-
-      if (sourceObj && typeof sourceObj === 'object' && !Array.isArray(sourceObj)) {
-        results.push({
-          path,
-          type: op,
-          value: (patch as { value?: unknown }).value,
-          operation: patch as JSONPatchOperation,
-        });
-        for (const childKey of Object.keys(sourceObj)) {
-          results.push({
-            path: [...path, childKey],
-            type: op,
-            value:
-              op === 'add'
-                ? (sourceObj as Record<string, unknown>)[childKey]
-                : undefined,
-            operation: patch as JSONPatchOperation,
-          });
-        }
-        continue;
-      }
-    }
-
-    // Expand root-level replace: compare old vs new children
-    if (op === 'replace' && path.length === 1) {
-      const oldObj = currentConfig[path[0]];
+    if (path.length === 1) {
       const newVal = (patch as { value?: unknown }).value;
+      const oldObj = currentConfig[path[0]];
 
-      const oldIsObj =
-        oldObj && typeof oldObj === 'object' && !Array.isArray(oldObj);
-      const newIsObj =
-        newVal && typeof newVal === 'object' && !Array.isArray(newVal);
+      const oldIsObj = oldObj && typeof oldObj === 'object' && !Array.isArray(oldObj);
+      const newIsObj = newVal && typeof newVal === 'object' && !Array.isArray(newVal);
 
       if (oldIsObj || newIsObj) {
-        const oldChildren = oldIsObj
-          ? (oldObj as Record<string, unknown>)
-          : {};
-        const newChildren = newIsObj
-          ? (newVal as Record<string, unknown>)
-          : {};
+        const oldChildren = oldIsObj ? (oldObj as Record<string, unknown>) : {};
+        const newChildren = newIsObj ? (newVal as Record<string, unknown>) : {};
         const oldKeys = new Set(Object.keys(oldChildren));
         const newKeys = new Set(Object.keys(newChildren));
         const childDiffs: DiffResult[] = [];

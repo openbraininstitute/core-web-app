@@ -38,14 +38,19 @@ function stripConfigPrefix(path: string[]): string[] {
   return path[0] === 'smc_simulation_config' && path.length > 1 ? path.slice(1) : path;
 }
 
-/** Build highlight objects from diffs (with path prefix stripped). */
-function diffsToHighlights(diffs: DiffResult[]) {
-  return diffs.map((d) => ({ path: stripConfigPrefix(d.path), type: d.type }));
-}
-
-/** Build adjusted diffs with path prefix stripped. */
-function diffsWithStrippedPaths(diffs: DiffResult[]): DiffResult[] {
-  return diffs.map((d) => ({ ...d, path: stripConfigPrefix(d.path) }));
+/** Strip config prefix from diffs and derive highlights in a single pass. */
+function processAccumulatedDiffs(diffs: DiffResult[]): {
+  highlights: { path: string[]; type: DiffResult['type'] }[];
+  strippedDiffs: DiffResult[];
+} {
+  const highlights: { path: string[]; type: DiffResult['type'] }[] = [];
+  const strippedDiffs: DiffResult[] = [];
+  for (const d of diffs) {
+    const path = stripConfigPrefix(d.path);
+    highlights.push({ path, type: d.type });
+    strippedDiffs.push({ ...d, path });
+  }
+  return { highlights, strippedDiffs };
 }
 
 /** Collect the set of top-level block names touched by highlights. */
@@ -205,10 +210,10 @@ export function useMessageDiffs({
   React.useEffect(() => {
     if (!showDiff || accumulatedDiffs.length === 0) return;
 
-    const highlights = diffsToHighlights(accumulatedDiffs);
+    const { highlights, strippedDiffs } = processAccumulatedDiffs(accumulatedDiffs);
     setDiffState({
       highlights,
-      diffs: diffsWithStrippedPaths(accumulatedDiffs),
+      diffs: strippedDiffs,
       oldConfig: firstOldConfig,
       expandedRootElements: modifiedBlockSet(highlights),
     });

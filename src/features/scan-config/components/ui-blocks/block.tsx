@@ -22,6 +22,31 @@ import { getDiffClassName } from '@/utils/diff-class';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
+/**
+ * Look up the diff/flash type for a specific field.
+ * Works for both dictionary entries (selectedEntry set) and single blocks.
+ */
+function lookupFieldType(
+  fieldName: string,
+  rootElement: string | undefined,
+  selectedEntry: string | undefined,
+  entryLookup: (entry: string) => { type: 'add' | 'remove' | 'replace' } | undefined,
+  fieldLookup: (key: string) => { type: 'add' | 'remove' | 'replace' } | undefined,
+): 'add' | 'remove' | 'replace' | null {
+  if (!rootElement) return null;
+
+  if (selectedEntry) {
+    const fieldResult = fieldLookup(selectedEntry + '/' + fieldName);
+    if (fieldResult) return fieldResult.type;
+    const entryResult = entryLookup(selectedEntry);
+    if (entryResult && entryResult.type !== 'replace') return entryResult.type;
+    return null;
+  }
+
+  const fieldResult = fieldLookup(fieldName);
+  return fieldResult ? fieldResult.type : null;
+}
+
 export default function Block({
   schemaName,
   schema,
@@ -53,65 +78,44 @@ export default function Block({
 
   // Helper to get flash type for a field (temporary animation from config-updated events)
   const getFieldFlashType = (fieldName: string): 'add' | 'remove' | 'replace' | null => {
-    if (!rootElement) return null;
-    const flash = activeFlashes.get(rootElement);
+    const flash = rootElement ? activeFlashes.get(rootElement) : undefined;
     if (!flash?.fields) return null;
-
-    // For dictionary entries: key is "entryName/fieldName"
-    if (selectedEntry) {
-      const fieldFlash = flash.fields.get(selectedEntry + '/' + fieldName);
-      if (fieldFlash) return fieldFlash.type;
-      // If the whole entry was added or removed, all fields inherit that flash.
-      // But if the entry is 'replace' (partial change), only field-level flashes apply.
-      const entryFlash = flash.entries.get(selectedEntry);
-      if (entryFlash && entryFlash.type !== 'replace') return entryFlash.type;
-      return null;
-    }
-
-    // For single blocks: key is just "fieldName"
-    const fieldFlash = flash.fields.get(fieldName);
-    return fieldFlash ? fieldFlash.type : null;
+    return lookupFieldType(
+      fieldName,
+      rootElement,
+      selectedEntry,
+      (entry) => flash.entries.get(entry),
+      (key) => flash.fields.get(key),
+    );
   };
-  
-  // Helper function to get field change type
+
+  // Helper to get field change type from persistent diffs
   const getFieldChangeType = (fieldName: string): 'add' | 'remove' | 'replace' | null => {
-    if (!rootElement || diffs.length === 0) return null;
-    
-    // For root-level blocks (no selectedEntry), check if any diff touches this field.
-    // This covers both direct changes (path.length === 2) and nested changes
-    // like initialize/circuit/id_str where fieldName is "circuit".
-    if (!selectedEntry) {
-      const fieldChange = diffs.find(
-        (d) => 
-          d.path.length >= 2 && 
-          d.path[0] === rootElement && 
-          d.path[1] === fieldName
-      );
-      return fieldChange ? fieldChange.type : null;
-    }
-    
-    // For dictionary entries, check if entire entry was added/removed.
-    // Only cascade to all fields for add/remove — 'replace' means partial
-    // change, so individual field-level diffs should be used instead.
-    const entryChange = diffs.find(
-      (d) => d.path.length === 2 && d.path[0] === rootElement && d.path[1] === selectedEntry
+    if (diffs.length === 0) return null;
+    return lookupFieldType(
+      fieldName,
+      rootElement,
+      selectedEntry,
+      (entry) =>
+        diffs.find(
+          (d) => d.path.length === 2 && d.path[0] === rootElement && d.path[1] === entry,
+        ),
+      selectedEntry
+        ? (key) => {
+            const field = key.slice(key.indexOf('/') + 1);
+            return diffs.find(
+              (d) =>
+                d.path.length >= 3 &&
+                d.path[0] === rootElement &&
+                d.path[1] === selectedEntry &&
+                d.path[2] === field,
+            );
+          }
+        : (key) =>
+            diffs.find(
+              (d) => d.path.length >= 2 && d.path[0] === rootElement && d.path[1] === key,
+            ),
     );
-    if (entryChange && entryChange.type !== 'replace') {
-      return entryChange.type;
-    }
-    
-    // Check for field-level change in dictionary entries.
-    // Use >= 3 because fast-json-patch may produce deeper paths when only a
-    // nested property of a field object changes (e.g. source_neuron_set/block_name).
-    const fieldChange = diffs.find(
-      (d) => 
-        d.path.length >= 3 && 
-        d.path[0] === rootElement && 
-        d.path[1] === selectedEntry && 
-        d.path[2] === fieldName
-    );
-    
-    return fieldChange ? fieldChange.type : null;
   };
 
   if (!blockSchema) return null;
