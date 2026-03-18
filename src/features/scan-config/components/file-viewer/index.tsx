@@ -146,7 +146,7 @@ function NwbFileViewer({ file, context }: NwbFileViewerProps) {
   return (
     <EphysViewer
       key={asset.id}
-      resource={entity as ISimulationResult}
+      entity={entity as ISimulationResult}
       assetId={asset.id}
       ctx={context}
     />
