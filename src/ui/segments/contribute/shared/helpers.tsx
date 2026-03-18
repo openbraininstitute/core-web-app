@@ -1,12 +1,11 @@
-import { initial, last, join, split } from 'es-toolkit/compat';
+import { initial, join, last, split } from 'es-toolkit/compat';
 import { z } from 'zod';
-
-import type { SafeParseReturnType, ZodTypeAny } from 'zod';
-import type { ComponentProps, ReactNode } from 'react';
-import type { FormInstance } from 'antd';
 
 import { cn } from '@/utils/css-class';
 
+import type { FormInstance } from 'antd';
+import type { ComponentProps, ReactNode } from 'react';
+import type { ZodSafeParseResult, ZodType } from 'zod';
 import type {
   ICustomFormErrorOptions,
   TStepValidationStatus,
@@ -72,7 +71,7 @@ export function renderLabel(
  * @param form - The Ant Design form instance
  * @param extraCustomValidator - Optional additional validator that can throw CustomFormError
  */
-export function createZodFieldValidator<TSchema extends ZodTypeAny, TFormValues>(
+export function createZodFieldValidator<TSchema extends ZodType, TFormValues>(
   schema: TSchema,
   fieldPath: string,
   form: FormInstance<TFormValues>,
@@ -104,7 +103,7 @@ export function createZodFieldValidator<TSchema extends ZodTypeAny, TFormValues>
  * @returns 'valid' if validation passed, 'invalid' if validation failed and field is dirty, 'non-touched' otherwise
  */
 export function getValidationStatus<T>(
-  validator: SafeParseReturnType<T, T>,
+  validator: ZodSafeParseResult<T>,
   fieldKey: string,
   dirtyFields: Array<string>
 ): TStepValidationStatus {

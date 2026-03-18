@@ -64,9 +64,9 @@ export interface ICircuitExtractionConfigFilter
 const CreateCircuitExtractionConfigSchema = z.object({
   name: z.string(),
   description: z.string(),
-  circuit_id: z.string().uuid(),
+  circuit_id: z.uuid(),
   scan_parameters: z.record(z.string(), z.unknown()),
-  authorized_public: z.boolean().default(false),
+  authorized_public: z.boolean().prefault(false),
 });
 
 export type TCreateCircuitExtractionConfig = z.infer<typeof CreateCircuitExtractionConfigSchema>;
@@ -74,7 +74,7 @@ export type TCreateCircuitExtractionConfig = z.infer<typeof CreateCircuitExtract
 const UpdateCircuitExtractionConfigSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
-  circuit_id: z.string().uuid().optional(),
+  circuit_id: z.uuid().optional(),
   scan_parameters: z.record(z.string(), z.unknown()).optional(),
 });
 
