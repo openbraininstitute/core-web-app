@@ -23,8 +23,6 @@ import type { UIMessage, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-const DEFAULT_EXPANDED = new Set(['info']);
-
 /** Filter parts down to completed editstate tool invocations. */
 function completedEditStateParts(parts: UIMessage['parts']): ToolInvocationUIPart[] {
   return parts.filter(
@@ -109,6 +107,8 @@ export function useMessageDiffs({
 
   /** The config state captured *before* the first editstate call in this message. */
   const firstOldConfig = React.useMemo(() => {
+    if (!isLastMessage) return null;
+
     const calls = completedEditStateParts(message.parts);
     if (calls.length === 0) return null;
 
@@ -141,7 +141,7 @@ export function useMessageDiffs({
       }
     }
     return null;
-  }, [message.parts, allMessages]);
+  }, [isLastMessage, message.parts, allMessages]);
 
   /** The config from the *last* completed editstate call in this message. */
   const lastNewConfig = React.useMemo((): Record<string, unknown> | null => {
@@ -162,12 +162,12 @@ export function useMessageDiffs({
 
   /** True diff between old and new config via fast-json-patch compare. */
   const accumulatedDiffs = React.useMemo(() => {
-    if (!firstOldConfig || !lastNewConfig) return [];
+    if (!isLastMessage || !firstOldConfig || !lastNewConfig) return [];
     return computeLiveDiffs(
       firstOldConfig as Record<string, unknown>,
       lastNewConfig as Record<string, unknown>
     );
-  }, [firstOldConfig, lastNewConfig]);
+  }, [isLastMessage, firstOldConfig, lastNewConfig]);
 
   /** Extract the config from the *last* completed editstate call (for restore). */
   const getLatestState = React.useCallback((): Config | null => {

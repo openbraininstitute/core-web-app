@@ -9,14 +9,10 @@ import {
 } from '@ant-design/icons';
 import { Input } from 'antd';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
-import isEqual from 'es-toolkit/compat/isEqual';
 import { atom, useAtomValue } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { Fragment } from 'react';
 
-import AIAdd from '@/components/icons/ai/add_icon';
-import AIIcon from '@/components/icons/ai/ai_icon';
-import AIEdit from '@/components/icons/ai/edit_icon';
 import { activeFlashesAtom } from '@/state/config-highlights';
 import { cn } from '@/utils/css-class';
 import { getDiffClassName } from '@/utils/diff-class';
@@ -31,6 +27,56 @@ import type { ConfigHighlight } from '@/state/config-highlights';
 import type { DiffType } from '@/utils/diff';
 
 import styles from './block-dictionary-entries.module.css';
+
+function EntryTab({
+  entryKey,
+  isSelected,
+  diffClass,
+  displayName,
+  onClick,
+  children,
+}: {
+  entryKey: string;
+  isSelected: boolean;
+  diffClass?: string;
+  displayName: string;
+  onClick: () => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    /* biome-ignore lint/a11y/useSemanticElements: input cannot be nested inside button */
+    <div
+      role="button"
+      key={entryKey}
+      className={cn(
+        'text-primary-8 flex h-12.5 min-h-12.5 min-w-37.5 items-center justify-between ',
+        'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
+        'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
+        {
+          'bg-linear-to-r from-[#003A8C] to-[#001026] text-white shadow-bnb':
+            isSelected,
+        },
+        styles.entryButton,
+        diffClass
+      )}
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(evt) => {
+        if (evt.key === ' ' || evt.key === 'Enter') {
+          onClick();
+        }
+      }}
+    >
+      {children ?? (
+        <div className="flex-1 min-w-0 text-left">
+          <div className="flex items-center">
+            <div className="inline-block truncate max-w-[24ch]">{displayName}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function BlockDictionaryEntries({
   config,
@@ -172,7 +218,7 @@ export default function BlockDictionaryEntries({
     setNewKey('');
   };
 
-  function renderBlockTab(entry: string, isDeleted = false, isHighlightOnly = false) {
+  function renderBlockTab(entry: string, isDeleted = false) {
     const isSelected = selectedRootElement === rootElement && entry === selectedEntry;
     const entryDiffClass = getEntryDiffClass(entry, isSelected);
 
@@ -182,72 +228,16 @@ export default function BlockDictionaryEntries({
       : upperFirst(lowerCase(entry)); // Format normally for non-deleted entries
 
     return (
-      <div
-        role="button"
+      <EntryTab
         key={entry}
-        className={cn(
-          'text-primary-8 flex h-12.5 min-h-12.5 min-w-37.5 items-center justify-between ',
-          'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
-          'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
-          {
-            'bg-linear-to-r from-[#003A8C] to-[#001026] text-white shadow-bnb':
-              isSelected,
-          },
-          styles.entryButton,
-          entryDiffClass
-        )}
-        tabIndex={0}
+        entryKey={entry}
+        isSelected={isSelected}
+        diffClass={entryDiffClass}
+        displayName={displayName}
         onClick={() => handleEntryClick(entry)}
-        onKeyDown={(evt) => {
-          if (evt.key === ' ' || evt.key === 'Enter') {
-            handleEntryClick(entry);
-          }
-        }}
-      >
-        <div className="flex-1 min-w-0 text-left">
-          <div className="flex items-center">
-            <div className="inline-block truncate max-w-[24ch]">{displayName}</div>
-          </div>
-        </div>
-        {!isDeleted && !isHighlightOnly && <AIIcon />}
-      </div>
+      />
     );
   }
-
-  const aiAddedEntries = aiConfig
-    ? Object.entries(aiConfig[rootElement] ?? {})
-        .filter(([block_key, _]) => {
-          if (!isPlainObject(config[rootElement])) return false;
-          const currentBlockConfig = config[rootElement][block_key];
-          return !currentBlockConfig;
-        })
-        .map(([entry]) => renderBlockTab(entry))
-    : [];
-
-  const aiDeletedEntries = aiConfig
-    ? Object.entries(config[rootElement] ?? {})
-        .filter(([block_key, _]) => {
-          if (!aiConfig) return false;
-          if (!isPlainObject(aiConfig[rootElement])) return false;
-          const blockAIConfig = aiConfig[rootElement][block_key];
-          return !blockAIConfig;
-        })
-        .map(([entry]) => renderBlockTab(entry))
-    : [];
-
-  const aiEditedEntries = aiConfig
-    ? Object.entries(config[rootElement] ?? {})
-        .filter(([block_key, block_schema]) => {
-          if (!aiConfig) return false;
-          if (!isPlainObject(aiConfig[rootElement])) return false;
-          const blockAIConfig = aiConfig[rootElement][block_key];
-          return !!blockAIConfig && !isEqual(block_schema, blockAIConfig);
-        })
-        .map(([entry]) => renderBlockTab(entry))
-    : [];
-
-  const areThereAiEntries =
-    !!aiConfig && [aiAddedEntries, aiDeletedEntries, aiEditedEntries].some((a) => a.length > 0);
 
   // Get deleted entries from highlights (entries with 'remove' type)
   // computeLiveDiffs expands section-level removes into child-level diffs,
@@ -301,19 +291,12 @@ export default function BlockDictionaryEntries({
             {deletedEntriesFromHighlights.map((entry) => renderBlockTab(entry, true))}
 
             {/* Render added entries from highlights (restore flow, aiConfig may be null) */}
-            {addedEntriesFromHighlights.map((entry) => renderBlockTab(entry, false, true))}
+            {addedEntriesFromHighlights.map((entry) => renderBlockTab(entry))}
 
             {Object.entries(config[rootElement] ?? {})
-              // We show only those that have no AI changes and are not marked as deleted
-              .filter(([block_key, block_schema]) => {
+              .filter(([block_key]) => {
                 if (deletedEntriesFromHighlights.includes(block_key)) return false;
-                // When highlights are active (restore preview / view diffs),
-                // skip the aiConfig equality filter — entries stay in the main
-                // list and get highlighted instead of moving to the AI section.
-                if (highlights.length > 0) return true;
-                if (!aiConfig) return true;
-                if (!isPlainObject(aiConfig[rootElement])) return true;
-                return isEqual(block_schema, aiConfig[rootElement][block_key]);
+                return true;
               })
               .map(([subkey]) => {
                 const isSelected =
@@ -322,28 +305,12 @@ export default function BlockDictionaryEntries({
 
                 return (
                   <Fragment key={subkey}>
-                    {/* biome-ignore lint/a11y/useSemanticElements: input cannot be nested inside button */}
-                    <div
-                      role="button"
-                      key={subkey}
-                      className={cn(
-                        'text-primary-8 flex h-12.5 min-h-12.5 min-w-37.5 items-center justify-between ',
-                        'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
-                        'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
-                        {
-                          'bg-linear-to-r from-[#003A8C] to-[#001026] text-white shadow-bnb':
-                            isSelected,
-                        },
-                        styles.entryButton,
-                        entryDiffClass
-                      )}
-                      tabIndex={0}
+                    <EntryTab
+                      entryKey={subkey}
+                      isSelected={isSelected}
+                      diffClass={entryDiffClass}
+                      displayName={subkey}
                       onClick={() => handleEntryClick(subkey)}
-                      onKeyDown={(evt) => {
-                        if (evt.key === ' ' || evt.key === 'Enter') {
-                          handleEntryClick(subkey);
-                        }
-                      }}
                     >
                       <div className="flex-1 min-w-0 text-left">
                         {isSelected && isEditingKey && !readOnly && (
@@ -487,43 +454,11 @@ export default function BlockDictionaryEntries({
                           />
                         )}
                       </div>
-                    </div>
+                    </EntryTab>
                   </Fragment>
                 );
               })}
           </div>
-          {/* AI suggested changes — hidden when highlights are active (restore preview uses highlights instead) */}
-
-          {!campaignId && areThereAiEntries && highlights.length === 0 && (
-            <div className="border-neutral-200 border rounded-lg w-90percent px-2 pb-4 pt-2 flex flex-col gap-2">
-              {aiAddedEntries.length > 0 && (
-                <div className="text-sm text-[#1690ff] flex items-center gap-1">
-                  <AIAdd w={12} h={12} /> Added
-                </div>
-              )}
-
-              {aiAddedEntries}
-
-              {aiDeletedEntries.length > 0 && (
-                <div className="text-sm text-red-500 flex items-center gap-1">
-                  <CloseOutlined /> Deleted
-                </div>
-              )}
-
-              {aiDeletedEntries}
-
-              {aiEditedEntries.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <AIEdit />
-                  <span className="text-sm bg-linear-to-r from-[#ef4444] to-[#1690ff] bg-clip-text text-transparent">
-                    Edited
-                  </span>
-                </div>
-              )}
-              {aiEditedEntries}
-            </div>
-          )}
-
           {!campaignId && !loading && !readOnly && isChatReady && !aiConfig && highlights.length === 0 && (
             <button
               className={cn(
