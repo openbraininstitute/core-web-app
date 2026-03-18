@@ -178,6 +178,7 @@ export const IonChannelModelSimulation: EntityCoreTypeConfig<
   asset: {
     extension: 'application/json',
   },
+  requiredFeatures: [ExtendedEntitiesTypeDict.IonChannelModelSimulation],
   detailViewSections: [DetailViewSectionsDict.Overview],
   isBookmarkable: false,
   isDownloadable: false,

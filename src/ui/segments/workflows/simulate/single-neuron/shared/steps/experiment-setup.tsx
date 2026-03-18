@@ -85,7 +85,7 @@ function Input({
                   await validator.parseAsync(value);
                 } catch (error) {
                   return Promise.reject(
-                    error instanceof z.ZodError ? error.errors.at(0)?.message : ''
+                    error instanceof z.ZodError ? error.issues.at(0)?.message : ''
                   );
                 }
                 return Promise.resolve();

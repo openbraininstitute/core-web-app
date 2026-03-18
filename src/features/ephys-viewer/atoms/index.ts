@@ -2,6 +2,7 @@ import isEqual from 'es-toolkit/compat/isEqual';
 import { atom } from 'jotai';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { AssetContentType } from '@/api/entitycore/types/shared/global';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
 
 import type { IElectricalCellRecording } from '@/api/entitycore/types';
@@ -21,7 +22,7 @@ export const nwbArrayBufferAtomFamily = readAtomFamilyWithExpiration(
     atom<Promise<ArrayBuffer>>(() => {
       const asset = assetId
         ? entity.assets?.find((a) => a.id === assetId)
-        : entity.assets?.find((a) => a.content_type === 'application/nwb');
+        : entity.assets?.find((a) => a.content_type === AssetContentType.nwb);
 
       if (!asset) {
         throw new Error('No NWB file found');

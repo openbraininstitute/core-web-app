@@ -4,7 +4,7 @@ import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
@@ -63,7 +63,7 @@ export function SimulationFiles({
     const voltageReportFile = outputFiles.find(
       (file) =>
         file.asset.label === AssetLabel.voltage_report &&
-        file.asset.content_type === 'application/nwb'
+        file.asset.content_type === AssetContentType.nwb
     );
 
     if (!selectedFile) {
