@@ -14,7 +14,7 @@ interface CollapsibleMessageProps {
 
 export function CollapsibleMessage({ message, status, children }: CollapsibleMessageProps) {
   const [collapsedIndices, setCollapsedIndices] = React.useState<Set<number>>(new Set());
-  const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(null);
+  const [animatingIndices, setAnimatingIndices] = React.useState<Set<number>>(new Set());
   const previousPartsLength = React.useRef(0);
 
   // Count steps in collapsed content (consecutive tool calls = 1 step)
@@ -71,16 +71,28 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
       const newPart = parts[newPartIndex];
 
       if (newPart.type === 'text' && 'text' in newPart && newPartIndex > 0) {
-        // Collapse everything before this new text part
+        // Start animation for items that will be collapsed
+        const toAnimate = new Set<number>();
+        // Preserve existing collapsed items
+        const updatedCollapsed = new Set(collapsedIndices);
+
         for (let i = 0; i < newPartIndex; i++) {
-          if (!collapsedIndices.has(i)) {
-            // Trigger animation for newly collapsed items
-            setAnimatingIndex(i);
-            setTimeout(() => setAnimatingIndex(null), 300);
+          if (!collapsedIndices.has(i) && !animatingIndices.has(i)) {
+            toAnimate.add(i);
           }
-          newCollapsedIndices.add(i);
+          updatedCollapsed.add(i);
         }
-        setCollapsedIndices(newCollapsedIndices);
+
+        if (toAnimate.size > 0) {
+          setAnimatingIndices(toAnimate);
+          // Delay actual collapse until animation completes
+          setTimeout(() => {
+            setCollapsedIndices(updatedCollapsed);
+            setAnimatingIndices(new Set());
+          }, 350);
+        } else {
+          setCollapsedIndices(updatedCollapsed);
+        }
       }
     }
 
@@ -94,19 +106,19 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
     }
 
     previousPartsLength.current = parts.length;
-  }, [message.parts, status]);
+  }, [message.parts, status, collapsedIndices, animatingIndices]);
 
-  // Separate collapsed and visible children
+  // Separate collapsed, animating, and visible children
   const collapsedChildren: React.ReactNode[] = [];
   const visibleChildren: React.ReactNode[] = [];
 
   children.forEach((child, index) => {
     if (collapsedIndices.has(index)) {
-      collapsedChildren.push(
-        <div
-          key={`collapsed-${index}`}
-          className={index === animatingIndex ? styles.slideToCollapsible : ''}
-        >
+      collapsedChildren.push(<div key={`collapsed-${index}`}>{child}</div>);
+    } else if (animatingIndices.has(index)) {
+      // Show animating items in visible area with animation
+      visibleChildren.push(
+        <div key={`animating-${index}`} className={styles.slideToCollapsible}>
           {child}
         </div>
       );
@@ -126,7 +138,7 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
       {collapsedChildren.length > 0 && (
         <div
           className={styles.thinkingContainer}
-          data-receiving={animatingIndex !== null}
+          data-receiving={animatingIndices.size > 0}
           data-collapsible="true"
         >
           <button
