@@ -44,6 +44,9 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
     .with({ asset: { content_type: ContentType.h5, label: AssetLabel.spike_report } }, (f) => (
       <H5SpikeFileViewer file={f} context={context} />
     ))
+    .with({ asset: { content_type: ContentType.h5, label: AssetLabel.replay_spikes } }, (f) => (
+      <H5SpikeFileViewer file={f} context={context} />
+    ))
     .otherwise((f) => <PlaceholderFileViewer file={f} />);
 
   return (
