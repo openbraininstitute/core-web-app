@@ -10,6 +10,7 @@
   isolation: isolate;
   opacity: 0;
   animation: fadeIn 0.3s ease-out forwards;
+  flex-shrink: 0;
 }
 
 .container::before {

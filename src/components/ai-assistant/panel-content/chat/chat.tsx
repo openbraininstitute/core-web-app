@@ -151,7 +151,7 @@ export default function Chat({ className, threadId }: ChatProps) {
       setIsAutoScrollEnabled(isAtBottom);
     }
   };
-
+  console.log(messages);
   return (
     <div className={classNames(styles.chatContainer, className)}>
       <div className={styles.articles} ref={refContainer} onWheel={handleWheel}>

@@ -31,6 +31,11 @@ function RawMessageItem({
   isLastMessage = false,
 }: MessageItemProps) {
   const debug = useDebug();
+
+  if ((value.role === 'user' || value.role === 'assistant') && value.parts.length === 0) {
+    return null;
+  }
+
   return (
     <div className={classNames(className, styles.messageItem)}>
       <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} />

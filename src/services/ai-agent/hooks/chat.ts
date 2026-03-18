@@ -14,13 +14,14 @@ import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
+import { fetchMessagesFromDB } from '../assistant/manager/message';
 
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
 const agentStateAtom = atom<Record<string, Config>>({});
-let requestId = crypto.randomUUID().replace(/-/g, '');
+const requestId = crypto.randomUUID().replace(/-/g, '');
 let returnId = '';
 
 export function useServiceAiAgentChat(threadId: string) {
@@ -70,8 +71,8 @@ export function useServiceAiAgentChat(threadId: string) {
   });
 
   useEffect(() => {
-    if (assistantInitialMessages.length === chat.messages.length){
-      return
+    if (assistantInitialMessages.length === chat.messages.length) {
+      return;
     }
     const lastMessage = chat.messages[chat.messages.length - 1];
 
@@ -105,6 +106,39 @@ export function useServiceAiAgentChat(threadId: string) {
     setIsChatReady(chat.status === 'ready');
   }, [chat.status, setIsChatReady]);
 
+  const stop = useCallback(async () => {
+    chat.stop();
+    queryClient.invalidateQueries({
+      queryKey: keyBuilderAI.messages(threadId, virtualLabId, projectId),
+    });
+    const oldMessages = chat.messages;
+    const messages = await fetchMessagesFromDB(
+      queryClient,
+      { accessToken: accessToken ?? 'NO-TOKEN', virtualLabId, projectId },
+      threadId
+    );
+
+    // If the messages where not saved in the DB yet, we keep the local state.
+    if (messages.length >= oldMessages.length) {
+      chat.setMessages([
+        ...oldMessages.slice(0, oldMessages.length - 1),
+        ...messages.slice(oldMessages.length - 1),
+      ]);
+    }
+    // We add a dummy AI message to sync up with backend, in case messages where not yet saved in DB.
+    else if (oldMessages.length > 0 && oldMessages[oldMessages.length - 1]?.role === 'user') {
+      chat.setMessages([
+        ...oldMessages,
+        {
+          id: `temp-id-${crypto.randomUUID()}`,
+          role: 'assistant',
+          content: '',
+          parts: [],
+        },
+      ]);
+    }
+  }, [chat, queryClient, accessToken, virtualLabId, projectId, threadId]);
+
   return {
     messages: chat.messages,
     isLoadingMessages,
@@ -132,7 +166,7 @@ export function useServiceAiAgentChat(threadId: string) {
     },
     status: chat.status,
     error: chat.error,
-    stop: chat.stop,
+    stop,
   };
 }
 
