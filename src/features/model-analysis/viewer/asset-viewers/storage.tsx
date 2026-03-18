@@ -3,13 +3,14 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import { AssetContentType as ContentType } from '@/api/entitycore/types/shared/global';
 import { getSession } from '@/auth-fetch';
 import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
 
 import type { WorkspaceContext } from '@/types/common';
 
-export const AllowedTypes = ['application/pdf', 'image/png', 'image/jpeg'] as const;
+export const AllowedTypes = [ContentType.pdf, ContentType.png, ContentType.jpeg] as const;
 export type TAllowedTypes = (typeof AllowedTypes)[number];
 
 const DEFAULT_CACHE_NAME = 'analysis-pdf-cache-v1';
