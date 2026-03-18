@@ -1,4 +1,4 @@
-import { authApiClient } from '@/api/apiClient';
+import { authApiClient } from '@/api/api-client';
 import { config } from '@/config';
 
 import type { IOrganizationFilter } from '@/api/entitycore/types/entities/agent';

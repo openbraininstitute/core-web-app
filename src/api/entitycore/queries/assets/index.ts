@@ -1,6 +1,6 @@
 import { kebabCase } from 'es-toolkit/compat';
 
-import { authApiClient } from '@/api/apiClient';
+import { authApiClient } from '@/api/api-client';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { config } from '@/config';
 import { compactRecord } from '@/utils/dictionary';

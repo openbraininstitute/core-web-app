@@ -1,4 +1,4 @@
-import {
+import type {
   EntityAuthorization,
   EntityCoreIdentifiable,
   EntityCoreOwnership,
@@ -6,7 +6,7 @@ import {
   IContributor,
   Timestamps,
 } from '../shared/global';
-import {
+import type {
   ContributionFilter,
   IdFilter,
   NameFilter,
