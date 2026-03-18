@@ -11,10 +11,7 @@ import {
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import {
   activeDiffMessageIdAtom,
-  configHighlightsAtom,
-  configDiffsAtom,
-  oldConfigAtom,
-  expandedRootElementsAtom,
+  clearDiffStateAtom,
   diffBarDataAtom,
   messageSubmittedCounterAtom,
 } from '@/state/config-highlights';
@@ -53,10 +50,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   const rateLimit = useAtomValue(atomRateLimit);
   const setRateLimit = useSetAtom(atomRateLimit);
   const [activeDiffMessageId, setActiveDiffMessageId] = useAtom(activeDiffMessageIdAtom);
-  const setConfigHighlights = useSetAtom(configHighlightsAtom);
-  const setConfigDiffs = useSetAtom(configDiffsAtom);
-  const setOldConfig = useSetAtom(oldConfigAtom);
-  const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
+  const clearDiffState = useSetAtom(clearDiffStateAtom);
   const [diffBarData, setDiffBarData] = useAtom(diffBarDataAtom);
   const setMessageSubmittedCounter = useSetAtom(messageSubmittedCounterAtom);
   const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
@@ -107,23 +101,17 @@ export default function Chat({ className, threadId }: ChatProps) {
     if (status === 'submitted') {
       setActiveDiffMessageId(null);
       setDiffBarData(null);
-      setConfigHighlights([]);
-      setConfigDiffs([]);
-      setOldConfig(null);
-      setExpandedRootElements(new Set(['info']));
+      clearDiffState();
       setMessageSubmittedCounter((c) => c + 1);
     }
-  }, [status, setActiveDiffMessageId, setDiffBarData, setConfigHighlights, setConfigDiffs, setOldConfig, setExpandedRootElements, setMessageSubmittedCounter]);
+  }, [status, setActiveDiffMessageId, setDiffBarData, clearDiffState, setMessageSubmittedCounter]);
 
   // Clear active diff view when switching conversations
   React.useEffect(() => {
     setActiveDiffMessageId(null);
     setDiffBarData(null);
-    setConfigHighlights([]);
-    setConfigDiffs([]);
-    setOldConfig(null);
-    setExpandedRootElements(new Set(['info']));
-  }, [threadId, setActiveDiffMessageId, setDiffBarData, setConfigHighlights, setConfigDiffs, setOldConfig, setExpandedRootElements]);
+    clearDiffState();
+  }, [threadId, setActiveDiffMessageId, setDiffBarData, clearDiffState]);
 
   // Monitor scroll height changes for auto-scroll
   React.useEffect(() => {
@@ -196,11 +184,8 @@ export default function Chat({ className, threadId }: ChatProps) {
   const handleCloseDiffBar = React.useCallback(() => {
     setDiffBarData(null);
     setActiveDiffMessageId(null);
-    setConfigHighlights([]);
-    setConfigDiffs([]);
-    setOldConfig(null);
-    setExpandedRootElements(new Set(['info']));
-  }, [setDiffBarData, setActiveDiffMessageId, setConfigHighlights, setConfigDiffs, setOldConfig, setExpandedRootElements]);
+    clearDiffState();
+  }, [setDiffBarData, setActiveDiffMessageId, clearDiffState]);
 
   const handleWheel = (event: React.WheelEvent) => {
     if (event.deltaY < 0) {

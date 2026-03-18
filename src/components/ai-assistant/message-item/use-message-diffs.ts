@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 
 import {
   adjustParentTypes,
@@ -11,10 +11,8 @@ import {
 import { configStateAtom, agentStateAtom } from '@/services/ai-agent/hooks/chat';
 import type { Config } from '@/features/scan-config/components/components';
 import {
-  configHighlightsAtom,
-  configDiffsAtom,
-  expandedRootElementsAtom,
-  oldConfigAtom,
+  diffStateAtom,
+  clearDiffStateAtom,
   activeDiffMessageIdAtom,
   diffBarDataAtom,
   pendingRestoreConfigAtom,
@@ -59,17 +57,8 @@ function modifiedBlockSet(highlights: { path: string[] }[]): Set<string> {
 
 /** Reset all diff-related atoms to their idle state. */
 function useClearDiffState() {
-  const [, setConfigHighlights] = useAtom(configHighlightsAtom);
-  const [, setConfigDiffs] = useAtom(configDiffsAtom);
-  const [, setOldConfig] = useAtom(oldConfigAtom);
-  const [, setExpandedRootElements] = useAtom(expandedRootElementsAtom);
-
-  return React.useCallback(() => {
-    setConfigHighlights([]);
-    setConfigDiffs([]);
-    setOldConfig(null);
-    setExpandedRootElements(DEFAULT_EXPANDED);
-  }, [setConfigHighlights, setConfigDiffs, setOldConfig, setExpandedRootElements]);
+  const clearDiff = useSetAtom(clearDiffStateAtom);
+  return React.useCallback(() => clearDiff(), [clearDiff]);
 }
 
 // ── Main hook ────────────────────────────────────────────────────────────────
@@ -96,10 +85,7 @@ export function useMessageDiffs({
 }: UseMessageDiffsArgs): MessageDiffActions {
   const [, setConfig] = useAtom(configStateAtom);
   const [agentState] = useAtom(agentStateAtom);
-  const [, setConfigHighlights] = useAtom(configHighlightsAtom);
-  const [, setConfigDiffs] = useAtom(configDiffsAtom);
-  const [, setExpandedRootElements] = useAtom(expandedRootElementsAtom);
-  const [, setOldConfig] = useAtom(oldConfigAtom);
+  const setDiffState = useSetAtom(diffStateAtom);
   const [activeDiffMessageId] = useAtom(activeDiffMessageIdAtom);
   const [, setDiffBarData] = useAtom(diffBarDataAtom);
   const [, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
@@ -219,20 +205,18 @@ export function useMessageDiffs({
   React.useEffect(() => {
     if (!showDiff || accumulatedDiffs.length === 0) return;
 
-    setOldConfig(firstOldConfig);
-
     const highlights = diffsToHighlights(accumulatedDiffs);
-    setConfigHighlights(highlights);
-    setConfigDiffs(diffsWithStrippedPaths(accumulatedDiffs));
-    setExpandedRootElements(modifiedBlockSet(highlights));
+    setDiffState({
+      highlights,
+      diffs: diffsWithStrippedPaths(accumulatedDiffs),
+      oldConfig: firstOldConfig,
+      expandedRootElements: modifiedBlockSet(highlights),
+    });
   }, [
     showDiff,
     accumulatedDiffs,
     firstOldConfig,
-    setOldConfig,
-    setConfigHighlights,
-    setConfigDiffs,
-    setExpandedRootElements,
+    setDiffState,
   ]);
 
   const prevShowDiffRef = React.useRef(showDiff);
@@ -268,28 +252,24 @@ export function useMessageDiffs({
 
     preRestoreConfigRef.current = currentLiveConfig as Config | null;
 
-    if (currentLiveConfig) {
-      setOldConfig(currentLiveConfig as Record<string, any>);
-    }
-
     // Set the preview guard BEFORE setting configStateAtom so the aiConfig
     // auto-apply effect in left.tsx skips this update.
     setRestorePreviewActive(true);
     setConfig(latestState as Config);
 
     const highlights = adjustedDiffs.map((d) => ({ path: d.path, type: d.type }));
-    setConfigHighlights(highlights);
-    setConfigDiffs(adjustedDiffs);
-    setExpandedRootElements(modifiedBlockSet(highlights));
+    setDiffState({
+      highlights,
+      diffs: adjustedDiffs,
+      oldConfig: currentLiveConfig as Record<string, any>,
+      expandedRootElements: modifiedBlockSet(highlights),
+    });
   }, [
     getLatestState,
     agentState,
-    setOldConfig,
     setRestorePreviewActive,
     setConfig,
-    setConfigHighlights,
-    setConfigDiffs,
-    setExpandedRootElements,
+    setDiffState,
   ]);
 
   const handleConfirmRestore = React.useCallback(() => {

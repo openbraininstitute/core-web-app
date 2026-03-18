@@ -2,27 +2,59 @@ import { atom } from 'jotai';
 import type { DiffResult } from '@/utils/diff';
 
 /**
- * Atom to track which config paths should be highlighted
- * Used by AI assistant to communicate diffs to the config UI
+ * Highlight descriptor for a single config path change.
  */
 export interface ConfigHighlight {
   path: string[]; // e.g., ['initialize', 'circuit', 'duration']
   type: 'add' | 'remove' | 'replace';
 }
 
-export const configHighlightsAtom = atom<ConfigHighlight[]>([]);
+// ── Consolidated diff state ──────────────────────────────────────────────────
+
+const DEFAULT_EXPANDED = new Set(['info']);
 
 /**
- * Atom to store the full diff results for detailed field-level comparisons
- * Used to show old vs new values in the middle panel
+ * All diff-related state that is always set and cleared as a group.
+ * Consolidating these into one atom eliminates the "clear all diff state"
+ * pattern that was previously repeated in 4+ places with 4 individual setters.
  */
-export const configDiffsAtom = atom<DiffResult[]>([]);
+export interface DiffState {
+  highlights: ConfigHighlight[];
+  diffs: DiffResult[];
+  oldConfig: Record<string, any> | null;
+  expandedRootElements: Set<string>;
+}
 
-/**
- * Atom to store the old config state before changes (for showing old values)
- * Used to display previous values for modified fields
- */
-export const oldConfigAtom = atom<Record<string, any> | null>(null);
+const IDLE_DIFF_STATE: DiffState = {
+  highlights: [],
+  diffs: [],
+  oldConfig: null,
+  expandedRootElements: DEFAULT_EXPANDED,
+};
+
+export const diffStateAtom = atom<DiffState>(IDLE_DIFF_STATE);
+
+/** Reset diff state to idle in one call. */
+export const clearDiffStateAtom = atom(null, (_get, set) => {
+  set(diffStateAtom, IDLE_DIFF_STATE);
+});
+
+// ── Derived read-only atoms (keep consumer imports stable) ───────────────────
+
+export const configHighlightsAtom = atom((get) => get(diffStateAtom).highlights);
+export const configDiffsAtom = atom((get) => get(diffStateAtom).diffs);
+export const oldConfigAtom = atom((get) => get(diffStateAtom).oldConfig);
+export const expandedRootElementsAtom = atom(
+  (get) => get(diffStateAtom).expandedRootElements,
+  (_get, set, update: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+    set(diffStateAtom, (prev) => ({
+      ...prev,
+      expandedRootElements: typeof update === 'function' ? update(prev.expandedRootElements) : update,
+    }));
+  },
+);
+
+// ── Independent UI atoms (not part of the diff group) ────────────────────────
 
 /**
  * Atom to control which root element is selected/expanded in the scan config UI
@@ -35,12 +67,6 @@ export const selectedRootElementAtom = atom<string>('info');
  * Used by AI assistant to show the config editor when expanding blocks
  */
 export const editingAtom = atom<boolean>(true);
-
-/**
- * Atom to track which root elements should be expanded (for multi-expand support)
- * Used by AI assistant to expand multiple blocks simultaneously when viewing diffs
- */
-export const expandedRootElementsAtom = atom<Set<string>>(new Set(['info']));
 
 /**
  * Atom to track which child entry should be selected within a dictionary block
