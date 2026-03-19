@@ -7,6 +7,10 @@ import {
   LicenseIdSchema,
   SubjectIdSchema,
 } from '@/ui/segments/contribute/shared/schemas';
+import {
+  RepairPipelineType,
+  type TRepairPipelineType,
+} from '@/api/entitycore/types/entities/cell-morphology';
 
 export const ProtocolSchema = z
   .string({ message: 'Protocol is required' })
@@ -17,16 +21,6 @@ export const MTypeClassIdSchema = z
   .string({ message: 'M-type class is required' })
   .uuid()
   .nonempty({ message: 'M-type class is required' });
-
-export const RepairPipelineType = {
-  Raw: { key: 'raw', label: 'raw' },
-  Curated: { key: 'curated', label: 'curated' },
-  Unraveled: { key: 'unraveled', label: 'unraveled' },
-  Repaired: { key: 'repaired', label: 'repaired' },
-} as const;
-
-export type TRepairPipelineType =
-  (typeof RepairPipelineType)[keyof typeof RepairPipelineType]['key'];
 
 export const RepairPipelineTypeSchema = z
   .enum(Object.values(RepairPipelineType).map((v) => v.key) as [string, ...string[]])
