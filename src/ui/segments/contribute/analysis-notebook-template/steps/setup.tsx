@@ -8,13 +8,12 @@ import {
   RequiredFieldMarker,
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
+import { EntityGroupDict } from '@/ui/segments/workflows/elements/helpers';
 
-const SCALE_OPTIONS = [
-  { label: 'Subcellular', value: 'subcellular' },
-  { label: 'Cellular', value: 'cellular' },
-  { label: 'Circuit', value: 'circuit' },
-  { label: 'System', value: 'system' },
-];
+const SCALE_OPTIONS = Object.values(EntityGroupDict).map((value) => ({
+  label: value,
+  value: value.toLowerCase(),
+}));
 
 export function Setup() {
   const form = Form.useFormInstance();
@@ -69,14 +68,8 @@ export function Setup() {
           },
         ]}
       >
-        <Select
-          className="h-12"
-          size="large"
-          placeholder="Select scale"
-          options={SCALE_OPTIONS}
-        />
+        <Select className="h-12" size="large" placeholder="Select scale" options={SCALE_OPTIONS} />
       </Form.Item>
-
     </div>
   );
 }
