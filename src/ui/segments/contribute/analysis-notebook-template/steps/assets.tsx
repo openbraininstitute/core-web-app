@@ -77,7 +77,7 @@ function HiddenSentinel({
 }
 
 export function Assets() {
-  const { notifyChange, form } = useContributionPipeline();
+  const { form } = useContributionPipeline();
   const [, setTick] = useState(0);
   const sentinels = useRef<{ notebook?: true; requirements?: true; zip?: true }>({});
 
@@ -93,7 +93,6 @@ export function Assets() {
     const snapshot = { ...sentinels.current };
     setTimeout(() => {
       form.setFieldsValue({ assets: snapshot } as any);
-      notifyChange();
       setTick((n) => n + 1);
     }, 0);
   };
