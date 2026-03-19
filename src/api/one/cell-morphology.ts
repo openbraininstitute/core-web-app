@@ -10,50 +10,29 @@ export type NeuronRegistered = {
   id: string;
 };
 
-interface EnhancedError extends Error {
-  code?: string | number;
-}
-
 export async function resolveNeuronFile(file: File): Promise<NeuronResolution> {
   const api = await obioneApi();
   const formData = new FormData();
   formData.append('file', file, file.name);
-
-  const url = '/declared/test-neuron-file';
   const response = await api.post<Response>(
-    url,
+    '/declared/test-neuron-file',
     {
-      headers: { accept: 'application/json' },
+      headers: {
+        accept: 'application/json',
+      },
       body: formData,
     },
     { asRawResponse: true }
   );
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const nested = errorData?.detail;
-    const message =
-      (typeof nested === 'object' ? nested?.detail : nested) ||
-      errorData?.message ||
-      `Request failed with status ${response.status}`;
-
-    const ansiRegex = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
-    const cleanMessage = message.replace(ansiRegex, '');
-
-    const err = new Error(cleanMessage) as EnhancedError;
-    err.code = typeof nested === 'object' ? nested?.code : undefined;
-    throw err;
-  }
-
   return {
-    isValid: true,
+    isValid: response.ok,
     buffer: await response.arrayBuffer(),
   };
 }
 
 export async function createAndRegisterMorphometrics(
   file: File,
-  payload: Record<string, unknown>, // Fix: Changed 'any' to 'unknown'
+  payload: Record<string, any>,
   context: { projectId: string; virtualLabId: string }
 ): Promise<{ isValid: boolean; id: string }> {
   const api = await obioneApi();
@@ -61,7 +40,7 @@ export async function createAndRegisterMorphometrics(
   formData.append('file', file, file.name);
   formData.append('metadata', JSON.stringify(payload));
 
-  const response = await api.post<{ entity_id: string }>(
+  const response = await api.post(
     '/declared/register-morphology-with-calculated-metrics',
     {
       headers: {
@@ -74,10 +53,10 @@ export async function createAndRegisterMorphometrics(
     { asRawResponse: true }
   );
 
-  const data = await (response as unknown as Response).json();
+  const data = await response.json();
 
   return {
-    isValid: (response as unknown as Response).ok,
+    isValid: response.ok,
     id: data.entity_id,
   };
 }
