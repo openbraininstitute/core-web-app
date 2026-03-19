@@ -8,6 +8,7 @@ import {
   type IContributionFormConfig,
   type IContributionStep,
 } from '@/ui/segments/contribute/shared';
+
 export const ANALYSIS_NOTEBOOK_TEMPLATE_PROGRESS_STEPS: Array<{
   key: string;
   label: string;
@@ -41,7 +42,11 @@ export function createAnalysisNotebookTemplateConfig(
     progressSteps: steps,
     getInitialValues: () => ({
       setup: {} as TAnalysisNotebookTemplateForm['setup'],
-      assets: {} as TAnalysisNotebookTemplateForm['assets'],
+      assets: {
+        notebook: undefined,
+        requirements: undefined,
+        zip: undefined,
+      } as unknown as TAnalysisNotebookTemplateForm['assets'],
       contribution: [{}] as unknown as TAnalysisNotebookTemplateForm['contribution'],
     }),
     buildDetailsUrl: ({ virtualLabId, projectId }) =>
