@@ -5,10 +5,8 @@ import { getProtocols } from '@/api/entitycore/queries/general/protocol';
 import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelectFormItem } from '@/ui/molecules/async-select';
-import {
-  CellMorphologySchema,
-  RepairPipelineType,
-} from '@/ui/segments/contribute/cell-morphology/schema';
+import { CellMorphologySchema } from '@/ui/segments/contribute/cell-morphology/schema';
+import { RepairPipelineType } from '@/api/entitycore/types/entities/cell-morphology';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
