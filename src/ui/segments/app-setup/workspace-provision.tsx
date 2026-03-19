@@ -62,16 +62,20 @@ function useDebouncedValue(value: string, delayMs = 400) {
   return debounced;
 }
 
-function RetryRenameInput({ onConfirm }: { onConfirm: (newName: string) => void }) {
+function RetryRenameInput({
+  onConfirm,
+  originalName,
+}: {
+  onConfirm: (newName: string) => void;
+  originalName: string;
+}) {
   const [value, setValue] = useState('');
   const debouncedName = useDebouncedValue(value.trim());
   const enabled = debouncedName.length >= 2;
 
   const { data: exists, isLoading } = useQuery({
     queryKey: ['check-virtual-lab-name', debouncedName],
-    queryFn: async () => {
-      return await checkVirtualLabExists({ name: debouncedName });
-    },
+    queryFn: () => checkVirtualLabExists({ name: debouncedName }),
     enabled,
   });
 
@@ -87,17 +91,21 @@ function RetryRenameInput({ onConfirm }: { onConfirm: (newName: string) => void 
             type="text"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Enter a new name"
             className={cn(
               'border-neutral-1 h-auto rounded-full bg-white shadow-sm',
               'placeholder:text-sm placeholder:font-light disabled:font-black disabled:opacity-70',
               'focus-visible:text-primary-8! font-black! focus-visible:font-bold! text-primary-8!',
-              'h-10 gap-1.5 text-base py-3 px-4 rounded-full focus-within:border-none',
+              'h-10 gap-1.5 py-3 px-4 rounded-full focus-within:border-none text-lg!',
               taken && 'border-error',
               available && 'border-secondary-2'
             )}
             aria-label="New virtual lab name"
           />
+          {!value && (
+            <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm font-light text-gray-400 line-through">
+              {originalName}
+            </span>
+          )}
           <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
             {isLoading && <LoadingOutlined className="text-primary-8 h-4 w-4 animate-spin" />}
             {!isLoading && available && <CheckCircleFilled className="text-secondary-2 h-4 w-4" />}
@@ -210,7 +218,11 @@ function processChunk(
     return prev;
   });
 
-  if (chunk.status === WorkspaceBootstrapStepStatus.Retryable && chunk.errorCode) {
+  // Only set retry state for ENTITY_ALREADY_EXISTS — the only retryable scenario
+  if (
+    chunk.status === WorkspaceBootstrapStepStatus.Retryable &&
+    chunk.errorCode === 'ENTITY_ALREADY_EXISTS'
+  ) {
     setRetryState({
       step: chunk.step as TWorkspaceBootstrapStep,
       errorCode: chunk.errorCode,
@@ -253,7 +265,8 @@ export function WorkspaceProvision({
     async (
       cancelled: { current: boolean },
       payload: TWorkspaceIdentitySchema | undefined,
-      resumeFromStep?: string
+      resumeFromStep?: string,
+      signal?: AbortSignal
     ) => {
       try {
         const it = streamingFetch('/api/sync/boot', {
@@ -269,6 +282,7 @@ export function WorkspaceProvision({
             shouldCreateProject,
             ...(resumeFromStep && { resumeFromStep }),
           }),
+          signal,
         });
 
         for await (const value of it) {
@@ -300,14 +314,17 @@ export function WorkspaceProvision({
   const payloadRef = useRef(accountPayload);
   payloadRef.current = accountPayload;
 
+  // Auto-start the full bootstrap stream on mount.
+  // AbortController ensures only one in-flight request survives across
+  // React Strict Mode's mount → unmount → remount cycle.
   useEffect(() => {
-    const cancelled = { current: false };
+    const abortController = new AbortController();
     setProgress(0);
     setCompletedSteps([]);
     setRetryState(null);
-    streamRef.current(cancelled, payloadRef.current);
+    streamRef.current({ current: false }, payloadRef.current, undefined, abortController.signal);
     return () => {
-      cancelled.current = true;
+      abortController.abort();
     };
   }, []);
 
@@ -373,7 +390,8 @@ export function WorkspaceProvision({
               const failed = cs?.status === WorkspaceBootstrapStepStatus.Error;
               const retryable = cs?.status === WorkspaceBootstrapStepStatus.Retryable;
               const inProgress = cs?.status === WorkspaceBootstrapStepStatus.InProgress;
-              const isRetryTarget = retryState?.step === step;
+              const isRetryTarget =
+                retryState?.step === step && retryState?.errorCode === 'ENTITY_ALREADY_EXISTS';
 
               return (
                 <div key={step} className="flex items-start gap-3">
@@ -393,11 +411,17 @@ export function WorkspaceProvision({
                     {failed && cs?.message && (
                       <span className="text-error text-sm">{cs.message}</span>
                     )}
-                    {retryable && cs?.message && (
-                      <span className="text-amber-600 text-sm max-w-80">{cs.message}</span>
+                    {isRetryTarget && (
+                      <span className="text-amber-600 text-sm max-w-80">
+                        The name <strong>&quot;{accountPayload?.name}&quot;</strong> is already
+                        taken. Please choose a different name for your Virtual Lab.
+                      </span>
                     )}
                     {isRetryTarget && !isResuming && (
-                      <RetryRenameInput onConfirm={handleRetryWithNewName} />
+                      <RetryRenameInput
+                        onConfirm={handleRetryWithNewName}
+                        originalName={accountPayload?.name ?? ''}
+                      />
                     )}
                   </div>
                 </div>
