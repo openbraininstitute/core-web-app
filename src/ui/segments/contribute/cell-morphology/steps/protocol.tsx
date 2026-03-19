@@ -1,5 +1,4 @@
 import { Form, Select } from 'antd';
-import { upperFirst } from 'lodash';
 import { useCallback, useMemo } from 'react';
 
 import { getProtocols } from '@/api/entitycore/queries/general/protocol';
@@ -22,7 +21,7 @@ import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shar
 import type { AsyncSelectOption } from '@/ui/molecules/async-select';
 
 const REPAIR_PIPELINE_OPTIONS = Object.values(RepairPipelineType).map(({ key, label }) => ({
-  label: upperFirst(label),
+  label: label.charAt(0).toUpperCase() + label.slice(1),
   value: key,
 }));
 
