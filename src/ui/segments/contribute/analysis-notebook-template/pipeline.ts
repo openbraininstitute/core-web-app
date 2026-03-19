@@ -4,24 +4,24 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 
 import {
-  AssetLabel,
-  ContentType,
   createAnalysisNotebookTemplate,
   uploadNotebookTemplateFile,
 } from '@/api/entitycore/queries/experimental/analysis-notebook-template';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
+import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ANALYSIS_NOTEBOOK_TEMPLATE_PROGRESS_STEPS } from '@/ui/segments/contribute/analysis-notebook-template/config';
-import type { TAnalysisNotebookTemplateForm } from '@/ui/segments/contribute/analysis-notebook-template/schema';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
+
+import { getNotebookFiles } from './steps/assets';
+
+import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
+import type { TAnalysisNotebookTemplateForm } from '@/ui/segments/contribute/analysis-notebook-template/schema';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
 } from '@/ui/segments/contribute/shared/types';
-import { getNotebookFiles } from './steps/assets';
-
 
 export function useAnalysisNotebookTemplatePipeline({
   sessionId,
@@ -50,10 +50,8 @@ export function useAnalysisNotebookTemplatePipeline({
         }),
         queryClient.invalidateQueries({
           predicate: (query) =>
-            get(
-              (query.queryKey as ExtendedEntityTypeQueryKey)[0],
-              'context.extendedEntityType'
-            ) === ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
+            get((query.queryKey as ExtendedEntityTypeQueryKey)[0], 'context.extendedEntityType') ===
+            ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
         }),
         queryClient.invalidateQueries(),
       ]);
@@ -72,7 +70,7 @@ export function useAnalysisNotebookTemplatePipeline({
         context: { projectId, virtualLabId },
         entityId,
         file: files.notebook,
-        contentType: ContentType.application_x_ipynb_json,
+        contentType: AssetContentType.ipynb,
         assetLabel: AssetLabel.jupyter_notebook,
       });
 
@@ -81,7 +79,7 @@ export function useAnalysisNotebookTemplatePipeline({
           context: { projectId, virtualLabId },
           entityId,
           file: files.requirements,
-          contentType: ContentType.text_plain,
+          contentType: AssetContentType.text,
           assetLabel: AssetLabel.requirements,
         });
       }
@@ -91,7 +89,7 @@ export function useAnalysisNotebookTemplatePipeline({
           context: { projectId, virtualLabId },
           entityId,
           file: files.zip,
-          contentType: ContentType.application_zip,
+          contentType: AssetContentType.zip,
           assetLabel: AssetLabel.notebook_required_files,
         });
       }
@@ -126,7 +124,7 @@ export function useAnalysisNotebookTemplatePipeline({
     createEntity: async ({ values }: { values: TAnalysisNotebookTemplateForm }) => {
       const notebook = await createNotebookAsync.mutateAsync(values);
       const entityId = notebook.id;
-console.log('[pipeline] getNotebookFiles():', getNotebookFiles());
+      console.log('[pipeline] getNotebookFiles():', getNotebookFiles());
       await uploadAssetsAsync.mutateAsync({
         entityId,
         files: getNotebookFiles() as { notebook: File; requirements?: File; zip?: File },
