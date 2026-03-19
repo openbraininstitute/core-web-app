@@ -44,6 +44,7 @@ type Props = {
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  errorPathPrefix?: string;
 };
 
 export default function BlockDictionary({
@@ -62,6 +63,7 @@ export default function BlockDictionary({
   allEntries,
   onNewBlockClick,
   schemaMappingConfig,
+  errorPathPrefix,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
 
@@ -93,6 +95,7 @@ export default function BlockDictionary({
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
         entity={entity}
         schemaMappingConfig={schemaMappingConfig}
+        errorPathPrefix={errorPathPrefix}
       />
     );
   }

@@ -3,6 +3,7 @@
 import { isNil } from 'es-toolkit/compat';
 import { useCallback, useEffect, useState } from 'react';
 
+import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
 import { cn } from '@/utils/css-class';
 
@@ -19,6 +20,7 @@ export interface SectionListEditorProps {
   values: Record<string, SectionValue>;
   onChange: (sectionList: string, value: SectionValue) => void;
   disabled?: boolean;
+  errorPathPrefix?: string;
 }
 
 export function SectionListConfigEditor({
@@ -26,6 +28,7 @@ export function SectionListConfigEditor({
   values,
   onChange,
   disabled = false,
+  errorPathPrefix,
 }: SectionListEditorProps) {
   return (
     <div className="mt-3 space-y-4 p-1">
@@ -36,6 +39,7 @@ export function SectionListConfigEditor({
           value={values[entry.section_list] ?? null}
           onChange={(v) => onChange(entry.section_list, v)}
           disabled={disabled}
+          errorPathPrefix={errorPathPrefix}
         />
       ))}
     </div>
@@ -47,11 +51,13 @@ function SectionConfigRow({
   value,
   onChange,
   disabled,
+  errorPathPrefix,
 }: {
   entry: SectionListEntry;
   value: SectionValue | null;
   onChange: (v: SectionValue) => void;
   disabled: boolean;
+  errorPathPrefix?: string;
 }) {
   const [min, max] = entry.limits ?? [undefined, undefined];
   const [draft, setDraft] = useState(value !== null ? String(value) : '');
@@ -70,7 +76,17 @@ function SectionConfigRow({
     [min, max]
   );
 
-  const error = value !== null ? validate(value) : undefined;
+  // validate against the draft so errors appear as the user types
+  const draftError = (() => {
+    if (draft.trim() === '') return undefined;
+    const num = Number(draft);
+    if (Number.isNaN(num)) return 'Invalid number';
+    return validate(num);
+  })();
+
+  // register this error in the shared field errors atom so the left menu can see it
+  const fieldPath = errorPathPrefix ? `${errorPathPrefix}/${entry.section_list}` : undefined;
+  useFieldError(fieldPath, draftError);
 
   const commitValue = () => {
     const num = Number(draft);
@@ -120,13 +136,20 @@ function SectionConfigRow({
           'flex min-h-9 w-full items-center gap-1.5 rounded-md border px-2 py-1.5',
           'border-gray-300 bg-background transition-shadow focus-within:ring-1 focus-within:ring-primary-9',
           disabled && 'cursor-not-allowed opacity-50',
-          error && 'border-red-400 focus-within:ring-red-400/30'
+          draftError && 'border-red-400 focus-within:ring-red-400/30'
         )}
       >
         <input
           type="number"
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => {
+            const newDraft = e.target.value;
+            setDraft(newDraft);
+            const num = Number(newDraft);
+            if (newDraft.trim() !== '' && !Number.isNaN(num)) {
+              onChange(num);
+            }
+          }}
           onBlur={commitValue}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
@@ -146,7 +169,7 @@ function SectionConfigRow({
           )}
         />
       </div>
-      {error && <div className="mt-1 text-xs text-red-500">{error}</div>}
+      {draftError && <div className="mt-1 text-xs text-red-500">{draftError}</div>}
     </div>
   );
 }
