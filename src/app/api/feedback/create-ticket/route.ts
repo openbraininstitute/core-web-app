@@ -1,11 +1,42 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Octokit } from '@octokit/core';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
+import { auth } from '@/auth';
 import { serverConfig } from '@/config/server';
 
 export async function POST(req: NextRequest) {
   try {
+    // Check for bearer token or session authentication
+    const authHeader = req.headers.get('authorization');
+    let isAuthenticated = false;
+
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      // Verify bearer token against Keycloak
+      try {
+        const userInfoResponse = await fetch(
+          `${serverConfig.KEYCLOAK_ISSUER}/protocol/openid-connect/userinfo`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        isAuthenticated = userInfoResponse.ok;
+      } catch {
+        isAuthenticated = false;
+      }
+    } else {
+      // Fall back to session-based auth
+      const session = await auth();
+      isAuthenticated = !!session;
+    }
+
+    if (!isAuthenticated) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { title, body, label, labels, screenshot, screenshots } = await req.json();
 
     if (!title || !body) {

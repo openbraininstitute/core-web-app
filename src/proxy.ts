@@ -32,6 +32,7 @@ const FREE_ACCESS_PAGES = [
   '/api/marketing',
   '/api/help*',
   '/api/version',
+  '/api/feedback/create-ticket',
 ];
 const ASSETS = [
   '/static*',
