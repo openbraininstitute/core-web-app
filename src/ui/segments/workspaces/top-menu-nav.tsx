@@ -1,7 +1,7 @@
 import { MenuOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 import {
@@ -14,7 +14,6 @@ import {
 } from '@/components/icons/buttons';
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
-import { URL_PARAMS } from '@/features/brain-region-hierarchy/context';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -26,7 +25,6 @@ import {
 } from '@/ui/molecules/dropdown-menu';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
-import { cleanSearchParams } from '@/utils/search-params';
 
 import type React from 'react';
 import type { ReactNode } from 'react';
@@ -137,7 +135,6 @@ export function TopMenuNavigation() {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
-  const queryParams = useSearchParams();
   const activeSection = getActiveSection(pathname);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
@@ -165,8 +162,6 @@ export function TopMenuNavigation() {
             className="border-neutral-1 w-56 rounded-xl bg-white p-1"
           >
             {hashedLinks.map((link) => {
-              const searchParams = new URLSearchParams(queryParams);
-
               if (link.id === 'workspace-feedbacks') {
                 return (
                   <DropdownMenuItem
@@ -212,7 +207,6 @@ export function TopMenuNavigation() {
                     prefetch
                     href={{
                       pathname: link.url,
-                      query: searchParams ? searchParams.toString() : undefined,
                     }}
                   >
                     {link.icon}
@@ -245,12 +239,6 @@ export function TopMenuNavigation() {
           isActive,
           hasAction,
         }) => {
-          const searchParams = new URLSearchParams(queryParams);
-          const linkSearchParams = cleanSearchParams({
-            searchParams,
-            keepKeys: [URL_PARAMS.BRAIN_REGION_ID, URL_PARAMS.HIERARCHY_ID],
-          }).toString();
-
           if (id === 'workspace-feedbacks') {
             return (
               <div key={key} className="group flex w-max items-center justify-center gap-0">
@@ -315,7 +303,6 @@ export function TopMenuNavigation() {
                       prefetch
                       href={{
                         pathname: url,
-                        query: linkSearchParams,
                       }}
                     >
                       {allowText && <span>{title}</span>}
