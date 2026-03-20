@@ -603,7 +603,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       value: item.key,
     })),
     isDisplayable: true,
-    isSortable: false,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.EMCellMesh],
+        property: 'order_by',
+        value: 'mesh_type',
+      },
+    ],
     render: (r) => {
       const entity = r as IEMCellMesh;
       if ('mesh_type' in entity) {
