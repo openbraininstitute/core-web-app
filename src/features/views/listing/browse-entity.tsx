@@ -13,12 +13,15 @@ import {
   useEffect,
   useMemo,
 } from 'react';
-
+import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import {
+  ExtendedEntityTypeQueryKey,
+  useQueryExtendedEntityType,
+} from '@/ui/hooks/use-query-extended-entity-type';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
@@ -124,7 +127,10 @@ export function BrowseEntityScope({
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
-  const scopeFilter = getWorkspaceScopeFilters(scope, { virtualLabId, projectId });
+  const scopeFilter = getWorkspaceScopeFilters(scope, {
+    virtualLabId,
+    projectId,
+  });
   const { dataKey } = makeDataKey({
     virtualLabId,
     projectId,
@@ -210,7 +216,7 @@ export function BrowseEntityScope({
       };
       return entity?.api?.query.list?.({
         filters,
-        withFacets: allowFilter,
+        withFacets: false,
         context: workspace,
       });
     },
@@ -227,9 +233,24 @@ export function BrowseEntityScope({
     },
   });
 
+  const {
+    data: facetsResults,
+    error: facetsError,
+    isPending: facetsLoading,
+    // @ts-expect-error
+  } = useQuery({
+    queryKey: [dataKey, { with_facets: allowFilter, workspace: { virtualLabId, projectId } }],
+    queryFn: () =>
+      entity?.api?.query.list?.({
+        filters: { page: 1, page_size: 1 },
+        withFacets: allowFilter,
+        context: { virtualLabId, projectId },
+      }),
+  });
+
   const dataSource = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.data;
-  const facets = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.facets;
   const pagination = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.pagination;
+  const facets = (facetsResults as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.facets;
 
   const onCellClick = (_: string, record: EntityCoreIdentifiableNamed) => {
     makeSelectEntityClickEvent({

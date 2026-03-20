@@ -23,17 +23,13 @@ import type {
   EntityCoreIdentifiable,
   EntityCoreIdentifiableNamed,
 } from '@/api/entitycore/types/shared/global';
-import type {
-  Pagination as EntitycorePagination,
-  Facets,
-} from '@/api/entitycore/types/shared/response';
+import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
 import type { UseExpandableTableOptions } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 
 export type Props<T extends EntityCoreIdentifiable> = {
-  facets: Facets | undefined;
   resultPagination?: {
     pagination: EntitycorePagination;
     totalData: number;
@@ -81,7 +77,6 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   dataType,
   workspace,
   cls,
-  facets,
   renderButton,
   showLoadingState,
   isLoading,
@@ -213,7 +208,6 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           toggleDisplay={() => setDisplayControlPanel(false)}
           dataType={dataType}
           dataKey={dataKey}
-          facets={facets}
           workspace={workspace}
           classNames={filterClassNames}
           section={section}

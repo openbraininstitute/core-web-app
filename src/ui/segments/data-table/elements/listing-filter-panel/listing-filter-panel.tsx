@@ -1,12 +1,12 @@
-import { CloseOutlined } from '@ant-design/icons';
-import { useIsFetching } from '@tanstack/react-query';
+import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
+import { useIsFetching, useQuery } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 import { useAtom, useSetAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Facets } from '@/api/entitycore/types/shared/response';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { DEFAULT_PAGE_NUMBER, type TWorkspaceScope, type TWorkspaceSection } from '@/constants';
 import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
@@ -24,6 +24,9 @@ import { ClearFilters } from '@/ui/segments/data-table/elements/listing-filter-p
 import { FilterGroup } from '@/ui/segments/data-table/elements/listing-filter-panel/filter-group';
 import { useFilterItems } from '@/ui/segments/data-table/elements/listing-filter-panel/hooks';
 import { cn } from '@/utils/css-class';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { Spin } from 'antd';
 
 type Props = {
   children?: ReactNode;
@@ -33,7 +36,6 @@ type Props = {
   dataScope?: TWorkspaceScope;
   dataKey: string;
   filters: TCoreFilter[];
-  facets: Facets | undefined;
   setFilters: any;
   showDisplayTrigger?: boolean;
   // eslint-disable-next-line react/no-unused-prop-types
@@ -51,22 +53,43 @@ export function ListingFilterPanel({
   dataKey,
   filters,
   setFilters,
-  facets,
   showDisplayTrigger = true,
   classNames,
   section,
+  workspace,
 }: Props) {
   useHotkeys('Escape', toggleDisplay);
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [filterValues, setFilterValues] = useState<CoreFilterValues>({});
   const [isApplyingFilters, setIsApplyingFilters] = useState(false);
-
   const resetFilters = useResetAtom(
     coreFiltersAtom({
       dataType,
       key: dataKey,
     })
   );
+  const entityViewDefs = getViewDefinitionByExtendedType(dataType);
+  const entityConfig = getEntityByExtendedType({ type: dataType });
+
+  const {
+    data: facetsResults,
+    error: facetsError,
+    isPending: facetsLoading,
+    // @ts-expect-error
+  } = useQuery({
+    queryKey: [dataKey, { with_facets: false, workspace }],
+    queryFn: () => {
+      return entityConfig?.api?.query.list?.({
+        filters: { page: 1, page_size: 1 },
+        withFacets: true,
+        context: workspace,
+      });
+    },
+    enabled: !!entityConfig?.api?.query.list,
+  });
+
+  const facets = (facetsResults as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.facets;
+
   const { sync: runStorageSync } = useDataListStateSnapshotActions({
     dataKey,
     dataType,
@@ -149,10 +172,9 @@ export function ListingFilterPanel({
     setIsApplyingFilters(false);
   };
 
-  const entity = getViewDefinitionByExtendedType(dataType);
   const filterItems = useFilterItems(
     filters,
-    entity,
+    entityViewDefs,
     facets,
     filterValues,
     setFilterValues,
@@ -201,7 +223,7 @@ export function ListingFilterPanel({
           classNames?.container
         )}
       >
-        <div className="mb-auto">
+        <div className="mb-auto flex-1 flex flex-col relative">
           <div className="mb-2 flex items-center justify-between gap-4">
             <span className="flex items-baseline gap-2 text-2xl font-bold text-white">
               Filters
@@ -222,10 +244,26 @@ export function ListingFilterPanel({
             the option(s).
           </p>
 
-          <div className="flex flex-col gap-12">
-            <FilterGroup items={filterItems} filters={filters} setFilters={setFilters} />
-            {children}
-          </div>
+          {facetsError ? (
+            <div className="mt-4 flex flex-1 flex-col items-center justify-center gap-3 text-center text-white">
+              <span className="text-lg font-semibold">Unable to load filters</span>
+              <p className="text-primary-3 text-sm">
+                Something went wrong while fetching filter options for "
+                {entityConfig?.title.toLowerCase()}" entities.
+                <br />
+                Please try again later or contact support if the issue persists.
+              </p>
+            </div>
+          ) : facetsLoading ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Spin indicator={<LoadingOutlined className="text-white size-10" />} />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-12">
+              <FilterGroup items={filterItems} filters={filters} setFilters={setFilters} />
+              {children}
+            </div>
+          )}
         </div>
 
         <div className="bg-primary-8 sticky bottom-0 left-0 mt-auto flex w-full items-center justify-between py-6">
