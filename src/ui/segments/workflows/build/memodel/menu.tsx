@@ -14,15 +14,14 @@ import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 import omit from 'es-toolkit/compat/omit';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
 import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
-import { LowFundsNotification } from '@/components/notification/low-funds-notification';
+import { InsufficientCreditsCard } from '@/components/notification/insufficient-credits-card';
 import { config } from '@/config';
-import { useWorkspaceMembership } from '@/hooks/use-user-membership';
+import { useInsufficientCredits } from '@/hooks/use-insufficient-credits';
 import { LOW_FUNDS_ERROR_CODE, messages } from '@/i18n/en/me-model';
 import { WorkspaceContextSchema } from '@/types/common';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -53,9 +52,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
   const { virtualLabId, projectId } = useWorkspace();
   const { push: navigate } = useRouter();
   const step = searchParams.get('step');
-  const [showLowFundsNotification, setShowLowFundsNotification] = useState(false);
-  const { isProjectAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
-
+  const { cardProps, creditsModal } = useInsufficientCredits();
   const { sessionValue } = useBuildMeModelSessionState({
     sessionId,
     virtualLabId,
@@ -112,17 +109,27 @@ export function Menu({ sessionId }: { sessionId: string }) {
       log('error', 'Build me-model failed:', err);
       const isLowFundsError = get(err, 'cause.code') === LOW_FUNDS_ERROR_CODE;
 
-      let message = messages.DefaultErrorMsg;
       if (isLowFundsError) {
-        message = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
-      }
-
-      if (isLowFundsError) {
-        setShowLowFundsNotification(true);
+        notification.error({
+          message: 'ME-model creation failed',
+          description: (
+            <InsufficientCreditsCard
+              message={messages.LowFundsError}
+              {...cardProps}
+              onAddCredits={() => {
+                notification.destroy('me-model-low-funds');
+                cardProps.onAddCredits();
+              }}
+            />
+          ),
+          key: 'me-model-low-funds',
+          placement: 'topRight',
+          duration: 0,
+        });
       } else {
         notification.error({
           message: 'ME-model creation failed',
-          description: message,
+          description: messages.DefaultErrorMsg,
           placement: 'topRight',
           duration: 10,
         });
@@ -151,14 +158,6 @@ export function Menu({ sessionId }: { sessionId: string }) {
 
   return (
     <>
-      {showLowFundsNotification && (
-        <LowFundsNotification
-          title="ME-model creation failed"
-          description={isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin}
-          onClose={() => setShowLowFundsNotification(false)}
-          duration={10000}
-        />
-      )}
       <div className="flex h-full flex-col gap-2">
         <div className="text-neutral-3 ml-4 font-light uppercase">Setup</div>
         <Button
@@ -318,6 +317,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
           )}
         </Tooltip>
       </div>
+      {creditsModal}
     </>
   );
 }

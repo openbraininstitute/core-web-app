@@ -1,5 +1,4 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
 import { Checkbox, ConfigProvider, Modal } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -10,8 +9,8 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ApiError } from '@/api/error';
 import { runSimulation } from '@/api/one/circuit-simulation';
-import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { useAppNotification } from '@/components/notification';
+import { InsufficientCreditsCard } from '@/components/notification/insufficient-credits-card';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import {
   simExecRemoteStatusMapAtomFamily,
@@ -25,14 +24,12 @@ import { SimulationFiles } from '@/features/scan-config/components/simulation-fi
 import errorRegistry from '@/features/scan-config/error-registry';
 import { StatusBadge } from '@/features/scan-config/status-badge';
 import { useLastTruthyValue } from '@/hooks/hooks';
-import { useWorkspaceMembership } from '@/hooks/use-user-membership';
+import { useInsufficientCredits } from '@/hooks/use-insufficient-credits';
 import { messages } from '@/i18n/en/simulation';
 import { useConsent } from '@/services/consent';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
-import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
@@ -64,6 +61,7 @@ export default function SimulationsTab({
 }: SimulationTabProps) {
   const notification = useAppNotification();
   const { waitForConsent } = useConsent();
+  const { cardProps, creditsModal } = useInsufficientCredits();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
   const simulationsAtom = simulationsByCampaignIdAtomFamily({
     campaignId,
@@ -94,15 +92,6 @@ export default function SimulationsTab({
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
   const [consent, setConsent] = useState<Consent | null>(null);
-  const [showCreditsModal, setShowCreditsModal] = useState(false);
-
-  const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
-  const { data: membersData } = useQuery({
-    queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
-    queryFn: () => listVirtualLabMembers({ virtualLabId }),
-    enabled: !!virtualLabId && !isVirtualLabAdmin,
-  });
-  const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
 
   const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
 
@@ -225,31 +214,14 @@ export default function SimulationsTab({
       notification.error({
         message: messages.LowFundsError,
         description: (
-          <div className="flex flex-col gap-2">
-            {isVirtualLabAdmin ? (
-              <button
-                type="button"
-                onClick={() => {
-                  notification.destroy(notificationKey);
-                  setShowCreditsModal(true);
-                }}
-                className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 hover:underline"
-              >
-                Add credits
-              </button>
-            ) : adminEmail ? (
-              <a
-                href={`mailto:${adminEmail}?subject=Insufficient%20credits%20for%20simulation`}
-                className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 no-underline hover:underline"
-              >
-                Contact Lab admin
-              </a>
-            ) : (
-              <span className="text-sm text-gray-600">
-                Contact your virtual lab administrator to request credits.
-              </span>
-            )}
-          </div>
+          <InsufficientCreditsCard
+            message={messages.LowFundsError}
+            {...cardProps}
+            onAddCredits={() => {
+              notification.destroy(notificationKey);
+              cardProps.onAddCredits();
+            }}
+          />
         ),
         key: notificationKey,
         duration: 0,
@@ -312,31 +284,14 @@ export default function SimulationsTab({
         return notification.error({
           message: messages.LowFundsError,
           description: (
-            <div className="flex flex-col gap-2">
-              {isVirtualLabAdmin ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    notification.destroy(notificationKey);
-                    setShowCreditsModal(true);
-                  }}
-                  className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 hover:underline"
-                >
-                  Add credits
-                </button>
-              ) : adminEmail ? (
-                <a
-                  href={`mailto:${adminEmail}?subject=Insufficient%20credits%20for%20simulation`}
-                  className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 no-underline hover:underline"
-                >
-                  Contact Lab admin
-                </a>
-              ) : (
-                <span className="text-sm text-gray-600">
-                  Contact your virtual lab administrator to request credits.
-                </span>
-              )}
-            </div>
+            <InsufficientCreditsCard
+              message={messages.LowFundsError}
+              {...cardProps}
+              onAddCredits={() => {
+                notification.destroy(notificationKey);
+                cardProps.onAddCredits();
+              }}
+            />
           ),
           key: notificationKey,
           duration: 0,
@@ -462,12 +417,13 @@ export default function SimulationsTab({
           className="text-primary-9 mt-4 inline-block text-lg font-semibold"
           href={consent?.url}
           target="_blank"
+          rel="noopener"
         >
           Grant consent
         </a>
       </Modal>
 
-      <CreditsTransferModal open={showCreditsModal} onClose={() => setShowCreditsModal(false)} />
+      {creditsModal}
     </div>
   );
 }

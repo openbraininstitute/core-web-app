@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react';
 
 import { getSingleNeuronStimuliPlot } from '@/api/small-scale-simulator';
 import { useAppNotification } from '@/components/notification';
-import { useWorkspaceMembership } from '@/hooks/use-user-membership';
+import { useInsufficientCredits } from '@/hooks/use-insufficient-credits';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
@@ -65,7 +65,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const launchSimulation = useSetAtom(launchSimulationAtom);
-  const { isProjectAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
+  const { cardProps, creditsModal } = useInsufficientCredits();
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const step = searchParams.get('step') ?? ExperimentStep.Info;
 
@@ -175,7 +175,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
       experimentalSetupConfiguration.max_time ?? currentInjectionDuration,
       () => updatePanelSelection(),
       notify,
-      isProjectAdmin
+      cardProps
     );
 
     setIsLaunching(false);
@@ -506,6 +506,7 @@ export function Menu({ sessionId, simulationType, modelId, memodelId }: Props) {
           )}
         </TooltipContent>
       </Tooltip>
+      {creditsModal}
     </div>
   );
 }
