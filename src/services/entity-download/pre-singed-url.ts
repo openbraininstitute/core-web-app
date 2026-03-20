@@ -32,7 +32,7 @@ export async function getEntityCorePresignedUrl({
 
   Object.entries(omitBy(queryParams, isNil) || {}).forEach(([key, value]) => {
     if (Array.isArray(value)) {
-      value.forEach((v) => query.append(`${key}`, `${v}`));
+      value.forEach((v) => void query.append(`${key}`, `${v}`));
     } else {
       query.append(`${key}`, `${value}`);
     }

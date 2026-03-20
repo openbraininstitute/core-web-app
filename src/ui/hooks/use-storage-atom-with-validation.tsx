@@ -1,6 +1,7 @@
 'use client';
 
-import { atomFamily, atomWithStorage } from 'jotai/utils';
+import { atomWithStorage } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 import superjson from 'superjson';
 import z from 'zod';
 

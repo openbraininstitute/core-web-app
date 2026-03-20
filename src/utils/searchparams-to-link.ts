@@ -26,7 +26,7 @@ export function buildLink(
     for (const [key, value] of Object.entries(searchParams ?? {})) {
       if (remove.includes(key)) continue;
       if (Array.isArray(value)) {
-        value.forEach((v) => params.append(key, v));
+        value.forEach((v) => void params.append(key, v));
       } else if (value !== undefined) {
         params.set(key, value);
       }

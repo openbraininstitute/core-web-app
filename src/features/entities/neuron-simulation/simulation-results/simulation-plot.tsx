@@ -1,12 +1,13 @@
 import { Empty } from 'antd';
-import Plotly, { Config, Layout } from 'plotly.js-dist-min';
+import Plotly, { type Config, type Layout } from 'plotly.js-dist-min';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
-import { LTTB } from '@/util/explore-section/LTTB';
+import { LTTB } from '@/util/explore-section/lttb';
+
+import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -27,7 +28,7 @@ const makePlotLayout = ({
       xref: 'paper',
       yref: 'paper',
       pad: { l: 0, r: 0, t: 20, b: 40 },
-      // @ts-ignore
+      // @ts-expect-error
       automargin: true,
     },
     plot_bgcolor: '#fff',

@@ -9,8 +9,8 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
 import { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import optimizePlotData from '@/util/explore-section/optimizeTrace';
-import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
+import optimizePlotData from '@/util/explore-section/optimize-trace';
+import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plot-helpers';
 import { cn } from '@/utils/css-class';
 
 import type NWBTrace from '@/features/ephys-viewer/nwb-trace';

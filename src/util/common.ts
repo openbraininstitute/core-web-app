@@ -1,4 +1,4 @@
-import { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export const switchStateType = {
   COUNT: 'count',

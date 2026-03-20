@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useEffect, useState } from 'react';
 
 export function getLocalStorageHelper() {
   return new LocalStorageHelper();
@@ -11,10 +11,8 @@ export function useLocalStorage<T>(
   defaultValue: T,
   typeGuard: (data: unknown) => data is T
 ): [value: T, setValue: (value: T) => void] {
-  const [value, setValue] = React.useState(
-    getLocalStorageHelper().get(key, defaultValue, typeGuard)
-  );
-  React.useEffect(() => {
+  const [value, setValue] = useState(getLocalStorageHelper().get(key, defaultValue, typeGuard));
+  useEffect(() => {
     getLocalStorageHelper().set(key, value);
   }, [value, key, typeGuard]);
   return [value, setValue];

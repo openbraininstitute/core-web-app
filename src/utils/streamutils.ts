@@ -53,7 +53,7 @@ export async function* messageGenerator<T>(
       buffer += value;
       let eolIndex: number;
 
-      // eslint-disable-next-line no-cond-assign
+      // biome-ignore lint/suspicious/noAssignInExpressions: To avoid duplicating code, we assign eolIndex in the while condition
       while ((eolIndex = buffer.indexOf('\n')) >= 0) {
         const line = buffer.slice(0, eolIndex).trim();
         buffer = buffer.slice(eolIndex + 1);
@@ -62,9 +62,7 @@ export async function* messageGenerator<T>(
         try {
           const msg = JSON.parse(line) as T;
           yield msg;
-        } catch (err) {
-          continue;
-        }
+        } catch {}
       }
     }
   } finally {

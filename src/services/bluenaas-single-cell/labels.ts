@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import { Camera, Object3D, Scene, Vector3 } from 'three';
+import { type Camera, type Object3D, type Scene, Vector3 } from 'three';
 
 import { getSimulationColor } from '@/constants/simulate/single-neuron';
 
@@ -103,7 +103,7 @@ export class Labels {
           objects.set(obj.name, obj);
         }
       } else {
-        obj.children.forEach((item) => fringe.push(item));
+        obj.children.forEach((item) => void fringe.push(item));
       }
     }
 

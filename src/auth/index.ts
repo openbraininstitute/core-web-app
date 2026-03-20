@@ -162,7 +162,7 @@ export const authOptions: NextAuthOptions = {
       if (account && user) {
         // eslint-disable-next-line no-void
         void (async () => {
-          if (account && account.access_token && account.refresh_token)
+          if (account?.access_token && account?.refresh_token)
             await upsertRefreshTokenInAuthManager({
               accessToken: account.access_token,
               refreshToken: account.refresh_token,

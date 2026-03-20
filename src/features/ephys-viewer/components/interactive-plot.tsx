@@ -6,14 +6,14 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
 import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
-import optimizePlotData from '@/util/explore-section/optimizeTrace';
+import optimizePlotData from '@/util/explore-section/optimize-trace';
 import {
   type CurrentUnit,
   convertCurrentSeries,
   convertVoltageSeries,
   ensureCurrentUnit,
   type VoltageUnit,
-} from '@/util/explore-section/plotHelpers';
+} from '@/util/explore-section/plot-helpers';
 
 import type { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
 

@@ -133,10 +133,12 @@ const baseServerSchema = z
         path: ['AUTH_PROXY_URL'],
       });
     }
+    // biome-ignore lint/suspicious/noExplicitAny: double cast needed — superRefine returns ZodEffects, not ZodObject
   }) as any as z.ZodObject<{
   [K in keyof typeof configFields]: (typeof configFields)[K]['schema'];
 }>;
 
+// biome-ignore lint/suspicious/noExplicitAny: standard Zod pattern for accepting any ZodObject shape
 const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
   schema
     .superRefine((data, ctx) => {
@@ -158,9 +160,10 @@ const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
           data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
         ])
       ),
-    })) as any as z.ZodEffects<
+      // biome-ignore lint/suspicious/noExplicitAny: double cast needed — transform returns ZodPipeline, not ZodPipe
+    })) as any as z.ZodPipe<
     T,
-    z.infer<T> & { [K in keyof typeof platformApiUrlFields]: string }
+    z.ZodObject<{ [K in keyof z.infer<T> | keyof typeof platformApiUrlFields]: z.ZodString }>
   >;
 
 export const serverSchema = applyApiUrlTransforms(baseServerSchema);
