@@ -33,49 +33,63 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
     queryFn: () => getVirtualLab(context.virtualLabId),
   });
 
-  const settled = await Promise.allSettled(
-    compact(
-      quickAccessList
-        .flatMap((o) => ({
-          groupTitle: o.title,
-          group: o.group,
-          ...o.list.find((a) => a.isPreview),
-          listLength: o.list.length,
-        }))
-        .map((p) => {
-          const call = getEntityByExtendedType({ type: p.extendedType })?.api.query.one;
-          return call ? { preview: p, call } : null;
-        })
-    )
-      .filter((o) => o.preview.entityId !== null)
-      .map(({ preview, call }) =>
-        call({ id: preview.entityId!, context }).then((entity) => ({
-          ...preview,
-          entity,
-        }))
-      )
+  const previews = quickAccessList.map((o) => {
+    const previewItem = (o.list ?? []).find((a) => a.isPreview);
+    return {
+      groupTitle: o.title,
+      group: o.group,
+      ...previewItem,
+      listLength: (o.list ?? []).length,
+    };
+  });
+
+  const withEntity = compact(
+    previews
+      .filter((p) => p.entityId != null)
+      .map((p) => {
+        const call = getEntityByExtendedType({ type: p.extendedType })?.api.query.one;
+        return call ? { preview: p, call } : null;
+      })
   );
+
+  const settled = await Promise.allSettled(
+    withEntity.map(({ preview, call }) =>
+      call({ id: preview.entityId!, context }).then((entity) => ({
+        ...preview,
+        entity,
+      }))
+    )
+  );
+
+  const withoutEntity = previews
+    .filter((p) => p.entityId == null)
+    .map((p) => ({
+      ...p,
+      entity: null,
+    }));
 
   const groupOrder = Object.values(QuickAccessGroupDict);
 
-  const results = settled
-    .filter((r) => r.status === 'fulfilled')
-    .map((r) => r.value)
-    .map((a) => ({
-      ...a,
-      title: a.title ?? a.entity.name,
-      description: a.description ?? a.entity.description,
-    }))
-    .sort((a, b) => groupOrder.indexOf(a.group) - groupOrder.indexOf(b.group));
+  const results = [
+    ...settled
+      .filter((r) => r.status === 'fulfilled')
+      .map((r) => r.value)
+      .map((a) => ({
+        ...a,
+        title: a.title ?? a.entity.name,
+        description: a.description ?? a.entity.description,
+      })),
+    ...withoutEntity,
+  ].sort((a, b) => groupOrder.indexOf(a.group) - groupOrder.indexOf(b.group));
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full">
       {results.map(
         ({ groupTitle, listLength, group, entityId, title, description, thumbnail, entity }) => {
-          if (group === 'workflows') {
+          if (!entity) {
             return (
-              <div key="workflows" className="flex flex-col gap-1.5 w-full">
-                <MainCardComingSoon groupTitle="Workflows" description="Coming soon" />
+              <div key={group} className="flex flex-col gap-1.5 w-full">
+                <MainCardComingSoon groupTitle={groupTitle ?? group} description="Coming soon" />
                 <div className="h-10 xl:h-12" />
               </div>
             );

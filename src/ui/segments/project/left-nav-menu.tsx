@@ -105,7 +105,7 @@ export function LeftMenu({ className }: Props) {
     ],
     combine: ([quickAccessList, discoverTutorialsList]) => {
       return {
-        qaListCount: sumBy(quickAccessList.data, (item) => item.list.length),
+        qaListCount: sumBy(quickAccessList.data, (item) => (item.list ?? []).length),
         dtListCount: discoverTutorialsList.data?.tutorialOrder.length ?? 0,
         isLoading: quickAccessList.isLoading || discoverTutorialsList.isLoading,
       };

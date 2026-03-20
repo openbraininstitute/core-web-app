@@ -82,5 +82,5 @@ export type TQuickAccessItem = {
 export interface IQuickAccessList {
   group: TQuickAccessGroup;
   title: string;
-  list: Array<TQuickAccessItem>;
+  list?: Array<TQuickAccessItem>;
 }

@@ -45,12 +45,14 @@ export default async function Layout({
 
   queryClient.prefetchQuery({
     queryKey: keyBuilderExternal.discoverTutorialsList(),
-    queryFn: () => client.fetch<IDiscoverTutorialsList>(DiscoverQuery),
+    queryFn: () =>
+      client.fetch<IDiscoverTutorialsList>(DiscoverQuery, {}, { next: { revalidate: 0 } }),
   });
 
   queryClient.prefetchQuery({
     queryKey: keyBuilderExternal.quickAccessList(),
-    queryFn: () => client.fetch<Array<IQuickAccessList>>(getQuickAccessQuery()),
+    queryFn: () =>
+      client.fetch<Array<IQuickAccessList>>(getQuickAccessQuery(), {}, { next: { revalidate: 0 } }),
   });
 
   return (
