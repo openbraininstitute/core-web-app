@@ -64,8 +64,8 @@ export const getQuickAccessQuery = () => {
 
 export const QuickAccessGroupDict = {
   Data: 'data',
-  Workflows: 'workflows',
   Notebooks: 'notebooks',
+  Workflows: 'workflows',
 } as const;
 export type TQuickAccessGroup = (typeof QuickAccessGroupDict)[keyof typeof QuickAccessGroupDict];
 

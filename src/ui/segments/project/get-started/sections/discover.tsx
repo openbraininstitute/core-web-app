@@ -20,7 +20,7 @@ export async function DiscoverList() {
       queryFn: () => client.fetch<IDiscoverTutorialsList>(DiscoverQuery),
     })
   );
-  const tutorials = flatMap(times(20), () => discoverTutorialsList?.tutorialOrder ?? []);
+  const tutorials = discoverTutorialsList?.tutorialOrder ?? [];
 
   return <Grid tutorials={tutorials} />;
 }

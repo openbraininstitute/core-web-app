@@ -39,19 +39,23 @@ export function DiscoverCard({
       )}
     >
       <CardTitle>{title}</CardTitle>
-      <CardDescription className="relative h-30.75 w-auto px-4 mt-auto">
+      <CardDescription className="relative h-30.75 w-auto px-4 mt-auto group">
         <Image
           fill
           alt={title}
           src={image}
-          className={cn('rounded-md', {
+          className={cn('rounded-md group-hover:scale-102 transition-all ease-in-out', {
             'grayscale brightness-90 contrast-60 opacity-80': isSelected,
           })}
         />
         <div
-          className={cn('absolute inset-0 bg-black/30 rounded-md', {
-            'filter grayscale-50': isSelected,
-          })}
+          className={cn(
+            'absolute inset-0 bg-black/30 rounded-md',
+            'group-hover:scale-102 transition-all ease-in-out',
+            {
+              'filter grayscale-50': isSelected,
+            }
+          )}
         />
         <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
           <Button
@@ -74,7 +78,7 @@ export function Grid({ tutorials }: { tutorials: TTutorial[] }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? tutorials : tutorials.slice(0, INITIAL_COUNT);
   const hasMore = tutorials.length > INITIAL_COUNT;
-  const slug = useSearchParams().get('t') ?? 'how-to-explore-data';
+  const slug = useSearchParams().get('t');
 
   return (
     <section id="discover-tutorials" className="w-full flex flex-col my-6 @container">

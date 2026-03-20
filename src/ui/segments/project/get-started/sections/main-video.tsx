@@ -37,7 +37,7 @@ export function MainVideo() {
       </h1>
       <div className="flex items-center justify-center gap-2">
         <div className="flex items-center justify-center gap-1.5 text-white">
-          <RiTimeLine className="text-current size-4" /> <span className="text-sm">01:22</span>
+          <RiTimeLine className="text-current size-4" /> <span className="text-sm">01:03</span>
         </div>
         <Badge rounded variant="outline" className="border-primary-4 text-white select-none">
           Data

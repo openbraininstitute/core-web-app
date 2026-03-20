@@ -36,7 +36,7 @@ const projectFormSchema = z.object({
 });
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
-// const sleep = () => new Promise((r) => setTimeout(r, 50000));
+
 export function ProjectCard(): ReactElement {
   const { virtualLabId, projectId } = useWorkspace();
   const [form] = Form.useForm<ProjectFormValues>();

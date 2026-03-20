@@ -1,10 +1,11 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
+import { useRouter } from '@bprogress/next';
 import { kebabCase } from 'es-toolkit/compat';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -13,7 +14,7 @@ import { config } from '@/config';
 import { startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { Card, CardContent } from '@/ui/molecules/card';
+import { Card, CardContent, CardTitle } from '@/ui/molecules/card';
 import {
   Select,
   SelectContent,
@@ -116,6 +117,29 @@ export function MainCardItem({
           {description ?? 'No description provided'}
         </p>
       </CardContent>
+    </Card>
+  );
+}
+
+export function MainCardComingSoon({
+  groupTitle,
+  description,
+}: {
+  groupTitle: string;
+  description: string;
+}) {
+  return (
+    <Card
+      className={cn(
+        'w-full bg-white border-none flex-1',
+        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
+        'hover:shadow-bnb hover:border-gray-200 hover:border'
+      )}
+    >
+      <CardTitle className="">
+        <h4 className="text-label pl-4">{groupTitle}</h4>
+        <p className="text-label pl-4 text-xl">{description}</p>
+      </CardTitle>
     </Card>
   );
 }

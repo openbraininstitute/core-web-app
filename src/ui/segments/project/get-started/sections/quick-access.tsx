@@ -4,10 +4,15 @@ import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity';
-import { MainCardItem, ViewExamples } from '@/ui/segments/project/get-started/elements/quic-access';
+import {
+  MainCardComingSoon,
+  MainCardItem,
+  ViewExamples,
+} from '@/ui/segments/project/get-started/elements/quic-access';
 import {
   getQuickAccessQuery,
   type IQuickAccessList,
+  QuickAccessGroupDict,
 } from '@/ui/segments/project/get-started/query';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
@@ -37,13 +42,17 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
           const call = getEntityByExtendedType({ type: p.extendedType })?.api.query.one;
           return call ? { preview: p, call } : null;
         })
-    ).map(({ preview, call }) =>
-      call({ id: preview.entityId!, context }).then((entity) => ({
-        ...preview,
-        entity,
-      }))
     )
+      .filter((o) => o.preview.entityId !== null)
+      .map(({ preview, call }) =>
+        call({ id: preview.entityId!, context }).then((entity) => ({
+          ...preview,
+          entity,
+        }))
+      )
   );
+
+  const groupOrder = Object.values(QuickAccessGroupDict);
 
   const results = settled
     .filter((r) => r.status === 'fulfilled')
@@ -52,12 +61,21 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
       ...a,
       title: a.title ?? a.entity.name,
       description: a.description ?? a.entity.description,
-    }));
+    }))
+    .sort((a, b) => groupOrder.indexOf(a.group) - groupOrder.indexOf(b.group));
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full">
       {results.map(
         ({ groupTitle, listLength, group, entityId, title, description, thumbnail, entity }) => {
+          if (group === 'workflows') {
+            return (
+              <div key="workflows" className="flex flex-col gap-1.5 w-full">
+                <MainCardComingSoon groupTitle="Workflows" description="Coming soon" />
+                <div className="h-10 xl:h-12" />
+              </div>
+            );
+          }
           return (
             <div key={entityId} className="flex flex-col gap-1.5 w-full">
               <MainCardItem
