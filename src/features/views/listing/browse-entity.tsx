@@ -13,14 +13,14 @@ import {
   useEffect,
   useMemo,
 } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
-  ExtendedEntityTypeQueryKey,
   useQueryExtendedEntityType,
+  useQueryExtendedEntityTypeFacets,
+  useQueryParameters,
 } from '@/ui/hooks/use-query-extended-entity-type';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -200,6 +200,24 @@ export function BrowseEntityScope({
     }
   }, [section, runStorageRestore]);
 
+  const queryParameters = useQueryParameters(
+    {
+      context: {
+        key: dataKey,
+        workspaceScope: scope,
+        extendedEntityType: dataType as TExtendedEntitiesTypeDict,
+      },
+      workspace: { virtualLabId, projectId },
+    },
+    { requireBrainRegion, defaultBrainRegion }
+  );
+
+  const queryFilters = {
+    ...queryParameters,
+    ...extraQueryParams,
+    ...scopeFilter,
+  };
+
   const { data, error, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
@@ -207,17 +225,11 @@ export function BrowseEntityScope({
       extendedEntityType: dataType as TExtendedEntitiesTypeDict,
     },
     workspace: { virtualLabId, projectId },
-    queryFn: async ({ queryKey }) => {
-      const [{ workspace, queryParameters }] = queryKey;
-      const filters = {
-        ...queryParameters,
-        ...extraQueryParams,
-        ...scopeFilter,
-      };
+    queryFn: async () => {
       return entity?.api?.query.list?.({
-        filters,
+        filters: queryFilters,
         withFacets: false,
-        context: workspace,
+        context: { virtualLabId, projectId },
       });
     },
     requireBrainRegion,
@@ -234,23 +246,20 @@ export function BrowseEntityScope({
   });
 
   const {
-    data: facetsResults,
+    data: facets,
     error: facetsError,
     isPending: facetsLoading,
-    // @ts-expect-error
-  } = useQuery({
-    queryKey: [dataKey, { with_facets: allowFilter, workspace: { virtualLabId, projectId } }],
-    queryFn: () =>
-      entity?.api?.query.list?.({
-        filters: { page: 1, page_size: 1 },
-        withFacets: allowFilter,
-        context: { virtualLabId, projectId },
-      }),
+  } = useQueryExtendedEntityTypeFacets({
+    dataKey,
+    section,
+    scope,
+    dataType,
+    workspace: { virtualLabId, projectId },
+    queryFilters,
   });
 
   const dataSource = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.data;
   const pagination = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.pagination;
-  const facets = (facetsResults as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.facets;
 
   const onCellClick = (_: string, record: EntityCoreIdentifiableNamed) => {
     makeSelectEntityClickEvent({
@@ -332,7 +341,6 @@ export function BrowseEntityScope({
             workspace={{ virtualLabId, projectId }}
             dataKey={dataKey}
             columns={columns}
-            facets={facets}
             onCellClick={onCellClick}
             resultPagination={{
               pagination,
@@ -350,6 +358,11 @@ export function BrowseEntityScope({
             filterClassNames={classNames?.filterClassNames}
             expandableOptions={expandableOptions}
             left={left}
+            facets={{
+              data: facets,
+              error: facetsError,
+              loading: facetsLoading,
+            }}
           />
         </div>
       </div>

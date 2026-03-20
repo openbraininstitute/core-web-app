@@ -23,7 +23,10 @@ import type {
   EntityCoreIdentifiable,
   EntityCoreIdentifiableNamed,
 } from '@/api/entitycore/types/shared/global';
-import type { Pagination as EntitycorePagination } from '@/api/entitycore/types/shared/response';
+import type {
+  Pagination as EntitycorePagination,
+  TFacets,
+} from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
 import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
@@ -68,6 +71,11 @@ export type Props<T extends EntityCoreIdentifiable> = {
   left?: ReactNode;
   /** when false, disables vertical scroll so the table sizes to its content (use with h-max/h-fit on container) */
   scrollable?: boolean;
+  facets?: {
+    data: TFacets | undefined;
+    loading: boolean;
+    error: Error | null;
+  };
 };
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
@@ -101,6 +109,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   showExpandButtons,
   left,
   scrollable = true,
+  facets,
 }: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -211,6 +220,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           workspace={workspace}
           classNames={filterClassNames}
           section={section}
+          facets={facets}
         />
       )}
     </>

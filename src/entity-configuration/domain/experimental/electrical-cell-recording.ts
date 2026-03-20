@@ -34,14 +34,15 @@ export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecord
       extraQueryKeyBuilder: recordingOriginFilter,
     },
     query: {
-      list: (params: Parameters<typeof getElectricalCellRecordings>[0]) =>
-        getElectricalCellRecordings({
+      list: (params: Parameters<typeof getElectricalCellRecordings>[0]) => {
+        return getElectricalCellRecordings({
           ...params,
           filters: {
             ...params.filters,
             ...recordingOriginFilter,
           },
-        }),
+        });
+      },
       one: getElectricalCellRecording,
     },
   },
