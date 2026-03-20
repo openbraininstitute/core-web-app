@@ -1,40 +1,29 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Octokit } from '@octokit/core';
 import { type NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-import { auth } from '@/auth';
 import { serverConfig } from '@/config/server';
 
 export async function POST(req: NextRequest) {
   try {
-    // Check for bearer token or session authentication
+    // Check Bearer token or session
     const authHeader = req.headers.get('authorization');
-    let isAuthenticated = false;
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
 
-    if (authHeader?.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-      // Verify bearer token against Keycloak
-      try {
-        const userInfoResponse = await fetch(
-          `${serverConfig.KEYCLOAK_ISSUER}/protocol/openid-connect/userinfo`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        isAuthenticated = userInfoResponse.ok;
-      } catch {
-        isAuthenticated = false;
+    if (bearerToken) {
+      const userInfoResponse = await fetch(
+        `${serverConfig.KEYCLOAK_ISSUER}/protocol/openid-connect/userinfo`,
+        { headers: { Authorization: `Bearer ${bearerToken}` } }
+      );
+      if (!userInfoResponse.ok) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     } else {
-      // Fall back to session-based auth
-      const session = await auth();
-      isAuthenticated = !!session;
-    }
-
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const token = await getToken({ req });
+      if (!token) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
     const { title, body, label, labels, screenshot, screenshots } = await req.json();
