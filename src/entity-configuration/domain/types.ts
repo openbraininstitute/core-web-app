@@ -47,6 +47,9 @@ export type EntityCoreTypeConfig<
         query: {
           id: string;
           context?: WorkspaceContext | null;
+          options?: {
+            next?: NextFetchRequestConfig;
+          };
         } & Record<string, any>
       ) => Promise<T>;
       resolve?: (

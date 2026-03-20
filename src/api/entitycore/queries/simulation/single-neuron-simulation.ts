@@ -30,6 +30,9 @@ export async function getSingleNeuronSimulation({
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  options?: {
+    next?: NextFetchRequestConfig;
+  };
 }) {
   const api = await entityCoreApi();
   return await api.get<ISingleNeuronSimulation>(`${baseUri}/${id}`, {
@@ -38,6 +41,7 @@ export async function getSingleNeuronSimulation({
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
+    next: {},
   });
 }
 

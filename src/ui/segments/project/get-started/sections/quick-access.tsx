@@ -22,7 +22,11 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
   const client = getClient();
   const queryClient = getQueryClient();
 
-  const quickAccessList = await client.fetch<Array<IQuickAccessList>>(getQuickAccessQuery());
+  const quickAccessList = await client.fetch<Array<IQuickAccessList>>(
+    getQuickAccessQuery(),
+    {},
+    { next: { revalidate: 0 } }
+  );
 
   const virtualLab = await queryClient.fetchQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId: context.virtualLabId }),

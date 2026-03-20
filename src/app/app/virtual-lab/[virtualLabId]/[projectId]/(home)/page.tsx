@@ -9,6 +9,8 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import type { Metadata } from 'next';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   params,
 }: ServerSideComponentProp<WorkspaceContext, null>): Promise<Metadata> {
