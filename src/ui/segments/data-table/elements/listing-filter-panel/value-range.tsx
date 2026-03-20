@@ -52,8 +52,9 @@ export function ValueRange({ filter, onChange }: Props) {
           <InputNumber
             id="value-range-min"
             className={cn(
-              'border-neutral-3 w-full border-none! bg-white! text-primary-9! focus-within:bg-transparent! hover:bg-transparent!',
-              '[&_.ant-input-number-input]:placeholder:text-primary-4 [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-white!'
+              'border-neutral-3 w-full border-none! bg-white! text-primary-9! focus-within:bg-transparent! hover:bg-transparent! ',
+              '[&_.ant-input-number-input]:placeholder:text-primary-4 [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-9!',
+              'hover:[&_.ant-input-number-input]:text-white! hover:border-white! hover:border!'
             )}
             value={minValue}
             onChange={handleMinChange}
@@ -71,8 +72,9 @@ export function ValueRange({ filter, onChange }: Props) {
             onChange={handleMaxChange}
             placeholder="–"
             className={cn(
-              'border-neutral-3 w-full border-none! bg-white! text-primary-9! focus-within:bg-transparent! hover:bg-transparent!',
-              '[&_.ant-input-number-input]:placeholder:text-primary-4 [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-white!'
+              'border-neutral-3 w-full border-none! bg-white! text-primary-9! focus-within:bg-transparent! hover:bg-transparent! ',
+              '[&_.ant-input-number-input]:placeholder:text-primary-4 [&_.ant-input-number-input]:font-bold! [&_.ant-input-number-input]:text-primary-9!',
+              'hover:[&_.ant-input-number-input]:text-white! hover:border-white! hover:border!'
             )}
             size="large"
           />

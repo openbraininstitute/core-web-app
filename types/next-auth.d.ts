@@ -7,6 +7,7 @@ declare module 'next-auth' {
       username: string;
       id: string;
       plan?: string[];
+      identityProvider?: string;
     };
     accessToken: string;
     idToken: string;

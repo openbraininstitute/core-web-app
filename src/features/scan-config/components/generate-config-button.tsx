@@ -1,7 +1,8 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import { get } from 'es-toolkit/compat';
+import { useQueryClient } from '@tanstack/react-query';
+import { get, isEqual, isString, pick } from 'es-toolkit/compat';
 
-import authFetch from '@/auth-fetch';
+import { authFetch } from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
 import {
@@ -10,18 +11,22 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { useCreditsAccessGuard } from '@/hooks/use-credits-access-guard';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { getTypeByActivityAndSourceType } from '@/ui/segments/workflows/elements/helpers';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
-import { useApiUrl } from './hooks';
-
 import type { ErrorObject } from 'ajv';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Config } from './components';
+import type { Config } from '@/features/scan-config/components/components';
 
+const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
+
+// TODO: the credits checks are not straightforward
+// it must be a clean way to do it (to be checked in another PR)
 export default function GenerateConfigButton({
   loading,
   errors,
@@ -29,9 +34,10 @@ export default function GenerateConfigButton({
   setCampaignId,
   setLoading,
   config,
-  model,
   setTab,
   activity,
+  generatedApiUrl,
+  entityType,
 }: {
   loading: boolean;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
@@ -39,20 +45,38 @@ export default function GenerateConfigButton({
   setCampaignId: (campaignId: string) => void;
   setLoading: (loading: boolean) => void;
   config: Config;
-  model: ICircuit | IMEModel;
   setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
   activity: TScanConfigActivity;
+  generatedApiUrl: string;
+  entityType: TSupportedEntityTypesForScanConfiguration;
 }) {
   const { projectId, virtualLabId } = useWorkspace();
   const notification = useAppNotification();
-  const apiUrl = useApiUrl({ model, activity });
+  const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
+  const queryClient = useQueryClient();
+  const { notifyCredits, shouldShowError } = useCreditsAccessGuard({
+    context: { virtualLabId, projectId },
+    message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
+    description: get(
+      messages,
+      `${activity}.InsufficientCreditsNonAdmin`,
+      messages[ScanConfigActivity.Simulate].InsufficientCreditsNonAdmin
+    ),
+  });
 
   const onTabChange = () => {
     if (activity === ScanConfigActivity.Simulate)
-      setTab({ id: SimulateScanConfigTabs.simulations, __activity: ScanConfigActivity.Simulate });
+      setTab({
+        id: SimulateScanConfigTabs.simulations,
+        __activity: ScanConfigActivity.Simulate,
+      });
     if (activity === ScanConfigActivity.Extract)
-      setTab({ id: ExtractScanConfigTabs.extractions, __activity: ScanConfigActivity.Extract });
+      setTab({
+        id: ExtractScanConfigTabs.extractions,
+        __activity: ScanConfigActivity.Extract,
+      });
   };
+
   return (
     <button
       type="button"
@@ -66,6 +90,10 @@ export default function GenerateConfigButton({
         if (loading) return;
         if (campaignId) {
           setCampaignId('');
+          return;
+        }
+        if (shouldShowError) {
+          notifyCredits();
           return;
         }
 
@@ -85,16 +113,26 @@ export default function GenerateConfigButton({
             }
           );
 
-          if (coordinateCountRes.status !== 200) {
+          if (!coordinateCountRes.ok) {
             const message = await coordinateCountRes.json();
-            notification.error({
-              message: get(messages, `${activity}.CoordinateCountFailed`),
-              description: message.detail,
-            });
+            const detailStr = typeof message?.detail === 'string' ? message.detail : '';
+            const isLowFunds =
+              message?.error_code === LOW_FUNDS_ERROR_CODE ||
+              detailStr.toLowerCase().includes('insufficient') ||
+              detailStr.toLowerCase().includes('credits');
+
+            if (isLowFunds && !isVirtualLabAdmin) {
+              notifyCredits();
+            } else {
+              notification.error({
+                message: get(messages, `${activity}.CoordinateCountFailed`),
+                description: detailStr || (message?.detail ?? 'Unknown error'),
+              });
+            }
             return;
           }
 
-          const res = await authFetch(apiUrl, {
+          const res = await authFetch(generatedApiUrl, {
             method: 'POST',
             body: JSON.stringify(config),
             headers: {
@@ -108,13 +146,27 @@ export default function GenerateConfigButton({
           if (res.status !== 200) {
             const errorRes = await res.json();
 
-            const details =
-              res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
+            const isLowFundsFromApi =
+              errorRes?.error_code === LOW_FUNDS_ERROR_CODE ||
+              (typeof errorRes?.detail === 'string' &&
+                (errorRes.detail.toLowerCase().includes('insufficient') ||
+                  errorRes.detail.toLowerCase().includes('credits')));
 
-            notification.error({
-              message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
-              description: details,
-            });
+            // When non-admin gets any error: show credits message. Backend may return
+            // misleading errors (sonata_circuit, no calibration result, etc.) when
+            // the real issue is insufficient credits.
+            const shouldShowCreditsMessage = isLowFundsFromApi && !isVirtualLabAdmin;
+
+            if (shouldShowCreditsMessage) {
+              notifyCredits();
+            } else {
+              const details =
+                res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
+              notification.error({
+                message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
+                description: details,
+              });
+            }
             return;
           }
 
@@ -125,7 +177,28 @@ export default function GenerateConfigButton({
             });
             return;
           }
-
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const baseQueryKey = query.queryKey.at(0);
+              const filtersQueryKey = query.queryKey.at(1);
+              if (
+                isString(baseQueryKey) &&
+                baseQueryKey.startsWith('workspace/activities') &&
+                isEqual(
+                  pick(filtersQueryKey, ['virtualLabId', 'projectId', 'activity', 'entityType']),
+                  {
+                    virtualLabId,
+                    projectId,
+                    activity,
+                    entityType: getTypeByActivityAndSourceType(activity, entityType),
+                  }
+                )
+              ) {
+                return true;
+              }
+              return false;
+            },
+          });
           setCampaignId(returnedCampaignId);
           onTabChange();
         } catch (e) {

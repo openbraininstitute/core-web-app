@@ -5,7 +5,14 @@ import { get, uniqBy } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
-import { type ComponentProps, type ReactElement, type ReactNode, useEffect, useMemo } from 'react';
+import {
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
 
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
@@ -52,7 +59,11 @@ const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
 type Props = {
   id?: string;
   section?: TWorkspaceSection;
+  /** whether to use the brain region filter in the query as some listing may not need it
+   * which means the query will fetch any brain region data
+   */
   requireBrainRegion?: boolean;
+  /** whether to display the mini detail view */
   requireMiniDetailView?: boolean;
   classNames?: {
     container?: ComponentProps<'div'>['className'];
@@ -60,14 +71,31 @@ type Props = {
     filterClassNames?: {
       container?: string;
     };
+    tableClassNames?: {
+      table?: ComponentProps<'div'>['className'];
+      container?: ComponentProps<'div'>['className'];
+    };
   };
   scope?: TWorkspaceScope;
   defaultBrainRegion?: string;
   dataType: TExtendedEntitiesTypeDict;
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
+  /** whether to display the download button */
   allowDownload?: boolean;
+  /** whether to display the delete button */
   allowDelete?: boolean;
+  /** whether to display the filter controls */
+  allowFilter?: boolean;
+  /** whether to display the search input */
+  allowSearch?: boolean;
+  /**
+   * when false, disables the fetch query
+   * this is useful where the query is already filtered
+   * and we don't want to fetch the data again.
+   */
+  allowQuery?: boolean;
+  /** whether to display the brain region dropdown */
   requireBrainRegionDropdown?: boolean;
   extraQueryParams?: Record<string, unknown>;
   left?: ReactNode;
@@ -86,6 +114,9 @@ export function BrowseEntityScope({
   miniViewProps,
   allowDownload,
   allowDelete,
+  allowFilter = true,
+  allowSearch = true,
+  allowQuery = true,
   requireBrainRegionDropdown,
   extraQueryParams,
   left,
@@ -113,11 +144,14 @@ export function BrowseEntityScope({
     section,
   });
 
-  const onSortChange = (newSortState: TSortState) => {
-    setPageNumber(DEFAULT_PAGE_NUMBER);
-    setSortState(newSortState);
-    runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
-  };
+  const onSortChange = useCallback(
+    (newSortState: TSortState) => {
+      setPageNumber(DEFAULT_PAGE_NUMBER);
+      setSortState(newSortState);
+      runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
+    },
+    [setPageNumber, setSortState, runStorageSync]
+  );
 
   const allColumns = useDataTableColumns<EntityCoreIdentifiableNamed>({
     dataType,
@@ -176,7 +210,7 @@ export function BrowseEntityScope({
       };
       return entity?.api?.query.list?.({
         filters,
-        withFacets: true,
+        withFacets: allowFilter,
         context: workspace,
       });
     },
@@ -186,6 +220,7 @@ export function BrowseEntityScope({
     extraQueryParams,
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
+      if (!allowQuery) return false;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
         return false;
       return true;
@@ -252,7 +287,7 @@ export function BrowseEntityScope({
   return (
     <>
       <div
-        id="data-table-container"
+        id={`data-table-container-${dataType}`}
         data-testid="data-table-container"
         className={cn(
           'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
@@ -264,6 +299,8 @@ export function BrowseEntityScope({
             showLoadingState
             allowDownload={allowDownload}
             allowDelete={allowDelete}
+            allowFilter={allowFilter}
+            allowSearch={allowSearch}
             requireBrainRegionDropdown={requireBrainRegionDropdown}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
@@ -283,8 +320,10 @@ export function BrowseEntityScope({
             cls={{
               table: cn(
                 '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
-                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!'
+                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
+                classNames?.tableClassNames?.table
               ),
+              container: classNames?.tableClassNames?.container,
             }}
             {...mainTableProps}
             filterClassNames={classNames?.filterClassNames}

@@ -3,11 +3,12 @@ import snakeCase from 'es-toolkit/compat/snakeCase';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import type { TEntityTypeDict } from '@/api/entitycore/types';
 import { auth } from '@/auth';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
 import { ticketStore } from '@/features/entity-download/ticket-store';
 import { getDownloadStreamHeaders } from '@/features/entity-download/utils';
+
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 
 /**
  * Handles GET requests for downloading an entity archive via a download ticket
@@ -59,7 +60,7 @@ export async function GET(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json({ error: error.issues }, { status: 400 });
     }
 
     return NextResponse.json({ error: 'Failed to process download request' }, { status: 500 });

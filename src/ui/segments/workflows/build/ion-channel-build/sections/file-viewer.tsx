@@ -5,7 +5,7 @@ import { Empty, Image } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { CodeBlock, CodeBlockCopyButton } from '@/ui/molecules/code-blocks';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -15,7 +15,9 @@ import { log } from '@/utils/logger';
 
 import type { BundledLanguage } from 'shiki';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { EntityCoreResource, IAsset } from '@/api/entitycore/types/shared/global';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { IIonChannelModelingConfig } from '@/api/entitycore/types/entities/ion-channel-modeling-config';
+import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -26,26 +28,28 @@ export function FileViewer({
   context,
 }: {
   asset: IAsset;
-  entity: Partial<EntityCoreResource>;
+  entity: IonChannelModel | IIonChannelModelingConfig | undefined;
   context: WorkspaceContext;
 }) {
   const isImage = asset.content_type.startsWith('image/');
-  const isPdf = asset.content_type === 'application/pdf';
-  const isJson = asset.content_type === 'application/json';
+  const isPdf = asset.content_type === AssetContentType.pdf;
+  const isJson = asset.content_type === AssetContentType.json;
   const isMod = asset.label === AssetLabel.neuron_mechanisms;
 
   const { data: presignedData, isLoading: isLoadingUrl } = useQuery({
-    queryKey: keyBuilder.s3presignedUrl({ entityId: entity.id, assetId: asset.id, ...context }),
+    queryKey: keyBuilder.s3presignedUrl({ entityId: entity?.id, assetId: asset.id, ...context }),
     queryFn: async () => {
       return getEntityCorePresignedUrl({
-        entityType: entity.type as TEntityTypeDict,
-        entityId: entity.id!,
+        entityType: entity?.type as TEntityTypeDict,
+        // biome-ignore lint/style/noNonNullAssertion: this is only run when the entity is present
+        entityId: entity!.id,
         virtualLabId: context.virtualLabId,
         projectId: context.projectId,
         configAssetId: asset.id,
       });
     },
-    enabled: !!entity.id && !!asset.id,
+    enabled: !!entity?.id && !!asset.id,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoadingUrl) {

@@ -1,15 +1,47 @@
+import { match } from 'ts-pattern';
+
+import {
+  EntityTypeDict,
+  type ICircuit,
+  type IMEModel,
+  type IonChannelModel,
+  type TEntityTypeDict,
+} from '@/api/entitycore/types';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+// biome-ignore lint/style/useImportType: biome hallucination
+import {
+  ExtendedEntitiesTypeDict,
+  TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
+
 import type { atom } from 'jotai';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
-import type { ConfigValue } from '@/features/scan-config/components/components';
 import type { Prettify } from '@/utils/type';
+
+export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
+
+type Primitive = null | boolean | number | string;
+interface Object {
+  [key: string]: Primitive | Primitive[] | Object;
+}
+
+export type ConfigValue = Primitive | Primitive[] | Object;
+export type Config = Record<string, Object | string>;
 
 export interface AtomsMap {
   [key: string]:
     | ReturnType<typeof atom<Record<string, ConfigValue>>>
     | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
 }
+
+export const SchemaMappingKeyDict = {
+  Circuit: 'Circuit',
+  IonChannelModel: 'IonChannelModel',
+} as const;
+
+export type TSchemaMappingKey = (typeof SchemaMappingKeyDict)[keyof typeof SchemaMappingKeyDict];
 
 export const ScanConfigActivity = {
   Simulate: 'simulate',
@@ -86,6 +118,10 @@ export const ScanConfigUIElementDict = {
   EntityPropertyDropdown: 'entity_property_dropdown',
   NeuronIds: 'neuron_ids',
   BooleanInput: 'boolean_input',
+  ionChannelVariableModificationBySectionList: 'ion_channel_variable_modification_by_section_list',
+  IonChannelVariableModificationByNeuron: 'ion_channel_variable_modification_by_neuron',
+  ModelSelectorSingle: 'model_selector_single',
+  SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
 } as const;
 
 export interface StringInput extends TBlockElement {
@@ -152,9 +188,75 @@ export interface EntityPropertyDropdown extends TBlockElement {
   entity_type: string;
   property: string;
 }
+export interface ModelSelectorSingle extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.ModelSelectorSingle;
+  model_selector_entity_type: TEntityTypeDict;
+  model_selector_property_filter: Record<string, any>;
+  properties: {
+    id_str: {
+      type: string;
+      title: string;
+      description: string;
+    };
+    type: {
+      type: string;
+      const: 'IonChannelModelFromID';
+      title: string;
+      default: 'IonChannelModelFromID';
+    };
+  };
+}
+
+export interface SelectRecordableIonChannelVariable extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.SelectRecordableIonChannelVariable;
+  property: string;
+  property_group: string;
+  properties: {
+    ion_channel_id: {
+      anyOf: [{ type: 'string'; format: 'uuid'; description: string }, { type: 'null' }];
+      title: string;
+    };
+    variable_name: {
+      type: 'string';
+      title: string;
+      description: string;
+    };
+    type: {
+      type: 'string';
+      const: 'IonChannelVariableForRecording';
+      title: string;
+      default: 'IonChannelVariableForRecording';
+    };
+  };
+}
 
 export interface NeuronIds extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronIds;
+}
+export interface IonChannelRangeVariableModification extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.ionChannelVariableModificationBySectionList;
+  description: string;
+  property: 'IonChannelRangeVariables';
+  title: string;
+  type: 'object';
+  properties: {
+    modification: any;
+    neuron_set: any;
+    type: Type;
+  };
+}
+
+export interface IonChannelGlobalVariableModification extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.IonChannelVariableModificationByNeuron;
+  description: string;
+  title: string;
+  property: 'IonChannelGlobalVariables';
+  type: 'object';
+  properties: {
+    modification: any;
+    neuron_set: any;
+    type: Type;
+  };
 }
 
 export interface BooleanInput extends TBlockElement {
@@ -190,13 +292,23 @@ export type ParamSchema =
   | Reference
   | NeuronIds
   | EntityPropertyDropdown
-  | BooleanInput;
+  | BooleanInput
+  | IonChannelRangeVariableModification
+  | IonChannelGlobalVariableModification
+  | ModelSelectorSingle
+  | SelectRecordableIonChannelVariable;
 
 export type TBlock = {
   title: string;
   description: string;
   properties: Record<string, ParamSchema> & { type: Type };
   required?: string[];
+  block_usability_entity_dependent: boolean;
+  block_usability_dictionary?: {
+    false_message: string;
+    property: string;
+    property_group: string;
+  };
 };
 
 export interface IBlockSingle extends TRootElement, TBlock {
@@ -223,6 +335,7 @@ export type ConfigSchema = {
     type: Type;
   };
   title: string;
+  property_endpoints: Record<string, string>;
 };
 
 type Type = {
@@ -248,4 +361,41 @@ export type TActivityCustomFile = {
   assetPath?: string;
   name?: string;
   renderer: TActivityCustomFileRenderer;
+};
+
+export type TSupportedEntitiesForScanConfiguration = ICircuit | IMEModel | IonChannelModel;
+
+export type TSupportedEntityTypesForScanConfiguration =
+  | typeof ExtendedEntitiesTypeDict.Circuit
+  | typeof ExtendedEntitiesTypeDict.MemodelCircuit
+  | typeof ExtendedEntitiesTypeDict.MEModelWithSynapses
+  | typeof ExtendedEntitiesTypeDict.IonChannelModel;
+
+export const getSupportedEntityTypesForScanConfiguration = ({
+  entity,
+}: {
+  entity?: TSupportedEntitiesForScanConfiguration | { type: TExtendedEntitiesTypeDict };
+}) => {
+  return match({ entity })
+    .with(
+      {
+        entity: {
+          type: EntityTypeDict.Circuit,
+          scale: CircuitScaleDictionary.Single,
+        },
+      },
+      () => ExtendedEntitiesTypeDict.MEModelWithSynapses
+    )
+    .with({ entity: { type: EntityTypeDict.Circuit } }, () => ExtendedEntitiesTypeDict.Circuit)
+    .with(
+      { entity: { type: EntityTypeDict.Memodel } },
+      () => ExtendedEntitiesTypeDict.MemodelCircuit
+    )
+    .with(
+      { entity: { type: EntityTypeDict.IonChannelModel } },
+      () => ExtendedEntitiesTypeDict.IonChannelModel
+    )
+    .otherwise(() => {
+      throw new Error('Not supported entity for scan configuration');
+    });
 };

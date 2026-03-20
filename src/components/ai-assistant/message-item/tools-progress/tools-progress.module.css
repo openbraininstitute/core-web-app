@@ -123,6 +123,35 @@
   gap: 0.25rem;
 }
 
+.restoreButton {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  transition: all 150ms;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: #6b7280;
+}
+
+.restoreButton:hover {
+  transform: scale(1.1);
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.restoreButton:active {
+  transform: scale(0.95);
+}
+
+.restoreIcon {
+  height: 1rem;
+  width: 1rem;
+}
+
 .expandButton,
 .helpButton {
   display: flex;

@@ -2,14 +2,20 @@ import { useAtomValue } from 'jotai';
 import { Suspense, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
+import {
+  AssetContentType,
+  AssetLabel,
+  AssetContentType as ContentType,
+} from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
+import { SpikeViewer } from '@/features/spike-viewer';
 import { cn } from '@/utils/css-class';
 
 import { jsonFileAtomFamily } from '../atoms';
 import { CodeFileViewer } from './code-viewer';
 
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -25,24 +31,31 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
 
   const isFilePreloading = file && file !== displayFile;
 
-  const fileName =
-    displayFile?.assetPath?.split('/').at(-1) ?? displayFile?.asset.path.split('/').at(-1);
+  const isJson = displayFile?.asset.content_type === ContentType.json;
 
-  const fileExt = fileName?.split('.').at(-1)?.toLowerCase();
-
-  const viewerContent = match(fileExt)
+  const viewerContent = match(displayFile)
     .with(undefined, () => null)
-    .with('json', () => <JsonFileViewer file={displayFile!} context={context} />)
-    .with('nwb', () => <NwbFileViewer file={displayFile!} context={context} />)
-    .otherwise(() => <PlaceholderFileViewer file={displayFile!} />);
+    .with({ asset: { content_type: ContentType.json } }, (f) => (
+      <JsonFileViewer file={f} context={context} />
+    ))
+    .with({ asset: { content_type: ContentType.nwb } }, (f) => (
+      <NwbFileViewer file={f} context={context} />
+    ))
+    .with({ asset: { content_type: ContentType.h5, label: AssetLabel.spike_report } }, (f) => (
+      <H5SpikeFileViewer file={f} context={context} />
+    ))
+    .with({ asset: { content_type: ContentType.h5, label: AssetLabel.replay_spikes } }, (f) => (
+      <H5SpikeFileViewer file={f} context={context} />
+    ))
+    .otherwise((f) => <PlaceholderFileViewer file={f} />);
 
   return (
     <div
       className={cn('text-primary-9 relative rounded-2xl bg-white p-6', className, {
-        'p-0': fileExt === 'json',
+        'p-0': isJson,
       })}
     >
-      <div className={cn('relative h-full overflow-auto p-6', { 'p-0': fileExt === 'json' })}>
+      <div className={cn('relative h-full overflow-auto p-6', { 'p-0': isJson })}>
         <Suspense>{viewerContent}</Suspense>
         {loading && !isFilePreloading && (
           <div className="absolute inset-0 z-10 flex h-full cursor-progress items-center justify-center rounded-2xl backdrop-blur-xs">
@@ -74,10 +87,7 @@ type FilePreloaderProps = {
 };
 
 function FilePreloader({ file, context, onLoaded }: FilePreloaderProps) {
-  const fileName = file?.assetPath?.split('/').at(-1) ?? file?.asset.path.split('/').at(-1);
-  const fileExt = fileName?.split('.').at(-1)?.toLowerCase();
-
-  const needsPreloading = fileExt === 'json';
+  const needsPreloading = file.asset.content_type === AssetContentType.json;
 
   useEffect(() => {
     if (!needsPreloading) {
@@ -132,9 +142,32 @@ type NwbFileViewerProps = {
 };
 
 function NwbFileViewer({ file, context }: NwbFileViewerProps) {
-  const { entity } = file;
+  const { entity, asset } = file;
   return (
-    <EphysViewer key={entity.id} resource={entity as ICircuitSimulationResult} ctx={context} />
+    <EphysViewer
+      key={asset.id}
+      entity={entity as ISimulationResult}
+      assetId={asset.id}
+      ctx={context}
+    />
+  );
+}
+
+type H5FileViewerProps = {
+  file: TActivityCustomFile;
+  context: WorkspaceContext;
+};
+
+function H5SpikeFileViewer({ file, context }: H5FileViewerProps) {
+  const { entity, asset } = file;
+  return (
+    <SpikeViewer
+      key={`${entity.id}-${asset.id}`}
+      entityId={entity.id}
+      entityType={entity.type}
+      asset={asset}
+      ctx={context}
+    />
   );
 }
 
@@ -143,8 +176,7 @@ type PlaceholderFileViewerProps = {
 };
 
 function PlaceholderFileViewer({ file }: PlaceholderFileViewerProps) {
-  const fileName = file?.assetPath?.split('/').at(-1) ?? file?.asset.path.split('/').at(-1);
-  const fileExt = fileName?.split('.').at(-1)?.toLowerCase();
+  const fileExt = (file?.assetPath ?? file.asset.path).split('.').at(-1)?.toLowerCase();
 
   return (
     <div className="flex h-full items-center justify-center">

@@ -1,6 +1,7 @@
-import { InfoCircleOutlined, CloseOutlined } from "@ant-design/icons";
-import { useMemo } from "react";
-import styles from "./free-credits-notification.module.css";
+import { CloseOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { useMemo } from 'react';
+
+import styles from './free-credits-notification.module.css';
 
 export interface FreeCreditsNotificationProps {
   onDismiss: () => void;
@@ -14,7 +15,7 @@ export default function FreeCreditsNotification({
   // Freeze the reset time when component mounts
   const resetTimeString = useMemo(() => {
     if (resetIn === null || resetIn <= 0) {
-      return "later";
+      return 'later';
     }
 
     // Calculate the reset time in user's local timezone
@@ -22,8 +23,8 @@ export default function FreeCreditsNotification({
 
     // Format the time in user's local timezone
     const timeString = resetDate.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
+      hour: 'numeric',
+      minute: '2-digit',
       hour12: true,
     });
 
@@ -45,9 +46,8 @@ export default function FreeCreditsNotification({
       <div className={styles.content}>
         <h4 className={styles.title}>Free Credits Exhausted</h4>
         <p className={styles.message}>
-          You have used all of your free credits. Your next chats will be
-          charged from the current project's balance. Free credits will be
-          replenished {resetTimeString}.
+          You have used all of your free credits. Your next chats will be charged from the current
+          project's balance. Free credits will be replenished {resetTimeString}.
         </p>
       </div>
       <button

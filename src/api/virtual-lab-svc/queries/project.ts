@@ -1,6 +1,5 @@
-import { getSession } from '@/auth-fetch';
-
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 
 import type {

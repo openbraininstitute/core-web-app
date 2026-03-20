@@ -86,11 +86,11 @@ export async function loadExpandedSingleNeuronSynaptome({
 export default async function Configuration({
   entity,
   extendedType,
-  ctx,
+  context,
 }: {
   entity: TRetrieveEntityOutput;
   extendedType: TExtendedEntitiesTypeDict;
-  ctx: WorkspaceContext;
+  context: WorkspaceContext;
 }) {
   const entityType = getEntityByExtendedType({ type: extendedType });
   if (!entityType) notFound();
@@ -102,7 +102,7 @@ export default async function Configuration({
       morphology = await getCellMorphology({
         id: (entity as IEModel).exemplar_morphology.id,
         expand: 'measurement_annotation',
-        context: ctx,
+        context: context,
       });
     } catch {
       notFound();
@@ -121,8 +121,8 @@ export default async function Configuration({
     let data: AwaitedType<ReturnType<typeof loadExpandedSingleNeuronSynaptome>>;
     try {
       data = await loadExpandedSingleNeuronSynaptome({
-        virtualLabId: ctx.virtualLabId,
-        projectId: ctx.projectId,
+        virtualLabId: context.virtualLabId,
+        projectId: context.projectId,
         id: entity.id,
       });
     } catch {
@@ -133,8 +133,8 @@ export default async function Configuration({
       <div className="flex w-full flex-col gap-4">
         <SynaptomeConfig
           memodel={data.memodel}
-          virtualLabId={ctx.virtualLabId}
-          projectId={ctx.projectId}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
         />
 
         <div className="mt-10">
@@ -149,7 +149,7 @@ export default async function Configuration({
     try {
       config = await singleNeuronSimulationApiQueryExpand.config(
         entity as ISingleNeuronSimulation,
-        ctx
+        context
       );
     } catch {
       notFound();
@@ -170,7 +170,7 @@ export default async function Configuration({
     try {
       config = await singleNeuronSynaptomeSimulationApiQueryExpand.config(
         entity as ISingleNeuronSynaptomeSimulation,
-        ctx
+        context
       );
     } catch {
       notFound();

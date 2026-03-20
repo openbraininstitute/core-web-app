@@ -1,0 +1,48 @@
+.debugPanel {
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+
+  > button {
+    font: inherit;
+    border: none;
+    border-radius: 0.125em;
+    background: #f90;
+    color: #000;
+    display: grid;
+    place-items: center;
+    width: 3em;
+    height: 3em;
+  }
+
+  > dialog::backdrop {
+    filter: blur(4px);
+  }
+
+  > dialog {
+    width: 70vw;
+    height: 80vh;
+    margin: auto;
+    box-shadow: 0 0.5em 1em #000;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 0.5em;
+
+    > header {
+      background: #002766;
+      color: #fff;
+      padding: 0.5em 1em;
+      grid-column: 1 / -1;
+      font-weight: bold;
+    }
+
+    > textarea {
+      background: #abc;
+      border: 1px solid #000;
+      padding: 1em;
+      margin: 1em;
+      font-family: monospace;
+    }
+  }
+}

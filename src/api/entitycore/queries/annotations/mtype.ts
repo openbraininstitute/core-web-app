@@ -1,5 +1,5 @@
+import { authApiClient } from '@/api/api-client';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
-import { authApiClient } from '@/api/apiClient';
 import { config } from '@/config';
 
 import type { IMType, IMTypeFilter } from '@/api/entitycore/types/shared/global';

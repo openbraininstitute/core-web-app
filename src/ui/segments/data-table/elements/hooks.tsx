@@ -1,14 +1,15 @@
 'use client';
 
 import { Button, ConfigProvider } from 'antd';
-import type { ColumnGroupType, ColumnType } from 'antd/es/table';
 import { usePathname } from 'next/navigation';
 import { type MouseEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
+
+import ChevronLast from '@/components/icons/ChevronLast';
+import { classNames } from '@/util/utils';
+
+import type { ColumnGroupType, ColumnType } from 'antd/es/table';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import ChevronLast from '@/components/icons/ChevronLast';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { classNames } from '@/util/utils';
 
 type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 
@@ -21,17 +22,14 @@ export function useOnCellRouteHandler<T extends EntityCoreIdentifiable>({
 }) {
   const pathname = usePathname();
 
-  const onCellRouteHandler = (col: ColumnGroupType<T> | ColumnType<T>) => {
+  const onCellRouteHandler = (_col: ColumnGroupType<T> | ColumnType<T>) => {
     return {
-      onCell: (record: T) =>
-        col.key !== EntityCoreFields.Preview
-          ? {
-              onClick: (e: MouseEvent<HTMLInputElement>) => {
-                e.preventDefault();
-                onCellClick?.(pathname, record, dataType);
-              },
-            }
-          : {},
+      onCell: (record: T) => ({
+        onClick: (e: MouseEvent<HTMLInputElement>) => {
+          e.preventDefault();
+          onCellClick?.(pathname, record, dataType);
+        },
+      }),
     };
   };
 

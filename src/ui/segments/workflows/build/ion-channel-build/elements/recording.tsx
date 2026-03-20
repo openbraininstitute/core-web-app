@@ -1,18 +1,17 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-
+import { Empty } from 'antd';
 import { useAtom } from 'jotai';
 import { useMemo } from 'react';
-import { Empty } from 'antd';
 
 import { TraceDetailsView } from '@/features/ion-channel-recording-viewer/components/trace-details-view/trace-details-view';
 import useTrace from '@/features/ion-channel-recording-viewer/hooks/use-nwb-trace';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   CONFIGURATION_RECORDING_STATE_KEY,
   IonChannelRecordingAtomFamily,
 } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 export default function Recording({ sessionId }: { sessionId: string }) {
   const { virtualLabId, projectId } = useWorkspace();

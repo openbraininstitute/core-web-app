@@ -1,5 +1,8 @@
 import isNil from 'es-toolkit/compat/isNil';
 import { z } from 'zod';
+
+import { validateSingleNeuronSynapseGenerationFormula } from '@/api/small-scale-simulator';
+
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { IMEModel, IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
 import type {
@@ -22,7 +25,6 @@ import type {
   PaginationFilter,
   SharedFilter,
 } from '@/api/entitycore/types/shared/request';
-import { validateSingleNeuronSynapseGenerationFormula } from '@/api/small-scale-simulator';
 
 export interface SingleNeuronSynaptomeBase {
   name: string;
@@ -59,7 +61,7 @@ const CreateSingleNeuronSynaptomeSchema = z.object({
   name: z.string(),
   description: z.string(),
   brain_region_id: z.number(),
-  me_model_id: z.string().uuid(),
+  me_model_id: z.uuid(),
   seed: z.number(),
 });
 
@@ -67,7 +69,7 @@ export type TCreateSingleNeuronSynaptome = z.infer<typeof CreateSingleNeuronSyna
 
 const SingleNeuronSynaptomeExclusionRuleSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     distance_soma_gte: z.number().nullish(),
     distance_soma_lte: z.number().nullish(),
   })
@@ -77,13 +79,13 @@ const SingleNeuronSynaptomeExclusionRuleSchema = z
       return true;
     },
     {
-      message: 'At least one of distance_soma_gte or distance_soma_lte must be provided',
       path: ['distance_soma_gte', 'distance_soma_lte'],
+      error: 'At least one of distance_soma_gte or distance_soma_lte must be provided',
     }
   );
 
 export const SingleNeuronSynaptomeBaseSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().nonempty(),
   target: z.string().optional(),
   seed: z.number(),
@@ -91,21 +93,21 @@ export const SingleNeuronSynaptomeBaseSchema = z.object({
   formula: z.string().optional(),
   soma_synapse_count: z.number().optional(),
   type: z.union([z.literal(110), z.literal(10)]),
-  exclusion_rules: z.array(SingleNeuronSynaptomeExclusionRuleSchema).nullable(),
+  exclusion_rules: z.array(SingleNeuronSynaptomeExclusionRuleSchema).nullable().optional(),
 });
 
 export const SingleNeuronSynaptomeConfigurationSchema = SingleNeuronSynaptomeBaseSchema.superRefine(
   (synapse, ctx) => {
     if (synapse.target !== 'soma' && isNil(synapse.formula)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'formula should be provided when target is different than "soma"',
         path: ['formula'],
       });
     }
     if (synapse.target === 'soma' && isNil(synapse.soma_synapse_count)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'soma_synapse_count must be a valid number when target is "soma"',
         path: ['soma_synapse_count'],
       });
@@ -113,10 +115,10 @@ export const SingleNeuronSynaptomeConfigurationSchema = SingleNeuronSynaptomeBas
   }
 ).superRefine(async (synapse, ctx) => {
   if (synapse.target !== 'soma') {
-    const v = await validateSingleNeuronSynapseGenerationFormula(synapse.formula!);
+    const v = await validateSingleNeuronSynapseGenerationFormula(synapse.formula);
     if (!v) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'formula is not valid',
         path: ['formula'],
       });

@@ -19,6 +19,7 @@ export const ModelEntitySlug = {
   Microcircuit: 'microcircuit',
   Circuit: 'circuit',
   IonChannelModel: 'ion-channel-model',
+  IonChannelModelingCampaign: 'ion-channel-modeling-campaign',
   MEModelWithSynapses: 'me-model-with-synapses',
 } as const;
 
@@ -31,6 +32,7 @@ const SimulationEntitySlug = {
   PairedNeuronCircuitSimulation: 'paired-neurons-simulation',
   SmallMicrocircuitSimulation: 'small-microcircuit-simulation',
   MicrocircuitSimulation: 'microcircuit-simulation',
+  IonChannelModelSimulation: 'ion-channel-model-simulation',
 } as const;
 
 const ExtractionEntitySlug = {

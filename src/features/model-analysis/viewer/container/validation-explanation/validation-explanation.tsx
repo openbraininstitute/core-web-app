@@ -1,21 +1,34 @@
-import React from 'react';
-
-import { classNames } from '@/util/utils';
+import { get } from 'es-toolkit/compat';
+import ReactMarkdown from 'react-markdown';
 
 import { Explanation } from '@/components/explanation';
+import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { classNames } from '@/util/utils';
+
+import { validationDescription } from '../hooks/dictionary';
+
+import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
+
 import styles from './validation-explanation.module.css';
 
 export interface ValidationExplanationProps {
   className?: string;
   passed: boolean;
+  entity: TRetrieveEntityOutput;
 }
 
-export function ValidationExplanation({ className, passed }: ValidationExplanationProps) {
+export function ValidationExplanation({ className, passed, entity }: ValidationExplanationProps) {
+  const entityConfig = getEntityByCoreType({ type: entity.type });
+  const title = entityConfig?.title;
+  const text = get(validationDescription, entity.type, null);
+  if (!text) return null;
+
   return (
     <Explanation
+      hasDescription
       title={
         <>
-          <div>ME-Model Validation</div>
+          <div>{title} Validation</div>
           <div className={passed ? styles.passed : styles.failed}>
             {passed ? 'passed' : 'failed'}
           </div>
@@ -23,33 +36,35 @@ export function ValidationExplanation({ className, passed }: ValidationExplanati
       }
       className={classNames(styles.validationDescription, className)}
     >
-      <p>
-        ME-Model validation runs a series of validations to test the model quality. We calculate the
-        threshold current (rheobase, if not present) and the input resistance of the model (Rin).
-        The validations include:
-      </p>
-      <ol>
-        <li>1. Hyperpolization Validation</li>
-        <li>2. Input Resistance (Rin) Validation</li>
-        <li>3. Spiking Validation</li>
-        <li>4. AIS (Axon Initial Segment) Spiking Validation</li>
-        <li>5. Depolarization Block Validation</li>
-        <li>6. IV (Current-Voltage) Curve Validation</li>
-        <li>7. FI (Frequency-Current) Curve Validation</li>
-        <li>8. Back-propagating Action Potential (BPAP) Validation</li>
-      </ol>
-      <p>
-        The output figures for each validation, along with the validation protocol descriptions and
-        validation conditions, are provided below. An ME-model PASSES validation if all individual
-        validations pass. The ME-model validation status only represents a qualitative assessment of
-        the model. Even if the ME-model FAILS validation, you can still run simulations with the
-        model.
-      </p>
-      <p>
-        Note: The platform skips certain validations when a model lacks specific sections, such as
-        AIS Validation when AIS is absent, and BPAP Validation when dendrites are missing in the
-        model, and their figures do not appear in the list below.
-      </p>
+      <ReactMarkdown
+        components={{
+          a: ({ children, href }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary-6 hover:text-primary-8 underline"
+            >
+              {children}
+            </a>
+          ),
+          p: ({ children }) => <div>{children}</div>,
+          h2: ({ children }) => <h3 className="font-bold text-base mt-4 mb-2">{children}</h3>,
+          h3: ({ children }) => <h3 className="font-bold text-lg mt-4 mb-2">{children}</h3>,
+          ul: ({ children }) => (
+            <div className="mb-0.5">
+              <ul className="list-disc pl-5">{children}</ul>
+            </div>
+          ),
+          ol: ({ children }) => (
+            <div className="my-2">
+              <ul className="list-decimal pl-5">{children}</ul>
+            </div>
+          ),
+        }}
+      >
+        {text}
+      </ReactMarkdown>
     </Explanation>
   );
 }

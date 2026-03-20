@@ -1,4 +1,4 @@
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
 export type TypeSummaryProps = { field: EntityCoreFields; className?: string };
 

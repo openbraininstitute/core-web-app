@@ -1,12 +1,16 @@
 import { tableFromIPC } from '@apache-arrow/es2015-esm';
-import { fetchPointCloud } from '../../api';
+
 import { getBrainAtlasRegions } from '@/api/entitycore/queries/general/brain-atlas';
+import { AssetContentType } from '@/api/entitycore/types/shared/global';
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
+import { logError } from '@/util/logger';
 import { assertType } from '@/util/type-guards';
 import { createHeaders } from '@/util/utils';
-import { logError } from '@/util/logger';
 import { log } from '@/utils/logger';
+import { fetchAllPaginatedData } from '@/utils/pagination';
+
+import { fetchPointCloud } from '../../api';
 
 let cacheAtlasId: string | null = null;
 
@@ -60,7 +64,7 @@ async function actualGetBrainRegionMeshArrayBuffer(
     throw new Error(`Unable to find region "${regionId}" in current Atlas!`);
   }
 
-  const contentType = 'model/gltf-binary';
+  const contentType = AssetContentType.gltf_binary;
   // const contentType = 'application/obj';
   const asset = entity.assets.find(
     (elem) => elem.label === 'brain_atlas_region_mesh' && elem.content_type === contentType
@@ -107,13 +111,22 @@ async function getAtlas(atlasId: string) {
 
 async function actualGetAtlas(atlasId: string) {
   const time = performance.now();
-  const atlas = await getBrainAtlasRegions({
-    atlasId: atlasId ?? config.DEFAULT_BRAIN_ATLAS_ID,
-    filters: {
-      page: 1,
-      page_size: 2000,
+
+  const data = await fetchAllPaginatedData({
+    fn: async (page, pageSize) => {
+      const result = await getBrainAtlasRegions({
+        atlasId: atlasId ?? config.DEFAULT_BRAIN_ATLAS_ID,
+        filters: {
+          page,
+          page_size: pageSize,
+        },
+      });
+      return { data: result.data || [] };
     },
+    pageSize: 200,
   });
+
+  const atlas: PartialAtlas = { data };
 
   log('debug', '🚀 [services] atlas =', atlas, `${performance.now() - time} msec`);
   assertType<PartialAtlas>(atlas, {

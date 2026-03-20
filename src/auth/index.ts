@@ -176,6 +176,8 @@ export const authOptions: NextAuthOptions = {
           user: {
             ...user,
             id: profile?.sub,
+            // @ts-expect-error identity_provider is a Keycloak-specific claim
+            identityProvider: profile?.identity_provider,
           },
 
           idToken: account.id_token,

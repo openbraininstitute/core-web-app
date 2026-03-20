@@ -1,89 +1,110 @@
 import Ajv, { type AnySchema } from 'ajv';
 import { useEffect, useMemo, useRef } from 'react';
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 
-import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
-import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config as appConfig } from '@/config';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import {
+  type Config,
   type ConfigSchema,
   ScanConfigActivity,
   type SchemaName,
   type TScanConfigActivity,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { log } from '@/utils/logger';
 
-import type { Config } from '@/features/scan-config/components/components';
+import type { Nullish } from '@/utils/type';
 
-export function useApiUrl({
+export function getGeneratedApiUrl({
   activity = ScanConfigActivity.Simulate,
-  model,
+  entityType,
 }: {
   activity?: TScanConfigActivity;
-  model: ICircuit | IMEModel;
+  entityType: TSupportedEntityTypesForScanConfiguration | Nullish;
 }) {
   const apiPath = match(activity)
     .with(ScanConfigActivity.Extract, () => {
-      const path = match(model)
+      const path = match({ entityType })
         .with(
-          { type: EntityTypeDict.Circuit },
+          { entityType: EntityTypeDict.Circuit },
           () => 'circuit-extraction-scan-config-generate-grid'
         )
         .otherwise(() => {
-          throw new Error(`Unsupported model type ${model.type}`);
+          throw new Error(`Unsupported entity type ${entityType}`);
         });
       return path;
     })
     .with(ScanConfigActivity.Simulate, () => {
-      const path = match(model)
+      const path = match({ entityType })
         .with(
-          { type: EntityTypeDict.Memodel },
+          { entityType: ExtendedEntitiesTypeDict.MemodelCircuit },
           () => 'me-model-simulation-scan-config-generate-grid'
         )
         .with(
-          { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
+          { entityType: ExtendedEntitiesTypeDict.IonChannelModel },
+          () => 'ion-channel-model-simulation-scan-config-generate-grid'
+        )
+        .with(
+          {
+            entityType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          },
           () => 'me-model-with-synapses-circuit-simulation-scan-config-generate-grid'
         )
         .with(
-          { type: EntityTypeDict.Circuit },
+          { entityType: EntityTypeDict.Circuit },
           () => 'circuit-simulation-scan-config-generate-grid'
         )
         .otherwise(() => {
-          throw new Error(`Unsupported model type ${model.type}`);
+          throw new Error(`Unsupported entity type ${entityType}`);
         });
       return path;
     })
-    .exhaustive();
+    .exhaustive(() => {
+      throw new Error(`No obi-one generated url found for this entity ${entityType}`);
+    });
+
   return `${appConfig.OBI_ONE_URL}/generated/${apiPath}`;
 }
 
-export function useSchemaName({
-  model,
+export function getScanConfigSchemaName({
+  entityType,
   activity = ScanConfigActivity.Simulate,
 }: {
-  model: ICircuit | IMEModel;
   activity?: TScanConfigActivity;
+  entityType: TSupportedEntityTypesForScanConfiguration | Nullish;
 }) {
-  const schemaName = match({ activity })
+  const schemaName = match({ activity, entityType })
+    .with({ entityType: P.nullish }, () => {
+      return null;
+    })
     .with({ activity: ScanConfigActivity.Extract }, () => {
-      const name = match(model)
-        .with({ type: EntityTypeDict.Circuit }, () => 'CircuitExtractionScanConfig')
+      const name = match({ entityType })
+        .with({ entityType: ExtendedEntitiesTypeDict.Circuit }, () => 'CircuitExtractionScanConfig')
         .otherwise(() => {
-          throw new Error(`Unsupported entity type: ${model.type}`);
+          throw new Error(`Unsupported entity type: ${entityType}`);
         });
       return name as SchemaName;
     })
     .with({ activity: ScanConfigActivity.Simulate }, () => {
-      const name = match(model)
-        .with({ type: EntityTypeDict.Memodel }, () => 'MEModelSimulationScanConfig')
+      const name = match({ entityType })
         .with(
-          { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
+          { entityType: ExtendedEntitiesTypeDict.MemodelCircuit },
+          () => 'MEModelSimulationScanConfig'
+        )
+        .with(
+          { entityType: ExtendedEntitiesTypeDict.IonChannelModel },
+          () => 'IonChannelModelSimulationScanConfig'
+        )
+        .with(
+          { entityType: ExtendedEntitiesTypeDict.MEModelWithSynapses },
           () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
         )
-        .with({ type: EntityTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
+        .with({ entityType: ExtendedEntitiesTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
         .otherwise(() => {
-          throw new Error(`Unsupported entity type: ${model.type}`);
+          throw new Error(`Unsupported entity type: ${entityType}`);
         });
       return name as SchemaName;
     })

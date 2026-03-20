@@ -1,3 +1,4 @@
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { PanelState } from '@/ui/segments/ai/types';
 
@@ -16,7 +17,7 @@ export const microcircuitFlag = defineFlag<boolean>({
   defaultValue: false,
   values: [true, false],
   description: 'Enable microcircuit (simulations)',
-  visible: () => ['local', 'development'].includes(config.DEPLOYMENT_ENV),
+  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
 export const extractionActivityFlag = defineFlag<boolean>({
@@ -24,10 +25,23 @@ export const extractionActivityFlag = defineFlag<boolean>({
   defaultValue: false,
   values: [true, false],
   description: 'Enable extraction activity',
-  visible: () => ['local', 'development'].includes(config.DEPLOYMENT_ENV),
+  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const flags = [aiPanelStateFlag, microcircuitFlag, extractionActivityFlag] as const;
+export const ionChannelSimulationActivityFlag = defineFlag<boolean>({
+  key: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+  defaultValue: false,
+  values: [true, false],
+  description: 'Enable ion channel simulation',
+  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+});
+
+export const flags = [
+  aiPanelStateFlag,
+  microcircuitFlag,
+  extractionActivityFlag,
+  ionChannelSimulationActivityFlag,
+] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 

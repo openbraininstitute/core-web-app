@@ -1,6 +1,7 @@
-import styles from '@/features/scan-config/scan-config.module.css';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
+
+import styles from '@/features/scan-config/scan-config.module.css';
 
 function TabsSkeleton() {
   return (
@@ -103,10 +104,10 @@ export function ScanConfigSkeleton({ className }: { className?: string }) {
     <div className={cn('flex h-full flex-col space-y-5', className)}>
       <header className={cn(styles.header, 'px-5')}>
         <TabsSkeleton />
-        <Skeleton className="h-8 w-48 rounded" />
+        <Skeleton className="h-10 w-48 rounded-full" />
       </header>
 
-      <div className="relative mb-10 px-5">
+      <div className="relative mb-5 px-5">
         <div className="w-full border-t border-gray-200" />
       </div>
 

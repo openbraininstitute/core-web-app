@@ -158,13 +158,14 @@ export function BrowseCircuit({
     workspace: { virtualLabId, projectId },
     queryFn: async ({ queryKey }) => {
       const [{ workspace, queryParameters }] = queryKey;
+      const outgoingFilters = {
+        ...queryParameters,
+        ...extraQueryParams,
+        ...getWorkspaceScopeFilters(scope!, { virtualLabId, projectId }),
+      };
       return await Circuit.api.query.list?.({
         withFacets: true,
-        filters: {
-          ...queryParameters,
-          ...extraQueryParams,
-          ...getWorkspaceScopeFilters(scope!, { virtualLabId, projectId }),
-        },
+        filters: outgoingFilters,
         context: workspace,
       });
     },

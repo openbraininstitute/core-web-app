@@ -1,22 +1,28 @@
-import { atom } from 'jotai';
 import isEqual from 'es-toolkit/compat/isEqual';
+import { atom } from 'jotai';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { IElectricalCellRecording } from '@/api/entitycore/types';
-import { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
-import { WorkspaceContext } from '@/types/common';
+import { AssetContentType } from '@/api/entitycore/types/shared/global';
 import { readAtomFamilyWithExpiration } from '@/util/atoms';
+
+import type { IElectricalCellRecording } from '@/api/entitycore/types';
+import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
+import type { WorkspaceContext } from '@/types/common';
 
 export const nwbArrayBufferAtomFamily = readAtomFamilyWithExpiration(
   ({
     entity,
+    assetId,
     ctx,
   }: {
-    entity: IElectricalCellRecording | ICircuitSimulationResult;
+    entity: IElectricalCellRecording | ISimulationResult;
+    assetId?: string;
     ctx?: WorkspaceContext;
   }) =>
     atom<Promise<ArrayBuffer>>(() => {
-      const asset = entity.assets?.find((a) => a.content_type === 'application/nwb');
+      const asset = assetId
+        ? entity.assets?.find((a) => a.id === assetId)
+        : entity.assets?.find((a) => a.content_type === AssetContentType.nwb);
 
       if (!asset) {
         throw new Error('No NWB file found');

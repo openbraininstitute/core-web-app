@@ -28,7 +28,7 @@ import { log } from '@/utils/logger';
 import type { ColumnType } from 'antd/es/table';
 import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
 
-const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
+const emailSchema = z.email('Email is not valid').min(3, 'Email is required');
 
 const Steps = {
   InviteMember: 'invite-member',
