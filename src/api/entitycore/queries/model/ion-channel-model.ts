@@ -1,8 +1,8 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
-  IonChannelModelFilter,
   IonChannelModel,
+  IonChannelModelFilter,
 } from '@/api/entitycore/types/entities/ion-channel';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';

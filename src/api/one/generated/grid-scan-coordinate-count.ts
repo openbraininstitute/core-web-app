@@ -1,4 +1,5 @@
 import { obioneApi } from '@/api/one/utils';
+
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/declared/scan_config/grid-scan-coordinate-count';

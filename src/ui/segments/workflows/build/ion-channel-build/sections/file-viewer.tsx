@@ -5,7 +5,7 @@ import { Empty, Image } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { CodeBlock, CodeBlockCopyButton } from '@/ui/molecules/code-blocks';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -32,8 +32,8 @@ export function FileViewer({
   context: WorkspaceContext;
 }) {
   const isImage = asset.content_type.startsWith('image/');
-  const isPdf = asset.content_type === 'application/pdf';
-  const isJson = asset.content_type === 'application/json';
+  const isPdf = asset.content_type === AssetContentType.pdf;
+  const isJson = asset.content_type === AssetContentType.json;
   const isMod = asset.label === AssetLabel.neuron_mechanisms;
 
   const { data: presignedData, isLoading: isLoadingUrl } = useQuery({

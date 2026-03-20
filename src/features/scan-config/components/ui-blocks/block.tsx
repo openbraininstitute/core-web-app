@@ -4,23 +4,25 @@ import { atom, useAtom } from 'jotai';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
   type Config,
+  type ConfigSchema,
   type ConfigValue,
   isType,
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
+  type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { Nullish } from '@/utils/type';
 
 export default function Block({
   schemaName,
+  schema,
   disabled,
   blockSchema,
   stateAtom,
@@ -30,10 +32,11 @@ export default function Block({
   schemaMappingConfig,
 }: {
   schemaName: SchemaName;
+  schema: ConfigSchema;
   disabled: boolean;
   config: Config;
   blockSchema?: TBlock;
-  entity: ICircuit | IMEModel | undefined | null;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   hideTitle?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
@@ -120,6 +123,7 @@ export default function Block({
                               paramSchema={blockElementSchema}
                               value={value}
                               config={config}
+                              schema={schema}
                               schemaName={schemaName}
                               entity={entity}
                               schemaMappingConfig={schemaMappingConfig}
@@ -158,3 +162,5 @@ export default function Block({
     </div>
   );
 }
+
+export { Block };

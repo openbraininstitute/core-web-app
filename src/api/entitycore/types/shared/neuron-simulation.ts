@@ -11,7 +11,7 @@ export interface ISingleNeuronSimulationBase extends EntityCoreIdentifiable, Ent
   recording_location: Array<string>;
 }
 
-export interface ICircuitSimulationBase extends EntityCoreIdentifiable, EntityCoreOwnership {
+export interface ISimulationBase extends EntityCoreIdentifiable, EntityCoreOwnership {
   name: string;
   description: string;
   simulation_campaign_id: string;

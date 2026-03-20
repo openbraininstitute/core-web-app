@@ -11,20 +11,17 @@ export const ContributionSchema = z.object({
   agent_type: z.enum(
     Object.values(AgentType).map((type) => type.key) as [TAgentType, ...Array<TAgentType>],
     {
-      message: 'Contributor type is required',
+      error: 'Contributor type is required',
     }
   ),
-  agent_id: z
-    .string({ message: 'Contributor is required' })
-    .uuid({ message: 'Contributor must be a valid UUID' }),
-  role_id: z.string({ message: 'Role is required' }).uuid({ message: 'Role must be a valid UUID' }),
+  agent_id: z.uuid({ error: 'Contributor must be a valid UUID' }),
+  role_id: z.uuid({ error: 'Role must be a valid UUID' }),
 });
 
 export type TContribution = z.infer<typeof ContributionSchema>;
 
 export const ContributionArraySchema = z
-  .array(ContributionSchema)
-  .nonempty({ message: 'At least one contributor is required' })
+  .tuple([ContributionSchema], ContributionSchema)
   .superRefine((arr, ctx) => {
     let hasFullyFilledContribution = false;
 
@@ -37,21 +34,21 @@ export const ContributionArraySchema = z
       if (filledFields.length > 0 && filledFields.length < 3) {
         if (isNil(contrib.agent_type)) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             message: 'Contributor type is required',
             path: [idx, 'agent_type'],
           });
         }
         if (isNil(contrib.agent_id) || contrib.agent_id === '') {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             message: 'Contributor is required',
             path: [idx, 'agent_id'],
           });
         }
         if (isNil(contrib.role_id) || contrib.role_id === '') {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             message: 'Role is required',
             path: [idx, 'role_id'],
           });
@@ -65,7 +62,7 @@ export const ContributionArraySchema = z
 
     if (!hasFullyFilledContribution) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'At least one contribution must be fully filled',
         path: [],
       });
@@ -77,7 +74,7 @@ export const ContributionArraySchema = z
       if (contrib.agent_id) {
         if (seen.has(contrib.agent_id)) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             message: 'Duplicate contributor, contributor should be used only once',
             path: [idx, 'agent_id'],
           });
@@ -90,9 +87,9 @@ export const ContributionArraySchema = z
 
 export const LocationSchema = z
   .object({
-    x: z.number({ message: 'X coordinate should be a number' }).nullish(),
-    y: z.number({ message: 'Y coordinate should be a number' }).nullish(),
-    z: z.number({ message: 'Z coordinate should be a number' }).nullish(),
+    x: z.number({ error: 'X coordinate should be a number' }).nullish(),
+    y: z.number({ error: 'Y coordinate should be a number' }).nullish(),
+    z: z.number({ error: 'Z coordinate should be a number' }).nullish(),
   })
   .nullable()
   .refine(
@@ -115,7 +112,7 @@ export const LocationSchema = z
 
 export const ExperimentDateSchema = z
   .custom((data) => dayjs.isDayjs(data), {
-    message: 'Experiment date should be a valid date',
+    error: 'Experiment date should be a valid date',
   })
   .refine(
     (data) => {
@@ -125,36 +122,33 @@ export const ExperimentDateSchema = z
       }
       return false;
     },
-    { message: 'Experiment date should be today or in the past' }
+    {
+      error: 'Experiment date should be today or in the past',
+    }
   )
   .nullish();
 
 export const BaseSetupSchema = z.object({
-  name: z.string({ message: 'Name is required' }).nonempty({ message: 'Name is required' }),
+  name: z.string({ error: 'Name is required' }).nonempty({ error: 'Name is required' }),
   description: z
-    .string({ message: 'Description is required' })
-    .nonempty({ message: 'Description is required' }),
-  brain_region_id: z
-    .string({ message: 'Brain region is required' })
-    .uuid()
-    .nonempty({ message: 'Brain region is required' }),
+    .string({ error: 'Description is required' })
+    .nonempty({ error: 'Description is required' }),
+  brain_region_id: z.uuid().nonempty({ error: 'Brain region is required' }),
   experiment_date: ExperimentDateSchema,
-  contact_email: z.string().email({ message: 'Contact email should be a valid email' }).nullish(),
+  contact_email: z.email({ error: 'Contact email should be a valid email' }).nullish(),
   published_in: z.string().nullish(),
   location: LocationSchema,
 });
 
 export type TBaseSetup = z.infer<typeof BaseSetupSchema>;
 
-export const SubjectIdSchema = z
-  .string({ message: 'Subject is required' })
-  .uuid()
-  .nonempty({ message: 'Subject is required' });
+export const SubjectIdSchema = z.uuid().nonempty({
+  error: 'Subject is required',
+});
 
-export const LicenseIdSchema = z
-  .string({ message: 'License is required' })
-  .uuid()
-  .nonempty({ message: 'License is required' });
+export const LicenseIdSchema = z.uuid().nonempty({
+  error: 'License is required',
+});
 
 export function createFileSchema(
   fileTypes: Array<string>

@@ -1,12 +1,18 @@
-import { Select } from 'antd';
+import { Radio, Select } from 'antd';
 import DistinctColors from 'distinct-colors';
+import { useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import InteractivePlot from '@/features/ephys-viewer/components/interactive-plot';
+import InteractivePlot, {
+  currentUnitAtom,
+  DEFAULT_CURRENT_UNIT,
+} from '@/features/ephys-viewer/components/interactive-plot';
 import OptionSelect from '@/features/ephys-viewer/components/option-select';
 import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
+import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import NWBTrace, { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
+
+import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
 
 interface TraceDetailsViewProps {
   trace: NWBTrace;
@@ -18,11 +24,18 @@ interface TraceDetailsViewProps {
 interface CellDetailsProps {
   trace: NWBTrace;
   cellId: string;
+  showCellLabel?: boolean;
   defaultProtocol?: string;
   defaultRepetition?: string;
 }
 
-function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: CellDetailsProps) {
+function CellDetails({
+  trace,
+  cellId,
+  showCellLabel,
+  defaultProtocol,
+  defaultRepetition,
+}: CellDetailsProps) {
   const [reset, setReset] = useState<boolean>(false);
 
   const plotContainerRef = useRef<HTMLDivElement>(null);
@@ -53,6 +66,26 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
     selectedProtocol,
     selectedRepetition
   );
+
+  const recordingCounts = useMemo(() => {
+    const firstSweepData = sweepDataMap.values().next().value;
+    return {
+      stimulus: firstSweepData?.stimulus?.length ?? 0,
+      response: firstSweepData?.response?.length ?? 0,
+    };
+  }, [sweepDataMap]);
+
+  const hasMultipleRecordings = recordingCounts.stimulus > 1 || recordingCounts.response > 1;
+
+  const hasCurrentRecordings = useMemo(() => {
+    const firstSweepData = sweepDataMap.values().next().value;
+    if (!firstSweepData) return false;
+    return [...(firstSweepData.stimulus ?? []), ...(firstSweepData.response ?? [])].some(
+      (r) => r.unit === 'amperes'
+    );
+  }, [sweepDataMap]);
+
+  const [currentUnit, setCurrentUnit] = useAtom(currentUnitAtom);
 
   const dataSetOptions = trace.getProtocols(cellId).map((protocol) => {
     const repetitionNum = trace.getRepetitions(cellId, protocol).length;
@@ -112,7 +145,7 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
 
   return (
     <div className="flex flex-col gap-10">
-      <div className="text-primary-9 text-xl font-bold">{cellId}</div>
+      {showCellLabel && <div className="text-primary-9 text-xl font-bold">{cellId}</div>}
       <div className="flex flex-wrap gap-8">
         <OptionSelect
           label={{ title: 'Protocol', numberOfAvailable: trace.getProtocols(cellId).length }}
@@ -135,24 +168,72 @@ function CellDetails({ trace, cellId, defaultProtocol, defaultRepetition }: Cell
           setSelectedSweeps={setSelectedSweeps}
           sweepOptions={sweepOptions}
         />
-      </div>
-      <div ref={plotContainerRef} className="flex flex-col gap-10 2xl:flex-row">
-        {trace.recordingTypes.includes(RecordingType.STIMULUS) && (
-          <InteractivePlot
-            recordingType={RecordingType.STIMULUS}
-            reset={reset}
-            setSelectedSweeps={setSelectedSweeps}
-            sweeps={sweepObject}
-          />
+        {hasCurrentRecordings && (
+          <Radio.Group
+            onChange={(e) => setCurrentUnit(e.target.value)}
+            value={currentUnit}
+            size="small"
+            className="ml-auto self-center"
+          >
+            <Radio.Button value={DEFAULT_CURRENT_UNIT}>{DEFAULT_CURRENT_UNIT}</Radio.Button>
+            <Radio.Button value="nA">nA</Radio.Button>
+          </Radio.Group>
         )}
-
-        {trace.recordingTypes.includes(RecordingType.RESPONSE) && (
-          <InteractivePlot
-            recordingType={RecordingType.RESPONSE}
-            reset={reset}
-            setSelectedSweeps={setSelectedSweeps}
-            sweeps={sweepObject}
-          />
+      </div>
+      <div
+        ref={plotContainerRef}
+        className={
+          hasMultipleRecordings
+            ? 'grid grid-cols-1 gap-10 lg:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4'
+            : 'flex flex-col gap-10 2xl:flex-row'
+        }
+      >
+        {hasMultipleRecordings ? (
+          <>
+            {trace.recordingTypes.includes(RecordingType.STIMULUS) &&
+              Array.from({ length: recordingCounts.stimulus }, (_, i) => (
+                <InteractivePlot
+                  key={`stimulus-${i}`}
+                  recordingType={RecordingType.STIMULUS}
+                  recordingIndex={i}
+                  reset={reset}
+                  setSelectedSweeps={setSelectedSweeps}
+                  sweeps={sweepObject}
+                />
+              ))}
+            {trace.recordingTypes.includes(RecordingType.RESPONSE) &&
+              Array.from({ length: recordingCounts.response }, (_, i) => (
+                <InteractivePlot
+                  key={`response-${i}`}
+                  recordingType={RecordingType.RESPONSE}
+                  recordingIndex={i}
+                  reset={reset}
+                  setSelectedSweeps={setSelectedSweeps}
+                  sweeps={sweepObject}
+                />
+              ))}
+          </>
+        ) : (
+          <>
+            {trace.recordingTypes.includes(RecordingType.STIMULUS) && (
+              <InteractivePlot
+                recordingType={RecordingType.STIMULUS}
+                recordingIndex={0}
+                reset={reset}
+                setSelectedSweeps={setSelectedSweeps}
+                sweeps={sweepObject}
+              />
+            )}
+            {trace.recordingTypes.includes(RecordingType.RESPONSE) && (
+              <InteractivePlot
+                recordingType={RecordingType.RESPONSE}
+                recordingIndex={0}
+                reset={reset}
+                setSelectedSweeps={setSelectedSweeps}
+                sweeps={sweepObject}
+              />
+            )}
+          </>
         )}
       </div>
     </div>
@@ -202,6 +283,7 @@ function TraceDetailsView({
             key={cellId}
             trace={trace}
             cellId={cellId}
+            showCellLabel={cellIds.length > 1}
             defaultProtocol={defaultProtocol}
             defaultRepetition={defaultRepetition}
           />

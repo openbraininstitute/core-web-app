@@ -24,10 +24,14 @@ async function validateSynapseGenerationFormula(formula: string) {
   });
 }
 
-export async function validateFormula(value: string) {
+export async function validateFormula(value: unknown) {
+  if (typeof value !== 'string') return false;
+
+  if (!value.trim()) return false;
+
   try {
     return validateSynapseGenerationFormula(value);
-  } catch (error) {
+  } catch {
     return false;
   }
 }

@@ -70,7 +70,8 @@ export default function Page({
   if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
     return (
       <ScanConfig
-        modelId={entity.id}
+        entityId={entity.id}
+        entityType={ExtendedEntitiesTypeDict.MemodelCircuit}
         virtualLabId={virtualLabId}
         projectId={projectId}
         initialConfig={campaignData?.config.form}
@@ -81,7 +82,7 @@ export default function Page({
 
   return (
     <>
-      <div className="mb-2 w-full flex-shrink-0">
+      <div className="mb-2 w-full shrink-0">
         <Header />
       </div>
       <div className='mt-5 grid h-full max-h-[calc(100%-4rem)] min-h-0 w-full flex-1 grid-cols-[24rem_1fr] gap-4 [grid-template-areas:"menu_content"]'>

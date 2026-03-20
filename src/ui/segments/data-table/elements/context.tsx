@@ -4,6 +4,7 @@ import { isNil, noop } from 'es-toolkit/compat';
 import { type Atom, atom, useSetAtom } from 'jotai';
 import { atomFamily, atomWithDefault, atomWithReset, atomWithStorage } from 'jotai/utils';
 import { createContext, use, useCallback, useEffect, useMemo } from 'react';
+import superjson from 'superjson';
 import { match } from 'ts-pattern';
 
 import {
@@ -74,12 +75,7 @@ export const coreSortStateAtom = atomFamily(
       backendField: EntityCoreFields.RegistrationDate,
       order: SortOrder.DESC,
     };
-
-    const writableAtom = atom<TSortState, [TSortState], void>(initialState, (_, set, update) => {
-      set(writableAtom, update);
-    });
-
-    return writableAtom;
+    return atom<TSortState>(initialState);
   },
   (a, b) => a.key === b.key
 );
@@ -161,22 +157,34 @@ export const DataListSnapshotSyncAtomFamily = atomFamily(
         const view = get(circuitRepresentationViewAtom);
         return { filters, page, search, sort, view };
       },
-      (get, set, action: TDataListStoreParamsSyncAction) => {
-        const storageAtom = DataListStateSnapshotStorageAtomFamily({ dataKey, dataType });
+      (_get, set, action: TDataListStoreParamsSyncAction) => {
+        const readStorage = (): TDataLisStateSnapshot => {
+          if (typeof window === 'undefined') {
+            return makeDataListStateSnapshotAtomsInitialValue({ dataType });
+          }
+          const raw = sessionStorage.getItem(dataKey);
+          if (!raw) return makeDataListStateSnapshotAtomsInitialValue({ dataType });
+          try {
+            return superjson.parse<TDataLisStateSnapshot>(raw);
+          } catch {
+            return makeDataListStateSnapshotAtomsInitialValue({ dataType });
+          }
+        };
+
+        const writeStorage = (value: TDataLisStateSnapshot) => {
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(dataKey, superjson.stringify(value));
+          }
+        };
 
         return match({ type: action.type })
           .with({ type: DataListStateSnapshotSyncAction.SYNC }, ({ type: t }) => {
             if (t === DataListStateSnapshotSyncAction.SYNC) {
-              const attribute = action.attribute || {};
-              const oldValue = get(storageAtom);
-              set(storageAtom, {
-                ...oldValue,
-                ...attribute,
-              });
+              writeStorage({ ...readStorage(), ...(action.attribute || {}) });
             }
           })
           .with({ type: DataListStateSnapshotSyncAction.RESTORE }, () => {
-            const stored = get(storageAtom);
+            const stored = readStorage();
             set(coreFiltersAtom({ key: dataKey, dataType }), stored.Filters);
             set(corePageNumberAtom(dataKey), stored.Page);
             set(coreSearchStringAtom(dataKey), stored.Search);
@@ -241,6 +249,17 @@ export function useDataListStateSnapshotActions({
     [updateSync]
   );
 
+  const restore = useCallback(
+    () => updateSync({ type: DataListStateSnapshotSyncAction.RESTORE }),
+    [updateSync]
+  );
+
+  const sync = useCallback(
+    (attribute: Partial<TDataLisStateSnapshot>) =>
+      updateSync({ type: DataListStateSnapshotSyncAction.SYNC, attribute }),
+    [updateSync]
+  );
+
   useEffect(() => {
     if (registerReset) {
       registerReset(dataKey, reset);
@@ -254,10 +273,5 @@ export function useDataListStateSnapshotActions({
       sync: noop,
     };
   }
-  return {
-    restore: () => updateSync({ type: DataListStateSnapshotSyncAction.RESTORE }),
-    reset,
-    sync: (attribute: Partial<TDataLisStateSnapshot>) =>
-      updateSync({ type: DataListStateSnapshotSyncAction.SYNC, attribute }),
-  };
+  return { restore, reset, sync };
 }

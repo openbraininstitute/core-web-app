@@ -44,19 +44,20 @@ function RawGithubFlavorMarkdown({
     [validStorageIds, isStreaming]
   );
   return (
-    <ReactMarkdown
-      className={classNames(className, styles.githubFlavorMarkdown)}
-      remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[rehypeKatex]}
-      components={{
-        a: LinkComponent,
-        img: ImageComponent,
-        p: ({ children }) => <div>{children}</div>,
-        pre: Highlighter,
-      }}
-    >
-      {children}
-    </ReactMarkdown>
+    <div className={classNames(className, styles.githubFlavorMarkdown)}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={{
+          a: LinkComponent,
+          img: ImageComponent,
+          p: ({ children }) => <div>{children}</div>,
+          pre: Highlighter,
+        }}
+      >
+        {children}
+      </ReactMarkdown>
+    </div>
   );
 }
 

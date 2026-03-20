@@ -1,11 +1,11 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
-import type { WorkspaceContext } from '@/types/common';
 import type {
   IValidationResult,
   IValidationResultFilter,
 } from '@/api/entitycore/types/entities/validation-result';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/validation-result';
 

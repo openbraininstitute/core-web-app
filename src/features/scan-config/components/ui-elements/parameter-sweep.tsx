@@ -1,7 +1,6 @@
 import { CloseOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
 import { isNil } from 'es-toolkit/compat';
-import { useEffect, useState } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
@@ -24,9 +23,7 @@ export default function ParameterSweep({
   disabled: boolean;
   k: string;
 }) {
-  const [mode, setMode] = useState<'single' | 'multiple'>(
-    Array.isArray(value) ? 'multiple' : 'single'
-  );
+  const mode: 'single' | 'multiple' = Array.isArray(value) ? 'multiple' : 'single';
 
   const singleValue = (() => {
     if (Array.isArray(value) && !isNil(value[0])) return value[0];
@@ -38,11 +35,6 @@ export default function ParameterSweep({
     if (Array.isArray(value)) return value;
     return [value];
   })();
-
-  // When the AI agent updates the value we need to change the mode
-  useEffect(() => {
-    setMode(Array.isArray(value) ? 'multiple' : 'single');
-  }, [value]);
 
   function error(value: number) {
     if (!isNil(min) && value < min) return `Value should be greater than or equal to ${min}`;
@@ -58,7 +50,7 @@ export default function ParameterSweep({
     return (
       <div
         className="relative"
-        data-scan-config-block-element={ScanConfigUIElementDict.FloatParameterSweep}
+        data-scan-config-block-element={`${ScanConfigUIElementDict.FloatParameterSweep}_single`}
       >
         <InputNumber
           controls={false}
@@ -75,9 +67,8 @@ export default function ParameterSweep({
 
         {!disabled && (
           <PlusCircleOutlined
-            className="!text-primary-8 absolute top-[10px] right-[8px]"
+            className="text-primary-8! absolute top-[10px] right-[8px]"
             onClick={() => {
-              setMode('multiple');
               onChange(multipleValues);
             }}
           />
@@ -88,13 +79,14 @@ export default function ParameterSweep({
 
   if (mode === 'multiple') {
     return (
-      <div data-scan-config-block-element={ScanConfigUIElementDict.FloatParameterSweep}>
+      <div
+        data-scan-config-block-element={`${ScanConfigUIElementDict.FloatParameterSweep}_multiple`}
+      >
         {!disabled && (
           <div className="mb-1 flex justify-end">
             <CloseOutlined
-              className="!text-primary-8"
+              className="text-primary-8!"
               onClick={() => {
-                setMode('single');
                 onChange(singleValue);
               }}
             />
@@ -123,7 +115,7 @@ export default function ParameterSweep({
                       <div className="flex gap-1">
                         {i === multipleValues.length - 1 && (
                           <PlusCircleOutlined
-                            className="!text-primary-8"
+                            className="text-primary-8!"
                             onClick={() => {
                               onChange([...multipleValues, null]);
                             }}
@@ -131,7 +123,7 @@ export default function ParameterSweep({
                         )}
                         {multipleValues.length >= 2 && (
                           <CloseOutlined
-                            className="!text-primary-8"
+                            className="text-primary-8!"
                             onClick={() => {
                               const updated = [...multipleValues];
                               updated.splice(i, 1);

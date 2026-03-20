@@ -12,6 +12,7 @@ export const ExtendedEntitiesTypeDict = {
   PairedNeuronCircuitSimulation: 'paired_neuron_circuit_simulation',
   SmallMicrocircuitSimulation: 'small_microcircuit_simulation',
   MicrocircuitSimulation: 'microcircuit_simulation',
+  IonChannelModelSimulation: 'ion_channel_model_simulation',
   NGVCircuit: 'ngv_circuit', // this is temporary
   BrainRegion: 'brain_region', // this is temporary
   BrainSystems: 'brain_system', // this is temporary

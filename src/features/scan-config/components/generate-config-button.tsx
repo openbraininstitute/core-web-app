@@ -1,9 +1,8 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
-import { get } from 'es-toolkit/compat';
+import { useQueryClient } from '@tanstack/react-query';
+import { get, isEqual, isString, pick } from 'es-toolkit/compat';
 
-import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
-import authFetch from '@/auth-fetch';
+import { authFetch } from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
 import {
@@ -12,23 +11,22 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { useCreditsAccessGuard } from '@/hooks/use-credits-access-guard';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/scan-config';
-import { getProjectAccountBalance } from '@/services/virtual-lab/projects';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { getTypeByActivityAndSourceType } from '@/ui/segments/workflows/elements/helpers';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
-import { useApiUrl } from './hooks';
-
 import type { ErrorObject } from 'ajv';
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { Config } from './components';
+import type { Config } from '@/features/scan-config/components/components';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
+// TODO: the credits checks are not straightforward
+// it must be a clean way to do it (to be checked in another PR)
 export default function GenerateConfigButton({
   loading,
   errors,
@@ -36,9 +34,10 @@ export default function GenerateConfigButton({
   setCampaignId,
   setLoading,
   config,
-  model,
   setTab,
   activity,
+  generatedApiUrl,
+  entityType,
 }: {
   loading: boolean;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
@@ -46,74 +45,38 @@ export default function GenerateConfigButton({
   setCampaignId: (campaignId: string) => void;
   setLoading: (loading: boolean) => void;
   config: Config;
-  model: ICircuit | IMEModel;
   setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
   activity: TScanConfigActivity;
+  generatedApiUrl: string;
+  entityType: TSupportedEntityTypesForScanConfiguration;
 }) {
   const { projectId, virtualLabId } = useWorkspace();
   const notification = useAppNotification();
-  const apiUrl = useApiUrl({ model, activity });
   const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
-
-  const { data: balanceData } = useQuery({
-    queryKey: keyBuilder.wallet({ virtualLabId, projectId }),
-    queryFn: () => getProjectAccountBalance({ virtualLabId, projectId }),
-    enabled: !!virtualLabId && !!projectId,
-  });
-
-  const { data: membersData } = useQuery({
-    queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
-    queryFn: () => listVirtualLabMembers({ virtualLabId }),
-    enabled: !!virtualLabId && !isVirtualLabAdmin,
-  });
-
-  const adminEmailFromQuery = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
-
-  const showInsufficientCreditsError = async () => {
-    const msg = get(
+  const queryClient = useQueryClient();
+  const { notifyCredits, shouldShowError } = useCreditsAccessGuard({
+    context: { virtualLabId, projectId },
+    message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
+    description: get(
       messages,
       `${activity}.InsufficientCreditsNonAdmin`,
       messages[ScanConfigActivity.Simulate].InsufficientCreditsNonAdmin
-    );
-    let adminEmail = adminEmailFromQuery;
-    if (!adminEmail && virtualLabId) {
-      try {
-        const members = await listVirtualLabMembers({ virtualLabId });
-        adminEmail = members?.data?.users.find((user) => user.role === 'admin')?.email;
-      } catch {
-        // ignore
-      }
-    }
-    notification.error({
-      message: get(messages, `${activity}.ScanConfigGenerateGridFailed`),
-      description: (
-        <div className="flex flex-col gap-2">
-          <p>{msg}</p>
-          {adminEmail ? (
-            <a
-              href={`mailto:${adminEmail}?subject=Insufficient%20credits%20for%20simulation`}
-              className="text-primary-8 border-neutral-300 inline-flex w-fit rounded-full border px-4 py-1.5 no-underline hover:underline"
-            >
-              Contact administrator
-            </a>
-          ) : (
-            <p className="text-sm text-gray-600">
-              Contact your virtual lab administrator to request credits.
-            </p>
-          )}
-        </div>
-      ),
-      placement: 'topRight',
-      duration: 0,
-    });
-  };
+    ),
+  });
 
   const onTabChange = () => {
     if (activity === ScanConfigActivity.Simulate)
-      setTab({ id: SimulateScanConfigTabs.simulations, __activity: ScanConfigActivity.Simulate });
+      setTab({
+        id: SimulateScanConfigTabs.simulations,
+        __activity: ScanConfigActivity.Simulate,
+      });
     if (activity === ScanConfigActivity.Extract)
-      setTab({ id: ExtractScanConfigTabs.extractions, __activity: ScanConfigActivity.Extract });
+      setTab({
+        id: ExtractScanConfigTabs.extractions,
+        __activity: ScanConfigActivity.Extract,
+      });
   };
+
   return (
     <button
       type="button"
@@ -129,11 +92,8 @@ export default function GenerateConfigButton({
           setCampaignId('');
           return;
         }
-
-        const projectBalance = balanceData?.balance != null ? Number(balanceData.balance) : null;
-        const hasNoCredits = projectBalance !== null && projectBalance <= 0;
-        if (hasNoCredits && !isVirtualLabAdmin) {
-          await showInsufficientCreditsError();
+        if (shouldShowError) {
+          notifyCredits();
           return;
         }
 
@@ -153,15 +113,16 @@ export default function GenerateConfigButton({
             }
           );
 
-          if (coordinateCountRes.status !== 200) {
+          if (!coordinateCountRes.ok) {
             const message = await coordinateCountRes.json();
             const detailStr = typeof message?.detail === 'string' ? message.detail : '';
             const isLowFunds =
               message?.error_code === LOW_FUNDS_ERROR_CODE ||
               detailStr.toLowerCase().includes('insufficient') ||
               detailStr.toLowerCase().includes('credits');
+
             if (isLowFunds && !isVirtualLabAdmin) {
-              await showInsufficientCreditsError();
+              notifyCredits();
             } else {
               notification.error({
                 message: get(messages, `${activity}.CoordinateCountFailed`),
@@ -171,7 +132,7 @@ export default function GenerateConfigButton({
             return;
           }
 
-          const res = await authFetch(apiUrl, {
+          const res = await authFetch(generatedApiUrl, {
             method: 'POST',
             body: JSON.stringify(config),
             headers: {
@@ -194,20 +155,10 @@ export default function GenerateConfigButton({
             // When non-admin gets any error: show credits message. Backend may return
             // misleading errors (sonata_circuit, no calibration result, etc.) when
             // the real issue is insufficient credits.
-            let shouldShowCreditsMessage = isLowFundsFromApi && !isVirtualLabAdmin;
-            if (!isVirtualLabAdmin && !shouldShowCreditsMessage) {
-              const balance =
-                balanceData?.balance != null
-                  ? Number(balanceData.balance)
-                  : await getProjectAccountBalance({ virtualLabId, projectId })
-                      .then((b) => (b?.balance != null ? Number(b.balance) : null))
-                      .catch(() => null);
-              // Show credits message when: balance is 0, or we couldn't fetch it (assume credits issue)
-              shouldShowCreditsMessage = balance === null ? true : balance <= 0;
-            }
+            const shouldShowCreditsMessage = isLowFundsFromApi && !isVirtualLabAdmin;
 
             if (shouldShowCreditsMessage) {
-              await showInsufficientCreditsError();
+              notifyCredits();
             } else {
               const details =
                 res.status === 500 ? errorRes.detail : (errorRes?.details?.[0].msg ?? '');
@@ -226,7 +177,28 @@ export default function GenerateConfigButton({
             });
             return;
           }
-
+          queryClient.invalidateQueries({
+            predicate: (query) => {
+              const baseQueryKey = query.queryKey.at(0);
+              const filtersQueryKey = query.queryKey.at(1);
+              if (
+                isString(baseQueryKey) &&
+                baseQueryKey.startsWith('workspace/activities') &&
+                isEqual(
+                  pick(filtersQueryKey, ['virtualLabId', 'projectId', 'activity', 'entityType']),
+                  {
+                    virtualLabId,
+                    projectId,
+                    activity,
+                    entityType: getTypeByActivityAndSourceType(activity, entityType),
+                  }
+                )
+              ) {
+                return true;
+              }
+              return false;
+            },
+          });
           setCampaignId(returnedCampaignId);
           onTabChange();
         } catch (e) {

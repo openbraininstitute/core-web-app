@@ -90,7 +90,7 @@ function RecordItem({
                 } catch (error) {
                   return Promise.reject(
                     error instanceof z.ZodError
-                      ? error.errors.at(0)?.message
+                      ? error.issues.at(0)?.message
                       : 'Section is required'
                   );
                 }
@@ -133,7 +133,7 @@ function RecordItem({
                   await NeuronLocationSchema.pick({ offset: true }).shape.offset.parseAsync(value);
                 } catch (error) {
                   return Promise.reject(
-                    error instanceof z.ZodError ? error.errors.at(0)?.message : 'Offset is required'
+                    error instanceof z.ZodError ? error.issues.at(0)?.message : 'Offset is required'
                   );
                 }
                 return Promise.resolve();
@@ -189,7 +189,7 @@ function RecordItem({
                 } catch (error) {
                   return Promise.reject(
                     error instanceof z.ZodError
-                      ? error.errors.at(0)?.message
+                      ? error.issues.at(0)?.message
                       : 'This field is required'
                   );
                 }

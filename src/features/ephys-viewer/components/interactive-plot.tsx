@@ -1,52 +1,54 @@
-import { useState, useMemo, useEffect } from 'react';
-import Plotly, { PlotData } from 'plotly.js-dist-min';
-import createPlotlyComponent from 'react-plotly.js/factory';
-import { Radio } from 'antd';
 import { useAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import Plotly, { type PlotData } from 'plotly.js-dist-min';
+import { useEffect, useMemo, useState } from 'react';
+import createPlotlyComponent from 'react-plotly.js/factory';
 
-import { RecordingType, SweepData } from '@/features/ephys-viewer/nwb-trace';
+import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
+import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import {
+  type CurrentUnit,
   convertCurrentSeries,
   convertVoltageSeries,
-  CurrentUnit,
   ensureCurrentUnit,
-  VoltageUnit,
+  type VoltageUnit,
 } from '@/util/explore-section/plotHelpers';
-import optimizePlotData from '@/util/explore-section/optimizeTrace';
-import { useInteractivePlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
-import { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
+
+import type { PlotProps, ZoomRanges } from '@/features/ephys-viewer/types';
 
 const Plot = createPlotlyComponent(Plotly);
 
-const DEFAULT_CURRENT_UNIT: CurrentUnit = 'pA';
+export const DEFAULT_CURRENT_UNIT: CurrentUnit = 'pA';
 const DEFAULT_VOLTAGE_UNIT: VoltageUnit = 'mV';
 
-const currentUnitAtom = atomWithStorage<CurrentUnit>(
+export const currentUnitAtom = atomWithStorage<CurrentUnit>(
   'ephysViewer.currentUnit',
   DEFAULT_CURRENT_UNIT
 );
 
 export default function InteractivePlot({
   recordingType,
+  recordingIndex,
   reset,
   setSelectedSweeps,
   sweeps: { selectedSweeps, previewSweep, allSweeps, colorMap, sweepDataMap },
 }: PlotProps) {
-  const [currentUnit, setCurrentUnit] = useAtom(currentUnitAtom);
+  const [currentUnit] = useAtom(currentUnitAtom);
   const [zoomRanges, setZoomRanges] = useState<ZoomRanges | null>(null);
 
   useEffect(() => {
     setZoomRanges(null);
   }, [reset]);
 
-  const { config, layout, font, style, antBreakpoints } = useInteractivePlotConfig();
+  const { config, layout, font, style } = useInteractivePlotConfig();
 
-  const [rawData, dataUnit] = useData(
+  const [rawData, dataUnit, label] = useData(
     zoomRanges,
     allSweeps,
     sweepDataMap,
     recordingType,
+    recordingIndex,
     colorMap,
     currentUnit
   );
@@ -70,10 +72,6 @@ export default function InteractivePlot({
     [previewSweep]
   );
 
-  const onChangeStimulusUnits = (event: any) => {
-    setCurrentUnit(event.target.value);
-  };
-
   const handleClick = ({ data, curveNumber }: Readonly<Plotly.LegendClickEvent>): boolean => {
     const value: string = (data[curveNumber] as any).sweepName;
     const isSelected = selectedSweeps.includes(value);
@@ -86,59 +84,47 @@ export default function InteractivePlot({
     return false;
   };
 
-  const yTitle = dataUnit === 'amperes' ? `Current (${currentUnit})` : 'Membrane potential (mV)';
+  const yTitle =
+    dataUnit === 'amperes' ? `${label ?? 'Current'} (${currentUnit})` : 'Membrane potential (mV)';
 
   const isEmptySelection = !selectedSweeps.length;
   const isEmptySelectionResponse = isEmptySelection ? rawData : selectedResponse;
   return (
-    <>
-      <Plot
-        data={previewSweep ? previewDataResponse : isEmptySelectionResponse}
-        onLegendClick={handleClick}
-        onDoubleClick={() => false}
-        onRelayout={(e) => {
-          const {
-            'xaxis.range[0]': x1,
-            'xaxis.range[1]': x2,
-            'yaxis.range[0]': y1,
-            'yaxis.range[1]': y2,
-          } = e;
-          setZoomRanges({ x: [x1, x2], y: [y1, y2] });
-        }}
-        layout={{
-          title: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
-          xaxis: {
-            title: {
-              font,
-              text: `Time (ms)`,
-            },
-            range: zoomRanges?.x,
+    <Plot
+      data={previewSweep ? previewDataResponse : isEmptySelectionResponse}
+      onLegendClick={handleClick}
+      onDoubleClick={() => false}
+      onRelayout={(e) => {
+        const {
+          'xaxis.range[0]': x1,
+          'xaxis.range[1]': x2,
+          'yaxis.range[0]': y1,
+          'yaxis.range[1]': y2,
+        } = e;
+        setZoomRanges({ x: [x1, x2], y: [y1, y2] });
+      }}
+      layout={{
+        title: recordingType === RecordingType.STIMULUS ? 'Stimulus' : 'Response',
+        xaxis: {
+          title: {
+            font,
+            text: `Time (ms)`,
           },
-          yaxis: {
-            title: {
-              font,
-              text: yTitle,
-            },
-            range: zoomRanges?.y,
-            zeroline: false,
+          range: zoomRanges?.x,
+        },
+        yaxis: {
+          title: {
+            font,
+            text: yTitle,
           },
-          ...layout,
-        }}
-        style={style}
-        config={config}
-      />
-      {dataUnit === 'amperes' && antBreakpoints.md && (
-        <Radio.Group
-          onChange={onChangeStimulusUnits}
-          value={currentUnit}
-          size="small"
-          className="units"
-        >
-          <Radio.Button value={DEFAULT_CURRENT_UNIT}>{DEFAULT_CURRENT_UNIT}</Radio.Button>
-          <Radio.Button value="nA">nA</Radio.Button>
-        </Radio.Group>
-      )}
-    </>
+          range: zoomRanges?.y,
+          zeroline: false,
+        },
+        ...layout,
+      }}
+      style={style}
+      config={config}
+    />
   );
 }
 
@@ -147,16 +133,19 @@ function useData(
   allSweeps: string[],
   sweepDataMap: Map<string, SweepData>,
   recordingType: RecordingType,
+  recordingIndex: number,
   colorMap: Map<string, string>,
   currentUnit: string
 ): [
   data: { x: any[]; y: any[]; sweepName: string; name: string; line: { color: string } }[],
   unit: string | null,
+  label: string | undefined,
 ] {
   return useMemo(() => {
     let deltaTime = 1;
     let dataUnit: string | null = null;
     let conversionFactor = 1;
+    let dataLabel: string | undefined;
 
     const zoom = {
       xstart: zoomRanges?.x[0],
@@ -164,7 +153,7 @@ function useData(
     };
 
     const allSweepsData = allSweeps.map((sweep, idx) => {
-      const recordingData = sweepDataMap.get(sweep)?.[recordingType];
+      const recordingData = sweepDataMap.get(sweep)?.[recordingType]?.[recordingIndex];
       if (!recordingData) {
         throw new Error(`No recording data found for sweep ${sweep}`);
       }
@@ -178,6 +167,7 @@ function useData(
 
         dataUnit = recordingData.unit;
         conversionFactor = recordingData.conversionFactor;
+        dataLabel = recordingData.label;
       }
 
       const name = sweep;
@@ -210,6 +200,14 @@ function useData(
           : convertVoltageSeries(d.y, DEFAULT_VOLTAGE_UNIT, conversionFactor);
     });
 
-    return [optimizedPlotData, dataUnit];
-  }, [zoomRanges?.x, allSweeps, sweepDataMap, recordingType, colorMap, currentUnit]);
+    return [optimizedPlotData, dataUnit, dataLabel];
+  }, [
+    zoomRanges?.x,
+    allSweeps,
+    sweepDataMap,
+    recordingType,
+    recordingIndex,
+    colorMap,
+    currentUnit,
+  ]);
 }

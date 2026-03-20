@@ -1,11 +1,11 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
-  IElectricalRecordingStimulusFilter,
   IElectricalRecordingStimulus,
+  IElectricalRecordingStimulusFilter,
 } from '@/api/entitycore/types/shared/electrical-recording-stimulus';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/electrical-recording-stimulus';

@@ -1,19 +1,18 @@
-import pick from 'es-toolkit/compat/pick';
-import get from 'es-toolkit/compat/get';
+import { get, pick } from 'es-toolkit/compat';
 
-import { FieldsDefinition as ExperimentalFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experimental';
-import { FieldsDefinition as ExperimentFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experiment';
 import { FieldsDefinition as CommonFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/common';
+import { FieldsDefinition as ExperimentFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experiment';
+import { FieldsDefinition as ExperimentalFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/experimental';
 import { FieldsDefinition as ModelFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/model';
 import { FieldsDefinition as NotebookFieldsDefinition } from '@/entity-configuration/definitions/fields-defs/notebook';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import type {
-  FieldsDefinitionRegistry,
-  FieldDefinition,
-} from '@/entity-configuration/definitions/types';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import type {
+  FieldDefinition,
+  FieldsDefinitionRegistry,
+} from '@/entity-configuration/definitions/types';
 
 export const fieldsDefinitionRegistry: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   ...CommonFieldsDefinition,

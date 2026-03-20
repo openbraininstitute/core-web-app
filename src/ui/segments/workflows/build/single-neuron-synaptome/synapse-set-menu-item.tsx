@@ -1,37 +1,28 @@
 'use client';
 
-import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined, PlusOutlined } from '@ant-design/icons';
-import sample from 'es-toolkit/compat/sample';
+import { DeleteOutlined, EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons';
 import { useAtom } from 'jotai';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
-import { Color } from 'three';
 
-import {
-  SingleNeuronSynaptomeBaseSchema,
-  type TSingleNeuronSynaptomeConfiguration,
-} from '@/api/entitycore/types/entities/single-neuron-synaptome';
-import {
-  sendDisplaySynapses3DEvent,
-  sendRemoveSynapses3DEvent,
-} from '@/components/neuron-viewer/hooks/events';
-import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
+import { SingleNeuronSynaptomeBaseSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import {
   DefaultSynapseValue,
-  SimulationColors,
   useBuildSingleNeuronSynaptomeSessionState,
 } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
 import { SynapsesPlacementAtomFamily } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
-import { getColorFromGeneratedPalette } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/colors';
-import { useVisibleSynapsesSetter } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/webgl-neuron-selector/hooks';
 import { getRandomIntInclusive } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 import { formatCompactNumber } from '@/utils/format';
 
-import type { SectionSynapsesWith3D } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { AddSynapticSetButton } from './add-synaptic-set-button';
+import { resetColors } from './colors';
+import { useAddSynapticButtonEnabled } from './hooks';
+
+import type { SynapsesPlacementRecord } from '../../simulate/single-neuron/shared/types';
 
 type Props = { sessionId: string };
 
@@ -40,41 +31,35 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
   const pathname = usePathname();
   const breakpoint = useDefaultBreakpoint();
   const { replace } = useRouter();
-  const [synapsesPlacement, setSynapsesPlacement] = useAtom(SynapsesPlacementAtomFamily(sessionId));
   const { sessionValue, setSessionValue } = useBuildSingleNeuronSynaptomeSessionState({
     sessionId,
   });
-
   const currentSet = params.get('set');
-
-  const onAdd = () => {
-    const id = crypto.randomUUID();
-    const queryParams = new URLSearchParams(params);
-    queryParams.set('set', id);
-    const currentMap =
-      sessionValue?.synapseSets ?? new Map<string, TSingleNeuronSynaptomeConfiguration>();
-    const cloneMap = new Map<string, TSingleNeuronSynaptomeConfiguration>();
-    // Cleanup the dictionary.
-    for (const key of currentMap.keys()) {
-      const val = currentMap.get(key);
-      if (!val?.name || !val?.target) continue;
-
-      cloneMap.set(key, val);
+  const addSynapticButtonEnabled = useAddSynapticButtonEnabled(
+    sessionValue?.synapseSets,
+    currentSet
+  );
+  const [synapsesPlacement, setSynapsesPlacement] = useAtom(SynapsesPlacementAtomFamily(sessionId));
+  React.useEffect(() => {
+    const sets = sessionValue?.synapseSets;
+    if (!sets) {
+      setSynapsesPlacement({});
+      return;
     }
-    cloneMap?.set(id, {
-      ...DefaultSynapseValue,
-      id,
-      seed: (sessionValue?.seed ?? 0) + getRandomIntInclusive(0, sessionValue?.seed ?? 0),
-      color: sample(SimulationColors) ?? SimulationColors[cloneMap.size],
+
+    setSynapsesPlacement((prev) => {
+      let hasChanges = false;
+      const newValue: SynapsesPlacementRecord = structuredClone(prev) ?? {};
+      for (const set of sets.values()) {
+        const item = newValue[set.id];
+        if (!item || item.color === set.color) continue;
+
+        item.color = set.color;
+        hasChanges = true;
+      }
+      return hasChanges ? newValue : prev;
     });
-    resetColors(cloneMap);
-    setSessionValue({
-      ...sessionValue,
-      seed: sessionValue?.seed ?? 100,
-      synapseSets: cloneMap,
-    });
-    replace(`${pathname}?${queryParams.toString()}`);
-  };
+  }, [sessionValue?.synapseSets, setSynapsesPlacement]);
 
   const onSelectSet = (id: string) => {
     const queryParams = new URLSearchParams(params);
@@ -104,20 +89,19 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
         synapseSets: resetColors(newMap),
         synapseCount: new Map(),
       });
+      setSynapsesPlacement({});
       replace(`${pathname}?${queryParams.toString()}`);
       return;
     }
-
+    resetColors(cloneMap);
     setSessionValue({
       ...sessionValue,
       seed: sessionValue?.seed ?? 100,
-      synapseSets: resetColors(cloneMap),
+      synapseSets: cloneMap,
       synapseCount: cloneCountMap,
     });
-
     const currentSynapsesPlacementConfig = synapsesPlacement?.[id];
-    if (currentSynapsesPlacementConfig?.meshId) {
-      sendRemoveSynapses3DEvent(id, currentSynapsesPlacementConfig.meshId);
+    if (currentSynapsesPlacementConfig?.visible) {
       setSynapsesPlacement((prev) => {
         const newValue = structuredClone(prev);
         if (newValue) delete newValue[id];
@@ -134,8 +118,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
   const onToggleVisibility = (id: string) => {
     const currentSynapsesPlacementConfig = synapsesPlacement?.[id];
     const synapseSet = sessionValue?.synapseSets?.get(id);
-    if (currentSynapsesPlacementConfig?.meshId) {
-      sendRemoveSynapses3DEvent(id, currentSynapsesPlacementConfig.meshId);
+    if (currentSynapsesPlacementConfig?.visible) {
       setSynapsesPlacement((prev) => {
         const newValue = structuredClone(prev);
         if (!newValue) return newValue;
@@ -144,25 +127,16 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
         return newValue;
       });
     } else if (currentSynapsesPlacementConfig?.sectionSynapses && synapseSet) {
-      const synapsePositions = currentSynapsesPlacementConfig.sectionSynapses
-        .flat()
-        .flatMap((p) => p.synapses)
-        .map((o) => o.coordinates);
-
-      const mesh = createBubblesInstanced(synapsePositions, new Color(synapseSet.color));
-      sendDisplaySynapses3DEvent(id, mesh);
-
       setSynapsesPlacement((prev) => ({
         ...prev,
         [id]: {
           ...currentSynapsesPlacementConfig,
-          meshId: mesh.uuid,
+          color: synapseSet.color,
+          visible: true,
         },
       }));
     }
   };
-  const values = sessionValue?.synapseSets?.values();
-  useViewer3D(values ? Array.from(values) : [], synapsesPlacement ?? {}, sessionId);
 
   return (
     <div className="flex max-h-[300px] flex-col gap-1.5">
@@ -170,7 +144,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
         {Array.from(sessionValue?.synapseSets?.values() ?? [])
           ?.filter((o) => SingleNeuronSynaptomeBaseSchema.safeParse(o).success)
           .map((o) => {
-            const isVisible = !!synapsesPlacement?.[o.id]?.meshId;
+            const isVisible = !!synapsesPlacement?.[o.id]?.visible;
             const canShow = !!synapsesPlacement?.[o.id]?.sectionSynapses;
             const count = sessionValue?.synapseCount?.get(o.id);
             return (
@@ -183,7 +157,9 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
                   variant="ghost"
                   className={cn(
                     'bg-neutral-1 border-neutral-2/60 hover:bg-neutral-2/20 hover:text-primary-9 active:bg-primary-7 w-full cursor-pointer border transition-all duration-300 ease-out',
-                    { 'bg-neutral-2/40 text-primary-9 border-neutral-3': currentSet === o.id },
+                    {
+                      'bg-neutral-2/40 text-primary-9 border-neutral-3': currentSet === o.id,
+                    },
                     'group-hover:w-[calc(100%-80px)]'
                   )}
                   size={breakpoint === 'l' ? 'md' : 'lg'}
@@ -266,18 +242,7 @@ export function SynapseSetMenuItems({ sessionId }: Props) {
           })}
       </div>
 
-      <Button
-        rounded
-        className="bg-neutral-1 hover:bg-neutral-2/20 hover:text-primary-9 mt-2 w-full flex-shrink-0 border"
-        variant="outline"
-        size={breakpoint === 'l' ? 'md' : 'lg'}
-        onClick={onAdd}
-      >
-        <div className="flex w-full items-center justify-between gap-4">
-          <span>Add set</span>
-          <PlusOutlined />
-        </div>
-      </Button>
+      <AddSynapticSetButton enabled={addSynapticButtonEnabled} sessionId={sessionId} />
     </div>
   );
 }
@@ -329,57 +294,4 @@ function VisibilityButton({
       {isVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
     </Button>
   );
-}
-
-function useViewer3D(
-  synapticInputs: { id: string; color?: string }[],
-  selection: Record<string, SectionSynapsesWith3D | null>,
-  sessionId: string
-) {
-  const update = useVisibleSynapsesSetter(sessionId);
-  React.useEffect(() => {
-    const synapses: {
-      color: string;
-      data: Float32Array;
-    }[] = [];
-    for (let index = 0; index < synapticInputs.length; index++) {
-      const synapticInput = synapticInputs[index];
-      const match = Object.values(selection).find(
-        (item) => item?.synapsePlacementConfigId === synapticInput.id
-      );
-      if (match) {
-        synapses.push({
-          color: synapticInput.color ?? getColorFromGeneratedPalette(index),
-          data: makeData(match.sectionSynapses),
-        });
-      }
-    }
-    update(synapses);
-  }, [synapticInputs, selection, update]);
-}
-
-function makeData(
-  sections: {
-    synapses: Array<{
-      coordinates: number[];
-    }>;
-  }[]
-) {
-  const data: number[] = [];
-  for (const section of sections) {
-    for (const { coordinates } of section.synapses) {
-      const [x, y, z] = coordinates;
-      data.push(x, y, z, 1);
-    }
-  }
-  return new Float32Array(data);
-}
-
-// Reset the colors.
-function resetColors(cloneMap: Map<string, TSingleNeuronSynaptomeConfiguration>) {
-  let index = 0;
-  for (const [, val] of cloneMap.entries()) {
-    val.color = getColorFromGeneratedPalette(index++);
-  }
-  return cloneMap;
 }

@@ -43,7 +43,7 @@ const CreateCircuitExtractionCampaignSchema = z.object({
   name: z.string(),
   description: z.string(),
   scan_parameters: z.record(z.string(), z.unknown()),
-  authorized_public: z.boolean().default(false),
+  authorized_public: z.boolean().prefault(false),
 });
 
 export type TCreateCircuitExtractionCampaign = z.infer<

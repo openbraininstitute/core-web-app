@@ -1,4 +1,4 @@
-import { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   EntityAuthorization,
   EntityCoreIdentifiable,

@@ -1,0 +1,10 @@
+.colorInput {
+  content: "";
+  border-radius: 50%;
+  width: 1.5em;
+  height: 1.5em;
+  border: none;
+  pointer-events: none;
+  /* cursor: pointer; */
+  /* box-shadow: 0 0.125em 0.25em #0008; */
+}

@@ -1,4 +1,5 @@
 import z from 'zod';
+
 import { SingleNeuronSynaptomeConfigurationSchema } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
 type Coordinates3D = [number, number, number];
