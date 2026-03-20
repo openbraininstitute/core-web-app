@@ -3,6 +3,7 @@ frontend:
   phases:
     preBuild:
       commands:
+        - echo "Node.js $(node -v)"
         - corepack enable
         - corepack prepare pnpm@latest --activate
         - pnpm config set store-dir .pnpm-store

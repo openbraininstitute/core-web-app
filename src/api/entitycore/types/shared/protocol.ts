@@ -9,6 +9,7 @@ import {
   RepairPipelineTypeSchema,
   SlicingDirectionTypeSchema,
 } from '@/api/entitycore/types/shared/global';
+
 import type {
   ContributionFilter,
   IDFilter,
@@ -24,7 +25,7 @@ export interface IProtocolFilter
 // Base schema for a Cell Morphology Protocol
 export const ProtocolBaseSchema = z.object({
   // Protocol core fields (similar to entity core, using optional where data suggests null/None)
-  id: z.string().uuid().optional(),
+  id: z.uuid().optional(),
   type: EntityTypeSchema,
   name: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -48,13 +49,18 @@ export const ProtocolBaseSchema = z.object({
 });
 
 export const ProtocolCreateSchema = ProtocolBaseSchema.extend({
-  name: z.string().nonempty({ message: 'Protocol name is required' }).nullable(),
+  name: z
+    .string()
+    .nonempty({
+      error: 'Protocol name is required',
+    })
+    .nullable(),
   protocol_design: CellMorphologyProtocolDesignSchema,
   generation_type: CellMorphologyGenerationTypeSchema,
 }).superRefine((data, ctx) => {
   if (data.generation_type === 'digital_reconstruction' && isNil(data.slicing_thickness)) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: 'Slicing thickness is required for digital reconstruction',
       path: ['slicing_thickness'],
     });

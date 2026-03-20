@@ -1,6 +1,7 @@
 import { tableFromIPC } from '@apache-arrow/es2015-esm';
 
 import { getBrainAtlasRegions } from '@/api/entitycore/queries/general/brain-atlas';
+import { AssetContentType } from '@/api/entitycore/types/shared/global';
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
 import { fetchPointCloud } from '@/features/brain-atlas-viewer/api';
@@ -43,7 +44,8 @@ async function getBrainRegionMeshArrayBufferQuery({
     throw new Error(`Unable to find region "${regionId}" in current Atlas ${atlasId}!`);
   }
 
-  const contentType = 'model/gltf-binary';
+  const contentType = AssetContentType.gltf_binary;
+  // const contentType = 'application/obj';
   const asset = entity.assets.find(
     (elem) => elem.label === 'brain_atlas_region_mesh' && elem.content_type === contentType
   );

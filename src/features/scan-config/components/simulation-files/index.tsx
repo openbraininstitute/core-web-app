@@ -4,18 +4,18 @@ import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { classNames } from '@/util/utils';
 
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
+import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { WorkspaceContext } from '@/types/common';
 
 type SimulationFilesProps = {
-  simulation: ICircuitSimulation;
+  simulation: ISimulation;
   execStatus: ActivityStatus;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
@@ -63,7 +63,7 @@ export function SimulationFiles({
     const voltageReportFile = outputFiles.find(
       (file) =>
         file.asset.label === AssetLabel.voltage_report &&
-        file.asset.content_type === 'application/nwb'
+        file.asset.content_type === AssetContentType.nwb
     );
 
     if (!selectedFile) {
@@ -133,7 +133,7 @@ export function SimulationFiles({
 }
 
 function useInputFiles(
-  simulation: ICircuitSimulation,
+  simulation: ISimulation,
   context: WorkspaceContext
 ): [boolean, TActivityCustomFile[]] {
   const { entity, isLoading } = useModelQuery({ id: simulation.entity_id, context });
@@ -169,7 +169,7 @@ function useInputFiles(
 }
 
 function useOutputFiles(
-  simulation: ICircuitSimulation,
+  simulation: ISimulation,
   context: WorkspaceContext,
   enabled: boolean
 ): [boolean, TActivityCustomFile[]] {

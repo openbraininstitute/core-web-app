@@ -70,7 +70,8 @@ export default function Page({
   if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
     return (
       <ScanConfig
-        modelId={entity.id}
+        entityId={entity.id}
+        entityType={ExtendedEntitiesTypeDict.MemodelCircuit}
         virtualLabId={virtualLabId}
         projectId={projectId}
         initialConfig={campaignData?.config.form}

@@ -1,8 +1,7 @@
 'use client';
 
-/* eslint-disable no-param-reassign */
 import { FullscreenOutlined } from '@ant-design/icons';
-import { GizmoCanvas, MorphologyCanvas } from '@bbp/morphoviewer';
+import { MorphologyCanvas } from '@bbp/morphoviewer';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
 
@@ -70,6 +69,7 @@ function MorphoViewerComponent({ className, swc, mode }: MorphoViewerProps) {
   };
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: if you are blind, fullscreen won't give you more information
     <div
       className={classNames(styles.main, className, isDarkMode && styles.darkMode)}
       ref={refDiv}

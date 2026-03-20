@@ -1,9 +1,12 @@
+import { RiResetLeftLine } from '@remixicon/react';
+import { useAtom } from 'jotai';
 import Link from 'next/link';
 import { useState } from 'react';
 
 import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
 import HelpIconI from '@/components/icons/HelpIcon';
+import { configStateAtom } from '@/services/ai-agent/hooks/chat';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
@@ -12,6 +15,7 @@ import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
 
 import type { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
+import type { Config } from '@/features/scan-config/components/components';
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './tools-progress.module.css';
@@ -25,6 +29,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
+  const [, setConfig] = useAtom(configStateAtom);
 
   const toggleExpanded = (key: string) => {
     setExpandedToolKeys((prev) => {
@@ -38,6 +43,24 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
     });
   };
 
+  const handleRestore = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Extract state directly from the tool invocation result
+    if (part.toolInvocation.state !== 'result') return;
+
+    try {
+      const result = JSON.parse(part.toolInvocation.result as string);
+      const state = result?.state?.smc_simulation_config;
+
+      if (state) {
+        setConfig(state as Config);
+      }
+    } catch (error) {
+      console.error('Failed to restore state:', error);
+    }
+  };
+
   if (!tools) return null;
 
   const toolsState = getToolsState(part, tools);
@@ -47,6 +70,8 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const Icon = tool.icon;
   const isExpanded = expandedToolKeys.has(key);
   const isRunning = state !== 'result';
+  const isStateToolCall = invocation.toolName === 'editstate' || invocation.toolName === 'getstate';
+  const showRestore = isStateToolCall && !isRunning;
 
   return (
     <div className={cn(styles.container, className)}>
@@ -94,6 +119,18 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
           </div>
 
           <div className={styles.actions}>
+            {showRestore && (
+              <button
+                type="button"
+                className={styles.restoreButton}
+                onClick={handleRestore}
+                title="Restore this state"
+                aria-label="Restore state"
+              >
+                <RiResetLeftLine className={styles.restoreIcon} size={16} />
+              </button>
+            )}
+
             <div className={styles.expandButton}>
               <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
             </div>

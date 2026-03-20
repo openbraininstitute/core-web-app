@@ -1,7 +1,6 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { isEqual, lowerCase, upperFirst } from 'es-toolkit/compat';
+import { lowerCase, upperFirst } from 'es-toolkit/compat';
 
-import AIIcon from '@/components/icons/ai/ai_icon';
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
@@ -75,18 +74,19 @@ export function RootElement({
   };
 
   return (
-    <>
+    <div className="w-full flex flex-col gap-0.5">
       <LeftMenuTab
         tab={rootElement}
         selectedTab={selectedRootElement}
         onClick={() => {
-          // for block_dictionary, clicking again collapses it
-          // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
-          if (
+          const isCollapseClick =
             selectedRootElement === rootElement &&
             !isRootBlock(schema, rootElement) &&
-            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion
-          ) {
+            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
+
+          // for block_dictionary, clicking again collapses it
+          // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
+          if (isCollapseClick) {
             setEditing(false);
             setSelectedEntry('');
             setSelectedRootElement('');
@@ -114,8 +114,6 @@ export function RootElement({
           />
         </span>
         <div className="flex gap-3">
-          {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && <AIIcon />}
-
           {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
             <WarningFilled className="text-yellow-400!" />
           ) : (
@@ -156,7 +154,7 @@ export function RootElement({
           visible={selectedRootElement === rootElement && !!config[rootElement]}
         />
       )}
-    </>
+    </div>
   );
 }
 

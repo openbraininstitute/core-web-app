@@ -40,7 +40,7 @@ import type {
   TSingleNeuronSynaptomeConfiguration,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type {
-  SectionSynapsesWith3D,
+  SectionSynapsesFor3D,
   SynapseConfiguration,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 
@@ -266,7 +266,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
 
 function useViewer3D(
   synapticInputs: SynapseConfiguration[],
-  selection: Record<string, SectionSynapsesWith3D | null>,
+  selection: Record<string, SectionSynapsesFor3D | null>,
   data: { synapses: Array<{ id: string; color?: string }> } | null | undefined,
   sessionId: string
 ) {

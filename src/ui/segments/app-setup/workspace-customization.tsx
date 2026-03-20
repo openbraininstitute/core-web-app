@@ -2,10 +2,6 @@
 
 'use client';
 
-import { ComponentProps, ReactNode, useEffect, useState, useTransition } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { useRouter } from '@bprogress/next/app';
-import { Form } from 'antd';
 import {
   CheckCircleFilled,
   CloseCircleFilled,
@@ -13,20 +9,24 @@ import {
   LoadingOutlined,
   RightOutlined,
 } from '@ant-design/icons';
+import { useRouter } from '@bprogress/next/app';
+import { useMutation } from '@tanstack/react-query';
+import { Form } from 'antd';
+import { type ComponentProps, type ReactNode, useEffect, useState, useTransition } from 'react';
 import z from 'zod';
 
-import { updateVirtualLab, checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { updateProject, checkProjectExists } from '@/api/virtual-lab-svc/queries/project';
+import { checkProjectExists, updateProject } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { checkVirtualLabExists, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
-import { Card, CardContent } from '@/ui/molecules/card';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { Card, CardContent } from '@/ui/molecules/card';
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 export type Props = {
   virtualLabId: string;
@@ -293,7 +293,7 @@ export function WorkspaceCustomization({
                         } catch (error) {
                           return Promise.reject(
                             error instanceof z.ZodError
-                              ? error.errors.at(0)?.message
+                              ? error.issues.at(0)?.message
                               : 'Virtual lab name is required !'
                           );
                         }
@@ -334,7 +334,7 @@ export function WorkspaceCustomization({
                         } catch (error) {
                           return Promise.reject(
                             error instanceof z.ZodError
-                              ? error.errors.at(0)?.message
+                              ? error.issues.at(0)?.message
                               : 'Project name is required !'
                           );
                         }

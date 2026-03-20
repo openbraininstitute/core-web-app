@@ -32,6 +32,7 @@ const SimulationEntitySlug = {
   PairedNeuronCircuitSimulation: 'paired-neurons-simulation',
   SmallMicrocircuitSimulation: 'small-microcircuit-simulation',
   MicrocircuitSimulation: 'microcircuit-simulation',
+  IonChannelModelSimulation: 'ion-channel-model-simulation',
 } as const;
 
 const ExtractionEntitySlug = {

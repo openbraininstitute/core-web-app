@@ -3,7 +3,6 @@ import { cloneElement, Fragment, isValidElement } from 'react';
 import type { ReactNode } from 'react';
 
 export type Component = (match: string) => ReactNode;
-
 /**
  * react component type for the generic Linkify component.
  */

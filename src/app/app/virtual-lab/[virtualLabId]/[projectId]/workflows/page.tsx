@@ -7,6 +7,10 @@ import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { use } from 'react';
 import { match, P } from 'ts-pattern';
 
+import {
+  ExtendedEntitiesTypeDict,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { WorkflowActivityDictValue, WorkspaceScope } from '@/constants';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
@@ -21,7 +25,6 @@ import {
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
@@ -72,9 +75,17 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
         }
       )
       .with({ activity: WorkflowActivityDictValue.simulate, value: P.nonNullable }, ({ value }) => {
-        navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`
-        );
+        return match({ value })
+          .with({ value: ExtendedEntitiesTypeDict.IonChannelModelSimulation }, () =>
+            navigate(
+              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}`
+            )
+          )
+          .otherwise(() =>
+            navigate(
+              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}`
+            )
+          );
       })
       .with({ activity: WorkflowActivityDictValue.extract, value: P.nonNullable }, ({ value }) => {
         navigate(

@@ -3,19 +3,19 @@ import { flatMap, keyBy } from 'es-toolkit/compat';
 import { getMEModels } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
 import {
   createSimulationCampaign,
-  getCircuitSimulationCampaign,
-  getCircuitSimulationCampaigns,
-} from '@/api/entitycore/queries/simulation/circuit-simulation-campaign';
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
+  getSimulationCampaign,
+  getSimulationCampaigns,
+} from '@/api/entitycore/queries/simulation/campaign';
+import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
+import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import {
   type ICircuitSimulationCampaign,
-  type ICircuitSimulationCampaignFilter,
+  type ISimulationCampaignFilter,
   SimulationCampaignEntityTypeDict,
-} from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+} from '@/api/entitycore/types/entities/simulation-campaign';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -28,7 +28,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
-const ENTITY_TYPE = SimulationCampaignEntityTypeDict.memodel;
+const ENTITY_TYPE = SimulationCampaignEntityTypeDict.Memodel;
 
 export async function resolveExecutions({
   context,
@@ -39,13 +39,13 @@ export async function resolveExecutions({
 }) {
   const chunkSize = 30;
 
-  const promises: ReturnType<typeof getCircuitSimulationExecutions>[] = [];
+  const promises: ReturnType<typeof getSimulationExecutions>[] = [];
 
   for (let i = 0; i < allSimIds.length; i += chunkSize) {
     const chunk = allSimIds.slice(i, i + chunkSize);
 
     promises.push(
-      getCircuitSimulationExecutions({
+      getSimulationExecutions({
         context,
         withFacets: false,
         filters: { used__id__in: [...chunk] },
@@ -66,10 +66,10 @@ async function resolveSimulationCampaigns({
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
-  filters?: Partial<ICircuitSimulationCampaignFilter>;
+  filters?: Partial<ISimulationCampaignFilter>;
 }) {
   filters = discardBrainRegionQueryParams(filters);
-  const source = await getCircuitSimulationCampaigns({
+  const source = await getSimulationCampaigns({
     context,
     withFacets,
     filters: { ...filters, entity__type: ENTITY_TYPE },
@@ -128,18 +128,19 @@ export async function resolveSimulationByCampaignId({
   id: string;
   context: WorkspaceContext | undefined;
 }) {
-  const campaign = await getCircuitSimulationCampaign({ id, context });
+  const campaign = await getSimulationCampaign({ id, context });
 
   if (!campaign) {
     throw new Error(`No campaign with id ${id} found`);
   }
 
-  const source = await getCircuitSimulations({
+  const source = await getSimulations({
     context,
     filters: { simulation_campaign_id: id },
   });
 
   const simulation = source.data.at(0);
+
   const assets = campaign?.assets ?? [];
   const configAsset = getAssetElement({
     assets,
@@ -190,7 +191,7 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<
     query: {
       count: (...params) => {
         const filters = discardBrainRegionQueryParams(params[0].filters);
-        return getCircuitSimulationCampaigns({
+        return getSimulationCampaigns({
           ...params,
           context: params[0].context,
           withFacets: params[0].withFacets,
@@ -202,7 +203,7 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<
       },
       list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
         resolveSimulationCampaigns(params),
-      one: getCircuitSimulationCampaign,
+      one: getSimulationCampaign,
       create: createSimulationCampaign,
     },
     expandRow: async (record, _context) => record,

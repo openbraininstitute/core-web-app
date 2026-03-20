@@ -1,6 +1,6 @@
 'use client';
 
-import { use } from 'react';
+import React, { use } from 'react';
 
 import { Content } from '@/ui/segments/workflows/build/single-neuron-synaptome';
 import { Menu } from '@/ui/segments/workflows/build/single-neuron-synaptome/menu';
@@ -14,8 +14,7 @@ export default function Page({
   WorkspaceContext & { id: string },
   { step: BuildStepKeys; sessionId: string }
 >) {
-  let { sessionId } = use(searchParams);
-  if (!sessionId) sessionId = crypto.randomUUID();
+  const sessionId = useSessionId(searchParams);
 
   return (
     <div className="h-full mx-2 flex flex-col max-h-[calc(100vh-6rem)] w-[calc(100%-10px)] overflow-hidden">
@@ -34,4 +33,20 @@ export default function Page({
       </div>
     </div>
   );
+}
+
+/**
+ * If there is no sessionId in the parameters,
+ * we create a random one that stay stable between re-renders.
+ */
+function useSessionId(
+  searchParams: Promise<{
+    step: BuildStepKeys;
+    sessionId: string;
+  }>
+) {
+  const refSessionId = React.useRef<string | null>(null);
+  if (!refSessionId.current) refSessionId.current = crypto.randomUUID();
+  const { sessionId } = use(searchParams);
+  return sessionId ?? refSessionId.current;
 }

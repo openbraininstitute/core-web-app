@@ -1,0 +1,12 @@
+.addNewSet {
+  width: 100%;
+
+  > h2 {
+    font-size: 120%;
+    font-weight: bold;
+  }
+
+  > p {
+    margin: 1em 0;
+  }
+}

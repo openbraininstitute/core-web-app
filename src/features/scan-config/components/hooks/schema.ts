@@ -5,8 +5,9 @@ import { atom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { EntityTypeDict, type IMEModel } from '@/api/entitycore/types';
-import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types';
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import { config } from '@/config';
@@ -20,18 +21,23 @@ import {
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
+  type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { WorkspaceContext } from '@/types/common';
+import type { Nullish } from '@/utils/type';
 
-export function useObioneJsonSchema(schemaName: SchemaName) {
+export function useObioneJsonSchema({ schemaName }: { schemaName?: SchemaName | undefined }) {
   const { data: schema, isLoading } = useQuery({
-    queryKey: keyBuilder.obiOneJsonSchema(schemaName),
-    queryFn: () => fetchSchema({ schemaName }),
-    // Keep data fresh indefinitely to prevent atom regeneration on window focus
+    // biome-ignore lint/style/noNonNullAssertion: query only start if the schemaName is present
+    queryKey: keyBuilder.obiOneJsonSchema(schemaName!),
+    // biome-ignore lint/style/noNonNullAssertion: query only start if the schemaName is present
+    queryFn: () => fetchSchema({ schemaName: schemaName! }),
+    // keep data fresh indefinitely to prevent atom regeneration on window focus
     staleTime: Infinity,
     refetchOnWindowFocus: false,
+    enabled: !!schemaName,
   });
 
   return { isLoading, schema };
@@ -39,23 +45,24 @@ export function useObioneJsonSchema(schemaName: SchemaName) {
 
 export type TSchemaMappingConfiguration = {
   usability: Record<string, boolean> | null;
-  properties: Record<string, ConfigValue> | null;
+  properties: Record<string, any> | null;
 };
 
+const SCHEMA_MAPPING_CONFIGURATION_STALE_TIME_MS = 60 * 60 * 1000;
+
 export function useSchemaMappingConfiguration({
-  schema,
-  circuitId,
+  entityId,
   workspace,
-  endpointType,
+  endpoint,
+  isSchemaLoaded,
 }: {
   workspace: WorkspaceContext;
-  circuitId: string | undefined;
-  schema: ConfigSchema | undefined;
-  endpointType: string;
+  entityId: string | undefined;
+  endpoint: string | undefined;
+  isSchemaLoaded: boolean;
 }) {
-  const properties_endpoint = get(schema?.property_endpoints, endpointType, '');
   return useQuery({
-    queryKey: ['schema-mapping-configuration', { workspace, circuitId, endpointType }],
+    queryKey: ['schema-mapping-configuration', { workspace, entityId, endpoint }],
     queryFn: async () => {
       const api = await obioneApi();
       return api.get<{
@@ -63,15 +70,15 @@ export function useSchemaMappingConfiguration({
           [key: string]: boolean;
         } | null;
         [key: string]: any;
-      }>(`/declared${properties_endpoint}`.replace('{circuit_id}', circuitId!), {
+      }>(`/declared${endpoint}`.replace('{circuit_id}', entityId ?? ''), {
         headers: {
           ...getEntityCoreContext(workspace).headers,
         },
       });
     },
-    enabled: !!properties_endpoint,
+    enabled: !!endpoint && isSchemaLoaded,
     refetchOnWindowFocus: false,
-    staleTime: 3600, //  1 hour
+    staleTime: SCHEMA_MAPPING_CONFIGURATION_STALE_TIME_MS,
     select: (resp) => {
       return {
         properties: omit(resp, ['usability']),
@@ -96,7 +103,7 @@ export function useDefaultConfig(
   schemaName: SchemaName,
   formModelType: 'CircuitFromId' = 'CircuitFromId'
 ) {
-  const { schema } = useObioneJsonSchema(schemaName);
+  const { schema } = useObioneJsonSchema({ schemaName });
 
   if (!schema) return;
 
@@ -153,6 +160,12 @@ async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
   return theSchema;
 }
 
+const ModelIdentifierSelector = {
+  [ExtendedEntitiesTypeDict.Memodel]: 'MEModelFromID',
+  [ExtendedEntitiesTypeDict.MEModelWithSynapses]: 'MEModelWithSynapsesCircuitFromID',
+  [ExtendedEntitiesTypeDict.Circuit]: 'CircuitFromID',
+};
+
 export function useAtomsMap({
   schema,
   initialConfig,
@@ -160,12 +173,23 @@ export function useAtomsMap({
 }: {
   schema?: ConfigSchema;
   initialConfig?: Config;
-  model: ICircuit | IMEModel;
+  model: TSupportedEntitiesForScanConfiguration | Nullish;
 }) {
   const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
 
   useEffect(() => {
     if (!schema?.properties) return;
+    const expectedRootKeys = Object.entries(schema.properties)
+      .filter(([_, v]) => !isType(v))
+      .map(([k]) => k);
+    const hasInitializedMapForSchema =
+      Object.keys(atomsMap).length > 0 && expectedRootKeys.every((key) => key in atomsMap);
+
+    // skip re-init when map is already complete, otherwise we wipe dictionary entry state
+    // (e.g. newly added "Ion Channel Model 0") and BlockDictionary falls back to type cards
+    if (hasInitializedMapForSchema) {
+      return;
+    }
 
     const map: {
       [key: string]:
@@ -199,19 +223,26 @@ export function useAtomsMap({
           Object.entries(v.properties).forEach(([subkey, subValue]) => {
             initial[subkey] = subValue.default ?? null;
             if (
+              model &&
               !isType(subValue) &&
               subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
             ) {
               const formModelType = match(model)
-                .with({ type: EntityTypeDict.Memodel }, () => 'MEModelFromID')
+                .with(
+                  { type: EntityTypeDict.Memodel },
+                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
+                )
                 .with(
                   {
                     type: EntityTypeDict.Circuit,
                     scale: CircuitScaleDictionary.Single,
                   },
-                  () => 'MEModelWithSynapsesCircuitFromID'
+                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.MEModelWithSynapses]
                 )
-                .with({ type: EntityTypeDict.Circuit }, () => 'CircuitFromID')
+                .with(
+                  { type: EntityTypeDict.Circuit },
+                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Circuit]
+                )
                 .otherwise(() => {
                   throw new Error(`Unsupported entity type: ${model.type}`);
                 });
@@ -233,7 +264,7 @@ export function useAtomsMap({
     }
 
     setAtomsMap(map);
-  }, [schema, model, initialConfig]);
+  }, [schema, model, initialConfig, atomsMap]);
 
   return [atomsMap, setAtomsMap] as const;
 }
@@ -259,6 +290,7 @@ export function resetConfig(
     .filter(([k]) => !isRootBlock(schema, k))
     .forEach(([k, v]) => {
       map[k] = {};
+      if (!v || !isPlainObject(v)) return;
       Object.entries(v).forEach(([subK, subV]) => {
         if (!isPlainObject(subV) || isAtom(map[k])) return;
         map[k][subK] = atom<Record<string, ConfigValue>>(subV);
@@ -268,9 +300,7 @@ export function resetConfig(
   setAtomsMap(map);
 }
 
-export function useReferenceTypeDict(schemaName: SchemaName) {
-  const { schema } = useObioneJsonSchema(schemaName);
-
+export function useReferenceTypeDict(schema: ConfigSchema) {
   const referenceTypeDict: Record<
     string,
     {

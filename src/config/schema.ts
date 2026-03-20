@@ -15,10 +15,10 @@ const configFields = {
 
   KEYCLOAK_CLIENT_ID: { schema: z.string().nonempty(), public: false },
   KEYCLOAK_CLIENT_SECRET: { schema: z.string().nonempty(), public: false },
-  KEYCLOAK_ISSUER: { schema: z.string().url(), public: false },
+  KEYCLOAK_ISSUER: { schema: z.url(), public: false },
 
   NEXTAUTH_SECRET: { schema: z.string().nonempty(), public: false },
-  AUTH_PROXY_URL: { schema: z.string().url().optional(), public: true },
+  AUTH_PROXY_URL: { schema: z.url().optional(), public: true },
 
   MAILCHIMP_API_KEY: {
     schema: z.string().nonempty().optional(),
@@ -38,25 +38,25 @@ const configFields = {
   GITHUB_FEEDBACK_TOKEN: { schema: z.string().optional(), public: false },
   GITHUB_FEEDBACK_PROJECT_ID: { schema: z.string().optional(), public: false },
 
-  API_ORIGIN: { schema: z.string().url().optional(), public: true },
+  API_ORIGIN: { schema: z.url().optional(), public: true },
 
-  AI_AGENT_URL: { schema: z.string().url().optional(), public: true },
-  AUTH_MANAGER_URL: { schema: z.string().url().optional(), public: true },
-  CELL_API_URL: { schema: z.string().url().optional(), public: true },
-  ENTITY_CORE_URL: { schema: z.string().url().optional(), public: true },
+  AI_AGENT_URL: { schema: z.url().optional(), public: true },
+  AUTH_MANAGER_URL: { schema: z.url().optional(), public: true },
+  CELL_API_URL: { schema: z.url().optional(), public: true },
+  ENTITY_CORE_URL: { schema: z.url().optional(), public: true },
   NOTEBOOK_API_URL: { schema: z.string().optional(), public: true },
-  OBI_ONE_URL: { schema: z.string().url().optional(), public: true },
+  OBI_ONE_URL: { schema: z.url().optional(), public: true },
   SMALL_SCALE_SIMULATOR_URL: {
-    schema: z.string().url().optional(),
+    schema: z.url().optional(),
     public: true,
   },
-  THUMBNAIL_API_URL: { schema: z.string().url().optional(), public: true },
-  VIRTUAL_LAB_API_URL: { schema: z.string().url().optional(), public: true },
+  THUMBNAIL_API_URL: { schema: z.url().optional(), public: true },
+  VIRTUAL_LAB_API_URL: { schema: z.url().optional(), public: true },
 
   ROOT_ROUTE: { schema: z.string(), public: true },
 
   SENTRY_DSN: {
-    schema: z.preprocess((sentryDsn) => sentryDsn || undefined, z.string().url().optional()),
+    schema: z.preprocess((sentryDsn) => sentryDsn || undefined, z.url().optional()),
     public: true,
   },
   SENTRY_ORG: { schema: z.string().optional(), public: true },
@@ -112,11 +112,11 @@ const configFields = {
     public: true,
   },
   LEGACY_DEFAULT_CIRCUIT_ID: {
-    schema: z.string().url().nonempty(),
+    schema: z.url().nonempty(),
     public: true,
   },
 
-  NOTEBOOK_REPO_URL: { schema: z.string().url(), public: true },
+  NOTEBOOK_REPO_URL: { schema: z.url(), public: true },
 } as const;
 
 const platformApiUrlFields = {
@@ -138,7 +138,7 @@ const baseServerSchema = z
   .superRefine((data, ctx) => {
     if (data.AUTH_PROXY_URL && data.DEPLOYMENT_ENV !== 'preview') {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'AUTH_PROXY_URL can only be set when DEPLOYMENT_ENV is "preview"',
         path: ['AUTH_PROXY_URL'],
       });
@@ -154,7 +154,7 @@ const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
       Object.keys(platformApiUrlFields).forEach((field) => {
         if (!data[field] && !data.API_ORIGIN) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: 'custom',
             message: `Either ${field} or API_ORIGIN must be provided`,
             path: [field],
           });

@@ -1,11 +1,10 @@
-import startsWith from 'es-toolkit/compat/startsWith';
-import some from 'es-toolkit/compat/some';
+import { some, startsWith } from 'es-toolkit/compat';
 
-import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
-import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
+import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation';
 
 import type {
   ISingleNeuronSynaptomeSimulation,
@@ -13,8 +12,8 @@ import type {
   TCreateSingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 import type { WorkspaceContext } from '@/types/common';
+import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 
 const baseUri = '/single-neuron-synaptome-simulation';
 

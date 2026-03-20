@@ -1,64 +1,49 @@
-import { CloseOutlined } from '@ant-design/icons';
-import { isEqual, isNil } from 'es-toolkit/compat';
+import { isNil } from 'es-toolkit/compat';
 import { atom, useAtom } from 'jotai';
-import { useRef } from 'react';
 
-import AIAdd from '@/components/icons/ai/add_icon';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
   type Config,
+  type ConfigSchema,
   type ConfigValue,
   isType,
   ScanConfigUIElementDict,
   type SchemaName,
   type TBlock,
+  type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { Nullish } from '@/utils/type';
 
 export default function Block({
   schemaName,
+  schema,
   disabled,
   blockSchema,
   stateAtom,
   config,
   entity,
-  blockAIConfig,
   hideTitle,
   schemaMappingConfig,
 }: {
   schemaName: SchemaName;
+  schema: ConfigSchema;
   disabled: boolean;
   config: Config;
   blockSchema?: TBlock;
-  entity: ICircuit | IMEModel | undefined | null;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
-  blockAIConfig: Record<string, ConfigValue> | null;
   hideTitle?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
 }) {
-  // Empty atom for when a block doesn't exist in the config (and the atoms map) yet, only in the AI suggested changes
-  const emptyAtom = useRef(atom<Record<string, ConfigValue>>({}));
-  const [state, setState] = useAtom(stateAtom ?? emptyAtom.current);
+  const [state, setState] = useAtom(stateAtom ?? atom<Record<string, ConfigValue>>({}));
 
   if (!blockSchema) return null;
-
-  function op(k: string) {
-    if (!blockAIConfig) return null;
-    const v1 = state[k];
-    const v2 = blockAIConfig[k];
-
-    if (v1 === undefined && v2 !== undefined) return 'add';
-    if (v1 !== undefined && v2 === undefined) return 'delete';
-    if (v1 !== undefined && v2 !== undefined && !isEqual(v1, v2)) return 'replace';
-    return null;
-  }
 
   return (
     <div
@@ -103,24 +88,8 @@ export default function Block({
               if (isType(blockElementSchema)) return null;
               const isBooleanInput =
                 blockElementSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
-              const op_ = op(k);
 
-              const patchBorderClass = () => {
-                if (op_ === 'delete' || op_ === 'replace') return 'border-red-500';
-                if (op_ === 'add') return 'border-[#1690ff]';
-                return 'border-transparent';
-              };
-
-              // Gets the value so show in the input element
-              const firstValue = () => {
-                if (!op_ || op_ === 'delete' || op_ === 'replace' || !blockAIConfig) {
-                  return state[k];
-                }
-
-                return blockAIConfig[k];
-              };
-
-              const value = firstValue();
+              const value = state[k];
 
               return (
                 <div
@@ -147,13 +116,14 @@ export default function Block({
                     <TooltipTrigger asChild>
                       <div>
                         <div className="mb-1 flex items-center gap-1">
-                          <div className={cn('border rounded-lg flex-1 mr-1', patchBorderClass())}>
+                          <div className="border rounded-lg border-transparent flex-1 mr-1">
                             <UIElementRender
                               k={k}
                               disabled={disabled}
                               paramSchema={blockElementSchema}
                               value={value}
                               config={config}
+                              schema={schema}
                               schemaName={schemaName}
                               entity={entity}
                               schemaMappingConfig={schemaMappingConfig}
@@ -161,31 +131,7 @@ export default function Block({
                               setState={setState}
                             />
                           </div>
-                          {(op_ === 'delete' || op_ === 'replace') && (
-                            <CloseOutlined className="text-red-500! text-[16px]!" />
-                          )}
-                          {op_ === 'add' && <AIAdd />}
                         </div>
-
-                        {op_ === 'replace' && !!blockAIConfig && (
-                          <div className="flex items-center gap-1">
-                            <div className="border rounded-lg border-[#1690ff] flex-1 mr-1">
-                              <UIElementRender
-                                k={k}
-                                disabled={disabled}
-                                paramSchema={blockElementSchema}
-                                value={blockAIConfig[k]}
-                                config={config}
-                                schemaName={schemaName}
-                                entity={entity}
-                                schemaMappingConfig={schemaMappingConfig}
-                                state={state}
-                                setState={setState}
-                              />
-                            </div>
-                            <AIAdd />
-                          </div>
-                        )}
                       </div>
                     </TooltipTrigger>
                     <TooltipContent
@@ -216,3 +162,5 @@ export default function Block({
     </div>
   );
 }
+
+export { Block };

@@ -3,11 +3,11 @@ import z from 'zod';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
   ElectricalCellRecordingFilter,
   IElectricalCellRecording,
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/electrical-cell-recording';
@@ -71,49 +71,34 @@ export async function getElectricalCellRecording({
 
 const electricalCellRecordingSchema = z.object({
   name: z
-    .string({ message: 'Cell recording name is required' })
-    .nonempty({ message: 'Cell recording name is required' }),
+    .string({ error: 'Cell recording name is required' })
+    .nonempty({ error: 'Cell recording name is required' }),
   description: z
-    .string({ message: 'Cell recording description is required' })
-    .nonempty({ message: 'Cell recording description is required' }),
-  brain_region_id: z
-    .string({ message: 'Brain region is required' })
-    .uuid()
-    .nonempty({ message: 'Brain region is required' }),
-  subject_id: z
-    .string({ message: 'Subject is required' })
-    .uuid()
-    .nonempty({ message: 'Subject is required' }),
-  license_id: z
-    .string({ message: 'License is required' })
-    .uuid()
-    .nonempty({ message: 'License is required' }),
-  experiment_date: z.string({ message: 'Experiment date is required' }).nullish(),
-  contact_email: z
-    .string({ message: 'Contact email is required' })
-    .email({ message: 'Contact email is required' })
-    .nullish(),
-  published_in: z.string({ message: 'Published in is required' }).nullish(),
+    .string({ error: 'Cell recording description is required' })
+    .nonempty({ error: 'Cell recording description is required' }),
+  brain_region_id: z.uuid({ error: 'Brain region is required' }),
+  subject_id: z.uuid({ error: 'Subject is required' }),
+  license_id: z.uuid({ error: 'License is required' }),
+  experiment_date: z.string({ error: 'Experiment date is required' }).nullish(),
+  contact_email: z.email({ error: 'Contact email is required' }).nullish(),
+  published_in: z.string({ error: 'Published in is required' }).nullish(),
   location: z.object({ x: z.number(), y: z.number(), z: z.number() }).nullable(),
   recording_location: z
     .array(
       z
-        .string({ message: 'Cell recording location is required' })
-        .nonempty({ message: 'Cell recording location is required' })
+        .string({ error: 'Cell recording location is required' })
+        .nonempty({ error: 'Cell recording location is required' })
     )
     .nullable(),
   recording_type: z.string({ message: 'Cell recording type is required' }).nonempty({
-    message: 'Cell recording type is required',
+    error: 'Cell recording type is required',
   }),
   recording_origin: z.string({ message: 'Cell recording origin is required' }).nonempty({
-    message: 'Cell recording origin is required',
+    error: 'Cell recording origin is required',
   }),
-  temperature: z
-    .number({ invalid_type_error: 'Temperature must be a number' })
-    .optional()
-    .nullable(),
+  temperature: z.number({ error: 'Temperature must be a number' }).optional().nullable(),
   ljp: z
-    .number({ invalid_type_error: 'Liquid junction potential (ljp) must be a number' })
+    .number({ error: 'Liquid junction potential (ljp) must be a number' })
     .optional()
     .default(0.0),
   comment: z.string().optional().nullable(),

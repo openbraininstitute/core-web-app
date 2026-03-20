@@ -1,12 +1,12 @@
 import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
 
-import {
+import type {
   SetupIntentResponse,
   StandalonePaymentRequest,
   StandalonePaymentResponse,
   SubscriptionPaymentsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import { config } from '@/config';
 
 function getPaymentsPrl() {
   return `${config.VIRTUAL_LAB_API_URL}/payments`;
