@@ -10,7 +10,7 @@ import { config } from '@/config';
 import {
   selectedBrainRegionAtom,
   useBrainRegionRootHierarchyQuery,
-  useHierarchyBrainRegionUrlState,
+  useBrainRegionUrlBoundaryContext,
   usePrimaryHierarchyOfCurrentSpeciesQuery,
   VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT,
   workspaceHierarchySpeciesAtom,
@@ -84,7 +84,7 @@ export function useLocalStoreHierarchySpeciesAndBrainRegion() {
       const result = await queryClient.ensureQueryData({
         ...queryOption(hierarchyId),
       });
-      const { options: brainRegions } = select(result);
+      const { options: brainRegions } = select(result, hierarchyId);
       const fallbackDefaultRegionId =
         runtimeHierarchyById.get(hierarchyId)?.fallbackDefaultSelectedRegionId ??
         config.MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID;
@@ -116,19 +116,20 @@ export function useLocalStoreHierarchySpeciesAndBrainRegion() {
  * features:
  * - species selection with automatic hierarchy switching
  * - brain region selection within the current hierarchy
- * - state synchronization across URL, localStorage, and API
+ * - state synchronization across transient URL overrides, localStorage, and API
  * - fire-and-forget API persistence (non-blocking)
  * - per-hierarchy brain region memory (restores previous selection when switching back)
  *
  * state priority on initialization:
- * 1. URL parameters (highest - for shareable links)
+ * 1. URL override (when a sync boundary is mounted)
  * 2. DB (remote persistence)
- * 4. LocalStorage (session persistence)
- * 5. Config defaults (fallback)
+ * 3. LocalStorage (session persistence)
+ * 4. Config defaults (fallback)
  */
 export function useWorkspaceHierarchyRegistry() {
   // track initialization to prevent infinite loops
   const isInitializedRef = useRef(false);
+  const lastAppliedUrlOverrideRef = useRef<string | null>(null);
   const queryClient = useQueryClient();
 
   const {
@@ -139,7 +140,7 @@ export function useWorkspaceHierarchyRegistry() {
     workspaceSpecies,
   } = useLocalStoreHierarchySpeciesAndBrainRegion();
 
-  const { urlState, setUrlState } = useHierarchyBrainRegionUrlState();
+  const { urlOverride } = useBrainRegionUrlBoundaryContext();
   const { remoteAvailableHierarchies, loading: isLoadingAvailableHierarchiesSpecies } =
     useAvailableHierarchySpeciesQuery();
   const { runtimeHierarchyById } = useHierarchyRuntimeMetadataQuery();
@@ -159,7 +160,7 @@ export function useWorkspaceHierarchyRegistry() {
   );
 
   const defaultingCurrentHierarchyId =
-    urlState.hierarchyId ||
+    urlOverride?.hierarchyId ||
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
     browserStorageHierarchy?.hierarchyId ||
     config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
@@ -206,17 +207,11 @@ export function useWorkspaceHierarchyRegistry() {
   /**
    * synchronize a brain-region hierarchy selection with external stores.
    *
-   * updates local/browser storage and the URL state synchronously, and then
-   * triggers a fire-and-forget remote persistence of the user's hierarchy/species
+   * updates local/browser storage synchronously and then triggers a fire-and-forget
+   * remote persistence of the user's hierarchy/species
    */
   function syncExternalStores(selection: BrainRegionHierarchySelection) {
     setBrowserStorageHierarchy(selection);
-    setUrlState({
-      brainRegionId: selection.brainRegionId,
-      hierarchyId: selection.hierarchyId,
-    });
-
-    // fire-and-forget api persistence
     syncHierarchySpeciesRemoteUserPreference(selection);
   }
 
@@ -229,14 +224,18 @@ export function useWorkspaceHierarchyRegistry() {
     const {
       remoteAvailableHierarchies: latestHierarchies,
       selectedBrainRegion: latestRegion,
-      urlState: latestUrlState,
       browserStorageHierarchy: latestStorage,
+      remoteUserPreferenceHierarchySpecies: latestRemotePreference,
     } = latestRef.current;
     const hierarchy = latestHierarchies?.find((h) => h.id === hId);
     if (!hierarchy) return;
 
     // memoize the current brain region for the current hierarchy before switching
-    const currentHierarchyId = latestUrlState.hierarchyId || latestStorage?.hierarchyId;
+    const currentHierarchyId =
+      latestRegion?.hierarchy_id ||
+      latestStorage?.hierarchyId ||
+      latestRemotePreference?.hierarchy_id ||
+      config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
     const prevMemory = {
       ...(latestStorage?.perHierarchyMemory ?? {}),
     };
@@ -280,9 +279,9 @@ export function useWorkspaceHierarchyRegistry() {
       setSelectedBrainRegion(null);
 
       const currentHierarchyId =
-        urlState.hierarchyId ||
-        remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
+        selectedBrainRegion?.hierarchy_id ||
         browserStorageHierarchy?.hierarchyId ||
+        remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
         config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
 
       const currentSpeciesName = workspaceSpecies?.name || '';
@@ -329,7 +328,6 @@ export function useWorkspaceHierarchyRegistry() {
   // use refs so the memoized callbacks always read the latest values
   const latestRef = useRef({
     selectedBrainRegion,
-    urlState,
     browserStorageHierarchy,
     remoteAvailableHierarchies,
     workspaceSpecies,
@@ -337,7 +335,6 @@ export function useWorkspaceHierarchyRegistry() {
   });
   latestRef.current = {
     selectedBrainRegion,
-    urlState,
     browserStorageHierarchy,
     remoteAvailableHierarchies,
     workspaceSpecies,
@@ -356,10 +353,10 @@ export function useWorkspaceHierarchyRegistry() {
   );
 
   /**
-   * initialize state from URL or localStorage on mount
+   * initialize state from the active URL override, remote preference, localStorage,
+   * or defaults once the current route boundary has settled.
    */
   useEffect(() => {
-    // wait for hierarchies to load before initializing
     if (
       isInitializedRef.current ||
       isLoadingAvailableHierarchiesSpecies ||
@@ -369,32 +366,31 @@ export function useWorkspaceHierarchyRegistry() {
       return;
 
     async function sync() {
-      const hasUrlParams = !!urlState.hierarchyId || !!urlState.brainRegionId;
+      const hasUrlOverride = !!urlOverride?.hierarchyId;
       const hasStoredSelection = !!browserStorageHierarchy?.hierarchyId;
 
-      // priority 1: url params
-      if (hasUrlParams && urlState.hierarchyId) {
-        const hierarchy = remoteAvailableHierarchies?.find((h) => h.id === urlState.hierarchyId);
+      if (hasUrlOverride) {
+        const hierarchy = remoteAvailableHierarchies?.find((h) => h.id === urlOverride.hierarchyId);
         if (hierarchy) {
           const result = await changeLocalStoreHierarchySpecies(
             hierarchy.id,
-            urlState.brainRegionId
+            urlOverride.brainRegionId || null
           );
           if (result?.brainRegion) {
-            // sync to localStorage
             setBrowserStorageHierarchy({
-              hierarchyId: urlState.hierarchyId,
+              hierarchyId: urlOverride.hierarchyId,
               speciesName: hierarchy.species.name,
               brainRegionId: result.brainRegion.id,
-              brainRegionName: result?.brainRegion?.name,
+              brainRegionName: result.brainRegion.name,
               perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
             });
           }
+          lastAppliedUrlOverrideRef.current = `${urlOverride.hierarchyId}:${urlOverride.brainRegionId}`;
+          isInitializedRef.current = true;
+          return;
         }
-        isInitializedRef.current = true;
-        return;
       }
-      // priority 2: user remote preference
+
       const remoteHierarchyId = remoteUserPreferenceHierarchySpecies?.hierarchy_id;
       if (remoteHierarchyId) {
         const hierarchy = remoteAvailableHierarchies?.find((h) => h.id === remoteHierarchyId);
@@ -414,68 +410,118 @@ export function useWorkspaceHierarchyRegistry() {
               '',
             perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
           });
-          setUrlState({
-            hierarchyId: hierarchy.id,
-            brainRegionId: result?.brainRegion?.id || '',
-          });
           isInitializedRef.current = true;
           return;
         }
       }
-      // priority 3: browser localStorage
+
       if (hasStoredSelection) {
         const hierarchy = remoteAvailableHierarchies?.find(
           (h) => h.id === browserStorageHierarchy.hierarchyId
         );
         if (hierarchy) {
-          const result = await changeLocalStoreHierarchySpecies(
+          await changeLocalStoreHierarchySpecies(
             hierarchy.id,
             browserStorageHierarchy.brainRegionId
           );
-          // Sync to URL
-          setUrlState({
-            hierarchyId: browserStorageHierarchy.hierarchyId,
-            brainRegionId: result?.brainRegion?.id || browserStorageHierarchy.brainRegionId,
-          });
+          isInitializedRef.current = true;
+          return;
         }
-        isInitializedRef.current = true;
-        return;
       }
-      // priority 4: Defaults config
+
       if (defaultHierarchy) {
         const result = await changeLocalStoreHierarchySpecies(defaultHierarchy.id);
         const fallbackRegionId =
           runtimeHierarchyById.get(defaultHierarchy.id)?.fallbackDefaultSelectedRegionId ??
           config.MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID;
 
-        const newSelection: BrainRegionHierarchySelection = {
+        setBrowserStorageHierarchy({
           hierarchyId: defaultHierarchy.id,
           speciesName: defaultHierarchy.species.name,
           brainRegionId: result?.brainRegion?.id ?? fallbackRegionId,
           brainRegionName: result?.brainRegion?.name ?? '',
-        };
-
-        setBrowserStorageHierarchy(newSelection);
-        setUrlState({
-          hierarchyId: newSelection.hierarchyId,
-          brainRegionId: newSelection.brainRegionId,
         });
       }
+
+      isInitializedRef.current = true;
     }
-    sync();
-    isInitializedRef.current = true;
+
+    void sync();
   }, [
     remoteAvailableHierarchies,
     isLoadingAvailableHierarchiesSpecies,
     isLoadingRemotePreference,
     remoteUserPreferenceHierarchySpecies,
-    urlState,
+    urlOverride,
     browserStorageHierarchy,
     defaultHierarchy,
     setBrowserStorageHierarchy,
     changeLocalStoreHierarchySpecies,
     runtimeHierarchyById,
-    setUrlState,
+  ]);
+
+  /**
+   * apply fresh URL overrides after initialization, e.g. on back/forward navigation
+   * within a synced route.
+   */
+  useEffect(() => {
+    if (
+      !isInitializedRef.current ||
+      isLoadingAvailableHierarchiesSpecies ||
+      remoteAvailableHierarchies?.length === 0 ||
+      !urlOverride?.hierarchyId
+    ) {
+      if (!urlOverride?.hierarchyId) {
+        lastAppliedUrlOverrideRef.current = null;
+      }
+      return;
+    }
+
+    const overrideKey = `${urlOverride.hierarchyId}:${urlOverride.brainRegionId}`;
+    if (lastAppliedUrlOverrideRef.current === overrideKey) return;
+
+    const matchesSelectedRegion =
+      selectedBrainRegion?.hierarchy_id === urlOverride.hierarchyId &&
+      (!urlOverride.brainRegionId || selectedBrainRegion?.id === urlOverride.brainRegionId);
+
+    if (matchesSelectedRegion) {
+      lastAppliedUrlOverrideRef.current = overrideKey;
+      return;
+    }
+
+    const currentUrlOverride = urlOverride;
+
+    async function applyUrlOverride() {
+      const hierarchy = remoteAvailableHierarchies?.find(
+        (h) => h.id === currentUrlOverride.hierarchyId
+      );
+      if (!hierarchy) return;
+
+      const result = await changeLocalStoreHierarchySpecies(
+        hierarchy.id,
+        currentUrlOverride.brainRegionId || null
+      );
+      if (result?.brainRegion) {
+        setBrowserStorageHierarchy({
+          hierarchyId: hierarchy.id,
+          speciesName: hierarchy.species.name,
+          brainRegionId: result.brainRegion.id,
+          brainRegionName: result.brainRegion.name,
+          perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
+        });
+      }
+      lastAppliedUrlOverrideRef.current = overrideKey;
+    }
+
+    void applyUrlOverride();
+  }, [
+    isLoadingAvailableHierarchiesSpecies,
+    remoteAvailableHierarchies,
+    urlOverride,
+    selectedBrainRegion,
+    browserStorageHierarchy,
+    changeLocalStoreHierarchySpecies,
+    setBrowserStorageHierarchy,
   ]);
 
   /**
@@ -488,7 +534,7 @@ export function useWorkspaceHierarchyRegistry() {
     if (!defaultBrainRegionObject) return; // no default region available
 
     // check if we have a stored brain region to restore
-    const storedRegionId = browserStorageHierarchy?.brainRegionId || urlState.brainRegionId;
+    const storedRegionId = browserStorageHierarchy?.brainRegionId || urlOverride?.brainRegionId;
     if (storedRegionId) {
       const storedRegion = find(brainRegions.options, (o) => o.data.id === storedRegionId)?.data;
       if (storedRegion) {
@@ -502,7 +548,7 @@ export function useWorkspaceHierarchyRegistry() {
 
     // update stores with default region
     const currentHierarchyId =
-      urlState.hierarchyId ||
+      urlOverride?.hierarchyId ||
       browserStorageHierarchy?.hierarchyId ||
       defaultHierarchy?.id ||
       config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
@@ -523,7 +569,7 @@ export function useWorkspaceHierarchyRegistry() {
     selectedBrainRegion,
     defaultBrainRegionObject,
     browserStorageHierarchy,
-    urlState,
+    urlOverride,
     defaultHierarchy,
     workspaceSpecies,
     setSelectedBrainRegion,
@@ -531,7 +577,7 @@ export function useWorkspaceHierarchyRegistry() {
 
   // compute effective hierarchy ID
   const workspaceHierarchyId =
-    urlState.hierarchyId ||
+    urlOverride?.hierarchyId ||
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
     browserStorageHierarchy?.hierarchyId ||
     config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;

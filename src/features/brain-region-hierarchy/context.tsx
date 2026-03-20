@@ -4,11 +4,16 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 import { capitalize, isNil } from 'es-toolkit/compat';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
 import { parseAsString, useQueryStates } from 'nuqs';
+import { createContext, useContext } from 'react';
 
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
 import { flattenTreeAsObject, renameKeyDeep } from '@/components/tree/elements/helpers';
 import { config } from '@/config';
 import { useBrainRegionAtlasQuery } from '@/features/brain-atlas-viewer/context';
+import {
+  BrainRegionUrlBoundaryMode,
+  type TBrainRegionUrlBoundaryMode,
+} from '@/features/brain-region-hierarchy/constants';
 import {
   getLeavesForEachRegion,
   getLeavesForEachRegionExtended,
@@ -53,6 +58,22 @@ export const { APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID, MOUSE_ATLAS__ID } = confi
 export const brainRegionSidebarAtom = atom(false);
 export const selectedBrainRegionAtom = atom<BrainRegionHierarchyBase | null>(null);
 
+export type BrainRegionUrlOverride = {
+  brainRegionId: string;
+  hierarchyId: string;
+};
+export const BrainRegionUrlBoundaryContext = createContext<{
+  mode: TBrainRegionUrlBoundaryMode;
+  urlOverride: BrainRegionUrlOverride | null;
+}>({
+  mode: BrainRegionUrlBoundaryMode.None,
+  urlOverride: null,
+});
+
+export function useBrainRegionUrlBoundaryContext() {
+  return useContext(BrainRegionUrlBoundaryContext);
+}
+
 /**
  * atom for storing the currently selected species information
  * used for multi-species brain region hierarchy support
@@ -91,8 +112,8 @@ export function useHierarchyBrainRegionUrlState() {
  * Retrieves the root brain-region hierarchy and provides a flattened list of options for UI controls.
  *
  * Resolution priority for the hierarchy id:
- * 1. UrlState
- * 2. Remote user preference)
+ * 1. Transient URL override (when a sync boundary is mounted)
+ * 2. Remote user preference
  * 3. Local storage
  * 4. APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID
  *
@@ -105,27 +126,27 @@ export function useHierarchyBrainRegionUrlState() {
 export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
   const { remoteUserPreferenceHierarchySpecies, loading: loadingRemote } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
-  const { urlState } = useHierarchyBrainRegionUrlState();
+  const { urlOverride } = useBrainRegionUrlBoundaryContext();
   const [browserStorageHierarchy] = useLocalStorage<BrainRegionHierarchySelection | null>(
     VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT,
     null
   );
-  // Priority: Url hierarchy ID > Remote ID > browser storage selection > config default
+  // Priority: URL override > Remote ID > browser storage selection > config default
   const hierarchyId =
-    urlState.hierarchyId ||
+    urlOverride?.hierarchyId ||
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
     browserStorageHierarchy?.hierarchyId ||
     APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
 
   const usedHierarchyId = config?.hId ?? hierarchyId;
 
-  function select(result: IBrainRegionHierarchy) {
+  function select(result: IBrainRegionHierarchy, explicitHierarchyId = usedHierarchyId) {
     return {
-      root: injectHierarchyId(result, usedHierarchyId),
+      root: injectHierarchyId(result, explicitHierarchyId),
       options: flattenTreeAsObject<IBrainRegionHierarchy>(result).map((region) => ({
         value: region.id,
         label: capitalize(`${region.name}`),
-        data: { ...region, hierarchy_id: usedHierarchyId },
+        data: { ...region, hierarchy_id: explicitHierarchyId },
       })),
     };
   }
@@ -135,7 +156,7 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
       queryKey: keyBuilderHierarchy.hierarchy({ id }),
       queryFn: () => getBrainRegionHierarchy({ id }),
       enabled,
-      select,
+      select: (result) => select(result, id),
       staleTime: Infinity,
       gcTime: Infinity,
       refetchOnWindowFocus: false,
