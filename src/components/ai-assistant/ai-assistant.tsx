@@ -1,6 +1,6 @@
 'use client';
 
-import { FullscreenExitOutlined, FullscreenOutlined, RightOutlined } from '@ant-design/icons';
+import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
@@ -130,7 +130,7 @@ export default function AiAssistant({
                   aria-label="Collapse"
                   title="Collapse"
                 >
-                  <RightOutlined />
+                  <MinusOutlined />
                 </button>
               )}
             </div>
