@@ -10,6 +10,7 @@ import {
 import { Input } from 'antd';
 import { AnimatePresence, motion } from 'framer-motion';
 import { atom } from 'jotai';
+import { memo } from 'react';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
@@ -18,7 +19,13 @@ import { isAtom, isPlainObject } from './utils';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
-import type { AtomsMap, Config, ConfigValue, IBlockDictionary } from '@/features/scan-config/types';
+import type {
+  AtomsMap,
+  Config,
+  ConfigValue,
+  IBlockDictionary,
+  TBlock,
+} from '@/features/scan-config/types';
 
 export default function BlockDictionaryEntries({
   config,
@@ -165,7 +172,7 @@ export default function BlockDictionaryEntries({
                       role="button"
                       key={subkey}
                       className={cn(
-                        'text-primary-8 flex flex-col h-15 min-h-12.5 min-w-37.5',
+                        'text-primary-8 flex items-center h-15 min-h-12.5 min-w-37.5',
                         'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
                         'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white mb-3',
                         {
@@ -181,155 +188,147 @@ export default function BlockDictionaryEntries({
                         }
                       }}
                     >
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex-1 min-w-0 text-left">
-                          {isSelected && isEditingKey && !readOnly && (
-                            <>
-                              <Input
-                                value={newKey}
-                                className="inline-block h-5 w-[70%] text-sm outline-none"
-                                classNames={{
-                                  input: 'border-none !bg-transparent text-white',
-                                }}
-                                ref={(element) => element?.focus()}
-                                onKeyDown={(e) => {
-                                  e.stopPropagation();
-                                  if (e.key === 'Enter') {
-                                    onNameChangeConfirm(e);
-                                  }
-                                }}
-                                maxLength={24}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={(v) => {
-                                  v.stopPropagation();
-                                  setNewKey(v.currentTarget.value);
-                                }}
-                                status={newKeyError ? 'error' : undefined}
-                                size="small"
-                              />
-                              <div className="ml-3 inline-block">
-                                <CheckOutlined
-                                  className={cn('mr-2', newKeyError && 'opacity-30')}
-                                  disabled={newKeyError}
-                                  onClick={onNameChangeConfirm}
-                                />
-
-                                <CloseOutlined
-                                  onClick={() => {
-                                    setIsEditingKey(false);
-                                    setNewKey('');
-                                  }}
-                                />
-                              </div>
-                            </>
-                          )}
-
-                          {(!isSelected || (isSelected && !isEditingKey)) && (
-                            <div className="flex items-center">
-                              <div className="inline-block truncate max-w-[24ch]">{subkey}</div>
-                              {!readOnly && !campaignId && isChatReady && (
-                                <EditOutlined
-                                  className="ml-3"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedEntry(subkey);
-                                    setIsEditingKey(true);
-                                    setNewKey(subkey);
-                                  }}
-                                />
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex gap-2 text-[14px]">
-                          {errors?.find((error) =>
-                            error.instancePath.startsWith(`/${rootElement}/${subkey}`)
-                          ) ? (
-                            <WarningFilled className="text-yellow-400!" />
-                          ) : (
-                            <CheckCircleFilled className="text-green-600!" />
-                          )}
-
-                          {!campaignId && !loading && !readOnly && isChatReady && (
-                            <DeleteOutlined
-                              className="cursor-pointer"
-                              onClick={(e) => {
+                      <div className="flex-1 min-w-0 text-left">
+                        {isSelected && isEditingKey && !readOnly && (
+                          <>
+                            <Input
+                              value={newKey}
+                              className="inline-block h-5 w-[70%] text-sm outline-none"
+                              classNames={{
+                                input: 'border-none !bg-transparent text-white',
+                              }}
+                              ref={(element) => element?.focus()}
+                              onKeyDown={(e) => {
                                 e.stopPropagation();
+                                if (e.key === 'Enter') {
+                                  onNameChangeConfirm(e);
+                                }
+                              }}
+                              maxLength={24}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(v) => {
+                                v.stopPropagation();
+                                setNewKey(v.currentTarget.value);
+                              }}
+                              status={newKeyError ? 'error' : undefined}
+                              size="small"
+                            />
+                            <div className="ml-3 inline-block">
+                              <CheckOutlined
+                                className={cn('mr-2', newKeyError && 'opacity-30')}
+                                disabled={newKeyError}
+                                onClick={onNameChangeConfirm}
+                              />
 
-                                setEditing(false);
+                              <CloseOutlined
+                                onClick={() => {
+                                  setIsEditingKey(false);
+                                  setNewKey('');
+                                }}
+                              />
+                            </div>
+                          </>
+                        )}
 
-                                const selectedTabAtoms = atomsMap[selectedRootElement];
+                        {(!isSelected || (isSelected && !isEditingKey)) && (
+                          <div className="flex items-center">
+                            <div className="inline-block truncate max-w-[24ch]">{subkey}</div>
+                            {!readOnly && !campaignId && isChatReady && (
+                              <EditOutlined
+                                className="ml-3"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedEntry(subkey);
+                                  setIsEditingKey(true);
+                                  setNewKey(subkey);
+                                }}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
 
-                                if (!isAtom(selectedTabAtoms)) {
-                                  delete selectedTabAtoms[subkey];
+                      <div className="flex gap-2 text-[14px]">
+                        {errors?.find((error) =>
+                          error.instancePath.startsWith(`/${rootElement}/${subkey}`)
+                        ) ? (
+                          <WarningFilled className="text-yellow-400!" />
+                        ) : (
+                          <CheckCircleFilled className="text-green-600!" />
+                        )}
 
-                                  // Initialize case
-                                  const configInitialize = config.initialize;
-                                  if (
-                                    isPlainObject(configInitialize) &&
-                                    isPlainObject(configInitialize.node_set) &&
-                                    typeof configInitialize.node_set.block_name === 'string' &&
-                                    configInitialize.node_set.block_name === subkey
-                                  ) {
-                                    atomsMap.initialize = atom<Record<string, ConfigValue>>({
-                                      ...configInitialize,
-                                      node_set: null,
-                                    });
-                                  }
+                        {!campaignId && !loading && !readOnly && isChatReady && (
+                          <DeleteOutlined
+                            className="cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
 
-                                  // Check all keys in the config
-                                  Object.entries(config)
-                                    .filter(([configK]) => configK !== 'initialize')
-                                    .forEach(([configK, configV]) => {
-                                      if (typeof configV !== 'object') return;
+                              setEditing(false);
 
-                                      // Check all keys in a section (e.g stimuli, recordings)
-                                      Object.entries(configV).forEach(([entryKey, entryV]) => {
-                                        if (!isPlainObject(entryV)) return;
+                              const selectedTabAtoms = atomsMap[selectedRootElement];
 
-                                        // Check all values in a particular object (a single stimuli, a single timestamp, etc)
-                                        Object.entries(entryV).forEach(([fieldK, field]) => {
-                                          if (
-                                            !isPlainObject(entryV) ||
-                                            !isPlainObject(field) ||
-                                            typeof field.block_name !== 'string' ||
-                                            isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
-                                            field.block_name !== subkey
-                                          )
-                                            return;
+                              if (!isAtom(selectedTabAtoms)) {
+                                delete selectedTabAtoms[subkey];
 
-                                          // Deleting the reference to current object
-
-                                          delete entryV[fieldK]; //eslint-disable-line
-
-                                          // The atom that has a reference to current object
-                                          atomsMap[configK][entryKey] =
-                                            atom<Record<string, ConfigValue>>(entryV);
-                                        });
-                                      });
-                                    });
-
-                                  setAtomsMap({
-                                    ...atomsMap,
-                                    [selectedRootElement]: {
-                                      ...selectedTabAtoms,
-                                    },
+                                // Initialize case
+                                const configInitialize = config.initialize;
+                                if (
+                                  isPlainObject(configInitialize) &&
+                                  isPlainObject(configInitialize.node_set) &&
+                                  typeof configInitialize.node_set.block_name === 'string' &&
+                                  configInitialize.node_set.block_name === subkey
+                                ) {
+                                  atomsMap.initialize = atom<Record<string, ConfigValue>>({
+                                    ...configInitialize,
+                                    node_set: null,
                                   });
                                 }
 
-                                setSelectedEntry('');
-                                allEntries.delete(subkey);
-                              }}
-                            />
-                          )}
-                        </div>
-                      </div>
+                                // Check all keys in the config
+                                Object.entries(config)
+                                  .filter(([configK]) => configK !== 'initialize')
+                                  .forEach(([configK, configV]) => {
+                                    if (typeof configV !== 'object') return;
 
-                      <div className="inline-block text-left truncate max-w-[24ch]">
-                        {isPlainObject(subValue) &&
-                          typeof subValue.type === 'string' &&
-                          subValue.type}
+                                    // Check all keys in a section (e.g stimuli, recordings)
+                                    Object.entries(configV).forEach(([entryKey, entryV]) => {
+                                      if (!isPlainObject(entryV)) return;
+
+                                      // Check all values in a particular object (a single stimuli, a single timestamp, etc)
+                                      Object.entries(entryV).forEach(([fieldK, field]) => {
+                                        if (
+                                          !isPlainObject(entryV) ||
+                                          !isPlainObject(field) ||
+                                          typeof field.block_name !== 'string' ||
+                                          isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
+                                          field.block_name !== subkey
+                                        )
+                                          return;
+
+                                        // Deleting the reference to current object
+
+                                        delete entryV[fieldK]; //eslint-disable-line
+
+                                        // The atom that has a reference to current object
+                                        atomsMap[configK][entryKey] =
+                                          atom<Record<string, ConfigValue>>(entryV);
+                                      });
+                                    });
+                                  });
+
+                                setAtomsMap({
+                                  ...atomsMap,
+                                  [selectedRootElement]: {
+                                    ...selectedTabAtoms,
+                                  },
+                                });
+                              }
+
+                              setSelectedEntry('');
+                              allEntries.delete(subkey);
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                   </TooltipTrigger>
@@ -346,14 +345,14 @@ export default function BlockDictionaryEntries({
                     arrowClassName="bg-primary-8"
                   >
                     <div className="text-base">
-                      {
-                        rootElementSchema.additionalProperties.oneOf.find((v) => {
+                      <BlockDictionaryEntryTooltip
+                        blockType={rootElementSchema.additionalProperties.oneOf.find((v) => {
                           if (!isPlainObject(subValue)) return null;
                           if (typeof subValue.type !== 'string') return null;
 
                           return v.properties.type.const === subValue.type;
-                        })?.description
-                      }
+                        })}
+                      />
                     </div>
                   </TooltipContent>
                 </Tooltip>
@@ -385,3 +384,18 @@ export default function BlockDictionaryEntries({
     </AnimatePresence>
   );
 }
+
+const BlockDictionaryEntryTooltip = memo(
+  ({ blockType }: { blockType?: TBlock }) => {
+    if (!blockType) return null;
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="font-bold">{blockType.title}</div>
+        <div>{blockType.description}</div>
+      </div>
+    );
+  },
+  (prevProps, props) => {
+    return prevProps.blockType?.properties.type.const === props.blockType?.properties.type.const;
+  }
+);
