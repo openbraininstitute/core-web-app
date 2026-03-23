@@ -4,7 +4,7 @@ import { config } from '@/config';
 import type {
   MemberResponse,
   MembersResponse,
-  TRole,
+  Role,
   VlmDeleteProjectMemberResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import type { VlmResponse } from '@/types/virtual-lab/common';
@@ -86,7 +86,7 @@ export async function updateVirtualLabUserRole({
 }: {
   virtualLabId: string;
   userId: string;
-  newRole: TRole;
+  newRole: Role;
 }): Promise<MemberResponse> {
   const session = await getSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/users/role`, {
@@ -130,7 +130,7 @@ export async function cancelVirtualLabInvite({
 }: {
   virtualLabId: string;
   email: string;
-  role?: TRole;
+  role?: Role;
 }): Promise<VlmResponse<null>> {
   const session = await getSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/invites/cancel`, {
@@ -210,7 +210,7 @@ export async function updateProjectUserRole({
   virtualLabId: string;
   projectId: string;
   userId: string;
-  newRole: TRole;
+  newRole: Role;
 }): Promise<MemberResponse> {
   const session = await getSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/projects/${projectId}/users/role`, {
@@ -256,7 +256,7 @@ export async function cancelProjectInvite({
   virtualLabId: string;
   projectId: string;
   email: string;
-  role?: TRole;
+  role?: Role;
 }): Promise<VlmResponse<null>> {
   const session = await getSession();
   const response = await fetch(`${baseUri}/${virtualLabId}/projects/${projectId}/invites/cancel`, {

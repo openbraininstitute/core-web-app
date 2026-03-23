@@ -1,21 +1,20 @@
 'use client';
 
+import Table, { ColumnsType } from 'antd/es/table';
 import { useQuery } from '@tanstack/react-query';
 import { ConfigProvider, theme } from 'antd';
-import Table, { type ColumnsType } from 'antd/es/table';
 import { format } from 'date-fns';
 import { useState } from 'react';
 
-import { listStandalonePayments } from '@/api/virtual-lab-svc/queries/payment';
-import { FileDownloadFill } from '@/components/icons/EditorIcons';
 import { HistoryError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
-import { Button } from '@/ui/molecules/button';
-import { Card, CardContent, CardTitle } from '@/ui/molecules/card';
 import { CONVERSION_RATE } from '@/ui/segments/virtual-lab-settings/elements/helpers';
+import { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
+import { listStandalonePayments } from '@/api/virtual-lab-svc/queries/payment';
+import { Card, CardContent, CardTitle } from '@/ui/molecules/card';
+import { FileDownloadFill } from '@/components/icons/EditorIcons';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
-
-import type { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
 
 export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
   const [pagination, setPagination] = useState({ page: 1, pageSize: 5 });
@@ -134,8 +133,7 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
                 '[&_.ant-spin-blur]:opacity-0!',
                 '[&_.ant-empty-description]:text-white!',
                 'me [&:has(.ant-table-empty)_td:last]:border-b-none!',
-                '[&_td]:last:border-b-0! bg-primary-9!',
-                ' [&_.ant-table-cell]:bg-primary-9!  [&_.ant-table-cell]:text-white!'
+                '[&_td]:last:border-b-0!'
               )}
               rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
               pagination={{

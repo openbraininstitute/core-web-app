@@ -1,17 +1,16 @@
-import { isEmpty } from 'es-toolkit/compat';
+import isEmpty from 'es-toolkit/compat/isEmpty';
 
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { LabTypeEnum, type VirtualLabPayload } from '@/api/virtual-lab-svc/types';
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 
 import type {
-  TVirtualLab,
-  TVirtualLabExistsVerificationResponse,
-  TVirtualLabListResponse,
-  TVirtualLabResponse,
+  VirtualLab,
+  VirtualLabExistsVerificationResponse,
+  VirtualLabListResponse,
+  VirtualLabResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import type { TVirtualLabPayload } from '@/api/virtual-lab-svc/validation';
 import type { VlmResponse } from '@/types/virtual-lab/common';
 
 function getBaseUrl() {
@@ -40,7 +39,7 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
       throw new Error('validating virtual lab name failed', { cause: await response.json() });
     }
 
-    const result = (await response.json()) as TVirtualLabExistsVerificationResponse;
+    const result = (await response.json()) as VirtualLabExistsVerificationResponse;
     return result.data?.exists ?? null;
   } catch (error) {
     // TODO: capture exception with sentry
@@ -53,12 +52,10 @@ export async function checkVirtualLabExists({ name }: { name: string }): Promise
  *
  * @param {Object} params - Parameters for virtual lab creation.
  * @param {VirtualLabPayload} lab - The virtual lab details.
- * @returns {Promise<TVirtualLabResponse>} - api response with the created virtual lab.
+ * @returns {Promise<VirtualLabResponse>} - api response with the created virtual lab.
  * @throws {Error} - Throws an error if the request fails or the response is invalid.
  */
-export async function createVirtualLab({
-  ...lab
-}: TVirtualLabPayload): Promise<TVirtualLabResponse> {
+export async function createVirtualLab({ ...lab }: VirtualLabPayload): Promise<VirtualLabResponse> {
   const session = await getSession();
   const response = await fetch(getBaseUrl(), {
     method: 'post',
@@ -74,14 +71,14 @@ export async function createVirtualLab({
     throw new Error(`creating virtual lab failed`, { cause: res });
   }
 
-  const result: TVirtualLabResponse = await response.json();
+  const result: VirtualLabResponse = await response.json();
   return result;
 }
 
 /**
  * List all virtual labs for a user.
  *
- * @returns {Promise<TVirtualLabResponse[]>} - api response with the list of virtual labs.
+ * @returns {Promise<VirtualLabResponse[]>} - api response with the list of virtual labs.
  * @throws {Error} - Throws an error if the request fails or the response is invalid.
  */
 
@@ -95,7 +92,7 @@ export async function listVirtualLabs({
   page?: number;
   size?: number;
   query?: string;
-}): Promise<TVirtualLabListResponse> {
+}): Promise<VirtualLabListResponse> {
   const session = await getSession();
   const params = new URLSearchParams({
     page: page.toString(),
@@ -123,7 +120,7 @@ export async function listVirtualLabs({
     throw new Error(`listing virtual labs failed`, { cause: await response.json() });
   }
 
-  const result: TVirtualLabListResponse = await response.json();
+  const result: VirtualLabListResponse = await response.json();
   return result;
 }
 
@@ -131,10 +128,10 @@ export async function listVirtualLabs({
  * Get details for a single virtual lab.
  *
  * @param {string} id - The ID of the virtual lab to retrieve
- * @returns {Promise<TVirtualLabResponse>} - API response with the virtual lab details
+ * @returns {Promise<VirtualLabResponse>} - API response with the virtual lab details
  * @throws {Error} - Throws an error if the request fails or the response is invalid
  */
-export async function getVirtualLab(id: string): Promise<TVirtualLabResponse> {
+export async function getVirtualLab(id: string): Promise<VirtualLabResponse> {
   const session = await getSession();
   const response = await fetch(`${getBaseUrl()}/${id}`, {
     method: 'get',
@@ -148,7 +145,7 @@ export async function getVirtualLab(id: string): Promise<TVirtualLabResponse> {
     throw new Error(`getting virtual lab failed`, { cause: await response.json() });
   }
 
-  const result: TVirtualLabResponse = await response.json();
+  const result: VirtualLabResponse = await response.json();
   return result;
 }
 
@@ -184,7 +181,7 @@ export async function updateVirtualLab({
   updatePayload: VirtualLabUpdate;
 }) {
   const api = await virtualLabRootApi();
-  return await api.patch<VlmResponse<{ virtual_lab: TVirtualLab }>>(
+  return await api.patch<VlmResponse<{ virtual_lab: VirtualLab }>>(
     `/virtual-labs/${virtualLabId}`,
     {
       headers: {

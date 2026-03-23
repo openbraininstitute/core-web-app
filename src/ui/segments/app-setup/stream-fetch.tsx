@@ -1,5 +1,4 @@
 import { log } from '@/utils/logger';
-
 import type { TWorkspaceBootstrapStepStatus } from '@/ui/segments/app-setup/helpers';
 
 export interface StreamItem {
@@ -8,7 +7,6 @@ export interface StreamItem {
   message: string;
   progress: number;
   data: any;
-  errorCode?: string;
 }
 
 export async function* streamingFetch(
@@ -51,15 +49,6 @@ export async function* streamingFetch(
             log('error', 'Failed to parse JSON:', e);
           }
         }
-      }
-    }
-
-    if (buffer.trim()) {
-      try {
-        const data = JSON.parse(buffer);
-        yield data as StreamItem;
-      } catch (e) {
-        log('error', 'Failed to parse remaining buffer:', e);
       }
     }
   } finally {

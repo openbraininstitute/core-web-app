@@ -1,13 +1,12 @@
+import { VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import authFetch, { authFetchRetryOnError } from '@/auth-fetch';
 import { config } from '@/config';
+import { VirtualLabBalanceResponse } from '@/types/accounting';
+import { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import { assertApiResponse } from '@/util/utils';
 
-import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
-import type { VirtualLabBalanceResponse } from '@/types/accounting';
-import type { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
-
 export async function getVirtualLabsOfUser(): Promise<
-  VlmResponse<VirtualLabAPIListData<TVirtualLab>>
+  VlmResponse<VirtualLabAPIListData<VirtualLab>>
 > {
   const response = await authFetchRetryOnError(`${config.VIRTUAL_LAB_API_URL}/virtual-labs`);
 
@@ -18,11 +17,11 @@ export async function getVirtualLabsOfUser(): Promise<
 }
 
 export async function patchVirtualLab(
-  partialVlab: Partial<TVirtualLab>,
+  partialVlab: Partial<VirtualLab>,
   id: string
 ): Promise<
   VlmResponse<{
-    virtual_lab: TVirtualLab;
+    virtual_lab: VirtualLab;
   }>
 > {
   const res = await authFetch(`${config.VIRTUAL_LAB_API_URL}/virtual-labs/${id}`, {

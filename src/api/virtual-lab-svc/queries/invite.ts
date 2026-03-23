@@ -1,7 +1,7 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 
 import type { InviteResponse } from '@/api/virtual-lab-svc/queries/types';
-import type { TUserRole } from '@/api/virtual-lab-svc/validation';
+import type { Role } from '@/api/virtual-lab-svc/types';
 import type { AcceptInviteResponse, InvitationContentResponse } from '@/types/virtual-lab/invites';
 
 export async function inviteToProject({
@@ -13,7 +13,7 @@ export async function inviteToProject({
   virtualLabId: string;
   projectId: string;
   email: string;
-  role: TUserRole;
+  role: Role;
 }): Promise<InviteResponse> {
   const api = await virtualLabRootApi();
   return await api.post(`/virtual-labs/${virtualLabId}/projects/${projectId}/invites`, {
@@ -31,7 +31,7 @@ export async function inviteToVirtualLab({
 }: {
   virtualLabId: string;
   email: string;
-  role: TUserRole;
+  role: Role;
 }): Promise<InviteResponse> {
   const api = await virtualLabRootApi();
   return await api.post(`/virtual-labs/${virtualLabId}/invites`, {

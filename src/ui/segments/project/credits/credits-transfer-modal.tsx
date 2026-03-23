@@ -12,7 +12,7 @@ import { Modal } from '@/ui/molecules/modal';
 import { PillTabs, PillTabsContent, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import {
   ManageCreditsStep,
-  type ManageCreditsStepHandle,
+  ManageCreditsStepHandle,
 } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
 import {
   PaymentModeSelection,
@@ -84,7 +84,7 @@ function BuyCreditsTab({
     .otherwise(() => null);
 
   return (
-    <div className="flex h-full w-full flex-col" data-widget="buy-credits-form">
+    <div className="flex h-full w-full flex-col">
       {showBackButton && (
         <div className="mb-4 flex items-center">
           <Button
@@ -93,16 +93,14 @@ function BuyCreditsTab({
             variant="ghost"
             size="sm"
             onClick={handleBackToSelection}
-            className="hover:bg-neutral-2/20 h-auto px-4! py-2! text-white hover:text-white"
+            className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
           >
             <ArrowLeftOutlined className="text-lg" />
             <span className="ml-2 text-base font-semibold text-white select-none">Back</span>
           </Button>
         </div>
       )}
-      <div className="w-full h-full" data-widget={mode}>
-        {content}
-      </div>
+      {content}
     </div>
   );
 }
@@ -136,7 +134,6 @@ export function CreditsTransferModal({ open, onClose }: Props) {
 
   return (
     <Modal
-      id="model-credits-manager"
       closable={false}
       open={open}
       title={
@@ -187,27 +184,18 @@ export function CreditsTransferModal({ open, onClose }: Props) {
       animation="scale"
       maxWidth={700}
       width={700}
-      className={cn(
-        'bg-primary-9! fixed! top-1/2! left-1/2! z-1000! -translate-x-1/2! -translate-y-1/2! transform!',
-        'h-190'
-      )}
+      className="!bg-primary-9 !fixed !top-1/2 !left-1/2 !z-[1000] !-translate-x-1/2 !-translate-y-1/2 !transform"
       headerClassName={cn('[&>div]:w-full')}
-      bodyClassName="pt-0 max-h-[calc(100%-130px)] h-full"
     >
-      <PillTabs
-        value={activeTab}
-        onValueChange={handleTabChange}
-        activationMode="manual"
-        className="h-full"
-      >
-        <PillTabsContent value="transfer" className="mt-0 h-full">
-          <div className="flex flex-col h-full">
+      <PillTabs value={activeTab} onValueChange={handleTabChange} activationMode="manual">
+        <PillTabsContent value="transfer">
+          <div className="flex flex-col">
             <div className="mb-4 flex justify-end">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => creditsRef.current?.swap()}
-                className="bg-primary-8 hover:bg-neutral-1/40 border-white/20 p-2!"
+                className="bg-primary-8 hover:bg-neutral-1/40 border-white/20 !p-2"
                 disabled={creditsRef.current?.isPending}
               >
                 <SwapOutlined className="text-sm text-white!" />
@@ -218,12 +206,12 @@ export function CreditsTransferModal({ open, onClose }: Props) {
               onBack={onClose}
               shouldHaveBack={false}
               shouldShowSwap={false}
-              buttonClassname="mt-10"
+              buttonClassname="mt-20"
               ref={creditsRef}
             />
           </div>
         </PillTabsContent>
-        <PillTabsContent value="buy" className="mt-0 h-full">
+        <PillTabsContent value="buy">
           <BuyCreditsTab
             virtualLabId={virtualLabId}
             onClose={onClose}

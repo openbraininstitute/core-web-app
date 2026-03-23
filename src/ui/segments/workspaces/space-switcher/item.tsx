@@ -2,7 +2,7 @@
 
 import { DownOutlined, LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { orderBy } from 'es-toolkit/compat';
+import orderBy from 'es-toolkit/compat/orderBy';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from 'react';
 
@@ -16,10 +16,10 @@ import {
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
-import type { Project, TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type { Project, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
-  lab: TVirtualLab & { isMine: boolean };
+  lab: VirtualLab & { isMine: boolean };
   isActive: boolean;
   isOpen: boolean;
   activeProjectId: string | null;
@@ -104,7 +104,6 @@ export function Item({
 
   return (
     <div className={cn('border-neutral-2 text-primary-9 bg-background mx-3 rounded-2xl border')}>
-      {/** biome-ignore lint/a11y/useSemanticElements: button can't have nested buttons */}
       <div
         role="button"
         tabIndex={-1}

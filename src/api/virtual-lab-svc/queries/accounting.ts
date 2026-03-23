@@ -1,4 +1,6 @@
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+// `${virtualLabApi.url}/virtual-labs/${virtualLabId}/projects/${projectId}/accounting/reports
+
+import { virtualLabRootApi } from '../utils';
 
 const baseUri = '/virtual-labs';
 
