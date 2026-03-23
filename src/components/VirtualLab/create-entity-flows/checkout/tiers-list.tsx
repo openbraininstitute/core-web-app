@@ -1,33 +1,30 @@
 'use client';
 
 import { CheckCircleFilled, InfoCircleOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
-import { Tooltip } from 'antd';
-import { kebabCase, noop, toUpper } from 'es-toolkit/compat';
-import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
+import { Tooltip } from 'antd';
+import { useAtom } from 'jotai';
+import kebabCase from 'es-toolkit/compat/kebabCase';
+import toUpper from 'es-toolkit/compat/toUpper';
+import noop from 'es-toolkit/compat/noop';
 
 import { tryCatch } from '@/api/utils';
-import { getVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 import ContactUs from '@/components/VirtualLab/create-entity-flows/checkout/contact-us';
 import DowngradeFree from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
 import {
+  ExtendedTier,
   flowAtom,
   getAllTiers,
   Switch,
-  type TExtendedTier,
-  type TSingleTier,
-  type TTierFeature,
+  Tier,
+  TierFeature,
 } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/checkout/skeleton';
-import { Button } from '@/ui/molecules/button';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { classNames } from '@/util/utils';
+import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
-
-import type { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
@@ -44,7 +41,7 @@ type TTiersStep = (typeof TiersStep)[keyof typeof TiersStep];
 
 type TiersComparisonPros = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
-  tiers: Array<TExtendedTier>;
+  tiers: Array<ExtendedTier>;
   onSelectPremiumTier: () => void;
   onSelectFree: () => void;
   subscriptionData: UserActiveSubscriptionResponse;
@@ -59,19 +56,9 @@ function TiersComparison({
 }: TiersComparisonPros) {
   const [{ interval, currency }, updateFlowState] = useAtom(flowAtom);
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
-
-  const { data: virtualLabData, isPending } = useQuery({
-    queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
-    queryFn: async () => await listVirtualLabs({ include: [LabTypeEnum.MY_LAB] }),
-  });
-
-  const onTierClick = (t: TExtendedTier) => () => {
+  const onTierClick = (t: ExtendedTier) => () => {
     if (t.title === 'Pro' && t.app_id) {
-      if (!isPending && !virtualLabData?.data?.virtual_lab.email_verified) {
-        updateFlowState((prev) => ({ ...prev, tier: t, step: 'email-verification' }));
-      } else {
-        updateFlowState((prev) => ({ ...prev, tier: t, step: 'pay' }));
-      }
+      updateFlowState((prev) => ({ ...prev, tier: t, step: 'pay' }));
     }
   };
 
@@ -94,7 +81,7 @@ function TiersComparison({
       interval: value ? 'year' : 'month',
     }));
 
-  const getPriceDisplay = (t: TSingleTier) => {
+  const getPriceDisplay = (t: Tier) => {
     if (!t.price) return { mainPrice: '0', discountPrice: null };
 
     const priceArray = interval === 'month' ? t.price.month : t.price.yearNormal;
@@ -115,7 +102,7 @@ function TiersComparison({
     return { mainPrice, discountPrice };
   };
 
-  const renderFeatureAvailability = (available: boolean, feature?: TTierFeature) => {
+  const renderFeatureAvailability = (available: boolean, feature?: TierFeature) => {
     if (!available && !feature?.title) return <span className="text-primary-4">—</span>;
     if (!available && feature?.title)
       return (
@@ -143,7 +130,7 @@ function TiersComparison({
     return <CheckCircleFilled className="text-lg text-green-500" />;
   };
 
-  const isFeatureAvailable = (t: TSingleTier, categoryTitle: string, featureTitle: string) => {
+  const isFeatureAvailable = (t: Tier, categoryTitle: string, featureTitle: string) => {
     const category = t.features.find((cat) => cat.title === categoryTitle);
     if (!category || !category.available) return false;
 
@@ -152,10 +139,10 @@ function TiersComparison({
   };
 
   const getFeatureDetails = (
-    t: TSingleTier,
+    t: Tier,
     categoryTitle: string,
     featureTitle: string
-  ): TTierFeature | undefined => {
+  ): TierFeature | undefined => {
     const category = t.features.find((cat) => cat.title === categoryTitle);
     if (!category) return undefined;
 
@@ -164,8 +151,8 @@ function TiersComparison({
 
   const allCategories: { title: string; available?: boolean; features: string[] }[] = [];
 
-  (tiers ?? [])?.forEach((t) => {
-    t.features?.forEach((category) => {
+  tiers?.forEach((t) => {
+    t.features.forEach((category) => {
       let existingCategory = allCategories.find((c) => c.title === category.title);
 
       if (!existingCategory) {
@@ -219,7 +206,6 @@ function TiersComparison({
         <div />
         {tiers.map((t) => {
           return (
-            // biome-ignore lint/a11y/noStaticElementInteractions: already have a button
             <div
               key={`tier-btn${t.id}`}
               className="relative flex flex-col bg-transparent px-4"
@@ -317,8 +303,7 @@ function TiersComparison({
                 <div className="text-base">{feature}</div>
 
                 {tiers.map((t) => (
-                  <button
-                    type="button"
+                  <div
                     key={`${t.id}-${feature}`}
                     className="flex justify-start px-4"
                     onMouseEnter={() => setHoveredTier(t.app_id)}
@@ -328,7 +313,7 @@ function TiersComparison({
                       isFeatureAvailable(t, category.title, feature),
                       getFeatureDetails(t, category.title, feature)
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
             ))}
@@ -364,10 +349,9 @@ function TiersComparison({
           if (isPro) controller = onTierClick(t);
           if (isPremium) controller = onSelectPremiumTier;
           return (
-            // biome-ignore lint/a11y/noStaticElementInteractions: already have a button
             <div
               key={`button-${t.app_id}`}
-              className="relative px-4 mx-auto"
+              className="relative px-4"
               onMouseEnter={() => setHoveredTier(t.app_id)}
               onMouseLeave={() => setHoveredTier(null)}
             >
@@ -400,7 +384,7 @@ function TiersComparison({
 
 export default function TiersList({ currentTier, subscriptionData }: Props) {
   const [loading, setLoading] = useState(true);
-  const [tiers, setTiers] = useState<{ data: Array<TExtendedTier> } | { error: any }>({ data: [] });
+  const [tiers, setTiers] = useState<{ data: Array<ExtendedTier> } | { error: any }>({ data: [] });
   const [currentStep, setCurrentStep] = useState<TTiersStep>(TiersStep.Listing);
 
   const onSelectPremiumTier = () => setCurrentStep(TiersStep.ContactUs);

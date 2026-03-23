@@ -1,35 +1,29 @@
 'use client';
 
+import { PaymentElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { StripeElementsOptions } from '@stripe/stripe-js';
 import { LoadingOutlined } from '@ant-design/icons';
-import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Spin } from 'antd';
-import { isObject } from 'es-toolkit/compat';
 import { useState, useTransition } from 'react';
+import { isObject } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
+import { Spin } from 'antd';
 
-import { tryCatch } from '@/api/utils';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
-import { getVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
-import { CoinsIcon } from '@/components/icons/buttons';
-import { useAppNotification } from '@/components/notification';
-import { getStripe } from '@/components/VirtualLab/Billing/utils';
-import useUserPermissions from '@/hooks/use-user-permissions';
-import { Button, Button as UiButton } from '@/ui/molecules/button';
-import { Input } from '@/ui/molecules/input';
 import { CONVERSION_RATE } from '@/ui/segments/virtual-lab-settings/elements/helpers';
+import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import {
   PurchaseModeDictionary,
   type TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
-import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
+import { Button, Button as UiButton } from '@/ui/molecules/button';
+import { getStripe } from '@/components/VirtualLab/Billing/utils';
+import { useAppNotification } from '@/components/notification';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { CoinsIcon } from '@/components/icons/buttons';
+import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
-
-import { EmailVerification } from './email-verification';
-
-import type { StripeElementsOptions } from '@stripe/stripe-js';
+import { tryCatch } from '@/api/utils';
 
 export const PaymentMode = {
   SetCredits: {
@@ -62,7 +56,7 @@ const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => 
   ],
   appearance: {
     theme: 'stripe', // or 'flat', 'night', etc.
-    labels: 'above', // or 'above'
+    labels: 'floating', // or 'inline'
     variables: {
       fontFamily: 'Titillium Web',
       fontSizeSm: '1rem',
@@ -111,7 +105,7 @@ function AmountForm({
   showControls: boolean;
 }) {
   return (
-    <div className="rounded-2xl bg-[#0a3a76] p-4 backdrop-blur-lg px-4">
+    <div className="rounded-2xl bg-[#0a3a76] p-6 backdrop-blur-lg md:p-8">
       <div className="flex w-full flex-col gap-2">
         <div className="relative w-full">
           <Input
@@ -141,31 +135,27 @@ function AmountForm({
         </div>
 
         {showControls && (
-          <>
-            <div className="mt-6 flex gap-3">
-              <Button
-                rounded
-                onClick={() => onModeChange?.(PurchaseModeDictionary.Selection)}
-                variant="outline"
-                className="h-12 flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
-              >
-                Cancel
-              </Button>
-              <Button
-                rounded
-                onClick={() => onStepChange?.(PaymentModeDictionary.Apply)}
-                disabled={!credits || credits <= 0}
-                className={cn(
-                  'h-12 flex-1 bg-white text-base font-semibold',
-                  'text-blue-900 hover:bg-white/90 disabled:opacity-50'
-                )}
-              >
-                Continue to Payment
-              </Button>
-            </div>
-            <p className="text-center text-sm text-white/60">Secure payment powered by Stripe</p>
-          </>
+          <div className="mt-6 flex gap-3">
+            <Button
+              onClick={() => onModeChange?.(PurchaseModeDictionary.Selection)}
+              variant="outline"
+              className="h-12 flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => onStepChange?.(PaymentModeDictionary.Apply)}
+              disabled={!credits || credits <= 0}
+              className={cn(
+                'h-12 flex-1 bg-white text-base font-semibold',
+                'text-blue-900 hover:bg-white/90 disabled:opacity-50'
+              )}
+            >
+              Continue to Payment
+            </Button>
+          </div>
         )}
+        <p className="text-center text-sm text-white/60">Secure payment powered by Stripe</p>
       </div>
     </div>
   );
@@ -279,17 +269,17 @@ function PaymentForm({
   };
 
   return (
-    <div className="flex h-full w-full flex-col gap-3">
+    <div className="flex h-full w-full flex-col gap-6">
       <AmountForm {...{ credits, onCreditsChange, formLoading, showControls: false }} />
-      <div className="rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white mb-5">
-        <PaymentElement
-          id="credits-form"
-          onReady={onReady}
-          options={{ layout: { type: 'auto' } }}
-        />
+      <div className="rounded-2xl border border-white/10 bg-[#0a3a76] p-5 text-white">
+        <div className="mb-3 p-2 text-lg font-semibold select-none">Payment Details</div>
+        <div className="rounded-lg bg-[#0a3a76] p-2">
+          <PaymentElement id="credits-form" onReady={onReady} />
+        </div>
       </div>
+
       {stripeElementsReady && (
-        <div className="ml-auto flex items-center justify-end gap-4">
+        <div className="mt-auto ml-auto flex items-center justify-end gap-4">
           <UiButton
             rounded
             type="button"
@@ -389,25 +379,10 @@ export function StripePaymentFlow({
   const [step, setStep] = useState<TPaymentModeDictionary>(PaymentModeDictionary.SetCredits);
   const [credits, setCredits] = useState<number | undefined>(undefined);
   const onCreditsChange = (c: number | undefined) => {
-    if (c === undefined || c <= 0) {
-      setStep(PaymentModeDictionary.SetCredits);
-    }
     setCredits(c);
   };
-  const { data: virtualLabData, isLoading } = useQuery({
-    queryKey: keyBuilder.getOneLab({ virtualLabId }),
-    queryFn: () => getVirtualLab(virtualLabId),
-    enabled: Boolean(virtualLabId),
-  });
-  const { isVirtualLabAdmin } = useUserPermissions({ virtualLabId, projectId: undefined });
 
   const onStepChange = (s: TPaymentModeDictionary) => setStep(s);
-
-  // the user is allowed to update the virtual lab reference email
-  // only if the user is an admin
-  if (!isLoading && !virtualLabData?.data?.virtual_lab.email_verified && isVirtualLabAdmin) {
-    return <EmailVerification virtualLabId={virtualLabId} />;
-  }
 
   const content = match({ mode: step, credits })
     .with({ mode: PaymentModeDictionary.SetCredits }, () => (

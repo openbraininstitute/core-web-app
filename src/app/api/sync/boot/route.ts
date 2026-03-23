@@ -1,4 +1,7 @@
-import { pick } from 'es-toolkit/compat';
+/* eslint-disable prefer-destructuring */
+
+import pick from 'es-toolkit/compat/pick';
+import { NextRequest } from 'next/server';
 
 import { tryCatch } from '@/api/utils';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
@@ -12,12 +15,8 @@ import {
 } from '@/ui/segments/app-setup/helpers';
 import { log } from '@/utils/logger';
 
-import type { NextRequest } from 'next/server';
-import type {
-  Project,
-  TVirtualLab,
-  UserProfileResponse,
-} from '@/api/virtual-lab-svc/queries/types';
+import type { Project, UserProfileResponse, VirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type { TEmailStatus } from '@/api/virtual-lab-svc/validation';
 import type {
   TResolvedWorkspace,
   TWorkspaceBootstrapStepStatus,
@@ -27,263 +26,185 @@ import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-type BootstrapBody = {
+type Body = {
   accountPayload: TWorkspaceIdentitySchema | undefined;
   workspaceResolution: TResolvedWorkspace;
   shouldCreateVirtualLab: boolean;
   shouldCreateProject: boolean;
-  resumeFromStep?: string;
 };
 
-type BootstrapState = {
-  virtualLab: TVirtualLab | null;
-  profile: UserProfileResponse | null;
-  project: Project | null;
-};
-
-export type StreamChunk = {
+export type StreamItem = {
   step: string;
   status: TWorkspaceBootstrapStepStatus;
   message: string;
   progress: number;
-  data?: BootstrapState;
-  errorCode?: string;
+  data?: any;
 };
 
-type StepResult = {
-  status: TWorkspaceBootstrapStepStatus;
-  message: string;
-  errorCode?: string;
-};
-
-function createStreamingResponse(stream: ReadableStream<Uint8Array>) {
-  return new Response(stream, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    },
-  });
+class StreamingResponse extends Response {
+  constructor(res: ReadableStream<any>, init?: ResponseInit) {
+    super(res as any, {
+      ...init,
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        ...init?.headers,
+      },
+    });
+  }
 }
 
-function streamFromGenerator(generator: AsyncGenerator<StreamChunk, void, unknown>) {
+const makeStream = <T extends StreamItem>(generator: AsyncGenerator<T, void, unknown>) => {
   const encoder = new TextEncoder();
-  return new ReadableStream<Uint8Array>({
+  return new ReadableStream<any>({
     async start(controller) {
       for await (const chunk of generator) {
-        controller.enqueue(encoder.encode(`${JSON.stringify(chunk)}\n`));
+        const chunkData = encoder.encode(JSON.stringify(chunk) + '\n');
+        controller.enqueue(chunkData);
       }
       controller.close();
     },
   });
-}
-
-async function processIdentity(body: BootstrapBody, state: BootstrapState): Promise<StepResult> {
-  const { shouldCreateVirtualLab, accountPayload, workspaceResolution } = body;
-
-  if (!shouldCreateVirtualLab || !accountPayload) {
-    return {
-      status: WorkspaceBootstrapStepStatus.Passed,
-      message: 'Your account  completed!',
-    };
-  }
-
-  const { data, error } = await tryCatch(
-    updateUserProfile({
-      ...pick(workspaceResolution?.profile, ['first_name', 'last_name', 'address']),
-      ...pick(accountPayload, ['first_name', 'last_name', 'email']),
-    })
-  );
-
-  if (data) {
-    state.profile = data.profile;
-    return {
-      status: WorkspaceBootstrapStepStatus.Completed,
-      message: 'Your account  completed!',
-    };
-  }
-
-  return {
-    status: WorkspaceBootstrapStepStatus.Error,
-    message: error?.message || 'Something went wrong while updating the profile',
-  };
-}
-
-async function processVirtualLab(body: BootstrapBody, state: BootstrapState): Promise<StepResult> {
-  const { shouldCreateVirtualLab, shouldCreateProject, accountPayload, workspaceResolution } = body;
-
-  if (shouldCreateVirtualLab && accountPayload) {
-    const { data, error } = await tryCatch(
-      createVirtualLab({
-        entity: accountPayload.entity,
-        name: accountPayload.name,
-        description: '',
-      })
-    );
-
-    if (data?.data?.virtual_lab) {
-      state.virtualLab = data.data.virtual_lab;
-      return {
-        status: WorkspaceBootstrapStepStatus.Completed,
-        message: 'Setting up your Virtual Lab  completed!',
-      };
-    }
-
-    const cause = (error as Error & { cause?: Record<string, string> })?.cause;
-    if (cause?.error_code === 'ENTITY_ALREADY_EXISTS') {
-      return {
-        status: WorkspaceBootstrapStepStatus.Retryable,
-        message: 'The name is already taken. Please choose a different name for your Virtual Lab.',
-        errorCode: 'ENTITY_ALREADY_EXISTS',
-      };
-    }
-
-    return {
-      status: WorkspaceBootstrapStepStatus.Error,
-      message: error?.message || 'Something went wrong while creating the virtual lab',
-    };
-  }
-
-  // No creation attempted — verify a lab exists if we need one for the project step
-  const hasLab = state.virtualLab?.id || workspaceResolution.virtualLab?.id;
-  if (shouldCreateProject && !hasLab) {
-    return {
-      status: WorkspaceBootstrapStepStatus.Error,
-      message: 'No virtual lab available to proceed',
-    };
-  }
-
-  return {
-    status: WorkspaceBootstrapStepStatus.Passed,
-    message: 'Setting up your Virtual Lab  completed!',
-  };
-}
-
-async function processProject(body: BootstrapBody, state: BootstrapState): Promise<StepResult> {
-  const { shouldCreateProject, workspaceResolution } = body;
-
-  if (!shouldCreateProject) {
-    return {
-      status: WorkspaceBootstrapStepStatus.Passed,
-      message: 'Initializing your first project  completed!',
-    };
-  }
-
-  const virtualLabId = workspaceResolution.virtualLab?.id ?? state.virtualLab?.id;
-  if (!virtualLabId) {
-    return {
-      status: WorkspaceBootstrapStepStatus.Error,
-      message: 'No virtual lab available to create the project',
-    };
-  }
-
-  const displayName = state.profile?.last_name || state.profile?.preferred_username || '';
-  const { data, error } = await tryCatch(
-    createProject(virtualLabId, {
-      name: `${displayName} first project`,
-      description:
-        'Your initial project has been set up as a ready-to-use workspace to jumpstart your work. Personalize its name and description to showcase your goals and make it truly yours.',
-      include_members: [],
-    })
-  );
-
-  if (data?.data?.project) {
-    state.project = data.data.project;
-    return {
-      status: WorkspaceBootstrapStepStatus.Completed,
-      message: 'Initializing your first project  completed!',
-    };
-  }
-
-  return {
-    status: WorkspaceBootstrapStepStatus.Error,
-    message: error?.message || 'Something went wrong while creating the project',
-  };
-}
-
-const stepProcessors: Record<
-  string,
-  (body: BootstrapBody, state: BootstrapState) => Promise<StepResult>
-> = {
-  [WorkspaceBootstrapStep.Identity]: processIdentity,
-  [WorkspaceBootstrapStep.VirtualLab]: processVirtualLab,
-  [WorkspaceBootstrapStep.Project]: processProject,
 };
 
-async function* bootstrapWorkspace(
-  body: BootstrapBody
-): AsyncGenerator<StreamChunk, void, unknown> {
-  const state: BootstrapState = {
-    virtualLab: body.workspaceResolution.virtualLab,
-    profile: body.workspaceResolution.profile,
-    project: body.workspaceResolution.project,
-  };
-
-  const { resumeFromStep } = body;
-  let shouldProcess = !resumeFromStep;
+async function* fetchItems<T>(body: Body) {
+  let virtualLab: VirtualLab | null = body.workspaceResolution.virtualLab;
+  let profile: UserProfileResponse | null = body.workspaceResolution.profile;
+  let project: Project | null = body.workspaceResolution.project;
 
   for (const sequence of WorkspaceBootstrap) {
-    // When resuming, skip steps until we reach the resume point
-    if (!shouldProcess) {
-      if (sequence.step === resumeFromStep) {
-        shouldProcess = true;
-      } else {
-        // Emit the skipped step as passed so the client sees it as done
-        yield {
-          step: sequence.step,
-          status: WorkspaceBootstrapStepStatus.Passed,
-          message: `${sequence.message.replace('...', '')} completed!`,
-          progress: sequence.progress,
-          data: { ...state },
-        };
-        continue;
-      }
-    }
-
-    const processor = stepProcessors[sequence.step];
-    if (!processor) continue;
-
     yield {
       step: sequence.step,
       status: WorkspaceBootstrapStepStatus.InProgress,
       message: sequence.message,
       progress: sequence.progress,
-    };
+    } as T;
+    const { shouldCreateProject, shouldCreateVirtualLab, accountPayload, workspaceResolution } =
+      body;
 
-    const result = await processor(body, state);
+    if (sequence.step === WorkspaceBootstrapStep.Identity) {
+      let IdentityStatus: TWorkspaceBootstrapStepStatus = WorkspaceBootstrapStepStatus.Passed;
+      let message: string = `${sequence.message.replace('...', '')} completed!`;
+      if (shouldCreateVirtualLab && accountPayload) {
+        const { data, error } = await tryCatch(
+          updateUserProfile({
+            ...pick(workspaceResolution?.profile, ['first_name', 'last_name', 'address', 'email']),
+            ...pick(accountPayload, ['first_name', 'last_name', 'email']),
+          })
+        );
+        if (data) {
+          profile = data.profile;
+          IdentityStatus = WorkspaceBootstrapStepStatus.Completed;
+        } else {
+          IdentityStatus = WorkspaceBootstrapStepStatus.Error;
+          message = error?.message || 'Something went wrong while updating the profile';
+        }
+      }
+      const chunk = {
+        message,
+        step: sequence.step,
+        status: IdentityStatus,
+        progress: sequence.progress,
+        data: { profile, virtualLab, project },
+      } as T;
+      log('debug', WorkspaceBootstrapStep.Identity, chunk);
+      yield chunk;
+    }
+    if (sequence.step === WorkspaceBootstrapStep.VirtualLab) {
+      let VirtualLabStatus: TWorkspaceBootstrapStepStatus = WorkspaceBootstrapStepStatus.Passed;
+      let message: string = `${sequence.message.replace('...', '')} completed!`;
+      if (shouldCreateVirtualLab && accountPayload) {
+        const { data, error } = await tryCatch(
+          createVirtualLab({
+            email_status: accountPayload?.email_status as TEmailStatus,
+            entity: accountPayload.entity,
+            reference_email: accountPayload.email,
+            name: accountPayload.name,
+            description: '',
+          })
+        );
+        if (data && data.data?.virtual_lab) {
+          virtualLab = data.data?.virtual_lab;
+          VirtualLabStatus = WorkspaceBootstrapStepStatus.Completed;
+        } else {
+          VirtualLabStatus = WorkspaceBootstrapStepStatus.Error;
+          message = error?.message || 'Something went wrong while creating the virtual lab';
+        }
+      }
+      const chunk = {
+        message,
+        step: sequence.step,
+        status: VirtualLabStatus,
+        progress: sequence.progress,
+        data: { virtualLab, profile, project },
+      } as T;
+      log('debug', WorkspaceBootstrapStep.VirtualLab, chunk);
+      yield chunk;
+    }
+    if (sequence.step === WorkspaceBootstrapStep.Project) {
+      let ProjectStatus: TWorkspaceBootstrapStepStatus = WorkspaceBootstrapStepStatus.Passed;
+      let message: string = `${sequence.message.replace('...', '')} completed!`;
+      if (shouldCreateProject && (workspaceResolution || virtualLab)) {
+        const ID = workspaceResolution.virtualLab?.id ?? virtualLab?.id;
+        const fullName = profile?.last_name || profile?.preferred_username || '';
+        const { data, error } = await tryCatch(
+          createProject(ID!, {
+            name: `${fullName} first project`,
+            description: `
+              Your initial project has been set up as a ready-to-use workspace to jumpstart your work.
+              Personalize its name and description to showcase your goals and make it truly yours.
+              `,
+            include_members: [],
+          })
+        );
+        if (data && data.data?.project) {
+          project = data.data?.project;
+          ProjectStatus = WorkspaceBootstrapStepStatus.Completed;
+        } else {
+          ProjectStatus = WorkspaceBootstrapStepStatus.Error;
+          message = error?.message || 'Something went wrong while creating the project';
+        }
+      }
+      const chunk = {
+        message,
+        step: sequence.step,
+        status: ProjectStatus,
+        progress: sequence.progress,
+        data: {
+          virtualLab,
+          project,
+          profile,
+        },
+      } as T;
 
-    const chunk: StreamChunk = {
+      log('debug', WorkspaceBootstrapStep.Project, chunk);
+      yield chunk;
+    }
+    yield {
       step: sequence.step,
-      status: result.status,
-      message: result.message,
+      status: WorkspaceBootstrapStepStatus.Completed,
+      message: `${sequence.message.replace('...', '')} completed!`,
       progress: sequence.progress,
-      data: { ...state },
-      ...(result.errorCode && { errorCode: result.errorCode }),
-    };
-
-    log('debug', sequence.step, chunk);
-    yield chunk;
-
-    if (
-      result.status === WorkspaceBootstrapStepStatus.Error ||
-      result.status === WorkspaceBootstrapStepStatus.Retryable
-    )
-      return;
+      data: {
+        virtualLab,
+        project,
+        profile,
+      },
+    } as T;
   }
 }
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json()) as BootstrapBody;
+  const body = (await req.json()) as Body;
   const session = await auth();
-
   if (!session) {
     return new Response('Unauthorized', {
       status: 401,
       statusText: 'The supplied authentication is not authorized for this action',
     });
   }
-
-  const stream = streamFromGenerator(bootstrapWorkspace(body));
-  return createStreamingResponse(stream);
+  const stream = makeStream<StreamItem>(fetchItems(body));
+  return new StreamingResponse(stream);
 }

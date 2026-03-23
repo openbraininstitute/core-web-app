@@ -53,7 +53,7 @@ function findMappedEntry<T>(arr: any[], fn: (item: any) => any) {
 
 const API_ERROR_CODE_PATHS = ['error.code', 'error_code', 'code'];
 const API_ERROR_MESSAGE_PATHS = ['error.message', 'error_message', 'message'];
-const API_ERROR_DETAILS_PATHS = ['error.details', 'error_details', 'details', 'data'];
+const API_ERROR_DETAILS_PATHS = ['error.details', 'error_details', 'details'];
 
 /*
  * Parse the error code from the API response.

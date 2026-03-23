@@ -1,24 +1,24 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { ComponentProps, useState } from 'react';
 import { match, P } from 'ts-pattern';
 
+import { WorkspaceCustomization } from '@/ui/segments/app-setup/workspace-customization';
+import { WorkspaceProvision } from '@/ui/segments/app-setup/workspace-provision';
+import { WorkspaceIdentity } from '@/ui/segments/app-setup/workspace-identity';
 import {
+  WizardSteps,
   hasNoProject,
   hasNoVirtualLab,
   isAccountPayload,
   isCustomizationPayload,
-  WizardSteps,
 } from '@/ui/segments/app-setup/helpers';
-import {
-  type Props as TWorkspaceCustomization,
-  WorkspaceCustomization,
-} from '@/ui/segments/app-setup/workspace-customization';
-import { WorkspaceIdentity } from '@/ui/segments/app-setup/workspace-identity';
-import { WorkspaceProvision } from '@/ui/segments/app-setup/workspace-provision';
 
-import type { TResolvedWorkspace, TWizardSteps } from '@/ui/segments/app-setup/helpers';
 import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace-identity';
+import type { TResolvedWorkspace, TWizardSteps } from '@/ui/segments/app-setup/helpers';
+import type { Prettify } from '@/utils/type';
+
+type FinalStepProps = Prettify<ComponentProps<typeof WorkspaceCustomization>>;
 
 export function WorkspaceWizard({
   step,
@@ -29,17 +29,17 @@ export function WorkspaceWizard({
 }) {
   const [sequence, setSequence] = useState<TWizardSteps>(() => step);
   const [accountSetupPayload, setAccountSetupPayload] = useState<TWorkspaceIdentitySchema>();
-  const [customizationPayload, setCustomizationPayload] = useState<TWorkspaceCustomization>();
+  const [customizationPayload, setCustomizationPayload] = useState<FinalStepProps>();
 
-  const toProvision = useCallback((value: TWorkspaceIdentitySchema) => {
+  const toProvision = (value: TWorkspaceIdentitySchema) => {
     setAccountSetupPayload(value);
     setSequence(WizardSteps.Provision);
-  }, []);
+  };
 
-  const toCustomization = useCallback((values: TWorkspaceCustomization) => {
+  const toCustomization = (values: FinalStepProps) => {
     setCustomizationPayload(values);
     setSequence(WizardSteps.Customization);
-  }, []);
+  };
 
   return match({
     current: sequence,
@@ -77,6 +77,7 @@ export function WorkspaceWizard({
     .with(
       { current: WizardSteps.Customization, customizationPayload: P.nonNullable.select('payload') },
       ({ customizationPayload: cp }) => isCustomizationPayload(cp),
+      // eslint-disable-next-line react/jsx-props-no-spreading
       ({ payload }) => <WorkspaceCustomization {...payload} />
     )
     .otherwise(() => null);

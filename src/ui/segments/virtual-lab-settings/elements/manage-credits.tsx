@@ -241,7 +241,7 @@ export function ManageCreditsStep({
   }, []);
 
   return (
-    <div className="flex h-full w-full flex-col gap-6">
+    <div className="flex h-full w-full flex-col gap-6 pb-10">
       {(shouldHaveBack || shouldShowSwap) && (
         <div className="bg-primary-9 sticky top-0 z-10 flex shrink-0 items-center px-6 py-5">
           <div className="flex w-full items-center justify-between">
@@ -253,7 +253,7 @@ export function ManageCreditsStep({
                   variant="ghost"
                   size="sm"
                   onClick={onBack}
-                  className="hover:bg-neutral-2/20 h-auto px-4! py-2! text-white hover:text-white"
+                  className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
                 >
                   <ArrowLeftOutlined className="text-lg" />
                   <span className="ml-4 text-lg font-bold text-white">Credits</span>
@@ -286,7 +286,7 @@ export function ManageCreditsStep({
         </div>
       )}
 
-      <div className="mx-auto flex w-full max-w-3xl items-stretch gap-4">
+      <div className="mx-auto flex w-full max-w-3xl items-stretch gap-4 px-3">
         <div className="bg-primary-8 flex w-[calc(50%-2.5rem)] flex-1 flex-col justify-between rounded-2xl border border-white/10 p-5 text-white shadow-2xl">
           <div className="flex w-full items-center gap-2">
             <span className="text-neutral-3">From</span>
@@ -315,22 +315,18 @@ export function ManageCreditsStep({
                     onChange={(value: string) => setSelectedProjectId(value)}
                     size="large"
                     className={cn(
-                      'w-full bg-transparent [&_.ant-select-arrow]:text-white! [&_.ant-select-selection-item]:text-xl!',
-                      '[&_.ant-select-selection-item]:font-semibold! [&_.ant-select-selection-item]:text-white!',
-                      '[&_.ant-select-selector]:border-0! [&_.ant-select-selector]:bg-transparent! [&_.ant-select-selector]:shadow-none!',
+                      'w-full bg-transparent [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-xl',
+                      '[&_.ant-select-selection-item]:!font-semibold [&_.ant-select-selection-item]:text-white!',
+                      '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!shadow-none',
                       '[&_.ant-select-selection-search]:text-white'
                     )}
                     options={projects}
-                    classNames={{
-                      popup: {
-                        root: cn(
-                          '!bg-primary-8 !text-white',
-                          '[&_.ant-select-item-option-content]:text-white!',
-                          '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
-                          '[&_.ant-empty-description]:text-white!'
-                        ),
-                      },
-                    }}
+                    popupClassName={cn(
+                      '!bg-primary-8 !text-white',
+                      '[&_.ant-select-item-option-content]:text-white!',
+                      '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
+                      '[&_.ant-empty-description]:text-white!'
+                    )}
                     optionFilterProp="label"
                     disabled={isPending}
                   />
@@ -370,22 +366,18 @@ export function ManageCreditsStep({
                     onChange={(value: string) => setSelectedProjectId(value)}
                     size="large"
                     className={cn(
-                      'w-full bg-transparent [&_.ant-select-arrow]:text-white! [&_.ant-select-selection-item]:text-xl!',
-                      '[&_.ant-select-selection-item]:font-semibold! [&_.ant-select-selection-item]:text-white!',
-                      '[&_.ant-select-selector]:border-0! [&_.ant-select-selector]:bg-transparent! [&_.ant-select-selector]:shadow-none!',
+                      'w-full bg-transparent [&_.ant-select-arrow]:!text-white [&_.ant-select-selection-item]:!text-xl',
+                      '[&_.ant-select-selection-item]:!font-semibold [&_.ant-select-selection-item]:text-white!',
+                      '[&_.ant-select-selector]:!border-0 [&_.ant-select-selector]:!bg-transparent [&_.ant-select-selector]:!shadow-none',
                       '[&_.ant-select-selection-search]:text-white'
                     )}
                     options={projects}
-                    classNames={{
-                      popup: {
-                        root: cn(
-                          '!bg-primary-8 !text-white',
-                          '[&_.ant-select-item-option-content]:text-white!',
-                          '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
-                          '[&_.ant-empty-description]:text-white!'
-                        ),
-                      },
-                    }}
+                    popupClassName={cn(
+                      '!bg-[#0a3a76] !text-white',
+                      '[&_.ant-select-item-option-content]:text-white!',
+                      '[&_.ant-select-item-option-selected:not(.ant-select-item-option-disabled)]:bg-primary-7/50! [&_.ant-select-item-option-selected]:!text-white!',
+                      '[&_.ant-empty-description]:text-white!'
+                    )}
                     optionFilterProp="label"
                     disabled={isPending}
                   />
@@ -426,7 +418,10 @@ export function ManageCreditsStep({
       </div>
 
       <div
-        className={cn('mx-auto flex w-full max-w-3xl justify-end gap-4 self-end', buttonClassname)}
+        className={cn(
+          'mx-auto mt-auto flex w-full max-w-3xl justify-end gap-4 self-end px-3',
+          buttonClassname
+        )}
       >
         <Button
           rounded

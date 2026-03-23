@@ -1,15 +1,15 @@
 'use client';
 
 import * as SwitchPrimitives from '@radix-ui/react-switch';
+import { atom } from 'jotai';
 import keyBy from 'es-toolkit/compat/keyBy';
 import map from 'es-toolkit/compat/map';
 import merge from 'es-toolkit/compat/merge';
 import omit from 'es-toolkit/compat/omit';
-import { atom } from 'jotai';
 import { forwardRef } from 'react';
 
-import { listSubscriptionTiers } from '@/api/virtual-lab-svc/queries/subscription';
 import { getSanityTiers } from '@/services/sanity';
+import { listSubscriptionTiers } from '@/api/virtual-lab-svc/queries/subscription';
 import { classNames } from '@/util/utils';
 
 type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
@@ -32,7 +32,7 @@ type TierPrice = {
   yearDiscount: Array<PriceValue>;
 };
 
-export type TTierFeature = {
+export type TierFeature = {
   title: string;
   specialLabel?: Array<string>;
   tooltip?: Array<string>;
@@ -41,9 +41,9 @@ export type TTierFeature = {
 type FeatureCategory = {
   title: string;
   available: boolean;
-  featuresList: Array<TTierFeature>;
+  featuresList: Array<TierFeature>;
 };
-export type TSingleTier = {
+export type Tier = {
   id: string;
   title: string;
   notes?: Array<string>;
@@ -52,7 +52,7 @@ export type TSingleTier = {
 };
 export type Interval = 'month' | 'year';
 
-export type TExtendedTier = TSingleTier & {
+export type ExtendedTier = Tier & {
   app_id: string;
   sanity_id: string;
   prices: Array<{
@@ -67,12 +67,12 @@ export type TExtendedTier = TSingleTier & {
 };
 
 type TiersData = {
-  tiers: TSingleTier[];
+  tiers: Tier[];
 };
 
 export const flowAtom = atom<{
-  step: 'select' | 'email-verification' | 'pay' | null;
-  tier: TExtendedTier | null;
+  step: 'select' | 'pay' | null;
+  tier: ExtendedTier | null;
   interval: 'month' | 'year';
   currency?: string;
 }>({
@@ -83,7 +83,7 @@ export const flowAtom = atom<{
 });
 
 export const Switch = forwardRef<
-  React.ComponentRef<typeof SwitchPrimitives.Root>,
+  React.ElementRef<typeof SwitchPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root> & {
     thumbCls: string;
   }
@@ -112,7 +112,7 @@ export const Switch = forwardRef<
 Switch.displayName = 'Switch';
 
 function transformData(data: any): TiersData {
-  const transformedTiers: TSingleTier[] = data.plans?.map((plan: any) => {
+  const transformedTiers: Tier[] = data.plans?.map((plan: any) => {
     const tierFeatures: FeatureCategory[] = data.features?.map((category: any) => {
       // transform features within this category for this plan
       const featuresList = category.features
@@ -123,7 +123,7 @@ function transformData(data: any): TiersData {
           if (!planFeature) {
             return null;
           }
-          const transformedFeature: TTierFeature = {
+          const transformedFeature: TierFeature = {
             title: feature.title,
           };
           if (planFeature.label) {
@@ -144,7 +144,7 @@ function transformData(data: any): TiersData {
       };
     });
 
-    const transformedTier: TSingleTier = {
+    const transformedTier: Tier = {
       id: plan.id,
       title: plan.title,
       features: tierFeatures,
@@ -176,8 +176,11 @@ const renameAndRemove = (arr: Array<any>, oldKey: string, newKey: string) =>
     obj[oldKey] !== undefined ? { ...omit(obj, oldKey), [newKey]: obj[oldKey] } : obj
   );
 
-export async function getAllTiers(): Promise<Array<TExtendedTier>> {
-  const [appTiers, sanityTiers] = await Promise.all([listSubscriptionTiers(), getSanityTiers()]);
+export async function getAllTiers(): Promise<Array<ExtendedTier>> {
+  const [appTiers, sanityTiers] = await Promise.all([
+    listSubscriptionTiers(),
+    getSanityTiers(),
+  ]);
   if (!appTiers || !sanityTiers) {
     throw new Error('Tiers can not be fetched');
   }

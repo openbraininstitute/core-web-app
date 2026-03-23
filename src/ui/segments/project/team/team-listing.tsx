@@ -16,7 +16,7 @@ import { extractInitials } from '@/util/slugify';
 import { cn } from '@/utils/css-class';
 
 import type { ColumnType } from 'antd/es/table';
-import type { Member, MembersResponse, TRole } from '@/api/virtual-lab-svc/queries/types';
+import type { Member, MembersResponse, Role } from '@/api/virtual-lab-svc/queries/types';
 
 export function ListingMembers({
   onAddMemberClick,
@@ -101,7 +101,7 @@ export function ListingMembers({
       dataIndex: 'role',
       align: 'right',
       width: '250px',
-      render: (_: TRole, record) => {
+      render: (_: Role, record) => {
         if (isLoading) return <LoadingOutlined />;
         return (
           <RoleModifier
