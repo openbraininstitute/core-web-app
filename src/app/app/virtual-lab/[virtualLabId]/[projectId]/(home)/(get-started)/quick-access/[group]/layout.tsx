@@ -1,6 +1,6 @@
 import { config } from '@/config';
 import { BackButton } from '@/ui/segments/project/get-started/elements/back-button';
-import { GroupDropdown } from '@/ui/segments/project/get-started/elements/quic-access';
+import { GroupDropdown } from '@/ui/segments/project/get-started/elements/quick-access';
 
 import type { PropsWithChildren } from 'react';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';

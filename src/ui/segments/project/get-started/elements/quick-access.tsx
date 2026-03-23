@@ -13,6 +13,7 @@ import { BrokenImageIcon } from '@/components/icons/image-states';
 import { config } from '@/config';
 import { startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import { Card, CardContent, CardTitle } from '@/ui/molecules/card';
 import {
@@ -44,6 +45,7 @@ export function MainCardItem({
   virtualLab,
   group,
   entity,
+  artifactTitle,
 }: {
   entity: IEntity;
   group: TQuickAccessGroup;
@@ -53,6 +55,7 @@ export function MainCardItem({
   description: string | undefined;
   context: WorkspaceContext;
   virtualLab: VirtualLabResponse;
+  artifactTitle?: string | null;
 }) {
   const { push: navigate } = useRouter();
   const [loading, setLoading] = useState(false);
@@ -85,11 +88,22 @@ export function MainCardItem({
   return (
     <Card
       className={cn(
-        'w-full bg-white border-none flex-1',
+        'w-full bg-white border-none flex-1 pt-0',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
         'hover:shadow-bnb hover:border-gray-200 hover:border'
       )}
     >
+      {artifactTitle && (
+        <div className="flex justify-end px-3 pt-3">
+          <Badge
+            variant="outline"
+            rounded
+            className="bg-white/90 backdrop-blur-sm text-primary-8 border-neutral-2 text-xs font-medium shadow-sm"
+          >
+            {artifactTitle}
+          </Badge>
+        </div>
+      )}
       <div className="relative h-41.75 w-auto">
         {thumbnail ? (
           <Image fill alt={title ?? 'preview'} src={thumbnail} objectFit="contain" />
@@ -152,6 +166,7 @@ export function SingleCardItem({
   group,
   entity,
   extendedType,
+  artifactTitle,
 }: {
   entity: IEntity;
   group: string;
@@ -160,6 +175,7 @@ export function SingleCardItem({
   context: WorkspaceContext;
   virtualLab: VirtualLabResponse | null;
   extendedType: TExtendedEntitiesTypeDict;
+  artifactTitle?: string | null;
 }) {
   const { push: navigate } = useRouter();
   async function getLink({ group, entity }: { entity: IEntity; group: string }) {
@@ -194,6 +210,17 @@ export function SingleCardItem({
         'hover:shadow-bnb hover:border-gray-200 hover:border'
       )}
     >
+      {artifactTitle && (
+        <div className="flex justify-end">
+          <Badge
+            variant="outline"
+            rounded
+            className="bg-white/90 backdrop-blur-sm text-primary-8 border-neutral-2 text-xs font-medium shadow-sm"
+          >
+            {artifactTitle}
+          </Badge>
+        </div>
+      )}
       <Button
         variant="ghost"
         size="responsive"

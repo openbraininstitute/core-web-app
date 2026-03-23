@@ -1,3 +1,4 @@
+import { InboxOutlined } from '@ant-design/icons';
 import { compact } from 'es-toolkit/array';
 import { findKey } from 'es-toolkit/object';
 
@@ -6,7 +7,7 @@ import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity';
-import { SingleCardItem } from '@/ui/segments/project/get-started/elements/quic-access';
+import { SingleCardItem } from '@/ui/segments/project/get-started/elements/quick-access';
 import {
   getQuickAccessQuery,
   type IQuickAccessList,
@@ -64,7 +65,7 @@ export default async function Layout({
 
   const settled = await Promise.allSettled(
     compact(
-      currentList?.list.map((p) => {
+      currentList?.list?.map((p) => {
         const rq = getEntityByExtendedType({ type: p.extendedType })?.api.query.one;
         return rq ? { preview: p, request: rq } : null;
       }) ?? []
@@ -83,7 +84,27 @@ export default async function Layout({
       ...a,
       title: a.title ?? a.entity.name,
       description: a.description ?? a.entity.description,
+      artifactTitle: getEntityByExtendedType({ type: a.extendedType })?.title ?? null,
     }));
+
+  if (!results.length) {
+    const capitalizedGroup = findKey(QuickAccessGroupDict, (p) => p === group);
+
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+        <div className="flex items-center justify-center size-20 rounded-full bg-primary-1 mb-6">
+          <InboxOutlined className="text-primary-6 text-3xl" />
+        </div>
+        <h2 className="text-primary-8 text-xl font-semibold mb-2">
+          No {capitalizedGroup?.toLowerCase() ?? group} examples yet
+        </h2>
+        <p className="text-neutral-4 text-sm max-w-md leading-relaxed">
+          Curated {group} examples for quick access will appear here once they become available.
+          Check back soon or explore other categories.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -91,7 +112,7 @@ export default async function Layout({
       data-testid={`quick-access-${group}`}
       className="grid grid-cols-3 gap-2 pr-2 mb-10"
     >
-      {results.map(({ title, thumbnail, entity, extendedType }) => {
+      {results.map(({ title, thumbnail, entity, extendedType, artifactTitle }) => {
         return (
           <SingleCardItem
             key={entity.id}
@@ -103,6 +124,7 @@ export default async function Layout({
               group,
               entity,
               extendedType,
+              artifactTitle,
             }}
           />
         );

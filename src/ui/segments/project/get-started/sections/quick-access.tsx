@@ -8,7 +8,7 @@ import {
   MainCardComingSoon,
   MainCardItem,
   ViewExamples,
-} from '@/ui/segments/project/get-started/elements/quic-access';
+} from '@/ui/segments/project/get-started/elements/quick-access';
 import {
   getQuickAccessQuery,
   type IQuickAccessList,
@@ -47,16 +47,18 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
     previews
       .filter((p) => p.entityId != null)
       .map((p) => {
-        const call = getEntityByExtendedType({ type: p.extendedType })?.api.query.one;
-        return call ? { preview: p, call } : null;
+        const entityConfig = getEntityByExtendedType({ type: p.extendedType });
+        const call = entityConfig?.api.query.one;
+        return call ? { preview: p, call, artifactTitle: entityConfig?.title ?? null } : null;
       })
   );
 
   const settled = await Promise.allSettled(
-    withEntity.map(({ preview, call }) =>
+    withEntity.map(({ preview, call, artifactTitle }) =>
       call({ id: preview.entityId!, context }).then((entity) => ({
         ...preview,
         entity,
+        artifactTitle,
       }))
     )
   );
@@ -66,6 +68,7 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
     .map((p) => ({
       ...p,
       entity: null,
+      artifactTitle: null,
     }));
 
   const groupOrder = Object.values(QuickAccessGroupDict);
@@ -85,7 +88,17 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full">
       {results.map(
-        ({ groupTitle, listLength, group, entityId, title, description, thumbnail, entity }) => {
+        ({
+          groupTitle,
+          listLength,
+          group,
+          entityId,
+          title,
+          description,
+          thumbnail,
+          entity,
+          artifactTitle,
+        }) => {
           if (!entity) {
             return (
               <div key={group} className="flex flex-col gap-1.5 w-full">
@@ -106,6 +119,7 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
                   virtualLab,
                   group,
                   entity,
+                  artifactTitle,
                 }}
               />
               <ViewExamples
