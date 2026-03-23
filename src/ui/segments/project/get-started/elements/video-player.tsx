@@ -22,7 +22,7 @@ export function VideoPlayer({ url }: { url?: string }) {
         playsInline
         autoPlay
         controls
-        className="h-full w-full rounded-xl border border-solid  object-contain"
+        className="h-full w-full rounded-xl object-contain"
         src={url}
         onLoadedData={() => setIsLoaded(true)}
       >
