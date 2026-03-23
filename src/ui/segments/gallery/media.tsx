@@ -89,7 +89,7 @@ export default function Media({ item, isLoaded, onLoad, onOpenModal }: MediaProp
             <span className="text-neutral-4">Brain Region:</span> {brainRegion}
           </div>
         )}
-        {isDesktop && <div className="text-sm font-normal">Copyright OBI – 2025</div>}
+        {isDesktop && <div className="text-sm font-normal">Copyright OBI – {new Date().getFullYear()}</div>}
       </aside>
     </div>
   );
