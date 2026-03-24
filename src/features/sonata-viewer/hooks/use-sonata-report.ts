@@ -35,22 +35,19 @@ export default function useSonataReport({
   const [metadata, setMetadata] = useState<SonataReportMetadata | null>(null);
   const [workerError, setWorkerError] = useState<Error | null>(null);
   const workerRef = useRef<Remote<SonataWorkerImpl> | null>(null);
-  const initialized = useRef(false);
 
   const asset = assetId
     ? entity.assets?.find((a) => a.id === assetId)
     : entity.assets?.find((a) => a.content_type === AssetContentType.h5);
 
-  if (!asset) {
-    throw new Error('No HDF5 file found in entity assets.');
-  }
+  const assetError = asset ? null : new Error('No HDF5 file found in entity assets.');
 
   const { data: arrayBuffer, error: fetchError } = useQuery({
     queryKey: keyBuilder.asset({
       context: ctx,
       entityId: entity.id,
-      assetId: asset.id,
-      assetPath: asset.path,
+      assetId: asset?.id ?? '',
+      assetPath: asset?.path ?? '',
       assetType: entity.type,
       asRawResponse: false,
     }),
@@ -58,14 +55,14 @@ export default function useSonataReport({
       downloadAsset<ArrayBuffer>({
         entityType: entity.type,
         entityId: entity.id,
-        id: asset.id,
+        id: asset!.id,
         ctx,
       }),
+    enabled: !!asset,
   });
 
   useEffect(() => {
-    if (initialized.current || !arrayBuffer) return;
-    initialized.current = true;
+    if (workerRef.current || !arrayBuffer) return;
 
     if (arrayBuffer.byteLength > MAX_FILE_SIZE) {
       setWorkerError(
@@ -88,14 +85,15 @@ export default function useSonataReport({
       workerRef.current = null;
       workerProxy.destroy();
       terminateWorker();
-      initialized.current = false;
     };
   }, [arrayBuffer]);
+
+  const error = assetError || fetchError || workerError;
 
   return {
     metadata,
     worker: workerRef.current,
-    error: fetchError || workerError,
-    isLoading: !metadata && !fetchError && !workerError,
+    error,
+    isLoading: !metadata && !error,
   };
 }

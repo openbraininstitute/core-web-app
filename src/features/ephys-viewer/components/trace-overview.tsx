@@ -263,7 +263,7 @@ function CellComponent({
   if (singleRecMultiCellMode) return content;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-5">
       {showCellLabel && <div className="text-primary-9 text-xl font-bold">{cellId}</div>}
       {content}
     </div>

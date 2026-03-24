@@ -52,6 +52,9 @@ export default function InteractivePlot({
       })
       .then((result) => {
         if (!cancelled) setData(result);
+      })
+      .catch(() => {
+        if (!cancelled) setData(null);
       });
 
     return () => {
@@ -91,7 +94,6 @@ export default function InteractivePlot({
         }}
         onDoubleClick={() => {
           setZoomRange(null);
-          return false;
         }}
         layout={{
           ...layout,

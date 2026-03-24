@@ -160,6 +160,8 @@ class SonataWorkerImpl {
         // Default to ms
       }
 
+      if (timeValues.length < 3) continue;
+
       const timeConfig: TimeConfig = {
         startTime: timeValues[0],
         endTime: timeValues[1],
@@ -258,10 +260,6 @@ class SonataWorkerImpl {
       y: downsampled.y,
       units: pop.dataUnits,
     };
-  }
-
-  async getNodeTraces(reqs: DownsampleRequest[]): Promise<NodeTraceData[]> {
-    return Promise.all(reqs.map((req) => this.getNodeTrace(req)));
   }
 
   destroy(): void {

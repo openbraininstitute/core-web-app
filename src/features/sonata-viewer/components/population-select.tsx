@@ -17,14 +17,14 @@ export default function PopulationSelect({
 
   return (
     <div className="flex flex-col gap-2">
-      Select Population ({populations.length} available)
+      Select population ({populations.length} available)
       <Select
         className="w-full"
         value={value}
         onChange={onChange}
         placeholder="Select a population"
       >
-        {showAllOption && <Option value="All">All Populations</Option>}
+        {showAllOption && <Option value="All">All populations</Option>}
         {populations.map((pop) => (
           <Option value={pop} key={pop}>
             {pop}
