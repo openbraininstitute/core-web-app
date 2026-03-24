@@ -1,10 +1,11 @@
 'use client';
 
+import { VideoCameraOutlined } from '@ant-design/icons';
 import { RiCloseLargeFill, RiPlayFill } from '@remixicon/react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { config } from '@/config';
@@ -31,7 +32,7 @@ export function DiscoverCard({
   const { virtualLabId, projectId } = useWorkspace();
   return (
     <Link
-      href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/tutorials?t=${slug}`}
+      href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/tutorials/${slug}`}
       className="flex w-full"
     >
       <Card
@@ -68,11 +69,11 @@ export function DiscoverCard({
   );
 }
 
-export function Grid({ tutorials }: { tutorials: TTutorial[] }) {
+export function Grid({ tutorials }: { tutorials: Array<TTutorial> }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? tutorials : tutorials.slice(0, INITIAL_COUNT);
   const hasMore = tutorials.length > INITIAL_COUNT;
-  const slug = useSearchParams().get('t');
+  const { slug } = useParams<{ slug: string }>();
 
   return (
     <section id="discover-tutorials" className="w-full flex flex-col my-6 @container">
@@ -108,7 +109,7 @@ export function Grid({ tutorials }: { tutorials: TTutorial[] }) {
             >
               <DiscoverCard
                 title={p.title}
-                image={p.imageURL}
+                image={p.poster}
                 slug={p.slug}
                 isSelected={slug === p.slug}
               />
@@ -116,6 +117,24 @@ export function Grid({ tutorials }: { tutorials: TTutorial[] }) {
           ))}
         </AnimatePresence>
       </motion.div>
+    </section>
+  );
+}
+
+export function EmptyTutorials() {
+  return (
+    <section id="discover-tutorials" className="w-full flex flex-col my-6">
+      <h2 className="font-medium text-primary-9 px-2 mb-4">Discover</h2>
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center rounded-xl bg-white shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
+        <div className="flex items-center justify-center size-16 rounded-full bg-primary-8 mb-5">
+          <VideoCameraOutlined className="text-white! text-2xl" />
+        </div>
+        <h3 className="text-primary-8 text-lg font-semibold mb-1.5">No tutorials available yet</h3>
+        <p className="text-neutral-4 text-sm max-w-sm leading-relaxed">
+          Video guides and walkthroughs will appear here as they are published. Stay tuned for new
+          content to help you get the most out of the platform.
+        </p>
+      </div>
     </section>
   );
 }

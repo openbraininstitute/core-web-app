@@ -15,10 +15,11 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import {
+  DEFAULT_GET_STARTED_VIDEO_SLUG,
   DiscoverQuery,
   getQuickAccessQuery,
-  type IDiscoverTutorialsList,
   type IQuickAccessList,
+  type TTutorial,
 } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
@@ -89,8 +90,8 @@ export function LeftMenu({ className }: Props) {
   );
 
   const {
-    dtListCount,
     qaListCount,
+    ttListCount,
     isLoading: loadingCounts,
   } = useQueries({
     queries: [
@@ -100,14 +101,14 @@ export function LeftMenu({ className }: Props) {
       },
       {
         queryKey: keyBuilderExternal.discoverTutorialsList(),
-        queryFn: () => client.fetch<IDiscoverTutorialsList>(DiscoverQuery),
+        queryFn: () => client.fetch<Array<TTutorial>>(DiscoverQuery),
       },
     ],
-    combine: ([quickAccessList, discoverTutorialsList]) => {
+    combine: ([quickAccessList, tutorials]) => {
       return {
         qaListCount: sumBy(quickAccessList.data, (item) => (item.list ?? []).length),
-        dtListCount: discoverTutorialsList.data?.tutorialOrder.length ?? 0,
-        isLoading: quickAccessList.isLoading || discoverTutorialsList.isLoading,
+        ttListCount: tutorials?.data?.length ?? 0,
+        isLoading: quickAccessList.isLoading || tutorials.isLoading,
       };
     },
   });
@@ -145,16 +146,20 @@ export function LeftMenu({ className }: Props) {
                 <div className="pl-2 pr-4 py-4 flex flex-col gap-1.5">
                   {children.map((child) => {
                     const activeSubSection = !!getActiveSection(pathname, child.key);
-                    let count = 0;
+                    let count = 0,
+                      slug = null;
                     if (child.key === 'quick-access') count = qaListCount;
-                    if (child.key === 'tutorials') count = dtListCount;
-
+                    if (child.key === 'tutorials') {
+                      count = ttListCount;
+                      slug = DEFAULT_GET_STARTED_VIDEO_SLUG;
+                    }
+                    const href = slug ? `${url}/${child.url}/${slug}` : `${url}/${child.url}`;
                     return (
                       <Button
-                        key={child.key}
                         rounded
                         borderless
                         asChild
+                        key={child.key}
                         variant="ghost"
                         className={cn(
                           'ml-2 h-auto w-full justify-start font-normal text-primary-9',
@@ -166,7 +171,7 @@ export function LeftMenu({ className }: Props) {
                         aria-label={activeSubSection ? 'active' : ''}
                         active={activeSubSection}
                       >
-                        <Link href={`${url}/${child.url}`}>
+                        <Link href={href}>
                           {activeSubSection && <RiCircleFill className="text-primary-8 size-3" />}
                           {child.title}
                           {!loadingCounts && (

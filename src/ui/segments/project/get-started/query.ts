@@ -4,33 +4,23 @@ import { config } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+export const DEFAULT_GET_STARTED_VIDEO_SLUG = 'how-to-explore-data';
 export const DiscoverQuery = defineQuery(
-  `*[_type=="documentationSettings"][0]{
-        tutorialOrder[] -> {
-            title,
-            description,
-            "slug": slug.current,
-            "url": videoUrl,
-            "imageURL": thumbnail.asset->url,
-            "imageWidth": thumbnail.asset->metadata.dimensions.width,
-            "imageHeight": thumbnail.asset->metadata.dimensions.height
-        }
+  `*[_type == "tutorial"][]{
+      _type,
+      title, 
+      "poster": thumbnail.asset->url,
+      "slug": slug.current,
+      "url": videoUrl
     }`
 );
 
 export type TTutorial = {
-  description: string | null;
-  imageHeight: number;
-  imageWidth: number;
-  imageURL: string;
+  poster: string;
   slug: string;
   title: string;
   url: string;
 };
-
-export interface IDiscoverTutorialsList {
-  tutorialOrder: TTutorial[];
-}
 
 export const getQuickAccessQuery = () => {
   const env = config.DEPLOYMENT_ENV;

@@ -7,6 +7,7 @@ import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
+import { DEFAULT_GET_STARTED_VIDEO_SLUG } from '@/ui/segments/project/get-started/query';
 import { cn } from '@/utils/css-class';
 
 export function MainVideo() {
@@ -28,24 +29,20 @@ export function MainVideo() {
           className="hover:scale-110 transition-all ease-in-expo"
         >
           <Link
-            href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/tutorials?t=how-to-explore-data`}
+            title="How to explore data?"
+            href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/tutorials/${DEFAULT_GET_STARTED_VIDEO_SLUG}`}
           >
             <RiPlayFill className="text-white size-10" />
           </Link>
         </Button>
       </div>
-      <h1 className="w-1/3 font-bold text-white text-2xl">
-        What is meant by "Data" <br /> and "Workflows"
-      </h1>
+      <h1 className="w-1/3 font-bold text-white text-2xl">How to explore data?</h1>
       <div className="flex items-center justify-center gap-2">
         <div className="flex items-center justify-center gap-1.5 text-white">
           <RiTimeLine className="text-current size-4" /> <span className="text-sm">01:03</span>
         </div>
         <Badge rounded variant="outline" className="border-primary-4 text-white select-none">
           Data
-        </Badge>
-        <Badge rounded variant="outline" className="border-primary-4 text-white select-none">
-          Workflows
         </Badge>
       </div>
     </section>
