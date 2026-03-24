@@ -1,6 +1,9 @@
 'use client';
 
+import { useMemo } from 'react';
+
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { createCellMorphologyImportAdapter, EntityImportFeature } from '@/features/entity-import';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   CELL_MORPHOLOGY_PROGRESS_STEPS,
@@ -21,6 +24,10 @@ import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
+
+interface ICellMorphologyProps {
+  sessionId: string;
+}
 
 const CELL_MORPHOLOGY_STEP_CONFIG: Array<IContributionStep<TCellMorphologyForm>> = [
   {
@@ -70,10 +77,6 @@ const CELL_MORPHOLOGY_STEP_CONFIG: Array<IContributionStep<TCellMorphologyForm>>
 
 const cellMorphologyConfig = createCellMorphologyConfig(CELL_MORPHOLOGY_STEP_CONFIG);
 
-interface ICellMorphologyProps {
-  sessionId: string;
-}
-
 export function CellMorphology({ sessionId }: ICellMorphologyProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
@@ -89,6 +92,31 @@ export function CellMorphology({ sessionId }: ICellMorphologyProps) {
       progressSteps={CELL_MORPHOLOGY_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
+    />
+  );
+}
+
+export function CellMorphologyImport({ sessionId }: ICellMorphologyProps) {
+  const { projectId, virtualLabId } = useWorkspace();
+  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
+    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
+  });
+  const adapter = useMemo(
+    () =>
+      createCellMorphologyImportAdapter({
+        defaultBrainRegionId: defaultBrainRegion.id,
+      }),
+    [defaultBrainRegion.id]
+  );
+
+  return (
+    <EntityImportFeature
+      adapter={adapter}
+      context={{
+        projectId,
+        virtualLabId,
+        sessionId,
+      }}
     />
   );
 }
