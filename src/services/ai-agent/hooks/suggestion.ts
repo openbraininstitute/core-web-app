@@ -11,21 +11,23 @@ import { serviceAiAgentSuggestionFromUserJourney } from '../api/suggestion';
 export function useServiceAiAgentSuggestionFromUserJourney(
   threadId: string,
   status?: 'submitted' | 'streaming' | 'ready' | 'error'
-): [suggestions: string[], clearSuggestions: () => void, isLoading: boolean] {
+): [suggestions: string[], clearSuggestions: () => void, isLoading: boolean, refetch: () => void] {
   const snapshot = useSnapshot();
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
   const accessToken = useAccessToken();
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [fetchTrigger, setFetchTrigger] = React.useState(0);
 
   const requestIdRef = React.useRef(0);
 
   React.useEffect(() => {
-    if (status === 'ready' && accessToken && virtualLabId && projectId && threadId) {
+    if (accessToken && virtualLabId && projectId && threadId) {
       const currentRequestId = ++requestIdRef.current;
 
       setIsLoading(true);
+      setSuggestions([]);
       serviceAiAgentSuggestionFromUserJourney(accessToken, {
         threadId,
         virtualLabId,
@@ -48,6 +50,6 @@ export function useServiceAiAgentSuggestionFromUserJourney(
           }
         });
     }
-  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId, status]);
-  return [suggestions, () => setSuggestions([]), isLoading];
+  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId, fetchTrigger]);
+  return [suggestions, () => setSuggestions([]), isLoading, () => setFetchTrigger((n) => n + 1)];
 }

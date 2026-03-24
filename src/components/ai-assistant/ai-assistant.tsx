@@ -46,10 +46,15 @@ export default function AiAssistant({
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const { status } = useServiceAiAgentChat(threadId ?? '');
 
+  const refetchSuggestionsRef = React.useRef<(() => void) | null>(null);
+  const clearSuggestionsRef = React.useRef<(() => void) | null>(null);
+
   const canCreateNewChat = status === 'ready';
 
   const handleNewChat = async () => {
     setTab('chat');
+    clearSuggestionsRef.current?.();
+    refetchSuggestionsRef.current?.();
     if (!isEmptyThread) {
       assistant.threadId.set(undefined);
       await assistant.createThread();
@@ -137,7 +142,16 @@ export default function AiAssistant({
           </div>
 
           <div className={styles.contentWrapper}>
-            <Chat className={styles.content} threadId={threadId} />
+            <Chat
+              className={styles.content}
+              threadId={threadId}
+              onRefetchSuggestions={(fn) => {
+                refetchSuggestionsRef.current = fn;
+              }}
+              onClearSuggestions={(fn) => {
+                clearSuggestionsRef.current = fn;
+              }}
+            />
 
             <AnimatePresence>
               {tab === 'history' && (

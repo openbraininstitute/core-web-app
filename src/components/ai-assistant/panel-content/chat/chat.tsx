@@ -26,9 +26,16 @@ import styles from './chat.module.css';
 export interface ChatProps {
   className?: string;
   threadId: string | undefined;
+  onRefetchSuggestions?: (fn: () => void) => void;
+  onClearSuggestions?: (fn: () => void) => void;
 }
 
-export default function Chat({ className, threadId }: ChatProps) {
+export default function Chat({
+  className,
+  threadId,
+  onRefetchSuggestions,
+  onClearSuggestions,
+}: ChatProps) {
   const assistant = useAiAssistant();
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const healthError = assistant.healthError.useValue();
@@ -37,8 +44,14 @@ export default function Chat({ className, threadId }: ChatProps) {
   const { messages, status, append, error, stop, isLoadingMessages } = useServiceAiAgentChat(
     threadId ?? ''
   );
-  const [suggestions, clearSuggestions, isLoadingSuggestions] =
+  const [suggestions, clearSuggestions, isLoadingSuggestions, refetchSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
+
+  React.useEffect(() => {
+    onRefetchSuggestions?.(refetchSuggestions);
+    onClearSuggestions?.(clearSuggestions);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refetchSuggestions]);
 
   const accessToken = useAccessToken();
   const rateLimit = useAtomValue(atomRateLimit);
@@ -173,15 +186,25 @@ export default function Chat({ className, threadId }: ChatProps) {
             {status === 'ready' && messages.length > 0 && (
               <div className={styles.footerButtons}></div>
             )}
-            {suggestions !== undefined && status === 'ready' && (
+            {(!threadId || isEmptyThread) && (
               <div className={styles.suggestedQuestionsContainer}>
                 <SuggestedQuestions
                   threadId={threadId}
-                  messagesLength={messages.length}
                   onClick={handlePrompt}
                   suggestions={suggestions}
                   clearSuggestions={clearSuggestions}
-                  isLoading={isLoadingSuggestions}
+                  isLoading={isLoadingSuggestions || status !== 'ready'}
+                />
+              </div>
+            )}
+            {threadId && !isEmptyThread && suggestions !== undefined && (
+              <div className={styles.suggestedQuestionsContainer}>
+                <SuggestedQuestions
+                  threadId={threadId}
+                  onClick={handlePrompt}
+                  suggestions={suggestions}
+                  clearSuggestions={clearSuggestions}
+                  isLoading={isLoadingSuggestions || status !== 'ready'}
                 />
               </div>
             )}
