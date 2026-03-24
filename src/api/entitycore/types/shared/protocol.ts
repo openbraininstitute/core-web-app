@@ -6,7 +6,6 @@ import {
   CellMorphologyProtocolDesignSchema,
   EntityTypeSchema,
   ModifiedMorphologyMethodTypeSchema,
-  RepairPipelineTypeSchema,
   SlicingDirectionTypeSchema,
 } from '@/api/entitycore/types/shared/global';
 
@@ -17,11 +16,43 @@ import type {
   PaginationFilter,
 } from '@/api/entitycore/types/shared/request';
 
+export const RepairPipelineState = {
+  Raw: {
+    key: 'raw',
+    label: 'Raw',
+  },
+  Curated: {
+    key: 'curated',
+    label: 'Curated',
+  },
+  Unraveled: {
+    key: 'unraveled',
+    label: 'Unraveled',
+  },
+  Repaired: {
+    key: 'repaired',
+    label: 'Repaired',
+  },
+} as const;
+
+export const RepairPipelineTypeDictionary = Object.fromEntries(
+  Object.entries(RepairPipelineState).map(([name, value]) => [name, value.key])
+) as {
+  [K in keyof typeof RepairPipelineState]: (typeof RepairPipelineState)[K]['key'];
+};
+export type TRepairPipelineState =
+  (typeof RepairPipelineTypeDictionary)[keyof typeof RepairPipelineTypeDictionary];
+
+export const RepairPipelineTypeSchema = z.enum(
+  Object.values(RepairPipelineState).map((value) => value.key)
+);
+
 export interface IProtocolFilter
   extends PaginationFilter,
     OwnershipFilter,
     IDFilter,
     ContributionFilter {}
+
 // Base schema for a Cell Morphology Protocol
 export const ProtocolBaseSchema = z.object({
   // Protocol core fields (similar to entity core, using optional where data suggests null/None)

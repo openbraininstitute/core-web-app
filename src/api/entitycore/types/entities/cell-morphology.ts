@@ -17,6 +17,7 @@ import type {
   Subject,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
+import type { TRepairPipelineState } from '@/api/entitycore/types/shared/protocol';
 import type {
   BrainLocationFilter,
   BrainRegionHierarchyFilter,
@@ -90,6 +91,7 @@ export interface ICellMorphology
   brain_region: BrainRegionHierarchyBase;
   mtypes: Array<IMType> | null;
   contributions?: Array<IContributor> | null;
+  repair_pipeline_state: TRepairPipelineState;
   cell_morphology_protocol: NestedCellMorphologyProtocolRead;
 }
 

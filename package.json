@@ -13,6 +13,8 @@
     "ci": "biome ci",
     "format": "biome format --write",
     "analyze": "next experimental-analyze",
+    "test:entity-import": "vitest run --config vitest.entity-import.config.ts",
+    "test:entity-import:watch": "vitest --config vitest.entity-import.config.ts",
     "typecheck": "npx tsc --noEmit",
     "typecheck:watch": "npx tsc --noEmit --watch",
     "knip": "knip"
@@ -121,6 +123,9 @@
   "devDependencies": {
     "@biomejs/biome": "2.4.7",
     "@tailwindcss/postcss": "^4.2.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/file-saver": "^2.0.5",
     "@types/node": "^25.3.3",
     "@types/papaparse": "^5.5.2",
@@ -132,13 +137,15 @@
     "@types/tar-stream": "^3.1.4",
     "@types/three": "^0.159.0",
     "autoprefixer": "^10.4.27",
+    "jsdom": "^29.0.1",
     "knip": "^5.85.0",
     "lefthook": "^2.1.2",
     "postcss": "^8.5.8",
     "raw-loader": "^4.0.2",
     "sass": "^1.98.0",
     "tailwindcss": "^4.2.1",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^4.1.1"
   },
   "pnpm": {
     "overrides": {

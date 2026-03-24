@@ -9,7 +9,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 import { SelectPopover } from '@/ui/molecules/select-popover';
-import { CellMorphology } from '@/ui/segments/contribute/cell-morphology';
+import { CellMorphology, CellMorphologyImport } from '@/ui/segments/contribute/cell-morphology';
 import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
 import { EMCellMesh } from '@/ui/segments/contribute/em-cell-mesh';
 import {
@@ -23,36 +23,84 @@ import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+const ContributionEntryMode = {
+  Legacy: 'legacy',
+  Import: 'import',
+} as const;
+
+type TContributionEntryMode = (typeof ContributionEntryMode)[keyof typeof ContributionEntryMode];
+
+const ImportArtifactSupport = {
+  [ExtendedEntitiesTypeDict.CellMorphology]: true,
+} as const as Partial<Record<TExtendedEntitiesTypeDict, boolean>>;
+
 interface IExtendedEntitiesSelectorProps {
-  onSelectEntityType: (type: TExtendedEntitiesTypeDict) => void;
+  onSelectEntityType: (params: {
+    type: TExtendedEntitiesTypeDict;
+    mode: TContributionEntryMode;
+  }) => void;
 }
 
-function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelectorProps) {
+function buildContributionArtifactOptions(mode: TContributionEntryMode) {
   const options = Object.entries(EntityCoreConfiguration)
     .filter(([, p]) => p.isContributionOption ?? true)
     .map(([, value]) => ({
       label: value.title,
       value: value.extendedType,
       data: {
-        isUploadable: value.isContributable ?? false,
+        disabled:
+          mode === ContributionEntryMode.Legacy
+            ? !(value.isContributable ?? false)
+            : !ImportArtifactSupport[value.extendedType],
+        mode,
       },
     }))
     .sort((a, b) => {
-      return Number(b.data.isUploadable) - Number(a.data.isUploadable);
+      return Number(a.data.disabled) - Number(b.data.disabled);
     });
 
+  return options;
+}
+
+interface ContributionArtifactSelectorProps {
+  title: string;
+  description: string;
+  testId: string;
+  mode: TContributionEntryMode;
+  onSelectEntityType: IExtendedEntitiesSelectorProps['onSelectEntityType'];
+}
+
+function ContributionArtifactSelector({
+  title,
+  description,
+  testId,
+  mode,
+  onSelectEntityType,
+}: ContributionArtifactSelectorProps) {
+  const options = buildContributionArtifactOptions(mode);
+
   return (
-    <div className="w-full px-5">
+    <div data-testid={testId} className="w-full">
       <div className="border-neutral-2 rounded-2xl border p-4 py-9">
-        <div className="text-primary-9 mb-3 text-lg font-bold">
-          Select an artifact you want to upload
-        </div>
+        <div className="text-primary-9 mb-1 text-lg font-bold">{title}</div>
+        <p className="mb-3 text-sm text-neutral-500">{description}</p>
         <SelectPopover
           options={options}
-          placeholder="select an artifact "
+          placeholder={
+            mode === ContributionEntryMode.Legacy
+              ? 'select an artifact for the guided form'
+              : 'select an artifact for csv import'
+          }
           searchPlaceholder="search an artifact"
           onSelect={(option) => {
-            onSelectEntityType?.(option?.value as TExtendedEntitiesTypeDict);
+            if (!option?.value || option.data?.disabled) {
+              return;
+            }
+
+            onSelectEntityType?.({
+              type: option.value as TExtendedEntitiesTypeDict,
+              mode,
+            });
           }}
           searchable={false}
           selectedValue={undefined}
@@ -62,7 +110,7 @@ function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelec
             content: 'z-[99999]',
             rowClassName(option) {
               return cn({
-                'pointer-events-none select-none opacity-50': !option.data?.isUploadable,
+                'pointer-events-none select-none opacity-50': option.data?.disabled,
               });
             },
           }}
@@ -72,12 +120,33 @@ function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelec
   );
 }
 
+function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelectorProps) {
+  return (
+    <div className="grid w-full gap-4 px-5 xl:grid-cols-2">
+      <ContributionArtifactSelector
+        title="Contribute with guided form"
+        description="Open the existing multi-step artifact form."
+        testId="legacy-form-selector"
+        mode={ContributionEntryMode.Legacy}
+        onSelectEntityType={onSelectEntityType}
+      />
+      <ContributionArtifactSelector
+        title="Import from CSV"
+        description="Open the new CSV import and validation flow."
+        testId="csv-import-selector"
+        mode={ContributionEntryMode.Import}
+        onSelectEntityType={onSelectEntityType}
+      />
+    </div>
+  );
+}
+
 interface IRenderEntityTypeContentProps {
   type: TExtendedEntitiesTypeDict;
   sessionId: string;
 }
 
-function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeContentProps) {
+function RenderLegacyEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeContentProps) {
   return match({ type })
     .with(
       {
@@ -101,19 +170,38 @@ function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeCont
     .otherwise(() => null);
 }
 
+function RenderImportEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeContentProps) {
+  return match({ type })
+    .with(
+      {
+        type: ExtendedEntitiesTypeDict.CellMorphology,
+      },
+      () => <CellMorphologyImport sessionId={sId} />
+    )
+    .otherwise(() => null);
+}
+
 export function ContributionModal() {
-  const [{ entityType, sessionId, display }, setEventPayload] = useState<{
+  const [{ entityType, entryMode, sessionId, display }, setEventPayload] = useState<{
     display: boolean;
     entityType: TExtendedEntitiesTypeDict | null;
+    entryMode: TContributionEntryMode | null;
     sessionId: string | null;
   }>({
     display: false,
     entityType: null,
+    entryMode: null,
     sessionId: null,
   });
 
-  const onSelectEntityType = (type: TExtendedEntitiesTypeDict): void => {
-    setEventPayload({ sessionId, display, entityType: type });
+  const onSelectEntityType = ({
+    type,
+    mode,
+  }: {
+    type: TExtendedEntitiesTypeDict;
+    mode: TContributionEntryMode;
+  }): void => {
+    setEventPayload({ sessionId, display, entityType: type, entryMode: mode });
   };
 
   const onClose = (): void => {
@@ -121,26 +209,55 @@ export function ContributionModal() {
   };
 
   useContributionEntityClickEvent(({ detail }) => {
-    setEventPayload(detail);
+    setEventPayload({
+      ...detail,
+      entryMode: detail.entityType ? ContributionEntryMode.Legacy : null,
+    });
   });
 
   const entity = getEntityByExtendedType({ type: entityType ?? undefined });
-  const title = match({ entityType, entity })
+  const title = match({ entityType, entryMode, entity })
     .with({ entityType: P.union(P.nullish, P._), entity: P.nullish }, () => 'Add new artifact')
     .with(
-      { entityType: P.string.select('type'), entity: P.not(P.nullish).select('entity') },
+      {
+        entryMode: ContributionEntryMode.Import,
+        entityType: P.string.select('type'),
+        entity: P.not(P.nullish).select('entity'),
+      },
+      ({ entity: et }) => `Import ${et.title ?? 'artifact'} from CSV`
+    )
+    .with(
+      {
+        entryMode: ContributionEntryMode.Legacy,
+        entityType: P.string.select('type'),
+        entity: P.not(P.nullish).select('entity'),
+      },
       ({ entity: et }) => `Add new ${et.title ?? 'artifact'}`
     )
     .otherwise(() => null);
 
-  const content = match({ entityType, sessionId, entity })
-    .with({ entityType: P.union(P.nullish, P._), entity: P.nullish }, () => (
+  const content = match({ entityType, entryMode, sessionId, entity })
+    .with({ entityType: P.nullish }, () => (
       <ExtendedEntitiesSelector onSelectEntityType={onSelectEntityType} />
     ))
     .with(
-      { sessionId: P.string.select('sId'), entityType: P.string.select('type') },
+      {
+        sessionId: P.string.select('sId'),
+        entryMode: ContributionEntryMode.Legacy,
+        entityType: P.string.select('type'),
+      },
       ({ sId, type }) => {
-        return <RenderEntityTypeContent type={type} sessionId={sId} />;
+        return <RenderLegacyEntityTypeContent type={type} sessionId={sId} />;
+      }
+    )
+    .with(
+      {
+        sessionId: P.string.select('sId'),
+        entryMode: ContributionEntryMode.Import,
+        entityType: P.string.select('type'),
+      },
+      ({ sId, type }) => {
+        return <RenderImportEntityTypeContent type={type} sessionId={sId} />;
       }
     )
     .otherwise(() => null);
@@ -150,9 +267,18 @@ export function ContributionModal() {
   return (
     <Modal
       open={display}
+      size={entryMode === ContributionEntryMode.Legacy ? undefined : 'full'}
       position="center"
-      className="h-full max-h-[calc(100vh-6rem)] min-h-100 w-200 rounded-2xl"
-      bodyClassName="flex flex-col h-[calc(100%-48px)] min-h-0 max-h-full overflow-hidden p-0 relative"
+      className={cn(
+        entryMode === ContributionEntryMode.Legacy
+          ? 'h-full max-h-[calc(100vh-6rem)] min-h-100 w-200 rounded-2xl'
+          : 'h-screen w-screen rounded-none'
+      )}
+      bodyClassName={cn(
+        entryMode === ContributionEntryMode.Legacy
+          ? 'flex flex-col h-[calc(100%-48px)] min-h-0 max-h-full overflow-hidden p-0 relative'
+          : 'h-full w-full max-h-full'
+      )}
       overlayClassName="bg-primary-9/80 backdrop-blur-sm!"
       headerClassName={cn('w-full rounded-t-2xl pb-2', '[&_#modal-title]:w-full')}
       onClose={onClose}
