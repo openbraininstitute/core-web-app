@@ -53,7 +53,11 @@ export default function LandingPage({ className, section, error }: LandingPagePr
       ref={containerRef}
       className={classNames(className, styles.landingPage, isFeatures && styles.featuresSnap)}
     >
-      <Menu scrollHasStarted={scrollHasStarted} section={section} />
+      <Menu
+        scrollHasStarted={scrollHasStarted}
+        section={section}
+        scrollContainerRef={isFeatures ? containerRef : undefined}
+      />
       <Hero section={section} />
       <PaddedBlock>{renderSection(section)}</PaddedBlock>
       <VerticalSpace height="30px" />

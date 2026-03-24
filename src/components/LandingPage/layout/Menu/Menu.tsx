@@ -17,6 +17,7 @@ interface MenuProps {
   className?: string;
   scrollHasStarted: boolean;
   section?: EnumSection;
+  scrollContainerRef?: React.RefObject<HTMLElement | null>;
 }
 
 interface MenuItem {
@@ -76,7 +77,12 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
-export default function Menu({ className, scrollHasStarted, section }: MenuProps) {
+export default function Menu({
+  className,
+  scrollHasStarted,
+  section,
+  scrollContainerRef,
+}: MenuProps) {
   const [showMenu, setShowMenu] = React.useState(false);
   const [showMenuComponent, setShowMenuComponent] = React.useState(true);
   const [lastScrollY, setLastScrollY] = React.useState(0);
@@ -98,8 +104,10 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
   const parentItem = getParentItemForSection(section);
 
   React.useEffect(() => {
+    const el = scrollContainerRef?.current;
+    const target = el ?? window;
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const currentScrollY = el ? el.scrollTop : window.scrollY;
 
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
         setShowMenuComponent(false);
@@ -110,10 +118,10 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
       setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    target.addEventListener('scroll', handleScroll, { passive: true });
 
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+    return () => target.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY, scrollContainerRef]);
 
   return (
     <>
