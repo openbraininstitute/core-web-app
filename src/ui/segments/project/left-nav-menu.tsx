@@ -1,7 +1,6 @@
 'use client';
 
-import { RightOutlined } from '@ant-design/icons';
-import { RiCircleFill } from '@remixicon/react';
+import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import { useQueries } from '@tanstack/react-query';
 import { filter, sumBy } from 'es-toolkit/compat';
 import Link from 'next/link';
@@ -121,9 +120,11 @@ export function LeftMenu({ className }: Props) {
       <div className="flex w-full flex-col items-center justify-center gap-2">
         {hashedLinks.map(({ title, key, url, baseUrl, children }) => {
           const currentActiveSection = getActiveSection(pathname);
-          const isActive =
-            currentActiveSection === baseUrl ||
-            (children?.some((child) => !!getActiveSection(pathname, child.key)) ?? false);
+          const hasActiveChild =
+            children?.some((child) => !!getActiveSection(pathname, child.key)) ?? false;
+          const isActive = currentActiveSection === baseUrl && !hasActiveChild;
+          const isExpanded = isActive || hasActiveChild;
+          const ArrowIcon = isExpanded ? DownOutlined : RightOutlined;
 
           return (
             <div key={key} data-menu-item={title} className="w-full">
@@ -139,10 +140,10 @@ export function LeftMenu({ className }: Props) {
               >
                 <Link href={url}>
                   {title}
-                  <RightOutlined className="ml-auto text-current" />
+                  <ArrowIcon className="ml-auto text-current" />
                 </Link>
               </Button>
-              {children && isActive && (
+              {children && isExpanded && (
                 <div className="pl-2 pr-4 py-4 flex flex-col gap-1.5">
                   {children.map((child) => {
                     const activeSubSection = !!getActiveSection(pathname, child.key);
@@ -160,22 +161,23 @@ export function LeftMenu({ className }: Props) {
                         borderless
                         asChild
                         key={child.key}
-                        variant="ghost"
-                        className={cn(
-                          'ml-2 h-auto w-full justify-start font-normal text-primary-9',
-                          {
-                            'font-bold': activeSubSection,
-                          }
-                        )}
+                        variant="outline"
+                        className="ml-2 h-auto w-full justify-start font-bold shadow-sm"
                         size={breakpoint === 'xl' ? 'md' : 'sm'}
                         aria-label={activeSubSection ? 'active' : ''}
                         active={activeSubSection}
                       >
                         <Link href={href}>
-                          {activeSubSection && <RiCircleFill className="text-primary-8 size-3" />}
                           {child.title}
                           {!loadingCounts && (
-                            <span className="ml-auto text-gray-500 font-light">{count}</span>
+                            <span
+                              className={cn('ml-auto font-light', {
+                                'text-gray-500': !activeSubSection,
+                                'text-white/70': activeSubSection,
+                              })}
+                            >
+                              {count}
+                            </span>
                           )}
                         </Link>
                       </Button>

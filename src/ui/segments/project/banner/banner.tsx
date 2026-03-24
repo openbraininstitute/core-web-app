@@ -5,10 +5,12 @@ import { RiEditBoxLine } from '@remixicon/react';
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { Form, type FormProps, Input } from 'antd';
 import { delay, get } from 'es-toolkit/compat';
+import Link from 'next/link';
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
+import { config } from '@/config';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button/index';
@@ -154,7 +156,12 @@ export function ProjectCard(): ReactElement {
               'font-bold text-primary-9 transition-all duration-300 lg:text-xl 2xl:text-3xl'
             )}
           >
-            <span className="pr-1.5">{isPending ? variables?.name : result.data.project.name}</span>
+            <Link
+              href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`}
+              className="pr-1.5 text-primary-9 hover:text-primary-7"
+            >
+              {isPending ? variables?.name : result.data.project.name}
+            </Link>
             {mounted && isVirtualLabAdmin && (
               <Button
                 rounded

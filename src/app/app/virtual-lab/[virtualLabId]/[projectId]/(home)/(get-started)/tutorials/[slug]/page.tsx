@@ -1,6 +1,7 @@
 import { tryCatch } from '@/api/utils';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
+import { ScrollToTop } from '@/ui/segments/project/get-started/elements/scroll-to-top';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
 import { DiscoverQuery, type TTutorial } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
@@ -56,8 +57,11 @@ export default async function Page({ params }: ServerSideComponentProp<{ slug: s
   }
 
   return (
-    <div className="relative w-full h-[522.19px] overflow-hidden rounded-xl">
-      <VideoPlayer url={video?.url} />
-    </div>
+    <>
+      <ScrollToTop />
+      <div className="relative w-full h-[522.19px] overflow-hidden rounded-xl">
+        <VideoPlayer url={video?.url} />
+      </div>
+    </>
   );
 }

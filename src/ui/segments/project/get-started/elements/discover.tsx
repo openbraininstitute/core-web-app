@@ -78,7 +78,7 @@ export function Grid({ tutorials }: { tutorials: Array<TTutorial> }) {
   return (
     <section id="discover-tutorials" className="w-full flex flex-col my-6 @container">
       <div className="flex items-center justify-between w-full px-2 mb-2">
-        <h2 className="font-medium text-primary-9">Discover</h2>
+        <h2 className="font-medium text-primary-9">Tutorials</h2>
         {hasMore && (
           <Button
             rounded
