@@ -68,13 +68,13 @@ export default function InteractivePlot({
       type: 'scatter',
       mode: 'lines',
       line: { color: CHART_LINE_COLOR, width: 1 },
-      name: `Node ${nodeId}`,
+      name: `${populationName}_${nodeId}`,
     },
   ];
 
   return (
     <div ref={containerRef} className="flex flex-col gap-1">
-      <span className="text-lg">Node {nodeId}</span>
+      <span className="text-lg">{populationName}_{nodeId}</span>
       <Plot
         data={plotData}
         onRelayout={(e) => {
@@ -93,7 +93,7 @@ export default function InteractivePlot({
         }}
         layout={{
           ...layout,
-          title: `Node ${nodeId}`,
+          title: `${populationName}_${nodeId}`,
           xaxis: {
             ...layout.xaxis,
             title: { font, text: 'Time (ms)' },

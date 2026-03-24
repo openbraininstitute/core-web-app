@@ -1,74 +1,59 @@
 import { Select } from 'antd';
 
-const MAX_ALL_NODES = 20;
+const ALL_VALUE = 'All';
 
 export default function NodeSelector({
+  populationName,
   nodeIds,
   selectedNodeIds,
   onChange,
 }: {
+  populationName: string;
   nodeIds: number[];
   selectedNodeIds: number[];
   onChange: (nodeIds: number[]) => void;
 }) {
-  const allowAll = nodeIds.length <= MAX_ALL_NODES;
+  const isAll = selectedNodeIds.length === nodeIds.length && nodeIds.length > 0;
 
-  if (allowAll) {
-    const isAll = selectedNodeIds.length === nodeIds.length;
-
-    return (
-      <div className="flex flex-col gap-2">
-        Select Node ({nodeIds.length} available)
-        <Select
-          className="w-full"
-          mode="multiple"
-          value={isAll ? ['All', ...nodeIds.map(String)] : selectedNodeIds.map(String)}
-          onChange={(values: string[]) => {
-            const hadAll = isAll;
-            const hasAll = values.includes('All');
-
-            if (!hadAll && hasAll) {
-              onChange(nodeIds);
-            } else if (hadAll && !hasAll) {
-              onChange([]);
-            } else {
-              const numericValues = values.filter((v) => v !== 'All').map(Number);
-              onChange(numericValues);
-            }
-          }}
-          placeholder="Select nodes"
-          maxTagCount="responsive"
-        >
-          <Select.Option value="All">All Nodes</Select.Option>
-          {nodeIds.map((id) => (
-            <Select.Option value={String(id)} key={id}>
-              Node {id}
-            </Select.Option>
-          ))}
-        </Select>
-      </div>
-    );
-  }
+  const summaryLabel = isAll
+    ? `All Nodes (${nodeIds.length})`
+    : `${selectedNodeIds.length} of ${nodeIds.length} selected`;
 
   return (
     <div className="flex flex-col gap-2">
       Select Node ({nodeIds.length} available)
       <Select
         className="w-full"
-        showSearch
+        mode="multiple"
         virtual
-        value={selectedNodeIds.length > 0 ? String(selectedNodeIds[0]) : undefined}
-        onChange={(value: string) => onChange([Number(value)])}
-        placeholder="Search for a node"
+        showSearch
+        value={isAll ? [ALL_VALUE, ...nodeIds.map(String)] : selectedNodeIds.map(String)}
+        onChange={(values: string[]) => {
+          const hadAll = isAll;
+          const hasAll = values.includes(ALL_VALUE);
+
+          if (!hadAll && hasAll) {
+            onChange(nodeIds);
+          } else if (hadAll && !hasAll) {
+            onChange([]);
+          } else {
+            const numericValues = values.filter((v) => v !== ALL_VALUE).map(Number);
+            onChange(numericValues);
+          }
+        }}
+        placeholder="Select nodes"
+        maxTagCount={0}
+        maxTagPlaceholder={() => summaryLabel}
         filterOption={(input, option) =>
           String(option?.children ?? '')
             .toLowerCase()
             .includes(input.toLowerCase())
         }
       >
+        <Select.Option value={ALL_VALUE}>All Nodes</Select.Option>
         {nodeIds.map((id) => (
           <Select.Option value={String(id)} key={id}>
-            Node {id}
+            {populationName}_{id}
           </Select.Option>
         ))}
       </Select>

@@ -3,8 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
-import { CHART_LINE_COLOR } from '@/features/sonata-viewer/constants';
 import PopulationSelect from '@/features/sonata-viewer/components/population-select';
+import { CHART_LINE_COLOR } from '@/features/sonata-viewer/constants';
 import { useOverviewPlotConfig } from '@/features/sonata-viewer/hooks/config-hooks';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 import { cn } from '@/utils/css-class';
@@ -95,8 +95,10 @@ function ThumbnailContainer({
   }, [inView, worker, populationName, nodeId]);
 
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-lg capitalize">Node {nodeId}</span>
+    <div className="flex flex-col gap-8">
+      <span className="text-lg">
+        {populationName}_{nodeId}
+      </span>
       <button
         ref={ref}
         type="button"

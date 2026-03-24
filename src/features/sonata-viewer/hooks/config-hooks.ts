@@ -24,7 +24,7 @@ export const useInteractivePlotConfig = (units: string): UseConfigResponse => {
     layout: {
       autosize: true,
       showlegend: false,
-      margin: antBreakpoints.md ? { l: 55, r: 0, t: 50, b: 50 } : { l: 45, r: 0, t: 30, b: 35 },
+      margin: antBreakpoints.md ? { l: 55, r: 0, t: 30, b: 50 } : { l: 45, r: 0, t: 20, b: 35 },
       xaxis: {
         title: { text: 'Time (ms)' },
         zeroline: false,

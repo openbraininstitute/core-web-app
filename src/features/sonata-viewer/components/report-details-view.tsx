@@ -8,7 +8,7 @@ import type { Remote } from 'comlink';
 import type { SonataReportMetadata } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
 
-const MAX_ALL_NODES = 20;
+const MAX_DEFAULT_ALL = 20;
 
 export default function ReportDetailsView({
   metadata,
@@ -36,13 +36,13 @@ export default function ReportDetailsView({
   );
 
   const nodeIds = currentPop?.nodeIds ?? [];
-  const allowAll = nodeIds.length <= MAX_ALL_NODES;
+  const defaultAll = nodeIds.length <= MAX_DEFAULT_ALL;
 
   const [selectedNodeIds, setSelectedNodeIds] = useState<number[]>(() => {
     if (defaultNodeId !== undefined && nodeIds.includes(defaultNodeId)) {
       return [defaultNodeId];
     }
-    return allowAll ? nodeIds : nodeIds.length > 0 ? [nodeIds[0]] : [];
+    return defaultAll ? nodeIds : nodeIds.length > 0 ? [nodeIds[0]] : [];
   });
 
   const handlePopulationChange = (value: string) => {
@@ -50,7 +50,7 @@ export default function ReportDetailsView({
     const pop = metadata.populations.find((p) => p.name === value);
     if (!pop) return;
 
-    const canSelectAll = pop.nodeIds.length <= MAX_ALL_NODES;
+    const canSelectAll = pop.nodeIds.length <= MAX_DEFAULT_ALL;
     setSelectedNodeIds(canSelectAll ? pop.nodeIds : pop.nodeIds.length > 0 ? [pop.nodeIds[0]] : []);
   };
 
@@ -65,13 +65,14 @@ export default function ReportDetailsView({
         />
 
         <NodeSelector
+          populationName={selectedPopulation}
           nodeIds={nodeIds}
           selectedNodeIds={selectedNodeIds}
           onChange={setSelectedNodeIds}
         />
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,25rem),1fr))] gap-10">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,30rem),1fr))] gap-10">
         {selectedNodeIds.map((nodeId) => (
           <InteractivePlot
             key={`${selectedPopulation}-${nodeId}-${selectedNodeIds.length}`}
