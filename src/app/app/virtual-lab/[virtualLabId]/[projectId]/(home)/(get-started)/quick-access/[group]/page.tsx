@@ -92,8 +92,8 @@ export default async function Layout({
 
     return (
       <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-        <div className="flex items-center justify-center size-20 rounded-full bg-primary-1 mb-6">
-          <InboxOutlined className="text-primary-6 text-3xl" />
+        <div className="flex items-center justify-center size-20 rounded-full bg-primary-8 mb-6">
+          <InboxOutlined className="text-white! text-3xl" />
         </div>
         <h2 className="text-primary-8 text-xl font-semibold mb-2">
           No {capitalizedGroup?.toLowerCase() ?? group} examples yet

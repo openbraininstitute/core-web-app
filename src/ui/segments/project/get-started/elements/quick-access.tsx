@@ -218,32 +218,34 @@ export function SingleCardItem({
       )}
       onClick={() => redirect()}
     >
-      {artifactTitle && (
-        <div className="flex justify-end">
+      <div className="flex items-start gap-2 px-2 pt-1">
+        <div
+          className={cn(
+            'font-black text-primary-8 min-w-0 flex-1',
+            'select-none text-left flex items-center gap-2',
+            'py-1.5 group-hover:text-primary-7'
+          )}
+          title={title}
+        >
+          {group === QuickAccessGroupDict.Notebooks && isPending && (
+            <LoadingOutlined className="text-label!" />
+          )}
+          <span className="line-clamp-5 whitespace-normal break-all">
+            {title ?? 'No title provided'}
+          </span>
+        </div>
+        {artifactTitle && (
           <Badge
             variant="outline"
             rounded
             className={cn(
-              'bg-white/90 backdrop-blur-sm py-1.5 px-5! text-primary-8 border-neutral-2 text-xs font-medium shadow-sm',
+              'bg-white/90 backdrop-blur-sm py-1.5 px-5! text-primary-8 border-neutral-2 text-xs font-medium shadow-sm shrink-0 mt-1',
               'group-hover:bg-primary-7 group-hover:text-white'
             )}
           >
             {artifactTitle}
           </Badge>
-        </div>
-      )}
-      <div
-        className={cn(
-          'font-black rounded-md h-auto! text-primary-8 min-w-0 ',
-          'max-w-full w-fit select-none text-left flex items-center justify-center gap-2',
-          'px-4 py-1.5 max-w-max group-hover:text-primary-7'
         )}
-        title={title}
-      >
-        {group === QuickAccessGroupDict.Notebooks && isPending && (
-          <LoadingOutlined className="text-label!" />
-        )}
-        <span className="line-clamp-2 whitespace-normal">{title ?? 'No title provided'}</span>
       </div>
       <CardContent className="relative h-41.75 w-auto px-0 mt-auto">
         {thumbnail ? (
