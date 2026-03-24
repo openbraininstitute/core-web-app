@@ -316,7 +316,7 @@ export default function TraceOverview({
     <div className="flex flex-col gap-10">
       {cellIds.length > 1 && (
         <div className="flex flex-col gap-2">
-          Select Cell ({cellIds.length} available)
+          Select cell ({cellIds.length} available)
           <Select
             className="cell-select"
             placeholder="Select a cell"

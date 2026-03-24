@@ -16,12 +16,12 @@ export default function NodeSelector({
   const isAll = selectedNodeIds.length === nodeIds.length && nodeIds.length > 0;
 
   const summaryLabel = isAll
-    ? `All Nodes (${nodeIds.length})`
+    ? `All cells (${nodeIds.length})`
     : `${selectedNodeIds.length} of ${nodeIds.length} selected`;
 
   return (
     <div className="flex flex-col gap-2">
-      Select Node ({nodeIds.length} available)
+      Select cell ({nodeIds.length} available)
       <Select
         className="w-full"
         mode="multiple"
@@ -41,7 +41,7 @@ export default function NodeSelector({
             onChange(numericValues);
           }
         }}
-        placeholder="Select nodes"
+        placeholder="Select cells"
         maxTagCount={0}
         maxTagPlaceholder={() => summaryLabel}
         filterOption={(input, option) =>
@@ -50,7 +50,7 @@ export default function NodeSelector({
             .includes(input.toLowerCase())
         }
       >
-        <Select.Option value={ALL_VALUE}>All Nodes</Select.Option>
+        <Select.Option value={ALL_VALUE}>All cells</Select.Option>
         {nodeIds.map((id) => (
           <Select.Option value={String(id)} key={id}>
             {populationName}_{id}

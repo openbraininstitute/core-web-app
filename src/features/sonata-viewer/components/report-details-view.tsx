@@ -55,7 +55,7 @@ export default function ReportDetailsView({
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-14">
       <div className="flex flex-col gap-6">
         <PopulationSelect
           populations={populationNames}
