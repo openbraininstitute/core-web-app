@@ -197,7 +197,7 @@ export default function Chat({
                 />
               </div>
             )}
-            {threadId && !isEmptyThread && suggestions !== undefined && (
+            {threadId && !isEmptyThread && status === 'ready' && (
               <div className={styles.suggestedQuestionsContainer}>
                 <SuggestedQuestions
                   threadId={threadId}

@@ -23,7 +23,11 @@ export function useServiceAiAgentSuggestionFromUserJourney(
   const requestIdRef = React.useRef(0);
 
   React.useEffect(() => {
-    if (accessToken && virtualLabId && projectId && threadId) {
+    if (status === 'submitted' || status === 'streaming') {
+      setSuggestions([]);
+      return;
+    }
+    if (status === 'ready' && accessToken && virtualLabId && projectId && threadId) {
       const currentRequestId = ++requestIdRef.current;
 
       setIsLoading(true);
@@ -50,6 +54,6 @@ export function useServiceAiAgentSuggestionFromUserJourney(
           }
         });
     }
-  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId, fetchTrigger]);
+  }, [snapshot.frontendUrl, threadId, accessToken, projectId, virtualLabId, status, fetchTrigger]);
   return [suggestions, () => setSuggestions([]), isLoading, () => setFetchTrigger((n) => n + 1)];
 }
