@@ -74,7 +74,9 @@ export default function InteractivePlot({
 
   return (
     <div ref={containerRef} className="flex flex-col gap-1">
-      <span className="text-lg">{populationName}_{nodeId}</span>
+      <span className="text-lg">
+        {populationName}_{nodeId}
+      </span>
       <Plot
         data={plotData}
         onRelayout={(e) => {
