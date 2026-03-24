@@ -10,6 +10,12 @@
   --gradient-angle: 150deg;
 }
 
+@media (min-width: 768px) {
+  .hero {
+    scroll-snap-align: start;
+  }
+}
+
 .hero .background {
   position: absolute;
   left: 0;

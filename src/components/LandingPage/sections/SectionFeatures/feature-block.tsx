@@ -1,5 +1,5 @@
 import { useInView } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 export type ContentForFeatures = {
   titleH1?: string;
@@ -13,11 +13,6 @@ export type ContentForFeatures = {
   theme?: string;
 };
 
-const LIGHT_ACTIVE = '#002766';
-const LIGHT_INACTIVE = '#8C8C8C';
-const DARK_ACTIVE = '#ffffff';
-const DARK_INACTIVE = '#69C0FF';
-
 export default function FeatureBlock({
   content,
   id,
@@ -29,14 +24,11 @@ export default function FeatureBlock({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { amount: 0.5 });
-  const [activeUseCase, setActiveUseCase] = useState<number>(0);
 
   useEffect(() => {
     if (isInView && onInView) onInView(id);
   }, [isInView, onInView, id]);
   const isDark = content.theme === 'dark';
-  const activeColor = isDark ? DARK_ACTIVE : LIGHT_ACTIVE;
-  const inactiveColor = isDark ? DARK_INACTIVE : LIGHT_INACTIVE;
   const style = {
     ...(content.backgroundColor && {
       backgroundColor: content.backgroundColor,
@@ -50,7 +42,7 @@ export default function FeatureBlock({
   return (
     <div
       ref={ref}
-      className="relative w-full min-h-screen flex flex-col lg:flex-row items-center gap-12 flex-nowrap py-[16vh] px-32"
+      className="relative w-full min-h-screen md:h-dvh md:min-h-0 md:snap-start flex flex-col lg:flex-row items-center gap-12 flex-nowrap py-[16vh] px-32"
       style={style}
       id={`feature-block-${id}`}
     >
@@ -75,54 +67,26 @@ export default function FeatureBlock({
         <p className="text-base leading-normal">{content.description}</p>
       </aside>
       <section className="w-full lg:w-2/3">
-        <div className="flex flex-row gap-4">
-          {content.useCases.map((useCase, index) => {
-            return (
-              <button
-                key={useCase}
-                onClick={() => setActiveUseCase(index)}
-                type="button"
-                className="flex flex-row items-center gap-1 px-4 py-1 border border-neutral-2 rounded-2xl"
-                style={{
-                  color: index === activeUseCase ? activeColor : inactiveColor,
-                  backgroundColor: index === activeUseCase ? activeColor : 'transparent',
-                }}
+        <div className="grid grid-cols-2 gap-4 mb-10">
+          {content.useCases.map((useCase, index) => (
+            <div
+              key={useCase}
+              className="rounded-2xl border px-4 py-3 text-sm font-normal leading-[1.4]"
+              style={{
+                borderColor: isDark ? '#096DD9' : '#D9D9D9',
+                color: isDark ? '#fff' : '#002766',
+              }}
+            >
+              <span
+                className="text-sm font-normal"
+                style={{ color: isDark ? '#69C0FF' : '#8C8C8C' }}
               >
-                <span
-                  className="text-base font-normal"
-                  style={{
-                    color:
-                      index === activeUseCase
-                        ? isDark
-                          ? '#002766'
-                          : '#ffffff'
-                        : isDark
-                          ? '#ffffff'
-                          : '#002766',
-                  }}
-                >
-                  {' '}
-                  Use case {index + 1}
-                </span>
-              </button>
-            );
-          })}
+                Use case {index + 1}
+              </span>
+              <p className="m-0 mt-1 hyphens-auto">{useCase}</p>
+            </div>
+          ))}
         </div>
-        <div
-          className="w-full h-54 flex items-center text-3xl leading-[1.4] font-semibold"
-          style={{
-            color: content.theme === 'dark' ? '#fff' : '#002766',
-          }}
-        >
-          {content.useCases[activeUseCase] ?? ''}
-        </div>
-
-        {/* <p
-          className="text-base leading-1.75"
-          style={{ color: content.theme === 'dark' ? '#fff' : '#002766' }}
-        >
-          {content.description}
-        </p> */}
 
         <div
           className="grid grid-cols-3 gap-4 border p-4 rounded-lg mt-10"
