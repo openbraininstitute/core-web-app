@@ -29,7 +29,6 @@ export function MainVideo() {
           className="hover:scale-110 transition-all ease-in-expo"
         >
           <Link
-            title="How to explore data?"
             href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/tutorials/${DEFAULT_GET_STARTED_VIDEO_SLUG}`}
           >
             <RiPlayFill className="text-white size-10" />

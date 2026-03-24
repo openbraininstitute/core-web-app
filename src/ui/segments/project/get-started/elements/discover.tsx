@@ -5,7 +5,7 @@ import { RiCloseLargeFill, RiPlayFill } from '@remixicon/react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { config } from '@/config';
