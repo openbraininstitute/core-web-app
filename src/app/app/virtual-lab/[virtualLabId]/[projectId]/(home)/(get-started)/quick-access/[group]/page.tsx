@@ -110,7 +110,7 @@ export default async function Layout({
     <div
       id={`quick-access-${group}`}
       data-testid={`quick-access-${group}`}
-      className="grid grid-cols-3 gap-2 pr-2 mb-10"
+      className="grid grid-cols-3 gap-2 px-3 mb-10"
     >
       {results.map(({ title, thumbnail, entity, extendedType, artifactTitle }) => {
         return (

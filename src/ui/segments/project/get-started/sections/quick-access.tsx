@@ -86,7 +86,11 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
   ].sort((a, b) => groupOrder.indexOf(a.group) - groupOrder.indexOf(b.group));
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full">
+    <section
+      id="main-data-category-cards"
+      data-testid="main-data-category-cards"
+      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full"
+    >
       {results.map(
         ({
           groupTitle,
@@ -134,6 +138,6 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
           );
         }
       )}
-    </div>
+    </section>
   );
 }

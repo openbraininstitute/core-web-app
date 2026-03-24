@@ -2,11 +2,11 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
+import { useMutation } from '@tanstack/react-query';
 import { kebabCase } from 'es-toolkit/compat';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
 
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { BrokenImageIcon } from '@/components/icons/image-states';
@@ -58,47 +58,52 @@ export function MainCardItem({
   artifactTitle?: string | null;
 }) {
   const { push: navigate } = useRouter();
-  const [loading, setLoading] = useState(false);
 
-  async function getLink({ group, entity }: { entity: IEntity; group: string }) {
-    if (group === QuickAccessGroupDict.Data || group === QuickAccessGroupDict.Workflows) {
-      navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${group}/view/${kebabCase(entity.type)}/${entity.id}`
-      );
-    }
-    if (group === QuickAccessGroupDict.Notebooks) {
-      setLoading(true);
-      const asset = (entity as INotebook).assets.find(
-        (n) => n.label === AssetLabel.jupyter_notebook
-      );
-      if (!asset) return null;
-      const notebook = await startNotebook(
-        entity.id,
-        asset.path,
-        virtualLabId,
-        projectId,
-        virtualLab.data?.virtual_lab.compute_cell ?? 'aws',
-        0
-      );
-      setLoading(false);
-      window.open(notebook.url, '_blank');
-    }
-  }
+  const { mutate: redirect, isPending } = useMutation({
+    mutationFn: async () => {
+      if (group === QuickAccessGroupDict.Data || group === QuickAccessGroupDict.Workflows) {
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${group}/view/${kebabCase(entity.type)}/${entity.id}`
+        );
+      }
+      if (group === QuickAccessGroupDict.Notebooks) {
+        const asset = (entity as INotebook).assets.find(
+          (n) => n.label === AssetLabel.jupyter_notebook
+        );
+        if (!asset) return null;
+        const notebook = await startNotebook(
+          entity.id,
+          asset.path,
+          virtualLabId,
+          projectId,
+          virtualLab.data?.virtual_lab.compute_cell ?? 'aws',
+          0
+        );
+        window.open(notebook.url, '_blank');
+      }
+    },
+  });
 
   return (
     <Card
       className={cn(
         'w-full bg-white border-none flex-1 pt-0',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
-        'hover:shadow-bnb hover:border-gray-200 hover:border'
+        'hover:shadow-bnb hover:bg-gray-100/70 hover:border group',
+        'cursor-pointer select-none'
       )}
+      onClick={() => redirect()}
+      title={title}
     >
       {artifactTitle && (
         <div className="flex justify-end px-3 pt-3">
           <Badge
             variant="outline"
             rounded
-            className="bg-white/90 backdrop-blur-sm text-primary-8 border-neutral-2 text-xs font-medium shadow-sm"
+            className={cn(
+              'bg-white/90 backdrop-blur-sm py-1.5 px-5! text-primary-8 border-neutral-2 text-xs font-medium shadow-sm',
+              'group-hover:bg-primary-7 group-hover:text-white'
+            )}
           >
             {artifactTitle}
           </Badge>
@@ -115,18 +120,17 @@ export function MainCardItem({
       </div>
       <CardContent className="mt-15">
         <h4 className="text-neutral-400 pl-4">{groupTitle}</h4>
-        <Button
-          rounded
-          variant="ghost"
-          onClick={() => getLink({ group, entity })}
-          className="font-black text-primary-8 text-lg 2xl:text-xl mb-1.5 hover:bg-background"
-          title={title}
+        <div
+          className={cn(
+            'font-black rounded-full text-primary-8 text-lg 2xl:text-xl mb-1.5',
+            'px-4 py-1.5 max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5'
+          )}
         >
-          {group === QuickAccessGroupDict.Notebooks && loading && (
+          {group === QuickAccessGroupDict.Notebooks && isPending && (
             <LoadingOutlined className="text-label!" />
           )}
           {title ?? 'No title provided'}
-        </Button>
+        </div>
         <p className="text-neutral-4 line-clamp-2 pl-4" title={description}>
           {description ?? 'No description provided'}
         </p>
@@ -178,61 +182,69 @@ export function SingleCardItem({
   artifactTitle?: string | null;
 }) {
   const { push: navigate } = useRouter();
-  async function getLink({ group, entity }: { entity: IEntity; group: string }) {
-    if (group === QuickAccessGroupDict.Data || group === QuickAccessGroupDict.Workflows) {
-      navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${group}/view/${kebabCase(extendedType)}/${entity.id}`
-      );
-    }
-    if (group === QuickAccessGroupDict.Notebooks) {
-      const asset = (entity as INotebook).assets.find(
-        (n) => n.label === AssetLabel.jupyter_notebook
-      );
-      if (!asset) return null;
-      const notebook = await startNotebook(
-        entity.id,
-        asset.path,
-        virtualLabId,
-        projectId,
-        virtualLab?.data?.virtual_lab.compute_cell ?? 'aws',
-        0
-      );
+  const { mutate: redirect, isPending } = useMutation({
+    mutationFn: async () => {
+      if (group === QuickAccessGroupDict.Data || group === QuickAccessGroupDict.Workflows) {
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${group}/view/${kebabCase(extendedType)}/${entity.id}`
+        );
+      }
+      if (group === QuickAccessGroupDict.Notebooks) {
+        const asset = (entity as INotebook).assets.find(
+          (n) => n.label === AssetLabel.jupyter_notebook
+        );
+        if (!asset) return null;
+        const notebook = await startNotebook(
+          entity.id,
+          asset.path,
+          virtualLabId,
+          projectId,
+          virtualLab?.data?.virtual_lab.compute_cell ?? 'aws',
+          0
+        );
 
-      window.open(notebook.url, '_blank');
-    }
-  }
+        window.open(notebook.url, '_blank');
+      }
+    },
+  });
 
   return (
     <Card
       className={cn(
         'w-full bg-white border-none flex-1 p-2 gap-3',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] w-full',
-        'hover:shadow-bnb hover:border-gray-200 hover:border'
+        'hover:shadow-bnb hover:bg-gray-100/80 hover:border group',
+        'cursor-pointer select-none'
       )}
+      onClick={() => redirect()}
     >
       {artifactTitle && (
         <div className="flex justify-end">
           <Badge
             variant="outline"
             rounded
-            className="bg-white/90 backdrop-blur-sm text-primary-8 border-neutral-2 text-xs font-medium shadow-sm"
+            className={cn(
+              'bg-white/90 backdrop-blur-sm py-1.5 px-5! text-primary-8 border-neutral-2 text-xs font-medium shadow-sm',
+              'group-hover:bg-primary-7 group-hover:text-white'
+            )}
           >
             {artifactTitle}
           </Badge>
         </div>
       )}
-      <Button
-        variant="ghost"
-        size="responsive"
-        onClick={() => getLink({ group, entity })}
+      <div
         className={cn(
-          'font-black rounded-md py-2! h-auto! text-primary-8 min-w-0 ',
-          'max-w-full w-fit hover:bg-background text-left justify-start'
+          'font-black rounded-md h-auto! text-primary-8 min-w-0 ',
+          'max-w-full w-fit select-none text-left flex items-center justify-center gap-2',
+          'px-4 py-1.5 max-w-max group-hover:text-primary-7'
         )}
         title={title}
       >
+        {group === QuickAccessGroupDict.Notebooks && isPending && (
+          <LoadingOutlined className="text-label!" />
+        )}
         <span className="line-clamp-2 whitespace-normal">{title ?? 'No title provided'}</span>
-      </Button>
+      </div>
       <CardContent className="relative h-41.75 w-auto px-0 mt-auto">
         {thumbnail ? (
           <Image fill alt={title ?? 'preview'} src={thumbnail} objectFit="contain" />

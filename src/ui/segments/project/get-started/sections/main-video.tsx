@@ -12,7 +12,9 @@ import { cn } from '@/utils/css-class';
 export function MainVideo() {
   const { virtualLabId, projectId } = useWorkspace();
   return (
-    <div
+    <section
+      id="main-video-card"
+      data-testid="main-video-card"
       className={cn(
         ' bg-primary-8 bg-[linear-gradient(143.15deg,rgba(0,39,102,0.7)_35.12%,rgba(0,39,102,0)_72.91%)]',
         'p-4 rounded-xl mt-8 pb-18 relative flex items-start flex-col gap-3 shadow-sm'
@@ -46,6 +48,6 @@ export function MainVideo() {
           Workflows
         </Badge>
       </div>
-    </div>
+    </section>
   );
 }
