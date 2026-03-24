@@ -174,7 +174,9 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
           {isExpanded && <div className={styles.thinkingContent}>{collapsedChildren}</div>}
         </div>
       )}
-      <div className={styles.contentWrapper}>{visibleChildren}</div>
+      <div className={styles.contentWrapper} data-visible-tools="true">
+        {visibleChildren}
+      </div>
     </>
   );
 }
