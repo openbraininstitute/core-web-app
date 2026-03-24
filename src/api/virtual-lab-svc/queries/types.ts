@@ -1,12 +1,13 @@
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TUserRole } from '../validation';
 
 interface VlmResponse<T> {
   message: string;
   data: T | null;
 }
 
-export type Role = 'admin' | 'member';
+export type TRole = TUserRole;
 export type Member = {
   id: string;
   username: string;
@@ -14,7 +15,7 @@ export type Member = {
   first_name: string;
   last_name: string;
   invite_accepted: boolean;
-  role: Role;
+  role: TRole;
   name: string;
   email: string;
 };
@@ -57,11 +58,12 @@ export type ProjectCreationResponse = VlmResponse<{
   balance_added: boolean;
 }>;
 
-export type VirtualLab = {
+export type TVirtualLab = {
   id: string;
   name: string;
   description: string;
   reference_email: string;
+  email_verified: boolean;
   entity: string;
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
@@ -71,7 +73,7 @@ export type VirtualLab = {
   compute_cell: string;
 };
 
-export type VirtualLabExistsVerificationResponse = VlmResponse<{
+export type TVirtualLabExistsVerificationResponse = VlmResponse<{
   exists: boolean;
 }>;
 
@@ -91,11 +93,11 @@ export type InviteResponse = VlmResponse<{
 }>;
 
 export type VirtualLabResponseData = {
-  virtual_lab: VirtualLab;
+  virtual_lab: TVirtualLab;
   admins: Array<string> | null;
 };
 
-export type VirtualLabResponse = VlmResponse<VirtualLabResponseData>;
+export type TVirtualLabResponse = VlmResponse<VirtualLabResponseData>;
 
 type VerificationCodeEmailResponseData = {
   message: string;
@@ -169,16 +171,16 @@ export type SubscriptionTiersResponse = {
   tiers: Array<SubscriptionTier>;
 };
 
-export type VirtualLabListResponse = VlmResponse<{
-  pending_labs: Array<VirtualLab & { invite_id: string }>;
-  virtual_lab: VirtualLab;
+export type TVirtualLabListResponse = VlmResponse<{
+  pending_labs: Array<TVirtualLab & { invite_id: string }>;
+  virtual_lab: TVirtualLab;
   membership_labs: {
     total: number;
     filtered_total: number;
     page: number;
     size: number;
     page_size: number;
-    results: Array<VirtualLab>;
+    results: Array<TVirtualLab>;
     has_next: boolean;
     has_previous: boolean;
   };
@@ -350,7 +352,7 @@ export type UserGroup = {
   group_type: 'vlab' | 'project';
   project_id?: string;
   virtual_lab_id?: string;
-  role: Role;
+  role: TRole;
 };
 
 type UserStats = {
@@ -368,16 +370,16 @@ type AttachUsersToProject = {
   added_users: Array<{
     id: string;
     email: string;
-    role: Role;
+    role: TRole;
   }>;
   updated_users: Array<{
     id: string;
     email: string;
-    role: Role;
+    role: TRole;
   }>;
   failed_operations: Array<{
     user_id: string;
-    requested_role: Role;
+    requested_role: TRole;
     error: string;
   }>;
   email_sending_failures: Array<{
@@ -418,7 +420,7 @@ export type RecentWorkspace = {
       project_id: string;
     };
     updated_at: Date;
-    virtual_lab: VirtualLab;
+    virtual_lab: TVirtualLab;
     project: Project;
   };
 };

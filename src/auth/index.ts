@@ -1,8 +1,7 @@
 import { getServerSession, type NextAuthOptions, type Session, type TokenSet } from 'next-auth';
 
 import { serverConfig as config } from '@/config/server';
-
-import { log } from '../utils/logger';
+import { log } from '@/utils/logger';
 
 import type { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
 
@@ -89,7 +88,6 @@ export async function refreshAccessToken(token: TokenSet) {
     if (!response.ok) {
       throw refreshedTokens;
     }
-    // eslint-disable-next-line no-void
     void (async () => {
       await upsertRefreshTokenInAuthManager({
         accessToken: refreshedTokens.access_token,
@@ -105,7 +103,6 @@ export async function refreshAccessToken(token: TokenSet) {
     };
   } catch (error) {
     // TODO: log to Sentry once it's enabled
-    // eslint-disable-next-line no-console
     log('error', error);
 
     return {
@@ -160,14 +157,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, user, profile }) {
       // Initial sign in
       if (account && user) {
-        // eslint-disable-next-line no-void
         void (async () => {
-          if (account && account.access_token && account.refresh_token)
+          if (account?.access_token && account?.refresh_token)
             await upsertRefreshTokenInAuthManager({
               accessToken: account.access_token,
               refreshToken: account.refresh_token,
             });
         })();
+
         return {
           ...token,
           accessToken: account.access_token,
@@ -183,7 +180,6 @@ export const authOptions: NextAuthOptions = {
           idToken: account.id_token,
         };
       }
-
       // Return previous token if the access token has not expired / is not close to expiration yet.
       if (
         typeof token.accessTokenExpires === 'number' &&

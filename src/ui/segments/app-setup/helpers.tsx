@@ -1,29 +1,29 @@
+import { head } from 'es-toolkit/compat';
 import { isMatching, P } from 'ts-pattern';
-import head from 'es-toolkit/compat/head';
 
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { tryCatch } from '@/api/utils';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserProfile, getUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
-import { tryCatch } from '@/api/utils';
 
 import type {
   Project,
   RecentWorkspace,
+  TVirtualLab,
   UserProfileResponse,
-  VirtualLab,
 } from '@/api/virtual-lab-svc/queries/types';
 
 export type TResolvedWorkspace = {
   project: Project | null;
-  virtualLab: VirtualLab | null;
+  virtualLab: TVirtualLab | null;
   profile: UserProfileResponse | null;
 };
 
 export const resolveWorkspace = async () => {
   let virtualLabId: string | undefined;
   let project: Project | null = null;
-  let virtualLab: VirtualLab | null = null;
+  let virtualLab: TVirtualLab | null = null;
   let recentWorkspace: RecentWorkspace['recent_workspace']['workspace'] | null = null;
 
   const [virtualLabResult, profileResult, recentWorkspaceResult] = await Promise.all([
@@ -66,9 +66,7 @@ export const isAccountPayload = isMatching({
   name: P.string,
   first_name: P.string,
   last_name: P.string,
-  email: P.string,
   entity: P.string,
-  email_status: P.string.regex(/^verified$/),
 });
 
 export const isCustomizationPayload = isMatching({
@@ -113,6 +111,7 @@ export const WorkspaceBootstrapStepStatus = {
   Completed: 'completed',
   Passed: 'passed',
   Error: 'error',
+  Retryable: 'retryable',
 } as const;
 
 export type TWorkspaceBootstrapStepStatus =
