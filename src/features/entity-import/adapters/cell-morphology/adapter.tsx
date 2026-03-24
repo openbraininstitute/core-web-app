@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Button } from '@/ui/molecules/button';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
 
-import { ImportInputType, type Suggestion } from '../../core/contracts';
+import { ImportInputType, type ISuggestion } from '../../core/contracts';
 import { type ContributionDraft, ContributionsEditor } from './contributions-editor';
 import { LocationEditor, type LocationValue, parseLocationSummary } from './location-editor';
 import {
@@ -146,22 +146,13 @@ export function createCellMorphologyImportAdapter({
     templateFileName: 'cell-morphology-import-template.csv',
     fields: [
       {
-        label: 'Morphology File',
-        path: 'sourceFile',
-        submissionPath: 'assets.sourceFile',
-        validationPath: 'sourceFile',
-        required: true,
-        inputType: ImportInputType.FileBundle,
-        csv: { include: false },
-        placeholder: 'Attach morphology file',
-      },
-      {
         label: 'Name',
         path: 'name',
         submissionPath: 'setup.name',
         validationPath: 'metadata.name',
         required: true,
         inputType: ImportInputType.Text,
+        columnWidth: 180,
       },
       {
         label: 'Description',
@@ -170,6 +161,7 @@ export function createCellMorphologyImportAdapter({
         validationPath: 'metadata.description',
         required: true,
         inputType: ImportInputType.Textarea,
+        columnWidth: 260,
       },
       {
         label: 'Brain Region',
@@ -182,6 +174,7 @@ export function createCellMorphologyImportAdapter({
         remote: {
           search: async ({ query, context }) => services.searchBrainRegions(query, context),
         },
+        columnWidth: 200,
       },
       {
         label: 'Experiment Date',
@@ -190,6 +183,7 @@ export function createCellMorphologyImportAdapter({
         validationPath: 'metadata.experiment_date',
         required: false,
         inputType: ImportInputType.Date,
+        columnWidth: 140,
       },
       {
         label: 'Contact Email',
@@ -198,6 +192,7 @@ export function createCellMorphologyImportAdapter({
         validationPath: 'metadata.contact_email',
         required: false,
         inputType: ImportInputType.Text,
+        columnWidth: 200,
       },
       {
         label: 'Published In',
@@ -206,6 +201,7 @@ export function createCellMorphologyImportAdapter({
         validationPath: 'metadata.published_in',
         required: false,
         inputType: ImportInputType.Text,
+        columnWidth: 180,
       },
       {
         label: 'Location',
@@ -221,6 +217,7 @@ export function createCellMorphologyImportAdapter({
         panelRenderer: ({ cell, row, field, actions }) => (
           <LocationEditor cell={cell} row={row} fieldPath={field.path} actions={actions} />
         ),
+        columnWidth: 160,
       },
       {
         label: 'Subject',
@@ -233,6 +230,7 @@ export function createCellMorphologyImportAdapter({
         remote: {
           search: async ({ query, context }) => services.searchSubjects(query, context),
         },
+        columnWidth: 200,
       },
       {
         label: 'License',
@@ -245,6 +243,7 @@ export function createCellMorphologyImportAdapter({
         remote: {
           search: async ({ query, context }) => services.searchLicenses(query, context),
         },
+        columnWidth: 200,
       },
       {
         label: 'Protocol',
@@ -257,6 +256,7 @@ export function createCellMorphologyImportAdapter({
         remote: {
           search: async ({ query, context }) => services.searchProtocols(query, context),
         },
+        columnWidth: 220,
       },
       {
         label: 'M-Type',
@@ -269,6 +269,7 @@ export function createCellMorphologyImportAdapter({
         remote: {
           search: async ({ query, context }) => services.searchMtypes(query, context),
         },
+        columnWidth: 180,
       },
       {
         label: 'Contributions',
@@ -292,6 +293,18 @@ export function createCellMorphologyImportAdapter({
             services={services}
           />
         ),
+        columnWidth: 220,
+      },
+      {
+        label: 'Morphology File',
+        path: 'sourceFile',
+        submissionPath: 'assets.sourceFile',
+        validationPath: 'sourceFile',
+        required: true,
+        inputType: ImportInputType.FileBundle,
+        csv: { include: false },
+        placeholder: 'Attach morphology file',
+        columnWidth: 200,
       },
     ],
     schema: cellMorphologySubmissionSchema as z.ZodType<CellMorphologySubmissionPayload>,
@@ -376,8 +389,8 @@ export function getLocationSummary(location: LocationValue | null): string {
 }
 
 export function isCellMorphologySuggestionRecommended(
-  suggestions: Array<Suggestion>,
-  candidate: Suggestion
+  suggestions: Array<ISuggestion>,
+  candidate: ISuggestion
 ): boolean {
   return suggestions.some(
     (suggestion) => suggestion.value === candidate.value && suggestion.recommended

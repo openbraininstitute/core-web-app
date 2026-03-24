@@ -53,7 +53,7 @@ const adapter: EntityImportAdapter<Record<string, string>, { id: string }> = {
 };
 
 describe('EntityImportFeature', () => {
-  it('applies a selected remote suggestion to all matching rows', async () => {
+  it('stages a selected remote suggestion and applies it after accepting the draft', async () => {
     const user = userEvent.setup();
 
     render(
@@ -70,7 +70,6 @@ describe('EntityImportFeature', () => {
     await user.click(screen.getByLabelText('Brain Region row 1'));
 
     expect(screen.getByText('Validator')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Brain Region', level: 4 })).toBeInTheDocument();
 
     const validatorInput = screen.getByLabelText('Validator value');
     await user.clear(validatorInput);
@@ -83,6 +82,16 @@ describe('EntityImportFeature', () => {
 
     await user.click(suggestion);
     await user.click(screen.getByRole('button', { name: /Apply to all/i }));
+
+    expect(
+      screen.getByRole('button', { name: 'Accept suggested Brain Region row 1' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Accept suggested Brain Region row 2' })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Accept suggested Brain Region row 1' }));
+    await user.click(screen.getByRole('button', { name: 'Accept suggested Brain Region row 2' }));
 
     expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Isocortex');
     expect(screen.getByLabelText('Brain Region row 2')).toHaveValue('Isocortex');

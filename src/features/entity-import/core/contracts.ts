@@ -55,7 +55,7 @@ export const NotificationTone = {
 
 export type TNotificationTone = (typeof NotificationTone)[keyof typeof NotificationTone];
 
-export interface Suggestion {
+export interface ISuggestion {
   value: string;
   label: string;
   description?: string;
@@ -76,13 +76,21 @@ export interface ImportFieldDefinition {
   inputType: TImportInputType;
   dependencies?: Array<string>;
   csv?: ImportFieldCsvConfig;
+  /** When set, table column uses this width (px) and prefers it over auto layout. */
+  columnWidth?: number;
 }
 
 export interface RemoteState {
   status: TRemoteValidationStatus;
-  suggestions: Array<Suggestion>;
-  selectedSuggestion: Suggestion | null;
+  suggestions: Array<ISuggestion>;
+  selectedSuggestion: ISuggestion | null;
   message: string | null;
+}
+
+export interface CellCorrectionDraft {
+  previousRawValue: string;
+  previousDisplayValue: string | null;
+  suggestion: ISuggestion;
 }
 
 export interface ImportCellState {
@@ -94,6 +102,8 @@ export interface ImportCellState {
   issues: Array<string>;
   dependencyState: TDependencyState;
   remoteState: RemoteState;
+  /** Staged remote suggestion; raw value stays as user-entered until accept. */
+  correctionDraft: CellCorrectionDraft | null;
 }
 
 export interface ImportRowState {

@@ -3,15 +3,17 @@ import { describe, expect, it } from 'vitest';
 import {
   type ImportFieldDefinition,
   ImportInputType,
+  type ISuggestion,
   RemoteValidationStatus,
-  type Suggestion,
 } from './contracts';
 import {
+  acceptCorrectionDraft,
   appendEmptyRow,
-  applySuggestionToRows,
   createImportSessionState,
   hydrateSessionRows,
+  rejectCorrectionDraft,
   selectCell,
+  stageSuggestionToRows,
   updateCellRawValue,
 } from './session';
 
@@ -30,7 +32,7 @@ const fields: Array<ImportFieldDefinition> = [
   },
 ];
 
-const suggestion: Suggestion = {
+const suggestion: ISuggestion = {
   value: 'isocortex',
   label: 'Isocortex',
 };
@@ -42,6 +44,7 @@ describe('createImportSessionState', () => {
     expect(session.rows).toHaveLength(2);
     expect(Object.keys(session.rows[0].cells)).toEqual(['name', 'brainRegion']);
     expect(session.rows[0].cells.name.rawValue).toBe('');
+    expect(session.rows[0].cells.name.correctionDraft).toBeNull();
   });
 });
 
@@ -99,8 +102,8 @@ describe('updateCellRawValue', () => {
   });
 });
 
-describe('applySuggestionToRows', () => {
-  it('applies a suggestion to all matching values in the selected column', () => {
+describe('stageSuggestionToRows', () => {
+  it('stages a suggestion without mutating the raw value immediately', () => {
     const session = createImportSessionState({
       fields,
       rows: [
@@ -110,7 +113,7 @@ describe('applySuggestionToRows', () => {
       ],
     });
 
-    const next = applySuggestionToRows(session, {
+    const next = stageSuggestionToRows(session, {
       fieldPath: 'brainRegion',
       targetRowId: session.rows[0].id,
       sourceValue: 'Ctx',
@@ -119,12 +122,74 @@ describe('applySuggestionToRows', () => {
     });
 
     expect(next.rows.map((row) => row.cells.brainRegion.rawValue)).toEqual([
-      'isocortex',
-      'isocortex',
+      'Ctx',
+      'Ctx',
       'Thalamus',
     ]);
+    expect(next.rows[0].cells.brainRegion.correctionDraft).toEqual({
+      previousRawValue: 'Ctx',
+      previousDisplayValue: 'Ctx',
+      suggestion,
+    });
+    expect(next.rows[1].cells.brainRegion.correctionDraft).toEqual({
+      previousRawValue: 'Ctx',
+      previousDisplayValue: 'Ctx',
+      suggestion,
+    });
+    expect(next.rows[2].cells.brainRegion.correctionDraft).toBeNull();
+  });
+});
+
+describe('acceptCorrectionDraft', () => {
+  it('commits the staged suggestion into the cell value', () => {
+    const session = createImportSessionState({
+      fields,
+      rows: [{ name: 'Neuron A', brainRegion: 'Ctx' }],
+    });
+
+    const staged = stageSuggestionToRows(session, {
+      fieldPath: 'brainRegion',
+      targetRowId: session.rows[0].id,
+      sourceValue: 'Ctx',
+      suggestion,
+      applyToAllMatching: false,
+    });
+
+    const next = acceptCorrectionDraft(staged, {
+      rowId: staged.rows[0].id,
+      fieldPath: 'brainRegion',
+    });
+
+    expect(next.rows[0].cells.brainRegion.rawValue).toBe('isocortex');
     expect(next.rows[0].cells.brainRegion.displayValue).toBe('Isocortex');
-    expect(next.rows[1].cells.brainRegion.displayValue).toBe('Isocortex');
+    expect(next.rows[0].cells.brainRegion.correctionDraft).toBeNull();
+    expect(next.rows[0].cells.brainRegion.remoteState.status).toBe(RemoteValidationStatus.Valid);
+  });
+});
+
+describe('rejectCorrectionDraft', () => {
+  it('clears the draft and keeps the original cell value', () => {
+    const session = createImportSessionState({
+      fields,
+      rows: [{ name: 'Neuron A', brainRegion: 'Ctx' }],
+    });
+
+    const staged = stageSuggestionToRows(session, {
+      fieldPath: 'brainRegion',
+      targetRowId: session.rows[0].id,
+      sourceValue: 'Ctx',
+      suggestion,
+      applyToAllMatching: false,
+    });
+
+    const next = rejectCorrectionDraft(staged, {
+      rowId: staged.rows[0].id,
+      fieldPath: 'brainRegion',
+    });
+
+    expect(next.rows[0].cells.brainRegion.rawValue).toBe('Ctx');
+    expect(next.rows[0].cells.brainRegion.displayValue).toBe('Ctx');
+    expect(next.rows[0].cells.brainRegion.correctionDraft).toBeNull();
   });
 });
 

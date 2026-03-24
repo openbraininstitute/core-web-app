@@ -17,7 +17,7 @@ import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brai
 import type { WorkspaceContext } from '@/types/common';
 import type { TAgentType } from '@/ui/segments/contribute/shared/types';
 import type { EntityImportRuntimeContext } from '../../core/adapter';
-import type { Suggestion } from '../../core/contracts';
+import type { ISuggestion } from '../../core/contracts';
 
 export interface CellMorphologyContributionInput {
   agent_type: TAgentType;
@@ -36,8 +36,6 @@ export interface CellMorphologyRegistrationMetadata {
   contact_email: string | null;
   published_in: string | null;
   location: { x: number; y: number; z: number } | null;
-  project_id: string;
-  virtual_lab_id: string;
 }
 
 export interface RegisterMorphologyResult {
@@ -49,30 +47,33 @@ export interface CellMorphologyImportServices {
   searchBrainRegions: (
     query: string,
     context: EntityImportRuntimeContext
-  ) => Promise<Array<Suggestion>>;
+  ) => Promise<Array<ISuggestion>>;
   searchLicenses: (
     query: string,
     context: EntityImportRuntimeContext
-  ) => Promise<Array<Suggestion>>;
+  ) => Promise<Array<ISuggestion>>;
   searchSubjects: (
     query: string,
     context: EntityImportRuntimeContext
-  ) => Promise<Array<Suggestion>>;
+  ) => Promise<Array<ISuggestion>>;
   searchProtocols: (
     query: string,
     context: EntityImportRuntimeContext
-  ) => Promise<Array<Suggestion>>;
-  searchMtypes: (query: string, context: EntityImportRuntimeContext) => Promise<Array<Suggestion>>;
-  searchPersons: (query: string, context: EntityImportRuntimeContext) => Promise<Array<Suggestion>>;
+  ) => Promise<Array<ISuggestion>>;
+  searchMtypes: (query: string, context: EntityImportRuntimeContext) => Promise<Array<ISuggestion>>;
+  searchPersons: (
+    query: string,
+    context: EntityImportRuntimeContext
+  ) => Promise<Array<ISuggestion>>;
   searchOrganizations: (
     query: string,
     context: EntityImportRuntimeContext
-  ) => Promise<Array<Suggestion>>;
+  ) => Promise<Array<ISuggestion>>;
   searchConsortia: (
     query: string,
     context: EntityImportRuntimeContext
-  ) => Promise<Array<Suggestion>>;
-  searchRoles: (query: string, context: EntityImportRuntimeContext) => Promise<Array<Suggestion>>;
+  ) => Promise<Array<ISuggestion>>;
+  searchRoles: (query: string, context: EntityImportRuntimeContext) => Promise<Array<ISuggestion>>;
   registerMorphology: (args: {
     file: File;
     metadata: CellMorphologyRegistrationMetadata;
@@ -101,7 +102,7 @@ function normalizeQuery(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function toSuggestion(value: string, label: string, description?: string): Suggestion {
+function toSuggestion(value: string, label: string, description?: string): ISuggestion {
   return {
     value,
     label,
@@ -109,7 +110,7 @@ function toSuggestion(value: string, label: string, description?: string): Sugge
   };
 }
 
-function filterSuggestions(suggestions: Array<Suggestion>, query: string): Array<Suggestion> {
+function filterSuggestions(suggestions: Array<ISuggestion>, query: string): Array<ISuggestion> {
   const normalizedQuery = normalizeQuery(query);
   return suggestions
     .filter((suggestion) => {
@@ -167,7 +168,7 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
         filters: {
           page: 1,
           page_size: 20,
-          search: query,
+          ilike_search: query,
         },
         context: toWorkspaceContext(context),
       });
@@ -184,7 +185,7 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
         filters: {
           page: 1,
           page_size: 20,
-          pref_label__ilike: query,
+          ilike_search: query,
         },
         ctx: toWorkspaceContext(context),
       });
