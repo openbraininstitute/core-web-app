@@ -159,6 +159,10 @@ export function useWorkspaceHierarchyRegistry() {
     (h) => h.id === config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID
   );
 
+  const currentUrlOverrideKey = urlOverride?.hierarchyId
+    ? `${urlOverride.hierarchyId}:${urlOverride.brainRegionId}`
+    : null;
+
   const defaultingCurrentHierarchyId =
     urlOverride?.hierarchyId ||
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
@@ -370,6 +374,7 @@ export function useWorkspaceHierarchyRegistry() {
       const hasStoredSelection = !!browserStorageHierarchy?.hierarchyId;
 
       if (hasUrlOverride) {
+        const overrideKey = `${urlOverride.hierarchyId}:${urlOverride.brainRegionId}`;
         const hierarchy = remoteAvailableHierarchies?.find((h) => h.id === urlOverride.hierarchyId);
         if (hierarchy) {
           const result = await changeLocalStoreHierarchySpecies(
@@ -385,10 +390,11 @@ export function useWorkspaceHierarchyRegistry() {
               perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
             });
           }
-          lastAppliedUrlOverrideRef.current = `${urlOverride.hierarchyId}:${urlOverride.brainRegionId}`;
+          lastAppliedUrlOverrideRef.current = overrideKey;
           isInitializedRef.current = true;
           return;
         }
+        lastAppliedUrlOverrideRef.current = overrideKey;
       }
 
       const remoteHierarchyId = remoteUserPreferenceHierarchySpecies?.hierarchy_id;
@@ -495,7 +501,10 @@ export function useWorkspaceHierarchyRegistry() {
       const hierarchy = remoteAvailableHierarchies?.find(
         (h) => h.id === currentUrlOverride.hierarchyId
       );
-      if (!hierarchy) return;
+      if (!hierarchy) {
+        lastAppliedUrlOverrideRef.current = overrideKey;
+        return;
+      }
 
       const result = await changeLocalStoreHierarchySpecies(
         hierarchy.id,
@@ -581,6 +590,8 @@ export function useWorkspaceHierarchyRegistry() {
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
     browserStorageHierarchy?.hierarchyId ||
     config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
+  const hasPendingUrlOverride =
+    !!currentUrlOverrideKey && lastAppliedUrlOverrideRef.current !== currentUrlOverrideKey;
 
   return {
     workspaceSpecies,
@@ -589,6 +600,7 @@ export function useWorkspaceHierarchyRegistry() {
     remoteAvailableHierarchies,
     isLoadingAvailableHierarchiesSpecies,
     syncSettled: isInitializedRef.current,
+    hasPendingUrlOverride,
     changeBulkStoreHierarchySpecies,
     changeBrainRegion,
   };

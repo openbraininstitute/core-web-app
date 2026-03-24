@@ -19,9 +19,64 @@ type Props = {
   children: ReactNode;
 };
 
+type NextBrainRegionUrlStateInput = {
+  mode: Exclude<TBrainRegionUrlBoundaryMode, 'none'>;
+  syncSettled: boolean;
+  hasPendingUrlOverride: boolean;
+  urlHierarchyId: string;
+  urlBrainRegionId: string;
+  selectedBrainRegionId?: string | null;
+  selectedHierarchyId?: string | null;
+  workspaceHierarchyId?: string | null;
+};
+
+type BrainRegionUrlState = {
+  hierarchyId: string;
+  brainRegionId: string;
+};
+
+/** when in Sync mode with settled state and no pending override,
+ * returns URL params that match workspace selection; otherwise `null`
+ * */
+export function getNextBrainRegionUrlState({
+  mode,
+  syncSettled,
+  hasPendingUrlOverride,
+  urlHierarchyId,
+  urlBrainRegionId,
+  selectedBrainRegionId,
+  selectedHierarchyId,
+  workspaceHierarchyId,
+}: NextBrainRegionUrlStateInput): BrainRegionUrlState | null {
+  const nextHierarchyId = selectedHierarchyId || workspaceHierarchyId;
+  if (
+    mode !== BrainRegionUrlBoundaryMode.Sync ||
+    !syncSettled ||
+    hasPendingUrlOverride ||
+    !nextHierarchyId ||
+    !selectedBrainRegionId
+  ) {
+    return null;
+  }
+
+  const isAlreadySynced =
+    urlHierarchyId === nextHierarchyId && urlBrainRegionId === selectedBrainRegionId;
+
+  if (isAlreadySynced) return null;
+
+  return {
+    hierarchyId: nextHierarchyId,
+    brainRegionId: selectedBrainRegionId,
+  };
+}
+
+/** side effects only: clears brain url params in Strip mode;
+ * updates url from selection in Sync mode
+ * */
 function BrainRegionUrlBoundaryEffects({ mode }: { mode: Props['mode'] }) {
   const { urlState, setUrlState } = useHierarchyBrainRegionUrlState();
-  const { selectedBrainRegion, workspaceHierarchyId } = useWorkspaceHierarchyRegistry();
+  const { selectedBrainRegion, workspaceHierarchyId, syncSettled, hasPendingUrlOverride } =
+    useWorkspaceHierarchyRegistry();
 
   const hasBrainParams = !!urlState.hierarchyId || !!urlState.brainRegionId;
 
@@ -31,21 +86,24 @@ function BrainRegionUrlBoundaryEffects({ mode }: { mode: Props['mode'] }) {
   }, [mode, hasBrainParams, setUrlState]);
 
   useEffect(() => {
-    const nextHierarchyId = selectedBrainRegion?.hierarchy_id || workspaceHierarchyId;
-    if (mode !== BrainRegionUrlBoundaryMode.Sync || !nextHierarchyId || !selectedBrainRegion?.id)
-      return;
-
-    const isAlreadySynced =
-      urlState.hierarchyId === nextHierarchyId && urlState.brainRegionId === selectedBrainRegion.id;
-
-    if (isAlreadySynced) return;
-
-    void setUrlState({
-      hierarchyId: nextHierarchyId,
-      brainRegionId: selectedBrainRegion.id,
+    const nextUrlState = getNextBrainRegionUrlState({
+      mode,
+      syncSettled,
+      hasPendingUrlOverride,
+      urlHierarchyId: urlState.hierarchyId,
+      urlBrainRegionId: urlState.brainRegionId,
+      selectedBrainRegionId: selectedBrainRegion?.id,
+      selectedHierarchyId: selectedBrainRegion?.hierarchy_id,
+      workspaceHierarchyId,
     });
+
+    if (!nextUrlState) return;
+
+    void setUrlState(nextUrlState);
   }, [
     mode,
+    syncSettled,
+    hasPendingUrlOverride,
     workspaceHierarchyId,
     selectedBrainRegion?.id,
     selectedBrainRegion?.hierarchy_id,
@@ -57,6 +115,9 @@ function BrainRegionUrlBoundaryEffects({ mode }: { mode: Props['mode'] }) {
   return null;
 }
 
+/** provides `BrainRegionUrlBoundaryContext` (mode + optional url override)
+ * and runs URL sync/strip effects for descendants.
+ * */
 export function BrainRegionUrlBoundary({ mode, children }: Props) {
   const { urlState } = useHierarchyBrainRegionUrlState();
 
