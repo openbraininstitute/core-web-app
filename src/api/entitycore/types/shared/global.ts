@@ -5,7 +5,7 @@ import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { AssetLegacyMeta } from '@/api/entitycore/types/shared/legacy';
-import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type { IlikeSearchFilter, PaginationFilter } from '@/api/entitycore/types/shared/request';
 import type { Prettify } from '@/utils/type';
 
 export type EntityCoreDataType =
@@ -159,7 +159,7 @@ export type TypeFilter = {
   order_by?: string | null;
 };
 
-export interface IMTypeFilter extends PaginationFilter, TypeFilter {}
+export interface IMTypeFilter extends PaginationFilter, TypeFilter, IlikeSearchFilter {}
 export interface IETypeFilter extends PaginationFilter, TypeFilter {}
 
 type RoleBase = {

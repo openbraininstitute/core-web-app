@@ -15,7 +15,7 @@ import {
 import { AgentType, type TAgentType } from '@/ui/segments/contribute/shared/types';
 
 import type { EntityImportActions, EntityImportRuntimeContext } from '../../core/adapter';
-import type { ImportCellState, ImportRowState, Suggestion } from '../../core/contracts';
+import type { ImportCellState, ImportRowState, ISuggestion } from '../../core/contracts';
 import type { CellMorphologyContributionInput, CellMorphologyImportServices } from './services';
 
 export interface ContributionDraft extends Partial<CellMorphologyContributionInput> {
@@ -85,8 +85,8 @@ export function ContributionsEditor({
   );
   const [agentQueries, setAgentQueries] = useState<Record<number, string>>({});
   const [roleQueries, setRoleQueries] = useState<Record<number, string>>({});
-  const [agentSuggestions, setAgentSuggestions] = useState<Record<number, Array<Suggestion>>>({});
-  const [roleSuggestions, setRoleSuggestions] = useState<Record<number, Array<Suggestion>>>({});
+  const [agentSuggestions, setAgentSuggestions] = useState<Record<number, Array<ISuggestion>>>({});
+  const [roleSuggestions, setRoleSuggestions] = useState<Record<number, Array<ISuggestion>>>({});
 
   const syncEntries = (nextEntries: Array<ContributionDraft>) => {
     const normalizedEntries = nextEntries.filter(

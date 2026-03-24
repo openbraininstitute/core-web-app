@@ -8,22 +8,24 @@ import {
   type FlatImportValues,
   type ImportRowState,
   type ImportSessionState,
+  type ISuggestion,
   NotificationTone,
   RemoteValidationStatus,
-  type Suggestion,
 } from '../core/contracts';
 import { buildTemplateColumns, importCsvRows } from '../core/csv';
 import { createRemoteSuggestionCacheKey } from '../core/remote-validation';
 import {
+  acceptCorrectionDraft,
   appendEmptyRow,
-  applySuggestionToRows,
   createImportSessionState,
   dismissNotification,
   hydrateSessionRows,
   pushNotification,
+  rejectCorrectionDraft,
   selectCell as selectCellState,
   setCellRemoteState,
   setCellValue,
+  stageSuggestionToRows,
   updateCellRawValue,
 } from '../core/session';
 import { validateSessionRows } from '../core/validation';
@@ -73,9 +75,9 @@ function hasSuggestionSource(field?: AdapterFieldDefinition): boolean {
 }
 
 function filterLocalSuggestions(
-  suggestions: Array<Suggestion> | undefined,
+  suggestions: Array<ISuggestion> | undefined,
   query: string
-): Array<Suggestion> {
+): Array<ISuggestion> {
   const normalizedQuery = query.trim().toLowerCase();
   if (!normalizedQuery || !suggestions?.length) {
     return [];
@@ -88,8 +90,8 @@ function filterLocalSuggestions(
     .slice(0, 12);
 }
 
-function mergeSuggestions(...groups: Array<Array<Suggestion> | undefined>): Array<Suggestion> {
-  const dedupedSuggestions = new Map<string, Suggestion>();
+function mergeSuggestions(...groups: Array<Array<ISuggestion> | undefined>): Array<ISuggestion> {
+  const dedupedSuggestions = new Map<string, ISuggestion>();
 
   groups.flat().forEach((suggestion) => {
     if (!suggestion) {
@@ -120,7 +122,7 @@ function cellStillMatchesQuery(
 function resolveSuggestionMessage(
   field: AdapterFieldDefinition,
   validationResult: RemoteValidationResult | null,
-  suggestions: Array<Suggestion>
+  suggestions: Array<ISuggestion>
 ): string | null {
   if (validationResult?.message) {
     return validationResult.message;
@@ -142,7 +144,7 @@ export function useEntityImportController<TPayload, TResult>({
   context: EntityImportRuntimeContext;
   initialRows?: Array<FlatImportValues>;
 }) {
-  const remoteSuggestionCache = useRef(new Map<string, Array<Suggestion>>());
+  const remoteSuggestionCache = useRef(new Map<string, Array<ISuggestion>>());
 
   const validate = useCallback(
     (session: ImportSessionState): ImportSessionState =>
@@ -197,7 +199,7 @@ export function useEntityImportController<TPayload, TResult>({
     }: {
       rowId: string;
       fieldPath: string;
-      suggestion: Suggestion;
+      suggestion: ISuggestion;
     }) => {
       const currentSession = sessionRef.current;
       const row = findRow(currentSession, rowId);
@@ -263,7 +265,7 @@ export function useEntityImportController<TPayload, TResult>({
 
       try {
         const rowValues = valuesFromRow(row);
-        let remoteSuggestions: Array<Suggestion> = [];
+        let remoteSuggestions: Array<ISuggestion> = [];
 
         if (field.remote?.search) {
           const cacheKey = createRemoteSuggestionCacheKey(fieldPath, normalizedQuery);
@@ -451,8 +453,22 @@ export function useEntityImportController<TPayload, TResult>({
   }, [adapter, commit]);
 
   const applySuggestion = useCallback(
-    (params: Parameters<typeof applySuggestionToRows>[1]) => {
-      commit((current) => applySuggestionToRows(current, params));
+    (params: Parameters<typeof stageSuggestionToRows>[1]) => {
+      commit((current) => stageSuggestionToRows(current, params));
+    },
+    [commit]
+  );
+
+  const acceptCorrection = useCallback(
+    (params: { rowId: string; fieldPath: string }) => {
+      commit((current) => acceptCorrectionDraft(current, params));
+    },
+    [commit]
+  );
+
+  const rejectCorrection = useCallback(
+    (params: { rowId: string; fieldPath: string }) => {
+      commit((current) => rejectCorrectionDraft(current, params));
     },
     [commit]
   );
@@ -551,6 +567,8 @@ export function useEntityImportController<TPayload, TResult>({
     () => ({
       addRow,
       applySuggestion,
+      acceptCorrection,
+      rejectCorrection,
       chooseSuggestion,
       dismissNotification: dismissFeatureNotification,
       requestSuggestions,
@@ -563,6 +581,8 @@ export function useEntityImportController<TPayload, TResult>({
     [
       addRow,
       applySuggestion,
+      acceptCorrection,
+      rejectCorrection,
       chooseSuggestion,
       dismissFeatureNotification,
       requestSuggestions,

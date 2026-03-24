@@ -6,7 +6,7 @@ import type {
   ImportFieldDefinition,
   ImportRowState,
   ImportSessionState,
-  Suggestion,
+  ISuggestion,
 } from './contracts';
 
 export interface EntityImportRuntimeContext {
@@ -37,7 +37,7 @@ export type TRemoteValidationResultStatus =
 export interface RemoteValidationResult {
   status: TRemoteValidationResultStatus;
   message?: string | null;
-  suggestions?: Array<Suggestion>;
+  suggestions?: Array<ISuggestion>;
 }
 
 export interface TableCellRendererProps {
@@ -50,17 +50,17 @@ export interface TableCellRendererProps {
 }
 
 export interface ValidatorFieldRendererProps extends TableCellRendererProps {
-  suggestions: Array<Suggestion>;
+  suggestions: Array<ISuggestion>;
 }
 
 export interface AdapterFieldDefinition extends ImportFieldDefinition {
   placeholder?: string;
   helpText?: string;
-  options?: Array<Suggestion>;
+  options?: Array<ISuggestion>;
   isEnabled?: (values: FlatImportValues) => boolean;
   getDisabledMessage?: (values: FlatImportValues) => string;
   remote?: {
-    search?: (args: RemoteSearchArgs) => Promise<Array<Suggestion>>;
+    search?: (args: RemoteSearchArgs) => Promise<Array<ISuggestion>>;
     validate?: (args: RemoteValidationArgs) => Promise<RemoteValidationResult>;
   };
   tableRenderer?: (props: TableCellRendererProps) => ReactNode;
@@ -93,15 +93,17 @@ export interface EntityImportAdapter<TPayload = unknown, TResult = unknown> {
 
 export interface EntityImportActions {
   addRow: () => void;
+  acceptCorrection: (params: { rowId: string; fieldPath: string }) => void;
   applySuggestion: (params: {
     fieldPath: string;
     targetRowId: string;
     sourceValue: string;
-    suggestion: Suggestion;
+    suggestion: ISuggestion;
     applyToAllMatching: boolean;
   }) => void;
-  chooseSuggestion: (params: { rowId: string; fieldPath: string; suggestion: Suggestion }) => void;
+  chooseSuggestion: (params: { rowId: string; fieldPath: string; suggestion: ISuggestion }) => void;
   dismissNotification: (notificationId: string) => void;
+  rejectCorrection: (params: { rowId: string; fieldPath: string }) => void;
   requestSuggestions: (params: {
     rowId: string;
     fieldPath: string;

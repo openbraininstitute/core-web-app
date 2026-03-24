@@ -12,6 +12,8 @@ import {
 import type {
   ContributionFilter,
   IDFilter,
+  IlikeSearchFilter,
+  NameFilter,
   OwnershipFilter,
   PaginationFilter,
 } from '@/api/entitycore/types/shared/request';
@@ -51,6 +53,8 @@ export interface IProtocolFilter
   extends PaginationFilter,
     OwnershipFilter,
     IDFilter,
+    IlikeSearchFilter,
+    NameFilter,
     ContributionFilter {}
 
 // Base schema for a Cell Morphology Protocol

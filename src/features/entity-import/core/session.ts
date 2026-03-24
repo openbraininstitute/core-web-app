@@ -7,10 +7,10 @@ import {
   type ImportFieldDefinition,
   type ImportRowState,
   type ImportSessionState,
+  type ISuggestion,
   NotificationTone,
   RemoteValidationStatus,
   RowStatus,
-  type Suggestion,
 } from './contracts';
 
 let rowIdCounter = 0;
@@ -30,6 +30,7 @@ function createCellState(field: ImportFieldDefinition, rawValue = ''): ImportCel
     issues: [],
     dependencyState: DependencyState.Ready,
     remoteState: createIdleRemoteState(),
+    correctionDraft: null,
   };
 }
 
@@ -61,10 +62,29 @@ function cloneSessionRows(rows: Array<ImportRowState>): Array<ImportRowState> {
             ...cell.remoteState,
             suggestions: [...cell.remoteState.suggestions],
           },
+          correctionDraft: cell.correctionDraft
+            ? {
+                ...cell.correctionDraft,
+                suggestion: { ...cell.correctionDraft.suggestion },
+              }
+            : null,
         },
       ])
     ),
   }));
+}
+
+function upsertSuggestion(
+  suggestions: Array<ISuggestion>,
+  suggestion: ISuggestion
+): Array<ISuggestion> {
+  if (suggestions.some((candidate) => candidate.value === suggestion.value)) {
+    return suggestions.map((candidate) =>
+      candidate.value === suggestion.value ? { ...candidate, ...suggestion } : candidate
+    );
+  }
+
+  return [suggestion, ...suggestions];
 }
 
 function summarizeSession(
@@ -76,6 +96,7 @@ function summarizeSession(
   rows.forEach((row) => {
     fields.forEach((field) => {
       const cell = row.cells[field.path];
+
       const isEmpty = cell.rawValue.trim() === '';
       const isInvalid =
         cell.status === CellStatus.Invalid ||
@@ -274,6 +295,7 @@ export function setCellValue(
       issues: [],
       dependencyState: DependencyState.Ready,
       remoteState: createIdleRemoteState(),
+      correctionDraft: null,
     };
 
     return row;
@@ -286,13 +308,13 @@ export function setCellValue(
   };
 }
 
-export function applySuggestionToRows(
+export function stageSuggestionToRows(
   session: ImportSessionState,
   params: {
     fieldPath: string;
     targetRowId: string;
     sourceValue: string;
-    suggestion: Suggestion;
+    suggestion: ISuggestion;
     applyToAllMatching: boolean;
   }
 ): ImportSessionState {
@@ -308,18 +330,107 @@ export function applySuggestionToRows(
 
     row.cells[params.fieldPath] = {
       ...currentCell,
-      rawValue: params.suggestion.value,
-      displayValue: params.suggestion.label,
-      parsedValue: params.suggestion.value,
-      status: CellStatus.Valid,
+      status: CellStatus.Idle,
       issues: [],
       dependencyState: DependencyState.Ready,
       remoteState: {
         status: RemoteValidationStatus.Valid,
-        suggestions: [params.suggestion],
+        suggestions: upsertSuggestion(currentCell.remoteState.suggestions, params.suggestion),
         selectedSuggestion: params.suggestion,
         message: null,
       },
+      correctionDraft: {
+        previousRawValue: currentCell.rawValue,
+        previousDisplayValue: currentCell.displayValue,
+        suggestion: params.suggestion,
+      },
+    };
+
+    return row;
+  });
+
+  return {
+    ...session,
+    rows: nextRows,
+    summary: summarizeSession(nextRows, session.fields),
+  };
+}
+
+export function acceptCorrectionDraft(
+  session: ImportSessionState,
+  params: { rowId: string; fieldPath: string }
+): ImportSessionState {
+  const nextRows = cloneSessionRows(session.rows).map((row) => {
+    if (row.id !== params.rowId) {
+      return row;
+    }
+
+    const currentCell = row.cells[params.fieldPath];
+    const draft = currentCell.correctionDraft;
+    if (!draft) {
+      return row;
+    }
+
+    row.cells[params.fieldPath] = {
+      ...currentCell,
+      rawValue: draft.suggestion.value,
+      displayValue: draft.suggestion.label,
+      parsedValue: draft.suggestion.value,
+      status: CellStatus.Idle,
+      issues: [],
+      dependencyState: DependencyState.Ready,
+      remoteState: {
+        status: RemoteValidationStatus.Valid,
+        suggestions: upsertSuggestion(currentCell.remoteState.suggestions, draft.suggestion),
+        selectedSuggestion: draft.suggestion,
+        message: null,
+      },
+      correctionDraft: null,
+    };
+
+    return row;
+  });
+
+  return {
+    ...session,
+    rows: nextRows,
+    summary: summarizeSession(nextRows, session.fields),
+  };
+}
+
+export function rejectCorrectionDraft(
+  session: ImportSessionState,
+  params: { rowId: string; fieldPath: string }
+): ImportSessionState {
+  const nextRows = cloneSessionRows(session.rows).map((row) => {
+    if (row.id !== params.rowId) {
+      return row;
+    }
+
+    const currentCell = row.cells[params.fieldPath];
+    const draft = currentCell.correctionDraft;
+    if (!draft) {
+      return row;
+    }
+
+    const suggestions = upsertSuggestion(currentCell.remoteState.suggestions, draft.suggestion);
+
+    row.cells[params.fieldPath] = {
+      ...currentCell,
+      rawValue: draft.previousRawValue,
+      displayValue: draft.previousDisplayValue,
+      parsedValue: draft.previousRawValue,
+      status: CellStatus.Idle,
+      issues: [],
+      dependencyState: DependencyState.Ready,
+      remoteState: {
+        status:
+          suggestions.length > 0 ? RemoteValidationStatus.Invalid : RemoteValidationStatus.Idle,
+        suggestions,
+        selectedSuggestion: null,
+        message: suggestions.length > 0 ? 'Choose the closest suggestion and apply it.' : null,
+      },
+      correctionDraft: null,
     };
 
     return row;

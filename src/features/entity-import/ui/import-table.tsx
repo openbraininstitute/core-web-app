@@ -1,11 +1,12 @@
 'use client';
 
 import { Table } from 'antd';
-import { useMemo } from 'react';
+import { type MouseEvent as ReactMouseEvent, useCallback, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
-import { InlineCell } from './cells/inline-cell';
+import { CellStatus, DependencyState } from '../core/contracts';
+import { InlineCell } from './inline-cell';
 
 import type { ColumnsType } from 'antd/es/table';
 import type {
@@ -15,11 +16,21 @@ import type {
 } from '../core/adapter';
 import type { ImportSessionState } from '../core/contracts';
 
+const DEFAULT_FIELD_COLUMN_WIDTH = 200;
+const ROW_INDEX_COLUMN_WIDTH = 50;
+
 interface ImportTableProps<TPayload, TResult> {
   adapter: EntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
   session: ImportSessionState;
   actions: EntityImportActions;
+}
+
+function fieldColumnWidth(
+  field: ImportSessionState['fields'][number],
+  overrides: Record<string, number>
+): number {
+  return overrides[field.path] ?? field.columnWidth ?? DEFAULT_FIELD_COLUMN_WIDTH;
 }
 
 export function ImportTable<TPayload, TResult>({
@@ -28,6 +39,43 @@ export function ImportTable<TPayload, TResult>({
   session,
   actions,
 }: ImportTableProps<TPayload, TResult>) {
+  const [resizeOverrides, setResizeOverrides] = useState<Record<string, number>>({});
+  const resizeOverridesRef = useRef(resizeOverrides);
+  resizeOverridesRef.current = resizeOverrides;
+
+  const beginResize = useCallback(
+    (event: ReactMouseEvent, fieldPath: string) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const field = adapter.fields.find((f) => f.path === fieldPath);
+      const startX = event.clientX;
+      const startWidth =
+        resizeOverridesRef.current[fieldPath] ?? field?.columnWidth ?? DEFAULT_FIELD_COLUMN_WIDTH;
+
+      const onMove = (moveEvent: MouseEvent) => {
+        const next = Math.max(64, startWidth + moveEvent.clientX - startX);
+        setResizeOverrides((current) => ({ ...current, [fieldPath]: next }));
+      };
+
+      const onUp = () => {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    },
+    [adapter.fields]
+  );
+
+  const scrollWidth = useMemo(() => {
+    const fieldsWidth = adapter.fields.reduce(
+      (acc, field) => acc + fieldColumnWidth(field, resizeOverrides),
+      0
+    );
+    return ROW_INDEX_COLUMN_WIDTH + fieldsWidth;
+  }, [adapter.fields, resizeOverrides]);
+
   const columns = useMemo<ColumnsType<ImportSessionState['rows'][number]>>(
     () => [
       {
@@ -37,7 +85,7 @@ export function ImportTable<TPayload, TResult>({
           </span>
         ),
         key: 'row',
-        width: 88,
+        width: ROW_INDEX_COLUMN_WIDTH,
         fixed: 'left',
         render: (_, row) => (
           <span className="text-sm font-semibold text-neutral-500">{row.rowIndex + 1}</span>
@@ -46,42 +94,64 @@ export function ImportTable<TPayload, TResult>({
           className: 'align-top',
         }),
       },
-      ...adapter.fields.map((field) => ({
-        title: (
-          <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-            {field.label}
-          </span>
-        ),
-        key: field.path,
-        render: (_: unknown, row: ImportSessionState['rows'][number]) => {
-          const cell = row.cells[field.path];
-          const isSelected =
-            session.selectedCell?.rowId === row.id &&
-            session.selectedCell?.fieldPath === field.path;
+      ...adapter.fields.map((field) => {
+        const width = fieldColumnWidth(field, resizeOverrides);
 
-          return (
-            <InlineCell
-              field={field}
-              cell={cell}
-              row={row}
-              session={session}
-              context={context}
-              actions={actions}
-              selected={isSelected}
-            />
-          );
-        },
-        onCell: (row: ImportSessionState['rows'][number]) => ({
-          className: cn(
-            'align-top',
-            session.selectedCell?.rowId === row.id &&
-              session.selectedCell?.fieldPath === field.path &&
-              'bg-blue-50/60'
+        return {
+          title: (
+            <div className="relative flex min-h-9 items-center pr-2">
+              <span className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+                {field.label}
+              </span>
+              <button
+                type="button"
+                tabIndex={0}
+                className="absolute top-0 right-0 z-10 h-full w-2 cursor-col-resize rounded-sm border-0 bg-transparent p-0 hover:bg-neutral-200/80"
+                aria-label={`Resize ${field.label} column`}
+                onMouseDown={(event) => beginResize(event, field.path)}
+              />
+            </div>
           ),
-        }),
-      })),
+          key: field.path,
+          width,
+          ellipsis: true,
+          render: (_: unknown, row: ImportSessionState['rows'][number]) => {
+            const cell = row.cells[field.path];
+            const isSelected =
+              session.selectedCell?.rowId === row.id &&
+              session.selectedCell?.fieldPath === field.path;
+
+            return (
+              <InlineCell
+                field={field}
+                cell={cell}
+                row={row}
+                session={session}
+                context={context}
+                actions={actions}
+                selected={isSelected}
+              />
+            );
+          },
+          onCell: (row: ImportSessionState['rows'][number]) => {
+            const cell = row.cells[field.path];
+            const isSelected =
+              session.selectedCell?.rowId === row.id &&
+              session.selectedCell?.fieldPath === field.path;
+
+            return {
+              className: cn(
+                'align-top !p-0 transition-colors',
+                isSelected && 'bg-blue-50/60',
+                cell.status === CellStatus.Invalid && 'bg-amber-50/70',
+                cell.dependencyState === DependencyState.Blocked && 'bg-neutral-100'
+              ),
+            };
+          },
+        };
+      }),
     ],
-    [actions, adapter.fields, context, session]
+    [actions, adapter.fields, beginResize, context, resizeOverrides, session]
   );
 
   return (
@@ -90,13 +160,15 @@ export function ImportTable<TPayload, TResult>({
         rowKey="id"
         size="small"
         pagination={false}
+        tableLayout="fixed"
         columns={columns}
         dataSource={session.rows}
-        scroll={{ x: 'max-content' }}
+        scroll={{ x: scrollWidth }}
         className={cn(
           'entity-import-table',
-          '[&_.ant-table-cell]:bg-white',
-          '[&_th.ant-table-cell>span]:text-base'
+          '[&_.ant-table-thead_.ant-table-cell]:bg-white',
+          '[&_.ant-table-cell]:align-top',
+          '[&_th.ant-table-cell>span]:text-sm'
         )}
       />
     </div>

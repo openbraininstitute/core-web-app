@@ -211,6 +211,7 @@ export type SubjectFilter = {
 export type PrefLabelFilter = {
   pref_label: string | null;
   pref_label__in: Array<string> | null;
+  pref_label__ilike: string | null;
 };
 
 export type AlternativeNameFilter = {

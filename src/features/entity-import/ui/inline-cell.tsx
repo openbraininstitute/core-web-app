@@ -1,5 +1,7 @@
 'use client';
 
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { DatePicker } from 'antd';
 import clsx from 'clsx';
 import { useId, useRef } from 'react';
 
@@ -22,13 +24,15 @@ import {
   type ImportRowState,
   type ImportSessionState,
   RemoteValidationStatus,
-} from '../../core/contracts';
+} from '../core/contracts';
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from './entity-import-popover';
+import { importDatePickerChangeToRawValue, parseImportDatePickerValue } from './import-date';
 
 import type {
   AdapterFieldDefinition,
   EntityImportActions,
   EntityImportRuntimeContext,
-} from '../../core/adapter';
+} from '../core/adapter';
 
 interface InlineCellProps {
   field: AdapterFieldDefinition;
@@ -50,9 +54,9 @@ function getDisplayValue(cell: ImportCellState): string {
 
 function getControlClassName(cell: ImportCellState, selected: boolean): string {
   return clsx(
-    'w-full rounded-xl',
-    selected && 'border-blue-500 shadow-sm',
-    cell.status === CellStatus.Invalid && 'border-amber-500 text-amber-950',
+    'h-full min-h-[52px] w-full rounded-none border-0 bg-transparent px-3 py-2 text-sm shadow-none outline-none focus-visible:border-transparent focus-visible:ring-0',
+    selected && 'text-blue-950',
+    cell.status === CellStatus.Invalid && 'bg-transparent text-amber-950',
     cell.remoteState.status === RemoteValidationStatus.Invalid && 'line-through',
     cell.dependencyState === DependencyState.Blocked && 'bg-neutral-100 text-neutral-500'
   );
@@ -70,6 +74,55 @@ export function InlineCell({
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const displayValue = getDisplayValue(cell);
+
+  if (cell.correctionDraft) {
+    const draft = cell.correctionDraft;
+    const previousLabel = draft.previousDisplayValue ?? draft.previousRawValue;
+
+    return (
+      <div className="flex flex-col gap-1.5 py-0.5 items-center justify-center">
+        <div
+          className="rounded-md border border-amber-600 bg-amber-600/16 px-4 py-1.5 text-base font-medium text-amber-950 w-90percent"
+          title="Original value"
+        >
+          {previousLabel || '—'}
+        </div>
+        <div className="flex items-center justify-center gap-1.5">
+          <div
+            className="rounded-xl px-2 py-1.5 text-base! font-semibold text-green-main"
+            title="Suggested value (click to accept or reject)"
+          >
+            {draft.suggestion.label}
+          </div>
+
+          <div className="flex justify-end gap-1">
+            <Button
+              rounded
+              type="button"
+              variant="icon"
+              size="sm"
+              className="shrink-0 p-0 border rounded-full border-green-main group hover:bg-green-main"
+              aria-label={`Accept suggested ${field.label} row ${row.rowIndex + 1}`}
+              onClick={() => actions.acceptCorrection({ rowId: row.id, fieldPath: field.path })}
+            >
+              <CheckOutlined className="text-green-main! group-hover:text-white!" />
+            </Button>
+            <Button
+              rounded
+              type="button"
+              variant="icon"
+              size="sm"
+              className="shrink-0 p-0 border rounded-full border-destructive group hover:bg-destructive"
+              aria-label={`Reject suggested ${field.label} row ${row.rowIndex + 1}`}
+              onClick={() => actions.rejectCorrection({ rowId: row.id, fieldPath: field.path })}
+            >
+              <CloseOutlined className="text-destructive! group-hover:text-white!" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (field.tableRenderer) {
     return field.tableRenderer({
@@ -98,11 +151,14 @@ export function InlineCell({
       >
         <SelectTrigger
           aria-label={`${field.label} row ${row.rowIndex + 1}`}
-          className={getControlClassName(cell, selected)}
+          className={clsx(
+            getControlClassName(cell, selected),
+            'data-[size=default]:h-full [&_svg]:opacity-100'
+          )}
         >
           <SelectValue placeholder={field.placeholder ?? `Select ${field.label}`} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className={ENTITY_IMPORT_POPOVER_Z_CLASS}>
           {field.options?.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
@@ -120,9 +176,12 @@ export function InlineCell({
           rounded
           type="button"
           aria-label={`${field.label} row ${row.rowIndex + 1}`}
-          variant="outline"
+          variant="ghost"
           size="md"
-          className={clsx('justify-start text-left', getControlClassName(cell, selected))}
+          className={clsx(
+            'h-full min-h-[52px] justify-start rounded-none border-0 bg-transparent px-3 py-2 text-left text-sm text-inherit shadow-none hover:bg-transparent hover:text-inherit',
+            getControlClassName(cell, selected)
+          )}
           onClick={() => {
             actions.selectCell({ rowId: row.id, fieldPath: field.path });
             fileInputRef.current?.click();
@@ -152,7 +211,10 @@ export function InlineCell({
     return (
       <Textarea
         aria-label={`${field.label} row ${row.rowIndex + 1}`}
-        className={getControlClassName(cell, selected)}
+        className={clsx(
+          getControlClassName(cell, selected),
+          'rounded-none border-0 bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0'
+        )}
         disabled={cell.dependencyState === DependencyState.Blocked}
         placeholder={field.placeholder}
         value={displayValue}
@@ -168,17 +230,30 @@ export function InlineCell({
     );
   }
 
+  if (field.inputType === ImportInputType.Date) {
+    return (
+      <DatePicker
+        id={`${field.label} row ${row.rowIndex + 1}`}
+        aria-label={`${field.label} row ${row.rowIndex + 1}`}
+        value={parseImportDatePickerValue(cell.rawValue)}
+        className="h-11 text-lg! rounded-full text-primary-9! focus-within:border-primary-6 w-full"
+        format="DD/MM/YYYY"
+        onChange={(date) => {
+          actions.updateCellValue({
+            rowId: row.id,
+            fieldPath: field.path,
+            rawValue: importDatePickerChangeToRawValue(date),
+          });
+        }}
+      />
+    );
+  }
+
   return (
     <Input
       aria-label={`${field.label} row ${row.rowIndex + 1}`}
-      type={
-        field.inputType === ImportInputType.Date
-          ? 'date'
-          : field.inputType === ImportInputType.Number
-            ? 'number'
-            : 'text'
-      }
-      className={clsx('h-11 px-3 py-2 text-sm', getControlClassName(cell, selected))}
+      type={field.inputType === ImportInputType.Number ? 'number' : 'text'}
+      className={getControlClassName(cell, selected)}
       disabled={cell.dependencyState === DependencyState.Blocked}
       placeholder={field.placeholder}
       value={displayValue}

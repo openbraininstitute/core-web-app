@@ -24,6 +24,9 @@ function cloneRows(rows: Array<ImportRowState>): Array<ImportRowState> {
             ...cell.remoteState,
             suggestions: [...cell.remoteState.suggestions],
           },
+          correctionDraft: cell.correctionDraft
+            ? { ...cell.correctionDraft, suggestion: { ...cell.correctionDraft.suggestion } }
+            : null,
         },
       ])
     ),
@@ -135,6 +138,7 @@ export function validateSessionRows<TPayload>({
       const combinedIssues = [...issues, ...remoteIssues];
       const hasRawValue = cell.rawValue.trim() !== '';
       const needsRemoteConfirmation =
+        !cell.correctionDraft &&
         (!!field.remote?.search || !!field.remote?.validate) &&
         hasRawValue &&
         cell.remoteState.status !== RemoteValidationStatus.Valid &&
@@ -142,7 +146,10 @@ export function validateSessionRows<TPayload>({
       const needsRemoteIssue = needsRemoteConfirmation
         ? [`Confirm ${field.label} from the suggestion list before importing.`]
         : [];
-      const finalIssues = [...combinedIssues, ...needsRemoteIssue];
+      const stagedIssues = cell.correctionDraft
+        ? ['Accept or reject the suggested correction in the table before importing.']
+        : [];
+      const finalIssues = [...combinedIssues, ...needsRemoteIssue, ...stagedIssues];
 
       row.cells[field.path] = {
         ...cell,
