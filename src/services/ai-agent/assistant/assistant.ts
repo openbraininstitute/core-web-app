@@ -12,6 +12,7 @@ import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { useAiAgentHealthCheck } from '../hooks/health';
+import { ChatManager } from './manager/chat';
 import { HistoryManager } from './manager/history';
 import { MessageManager } from './manager/message';
 import { ThreadManager } from './manager/thread';
@@ -42,6 +43,8 @@ class AiAssistantClass {
   private readonly virtualLabId = new Signal<string | null>(null);
 
   private readonly projectId = new Signal<string | null>(null);
+
+  public readonly chat = new ChatManager();
 
   private readonly threadmanager = new ThreadManager(this);
 

@@ -4,7 +4,6 @@ import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
-import { useServiceAiAgentChat } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
@@ -44,17 +43,18 @@ export default function AiAssistant({
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
   const isEmptyThread = assistant.isEmptyThread.useValue();
-  const { status } = useServiceAiAgentChat(threadId ?? '');
+  const status = assistant.chat.status.useValue();
 
   const refetchSuggestionsRef = React.useRef<(() => void) | null>(null);
   const clearSuggestionsRef = React.useRef<(() => void) | null>(null);
-
-  const canCreateNewChat = status === 'ready';
 
   const handleNewChat = async () => {
     setTab('chat');
     clearSuggestionsRef.current?.();
     refetchSuggestionsRef.current?.();
+    if (status !== 'ready') {
+      await assistant.chat.stop();
+    }
     if (!isEmptyThread) {
       assistant.threadId.set(undefined);
       await assistant.createThread();
@@ -90,7 +90,6 @@ export default function AiAssistant({
               <button
                 type="button"
                 className={classNames(styles.navBtn, styles.newChatBtn)}
-                disabled={!canCreateNewChat}
                 onClick={handleNewChat}
                 aria-label="New Chat"
                 title="New Chat"

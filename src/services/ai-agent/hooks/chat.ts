@@ -106,6 +106,30 @@ export function useServiceAiAgentChat(threadId: string) {
     setIsChatReady(chat.status === 'ready');
   }, [chat.status, setIsChatReady]);
 
+  const append = useCallback(
+    (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
+      assistant.isEmptyThread.set(false);
+      chat.append(message, chatRequestOptions);
+      if (chat.messages.length === 0) {
+        try {
+          serviceAiAgentThreadSuggestTitle({
+            accessToken: accessToken ?? 'NO-TOKEN',
+            threadId,
+            title: message.content,
+          }).then(() => {
+            queryClient.invalidateQueries({
+              queryKey: keyBuilderAI.history(virtualLabId, projectId),
+            });
+          });
+        } catch (ex) {
+          logError('Unable to rename the thread:', ex);
+        }
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chat, accessToken, threadId, queryClient, virtualLabId, projectId]
+  );
+
   const stop = useCallback(async () => {
     chat.stop();
     queryClient.invalidateQueries({
@@ -139,31 +163,25 @@ export function useServiceAiAgentChat(threadId: string) {
     }
   }, [chat, queryClient, accessToken, virtualLabId, projectId, threadId]);
 
+  useEffect(() => {
+    assistant.chat.sync({
+      status: chat.status,
+      error: chat.error,
+      append,
+      stop,
+    });
+  }, [chat.status, chat.error, append, stop]);
+
+  useEffect(() => {
+    if (chat.status === 'ready') {
+      assistant.chat.messages.set(chat.messages);
+    }
+  }, [chat.status, chat.messages]);
+
   return {
     messages: chat.messages,
     isLoadingMessages,
-    append: (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
-      assistant.isEmptyThread.set(false);
-      chat.append(message, chatRequestOptions);
-      if (chat.messages.length === 0) {
-        // We suggest a title for the thread based on the first message
-        try {
-          serviceAiAgentThreadSuggestTitle({
-            accessToken: accessToken ?? 'NO-TOKEN',
-            threadId,
-            title: message.content,
-          }).then(() => {
-            queryClient.invalidateQueries({
-              queryKey: keyBuilderAI.history(virtualLabId, projectId),
-            });
-          });
-        } catch (ex) {
-          // Renaming the thread is not important.
-          // If it fails, we just ignore it.
-          logError('Unable to rename the thread:', ex);
-        }
-      }
-    },
+    append,
     status: chat.status,
     error: chat.error,
     stop,
