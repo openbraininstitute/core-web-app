@@ -34,9 +34,9 @@ export default function InteractivePlot({
   const { config, layout, font, style } = useInteractivePlotConfig(units);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const plotRef = useRef<HTMLElement>(null);
   const onResize = useCallback(() => {
-    const plotDiv = containerRef.current?.querySelector('.js-plotly-plot') as HTMLElement | null;
-    if (plotDiv) Plotly.Plots.resize(plotDiv);
+    if (plotRef.current) Plotly.Plots.resize(plotRef.current);
   }, []);
   useResizeObserver(containerRef, onResize);
 
@@ -81,6 +81,9 @@ export default function InteractivePlot({
         {populationName}_{nodeId}
       </span>
       <Plot
+        onInitialized={(_, graphDiv) => {
+          plotRef.current = graphDiv;
+        }}
         data={plotData}
         onRelayout={(e) => {
           const x1 = e['xaxis.range[0]'] as number | undefined;
