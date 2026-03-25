@@ -111,33 +111,7 @@ export default function AiAssistant({
               </button>
             </nav>
 
-            <div className={styles.headerTitle}>
-              OBI assistant
-              <div
-                className={classNames(
-                  styles.statusBadge,
-                  (status === 'streaming' || status === 'submitted') && styles.statusStreaming,
-                  status === 'error' && styles.statusError
-                )}
-              >
-                <span className={styles.statusDot} />
-                {status === 'streaming' || status === 'submitted'
-                  ? 'Thinking…'
-                  : status === 'error'
-                    ? 'Error'
-                    : 'Ready'}
-                {status === 'error' && (
-                  <button
-                    type="button"
-                    className={styles.retryBtn}
-                    onClick={handleNewChat}
-                    title="Retry"
-                  >
-                    ↺
-                  </button>
-                )}
-              </div>
-            </div>
+            <div className={styles.headerTitle}>OBI assistant</div>
 
             <div className={styles.headerActions}>
               {onFullscreenToggle && (
