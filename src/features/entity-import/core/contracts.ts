@@ -97,6 +97,8 @@ export interface RemoteState {
 export interface CellCorrectionDraft {
   previousRawValue: string;
   previousDisplayValue: string | null;
+  previousParsedValue: unknown;
+  previousRemoteState: RemoteState;
   suggestion: ISuggestion;
 }
 

@@ -1,14 +1,23 @@
 'use client';
 
+import { RiInsertRowBottom } from '@remixicon/react';
 import { Table } from 'antd';
-import { type MouseEvent as ReactMouseEvent, useCallback, useMemo, useRef, useState } from 'react';
+import {
+  type MouseEvent as ReactMouseEvent,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
+import useResizeObserver from '@/hooks/useResizeObserver';
 import { cn } from '@/utils/css-class';
 
 import { CellStatus, DependencyState } from '../core/contracts';
 import { BLOCKED_CONTROL_CLASSNAME, INVALID_CONTROL_CLASSNAME, InlineCell } from './inline-cell';
 
-import type { ColumnsType } from 'antd/es/table';
+import type { ColumnsType, TableRef } from 'antd/es/table';
 import type {
   EntityImportActions,
   EntityImportAdapter,
@@ -17,6 +26,7 @@ import type {
 import type { ImportSessionState } from '../core/contracts';
 
 const DEFAULT_FIELD_COLUMN_WIDTH = 200;
+const DEFAULT_TABLE_BODY_SCROLL_HEIGHT = 1;
 const ROW_INDEX_COLUMN_WIDTH = 46;
 
 interface ImportTableProps<TPayload, TResult> {
@@ -39,9 +49,52 @@ export function ImportTable<TPayload, TResult>({
   session,
   actions,
 }: ImportTableProps<TPayload, TResult>) {
+  const previousRowCountRef = useRef(session.rows.length);
+  const shouldScrollToNewRowRef = useRef(false);
+  const tableRef = useRef<TableRef>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [resizeOverrides, setResizeOverrides] = useState<Record<string, number>>({});
+  const [containerHeight, setContainerHeight] = useState(0);
   const resizeOverridesRef = useRef(resizeOverrides);
   resizeOverridesRef.current = resizeOverrides;
+
+  const syncContainerHeight = useCallback((target?: HTMLElement | null) => {
+    const element = target ?? wrapperRef.current;
+    if (!element) {
+      return;
+    }
+
+    const nextHeight = element.getBoundingClientRect().height;
+    setContainerHeight((current) => (current === nextHeight ? current : nextHeight));
+  }, []);
+
+  useLayoutEffect(() => {
+    syncContainerHeight();
+  }, [syncContainerHeight]);
+
+  useLayoutEffect(() => {
+    if (shouldScrollToNewRowRef.current && session.rows.length > previousRowCountRef.current) {
+      const tableBody = tableRef.current?.nativeElement.querySelector(
+        '.ant-table-body'
+      ) as HTMLDivElement | null;
+      if (tableBody) {
+        tableBody.scrollTop = tableBody.scrollHeight;
+      }
+      shouldScrollToNewRowRef.current = false;
+    }
+
+    previousRowCountRef.current = session.rows.length;
+  }, [session.rows.length]);
+
+  useResizeObserver({
+    element: wrapperRef.current ?? undefined,
+    callback: syncContainerHeight,
+  });
+
+  const handleAddRow = useCallback(() => {
+    shouldScrollToNewRowRef.current = true;
+    actions.addRow();
+  }, [actions]);
 
   const beginResize = useCallback(
     (event: ReactMouseEvent, fieldPath: string) => {
@@ -76,6 +129,18 @@ export function ImportTable<TPayload, TResult>({
     return ROW_INDEX_COLUMN_WIDTH + fieldsWidth;
   }, [adapter.fields, resizeOverrides]);
 
+  const headerHeight =
+    tableRef.current?.nativeElement
+      .querySelector('.ant-table-header, .ant-table-thead')
+      ?.getBoundingClientRect().height ?? 0;
+  const footerHeight =
+    tableRef.current?.nativeElement.querySelector('.ant-table-footer')?.getBoundingClientRect()
+      .height ?? 0;
+  const scrollHeight = Math.max(
+    containerHeight - headerHeight - footerHeight,
+    DEFAULT_TABLE_BODY_SCROLL_HEIGHT
+  );
+
   const columns = useMemo<ColumnsType<ImportSessionState['rows'][number]>>(
     () => [
       {
@@ -104,14 +169,14 @@ export function ImportTable<TPayload, TResult>({
 
         return {
           title: (
-            <div className="relative flex min-h-9 items-center pr-2">
+            <div className="relative -mx-2 flex min-h-9 items-center overflow-visible px-2">
               <span className="text-sm font-semibold uppercase tracking-wide text-neutral-4">
                 {field.label}
               </span>
               <button
                 type="button"
                 tabIndex={0}
-                className="absolute top-0 right-0 z-10 h-full w-2 cursor-col-resize rounded-sm border-0 bg-transparent p-0 hover:bg-neutral-200/80"
+                className="absolute top-0 right-0 z-10 h-full w-3 translate-x-1/2 cursor-col-resize rounded-sm border-0 bg-transparent p-0 hover:bg-neutral-200/80"
                 aria-label={`Resize ${field.label} column`}
                 onMouseDown={(event) => beginResize(event, field.path)}
               />
@@ -160,19 +225,33 @@ export function ImportTable<TPayload, TResult>({
   );
 
   return (
-    <div className="min-h-full bg-white">
+    <div ref={wrapperRef} className="h-full min-h-0 overflow-hidden bg-white">
       <Table
+        ref={tableRef}
         rowKey="id"
         size="small"
         pagination={false}
         tableLayout="fixed"
         columns={columns}
         dataSource={session.rows}
-        scroll={{ x: scrollWidth }}
+        scroll={{ x: scrollWidth, y: scrollHeight }}
+        footer={() => (
+          <button
+            type="button"
+            onClick={handleAddRow}
+            className="flex w-full items-center justify-center gap-3 px-5 py-4 text-sm font-semibold text-primary-9 transition-colors hover:bg-neutral-50"
+          >
+            <span>Add row</span>
+            <RiInsertRowBottom />
+          </button>
+        )}
         className={cn(
           'entity-import-table',
           '[&_.ant-table-thead_.ant-table-cell]:bg-white',
           '[&_.ant-table-cell]:align-top',
+          '[&_.ant-table-footer]:p-0',
+          '[&_.ant-spin-container]:h-full',
+          '[&_.ant-spin-nested-loading]:h-full',
           '[&_th.ant-table-cell>span]:text-sm',
           // allow in-cell controls (Input, DatePicker) fill row height via absolute inset-0; h-full on td children is often unresolved.
           '[&_.ant-table-tbody>tr>td.ant-table-cell]:relative'

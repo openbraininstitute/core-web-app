@@ -8,8 +8,7 @@ import {
 } from '@ant-design/icons';
 import { RiSearchLine } from '@remixicon/react';
 import { DatePicker } from 'antd';
-import clsx from 'clsx';
-import { useId, useRef } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { Button } from '@/ui/molecules/button';
 import { Card, CardContent } from '@/ui/molecules/card';
@@ -32,7 +31,11 @@ import {
   type ImportSessionState,
   RowStatus,
 } from '../core/contracts';
-import { importDatePickerChangeToRawValue, parseImportDatePickerValue } from '../core/helpers';
+import {
+  formatImportDateDisplayValue,
+  importDatePickerChangeToRawValue,
+  parseImportDatePickerValue,
+} from '../core/helpers';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from './entity-import-popover';
 
 import type {
@@ -40,6 +43,7 @@ import type {
   EntityImportActions,
   EntityImportAdapter,
   EntityImportRuntimeContext,
+  ValidatorDraftValue,
 } from '../core/adapter';
 
 interface ValidatorPanelProps<TPayload, TResult> {
@@ -124,6 +128,27 @@ function ValidationStatusIcon({ status }: { status: TValidatorFieldStatus }) {
   return <span className="inline-flex size-4" />;
 }
 
+function createValidatorDraftValue(
+  cell: ImportSessionState['rows'][number]['cells'][string]
+): ValidatorDraftValue {
+  return {
+    rawValue: cell.rawValue,
+    displayValue: cell.displayValue ?? null,
+    parsedValue: cell.parsedValue,
+  };
+}
+
+function resolveValidatorDisplayValue(
+  field: AdapterFieldDefinition,
+  draftValue: ValidatorDraftValue
+): string {
+  if (field.inputType === ImportInputType.Date) {
+    return formatImportDateDisplayValue(draftValue.rawValue);
+  }
+
+  return draftValue.displayValue ?? draftValue.rawValue;
+}
+
 export function ValidatorPanel<TPayload, TResult>({
   adapter,
   context,
@@ -133,26 +158,139 @@ export function ValidatorPanel<TPayload, TResult>({
 }: ValidatorPanelProps<TPayload, TResult>) {
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const previousSelectionKeyRef = useRef<string>('');
   const activeRow = resolveActiveRow(session);
   const activeField = resolveActiveField(adapter, session);
+  const activeCell = activeRow && activeField ? activeRow.cells[activeField.path] : null;
+  const selectedSuggestion = activeCell?.remoteState.selectedSuggestion ?? null;
+  const rowPosition = activeRow ? session.rows.findIndex((row) => row.id === activeRow.id) : -1;
+  const fieldPosition = activeField
+    ? adapter.fields.findIndex((field) => field.path === activeField.path)
+    : -1;
+  const selectionKey = activeRow && activeField ? `${activeRow.id}:${activeField.path}` : '';
+  const [draftValue, setDraftValue] = useState<ValidatorDraftValue>(() =>
+    activeCell
+      ? createValidatorDraftValue(activeCell)
+      : {
+          rawValue: '',
+          displayValue: null,
+          parsedValue: '',
+        }
+  );
+  const [hasPendingManualChange, setHasPendingManualChange] = useState(false);
 
-  if (!activeRow || !activeField) {
-    return (
-      <aside className="rounded-3xl border border-neutral-200 bg-white p-5">
-        <h3 className="text-lg font-semibold text-neutral-900">Validator</h3>
-        <p className="mt-3 text-sm text-neutral-500">
-          Add at least one row to begin validating data.
-        </p>
-      </aside>
+  useEffect(() => {
+    if (previousSelectionKeyRef.current === selectionKey) {
+      return;
+    }
+
+    previousSelectionKeyRef.current = selectionKey;
+    setDraftValue(
+      activeCell
+        ? createValidatorDraftValue(activeCell)
+        : {
+            rawValue: '',
+            displayValue: null,
+            parsedValue: '',
+          }
     );
-  }
+    setHasPendingManualChange(false);
+  }, [activeCell, selectionKey]);
 
-  const activeCell = activeRow.cells[activeField.path];
-  const selectedSuggestion = activeCell.remoteState.selectedSuggestion;
-  const rowPosition = session.rows.findIndex((row) => row.id === activeRow.id);
-  const fieldPosition = adapter.fields.findIndex((field) => field.path === activeField.path);
+  useEffect(() => {
+    if (!activeCell || selectedSuggestion || hasPendingManualChange) {
+      return;
+    }
+
+    setDraftValue(createValidatorDraftValue(activeCell));
+  }, [activeCell, hasPendingManualChange, selectedSuggestion]);
+
+  const updateDraftValue = useCallback((nextValue: ValidatorDraftValue) => {
+    setDraftValue(nextValue);
+    setHasPendingManualChange(true);
+  }, []);
+
+  const commitManualValueToRow = useCallback(
+    (rowId: string) => {
+      if (!activeField) {
+        return;
+      }
+
+      if (
+        activeField.inputType === ImportInputType.File ||
+        activeField.inputType === ImportInputType.FileBundle
+      ) {
+        actions.setFileValue({
+          rowId,
+          fieldPath: activeField.path,
+          file: (draftValue.parsedValue as File | null) ?? null,
+          displayValue: draftValue.displayValue,
+        });
+        return;
+      }
+
+      if (activeField.inputType === ImportInputType.RemoteSelect) {
+        actions.updateCellValue({
+          rowId,
+          fieldPath: activeField.path,
+          rawValue: draftValue.rawValue,
+        });
+        return;
+      }
+
+      actions.setCustomValue({
+        rowId,
+        fieldPath: activeField.path,
+        rawValue: draftValue.rawValue,
+        displayValue: draftValue.displayValue,
+        parsedValue: draftValue.parsedValue,
+      });
+    },
+    [actions, activeField, draftValue]
+  );
+
+  const handleApply = useCallback(
+    (applyToAll: boolean) => {
+      if (!activeField || !activeRow || !activeCell) {
+        return;
+      }
+
+      if (selectedSuggestion) {
+        actions.applySuggestion({
+          fieldPath: activeField.path,
+          targetRowId: activeRow.id,
+          sourceValue: activeCell.rawValue,
+          suggestion: selectedSuggestion,
+          applyToAllMatching: applyToAll,
+        });
+        setHasPendingManualChange(false);
+        return;
+      }
+
+      const targetRows = applyToAll ? session.rows : [activeRow];
+      targetRows.forEach((row) => {
+        commitManualValueToRow(row.id);
+      });
+      setHasPendingManualChange(false);
+    },
+    [
+      actions,
+      activeCell,
+      activeField,
+      activeRow,
+      commitManualValueToRow,
+      selectedSuggestion,
+      session.rows,
+    ]
+  );
+
+  const previewValue = activeField ? resolveValidatorDisplayValue(activeField, draftValue) : '';
 
   const goNeighborRow = (delta: number) => {
+    if (!activeField) {
+      return;
+    }
+
     const nextIndex = rowPosition + delta;
     if (nextIndex < 0 || nextIndex >= session.rows.length) {
       return;
@@ -163,6 +301,17 @@ export function ValidatorPanel<TPayload, TResult>({
       fieldPath: activeField.path,
     });
   };
+
+  if (!activeRow || !activeField || !activeCell) {
+    return (
+      <aside className="rounded-3xl border border-neutral-200 bg-white p-5">
+        <h3 className="text-lg font-semibold text-neutral-900">Validator</h3>
+        <p className="mt-3 text-sm text-neutral-500">
+          Add at least one row to begin validating data.
+        </p>
+      </aside>
+    );
+  }
 
   return (
     <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-white">
@@ -189,7 +338,7 @@ export function ValidatorPanel<TPayload, TResult>({
                 <span>{fieldPosition >= 0 ? `Column ${fieldPosition + 1}` : 'Select'}</span>
               </SelectTrigger>
               <SelectContent
-                className={clsx(
+                className={cn(
                   ENTITY_IMPORT_POPOVER_Z_CLASS,
                   'border border-neutral-200 bg-white p-2 shadow-[0_16px_40px_rgba(0,0,0,0.16)]',
                   'max-h-80'
@@ -200,7 +349,7 @@ export function ValidatorPanel<TPayload, TResult>({
                     key={field.path}
                     value={field.path}
                     checkClassName="hidden"
-                    className={clsx(
+                    className={cn(
                       'px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50',
                       '[&_.indicator]:hidden',
                       field.path === activeField.path && 'text-neutral-700'
@@ -245,7 +394,7 @@ export function ValidatorPanel<TPayload, TResult>({
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent
-                  className={clsx(
+                  className={cn(
                     ENTITY_IMPORT_POPOVER_Z_CLASS,
                     'border border-neutral-200 bg-white p-2 shadow-[0_16px_40px_rgba(0,0,0,0.16)]',
                     'max-h-40'
@@ -270,7 +419,7 @@ export function ValidatorPanel<TPayload, TResult>({
                       key={row.id}
                       value={row.id}
                       checkClassName="hidden"
-                      className={clsx(
+                      className={cn(
                         'px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50',
                         '[&_.indicator]:hidden',
                         row.id === activeRow.id && 'text-neutral-700'
@@ -317,14 +466,10 @@ export function ValidatorPanel<TPayload, TResult>({
                 </Button>
                 <div
                   className="flex h-10 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-base font-semibold text-blue-950"
-                  title={
-                    (activeCell.displayValue ?? activeCell.rawValue)?.trim()
-                      ? String(activeCell.displayValue ?? activeCell.rawValue)
-                      : undefined
-                  }
+                  title={previewValue.trim() ? previewValue : undefined}
                 >
                   <span className="block min-w-0 w-full truncate text-center">
-                    {(activeCell.displayValue ?? activeCell.rawValue) || '—'}
+                    {previewValue || '—'}
                   </span>
                 </div>
                 <Button
@@ -371,6 +516,8 @@ export function ValidatorPanel<TPayload, TResult>({
               context,
               actions,
               suggestions: activeCell.remoteState.suggestions,
+              draftValue,
+              onDraftChange: updateDraftValue,
             })}
 
             <div className="px-4">
@@ -391,8 +538,13 @@ export function ValidatorPanel<TPayload, TResult>({
                         'focus-visible:outline-none focus-visible:ring-0 shadow-none border-none',
                         'font-semibold'
                       )}
-                      value={activeCell.displayValue ?? activeCell.rawValue}
+                      value={draftValue.displayValue ?? draftValue.rawValue}
                       onChange={(event) => {
+                        updateDraftValue({
+                          rawValue: event.target.value,
+                          displayValue: null,
+                          parsedValue: event.target.value,
+                        });
                         actions.updateCellValue({
                           rowId: activeRow.id,
                           fieldPath: activeField.path,
@@ -410,16 +562,16 @@ export function ValidatorPanel<TPayload, TResult>({
                   rows={1}
                   id="validator-value"
                   aria-label="Validator value"
-                  value={activeCell.displayValue ?? activeCell.rawValue}
+                  value={draftValue.displayValue ?? draftValue.rawValue}
                   className={cn(
                     'border border-neutral-200 bg-white rounded-xl p-2 focus-within:border-primary-6! focus-visible:ring-0! focus-visible:outline-none!',
                     'shadow-none! ring-0!'
                   )}
                   onChange={(event) => {
-                    actions.updateCellValue({
-                      rowId: activeRow.id,
-                      fieldPath: activeField.path,
+                    updateDraftValue({
                       rawValue: event.target.value,
+                      displayValue: null,
+                      parsedValue: event.target.value,
                     });
                   }}
                 />
@@ -429,14 +581,15 @@ export function ValidatorPanel<TPayload, TResult>({
                 <DatePicker
                   id="validator-value"
                   aria-label="Validator value"
-                  value={parseImportDatePickerValue(activeCell.rawValue)}
+                  value={parseImportDatePickerValue(draftValue.rawValue)}
                   className="h-11 text-lg! rounded-full text-primary-9! focus-within:border-primary-6 w-full"
                   format="DD/MM/YYYY"
                   onChange={(date) => {
-                    actions.updateCellValue({
-                      rowId: activeRow.id,
-                      fieldPath: activeField.path,
-                      rawValue: importDatePickerChangeToRawValue(date),
+                    const rawValue = importDatePickerChangeToRawValue(date);
+                    updateDraftValue({
+                      rawValue,
+                      displayValue: null,
+                      parsedValue: rawValue,
                     });
                   }}
                 />
@@ -451,12 +604,12 @@ export function ValidatorPanel<TPayload, TResult>({
                       aria-label="Validator value"
                       type={activeField.inputType === ImportInputType.Number ? 'number' : 'text'}
                       className="h-11 text-lg! rounded-full text-primary-9! focus-within:border-primary-6"
-                      value={activeCell.displayValue ?? activeCell.rawValue}
+                      value={draftValue.displayValue ?? draftValue.rawValue}
                       onChange={(event) => {
-                        actions.updateCellValue({
-                          rowId: activeRow.id,
-                          fieldPath: activeField.path,
+                        updateDraftValue({
                           rawValue: event.target.value,
+                          displayValue: null,
+                          parsedValue: event.target.value,
                         });
                       }}
                     />
@@ -465,12 +618,12 @@ export function ValidatorPanel<TPayload, TResult>({
                   {activeField.inputType === ImportInputType.Select && (
                     <div>
                       <Select
-                        value={activeCell.rawValue || undefined}
+                        value={draftValue.rawValue || undefined}
                         onValueChange={(value) =>
-                          actions.updateCellValue({
-                            rowId: activeRow.id,
-                            fieldPath: activeField.path,
+                          updateDraftValue({
                             rawValue: value,
+                            displayValue: null,
+                            parsedValue: value,
                           })
                         }
                       >
@@ -505,7 +658,7 @@ export function ValidatorPanel<TPayload, TResult>({
                         className="w-full justify-start text-left"
                         onClick={() => fileInputRef.current?.click()}
                       >
-                        {(activeCell.displayValue ?? activeCell.rawValue) || 'Attach file'}
+                        {(draftValue.displayValue ?? draftValue.rawValue) || 'Attach file'}
                       </Button>
                       <input
                         ref={fileInputRef}
@@ -514,10 +667,10 @@ export function ValidatorPanel<TPayload, TResult>({
                         className="sr-only"
                         onChange={(event) => {
                           const file = event.currentTarget.files?.[0] ?? null;
-                          actions.setFileValue({
-                            rowId: activeRow.id,
-                            fieldPath: activeField.path,
-                            file,
+                          updateDraftValue({
+                            rawValue: file?.name ?? '',
+                            displayValue: file?.name ?? null,
+                            parsedValue: file,
                           });
                         }}
                       />
@@ -555,7 +708,7 @@ export function ValidatorPanel<TPayload, TResult>({
                       type="button"
                       aria-label={`Select suggestion ${suggestion.label}`}
                       variant="outline"
-                      className={clsx(
+                      className={cn(
                         'h-auto rounded-xl min-w-0 w-full justify-between gap-3 whitespace-normal px-3 py-3 text-left text-base transition',
                         isSelected
                           ? 'border-green-main text-green-main bg-green-main/10'
@@ -623,17 +776,8 @@ export function ValidatorPanel<TPayload, TResult>({
                   type="button"
                   size="md"
                   className="flex-1 cursor-pointer"
-                  disabled={!selectedSuggestion || Boolean(activeCell.correctionDraft)}
-                  onClick={() =>
-                    selectedSuggestion &&
-                    actions.applySuggestion({
-                      fieldPath: activeField.path,
-                      targetRowId: activeRow.id,
-                      sourceValue: activeCell.rawValue,
-                      suggestion: selectedSuggestion,
-                      applyToAllMatching: true,
-                    })
-                  }
+                  disabled={Boolean(activeCell.correctionDraft)}
+                  onClick={() => handleApply(true)}
                 >
                   Apply to all
                 </Button>
@@ -643,17 +787,8 @@ export function ValidatorPanel<TPayload, TResult>({
                   variant="success"
                   size="md"
                   className="flex-1 cursor-pointer"
-                  disabled={!selectedSuggestion || Boolean(activeCell.correctionDraft)}
-                  onClick={() =>
-                    selectedSuggestion &&
-                    actions.applySuggestion({
-                      fieldPath: activeField.path,
-                      targetRowId: activeRow.id,
-                      sourceValue: activeCell.rawValue,
-                      suggestion: selectedSuggestion,
-                      applyToAllMatching: false,
-                    })
-                  }
+                  disabled={Boolean(activeCell.correctionDraft)}
+                  onClick={() => handleApply(false)}
                 >
                   Apply
                 </Button>

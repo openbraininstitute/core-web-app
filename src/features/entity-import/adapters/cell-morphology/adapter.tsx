@@ -1,5 +1,6 @@
 'use client';
 
+import { SmallDashOutlined } from '@ant-design/icons';
 import { z } from 'zod';
 
 import { Button } from '@/ui/molecules/button';
@@ -7,7 +8,12 @@ import { AgentType } from '@/ui/segments/contribute/shared/types';
 
 import { ImportInputType, type ISuggestion } from '../../core/contracts';
 import { type ContributionDraft, ContributionsEditor } from './contributions-editor';
-import { LocationEditor, type LocationValue, parseLocationSummary } from './location-editor';
+import {
+  LocationEditor,
+  type LocationValue,
+  parseLocationSummary,
+  summarizeLocation,
+} from './location-editor';
 import {
   type CellMorphologyContributionInput,
   type CellMorphologyImportServices,
@@ -111,18 +117,66 @@ function readLocation(parsedValue: unknown, rawValue: string): LocationValue | n
   return (parsedValue as LocationValue | null) ?? parseLocationSummary(rawValue) ?? null;
 }
 
-function summaryTrigger(label: string, rawValue: string, onClick: () => void) {
+function getContributionPreview(entries: unknown): {
+  primaryLabel: string;
+  roleLabel: string | null;
+  hasOverflow: boolean;
+} | null {
+  const contributions = sanitizeContributions(entries);
+  const primary = contributions[0];
+  if (!primary) {
+    return null;
+  }
+
+  return {
+    primaryLabel: primary.agent_label?.trim() || primary.agent_id?.trim() || 'Unnamed contributor',
+    roleLabel: primary.role_label?.trim() || primary.role_id?.trim() || null,
+    hasOverflow: contributions.length > 1,
+  };
+}
+
+function contributionSummaryTrigger({
+  label,
+  entries,
+  onClick,
+}: {
+  label: string;
+  entries: unknown;
+  onClick: () => void;
+}) {
+  const preview = getContributionPreview(entries);
+
   return (
     <Button
-      rounded
       type="button"
       aria-label={label}
-      variant="outline"
+      variant="ghost"
       size="md"
-      className="w-full justify-start text-left"
+      className="h-full min-h-[52px] w-full justify-between rounded-none border-0 bg-transparent px-3 py-2 text-left shadow-none hover:bg-neutral-50"
       onClick={onClick}
     >
-      {rawValue || `Edit ${label.toLowerCase()}`}
+      <span className="min-w-0 flex-1 text-left">
+        <span
+          className="block truncate text-sm font-medium text-neutral-900"
+          title={preview?.primaryLabel}
+        >
+          {preview?.primaryLabel || `Edit ${label.toLowerCase()}`}
+        </span>
+        {preview?.roleLabel ? (
+          <span className="block truncate text-xs text-neutral-500" title={preview.roleLabel}>
+            {preview.roleLabel}
+          </span>
+        ) : null}
+      </span>
+      {preview?.hasOverflow ? (
+        <span
+          role="img"
+          aria-label="More contributions"
+          className="ml-3 inline-flex size-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
+        >
+          <SmallDashOutlined />
+        </span>
+      ) : null}
     </Button>
   );
 }
@@ -212,14 +266,36 @@ export function createCellMorphologyImportAdapter({
         validationPath: 'metadata.location',
         required: false,
         inputType: ImportInputType.Compound,
-        tableRenderer: ({ field, cell, row, actions }) =>
-          summaryTrigger(`${field.label} row ${row.rowIndex + 1}`, cell.rawValue, () =>
-            actions.selectCell({ rowId: row.id, fieldPath: field.path })
-          ),
-        panelRenderer: ({ cell, row, field, actions }) => (
-          <LocationEditor cell={cell} row={row} fieldPath={field.path} actions={actions} />
+        tableRenderer: ({ cell, row, field, actions }) => (
+          <LocationEditor
+            cell={cell}
+            row={row}
+            fieldPath={field.path}
+            actions={actions}
+            mode="table"
+          />
         ),
-        columnWidth: 160,
+        panelRenderer: ({ cell, row, field, actions, draftValue, onDraftChange }) => (
+          <LocationEditor
+            cell={cell}
+            row={row}
+            fieldPath={field.path}
+            actions={actions}
+            mode="panel"
+            value={
+              (draftValue.parsedValue as LocationValue | null) ??
+              parseLocationSummary(draftValue.rawValue)
+            }
+            onChange={(nextLocation) =>
+              onDraftChange({
+                rawValue: summarizeLocation(nextLocation),
+                displayValue: null,
+                parsedValue: nextLocation,
+              })
+            }
+          />
+        ),
+        columnWidth: 240,
       },
       {
         label: 'Subject',
@@ -290,9 +366,11 @@ export function createCellMorphologyImportAdapter({
         inputType: ImportInputType.Compound,
         csv: { include: false },
         tableRenderer: ({ field, cell, row, actions }) =>
-          summaryTrigger(`${field.label} row ${row.rowIndex + 1}`, cell.rawValue, () =>
-            actions.selectCell({ rowId: row.id, fieldPath: field.path })
-          ),
+          contributionSummaryTrigger({
+            label: `${field.label} row ${row.rowIndex + 1}`,
+            entries: cell.parsedValue,
+            onClick: () => actions.selectCell({ rowId: row.id, fieldPath: field.path }),
+          }),
         panelRenderer: ({ cell, row, field, actions, context }) => (
           <ContributionsEditor
             cell={cell}
@@ -322,13 +400,13 @@ export function createCellMorphologyImportAdapter({
       sourceFile: '',
       name: '',
       description: '',
-      brainRegionId: '',
+      brainRegionId: defaultBrainRegionId,
       experimentDate: '',
       contactEmail: '',
       publishedIn: '',
       location: '',
       subjectId: '',
-      licenseId: '',
+      licenseId: defaultLicenseId,
       protocolId: '',
       mtypeClassId: '',
       contributions: '',

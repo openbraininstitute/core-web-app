@@ -23,6 +23,11 @@ import {
 } from '../core/contracts';
 import { buildTemplateColumns, importCsvRows } from '../core/csv';
 import {
+  fieldHasSuggestionResolution,
+  findExactSuggestionMatch,
+  getRowSubmissionValues,
+} from '../core/helpers';
+import {
   acceptCorrectionDraft,
   appendEmptyRow,
   createImportSessionState,
@@ -30,6 +35,7 @@ import {
   hydrateSessionRows,
   pushNotification,
   rejectCorrectionDraft,
+  resolveCellSuggestion,
   selectCell as selectCellState,
   setCellRemoteState,
   setCellValue,
@@ -37,10 +43,6 @@ import {
   updateCellRawValue,
 } from '../core/session';
 import { validateSessionRows } from '../core/validation';
-
-function valuesFromRow(row: ImportRowState): FlatImportValues {
-  return Object.fromEntries(Object.entries(row.cells).map(([key, cell]) => [key, cell.rawValue]));
-}
 
 function findField(
   fields: Array<AdapterFieldDefinition>,
@@ -69,13 +71,7 @@ function parseCsvFile(file: File): Promise<Array<Record<string, string>>> {
 }
 
 function hasSuggestionSource(field?: AdapterFieldDefinition): boolean {
-  return Boolean(
-    field &&
-      (field.remote?.searchPage ||
-        field.remote?.search ||
-        field.remote?.validate ||
-        field.options?.length)
-  );
+  return fieldHasSuggestionResolution(field);
 }
 
 function hasRemoteSearch(field?: AdapterFieldDefinition): boolean {
@@ -141,6 +137,14 @@ function resolveSuggestionMessage(
   }
 
   return `No matches found for ${field.label}.`;
+}
+
+function resolveMatchedSuggestion(
+  query: string,
+  validationResult: RemoteValidationResult | null,
+  suggestions: Array<ISuggestion>
+): ISuggestion | null {
+  return validationResult?.resolvedSuggestion ?? findExactSuggestionMatch(suggestions, query);
 }
 
 export function useEntityImportController<TPayload, TResult>({
@@ -219,7 +223,7 @@ export function useEntityImportController<TPayload, TResult>({
       const baseArgs = {
         query: req.query,
         row,
-        values: valuesFromRow(row),
+        values: getRowSubmissionValues(row),
         context,
       };
 
@@ -273,7 +277,7 @@ export function useEntityImportController<TPayload, TResult>({
           query: suggestionRequest.query,
           value: suggestionRequest.query,
           row,
-          values: valuesFromRow(row),
+          values: getRowSubmissionValues(row),
           context,
         });
 
@@ -380,10 +384,31 @@ export function useEntityImportController<TPayload, TResult>({
 
     const remoteSuggestions = suggestionsInfinite.data.pages.flatMap((page) => page.suggestions);
     const validationResult = remoteValidation;
+    const resolutionCandidates = mergeSuggestions(
+      localSuggestions,
+      remoteSuggestions,
+      validationResult?.suggestions,
+      validationResult?.resolvedSuggestion ? [validationResult.resolvedSuggestion] : undefined
+    );
+    const matchedSuggestion = resolveMatchedSuggestion(
+      query,
+      validationResult,
+      resolutionCandidates
+    );
+
+    if (matchedSuggestion) {
+      commit((current) =>
+        resolveCellSuggestion(current, {
+          rowId,
+          fieldPath,
+          suggestion: matchedSuggestion,
+        })
+      );
+      return;
+    }
+
     const suggestions =
-      validationResult?.status === RemoteValidationStatus.Valid
-        ? []
-        : mergeSuggestions(localSuggestions, remoteSuggestions, validationResult?.suggestions);
+      validationResult?.status === RemoteValidationStatus.Valid ? [] : resolutionCandidates;
 
     const previousSelected = findRow(sessionRef.current, rowId)?.cells[fieldPath].remoteState
       .selectedSuggestion;
@@ -514,15 +539,27 @@ export function useEntityImportController<TPayload, TResult>({
       }
 
       if (!field.remote?.validate) {
+        const matchedSuggestion = resolveMatchedSuggestion(normalizedQuery, null, localSuggestions);
+        if (matchedSuggestion) {
+          commit((current) =>
+            resolveCellSuggestion(current, {
+              rowId,
+              fieldPath,
+              suggestion: matchedSuggestion,
+            })
+          );
+          return;
+        }
+
         commit((current) =>
           setCellRemoteState(current, {
             rowId,
             fieldPath,
             remoteState: {
-              status: RemoteValidationStatus.Idle,
+              status: RemoteValidationStatus.Invalid,
               suggestions: localSuggestions,
               selectedSuggestion: null,
-              message: null,
+              message: resolveSuggestionMessage(field, null, localSuggestions),
             },
           })
         );
@@ -530,7 +567,7 @@ export function useEntityImportController<TPayload, TResult>({
       }
 
       try {
-        const rowValues = valuesFromRow(row);
+        const rowValues = getRowSubmissionValues(row);
         const validationResult = await field.remote.validate({
           query: normalizedQuery,
           value: normalizedQuery,
@@ -543,10 +580,31 @@ export function useEntityImportController<TPayload, TResult>({
           return;
         }
 
+        const resolutionCandidates = mergeSuggestions(
+          localSuggestions,
+          undefined,
+          validationResult.suggestions,
+          validationResult.resolvedSuggestion ? [validationResult.resolvedSuggestion] : undefined
+        );
+        const matchedSuggestion = resolveMatchedSuggestion(
+          normalizedQuery,
+          validationResult,
+          resolutionCandidates
+        );
+
+        if (matchedSuggestion) {
+          commit((current) =>
+            resolveCellSuggestion(current, {
+              rowId,
+              fieldPath,
+              suggestion: matchedSuggestion,
+            })
+          );
+          return;
+        }
+
         const suggestions =
-          validationResult.status === RemoteValidationStatus.Valid
-            ? []
-            : mergeSuggestions(localSuggestions, undefined, validationResult.suggestions);
+          validationResult.status === RemoteValidationStatus.Valid ? [] : resolutionCandidates;
 
         commit((current) =>
           setCellRemoteState(current, {
@@ -777,7 +835,7 @@ export function useEntityImportController<TPayload, TResult>({
 
       await Promise.all(
         current.rows.map(async (row) => {
-          const values = valuesFromRow(row);
+          const values = getRowSubmissionValues(row);
           const payload = adapter.buildPayload({ row, values, context });
           await adapter.submitRow({
             payload,
