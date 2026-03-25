@@ -72,7 +72,7 @@ export default function ReportDetailsView({
         />
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,30rem),1fr))] gap-10">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,25rem),1fr))] gap-10">
         {selectedNodeIds.map((nodeId) => (
           <InteractivePlot
             key={`${selectedPopulation}-${nodeId}-${selectedNodeIds.length}`}

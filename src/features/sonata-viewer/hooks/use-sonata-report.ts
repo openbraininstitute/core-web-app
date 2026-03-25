@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { wrap } from 'comlink';
+import { useEffect, useState } from 'react';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { AssetContentType } from '@/api/entitycore/types/shared/global';
-import { getSonataWorker, terminateWorker } from '@/features/sonata-viewer/worker/worker-api';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { Remote } from 'comlink';
@@ -20,6 +20,11 @@ type UseSonataReportArgs = {
   ctx?: WorkspaceContext;
 };
 
+type WorkerState = {
+  metadata: SonataReportMetadata;
+  worker: Remote<SonataWorkerImpl>;
+};
+
 type UseSonataReportReturn = {
   metadata: SonataReportMetadata | null;
   worker: Remote<SonataWorkerImpl> | null;
@@ -32,9 +37,8 @@ export default function useSonataReport({
   assetId,
   ctx,
 }: UseSonataReportArgs): UseSonataReportReturn {
-  const [metadata, setMetadata] = useState<SonataReportMetadata | null>(null);
+  const [state, setState] = useState<WorkerState | null>(null);
   const [workerError, setWorkerError] = useState<Error | null>(null);
-  const workerRef = useRef<Remote<SonataWorkerImpl> | null>(null);
 
   const asset = assetId
     ? entity.assets?.find((a) => a.id === assetId)
@@ -62,7 +66,7 @@ export default function useSonataReport({
   });
 
   useEffect(() => {
-    if (workerRef.current || !arrayBuffer) return;
+    if (!arrayBuffer) return;
 
     if (arrayBuffer.byteLength > MAX_FILE_SIZE) {
       setWorkerError(
@@ -73,27 +77,35 @@ export default function useSonataReport({
       return;
     }
 
-    const workerProxy = getSonataWorker();
-    workerRef.current = workerProxy;
+    let cancelled = false;
+    const rawWorker = new Worker(new URL('../worker/sonata-worker.ts', import.meta.url), {
+      type: 'module',
+    });
+    const workerProxy = wrap<SonataWorkerImpl>(rawWorker);
 
     workerProxy
       .loadFile(arrayBuffer)
-      .then(setMetadata)
-      .catch((e: unknown) => setWorkerError(e instanceof Error ? e : new Error(String(e))));
+      .then((metadata) => {
+        if (!cancelled) setState({ metadata, worker: workerProxy });
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setWorkerError(e instanceof Error ? e : new Error(String(e)));
+      });
 
     return () => {
-      workerRef.current = null;
+      cancelled = true;
+      setState(null);
       workerProxy.destroy();
-      terminateWorker();
+      rawWorker.terminate();
     };
   }, [arrayBuffer]);
 
   const error = assetError || fetchError || workerError;
 
   return {
-    metadata,
-    worker: workerRef.current,
+    metadata: state?.metadata ?? null,
+    worker: state?.worker ?? null,
     error,
-    isLoading: !metadata && !error,
+    isLoading: !state && !error,
   };
 }
