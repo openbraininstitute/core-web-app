@@ -68,12 +68,16 @@ function Users({
   virtualLabId: string | undefined;
 }) {
   const { isLoading, data: result } = useQuery({
-    queryKey: keyBuilder.listProjectTeam({ virtualLabId: virtualLabId!, projectId: data?.id! }),
+    queryKey: keyBuilder.listProjectTeam({
+      virtualLabId: virtualLabId!,
+      projectId: data?.id!,
+    }),
     queryFn: () => listProjectMembers({ virtualLabId: virtualLabId!, projectId: data?.id! }),
     enabled: Boolean(virtualLabId && data?.id),
   });
 
-  const users = buildUsersList(result?.data?.users);
+  const confirmedUsers = buildUsersList(result?.data?.users.filter((o) => !!o.invite_accepted));
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-lg text-white">
@@ -82,7 +86,6 @@ function Users({
           .fill(1)
           .map((_, i) => (
             <Bar
-              // eslint-disable-next-line react/no-array-index-key
               key={`loader-user-${i}`}
               aria-label="Loading label"
               className="h-3 w-20 rounded-full"
@@ -91,12 +94,12 @@ function Users({
       </div>
     );
   }
-  if (users.length) {
+  if (confirmedUsers.length) {
     return (
       <div className="border-primary-4 flex items-start gap-2 border-y py-1.5 text-lg text-white select-none">
         <PeopleCommunity className="text-primary-4 mt-0.5 min-h-5 min-w-5" />
         <div className="flex max-w-full flex-wrap items-center gap-1 overflow-hidden text-ellipsis max-h-30 overflow-y-auto primary-scrollbar">
-          {users.map((user) => {
+          {confirmedUsers.map((user) => {
             let name = user.name;
             if (name.includes('unknown')) name = user.email;
             return (
@@ -171,7 +174,9 @@ function Content({
   const breakpoint = useDefaultBreakpoint();
   const mutateRecentWorkspace = useMutation({
     mutationFn: ({ vlabId, prjId }: { vlabId: string; prjId: string }) =>
-      setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
+      setUserRecentWorkspace({
+        workspace: { virtualLabId: vlabId, projectId: prjId },
+      }),
   });
 
   const onProjectClick = () => {
@@ -213,7 +218,13 @@ function Content({
               onClick={onProjectClick}
               className="h-auto w-full justify-start font-semibold shadow-[0px_2px_16px_0px_#0000003D,-2px_-2px_16px_0px_#9FC4FF24]"
             >
-              <Link prefetch href={url({ virtualLabId: virtualLabId!, projectId: data?.id! })}>
+              <Link
+                prefetch
+                href={url({
+                  virtualLabId: virtualLabId!,
+                  projectId: data?.id!,
+                })}
+              >
                 {title}
                 <RightOutlined className="ml-auto text-current" />
               </Link>
