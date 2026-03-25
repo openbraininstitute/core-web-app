@@ -160,7 +160,7 @@ export function ImportTable<TPayload, TResult>({
   );
 
   return (
-    <div className="overflow-hidden bg-white">
+    <div className="min-h-full bg-white">
       <Table
         rowKey="id"
         size="small"
@@ -174,7 +174,7 @@ export function ImportTable<TPayload, TResult>({
           '[&_.ant-table-thead_.ant-table-cell]:bg-white',
           '[&_.ant-table-cell]:align-top',
           '[&_th.ant-table-cell>span]:text-sm',
-          // Lets in-cell controls (e.g. DatePicker) fill row height via absolute inset-0; h-full on td children is often unresolved.
+          // allow in-cell controls (Input, DatePicker) fill row height via absolute inset-0; h-full on td children is often unresolved.
           '[&_.ant-table-tbody>tr>td.ant-table-cell]:relative'
         )}
       />
