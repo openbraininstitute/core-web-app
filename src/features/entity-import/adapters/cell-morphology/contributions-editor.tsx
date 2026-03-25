@@ -376,7 +376,7 @@ export function ContributionsEditor({
                   variant="outline"
                   size="sm"
                   className={cn(
-                    'h-12 gap-2 rounded-full',
+                    'gap-2 rounded-full',
                     storedEntries.length === 1 && 'text-neutral-400'
                   )}
                   disabled={storedEntries.length === 1}
@@ -400,7 +400,7 @@ export function ContributionsEditor({
         rounded
         type="button"
         variant="outline"
-        size="md"
+        size="sm"
         className="ml-auto flex gap-2 rounded-full"
         onClick={() => syncEntries([...storedEntries, createBlankContribution()])}
       >
