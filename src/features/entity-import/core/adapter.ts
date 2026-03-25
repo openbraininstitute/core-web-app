@@ -2,13 +2,13 @@ import type { ReactNode } from 'react';
 import type { ZodType } from 'zod';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
-  FlatImportValues,
-  ImportCellState,
-  ImportFieldDefinition,
-  ImportRowState,
-  ImportSessionState,
+  IImportCellState,
+  IImportFieldDefinition,
+  IImportRowState,
+  IImportSessionState,
   ISuggestion,
-} from './contracts';
+  TFlatImportValues,
+} from '@/features/entity-import/core/contracts';
 
 export interface EntityImportRuntimeContext {
   projectId: string;
@@ -18,8 +18,8 @@ export interface EntityImportRuntimeContext {
 
 export interface RemoteSearchArgs {
   query: string;
-  row: ImportRowState;
-  values: FlatImportValues;
+  row: IImportRowState;
+  values: TFlatImportValues;
   context: EntityImportRuntimeContext;
 }
 
@@ -58,9 +58,9 @@ export interface RemoteValidationResult {
 
 export interface TableCellRendererProps {
   field: AdapterFieldDefinition;
-  cell: ImportCellState;
-  row: ImportRowState;
-  session: ImportSessionState;
+  cell: IImportCellState;
+  row: IImportRowState;
+  session: IImportSessionState;
   context: EntityImportRuntimeContext;
   actions: EntityImportActions;
 }
@@ -91,11 +91,11 @@ export interface EntityImportTemplateGuideConfig {
 }
 
 export interface AdapterFieldEnablementArgs {
-  values: FlatImportValues;
-  row: ImportRowState;
+  values: TFlatImportValues;
+  row: IImportRowState;
 }
 
-export interface AdapterFieldDefinition extends ImportFieldDefinition {
+export interface AdapterFieldDefinition extends IImportFieldDefinition {
   placeholder?: string;
   helpText?: string;
   options?: Array<ISuggestion>;
@@ -114,8 +114,8 @@ export interface AdapterFieldDefinition extends ImportFieldDefinition {
 
 export interface SubmitRowArgs<TPayload> {
   payload: TPayload;
-  row: ImportRowState;
-  values: FlatImportValues;
+  row: IImportRowState;
+  values: TFlatImportValues;
   context: EntityImportRuntimeContext;
 }
 
@@ -128,10 +128,10 @@ export interface EntityImportAdapter<TPayload = unknown, TResult = unknown> {
   templateGuide?: EntityImportTemplateGuideConfig;
   fields: Array<AdapterFieldDefinition>;
   schema: ZodType<TPayload>;
-  createBlankRow?: () => FlatImportValues;
+  createBlankRow?: () => TFlatImportValues;
   buildPayload: (args: {
-    row: ImportRowState;
-    values: FlatImportValues;
+    row: IImportRowState;
+    values: TFlatImportValues;
     context: EntityImportRuntimeContext;
   }) => TPayload;
   submitRow: (args: SubmitRowArgs<TPayload>) => Promise<TResult>;
@@ -140,6 +140,12 @@ export interface EntityImportAdapter<TPayload = unknown, TResult = unknown> {
 export interface EntityImportActions {
   addRow: () => void;
   acceptCorrection: (params: { rowId: string; fieldPath: string }) => void;
+  rejectCorrection: (params: { rowId: string; fieldPath: string }) => void;
+  requestSuggestions: (params: {
+    rowId: string;
+    fieldPath: string;
+    query: string;
+  }) => Promise<void>;
   applySuggestion: (params: {
     fieldPath: string;
     targetRowId: string;
@@ -148,15 +154,12 @@ export interface EntityImportActions {
     applyToAllMatching: boolean;
   }) => void;
   chooseSuggestion: (params: { rowId: string; fieldPath: string; suggestion: ISuggestion }) => void;
+  clearRow: (rowId: string) => void;
+  deleteRow: (rowId: string) => void;
   dismissNotification: (notificationId: string) => void;
-  rejectCorrection: (params: { rowId: string; fieldPath: string }) => void;
-  requestSuggestions: (params: {
-    rowId: string;
-    fieldPath: string;
-    query: string;
-  }) => Promise<void>;
   loadMoreSuggestions: () => void;
   selectCell: (params: { rowId: string; fieldPath: string }) => void;
+  setValidatorSelection: (params: { rowId?: string | null; fieldPath?: string | null }) => void;
   setCustomValue: (params: {
     rowId: string;
     fieldPath: string;

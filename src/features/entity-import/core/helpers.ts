@@ -1,8 +1,13 @@
 import dayjs from 'dayjs';
 
 import type { Dayjs } from 'dayjs';
-import type { AdapterFieldDefinition } from './adapter';
-import type { FlatImportValues, ImportCellState, ImportRowState, ISuggestion } from './contracts';
+import type { AdapterFieldDefinition } from '@/features/entity-import/core/adapter';
+import type {
+  IImportCellState,
+  IImportRowState,
+  ISuggestion,
+  TFlatImportValues,
+} from '@/features/entity-import/core/contracts';
 
 export function parseImportDatePickerValue(value: string | null | undefined): Dayjs | null {
   if (!value?.trim()) {
@@ -68,11 +73,11 @@ export function findExactSuggestionMatch(
   return exactValueMatches.length === 1 ? exactValueMatches[0] : null;
 }
 
-export function getCellSubmissionValue(cell: ImportCellState): string {
+export function getCellSubmissionValue(cell: IImportCellState): string {
   return typeof cell.parsedValue === 'string' ? cell.parsedValue : cell.rawValue;
 }
 
-export function getRowSubmissionValues(row: ImportRowState): FlatImportValues {
+export function getRowSubmissionValues(row: IImportRowState): TFlatImportValues {
   return Object.fromEntries(
     Object.entries(row.cells).map(([key, cell]) => [key, getCellSubmissionValue(cell)])
   );

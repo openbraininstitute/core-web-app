@@ -8,9 +8,9 @@ import {
   CellStatus,
   createIdleRemoteState,
   DependencyState,
-  type ImportCellState,
-  type ImportRowState,
-  type ImportSessionState,
+  type IImportCellState,
+  type IImportRowState,
+  type IImportSessionState,
   RowStatus,
 } from '../../core/contracts';
 import { createCellMorphologyImportAdapter } from './adapter';
@@ -18,7 +18,7 @@ import { ContributionsEditor } from './contributions-editor';
 
 import type { ReactElement } from 'react';
 import type { EntityImportActions, EntityImportRuntimeContext } from '../../core/adapter';
-import type { CellMorphologyImportServices } from './services';
+import type { ICellMorphologyImportServices } from './services';
 
 function renderWithQueryClient(ui: ReactElement) {
   const client = new QueryClient({
@@ -37,11 +37,14 @@ function createMockActions(): EntityImportActions {
     acceptCorrection: vi.fn(),
     applySuggestion: vi.fn(),
     chooseSuggestion: vi.fn(),
+    clearRow: vi.fn(),
+    deleteRow: vi.fn(),
     dismissNotification: vi.fn(),
     rejectCorrection: vi.fn(),
     requestSuggestions: vi.fn(async () => {}),
     loadMoreSuggestions: vi.fn(),
     selectCell: vi.fn(),
+    setValidatorSelection: vi.fn(),
     setCustomValue: vi.fn(),
     setFileValue: vi.fn(),
     submitRows: vi.fn(),
@@ -49,7 +52,9 @@ function createMockActions(): EntityImportActions {
   };
 }
 
-function createContributionCell(parsedValue: ImportCellState['parsedValue'] = []): ImportCellState {
+function createContributionCell(
+  parsedValue: IImportCellState['parsedValue'] = []
+): IImportCellState {
   return {
     fieldPath: 'contributions',
     rawValue: '',
@@ -63,7 +68,7 @@ function createContributionCell(parsedValue: ImportCellState['parsedValue'] = []
   };
 }
 
-function createContributionRow(cell: ImportCellState): ImportRowState {
+function createContributionRow(cell: IImportCellState): IImportRowState {
   return {
     id: 'row-1',
     rowIndex: 0,
@@ -80,11 +85,11 @@ function ContributionEditorHarness({
 }: {
   onSetCustomValue: ReturnType<typeof vi.fn>;
   services: Pick<
-    CellMorphologyImportServices,
+    ICellMorphologyImportServices,
     'searchPersonsPage' | 'searchOrganizationsPage' | 'searchConsortiaPage' | 'searchRolesPage'
   >;
 }) {
-  const [cell, setCell] = useState<ImportCellState>(() => createContributionCell());
+  const [cell, setCell] = useState<IImportCellState>(() => createContributionCell());
   const row = useMemo(() => createContributionRow(cell), [cell]);
   const actions = useMemo(() => {
     const baseActions = createMockActions();
@@ -131,7 +136,7 @@ function ContributionSummaryHarness({
     () =>
       createCellMorphologyImportAdapter({
         defaultBrainRegionId: 'brain-region-1',
-        services: {} as CellMorphologyImportServices,
+        services: {} as ICellMorphologyImportServices,
       }),
     []
   );
@@ -140,13 +145,17 @@ function ContributionSummaryHarness({
     throw new Error('Expected contributions field table renderer');
   }
 
-  const [cell, setCell] = useState<ImportCellState>(() => createContributionCell(initialEntries));
+  const [cell, setCell] = useState<IImportCellState>(() => createContributionCell(initialEntries));
   const row = useMemo(() => createContributionRow(cell), [cell]);
-  const session = useMemo<ImportSessionState>(
+  const session = useMemo<IImportSessionState>(
     () => ({
       fields: adapter.fields,
       rows: [row],
       selectedCell: null,
+      validatorSelection: {
+        rowId: null,
+        fieldPath: null,
+      },
       notifications: [],
       summary: {
         canSubmit: false,
@@ -214,7 +223,7 @@ describe('ContributionsEditor', () => {
       searchConsortiaPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       searchRolesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     } as unknown as Pick<
-      CellMorphologyImportServices,
+      ICellMorphologyImportServices,
       'searchPersonsPage' | 'searchOrganizationsPage' | 'searchConsortiaPage' | 'searchRolesPage'
     >;
 
@@ -275,7 +284,7 @@ describe('ContributionsEditor', () => {
         nextPageParam: null,
       })),
     } as unknown as Pick<
-      CellMorphologyImportServices,
+      ICellMorphologyImportServices,
       'searchPersonsPage' | 'searchOrganizationsPage' | 'searchConsortiaPage' | 'searchRolesPage'
     >;
 
@@ -486,7 +495,7 @@ describe('ContributionsEditor', () => {
             searchConsortiaPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
             searchRolesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
           } as unknown as Pick<
-            CellMorphologyImportServices,
+            ICellMorphologyImportServices,
             | 'searchPersonsPage'
             | 'searchOrganizationsPage'
             | 'searchConsortiaPage'

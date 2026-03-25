@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { type ImportFieldDefinition, ImportInputType } from './contracts';
-import { buildTemplateColumns, importCsvRows } from './csv';
+import {
+  type IImportFieldDefinition,
+  ImportInputType,
+} from '@/features/entity-import/core/contracts';
+import { buildTemplateColumns, importCsvRows } from '@/features/entity-import/core/csv';
 
-const fields: Array<ImportFieldDefinition> = [
+const fields: Array<IImportFieldDefinition> = [
   {
     label: 'Name',
     path: 'name',

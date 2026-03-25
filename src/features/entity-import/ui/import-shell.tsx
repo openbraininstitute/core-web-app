@@ -4,6 +4,10 @@ import { CloseOutlined } from '@ant-design/icons';
 import { RiDownload2Line, RiUpload2Line } from '@remixicon/react';
 import { useRef } from 'react';
 
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
+import { ImportTable } from '@/features/entity-import/ui/import-table';
+import { NotificationStack } from '@/features/entity-import/ui/notification-stack';
+import { ValidatorPanel } from '@/features/entity-import/ui/validator-panel';
 import { Button } from '@/ui/molecules/button';
 import {
   DropdownMenu,
@@ -13,23 +17,18 @@ import {
 } from '@/ui/molecules/dropdown-menu';
 import { cn } from '@/utils/css-class';
 
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from './entity-import-popover';
-import { ImportTable } from './import-table';
-import { NotificationStack } from './notification-stack';
-import { ValidatorPanel } from './validator-panel';
-
 import type {
   EntityImportActions,
   EntityImportAdapter,
   EntityImportRuntimeContext,
-} from '../core/adapter';
-import type { ImportSessionState } from '../core/contracts';
+} from '@/features/entity-import/core/adapter';
+import type { IImportSessionState } from '@/features/entity-import/core/contracts';
 
 interface ImportShellProps<TPayload, TResult> {
   title: string | null;
   adapter: EntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
-  session: ImportSessionState;
+  session: IImportSessionState;
   actions: EntityImportActions;
   isSubmitting: boolean;
   onClose: () => void;

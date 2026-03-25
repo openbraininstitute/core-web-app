@@ -1,5 +1,6 @@
 'use client';
 
+import { MoreOutlined } from '@ant-design/icons';
 import { RiInsertRowBottom } from '@remixicon/react';
 import { Table } from 'antd';
 import {
@@ -11,33 +12,48 @@ import {
   useState,
 } from 'react';
 
+import {
+  CellStatus,
+  DependencyState,
+  ENTITY_IMPORT_ALL_COLUMNS,
+} from '@/features/entity-import/core/contracts';
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
+import {
+  BLOCKED_CONTROL_CLASSNAME,
+  INVALID_CONTROL_CLASSNAME,
+  InlineCell,
+} from '@/features/entity-import/ui/inline-cell';
 import useResizeObserver from '@/hooks/useResizeObserver';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/molecules/dropdown-menu';
 import { cn } from '@/utils/css-class';
-
-import { CellStatus, DependencyState } from '../core/contracts';
-import { BLOCKED_CONTROL_CLASSNAME, INVALID_CONTROL_CLASSNAME, InlineCell } from './inline-cell';
 
 import type { ColumnsType, TableRef } from 'antd/es/table';
 import type {
   EntityImportActions,
   EntityImportAdapter,
   EntityImportRuntimeContext,
-} from '../core/adapter';
-import type { ImportSessionState } from '../core/contracts';
+} from '@/features/entity-import/core/adapter';
+import type { IImportSessionState } from '@/features/entity-import/core/contracts';
 
 const DEFAULT_FIELD_COLUMN_WIDTH = 200;
 const DEFAULT_TABLE_BODY_SCROLL_HEIGHT = 1;
 const ROW_INDEX_COLUMN_WIDTH = 46;
+const ROW_ACTIONS_COLUMN_WIDTH = 72;
 
 interface ImportTableProps<TPayload, TResult> {
   adapter: EntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
-  session: ImportSessionState;
+  session: IImportSessionState;
   actions: EntityImportActions;
 }
 
 function fieldColumnWidth(
-  field: ImportSessionState['fields'][number],
+  field: IImportSessionState['fields'][number],
   overrides: Record<string, number>
 ): number {
   return overrides[field.path] ?? field.columnWidth ?? DEFAULT_FIELD_COLUMN_WIDTH;
@@ -86,6 +102,46 @@ export function ImportTable<TPayload, TResult>({
     previousRowCountRef.current = session.rows.length;
   }, [session.rows.length]);
 
+  useLayoutEffect(() => {
+    const selectedFieldPath = session.validatorSelection.fieldPath;
+    if (!selectedFieldPath || selectedFieldPath === ENTITY_IMPORT_ALL_COLUMNS) {
+      return;
+    }
+
+    const tableBody = tableRef.current?.nativeElement.querySelector(
+      '.ant-table-body'
+    ) as HTMLDivElement | null;
+    if (!tableBody) {
+      return;
+    }
+
+    const selectedFieldIndex = adapter.fields.findIndex(
+      (field) => field.path === selectedFieldPath
+    );
+    if (selectedFieldIndex < 0) {
+      return;
+    }
+
+    const targetLeft =
+      ROW_INDEX_COLUMN_WIDTH +
+      adapter.fields
+        .slice(0, selectedFieldIndex)
+        .reduce((width, field) => width + fieldColumnWidth(field, resizeOverrides), 0);
+    const targetRight =
+      targetLeft + fieldColumnWidth(adapter.fields[selectedFieldIndex], resizeOverrides);
+    const viewportLeft = tableBody.scrollLeft;
+    const viewportRight = viewportLeft + tableBody.clientWidth;
+
+    if (targetLeft < viewportLeft) {
+      tableBody.scrollLeft = targetLeft;
+      return;
+    }
+
+    if (targetRight > viewportRight) {
+      tableBody.scrollLeft = Math.max(targetRight - tableBody.clientWidth, 0);
+    }
+  }, [adapter.fields, resizeOverrides, session.validatorSelection.fieldPath]);
+
   useResizeObserver({
     element: wrapperRef.current ?? undefined,
     callback: syncContainerHeight,
@@ -126,7 +182,7 @@ export function ImportTable<TPayload, TResult>({
       (acc, field) => acc + fieldColumnWidth(field, resizeOverrides),
       0
     );
-    return ROW_INDEX_COLUMN_WIDTH + fieldsWidth;
+    return ROW_INDEX_COLUMN_WIDTH + fieldsWidth + ROW_ACTIONS_COLUMN_WIDTH;
   }, [adapter.fields, resizeOverrides]);
 
   const headerHeight =
@@ -141,7 +197,7 @@ export function ImportTable<TPayload, TResult>({
     DEFAULT_TABLE_BODY_SCROLL_HEIGHT
   );
 
-  const columns = useMemo<ColumnsType<ImportSessionState['rows'][number]>>(
+  const columns = useMemo<ColumnsType<IImportSessionState['rows'][number]>>(
     () => [
       {
         title: (
@@ -185,7 +241,7 @@ export function ImportTable<TPayload, TResult>({
           key: field.path,
           width,
           ellipsis: false,
-          render: (_: unknown, row: ImportSessionState['rows'][number]) => {
+          render: (_: unknown, row: IImportSessionState['rows'][number]) => {
             const cell = row.cells[field.path];
             const isSelected =
               session.selectedCell?.rowId === row.id &&
@@ -203,7 +259,7 @@ export function ImportTable<TPayload, TResult>({
               />
             );
           },
-          onCell: (row: ImportSessionState['rows'][number]) => {
+          onCell: (row: IImportSessionState['rows'][number]) => {
             const cell = row.cells[field.path];
             const isSelected =
               session.selectedCell?.rowId === row.id &&
@@ -220,6 +276,59 @@ export function ImportTable<TPayload, TResult>({
           },
         };
       }),
+      {
+        title: (
+          <div className="flex min-h-9 items-center justify-center px-2">
+            <span className="text-sm font-semibold uppercase tracking-wide text-neutral-4">
+              Actions
+            </span>
+          </div>
+        ),
+        key: 'actions',
+        width: ROW_ACTIONS_COLUMN_WIDTH,
+        fixed: 'right',
+        align: 'center',
+        render: (_: unknown, row: IImportSessionState['rows'][number]) => (
+          <div className="flex h-full min-h-[52px] items-center justify-center px-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`Actions row ${row.rowIndex + 1}`}
+                  className={cn(
+                    'inline-flex size-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-primary-9 transition',
+                    'hover:border-neutral-300 hover:bg-neutral-50'
+                  )}
+                >
+                  <MoreOutlined />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className={cn(ENTITY_IMPORT_POPOVER_Z_CLASS, 'border border-neutral-200 bg-white')}
+              >
+                <DropdownMenuItem
+                  aria-label={`Clear row ${row.rowIndex + 1}`}
+                  className="text-primary-9"
+                  onSelect={() => actions.clearRow(row.id)}
+                >
+                  Clear
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  aria-label={`Delete row ${row.rowIndex + 1}`}
+                  variant="destructive"
+                  onSelect={() => actions.deleteRow(row.id)}
+                >
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+        onCell: () => ({
+          className: 'align-top !p-0 bg-white',
+        }),
+      },
     ],
     [actions, adapter.fields, beginResize, context, resizeOverrides, session]
   );

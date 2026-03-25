@@ -3,19 +3,28 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useCallback, useMemo } from 'react';
 
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
 import { AsyncSelect } from '@/ui/molecules/async-select';
 import { Button } from '@/ui/molecules/button';
 import { AgentType, type TAgentType } from '@/ui/segments/contribute/shared/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '../../ui/entity-import-popover';
-
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { EntityImportActions, EntityImportRuntimeContext } from '../../core/adapter';
-import type { ImportCellState, ImportRowState, ISuggestion } from '../../core/contracts';
-import type { CellMorphologyContributionInput, CellMorphologyImportServices } from './services';
+import type {
+  CellMorphologyContributionInput,
+  ICellMorphologyImportServices,
+} from '@/features/entity-import/adapters/cell-morphology/services';
+import type {
+  EntityImportActions,
+  EntityImportRuntimeContext,
+} from '@/features/entity-import/core/adapter';
+import type {
+  IImportCellState,
+  IImportRowState,
+  ISuggestion,
+} from '@/features/entity-import/core/contracts';
 
 export interface ContributionDraft extends Partial<CellMorphologyContributionInput> {
   id: string;
@@ -190,7 +199,7 @@ async function querySuggestionPage({
 function resolveContributorSearchPage(
   agentType: TAgentType | undefined,
   services: Pick<
-    CellMorphologyImportServices,
+    ICellMorphologyImportServices,
     'searchPersonsPage' | 'searchOrganizationsPage' | 'searchConsortiaPage'
   >
 ) {
@@ -210,13 +219,13 @@ function resolveContributorSearchPage(
 }
 
 interface ContributionsEditorProps {
-  cell: ImportCellState;
-  row: ImportRowState;
+  cell: IImportCellState;
+  row: IImportRowState;
   fieldPath: string;
   context: EntityImportRuntimeContext;
   actions: EntityImportActions;
   services: Pick<
-    CellMorphologyImportServices,
+    ICellMorphologyImportServices,
     'searchPersonsPage' | 'searchOrganizationsPage' | 'searchConsortiaPage' | 'searchRolesPage'
   >;
 }
@@ -272,7 +281,7 @@ export function ContributionsEditor({
           >
             <div
               data-testid={`contribution-row-layout-${index}`}
-              className="flex flex-col  flex-nowrap items-start w-full gap-4"
+              className="flex flex-col flex-nowrap items-center w-full gap-4"
             >
               <div className="w-full shrink-0 space-y-2">
                 <div className="text-sm font-medium text-neutral-700">Contributor type</div>

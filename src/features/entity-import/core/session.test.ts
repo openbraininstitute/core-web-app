@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  type ImportFieldDefinition,
+  ENTITY_IMPORT_ALL_COLUMNS,
+  type IImportFieldDefinition,
   ImportInputType,
   type ISuggestion,
   RemoteValidationStatus,
@@ -9,16 +10,19 @@ import {
 import {
   acceptCorrectionDraft,
   appendEmptyRow,
+  clearRow,
   createImportSessionState,
+  deleteRow,
   hydrateSessionRows,
   rejectCorrectionDraft,
   selectCell,
   setCellValue,
+  setValidatorSelection,
   stageSuggestionToRows,
   updateCellRawValue,
 } from './session';
 
-const fields: Array<ImportFieldDefinition> = [
+const fields: Array<IImportFieldDefinition> = [
   {
     label: 'Name',
     path: 'name',
@@ -61,6 +65,69 @@ describe('appendEmptyRow', () => {
   });
 });
 
+describe('clearRow', () => {
+  it('resets a row back to the provided default values while preserving row identity', () => {
+    const session = createImportSessionState({
+      fields,
+      rows: [{ name: 'Neuron A', brainRegion: 'Ctx' }],
+    });
+
+    const next = clearRow(session, {
+      rowId: session.rows[0].id,
+      values: {
+        name: '',
+        brainRegion: 'default-brain-region',
+      },
+    });
+
+    expect(next.rows[0]?.id).toBe(session.rows[0]?.id);
+    expect(next.rows[0]?.rowIndex).toBe(0);
+    expect(next.rows[0]?.cells.name.rawValue).toBe('');
+    expect(next.rows[0]?.cells.brainRegion.rawValue).toBe('default-brain-region');
+    expect(next.rows[0]?.cells.brainRegion.displayValue).toBe('default-brain-region');
+  });
+});
+
+describe('deleteRow', () => {
+  it('removes a row, reindexes the table, and clears selection when no rows remain', () => {
+    const session = createImportSessionState({
+      fields,
+      rows: [
+        { name: 'Neuron A', brainRegion: 'Ctx' },
+        { name: 'Neuron B', brainRegion: 'Thalamus' },
+      ],
+    });
+
+    const selectedSession = selectCell(session, {
+      rowId: session.rows[0]?.id ?? '',
+      fieldPath: 'brainRegion',
+    });
+    const next = deleteRow(selectedSession, {
+      rowId: selectedSession.rows[0]?.id ?? '',
+    });
+
+    expect(next.rows).toHaveLength(1);
+    expect(next.rows[0]?.cells.name.rawValue).toBe('Neuron B');
+    expect(next.rows[0]?.rowIndex).toBe(0);
+    expect(next.validatorSelection).toEqual({
+      rowId: next.rows[0]?.id ?? null,
+      fieldPath: 'brainRegion',
+    });
+    expect(next.selectedCell).toEqual({
+      rowId: next.rows[0]?.id ?? '',
+      fieldPath: 'brainRegion',
+    });
+
+    const empty = deleteRow(next, { rowId: next.rows[0]?.id ?? '' });
+    expect(empty.rows).toHaveLength(0);
+    expect(empty.validatorSelection).toEqual({
+      rowId: null,
+      fieldPath: null,
+    });
+    expect(empty.selectedCell).toBeNull();
+  });
+});
+
 describe('selectCell', () => {
   it('tracks the currently focused row and field for the validator panel', () => {
     const session = createImportSessionState({ fields, rowCount: 1 });
@@ -71,6 +138,46 @@ describe('selectCell', () => {
     });
 
     expect(next.selectedCell).toEqual({
+      rowId: session.rows[0].id,
+      fieldPath: 'brainRegion',
+    });
+    expect(next.validatorSelection).toEqual({
+      rowId: session.rows[0].id,
+      fieldPath: 'brainRegion',
+    });
+  });
+});
+
+describe('setValidatorSelection', () => {
+  it('supports row-only and all-column validator selection without forcing a table cell highlight', () => {
+    const session = createImportSessionState({ fields, rowCount: 1 });
+
+    const withAllColumns = setValidatorSelection(session, {
+      fieldPath: ENTITY_IMPORT_ALL_COLUMNS,
+    });
+    expect(withAllColumns.validatorSelection).toEqual({
+      rowId: null,
+      fieldPath: ENTITY_IMPORT_ALL_COLUMNS,
+    });
+    expect(withAllColumns.selectedCell).toBeNull();
+
+    const withRow = setValidatorSelection(withAllColumns, {
+      rowId: session.rows[0].id,
+    });
+    expect(withRow.validatorSelection).toEqual({
+      rowId: session.rows[0].id,
+      fieldPath: ENTITY_IMPORT_ALL_COLUMNS,
+    });
+    expect(withRow.selectedCell).toBeNull();
+
+    const withConcreteCell = setValidatorSelection(withRow, {
+      fieldPath: 'brainRegion',
+    });
+    expect(withConcreteCell.validatorSelection).toEqual({
+      rowId: session.rows[0].id,
+      fieldPath: 'brainRegion',
+    });
+    expect(withConcreteCell.selectedCell).toEqual({
       rowId: session.rows[0].id,
       fieldPath: 'brainRegion',
     });

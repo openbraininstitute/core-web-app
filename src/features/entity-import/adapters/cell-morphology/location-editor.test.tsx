@@ -12,7 +12,8 @@ import {
 import { LocationEditor, summarizeLocation } from './location-editor';
 
 import type { EntityImportActions } from '../../core/adapter';
-import type { ImportCellState, ImportRowState } from '../../core/contracts';
+import type { IImportCellState, IImportRowState } from '../../core/contracts';
+import type { LocationValue } from './location-editor';
 
 function createMockActions(): EntityImportActions {
   return {
@@ -20,11 +21,14 @@ function createMockActions(): EntityImportActions {
     acceptCorrection: vi.fn(),
     applySuggestion: vi.fn(),
     chooseSuggestion: vi.fn(),
+    clearRow: vi.fn(),
+    deleteRow: vi.fn(),
     dismissNotification: vi.fn(),
     rejectCorrection: vi.fn(),
     requestSuggestions: vi.fn(async () => {}),
     loadMoreSuggestions: vi.fn(),
     selectCell: vi.fn(),
+    setValidatorSelection: vi.fn(),
     setCustomValue: vi.fn(),
     setFileValue: vi.fn(),
     submitRows: vi.fn(),
@@ -32,7 +36,7 @@ function createMockActions(): EntityImportActions {
   };
 }
 
-function createLocationCell(parsedValue: unknown = null, rawValue = ''): ImportCellState {
+function createLocationCell(parsedValue: unknown = null, rawValue = ''): IImportCellState {
   return {
     fieldPath: 'location',
     rawValue,
@@ -46,7 +50,7 @@ function createLocationCell(parsedValue: unknown = null, rawValue = ''): ImportC
   };
 }
 
-function createRow(cell: ImportCellState): ImportRowState {
+function createRow(cell: IImportCellState): IImportRowState {
   return {
     id: 'row-1',
     rowIndex: 0,
@@ -60,9 +64,15 @@ function createRow(cell: ImportCellState): ImportRowState {
 function InlineLocationHarness({
   onSetCustomValue,
 }: {
-  onSetCustomValue: ReturnType<typeof vi.fn>;
+  onSetCustomValue: (params: {
+    rowId: string;
+    fieldPath: string;
+    rawValue: string;
+    displayValue?: string | null;
+    parsedValue?: unknown;
+  }) => void;
 }) {
-  const [cell, setCell] = useState<ImportCellState>(() => createLocationCell());
+  const [cell, setCell] = useState<IImportCellState>(() => createLocationCell());
   const row = useMemo(() => createRow(cell), [cell]);
   const actions = useMemo(() => {
     const baseActions = createMockActions();
@@ -91,9 +101,9 @@ function InlineLocationHarness({
   );
 }
 
-function PanelLocationHarness({ onChange }: { onChange: ReturnType<typeof vi.fn> }) {
+function PanelLocationHarness({ onChange }: { onChange: (value: LocationValue) => void }) {
   const actions = createMockActions();
-  const [value, setValue] = useState({ x: 1, y: 2, z: 3 });
+  const [value, setValue] = useState<LocationValue>({ x: 1, y: 2, z: 3 });
   const cell = createLocationCell(value, summarizeLocation(value));
   const row = createRow(cell);
 

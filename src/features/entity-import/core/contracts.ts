@@ -63,12 +63,12 @@ export interface ISuggestion {
   metadata?: Record<string, unknown>;
 }
 
-export interface ImportFieldCsvConfig {
+export interface IImportFieldCsvConfig {
   include?: boolean;
   aliases?: Array<string>;
 }
 
-export interface ImportFieldDefinition {
+export interface IImportFieldDefinition {
   label: string;
   path: string;
   submissionPath?: string;
@@ -76,7 +76,7 @@ export interface ImportFieldDefinition {
   required: boolean;
   inputType: TImportInputType;
   dependencies?: Array<string>;
-  csv?: ImportFieldCsvConfig;
+  csv?: IImportFieldCsvConfig;
   /** When set, table column uses this width (px) and prefers it over auto layout. */
   columnWidth?: number;
 }
@@ -86,7 +86,7 @@ export interface RemoteSuggestionPaging {
   isFetchingNextPage: boolean;
 }
 
-export interface RemoteState {
+export interface IRemoteState {
   status: TRemoteValidationStatus;
   suggestions: Array<ISuggestion>;
   selectedSuggestion: ISuggestion | null;
@@ -99,11 +99,11 @@ export interface CellCorrectionDraft {
   previousRawValue: string;
   previousDisplayValue: string | null;
   previousParsedValue: unknown;
-  previousRemoteState: RemoteState;
+  previousRemoteState: IRemoteState;
   suggestion: ISuggestion;
 }
 
-export interface ImportCellState {
+export interface IImportCellState {
   fieldPath: string;
   rawValue: string;
   displayValue: string | null;
@@ -111,45 +111,53 @@ export interface ImportCellState {
   status: TCellStatus;
   issues: Array<string>;
   dependencyState: TDependencyState;
-  remoteState: RemoteState;
+  remoteState: IRemoteState;
   /** Staged remote suggestion; raw value stays as user-entered until accept. */
   correctionDraft: CellCorrectionDraft | null;
 }
 
-export interface ImportRowState {
+export interface IImportRowState {
   id: string;
   rowIndex: number;
-  cells: Record<string, ImportCellState>;
+  cells: Record<string, IImportCellState>;
   rowStatus: TRowStatus;
 }
 
-export interface SessionSummary {
+export interface ISessionSummary {
   canSubmit: boolean;
   invalidRequiredCellCount: number;
 }
 
-export interface SelectedCellState {
+export interface ISelectedCellState {
   rowId: string;
   fieldPath: string;
 }
 
-export interface SessionNotification {
+export const ENTITY_IMPORT_ALL_COLUMNS = '__all__';
+
+export interface IValidatorSelectionState {
+  rowId: string | null;
+  fieldPath: string | null;
+}
+
+export interface ISessionNotification {
   id: string;
   tone: TNotificationTone;
   message: string;
 }
 
-export interface ImportSessionState {
-  fields: Array<ImportFieldDefinition>;
-  rows: Array<ImportRowState>;
-  selectedCell: SelectedCellState | null;
-  notifications: Array<SessionNotification>;
-  summary: SessionSummary;
+export interface IImportSessionState {
+  fields: Array<IImportFieldDefinition>;
+  rows: Array<IImportRowState>;
+  selectedCell: ISelectedCellState | null;
+  validatorSelection: IValidatorSelectionState;
+  notifications: Array<ISessionNotification>;
+  summary: ISessionSummary;
 }
 
-export type FlatImportValues = Record<string, string>;
+export type TFlatImportValues = Record<string, string>;
 
-export function createIdleRemoteState(): RemoteState {
+export function createIdleRemoteState(): IRemoteState {
   return {
     status: RemoteValidationStatus.Idle,
     suggestions: [],

@@ -15,10 +15,13 @@ import { createAndRegisterMorphometrics } from '@/api/one/cell-morphology';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { TRepairPipelineState } from '@/api/entitycore/types/shared/protocol';
+import type {
+  EntityImportRuntimeContext,
+  RemoteSearchPageResult,
+} from '@/features/entity-import/core/adapter';
+import type { ISuggestion } from '@/features/entity-import/core/contracts';
 import type { WorkspaceContext } from '@/types/common';
 import type { TAgentType } from '@/ui/segments/contribute/shared/types';
-import type { EntityImportRuntimeContext, RemoteSearchPageResult } from '../../core/adapter';
-import type { ISuggestion } from '../../core/contracts';
 
 export interface CellMorphologyContributionInput {
   agent_type: TAgentType;
@@ -45,7 +48,7 @@ export interface RegisterMorphologyResult {
   isValid: boolean;
 }
 
-export interface CellMorphologyImportServices {
+export interface ICellMorphologyImportServices {
   searchBrainRegions: (
     query: string,
     context: EntityImportRuntimeContext
@@ -216,7 +219,7 @@ function slicePage(
   return { suggestions, nextPageParam };
 }
 
-export function createCellMorphologyImportServices(): CellMorphologyImportServices {
+export function createCellMorphologyImportServices(): ICellMorphologyImportServices {
   return {
     async searchBrainRegions(query) {
       const suggestions = await getBrainRegionFlatSuggestions();

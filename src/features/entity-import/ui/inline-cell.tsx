@@ -6,6 +6,33 @@ import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { useId, useRef } from 'react';
 
+import {
+  CellStatus,
+  DependencyState,
+  type IImportCellState,
+  type IImportRowState,
+  type IImportSessionState,
+  ImportInputType,
+  RemoteValidationStatus,
+} from '@/features/entity-import/core/contracts';
+import {
+  buildFileAcceptValue,
+  getImportFileButtonLabel,
+  getImportFileInputMultiple,
+} from '@/features/entity-import/core/file-field';
+import {
+  importDatePickerChangeToRawValue,
+  parseImportDatePickerValue,
+} from '@/features/entity-import/core/helpers';
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
+import {
+  ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
+  getEntityImportSelectLabel,
+} from '@/features/entity-import/ui/select-styles';
+import {
+  ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
+  ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
+} from '@/features/entity-import/ui/tooltip-styles';
 import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { Textarea } from '@/ui/molecules/input/text-area';
@@ -19,40 +46,23 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import {
-  CellStatus,
-  DependencyState,
-  type ImportCellState,
-  ImportInputType,
-  type ImportRowState,
-  type ImportSessionState,
-  RemoteValidationStatus,
-} from '../core/contracts';
-import {
-  buildFileAcceptValue,
-  getImportFileButtonLabel,
-  getImportFileInputMultiple,
-} from '../core/file-field';
-import { importDatePickerChangeToRawValue, parseImportDatePickerValue } from '../core/helpers';
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from './entity-import-popover';
-
 import type {
   AdapterFieldDefinition,
   EntityImportActions,
   EntityImportRuntimeContext,
-} from '../core/adapter';
+} from '@/features/entity-import/core/adapter';
 
 interface InlineCellProps {
   field: AdapterFieldDefinition;
-  cell: ImportCellState;
-  row: ImportRowState;
-  session: ImportSessionState;
+  cell: IImportCellState;
+  row: IImportRowState;
+  session: IImportSessionState;
   context: EntityImportRuntimeContext;
   actions: EntityImportActions;
   selected: boolean;
 }
 
-function getDisplayValue(cell: ImportCellState): string {
+function getDisplayValue(cell: IImportCellState): string {
   if (cell.displayValue) {
     return cell.displayValue;
   }
@@ -65,7 +75,7 @@ export const INVALID_CONTROL_CLASSNAME =
 export const BLOCKED_CONTROL_CLASSNAME =
   'bg-neutral-100 text-neutral-500 [&_textarea]:text-neutral-500 bg-neutral-100 [&_textarea]:bg-neutral-100';
 
-function getControlClassName(cell: ImportCellState, selected: boolean): string {
+function getControlClassName(cell: IImportCellState, selected: boolean): string {
   return clsx(
     'h-full w-full rounded-none border-0 bg-transparent px-3 py-2 text-base! font-semibold!',
     'placeholder:font-light! placeholder:text-gray-400! text-primary-9! placeholder:text-sm!',
@@ -169,35 +179,44 @@ export function InlineCell({
 
   if (field.inputType === ImportInputType.Select) {
     return (
-      <Select
-        disabled={cell.dependencyState === 'blocked'}
-        value={cell.rawValue || undefined}
-        onOpenChange={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
-        onValueChange={(value) =>
-          actions.updateCellValue({
-            rowId: row.id,
-            fieldPath: field.path,
-            rawValue: value,
-          })
-        }
-      >
-        <SelectTrigger
-          aria-label={`${field.label} row ${row.rowIndex + 1}`}
-          className={clsx(
-            getControlClassName(cell, selected),
-            'data-[size=default]:h-full [&_svg]:opacity-100'
-          )}
+      <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0">
+        <Select
+          disabled={cell.dependencyState === 'blocked'}
+          value={cell.rawValue}
+          onOpenChange={(open) => {
+            if (open) {
+              actions.selectCell({ rowId: row.id, fieldPath: field.path });
+            }
+          }}
+          onValueChange={(value) =>
+            actions.updateCellValue({
+              rowId: row.id,
+              fieldPath: field.path,
+              rawValue: value,
+            })
+          }
         >
-          <SelectValue placeholder={field.placeholder ?? `Select ${field.label}`} />
-        </SelectTrigger>
-        <SelectContent className={ENTITY_IMPORT_POPOVER_Z_CLASS}>
-          {field.options?.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+          <SelectTrigger
+            aria-label={`${field.label} row ${row.rowIndex + 1}`}
+            className={clsx(
+              getControlClassName(cell, selected),
+              'pointer-events-auto box-border h-full min-h-[52px] w-full justify-start rounded-none border-0 bg-transparent text-left',
+              'data-[size=default]:h-full [&_svg]:opacity-100'
+            )}
+          >
+            <SelectValue placeholder={field.placeholder ?? `Select ${field.label}`}>
+              {getEntityImportSelectLabel(field, cell.rawValue) || undefined}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className={ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME}>
+            {field.options?.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     );
   }
 
@@ -345,7 +364,10 @@ export function InlineCell({
                 <button
                   type="button"
                   aria-label={`Why ${field.label} row ${row.rowIndex + 1} needs selection`}
-                  className="pointer-events-auto inline-flex size-6 items-center justify-center rounded-full text-amber-700 transition hover:bg-amber-100"
+                  className={cn(
+                    ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
+                    'pointer-events-auto text-amber-700'
+                  )}
                   onClick={(event) => {
                     event.stopPropagation();
                     actions.selectCell({ rowId: row.id, fieldPath: field.path });
@@ -354,8 +376,16 @@ export function InlineCell({
                   <InfoCircleOutlined />
                 </button>
               </TooltipTrigger>
-              <TooltipContent className={cn('max-w-64 text-pretty', ENTITY_IMPORT_POPOVER_Z_CLASS)}>
-                Open the validator and choose the correct value for this cell.
+              <TooltipContent
+                side="top"
+                align="end"
+                sideOffset={0}
+                arrowClassName="bg-white"
+                className={ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME}
+              >
+                <div className="text-pretty px-1 py-1">
+                  Open the validator and choose the correct value for this cell.
+                </div>
               </TooltipContent>
             </Tooltip>
           </div>

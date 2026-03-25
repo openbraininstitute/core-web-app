@@ -1,18 +1,21 @@
 import {
   CellStatus,
   DependencyState,
-  type FlatImportValues,
-  type ImportRowState,
-  type ImportSessionState,
+  type IImportRowState,
+  type IImportSessionState,
   RemoteValidationStatus,
   RowStatus,
-} from './contracts';
-import { fieldHasSuggestionResolution, getRowSubmissionValues } from './helpers';
+  type TFlatImportValues,
+} from '@/features/entity-import/core/contracts';
+import {
+  fieldHasSuggestionResolution,
+  getRowSubmissionValues,
+} from '@/features/entity-import/core/helpers';
 
 import type { ZodType } from 'zod';
-import type { AdapterFieldDefinition } from './adapter';
+import type { AdapterFieldDefinition } from '@/features/entity-import/core/adapter';
 
-function cloneRows(rows: Array<ImportRowState>): Array<ImportRowState> {
+function cloneRows(rows: Array<IImportRowState>): Array<IImportRowState> {
   return rows.map((row) => ({
     ...row,
     cells: Object.fromEntries(
@@ -51,9 +54,9 @@ function resolveIssueFieldPath(fields: Array<AdapterFieldDefinition>, issuePath:
 }
 
 function summarize(
-  rows: Array<ImportRowState>,
+  rows: Array<IImportRowState>,
   fields: Array<AdapterFieldDefinition>
-): ImportSessionState['summary'] {
+): IImportSessionState['summary'] {
   let invalidRequiredCellCount = 0;
 
   rows.forEach((row) => {
@@ -85,11 +88,11 @@ export function validateSessionRows<TPayload>({
   schema,
   buildPayload,
 }: {
-  session: ImportSessionState;
+  session: IImportSessionState;
   fields: Array<AdapterFieldDefinition>;
   schema: ZodType<TPayload>;
-  buildPayload: (args: { row: ImportRowState; values: FlatImportValues }) => TPayload;
-}): ImportSessionState {
+  buildPayload: (args: { row: IImportRowState; values: TFlatImportValues }) => TPayload;
+}): IImportSessionState {
   const nextRows = cloneRows(session.rows).map((row) => {
     const rowValues = getRowSubmissionValues(row);
     const issueMap = new Map<string, Array<string>>();

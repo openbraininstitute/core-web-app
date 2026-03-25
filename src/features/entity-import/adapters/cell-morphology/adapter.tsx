@@ -11,13 +11,6 @@ import {
   RepairPipelineTypeSchema,
   type TRepairPipelineState,
 } from '@/api/entitycore/types/shared/protocol';
-import { Button } from '@/ui/molecules/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { AgentType } from '@/ui/segments/contribute/shared/types';
-import { cn } from '@/utils/css-class';
-
-import { ImportInputType, type ImportRowState, type ISuggestion } from '../../core/contracts';
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '../../ui/entity-import-popover';
 import {
   type ContributionDraft,
   ContributionsEditor,
@@ -25,25 +18,38 @@ import {
   getRenderableContributionEntries,
   promoteContributionToPrimary,
   summarizeContributions,
-} from './contributions-editor';
+} from '@/features/entity-import/adapters/cell-morphology/contributions-editor';
 import {
   LocationEditor,
   type LocationValue,
   parseLocationSummary,
   summarizeLocation,
-} from './location-editor';
+} from '@/features/entity-import/adapters/cell-morphology/location-editor';
 import {
   type CellMorphologyContributionInput,
-  type CellMorphologyImportServices,
   type CellMorphologyRegistrationMetadata,
   createCellMorphologyImportServices,
-} from './services';
+  type ICellMorphologyImportServices,
+} from '@/features/entity-import/adapters/cell-morphology/services';
+import {
+  type IImportRowState,
+  ImportInputType,
+  type ISuggestion,
+} from '@/features/entity-import/core/contracts';
+import {
+  ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
+  ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
+} from '@/features/entity-import/ui/tooltip-styles';
+import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { AgentType } from '@/ui/segments/contribute/shared/types';
+import { cn } from '@/utils/css-class';
 
 import type {
   EntityImportAdapter,
   EntityImportRuntimeContext,
   RemoteValidationResult,
-} from '../../core/adapter';
+} from '@/features/entity-import/core/adapter';
 
 const DEFAULT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
 const REPAIR_PIPELINE_STATE_OPTIONS = Object.values(RepairPipelineState).map((option) => ({
@@ -118,7 +124,7 @@ export interface CellMorphologySubmissionPayload {
 interface CreateCellMorphologyImportAdapterOptions {
   defaultBrainRegionId: string;
   defaultLicenseId?: string;
-  services?: CellMorphologyImportServices;
+  services?: ICellMorphologyImportServices;
 }
 
 function normalizeOptionalString(value: string): string | null {
@@ -144,7 +150,7 @@ function readLocation(parsedValue: unknown, rawValue: string): LocationValue | n
   return (parsedValue as LocationValue | null) ?? parseLocationSummary(rawValue) ?? null;
 }
 
-function getProtocolGenerationType(row: ImportRowState): string | null {
+function getProtocolGenerationType(row: IImportRowState): string | null {
   const protocolCell = row.cells.protocolId;
 
   if (protocolCell.remoteState.status !== 'valid') {
@@ -158,7 +164,7 @@ function getProtocolGenerationType(row: ImportRowState): string | null {
   return metadata?.generationType ?? null;
 }
 
-function hasDigitalReconstructionProtocol(row: ImportRowState): boolean {
+function hasDigitalReconstructionProtocol(row: IImportRowState): boolean {
   return getProtocolGenerationType(row) === CellMorphologyGenerationType.DigitalReconstruction.key;
 }
 
@@ -245,11 +251,13 @@ function ContributionPreviewText({
 
 function ContributionSummaryCell({
   label,
+  triggerLabel,
   entries,
   onClick,
   onPromoteContribution,
 }: {
   label: string;
+  triggerLabel: string;
   entries: unknown;
   onClick: () => void;
   onPromoteContribution: (contributionId: string) => void;
@@ -263,7 +271,7 @@ function ContributionSummaryCell({
     <div className="flex h-full min-h-[52px] w-full items-stretch gap-2 px-3 py-2">
       <Button
         type="button"
-        aria-label={label}
+        aria-label={triggerLabel}
         variant="ghost"
         size="md"
         className="h-full min-h-[52px] min-w-0 flex-1 justify-start rounded-none border-0 bg-transparent px-0 py-0 text-left shadow-none hover:bg-neutral-50"
@@ -278,10 +286,7 @@ function ContributionSummaryCell({
             <button
               type="button"
               aria-label={`Show ${overflowCount} more contribution${overflowCount === 1 ? '' : 's'}`}
-              className={cn(
-                'inline-flex size-8 shrink-0 items-center justify-center self-center rounded-full border border-neutral-200',
-                'text-sm font-semibold text-primary-9 transition hover:border-neutral-300 hover:bg-white bg-neutral-50'
-              )}
+              className={ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME}
               onClick={(event) => event.stopPropagation()}
             >
               +{overflowCount}
@@ -292,10 +297,7 @@ function ContributionSummaryCell({
             align="end"
             sideOffset={0}
             arrowClassName="bg-white"
-            className={cn(
-              ENTITY_IMPORT_POPOVER_Z_CLASS,
-              'w-80 max-w-88 rounded-2xl border border-neutral-200 bg-white p-2 text-sm text-neutral-900 shadow-[0_16px_40px_rgba(0,0,0,0.16)]'
-            )}
+            className={ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME}
           >
             <div data-testid="contribution-tooltip-list" className="max-h-64 overflow-y-auto pr-1">
               {contributions.map((entry, index) => {
@@ -560,6 +562,7 @@ export function createCellMorphologyImportAdapter({
         tableRenderer: ({ field, cell, row, actions }) => (
           <ContributionSummaryCell
             label={field.label}
+            triggerLabel={`${field.label} row ${row.rowIndex + 1}`}
             entries={cell.parsedValue}
             onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
             onPromoteContribution={(contributionId) => {
