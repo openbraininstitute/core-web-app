@@ -48,11 +48,13 @@ function buildUsersList(users: Array<Member> | undefined) {
         return {
           id: user.id,
           name: `${user.first_name} ${user.last_name}`,
+          email: user.email,
         };
       }
       return {
         id: user.id,
         name: user.username,
+        email: user.email,
       };
     }) ?? []
   );
@@ -94,14 +96,18 @@ function Users({
       <div className="border-primary-4 flex items-start gap-2 border-y py-1.5 text-lg text-white select-none">
         <PeopleCommunity className="text-primary-4 mt-0.5 min-h-5 min-w-5" />
         <div className="flex max-w-full flex-wrap items-center gap-1 overflow-hidden text-ellipsis max-h-30 overflow-y-auto primary-scrollbar">
-          {users.map((user) => (
-            <div
-              key={user.id}
-              className="after:text-white after:content-[','] last:after:content-none"
-            >
-              {user.name}
-            </div>
-          ))}
+          {users.map((user) => {
+            let name = user.name;
+            if (name.includes('unknown')) name = user.email;
+            return (
+              <div
+                key={user.id}
+                className="after:text-white after:content-[','] last:after:content-none"
+              >
+                {name}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
