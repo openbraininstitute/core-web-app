@@ -1,6 +1,7 @@
 'use client';
 
-import { SmallDashOutlined } from '@ant-design/icons';
+import { EditOutlined, PlusOutlined, SmallDashOutlined } from '@ant-design/icons';
+import { RiEditBoxLine } from '@remixicon/react';
 import { z } from 'zod';
 
 import { Button } from '@/ui/molecules/button';
@@ -160,7 +161,12 @@ function contributionSummaryTrigger({
           className="block truncate text-sm font-medium text-neutral-900"
           title={preview?.primaryLabel}
         >
-          {preview?.primaryLabel || `Edit ${label.toLowerCase()}`}
+          {preview?.primaryLabel || (
+            <div className="flex items-center gap-1 font-bold text-primary-9 hover:text-primary-7">
+              Add {label.toLowerCase()}
+              <RiEditBoxLine />
+            </div>
+          )}
         </span>
         {preview?.roleLabel ? (
           <span className="block truncate text-xs text-neutral-500" title={preview.roleLabel}>
@@ -367,7 +373,7 @@ export function createCellMorphologyImportAdapter({
         csv: { include: false },
         tableRenderer: ({ field, cell, row, actions }) =>
           contributionSummaryTrigger({
-            label: `${field.label} row ${row.rowIndex + 1}`,
+            label: `${field.label}`,
             entries: cell.parsedValue,
             onClick: () => actions.selectCell({ rowId: row.id, fieldPath: field.path }),
           }),
