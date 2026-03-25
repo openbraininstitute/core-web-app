@@ -136,12 +136,14 @@ export default function ReportOverview({
 
   return (
     <div className="flex flex-col gap-10">
-      <PopulationSelect
-        populations={populationNames}
-        value={selectedPopulation}
-        onChange={setSelectedPopulation}
-        showAllOption
-      />
+      {populationNames.length > 1 && (
+        <PopulationSelect
+          populations={populationNames}
+          value={selectedPopulation}
+          onChange={setSelectedPopulation}
+          showAllOption
+        />
+      )}
 
       {displayedPopulations.map((pop) => (
         <div key={pop.name} className="flex flex-col gap-3">

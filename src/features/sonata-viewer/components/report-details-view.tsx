@@ -59,19 +59,23 @@ export default function ReportDetailsView({
   return (
     <div className="flex flex-col gap-14">
       <div className="flex flex-col gap-6">
-        <PopulationSelect
-          populations={populationNames}
-          value={selectedPopulation}
-          onChange={handlePopulationChange}
-          showAllOption={false}
-        />
+        {populationNames.length > 1 && (
+          <PopulationSelect
+            populations={populationNames}
+            value={selectedPopulation}
+            onChange={handlePopulationChange}
+            showAllOption={false}
+          />
+        )}
 
-        <NodeSelector
-          populationName={selectedPopulation}
-          nodeIds={nodeIds}
-          selectedNodeIds={selectedNodeIds}
-          onChange={setSelectedNodeIds}
-        />
+        {nodeIds.length > 1 && (
+          <NodeSelector
+            populationName={selectedPopulation}
+            nodeIds={nodeIds}
+            selectedNodeIds={selectedNodeIds}
+            onChange={setSelectedNodeIds}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,25rem),1fr))] gap-10">
