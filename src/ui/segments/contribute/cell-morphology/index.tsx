@@ -96,7 +96,12 @@ export function CellMorphology({ sessionId }: ICellMorphologyProps) {
   );
 }
 
-export function CellMorphologyImport({ sessionId }: ICellMorphologyProps) {
+type ICellMorphologyImportProps = {
+  title: string | null;
+  onClose: () => void;
+} & ICellMorphologyProps;
+
+export function CellMorphologyImport({ title, sessionId, onClose }: ICellMorphologyImportProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
@@ -111,6 +116,8 @@ export function CellMorphologyImport({ sessionId }: ICellMorphologyProps) {
 
   return (
     <EntityImportFeature
+      title={title}
+      onClose={onClose}
       adapter={adapter}
       context={{
         projectId,

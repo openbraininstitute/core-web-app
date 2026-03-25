@@ -1,5 +1,7 @@
 'use client';
 
+import { CloseOutlined } from '@ant-design/icons';
+import { RiDownload2Line, RiInsertRowBottom, RiUpload2Line } from '@remixicon/react';
 import { useRef } from 'react';
 
 import { Button } from '@/ui/molecules/button';
@@ -16,21 +18,25 @@ import type {
 import type { ImportSessionState } from '../core/contracts';
 
 interface ImportShellProps<TPayload, TResult> {
+  title: string | null;
   adapter: EntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
   session: ImportSessionState;
   actions: EntityImportActions;
   isSubmitting: boolean;
+  onClose: () => void;
   onDownloadTemplate: () => void;
   onUploadCsvFile: (file: File) => Promise<void>;
 }
 
 export function ImportShell<TPayload, TResult>({
+  title,
   adapter,
   context,
   session,
   actions,
   isSubmitting,
+  onClose,
   onDownloadTemplate,
   onUploadCsvFile,
 }: ImportShellProps<TPayload, TResult>) {
@@ -40,28 +46,40 @@ export function ImportShell<TPayload, TResult>({
     <div className="flex h-full min-h-0 flex-col gap-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-3xl">
-          <h2 className="text-3xl font-semibold tracking-tight text-neutral-950">
-            {adapter.title}
-          </h2>
-          {adapter.description && (
-            <p className="mt-2 text-sm text-neutral-500">{adapter.description}</p>
-          )}
+          <h2 className="text-3xl font-bold text-primary-9">{title}</h2>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Button rounded type="button" variant="outline" size="md" onClick={onDownloadTemplate}>
-            Download CSV
+          <Button
+            className="flex items-center justify-center gap-4"
+            rounded
+            type="button"
+            variant="outline"
+            size="md"
+            onClick={onDownloadTemplate}
+          >
+            <span>Download CSV</span>
+            <RiDownload2Line />
           </Button>
           <Button
             rounded
+            className="flex items-center justify-center gap-4"
             type="button"
             variant="outline"
             size="md"
             onClick={() => uploadInputRef.current?.click()}
           >
-            Upload CSV
+            <span>Upload CSV</span>
+            <RiUpload2Line />
           </Button>
-          <Button rounded type="button" size="md" onClick={actions.addRow}>
+          <Button
+            rounded
+            type="button"
+            size="md"
+            onClick={actions.addRow}
+            className="flex items-center justify-center gap-4"
+          >
             Add row
+            <RiInsertRowBottom />
           </Button>
           <input
             ref={uploadInputRef}
@@ -76,6 +94,9 @@ export function ImportShell<TPayload, TResult>({
               }
             }}
           />
+          <Button rounded type="button" variant="icon" size="md" onClick={onClose}>
+            <CloseOutlined />
+          </Button>
         </div>
       </div>
 

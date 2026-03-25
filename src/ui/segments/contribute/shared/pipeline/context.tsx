@@ -173,7 +173,7 @@ export function ContributionPipelineProvider<
         form={form}
         id={config.formId}
         rootClassName={cn(
-          'relative flex flex-col w-full h-full [&_.ant-form-item-explain-error]:text-sm! ',
+          'relative flex flex-col w-full h-[calc(100%-60px)]! [&_.ant-form-item-explain-error]:text-sm! ',
           '[&_.ant-form-item-explain-error]:pl-1.5! [&_.ant-form-item-explain-error]:select-none!'
         )}
         layout="vertical"

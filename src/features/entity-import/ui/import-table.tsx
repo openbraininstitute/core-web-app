@@ -6,7 +6,7 @@ import { type MouseEvent as ReactMouseEvent, useCallback, useMemo, useRef, useSt
 import { cn } from '@/utils/css-class';
 
 import { CellStatus, DependencyState } from '../core/contracts';
-import { InlineCell } from './inline-cell';
+import { BLOCKED_CONTROL_CLASSNAME, INVALID_CONTROL_CLASSNAME, InlineCell } from './inline-cell';
 
 import type { ColumnsType } from 'antd/es/table';
 import type {
@@ -17,7 +17,7 @@ import type {
 import type { ImportSessionState } from '../core/contracts';
 
 const DEFAULT_FIELD_COLUMN_WIDTH = 200;
-const ROW_INDEX_COLUMN_WIDTH = 50;
+const ROW_INDEX_COLUMN_WIDTH = 46;
 
 interface ImportTableProps<TPayload, TResult> {
   adapter: EntityImportAdapter<TPayload, TResult>;
@@ -80,18 +80,23 @@ export function ImportTable<TPayload, TResult>({
     () => [
       {
         title: (
-          <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-            Row
-          </span>
+          <div className="relative flex min-h-9 items-center pr-2">
+            <span className="text-sm  font-semibold uppercase tracking-wide text-neutral-4">
+              Row
+            </span>
+          </div>
         ),
         key: 'row',
         width: ROW_INDEX_COLUMN_WIDTH,
         fixed: 'left',
+        align: 'center',
         render: (_, row) => (
-          <span className="text-sm font-semibold text-neutral-500">{row.rowIndex + 1}</span>
+          <span className="text-sm text-center font-semibold text-neutral-4">
+            {row.rowIndex + 1}
+          </span>
         ),
         onCell: () => ({
-          className: 'align-top',
+          className: 'align-center',
         }),
       },
       ...adapter.fields.map((field) => {
@@ -100,7 +105,7 @@ export function ImportTable<TPayload, TResult>({
         return {
           title: (
             <div className="relative flex min-h-9 items-center pr-2">
-              <span className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+              <span className="text-sm font-semibold uppercase tracking-wide text-neutral-4">
                 {field.label}
               </span>
               <button
@@ -114,7 +119,7 @@ export function ImportTable<TPayload, TResult>({
           ),
           key: field.path,
           width,
-          ellipsis: true,
+          ellipsis: false,
           render: (_: unknown, row: ImportSessionState['rows'][number]) => {
             const cell = row.cells[field.path];
             const isSelected =
@@ -143,8 +148,8 @@ export function ImportTable<TPayload, TResult>({
               className: cn(
                 'align-top !p-0 transition-colors',
                 isSelected && 'bg-blue-50/60',
-                cell.status === CellStatus.Invalid && 'bg-amber-50/70',
-                cell.dependencyState === DependencyState.Blocked && 'bg-neutral-100'
+                cell.status === CellStatus.Invalid && INVALID_CONTROL_CLASSNAME,
+                cell.dependencyState === DependencyState.Blocked && BLOCKED_CONTROL_CLASSNAME
               ),
             };
           },
@@ -168,7 +173,9 @@ export function ImportTable<TPayload, TResult>({
           'entity-import-table',
           '[&_.ant-table-thead_.ant-table-cell]:bg-white',
           '[&_.ant-table-cell]:align-top',
-          '[&_th.ant-table-cell>span]:text-sm'
+          '[&_th.ant-table-cell>span]:text-sm',
+          // Lets in-cell controls (e.g. DatePicker) fill row height via absolute inset-0; h-full on td children is often unresolved.
+          '[&_.ant-table-tbody>tr>td.ant-table-cell]:relative'
         )}
       />
     </div>

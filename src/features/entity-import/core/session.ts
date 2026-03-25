@@ -318,14 +318,13 @@ export function stageSuggestionToRows(
     targetRowId: string;
     sourceValue: string;
     suggestion: ISuggestion;
+    /** When true, stage the suggestion on every row for this column (accept/reject per row). */
     applyToAllMatching: boolean;
   }
 ): ImportSessionState {
   const nextRows = cloneSessionRows(session.rows).map((row) => {
     const currentCell = row.cells[params.fieldPath];
-    const shouldApply =
-      currentCell.rawValue === params.sourceValue &&
-      (params.applyToAllMatching || row.id === params.targetRowId);
+    const shouldApply = params.applyToAllMatching || row.id === params.targetRowId;
 
     if (!shouldApply) {
       return row;

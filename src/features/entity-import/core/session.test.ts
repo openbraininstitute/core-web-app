@@ -136,7 +136,11 @@ describe('stageSuggestionToRows', () => {
       previousDisplayValue: 'Ctx',
       suggestion,
     });
-    expect(next.rows[2].cells.brainRegion.correctionDraft).toBeNull();
+    expect(next.rows[2].cells.brainRegion.correctionDraft).toEqual({
+      previousRawValue: 'Thalamus',
+      previousDisplayValue: 'Thalamus',
+      suggestion,
+    });
   });
 });
 
