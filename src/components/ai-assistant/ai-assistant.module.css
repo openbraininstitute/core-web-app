@@ -60,7 +60,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.45rem 0.75rem;
+  padding: 0.4rem 0.75rem;
   background: var(--color-neutral-9);
   border-radius: 1em 1em 0 0;
   border-bottom: 1px solid #d9d9d9;
@@ -84,6 +84,64 @@
   flex: 1;
   text-align: center;
   white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  line-height: 1.2;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: #52c41a;
+  opacity: 0.85;
+}
+
+.statusBadge.statusStreaming {
+  color: #1677ff;
+}
+
+.statusBadge.statusError {
+  color: #ff4d4f;
+}
+
+.statusDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.statusStreaming .statusDot {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.65); }
+}
+
+.retryBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: currentColor;
+  font-size: 0.85rem;
+  padding: 0;
+  line-height: 1;
+  transition: opacity 0.15s;
+}
+
+.retryBtn:hover {
+  opacity: 0.6;
 }
 
 .headerActions {
