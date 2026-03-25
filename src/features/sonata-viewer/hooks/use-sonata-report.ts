@@ -59,6 +59,7 @@ export default function useSonataReport({
       downloadAsset<ArrayBuffer>({
         entityType: entity.type,
         entityId: entity.id,
+        // biome-ignore lint/style/noNonNullAssertion: The asset existence is guaranteed by the query's enabled condition.
         id: asset!.id,
         ctx,
       }),

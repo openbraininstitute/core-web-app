@@ -8,7 +8,9 @@ import type { Remote } from 'comlink';
 import type { SonataReportMetadata } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
 
-const MAX_DEFAULT_ALL = 20;
+// When a population is small enough recordings for all neurons will be shown by default,
+// otherwise only the first one will be selected to avoid performance issues.
+const AUTO_SELECT_ALL_THRESHOLD = 20;
 
 export default function ReportDetailsView({
   metadata,
@@ -36,13 +38,13 @@ export default function ReportDetailsView({
   );
 
   const nodeIds = currentPop?.nodeIds ?? [];
-  const defaultAll = nodeIds.length <= MAX_DEFAULT_ALL;
+  const autoSelectAll = nodeIds.length <= AUTO_SELECT_ALL_THRESHOLD;
 
   const [selectedNodeIds, setSelectedNodeIds] = useState<number[]>(() => {
     if (defaultNodeId !== undefined && nodeIds.includes(defaultNodeId)) {
       return [defaultNodeId];
     }
-    return defaultAll ? nodeIds : nodeIds.length > 0 ? [nodeIds[0]] : [];
+    return autoSelectAll ? nodeIds : nodeIds.length > 0 ? [nodeIds[0]] : [];
   });
 
   const handlePopulationChange = (value: string) => {
@@ -50,7 +52,7 @@ export default function ReportDetailsView({
     const pop = metadata.populations.find((p) => p.name === value);
     if (!pop) return;
 
-    const canSelectAll = pop.nodeIds.length <= MAX_DEFAULT_ALL;
+    const canSelectAll = pop.nodeIds.length <= AUTO_SELECT_ALL_THRESHOLD;
     setSelectedNodeIds(canSelectAll ? pop.nodeIds : pop.nodeIds.length > 0 ? [pop.nodeIds[0]] : []);
   };
 

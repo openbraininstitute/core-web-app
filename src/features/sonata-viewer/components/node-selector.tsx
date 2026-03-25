@@ -1,7 +1,20 @@
 import { Select } from 'antd';
 
-const ALL_VALUE = 'All';
+const SELECT_ALL_SENTINEL = 'All';
 
+/**
+ * Multi-select dropdown for choosing node IDs within a population.
+ *
+ * Ant Design's multi-mode Select has no built-in "select all" toggle, so we
+ * prepend a synthetic "All" option (SELECT_ALL_SENTINEL) to the list. The
+ * onChange handler detects transitions to/from the all-selected state:
+ * - User clicks "All" when not all selected → select every node
+ * - User clicks "All" when all selected    → deselect everything
+ * - Otherwise                              → update individual selection
+ *
+ * A collapsed tag placeholder shows a summary like "3 of 50 selected" instead
+ * of rendering every tag.
+ */
 export default function NodeSelector({
   populationName,
   nodeIds,
@@ -27,17 +40,17 @@ export default function NodeSelector({
         mode="multiple"
         virtual
         showSearch
-        value={isAll ? [ALL_VALUE, ...nodeIds.map(String)] : selectedNodeIds.map(String)}
+        value={isAll ? [SELECT_ALL_SENTINEL, ...nodeIds.map(String)] : selectedNodeIds.map(String)}
         onChange={(values: string[]) => {
           const hadAll = isAll;
-          const hasAll = values.includes(ALL_VALUE);
+          const hasAll = values.includes(SELECT_ALL_SENTINEL);
 
           if (!hadAll && hasAll) {
             onChange(nodeIds);
           } else if (hadAll && !hasAll) {
             onChange([]);
           } else {
-            const numericValues = values.filter((v) => v !== ALL_VALUE).map(Number);
+            const numericValues = values.filter((v) => v !== SELECT_ALL_SENTINEL).map(Number);
             onChange(numericValues);
           }
         }}
@@ -50,7 +63,7 @@ export default function NodeSelector({
             .includes(input.toLowerCase())
         }
       >
-        <Select.Option value={ALL_VALUE}>All cells</Select.Option>
+        <Select.Option value={SELECT_ALL_SENTINEL}>All cells</Select.Option>
         {nodeIds.map((id) => (
           <Select.Option value={String(id)} key={id}>
             {populationName}_{id}
