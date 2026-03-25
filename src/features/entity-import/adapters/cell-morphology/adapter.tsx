@@ -1,14 +1,24 @@
 'use client';
 
-import { EditOutlined, PlusOutlined, SmallDashOutlined } from '@ant-design/icons';
 import { RiEditBoxLine } from '@remixicon/react';
+import { useState } from 'react';
 import { z } from 'zod';
 
 import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
+import { cn } from '@/utils/css-class';
 
 import { ImportInputType, type ISuggestion } from '../../core/contracts';
-import { type ContributionDraft, ContributionsEditor } from './contributions-editor';
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '../../ui/entity-import-popover';
+import {
+  type ContributionDraft,
+  ContributionsEditor,
+  countRenderableEntries,
+  getRenderableContributionEntries,
+  promoteContributionToPrimary,
+  summarizeContributions,
+} from './contributions-editor';
 import {
   LocationEditor,
   type LocationValue,
@@ -118,72 +128,133 @@ function readLocation(parsedValue: unknown, rawValue: string): LocationValue | n
   return (parsedValue as LocationValue | null) ?? parseLocationSummary(rawValue) ?? null;
 }
 
-function getContributionPreview(entries: unknown): {
-  primaryLabel: string;
+function resolveContributionPreview(entry: ContributionDraft): {
+  label: string;
   roleLabel: string | null;
-  hasOverflow: boolean;
-} | null {
-  const contributions = sanitizeContributions(entries);
-  const primary = contributions[0];
-  if (!primary) {
-    return null;
-  }
-
+} {
   return {
-    primaryLabel: primary.agent_label?.trim() || primary.agent_id?.trim() || 'Unnamed contributor',
-    roleLabel: primary.role_label?.trim() || primary.role_id?.trim() || null,
-    hasOverflow: contributions.length > 1,
+    label: entry.agent_label?.trim() || entry.agent_id?.trim() || 'Unnamed contributor',
+    roleLabel: entry.role_label?.trim() || entry.role_id?.trim() || null,
   };
 }
 
-function contributionSummaryTrigger({
+function ContributionPreviewText({
+  entry,
+  emptyLabel,
+}: {
+  entry: ContributionDraft | null;
+  emptyLabel: string;
+}) {
+  if (!entry) {
+    return (
+      <span className="flex items-center gap-1 font-bold text-primary-9 hover:text-primary-7">
+        {emptyLabel}
+        <RiEditBoxLine />
+      </span>
+    );
+  }
+
+  const preview = resolveContributionPreview(entry);
+
+  return (
+    <span className="min-w-0 flex-1 text-left">
+      <span className="block truncate text-sm font-medium text-neutral-900" title={preview.label}>
+        {preview.label}
+      </span>
+      {preview.roleLabel ? (
+        <span className="block truncate text-xs text-neutral-500" title={preview.roleLabel}>
+          {preview.roleLabel}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function ContributionSummaryCell({
   label,
   entries,
   onClick,
+  onPromoteContribution,
 }: {
   label: string;
   entries: unknown;
   onClick: () => void;
+  onPromoteContribution: (contributionId: string) => void;
 }) {
-  const preview = getContributionPreview(entries);
+  const contributions = getRenderableContributionEntries(entries);
+  const primary = contributions[0] ?? null;
+  const overflowCount = Math.max(contributions.length - 1, 0);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
 
   return (
-    <Button
-      type="button"
-      aria-label={label}
-      variant="ghost"
-      size="md"
-      className="h-full min-h-[52px] w-full justify-between rounded-none border-0 bg-transparent px-3 py-2 text-left shadow-none hover:bg-neutral-50"
-      onClick={onClick}
-    >
-      <span className="min-w-0 flex-1 text-left">
-        <span
-          className="block truncate text-sm font-medium text-neutral-900"
-          title={preview?.primaryLabel}
-        >
-          {preview?.primaryLabel || (
-            <div className="flex items-center gap-1 font-bold text-primary-9 hover:text-primary-7">
-              Add {label.toLowerCase()}
-              <RiEditBoxLine />
+    <div className="flex h-full min-h-[52px] w-full items-stretch gap-2 px-3 py-2">
+      <Button
+        type="button"
+        aria-label={label}
+        variant="ghost"
+        size="md"
+        className="h-full min-h-[52px] min-w-0 flex-1 justify-start rounded-none border-0 bg-transparent px-0 py-0 text-left shadow-none hover:bg-neutral-50"
+        onClick={onClick}
+      >
+        <ContributionPreviewText entry={primary} emptyLabel={`Add ${label.toLowerCase()}`} />
+      </Button>
+
+      {overflowCount > 0 ? (
+        <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Show ${overflowCount} more contribution${overflowCount === 1 ? '' : 's'}`}
+              className={cn(
+                'inline-flex size-8 shrink-0 items-center justify-center self-center rounded-full border border-neutral-200',
+                'text-sm font-semibold text-primary-9 transition hover:border-neutral-300 hover:bg-white bg-neutral-50'
+              )}
+              onClick={(event) => event.stopPropagation()}
+            >
+              +{overflowCount}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            align="end"
+            sideOffset={0}
+            arrowClassName="bg-white"
+            className={cn(
+              ENTITY_IMPORT_POPOVER_Z_CLASS,
+              'w-80 max-w-[22rem] rounded-2xl border border-neutral-200 bg-white p-2 text-sm text-neutral-900 shadow-[0_16px_40px_rgba(0,0,0,0.16)]'
+            )}
+          >
+            <div data-testid="contribution-tooltip-list" className="max-h-64 overflow-y-auto pr-1">
+              {contributions.map((entry, index) => {
+                const preview = resolveContributionPreview(entry);
+
+                return (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    aria-label={`Make ${preview.label} primary contribution`}
+                    className={cn(
+                      'flex w-full items-start justify-between gap-3 rounded-xl border px-3 py-2 text-left transition',
+                      index === 0
+                        ? 'border-primary-6 bg-primary-0/10'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50',
+                      index > 0 && 'mt-2'
+                    )}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onPromoteContribution(entry.id);
+                      setTooltipOpen(false);
+                    }}
+                  >
+                    <ContributionPreviewText entry={entry} emptyLabel="" />
+                  </button>
+                );
+              })}
             </div>
-          )}
-        </span>
-        {preview?.roleLabel ? (
-          <span className="block truncate text-xs text-neutral-500" title={preview.roleLabel}>
-            {preview.roleLabel}
-          </span>
-        ) : null}
-      </span>
-      {preview?.hasOverflow ? (
-        <span
-          role="img"
-          aria-label="More contributions"
-          className="ml-3 inline-flex size-7 items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
-        >
-          <SmallDashOutlined />
-        </span>
+          </TooltipContent>
+        </Tooltip>
       ) : null}
-    </Button>
+    </div>
   );
 }
 
@@ -371,12 +442,25 @@ export function createCellMorphologyImportAdapter({
         required: true,
         inputType: ImportInputType.Compound,
         csv: { include: false },
-        tableRenderer: ({ field, cell, row, actions }) =>
-          contributionSummaryTrigger({
-            label: `${field.label}`,
-            entries: cell.parsedValue,
-            onClick: () => actions.selectCell({ rowId: row.id, fieldPath: field.path }),
-          }),
+        tableRenderer: ({ field, cell, row, actions }) => (
+          <ContributionSummaryCell
+            label={field.label}
+            entries={cell.parsedValue}
+            onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+            onPromoteContribution={(contributionId) => {
+              const currentEntries = Array.isArray(cell.parsedValue)
+                ? (cell.parsedValue as Array<ContributionDraft>)
+                : [];
+              const nextEntries = promoteContributionToPrimary(currentEntries, contributionId);
+              actions.setCustomValue({
+                rowId: row.id,
+                fieldPath: field.path,
+                rawValue: summarizeContributions(countRenderableEntries(nextEntries)),
+                parsedValue: nextEntries,
+              });
+            }}
+          />
+        ),
         panelRenderer: ({ cell, row, field, actions, context }) => (
           <ContributionsEditor
             cell={cell}
