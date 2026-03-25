@@ -36,6 +36,8 @@ export interface CellMorphologyRegistrationMetadata {
   contact_email: string | null;
   published_in: string | null;
   location: { x: number; y: number; z: number } | null;
+  project_id: string;
+  virtual_lab_id: string;
 }
 
 export interface RegisterMorphologyResult {

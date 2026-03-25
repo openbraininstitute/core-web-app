@@ -33,7 +33,11 @@ import {
   createCellMorphologyImportServices,
 } from './services';
 
-import type { EntityImportAdapter } from '../../core/adapter';
+import type {
+  EntityImportAdapter,
+  EntityImportRuntimeContext,
+  RemoteValidationResult,
+} from '../../core/adapter';
 
 const DEFAULT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
 
@@ -84,6 +88,8 @@ const metadataSchema = z.object({
   contact_email: z.union([z.email('Contact email must be valid'), z.null()]),
   published_in: z.string().nullable(),
   location: locationSchema,
+  project_id: z.string().min(1, 'Project is required'),
+  virtual_lab_id: z.string().min(1, 'Virtual lab is required'),
 });
 
 export const cellMorphologySubmissionSchema = z.object({
@@ -127,6 +133,45 @@ function sanitizeContributions(entries: unknown): Array<ContributionDraft> {
 
 function readLocation(parsedValue: unknown, rawValue: string): LocationValue | null {
   return (parsedValue as LocationValue | null) ?? parseLocationSummary(rawValue) ?? null;
+}
+
+function createSingleSuggestionRemoteValidator({
+  label,
+  search,
+}: {
+  label: string;
+  search: (query: string, context: EntityImportRuntimeContext) => Promise<Array<ISuggestion>>;
+}) {
+  return async ({
+    query,
+    context,
+  }: {
+    query: string;
+    context: EntityImportRuntimeContext;
+  }): Promise<RemoteValidationResult> => {
+    const suggestions = await search(query, context);
+
+    if (suggestions.length === 1) {
+      return {
+        status: 'valid',
+        resolvedSuggestion: suggestions[0],
+      };
+    }
+
+    if (suggestions.length > 1) {
+      return {
+        status: 'invalid',
+        message: `Multiple matches found for ${label}. Choose one in the validator.`,
+        suggestions,
+      };
+    }
+
+    return {
+      status: 'invalid',
+      message: `No matches found for ${label}.`,
+      suggestions: [],
+    };
+  };
 }
 
 function resolveContributionPreview(entry: ContributionDraft): {
@@ -309,6 +354,11 @@ export function createCellMorphologyImportAdapter({
           search: async ({ query, context }) => services.searchBrainRegions(query, context),
           searchPage: async ({ query, context, pageParam, pageSize }) =>
             services.searchBrainRegionsPage(query, context, pageParam, pageSize),
+          validate: async ({ query, context }) =>
+            createSingleSuggestionRemoteValidator({
+              label: 'Brain Region',
+              search: services.searchBrainRegions,
+            })({ query, context }),
         },
         columnWidth: 200,
       },
@@ -389,6 +439,11 @@ export function createCellMorphologyImportAdapter({
           search: async ({ query, context }) => services.searchSubjects(query, context),
           searchPage: async ({ query, context, pageParam, pageSize }) =>
             services.searchSubjectsPage(query, context, pageParam, pageSize),
+          validate: async ({ query, context }) =>
+            createSingleSuggestionRemoteValidator({
+              label: 'Subject',
+              search: services.searchSubjects,
+            })({ query, context }),
         },
         columnWidth: 200,
       },
@@ -404,6 +459,11 @@ export function createCellMorphologyImportAdapter({
           search: async ({ query, context }) => services.searchLicenses(query, context),
           searchPage: async ({ query, context, pageParam, pageSize }) =>
             services.searchLicensesPage(query, context, pageParam, pageSize),
+          validate: async ({ query, context }) =>
+            createSingleSuggestionRemoteValidator({
+              label: 'License',
+              search: services.searchLicenses,
+            })({ query, context }),
         },
         columnWidth: 200,
       },
@@ -419,6 +479,11 @@ export function createCellMorphologyImportAdapter({
           search: async ({ query, context }) => services.searchProtocols(query, context),
           searchPage: async ({ query, context, pageParam, pageSize }) =>
             services.searchProtocolsPage(query, context, pageParam, pageSize),
+          validate: async ({ query, context }) =>
+            createSingleSuggestionRemoteValidator({
+              label: 'Protocol',
+              search: services.searchProtocols,
+            })({ query, context }),
         },
         columnWidth: 220,
       },
@@ -434,6 +499,11 @@ export function createCellMorphologyImportAdapter({
           search: async ({ query, context }) => services.searchMtypes(query, context),
           searchPage: async ({ query, context, pageParam, pageSize }) =>
             services.searchMtypesPage(query, context, pageParam, pageSize),
+          validate: async ({ query, context }) =>
+            createSingleSuggestionRemoteValidator({
+              label: 'M-Type',
+              search: services.searchMtypes,
+            })({ query, context }),
         },
         columnWidth: 180,
       },
