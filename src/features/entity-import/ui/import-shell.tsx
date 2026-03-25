@@ -43,7 +43,7 @@ export function ImportShell<TPayload, TResult>({
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-5">
+    <div className="flex h-full min-h-0 flex-col gap-5 overflow-hidden">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-3xl">
           <h2 className="text-3xl font-bold text-primary-9">{title}</h2>
@@ -71,16 +71,6 @@ export function ImportShell<TPayload, TResult>({
             <span>Upload CSV</span>
             <RiUpload2Line />
           </Button>
-          <Button
-            rounded
-            type="button"
-            size="md"
-            onClick={actions.addRow}
-            className="flex items-center justify-center gap-4"
-          >
-            Add row
-            <RiInsertRowBottom />
-          </Button>
           <input
             ref={uploadInputRef}
             type="file"
@@ -105,9 +95,32 @@ export function ImportShell<TPayload, TResult>({
         onDismiss={actions.dismissNotification}
       />
 
-      <div className="grid min-h-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <section className="min-h-0">
-          <ImportTable adapter={adapter} context={context} session={session} actions={actions} />
+      <div className="grid min-h-0 flex-1 overflow-hidden gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
+        <section className="min-h-0 overflow-hidden bg-white">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="min-h-0 flex-1 overflow-auto">
+              <ImportTable
+                adapter={adapter}
+                context={context}
+                session={session}
+                actions={actions}
+              />
+            </div>
+            <div className="shrink-0 border-t border-neutral-200 px-5 py-4">
+              <div className="flex justify-end">
+                <Button
+                  rounded
+                  type="button"
+                  size="md"
+                  onClick={actions.addRow}
+                  className="flex items-center justify-center gap-4"
+                >
+                  Add row
+                  <RiInsertRowBottom />
+                </Button>
+              </div>
+            </div>
+          </div>
         </section>
         <section className="min-h-0">
           <ValidatorPanel

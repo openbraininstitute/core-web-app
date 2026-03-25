@@ -26,8 +26,8 @@ import {
   type ImportRowState,
   type ImportSessionState,
 } from '../core/contracts';
+import { importDatePickerChangeToRawValue, parseImportDatePickerValue } from '../core/helpers';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from './entity-import-popover';
-import { importDatePickerChangeToRawValue, parseImportDatePickerValue } from './import-date';
 
 import type {
   AdapterFieldDefinition,
@@ -270,13 +270,12 @@ export function InlineCell({
           disabled={cell.dependencyState === DependencyState.Blocked}
           value={parseImportDatePickerValue(cell.rawValue)}
           className={cn(
+            getControlClassName(cell, selected),
             'pointer-events-auto flex h-full min-h-[52px] w-full items-stretch text-lg text-primary-9',
-            'rounded-none border border-neutral-200 shadow-none outline-none focus-within:border-primary-6',
+            'rounded-none border-none shadow-none outline-none focus-within:border-primary-6',
             '[&_.ant-picker-input]:flex [&_.ant-picker-input]:min-h-0 [&_.ant-picker-input]:flex-1 [&_.ant-picker-input]:items-center',
-            '[&_.ant-picker-input>input]:box-border [&_.ant-picker-input>input]:h-full [&_.ant-picker-input>input]:min-h-0'
-            /*  selected && 'text-blue-950',
-            cell.status === CellStatus.Invalid && 'bg-transparent text-amber-950',
-            cell.dependencyState === DependencyState.Blocked && 'bg-neutral-100 text-neutral-500' */
+            '[&_.ant-picker-input>input]:box-border [&_.ant-picker-input>input]:h-full [&_.ant-picker-input>input]:min-h-0',
+            '[&_input]:placeholder:text-gray-400! [&_input]:placeholder:text-sm! [&_input]:placeholder:font-light! '
           )}
           styles={{
             root: {
