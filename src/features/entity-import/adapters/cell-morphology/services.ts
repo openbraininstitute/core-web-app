@@ -14,6 +14,7 @@ import { getSubjects } from '@/api/entitycore/queries/general/subject';
 import { createAndRegisterMorphometrics } from '@/api/one/cell-morphology';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+import type { TRepairPipelineState } from '@/api/entitycore/types/shared/protocol';
 import type { WorkspaceContext } from '@/types/common';
 import type { TAgentType } from '@/ui/segments/contribute/shared/types';
 import type { EntityImportRuntimeContext, RemoteSearchPageResult } from '../../core/adapter';
@@ -36,8 +37,7 @@ export interface CellMorphologyRegistrationMetadata {
   contact_email: string | null;
   published_in: string | null;
   location: { x: number; y: number; z: number } | null;
-  project_id: string;
-  virtual_lab_id: string;
+  repair_pipeline_state: TRepairPipelineState | null;
 }
 
 export interface RegisterMorphologyResult {
@@ -158,11 +158,17 @@ function normalizeQuery(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function toSuggestion(value: string, label: string, description?: string): ISuggestion {
+function toSuggestion(
+  value: string,
+  label: string,
+  description?: string,
+  metadata?: Record<string, unknown>
+): ISuggestion {
   return {
     value,
     label,
     description,
+    metadata,
   };
 }
 
@@ -300,7 +306,11 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
       return response.data.map((protocol) =>
         toSuggestion(
           protocol.id,
-          `${protocol.name ?? 'Unnamed protocol'} (${protocol.generation_type})`
+          `${protocol.name ?? 'Unnamed protocol'} (${protocol.generation_type})`,
+          undefined,
+          {
+            generationType: protocol.generation_type,
+          }
         )
       );
     },
@@ -318,7 +328,11 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
       const suggestions = response.data.map((protocol) =>
         toSuggestion(
           protocol.id,
-          `${protocol.name ?? 'Unnamed protocol'} (${protocol.generation_type})`
+          `${protocol.name ?? 'Unnamed protocol'} (${protocol.generation_type})`,
+          undefined,
+          {
+            generationType: protocol.generation_type,
+          }
         )
       );
       return {

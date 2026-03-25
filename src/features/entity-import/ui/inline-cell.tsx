@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { DatePicker } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/molecules/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import {
@@ -25,6 +26,7 @@ import {
   ImportInputType,
   type ImportRowState,
   type ImportSessionState,
+  RemoteValidationStatus,
 } from '../core/contracts';
 import {
   buildFileAcceptValue,
@@ -87,6 +89,10 @@ export function InlineCell({
   const correctionDetailsPopoverId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const displayValue = getDisplayValue(cell);
+  const showAmbiguousSelectionHint =
+    field.inputType === ImportInputType.RemoteSelect &&
+    cell.remoteState.status === RemoteValidationStatus.Invalid &&
+    cell.remoteState.suggestions.length > 1;
 
   if (cell.correctionDraft) {
     const draft = cell.correctionDraft;
@@ -311,25 +317,50 @@ export function InlineCell({
 
   return (
     <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0">
-      <Input
-        aria-label={`${field.label} row ${row.rowIndex + 1}`}
-        type={field.inputType === ImportInputType.Number ? 'number' : 'text'}
-        className={cn(
-          getControlClassName(cell, selected),
-          'pointer-events-auto box-border h-full min-h-[52px] w-full'
-        )}
-        disabled={cell.dependencyState === DependencyState.Blocked}
-        placeholder={field.placeholder}
-        value={displayValue}
-        onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
-        onChange={(event) =>
-          actions.updateCellValue({
-            rowId: row.id,
-            fieldPath: field.path,
-            rawValue: event.target.value,
-          })
-        }
-      />
+      <div className="relative h-full w-full">
+        <Input
+          aria-label={`${field.label} row ${row.rowIndex + 1}`}
+          type={field.inputType === ImportInputType.Number ? 'number' : 'text'}
+          className={cn(
+            getControlClassName(cell, selected),
+            'pointer-events-auto box-border h-full min-h-[52px] w-full',
+            showAmbiguousSelectionHint && 'pr-10'
+          )}
+          disabled={cell.dependencyState === DependencyState.Blocked}
+          placeholder={field.placeholder}
+          value={displayValue}
+          onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+          onChange={(event) =>
+            actions.updateCellValue({
+              rowId: row.id,
+              fieldPath: field.path,
+              rawValue: event.target.value,
+            })
+          }
+        />
+        {showAmbiguousSelectionHint ? (
+          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`Why ${field.label} row ${row.rowIndex + 1} needs selection`}
+                  className="pointer-events-auto inline-flex size-6 items-center justify-center rounded-full text-amber-700 transition hover:bg-amber-100"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    actions.selectCell({ rowId: row.id, fieldPath: field.path });
+                  }}
+                >
+                  <InfoCircleOutlined />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className={cn('max-w-64 text-pretty', ENTITY_IMPORT_POPOVER_Z_CLASS)}>
+                Open the validator and choose the correct value for this cell.
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

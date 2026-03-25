@@ -5,10 +5,13 @@ import dayjs from 'dayjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
+
 import { ImportInputType } from '../core/contracts';
 import { createCellMorphologyImportAdapter, EntityImportFeature } from '../index';
 
 import type { ReactElement } from 'react';
+import type { CellMorphologyImportServices } from '../adapters/cell-morphology/services';
 import type { EntityImportAdapter, RemoteValidationResult } from '../core/adapter';
 
 const adapter: EntityImportAdapter<Record<string, string>, { id: string }> = {
@@ -180,6 +183,35 @@ function createCsvUploadFile(contents: string): File {
   return new File([contents], 'entity-import.csv', {
     type: 'text/csv',
   });
+}
+
+function createMockCellMorphologyImportServices(
+  overrides: Partial<CellMorphologyImportServices> = {}
+): CellMorphologyImportServices {
+  return {
+    searchBrainRegions: vi.fn(async () => []),
+    searchBrainRegionsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    searchLicenses: vi.fn(async () => []),
+    searchLicensesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    searchSubjects: vi.fn(async () => []),
+    searchSubjectsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    searchProtocols: vi.fn(async () => []),
+    searchProtocolsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    searchMtypes: vi.fn(async () => []),
+    searchMtypesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    searchPersons: vi.fn(async () => []),
+    searchPersonsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    searchOrganizations: vi.fn(async () => []),
+    searchOrganizationsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    searchConsortia: vi.fn(async () => []),
+    searchConsortiaPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    searchRoles: vi.fn(async () => []),
+    searchRolesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
+    createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
+    createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
+    ...overrides,
+  };
 }
 
 function renderWithQueryClient(ui: ReactElement) {
@@ -537,13 +569,98 @@ describe('EntityImportFeature', () => {
       expect(validateSpy).toHaveBeenCalledTimes(2);
     });
 
+    const infoTrigger = screen.getByRole('button', {
+      name: 'Why Brain Region row 1 needs selection',
+    });
+    await user.hover(infoTrigger);
+
     expect(
       await screen.findByText(
         'Multiple matches found for Brain Region. Choose one in the validator.'
       )
     ).toBeInTheDocument();
+    expect(
+      await screen.findAllByText('Open the validator and choose the correct value for this cell.')
+    ).not.toHaveLength(0);
     expect(screen.getByText('Cortex layer 2')).toBeInTheDocument();
     expect(screen.getByText('Cortex layer 5')).toBeInTheDocument();
+  });
+
+  it('keeps repair pipeline state visible but disabled until a digital reconstruction protocol is selected', async () => {
+    const user = userEvent.setup();
+    const searchProtocols = vi.fn(async (query: string) => {
+      const normalizedQuery = query.trim().toLowerCase();
+
+      if (normalizedQuery.includes('modified')) {
+        return [
+          {
+            value: '11111111-1111-4111-8111-111111111111',
+            label: 'Modified Protocol (modified_reconstruction)',
+            metadata: {
+              generationType: CellMorphologyGenerationType.ModifiedReconstruction.key,
+            },
+          },
+        ];
+      }
+
+      if (normalizedQuery.includes('digital')) {
+        return [
+          {
+            value: '22222222-2222-4222-8222-222222222222',
+            label: 'Digital Protocol (digital_reconstruction)',
+            metadata: {
+              generationType: CellMorphologyGenerationType.DigitalReconstruction.key,
+            },
+          },
+        ];
+      }
+
+      return [];
+    });
+    const services = createMockCellMorphologyImportServices({
+      searchProtocols,
+      searchProtocolsPage: vi.fn(async (query, context) => {
+        const suggestions = await searchProtocols(query, context);
+        return { suggestions, nextPageParam: null };
+      }),
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      services,
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    const repairField = screen.getByLabelText('Repair Pipeline State row 1');
+    expect(repairField).toBeDisabled();
+
+    await user.click(screen.getByLabelText('Protocol row 1'));
+
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.clear(validatorInput);
+    await user.type(validatorInput, 'Modified');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Protocol row 1')).toHaveValue(
+        'Modified Protocol (modified_reconstruction)'
+      );
+      expect(screen.getByLabelText('Repair Pipeline State row 1')).toBeDisabled();
+    });
+
+    await user.clear(validatorInput);
+    await user.type(validatorInput, 'Digital');
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Protocol row 1')).toHaveValue(
+        'Digital Protocol (digital_reconstruction)'
+      );
+      expect(screen.getByLabelText('Repair Pipeline State row 1')).not.toBeDisabled();
+    });
   });
 
   it('renders configurable full-cell file triggers with generic labels', () => {

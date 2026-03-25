@@ -110,7 +110,11 @@ export function validateSessionRows<TPayload>({
 
     fields.forEach((field) => {
       const cell = row.cells[field.path];
-      const isExplicitlyEnabled = field.isEnabled?.(rowValues) ?? true;
+      const enablementArgs = {
+        values: rowValues,
+        row,
+      };
+      const isExplicitlyEnabled = field.isEnabled?.(enablementArgs) ?? true;
       const blockingDependency = field.dependencies?.find((dependencyPath) => {
         const dependencyCell = row.cells[dependencyPath];
         return !dependencyCell || dependencyCell.rawValue.trim() === '';
@@ -118,8 +122,11 @@ export function validateSessionRows<TPayload>({
 
       if (blockingDependency || !isExplicitlyEnabled) {
         const blockingPath = blockingDependency ?? field.dependencies?.[0] ?? field.path;
+        const customDisabledMessage = !blockingDependency
+          ? field.getDisabledMessage?.(enablementArgs)
+          : null;
         const disabledMessage =
-          field.getDisabledMessage?.(rowValues) ??
+          customDisabledMessage ??
           `Resolve ${labelForPath(fields, blockingPath)} before editing ${field.label}.`;
         row.cells[field.path] = {
           ...cell,

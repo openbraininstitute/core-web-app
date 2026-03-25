@@ -4,13 +4,19 @@ import { RiEditBoxLine } from '@remixicon/react';
 import { useState } from 'react';
 import { z } from 'zod';
 
+import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  RepairPipelineState,
+  RepairPipelineTypeSchema,
+  type TRepairPipelineState,
+} from '@/api/entitycore/types/shared/protocol';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
 import { cn } from '@/utils/css-class';
 
-import { ImportInputType, type ISuggestion } from '../../core/contracts';
+import { ImportInputType, type ImportRowState, type ISuggestion } from '../../core/contracts';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '../../ui/entity-import-popover';
 import {
   type ContributionDraft,
@@ -40,6 +46,10 @@ import type {
 } from '../../core/adapter';
 
 const DEFAULT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
+const REPAIR_PIPELINE_STATE_OPTIONS = Object.values(RepairPipelineState).map((option) => ({
+  value: option.key,
+  label: option.label,
+}));
 
 const contributionAgentKeys = [
   AgentType.Person.key,
@@ -88,8 +98,7 @@ const metadataSchema = z.object({
   contact_email: z.union([z.email('Contact email must be valid'), z.null()]),
   published_in: z.string().nullable(),
   location: locationSchema,
-  project_id: z.string().min(1, 'Project is required'),
-  virtual_lab_id: z.string().min(1, 'Virtual lab is required'),
+  repair_pipeline_state: RepairPipelineTypeSchema.nullable(),
 });
 
 export const cellMorphologySubmissionSchema = z.object({
@@ -133,6 +142,24 @@ function sanitizeContributions(entries: unknown): Array<ContributionDraft> {
 
 function readLocation(parsedValue: unknown, rawValue: string): LocationValue | null {
   return (parsedValue as LocationValue | null) ?? parseLocationSummary(rawValue) ?? null;
+}
+
+function getProtocolGenerationType(row: ImportRowState): string | null {
+  const protocolCell = row.cells.protocolId;
+
+  if (protocolCell.remoteState.status !== 'valid') {
+    return null;
+  }
+
+  const metadata = protocolCell.remoteState.selectedSuggestion?.metadata as
+    | { generationType?: string }
+    | undefined;
+
+  return metadata?.generationType ?? null;
+}
+
+function hasDigitalReconstructionProtocol(row: ImportRowState): boolean {
+  return getProtocolGenerationType(row) === CellMorphologyGenerationType.DigitalReconstruction.key;
 }
 
 function createSingleSuggestionRemoteValidator({
@@ -488,6 +515,21 @@ export function createCellMorphologyImportAdapter({
         columnWidth: 220,
       },
       {
+        label: 'Repair Pipeline State',
+        path: 'repairPipelineState',
+        submissionPath: 'repair_pipeline_state',
+        validationPath: 'metadata.repair_pipeline_state',
+        required: false,
+        inputType: ImportInputType.Select,
+        placeholder: 'Select repair pipeline state',
+        dependencies: ['protocolId'],
+        options: REPAIR_PIPELINE_STATE_OPTIONS,
+        isEnabled: ({ row }) => hasDigitalReconstructionProtocol(row),
+        getDisabledMessage: () =>
+          'Select a digital reconstruction protocol to enable Repair Pipeline State.',
+        columnWidth: 190,
+      },
+      {
         label: 'M-Type',
         path: 'mtypeClassId',
         submissionPath: 'mtype_class_id',
@@ -575,16 +617,20 @@ export function createCellMorphologyImportAdapter({
       subjectId: '',
       licenseId: defaultLicenseId,
       protocolId: '',
+      repairPipelineState: '',
       mtypeClassId: '',
       contributions: '',
     }),
-    buildPayload: ({ row, values, context }) => {
+    buildPayload: ({ row, values }) => {
       const sourceFileValue = row.cells.sourceFile.parsedValue;
       const sourceFile = Array.isArray(sourceFileValue)
         ? ((sourceFileValue[0] as File | undefined) ?? null)
         : (sourceFileValue as File | null);
       const contributions = sanitizeContributions(row.cells.contributions.parsedValue);
       const location = readLocation(row.cells.location.parsedValue, row.cells.location.rawValue);
+      const repairPipelineState = hasDigitalReconstructionProtocol(row)
+        ? (normalizeOptionalString(values.repairPipelineState) as TRepairPipelineState | null)
+        : null;
 
       return {
         sourceFile: sourceFile as File,
@@ -599,8 +645,7 @@ export function createCellMorphologyImportAdapter({
           contact_email: normalizeOptionalString(values.contactEmail),
           published_in: normalizeOptionalString(values.publishedIn),
           location,
-          project_id: context.projectId,
-          virtual_lab_id: context.virtualLabId,
+          repair_pipeline_state: repairPipelineState,
         },
         contribution: contributions as Array<CellMorphologyContributionInput>,
         mtype_class_id: values.mtypeClassId,
