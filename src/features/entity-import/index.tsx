@@ -7,15 +7,19 @@ import type { EntityImportAdapter, EntityImportRuntimeContext } from './core/ada
 import type { FlatImportValues } from './core/contracts';
 
 interface EntityImportFeatureProps<TPayload, TResult> {
+  title: string | null;
   adapter: EntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
   initialRows?: Array<FlatImportValues>;
+  onClose: () => void;
 }
 
 export function EntityImportFeature<TPayload, TResult>({
+  title,
   adapter,
   context,
   initialRows,
+  onClose,
 }: EntityImportFeatureProps<TPayload, TResult>) {
   const controller = useEntityImportController({
     adapter,
@@ -25,6 +29,7 @@ export function EntityImportFeature<TPayload, TResult>({
 
   return (
     <ImportShell
+      title={title}
       adapter={adapter}
       context={context}
       session={controller.session}
@@ -32,6 +37,7 @@ export function EntityImportFeature<TPayload, TResult>({
       isSubmitting={controller.isSubmitting}
       onDownloadTemplate={controller.downloadTemplate}
       onUploadCsvFile={controller.handleCsvUpload}
+      onClose={onClose}
     />
   );
 }

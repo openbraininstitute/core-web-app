@@ -294,16 +294,16 @@ export function ValidatorPanel<TPayload, TResult>({
         <Card className="rounded-2xl border border-neutral-200 py-0">
           <CardContent className="space-y-4 py-4 px-0">
             <div className="flex items-start justify-between gap-3 px-4">
-              <p className="text-base font-bold uppercase tracking-wide text-primary-9">
+              <p className="text-base text-left font-bold uppercase tracking-wide text-primary-9">
                 {activeField.label}
               </p>
-              <span className="text-sm font-light text-neutral-500">
+              <span className="text-sm text-center font-light text-neutral-500">
                 Column {fieldPosition >= 0 ? fieldPosition + 1 : '—'}
               </span>
             </div>
 
-            <div className="border-b border-neutral-200 pb-4 px-4">
-              <div className="flex items-stretch gap-2">
+            <div className="border-b border-neutral-200 pb-4 px-4 min-w-0 max-w-full">
+              <div className="flex min-w-0 items-stretch gap-2">
                 <Button
                   rounded
                   type="button"
@@ -316,8 +316,17 @@ export function ValidatorPanel<TPayload, TResult>({
                 >
                   <LeftOutlined />
                 </Button>
-                <div className="flex h-10 flex-1 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 px-3 py-2 text-center text-base font-semibold text-blue-950">
-                  {(activeCell.displayValue ?? activeCell.rawValue) || '—'}
+                <div
+                  className="flex h-10 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-base font-semibold text-blue-950"
+                  title={
+                    (activeCell.displayValue ?? activeCell.rawValue)?.trim()
+                      ? String(activeCell.displayValue ?? activeCell.rawValue)
+                      : undefined
+                  }
+                >
+                  <span className="block min-w-0 w-full truncate text-center">
+                    {(activeCell.displayValue ?? activeCell.rawValue) || '—'}
+                  </span>
                 </div>
                 <Button
                   rounded
@@ -543,15 +552,14 @@ export function ValidatorPanel<TPayload, TResult>({
                   const isSelected = selectedSuggestion?.value === suggestion.value;
                   return (
                     <Button
-                      rounded
                       key={suggestion.value}
                       type="button"
                       aria-label={`Select suggestion ${suggestion.label}`}
                       variant="outline"
                       className={clsx(
-                        'flex h-auto w-full items-center justify-between px-3 py-3 text-left text-sm transition',
+                        'h-auto rounded-xl min-w-0 w-full justify-between gap-3 whitespace-normal px-3 py-3 text-left text-base transition',
                         isSelected
-                          ? 'border-green-main text-green-main'
+                          ? 'border-green-main text-green-main bg-green-main/10'
                           : 'border-neutral-200 hover:border-neutral-300'
                       )}
                       onClick={() =>
@@ -562,27 +570,25 @@ export function ValidatorPanel<TPayload, TResult>({
                         })
                       }
                     >
-                      <div className="flex items-center justify-between w-full">
-                        <div>
-                          <span className="flex items-center gap-2 font-medium">
-                            {suggestion.label}
+                      <div className="min-w-0 flex-1 text-left">
+                        <span className="block font-medium wrap-break-word whitespace-normal">
+                          {suggestion.label}
+                        </span>
+                        {suggestion.recommended && (
+                          <span className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
+                            Recommended
                           </span>
-                          {suggestion.recommended && (
-                            <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
-                              Recommended
-                            </span>
-                          )}
-                        </div>
-                        <div
-                          className={cn(
-                            'border border-neutral-200 rounded-full size-6! p-2 flex items-center justify-center',
-                            isSelected
-                              ? 'border-green-main bg-green-main text-white'
-                              : 'border-neutral-200 hover:border-neutral-300'
-                          )}
-                        >
-                          {isSelected && <CheckOutlined className="opacity-100" />}
-                        </div>
+                        )}
+                      </div>
+                      <div
+                        className={cn(
+                          'shrink-0 border border-neutral-200 rounded-full size-6! p-2 flex items-center justify-center',
+                          isSelected
+                            ? 'border-green-main bg-green-main text-white'
+                            : 'border-neutral-200 hover:border-neutral-300'
+                        )}
+                      >
+                        {isSelected && <CheckOutlined className="opacity-100" />}
                       </div>
                     </Button>
                   );

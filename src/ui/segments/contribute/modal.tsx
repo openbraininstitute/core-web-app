@@ -81,9 +81,9 @@ function ContributionArtifactSelector({
 
   return (
     <div data-testid={testId} className="w-full">
-      <div className="border-neutral-2 rounded-2xl border p-4 py-9">
-        <div className="text-primary-9 mb-1 text-lg font-bold">{title}</div>
-        <p className="mb-3 text-sm text-neutral-500">{description}</p>
+      <div className="border-neutral-2 rounded-2xl border p-4 py-5">
+        <div className="text-primary-9 text-lg font-bold">{title}</div>
+        <p className="text-sm mb-5 text-neutral-500">{description}</p>
         <SelectPopover
           options={options}
           placeholder={
@@ -122,17 +122,17 @@ function ContributionArtifactSelector({
 
 function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelectorProps) {
   return (
-    <div className="grid w-full gap-4 px-5 xl:grid-cols-2">
+    <div className="flex flex-col w-full gap-4 px-5">
       <ContributionArtifactSelector
         title="Contribute with guided form"
-        description="Open the existing multi-step artifact form."
+        description="Open multi-step artifact form."
         testId="legacy-form-selector"
         mode={ContributionEntryMode.Legacy}
         onSelectEntityType={onSelectEntityType}
       />
       <ContributionArtifactSelector
         title="Import from CSV"
-        description="Open the new CSV import and validation flow."
+        description="Open the CSV import and validation flow."
         testId="csv-import-selector"
         mode={ContributionEntryMode.Import}
         onSelectEntityType={onSelectEntityType}
@@ -142,12 +142,19 @@ function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelec
 }
 
 interface IRenderEntityTypeContentProps {
+  title: string | null;
   type: TExtendedEntitiesTypeDict;
   sessionId: string;
+  onClose: () => void;
 }
 
-function RenderLegacyEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeContentProps) {
-  return match({ type })
+function RenderLegacyEntityTypeContent({
+  title,
+  type,
+  sessionId: sId,
+  onClose,
+}: IRenderEntityTypeContentProps) {
+  const content = match({ type })
     .with(
       {
         type: ExtendedEntitiesTypeDict.CellMorphology,
@@ -168,15 +175,36 @@ function RenderLegacyEntityTypeContent({ type, sessionId: sId }: IRenderEntityTy
     ))
     .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
     .otherwise(() => null);
+
+  return (
+    <div className="flex flex-col w-full h-full px-5">
+      <div className="flex w-full items-center justify-between gap-2 mt-5 mb-3">
+        <h3 className="text-primary-9 text-2xl font-bold">{title}</h3>
+        <Button
+          variant="icon"
+          className="text-primary-9 hover:text-primary-6 hover:bg-background ml-auto size-8 bg-white text-lg"
+          onClick={onClose}
+        >
+          <CloseOutlined />
+        </Button>
+      </div>
+      {content}
+    </div>
+  );
 }
 
-function RenderImportEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeContentProps) {
+function RenderImportEntityTypeContent({
+  title,
+  type,
+  sessionId: sId,
+  onClose,
+}: IRenderEntityTypeContentProps) {
   return match({ type })
     .with(
       {
         type: ExtendedEntitiesTypeDict.CellMorphology,
       },
-      () => <CellMorphologyImport sessionId={sId} />
+      () => <CellMorphologyImport title={title} sessionId={sId} onClose={onClose} />
     )
     .otherwise(() => null);
 }
@@ -247,7 +275,14 @@ export function ContributionModal() {
         entityType: P.string.select('type'),
       },
       ({ sId, type }) => {
-        return <RenderLegacyEntityTypeContent type={type} sessionId={sId} />;
+        return (
+          <RenderLegacyEntityTypeContent
+            title={title}
+            onClose={onClose}
+            type={type}
+            sessionId={sId}
+          />
+        );
       }
     )
     .with(
@@ -257,7 +292,14 @@ export function ContributionModal() {
         entityType: P.string.select('type'),
       },
       ({ sId, type }) => {
-        return <RenderImportEntityTypeContent type={type} sessionId={sId} />;
+        return (
+          <RenderImportEntityTypeContent
+            onClose={onClose}
+            title={title}
+            type={type}
+            sessionId={sId}
+          />
+        );
       }
     )
     .otherwise(() => null);
@@ -270,30 +312,33 @@ export function ContributionModal() {
       size={entryMode === ContributionEntryMode.Legacy ? undefined : 'full'}
       position="center"
       className={cn(
-        entryMode === ContributionEntryMode.Legacy
-          ? 'h-full max-h-[calc(100vh-6rem)] min-h-100 w-200 rounded-2xl'
-          : 'h-screen w-screen rounded-none'
+        entryMode === ContributionEntryMode.Import
+          ? 'h-screen w-screen rounded-none'
+          : 'h-full max-h-[calc(100vh-6rem)] min-h-100 w-200 rounded-2xl'
       )}
       bodyClassName={cn(
-        entryMode === ContributionEntryMode.Legacy
-          ? 'flex flex-col h-[calc(100%-48px)] min-h-0 max-h-full overflow-hidden p-0 relative'
-          : 'h-full w-full max-h-full'
+        entryMode === ContributionEntryMode.Import
+          ? 'h-full w-full max-h-full'
+          : 'flex flex-col h-full min-h-0 max-h-full overflow-hidden p-0 relative'
       )}
       overlayClassName="bg-primary-9/80 backdrop-blur-sm!"
       headerClassName={cn('w-full rounded-t-2xl pb-2', '[&_#modal-title]:w-full')}
       onClose={onClose}
       closable={false}
       title={
-        <div className="flex w-full items-center justify-between gap-2">
-          <h3 className="text-primary-9 text-2xl font-bold">{title}</h3>
-          <Button
-            variant="icon"
-            className="text-primary-9 hover:text-primary-6 hover:bg-background ml-auto size-8 bg-white text-lg"
-            onClick={onClose}
-          >
-            <CloseOutlined />
-          </Button>
-        </div>
+        !entryMode && (
+          <div className="flex w-full items-center justify-between gap-2 mb-10">
+            <h3 className="text-primary-9 text-2xl font-bold">{title}</h3>
+            <Button
+              rounded
+              variant="icon"
+              className="text-primary-9 hover:text-primary-6 hover:bg-background ml-auto size-8 bg-white text-lg"
+              onClick={onClose}
+            >
+              <CloseOutlined />
+            </Button>
+          </div>
+        )
       }
     >
       {content}

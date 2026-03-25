@@ -88,7 +88,7 @@ function FormContent<
   };
 
   return (
-    <div className={cn('relative mx-auto h-full w-full px-6 py-2 flex flex-col')}>
+    <div className={cn('relative mx-auto h-full w-full py-2 flex flex-col')}>
       <Form.Item noStyle>
         <input type="hidden" />
       </Form.Item>
