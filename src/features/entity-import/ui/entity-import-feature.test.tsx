@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import { ImportInputType } from '../core/contracts';
-import { EntityImportFeature } from '../index';
+import { createCellMorphologyImportAdapter, EntityImportFeature } from '../index';
 
 import type { ReactElement } from 'react';
 import type { EntityImportAdapter } from '../core/adapter';
@@ -98,6 +98,38 @@ const dateDisplayAdapter: EntityImportAdapter<Record<string, string>, { id: stri
   },
   submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
 };
+
+const fileAdapter = {
+  id: 'file-import',
+  title: 'File Import',
+  templateFileName: 'cell-morphology-import-template.csv',
+  templateGuide: {
+    entityType: 'cell-morphology',
+    guideFileName: 'cell-morphology-import-template.md',
+  },
+  submitLabel: 'Import rows',
+  fields: [
+    {
+      label: 'Asset',
+      path: 'asset',
+      required: true,
+      inputType: ImportInputType.FileBundle,
+      fileConfig: {
+        accept: ['application/json'],
+        allowedExtensions: ['.json'],
+        maxFiles: 2,
+        maxSizeBytes: 5,
+      },
+    },
+  ],
+  schema: z.object({
+    asset: z.any(),
+  }),
+  buildPayload({ values }: { values: Record<string, unknown> }) {
+    return values;
+  },
+  submitRow: vi.fn(async ({ row }: { row: { id: string } }) => ({ id: row.id })),
+} as unknown as EntityImportAdapter<Record<string, unknown>, { id: string }>;
 
 function renderWithQueryClient(ui: ReactElement) {
   const client = new QueryClient({
@@ -308,5 +340,144 @@ describe('EntityImportFeature', () => {
 
     expect(screen.getByText(expectedDisplay)).toBeInTheDocument();
     expect(screen.queryByText(/2026-03-16T23:00:00/)).not.toBeInTheDocument();
+  });
+
+  it('renders configurable full-cell file triggers with generic labels', () => {
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="File Import"
+        onClose={() => {}}
+        adapter={fileAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ asset: '' }]}
+      />
+    );
+
+    const assetButton = screen.getByRole('button', { name: 'Asset row 1' });
+    expect(assetButton).toHaveTextContent('Add file(s) (.json)');
+    expect(assetButton).toHaveClass('w-full', 'min-h-[52px]');
+
+    const assetInput = screen.getByLabelText('Asset row 1 file input');
+    expect(assetInput).toHaveAttribute('accept', 'application/json,.json');
+    expect(assetInput).toHaveAttribute('multiple');
+  });
+
+  it('uses the same generic add-file label pattern for morphology uploads', () => {
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Morphology File row 1' })).toHaveTextContent(
+      'Add file(s) (.swc)'
+    );
+  });
+
+  it('rejects files that exceed the configured size limit', async () => {
+    const user = userEvent.setup();
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="File Import"
+        onClose={() => {}}
+        adapter={fileAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ asset: '' }]}
+      />
+    );
+
+    const assetInput = screen.getByLabelText('Asset row 1 file input');
+    await user.upload(
+      assetInput,
+      new File(['123456'], 'asset.json', {
+        type: 'application/json',
+      })
+    );
+
+    expect(screen.getByText(/Asset files must be 5 Bytes or smaller/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Asset row 1' })).toHaveTextContent(
+      'Add file(s) (.json)'
+    );
+  });
+
+  it('rejects selections that exceed the configured max file count', async () => {
+    const user = userEvent.setup();
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="File Import"
+        onClose={() => {}}
+        adapter={fileAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ asset: '' }]}
+      />
+    );
+
+    const assetInput = screen.getByLabelText('Asset row 1 file input');
+    await user.upload(assetInput, [
+      new File(['1'], 'one.json', { type: 'application/json' }),
+      new File(['2'], 'two.json', { type: 'application/json' }),
+      new File(['3'], 'three.json', { type: 'application/json' }),
+    ]);
+
+    expect(screen.getByText(/Asset accepts at most 2 files/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Asset row 1' })).toHaveTextContent(
+      'Add file(s) (.json)'
+    );
+  });
+
+  it('shows a template dropdown named from templateFileName and downloads csv + guide', async () => {
+    const user = userEvent.setup();
+    const createObjectURL = vi.fn(() => 'blob:template');
+    const revokeObjectURL = vi.fn();
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: revokeObjectURL,
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="File Import"
+        onClose={() => {}}
+        adapter={fileAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ asset: '' }]}
+      />
+    );
+
+    const templateButton = screen.getByRole('button', {
+      name: 'cell-morphology-import-template.csv',
+    });
+    await user.click(templateButton);
+    await user.click(screen.getByRole('menuitem', { name: 'Download CSV' }));
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    const csvBlob = createObjectURL.mock.calls[0][0] as Blob;
+    expect(csvBlob.type).toBe('text/csv;charset=utf-8;');
+    await expect(csvBlob.text()).resolves.toContain('Asset');
+
+    await user.click(templateButton);
+    await user.click(screen.getByRole('menuitem', { name: 'Download Guide' }));
+
+    expect(createObjectURL).toHaveBeenCalledTimes(2);
+    const guideBlob = createObjectURL.mock.calls[1][0] as Blob;
+    expect(guideBlob.type).toBe('text/markdown;charset=utf-8;');
+    await expect(guideBlob.text()).resolves.toContain('# Cell Morphology CSV Guide');
+    expect(clickSpy).toHaveBeenCalledTimes(2);
+    expect(revokeObjectURL).toHaveBeenCalledTimes(2);
   });
 });

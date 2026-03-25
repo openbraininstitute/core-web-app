@@ -5,7 +5,15 @@ import { RiDownload2Line, RiUpload2Line } from '@remixicon/react';
 import { useRef } from 'react';
 
 import { Button } from '@/ui/molecules/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/ui/molecules/dropdown-menu';
+import { cn } from '@/utils/css-class';
 
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from './entity-import-popover';
 import { ImportTable } from './import-table';
 import { NotificationStack } from './notification-stack';
 import { ValidatorPanel } from './validator-panel';
@@ -25,7 +33,8 @@ interface ImportShellProps<TPayload, TResult> {
   actions: EntityImportActions;
   isSubmitting: boolean;
   onClose: () => void;
-  onDownloadTemplate: () => void;
+  onDownloadCsvTemplate: () => void;
+  onDownloadGuideTemplate: () => void;
   onUploadCsvFile: (file: File) => Promise<void>;
 }
 
@@ -37,7 +46,8 @@ export function ImportShell<TPayload, TResult>({
   actions,
   isSubmitting,
   onClose,
-  onDownloadTemplate,
+  onDownloadCsvTemplate,
+  onDownloadGuideTemplate,
   onUploadCsvFile,
 }: ImportShellProps<TPayload, TResult>) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
@@ -47,19 +57,38 @@ export function ImportShell<TPayload, TResult>({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-3xl">
           <h2 className="text-3xl font-bold text-primary-9">{title}</h2>
+          <div className="mt-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button rounded type="button" variant="outline" size="md" className="gap-3">
+                  <span>{adapter.templateFileName}</span>
+                  <RiDownload2Line />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className={cn(ENTITY_IMPORT_POPOVER_Z_CLASS, 'bg-white border border-neutral-200')}
+                style={{
+                  width: 'var(--radix-dropdown-menu-trigger-width)',
+                }}
+              >
+                <DropdownMenuItem
+                  className="text-primary-9 w-full cursor-pointer h-9"
+                  onSelect={onDownloadCsvTemplate}
+                >
+                  Download CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-primary-9 w-full cursor-pointer h-9"
+                  onSelect={onDownloadGuideTemplate}
+                >
+                  Download Guide
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Button
-            className="flex items-center justify-center gap-4"
-            rounded
-            type="button"
-            variant="outline"
-            size="md"
-            onClick={onDownloadTemplate}
-          >
-            <span>Download CSV</span>
-            <RiDownload2Line />
-          </Button>
           <Button
             rounded
             className="flex items-center justify-center gap-4"

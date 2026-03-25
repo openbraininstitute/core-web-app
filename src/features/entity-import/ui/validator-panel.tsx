@@ -32,6 +32,12 @@ import {
   RowStatus,
 } from '../core/contracts';
 import {
+  buildFileAcceptValue,
+  getImportFileButtonLabel,
+  getImportFileInputMultiple,
+  toFileArray,
+} from '../core/file-field';
+import {
   formatImportDateDisplayValue,
   importDatePickerChangeToRawValue,
   parseImportDatePickerValue,
@@ -223,7 +229,7 @@ export function ValidatorPanel<TPayload, TResult>({
         actions.setFileValue({
           rowId,
           fieldPath: activeField.path,
-          file: (draftValue.parsedValue as File | null) ?? null,
+          files: toFileArray(draftValue.parsedValue),
           displayValue: draftValue.displayValue,
         });
         return;
@@ -658,20 +664,35 @@ export function ValidatorPanel<TPayload, TResult>({
                         className="w-full justify-start text-left"
                         onClick={() => fileInputRef.current?.click()}
                       >
-                        {(draftValue.displayValue ?? draftValue.rawValue) || 'Attach file'}
+                        {(draftValue.displayValue ?? draftValue.rawValue) ||
+                          getImportFileButtonLabel(activeField)}
                       </Button>
                       <input
                         ref={fileInputRef}
                         id={fileInputId}
                         type="file"
+                        aria-label="Validator file input"
+                        accept={buildFileAcceptValue(activeField.fileConfig)}
+                        multiple={getImportFileInputMultiple(activeField)}
                         className="sr-only"
                         onChange={(event) => {
-                          const file = event.currentTarget.files?.[0] ?? null;
+                          const files = Array.from(event.currentTarget.files ?? []);
                           updateDraftValue({
-                            rawValue: file?.name ?? '',
-                            displayValue: file?.name ?? null,
-                            parsedValue: file,
+                            rawValue:
+                              files.length === 0
+                                ? ''
+                                : files.length === 1
+                                  ? (files[0]?.name ?? '')
+                                  : `${files.length} files selected`,
+                            displayValue:
+                              files.length === 0
+                                ? null
+                                : files.length === 1
+                                  ? (files[0]?.name ?? null)
+                                  : `${files.length} files selected`,
+                            parsedValue: files,
                           });
+                          event.currentTarget.value = '';
                         }}
                       />
                     </div>

@@ -4,6 +4,7 @@ import { RiEditBoxLine } from '@remixicon/react';
 import { useState } from 'react';
 import { z } from 'zod';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
@@ -221,7 +222,7 @@ function ContributionSummaryCell({
             arrowClassName="bg-white"
             className={cn(
               ENTITY_IMPORT_POPOVER_Z_CLASS,
-              'w-80 max-w-[22rem] rounded-2xl border border-neutral-200 bg-white p-2 text-sm text-neutral-900 shadow-[0_16px_40px_rgba(0,0,0,0.16)]'
+              'w-80 max-w-88 rounded-2xl border border-neutral-200 bg-white p-2 text-sm text-neutral-900 shadow-[0_16px_40px_rgba(0,0,0,0.16)]'
             )}
           >
             <div data-testid="contribution-tooltip-list" className="max-h-64 overflow-y-auto pr-1">
@@ -269,10 +270,12 @@ export function createCellMorphologyImportAdapter({
   return {
     id: 'cell-morphology-import',
     title: 'Cell Morphology Import',
-    description:
-      'Upload a CSV or fill the table directly, then resolve flagged fields from the validator before importing.',
     submitLabel: 'Import rows',
     templateFileName: 'cell-morphology-import-template.csv',
+    templateGuide: {
+      entityType: ExtendedEntitiesTypeDict.CellMorphology,
+      guideFileName: 'cell-morphology-import-template.md',
+    },
     fields: [
       {
         label: 'Name',
@@ -481,7 +484,11 @@ export function createCellMorphologyImportAdapter({
         required: true,
         inputType: ImportInputType.FileBundle,
         csv: { include: false },
-        placeholder: 'Attach morphology file',
+        fileConfig: {
+          accept: ['application/swc'],
+          allowedExtensions: ['.swc'],
+          maxFiles: 1,
+        },
         columnWidth: 200,
       },
     ],
@@ -502,7 +509,10 @@ export function createCellMorphologyImportAdapter({
       contributions: '',
     }),
     buildPayload: ({ row, values, context }) => {
-      const sourceFile = row.cells.sourceFile.parsedValue as File | null;
+      const sourceFileValue = row.cells.sourceFile.parsedValue;
+      const sourceFile = Array.isArray(sourceFileValue)
+        ? ((sourceFileValue[0] as File | undefined) ?? null)
+        : (sourceFileValue as File | null);
       const contributions = sanitizeContributions(row.cells.contributions.parsedValue);
       const location = readLocation(row.cells.location.parsedValue, row.cells.location.rawValue);
 

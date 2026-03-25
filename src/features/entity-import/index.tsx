@@ -35,7 +35,8 @@ export function EntityImportFeature<TPayload, TResult>({
       session={controller.session}
       actions={controller.actions}
       isSubmitting={controller.isSubmitting}
-      onDownloadTemplate={controller.downloadTemplate}
+      onDownloadCsvTemplate={controller.downloadCsvTemplate}
+      onDownloadGuideTemplate={controller.downloadGuideTemplate}
       onUploadCsvFile={controller.handleCsvUpload}
       onClose={onClose}
     />
