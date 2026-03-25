@@ -26,9 +26,9 @@ export default function NodeSelector({
   selectedNodeIds: number[];
   onChange: (nodeIds: number[]) => void;
 }) {
-  const isAll = selectedNodeIds.length === nodeIds.length && nodeIds.length > 0;
+  const allNodesSelected = selectedNodeIds.length === nodeIds.length && nodeIds.length > 0;
 
-  const summaryLabel = isAll
+  const selectionSummary = allNodesSelected
     ? `All cells (${nodeIds.length})`
     : `${selectedNodeIds.length} of ${nodeIds.length} selected`;
 
@@ -40,23 +40,27 @@ export default function NodeSelector({
         mode="multiple"
         virtual
         showSearch
-        value={isAll ? [SELECT_ALL_SENTINEL, ...nodeIds.map(String)] : selectedNodeIds.map(String)}
+        value={
+          allNodesSelected
+            ? [SELECT_ALL_SENTINEL, ...nodeIds.map(String)]
+            : selectedNodeIds.map(String)
+        }
         onChange={(values: string[]) => {
-          const hadAll = isAll;
-          const hasAll = values.includes(SELECT_ALL_SENTINEL);
+          const wasAllSelected = allNodesSelected;
+          const allOptionToggled = values.includes(SELECT_ALL_SENTINEL);
 
-          if (!hadAll && hasAll) {
+          if (!wasAllSelected && allOptionToggled) {
             onChange(nodeIds);
-          } else if (hadAll && !hasAll) {
+          } else if (wasAllSelected && !allOptionToggled) {
             onChange([]);
           } else {
-            const numericValues = values.filter((v) => v !== SELECT_ALL_SENTINEL).map(Number);
-            onChange(numericValues);
+            const individualNodeIds = values.filter((v) => v !== SELECT_ALL_SENTINEL).map(Number);
+            onChange(individualNodeIds);
           }
         }}
         placeholder="Select cells"
         maxTagCount={0}
-        maxTagPlaceholder={() => summaryLabel}
+        maxTagPlaceholder={() => selectionSummary}
         filterOption={(input, option) =>
           String(option?.children ?? '')
             .toLowerCase()
