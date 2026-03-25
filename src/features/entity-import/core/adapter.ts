@@ -90,13 +90,18 @@ export interface EntityImportTemplateGuideConfig {
   guideFileName: string;
 }
 
+export interface AdapterFieldEnablementArgs {
+  values: FlatImportValues;
+  row: ImportRowState;
+}
+
 export interface AdapterFieldDefinition extends ImportFieldDefinition {
   placeholder?: string;
   helpText?: string;
   options?: Array<ISuggestion>;
   fileConfig?: ImportFileFieldConfig;
-  isEnabled?: (values: FlatImportValues) => boolean;
-  getDisabledMessage?: (values: FlatImportValues) => string;
+  isEnabled?: (args: AdapterFieldEnablementArgs) => boolean;
+  getDisabledMessage?: (args: AdapterFieldEnablementArgs) => string;
   remote?: {
     search?: (args: RemoteSearchArgs) => Promise<Array<ISuggestion>>;
     /** Prefer this for server-backed lists; enables infinite query + load more in the validator. */

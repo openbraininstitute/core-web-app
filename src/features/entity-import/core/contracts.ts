@@ -60,6 +60,7 @@ export interface ISuggestion {
   label: string;
   description?: string;
   recommended?: boolean;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ImportFieldCsvConfig {

@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
+import { RepairPipelineState } from '@/api/entitycore/types/shared/protocol';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
 
-import { createImportSessionState, setCellValue } from '../../core/session';
+import { getRowSubmissionValues } from '../../core/helpers';
+import { createImportSessionState, resolveCellSuggestion, setCellValue } from '../../core/session';
 import { type CellMorphologySubmissionPayload, createCellMorphologyImportAdapter } from './adapter';
 
 describe('createCellMorphologyImportAdapter', () => {
@@ -121,6 +124,67 @@ describe('createCellMorphologyImportAdapter', () => {
     });
   });
 
+  it('keeps repair pipeline state visible and only enables it for digital reconstruction protocols', () => {
+    const adapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      defaultLicenseId: 'license-1',
+    });
+    const repairField = adapter.fields.find((field) => field.path === 'repairPipelineState');
+
+    expect(repairField?.options).toEqual(
+      Object.values(RepairPipelineState).map((option) => ({
+        value: option.key,
+        label: option.label,
+      }))
+    );
+
+    const baseSession = createImportSessionState({
+      fields: adapter.fields,
+      rows: [adapter.createBlankRow?.() ?? {}],
+    });
+    const nonDigitalSession = resolveCellSuggestion(baseSession, {
+      rowId: baseSession.rows[0].id,
+      fieldPath: 'protocolId',
+      suggestion: {
+        value: 'protocol-modified',
+        label: 'Modified Protocol (modified_reconstruction)',
+        metadata: {
+          generationType: CellMorphologyGenerationType.ModifiedReconstruction.key,
+        },
+      },
+    });
+    const digitalSession = resolveCellSuggestion(baseSession, {
+      rowId: baseSession.rows[0].id,
+      fieldPath: 'protocolId',
+      suggestion: {
+        value: 'protocol-digital',
+        label: 'Digital Protocol (digital_reconstruction)',
+        metadata: {
+          generationType: CellMorphologyGenerationType.DigitalReconstruction.key,
+        },
+      },
+    });
+
+    expect(
+      repairField?.isEnabled?.({
+        values: getRowSubmissionValues(nonDigitalSession.rows[0]),
+        row: nonDigitalSession.rows[0],
+      })
+    ).toBe(false);
+    expect(
+      repairField?.getDisabledMessage?.({
+        values: getRowSubmissionValues(nonDigitalSession.rows[0]),
+        row: nonDigitalSession.rows[0],
+      })
+    ).toContain('digital reconstruction');
+    expect(
+      repairField?.isEnabled?.({
+        values: getRowSubmissionValues(digitalSession.rows[0]),
+        row: digitalSession.rows[0],
+      })
+    ).toBe(true);
+  });
+
   it('seeds blank rows with the default brain region and license', () => {
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',
@@ -151,6 +215,7 @@ describe('createCellMorphologyImportAdapter', () => {
           contactEmail: 'test@example.org',
           publishedIn: 'Paper',
           location: '',
+          repairPipelineState: '',
           subjectId: 'subject-1',
           licenseId: 'license-1',
           protocolId: 'protocol-1',
@@ -210,8 +275,7 @@ describe('createCellMorphologyImportAdapter', () => {
         contact_email: 'test@example.org',
         published_in: 'Paper',
         location: { x: 10, y: 20, z: 30 },
-        project_id: 'project-1',
-        virtual_lab_id: 'lab-1',
+        repair_pipeline_state: null,
       },
       contribution: [
         {
@@ -242,6 +306,7 @@ describe('createCellMorphologyImportAdapter', () => {
           contactEmail: '',
           publishedIn: '',
           location: '',
+          repairPipelineState: '',
           subjectId: 'subject-1',
           licenseId: 'license-1',
           protocolId: 'protocol-1',
@@ -317,8 +382,7 @@ describe('createCellMorphologyImportAdapter', () => {
         contact_email: 'test@example.org',
         published_in: 'Paper',
         location: null,
-        project_id: 'project-1',
-        virtual_lab_id: 'lab-1',
+        repair_pipeline_state: null,
       },
       contribution: [
         {
