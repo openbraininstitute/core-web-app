@@ -173,6 +173,8 @@ export function createCellMorphologyImportAdapter({
         placeholder: 'Search brain region',
         remote: {
           search: async ({ query, context }) => services.searchBrainRegions(query, context),
+          searchPage: async ({ query, context, pageParam, pageSize }) =>
+            services.searchBrainRegionsPage(query, context, pageParam, pageSize),
         },
         columnWidth: 200,
       },
@@ -229,6 +231,8 @@ export function createCellMorphologyImportAdapter({
         placeholder: 'Search subject',
         remote: {
           search: async ({ query, context }) => services.searchSubjects(query, context),
+          searchPage: async ({ query, context, pageParam, pageSize }) =>
+            services.searchSubjectsPage(query, context, pageParam, pageSize),
         },
         columnWidth: 200,
       },
@@ -242,6 +246,8 @@ export function createCellMorphologyImportAdapter({
         placeholder: 'Search license',
         remote: {
           search: async ({ query, context }) => services.searchLicenses(query, context),
+          searchPage: async ({ query, context, pageParam, pageSize }) =>
+            services.searchLicensesPage(query, context, pageParam, pageSize),
         },
         columnWidth: 200,
       },
@@ -255,6 +261,8 @@ export function createCellMorphologyImportAdapter({
         placeholder: 'Search protocol',
         remote: {
           search: async ({ query, context }) => services.searchProtocols(query, context),
+          searchPage: async ({ query, context, pageParam, pageSize }) =>
+            services.searchProtocolsPage(query, context, pageParam, pageSize),
         },
         columnWidth: 220,
       },
@@ -268,6 +276,8 @@ export function createCellMorphologyImportAdapter({
         placeholder: 'Search m-type',
         remote: {
           search: async ({ query, context }) => services.searchMtypes(query, context),
+          searchPage: async ({ query, context, pageParam, pageSize }) =>
+            services.searchMtypesPage(query, context, pageParam, pageSize),
         },
         columnWidth: 180,
       },

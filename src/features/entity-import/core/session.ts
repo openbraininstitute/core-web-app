@@ -61,6 +61,9 @@ function cloneSessionRows(rows: Array<ImportRowState>): Array<ImportRowState> {
           remoteState: {
             ...cell.remoteState,
             suggestions: [...cell.remoteState.suggestions],
+            suggestionPaging: cell.remoteState.suggestionPaging
+              ? { ...cell.remoteState.suggestionPaging }
+              : undefined,
           },
           correctionDraft: cell.correctionDraft
             ? {

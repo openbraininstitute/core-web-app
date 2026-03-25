@@ -345,7 +345,7 @@ export function ValidatorPanel<TPayload, TResult>({
               )}
             </div>
 
-            {activeCell.correctionDraft && (
+            {/* {activeCell.correctionDraft && (
               <Alert appearance="light" variant="info" className="px-4">
                 <AlertContent>
                   <AlertDescription>
@@ -353,7 +353,7 @@ export function ValidatorPanel<TPayload, TResult>({
                   </AlertDescription>
                 </AlertContent>
               </Alert>
-            )}
+            )} */}
 
             {activeField.panelRenderer?.({
               field: activeField,
@@ -364,13 +364,14 @@ export function ValidatorPanel<TPayload, TResult>({
               actions,
               suggestions: activeCell.remoteState.suggestions,
             })}
+
             <div className="px-4">
               {!activeField.panelRenderer &&
                 activeField.inputType === ImportInputType.RemoteSelect && (
                   <div
                     className={cn(
-                      'mx-4 px-4 flex items-center gap-2 ',
-                      'border rounded-full border-neutral-2 focus-within:border-primary-6'
+                      'pr-4 pl-0 flex items-center gap-2 ',
+                      'border rounded-full border-neutral-2 focus-within:border-primary-6 group'
                     )}
                   >
                     <Input
@@ -379,7 +380,8 @@ export function ValidatorPanel<TPayload, TResult>({
                       type="text"
                       className={cn(
                         'h-11 text-lg! text-primary-9! focus-visible:border-none',
-                        'focus-visible:outline-none focus-visible:ring-0 shadow-none border-none'
+                        'focus-visible:outline-none focus-visible:ring-0 shadow-none border-none',
+                        'font-semibold'
                       )}
                       value={activeCell.displayValue ?? activeCell.rawValue}
                       onChange={(event) => {
@@ -391,7 +393,7 @@ export function ValidatorPanel<TPayload, TResult>({
                       }}
                     />
                     <div className="flex items-center gap-2">
-                      <RiSearchLine className="text-primary-9 size-5" />
+                      <RiSearchLine className="text-primary-9 size-5 group-focus-within:text-primary-6 group-focus-within:scale-110 transition-all duration-100" />
                     </div>
                   </div>
                 )}
@@ -587,6 +589,26 @@ export function ValidatorPanel<TPayload, TResult>({
                 })}
               </div>
             )}
+
+            {(activeField.remote?.searchPage ?? activeField.remote?.search) &&
+              (activeCell.remoteState.suggestionPaging?.hasNextPage ||
+                activeCell.remoteState.suggestionPaging?.isFetchingNextPage) && (
+                <div className="px-4">
+                  <Button
+                    rounded
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-sm text-primary-9"
+                    disabled={activeCell.remoteState.suggestionPaging?.isFetchingNextPage}
+                    onClick={() => actions.loadMoreSuggestions()}
+                  >
+                    {activeCell.remoteState.suggestionPaging?.isFetchingNextPage
+                      ? 'Loading…'
+                      : 'Load more'}
+                  </Button>
+                </div>
+              )}
 
             <div className="flex flex-col gap-2 border-t border-neutral-100 pt-4 px-4">
               <div className="flex items-center gap-3">

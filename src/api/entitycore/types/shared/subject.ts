@@ -6,6 +6,7 @@ import { AgePeriodEnum, SexEnum } from '@/api/entitycore/types/shared/global';
 import type {
   ContributionFilter,
   IDFilter,
+  IlikeSearchFilter,
   OwnershipFilter,
   PaginationFilter,
   SearchFilter,
@@ -18,7 +19,8 @@ export interface ISubjectFilter
     SpeciesFilter,
     IDFilter,
     SearchFilter,
-    ContributionFilter {
+    ContributionFilter,
+    IlikeSearchFilter {
   age_value: string | null;
 }
 
