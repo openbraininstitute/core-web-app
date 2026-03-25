@@ -103,10 +103,8 @@ export interface AdapterFieldDefinition extends IImportFieldDefinition {
   isEnabled?: (args: AdapterFieldEnablementArgs) => boolean;
   getDisabledMessage?: (args: AdapterFieldEnablementArgs) => string;
   remote?: {
-    search?: (args: RemoteSearchArgs) => Promise<Array<ISuggestion>>;
-    /** Prefer this for server-backed lists; enables infinite query + load more in the validator. */
-    searchPage?: (args: RemoteSearchPagedArgs) => Promise<RemoteSearchPageResult>;
-    validate?: (args: RemoteValidationArgs) => Promise<RemoteValidationResult>;
+    query?: (args: RemoteSearchPagedArgs) => Promise<RemoteSearchPageResult>;
+    evaluate?: (args: RemoteValidationArgs) => Promise<RemoteValidationResult>;
   };
   tableRenderer?: (props: TableCellRendererProps) => ReactNode;
   panelRenderer?: (props: ValidatorFieldRendererProps) => ReactNode;

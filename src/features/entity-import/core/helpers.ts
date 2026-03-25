@@ -40,12 +40,7 @@ function normalizeSuggestionValue(value: string): string {
 }
 
 export function fieldHasSuggestionResolution(field?: AdapterFieldDefinition): boolean {
-  return Boolean(
-    field?.remote?.searchPage ||
-      field?.remote?.search ||
-      field?.remote?.validate ||
-      field?.options?.length
-  );
+  return Boolean(field?.remote?.query || field?.remote?.evaluate || field?.options?.length);
 }
 
 export function findExactSuggestionMatch(

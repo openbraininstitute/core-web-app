@@ -35,6 +35,7 @@ import {
   type IImportRowState,
   ImportInputType,
   type ISuggestion,
+  RemoteValidationStatus,
 } from '@/features/entity-import/core/contracts';
 import {
   ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
@@ -48,6 +49,7 @@ import { cn } from '@/utils/css-class';
 import type {
   EntityImportAdapter,
   EntityImportRuntimeContext,
+  RemoteSearchPagedArgs,
   RemoteValidationResult,
 } from '@/features/entity-import/core/adapter';
 
@@ -153,7 +155,7 @@ function readLocation(parsedValue: unknown, rawValue: string): LocationValue | n
 function getProtocolGenerationType(row: IImportRowState): string | null {
   const protocolCell = row.cells.protocolId;
 
-  if (protocolCell.remoteState.status !== 'valid') {
+  if (protocolCell.remoteState.status !== RemoteValidationStatus.Valid) {
     return null;
   }
 
@@ -168,12 +170,43 @@ function hasDigitalReconstructionProtocol(row: IImportRowState): boolean {
   return getProtocolGenerationType(row) === CellMorphologyGenerationType.DigitalReconstruction.key;
 }
 
-function createSingleSuggestionRemoteValidator({
+function createRemoteQuery<TQueryField extends string>({
+  queryField,
+  querySuggestions,
+}: {
+  queryField: TQueryField;
+  querySuggestions: (args: {
+    query: string;
+    queryField: TQueryField;
+    context: EntityImportRuntimeContext;
+    pageParam?: number;
+    pageSize?: number;
+  }) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>;
+}) {
+  return async ({ query, context, pageParam, pageSize }: RemoteSearchPagedArgs) =>
+    querySuggestions({
+      query,
+      queryField,
+      context,
+      pageParam,
+      pageSize,
+    });
+}
+
+function createSingleSuggestionRemoteEvaluator<TQueryField extends string>({
   label,
-  search,
+  queryField,
+  querySuggestions,
 }: {
   label: string;
-  search: (query: string, context: EntityImportRuntimeContext) => Promise<Array<ISuggestion>>;
+  queryField: TQueryField;
+  querySuggestions: (args: {
+    query: string;
+    queryField: TQueryField;
+    context: EntityImportRuntimeContext;
+    pageParam?: number;
+    pageSize?: number;
+  }) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>;
 }) {
   return async ({
     query,
@@ -182,7 +215,11 @@ function createSingleSuggestionRemoteValidator({
     query: string;
     context: EntityImportRuntimeContext;
   }): Promise<RemoteValidationResult> => {
-    const suggestions = await search(query, context);
+    const { suggestions } = await querySuggestions({
+      query,
+      queryField,
+      context,
+    });
 
     if (suggestions.length === 1) {
       return {
@@ -380,13 +417,15 @@ export function createCellMorphologyImportAdapter({
         inputType: ImportInputType.RemoteSelect,
         placeholder: 'Search brain region',
         remote: {
-          search: async ({ query, context }) => services.searchBrainRegions(query, context),
-          searchPage: async ({ query, context, pageParam, pageSize }) =>
-            services.searchBrainRegionsPage(query, context, pageParam, pageSize),
-          validate: async ({ query, context }) =>
-            createSingleSuggestionRemoteValidator({
+          query: createRemoteQuery({
+            queryField: 'semantic_search',
+            querySuggestions: services.queryBrainRegion,
+          }),
+          evaluate: async ({ query, context }) =>
+            createSingleSuggestionRemoteEvaluator({
               label: 'Brain Region',
-              search: services.searchBrainRegions,
+              queryField: 'name__ilike',
+              querySuggestions: services.queryBrainRegion,
             })({ query, context }),
         },
         columnWidth: 200,
@@ -465,13 +504,15 @@ export function createCellMorphologyImportAdapter({
         inputType: ImportInputType.RemoteSelect,
         placeholder: 'Search subject',
         remote: {
-          search: async ({ query, context }) => services.searchSubjects(query, context),
-          searchPage: async ({ query, context, pageParam, pageSize }) =>
-            services.searchSubjectsPage(query, context, pageParam, pageSize),
-          validate: async ({ query, context }) =>
-            createSingleSuggestionRemoteValidator({
+          query: createRemoteQuery({
+            queryField: 'ilike_search',
+            querySuggestions: services.querySubject,
+          }),
+          evaluate: async ({ query, context }) =>
+            createSingleSuggestionRemoteEvaluator({
               label: 'Subject',
-              search: services.searchSubjects,
+              queryField: 'ilike_search',
+              querySuggestions: services.querySubject,
             })({ query, context }),
         },
         columnWidth: 200,
@@ -485,13 +526,15 @@ export function createCellMorphologyImportAdapter({
         inputType: ImportInputType.RemoteSelect,
         placeholder: 'Search license',
         remote: {
-          search: async ({ query, context }) => services.searchLicenses(query, context),
-          searchPage: async ({ query, context, pageParam, pageSize }) =>
-            services.searchLicensesPage(query, context, pageParam, pageSize),
-          validate: async ({ query, context }) =>
-            createSingleSuggestionRemoteValidator({
+          query: createRemoteQuery({
+            queryField: 'ilike_search',
+            querySuggestions: services.queryLicense,
+          }),
+          evaluate: async ({ query, context }) =>
+            createSingleSuggestionRemoteEvaluator({
               label: 'License',
-              search: services.searchLicenses,
+              queryField: 'ilike_search',
+              querySuggestions: services.queryLicense,
             })({ query, context }),
         },
         columnWidth: 200,
@@ -505,13 +548,15 @@ export function createCellMorphologyImportAdapter({
         inputType: ImportInputType.RemoteSelect,
         placeholder: 'Search protocol',
         remote: {
-          search: async ({ query, context }) => services.searchProtocols(query, context),
-          searchPage: async ({ query, context, pageParam, pageSize }) =>
-            services.searchProtocolsPage(query, context, pageParam, pageSize),
-          validate: async ({ query, context }) =>
-            createSingleSuggestionRemoteValidator({
+          query: createRemoteQuery({
+            queryField: 'ilike_search',
+            querySuggestions: services.queryProtocol,
+          }),
+          evaluate: async ({ query, context }) =>
+            createSingleSuggestionRemoteEvaluator({
               label: 'Protocol',
-              search: services.searchProtocols,
+              queryField: 'ilike_search',
+              querySuggestions: services.queryProtocol,
             })({ query, context }),
         },
         columnWidth: 220,
@@ -540,13 +585,15 @@ export function createCellMorphologyImportAdapter({
         inputType: ImportInputType.RemoteSelect,
         placeholder: 'Search m-type',
         remote: {
-          search: async ({ query, context }) => services.searchMtypes(query, context),
-          searchPage: async ({ query, context, pageParam, pageSize }) =>
-            services.searchMtypesPage(query, context, pageParam, pageSize),
-          validate: async ({ query, context }) =>
-            createSingleSuggestionRemoteValidator({
+          query: createRemoteQuery({
+            queryField: 'ilike_search',
+            querySuggestions: services.queryMtype,
+          }),
+          evaluate: async ({ query, context }) =>
+            createSingleSuggestionRemoteEvaluator({
               label: 'M-Type',
-              search: services.searchMtypes,
+              queryField: 'ilike_search',
+              querySuggestions: services.queryMtype,
             })({ query, context }),
         },
         columnWidth: 180,

@@ -105,8 +105,8 @@ function hasSuggestionSource(field?: AdapterFieldDefinition): boolean {
   return fieldHasSuggestionResolution(field);
 }
 
-function hasRemoteSearch(field?: AdapterFieldDefinition): boolean {
-  return Boolean(field?.remote?.searchPage ?? field?.remote?.search);
+function hasRemoteQuery(field?: AdapterFieldDefinition): boolean {
+  return Boolean(field?.remote?.query);
 }
 
 function filterLocalSuggestions(
@@ -258,21 +258,12 @@ export function useEntityImportController<TPayload, TResult>({
         context,
       };
 
-      if (field.remote?.searchPage) {
-        return field.remote.searchPage({
+      if (field.remote?.query) {
+        return field.remote.query({
           ...baseArgs,
           pageParam,
           pageSize: ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
         });
-      }
-
-      if (field.remote?.search) {
-        const all = await field.remote.search(baseArgs);
-        const size = ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE;
-        return {
-          suggestions: all.slice(pageParam, pageParam + size),
-          nextPageParam: pageParam + size < all.length ? pageParam + size : null,
-        };
       }
 
       return { suggestions: [], nextPageParam: null };
@@ -288,7 +279,7 @@ export function useEntityImportController<TPayload, TResult>({
     }
 
     const field = findField(adapter.fields, suggestionRequest.fieldPath);
-    if (!field?.remote?.validate) {
+    if (!field?.remote?.evaluate) {
       setRemoteValidation(null);
       return;
     }
@@ -299,12 +290,12 @@ export function useEntityImportController<TPayload, TResult>({
     void (async () => {
       try {
         const row = findRow(sessionRef.current, suggestionRequest.rowId);
-        const validateRemote = field.remote?.validate;
-        if (!row || !validateRemote) {
+        const evaluateRemote = field.remote?.evaluate;
+        if (!row || !evaluateRemote) {
           return;
         }
 
-        const validationResult = await validateRemote({
+        const validationResult = await evaluateRemote({
           query: suggestionRequest.query,
           value: suggestionRequest.query,
           row,
@@ -367,7 +358,7 @@ export function useEntityImportController<TPayload, TResult>({
       const field = findField(adapter.fields, fieldPath);
       const normalizedQuery = query.trim();
 
-      if (!row || !field?.remote?.validate || !normalizedQuery) {
+      if (!row || !field?.remote?.evaluate || !normalizedQuery) {
         return;
       }
 
@@ -375,7 +366,7 @@ export function useEntityImportController<TPayload, TResult>({
 
       try {
         const rowValues = getRowSubmissionValues(row);
-        const validationResult = await field.remote.validate({
+        const validationResult = await field.remote.evaluate({
           query: normalizedQuery,
           value: normalizedQuery,
           row,
@@ -489,7 +480,7 @@ export function useEntityImportController<TPayload, TResult>({
     const { rowId, fieldPath, query } = suggestionRequest;
     const field = findField(adapter.fields, fieldPath);
 
-    if (!field || !hasRemoteSearch(field)) {
+    if (!field || !hasRemoteQuery(field)) {
       return;
     }
 
@@ -498,7 +489,7 @@ export function useEntityImportController<TPayload, TResult>({
     }
 
     const localSuggestions = filterLocalSuggestions(field.options, query);
-    const hasRemoteLookup = Boolean(hasRemoteSearch(field) || field.remote?.validate);
+    const hasRemoteLookup = Boolean(hasRemoteQuery(field) || field.remote?.evaluate);
 
     if (suggestionsInfinite.isPending && !suggestionsInfinite.data) {
       return;
@@ -675,8 +666,8 @@ export function useEntityImportController<TPayload, TResult>({
       }
 
       const localSuggestions = filterLocalSuggestions(field.options, normalizedQuery);
-      const remoteSearch = hasRemoteSearch(field);
-      const hasRemoteLookup = Boolean(remoteSearch || field.remote?.validate);
+      const remoteQuery = hasRemoteQuery(field);
+      const hasRemoteLookup = Boolean(remoteQuery || field.remote?.evaluate);
 
       commit((current) =>
         setCellRemoteState(current, {
@@ -695,12 +686,12 @@ export function useEntityImportController<TPayload, TResult>({
         })
       );
 
-      if (remoteSearch) {
+      if (remoteQuery) {
         setSuggestionRequest({ rowId, fieldPath, query: normalizedQuery });
         return;
       }
 
-      if (!field.remote?.validate) {
+      if (!field.remote?.evaluate) {
         const matchedSuggestion = resolveMatchedSuggestion(normalizedQuery, null, localSuggestions);
         if (matchedSuggestion) {
           commit((current) =>
@@ -932,7 +923,7 @@ export function useEntityImportController<TPayload, TResult>({
         const remoteValidationTargets = hydratedSession.rows.flatMap((row) =>
           adapter.fields.flatMap((field) => {
             const query = row.cells[field.path]?.rawValue.trim();
-            if (!field.remote?.validate || !query) {
+            if (!field.remote?.evaluate || !query) {
               return [];
             }
 

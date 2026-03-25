@@ -163,31 +163,38 @@ async function queryContributionTypes({
   );
 }
 
-async function querySuggestionPage({
+async function querySuggestionPage<TQueryField extends 'pref_label__ilike' | 'query'>({
   filters,
   searchField,
   context,
-  searchPage,
+  querySuggestions,
 }: {
   filters: ContributionSelectFilters;
-  searchField: 'pref_label__ilike' | 'query';
+  searchField: TQueryField;
   context: EntityImportRuntimeContext;
-  searchPage?:
-    | ((
-        query: string,
-        context: EntityImportRuntimeContext,
-        pageParam: number,
-        pageSize: number
-      ) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>)
+  querySuggestions?:
+    | ((args: {
+        query: string;
+        queryField: TQueryField;
+        context: EntityImportRuntimeContext;
+        pageParam?: number;
+        pageSize?: number;
+      }) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>)
     | undefined;
 }): Promise<EntityCoreResponse<ISuggestion>> {
   const { page, pageSize, offset } = readPagedFilters(filters);
 
-  if (!searchPage) {
+  if (!querySuggestions) {
     return createSuggestionResponse([], page, pageSize, false);
   }
 
-  const result = await searchPage(readFilterQuery(filters, searchField), context, offset, pageSize);
+  const result = await querySuggestions({
+    query: readFilterQuery(filters, searchField),
+    queryField: searchField,
+    context,
+    pageParam: offset,
+    pageSize,
+  });
   return createSuggestionResponse(
     result.suggestions,
     page,
@@ -200,19 +207,19 @@ function resolveContributorSearchPage(
   agentType: TAgentType | undefined,
   services: Pick<
     ICellMorphologyImportServices,
-    'searchPersonsPage' | 'searchOrganizationsPage' | 'searchConsortiaPage'
+    'queryPerson' | 'queryOrganization' | 'queryConsortium'
   >
 ) {
   if (agentType === AgentType.Organization.key) {
-    return services.searchOrganizationsPage;
+    return services.queryOrganization;
   }
 
   if (agentType === AgentType.Consortium.key) {
-    return services.searchConsortiaPage;
+    return services.queryConsortium;
   }
 
   if (agentType === AgentType.Person.key) {
-    return services.searchPersonsPage;
+    return services.queryPerson;
   }
 
   return undefined;
@@ -226,7 +233,7 @@ interface ContributionsEditorProps {
   actions: EntityImportActions;
   services: Pick<
     ICellMorphologyImportServices,
-    'searchPersonsPage' | 'searchOrganizationsPage' | 'searchConsortiaPage' | 'searchRolesPage'
+    'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
   >;
 }
 
@@ -335,7 +342,7 @@ export function ContributionsEditor({
                       filters,
                       searchField: 'pref_label__ilike',
                       context,
-                      searchPage: contributorSearchPage,
+                      querySuggestions: contributorSearchPage,
                     })
                   }
                   getOptionLabel={(option) => option.label}
@@ -381,7 +388,7 @@ export function ContributionsEditor({
                       filters,
                       searchField: 'query',
                       context,
-                      searchPage: services.searchRolesPage,
+                      querySuggestions: services.queryRole,
                     })
                   }
                   getOptionLabel={(option) => option.label}

@@ -32,18 +32,21 @@ const adapter: EntityImportAdapter<Record<string, string>, { id: string }> = {
       required: true,
       inputType: ImportInputType.RemoteSelect,
       remote: {
-        async search({ query }) {
+        async query({ query, pageParam, pageSize }) {
           if (!query.toLowerCase().includes('ctx') && !query.toLowerCase().includes('isocortex')) {
-            return [];
+            return { suggestions: [], nextPageParam: null };
           }
 
-          return [
-            {
-              value: 'brain-region-1',
-              label: 'Isocortex',
-              recommended: true,
-            },
-          ];
+          return {
+            suggestions: [
+              {
+                value: 'brain-region-1',
+                label: 'Isocortex',
+                recommended: true,
+              },
+            ].slice(pageParam, pageParam + pageSize),
+            nextPageParam: null,
+          };
         },
       },
     },
@@ -225,7 +228,7 @@ const rowActionsAdapter: EntityImportAdapter<Record<string, string>, { id: strin
 };
 
 function createCsvRemoteValidationAdapter(
-  validate: (args: { query: string }) => Promise<RemoteValidationResult>
+  evaluate: (args: { query: string }) => Promise<RemoteValidationResult>
 ): EntityImportAdapter<Record<string, string>, { id: string }> {
   return {
     id: 'csv-remote-validation-import',
@@ -245,7 +248,7 @@ function createCsvRemoteValidationAdapter(
         required: true,
         inputType: ImportInputType.RemoteSelect,
         remote: {
-          validate: ({ query }) => validate({ query }),
+          evaluate: ({ query }) => evaluate({ query }),
         },
       },
     ],
@@ -288,24 +291,15 @@ function createMockCellMorphologyImportServices(
   overrides: Partial<ICellMorphologyImportServices> = {}
 ): ICellMorphologyImportServices {
   return {
-    searchBrainRegions: vi.fn(async () => []),
-    searchBrainRegionsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-    searchLicenses: vi.fn(async () => []),
-    searchLicensesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-    searchSubjects: vi.fn(async () => []),
-    searchSubjectsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-    searchProtocols: vi.fn(async () => []),
-    searchProtocolsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-    searchMtypes: vi.fn(async () => []),
-    searchMtypesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-    searchPersons: vi.fn(async () => []),
-    searchPersonsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-    searchOrganizations: vi.fn(async () => []),
-    searchOrganizationsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-    searchConsortia: vi.fn(async () => []),
-    searchConsortiaPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-    searchRoles: vi.fn(async () => []),
-    searchRolesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    queryBrainRegion: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    queryLicense: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    querySubject: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    queryProtocol: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    queryMtype: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    queryPerson: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    queryOrganization: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
     createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
     createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
@@ -803,9 +797,8 @@ describe('EntityImportFeature', () => {
       return [];
     });
     const services = createMockCellMorphologyImportServices({
-      searchProtocols,
-      searchProtocolsPage: vi.fn(async (query, context) => {
-        const suggestions = await searchProtocols(query, context);
+      queryProtocol: vi.fn(async ({ query }) => {
+        const suggestions = await searchProtocols(query);
         return { suggestions, nextPageParam: null };
       }),
     });
@@ -1000,9 +993,8 @@ describe('EntityImportFeature', () => {
       return [];
     });
     const services = createMockCellMorphologyImportServices({
-      searchProtocols,
-      searchProtocolsPage: vi.fn(async (query, context) => {
-        const suggestions = await searchProtocols(query, context);
+      queryProtocol: vi.fn(async ({ query }) => {
+        const suggestions = await searchProtocols(query);
         return { suggestions, nextPageParam: null };
       }),
     });

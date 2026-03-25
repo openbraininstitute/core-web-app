@@ -10,7 +10,7 @@ import { createImportSessionState, resolveCellSuggestion, setCellValue } from '.
 import { type CellMorphologySubmissionPayload, createCellMorphologyImportAdapter } from './adapter';
 
 describe('createCellMorphologyImportAdapter', () => {
-  it('exposes remote validate handlers for all remotely resolved fields', () => {
+  it('exposes remote query and evaluate handlers for all remotely resolved fields', () => {
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',
       defaultLicenseId: 'license-1',
@@ -23,47 +23,65 @@ describe('createCellMorphologyImportAdapter', () => {
             field.path
           )
         )
-        .every((field) => typeof field.remote?.validate === 'function')
+        .every((field) => {
+          const remote = field.remote as Record<string, unknown> | undefined;
+          return (
+            typeof field.remote?.query === 'function' &&
+            typeof field.remote?.evaluate === 'function' &&
+            remote?.search === undefined &&
+            remote?.searchPage === undefined &&
+            remote?.validate === undefined
+          );
+        })
     ).toBe(true);
   });
 
-  it('uses remote validation to distinguish zero, one, and many matches', async () => {
+  it('uses remote evaluate to distinguish zero, one, and many matches', async () => {
+    const queryBrainRegion = vi.fn(
+      async ({
+        queryField,
+        query,
+      }: {
+        queryField: 'semantic_search' | 'name__ilike';
+        query: string;
+      }) => {
+        if (queryField === 'name__ilike' && query === 'Cerebellu') {
+          return {
+            suggestions: [{ value: 'brain-region-1', label: 'Cerebellum' }],
+            nextPageParam: null,
+          };
+        }
+
+        if (queryField === 'name__ilike' && query === 'Cortex') {
+          return {
+            suggestions: [
+              { value: 'brain-region-2', label: 'Cortex layer 2' },
+              { value: 'brain-region-3', label: 'Cortex layer 5' },
+            ],
+            nextPageParam: null,
+          };
+        }
+
+        return {
+          suggestions: [],
+          nextPageParam: null,
+        };
+      }
+    );
     const services = {
-      searchBrainRegions: vi.fn(async (query: string) => {
-        if (query === 'Cerebellu') {
-          return [{ value: 'brain-region-1', label: 'Cerebellum' }];
-        }
-
-        if (query === 'Cortex') {
-          return [
-            { value: 'brain-region-2', label: 'Cortex layer 2' },
-            { value: 'brain-region-3', label: 'Cortex layer 5' },
-          ];
-        }
-
-        return [];
-      }),
-      searchBrainRegionsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchLicenses: vi.fn(async () => []),
-      searchLicensesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchSubjects: vi.fn(async () => []),
-      searchSubjectsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchProtocols: vi.fn(async () => []),
-      searchProtocolsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchMtypes: vi.fn(async () => []),
-      searchMtypesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchPersons: vi.fn(async () => []),
-      searchPersonsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchOrganizations: vi.fn(async () => []),
-      searchOrganizationsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchConsortia: vi.fn(async () => []),
-      searchConsortiaPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchRoles: vi.fn(async () => []),
-      searchRolesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryBrainRegion,
+      queryLicense: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      querySubject: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryProtocol: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryMtype: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryPerson: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryOrganization: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
       createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
       createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
-    };
+    } as never;
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',
       defaultLicenseId: 'license-1',
@@ -80,7 +98,7 @@ describe('createCellMorphologyImportAdapter', () => {
     const brainRegionField = adapter.fields.find((field) => field.path === 'brainRegionId');
 
     await expect(
-      brainRegionField?.remote?.validate?.({
+      brainRegionField?.remote?.evaluate?.({
         query: 'Cerebellu',
         value: 'Cerebellu',
         row,
@@ -93,7 +111,7 @@ describe('createCellMorphologyImportAdapter', () => {
     });
 
     await expect(
-      brainRegionField?.remote?.validate?.({
+      brainRegionField?.remote?.evaluate?.({
         query: 'Cortex',
         value: 'Cortex',
         row,
@@ -110,7 +128,7 @@ describe('createCellMorphologyImportAdapter', () => {
     });
 
     await expect(
-      brainRegionField?.remote?.validate?.({
+      brainRegionField?.remote?.evaluate?.({
         query: 'Atlantis',
         value: 'Atlantis',
         row,
@@ -122,6 +140,30 @@ describe('createCellMorphologyImportAdapter', () => {
       message: 'No matches found for Brain Region.',
       suggestions: [],
     });
+
+    await brainRegionField?.remote?.query?.({
+      query: 'Cerebellu',
+      row,
+      values,
+      context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+      pageParam: 0,
+      pageSize: 5,
+    });
+
+    expect(queryBrainRegion).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: 'Cerebellu',
+        queryField: 'semantic_search',
+        pageParam: 0,
+        pageSize: 5,
+      })
+    );
+    expect(queryBrainRegion).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: 'Cerebellu',
+        queryField: 'name__ilike',
+      })
+    );
   });
 
   it('keeps repair pipeline state visible and only enables it for digital reconstruction protocols', () => {
@@ -343,24 +385,15 @@ describe('createCellMorphologyImportAdapter', () => {
       registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
       createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
       createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
-      searchBrainRegions: vi.fn(async () => []),
-      searchBrainRegionsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchLicenses: vi.fn(async () => []),
-      searchLicensesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchSubjects: vi.fn(async () => []),
-      searchSubjectsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchProtocols: vi.fn(async () => []),
-      searchProtocolsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchMtypes: vi.fn(async () => []),
-      searchMtypesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchPersons: vi.fn(async () => []),
-      searchPersonsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchOrganizations: vi.fn(async () => []),
-      searchOrganizationsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchConsortia: vi.fn(async () => []),
-      searchConsortiaPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchRoles: vi.fn(async () => []),
-      searchRolesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryBrainRegion: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryLicense: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      querySubject: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryProtocol: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryMtype: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryPerson: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryOrganization: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     };
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',

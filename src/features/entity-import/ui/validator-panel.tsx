@@ -612,7 +612,7 @@ function SingleColumnValidatorCard({
           </div>
         )}
 
-        {(field.remote?.searchPage ?? field.remote?.search) &&
+        {field.remote?.query &&
           (cell.remoteState.suggestionPaging?.hasNextPage ||
             cell.remoteState.suggestionPaging?.isFetchingNextPage) && (
             <div className="px-4">
