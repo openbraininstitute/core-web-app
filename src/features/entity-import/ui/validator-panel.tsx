@@ -16,6 +16,7 @@ import {
   type IImportRowState,
   type IImportSessionState,
   ImportInputType,
+  type ISuggestion,
   RowStatus,
 } from '@/features/entity-import/core/contracts';
 import {
@@ -157,6 +158,25 @@ function createValidatorDraftValue(
   };
 }
 
+function createManualDraftSuggestion(draftValue: ValidatorDraftValue): ISuggestion {
+  const label = draftValue.displayValue ?? draftValue.rawValue;
+
+  return {
+    value: draftValue.rawValue,
+    label,
+  };
+}
+
+function isDraftValueUnchanged(
+  cell: IImportSessionState['rows'][number]['cells'][string],
+  draftValue: ValidatorDraftValue
+): boolean {
+  return (
+    cell.rawValue === draftValue.rawValue &&
+    (cell.displayValue ?? null) === (draftValue.displayValue ?? null)
+  );
+}
+
 function resolveValidatorDisplayValue(
   field: AdapterFieldDefinition,
   draftValue: ValidatorDraftValue
@@ -273,6 +293,23 @@ function SingleColumnValidatorCard({
         return;
       }
 
+      if (isDraftValueUnchanged(cell, draftValue)) {
+        setHasPendingManualChange(false);
+        return;
+      }
+
+      if (field.validatorManualApplyMode === 'stage') {
+        actions.applySuggestion({
+          fieldPath: field.path,
+          targetRowId: row.id,
+          sourceValue: cell.rawValue,
+          suggestion: createManualDraftSuggestion(draftValue),
+          applyToAllMatching: applyToAll,
+        });
+        setHasPendingManualChange(false);
+        return;
+      }
+
       const targetRows = applyToAll ? session.rows : [row];
       targetRows.forEach((targetRow) => {
         commitManualValueToRow(targetRow.id);
@@ -281,9 +318,11 @@ function SingleColumnValidatorCard({
     },
     [
       actions,
-      cell.rawValue,
+      cell,
       commitManualValueToRow,
+      draftValue,
       field.path,
+      field.validatorManualApplyMode,
       row,
       selectedSuggestion,
       session.rows,

@@ -22,6 +22,7 @@ import {
 import {
   LocationEditor,
   type LocationValue,
+  normalizeLocationValue,
   parseLocationSummary,
   summarizeLocation,
 } from '@/features/entity-import/adapters/cell-morphology/location-editor';
@@ -149,7 +150,7 @@ function sanitizeContributions(entries: unknown): Array<ContributionDraft> {
 }
 
 function readLocation(parsedValue: unknown, rawValue: string): LocationValue | null {
-  return (parsedValue as LocationValue | null) ?? parseLocationSummary(rawValue) ?? null;
+  return normalizeLocationValue(parsedValue) ?? parseLocationSummary(rawValue) ?? null;
 }
 
 function getProtocolGenerationType(row: IImportRowState): string | null {
@@ -219,25 +220,27 @@ function createSingleSuggestionRemoteEvaluator<TQueryField extends string>({
       query,
       queryField,
       context,
+      pageParam: 1,
+      pageSize: 5,
     });
 
     if (suggestions.length === 1) {
       return {
-        status: 'valid',
+        status: RemoteValidationStatus.Valid,
         resolvedSuggestion: suggestions[0],
       };
     }
 
     if (suggestions.length > 1) {
       return {
-        status: 'invalid',
+        status: RemoteValidationStatus.Invalid,
         message: `Multiple matches found for ${label}. Choose one in the validator.`,
         suggestions,
       };
     }
 
     return {
-      status: 'invalid',
+      status: RemoteValidationStatus.Invalid,
       message: `No matches found for ${label}.`,
       suggestions: [],
     };
@@ -464,6 +467,7 @@ export function createCellMorphologyImportAdapter({
         validationPath: 'metadata.location',
         required: false,
         inputType: ImportInputType.Compound,
+        validatorManualApplyMode: 'stage',
         tableRenderer: ({ cell, row, field, actions }) => (
           <LocationEditor
             cell={cell}
@@ -481,7 +485,7 @@ export function createCellMorphologyImportAdapter({
             actions={actions}
             mode="panel"
             value={
-              (draftValue.parsedValue as LocationValue | null) ??
+              normalizeLocationValue(draftValue.parsedValue) ??
               parseLocationSummary(draftValue.rawValue)
             }
             onChange={(nextLocation) =>
@@ -533,7 +537,7 @@ export function createCellMorphologyImportAdapter({
           evaluate: async ({ query, context }) =>
             createSingleSuggestionRemoteEvaluator({
               label: 'License',
-              queryField: 'ilike_search',
+              queryField: 'label__ilike',
               querySuggestions: services.queryLicense,
             })({ query, context }),
         },
@@ -592,7 +596,7 @@ export function createCellMorphologyImportAdapter({
           evaluate: async ({ query, context }) =>
             createSingleSuggestionRemoteEvaluator({
               label: 'M-Type',
-              queryField: 'ilike_search',
+              queryField: 'pref_label__ilike',
               querySuggestions: services.queryMtype,
             })({ query, context }),
         },

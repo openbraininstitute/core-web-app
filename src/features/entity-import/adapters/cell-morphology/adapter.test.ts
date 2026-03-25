@@ -239,6 +239,68 @@ describe('createCellMorphologyImportAdapter', () => {
     });
   });
 
+  it('builds a null optional location when the cell is blank', () => {
+    const adapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      defaultLicenseId: 'license-1',
+    });
+
+    const session = createImportSessionState({
+      fields: adapter.fields,
+      rows: [
+        {
+          sourceFile: '',
+          name: 'Neuron A',
+          description: 'A morphology',
+          brainRegionId: 'brain-region-1',
+          experimentDate: '',
+          contactEmail: '',
+          publishedIn: '',
+          location: '',
+          repairPipelineState: '',
+          subjectId: 'subject-1',
+          licenseId: 'license-1',
+          protocolId: 'protocol-1',
+          mtypeClassId: 'mtype-1',
+          contributions: '',
+        },
+      ],
+    });
+
+    const sourceFile = new File(['swc'], 'cell.swc', { type: 'application/swc' });
+    const sessionWithFile = setCellValue(session, {
+      rowId: session.rows[0].id,
+      fieldPath: 'sourceFile',
+      rawValue: sourceFile.name,
+      parsedValue: sourceFile,
+    });
+    const sessionWithContributions = setCellValue(sessionWithFile, {
+      rowId: session.rows[0].id,
+      fieldPath: 'contributions',
+      rawValue: '1 contributor',
+      parsedValue: [
+        {
+          agent_type: AgentType.Person.key,
+          agent_id: 'agent-1',
+          role_id: 'role-1',
+        },
+      ],
+    });
+
+    const row = sessionWithContributions.rows[0];
+    const values = Object.fromEntries(
+      Object.entries(row.cells).map(([key, cell]) => [key, cell.rawValue])
+    );
+
+    expect(
+      adapter.buildPayload({
+        row,
+        values,
+        context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+      }).metadata.location
+    ).toBeNull();
+  });
+
   it('builds the submission payload from compound row state', () => {
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',

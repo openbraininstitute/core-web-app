@@ -104,6 +104,17 @@ export function InlineCell({
     cell.remoteState.status === RemoteValidationStatus.Invalid &&
     cell.remoteState.suggestions.length > 1;
 
+  if (field.tableRenderer && cell.correctionDraft && field.inputType === ImportInputType.Compound) {
+    return field.tableRenderer({
+      field,
+      cell,
+      row,
+      session,
+      context,
+      actions,
+    });
+  }
+
   if (cell.correctionDraft) {
     const draft = cell.correctionDraft;
     const previousLabel = draft.previousDisplayValue ?? draft.previousRawValue;

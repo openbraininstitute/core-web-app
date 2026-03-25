@@ -1,5 +1,8 @@
 'use client';
 
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+
+import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 
@@ -10,6 +13,39 @@ export interface LocationValue {
   x?: number | null;
   y?: number | null;
   z?: number | null;
+}
+
+function normalizeCoordinateValue(value: unknown): number | null | undefined {
+  if (value === null || value === undefined) {
+    return value as null | undefined;
+  }
+
+  if (typeof value === 'number' && !Number.isNaN(value)) {
+    return value;
+  }
+
+  return undefined;
+}
+
+export function normalizeLocationValue(value: unknown): LocationValue | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const x = normalizeCoordinateValue(candidate.x);
+  const y = normalizeCoordinateValue(candidate.y);
+  const z = normalizeCoordinateValue(candidate.z);
+
+  if (x === undefined && y === undefined && z === undefined) {
+    return null;
+  }
+
+  return {
+    x: x ?? null,
+    y: y ?? null,
+    z: z ?? null,
+  };
 }
 
 function formatNumber(value: number | null | undefined): string {
@@ -64,6 +100,10 @@ interface LocationEditorProps {
 
 const LOCATION_AXES = ['x', 'y', 'z'] as const;
 
+function resolveLocationValue(parsedValue: unknown, rawValue: string): LocationValue | null {
+  return normalizeLocationValue(parsedValue) ?? parseLocationSummary(rawValue) ?? null;
+}
+
 export function LocationEditor({
   cell,
   row,
@@ -73,11 +113,14 @@ export function LocationEditor({
   value,
   onChange,
 }: LocationEditorProps) {
-  const location =
-    value ??
-    (cell.parsedValue as LocationValue | null) ??
-    parseLocationSummary(cell.rawValue) ??
-    null;
+  const location = value ?? resolveLocationValue(cell.parsedValue, cell.rawValue) ?? null;
+  const correctionDraft = mode === 'table' ? cell.correctionDraft : null;
+  const previousLocation = correctionDraft
+    ? resolveLocationValue(correctionDraft.previousParsedValue, correctionDraft.previousRawValue)
+    : null;
+  const stagedLocation = correctionDraft
+    ? resolveLocationValue(null, correctionDraft.suggestion.label)
+    : null;
 
   const emitChange = (nextLocation: LocationValue) => {
     if (onChange) {
@@ -104,6 +147,75 @@ export function LocationEditor({
 
     emitChange(nextLocation);
   };
+
+  if (mode === 'table' && correctionDraft) {
+    return (
+      <div
+        data-testid="location-editor-table"
+        className="flex h-full min-h-[96px] w-full flex-col overflow-hidden bg-transparent"
+      >
+        <div className="flex min-h-0 flex-1 items-stretch overflow-hidden">
+          {LOCATION_AXES.map((axis) => (
+            <div
+              key={axis}
+              className="flex min-w-0 flex-1 flex-col border-r border-neutral-200 px-2 py-1.5 last:border-r-0"
+            >
+              <label
+                className="mb-1 flex flex-col gap-0.5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400"
+                htmlFor={`location-${row.id}-${axis}`}
+              >
+                <div className="text-primary-9">{axis.toUpperCase()}</div>
+                <div className="text-[9px] leading-none text-neutral-400">(microns)</div>
+              </label>
+              <Input
+                id={`location-${row.id}-${axis}`}
+                aria-label={`Location ${axis.toUpperCase()} row ${row.rowIndex + 1}`}
+                type="number"
+                readOnly
+                className="mt-auto h-8 min-w-0 rounded-lg border border-green-main/30 bg-green-main/10 px-2 text-center text-base font-bold text-green-main shadow-none focus-visible:ring-0"
+                value={formatNumber(stagedLocation?.[axis] ?? null)}
+                onClick={() => actions.selectCell({ rowId: row.id, fieldPath })}
+              />
+              <div
+                title="Original value"
+                className="mt-1 min-h-7 rounded-md border border-amber-600 bg-amber-600/16 px-2 py-1 text-center text-xs font-medium text-amber-950 line-through"
+              >
+                {formatNumber(previousLocation?.[axis] ?? null) || '—'}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-end gap-1 border-t border-neutral-200 px-2 py-1.5">
+          <Button
+            rounded
+            type="button"
+            variant="icon"
+            className="shrink-0 rounded-full border border-green-main p-0 group hover:bg-green-main size-6 [&_svg]:size-3!"
+            aria-label={`Accept suggested Location row ${row.rowIndex + 1}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              actions.acceptCorrection({ rowId: row.id, fieldPath });
+            }}
+          >
+            <CheckOutlined className="text-green-main! group-hover:text-white!" />
+          </Button>
+          <Button
+            rounded
+            type="button"
+            variant="icon"
+            className="shrink-0 rounded-full border border-destructive p-0 group hover:bg-destructive size-6 [&_svg]:size-3!"
+            aria-label={`Reject suggested Location row ${row.rowIndex + 1}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              actions.rejectCorrection({ rowId: row.id, fieldPath });
+            }}
+          >
+            <CloseOutlined className="text-destructive! group-hover:text-white!" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

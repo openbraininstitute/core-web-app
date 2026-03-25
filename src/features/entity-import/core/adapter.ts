@@ -98,6 +98,7 @@ export interface AdapterFieldEnablementArgs {
 export interface AdapterFieldDefinition extends IImportFieldDefinition {
   placeholder?: string;
   helpText?: string;
+  validatorManualApplyMode?: 'commit' | 'stage';
   options?: Array<ISuggestion>;
   fileConfig?: ImportFileFieldConfig;
   isEnabled?: (args: AdapterFieldEnablementArgs) => boolean;
