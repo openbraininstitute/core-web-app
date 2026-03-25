@@ -10,6 +10,7 @@ import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { getProtocols } from '@/api/entitycore/queries/general/protocol';
 import { getRoles } from '@/api/entitycore/queries/general/role';
 import { getSubjects } from '@/api/entitycore/queries/general/subject';
+import { transformToIlikePattern } from '@/api/entitycore/transformers';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { createAndRegisterMorphometrics } from '@/api/one/cell-morphology';
 
@@ -50,7 +51,7 @@ export interface RegisterMorphologyResult {
 }
 
 type BrainRegionQueryField = 'semantic_search' | 'name__ilike';
-type TextQueryField = 'ilike_search';
+type TextQueryField = 'ilike_search' | 'label__ilike' | 'pref_label__ilike';
 type PrefLabelQueryField = 'pref_label__ilike';
 type RoleQueryField = 'query';
 
@@ -181,7 +182,7 @@ function makeRemoteSearchResult({
 
 function makeWildcardIlikeQuery(query: string): string | null {
   const normalizedQuery = query.trim();
-  return normalizedQuery ? `*${normalizedQuery}*` : null;
+  return normalizedQuery ? transformToIlikePattern(normalizedQuery) : null;
 }
 
 function makePlainQuery(query: string): string | null {

@@ -1037,6 +1037,131 @@ describe('EntityImportFeature', () => {
     });
   });
 
+  it('keeps blank optional location neutral and does not surface object validation errors', async () => {
+    const user = userEvent.setup();
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    const locationXInput = screen.getByLabelText('Location X row 1');
+
+    await waitFor(() => {
+      expect(locationXInput.closest('td')).not.toHaveClass('bg-amber-50/70');
+    });
+
+    await user.click(locationXInput);
+
+    expect(
+      screen.queryByText('Invalid input: expected object, received string')
+    ).not.toBeInTheDocument();
+  });
+
+  it('stages panel location edits until the user accepts or rejects them in the table', async () => {
+    const user = userEvent.setup();
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    const table = screen.getByTestId('location-editor-table');
+    const tableXInput = within(table).getByLabelText('Location X row 1');
+    const tableYInput = within(table).getByLabelText('Location Y row 1');
+    const tableZInput = within(table).getByLabelText('Location Z row 1');
+
+    await user.clear(tableXInput);
+    await user.type(tableXInput, '1');
+    await user.clear(tableYInput);
+    await user.type(tableYInput, '2');
+    await user.clear(tableZInput);
+    await user.type(tableZInput, '3');
+
+    expect(tableXInput).toHaveValue(1);
+    expect(tableYInput).toHaveValue(2);
+    expect(tableZInput).toHaveValue(3);
+
+    await user.click(tableXInput);
+
+    const panel = screen.getByTestId('location-editor-panel');
+    const panelXInput = within(panel).getByLabelText('Location X row 1');
+
+    await user.clear(panelXInput);
+    await user.type(panelXInput, '9');
+
+    expect(
+      within(screen.getByTestId('location-editor-table')).getByLabelText('Location X row 1')
+    ).toHaveValue(1);
+
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Accept suggested Location row 1' })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Reject suggested Location row 1' })
+      ).toBeInTheDocument();
+    });
+
+    const stagedTable = screen.getByTestId('location-editor-table');
+    expect(within(stagedTable).getByLabelText('Location X row 1')).toHaveValue(9);
+    expect(
+      within(stagedTable)
+        .getAllByTitle('Original value')
+        .map((node) => node.textContent)
+    ).toEqual(expect.arrayContaining(['1', '2', '3']));
+
+    await user.click(screen.getByRole('button', { name: 'Reject suggested Location row 1' }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: 'Accept suggested Location row 1' })
+      ).not.toBeInTheDocument();
+      expect(
+        within(screen.getByTestId('location-editor-table')).getByLabelText('Location X row 1')
+      ).toHaveValue(1);
+    });
+
+    const refreshedPanel = screen.getByTestId('location-editor-panel');
+    const refreshedPanelXInput = within(refreshedPanel).getByLabelText('Location X row 1');
+    await user.clear(refreshedPanelXInput);
+    await user.type(refreshedPanelXInput, '8');
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Accept suggested Location row 1' })
+      ).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Accept suggested Location row 1' }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: 'Accept suggested Location row 1' })
+      ).not.toBeInTheDocument();
+      expect(
+        within(screen.getByTestId('location-editor-table')).getByLabelText('Location X row 1')
+      ).toHaveValue(8);
+    });
+  });
+
   it('renders configurable full-cell file triggers with generic labels', () => {
     renderWithQueryClient(
       <EntityImportFeature
