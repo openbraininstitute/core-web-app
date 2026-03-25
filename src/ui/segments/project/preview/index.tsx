@@ -2,19 +2,19 @@
 
 import { CloseOutlined, RightOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 
-import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
-import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Bar } from '@/ui/segments/project/metrics/metrics-skeleton';
-import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { PeopleCommunity } from '@/components/icons/buttons';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { Button } from '@/ui/molecules/button';
 import { config } from '@/config';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { Bar } from '@/ui/segments/project/metrics/metrics-skeleton';
+import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { Member, Project } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -93,7 +93,7 @@ function Users({
     return (
       <div className="border-primary-4 flex items-start gap-2 border-y py-1.5 text-lg text-white select-none">
         <PeopleCommunity className="text-primary-4 mt-0.5 min-h-5 min-w-5" />
-        <div className="flex max-w-full flex-wrap items-center gap-1 overflow-hidden text-ellipsis">
+        <div className="flex max-w-full flex-wrap items-center gap-1 overflow-hidden text-ellipsis max-h-30 overflow-y-auto primary-scrollbar">
           {users.map((user) => (
             <div
               key={user.id}
