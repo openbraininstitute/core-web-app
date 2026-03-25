@@ -86,7 +86,7 @@ function ContributionEditorHarness({
   onSetCustomValue: ReturnType<typeof vi.fn>;
   services: Pick<
     ICellMorphologyImportServices,
-    'searchPersonsPage' | 'searchOrganizationsPage' | 'searchConsortiaPage' | 'searchRolesPage'
+    'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
   >;
 }) {
   const [cell, setCell] = useState<IImportCellState>(() => createContributionCell());
@@ -218,13 +218,13 @@ describe('ContributionsEditor', () => {
     const user = userEvent.setup();
     const setCustomValueSpy = vi.fn();
     const services = {
-      searchPersonsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchOrganizationsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchConsortiaPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      searchRolesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryPerson: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryOrganization: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     } as unknown as Pick<
       ICellMorphologyImportServices,
-      'searchPersonsPage' | 'searchOrganizationsPage' | 'searchConsortiaPage' | 'searchRolesPage'
+      'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
     >;
 
     renderWithQueryClient(
@@ -263,21 +263,21 @@ describe('ContributionsEditor', () => {
     const user = userEvent.setup();
     const setCustomValueSpy = vi.fn();
     const services = {
-      searchPersonsPage: vi.fn(async (query: string) => ({
+      queryPerson: vi.fn(async ({ query }: { query: string }) => ({
         suggestions: query.toLowerCase().includes('alice')
           ? [{ value: 'person-1', label: 'Alice Example' }]
           : [],
         nextPageParam: null,
       })),
-      searchOrganizationsPage: vi.fn(async () => ({
+      queryOrganization: vi.fn(async () => ({
         suggestions: [],
         nextPageParam: null,
       })),
-      searchConsortiaPage: vi.fn(async () => ({
+      queryConsortium: vi.fn(async () => ({
         suggestions: [],
         nextPageParam: null,
       })),
-      searchRolesPage: vi.fn(async (query: string) => ({
+      queryRole: vi.fn(async ({ query }: { query: string }) => ({
         suggestions: query.toLowerCase().includes('auth')
           ? [{ value: 'role-1', label: 'Author' }]
           : [],
@@ -285,7 +285,7 @@ describe('ContributionsEditor', () => {
       })),
     } as unknown as Pick<
       ICellMorphologyImportServices,
-      'searchPersonsPage' | 'searchOrganizationsPage' | 'searchConsortiaPage' | 'searchRolesPage'
+      'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
     >;
 
     renderWithQueryClient(
@@ -490,16 +490,13 @@ describe('ContributionsEditor', () => {
         onSetCustomValue={vi.fn()}
         services={
           {
-            searchPersonsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-            searchOrganizationsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-            searchConsortiaPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-            searchRolesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+            queryPerson: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+            queryOrganization: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+            queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+            queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
           } as unknown as Pick<
             ICellMorphologyImportServices,
-            | 'searchPersonsPage'
-            | 'searchOrganizationsPage'
-            | 'searchConsortiaPage'
-            | 'searchRolesPage'
+            'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
           >
         }
       />

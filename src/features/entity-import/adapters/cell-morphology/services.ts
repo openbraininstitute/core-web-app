@@ -2,7 +2,6 @@
 
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { createMtypeClassification as createMtypeClassificationMutation } from '@/api/entitycore/queries/annotations/mtype-classification';
-import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
 import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
 import { createContribution as createContributionMutation } from '@/api/entitycore/queries/general/contribution';
 import { getLicenses } from '@/api/entitycore/queries/general/license';
@@ -11,10 +10,12 @@ import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { getProtocols } from '@/api/entitycore/queries/general/protocol';
 import { getRoles } from '@/api/entitycore/queries/general/role';
 import { getSubjects } from '@/api/entitycore/queries/general/subject';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { createAndRegisterMorphometrics } from '@/api/one/cell-morphology';
 
-import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { TRepairPipelineState } from '@/api/entitycore/types/shared/protocol';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { IRoleFilter } from '@/api/entitycore/types/shared/role';
 import type {
   EntityImportRuntimeContext,
   RemoteSearchPageResult,
@@ -48,91 +49,29 @@ export interface RegisterMorphologyResult {
   isValid: boolean;
 }
 
+type BrainRegionQueryField = 'semantic_search' | 'name__ilike';
+type TextQueryField = 'ilike_search';
+type PrefLabelQueryField = 'pref_label__ilike';
+type RoleQueryField = 'query';
+
+interface QueryArgs<TQueryField extends string> {
+  query: string;
+  queryField: TQueryField;
+  context: EntityImportRuntimeContext;
+  pageParam?: number;
+  pageSize?: number;
+}
+
 export interface ICellMorphologyImportServices {
-  searchBrainRegions: (
-    query: string,
-    context: EntityImportRuntimeContext
-  ) => Promise<Array<ISuggestion>>;
-  searchBrainRegionsPage: (
-    query: string,
-    context: EntityImportRuntimeContext,
-    pageParam: number,
-    pageSize: number
-  ) => Promise<RemoteSearchPageResult>;
-  searchLicenses: (
-    query: string,
-    context: EntityImportRuntimeContext
-  ) => Promise<Array<ISuggestion>>;
-  searchLicensesPage: (
-    query: string,
-    context: EntityImportRuntimeContext,
-    pageParam: number,
-    pageSize: number
-  ) => Promise<RemoteSearchPageResult>;
-  searchSubjects: (
-    query: string,
-    context: EntityImportRuntimeContext
-  ) => Promise<Array<ISuggestion>>;
-  searchSubjectsPage: (
-    query: string,
-    context: EntityImportRuntimeContext,
-    pageParam: number,
-    pageSize: number
-  ) => Promise<RemoteSearchPageResult>;
-  searchProtocols: (
-    query: string,
-    context: EntityImportRuntimeContext
-  ) => Promise<Array<ISuggestion>>;
-  searchProtocolsPage: (
-    query: string,
-    context: EntityImportRuntimeContext,
-    pageParam: number,
-    pageSize: number
-  ) => Promise<RemoteSearchPageResult>;
-  searchMtypes: (query: string, context: EntityImportRuntimeContext) => Promise<Array<ISuggestion>>;
-  searchMtypesPage: (
-    query: string,
-    context: EntityImportRuntimeContext,
-    pageParam: number,
-    pageSize: number
-  ) => Promise<RemoteSearchPageResult>;
-  searchPersons: (
-    query: string,
-    context: EntityImportRuntimeContext
-  ) => Promise<Array<ISuggestion>>;
-  searchPersonsPage: (
-    query: string,
-    context: EntityImportRuntimeContext,
-    pageParam: number,
-    pageSize: number
-  ) => Promise<RemoteSearchPageResult>;
-  searchOrganizations: (
-    query: string,
-    context: EntityImportRuntimeContext
-  ) => Promise<Array<ISuggestion>>;
-  searchOrganizationsPage: (
-    query: string,
-    context: EntityImportRuntimeContext,
-    pageParam: number,
-    pageSize: number
-  ) => Promise<RemoteSearchPageResult>;
-  searchConsortia: (
-    query: string,
-    context: EntityImportRuntimeContext
-  ) => Promise<Array<ISuggestion>>;
-  searchConsortiaPage: (
-    query: string,
-    context: EntityImportRuntimeContext,
-    pageParam: number,
-    pageSize: number
-  ) => Promise<RemoteSearchPageResult>;
-  searchRoles: (query: string, context: EntityImportRuntimeContext) => Promise<Array<ISuggestion>>;
-  searchRolesPage: (
-    query: string,
-    context: EntityImportRuntimeContext,
-    pageParam: number,
-    pageSize: number
-  ) => Promise<RemoteSearchPageResult>;
+  queryBrainRegion: (args: QueryArgs<BrainRegionQueryField>) => Promise<RemoteSearchPageResult>;
+  queryLicense: (args: QueryArgs<TextQueryField>) => Promise<RemoteSearchPageResult>;
+  querySubject: (args: QueryArgs<TextQueryField>) => Promise<RemoteSearchPageResult>;
+  queryProtocol: (args: QueryArgs<TextQueryField>) => Promise<RemoteSearchPageResult>;
+  queryMtype: (args: QueryArgs<TextQueryField>) => Promise<RemoteSearchPageResult>;
+  queryPerson: (args: QueryArgs<PrefLabelQueryField>) => Promise<RemoteSearchPageResult>;
+  queryOrganization: (args: QueryArgs<PrefLabelQueryField>) => Promise<RemoteSearchPageResult>;
+  queryConsortium: (args: QueryArgs<PrefLabelQueryField>) => Promise<RemoteSearchPageResult>;
+  queryRole: (args: QueryArgs<RoleQueryField>) => Promise<RemoteSearchPageResult>;
   registerMorphology: (args: {
     file: File;
     metadata: CellMorphologyRegistrationMetadata;
@@ -161,7 +100,7 @@ function normalizeQuery(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function toSuggestion(
+function makeSuggestion(
   value: string,
   label: string,
   description?: string,
@@ -175,322 +114,276 @@ function toSuggestion(
   };
 }
 
-function filterSuggestions(suggestions: Array<ISuggestion>, query: string): Array<ISuggestion> {
-  return filterSuggestionsAll(suggestions, query).slice(0, 12);
+const DEFAULT_ENTITY_IMPORT_QUERY_PAGE_SIZE = 20;
+
+type BrainRegionQueryResponseItem = {
+  id: string;
+  name: string;
+  acronym?: string | null;
+};
+
+function resolveQueryPaging({
+  pageParam = 0,
+  pageSize = DEFAULT_ENTITY_IMPORT_QUERY_PAGE_SIZE,
+}: {
+  pageParam?: number;
+  pageSize?: number;
+}) {
+  const normalizedPageSize = Math.max(pageSize, 1);
+  const normalizedPageParam = Math.max(pageParam, 0);
+
+  return {
+    page: Math.floor(normalizedPageParam / normalizedPageSize) + 1,
+    pageParam: normalizedPageParam,
+    pageSize: normalizedPageSize,
+  };
 }
 
-function filterSuggestionsAll(suggestions: Array<ISuggestion>, query: string): Array<ISuggestion> {
-  const normalizedQuery = normalizeQuery(query);
-  return suggestions.filter((suggestion) => {
-    const haystack = `${suggestion.label} ${suggestion.description ?? ''}`.toLowerCase();
-    return haystack.includes(normalizedQuery);
-  });
+function makeNextPageParam({
+  pageParam,
+  pageSize,
+  suggestionsCount,
+  totalItems,
+}: {
+  pageParam: number;
+  pageSize: number;
+  suggestionsCount: number;
+  totalItems?: number | null;
+}) {
+  if (typeof totalItems === 'number') {
+    return pageParam + pageSize < totalItems ? pageParam + pageSize : null;
+  }
+
+  return suggestionsCount === pageSize ? pageParam + pageSize : null;
 }
 
-function flattenBrainRegions(node: IBrainRegionHierarchy): Array<IBrainRegionHierarchy> {
-  return [node, ...(node.children?.flatMap(flattenBrainRegions) ?? [])];
+function makeRemoteSearchResult({
+  suggestions,
+  pageParam,
+  pageSize,
+  totalItems,
+}: {
+  suggestions: Array<ISuggestion>;
+  pageParam: number;
+  pageSize: number;
+  totalItems?: number | null;
+}): RemoteSearchPageResult {
+  return {
+    suggestions,
+    nextPageParam: makeNextPageParam({
+      pageParam,
+      pageSize,
+      suggestionsCount: suggestions.length,
+      totalItems,
+    }),
+  };
 }
 
-/**
- * Entity Core does not expose a paginated brain-region search like `/license` or
- * `/cell-morphology-protocol`. We load the default hierarchy once (UUID ids for
- * registration), then paginate filtered matches in memory with the same offset-based
- * `pageParam` / `nextPageParam` contract as server-paged fields.
- */
-let brainRegionFlatSuggestionsPromise: Promise<Array<ISuggestion>> | null = null;
-
-function getBrainRegionFlatSuggestions(): Promise<Array<ISuggestion>> {
-  brainRegionFlatSuggestionsPromise ??= (async () => {
-    const hierarchy = await getBrainRegionHierarchy({});
-    return flattenBrainRegions(hierarchy).map((region) =>
-      toSuggestion(region.id, region.name, region.acronym ?? undefined)
-    );
-  })();
-  return brainRegionFlatSuggestionsPromise;
+function makeWildcardIlikeQuery(query: string): string | null {
+  const normalizedQuery = query.trim();
+  return normalizedQuery ? `*${normalizedQuery}*` : null;
 }
 
-function slicePage(
-  items: Array<ISuggestion>,
-  pageParam: number,
-  pageSize: number
-): RemoteSearchPageResult {
-  const suggestions = items.slice(pageParam, pageParam + pageSize);
-  const nextPageParam = pageParam + pageSize < items.length ? pageParam + pageSize : null;
-  return { suggestions, nextPageParam };
+function makePlainQuery(query: string): string | null {
+  const normalizedQuery = query.trim();
+  return normalizedQuery ? normalizedQuery : null;
 }
 
 export function createCellMorphologyImportServices(): ICellMorphologyImportServices {
   return {
-    async searchBrainRegions(query) {
-      const suggestions = await getBrainRegionFlatSuggestions();
-      return filterSuggestions(suggestions, query);
+    async queryBrainRegion({ query, queryField, context, pageParam, pageSize }) {
+      const paging = resolveQueryPaging({ pageParam, pageSize });
+      const api = await entityCoreApi();
+      const queryValue = makePlainQuery(query);
+      // FIXME: this need to be using the new brain-region query in entitycore api folder
+      const response = await api.get<EntityCoreResponse<BrainRegionQueryResponseItem>>(
+        '/brain-region',
+        {
+          queryParams: {
+            page: paging.page,
+            page_size: paging.pageSize,
+            ...(queryValue ? { [queryField]: queryValue } : {}),
+          },
+          headers: getEntityCoreContext(toWorkspaceContext(context)).headers,
+        }
+      );
+
+      return makeRemoteSearchResult({
+        suggestions: response.data.map((region) =>
+          makeSuggestion(region.id, region.name, region.acronym ?? undefined)
+        ),
+        pageParam: paging.pageParam,
+        pageSize: paging.pageSize,
+        totalItems: response.pagination.total_items,
+      });
     },
-    async searchBrainRegionsPage(query, _context, pageParam, pageSize) {
-      const suggestions = await getBrainRegionFlatSuggestions();
-      const filtered = filterSuggestionsAll(suggestions, query);
-      return slicePage(filtered, pageParam, pageSize);
-    },
-    async searchLicenses(query, context) {
+    async queryLicense({ query, queryField, context, pageParam, pageSize }) {
+      const paging = resolveQueryPaging({ pageParam, pageSize });
+      const queryValue = makeWildcardIlikeQuery(query);
       const response = await getLicenses({
         filters: {
-          page: 1,
-          page_size: 20,
-          ...(query.trim() ? { ilike_search: query } : {}),
+          page: paging.page,
+          page_size: paging.pageSize,
+          ...(queryValue ? { [queryField]: queryValue } : {}),
         },
         context: toWorkspaceContext(context),
       });
 
-      return response.data.map((license) =>
-        toSuggestion(license.id, license.label ?? license.name)
-      );
-    },
-    async searchLicensesPage(query, context, pageParam, pageSize) {
-      const page = Math.floor(pageParam / pageSize) + 1;
-      const response = await getLicenses({
-        filters: {
-          page,
-          page_size: pageSize,
-          ...(query.trim() ? { ilike_search: `*${query}*` } : {}),
-        },
-        context: toWorkspaceContext(context),
+      return makeRemoteSearchResult({
+        suggestions: response.data.map((license) =>
+          makeSuggestion(license.id, license.label ?? license.name)
+        ),
+        pageParam: paging.pageParam,
+        pageSize: paging.pageSize,
+        totalItems: response.pagination.total_items,
       });
-
-      const suggestions = response.data.map((license) =>
-        toSuggestion(license.id, license.label ?? license.name)
-      );
-      return {
-        suggestions,
-        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
-      };
     },
-    async searchSubjects(query, context) {
+    async querySubject({ query, queryField, context, pageParam, pageSize }) {
+      const paging = resolveQueryPaging({ pageParam, pageSize });
+      const queryValue = makeWildcardIlikeQuery(query);
       const response = await getSubjects({
         filters: {
-          page: 1,
-          page_size: 20,
-          ilike_search: `*${query}*`,
+          page: paging.page,
+          page_size: paging.pageSize,
+          ...(queryValue ? { [queryField]: queryValue } : {}),
         },
         context: toWorkspaceContext(context),
       });
 
-      return response.data
-        .filter((subject) => subject.name.trim().toLowerCase() !== 'unknown')
-        .map((subject) => toSuggestion(subject.id, subject.name));
-    },
-    async searchSubjectsPage(query, context, pageParam, pageSize) {
-      const page = Math.floor(pageParam / pageSize) + 1;
-      const response = await getSubjects({
-        filters: {
-          page,
-          page_size: pageSize,
-          ilike_search: `*${query}*`,
-        },
-        context: toWorkspaceContext(context),
+      return makeRemoteSearchResult({
+        suggestions: response.data
+          .filter((subject) => normalizeQuery(subject.name) !== 'unknown')
+          .map((subject) => makeSuggestion(subject.id, subject.name)),
+        pageParam: paging.pageParam,
+        pageSize: paging.pageSize,
+        totalItems: response.pagination.total_items,
       });
-
-      const suggestions = response.data
-        .filter((subject) => subject.name.trim().toLowerCase() !== 'unknown')
-        .map((subject) => toSuggestion(subject.id, subject.name));
-      return {
-        suggestions,
-        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
-      };
     },
-    async searchProtocols(query, context) {
+    async queryProtocol({ query, queryField, context, pageParam, pageSize }) {
+      const paging = resolveQueryPaging({ pageParam, pageSize });
+      const queryValue = makeWildcardIlikeQuery(query);
       const response = await getProtocols({
         filters: {
-          page: 1,
-          page_size: 20,
-          ...(query.trim() ? { ilike_search: `*${query}*` } : {}),
+          page: paging.page,
+          page_size: paging.pageSize,
+          ...(queryValue ? { [queryField]: queryValue } : {}),
         },
         context: toWorkspaceContext(context),
       });
 
-      return response.data.map((protocol) =>
-        toSuggestion(
-          protocol.id,
-          `${protocol.name ?? 'Unnamed protocol'} (${protocol.generation_type})`,
-          undefined,
-          {
-            generationType: protocol.generation_type,
-          }
-        )
-      );
-    },
-    async searchProtocolsPage(query, context, pageParam, pageSize) {
-      const page = Math.floor(pageParam / pageSize) + 1;
-      const response = await getProtocols({
-        filters: {
-          page,
-          page_size: pageSize,
-          ...(query.trim() ? { ilike_search: `*${query}*` } : {}),
-        },
-        context: toWorkspaceContext(context),
+      return makeRemoteSearchResult({
+        suggestions: response.data.map((protocol) =>
+          makeSuggestion(
+            protocol.id,
+            `${protocol.name ?? 'Unnamed protocol'} (${protocol.generation_type})`,
+            undefined,
+            {
+              generationType: protocol.generation_type,
+            }
+          )
+        ),
+        pageParam: paging.pageParam,
+        pageSize: paging.pageSize,
+        totalItems: response.pagination.total_items,
       });
-
-      const suggestions = response.data.map((protocol) =>
-        toSuggestion(
-          protocol.id,
-          `${protocol.name ?? 'Unnamed protocol'} (${protocol.generation_type})`,
-          undefined,
-          {
-            generationType: protocol.generation_type,
-          }
-        )
-      );
-      return {
-        suggestions,
-        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
-      };
     },
-    async searchMtypes(query, context) {
+    async queryMtype({ query, queryField, context, pageParam, pageSize }) {
+      const paging = resolveQueryPaging({ pageParam, pageSize });
+      const queryValue = makeWildcardIlikeQuery(query);
       const response = await getMtypes({
         filters: {
-          page: 1,
-          page_size: 20,
-          ilike_search: `*${query}*`,
+          page: paging.page,
+          page_size: paging.pageSize,
+          [queryField]: queryValue,
         },
         ctx: toWorkspaceContext(context),
       });
 
-      return response.data.map((mtype) =>
-        toSuggestion(mtype.id, mtype.pref_label, mtype.alt_label ?? undefined)
-      );
-    },
-    async searchMtypesPage(query, context, pageParam, pageSize) {
-      const page = Math.floor(pageParam / pageSize) + 1;
-      const response = await getMtypes({
-        filters: {
-          page,
-          page_size: pageSize,
-          ilike_search: `*${query}*`,
-        },
-        ctx: toWorkspaceContext(context),
+      return makeRemoteSearchResult({
+        suggestions: response.data.map((mtype) =>
+          makeSuggestion(mtype.id, mtype.pref_label, mtype.alt_label ?? undefined)
+        ),
+        pageParam: paging.pageParam,
+        pageSize: paging.pageSize,
+        totalItems: response.pagination.total_items,
       });
-
-      const suggestions = response.data.map((mtype) =>
-        toSuggestion(mtype.id, mtype.pref_label, mtype.alt_label ?? undefined)
-      );
-      return {
-        suggestions,
-        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
-      };
     },
-    async searchPersons(query) {
+    async queryPerson({ query, queryField, pageParam, pageSize }) {
+      const paging = resolveQueryPaging({ pageParam, pageSize });
+      const queryValue = makePlainQuery(query);
       const response = await getPersons({
         filters: {
-          page: 1,
-          page_size: 20,
-          pref_label__ilike: query,
+          page: paging.page,
+          page_size: paging.pageSize,
+          ...(queryValue ? { [queryField]: queryValue } : {}),
         },
       });
 
-      return response.data.map((person) => toSuggestion(person.id, person.pref_label));
-    },
-    async searchPersonsPage(query, _context, pageParam, pageSize) {
-      const page = Math.floor(pageParam / pageSize) + 1;
-      const response = await getPersons({
-        filters: {
-          page,
-          page_size: pageSize,
-          pref_label__ilike: query,
-        },
+      return makeRemoteSearchResult({
+        suggestions: response.data.map((person) => makeSuggestion(person.id, person.pref_label)),
+        pageParam: paging.pageParam,
+        pageSize: paging.pageSize,
+        totalItems: response.pagination.total_items,
       });
-
-      const suggestions = response.data.map((person) => toSuggestion(person.id, person.pref_label));
-      return {
-        suggestions,
-        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
-      };
     },
-    async searchOrganizations(query) {
+    async queryOrganization({ query, queryField, pageParam, pageSize }) {
+      const paging = resolveQueryPaging({ pageParam, pageSize });
+      const queryValue = makePlainQuery(query);
       const response = await getOrganizations({
         filters: {
-          page: 1,
-          page_size: 20,
-          pref_label__ilike: query,
+          page: paging.page,
+          page_size: paging.pageSize,
+          ...(queryValue ? { [queryField]: queryValue } : {}),
         },
       });
 
-      return response.data.map((organization) =>
-        toSuggestion(organization.id, organization.pref_label)
-      );
-    },
-    async searchOrganizationsPage(query, _context, pageParam, pageSize) {
-      const page = Math.floor(pageParam / pageSize) + 1;
-      const response = await getOrganizations({
-        filters: {
-          page,
-          page_size: pageSize,
-          pref_label__ilike: query,
-        },
+      return makeRemoteSearchResult({
+        suggestions: response.data.map((organization) =>
+          makeSuggestion(organization.id, organization.pref_label)
+        ),
+        pageParam: paging.pageParam,
+        pageSize: paging.pageSize,
+        totalItems: response.pagination.total_items,
       });
-
-      const suggestions = response.data.map((organization) =>
-        toSuggestion(organization.id, organization.pref_label)
-      );
-      return {
-        suggestions,
-        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
-      };
     },
-    async searchConsortia(query) {
+    async queryConsortium({ query, queryField, pageParam, pageSize }) {
+      const paging = resolveQueryPaging({ pageParam, pageSize });
+      const queryValue = makePlainQuery(query);
       const response = await getConsortia({
         filters: {
-          page: 1,
-          page_size: 20,
-          pref_label__ilike: query,
+          page: paging.page,
+          page_size: paging.pageSize,
+          ...(queryValue ? { [queryField]: queryValue } : {}),
         },
       });
 
-      return response.data.map((consortium) => toSuggestion(consortium.id, consortium.pref_label));
-    },
-    async searchConsortiaPage(query, _context, pageParam, pageSize) {
-      const page = Math.floor(pageParam / pageSize) + 1;
-      const response = await getConsortia({
-        filters: {
-          page,
-          page_size: pageSize,
-          pref_label__ilike: query,
-        },
+      return makeRemoteSearchResult({
+        suggestions: response.data.map((consortium) =>
+          makeSuggestion(consortium.id, consortium.pref_label)
+        ),
+        pageParam: paging.pageParam,
+        pageSize: paging.pageSize,
+        totalItems: response.pagination.total_items,
       });
-
-      const suggestions = response.data.map((consortium) =>
-        toSuggestion(consortium.id, consortium.pref_label)
-      );
-      return {
-        suggestions,
-        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
-      };
     },
-    async searchRoles(query, context) {
+    async queryRole({ query, queryField, context, pageParam, pageSize }) {
+      const paging = resolveQueryPaging({ pageParam, pageSize });
+      const queryValue = makePlainQuery(query);
       const response = await getRoles({
         filters: {
-          page: 1,
-          page_size: 100,
-        },
+          page: paging.page,
+          page_size: paging.pageSize,
+          ...(queryValue ? { [queryField]: queryValue } : {}),
+        } as Partial<IRoleFilter> & { query?: string },
         context: toWorkspaceContext(context),
       });
 
-      return filterSuggestions(
-        response.data.map((role) => toSuggestion(role.id, role.name)),
-        query
-      );
-    },
-    async searchRolesPage(query, context, pageParam, pageSize) {
-      const response = await getRoles({
-        filters: {
-          page: 1,
-          page_size: 100,
-        },
-        context: toWorkspaceContext(context),
+      return makeRemoteSearchResult({
+        suggestions: response.data.map((role) => makeSuggestion(role.id, role.name)),
+        pageParam: paging.pageParam,
+        pageSize: paging.pageSize,
+        totalItems: response.pagination.total_items,
       });
-
-      const all = filterSuggestionsAll(
-        response.data.map((role) => toSuggestion(role.id, role.name)),
-        query
-      );
-      return slicePage(all, pageParam, pageSize);
     },
     async registerMorphology({ file, metadata, context }) {
       return await createAndRegisterMorphometrics(file, metadata, toWorkspaceContext(context));
