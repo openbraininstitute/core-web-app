@@ -1,6 +1,9 @@
 import { formatBytes } from '@/utils/format';
 
-import type { AdapterFieldDefinition, ImportFileFieldConfig } from './adapter';
+import type {
+  AdapterFieldDefinition,
+  ImportFileFieldConfig,
+} from '@/features/entity-import/core/adapter';
 
 const DEFAULT_FILE_BUTTON_LABEL = 'Add file(s)';
 const DEFAULT_MAX_FILES = 1;
@@ -124,7 +127,7 @@ export function validateImportFiles({
 
   const normalizedConfig = normalizeFileConfig(field.fileConfig);
 
-  if (files.length > normalizedConfig.maxFiles) {
+  if (files.length > (normalizedConfig.maxFiles ?? 0)) {
     return `${field.label} accepts at most ${normalizedConfig.maxFiles} file${
       normalizedConfig.maxFiles === 1 ? '' : 's'
     }.`;
@@ -143,7 +146,7 @@ export function validateImportFiles({
 
   if (
     normalizedConfig.maxSizeBytes !== undefined &&
-    files.some((file) => file.size > normalizedConfig.maxSizeBytes)
+    files.some((file) => file.size > (normalizedConfig.maxSizeBytes ?? 0))
   ) {
     return `${field.label} files must be ${formatBytes(normalizedConfig.maxSizeBytes)} or smaller.`;
   }

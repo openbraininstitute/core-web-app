@@ -339,6 +339,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                   <button
                     type="button"
                     aria-label={label}
+                    data-slot="async-select-option"
                     onClick={() => handleSelect(option)}
                     className={cn(
                       'text-primary-9 hover:bg-background flex h-full w-full cursor-pointer',
@@ -373,7 +374,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
                             sideOffset={-9}
                             collisionPadding={{ left: 0 }}
                             arrowPadding={0}
-                            className="shadow-bnb bg-primary-9 z-[99999] text-white!"
+                            className="shadow-bnb bg-primary-9 z-99999 text-white!"
                             arrowClassName="bg-primary-9"
                           >
                             {tooltip(optionData)}
@@ -387,7 +388,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
             })
           )}
           {isFetchingNextPage && (
-            <div className="sticky bottom-0 left-0 z-[99999] flex items-center justify-center gap-2 py-3">
+            <div className="sticky bottom-0 left-0 z-99999 flex items-center justify-center gap-2 py-3">
               <LoadingOutlined className="text-primary-8" spin />
               <span className="text-primary-8 text-sm font-medium">Loading next results...</span>
             </div>

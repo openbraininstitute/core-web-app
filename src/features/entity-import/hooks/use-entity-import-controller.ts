@@ -16,12 +16,13 @@ import {
 } from '../core/adapter';
 import {
   createIdleRemoteState,
-  type FlatImportValues,
-  type ImportRowState,
-  type ImportSessionState,
+  ENTITY_IMPORT_ALL_COLUMNS,
+  type IImportRowState,
+  type IImportSessionState,
   type ISuggestion,
   NotificationTone,
   RemoteValidationStatus,
+  type TFlatImportValues,
 } from '../core/contracts';
 import { buildTemplateColumns, importCsvRows } from '../core/csv';
 import {
@@ -37,7 +38,9 @@ import {
 import {
   acceptCorrectionDraft,
   appendEmptyRow,
+  clearRow as clearSessionRow,
   createImportSessionState,
+  deleteRow as deleteSessionRow,
   dismissNotification,
   hydrateSessionRows,
   pushNotification,
@@ -46,6 +49,7 @@ import {
   selectCell as selectCellState,
   setCellRemoteState,
   setCellValue,
+  setValidatorSelection as setValidatorSelectionState,
   stageSuggestionToRows,
   updateCellRawValue,
 } from '../core/session';
@@ -58,7 +62,7 @@ function findField(
   return fields.find((field) => field.path === fieldPath);
 }
 
-function findRow(session: ImportSessionState, rowId: string): ImportRowState | undefined {
+function findRow(session: IImportSessionState, rowId: string): IImportRowState | undefined {
   return session.rows.find((row) => row.id === rowId);
 }
 
@@ -142,7 +146,7 @@ function mergeSuggestions(...groups: Array<Array<ISuggestion> | undefined>): Arr
 }
 
 function cellStillMatchesQuery(
-  session: ImportSessionState,
+  session: IImportSessionState,
   rowId: string,
   fieldPath: string,
   query: string
@@ -181,10 +185,10 @@ export function useEntityImportController<TPayload, TResult>({
 }: {
   adapter: EntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
-  initialRows?: Array<FlatImportValues>;
+  initialRows?: Array<TFlatImportValues>;
 }) {
   const validate = useCallback(
-    (session: ImportSessionState): ImportSessionState =>
+    (session: IImportSessionState): IImportSessionState =>
       validateSessionRows({
         session,
         fields: adapter.fields,
@@ -196,7 +200,7 @@ export function useEntityImportController<TPayload, TResult>({
     [adapter, context]
   );
 
-  const [session, setSession] = useState<ImportSessionState>(() => {
+  const [session, setSession] = useState<IImportSessionState>(() => {
     const blankRow = adapter.createBlankRow?.() ?? undefined;
     const baseSession = createImportSessionState({
       fields: adapter.fields,
@@ -333,7 +337,7 @@ export function useEntityImportController<TPayload, TResult>({
 
   const commit = useCallback(
     (
-      updater: (current: ImportSessionState) => ImportSessionState,
+      updater: (current: IImportSessionState) => IImportSessionState,
       options?: { validate?: boolean }
     ) => {
       setSession((current) => {
@@ -733,9 +737,13 @@ export function useEntityImportController<TPayload, TResult>({
     void suggestionsInfinite.fetchNextPage();
   }, [suggestionsInfinite.fetchNextPage]);
 
-  const selectCell = useCallback(
-    ({ rowId, fieldPath }: { rowId: string; fieldPath: string }) => {
-      commit((current) => selectCellState(current, { rowId, fieldPath }), { validate: false });
+  const syncSuggestionsForSelection = useCallback(
+    ({ rowId, fieldPath }: { rowId: string | null; fieldPath: string | null }) => {
+      if (!rowId || !fieldPath || fieldPath === ENTITY_IMPORT_ALL_COLUMNS) {
+        setSuggestionRequest(null);
+        setRemoteValidation(null);
+        return;
+      }
 
       const currentSession = sessionRef.current;
       const row = findRow(currentSession, rowId);
@@ -752,9 +760,37 @@ export function useEntityImportController<TPayload, TResult>({
           fieldPath,
           query: row.cells[fieldPath].rawValue,
         });
+        return;
       }
+
+      setSuggestionRequest(null);
+      setRemoteValidation(null);
     },
-    [adapter.fields, commit, requestSuggestions]
+    [adapter.fields, requestSuggestions]
+  );
+
+  const selectCell = useCallback(
+    ({ rowId, fieldPath }: { rowId: string; fieldPath: string }) => {
+      commit((current) => selectCellState(current, { rowId, fieldPath }), { validate: false });
+      syncSuggestionsForSelection({ rowId, fieldPath });
+    },
+    [commit, syncSuggestionsForSelection]
+  );
+
+  const setValidatorSelection = useCallback(
+    ({ rowId, fieldPath }: { rowId?: string | null; fieldPath?: string | null }) => {
+      const currentSelection = sessionRef.current.validatorSelection;
+      const nextSelection = {
+        rowId: rowId !== undefined ? rowId : currentSelection.rowId,
+        fieldPath: fieldPath !== undefined ? fieldPath : currentSelection.fieldPath,
+      };
+
+      commit((current) => setValidatorSelectionState(current, { rowId, fieldPath }), {
+        validate: false,
+      });
+      syncSuggestionsForSelection(nextSelection);
+    },
+    [commit, syncSuggestionsForSelection]
   );
 
   const updateCellValue = useCallback(
@@ -843,6 +879,21 @@ export function useEntityImportController<TPayload, TResult>({
     const blankRow = adapter.createBlankRow?.();
     commit((current) => appendEmptyRow(current, blankRow));
   }, [adapter, commit]);
+
+  const clearRow = useCallback(
+    (rowId: string) => {
+      const blankRow = adapter.createBlankRow?.();
+      commit((current) => clearSessionRow(current, { rowId, values: blankRow }));
+    },
+    [adapter, commit]
+  );
+
+  const deleteRow = useCallback(
+    (rowId: string) => {
+      commit((current) => deleteSessionRow(current, { rowId }));
+    },
+    [commit]
+  );
 
   const applySuggestion = useCallback(
     (params: Parameters<typeof stageSuggestionToRows>[1]) => {
@@ -1016,10 +1067,13 @@ export function useEntityImportController<TPayload, TResult>({
       acceptCorrection,
       rejectCorrection,
       chooseSuggestion,
+      clearRow,
+      deleteRow,
       dismissNotification: dismissFeatureNotification,
       requestSuggestions,
       loadMoreSuggestions,
       selectCell,
+      setValidatorSelection,
       setCustomValue,
       setFileValue,
       submitRows,
@@ -1031,10 +1085,13 @@ export function useEntityImportController<TPayload, TResult>({
       acceptCorrection,
       rejectCorrection,
       chooseSuggestion,
+      clearRow,
+      deleteRow,
       dismissFeatureNotification,
       requestSuggestions,
       loadMoreSuggestions,
       selectCell,
+      setValidatorSelection,
       setCustomValue,
       setFileValue,
       submitRows,

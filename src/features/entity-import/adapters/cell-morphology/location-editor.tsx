@@ -3,8 +3,8 @@
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 
-import type { EntityImportActions } from '../../core/adapter';
-import type { ImportCellState, ImportRowState } from '../../core/contracts';
+import type { EntityImportActions } from '@/features/entity-import/core/adapter';
+import type { IImportCellState, IImportRowState } from '@/features/entity-import/core/contracts';
 
 export interface LocationValue {
   x?: number | null;
@@ -53,8 +53,8 @@ export function parseLocationSummary(summary: string): LocationValue | null {
 }
 
 interface LocationEditorProps {
-  cell: ImportCellState;
-  row: ImportRowState;
+  cell: IImportCellState;
+  row: IImportRowState;
   fieldPath: string;
   actions: EntityImportActions;
   mode?: 'table' | 'panel';

@@ -2,16 +2,17 @@ import {
   CellStatus,
   createIdleRemoteState,
   DependencyState,
-  type FlatImportValues,
-  type ImportCellState,
-  type ImportFieldDefinition,
-  type ImportRowState,
-  type ImportSessionState,
+  ENTITY_IMPORT_ALL_COLUMNS,
+  type IImportCellState,
+  type IImportFieldDefinition,
+  type IImportRowState,
+  type IImportSessionState,
   type ISuggestion,
   NotificationTone,
   RemoteValidationStatus,
   RowStatus,
-} from './contracts';
+  type TFlatImportValues,
+} from '@/features/entity-import/core/contracts';
 
 let rowIdCounter = 0;
 
@@ -20,7 +21,7 @@ function nextRowId(): string {
   return `import-row-${rowIdCounter}`;
 }
 
-function createCellState(field: ImportFieldDefinition, rawValue = ''): ImportCellState {
+function createCellState(field: IImportFieldDefinition, rawValue = ''): IImportCellState {
   return {
     fieldPath: field.path,
     rawValue,
@@ -34,22 +35,36 @@ function createCellState(field: ImportFieldDefinition, rawValue = ''): ImportCel
   };
 }
 
+function createRowCells(
+  fields: Array<IImportFieldDefinition>,
+  values: TFlatImportValues
+): IImportRowState['cells'] {
+  return Object.fromEntries(
+    fields.map((field) => [field.path, createCellState(field, values[field.path] ?? '')])
+  );
+}
+
 function createRowState(
-  fields: Array<ImportFieldDefinition>,
-  values: FlatImportValues,
+  fields: Array<IImportFieldDefinition>,
+  values: TFlatImportValues,
   rowIndex: number
-): ImportRowState {
+): IImportRowState {
   return {
     id: nextRowId(),
     rowIndex,
     rowStatus: RowStatus.Idle,
-    cells: Object.fromEntries(
-      fields.map((field) => [field.path, createCellState(field, values[field.path] ?? '')])
-    ),
+    cells: createRowCells(fields, values),
   };
 }
 
-function cloneSessionRows(rows: Array<ImportRowState>): Array<ImportRowState> {
+function reindexRows(rows: Array<IImportRowState>): Array<IImportRowState> {
+  return rows.map((row, rowIndex) => ({
+    ...row,
+    rowIndex,
+  }));
+}
+
+function cloneSessionRows(rows: Array<IImportRowState>): Array<IImportRowState> {
   return rows.map((row) => ({
     ...row,
     cells: Object.fromEntries(
@@ -99,9 +114,9 @@ function upsertSuggestion(
 }
 
 function summarizeSession(
-  rows: Array<ImportRowState>,
-  fields: Array<ImportFieldDefinition>
-): ImportSessionState['summary'] {
+  rows: Array<IImportRowState>,
+  fields: Array<IImportFieldDefinition>
+): IImportSessionState['summary'] {
   let invalidRequiredCellCount = 0;
 
   rows.forEach((row) => {
@@ -126,11 +141,53 @@ function summarizeSession(
   };
 }
 
+function toSelectedCell(
+  selection: IImportSessionState['validatorSelection']
+): IImportSessionState['selectedCell'] {
+  if (
+    !selection.rowId ||
+    !selection.fieldPath ||
+    selection.fieldPath === ENTITY_IMPORT_ALL_COLUMNS
+  ) {
+    return null;
+  }
+
+  return {
+    rowId: selection.rowId,
+    fieldPath: selection.fieldPath,
+  };
+}
+
 function normalizeFlatValues(
-  fields: Array<ImportFieldDefinition>,
-  values?: FlatImportValues
-): FlatImportValues {
+  fields: Array<IImportFieldDefinition>,
+  values?: TFlatImportValues
+): TFlatImportValues {
   return Object.fromEntries(fields.map((field) => [field.path, values?.[field.path] ?? '']));
+}
+
+function resolveSelectionAfterRowDelete(
+  session: IImportSessionState,
+  deletedRowId: string,
+  nextRows: Array<IImportRowState>
+): Pick<IImportSessionState, 'selectedCell' | 'validatorSelection'> {
+  if (session.validatorSelection.rowId !== deletedRowId) {
+    return {
+      selectedCell: session.selectedCell,
+      validatorSelection: session.validatorSelection,
+    };
+  }
+
+  const deletedRowIndex = session.rows.findIndex((row) => row.id === deletedRowId);
+  const fallbackRow = nextRows[deletedRowIndex] ?? nextRows[deletedRowIndex - 1] ?? null;
+  const nextValidatorSelection = {
+    rowId: fallbackRow?.id ?? null,
+    fieldPath: fallbackRow ? session.validatorSelection.fieldPath : null,
+  };
+
+  return {
+    selectedCell: toSelectedCell(nextValidatorSelection),
+    validatorSelection: nextValidatorSelection,
+  };
 }
 
 export function createImportSessionState({
@@ -138,10 +195,10 @@ export function createImportSessionState({
   rowCount,
   rows,
 }: {
-  fields: Array<ImportFieldDefinition>;
+  fields: Array<IImportFieldDefinition>;
   rowCount?: number;
-  rows?: Array<FlatImportValues>;
-}): ImportSessionState {
+  rows?: Array<TFlatImportValues>;
+}): IImportSessionState {
   const normalizedRows =
     rows && rows.length > 0
       ? rows
@@ -155,15 +212,19 @@ export function createImportSessionState({
     fields,
     rows: sessionRows,
     selectedCell: null,
+    validatorSelection: {
+      rowId: null,
+      fieldPath: null,
+    },
     notifications: [],
     summary: summarizeSession(sessionRows, fields),
   };
 }
 
 export function appendEmptyRow(
-  session: ImportSessionState,
-  values?: FlatImportValues
-): ImportSessionState {
+  session: IImportSessionState,
+  values?: TFlatImportValues
+): IImportSessionState {
   const nextRows = [
     ...cloneSessionRows(session.rows),
     createRowState(
@@ -180,10 +241,54 @@ export function appendEmptyRow(
   };
 }
 
+export function clearRow(
+  session: IImportSessionState,
+  params: {
+    rowId: string;
+    values?: TFlatImportValues;
+  }
+): IImportSessionState {
+  const normalizedValues = normalizeFlatValues(session.fields, params.values);
+  const nextRows = cloneSessionRows(session.rows).map((row) =>
+    row.id === params.rowId
+      ? {
+          ...row,
+          rowStatus: RowStatus.Idle,
+          cells: createRowCells(session.fields, normalizedValues),
+        }
+      : row
+  );
+
+  return {
+    ...session,
+    rows: nextRows,
+    summary: summarizeSession(nextRows, session.fields),
+  };
+}
+
+export function deleteRow(
+  session: IImportSessionState,
+  params: {
+    rowId: string;
+  }
+): IImportSessionState {
+  const nextRows = reindexRows(
+    cloneSessionRows(session.rows).filter((row) => row.id !== params.rowId)
+  );
+  const nextSelection = resolveSelectionAfterRowDelete(session, params.rowId, nextRows);
+
+  return {
+    ...session,
+    ...nextSelection,
+    rows: nextRows,
+    summary: summarizeSession(nextRows, session.fields),
+  };
+}
+
 export function dismissNotification(
-  session: ImportSessionState,
+  session: IImportSessionState,
   notificationId: string
-): ImportSessionState {
+): IImportSessionState {
   return {
     ...session,
     notifications: session.notifications.filter(
@@ -193,9 +298,9 @@ export function dismissNotification(
 }
 
 export function pushNotification(
-  session: ImportSessionState,
-  notification: ImportSessionState['notifications'][number]
-): ImportSessionState {
+  session: IImportSessionState,
+  notification: IImportSessionState['notifications'][number]
+): IImportSessionState {
   return {
     ...session,
     notifications: [notification, ...session.notifications],
@@ -203,22 +308,48 @@ export function pushNotification(
 }
 
 export function selectCell(
-  session: ImportSessionState,
+  session: IImportSessionState,
   params: { rowId: string; fieldPath: string }
-): ImportSessionState {
+): IImportSessionState {
+  const validatorSelection = {
+    rowId: params.rowId,
+    fieldPath: params.fieldPath,
+  };
+
   return {
     ...session,
+    validatorSelection,
     selectedCell: params,
   };
 }
 
-export function hydrateSessionRows(
-  session: ImportSessionState,
+export function setValidatorSelection(
+  session: IImportSessionState,
   params: {
-    rows: Array<FlatImportValues>;
+    rowId?: string | null;
+    fieldPath?: string | null;
+  }
+): IImportSessionState {
+  const validatorSelection = {
+    rowId: params.rowId !== undefined ? params.rowId : session.validatorSelection.rowId,
+    fieldPath:
+      params.fieldPath !== undefined ? params.fieldPath : session.validatorSelection.fieldPath,
+  };
+
+  return {
+    ...session,
+    validatorSelection,
+    selectedCell: toSelectedCell(validatorSelection),
+  };
+}
+
+export function hydrateSessionRows(
+  session: IImportSessionState,
+  params: {
+    rows: Array<TFlatImportValues>;
     strippedColumns: Array<string>;
   }
-): ImportSessionState {
+): IImportSessionState {
   const nextRows = params.rows.map((row, index) =>
     createRowState(session.fields, normalizeFlatValues(session.fields, row), index)
   );
@@ -243,13 +374,13 @@ export function hydrateSessionRows(
 }
 
 export function setCellRemoteState(
-  session: ImportSessionState,
+  session: IImportSessionState,
   params: {
     rowId: string;
     fieldPath: string;
-    remoteState: ImportCellState['remoteState'];
+    remoteState: IImportCellState['remoteState'];
   }
-): ImportSessionState {
+): IImportSessionState {
   const nextRows = cloneSessionRows(session.rows).map((row) => {
     if (row.id !== params.rowId) {
       return row;
@@ -271,18 +402,18 @@ export function setCellRemoteState(
 }
 
 export function updateCellRawValue(
-  session: ImportSessionState,
+  session: IImportSessionState,
   params: {
     rowId: string;
     fieldPath: string;
     rawValue: string;
   }
-): ImportSessionState {
+): IImportSessionState {
   return setCellValue(session, params);
 }
 
 export function setCellValue(
-  session: ImportSessionState,
+  session: IImportSessionState,
   params: {
     rowId: string;
     fieldPath: string;
@@ -290,7 +421,7 @@ export function setCellValue(
     displayValue?: string | null;
     parsedValue?: unknown;
   }
-): ImportSessionState {
+): IImportSessionState {
   const nextRows = cloneSessionRows(session.rows).map((row) => {
     if (row.id !== params.rowId) {
       return row;
@@ -320,14 +451,14 @@ export function setCellValue(
 }
 
 export function resolveCellSuggestion(
-  session: ImportSessionState,
+  session: IImportSessionState,
   params: {
     rowId: string;
     fieldPath: string;
     suggestion: ISuggestion;
-    suggestionPaging?: ImportCellState['remoteState']['suggestionPaging'];
+    suggestionPaging?: IImportCellState['remoteState']['suggestionPaging'];
   }
-): ImportSessionState {
+): IImportSessionState {
   const nextRows = cloneSessionRows(session.rows).map((row) => {
     if (row.id !== params.rowId) {
       return row;
@@ -363,7 +494,7 @@ export function resolveCellSuggestion(
 }
 
 export function stageSuggestionToRows(
-  session: ImportSessionState,
+  session: IImportSessionState,
   params: {
     fieldPath: string;
     targetRowId: string;
@@ -372,7 +503,7 @@ export function stageSuggestionToRows(
     /** When true, stage the suggestion on every row for this column (accept/reject per row). */
     applyToAllMatching: boolean;
   }
-): ImportSessionState {
+): IImportSessionState {
   const nextRows = cloneSessionRows(session.rows).map((row) => {
     const currentCell = row.cells[params.fieldPath];
     const shouldApply = params.applyToAllMatching || row.id === params.targetRowId;
@@ -418,9 +549,9 @@ export function stageSuggestionToRows(
 }
 
 export function acceptCorrectionDraft(
-  session: ImportSessionState,
+  session: IImportSessionState,
   params: { rowId: string; fieldPath: string }
-): ImportSessionState {
+): IImportSessionState {
   const draft = session.rows.find((row) => row.id === params.rowId)?.cells[params.fieldPath]
     .correctionDraft;
   if (!draft) {
@@ -435,9 +566,9 @@ export function acceptCorrectionDraft(
 }
 
 export function rejectCorrectionDraft(
-  session: ImportSessionState,
+  session: IImportSessionState,
   params: { rowId: string; fieldPath: string }
-): ImportSessionState {
+): IImportSessionState {
   const nextRows = cloneSessionRows(session.rows).map((row) => {
     if (row.id !== params.rowId) {
       return row;

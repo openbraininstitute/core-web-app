@@ -4,14 +4,14 @@ import { z } from 'zod';
 import {
   CellStatus,
   DependencyState,
-  type ImportFieldDefinition,
+  type IImportFieldDefinition,
   ImportInputType,
   RowStatus,
 } from './contracts';
 import { createImportSessionState } from './session';
 import { validateSessionRows } from './validation';
 
-const fields: Array<ImportFieldDefinition> = [
+const fields: Array<IImportFieldDefinition> = [
   {
     label: 'Name',
     path: 'name',

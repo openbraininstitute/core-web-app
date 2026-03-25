@@ -1,16 +1,19 @@
 'use client';
 
-import { useEntityImportController } from './hooks/use-entity-import-controller';
-import { ImportShell } from './ui/import-shell';
+import { useEntityImportController } from '@/features/entity-import/hooks/use-entity-import-controller';
+import { ImportShell } from '@/features/entity-import/ui/import-shell';
 
-import type { EntityImportAdapter, EntityImportRuntimeContext } from './core/adapter';
-import type { FlatImportValues } from './core/contracts';
+import type {
+  EntityImportAdapter,
+  EntityImportRuntimeContext,
+} from '@/features/entity-import/core/adapter';
+import type { TFlatImportValues } from '@/features/entity-import/core/contracts';
 
 interface EntityImportFeatureProps<TPayload, TResult> {
   title: string | null;
   adapter: EntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
-  initialRows?: Array<FlatImportValues>;
+  initialRows?: Array<TFlatImportValues>;
   onClose: () => void;
 }
 
@@ -43,6 +46,9 @@ export function EntityImportFeature<TPayload, TResult>({
   );
 }
 
-export { createCellMorphologyImportAdapter } from './adapters/cell-morphology/adapter';
+export { createCellMorphologyImportAdapter } from '@/features/entity-import/adapters/cell-morphology/adapter';
 
-export type { EntityImportAdapter, EntityImportRuntimeContext } from './core/adapter';
+export type {
+  EntityImportAdapter,
+  EntityImportRuntimeContext,
+} from '@/features/entity-import/core/adapter';

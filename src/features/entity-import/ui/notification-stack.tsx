@@ -2,10 +2,10 @@
 
 import { Alert, AlertContent, AlertDescription, AlertTitle } from '@/ui/molecules/alert';
 
-import type { ImportSessionState } from '../core/contracts';
+import type { IImportSessionState } from '@/features/entity-import/core/contracts';
 
 interface NotificationStackProps {
-  notifications: ImportSessionState['notifications'];
+  notifications: IImportSessionState['notifications'];
   onDismiss: (notificationId: string) => void;
 }
 
