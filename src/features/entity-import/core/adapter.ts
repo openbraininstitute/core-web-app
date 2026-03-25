@@ -52,6 +52,7 @@ export interface RemoteValidationResult {
   status: TRemoteValidationResultStatus;
   message?: string | null;
   suggestions?: Array<ISuggestion>;
+  resolvedSuggestion?: ISuggestion | null;
 }
 
 export interface TableCellRendererProps {
@@ -63,8 +64,16 @@ export interface TableCellRendererProps {
   actions: EntityImportActions;
 }
 
+export interface ValidatorDraftValue {
+  rawValue: string;
+  displayValue: string | null;
+  parsedValue: unknown;
+}
+
 export interface ValidatorFieldRendererProps extends TableCellRendererProps {
   suggestions: Array<ISuggestion>;
+  draftValue: ValidatorDraftValue;
+  onDraftChange: (value: ValidatorDraftValue) => void;
 }
 
 export interface AdapterFieldDefinition extends ImportFieldDefinition {

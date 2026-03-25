@@ -7,6 +7,7 @@ import {
   RemoteValidationStatus,
   RowStatus,
 } from './contracts';
+import { fieldHasSuggestionResolution, getRowSubmissionValues } from './helpers';
 
 import type { ZodType } from 'zod';
 import type { AdapterFieldDefinition } from './adapter';
@@ -47,10 +48,6 @@ function resolveIssueFieldPath(fields: Array<AdapterFieldDefinition>, issuePath:
   });
 
   return matchingField?.path ?? issuePath;
-}
-
-function valuesFromRow(row: ImportRowState): FlatImportValues {
-  return Object.fromEntries(Object.entries(row.cells).map(([key, cell]) => [key, cell.rawValue]));
 }
 
 function summarize(
@@ -94,7 +91,7 @@ export function validateSessionRows<TPayload>({
   buildPayload: (args: { row: ImportRowState; values: FlatImportValues }) => TPayload;
 }): ImportSessionState {
   const nextRows = cloneRows(session.rows).map((row) => {
-    const rowValues = valuesFromRow(row);
+    const rowValues = getRowSubmissionValues(row);
     const issueMap = new Map<string, Array<string>>();
 
     const parseResult = schema.safeParse(
@@ -142,7 +139,7 @@ export function validateSessionRows<TPayload>({
       const hasRawValue = cell.rawValue.trim() !== '';
       const needsRemoteConfirmation =
         !cell.correctionDraft &&
-        (!!field.remote?.search || !!field.remote?.validate) &&
+        fieldHasSuggestionResolution(field) &&
         hasRawValue &&
         cell.remoteState.status !== RemoteValidationStatus.Valid &&
         combinedIssues.length === 0;

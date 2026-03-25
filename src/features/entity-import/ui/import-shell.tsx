@@ -1,7 +1,7 @@
 'use client';
 
 import { CloseOutlined } from '@ant-design/icons';
-import { RiDownload2Line, RiInsertRowBottom, RiUpload2Line } from '@remixicon/react';
+import { RiDownload2Line, RiUpload2Line } from '@remixicon/react';
 import { useRef } from 'react';
 
 import { Button } from '@/ui/molecules/button';
@@ -97,30 +97,7 @@ export function ImportShell<TPayload, TResult>({
 
       <div className="grid min-h-0 flex-1 overflow-hidden gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <section className="min-h-0 overflow-hidden bg-white">
-          <div className="flex h-full min-h-0 flex-col">
-            <div className="min-h-0 flex-1 overflow-auto">
-              <ImportTable
-                adapter={adapter}
-                context={context}
-                session={session}
-                actions={actions}
-              />
-            </div>
-            <div className="shrink-0 border-t border-neutral-200 px-5 py-4">
-              <div className="flex justify-end">
-                <Button
-                  rounded
-                  type="button"
-                  size="md"
-                  onClick={actions.addRow}
-                  className="flex items-center justify-center gap-4"
-                >
-                  Add row
-                  <RiInsertRowBottom />
-                </Button>
-              </div>
-            </div>
-          </div>
+          <ImportTable adapter={adapter} context={context} session={session} actions={actions} />
         </section>
         <section className="min-h-0">
           <ValidatorPanel

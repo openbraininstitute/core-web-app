@@ -68,6 +68,14 @@ function cloneSessionRows(rows: Array<ImportRowState>): Array<ImportRowState> {
           correctionDraft: cell.correctionDraft
             ? {
                 ...cell.correctionDraft,
+                previousParsedValue: cell.correctionDraft.previousParsedValue,
+                previousRemoteState: {
+                  ...cell.correctionDraft.previousRemoteState,
+                  suggestions: [...cell.correctionDraft.previousRemoteState.suggestions],
+                  suggestionPaging: cell.correctionDraft.previousRemoteState.suggestionPaging
+                    ? { ...cell.correctionDraft.previousRemoteState.suggestionPaging }
+                    : undefined,
+                },
                 suggestion: { ...cell.correctionDraft.suggestion },
               }
             : null,
@@ -311,6 +319,49 @@ export function setCellValue(
   };
 }
 
+export function resolveCellSuggestion(
+  session: ImportSessionState,
+  params: {
+    rowId: string;
+    fieldPath: string;
+    suggestion: ISuggestion;
+    suggestionPaging?: ImportCellState['remoteState']['suggestionPaging'];
+  }
+): ImportSessionState {
+  const nextRows = cloneSessionRows(session.rows).map((row) => {
+    if (row.id !== params.rowId) {
+      return row;
+    }
+
+    const currentCell = row.cells[params.fieldPath];
+    row.cells[params.fieldPath] = {
+      ...currentCell,
+      rawValue: params.suggestion.label,
+      displayValue: params.suggestion.label,
+      parsedValue: params.suggestion.value,
+      status: CellStatus.Idle,
+      issues: [],
+      dependencyState: DependencyState.Ready,
+      remoteState: {
+        status: RemoteValidationStatus.Valid,
+        suggestions: [],
+        selectedSuggestion: params.suggestion,
+        message: null,
+        suggestionPaging: params.suggestionPaging,
+      },
+      correctionDraft: null,
+    };
+
+    return row;
+  });
+
+  return {
+    ...session,
+    rows: nextRows,
+    summary: summarizeSession(nextRows, session.fields),
+  };
+}
+
 export function stageSuggestionToRows(
   session: ImportSessionState,
   params: {
@@ -344,6 +395,14 @@ export function stageSuggestionToRows(
       correctionDraft: {
         previousRawValue: currentCell.rawValue,
         previousDisplayValue: currentCell.displayValue,
+        previousParsedValue: currentCell.parsedValue,
+        previousRemoteState: {
+          ...currentCell.remoteState,
+          suggestions: [...currentCell.remoteState.suggestions],
+          suggestionPaging: currentCell.remoteState.suggestionPaging
+            ? { ...currentCell.remoteState.suggestionPaging }
+            : undefined,
+        },
         suggestion: params.suggestion,
       },
     };
@@ -362,42 +421,17 @@ export function acceptCorrectionDraft(
   session: ImportSessionState,
   params: { rowId: string; fieldPath: string }
 ): ImportSessionState {
-  const nextRows = cloneSessionRows(session.rows).map((row) => {
-    if (row.id !== params.rowId) {
-      return row;
-    }
+  const draft = session.rows.find((row) => row.id === params.rowId)?.cells[params.fieldPath]
+    .correctionDraft;
+  if (!draft) {
+    return session;
+  }
 
-    const currentCell = row.cells[params.fieldPath];
-    const draft = currentCell.correctionDraft;
-    if (!draft) {
-      return row;
-    }
-
-    row.cells[params.fieldPath] = {
-      ...currentCell,
-      rawValue: draft.suggestion.value,
-      displayValue: draft.suggestion.label,
-      parsedValue: draft.suggestion.value,
-      status: CellStatus.Idle,
-      issues: [],
-      dependencyState: DependencyState.Ready,
-      remoteState: {
-        status: RemoteValidationStatus.Valid,
-        suggestions: upsertSuggestion(currentCell.remoteState.suggestions, draft.suggestion),
-        selectedSuggestion: draft.suggestion,
-        message: null,
-      },
-      correctionDraft: null,
-    };
-
-    return row;
+  return resolveCellSuggestion(session, {
+    rowId: params.rowId,
+    fieldPath: params.fieldPath,
+    suggestion: draft.suggestion,
   });
-
-  return {
-    ...session,
-    rows: nextRows,
-    summary: summarizeSession(nextRows, session.fields),
-  };
 }
 
 export function rejectCorrectionDraft(
@@ -415,23 +449,15 @@ export function rejectCorrectionDraft(
       return row;
     }
 
-    const suggestions = upsertSuggestion(currentCell.remoteState.suggestions, draft.suggestion);
-
     row.cells[params.fieldPath] = {
       ...currentCell,
       rawValue: draft.previousRawValue,
       displayValue: draft.previousDisplayValue,
-      parsedValue: draft.previousRawValue,
+      parsedValue: draft.previousParsedValue,
       status: CellStatus.Idle,
       issues: [],
       dependencyState: DependencyState.Ready,
-      remoteState: {
-        status:
-          suggestions.length > 0 ? RemoteValidationStatus.Invalid : RemoteValidationStatus.Idle,
-        suggestions,
-        selectedSuggestion: null,
-        message: suggestions.length > 0 ? 'Choose the closest suggestion and apply it.' : null,
-      },
+      remoteState: draft.previousRemoteState,
       correctionDraft: null,
     };
 

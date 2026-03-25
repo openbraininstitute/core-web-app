@@ -13,6 +13,7 @@ import {
   hydrateSessionRows,
   rejectCorrectionDraft,
   selectCell,
+  setCellValue,
   stageSuggestionToRows,
   updateCellRawValue,
 } from './session';
@@ -33,7 +34,7 @@ const fields: Array<ImportFieldDefinition> = [
 ];
 
 const suggestion: ISuggestion = {
-  value: 'isocortex',
+  value: 'brain-region-1',
   label: 'Isocortex',
 };
 
@@ -126,19 +127,22 @@ describe('stageSuggestionToRows', () => {
       'Ctx',
       'Thalamus',
     ]);
-    expect(next.rows[0].cells.brainRegion.correctionDraft).toEqual({
+    expect(next.rows[0].cells.brainRegion.correctionDraft).toMatchObject({
       previousRawValue: 'Ctx',
       previousDisplayValue: 'Ctx',
+      previousParsedValue: 'Ctx',
       suggestion,
     });
-    expect(next.rows[1].cells.brainRegion.correctionDraft).toEqual({
+    expect(next.rows[1].cells.brainRegion.correctionDraft).toMatchObject({
       previousRawValue: 'Ctx',
       previousDisplayValue: 'Ctx',
+      previousParsedValue: 'Ctx',
       suggestion,
     });
-    expect(next.rows[2].cells.brainRegion.correctionDraft).toEqual({
+    expect(next.rows[2].cells.brainRegion.correctionDraft).toMatchObject({
       previousRawValue: 'Thalamus',
       previousDisplayValue: 'Thalamus',
+      previousParsedValue: 'Thalamus',
       suggestion,
     });
   });
@@ -164,8 +168,9 @@ describe('acceptCorrectionDraft', () => {
       fieldPath: 'brainRegion',
     });
 
-    expect(next.rows[0].cells.brainRegion.rawValue).toBe('isocortex');
+    expect(next.rows[0].cells.brainRegion.rawValue).toBe('Isocortex');
     expect(next.rows[0].cells.brainRegion.displayValue).toBe('Isocortex');
+    expect(next.rows[0].cells.brainRegion.parsedValue).toBe('brain-region-1');
     expect(next.rows[0].cells.brainRegion.correctionDraft).toBeNull();
     expect(next.rows[0].cells.brainRegion.remoteState.status).toBe(RemoteValidationStatus.Valid);
   });
@@ -193,6 +198,42 @@ describe('rejectCorrectionDraft', () => {
 
     expect(next.rows[0].cells.brainRegion.rawValue).toBe('Ctx');
     expect(next.rows[0].cells.brainRegion.displayValue).toBe('Ctx');
+    expect(next.rows[0].cells.brainRegion.correctionDraft).toBeNull();
+  });
+
+  it('restores the previous resolved id when rejecting a staged suggestion', () => {
+    const session = createImportSessionState({
+      fields,
+      rows: [{ name: 'Neuron A', brainRegion: 'Isocortex' }],
+    });
+
+    const resolved = setCellValue(session, {
+      rowId: session.rows[0].id,
+      fieldPath: 'brainRegion',
+      rawValue: 'Isocortex',
+      displayValue: 'Isocortex',
+      parsedValue: 'brain-region-1',
+    });
+
+    const staged = stageSuggestionToRows(resolved, {
+      fieldPath: 'brainRegion',
+      targetRowId: resolved.rows[0].id,
+      sourceValue: 'Isocortex',
+      suggestion: {
+        value: 'brain-region-2',
+        label: 'Thalamus',
+      },
+      applyToAllMatching: false,
+    });
+
+    const next = rejectCorrectionDraft(staged, {
+      rowId: staged.rows[0].id,
+      fieldPath: 'brainRegion',
+    });
+
+    expect(next.rows[0].cells.brainRegion.rawValue).toBe('Isocortex');
+    expect(next.rows[0].cells.brainRegion.displayValue).toBe('Isocortex');
+    expect(next.rows[0].cells.brainRegion.parsedValue).toBe('brain-region-1');
     expect(next.rows[0].cells.brainRegion.correctionDraft).toBeNull();
   });
 });

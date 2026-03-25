@@ -1,4 +1,3 @@
-import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckOutlined,
   CloseOutlined,
@@ -8,29 +7,31 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
+import type { ComponentProps } from 'react';
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 function SkeletonLoader({ count = 5 }: { count?: number }) {
+  const delays = Array.from({ length: count }, (_, index) => index * 100);
+
   return (
     <div className="space-y-2 p-2">
-      {Array.from({ length: count }).map((_, index) => (
+      {delays.map((delay) => (
         <div
-          // eslint-disable-next-line react/no-array-index-key
-          key={`select-skeleton-${index}`}
+          key={`select-skeleton-${delay}`}
           className={cn(
             'from-neutral-1 via-neutral-2 to-neutral-1 animate-shimmer',
             'relative h-10 overflow-hidden rounded-md bg-gradient-to-r bg-[length:200%_100%]'
           )}
           style={{
-            animationDelay: `${index * 100}ms`,
+            animationDelay: `${delay}ms`,
           }}
         />
       ))}
@@ -51,7 +52,8 @@ export type AsyncSelectQueryFn<
 
 export type AsyncSelectProps<R extends Partial<PaginationFilter & SearchFilter>, T = unknown> = {
   id?: string;
-  dataKey: Array<string> | Array<string | Record<string, any>>;
+  ariaLabel?: string;
+  dataKey: Array<string> | Array<string | Record<string, unknown>>;
   queryFn: AsyncSelectQueryFn<R, T>;
   getOptionLabel: (item: T) => string;
   getOptionValue: (item: T) => string;
@@ -59,8 +61,10 @@ export type AsyncSelectProps<R extends Partial<PaginationFilter & SearchFilter>,
   searchPlaceholder?: string;
   onSelect?: (option: AsyncSelectOption<T> | undefined) => void;
   selectedValue?: string;
+  selectedLabel?: string;
   searchField?: string;
   searchable: boolean;
+  disabled?: boolean;
   clsx?: {
     trigger?: ComponentProps<'div'>['className'];
     content?: ComponentProps<'div'>['className'];
@@ -78,6 +82,7 @@ export type AsyncSelectProps<R extends Partial<PaginationFilter & SearchFilter>,
 
 export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, T = unknown>({
   id,
+  ariaLabel,
   dataKey,
   queryFn,
   getOptionLabel,
@@ -86,8 +91,10 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
   searchPlaceholder = 'Search...',
   onSelect,
   selectedValue,
+  selectedLabel,
   searchField,
   searchable,
+  disabled = false,
   tooltip,
   customItemRender,
   clsx,
@@ -137,7 +144,9 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
 
   const currentOptionsMap = useMemo<Map<string, AsyncSelectOption<T>>>(() => {
     const next = new Map<string, AsyncSelectOption<T>>();
-    options.forEach((opt) => next.set(opt.value, opt));
+    for (const option of options) {
+      next.set(option.value, option);
+    }
     return next;
   }, [options]);
 
@@ -155,13 +164,12 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
     if (!selectedValue) return undefined;
     return currentOptionsMap.get(selectedValue) ?? persistedOptionsRef.current?.get(selectedValue);
   }, [currentOptionsMap, selectedValue]);
+  const selectedText =
+    selectedOptionFromProps?.label ?? (selectedValue ? selectedLabel : undefined);
 
-  const parentSetter = useCallback(
-    (el: HTMLDivElement) => {
-      setParent(el);
-    },
-    [setParent]
-  );
+  const parentSetter = useCallback((el: HTMLDivElement | null) => {
+    setParent(el);
+  }, []);
 
   useEffect(() => {
     if (!open || !parent) return;
@@ -207,28 +215,42 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
           clsx?.trigger
         )}
       >
-        <Button variant="outline" role="combobox" disabled={isLoading} className="select-none">
+        <button
+          type="button"
+          role="combobox"
+          aria-label={ariaLabel}
+          aria-expanded={open}
+          disabled={disabled || isLoading}
+          className="select-none dropdown-item flex items-center justify-between"
+        >
           <div
             id={`async-select-label-${id}`}
             className={cn('line-clamp-1 w-full truncate text-left', clsx?.label, {
-              'text-neutral-2 placeholder:text-sm': !selectedOptionFromProps?.label,
+              'text-neutral-2 placeholder:text-sm': !selectedText,
             })}
           >
-            {selectedOptionFromProps?.label || placeholder}
+            {selectedText || placeholder}
           </div>
           {/* eslint-disable-next-line no-nested-ternary */}
           {isLoading || isFetching ? (
             <LoadingOutlined className="opacity-50 [&_svg]:size-3!" spin />
           ) : selectedValue ? (
-            <div
+            // biome-ignore lint/a11y/useSemanticElements: the clear affordance lives inside the popover trigger, so a nested button would be invalid markup.
+            <span
+              role="button"
+              aria-label="Clear selection"
+              tabIndex={-1}
               className={cn(
                 'group-hover:bg-neutral-1 group-hover:text-primary-8',
                 'flex cursor-pointer items-center justify-center rounded-full p-1'
               )}
-              role="button"
-              tabIndex={-1}
-              onKeyDown={(e) => {
-                e.stopPropagation();
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                  return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
                 handleSelect(undefined);
               }}
               onClick={(e) => {
@@ -237,18 +259,18 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
               }}
             >
               <CloseOutlined className="opacity-50 [&_svg]:size-3!" />
-            </div>
+            </span>
           ) : (
             <div
               className={cn(
-                'group-hover:bg-neutral-1 group-hover:text-primary-8',
+                'group-hover:bg-neutral-1 group-hover:text-primary-8 size-5! min-w-5!',
                 'flex cursor-pointer items-center justify-center rounded-full p-1'
               )}
             >
               <DownOutlined className="opacity-50 [&_svg]:size-3!" />
             </div>
           )}
-        </Button>
+        </button>
       </PopoverTrigger>
 
       <PopoverContent
@@ -299,70 +321,70 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
               <span className="text-neutral-4 text-sm">No results found</span>
             </div>
           ) : (
-            <>
-              {options.map((option) => {
-                if (!option) return null;
+            options.map((option, ind) => {
+              if (!option) return null;
 
-                const { value, label, data: optionData } = option;
-                const isSelected = value === selectedValue;
-                if (customItemRender) {
-                  return customItemRender({
-                    data: option,
-                    selected: isSelected,
-                    onSelect: handleSelect,
-                  });
-                }
+              const { value, label, data: optionData } = option;
+              const isSelected = value === selectedValue;
+              if (customItemRender) {
+                return customItemRender({
+                  data: option,
+                  selected: isSelected,
+                  onSelect: handleSelect,
+                });
+              }
 
-                return (
-                  <div key={option?.value} className="group mb-1 flex items-center justify-start">
-                    <button
-                      type="button"
-                      aria-label={label}
-                      onClick={() => handleSelect(option)}
-                      className={cn(
-                        'text-primary-9 hover:bg-background flex h-full w-full cursor-pointer',
-                        'items-center justify-start px-3 text-left transition-colors duration-150',
-                        'group-first:hover:rounded-t-md',
-                        { 'p-2 text-base': breakpoint === 'l' },
-                        { 'p-3 text-lg': breakpoint === 'xl' }
-                      )}
-                      title={label}
-                    >
-                      <span className="line-clamp-2 w-full group-hover:font-black">{label}</span>
-                      <div className="flex items-center justify-center gap-1">
-                        <CheckOutlined
-                          className={cn(
-                            'ml-auto text-sm transition-opacity duration-200',
-                            isSelected ? 'opacity-100' : 'opacity-0'
-                          )}
-                        />
-                        {tooltip && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="h-8 rounded-full border-none">
-                                <InfoCircleFilled className="text-primary-8" />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent
-                              avoidCollisions
-                              align="end"
-                              side="bottom"
-                              sideOffset={-9}
-                              collisionPadding={{ left: 0 }}
-                              arrowPadding={0}
-                              className="shadow-bnb bg-primary-9 z-[99999] text-white!"
-                              arrowClassName="bg-primary-9"
-                            >
-                              {tooltip(optionData)}
-                            </TooltipContent>
-                          </Tooltip>
+              return (
+                <div key={option?.value} className="group mb-1 flex items-center justify-start">
+                  <button
+                    type="button"
+                    aria-label={label}
+                    onClick={() => handleSelect(option)}
+                    className={cn(
+                      'text-primary-9 hover:bg-background flex h-full w-full cursor-pointer',
+                      'items-center justify-start px-3 text-left transition-colors duration-150',
+                      'group-first:hover:rounded-t-md',
+                      { 'p-2 text-base': breakpoint === 'l' },
+                      { 'p-3 text-lg': breakpoint === 'xl' },
+                      { 'hover:rounded-b-md': ind === options.length - 1 },
+                      { 'hover:rounded-t-md': ind === 0 }
+                    )}
+                    title={label}
+                  >
+                    <span className="line-clamp-2 w-full group-hover:font-black">{label}</span>
+                    <div className="flex items-center justify-center gap-1">
+                      <CheckOutlined
+                        className={cn(
+                          'ml-auto text-sm transition-opacity duration-200',
+                          isSelected ? 'opacity-100' : 'opacity-0'
                         )}
-                      </div>
-                    </button>
-                  </div>
-                );
-              })}
-            </>
+                      />
+                      {tooltip && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="h-8 rounded-full border-none">
+                              <InfoCircleFilled className="text-primary-8" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            avoidCollisions
+                            align="end"
+                            side="bottom"
+                            sideOffset={-9}
+                            collisionPadding={{ left: 0 }}
+                            arrowPadding={0}
+                            className="shadow-bnb bg-primary-9 z-[99999] text-white!"
+                            arrowClassName="bg-primary-9"
+                          >
+                            {tooltip(optionData)}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </button>
+                </div>
+              );
+            })
           )}
           {isFetchingNextPage && (
             <div className="sticky bottom-0 left-0 z-[99999] flex items-center justify-center gap-2 py-3">
