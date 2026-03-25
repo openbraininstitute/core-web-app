@@ -26,6 +26,11 @@ import {
   type ImportRowState,
   type ImportSessionState,
 } from '../core/contracts';
+import {
+  buildFileAcceptValue,
+  getImportFileButtonLabel,
+  getImportFileInputMultiple,
+} from '../core/file-field';
 import { importDatePickerChangeToRawValue, parseImportDatePickerValue } from '../core/helpers';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from './entity-import-popover';
 
@@ -192,7 +197,7 @@ export function InlineCell({
 
   if (field.inputType === ImportInputType.File || field.inputType === ImportInputType.FileBundle) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0">
         <Button
           rounded
           type="button"
@@ -200,7 +205,7 @@ export function InlineCell({
           variant="ghost"
           size="md"
           className={clsx(
-            'h-full min-h-[52px] justify-start rounded-none border-0 bg-transparent px-3 py-2 text-left text-sm text-inherit shadow-none hover:bg-transparent hover:text-inherit',
+            'pointer-events-auto box-border h-full min-h-[52px] w-full justify-start rounded-none border-0 bg-transparent px-3 py-2 text-left text-sm text-inherit shadow-none hover:bg-transparent hover:text-inherit',
             getControlClassName(cell, selected)
           )}
           onClick={() => {
@@ -208,20 +213,24 @@ export function InlineCell({
             fileInputRef.current?.click();
           }}
         >
-          {displayValue || field.placeholder || 'Attach file'}
+          {displayValue || getImportFileButtonLabel(field)}
         </Button>
         <input
           ref={fileInputRef}
           id={fileInputId}
           type="file"
+          aria-label={`${field.label} row ${row.rowIndex + 1} file input`}
+          accept={buildFileAcceptValue(field.fileConfig)}
+          multiple={getImportFileInputMultiple(field)}
           className="sr-only"
           onChange={(event) => {
-            const file = event.currentTarget.files?.[0] ?? null;
+            const files = Array.from(event.currentTarget.files ?? []);
             actions.setFileValue({
               rowId: row.id,
               fieldPath: field.path,
-              file,
+              files,
             });
+            event.currentTarget.value = '';
           }}
         />
       </div>
@@ -238,7 +247,7 @@ export function InlineCell({
             'pointer-events-auto flex h-full min-h-[52px] w-full flex-col rounded-none border-none border-neutral-200 bg-white shadow-none ring-0',
             'focus-within:border-none! focus-visible:ring-0! focus-visible:outline-none!',
             '[&_textarea]:box-border [&_textarea]:h-full [&_textarea]:min-h-0! [&_textarea]:flex-1 [&_textarea]:resize-none ',
-            '[&_textarea]:rounded-none [&_textarea]:p-2 [&_textarea]:[field-sizing:fixed]',
+            '[&_textarea]:rounded-none [&_textarea]:p-2 [&_textarea]:field-sizing-fixed',
             '[&_textarea]:placeholder:font-light! [&_textarea]:placeholder:text-gray-400! [&_textarea]:placeholder:text-sm!',
             'focus:border border-neutral-200 bg-white p-2 focus-within:border-primary-6! focus-visible:ring-0! focus-visible:outline-none!',
             'shadow-none! ring-0!',

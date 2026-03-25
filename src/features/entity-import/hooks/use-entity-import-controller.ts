@@ -4,6 +4,8 @@ import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
 import Papa from 'papaparse';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { getEntityImportTemplateGuide } from '@/features/entity-import/templates/registry';
+
 import {
   type AdapterFieldDefinition,
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
@@ -22,6 +24,11 @@ import {
   RemoteValidationStatus,
 } from '../core/contracts';
 import { buildTemplateColumns, importCsvRows } from '../core/csv';
+import {
+  getImportFileDisplayValue,
+  toParsedFileValue,
+  validateImportFiles,
+} from '../core/file-field';
 import {
   fieldHasSuggestionResolution,
   findExactSuggestionMatch,
@@ -68,6 +75,26 @@ function parseCsvFile(file: File): Promise<Array<Record<string, string>>> {
       },
     });
   });
+}
+
+function downloadBlob({
+  content,
+  type,
+  fileName,
+}: {
+  content: BlobPart;
+  type: string;
+  fileName: string;
+}) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function hasSuggestionSource(field?: AdapterFieldDefinition): boolean {
@@ -706,25 +733,42 @@ export function useEntityImportController<TPayload, TResult>({
     ({
       rowId,
       fieldPath,
-      file,
+      files,
       displayValue,
     }: {
       rowId: string;
       fieldPath: string;
-      file: File | null;
+      files: Array<File>;
       displayValue?: string | null;
     }) => {
+      const field = findField(adapter.fields, fieldPath);
+      const validationError = validateImportFiles({ field, files });
+      if (validationError) {
+        commit(
+          (current) =>
+            pushNotification(current, {
+              id: `notification-${Date.now()}`,
+              tone: NotificationTone.Error,
+              message: validationError,
+            }),
+          { validate: false }
+        );
+        return;
+      }
+
+      const nextRawValue = displayValue ?? getImportFileDisplayValue(files);
+      const resolvedDisplayValue = nextRawValue || null;
       commit((current) =>
         setCellValue(current, {
           rowId,
           fieldPath,
-          rawValue: file?.name ?? '',
-          displayValue: displayValue ?? file?.name ?? null,
-          parsedValue: file,
+          rawValue: nextRawValue,
+          displayValue: resolvedDisplayValue,
+          parsedValue: toParsedFileValue(files, field),
         })
       );
     },
-    [commit]
+    [adapter.fields, commit]
   );
 
   const setCustomValue = useCallback(
@@ -809,22 +853,40 @@ export function useEntityImportController<TPayload, TResult>({
     [adapter.fields, commit]
   );
 
-  const downloadTemplate = useCallback(() => {
+  const downloadCsvTemplate = useCallback(() => {
     const csv = Papa.unparse({
       fields: buildTemplateColumns(adapter.fields),
       data: [],
     });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = adapter.templateFileName;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    downloadBlob({
+      content: csv,
+      type: 'text/csv;charset=utf-8;',
+      fileName: adapter.templateFileName,
+    });
   }, [adapter.fields, adapter.templateFileName]);
+
+  const downloadGuideTemplate = useCallback(() => {
+    const templateGuide = getEntityImportTemplateGuide(adapter.templateGuide);
+    if (!templateGuide) {
+      commit(
+        (current) =>
+          pushNotification(current, {
+            id: `notification-${Date.now()}`,
+            tone: NotificationTone.Error,
+            message: 'No import guide is available for this artifact type.',
+          }),
+        { validate: false }
+      );
+      return;
+    }
+
+    downloadBlob({
+      content: templateGuide.content,
+      type: 'text/markdown;charset=utf-8;',
+      fileName: templateGuide.fileName,
+    });
+  }, [adapter.templateGuide, commit]);
 
   const importMutation = useMutation({
     mutationFn: async () => {
@@ -917,7 +979,8 @@ export function useEntityImportController<TPayload, TResult>({
     session,
     actions,
     isSubmitting: importMutation.isPending,
-    downloadTemplate,
+    downloadCsvTemplate,
+    downloadGuideTemplate,
     handleCsvUpload,
   };
 }

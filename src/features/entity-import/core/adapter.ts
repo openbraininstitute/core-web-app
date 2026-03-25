@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ZodType } from 'zod';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   FlatImportValues,
   ImportCellState,
@@ -76,10 +77,24 @@ export interface ValidatorFieldRendererProps extends TableCellRendererProps {
   onDraftChange: (value: ValidatorDraftValue) => void;
 }
 
+export interface ImportFileFieldConfig {
+  accept?: Array<string>;
+  allowedExtensions?: Array<string>;
+  maxSizeBytes?: number;
+  maxFiles?: number;
+  buttonLabel?: string;
+}
+
+export interface EntityImportTemplateGuideConfig {
+  entityType: TExtendedEntitiesTypeDict;
+  guideFileName: string;
+}
+
 export interface AdapterFieldDefinition extends ImportFieldDefinition {
   placeholder?: string;
   helpText?: string;
   options?: Array<ISuggestion>;
+  fileConfig?: ImportFileFieldConfig;
   isEnabled?: (values: FlatImportValues) => boolean;
   getDisabledMessage?: (values: FlatImportValues) => string;
   remote?: {
@@ -105,6 +120,7 @@ export interface EntityImportAdapter<TPayload = unknown, TResult = unknown> {
   description?: string;
   submitLabel?: string;
   templateFileName: string;
+  templateGuide?: EntityImportTemplateGuideConfig;
   fields: Array<AdapterFieldDefinition>;
   schema: ZodType<TPayload>;
   createBlankRow?: () => FlatImportValues;
@@ -146,7 +162,7 @@ export interface EntityImportActions {
   setFileValue: (params: {
     rowId: string;
     fieldPath: string;
-    file: File | null;
+    files: Array<File>;
     displayValue?: string | null;
   }) => void;
   submitRows: () => void;
