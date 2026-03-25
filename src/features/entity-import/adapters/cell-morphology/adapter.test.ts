@@ -7,6 +7,120 @@ import { createImportSessionState, setCellValue } from '../../core/session';
 import { type CellMorphologySubmissionPayload, createCellMorphologyImportAdapter } from './adapter';
 
 describe('createCellMorphologyImportAdapter', () => {
+  it('exposes remote validate handlers for all remotely resolved fields', () => {
+    const adapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      defaultLicenseId: 'license-1',
+    });
+
+    expect(
+      adapter.fields
+        .filter((field) =>
+          ['brainRegionId', 'subjectId', 'licenseId', 'protocolId', 'mtypeClassId'].includes(
+            field.path
+          )
+        )
+        .every((field) => typeof field.remote?.validate === 'function')
+    ).toBe(true);
+  });
+
+  it('uses remote validation to distinguish zero, one, and many matches', async () => {
+    const services = {
+      searchBrainRegions: vi.fn(async (query: string) => {
+        if (query === 'Cerebellu') {
+          return [{ value: 'brain-region-1', label: 'Cerebellum' }];
+        }
+
+        if (query === 'Cortex') {
+          return [
+            { value: 'brain-region-2', label: 'Cortex layer 2' },
+            { value: 'brain-region-3', label: 'Cortex layer 5' },
+          ];
+        }
+
+        return [];
+      }),
+      searchBrainRegionsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      searchLicenses: vi.fn(async () => []),
+      searchLicensesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      searchSubjects: vi.fn(async () => []),
+      searchSubjectsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      searchProtocols: vi.fn(async () => []),
+      searchProtocolsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      searchMtypes: vi.fn(async () => []),
+      searchMtypesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      searchPersons: vi.fn(async () => []),
+      searchPersonsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      searchOrganizations: vi.fn(async () => []),
+      searchOrganizationsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      searchConsortia: vi.fn(async () => []),
+      searchConsortiaPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      searchRoles: vi.fn(async () => []),
+      searchRolesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
+      createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
+      createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
+    };
+    const adapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      defaultLicenseId: 'license-1',
+      services,
+    });
+    const session = createImportSessionState({
+      fields: adapter.fields,
+      rows: [adapter.createBlankRow?.() ?? {}],
+    });
+    const row = session.rows[0];
+    const values = Object.fromEntries(
+      Object.entries(row.cells).map(([key, cell]) => [key, cell.rawValue])
+    );
+    const brainRegionField = adapter.fields.find((field) => field.path === 'brainRegionId');
+
+    await expect(
+      brainRegionField?.remote?.validate?.({
+        query: 'Cerebellu',
+        value: 'Cerebellu',
+        row,
+        values,
+        context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+      })
+    ).resolves.toEqual({
+      status: 'valid',
+      resolvedSuggestion: { value: 'brain-region-1', label: 'Cerebellum' },
+    });
+
+    await expect(
+      brainRegionField?.remote?.validate?.({
+        query: 'Cortex',
+        value: 'Cortex',
+        row,
+        values,
+        context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+      })
+    ).resolves.toEqual({
+      status: 'invalid',
+      message: 'Multiple matches found for Brain Region. Choose one in the validator.',
+      suggestions: [
+        { value: 'brain-region-2', label: 'Cortex layer 2' },
+        { value: 'brain-region-3', label: 'Cortex layer 5' },
+      ],
+    });
+
+    await expect(
+      brainRegionField?.remote?.validate?.({
+        query: 'Atlantis',
+        value: 'Atlantis',
+        row,
+        values,
+        context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+      })
+    ).resolves.toEqual({
+      status: 'invalid',
+      message: 'No matches found for Brain Region.',
+      suggestions: [],
+    });
+  });
+
   it('seeds blank rows with the default brain region and license', () => {
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',
@@ -165,14 +279,23 @@ describe('createCellMorphologyImportAdapter', () => {
       createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
       createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
       searchBrainRegions: vi.fn(async () => []),
+      searchBrainRegionsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       searchLicenses: vi.fn(async () => []),
+      searchLicensesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       searchSubjects: vi.fn(async () => []),
+      searchSubjectsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       searchProtocols: vi.fn(async () => []),
+      searchProtocolsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       searchMtypes: vi.fn(async () => []),
+      searchMtypesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       searchPersons: vi.fn(async () => []),
+      searchPersonsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       searchOrganizations: vi.fn(async () => []),
+      searchOrganizationsPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       searchConsortia: vi.fn(async () => []),
+      searchConsortiaPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       searchRoles: vi.fn(async () => []),
+      searchRolesPage: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     };
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',

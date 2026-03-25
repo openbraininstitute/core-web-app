@@ -10,6 +10,7 @@ import { RiSearchLine } from '@remixicon/react';
 import { DatePicker } from 'antd';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
+import { Alert, AlertContent, AlertDescription } from '@/ui/molecules/alert';
 import { Button } from '@/ui/molecules/button';
 import { Card, CardContent } from '@/ui/molecules/card';
 import { Input } from '@/ui/molecules/input';
@@ -702,21 +703,20 @@ export function ValidatorPanel<TPayload, TResult>({
             </div>
 
             <div className="px-4">
-              {/* {activeCell.issues.length > 0 && (
+              {activeCell.issues.length > 0 && (
                 <Alert appearance="light" variant="warning">
                   <AlertContent>
                     <AlertDescription>{activeCell.issues[0]}</AlertDescription>
                   </AlertContent>
                 </Alert>
               )}
- */}
-              {/*  {activeCell.issues.length === 0 && activeCell.remoteState.message && (
+              {activeCell.issues.length === 0 && activeCell.remoteState.message && (
                 <Alert appearance="light" variant="info">
                   <AlertContent>
                     <AlertDescription>{activeCell.remoteState.message}</AlertDescription>
                   </AlertContent>
                 </Alert>
-              )} */}
+              )}
             </div>
 
             {activeCell.remoteState.suggestions.length > 0 && (
