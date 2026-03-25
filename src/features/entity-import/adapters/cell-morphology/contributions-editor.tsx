@@ -53,7 +53,13 @@ function createBlankContribution(): ContributionDraft {
   };
 }
 
-function summarizeContributions(entries: Array<ContributionDraft>): string {
+function isRenderableContribution(entry: ContributionDraft): boolean {
+  return Boolean(
+    entry.agent_type || entry.agent_id || entry.role_id || entry.agent_label || entry.role_label
+  );
+}
+
+export function summarizeContributions(entries: Array<ContributionDraft>): string {
   const completedEntries = entries.filter(
     (entry) => entry.agent_type && entry.agent_id && entry.role_id
   );
@@ -65,11 +71,39 @@ function summarizeContributions(entries: Array<ContributionDraft>): string {
   return `${completedEntries.length} contributor${completedEntries.length === 1 ? '' : 's'}`;
 }
 
-function countRenderableEntries(entries: Array<ContributionDraft>): Array<ContributionDraft> {
-  return entries.filter(
-    (entry) =>
-      entry.agent_type || entry.agent_id || entry.role_id || entry.agent_label || entry.role_label
-  );
+export function countRenderableEntries(
+  entries: Array<ContributionDraft>
+): Array<ContributionDraft> {
+  return entries.filter(isRenderableContribution);
+}
+
+export function getRenderableContributionEntries(entries: unknown): Array<ContributionDraft> {
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+
+  return entries
+    .filter((entry): entry is ContributionDraft => Boolean(entry))
+    .filter(isRenderableContribution);
+}
+
+export function promoteContributionToPrimary(
+  entries: Array<ContributionDraft>,
+  contributionId: string
+): Array<ContributionDraft> {
+  const targetIndex = entries.findIndex((entry) => entry.id === contributionId);
+  if (targetIndex <= 0) {
+    return entries;
+  }
+
+  const nextEntries = [...entries];
+  const [selectedEntry] = nextEntries.splice(targetIndex, 1);
+  if (!selectedEntry) {
+    return entries;
+  }
+
+  nextEntries.unshift(selectedEntry);
+  return nextEntries;
 }
 
 function createSuggestionResponse<T>(
@@ -238,9 +272,9 @@ export function ContributionsEditor({
           >
             <div
               data-testid={`contribution-row-layout-${index}`}
-              className="flex flex-col flex-nowrap items-start w-full gap-4"
+              className="flex flex-col  flex-nowrap items-start w-full gap-4"
             >
-              <div className="space-y-2 w-full min-w-0">
+              <div className="w-full shrink-0 space-y-2">
                 <div className="text-sm font-medium text-neutral-700">Contributor type</div>
                 <AsyncSelect<ContributionSelectFilters, ISuggestion>
                   id={contributorTypeId}
@@ -274,7 +308,7 @@ export function ContributionsEditor({
                 />
               </div>
 
-              <div className="w-full min-w-0 space-y-2">
+              <div className="min-w-0 w-full space-y-2">
                 <div className="text-sm font-medium text-neutral-700">Contributor</div>
                 <AsyncSelect<ContributionSelectFilters, ISuggestion>
                   id={contributorInputId}
@@ -324,7 +358,7 @@ export function ContributionsEditor({
                 />
               </div>
 
-              <div className="w-full min-w-0 space-y-2">
+              <div className="min-w-0 w-full space-y-2">
                 <div className="text-sm font-medium text-neutral-700">Role</div>
                 <AsyncSelect<ContributionSelectFilters, ISuggestion>
                   id={roleInputId}

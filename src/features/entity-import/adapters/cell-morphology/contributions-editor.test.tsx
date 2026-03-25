@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useMemo, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -120,10 +120,89 @@ function ContributionEditorHarness({
   );
 }
 
+function ContributionSummaryHarness({
+  initialEntries,
+  onSetCustomValue,
+}: {
+  initialEntries: Array<Record<string, unknown>>;
+  onSetCustomValue?: ReturnType<typeof vi.fn>;
+}) {
+  const adapter = useMemo(
+    () =>
+      createCellMorphologyImportAdapter({
+        defaultBrainRegionId: 'brain-region-1',
+        services: {} as CellMorphologyImportServices,
+      }),
+    []
+  );
+  const contributionsField = adapter.fields.find((field) => field.path === 'contributions');
+  if (!contributionsField?.tableRenderer) {
+    throw new Error('Expected contributions field table renderer');
+  }
+
+  const [cell, setCell] = useState<ImportCellState>(() => createContributionCell(initialEntries));
+  const row = useMemo(() => createContributionRow(cell), [cell]);
+  const session = useMemo<ImportSessionState>(
+    () => ({
+      fields: adapter.fields,
+      rows: [row],
+      selectedCell: null,
+      notifications: [],
+      summary: {
+        canSubmit: false,
+        invalidRequiredCellCount: 0,
+      },
+    }),
+    [adapter.fields, row]
+  );
+  const actions = useMemo(() => {
+    const baseActions = createMockActions();
+    return {
+      ...baseActions,
+      setCustomValue: (params: {
+        rowId: string;
+        fieldPath: string;
+        rawValue: string;
+        displayValue?: string | null;
+        parsedValue?: unknown;
+      }) => {
+        onSetCustomValue?.(params);
+        setCell((current) => ({
+          ...current,
+          rawValue: params.rawValue,
+          displayValue: params.displayValue ?? null,
+          parsedValue: params.parsedValue ?? params.rawValue,
+        }));
+      },
+    } satisfies EntityImportActions;
+  }, [onSetCustomValue]);
+
+  return contributionsField.tableRenderer({
+    field: contributionsField,
+    cell,
+    row,
+    session,
+    context,
+    actions,
+  });
+}
+
 const context: EntityImportRuntimeContext = {
   projectId: 'project-1',
   virtualLabId: 'lab-1',
 };
+
+function getVisibleContributionTooltipList(): HTMLElement {
+  const visibleTooltipList = screen
+    .getAllByTestId('contribution-tooltip-list')
+    .find((element) => element.closest('[data-slot="tooltip-content"]'));
+
+  if (!visibleTooltipList) {
+    throw new Error('Expected visible contribution tooltip list');
+  }
+
+  return visibleTooltipList;
+}
 
 describe('ContributionsEditor', () => {
   it('adds a blank contribution row when clicking add contribution', async () => {
@@ -270,62 +349,130 @@ describe('ContributionsEditor', () => {
     );
   });
 
-  it('renders a full-height single-contributor preview with an overflow indicator', () => {
-    const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      services: {} as CellMorphologyImportServices,
-    });
-    const contributionsField = adapter.fields.find((field) => field.path === 'contributions');
-    if (!contributionsField?.tableRenderer) {
-      throw new Error('Expected contributions field table renderer');
-    }
-
-    const cell = createContributionCell([
-      {
-        id: 'contribution-1',
-        agent_type: 'person',
-        agent_id: 'person-1',
-        agent_label: 'Alice Example',
-        role_id: 'role-1',
-        role_label: 'Author',
-      },
-      {
-        id: 'contribution-2',
-        agent_type: 'person',
-        agent_id: 'person-2',
-        agent_label: 'Bob Example',
-        role_id: 'role-2',
-        role_label: 'Reviewer',
-      },
-    ]);
-    const row = createContributionRow(cell);
-    const session: ImportSessionState = {
-      fields: adapter.fields,
-      rows: [row],
-      selectedCell: null,
-      notifications: [],
-      summary: {
-        canSubmit: false,
-        invalidRequiredCellCount: 0,
-      },
-    };
+  it('renders a full-height single-contributor preview with an overflow count tooltip', async () => {
+    const user = userEvent.setup();
 
     render(
-      contributionsField.tableRenderer({
-        field: contributionsField,
-        cell,
-        row,
-        session,
-        context,
-        actions: createMockActions(),
+      <ContributionSummaryHarness
+        initialEntries={[
+          {
+            id: 'contribution-1',
+            agent_type: 'person',
+            agent_id: 'person-1',
+            agent_label: 'Alice Example',
+            role_id: 'role-1',
+            role_label: 'Author',
+          },
+          {
+            id: 'contribution-2',
+            agent_type: 'person',
+            agent_id: 'person-2',
+            agent_label: 'Bob Example',
+            role_id: 'role-2',
+            role_label: 'Reviewer',
+          },
+          {
+            id: 'contribution-3',
+            agent_type: 'person',
+            agent_id: 'person-3',
+            agent_label: 'Carol Example',
+            role_id: 'role-3',
+            role_label: 'Curator',
+          },
+        ]}
+      />
+    );
+
+    const mainButton = screen.getByRole('button', { name: 'Contributions row 1' });
+
+    expect(mainButton).toHaveClass('min-h-[52px]');
+    expect(within(mainButton).getByText('Alice Example')).toBeInTheDocument();
+    expect(screen.queryByText('Bob Example')).not.toBeInTheDocument();
+    expect(screen.queryByText('3 contributors')).not.toBeInTheDocument();
+
+    const overflowTrigger = screen.getByRole('button', { name: 'Show 2 more contributions' });
+    expect(overflowTrigger).toHaveTextContent('2');
+
+    await user.hover(overflowTrigger);
+
+    await waitFor(() => {
+      expect(getVisibleContributionTooltipList()).toBeInTheDocument();
+    });
+
+    const tooltipList = getVisibleContributionTooltipList();
+    expect(tooltipList).toHaveClass('max-h-64', 'overflow-y-auto');
+    expect(within(tooltipList).getByText('Alice Example')).toBeInTheDocument();
+    expect(within(tooltipList).getByText('Bob Example')).toBeInTheDocument();
+    expect(within(tooltipList).getByText('Carol Example')).toBeInTheDocument();
+    expect(within(tooltipList).getByText('Curator')).toBeInTheDocument();
+  });
+
+  it('promotes a tooltip contribution to the main preview when selected', async () => {
+    const user = userEvent.setup();
+    const setCustomValueSpy = vi.fn();
+
+    render(
+      <ContributionSummaryHarness
+        onSetCustomValue={setCustomValueSpy}
+        initialEntries={[
+          {
+            id: 'contribution-1',
+            agent_type: 'person',
+            agent_id: 'person-1',
+            agent_label: 'Alice Example',
+            role_id: 'role-1',
+            role_label: 'Author',
+          },
+          {
+            id: 'contribution-2',
+            agent_type: 'person',
+            agent_id: 'person-2',
+            agent_label: 'Bob Example',
+            role_id: 'role-2',
+            role_label: 'Reviewer',
+          },
+          {
+            id: 'contribution-3',
+            agent_type: 'person',
+            agent_id: 'person-3',
+            agent_label: 'Carol Example',
+            role_id: 'role-3',
+            role_label: 'Curator',
+          },
+        ]}
+      />
+    );
+
+    await user.hover(screen.getByRole('button', { name: 'Show 2 more contributions' }));
+    await waitFor(() => {
+      expect(getVisibleContributionTooltipList()).toBeInTheDocument();
+    });
+    await user.click(
+      within(getVisibleContributionTooltipList()).getByRole('button', {
+        name: 'Make Bob Example primary contribution',
       })
     );
 
-    expect(screen.getByRole('button', { name: 'Contributions row 1' })).toHaveClass('min-h-[52px]');
-    expect(screen.getByText('Alice Example')).toBeInTheDocument();
-    expect(screen.queryByText('Bob Example')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('More contributions')).toBeInTheDocument();
-    expect(screen.queryByText('2 contributors')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        within(screen.getByRole('button', { name: 'Contributions row 1' })).getByText('Bob Example')
+      ).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(document.querySelector('[data-slot="tooltip-content"]')).toBeNull();
+    });
+    expect(setCustomValueSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        rowId: 'row-1',
+        fieldPath: 'contributions',
+        rawValue: '3 contributors',
+        parsedValue: [
+          expect.objectContaining({ id: 'contribution-2', agent_label: 'Bob Example' }),
+          expect.objectContaining({ id: 'contribution-1', agent_label: 'Alice Example' }),
+          expect.objectContaining({ id: 'contribution-3', agent_label: 'Carol Example' }),
+        ],
+      })
+    );
   });
 
   it('keeps contribution fields aligned in a single row', () => {
