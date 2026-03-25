@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -6,6 +7,7 @@ import { z } from 'zod';
 import { ImportInputType } from '../core/contracts';
 import { EntityImportFeature } from '../index';
 
+import type { ReactElement } from 'react';
 import type { EntityImportAdapter } from '../core/adapter';
 
 const adapter: EntityImportAdapter<Record<string, string>, { id: string }> = {
@@ -52,11 +54,21 @@ const adapter: EntityImportAdapter<Record<string, string>, { id: string }> = {
   submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
 };
 
+function renderWithQueryClient(ui: ReactElement) {
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+}
+
 describe('EntityImportFeature', () => {
   it('stages a selected remote suggestion and applies it after accepting the draft', async () => {
     const user = userEvent.setup();
 
-    render(
+    renderWithQueryClient(
       <EntityImportFeature
         adapter={adapter}
         context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}

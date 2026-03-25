@@ -16,7 +16,7 @@ import { createAndRegisterMorphometrics } from '@/api/one/cell-morphology';
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { WorkspaceContext } from '@/types/common';
 import type { TAgentType } from '@/ui/segments/contribute/shared/types';
-import type { EntityImportRuntimeContext } from '../../core/adapter';
+import type { EntityImportRuntimeContext, RemoteSearchPageResult } from '../../core/adapter';
 import type { ISuggestion } from '../../core/contracts';
 
 export interface CellMorphologyContributionInput {
@@ -48,32 +48,86 @@ export interface CellMorphologyImportServices {
     query: string,
     context: EntityImportRuntimeContext
   ) => Promise<Array<ISuggestion>>;
+  searchBrainRegionsPage: (
+    query: string,
+    context: EntityImportRuntimeContext,
+    pageParam: number,
+    pageSize: number
+  ) => Promise<RemoteSearchPageResult>;
   searchLicenses: (
     query: string,
     context: EntityImportRuntimeContext
   ) => Promise<Array<ISuggestion>>;
+  searchLicensesPage: (
+    query: string,
+    context: EntityImportRuntimeContext,
+    pageParam: number,
+    pageSize: number
+  ) => Promise<RemoteSearchPageResult>;
   searchSubjects: (
     query: string,
     context: EntityImportRuntimeContext
   ) => Promise<Array<ISuggestion>>;
+  searchSubjectsPage: (
+    query: string,
+    context: EntityImportRuntimeContext,
+    pageParam: number,
+    pageSize: number
+  ) => Promise<RemoteSearchPageResult>;
   searchProtocols: (
     query: string,
     context: EntityImportRuntimeContext
   ) => Promise<Array<ISuggestion>>;
+  searchProtocolsPage: (
+    query: string,
+    context: EntityImportRuntimeContext,
+    pageParam: number,
+    pageSize: number
+  ) => Promise<RemoteSearchPageResult>;
   searchMtypes: (query: string, context: EntityImportRuntimeContext) => Promise<Array<ISuggestion>>;
+  searchMtypesPage: (
+    query: string,
+    context: EntityImportRuntimeContext,
+    pageParam: number,
+    pageSize: number
+  ) => Promise<RemoteSearchPageResult>;
   searchPersons: (
     query: string,
     context: EntityImportRuntimeContext
   ) => Promise<Array<ISuggestion>>;
+  searchPersonsPage: (
+    query: string,
+    context: EntityImportRuntimeContext,
+    pageParam: number,
+    pageSize: number
+  ) => Promise<RemoteSearchPageResult>;
   searchOrganizations: (
     query: string,
     context: EntityImportRuntimeContext
   ) => Promise<Array<ISuggestion>>;
+  searchOrganizationsPage: (
+    query: string,
+    context: EntityImportRuntimeContext,
+    pageParam: number,
+    pageSize: number
+  ) => Promise<RemoteSearchPageResult>;
   searchConsortia: (
     query: string,
     context: EntityImportRuntimeContext
   ) => Promise<Array<ISuggestion>>;
+  searchConsortiaPage: (
+    query: string,
+    context: EntityImportRuntimeContext,
+    pageParam: number,
+    pageSize: number
+  ) => Promise<RemoteSearchPageResult>;
   searchRoles: (query: string, context: EntityImportRuntimeContext) => Promise<Array<ISuggestion>>;
+  searchRolesPage: (
+    query: string,
+    context: EntityImportRuntimeContext,
+    pageParam: number,
+    pageSize: number
+  ) => Promise<RemoteSearchPageResult>;
   registerMorphology: (args: {
     file: File;
     metadata: CellMorphologyRegistrationMetadata;
@@ -111,36 +165,66 @@ function toSuggestion(value: string, label: string, description?: string): ISugg
 }
 
 function filterSuggestions(suggestions: Array<ISuggestion>, query: string): Array<ISuggestion> {
+  return filterSuggestionsAll(suggestions, query).slice(0, 12);
+}
+
+function filterSuggestionsAll(suggestions: Array<ISuggestion>, query: string): Array<ISuggestion> {
   const normalizedQuery = normalizeQuery(query);
-  return suggestions
-    .filter((suggestion) => {
-      const haystack = `${suggestion.label} ${suggestion.description ?? ''}`.toLowerCase();
-      return haystack.includes(normalizedQuery);
-    })
-    .slice(0, 12);
+  return suggestions.filter((suggestion) => {
+    const haystack = `${suggestion.label} ${suggestion.description ?? ''}`.toLowerCase();
+    return haystack.includes(normalizedQuery);
+  });
 }
 
 function flattenBrainRegions(node: IBrainRegionHierarchy): Array<IBrainRegionHierarchy> {
   return [node, ...(node.children?.flatMap(flattenBrainRegions) ?? [])];
 }
 
+/**
+ * Entity Core does not expose a paginated brain-region search like `/license` or
+ * `/cell-morphology-protocol`. We load the default hierarchy once (UUID ids for
+ * registration), then paginate filtered matches in memory with the same offset-based
+ * `pageParam` / `nextPageParam` contract as server-paged fields.
+ */
+let brainRegionFlatSuggestionsPromise: Promise<Array<ISuggestion>> | null = null;
+
+function getBrainRegionFlatSuggestions(): Promise<Array<ISuggestion>> {
+  brainRegionFlatSuggestionsPromise ??= (async () => {
+    const hierarchy = await getBrainRegionHierarchy({});
+    return flattenBrainRegions(hierarchy).map((region) =>
+      toSuggestion(region.id, region.name, region.acronym ?? undefined)
+    );
+  })();
+  return brainRegionFlatSuggestionsPromise;
+}
+
+function slicePage(
+  items: Array<ISuggestion>,
+  pageParam: number,
+  pageSize: number
+): RemoteSearchPageResult {
+  const suggestions = items.slice(pageParam, pageParam + pageSize);
+  const nextPageParam = pageParam + pageSize < items.length ? pageParam + pageSize : null;
+  return { suggestions, nextPageParam };
+}
+
 export function createCellMorphologyImportServices(): CellMorphologyImportServices {
   return {
     async searchBrainRegions(query) {
-      const hierarchy = await getBrainRegionHierarchy({});
-
-      const suggestions = flattenBrainRegions(hierarchy).map((region) =>
-        toSuggestion(region.id, region.name, region.acronym ?? undefined)
-      );
-
+      const suggestions = await getBrainRegionFlatSuggestions();
       return filterSuggestions(suggestions, query);
+    },
+    async searchBrainRegionsPage(query, _context, pageParam, pageSize) {
+      const suggestions = await getBrainRegionFlatSuggestions();
+      const filtered = filterSuggestionsAll(suggestions, query);
+      return slicePage(filtered, pageParam, pageSize);
     },
     async searchLicenses(query, context) {
       const response = await getLicenses({
         filters: {
           page: 1,
           page_size: 20,
-          ilike_search: query,
+          ...(query.trim() ? { ilike_search: query } : {}),
         },
         context: toWorkspaceContext(context),
       });
@@ -149,12 +233,31 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
         toSuggestion(license.id, license.label ?? license.name)
       );
     },
+    async searchLicensesPage(query, context, pageParam, pageSize) {
+      const page = Math.floor(pageParam / pageSize) + 1;
+      const response = await getLicenses({
+        filters: {
+          page,
+          page_size: pageSize,
+          ...(query.trim() ? { ilike_search: `*${query}*` } : {}),
+        },
+        context: toWorkspaceContext(context),
+      });
+
+      const suggestions = response.data.map((license) =>
+        toSuggestion(license.id, license.label ?? license.name)
+      );
+      return {
+        suggestions,
+        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
+      };
+    },
     async searchSubjects(query, context) {
       const response = await getSubjects({
         filters: {
           page: 1,
           page_size: 20,
-          search: query,
+          ilike_search: `*${query}*`,
         },
         context: toWorkspaceContext(context),
       });
@@ -163,12 +266,31 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
         .filter((subject) => subject.name.trim().toLowerCase() !== 'unknown')
         .map((subject) => toSuggestion(subject.id, subject.name));
     },
+    async searchSubjectsPage(query, context, pageParam, pageSize) {
+      const page = Math.floor(pageParam / pageSize) + 1;
+      const response = await getSubjects({
+        filters: {
+          page,
+          page_size: pageSize,
+          ilike_search: `*${query}*`,
+        },
+        context: toWorkspaceContext(context),
+      });
+
+      const suggestions = response.data
+        .filter((subject) => subject.name.trim().toLowerCase() !== 'unknown')
+        .map((subject) => toSuggestion(subject.id, subject.name));
+      return {
+        suggestions,
+        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
+      };
+    },
     async searchProtocols(query, context) {
       const response = await getProtocols({
         filters: {
           page: 1,
           page_size: 20,
-          ilike_search: query,
+          ...(query.trim() ? { ilike_search: `*${query}*` } : {}),
         },
         context: toWorkspaceContext(context),
       });
@@ -180,12 +302,34 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
         )
       );
     },
+    async searchProtocolsPage(query, context, pageParam, pageSize) {
+      const page = Math.floor(pageParam / pageSize) + 1;
+      const response = await getProtocols({
+        filters: {
+          page,
+          page_size: pageSize,
+          ...(query.trim() ? { ilike_search: `*${query}*` } : {}),
+        },
+        context: toWorkspaceContext(context),
+      });
+
+      const suggestions = response.data.map((protocol) =>
+        toSuggestion(
+          protocol.id,
+          `${protocol.name ?? 'Unnamed protocol'} (${protocol.generation_type})`
+        )
+      );
+      return {
+        suggestions,
+        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
+      };
+    },
     async searchMtypes(query, context) {
       const response = await getMtypes({
         filters: {
           page: 1,
           page_size: 20,
-          ilike_search: query,
+          ilike_search: `*${query}*`,
         },
         ctx: toWorkspaceContext(context),
       });
@@ -193,6 +337,25 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
       return response.data.map((mtype) =>
         toSuggestion(mtype.id, mtype.pref_label, mtype.alt_label ?? undefined)
       );
+    },
+    async searchMtypesPage(query, context, pageParam, pageSize) {
+      const page = Math.floor(pageParam / pageSize) + 1;
+      const response = await getMtypes({
+        filters: {
+          page,
+          page_size: pageSize,
+          ilike_search: `*${query}*`,
+        },
+        ctx: toWorkspaceContext(context),
+      });
+
+      const suggestions = response.data.map((mtype) =>
+        toSuggestion(mtype.id, mtype.pref_label, mtype.alt_label ?? undefined)
+      );
+      return {
+        suggestions,
+        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
+      };
     },
     async searchPersons(query) {
       const response = await getPersons({
@@ -204,6 +367,22 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
       });
 
       return response.data.map((person) => toSuggestion(person.id, person.pref_label));
+    },
+    async searchPersonsPage(query, _context, pageParam, pageSize) {
+      const page = Math.floor(pageParam / pageSize) + 1;
+      const response = await getPersons({
+        filters: {
+          page,
+          page_size: pageSize,
+          pref_label__ilike: query,
+        },
+      });
+
+      const suggestions = response.data.map((person) => toSuggestion(person.id, person.pref_label));
+      return {
+        suggestions,
+        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
+      };
     },
     async searchOrganizations(query) {
       const response = await getOrganizations({
@@ -218,6 +397,24 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
         toSuggestion(organization.id, organization.pref_label)
       );
     },
+    async searchOrganizationsPage(query, _context, pageParam, pageSize) {
+      const page = Math.floor(pageParam / pageSize) + 1;
+      const response = await getOrganizations({
+        filters: {
+          page,
+          page_size: pageSize,
+          pref_label__ilike: query,
+        },
+      });
+
+      const suggestions = response.data.map((organization) =>
+        toSuggestion(organization.id, organization.pref_label)
+      );
+      return {
+        suggestions,
+        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
+      };
+    },
     async searchConsortia(query) {
       const response = await getConsortia({
         filters: {
@@ -228,6 +425,24 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
       });
 
       return response.data.map((consortium) => toSuggestion(consortium.id, consortium.pref_label));
+    },
+    async searchConsortiaPage(query, _context, pageParam, pageSize) {
+      const page = Math.floor(pageParam / pageSize) + 1;
+      const response = await getConsortia({
+        filters: {
+          page,
+          page_size: pageSize,
+          pref_label__ilike: query,
+        },
+      });
+
+      const suggestions = response.data.map((consortium) =>
+        toSuggestion(consortium.id, consortium.pref_label)
+      );
+      return {
+        suggestions,
+        nextPageParam: suggestions.length === pageSize ? pageParam + suggestions.length : null,
+      };
     },
     async searchRoles(query, context) {
       const response = await getRoles({
@@ -242,6 +457,21 @@ export function createCellMorphologyImportServices(): CellMorphologyImportServic
         response.data.map((role) => toSuggestion(role.id, role.name)),
         query
       );
+    },
+    async searchRolesPage(query, context, pageParam, pageSize) {
+      const response = await getRoles({
+        filters: {
+          page: 1,
+          page_size: 100,
+        },
+        context: toWorkspaceContext(context),
+      });
+
+      const all = filterSuggestionsAll(
+        response.data.map((role) => toSuggestion(role.id, role.name)),
+        query
+      );
+      return slicePage(all, pageParam, pageSize);
     },
     async registerMorphology({ file, metadata, context }) {
       return await createAndRegisterMorphometrics(file, metadata, toWorkspaceContext(context));

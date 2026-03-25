@@ -26,6 +26,20 @@ export interface RemoteValidationArgs extends RemoteSearchArgs {
   value: string;
 }
 
+/** Page size for validator remote suggestions (first page + load more). */
+export const ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE = 5;
+
+export interface RemoteSearchPageResult {
+  suggestions: Array<ISuggestion>;
+  /** Offset for the next page, or null when there are no more results. */
+  nextPageParam: number | null;
+}
+
+export type RemoteSearchPagedArgs = RemoteSearchArgs & {
+  pageParam: number;
+  pageSize: number;
+};
+
 export const RemoteValidationResultStatus = {
   Valid: 'valid',
   Invalid: 'invalid',
@@ -61,6 +75,8 @@ export interface AdapterFieldDefinition extends ImportFieldDefinition {
   getDisabledMessage?: (values: FlatImportValues) => string;
   remote?: {
     search?: (args: RemoteSearchArgs) => Promise<Array<ISuggestion>>;
+    /** Prefer this for server-backed lists; enables infinite query + load more in the validator. */
+    searchPage?: (args: RemoteSearchPagedArgs) => Promise<RemoteSearchPageResult>;
     validate?: (args: RemoteValidationArgs) => Promise<RemoteValidationResult>;
   };
   tableRenderer?: (props: TableCellRendererProps) => ReactNode;
@@ -109,6 +125,7 @@ export interface EntityImportActions {
     fieldPath: string;
     query: string;
   }) => Promise<void>;
+  loadMoreSuggestions: () => void;
   selectCell: (params: { rowId: string; fieldPath: string }) => void;
   setCustomValue: (params: {
     rowId: string;
@@ -123,6 +140,6 @@ export interface EntityImportActions {
     file: File | null;
     displayValue?: string | null;
   }) => void;
-  submitRows: () => Promise<void>;
+  submitRows: () => void;
   updateCellValue: (params: { rowId: string; fieldPath: string; rawValue: string }) => void;
 }

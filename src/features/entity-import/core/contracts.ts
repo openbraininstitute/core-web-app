@@ -80,11 +80,18 @@ export interface ImportFieldDefinition {
   columnWidth?: number;
 }
 
+export interface RemoteSuggestionPaging {
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+}
+
 export interface RemoteState {
   status: TRemoteValidationStatus;
   suggestions: Array<ISuggestion>;
   selectedSuggestion: ISuggestion | null;
   message: string | null;
+  /** Present when remote search supports pagination (validator load more). */
+  suggestionPaging?: RemoteSuggestionPaging;
 }
 
 export interface CellCorrectionDraft {
