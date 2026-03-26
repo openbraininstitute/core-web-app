@@ -7,6 +7,7 @@ import type {
   IImportFieldDefinition,
   IImportRowState,
   IImportSessionState,
+  IRemoteState,
   ISuggestion,
   TFlatImportValues,
 } from '@/features/entity-import/core/contracts';
@@ -58,12 +59,12 @@ export interface RemoteValidationResult {
 }
 
 export interface TableCellRendererProps {
-  field: AdapterFieldDefinition;
+  field: IAdapterFieldDefinition;
   cell: IImportCellState;
   row: IImportRowState;
   session: IImportSessionState;
   context: EntityImportRuntimeContext;
-  actions: EntityImportActions;
+  actions: IEntityImportActions;
 }
 
 export interface ValidatorDraftValue {
@@ -96,13 +97,20 @@ export interface AdapterFieldValidationArgs {
   values: TFlatImportValues;
 }
 
-export interface AdapterFieldCsvConfig extends IImportFieldCsvConfig {
+export interface ValidatorSuggestionDetailsArgs {
+  suggestion: ISuggestion;
+  cell: IImportCellState;
+  row: IImportRowState;
+  values: TFlatImportValues;
+}
+
+export interface IAdapterFieldCsvConfig extends IImportFieldCsvConfig {
   hydrateCell?: (
     args: CsvFieldHydrationArgs
   ) => Promise<CsvHydratedCellValue> | CsvHydratedCellValue;
 }
 
-export interface ImportFileFieldConfig {
+export interface IImportFileFieldConfig {
   accept?: Array<string>;
   allowedExtensions?: Array<string>;
   maxSizeBytes?: number;
@@ -110,25 +118,32 @@ export interface ImportFileFieldConfig {
   buttonLabel?: string;
 }
 
-export interface EntityImportTemplateGuideConfig {
+export interface IValidatorSuggestionState extends IRemoteState {
+  rowId: string | null;
+  fieldPath: string | null;
+  query: string;
+}
+
+export interface IEntityImportTemplateGuideConfig {
   entityType: TExtendedEntitiesTypeDict;
   guideFileName: string;
 }
 
-export interface AdapterFieldEnablementArgs {
+export interface IAdapterFieldEnablementArgs {
   values: TFlatImportValues;
   row: IImportRowState;
 }
 
-export interface AdapterFieldDefinition extends IImportFieldDefinition {
+export interface IAdapterFieldDefinition extends IImportFieldDefinition {
   placeholder?: string;
   helpText?: string;
   validatorManualApplyMode?: 'commit' | 'stage';
-  csv?: AdapterFieldCsvConfig;
+  csv?: IAdapterFieldCsvConfig;
   options?: Array<ISuggestion>;
-  fileConfig?: ImportFileFieldConfig;
-  isEnabled?: (args: AdapterFieldEnablementArgs) => boolean;
-  getDisabledMessage?: (args: AdapterFieldEnablementArgs) => string;
+  validatorSuggestionDetails?: (args: ValidatorSuggestionDetailsArgs) => ReactNode;
+  fileConfig?: IImportFileFieldConfig;
+  isEnabled?: (args: IAdapterFieldEnablementArgs) => boolean;
+  getDisabledMessage?: (args: IAdapterFieldEnablementArgs) => string;
   getValidationIssues?: (args: AdapterFieldValidationArgs) => Array<string>;
   remote?: {
     query?: (args: RemoteSearchPagedArgs) => Promise<RemoteSearchPageResult>;
@@ -138,21 +153,21 @@ export interface AdapterFieldDefinition extends IImportFieldDefinition {
   panelRenderer?: (props: ValidatorFieldRendererProps) => ReactNode;
 }
 
-export interface SubmitRowArgs<TPayload> {
+export interface ISubmitRowArgs<TPayload> {
   payload: TPayload;
   row: IImportRowState;
   values: TFlatImportValues;
   context: EntityImportRuntimeContext;
 }
 
-export interface EntityImportAdapter<TPayload = unknown, TResult = unknown> {
+export interface IEntityImportAdapter<TPayload = unknown, TResult = unknown> {
   id: string;
   title: string;
   description?: string;
   submitLabel?: string;
   templateFileName: string;
-  templateGuide?: EntityImportTemplateGuideConfig;
-  fields: Array<AdapterFieldDefinition>;
+  templateGuide?: IEntityImportTemplateGuideConfig;
+  fields: Array<IAdapterFieldDefinition>;
   schema: ZodType<TPayload>;
   createBlankRow?: () => TFlatImportValues;
   buildPayload: (args: {
@@ -160,10 +175,10 @@ export interface EntityImportAdapter<TPayload = unknown, TResult = unknown> {
     values: TFlatImportValues;
     context: EntityImportRuntimeContext;
   }) => TPayload;
-  submitRow: (args: SubmitRowArgs<TPayload>) => Promise<TResult>;
+  submitRow: (args: ISubmitRowArgs<TPayload>) => Promise<TResult>;
 }
 
-export interface EntityImportActions {
+export interface IEntityImportActions {
   addRow: () => void;
   acceptCorrection: (params: { rowId: string; fieldPath: string }) => void;
   rejectCorrection: (params: { rowId: string; fieldPath: string }) => void;

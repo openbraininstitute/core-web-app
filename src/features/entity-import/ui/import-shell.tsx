@@ -18,19 +18,27 @@ import {
 import { cn } from '@/utils/css-class';
 
 import type {
-  EntityImportActions,
-  EntityImportAdapter,
   EntityImportRuntimeContext,
+  IEntityImportActions,
+  IEntityImportAdapter,
+  IValidatorSuggestionState,
 } from '@/features/entity-import/core/adapter';
 import type { IImportSessionState } from '@/features/entity-import/core/contracts';
 
 interface ImportShellProps<TPayload, TResult> {
   title: string | null;
-  adapter: EntityImportAdapter<TPayload, TResult>;
+  adapter: IEntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
   session: IImportSessionState;
-  actions: EntityImportActions;
+  actions: IEntityImportActions;
   isSubmitting: boolean;
+  csvUploadPhase: string;
+  csvRowValidationProgress: {
+    active: boolean;
+    totalRowCount: number;
+    completedRowCount: number;
+  };
+  validatorSuggestions: IValidatorSuggestionState;
   onClose: () => void;
   onDownloadCsvTemplate: () => void;
   onDownloadGuideTemplate: () => void;
@@ -44,12 +52,24 @@ export function ImportShell<TPayload, TResult>({
   session,
   actions,
   isSubmitting,
+  csvUploadPhase,
+  csvRowValidationProgress,
+  validatorSuggestions,
   onClose,
   onDownloadCsvTemplate,
   onDownloadGuideTemplate,
   onUploadCsvFile,
 }: ImportShellProps<TPayload, TResult>) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const csvUploadMessage =
+    csvUploadPhase === 'parsing'
+      ? 'Parsing CSV...'
+      : csvUploadPhase === 'hydrating' || csvUploadPhase === 'preparing-rows'
+        ? 'Preparing CSV rows...'
+        : null;
+  const csvValidationMessage = csvRowValidationProgress.active
+    ? `Validating ${csvRowValidationProgress.completedRowCount} of ${csvRowValidationProgress.totalRowCount} row(s)...`
+    : null;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-5 overflow-hidden">
@@ -94,6 +114,7 @@ export function ImportShell<TPayload, TResult>({
             type="button"
             variant="outline"
             size="md"
+            disabled={csvUploadPhase !== 'idle'}
             onClick={() => uploadInputRef.current?.click()}
           >
             <span>Upload CSV</span>
@@ -125,7 +146,32 @@ export function ImportShell<TPayload, TResult>({
 
       <div className="grid min-h-0 flex-1 overflow-hidden gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <section className="min-h-0 overflow-hidden bg-white">
-          <ImportTable adapter={adapter} context={context} session={session} actions={actions} />
+          <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
+            {csvValidationMessage ? (
+              <div className="mx-4 mt-4 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-medium text-primary-9">
+                {csvValidationMessage}
+              </div>
+            ) : null}
+            <div className="relative min-h-0 flex-1">
+              <ImportTable
+                adapter={adapter}
+                context={context}
+                session={session}
+                actions={actions}
+              />
+              {csvUploadMessage ? (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/90 px-6 text-center">
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-semibold text-primary-9 shadow-sm"
+                  >
+                    {csvUploadMessage}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </section>
         <section className="min-h-0">
           <ValidatorPanel
@@ -134,6 +180,7 @@ export function ImportShell<TPayload, TResult>({
             session={session}
             actions={actions}
             isSubmitting={isSubmitting}
+            validatorSuggestions={validatorSuggestions}
           />
         </section>
       </div>

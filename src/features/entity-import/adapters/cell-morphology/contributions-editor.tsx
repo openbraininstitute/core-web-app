@@ -18,8 +18,8 @@ import type {
   ICellMorphologyImportServices,
 } from '@/features/entity-import/adapters/cell-morphology/services';
 import type {
-  EntityImportActions,
   EntityImportRuntimeContext,
+  IEntityImportActions,
 } from '@/features/entity-import/core/adapter';
 import type {
   IImportCellState,
@@ -247,7 +247,7 @@ interface ContributionsEditorProps {
   row: IImportRowState;
   fieldPath: string;
   context: EntityImportRuntimeContext;
-  actions: EntityImportActions;
+  actions: IEntityImportActions;
   services: Pick<
     ICellMorphologyImportServices,
     'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
@@ -288,7 +288,7 @@ export function ContributionsEditor({
   );
 
   return (
-    <div className="space-y-4 px-4 pb-4">
+    <div className="space-y-2 px-4">
       {storedEntries.map((entry, index) => {
         const contributorTypeId = `contribution-type-${row.id}-${entry.id}`;
         const contributorInputId = `contribution-agent-${row.id}-${entry.id}`;
@@ -301,7 +301,7 @@ export function ContributionsEditor({
         return (
           <div
             key={entry.id}
-            className="rounded-3xl border border-neutral-200 bg-white p-4 shadow-xs"
+            className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
           >
             <div
               data-testid={`contribution-row-layout-${index}`}
@@ -445,7 +445,7 @@ export function ContributionsEditor({
                   variant="outline"
                   size="sm"
                   className={cn(
-                    'gap-2 rounded-full',
+                    'gap-2 rounded-full active:text-white',
                     storedEntries.length === 1 && 'text-neutral-400'
                   )}
                   disabled={storedEntries.length === 1}
@@ -476,7 +476,7 @@ export function ContributionsEditor({
         type="button"
         variant="outline"
         size="sm"
-        className="ml-auto flex gap-2 rounded-full"
+        className="ml-auto flex gap-2 rounded-full active:text-white"
         onClick={() => syncEntries([...storedEntries, createBlankContribution()])}
       >
         <PlusOutlined />

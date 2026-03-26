@@ -4,9 +4,10 @@ import {
   CheckOutlined,
   ExclamationCircleOutlined,
   LeftOutlined,
+  LoadingOutlined,
   RightOutlined,
 } from '@ant-design/icons';
-import { RiSearchLine } from '@remixicon/react';
+import { RiInfoI, RiSearchLine } from '@remixicon/react';
 import { DatePicker } from 'antd';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
@@ -27,6 +28,7 @@ import {
 } from '@/features/entity-import/core/file-field';
 import {
   formatImportDateDisplayValue,
+  getRowSubmissionValues,
   importDatePickerChangeToRawValue,
   parseImportDatePickerValue,
 } from '@/features/entity-import/core/helpers';
@@ -35,6 +37,10 @@ import {
   ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
   getEntityImportSelectLabel,
 } from '@/features/entity-import/ui/select-styles';
+import {
+  ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
+  ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
+} from '@/features/entity-import/ui/tooltip-styles';
 import { Alert, AlertContent, AlertDescription } from '@/ui/molecules/alert';
 import { Button } from '@/ui/molecules/button';
 import { Card, CardContent } from '@/ui/molecules/card';
@@ -48,22 +54,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/molecules/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type {
-  AdapterFieldDefinition,
-  EntityImportActions,
-  EntityImportAdapter,
   EntityImportRuntimeContext,
+  IAdapterFieldDefinition,
+  IEntityImportActions,
+  IEntityImportAdapter,
+  IValidatorSuggestionState,
   ValidatorDraftValue,
 } from '@/features/entity-import/core/adapter';
 
 interface ValidatorPanelProps<TPayload, TResult> {
-  adapter: EntityImportAdapter<TPayload, TResult>;
+  adapter: IEntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
   session: IImportSessionState;
-  actions: EntityImportActions;
+  actions: IEntityImportActions;
   isSubmitting: boolean;
+  validatorSuggestions: IValidatorSuggestionState;
 }
 
 const ValidatorFieldStatus = {
@@ -98,9 +107,9 @@ function resolveActiveRow(session: IImportSessionState): IImportRowState | null 
 }
 
 function resolveActiveField<TPayload, TResult>(
-  adapter: EntityImportAdapter<TPayload, TResult>,
+  adapter: IEntityImportAdapter<TPayload, TResult>,
   session: IImportSessionState
-): AdapterFieldDefinition | null {
+): IAdapterFieldDefinition | null {
   if (
     session.validatorSelection.fieldPath &&
     session.validatorSelection.fieldPath !== ENTITY_IMPORT_ALL_COLUMNS
@@ -178,7 +187,7 @@ function isDraftValueUnchanged(
 }
 
 function resolveValidatorDisplayValue(
-  field: AdapterFieldDefinition,
+  field: IAdapterFieldDefinition,
   draftValue: ValidatorDraftValue
 ): string {
   if (field.inputType === ImportInputType.Select) {
@@ -193,12 +202,13 @@ function resolveValidatorDisplayValue(
 }
 
 interface SingleColumnValidatorCardProps {
-  field: AdapterFieldDefinition;
+  field: IAdapterFieldDefinition;
   row: IImportRowState;
   fieldPosition: number;
   session: IImportSessionState;
   context: EntityImportRuntimeContext;
-  actions: EntityImportActions;
+  actions: IEntityImportActions;
+  validatorSuggestions: IValidatorSuggestionState;
 }
 
 function SingleColumnValidatorCard({
@@ -208,6 +218,7 @@ function SingleColumnValidatorCard({
   session,
   context,
   actions,
+  validatorSuggestions,
 }: SingleColumnValidatorCardProps) {
   const cell = row.cells[field.path];
   const selectedSuggestion = cell.remoteState.selectedSuggestion ?? null;
@@ -330,6 +341,16 @@ function SingleColumnValidatorCard({
   );
 
   const previewValue = resolveValidatorDisplayValue(field, draftValue);
+  const rowValues = getRowSubmissionValues(row);
+  const activeValidatorSuggestions =
+    validatorSuggestions.rowId === row.id && validatorSuggestions.fieldPath === field.path
+      ? validatorSuggestions
+      : null;
+  const visibleSuggestions =
+    activeValidatorSuggestions?.suggestions ?? cell.remoteState.suggestions;
+  const visibleSuggestionPaging =
+    activeValidatorSuggestions?.suggestionPaging ?? cell.remoteState.suggestionPaging;
+  const visibleMessage = activeValidatorSuggestions?.message ?? cell.remoteState.message;
 
   const goNeighborRow = (delta: number) => {
     const nextIndex = rowPosition + delta;
@@ -407,7 +428,7 @@ function SingleColumnValidatorCard({
           session,
           context,
           actions,
-          suggestions: cell.remoteState.suggestions,
+          suggestions: visibleSuggestions,
           draftValue,
           onDraftChange: updateDraftValue,
         })}
@@ -431,20 +452,26 @@ function SingleColumnValidatorCard({
                 )}
                 value={draftValue.displayValue ?? draftValue.rawValue}
                 onChange={(event) => {
+                  const nextRawValue = event.target.value;
                   updateDraftValue({
-                    rawValue: event.target.value,
+                    rawValue: nextRawValue,
                     displayValue: null,
-                    parsedValue: event.target.value,
+                    parsedValue: nextRawValue,
+                  });
+                  void actions.requestSuggestions({
+                    rowId: row.id,
+                    fieldPath: field.path,
+                    query: nextRawValue,
                   });
                   actions.updateCellValue({
                     rowId: row.id,
                     fieldPath: field.path,
-                    rawValue: event.target.value,
+                    rawValue: nextRawValue,
                   });
                 }}
               />
               <div className="flex items-center gap-2">
-                <RiSearchLine className="text-primary-9 size-5 group-focus-within:text-primary-6 group-focus-within:scale-110 transition-all duration-100" />
+                <RiSearchLine className="text-primary-9 size-4 group-focus-within:text-primary-6 group-focus-within:scale-110 transition-all duration-100" />
               </div>
             </div>
           )}
@@ -592,79 +619,134 @@ function SingleColumnValidatorCard({
               </AlertContent>
             </Alert>
           )}
-          {cell.issues.length === 0 && cell.remoteState.message && (
+          {cell.issues.length === 0 && visibleMessage && (
             <Alert appearance="light" variant="info">
               <AlertContent>
-                <AlertDescription>{cell.remoteState.message}</AlertDescription>
+                <AlertDescription>{visibleMessage}</AlertDescription>
               </AlertContent>
             </Alert>
           )}
         </div>
 
-        {cell.remoteState.suggestions.length > 0 && (
-          <div className="space-y-2 px-4 flex flex-col gap-1.5">
-            {cell.remoteState.suggestions.map((suggestion) => {
+        {visibleSuggestions.length > 0 && (
+          <div className="px-4 flex flex-col gap-1.5">
+            {visibleSuggestions.map((suggestion) => {
               const isSelected = selectedSuggestion?.value === suggestion.value;
+              const suggestionDetails = field.validatorSuggestionDetails?.({
+                suggestion,
+                cell,
+                row,
+                values: rowValues,
+              });
+
               return (
-                <Button
+                <div
                   key={suggestion.value}
-                  type="button"
-                  aria-label={`Select suggestion ${suggestion.label}`}
-                  variant="outline"
                   className={cn(
-                    'h-auto rounded-xl min-w-0 w-full justify-between gap-3 whitespace-normal px-3 py-3 text-left text-base transition',
+                    'flex min-w-0 items-center gap-2 overflow-hidden rounded-xl border',
+                    'px-3 py-3 transition-all ease-out-expo select-none',
                     isSelected
-                      ? 'border-green-main text-green-main bg-green-main/10'
-                      : 'border-neutral-200 hover:border-neutral-300'
+                      ? 'border-green-main bg-green-main/10 text-green-main border-2'
+                      : 'border-neutral-200 bg-white hover:border-neutral-300'
                   )}
-                  onClick={() =>
-                    actions.chooseSuggestion({
-                      rowId: row.id,
-                      fieldPath: field.path,
-                      suggestion,
-                    })
-                  }
                 >
-                  <div className="min-w-0 flex-1 text-left">
-                    <span className="block font-medium wrap-break-word whitespace-normal">
-                      {suggestion.label}
-                    </span>
-                    {suggestion.recommended && (
-                      <span className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
-                        Recommended
-                      </span>
+                  <button
+                    type="button"
+                    aria-label={`Select suggestion ${suggestion.label}`}
+                    className={cn(
+                      'flex min-w-0 flex-1 items-center gap-3 overflow-hidden whitespace-normal text-left text-base'
                     )}
-                  </div>
+                    onClick={() =>
+                      actions.chooseSuggestion({
+                        rowId: row.id,
+                        fieldPath: field.path,
+                        suggestion,
+                      })
+                    }
+                  >
+                    <div className="min-w-0 flex-1 text-left">
+                      <span
+                        className={cn('block font-medium wrap-break-word whitespace-normal', {
+                          'font-bold!': isSelected,
+                        })}
+                      >
+                        {suggestion.label}
+                      </span>
+                      {/* {suggestion.recommended && (
+                        <span className="mt-1 inline-flex rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
+                          Recommended
+                        </span>
+                      )} */}
+                    </div>
+                  </button>
+                  {suggestionDetails ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label={`Show details for suggestion ${suggestion.label} (${suggestion.value})`}
+                          className={cn(
+                            ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
+                            'size-5.5! shrink-0 self-center bg-white group'
+                          )}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                          }}
+                          onMouseDown={(event) => {
+                            event.stopPropagation();
+                          }}
+                        >
+                          <RiInfoI className="size-3.5! text-primary-8! group-hover:text-primary-6!" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
+                        align="end"
+                        sideOffset={0}
+                        alignOffset={0}
+                        arrowClassName="bg-white"
+                        className={ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME}
+                      >
+                        {suggestionDetails}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : null}
                   <div
                     className={cn(
-                      'shrink-0 border border-neutral-200 rounded-full size-6! p-2 flex items-center justify-center',
+                      'flex size-5! shrink-0 items-center justify-center rounded-full border border-neutral-200 p-2',
                       isSelected
                         ? 'border-green-main bg-green-main text-white'
                         : 'border-neutral-200 hover:border-neutral-300'
                     )}
                   >
-                    {isSelected && <CheckOutlined className="opacity-100" />}
+                    {isSelected && <CheckOutlined className="opacity-100 size-2.5!" />}
                   </div>
-                </Button>
+                </div>
               );
             })}
           </div>
         )}
 
         {field.remote?.query &&
-          (cell.remoteState.suggestionPaging?.hasNextPage ||
-            cell.remoteState.suggestionPaging?.isFetchingNextPage) && (
+          (visibleSuggestionPaging?.hasNextPage || visibleSuggestionPaging?.isFetchingNextPage) && (
             <div className="px-4">
               <Button
                 rounded
                 type="button"
-                variant="ghost"
-                size="sm"
-                className="w-full text-sm text-primary-9"
-                disabled={cell.remoteState.suggestionPaging?.isFetchingNextPage}
+                variant="outline"
+                size="md"
+                className="w-full text-sm text-primary-9 active:text-white select-none"
+                disabled={visibleSuggestionPaging?.isFetchingNextPage}
                 onClick={() => actions.loadMoreSuggestions()}
               >
-                {cell.remoteState.suggestionPaging?.isFetchingNextPage ? 'Loading…' : 'Load more'}
+                {visibleSuggestionPaging?.isFetchingNextPage ? (
+                  <div className="flex items-center gap-2">
+                    <LoadingOutlined spin />
+                    <span className="text-sm text-primary-9">Loading...</span>
+                  </div>
+                ) : (
+                  'Load more'
+                )}
               </Button>
             </div>
           )}
@@ -706,6 +788,7 @@ export function ValidatorPanel<TPayload, TResult>({
   session,
   actions,
   isSubmitting,
+  validatorSuggestions,
 }: ValidatorPanelProps<TPayload, TResult>) {
   const activeRow = resolveActiveRow(session);
   const activeField = resolveActiveField(adapter, session);
@@ -723,154 +806,156 @@ export function ValidatorPanel<TPayload, TResult>({
     (!activeField && !isAllColumnsMode);
 
   return (
-    <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-white">
-      <div className="shrink-0 px-5 py-4 text-white">
-        <div className="flex items-start justify-between gap-4">
-          <h3 className="text-2xl font-semibold leading-none tracking-tight text-primary-9">
-            Validator
-          </h3>
-        </div>
-        <div className="mt-3 h-px bg-neutral-2" />
-
-        <div className="mt-5 space-y-4">
-          <div className="grid grid-cols-[auto_1fr] items-center justify-between gap-1 w-full">
-            <div className="text-base font-light text-gray-400">Columns</div>
-            <Select
-              value={session.validatorSelection.fieldPath ?? ''}
-              onValueChange={(fieldPath) => actions.setValidatorSelection({ fieldPath })}
-            >
-              <SelectTrigger
-                id="validator-column-select"
-                aria-label="Select column"
-                className={ENTITY_IMPORT_PANEL_SELECT_TRIGGER_CLASSNAME}
-              >
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-80')}>
-                <SelectItem
-                  value={ENTITY_IMPORT_ALL_COLUMNS}
-                  checkClassName="hidden"
-                  className="px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50 [&_.indicator]:hidden"
-                >
-                  <span className="flex text-base w-full items-center justify-between gap-6">
-                    <span>All</span>
-                    <ValidationStatusIcon status={resolveRowsSummaryStatus(session)} />
-                  </span>
-                </SelectItem>
-                <SelectSeparator className="mx-3 my-1 bg-neutral-200" />
-                {adapter.fields.map((field, index) => (
-                  <SelectItem
-                    key={field.path}
-                    value={field.path}
-                    checkClassName="hidden"
-                    className={cn(
-                      'px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50',
-                      '[&_.indicator]:hidden',
-                      field.path === selectedFieldPath && 'text-neutral-700'
-                    )}
-                  >
-                    <span className="flex text-base w-full items-center justify-between gap-6">
-                      <span>{index + 1}</span>
-                      <ValidationStatusIcon status={resolveFieldStatus(session, field.path)} />
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <aside className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden px-2">
+      <div className="flex flex-col h-full min-h-0 max-h-[calc(100%-42px)] shadow-sm hover:shadow-md py-4 rounded-3xl border border-neutral-200 bg-white">
+        <div className="shrink-0 px-3 pb-4 text-white">
+          <div className="flex items-start justify-between gap-4">
+            <h3 className="text-2xl font-semibold leading-none tracking-tight text-primary-9">
+              Validator
+            </h3>
           </div>
+          <div className="mt-3 h-px bg-neutral-2" />
 
-          <div className="grid grid-cols-[auto_1fr] items-center gap-x-6 gap-y-3">
-            <div className="text-base font-light text-gray-400">Rows</div>
-            <div className="flex flex-wrap items-center justify-end gap-3">
+          <div className="mt-5 space-y-4">
+            <div className="grid grid-cols-[auto_1fr] items-center justify-between gap-1 w-full">
+              <div className="text-base font-light text-gray-400">Columns</div>
               <Select
-                value={session.validatorSelection.rowId ?? ''}
-                onValueChange={(rowId) => {
-                  actions.setValidatorSelection({ rowId });
-                }}
+                value={session.validatorSelection.fieldPath ?? ''}
+                onValueChange={(fieldPath) => actions.setValidatorSelection({ fieldPath })}
               >
                 <SelectTrigger
-                  id="validator-row-select"
-                  aria-label="Select row"
+                  id="validator-column-select"
+                  aria-label="Select column"
                   className={ENTITY_IMPORT_PANEL_SELECT_TRIGGER_CLASSNAME}
                 >
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
-                <SelectContent className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-40')}>
-                  {session.rows.map((row) => (
+                <SelectContent className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-80')}>
+                  <SelectItem
+                    value={ENTITY_IMPORT_ALL_COLUMNS}
+                    checkClassName="hidden"
+                    className="px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50 [&_.indicator]:hidden"
+                  >
+                    <span className="flex text-base w-full items-center justify-between gap-6">
+                      <span>All</span>
+                      <ValidationStatusIcon status={resolveRowsSummaryStatus(session)} />
+                    </span>
+                  </SelectItem>
+                  <SelectSeparator className="mx-3 my-1 bg-neutral-200" />
+                  {adapter.fields.map((field, index) => (
                     <SelectItem
-                      key={row.id}
-                      value={row.id}
+                      key={field.path}
+                      value={field.path}
                       checkClassName="hidden"
                       className={cn(
                         'px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50',
                         '[&_.indicator]:hidden',
-                        row.id === session.validatorSelection.rowId && 'text-neutral-700'
+                        field.path === selectedFieldPath && 'text-neutral-700'
                       )}
                     >
-                      <span className="flex w-full items-center justify-between gap-6">
-                        <span>{row.rowIndex + 1}</span>
-                        <ValidationStatusIcon status={resolveRowStatus(row)} />
+                      <span className="flex text-base w-full items-center justify-between gap-6">
+                        <span>{index + 1}</span>
+                        <ValidationStatusIcon status={resolveFieldStatus(session, field.path)} />
                       </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="grid grid-cols-[auto_1fr] items-center gap-x-6 gap-y-3">
+              <div className="text-base font-light text-gray-400">Rows</div>
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <Select
+                  value={session.validatorSelection.rowId ?? ''}
+                  onValueChange={(rowId) => {
+                    actions.setValidatorSelection({ rowId });
+                  }}
+                >
+                  <SelectTrigger
+                    id="validator-row-select"
+                    aria-label="Select row"
+                    className={ENTITY_IMPORT_PANEL_SELECT_TRIGGER_CLASSNAME}
+                  >
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-40')}>
+                    {session.rows.map((row) => (
+                      <SelectItem
+                        key={row.id}
+                        value={row.id}
+                        checkClassName="hidden"
+                        className={cn(
+                          'px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50',
+                          '[&_.indicator]:hidden',
+                          row.id === session.validatorSelection.rowId && 'text-neutral-700'
+                        )}
+                      >
+                        <span className="flex w-full items-center justify-between gap-6">
+                          <span>{row.rowIndex + 1}</span>
+                          <ValidationStatusIcon status={resolveRowStatus(row)} />
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto secondary-scrollbar overflow-x-hidden px-3 py-5">
+          {showSelectionPrompt ? (
+            <Card className="rounded-2xl border border-neutral-200 py-0">
+              <CardContent className="px-6 py-8 text-sm text-neutral-500">
+                {hasRows
+                  ? 'Select a row and column to begin validation.'
+                  : 'Add at least one row to begin validating data.'}
+              </CardContent>
+            </Card>
+          ) : isAllColumnsMode && activeRow ? (
+            <div className="space-y-4">
+              {adapter.fields.map((field, index) => (
+                <section key={field.path} aria-label={`Validator box ${field.label}`}>
+                  <SingleColumnValidatorCard
+                    field={field}
+                    row={activeRow}
+                    fieldPosition={index}
+                    session={session}
+                    context={context}
+                    actions={actions}
+                    validatorSuggestions={validatorSuggestions}
+                  />
+                </section>
+              ))}
+            </div>
+          ) : activeRow && activeField ? (
+            <SingleColumnValidatorCard
+              key={`${activeRow.id}:${activeField.path}`}
+              field={activeField}
+              row={activeRow}
+              fieldPosition={fieldPosition}
+              session={session}
+              context={context}
+              actions={actions}
+              validatorSuggestions={validatorSuggestions}
+            />
+          ) : null}
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-5 py-5">
-        {showSelectionPrompt ? (
-          <Card className="rounded-2xl border border-neutral-200 py-0">
-            <CardContent className="px-6 py-8 text-sm text-neutral-500">
-              {hasRows
-                ? 'Select a row and column to begin validation.'
-                : 'Add at least one row to begin validating data.'}
-            </CardContent>
-          </Card>
-        ) : isAllColumnsMode && activeRow ? (
-          <div className="space-y-4">
-            {adapter.fields.map((field, index) => (
-              <section key={field.path} aria-label={`Validator box ${field.label}`}>
-                <SingleColumnValidatorCard
-                  field={field}
-                  row={activeRow}
-                  fieldPosition={index}
-                  session={session}
-                  context={context}
-                  actions={actions}
-                />
-              </section>
-            ))}
-          </div>
-        ) : activeRow && activeField ? (
-          <SingleColumnValidatorCard
-            key={`${activeRow.id}:${activeField.path}`}
-            field={activeField}
-            row={activeRow}
-            fieldPosition={fieldPosition}
-            session={session}
-            context={context}
-            actions={actions}
-          />
-        ) : null}
-      </div>
-
-      <div className="shrink-0 border-t border-neutral-200 bg-white px-4 py-4">
-        <Button
-          rounded
-          type="button"
-          size="lg"
-          className="w-full"
-          disabled={!session.summary.canSubmit || isSubmitting}
-          onClick={() => void actions.submitRows()}
-        >
-          {isSubmitting
-            ? 'Importing...'
-            : `${adapter.submitLabel ?? 'Import'} ${session.rows.length} row(s)`}
-        </Button>
-      </div>
+      <Button
+        rounded
+        type="button"
+        size="lg"
+        className="w-full mt-auto"
+        disabled={!session.summary.canSubmit || isSubmitting}
+        onClick={() => void actions.submitRows()}
+      >
+        {isSubmitting
+          ? 'Importing...'
+          : `${adapter.submitLabel ?? 'Import'} ${session.rows.length} row(s)`}
+      </Button>
     </aside>
   );
 }

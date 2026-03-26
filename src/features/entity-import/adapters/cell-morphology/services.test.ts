@@ -118,7 +118,12 @@ describe('createCellMorphologyImportServices query helpers', () => {
         pageParam: number;
         pageSize: number;
       }) => Promise<{
-        suggestions: Array<{ value: string; label: string; description?: string }>;
+        suggestions: Array<{
+          value: string;
+          label: string;
+          description?: string;
+          metadata?: { acronym?: string };
+        }>;
         nextPageParam: number | null;
       }>;
     };
@@ -133,8 +138,18 @@ describe('createCellMorphologyImportServices query helpers', () => {
       })
     ).resolves.toEqual({
       suggestions: [
-        { value: 'brain-region-1', label: 'Isocortex', description: 'ISO' },
-        { value: 'brain-region-2', label: 'Hippocampus', description: 'HIP' },
+        {
+          value: 'brain-region-1',
+          label: 'Isocortex',
+          description: 'ISO',
+          metadata: { acronym: 'ISO' },
+        },
+        {
+          value: 'brain-region-2',
+          label: 'Hippocampus',
+          description: 'HIP',
+          metadata: { acronym: 'HIP' },
+        },
       ],
       nextPageParam: null,
     });

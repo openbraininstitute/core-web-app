@@ -13,7 +13,7 @@ import {
 } from '@/features/entity-import/core/helpers';
 
 import type { ZodType } from 'zod';
-import type { AdapterFieldDefinition } from '@/features/entity-import/core/adapter';
+import type { IAdapterFieldDefinition } from '@/features/entity-import/core/adapter';
 
 function cloneRows(rows: Array<IImportRowState>): Array<IImportRowState> {
   return rows.map((row) => ({
@@ -40,11 +40,11 @@ function cloneRows(rows: Array<IImportRowState>): Array<IImportRowState> {
   }));
 }
 
-function labelForPath(fields: Array<AdapterFieldDefinition>, path: string): string {
+function labelForPath(fields: Array<IAdapterFieldDefinition>, path: string): string {
   return fields.find((field) => field.path === path)?.label ?? path;
 }
 
-function resolveIssueFieldPath(fields: Array<AdapterFieldDefinition>, issuePath: string): string {
+function resolveIssueFieldPath(fields: Array<IAdapterFieldDefinition>, issuePath: string): string {
   const matchingField = fields.find((field) => {
     const validationPath = field.validationPath ?? field.path;
     return issuePath === validationPath || issuePath.startsWith(`${validationPath}.`);
@@ -55,7 +55,7 @@ function resolveIssueFieldPath(fields: Array<AdapterFieldDefinition>, issuePath:
 
 function summarize(
   rows: Array<IImportRowState>,
-  fields: Array<AdapterFieldDefinition>
+  fields: Array<IAdapterFieldDefinition>
 ): IImportSessionState['summary'] {
   let invalidRequiredCellCount = 0;
 
@@ -89,7 +89,7 @@ export function validateSessionRows<TPayload>({
   buildPayload,
 }: {
   session: IImportSessionState;
-  fields: Array<AdapterFieldDefinition>;
+  fields: Array<IAdapterFieldDefinition>;
   schema: ZodType<TPayload>;
   buildPayload: (args: { row: IImportRowState; values: TFlatImportValues }) => TPayload;
 }): IImportSessionState {

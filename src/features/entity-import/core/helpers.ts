@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 import type { Dayjs } from 'dayjs';
-import type { AdapterFieldDefinition } from '@/features/entity-import/core/adapter';
+import type { IAdapterFieldDefinition } from '@/features/entity-import/core/adapter';
 import type {
   IImportCellState,
   IImportRowState,
@@ -39,7 +39,7 @@ function normalizeSuggestionValue(value: string): string {
   return value.trim().toLowerCase();
 }
 
-export function fieldHasSuggestionResolution(field?: AdapterFieldDefinition): boolean {
+export function fieldHasSuggestionResolution(field?: IAdapterFieldDefinition): boolean {
   return Boolean(field?.remote?.query || field?.remote?.evaluate || field?.options?.length);
 }
 

@@ -1,3 +1,35 @@
+import type { ISpecies, IStrain } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+
+export interface IBrainRegion {
+  id: string;
+  name: string;
+  acronym: string;
+  parent_structure_id: string;
+  color_hex_triplet: string;
+  annotation_value: number;
+  hierarchy_id: string;
+  species: ISpecies;
+  strain: IStrain | null;
+}
+export interface IBrainRegionFilter extends PaginationFilter {
+  acronym: string | null;
+  acronym__in: string[] | null;
+  annotation_value: number | null;
+  hierarchy_id: string | null;
+  species_id__in: string[] | null;
+  species__name: string | null;
+  species__name__in: string[] | null;
+  species__name__ilike: string | null;
+  species__id: string | null;
+  species__id__in: string[] | null;
+  strain__name: string | null;
+  strain__name__in: string[] | null;
+  strain__name__ilike: string | null;
+  strain__id: string | null;
+  strain__id__in: string[] | null;
+}
+
 export type BrainRegionHierarchyBase = {
   id: string;
   name: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { RiEditBoxLine } from '@remixicon/react';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { z } from 'zod';
 
 import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
@@ -52,10 +52,11 @@ import { AgentType } from '@/ui/segments/contribute/shared/types';
 import { cn } from '@/utils/css-class';
 
 import type {
-  EntityImportAdapter,
   EntityImportRuntimeContext,
+  IEntityImportAdapter,
   RemoteSearchPagedArgs,
   RemoteValidationResult,
+  ValidatorSuggestionDetailsArgs,
 } from '@/features/entity-import/core/adapter';
 
 const DEFAULT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
@@ -69,6 +70,88 @@ const contributionAgentKeys = [
   AgentType.Organization.key,
   AgentType.Consortium.key,
 ] as const;
+
+function readSuggestionString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value : null;
+}
+
+function renderSuggestionDetailRows(rows: Array<{ label: string; value: ReactNode }>) {
+  const presentRows = rows.filter((row) => row.value);
+  if (presentRows.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-1 max-w-full">
+      {presentRows.map((row) => (
+        <div key={row.label} className="max-w-full">
+          <span className="font-semibold text-primary-9 mr-0.5">{row.label}:</span>
+          {row.value}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function renderBrainRegionSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
+  return renderSuggestionDetailRows([
+    {
+      label: 'Species',
+      value: readSuggestionString(
+        (suggestion.metadata as { species: string; acronym: string })?.species
+      ),
+    },
+    {
+      label: 'Acronym',
+      value: readSuggestionString(
+        (suggestion.metadata as { species: string; acronym: string })?.acronym
+      ),
+    },
+  ]);
+}
+
+function renderProtocolSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
+  return renderSuggestionDetailRows([
+    {
+      label: 'Generation Type',
+      value: readSuggestionString(
+        (suggestion.metadata as { generationType?: unknown } | undefined)?.generationType
+      ),
+    },
+    {
+      label: 'Description',
+      value: readSuggestionString(
+        (suggestion.metadata as { description?: unknown } | undefined)?.description
+      ),
+    },
+    {
+      label: 'Protocol Document',
+      value: (suggestion.metadata?.protocol_document as string | undefined) ? (
+        <span className="inline-block max-w-full truncate align-middle">
+          <a
+            href={
+              (suggestion.metadata as { protocol_document?: string } | undefined)?.protocol_document
+            }
+            className="text-primary-9 hover:text-primary-7 word-break-break-all maw-w-full"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {(suggestion.metadata as { protocol_document?: string } | undefined)?.protocol_document}
+          </a>
+        </span>
+      ) : null,
+    },
+  ]);
+}
+
+function renderMtypeSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
+  return renderSuggestionDetailRows([
+    {
+      label: 'Alternative Label',
+      value: readSuggestionString(suggestion.description),
+    },
+  ]);
+}
 
 const contributionEntrySchema = z.object({
   agent_type: z.enum(contributionAgentKeys),
@@ -103,10 +186,14 @@ const locationSchema = z
 const metadataSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
-  brain_region_id: z.uuid().nonempty({ message: 'Brain region is required' }),
-  cell_morphology_protocol_id: z.uuid().nonempty({ message: 'Protocol is required' }),
-  subject_id: z.uuid().nonempty({ message: 'Subject is required' }),
-  license_id: z.uuid().nonempty({ message: 'License is required' }),
+  brain_region_id: z
+    .uuid({ error: 'Brain region is required' })
+    .nonempty({ message: 'Brain region is required' }),
+  cell_morphology_protocol_id: z
+    .uuid({ error: 'Protocol is required' })
+    .nonempty({ message: 'Protocol is required' }),
+  subject_id: z.uuid({ error: 'Subject is required' }).nonempty({ message: 'Subject is required' }),
+  license_id: z.uuid({ error: 'License is required' }).nonempty({ message: 'License is required' }),
   experiment_date: z.string().nullable(),
   contact_email: z.union([z.email('Contact email must be valid'), z.null()]),
   published_in: z.string().nullable(),
@@ -118,7 +205,9 @@ export const cellMorphologySubmissionSchema = z.object({
   sourceFile: z.instanceof(File, { message: 'Morphology file is required' }),
   metadata: metadataSchema,
   contribution: z.array(contributionEntrySchema).min(1, 'At least one contribution is required'),
-  mtype_class_id: z.uuid().nonempty({ message: 'M-type is required' }),
+  mtype_class_id: z
+    .uuid({ error: 'M-type is required' })
+    .nonempty({ message: 'M-type is required' }),
 });
 
 export interface CellMorphologySubmissionPayload {
@@ -354,7 +443,7 @@ function ContributionSummaryCell({
             <button
               type="button"
               aria-label={`Show ${overflowCount} more contribution${overflowCount === 1 ? '' : 's'}`}
-              className={ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME}
+              className={cn(ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME, 'size-8!')}
               onClick={(event) => event.stopPropagation()}
             >
               +{overflowCount}
@@ -405,14 +494,14 @@ export function createCellMorphologyImportAdapter({
   defaultBrainRegionId,
   defaultLicenseId = DEFAULT_LICENSE_ID,
   services = createCellMorphologyImportServices(),
-}: CreateCellMorphologyImportAdapterOptions): EntityImportAdapter<
+}: CreateCellMorphologyImportAdapterOptions): IEntityImportAdapter<
   CellMorphologySubmissionPayload,
   { id: string; isValid: boolean }
 > {
   return {
     id: 'cell-morphology-import',
     title: 'Cell Morphology Import',
-    submitLabel: 'Import rows',
+    submitLabel: 'Import',
     templateFileName: 'cell-morphology-import-template.csv',
     templateGuide: {
       entityType: ExtendedEntitiesTypeDict.CellMorphology,
@@ -459,6 +548,7 @@ export function createCellMorphologyImportAdapter({
               querySuggestions: services.queryBrainRegion,
             })({ query, context }),
         },
+        validatorSuggestionDetails: renderBrainRegionSuggestionDetails,
         columnWidth: 200,
       },
       {
@@ -602,6 +692,7 @@ export function createCellMorphologyImportAdapter({
               querySuggestions: services.queryProtocol,
             })({ query, context }),
         },
+        validatorSuggestionDetails: renderProtocolSuggestionDetails,
         columnWidth: 220,
       },
       {
@@ -639,6 +730,7 @@ export function createCellMorphologyImportAdapter({
               querySuggestions: services.queryMtype,
             })({ query, context }),
         },
+        validatorSuggestionDetails: renderMtypeSuggestionDetails,
         columnWidth: 180,
       },
       {
@@ -719,8 +811,8 @@ export function createCellMorphologyImportAdapter({
         inputType: ImportInputType.FileBundle,
         csv: { include: false },
         fileConfig: {
-          accept: ['application/swc'],
-          allowedExtensions: ['.swc'],
+          accept: ['application/swc', 'application/asc', 'application/x-hdf5'],
+          allowedExtensions: ['.swc', '.asc', '.h5', '.H5', '.SWC', '.ASC'],
           maxFiles: 1,
         },
         columnWidth: 200,
@@ -731,13 +823,13 @@ export function createCellMorphologyImportAdapter({
       sourceFile: '',
       name: '',
       description: '',
-      brainRegionId: defaultBrainRegionId,
+      brainRegionId: '',
       experimentDate: '',
       contactEmail: '',
       publishedIn: '',
       location: '',
       subjectId: '',
-      licenseId: defaultLicenseId,
+      licenseId: '',
       protocolId: '',
       repairPipelineState: '',
       mtypeClassId: '',

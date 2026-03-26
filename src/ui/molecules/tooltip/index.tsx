@@ -63,7 +63,7 @@ function TooltipContent({
         {showArrow && (
           <TooltipPrimitive.Arrow
             className={cn(
-              'z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-xs bg-current fill-transparent',
+              'z-50 size-2.5 translate-y-[calc(-50%-3px)] rotate-45 rounded-xs bg-current fill-transparent',
               arrowClassName
             )}
           />
@@ -73,4 +73,4 @@ function TooltipContent({
   );
 }
 
-export { Tooltip, TooltipTrigger, TooltipArrow, TooltipContent, TooltipProvider };
+export { Tooltip, TooltipArrow, TooltipContent, TooltipProvider, TooltipTrigger };

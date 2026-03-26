@@ -2,6 +2,7 @@
 
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { createMtypeClassification as createMtypeClassificationMutation } from '@/api/entitycore/queries/annotations/mtype-classification';
+import { getBrainRegions } from '@/api/entitycore/queries/general/brain-region';
 import { getConsortia } from '@/api/entitycore/queries/general/consortium-agent';
 import { createContribution as createContributionMutation } from '@/api/entitycore/queries/general/contribution';
 import { getLicenses } from '@/api/entitycore/queries/general/license';
@@ -10,12 +11,9 @@ import { getPersons } from '@/api/entitycore/queries/general/person-agent';
 import { getProtocols } from '@/api/entitycore/queries/general/protocol';
 import { getRoles } from '@/api/entitycore/queries/general/role';
 import { getSubjects } from '@/api/entitycore/queries/general/subject';
-import { transformToIlikePattern } from '@/api/entitycore/transformers';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { createAndRegisterMorphometrics } from '@/api/one/cell-morphology';
 
 import type { TRepairPipelineState } from '@/api/entitycore/types/shared/protocol';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { IRoleFilter } from '@/api/entitycore/types/shared/role';
 import type {
   EntityImportRuntimeContext,
@@ -117,12 +115,6 @@ function makeSuggestion(
 
 const DEFAULT_ENTITY_IMPORT_QUERY_PAGE_SIZE = 20;
 
-type BrainRegionQueryResponseItem = {
-  id: string;
-  name: string;
-  acronym?: string | null;
-};
-
 function resolveQueryPaging({
   pageParam = 0,
   pageSize = DEFAULT_ENTITY_IMPORT_QUERY_PAGE_SIZE,
@@ -182,7 +174,7 @@ function makeRemoteSearchResult({
 
 function makeWildcardIlikeQuery(query: string): string | null {
   const normalizedQuery = query.trim();
-  return normalizedQuery ? transformToIlikePattern(normalizedQuery) : null;
+  return normalizedQuery ? `*${normalizedQuery}*` : null;
 }
 
 function makePlainQuery(query: string): string | null {
@@ -194,24 +186,22 @@ export function createCellMorphologyImportServices(): ICellMorphologyImportServi
   return {
     async queryBrainRegion({ query, queryField, context, pageParam, pageSize }) {
       const paging = resolveQueryPaging({ pageParam, pageSize });
-      const api = await entityCoreApi();
       const queryValue = makePlainQuery(query);
-      // FIXME: this need to be using the new brain-region query in entitycore api folder
-      const response = await api.get<EntityCoreResponse<BrainRegionQueryResponseItem>>(
-        '/brain-region',
-        {
-          queryParams: {
-            page: paging.page,
-            page_size: paging.pageSize,
-            ...(queryValue ? { [queryField]: queryValue } : {}),
-          },
-          headers: getEntityCoreContext(toWorkspaceContext(context)).headers,
-        }
-      );
+      const response = await getBrainRegions({
+        filters: {
+          page: paging.page,
+          page_size: paging.pageSize,
+          ...(queryValue ? { [queryField]: queryValue } : {}),
+        },
+        context: toWorkspaceContext(context),
+      });
 
       return makeRemoteSearchResult({
         suggestions: response.data.map((region) =>
-          makeSuggestion(region.id, region.name, region.acronym ?? undefined)
+          makeSuggestion(region.id, region.name, region.acronym ?? undefined, {
+            acronym: region.acronym ?? null,
+            species: region.species?.name ?? null,
+          })
         ),
         pageParam: paging.pageParam,
         pageSize: paging.pageSize,
@@ -280,6 +270,8 @@ export function createCellMorphologyImportServices(): ICellMorphologyImportServi
             undefined,
             {
               generationType: protocol.generation_type,
+              description: protocol.description,
+              protocol_document: protocol.protocol_document,
             }
           )
         ),
@@ -295,7 +287,8 @@ export function createCellMorphologyImportServices(): ICellMorphologyImportServi
         filters: {
           page: paging.page,
           page_size: paging.pageSize,
-          [queryField]: queryValue,
+          ilike_search: queryValue,
+          ...(queryField !== 'ilike_search' && queryValue ? { [queryField]: queryValue } : {}),
         },
         ctx: toWorkspaceContext(context),
       });

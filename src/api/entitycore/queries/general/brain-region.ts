@@ -1,11 +1,15 @@
-import { entityCoreApi } from '@/api/entitycore/utils';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { config } from '@/config';
 
 import type {
+  IBrainRegion,
+  IBrainRegionFilter,
   IBrainRegionHierarchy,
   ITemporaryBrainRegionHierarchy,
   TemporaryFlatBrainRegionHierarchy,
 } from '@/api/entitycore/types/entities/brain-region';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { WorkspaceContext } from '@/types/common';
 
 /**
  * Retrieves the brain region hierarchy from the Entity Core API.
@@ -42,4 +46,30 @@ export async function getBrainRegionHierarchy({
 }) {
   const api = await entityCoreApi();
   return await api.get<IBrainRegionHierarchy>(`/brain-region-hierarchy/${id}/hierarchy`);
+}
+
+export async function getBrainRegion({ id }: { id?: string }) {
+  const api = await entityCoreApi();
+  return await api.get<IBrainRegion>(`/brain-region/${id}`);
+}
+
+export async function getBrainRegions({
+  context,
+  filters,
+}: {
+  id?: string;
+  context?: WorkspaceContext | null;
+  filters?: Partial<IBrainRegionFilter>;
+}) {
+  const api = await entityCoreApi();
+  return await api.get<EntityCoreResponse<IBrainRegion>>(`/brain-region`, {
+    queryParams: {
+      ...filters,
+    },
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
 }
