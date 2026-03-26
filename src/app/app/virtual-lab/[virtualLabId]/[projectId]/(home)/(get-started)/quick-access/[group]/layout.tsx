@@ -13,7 +13,7 @@ export default async function Layout({
   return (
     <section id="quick-access" className="pr-2">
       <BackButton
-        className="sticky top-0 bg-background w-full z-9001 pb-2"
+        className="sticky top-0 bg-background w-full z-100 pb-2"
         toBack={`${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}`}
         list={[
           {
