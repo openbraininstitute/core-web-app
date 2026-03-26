@@ -1,7 +1,7 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
-import type { IProtocol } from '@/api/entitycore/types/shared/global';
+import type { CellMorphologyProtocolBase } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import type { IProtocolFilter } from '@/api/entitycore/types/shared/protocol';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
@@ -21,9 +21,9 @@ export async function getProtocols({
 }: {
   filters?: Partial<IProtocolFilter>;
   context?: WorkspaceContext | null;
-}): Promise<EntityCoreResponse<IProtocol>> {
+}): Promise<EntityCoreResponse<CellMorphologyProtocolBase>> {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IProtocol>>(baseUri, {
+  return await api.get<EntityCoreResponse<CellMorphologyProtocolBase>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
     }),
@@ -48,9 +48,9 @@ export async function getProtocol({
 }: {
   id: string;
   context?: WorkspaceContext | null;
-}): Promise<EntityCoreResponse<IProtocol>> {
+}): Promise<EntityCoreResponse<CellMorphologyProtocolBase>> {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IProtocol>>(`${baseUri}/${id}`, {
+  return await api.get<EntityCoreResponse<CellMorphologyProtocolBase>>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',

@@ -130,8 +130,30 @@ export type TModifiedMorphologyMethodType =
 
 export type CellMorphologyProtocolEntityType = 'cell_morphology_protocol';
 
-export interface CellMorphologyProtocolBase {
+export interface ProtocolMixin {
+  /** URL link to protocol document or publication */
+  protocol_document: string | null; // SerializableHttpUrl → string
+  /** Controlled vocabulary (e.g. EM, CellPatch, Fluorophore, Imp) */
+  protocol_design: TCellMorphologyProtocolDesign;
+}
+
+export interface CellMorphologyProtocolBase extends EntityCoreIdentifiable, ProtocolMixin {
   type: CellMorphologyProtocolEntityType;
+  name: string;
+  description: string;
+  /** Method used for staining. */
+  staining_type: TStainingType | null;
+  /** Thickness of the slice in microns (>= 0). */
+  slicing_thickness: number;
+  /** Direction of slicing. */
+  slicing_direction: TSlicingDirectionType | null;
+  /** Magnification level used (>= 0). */
+  magnification: number | null;
+  /** Amount tissue shrunk by (>= 0), not the correction factor. */
+  tissue_shrinkage: number | null;
+  /** Whether data has been corrected for shrinkage. */
+  corrected_for_shrinkage: boolean | null;
+  generation_type: string;
 }
 
 export const CellMorphologyProtocolDesign = {
@@ -162,29 +184,10 @@ export const CellMorphologyProtocolDesignDictionary = Object.fromEntries(
 export type TCellMorphologyProtocolDesign =
   (typeof CellMorphologyProtocolDesignDictionary)[keyof typeof CellMorphologyProtocolDesignDictionary];
 
-export interface ProtocolMixin {
-  /** URL link to protocol document or publication */
-  protocol_document: string | null; // SerializableHttpUrl → string
-  /** Controlled vocabulary (e.g. EM, CellPatch, Fluorophore, Imp) */
-  protocol_design: TCellMorphologyProtocolDesign;
-}
-
 export interface DigitalReconstructionCellMorphologyProtocolBase
   extends CellMorphologyProtocolBase,
     ProtocolMixin {
   generation_type: typeof CellMorphologyGenerationType.DigitalReconstruction.key; // 'digital_reconstruction'
-  /** Method used for staining. */
-  staining_type: TStainingType | null;
-  /** Thickness of the slice in microns (>= 0). */
-  slicing_thickness: number;
-  /** Direction of slicing. */
-  slicing_direction: TSlicingDirectionType | null;
-  /** Magnification level used (>= 0). */
-  magnification: number | null;
-  /** Amount tissue shrunk by (>= 0), not the correction factor. */
-  tissue_shrinkage: number | null;
-  /** Whether data has been corrected for shrinkage. */
-  corrected_for_shrinkage: boolean | null;
 }
 
 export interface ModifiedReconstructionCellMorphologyProtocolBase
@@ -206,20 +209,16 @@ export interface PlaceholderCellMorphologyProtocolBase extends CellMorphologyPro
 }
 
 export interface NestedDigitalReconstructionCellMorphologyProtocolRead
-  extends DigitalReconstructionCellMorphologyProtocolBase,
-    EntityCoreIdentifiable {}
+  extends DigitalReconstructionCellMorphologyProtocolBase {}
 
 export interface NestedModifiedReconstructionCellMorphologyProtocolRead
-  extends ModifiedReconstructionCellMorphologyProtocolBase,
-    EntityCoreIdentifiable {}
+  extends ModifiedReconstructionCellMorphologyProtocolBase {}
 
 export interface NestedComputationallySynthesizedCellMorphologyProtocolRead
-  extends ComputationallySynthesizedCellMorphologyProtocolBase,
-    EntityCoreIdentifiable {}
+  extends ComputationallySynthesizedCellMorphologyProtocolBase {}
 
 export interface NestedPlaceholderCellMorphologyProtocolRead
-  extends PlaceholderCellMorphologyProtocolBase,
-    EntityCoreIdentifiable {}
+  extends PlaceholderCellMorphologyProtocolBase {}
 
 export type NestedCellMorphologyProtocolRead = Prettify<
   | NestedDigitalReconstructionCellMorphologyProtocolRead

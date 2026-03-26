@@ -4,14 +4,14 @@ import { useEntityImportController } from '@/features/entity-import/hooks/use-en
 import { ImportShell } from '@/features/entity-import/ui/import-shell';
 
 import type {
-  EntityImportAdapter,
   EntityImportRuntimeContext,
+  IEntityImportAdapter,
 } from '@/features/entity-import/core/adapter';
 import type { TFlatImportValues } from '@/features/entity-import/core/contracts';
 
 interface EntityImportFeatureProps<TPayload, TResult> {
   title: string | null;
-  adapter: EntityImportAdapter<TPayload, TResult>;
+  adapter: IEntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
   initialRows?: Array<TFlatImportValues>;
   onClose: () => void;
@@ -38,6 +38,9 @@ export function EntityImportFeature<TPayload, TResult>({
       session={controller.session}
       actions={controller.actions}
       isSubmitting={controller.isSubmitting}
+      csvUploadPhase={controller.csvUploadPhase}
+      csvRowValidationProgress={controller.csvRowValidationProgress}
+      validatorSuggestions={controller.validatorSuggestions}
       onDownloadCsvTemplate={controller.downloadCsvTemplate}
       onDownloadGuideTemplate={controller.downloadGuideTemplate}
       onUploadCsvFile={controller.handleCsvUpload}
@@ -49,6 +52,6 @@ export function EntityImportFeature<TPayload, TResult>({
 export { createCellMorphologyImportAdapter } from '@/features/entity-import/adapters/cell-morphology/adapter';
 
 export type {
-  EntityImportAdapter,
   EntityImportRuntimeContext,
+  IEntityImportAdapter as EntityImportAdapter,
 } from '@/features/entity-import/core/adapter';

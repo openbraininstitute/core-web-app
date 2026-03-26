@@ -7,12 +7,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getEntityImportTemplateGuide } from '@/features/entity-import/templates/registry';
 
 import {
-  type AdapterFieldDefinition,
   type CsvHydratedCellValue,
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
-  type EntityImportActions,
-  type EntityImportAdapter,
   type EntityImportRuntimeContext,
+  type IAdapterFieldDefinition,
+  type IEntityImportActions,
+  type IEntityImportAdapter,
+  type IValidatorSuggestionState,
   type RemoteValidationResult,
 } from '../core/adapter';
 import {
@@ -57,9 +58,9 @@ import {
 import { validateSessionRows } from '../core/validation';
 
 function findField(
-  fields: Array<AdapterFieldDefinition>,
+  fields: Array<IAdapterFieldDefinition>,
   fieldPath: string
-): AdapterFieldDefinition | undefined {
+): IAdapterFieldDefinition | undefined {
   return fields.find((field) => field.path === fieldPath);
 }
 
@@ -112,7 +113,7 @@ async function hydrateCsvRows({
   rows,
   context,
 }: {
-  fields: Array<AdapterFieldDefinition>;
+  fields: Array<IAdapterFieldDefinition>;
   rows: Array<TFlatImportValues>;
   context: EntityImportRuntimeContext;
 }) {
@@ -160,11 +161,11 @@ function downloadBlob({
   URL.revokeObjectURL(url);
 }
 
-function hasSuggestionSource(field?: AdapterFieldDefinition): boolean {
+function hasSuggestionSource(field?: IAdapterFieldDefinition): boolean {
   return fieldHasSuggestionResolution(field);
 }
 
-function hasRemoteQuery(field?: AdapterFieldDefinition): boolean {
+function hasRemoteQuery(field?: IAdapterFieldDefinition): boolean {
   return Boolean(field?.remote?.query);
 }
 
@@ -214,7 +215,7 @@ function cellStillMatchesQuery(
 }
 
 function resolveSuggestionMessage(
-  field: AdapterFieldDefinition,
+  field: IAdapterFieldDefinition,
   validationResult: RemoteValidationResult | null,
   suggestions: Array<ISuggestion>
 ): string | null {
@@ -237,12 +238,46 @@ function resolveMatchedSuggestion(
   return validationResult?.resolvedSuggestion ?? findExactSuggestionMatch(suggestions, query);
 }
 
+const CsvUploadPhase = {
+  Idle: 'idle',
+  Parsing: 'parsing',
+  Hydrating: 'hydrating',
+  PreparingRows: 'preparing-rows',
+} as const;
+
+type TCsvUploadPhase = (typeof CsvUploadPhase)[keyof typeof CsvUploadPhase];
+
+interface CsvRowValidationProgress {
+  active: boolean;
+  totalRowCount: number;
+  completedRowCount: number;
+}
+
+const ENTITY_IMPORT_INPUT_SYNC_DELAY_MS = 150;
+
+function createIdleValidatorSuggestionState(): IValidatorSuggestionState {
+  return {
+    rowId: null,
+    fieldPath: null,
+    query: '',
+    ...createIdleRemoteState(),
+  };
+}
+
+function createIdleCsvRowValidationProgress(): CsvRowValidationProgress {
+  return {
+    active: false,
+    totalRowCount: 0,
+    completedRowCount: 0,
+  };
+}
+
 export function useEntityImportController<TPayload, TResult>({
   adapter,
   context,
   initialRows,
 }: {
-  adapter: EntityImportAdapter<TPayload, TResult>;
+  adapter: IEntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
   initialRows?: Array<TFlatImportValues>;
 }) {
@@ -271,35 +306,52 @@ export function useEntityImportController<TPayload, TResult>({
   });
   const sessionRef = useRef(session);
 
-  const [suggestionRequest, setSuggestionRequest] = useState<{
+  const [csvUploadPhase, setCsvUploadPhase] = useState<TCsvUploadPhase>(CsvUploadPhase.Idle);
+  const [csvRowValidationProgress, setCsvRowValidationProgress] =
+    useState<CsvRowValidationProgress>(createIdleCsvRowValidationProgress);
+  const csvRowValidationPendingCountsRef = useRef<Map<string, number>>(new Map());
+  const [validatorSuggestionRequest, setValidatorSuggestionRequest] = useState<{
     rowId: string;
     fieldPath: string;
     query: string;
   } | null>(null);
-  const suggestionRequestRef = useRef(suggestionRequest);
-  const [remoteValidation, setRemoteValidation] = useState<RemoteValidationResult | null>(null);
+  const validatorSuggestionRequestRef = useRef(validatorSuggestionRequest);
+  const [validatorSuggestions, setValidatorSuggestions] = useState<IValidatorSuggestionState>(() =>
+    createIdleValidatorSuggestionState()
+  );
+  const validatorSelectionQueryKeyRef = useRef('');
+  const pendingCellSyncTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     sessionRef.current = session;
   }, [session]);
 
   useEffect(() => {
-    suggestionRequestRef.current = suggestionRequest;
-  }, [suggestionRequest]);
+    validatorSuggestionRequestRef.current = validatorSuggestionRequest;
+  }, [validatorSuggestionRequest]);
 
-  const suggestionsInfinite = useInfiniteQuery({
+  useEffect(() => {
+    return () => {
+      pendingCellSyncTimeoutsRef.current.forEach((timeoutId) => {
+        clearTimeout(timeoutId);
+      });
+      pendingCellSyncTimeoutsRef.current.clear();
+    };
+  }, []);
+
+  const validatorSuggestionsInfinite = useInfiniteQuery({
     queryKey: [
       'entity-import',
-      'remote-suggestions',
+      'validator-remote-suggestions',
       adapter.id,
-      suggestionRequest?.rowId ?? '',
-      suggestionRequest?.fieldPath ?? '',
-      suggestionRequest?.query ?? '',
+      validatorSuggestionRequest?.rowId ?? '',
+      validatorSuggestionRequest?.fieldPath ?? '',
+      validatorSuggestionRequest?.query ?? '',
     ],
-    enabled: Boolean(suggestionRequest),
+    enabled: Boolean(validatorSuggestionRequest),
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
-      const req = suggestionRequestRef.current;
+      const req = validatorSuggestionRequestRef.current;
       if (!req) {
         return { suggestions: [] as Array<ISuggestion>, nextPageParam: null as number | null };
       }
@@ -331,60 +383,6 @@ export function useEntityImportController<TPayload, TResult>({
     retry: 1,
   });
 
-  useEffect(() => {
-    if (!suggestionRequest) {
-      setRemoteValidation(null);
-      return;
-    }
-
-    const field = findField(adapter.fields, suggestionRequest.fieldPath);
-    if (!field?.remote?.evaluate) {
-      setRemoteValidation(null);
-      return;
-    }
-
-    setRemoteValidation(null);
-    let cancelled = false;
-
-    void (async () => {
-      try {
-        const row = findRow(sessionRef.current, suggestionRequest.rowId);
-        const evaluateRemote = field.remote?.evaluate;
-        if (!row || !evaluateRemote) {
-          return;
-        }
-
-        const validationResult = await evaluateRemote({
-          query: suggestionRequest.query,
-          value: suggestionRequest.query,
-          row,
-          values: getRowSubmissionValues(row),
-          context,
-        });
-
-        if (
-          !cancelled &&
-          cellStillMatchesQuery(
-            sessionRef.current,
-            suggestionRequest.rowId,
-            suggestionRequest.fieldPath,
-            suggestionRequest.query
-          )
-        ) {
-          setRemoteValidation(validationResult);
-        }
-      } catch {
-        if (!cancelled) {
-          setRemoteValidation(null);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [adapter.fields, context, suggestionRequest]);
-
   const commit = useCallback(
     (
       updater: (current: IImportSessionState) => IImportSessionState,
@@ -398,6 +396,125 @@ export function useEntityImportController<TPayload, TResult>({
       });
     },
     [validate]
+  );
+
+  const resetCsvRowValidationProgress = useCallback(() => {
+    csvRowValidationPendingCountsRef.current = new Map();
+    setCsvRowValidationProgress(createIdleCsvRowValidationProgress());
+  }, []);
+
+  const beginCsvRowValidationProgress = useCallback((targets: Array<{ rowId: string }>) => {
+    const pendingCounts = new Map<string, number>();
+
+    targets.forEach(({ rowId }) => {
+      pendingCounts.set(rowId, (pendingCounts.get(rowId) ?? 0) + 1);
+    });
+
+    csvRowValidationPendingCountsRef.current = pendingCounts;
+    setCsvRowValidationProgress(
+      pendingCounts.size > 0
+        ? {
+            active: true,
+            totalRowCount: pendingCounts.size,
+            completedRowCount: 0,
+          }
+        : createIdleCsvRowValidationProgress()
+    );
+  }, []);
+
+  const completeCsvRowValidationTarget = useCallback((rowId: string) => {
+    const pendingCounts = csvRowValidationPendingCountsRef.current;
+    const nextPendingCount = pendingCounts.get(rowId);
+
+    if (nextPendingCount === undefined) {
+      return;
+    }
+
+    if (nextPendingCount > 1) {
+      pendingCounts.set(rowId, nextPendingCount - 1);
+      return;
+    }
+
+    pendingCounts.delete(rowId);
+    setCsvRowValidationProgress((current) => {
+      const completedRowCount = current.completedRowCount + 1;
+      if (completedRowCount >= current.totalRowCount) {
+        return createIdleCsvRowValidationProgress();
+      }
+
+      return {
+        ...current,
+        completedRowCount,
+      };
+    });
+  }, []);
+
+  const clearValidatorSuggestions = useCallback(() => {
+    validatorSelectionQueryKeyRef.current = '';
+    validatorSuggestionRequestRef.current = null;
+    setValidatorSuggestionRequest(null);
+    setValidatorSuggestions(createIdleValidatorSuggestionState());
+  }, []);
+
+  const requestValidatorSuggestions = useCallback(
+    async ({ rowId, fieldPath, query }: { rowId: string; fieldPath: string; query: string }) => {
+      const currentSession = sessionRef.current;
+      const row = findRow(currentSession, rowId);
+      const field = findField(adapter.fields, fieldPath);
+
+      if (!row || !field || !hasSuggestionSource(field)) {
+        clearValidatorSuggestions();
+        return;
+      }
+
+      const normalizedQuery = query.trim();
+      if (!normalizedQuery) {
+        clearValidatorSuggestions();
+        return;
+      }
+
+      validatorSelectionQueryKeyRef.current = `${rowId}:${fieldPath}:${normalizedQuery}`;
+
+      const cell = row.cells[fieldPath];
+      const localSuggestions = filterLocalSuggestions(field.options, normalizedQuery);
+
+      if (!hasRemoteQuery(field)) {
+        validatorSuggestionRequestRef.current = null;
+        setValidatorSuggestionRequest(null);
+        setValidatorSuggestions({
+          rowId,
+          fieldPath,
+          query: normalizedQuery,
+          status: cell.remoteState.status,
+          suggestions: mergeSuggestions(localSuggestions, cell.remoteState.suggestions),
+          selectedSuggestion: cell.remoteState.selectedSuggestion,
+          message: cell.remoteState.message,
+          suggestionPaging: cell.remoteState.suggestionPaging,
+        });
+        return;
+      }
+
+      validatorSuggestionRequestRef.current = {
+        rowId,
+        fieldPath,
+        query: normalizedQuery,
+      };
+      setValidatorSuggestionRequest({ rowId, fieldPath, query: normalizedQuery });
+      setValidatorSuggestions({
+        rowId,
+        fieldPath,
+        query: normalizedQuery,
+        status: RemoteValidationStatus.Pending,
+        suggestions: localSuggestions,
+        selectedSuggestion: cell.remoteState.selectedSuggestion,
+        message: cell.remoteState.message,
+        suggestionPaging: {
+          hasNextPage: false,
+          isFetchingNextPage: false,
+        },
+      });
+    },
+    [adapter.fields, clearValidatorSuggestions]
   );
 
   const runDirectRemoteValidation = useCallback(
@@ -526,182 +643,14 @@ export function useEntityImportController<TPayload, TResult>({
             ),
           { validate: false }
         );
+      } finally {
+        completeCsvRowValidationTarget(rowId);
       }
     },
-    [adapter.fields, commit, context]
+    [adapter.fields, commit, completeCsvRowValidationTarget, context]
   );
 
-  useEffect(() => {
-    if (!suggestionRequest) {
-      return;
-    }
-
-    const { rowId, fieldPath, query } = suggestionRequest;
-    const field = findField(adapter.fields, fieldPath);
-
-    if (!field || !hasRemoteQuery(field)) {
-      return;
-    }
-
-    if (!cellStillMatchesQuery(sessionRef.current, rowId, fieldPath, query)) {
-      return;
-    }
-
-    const localSuggestions = filterLocalSuggestions(field.options, query);
-    const hasRemoteLookup = Boolean(hasRemoteQuery(field) || field.remote?.evaluate);
-
-    if (suggestionsInfinite.isPending && !suggestionsInfinite.data) {
-      return;
-    }
-
-    if (suggestionsInfinite.isError) {
-      const error = suggestionsInfinite.error;
-      commit(
-        (current) =>
-          pushNotification(
-            setCellRemoteState(current, {
-              rowId,
-              fieldPath,
-              remoteState: {
-                status: RemoteValidationStatus.Invalid,
-                suggestions: localSuggestions,
-                selectedSuggestion: null,
-                message:
-                  error instanceof Error
-                    ? error.message
-                    : `Failed to load suggestions for ${field.label}.`,
-                suggestionPaging: {
-                  hasNextPage: false,
-                  isFetchingNextPage: false,
-                },
-              },
-            }),
-            {
-              id: `notification-${Date.now()}`,
-              tone: NotificationTone.Error,
-              message:
-                error instanceof Error
-                  ? error.message
-                  : `Failed to load suggestions for ${field.label}.`,
-            }
-          ),
-        { validate: false }
-      );
-      return;
-    }
-
-    if (!suggestionsInfinite.data) {
-      return;
-    }
-
-    const remoteSuggestions = suggestionsInfinite.data.pages.flatMap((page) => page.suggestions);
-    const validationResult = remoteValidation;
-    const resolutionCandidates = mergeSuggestions(
-      localSuggestions,
-      remoteSuggestions,
-      validationResult?.suggestions,
-      validationResult?.resolvedSuggestion ? [validationResult.resolvedSuggestion] : undefined
-    );
-    const matchedSuggestion = resolveMatchedSuggestion(
-      query,
-      validationResult,
-      resolutionCandidates
-    );
-
-    if (matchedSuggestion) {
-      commit((current) =>
-        resolveCellSuggestion(current, {
-          rowId,
-          fieldPath,
-          suggestion: matchedSuggestion,
-        })
-      );
-      return;
-    }
-
-    const suggestions =
-      validationResult?.status === RemoteValidationStatus.Valid ? [] : resolutionCandidates;
-
-    const previousSelected = findRow(sessionRef.current, rowId)?.cells[fieldPath].remoteState
-      .selectedSuggestion;
-    const selectedSuggestion =
-      previousSelected &&
-      suggestions.some((candidate) => candidate.value === previousSelected.value)
-        ? previousSelected
-        : null;
-
-    commit((current) =>
-      setCellRemoteState(current, {
-        rowId,
-        fieldPath,
-        remoteState: {
-          status:
-            validationResult?.status === RemoteValidationStatus.Valid
-              ? RemoteValidationStatus.Valid
-              : hasRemoteLookup
-                ? RemoteValidationStatus.Invalid
-                : RemoteValidationStatus.Idle,
-          suggestions,
-          selectedSuggestion,
-          message:
-            validationResult?.status === RemoteValidationStatus.Valid
-              ? null
-              : resolveSuggestionMessage(field, validationResult, suggestions),
-          suggestionPaging: {
-            hasNextPage: suggestionsInfinite.hasNextPage ?? false,
-            isFetchingNextPage: suggestionsInfinite.isFetchingNextPage,
-          },
-        },
-      })
-    );
-  }, [
-    adapter.fields,
-    commit,
-    remoteValidation,
-    suggestionRequest,
-    suggestionsInfinite.data,
-    suggestionsInfinite.error,
-    suggestionsInfinite.hasNextPage,
-    suggestionsInfinite.isError,
-    suggestionsInfinite.isFetchingNextPage,
-    suggestionsInfinite.isPending,
-  ]);
-
-  const chooseSuggestion = useCallback(
-    ({
-      rowId,
-      fieldPath,
-      suggestion,
-    }: {
-      rowId: string;
-      fieldPath: string;
-      suggestion: ISuggestion;
-    }) => {
-      const currentSession = sessionRef.current;
-      const row = findRow(currentSession, rowId);
-      if (!row) {
-        return;
-      }
-
-      const currentCell = row.cells[fieldPath];
-
-      commit((current) =>
-        setCellRemoteState(current, {
-          rowId,
-          fieldPath,
-          remoteState: {
-            ...currentCell.remoteState,
-            status: RemoteValidationStatus.Invalid,
-            selectedSuggestion: suggestion,
-            message: 'Apply the selected suggestion to continue.',
-          },
-        })
-      );
-    },
-    [commit]
-  );
-
-  const requestSuggestions = useCallback(
+  const runInlineSuggestionResolution = useCallback(
     async ({ rowId, fieldPath, query }: { rowId: string; fieldPath: string; query: string }) => {
       const currentSession = sessionRef.current;
       const row = findRow(currentSession, rowId);
@@ -712,8 +661,11 @@ export function useEntityImportController<TPayload, TResult>({
       }
 
       const normalizedQuery = query.trim();
+      if (!cellStillMatchesQuery(sessionRef.current, rowId, fieldPath, normalizedQuery)) {
+        return;
+      }
+
       if (!normalizedQuery) {
-        setSuggestionRequest(null);
         commit((current) =>
           setCellRemoteState(current, {
             rowId,
@@ -726,6 +678,7 @@ export function useEntityImportController<TPayload, TResult>({
 
       const localSuggestions = filterLocalSuggestions(field.options, normalizedQuery);
       const remoteQuery = hasRemoteQuery(field);
+      const remoteQueryFn = field.remote?.query;
       const hasRemoteLookup = Boolean(remoteQuery || field.remote?.evaluate);
 
       commit((current) =>
@@ -745,8 +698,124 @@ export function useEntityImportController<TPayload, TResult>({
         })
       );
 
-      if (remoteQuery) {
-        setSuggestionRequest({ rowId, fieldPath, query: normalizedQuery });
+      if (remoteQuery && remoteQueryFn) {
+        try {
+          const rowValues = getRowSubmissionValues(row);
+          const [remoteResult, validationResult] = await Promise.all([
+            remoteQueryFn({
+              query: normalizedQuery,
+              row,
+              values: rowValues,
+              context,
+              pageParam: 0,
+              pageSize: ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
+            }),
+            field.remote?.evaluate
+              ? field.remote.evaluate({
+                  query: normalizedQuery,
+                  value: normalizedQuery,
+                  row,
+                  values: rowValues,
+                  context,
+                })
+              : Promise.resolve(null),
+          ]);
+
+          if (!cellStillMatchesQuery(sessionRef.current, rowId, fieldPath, normalizedQuery)) {
+            return;
+          }
+
+          const resolutionCandidates = mergeSuggestions(
+            localSuggestions,
+            remoteResult.suggestions,
+            validationResult?.suggestions,
+            validationResult?.resolvedSuggestion ? [validationResult.resolvedSuggestion] : undefined
+          );
+          const matchedSuggestion = resolveMatchedSuggestion(
+            normalizedQuery,
+            validationResult,
+            resolutionCandidates
+          );
+          if (matchedSuggestion) {
+            commit((current) =>
+              resolveCellSuggestion(current, {
+                rowId,
+                fieldPath,
+                suggestion: matchedSuggestion,
+              })
+            );
+            return;
+          }
+
+          const previousSelected = findRow(sessionRef.current, rowId)?.cells[fieldPath].remoteState
+            .selectedSuggestion;
+          const selectedSuggestion =
+            previousSelected &&
+            resolutionCandidates.some((candidate) => candidate.value === previousSelected.value)
+              ? previousSelected
+              : null;
+
+          commit((current) =>
+            setCellRemoteState(current, {
+              rowId,
+              fieldPath,
+              remoteState: {
+                status:
+                  validationResult?.status === RemoteValidationStatus.Valid
+                    ? RemoteValidationStatus.Valid
+                    : RemoteValidationStatus.Invalid,
+                suggestions:
+                  validationResult?.status === RemoteValidationStatus.Valid
+                    ? []
+                    : resolutionCandidates,
+                selectedSuggestion,
+                message:
+                  validationResult?.status === RemoteValidationStatus.Valid
+                    ? null
+                    : resolveSuggestionMessage(field, validationResult, resolutionCandidates),
+                suggestionPaging: {
+                  hasNextPage: remoteResult.nextPageParam !== null,
+                  isFetchingNextPage: false,
+                },
+              },
+            })
+          );
+        } catch (error) {
+          if (!cellStillMatchesQuery(sessionRef.current, rowId, fieldPath, normalizedQuery)) {
+            return;
+          }
+
+          const message =
+            error instanceof Error
+              ? error.message
+              : `Failed to load suggestions for ${field.label}.`;
+
+          commit(
+            (current) =>
+              pushNotification(
+                setCellRemoteState(current, {
+                  rowId,
+                  fieldPath,
+                  remoteState: {
+                    status: RemoteValidationStatus.Invalid,
+                    suggestions: localSuggestions,
+                    selectedSuggestion: null,
+                    message,
+                    suggestionPaging: {
+                      hasNextPage: false,
+                      isFetchingNextPage: false,
+                    },
+                  },
+                }),
+                {
+                  id: `notification-${Date.now()}`,
+                  tone: NotificationTone.Error,
+                  message,
+                }
+              ),
+            { validate: false }
+          );
+        }
         return;
       }
 
@@ -772,6 +841,10 @@ export function useEntityImportController<TPayload, TResult>({
               suggestions: localSuggestions,
               selectedSuggestion: null,
               message: resolveSuggestionMessage(field, null, localSuggestions),
+              suggestionPaging: {
+                hasNextPage: false,
+                isFetchingNextPage: false,
+              },
             },
           })
         );
@@ -780,80 +853,235 @@ export function useEntityImportController<TPayload, TResult>({
 
       await runDirectRemoteValidation({ rowId, fieldPath, query: normalizedQuery });
     },
-    [adapter.fields, commit, runDirectRemoteValidation]
+    [adapter.fields, commit, context, runDirectRemoteValidation]
   );
 
-  const loadMoreSuggestions = useCallback(() => {
-    void suggestionsInfinite.fetchNextPage();
-  }, [suggestionsInfinite.fetchNextPage]);
+  const clearPendingCellSync = useCallback((rowId: string, fieldPath: string) => {
+    const syncKey = `${rowId}:${fieldPath}`;
+    const existingTimeout = pendingCellSyncTimeoutsRef.current.get(syncKey);
+    if (!existingTimeout) {
+      return;
+    }
 
-  const syncSuggestionsForSelection = useCallback(
-    ({ rowId, fieldPath }: { rowId: string | null; fieldPath: string | null }) => {
-      if (!rowId || !fieldPath || fieldPath === ENTITY_IMPORT_ALL_COLUMNS) {
-        setSuggestionRequest(null);
-        setRemoteValidation(null);
-        return;
-      }
+    clearTimeout(existingTimeout);
+    pendingCellSyncTimeoutsRef.current.delete(syncKey);
+  }, []);
+
+  const scheduleDeferredCellSync = useCallback(
+    ({ rowId, fieldPath, rawValue }: { rowId: string; fieldPath: string; rawValue: string }) => {
+      const syncKey = `${rowId}:${fieldPath}`;
+      clearPendingCellSync(rowId, fieldPath);
+
+      const timeoutId = setTimeout(() => {
+        pendingCellSyncTimeoutsRef.current.delete(syncKey);
+
+        const field = findField(adapter.fields, fieldPath);
+        if (field && hasSuggestionSource(field)) {
+          void runInlineSuggestionResolution({ rowId, fieldPath, query: rawValue });
+          return;
+        }
+
+        commit((current) => current);
+      }, ENTITY_IMPORT_INPUT_SYNC_DELAY_MS);
+
+      pendingCellSyncTimeoutsRef.current.set(syncKey, timeoutId);
+    },
+    [adapter.fields, clearPendingCellSync, commit, runInlineSuggestionResolution]
+  );
+
+  useEffect(() => {
+    if (!validatorSuggestionRequest) {
+      return;
+    }
+
+    const row = findRow(sessionRef.current, validatorSuggestionRequest.rowId);
+    const field = findField(adapter.fields, validatorSuggestionRequest.fieldPath);
+    if (!row || !field || !hasRemoteQuery(field)) {
+      return;
+    }
+
+    if (
+      !cellStillMatchesQuery(
+        sessionRef.current,
+        validatorSuggestionRequest.rowId,
+        validatorSuggestionRequest.fieldPath,
+        validatorSuggestionRequest.query
+      )
+    ) {
+      return;
+    }
+
+    const localSuggestions = filterLocalSuggestions(
+      field.options,
+      validatorSuggestionRequest.query
+    );
+    const currentCell = row.cells[validatorSuggestionRequest.fieldPath];
+
+    if (validatorSuggestionsInfinite.isError) {
+      const error = validatorSuggestionsInfinite.error;
+      setValidatorSuggestions({
+        rowId: validatorSuggestionRequest.rowId,
+        fieldPath: validatorSuggestionRequest.fieldPath,
+        query: validatorSuggestionRequest.query,
+        status: RemoteValidationStatus.Invalid,
+        suggestions: localSuggestions,
+        selectedSuggestion: currentCell.remoteState.selectedSuggestion,
+        message:
+          error instanceof Error ? error.message : `Failed to load suggestions for ${field.label}.`,
+        suggestionPaging: {
+          hasNextPage: false,
+          isFetchingNextPage: false,
+        },
+      });
+      return;
+    }
+
+    if (!validatorSuggestionsInfinite.data) {
+      return;
+    }
+
+    const remoteSuggestions = validatorSuggestionsInfinite.data.pages.flatMap(
+      (page) => page.suggestions
+    );
+    const suggestions = mergeSuggestions(localSuggestions, remoteSuggestions);
+    const selectedSuggestion =
+      currentCell.remoteState.selectedSuggestion &&
+      suggestions.some(
+        (candidate) => candidate.value === currentCell.remoteState.selectedSuggestion?.value
+      )
+        ? currentCell.remoteState.selectedSuggestion
+        : null;
+
+    setValidatorSuggestions({
+      rowId: validatorSuggestionRequest.rowId,
+      fieldPath: validatorSuggestionRequest.fieldPath,
+      query: validatorSuggestionRequest.query,
+      status:
+        currentCell.remoteState.status === RemoteValidationStatus.Valid
+          ? RemoteValidationStatus.Valid
+          : RemoteValidationStatus.Invalid,
+      suggestions:
+        currentCell.remoteState.status === RemoteValidationStatus.Valid ? [] : suggestions,
+      selectedSuggestion,
+      message:
+        currentCell.remoteState.status === RemoteValidationStatus.Valid
+          ? null
+          : (currentCell.remoteState.message ?? resolveSuggestionMessage(field, null, suggestions)),
+      suggestionPaging: {
+        hasNextPage: validatorSuggestionsInfinite.hasNextPage ?? false,
+        isFetchingNextPage: validatorSuggestionsInfinite.isFetchingNextPage,
+      },
+    });
+  }, [
+    adapter.fields,
+    validatorSuggestionRequest,
+    validatorSuggestionsInfinite.data,
+    validatorSuggestionsInfinite.error,
+    validatorSuggestionsInfinite.hasNextPage,
+    validatorSuggestionsInfinite.isError,
+    validatorSuggestionsInfinite.isFetchingNextPage,
+  ]);
+
+  const chooseSuggestion = useCallback(
+    ({
+      rowId,
+      fieldPath,
+      suggestion,
+    }: {
+      rowId: string;
+      fieldPath: string;
+      suggestion: ISuggestion;
+    }) => {
+      clearPendingCellSync(rowId, fieldPath);
 
       const currentSession = sessionRef.current;
       const row = findRow(currentSession, rowId);
-      const field = findField(adapter.fields, fieldPath);
-
-      if (
-        row &&
-        field &&
-        hasSuggestionSource(field) &&
-        row.cells[fieldPath].rawValue.trim() !== ''
-      ) {
-        void requestSuggestions({
-          rowId,
-          fieldPath,
-          query: row.cells[fieldPath].rawValue,
-        });
+      if (!row) {
         return;
       }
 
-      setSuggestionRequest(null);
-      setRemoteValidation(null);
+      const currentCell = row.cells[fieldPath];
+
+      commit((current) =>
+        setCellRemoteState(current, {
+          rowId,
+          fieldPath,
+          remoteState: {
+            ...currentCell.remoteState,
+            status: RemoteValidationStatus.Invalid,
+            selectedSuggestion: suggestion,
+            message: 'Apply the selected suggestion to continue.',
+          },
+        })
+      );
     },
-    [adapter.fields, requestSuggestions]
+    [clearPendingCellSync, commit]
   );
+
+  useEffect(() => {
+    const { rowId, fieldPath } = session.validatorSelection;
+
+    if (!rowId || !fieldPath || fieldPath === ENTITY_IMPORT_ALL_COLUMNS) {
+      clearValidatorSuggestions();
+      return;
+    }
+
+    const row = findRow(session, rowId);
+    const field = findField(adapter.fields, fieldPath);
+    const query = row?.cells[fieldPath]?.rawValue ?? '';
+
+    if (!row || !field || !hasSuggestionSource(field) || !query.trim()) {
+      clearValidatorSuggestions();
+      return;
+    }
+
+    const nextQueryKey = `${rowId}:${fieldPath}:${query.trim()}`;
+    if (validatorSelectionQueryKeyRef.current === nextQueryKey) {
+      return;
+    }
+
+    validatorSelectionQueryKeyRef.current = nextQueryKey;
+    void requestValidatorSuggestions({ rowId, fieldPath, query });
+  }, [
+    adapter.fields,
+    clearValidatorSuggestions,
+    requestValidatorSuggestions,
+    session,
+    session.validatorSelection,
+  ]);
+
+  const loadMoreSuggestions = useCallback(() => {
+    if (!validatorSuggestionRequest) {
+      return;
+    }
+
+    void validatorSuggestionsInfinite.fetchNextPage();
+  }, [validatorSuggestionRequest, validatorSuggestionsInfinite.fetchNextPage]);
 
   const selectCell = useCallback(
     ({ rowId, fieldPath }: { rowId: string; fieldPath: string }) => {
       commit((current) => selectCellState(current, { rowId, fieldPath }), { validate: false });
-      syncSuggestionsForSelection({ rowId, fieldPath });
     },
-    [commit, syncSuggestionsForSelection]
+    [commit]
   );
 
   const setValidatorSelection = useCallback(
     ({ rowId, fieldPath }: { rowId?: string | null; fieldPath?: string | null }) => {
-      const currentSelection = sessionRef.current.validatorSelection;
-      const nextSelection = {
-        rowId: rowId !== undefined ? rowId : currentSelection.rowId,
-        fieldPath: fieldPath !== undefined ? fieldPath : currentSelection.fieldPath,
-      };
-
       commit((current) => setValidatorSelectionState(current, { rowId, fieldPath }), {
         validate: false,
       });
-      syncSuggestionsForSelection(nextSelection);
     },
-    [commit, syncSuggestionsForSelection]
+    [commit]
   );
 
   const updateCellValue = useCallback(
     ({ rowId, fieldPath, rawValue }: { rowId: string; fieldPath: string; rawValue: string }) => {
-      const field = findField(adapter.fields, fieldPath);
-
-      commit((current) => updateCellRawValue(current, { rowId, fieldPath, rawValue }));
-
-      if (field && hasSuggestionSource(field)) {
-        void requestSuggestions({ rowId, fieldPath, query: rawValue });
-      }
+      commit((current) => updateCellRawValue(current, { rowId, fieldPath, rawValue }), {
+        validate: false,
+      });
+      scheduleDeferredCellSync({ rowId, fieldPath, rawValue });
     },
-    [adapter.fields, commit, requestSuggestions]
+    [commit, scheduleDeferredCellSync]
   );
 
   const setFileValue = useCallback(
@@ -912,6 +1140,7 @@ export function useEntityImportController<TPayload, TResult>({
       displayValue?: string | null;
       parsedValue?: unknown;
     }) => {
+      clearPendingCellSync(rowId, fieldPath);
       commit((current) =>
         setCellValue(current, {
           rowId,
@@ -922,7 +1151,7 @@ export function useEntityImportController<TPayload, TResult>({
         })
       );
     },
-    [commit]
+    [clearPendingCellSync, commit]
   );
 
   const addRow = useCallback(() => {
@@ -947,23 +1176,26 @@ export function useEntityImportController<TPayload, TResult>({
 
   const applySuggestion = useCallback(
     (params: Parameters<typeof stageSuggestionToRows>[1]) => {
+      clearPendingCellSync(params.targetRowId, params.fieldPath);
       commit((current) => stageSuggestionToRows(current, params));
     },
-    [commit]
+    [clearPendingCellSync, commit]
   );
 
   const acceptCorrection = useCallback(
     (params: { rowId: string; fieldPath: string }) => {
+      clearPendingCellSync(params.rowId, params.fieldPath);
       commit((current) => acceptCorrectionDraft(current, params));
     },
-    [commit]
+    [clearPendingCellSync, commit]
   );
 
   const rejectCorrection = useCallback(
     (params: { rowId: string; fieldPath: string }) => {
+      clearPendingCellSync(params.rowId, params.fieldPath);
       commit((current) => rejectCorrectionDraft(current, params));
     },
-    [commit]
+    [clearPendingCellSync, commit]
   );
 
   const dismissFeatureNotification = useCallback(
@@ -976,13 +1208,18 @@ export function useEntityImportController<TPayload, TResult>({
   const handleCsvUpload = useCallback(
     async (file: File) => {
       try {
+        setCsvUploadPhase(CsvUploadPhase.Parsing);
+        resetCsvRowValidationProgress();
+        clearValidatorSuggestions();
         const parsedCsv = await parseCsvFile(file);
+        setCsvUploadPhase(CsvUploadPhase.Hydrating);
         const imported = importCsvRows({ fields: adapter.fields, rows: parsedCsv.data });
         const csvHydratedRows = await hydrateCsvRows({
           fields: adapter.fields,
           rows: imported.rows,
           context,
         });
+        setCsvUploadPhase(CsvUploadPhase.PreparingRows);
         const parseNotifications = buildCsvParseNotificationMessages(parsedCsv);
         const hydratedSession = parseNotifications.reduce(
           (current, message, index) =>
@@ -1008,11 +1245,29 @@ export function useEntityImportController<TPayload, TResult>({
             return [{ rowId: row.id, fieldPath: field.path, query }];
           })
         );
+        const pendingSession = remoteValidationTargets.reduce(
+          (current, { rowId, fieldPath }) =>
+            setCellRemoteState(current, {
+              rowId,
+              fieldPath,
+              remoteState: {
+                status: RemoteValidationStatus.Pending,
+                suggestions: [],
+                selectedSuggestion: null,
+                message: null,
+                suggestionPaging: {
+                  hasNextPage: false,
+                  isFetchingNextPage: false,
+                },
+              },
+            }),
+          hydratedSession
+        );
 
-        setSuggestionRequest(null);
-        setRemoteValidation(null);
-        sessionRef.current = hydratedSession;
-        setSession(hydratedSession);
+        beginCsvRowValidationProgress(remoteValidationTargets);
+        setCsvUploadPhase(CsvUploadPhase.Idle);
+        sessionRef.current = pendingSession;
+        setSession(pendingSession);
 
         await Promise.all(
           remoteValidationTargets.map(({ rowId, fieldPath, query }) =>
@@ -1025,6 +1280,8 @@ export function useEntityImportController<TPayload, TResult>({
           )
         );
       } catch (error) {
+        setCsvUploadPhase(CsvUploadPhase.Idle);
+        resetCsvRowValidationProgress();
         commit(
           (current) =>
             pushNotification(current, {
@@ -1037,7 +1294,16 @@ export function useEntityImportController<TPayload, TResult>({
         );
       }
     },
-    [adapter.fields, commit, runDirectRemoteValidation, validate]
+    [
+      adapter.fields,
+      beginCsvRowValidationProgress,
+      clearValidatorSuggestions,
+      commit,
+      context,
+      resetCsvRowValidationProgress,
+      runDirectRemoteValidation,
+      validate,
+    ]
   );
 
   const downloadCsvTemplate = useCallback(() => {
@@ -1129,7 +1395,7 @@ export function useEntityImportController<TPayload, TResult>({
     importMutation.mutate();
   }, [importMutation]);
 
-  const actions = useMemo<EntityImportActions>(
+  const actions = useMemo<IEntityImportActions>(
     () => ({
       addRow,
       applySuggestion,
@@ -1139,7 +1405,7 @@ export function useEntityImportController<TPayload, TResult>({
       clearRow,
       deleteRow,
       dismissNotification: dismissFeatureNotification,
-      requestSuggestions,
+      requestSuggestions: requestValidatorSuggestions,
       loadMoreSuggestions,
       selectCell,
       setValidatorSelection,
@@ -1157,7 +1423,7 @@ export function useEntityImportController<TPayload, TResult>({
       clearRow,
       deleteRow,
       dismissFeatureNotification,
-      requestSuggestions,
+      requestValidatorSuggestions,
       loadMoreSuggestions,
       selectCell,
       setValidatorSelection,
@@ -1172,6 +1438,9 @@ export function useEntityImportController<TPayload, TResult>({
     session,
     actions,
     isSubmitting: importMutation.isPending,
+    csvUploadPhase,
+    csvRowValidationProgress,
+    validatorSuggestions,
     downloadCsvTemplate,
     downloadGuideTemplate,
     handleCsvUpload,

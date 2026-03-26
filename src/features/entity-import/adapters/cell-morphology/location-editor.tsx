@@ -6,7 +6,7 @@ import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 
-import type { EntityImportActions } from '@/features/entity-import/core/adapter';
+import type { IEntityImportActions } from '@/features/entity-import/core/adapter';
 import type { IImportCellState, IImportRowState } from '@/features/entity-import/core/contracts';
 
 export interface LocationValue {
@@ -92,7 +92,7 @@ interface LocationEditorProps {
   cell: IImportCellState;
   row: IImportRowState;
   fieldPath: string;
-  actions: EntityImportActions;
+  actions: IEntityImportActions;
   mode?: 'table' | 'panel';
   value?: LocationValue | null;
   onChange?: (value: LocationValue) => void;
@@ -115,9 +115,6 @@ export function LocationEditor({
 }: LocationEditorProps) {
   const location = value ?? resolveLocationValue(cell.parsedValue, cell.rawValue) ?? null;
   const correctionDraft = mode === 'table' ? cell.correctionDraft : null;
-  const invalidRawValue =
-    !correctionDraft && !location && cell.rawValue.trim() !== '' ? cell.rawValue.trim() : null;
-  const invalidMessage = invalidRawValue ? (cell.issues[0] ?? 'Invalid location value.') : null;
   const previousLocation = correctionDraft
     ? resolveLocationValue(correctionDraft.previousParsedValue, correctionDraft.previousRawValue)
     : null;
@@ -274,16 +271,6 @@ export function LocationEditor({
           </div>
         ))}
       </div>
-
-      {invalidRawValue ? (
-        <div
-          data-testid={`location-invalid-raw-${mode}`}
-          className="mx-2 mt-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-950"
-        >
-          <div className="font-semibold">{invalidMessage}</div>
-          <div className="mt-1 break-all">{invalidRawValue}</div>
-        </div>
-      ) : null}
     </div>
   );
 }

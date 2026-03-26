@@ -1,17 +1,21 @@
+import { RiFolderUploadFill } from '@remixicon/react';
+import { uniqWith } from 'es-toolkit/compat';
+
 import { formatBytes } from '@/utils/format';
 
+import type { ReactNode } from 'react';
 import type {
-  AdapterFieldDefinition,
-  ImportFileFieldConfig,
+  IAdapterFieldDefinition,
+  IImportFileFieldConfig,
 } from '@/features/entity-import/core/adapter';
 
 const DEFAULT_FILE_BUTTON_LABEL = 'Add file(s)';
 const DEFAULT_MAX_FILES = 1;
 
 function normalizeFileConfig(
-  fileConfig?: ImportFileFieldConfig
-): Required<Pick<ImportFileFieldConfig, 'accept' | 'allowedExtensions'>> &
-  Omit<ImportFileFieldConfig, 'accept' | 'allowedExtensions'> {
+  fileConfig?: IImportFileFieldConfig
+): Required<Pick<IImportFileFieldConfig, 'accept' | 'allowedExtensions'>> &
+  Omit<IImportFileFieldConfig, 'accept' | 'allowedExtensions'> {
   return {
     accept: fileConfig?.accept ?? [],
     allowedExtensions: fileConfig?.allowedExtensions ?? [],
@@ -44,7 +48,7 @@ function matchesAcceptToken(file: File, token: string): boolean {
   return file.type.toLowerCase() === normalizedToken;
 }
 
-export function buildFileAcceptValue(fileConfig?: ImportFileFieldConfig): string | undefined {
+export function buildFileAcceptValue(fileConfig?: IImportFileFieldConfig): string | undefined {
   const normalizedConfig = normalizeFileConfig(fileConfig);
   const tokens = [
     ...normalizedConfig.accept,
@@ -56,7 +60,7 @@ export function buildFileAcceptValue(fileConfig?: ImportFileFieldConfig): string
   return tokens.length > 0 ? [...new Set(tokens)].join(',') : undefined;
 }
 
-export function getImportFileButtonLabel(field: AdapterFieldDefinition): string {
+export function getImportFileButtonLabel(field: IAdapterFieldDefinition): ReactNode {
   const normalizedConfig = normalizeFileConfig(field.fileConfig);
   if (normalizedConfig.buttonLabel?.trim()) {
     return normalizedConfig.buttonLabel.trim();
@@ -67,7 +71,17 @@ export function getImportFileButtonLabel(field: AdapterFieldDefinition): string 
     return DEFAULT_FILE_BUTTON_LABEL;
   }
 
-  return `${DEFAULT_FILE_BUTTON_LABEL} (${allowedExtensions.join(', ')})`;
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="flex items-center gap-2">
+        {DEFAULT_FILE_BUTTON_LABEL}
+        <RiFolderUploadFill className="size-4" />
+      </div>
+      <div className="text-xs text-muted-foreground">
+        {uniqWith(allowedExtensions, (a, b) => a.toLowerCase() === b.toLowerCase()).join(', ')}
+      </div>
+    </div>
+  );
 }
 
 export function getImportFileDisplayValue(files: Array<File>): string {
@@ -82,11 +96,11 @@ export function getImportFileDisplayValue(files: Array<File>): string {
   return `${files.length} files selected`;
 }
 
-export function getImportFileMaxFiles(field?: AdapterFieldDefinition): number {
+export function getImportFileMaxFiles(field?: IAdapterFieldDefinition): number {
   return normalizeFileConfig(field?.fileConfig).maxFiles ?? DEFAULT_MAX_FILES;
 }
 
-export function getImportFileInputMultiple(field?: AdapterFieldDefinition): boolean {
+export function getImportFileInputMultiple(field?: IAdapterFieldDefinition): boolean {
   return getImportFileMaxFiles(field) > 1;
 }
 
@@ -104,7 +118,7 @@ export function toFileArray(value: unknown): Array<File> {
 
 export function toParsedFileValue(
   files: Array<File>,
-  field?: AdapterFieldDefinition
+  field?: IAdapterFieldDefinition
 ): File | Array<File> | null {
   const maxFiles = getImportFileMaxFiles(field);
   if (files.length === 0) {
@@ -118,7 +132,7 @@ export function validateImportFiles({
   field,
   files,
 }: {
-  field?: AdapterFieldDefinition;
+  field?: IAdapterFieldDefinition;
   files: Array<File>;
 }): string | null {
   if (!field) {

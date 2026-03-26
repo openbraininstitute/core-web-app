@@ -81,7 +81,7 @@ export interface IImportFieldDefinition {
   columnWidth?: number;
 }
 
-export interface RemoteSuggestionPaging {
+export interface IRemoteSuggestionPaging {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
 }
@@ -92,7 +92,7 @@ export interface IRemoteState {
   selectedSuggestion: ISuggestion | null;
   message: string | null;
   /** Present when remote search supports pagination (validator load more). */
-  suggestionPaging?: RemoteSuggestionPaging;
+  suggestionPaging?: IRemoteSuggestionPaging;
 }
 
 export interface CellCorrectionDraft {

@@ -11,11 +11,11 @@ import {
 } from '../../core/contracts';
 import { LocationEditor, summarizeLocation } from './location-editor';
 
-import type { EntityImportActions } from '../../core/adapter';
+import type { IEntityImportActions } from '../../core/adapter';
 import type { IImportCellState, IImportRowState } from '../../core/contracts';
 import type { LocationValue } from './location-editor';
 
-function createMockActions(): EntityImportActions {
+function createMockActions(): IEntityImportActions {
   return {
     addRow: vi.fn(),
     acceptCorrection: vi.fn(),
@@ -93,7 +93,7 @@ function InlineLocationHarness({
           parsedValue: params.parsedValue ?? params.rawValue,
         }));
       },
-    } satisfies EntityImportActions;
+    } satisfies IEntityImportActions;
   }, [onSetCustomValue]);
 
   return (
@@ -153,7 +153,7 @@ describe('LocationEditor', () => {
 
     render(<PanelLocationHarness onChange={onChange} />);
 
-    expect(screen.getByTestId('location-editor-panel')).toHaveClass('grid', 'grid-cols-3');
+    expect(screen.getByTestId('location-editor-panel')).toHaveClass('space-y-3', 'px-4');
 
     const yInput = screen.getByLabelText('Location Y row 1');
     await user.clear(yInput);

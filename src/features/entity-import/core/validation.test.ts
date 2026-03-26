@@ -11,7 +11,7 @@ import {
 import { createImportSessionState, hydrateSessionRows } from './session';
 import { validateSessionRows } from './validation';
 
-import type { AdapterFieldDefinition } from './adapter';
+import type { IAdapterFieldDefinition } from './adapter';
 
 const fields: Array<IImportFieldDefinition> = [
   {
@@ -85,7 +85,7 @@ describe('validateSessionRows', () => {
   });
 
   it('merges field-local validation issues for hydrated compound csv cells', () => {
-    const compoundFields: Array<AdapterFieldDefinition> = [
+    const compoundFields: Array<IAdapterFieldDefinition> = [
       {
         label: 'Location',
         path: 'location',

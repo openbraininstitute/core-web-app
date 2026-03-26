@@ -17,7 +17,7 @@ import { createCellMorphologyImportAdapter } from './adapter';
 import { ContributionsEditor } from './contributions-editor';
 
 import type { ReactElement } from 'react';
-import type { EntityImportActions, EntityImportRuntimeContext } from '../../core/adapter';
+import type { EntityImportRuntimeContext, IEntityImportActions } from '../../core/adapter';
 import type { ICellMorphologyImportServices } from './services';
 
 function renderWithQueryClient(ui: ReactElement) {
@@ -31,7 +31,7 @@ function renderWithQueryClient(ui: ReactElement) {
   return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
 }
 
-function createMockActions(): EntityImportActions {
+function createMockActions(): IEntityImportActions {
   return {
     addRow: vi.fn(),
     acceptCorrection: vi.fn(),
@@ -114,7 +114,7 @@ function ContributionEditorHarness({
           parsedValue: params.parsedValue ?? params.rawValue,
         }));
       },
-    } satisfies EntityImportActions;
+    } satisfies IEntityImportActions;
   }, [onSetCustomValue]);
 
   return (
@@ -187,7 +187,7 @@ function ContributionSummaryHarness({
           parsedValue: params.parsedValue ?? params.rawValue,
         }));
       },
-    } satisfies EntityImportActions;
+    } satisfies IEntityImportActions;
   }, [onSetCustomValue]);
 
   return contributionsField.tableRenderer({

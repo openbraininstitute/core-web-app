@@ -1,10 +1,10 @@
 'use client';
 
-import { CheckOutlined, CloseOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { DatePicker } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import { useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState, useTransition } from 'react';
 
 import {
   CellStatus,
@@ -13,7 +13,6 @@ import {
   type IImportRowState,
   type IImportSessionState,
   ImportInputType,
-  RemoteValidationStatus,
 } from '@/features/entity-import/core/contracts';
 import {
   buildFileAcceptValue,
@@ -24,15 +23,17 @@ import {
   importDatePickerChangeToRawValue,
   parseImportDatePickerValue,
 } from '@/features/entity-import/core/helpers';
+import { CellStatusBadge } from '@/features/entity-import/ui/cell-status-badge';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
 import {
   ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
   getEntityImportSelectLabel,
 } from '@/features/entity-import/ui/select-styles';
 import {
-  ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
-  ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
-} from '@/features/entity-import/ui/tooltip-styles';
+  getTableCellUiStatus,
+  shouldDisplayCellStatusBadge,
+  TableCellUiStatus,
+} from '@/features/entity-import/ui/status';
 import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { Textarea } from '@/ui/molecules/input/text-area';
@@ -43,22 +44,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/molecules/select';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type {
-  AdapterFieldDefinition,
-  EntityImportActions,
   EntityImportRuntimeContext,
+  IAdapterFieldDefinition,
+  IEntityImportActions,
 } from '@/features/entity-import/core/adapter';
 
 interface InlineCellProps {
-  field: AdapterFieldDefinition;
+  field: IAdapterFieldDefinition;
   cell: IImportCellState;
   row: IImportRowState;
   session: IImportSessionState;
   context: EntityImportRuntimeContext;
-  actions: EntityImportActions;
+  actions: IEntityImportActions;
   selected: boolean;
 }
 
@@ -76,12 +76,18 @@ export const BLOCKED_CONTROL_CLASSNAME =
   'bg-neutral-100 text-neutral-500 [&_textarea]:text-neutral-500 bg-neutral-100 [&_textarea]:bg-neutral-100';
 
 function getControlClassName(cell: IImportCellState, selected: boolean): string {
+  const cellUiStatus = getTableCellUiStatus(cell);
+
   return clsx(
     'h-full w-full rounded-none border-0 bg-transparent px-3 py-2 text-base! font-semibold!',
     'placeholder:font-light! placeholder:text-gray-400! text-primary-9! placeholder:text-sm!',
     'shadow-none outline-none focus-visible:border-transparent focus-visible:ring-0',
     selected && 'text-blue-950',
-    cell.status === CellStatus.Invalid && INVALID_CONTROL_CLASSNAME,
+    cellUiStatus === TableCellUiStatus.NeedsSelection &&
+      'bg-sky-50/70 text-sky-950 [&_textarea]:bg-sky-50/70 [&_textarea]:text-sky-950',
+    cellUiStatus !== TableCellUiStatus.NeedsSelection &&
+      cell.status === CellStatus.Invalid &&
+      INVALID_CONTROL_CLASSNAME,
     cell.dependencyState === DependencyState.Blocked && BLOCKED_CONTROL_CLASSNAME
   );
 }
@@ -99,10 +105,13 @@ export function InlineCell({
   const correctionDetailsPopoverId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const displayValue = getDisplayValue(cell);
-  const showAmbiguousSelectionHint =
-    field.inputType === ImportInputType.RemoteSelect &&
-    cell.remoteState.status === RemoteValidationStatus.Invalid &&
-    cell.remoteState.suggestions.length > 1;
+  const hasStatusBadge = shouldDisplayCellStatusBadge(cell);
+  const [draftInputValue, setDraftInputValue] = useState(displayValue);
+  const [, startCellUpdateTransition] = useTransition();
+
+  useEffect(() => {
+    setDraftInputValue(displayValue);
+  }, [displayValue]);
 
   if (field.tableRenderer && cell.correctionDraft && field.inputType === ImportInputType.Compound) {
     return field.tableRenderer({
@@ -178,14 +187,24 @@ export function InlineCell({
   }
 
   if (field.tableRenderer) {
-    return field.tableRenderer({
-      field,
-      cell,
-      row,
-      session,
-      context,
-      actions,
-    });
+    return (
+      <div className="relative h-full w-full">
+        {field.tableRenderer({
+          field,
+          cell,
+          row,
+          session,
+          context,
+          actions,
+        })}
+        <CellStatusBadge
+          cell={cell}
+          fieldLabel={field.label}
+          rowIndex={row.rowIndex + 1}
+          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+        />
+      </div>
+    );
   }
 
   if (field.inputType === ImportInputType.Select) {
@@ -227,6 +246,12 @@ export function InlineCell({
             ))}
           </SelectContent>
         </Select>
+        <CellStatusBadge
+          cell={cell}
+          fieldLabel={field.label}
+          rowIndex={row.rowIndex + 1}
+          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+        />
       </div>
     );
   }
@@ -269,6 +294,12 @@ export function InlineCell({
             event.currentTarget.value = '';
           }}
         />
+        <CellStatusBadge
+          cell={cell}
+          fieldLabel={field.label}
+          rowIndex={row.rowIndex + 1}
+          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+        />
       </div>
     );
   }
@@ -292,15 +323,25 @@ export function InlineCell({
           )}
           disabled={cell.dependencyState === DependencyState.Blocked}
           placeholder={field.placeholder}
-          value={displayValue}
+          value={draftInputValue}
           onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
-          onChange={(event) =>
-            actions.updateCellValue({
-              rowId: row.id,
-              fieldPath: field.path,
-              rawValue: event.target.value,
-            })
-          }
+          onChange={(event) => {
+            const nextRawValue = event.target.value;
+            setDraftInputValue(nextRawValue);
+            startCellUpdateTransition(() => {
+              actions.updateCellValue({
+                rowId: row.id,
+                fieldPath: field.path,
+                rawValue: nextRawValue,
+              });
+            });
+          }}
+        />
+        <CellStatusBadge
+          cell={cell}
+          fieldLabel={field.label}
+          rowIndex={row.rowIndex + 1}
+          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
         />
       </div>
     );
@@ -341,6 +382,12 @@ export function InlineCell({
             });
           }}
         />
+        <CellStatusBadge
+          cell={cell}
+          fieldLabel={field.label}
+          rowIndex={row.rowIndex + 1}
+          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+        />
       </div>
     );
   }
@@ -354,53 +401,30 @@ export function InlineCell({
           className={cn(
             getControlClassName(cell, selected),
             'pointer-events-auto box-border h-full min-h-[52px] w-full',
-            showAmbiguousSelectionHint && 'pr-10'
+            hasStatusBadge && 'pr-10'
           )}
           disabled={cell.dependencyState === DependencyState.Blocked}
           placeholder={field.placeholder}
-          value={displayValue}
+          value={draftInputValue}
           onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
-          onChange={(event) =>
-            actions.updateCellValue({
-              rowId: row.id,
-              fieldPath: field.path,
-              rawValue: event.target.value,
-            })
-          }
+          onChange={(event) => {
+            const nextRawValue = event.target.value;
+            setDraftInputValue(nextRawValue);
+            startCellUpdateTransition(() => {
+              actions.updateCellValue({
+                rowId: row.id,
+                fieldPath: field.path,
+                rawValue: nextRawValue,
+              });
+            });
+          }}
         />
-        {showAmbiguousSelectionHint ? (
-          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={`Why ${field.label} row ${row.rowIndex + 1} needs selection`}
-                  className={cn(
-                    ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
-                    'pointer-events-auto text-amber-700'
-                  )}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    actions.selectCell({ rowId: row.id, fieldPath: field.path });
-                  }}
-                >
-                  <InfoCircleOutlined />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                align="end"
-                sideOffset={0}
-                arrowClassName="bg-white"
-                className={ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME}
-              >
-                <div className="text-pretty px-1 py-1">
-                  Open the validator and choose the correct value for this cell.
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        ) : null}
+        <CellStatusBadge
+          cell={cell}
+          fieldLabel={field.label}
+          rowIndex={row.rowIndex + 1}
+          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+        />
       </div>
     </div>
   );

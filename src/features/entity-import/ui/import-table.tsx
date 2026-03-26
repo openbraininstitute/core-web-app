@@ -12,17 +12,20 @@ import {
   useState,
 } from 'react';
 
-import {
-  CellStatus,
-  DependencyState,
-  ENTITY_IMPORT_ALL_COLUMNS,
-} from '@/features/entity-import/core/contracts';
+import { ENTITY_IMPORT_ALL_COLUMNS } from '@/features/entity-import/core/contracts';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
 import {
   BLOCKED_CONTROL_CLASSNAME,
   INVALID_CONTROL_CLASSNAME,
   InlineCell,
 } from '@/features/entity-import/ui/inline-cell';
+import {
+  getTableCellUiStatus,
+  getTableRowUiStatus,
+  getTableRowUiStatusLabel,
+  TableCellUiStatus,
+  TableRowUiStatus,
+} from '@/features/entity-import/ui/status';
 import useResizeObserver from '@/hooks/useResizeObserver';
 import {
   DropdownMenu,
@@ -34,22 +37,22 @@ import { cn } from '@/utils/css-class';
 
 import type { ColumnsType, TableRef } from 'antd/es/table';
 import type {
-  EntityImportActions,
-  EntityImportAdapter,
   EntityImportRuntimeContext,
+  IEntityImportActions,
+  IEntityImportAdapter,
 } from '@/features/entity-import/core/adapter';
 import type { IImportSessionState } from '@/features/entity-import/core/contracts';
 
 const DEFAULT_FIELD_COLUMN_WIDTH = 200;
 const DEFAULT_TABLE_BODY_SCROLL_HEIGHT = 1;
-const ROW_INDEX_COLUMN_WIDTH = 46;
+const ROW_INDEX_COLUMN_WIDTH = 68;
 const ROW_ACTIONS_COLUMN_WIDTH = 72;
 
 interface ImportTableProps<TPayload, TResult> {
-  adapter: EntityImportAdapter<TPayload, TResult>;
+  adapter: IEntityImportAdapter<TPayload, TResult>;
   context: EntityImportRuntimeContext;
   session: IImportSessionState;
-  actions: EntityImportActions;
+  actions: IEntityImportActions;
 }
 
 function fieldColumnWidth(
@@ -201,7 +204,7 @@ export function ImportTable<TPayload, TResult>({
     () => [
       {
         title: (
-          <div className="relative flex min-h-9 items-center pr-2">
+          <div className="relative flex min-h-9 items-center justify-center pr-2">
             <span className="text-sm  font-semibold uppercase tracking-wide text-neutral-4">
               Row
             </span>
@@ -211,11 +214,35 @@ export function ImportTable<TPayload, TResult>({
         width: ROW_INDEX_COLUMN_WIDTH,
         fixed: 'left',
         align: 'center',
-        render: (_, row) => (
-          <span className="text-sm text-center font-semibold text-neutral-4">
-            {row.rowIndex + 1}
-          </span>
-        ),
+        render: (_, row) => {
+          const rowUiStatus = getTableRowUiStatus(row);
+          const rowStatusLabel = getTableRowUiStatusLabel(rowUiStatus);
+
+          return (
+            <div className="flex min-h-[52px] flex-col items-center justify-center gap-1 py-2">
+              <span
+                role="img"
+                aria-label={`Row ${row.rowIndex + 1} status: ${rowStatusLabel}`}
+                className={cn(
+                  'inline-flex size-3 rounded-full border',
+                  rowUiStatus === TableRowUiStatus.Ready &&
+                    'border-emerald-300 bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]',
+                  rowUiStatus === TableRowUiStatus.Validating &&
+                    'border-neutral-300 bg-neutral-500 shadow-[0_0_0_3px_rgba(115,115,115,0.12)]',
+                  rowUiStatus === TableRowUiStatus.NeedsSelection &&
+                    'border-sky-300 bg-sky-500 shadow-[0_0_0_3px_rgba(14,165,233,0.12)]',
+                  rowUiStatus === TableRowUiStatus.NeedsAttention &&
+                    'border-amber-300 bg-amber-500 shadow-[0_0_0_3px_rgba(245,158,11,0.12)]',
+                  rowUiStatus === TableRowUiStatus.Idle &&
+                    'border-neutral-200 bg-neutral-200 shadow-[0_0_0_3px_rgba(229,229,229,0.5)]'
+                )}
+              />
+              <span className="text-xs text-center font-semibold text-neutral-4">
+                {row.rowIndex + 1}
+              </span>
+            </div>
+          );
+        },
         onCell: () => ({
           className: 'align-center',
         }),
@@ -264,13 +291,18 @@ export function ImportTable<TPayload, TResult>({
             const isSelected =
               session.selectedCell?.rowId === row.id &&
               session.selectedCell?.fieldPath === field.path;
+            const cellUiStatus = getTableCellUiStatus(cell);
 
             return {
               className: cn(
                 'align-top !p-0 transition-colors',
                 isSelected && 'bg-blue-50/60',
-                cell.status === CellStatus.Invalid && INVALID_CONTROL_CLASSNAME,
-                cell.dependencyState === DependencyState.Blocked && BLOCKED_CONTROL_CLASSNAME
+                cellUiStatus === TableCellUiStatus.Warning && INVALID_CONTROL_CLASSNAME,
+                cellUiStatus === TableCellUiStatus.NeedsSelection &&
+                  'bg-sky-50/70 text-sky-950 [&_textarea]:bg-sky-50/70 [&_textarea]:text-sky-950',
+                cellUiStatus === TableCellUiStatus.Validating &&
+                  'bg-neutral-50 text-neutral-700 [&_textarea]:bg-neutral-50 [&_textarea]:text-neutral-700',
+                cell.dependencyState === 'blocked' && BLOCKED_CONTROL_CLASSNAME
               ),
             };
           },

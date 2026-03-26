@@ -1,4 +1,4 @@
-import type { EntityImportTemplateGuideConfig } from '../core/adapter';
+import type { IEntityImportTemplateGuideConfig } from '../core/adapter';
 
 const cellMorphologyImportTemplateGuide = `# Cell Morphology CSV Guide
 
@@ -38,7 +38,7 @@ const ENTITY_IMPORT_TEMPLATE_GUIDES: Record<string, Record<string, string>> = {
   },
 };
 
-export function getEntityImportTemplateGuide(templateGuide?: EntityImportTemplateGuideConfig): {
+export function getEntityImportTemplateGuide(templateGuide?: IEntityImportTemplateGuideConfig): {
   fileName: string;
   content: string;
 } | null {

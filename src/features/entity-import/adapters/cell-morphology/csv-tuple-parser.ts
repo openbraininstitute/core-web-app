@@ -168,7 +168,7 @@ function resolveAgentTypeToken(token: string): TAgentType | null {
       normalizeToken(candidate.label) === normalizedToken
   );
 
-  return match?.key;
+  return match?.key ?? null;
 }
 
 function toExactLookupResult(suggestions: Array<ISuggestion>, query: string): ExactLookupResult {
