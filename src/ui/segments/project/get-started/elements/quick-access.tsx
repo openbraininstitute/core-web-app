@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { BrokenImageIcon } from '@/components/icons/image-states';
+import { ImageIcon } from '@/components/icons/image-states';
 import { config } from '@/config';
 import { startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -33,7 +33,7 @@ import { cn } from '@/utils/css-class';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { VirtualLabResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { TVirtualLabResponse } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export function MainCardItem({
@@ -54,7 +54,7 @@ export function MainCardItem({
   title: string | undefined;
   description: string | undefined;
   context: WorkspaceContext;
-  virtualLab: VirtualLabResponse;
+  virtualLab: TVirtualLabResponse;
   artifactTitle?: string | null;
 }) {
   const { push: navigate } = useRouter();
@@ -113,12 +113,15 @@ export function MainCardItem({
         {thumbnail ? (
           <Image fill alt={title ?? 'preview'} src={thumbnail} objectFit="contain" />
         ) : (
-          <Skeleton active={false} className="flex items-center justify-center w-full h-full">
-            <BrokenImageIcon className="w-20 h-20 text-gray-300" />
+          <Skeleton
+            active={false}
+            className="flex items-center justify-center w-full h-full bg-background rounded-none"
+          >
+            <ImageIcon className="w-20 h-20 text-gray-300" />
           </Skeleton>
         )}
       </div>
-      <CardContent className="mt-15">
+      <CardContent className="mt-8">
         <h4 className="text-neutral-400 pl-4">{groupTitle}</h4>
         <div
           className={cn(
@@ -150,7 +153,7 @@ export function MainCardComingSoon({
     <Card
       className={cn(
         'w-full bg-white border-none flex-1',
-        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
+        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] select-none pointer-events-none',
         'hover:shadow-bnb hover:border-gray-200 hover:border'
       )}
     >
@@ -171,15 +174,17 @@ export function SingleCardItem({
   entity,
   extendedType,
   artifactTitle,
+  description,
 }: {
   entity: IEntity;
   group: string;
   thumbnail: string | undefined | null;
   title: string | undefined;
   context: WorkspaceContext;
-  virtualLab: VirtualLabResponse | null;
+  virtualLab: TVirtualLabResponse | null;
   extendedType: TExtendedEntitiesTypeDict;
   artifactTitle?: string | null;
+  description: string;
 }) {
   const { push: navigate } = useRouter();
   const { mutate: redirect, isPending } = useMutation({
@@ -211,30 +216,16 @@ export function SingleCardItem({
   return (
     <Card
       className={cn(
-        'w-full bg-white border-none flex-1 p-2 gap-3',
-        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] w-full',
-        'hover:shadow-bnb hover:bg-gray-100/80 hover:border group',
-        'cursor-pointer select-none'
+        'w-full bg-white border-none flex-1 pt-0',
+        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
+        'hover:shadow-bnb hover:bg-gray-100/70 hover:border group',
+        'cursor-pointer select-none gap-2.5'
       )}
       onClick={() => redirect()}
+      title={title}
     >
-      <div className="flex items-start gap-2 px-2 pt-1">
-        <div
-          className={cn(
-            'font-black text-primary-8 min-w-0 flex-1',
-            'select-none text-left flex items-center gap-2',
-            'py-1.5 group-hover:text-primary-7'
-          )}
-          title={title}
-        >
-          {group === QuickAccessGroupDict.Notebooks && isPending && (
-            <LoadingOutlined className="text-label!" />
-          )}
-          <span className="line-clamp-5 whitespace-normal break-all">
-            {title ?? 'No title provided'}
-          </span>
-        </div>
-        {artifactTitle && (
+      {artifactTitle && (
+        <CardTitle className="self-end p-2 pt-1">
           <Badge
             variant="outline"
             rounded
@@ -245,20 +236,39 @@ export function SingleCardItem({
           >
             {artifactTitle}
           </Badge>
-        )}
-      </div>
-      <CardContent className="relative h-41.75 w-auto px-0 mt-auto">
+        </CardTitle>
+      )}
+      <div className="relative h-41.75 w-auto">
         {thumbnail ? (
           <Image fill alt={title ?? 'preview'} src={thumbnail} objectFit="contain" />
         ) : (
           <Skeleton
             active={false}
-            className="flex items-center justify-center w-full h-full bg-background"
+            className="flex items-center justify-center w-full h-full bg-background rounded-none"
             title="No image available"
           >
-            <BrokenImageIcon className="size-10 text-gray-200" />
+            <ImageIcon className="size-10 text-gray-200" />
           </Skeleton>
         )}
+      </div>
+      <CardContent className="mt-8 flex flex-col">
+        <div
+          className={cn(
+            'font-black rounded-full text-primary-8 text-lg 2xl:text-xl mb-1.5',
+            'px-4 py-1.5 max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5'
+          )}
+          title={title}
+        >
+          {group === QuickAccessGroupDict.Notebooks && isPending && (
+            <LoadingOutlined className="text-label!" />
+          )}
+          <span className="line-clamp-5 whitespace-normal break-all">
+            {title ?? 'No title provided'}
+          </span>
+        </div>
+        <p className="text-neutral-4 line-clamp-4 pl-4" title={description}>
+          {description ?? 'No description provided'}
+        </p>
       </CardContent>
     </Card>
   );

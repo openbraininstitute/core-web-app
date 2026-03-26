@@ -40,7 +40,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function Layout({
+export default async function Page({
   params,
 }: ServerSideComponentProp<WorkspaceContext & { group: string }, null>) {
   const { group, ...context } = await params;
@@ -112,7 +112,7 @@ export default async function Layout({
       data-testid={`quick-access-${group}`}
       className="grid grid-cols-3 gap-2 px-3 mb-10"
     >
-      {results.map(({ title, thumbnail, entity, extendedType, artifactTitle }) => {
+      {results.map(({ title, thumbnail, entity, extendedType, artifactTitle, description }) => {
         return (
           <SingleCardItem
             key={entity.id}
@@ -125,6 +125,7 @@ export default async function Layout({
               entity,
               extendedType,
               artifactTitle,
+              description,
             }}
           />
         );

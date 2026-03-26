@@ -89,7 +89,7 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
     <section
       id="main-data-category-cards"
       data-testid="main-data-category-cards"
-      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full"
+      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full mt-2"
     >
       {results.map(
         ({

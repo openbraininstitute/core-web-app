@@ -2,6 +2,7 @@ import { tryCatch } from '@/api/utils';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
 import { ScrollToTop } from '@/ui/segments/project/get-started/elements/scroll-to-top';
+import { TutorialNotFound } from '@/ui/segments/project/get-started/elements/tutorial-not-found';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
 import { type TTutorial, TutorialQuery } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
@@ -53,7 +54,7 @@ export default async function Page({ params }: ServerSideComponentProp<{ slug: s
   const video = tutorials?.find((item) => item.slug === slug);
 
   if (!video) {
-    return <div>HIIIII</div>;
+    return <TutorialNotFound />;
   }
 
   return (
