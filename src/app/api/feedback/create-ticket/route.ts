@@ -1,11 +1,30 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Octokit } from '@octokit/core';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 import { serverConfig } from '@/config/server';
 
 export async function POST(req: NextRequest) {
   try {
+    // Check Bearer token or session
+    const authHeader = req.headers.get('authorization');
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+
+    if (bearerToken) {
+      const userInfoResponse = await fetch(
+        `${serverConfig.KEYCLOAK_ISSUER}/protocol/openid-connect/userinfo`,
+        { headers: { Authorization: `Bearer ${bearerToken}` } }
+      );
+      if (!userInfoResponse.ok) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    } else {
+      const token = await getToken({ req });
+      if (!token) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
     const { title, body, label, labels, screenshot, screenshots } = await req.json();
 
     if (!title || !body) {

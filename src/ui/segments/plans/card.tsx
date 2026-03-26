@@ -9,7 +9,6 @@ import PlanHeader from '@/ui/segments/plans/header';
 export default function PlanCard({ plan }: { plan: PlanV2 }) {
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
-  console.log('My plan is :', plan);
 
   return (
     <div className="border-neutral-2 relative w-full rounded-xl border bg-white p-6">

@@ -155,7 +155,7 @@ export default function RasterPlot({ data }: RasterPlotProps) {
             onChange={(e) => togglePopulation(pop.name, e.target.checked)}
           >
             <span style={{ color: POPULATION_COLORS[idx % POPULATION_COLORS.length] }}>
-              {pop.name} ({pop.timestamps.length} spikes)
+              Population: {pop.name} ({pop.timestamps.length} spikes)
             </span>
           </Checkbox>
         ))}
