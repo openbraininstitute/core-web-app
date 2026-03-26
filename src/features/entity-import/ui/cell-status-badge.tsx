@@ -81,14 +81,14 @@ export function CellStatusBadge({
           align="start"
           sideOffset={0}
           alignOffset={-10}
-          arrowClassName="bg-white "
+          arrowClassName="bg-white"
           className={ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME}
         >
           <div className="space-y-2 px-1 py-1 text-pretty">
             <div>{tooltipMessage}</div>
-            {isSelectionState && hasAttentionIssue ? (
+            {isSelectionState ? (
               <div className="text-neutral-600">
-                Open the validator and choose the correct value for this cell.
+                Use the validator panel to review the matches and select the correct value.
               </div>
             ) : null}
             {extraContent}

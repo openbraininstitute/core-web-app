@@ -89,6 +89,7 @@ export interface CsvFieldHydrationArgs {
   rawValue: string;
   row: TFlatImportValues;
   context: EntityImportRuntimeContext;
+  importCache?: Map<string, unknown>;
 }
 
 export interface AdapterFieldValidationArgs {
@@ -106,6 +107,9 @@ export interface ValidatorSuggestionDetailsArgs {
 
 export interface IAdapterFieldCsvConfig extends IImportFieldCsvConfig {
   hydrateCell?: (
+    args: CsvFieldHydrationArgs
+  ) => Promise<CsvHydratedCellValue> | CsvHydratedCellValue;
+  backgroundHydrateCell?: (
     args: CsvFieldHydrationArgs
   ) => Promise<CsvHydratedCellValue> | CsvHydratedCellValue;
 }
@@ -134,10 +138,18 @@ export interface IAdapterFieldEnablementArgs {
   row: IImportRowState;
 }
 
+export const ValidatorManualApplyMode = {
+  Commit: 'commit' as const,
+  Stage: 'stage' as const,
+} as const;
+
+export type TValidatorManualApplyMode =
+  (typeof ValidatorManualApplyMode)[keyof typeof ValidatorManualApplyMode];
+
 export interface IAdapterFieldDefinition extends IImportFieldDefinition {
   placeholder?: string;
   helpText?: string;
-  validatorManualApplyMode?: 'commit' | 'stage';
+  validatorManualApplyMode?: TValidatorManualApplyMode;
   csv?: IAdapterFieldCsvConfig;
   options?: Array<ISuggestion>;
   validatorSuggestionDetails?: (args: ValidatorSuggestionDetailsArgs) => ReactNode;
@@ -146,6 +158,7 @@ export interface IAdapterFieldDefinition extends IImportFieldDefinition {
   getDisabledMessage?: (args: IAdapterFieldEnablementArgs) => string;
   getValidationIssues?: (args: AdapterFieldValidationArgs) => Array<string>;
   remote?: {
+    autoResolveResolvedSuggestion?: boolean;
     query?: (args: RemoteSearchPagedArgs) => Promise<RemoteSearchPageResult>;
     evaluate?: (args: RemoteValidationArgs) => Promise<RemoteValidationResult>;
   };

@@ -62,6 +62,7 @@ function TooltipContent({
         {children}
         {showArrow && (
           <TooltipPrimitive.Arrow
+            data-slot="tooltip-arrow"
             className={cn(
               'z-50 size-2.5 translate-y-[calc(-50%-3px)] rotate-45 rounded-xs bg-current fill-transparent',
               arrowClassName

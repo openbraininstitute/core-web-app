@@ -119,7 +119,9 @@ export function LocationEditor({
     ? resolveLocationValue(correctionDraft.previousParsedValue, correctionDraft.previousRawValue)
     : null;
   const stagedLocation = correctionDraft
-    ? resolveLocationValue(null, correctionDraft.suggestion.label)
+    ? (normalizeLocationValue(
+        (correctionDraft.suggestion.metadata as { parsedValue?: unknown } | undefined)?.parsedValue
+      ) ?? resolveLocationValue(null, correctionDraft.suggestion.label))
     : null;
 
   const emitChange = (nextLocation: LocationValue) => {
@@ -167,6 +169,12 @@ export function LocationEditor({
                 <div className="text-primary-9">{axis.toUpperCase()}</div>
                 <div className="text-[9px] leading-none text-neutral-400">(microns)</div>
               </label>
+              <div
+                title="Original value"
+                className="mb-1 min-h-7 rounded-md border border-amber-600 bg-amber-600/16 px-2 py-1 text-center text-xs font-medium text-amber-950 line-through"
+              >
+                {formatNumber(previousLocation?.[axis] ?? null) || '—'}
+              </div>
               <Input
                 id={`location-${row.id}-${axis}`}
                 aria-label={`Location ${axis.toUpperCase()} row ${row.rowIndex + 1}`}
@@ -176,12 +184,6 @@ export function LocationEditor({
                 value={formatNumber(stagedLocation?.[axis] ?? null)}
                 onClick={() => actions.selectCell({ rowId: row.id, fieldPath })}
               />
-              <div
-                title="Original value"
-                className="mt-1 min-h-7 rounded-md border border-amber-600 bg-amber-600/16 px-2 py-1 text-center text-xs font-medium text-amber-950 line-through"
-              >
-                {formatNumber(previousLocation?.[axis] ?? null) || '—'}
-              </div>
             </div>
           ))}
         </div>
@@ -264,7 +266,9 @@ export function LocationEditor({
                   ? 'h-8 min-w-0 rounded-lg border border-neutral-200 px-2 text-center shadow-none focus-visible:border-primary-6 focus-visible:ring-0'
                   : 'h-11 rounded-xl text-base shadow-none focus-visible:border-primary-6 focus-visible:ring-0'
               )}
-              value={formatNumber(location?.[axis] ?? null)}
+              value={formatNumber(
+                (mode === 'table' && correctionDraft ? stagedLocation : location)?.[axis] ?? null
+              )}
               onFocus={() => actions.selectCell({ rowId: row.id, fieldPath })}
               onChange={(event) => updateCoordinate(axis, event.target.value)}
             />

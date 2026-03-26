@@ -72,6 +72,50 @@ function createEntry(index: number, tupleText: string): ParsedContributionCsvEnt
   };
 }
 
+function createStructureOnlyContributionEntry(
+  tupleText: string,
+  index: number
+): ParsedContributionCsvEntry {
+  const entry = createEntry(index, tupleText);
+  const contributionNumber = index + 1;
+  const tokens = splitTupleTokens(tupleText);
+
+  if (tokens.length === 3) {
+    const [typeToken = '', agentToken = '', roleToken = ''] = tokens;
+    const resolvedType = resolveAgentTypeToken(typeToken);
+
+    if (typeToken && !resolvedType) {
+      entry.issues.push(
+        `Contribution ${contributionNumber}: \`${typeToken}\` is not a supported contributor type.`
+      );
+      entry.imported_type_text = typeToken;
+    }
+
+    if (resolvedType) {
+      entry.agent_type = resolvedType;
+    }
+
+    entry.imported_agent_text = agentToken || undefined;
+    entry.imported_role_text = roleToken || undefined;
+    return entry;
+  }
+
+  if (tokens.length === 2) {
+    entry.imported_agent_text = tokens[0] || undefined;
+    entry.imported_role_text = tokens[1] || undefined;
+    return entry;
+  }
+
+  if (tokens.length === 1 && tokens[0]) {
+    entry.imported_agent_text = tokens[0];
+    entry.imported_role_text = tokens[0];
+    return entry;
+  }
+
+  entry.issues.push(CONTRIBUTION_TUPLE_ERROR);
+  return entry;
+}
+
 function splitTupleTokens(tupleText: string): Array<string> {
   return tupleText.split(',').map((token) => token.trim());
 }
@@ -653,10 +697,14 @@ export async function parseContributionCsvValue({
   rawValue,
   context,
   services,
+  lookupCache,
+  resolveExactMatches = true,
 }: {
   rawValue: string;
   context: EntityImportRuntimeContext;
   services: ContributionServices;
+  lookupCache?: Map<string, unknown>;
+  resolveExactMatches?: boolean;
 }): Promise<ParsedContributionCsvValue> {
   const parsedList = parseTupleList(rawValue);
   if (parsedList.issues.length > 0 || parsedList.tuples.length === 0) {
@@ -666,7 +714,17 @@ export async function parseContributionCsvValue({
     };
   }
 
-  const cache: ExactLookupCache = new Map();
+  if (!resolveExactMatches) {
+    return {
+      entries: parsedList.tuples.map((tupleText, index) =>
+        createStructureOnlyContributionEntry(tupleText, index)
+      ),
+      issues: [],
+    };
+  }
+
+  const cache =
+    (lookupCache as ExactLookupCache | undefined) ?? new Map<string, Promise<ExactLookupResult>>();
   const entries = await Promise.all(
     parsedList.tuples.map(async (tupleText, index) => {
       const entry = createEntry(index, tupleText);

@@ -16,6 +16,7 @@ import {
   hydrateSessionRows,
   rejectCorrectionDraft,
   selectCell,
+  setCellRemoteState,
   setCellValue,
   setValidatorSelection,
   stageSuggestionToRows,
@@ -207,6 +208,51 @@ describe('updateCellRawValue', () => {
       selectedSuggestion: null,
       message: null,
     });
+  });
+
+  it('preserves untouched row references when updating a single cell', () => {
+    const session = createImportSessionState({
+      fields,
+      rows: [
+        { name: 'Neuron A', brainRegion: 'Ctx' },
+        { name: 'Neuron B', brainRegion: 'Thalamus' },
+      ],
+    });
+
+    const next = setCellValue(session, {
+      rowId: session.rows[1].id,
+      fieldPath: 'brainRegion',
+      rawValue: 'Isocortex',
+    });
+
+    expect(next.rows[0]).toBe(session.rows[0]);
+    expect(next.rows[1]).not.toBe(session.rows[1]);
+    expect(next.rows[1].cells.brainRegion.rawValue).toBe('Isocortex');
+  });
+
+  it('preserves untouched row references when updating remote state', () => {
+    const session = createImportSessionState({
+      fields,
+      rows: [
+        { name: 'Neuron A', brainRegion: 'Ctx' },
+        { name: 'Neuron B', brainRegion: 'Thalamus' },
+      ],
+    });
+
+    const next = setCellRemoteState(session, {
+      rowId: session.rows[1].id,
+      fieldPath: 'brainRegion',
+      remoteState: {
+        status: RemoteValidationStatus.Pending,
+        suggestions: [],
+        selectedSuggestion: null,
+        message: null,
+      },
+    });
+
+    expect(next.rows[0]).toBe(session.rows[0]);
+    expect(next.rows[1]).not.toBe(session.rows[1]);
+    expect(next.rows[1].cells.brainRegion.remoteState.status).toBe(RemoteValidationStatus.Pending);
   });
 });
 

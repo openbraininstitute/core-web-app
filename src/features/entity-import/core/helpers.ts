@@ -1,5 +1,7 @@
 import dayjs from 'dayjs';
 
+import { ImportInputType } from '@/features/entity-import/core/contracts';
+
 import type { Dayjs } from 'dayjs';
 import type { IAdapterFieldDefinition } from '@/features/entity-import/core/adapter';
 import type {
@@ -40,7 +42,15 @@ function normalizeSuggestionValue(value: string): string {
 }
 
 export function fieldHasSuggestionResolution(field?: IAdapterFieldDefinition): boolean {
-  return Boolean(field?.remote?.query || field?.remote?.evaluate || field?.options?.length);
+  if (!field) {
+    return false;
+  }
+
+  if (field.inputType === ImportInputType.Select) {
+    return false;
+  }
+
+  return Boolean(field.remote?.query || field.remote?.evaluate || field.options?.length);
 }
 
 export function findExactSuggestionMatch(

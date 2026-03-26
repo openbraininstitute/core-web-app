@@ -86,46 +86,66 @@ function createRowState(
 }
 
 function reindexRows(rows: Array<IImportRowState>): Array<IImportRowState> {
-  return rows.map((row, rowIndex) => ({
-    ...row,
-    rowIndex,
-  }));
+  return rows.map((row, rowIndex) => (row.rowIndex === rowIndex ? row : { ...row, rowIndex }));
 }
 
-function cloneSessionRows(rows: Array<IImportRowState>): Array<IImportRowState> {
-  return rows.map((row) => ({
-    ...row,
-    cells: Object.fromEntries(
-      Object.entries(row.cells).map(([key, cell]) => [
-        key,
-        {
-          ...cell,
-          issues: [...cell.issues],
-          remoteState: {
-            ...cell.remoteState,
-            suggestions: [...cell.remoteState.suggestions],
-            suggestionPaging: cell.remoteState.suggestionPaging
-              ? { ...cell.remoteState.suggestionPaging }
-              : undefined,
-          },
-          correctionDraft: cell.correctionDraft
-            ? {
-                ...cell.correctionDraft,
-                previousParsedValue: cell.correctionDraft.previousParsedValue,
-                previousRemoteState: {
-                  ...cell.correctionDraft.previousRemoteState,
-                  suggestions: [...cell.correctionDraft.previousRemoteState.suggestions],
-                  suggestionPaging: cell.correctionDraft.previousRemoteState.suggestionPaging
-                    ? { ...cell.correctionDraft.previousRemoteState.suggestionPaging }
-                    : undefined,
-                },
-                suggestion: { ...cell.correctionDraft.suggestion },
-              }
-            : null,
-        },
-      ])
-    ),
-  }));
+function cloneRemoteState(
+  remoteState: IImportCellState['remoteState']
+): IImportCellState['remoteState'] {
+  return remoteState.suggestionPaging
+    ? {
+        ...remoteState,
+        suggestionPaging: { ...remoteState.suggestionPaging },
+      }
+    : { ...remoteState };
+}
+
+function replaceRows(
+  session: IImportSessionState,
+  nextRows: Array<IImportRowState>
+): IImportSessionState {
+  if (nextRows === session.rows) {
+    return session;
+  }
+
+  return {
+    ...session,
+    rows: nextRows,
+    summary: summarizeSession(nextRows, session.fields),
+  };
+}
+
+function updateRowById(
+  session: IImportSessionState,
+  rowId: string,
+  updater: (row: IImportRowState) => IImportRowState
+): IImportSessionState {
+  let didChange = false;
+  const nextRows = session.rows.map((row) => {
+    if (row.id !== rowId) {
+      return row;
+    }
+
+    const nextRow = updater(row);
+    didChange ||= nextRow !== row;
+    return nextRow;
+  });
+
+  return replaceRows(session, didChange ? nextRows : session.rows);
+}
+
+function updateRows(
+  session: IImportSessionState,
+  updater: (row: IImportRowState) => IImportRowState
+): IImportSessionState {
+  let didChange = false;
+  const nextRows = session.rows.map((row) => {
+    const nextRow = updater(row);
+    didChange ||= nextRow !== row;
+    return nextRow;
+  });
+
+  return replaceRows(session, didChange ? nextRows : session.rows);
 }
 
 function upsertSuggestion(
@@ -155,7 +175,8 @@ function summarizeSession(
       const isInvalid =
         cell.status === CellStatus.Invalid ||
         cell.status === CellStatus.Disabled ||
-        cell.remoteState.status === RemoteValidationStatus.Invalid;
+        cell.remoteState.status === RemoteValidationStatus.Invalid ||
+        cell.remoteState.status === RemoteValidationStatus.Pending;
 
       if (field.required && (isEmpty || isInvalid)) {
         invalidRequiredCellCount += 1;
@@ -254,7 +275,7 @@ export function appendEmptyRow(
   values?: TFlatImportValues
 ): IImportSessionState {
   const nextRows = [
-    ...cloneSessionRows(session.rows),
+    ...session.rows,
     createRowState(
       session.fields,
       normalizeFlatValues(session.fields, values),
@@ -277,21 +298,11 @@ export function clearRow(
   }
 ): IImportSessionState {
   const normalizedValues = normalizeFlatValues(session.fields, params.values);
-  const nextRows = cloneSessionRows(session.rows).map((row) =>
-    row.id === params.rowId
-      ? {
-          ...row,
-          rowStatus: RowStatus.Idle,
-          cells: createRowCells(session.fields, normalizedValues),
-        }
-      : row
-  );
-
-  return {
-    ...session,
-    rows: nextRows,
-    summary: summarizeSession(nextRows, session.fields),
-  };
+  return updateRowById(session, params.rowId, (row) => ({
+    ...row,
+    rowStatus: RowStatus.Idle,
+    cells: createRowCells(session.fields, normalizedValues),
+  }));
 }
 
 export function deleteRow(
@@ -300,16 +311,13 @@ export function deleteRow(
     rowId: string;
   }
 ): IImportSessionState {
-  const nextRows = reindexRows(
-    cloneSessionRows(session.rows).filter((row) => row.id !== params.rowId)
-  );
+  const filteredRows = session.rows.filter((row) => row.id !== params.rowId);
+  const nextRows = reindexRows(filteredRows);
   const nextSelection = resolveSelectionAfterRowDelete(session, params.rowId, nextRows);
 
   return {
-    ...session,
+    ...replaceRows(session, nextRows),
     ...nextSelection,
-    rows: nextRows,
-    summary: summarizeSession(nextRows, session.fields),
   };
 }
 
@@ -392,10 +400,8 @@ export function hydrateSessionRows(
       : [];
 
   return {
-    ...session,
-    rows: nextRows,
+    ...replaceRows(session, nextRows),
     notifications: [...notification, ...session.notifications],
-    summary: summarizeSession(nextRows, session.fields),
   };
 }
 
@@ -407,24 +413,23 @@ export function setCellRemoteState(
     remoteState: IImportCellState['remoteState'];
   }
 ): IImportSessionState {
-  const nextRows = cloneSessionRows(session.rows).map((row) => {
-    if (row.id !== params.rowId) {
+  return updateRowById(session, params.rowId, (row) => {
+    const currentCell = row.cells[params.fieldPath];
+    if (!currentCell) {
       return row;
     }
 
-    const currentCell = row.cells[params.fieldPath];
-    row.cells[params.fieldPath] = {
-      ...currentCell,
-      remoteState: params.remoteState,
+    return {
+      ...row,
+      cells: {
+        ...row.cells,
+        [params.fieldPath]: {
+          ...currentCell,
+          remoteState: params.remoteState,
+        },
+      },
     };
-    return row;
   });
-
-  return {
-    ...session,
-    rows: nextRows,
-    summary: summarizeSession(nextRows, session.fields),
-  };
 }
 
 export function updateCellRawValue(
@@ -448,32 +453,30 @@ export function setCellValue(
     parsedValue?: unknown;
   }
 ): IImportSessionState {
-  const nextRows = cloneSessionRows(session.rows).map((row) => {
-    if (row.id !== params.rowId) {
+  return updateRowById(session, params.rowId, (row) => {
+    const currentCell = row.cells[params.fieldPath];
+    if (!currentCell) {
       return row;
     }
 
-    const currentCell = row.cells[params.fieldPath];
-    row.cells[params.fieldPath] = {
-      ...currentCell,
-      rawValue: params.rawValue,
-      displayValue: params.displayValue ?? null,
-      parsedValue: params.parsedValue ?? params.rawValue,
-      status: CellStatus.Idle,
-      issues: [],
-      dependencyState: DependencyState.Ready,
-      remoteState: createIdleRemoteState(),
-      correctionDraft: null,
+    return {
+      ...row,
+      cells: {
+        ...row.cells,
+        [params.fieldPath]: {
+          ...currentCell,
+          rawValue: params.rawValue,
+          displayValue: params.displayValue ?? null,
+          parsedValue: params.parsedValue ?? params.rawValue,
+          status: CellStatus.Idle,
+          issues: [],
+          dependencyState: DependencyState.Ready,
+          remoteState: createIdleRemoteState(),
+          correctionDraft: null,
+        },
+      },
     };
-
-    return row;
   });
-
-  return {
-    ...session,
-    rows: nextRows,
-    summary: summarizeSession(nextRows, session.fields),
-  };
 }
 
 export function resolveCellSuggestion(
@@ -485,38 +488,43 @@ export function resolveCellSuggestion(
     suggestionPaging?: IImportCellState['remoteState']['suggestionPaging'];
   }
 ): IImportSessionState {
-  const nextRows = cloneSessionRows(session.rows).map((row) => {
-    if (row.id !== params.rowId) {
+  return updateRowById(session, params.rowId, (row) => {
+    const currentCell = row.cells[params.fieldPath];
+    if (!currentCell) {
       return row;
     }
 
-    const currentCell = row.cells[params.fieldPath];
-    row.cells[params.fieldPath] = {
-      ...currentCell,
-      rawValue: params.suggestion.label,
-      displayValue: params.suggestion.label,
-      parsedValue: params.suggestion.value,
-      status: CellStatus.Idle,
-      issues: [],
-      dependencyState: DependencyState.Ready,
-      remoteState: {
-        status: RemoteValidationStatus.Valid,
-        suggestions: [],
-        selectedSuggestion: params.suggestion,
-        message: null,
-        suggestionPaging: params.suggestionPaging,
+    return {
+      ...row,
+      cells: {
+        ...row.cells,
+        [params.fieldPath]: {
+          ...currentCell,
+          rawValue: params.suggestion.label,
+          displayValue: params.suggestion.label,
+          parsedValue: params.suggestion.value,
+          status: CellStatus.Idle,
+          issues: [],
+          dependencyState: DependencyState.Ready,
+          remoteState: params.suggestionPaging
+            ? {
+                status: RemoteValidationStatus.Valid,
+                suggestions: [],
+                selectedSuggestion: params.suggestion,
+                message: null,
+                suggestionPaging: params.suggestionPaging,
+              }
+            : {
+                status: RemoteValidationStatus.Valid,
+                suggestions: [],
+                selectedSuggestion: params.suggestion,
+                message: null,
+              },
+          correctionDraft: null,
+        },
       },
-      correctionDraft: null,
     };
-
-    return row;
   });
-
-  return {
-    ...session,
-    rows: nextRows,
-    summary: summarizeSession(nextRows, session.fields),
-  };
 }
 
 export function stageSuggestionToRows(
@@ -530,48 +538,40 @@ export function stageSuggestionToRows(
     applyToAllMatching: boolean;
   }
 ): IImportSessionState {
-  const nextRows = cloneSessionRows(session.rows).map((row) => {
+  return updateRows(session, (row) => {
     const currentCell = row.cells[params.fieldPath];
     const shouldApply = params.applyToAllMatching || row.id === params.targetRowId;
 
-    if (!shouldApply) {
+    if (!currentCell || !shouldApply) {
       return row;
     }
 
-    row.cells[params.fieldPath] = {
-      ...currentCell,
-      status: CellStatus.Idle,
-      issues: [],
-      dependencyState: DependencyState.Ready,
-      remoteState: {
-        status: RemoteValidationStatus.Valid,
-        suggestions: upsertSuggestion(currentCell.remoteState.suggestions, params.suggestion),
-        selectedSuggestion: params.suggestion,
-        message: null,
-      },
-      correctionDraft: {
-        previousRawValue: currentCell.rawValue,
-        previousDisplayValue: currentCell.displayValue,
-        previousParsedValue: currentCell.parsedValue,
-        previousRemoteState: {
-          ...currentCell.remoteState,
-          suggestions: [...currentCell.remoteState.suggestions],
-          suggestionPaging: currentCell.remoteState.suggestionPaging
-            ? { ...currentCell.remoteState.suggestionPaging }
-            : undefined,
+    return {
+      ...row,
+      cells: {
+        ...row.cells,
+        [params.fieldPath]: {
+          ...currentCell,
+          status: CellStatus.Idle,
+          issues: [],
+          dependencyState: DependencyState.Ready,
+          remoteState: {
+            status: RemoteValidationStatus.Valid,
+            suggestions: upsertSuggestion(currentCell.remoteState.suggestions, params.suggestion),
+            selectedSuggestion: params.suggestion,
+            message: null,
+          },
+          correctionDraft: {
+            previousRawValue: currentCell.rawValue,
+            previousDisplayValue: currentCell.displayValue,
+            previousParsedValue: currentCell.parsedValue,
+            previousRemoteState: cloneRemoteState(currentCell.remoteState),
+            suggestion: params.suggestion,
+          },
         },
-        suggestion: params.suggestion,
       },
     };
-
-    return row;
   });
-
-  return {
-    ...session,
-    rows: nextRows,
-    summary: summarizeSession(nextRows, session.fields),
-  };
 }
 
 export function acceptCorrectionDraft(
@@ -595,35 +595,29 @@ export function rejectCorrectionDraft(
   session: IImportSessionState,
   params: { rowId: string; fieldPath: string }
 ): IImportSessionState {
-  const nextRows = cloneSessionRows(session.rows).map((row) => {
-    if (row.id !== params.rowId) {
-      return row;
-    }
-
+  return updateRowById(session, params.rowId, (row) => {
     const currentCell = row.cells[params.fieldPath];
-    const draft = currentCell.correctionDraft;
-    if (!draft) {
+    const draft = currentCell?.correctionDraft;
+    if (!currentCell || !draft) {
       return row;
     }
 
-    row.cells[params.fieldPath] = {
-      ...currentCell,
-      rawValue: draft.previousRawValue,
-      displayValue: draft.previousDisplayValue,
-      parsedValue: draft.previousParsedValue,
-      status: CellStatus.Idle,
-      issues: [],
-      dependencyState: DependencyState.Ready,
-      remoteState: draft.previousRemoteState,
-      correctionDraft: null,
+    return {
+      ...row,
+      cells: {
+        ...row.cells,
+        [params.fieldPath]: {
+          ...currentCell,
+          rawValue: draft.previousRawValue,
+          displayValue: draft.previousDisplayValue,
+          parsedValue: draft.previousParsedValue,
+          status: CellStatus.Idle,
+          issues: [],
+          dependencyState: DependencyState.Ready,
+          remoteState: cloneRemoteState(draft.previousRemoteState),
+          correctionDraft: null,
+        },
+      },
     };
-
-    return row;
   });
-
-  return {
-    ...session,
-    rows: nextRows,
-    summary: summarizeSession(nextRows, session.fields),
-  };
 }
