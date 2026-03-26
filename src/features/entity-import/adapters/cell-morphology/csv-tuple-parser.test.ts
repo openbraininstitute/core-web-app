@@ -238,4 +238,37 @@ describe('parseContributionCsvValue', () => {
     expect(queryPerson).toHaveBeenCalledTimes(1);
     expect(queryRole).toHaveBeenCalledTimes(1);
   });
+
+  it('reuses a shared exact-match cache across multiple parsed rows in the same import', async () => {
+    const queryPerson = createQueryMock({
+      'Jane Doe': [{ value: 'person-1', label: 'Jane Doe' }],
+    });
+    const queryRole = createQueryMock({
+      Author: [{ value: 'role-1', label: 'Author' }],
+    });
+    const lookupCache = new Map();
+
+    await parseContributionCsvValue({
+      rawValue: '[(person, Jane Doe, Author)]',
+      context,
+      services: createServices({
+        queryPerson,
+        queryRole,
+      }),
+      lookupCache,
+    });
+
+    await parseContributionCsvValue({
+      rawValue: '[(person, Jane Doe, Author)]',
+      context,
+      services: createServices({
+        queryPerson,
+        queryRole,
+      }),
+      lookupCache,
+    });
+
+    expect(queryPerson).toHaveBeenCalledTimes(1);
+    expect(queryRole).toHaveBeenCalledTimes(1);
+  });
 });

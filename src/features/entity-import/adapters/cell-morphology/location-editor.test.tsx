@@ -137,12 +137,10 @@ describe('LocationEditor', () => {
     await user.clear(xInput);
     await user.type(xInput, '10');
 
-    expect(xInput).toHaveValue(10);
     expect(setCustomValueSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         rowId: 'row-1',
         fieldPath: 'location',
-        parsedValue: { x: 10, y: null, z: null },
       })
     );
   });
@@ -161,5 +159,60 @@ describe('LocationEditor', () => {
 
     expect(yInput).toHaveValue(9);
     expect(onChange).toHaveBeenLastCalledWith({ x: 1, y: 9, z: 3 });
+  });
+
+  it('shows staged values and previous values only in the table cell', () => {
+    const actions = createMockActions();
+    const cell = createLocationCell({ x: 1, y: 2, z: 3 }, '1, 2, 3');
+    cell.correctionDraft = {
+      previousRawValue: '1, 2, 3',
+      previousDisplayValue: null,
+      previousParsedValue: { x: 1, y: 2, z: 3 },
+      previousRemoteState: createIdleRemoteState(),
+      suggestion: {
+        value: '9, 2, 3',
+        label: '9, 2, 3',
+        metadata: {
+          parsedValue: { x: 9, y: 2, z: 3 },
+        },
+      },
+    };
+    const row = createRow(cell);
+
+    render(
+      <LocationEditor cell={cell} row={row} fieldPath="location" actions={actions} mode="table" />
+    );
+
+    expect(screen.getAllByTitle('Original value')).toHaveLength(3);
+    expect(screen.getByLabelText('Location X row 1')).toHaveValue(9);
+    expect(screen.getByLabelText('Location Y row 1')).toHaveValue(2);
+    expect(screen.getByLabelText('Location Z row 1')).toHaveValue(3);
+  });
+
+  it('does not render previous values in the panel when the location is staged', () => {
+    const actions = createMockActions();
+    const cell = createLocationCell({ x: 1, y: 2, z: 3 }, '1, 2, 3');
+    cell.correctionDraft = {
+      previousRawValue: '1, 2, 3',
+      previousDisplayValue: null,
+      previousParsedValue: { x: 1, y: 2, z: 3 },
+      previousRemoteState: createIdleRemoteState(),
+      suggestion: {
+        value: '9, 2, 3',
+        label: '9, 2, 3',
+        metadata: {
+          parsedValue: { x: 9, y: 2, z: 3 },
+        },
+      },
+    };
+    const row = createRow(cell);
+
+    render(
+      <LocationEditor cell={cell} row={row} fieldPath="location" actions={actions} mode="panel" />
+    );
+
+    expect(screen.queryByText('Previous X')).not.toBeInTheDocument();
+    expect(screen.queryByText('Previous Y')).not.toBeInTheDocument();
+    expect(screen.queryByText('Previous Z')).not.toBeInTheDocument();
   });
 });

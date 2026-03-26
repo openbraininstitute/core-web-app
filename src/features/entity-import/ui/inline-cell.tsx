@@ -4,7 +4,7 @@ import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { DatePicker } from 'antd';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import { useEffect, useId, useRef, useState, useTransition } from 'react';
+import { memo, useCallback, useEffect, useId, useRef, useState, useTransition } from 'react';
 
 import {
   CellStatus,
@@ -62,6 +62,8 @@ interface InlineCellProps {
   selected: boolean;
 }
 
+const INLINE_CELL_DRAFT_COMMIT_DELAY_MS = 250;
+
 function getDisplayValue(cell: IImportCellState): string {
   if (cell.displayValue) {
     return cell.displayValue;
@@ -92,7 +94,7 @@ function getControlClassName(cell: IImportCellState, selected: boolean): string 
   );
 }
 
-export function InlineCell({
+function InlineCellComponent({
   field,
   cell,
   row,
@@ -104,14 +106,62 @@ export function InlineCell({
   const fileInputId = useId();
   const correctionDetailsPopoverId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const draftCommitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const displayValue = getDisplayValue(cell);
+  const latestCommittedValueRef = useRef(displayValue);
+  const draftInputValueRef = useRef(displayValue);
   const hasStatusBadge = shouldDisplayCellStatusBadge(cell);
   const [draftInputValue, setDraftInputValue] = useState(displayValue);
   const [, startCellUpdateTransition] = useTransition();
 
   useEffect(() => {
+    latestCommittedValueRef.current = displayValue;
+    draftInputValueRef.current = displayValue;
     setDraftInputValue(displayValue);
   }, [displayValue]);
+
+  useEffect(() => {
+    return () => {
+      if (draftCommitTimeoutRef.current) {
+        clearTimeout(draftCommitTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const flushDraftInputValue = useCallback(() => {
+    if (draftCommitTimeoutRef.current) {
+      clearTimeout(draftCommitTimeoutRef.current);
+      draftCommitTimeoutRef.current = null;
+    }
+
+    const nextRawValue = draftInputValueRef.current;
+    if (nextRawValue === latestCommittedValueRef.current) {
+      return;
+    }
+
+    startCellUpdateTransition(() => {
+      actions.updateCellValue({
+        rowId: row.id,
+        fieldPath: field.path,
+        rawValue: nextRawValue,
+      });
+    });
+  }, [actions, field.path, row.id]);
+
+  const scheduleDraftCommit = useCallback(
+    (nextRawValue: string) => {
+      draftInputValueRef.current = nextRawValue;
+      if (draftCommitTimeoutRef.current) {
+        clearTimeout(draftCommitTimeoutRef.current);
+      }
+
+      draftCommitTimeoutRef.current = setTimeout(
+        flushDraftInputValue,
+        INLINE_CELL_DRAFT_COMMIT_DELAY_MS
+      );
+    },
+    [flushDraftInputValue]
+  );
 
   if (field.tableRenderer && cell.correctionDraft && field.inputType === ImportInputType.Compound) {
     return field.tableRenderer({
@@ -328,14 +378,9 @@ export function InlineCell({
           onChange={(event) => {
             const nextRawValue = event.target.value;
             setDraftInputValue(nextRawValue);
-            startCellUpdateTransition(() => {
-              actions.updateCellValue({
-                rowId: row.id,
-                fieldPath: field.path,
-                rawValue: nextRawValue,
-              });
-            });
+            scheduleDraftCommit(nextRawValue);
           }}
+          onBlur={flushDraftInputValue}
         />
         <CellStatusBadge
           cell={cell}
@@ -410,14 +455,9 @@ export function InlineCell({
           onChange={(event) => {
             const nextRawValue = event.target.value;
             setDraftInputValue(nextRawValue);
-            startCellUpdateTransition(() => {
-              actions.updateCellValue({
-                rowId: row.id,
-                fieldPath: field.path,
-                rawValue: nextRawValue,
-              });
-            });
+            scheduleDraftCommit(nextRawValue);
           }}
+          onBlur={flushDraftInputValue}
         />
         <CellStatusBadge
           cell={cell}
@@ -429,3 +469,16 @@ export function InlineCell({
     </div>
   );
 }
+
+function inlineCellPropsAreEqual(previous: InlineCellProps, next: InlineCellProps): boolean {
+  return (
+    previous.field === next.field &&
+    previous.cell === next.cell &&
+    previous.row === next.row &&
+    previous.context === next.context &&
+    previous.actions === next.actions &&
+    previous.selected === next.selected
+  );
+}
+
+export const InlineCell = memo(InlineCellComponent, inlineCellPropsAreEqual);

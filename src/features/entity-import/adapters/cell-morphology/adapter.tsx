@@ -42,6 +42,7 @@ import {
   type ISuggestion,
   RemoteValidationStatus,
 } from '@/features/entity-import/core/contracts';
+import { findExactSuggestionMatch } from '@/features/entity-import/core/helpers';
 import {
   ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
   ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
@@ -155,8 +156,10 @@ function renderMtypeSuggestionDetails({ suggestion }: ValidatorSuggestionDetails
 
 const contributionEntrySchema = z.object({
   agent_type: z.enum(contributionAgentKeys),
-  agent_id: z.string().min(1, 'Contributor is required'),
-  role_id: z.string().min(1, 'Role is required'),
+  agent_id: z
+    .uuid({ error: 'Contributor is required' })
+    .nonempty({ message: 'Contributor is required' }),
+  role_id: z.string({ error: 'Role is required' }).min(1, 'Role is required'),
 });
 
 const locationSchema = z
@@ -356,6 +359,60 @@ function createSingleSuggestionRemoteEvaluator<TQueryField extends string>({
   };
 }
 
+function createExactOnlyRemoteEvaluator<TQueryField extends string>({
+  label,
+  queryField,
+  querySuggestions,
+}: {
+  label: string;
+  queryField: TQueryField;
+  querySuggestions: (args: {
+    query: string;
+    queryField: TQueryField;
+    context: EntityImportRuntimeContext;
+    pageParam?: number;
+    pageSize?: number;
+  }) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>;
+}) {
+  return async ({
+    query,
+    context,
+  }: {
+    query: string;
+    context: EntityImportRuntimeContext;
+  }): Promise<RemoteValidationResult> => {
+    const { suggestions } = await querySuggestions({
+      query,
+      queryField,
+      context,
+      pageParam: 1,
+      pageSize: 5,
+    });
+
+    const exactMatch = findExactSuggestionMatch(suggestions, query);
+    if (exactMatch) {
+      return {
+        status: RemoteValidationStatus.Valid,
+        resolvedSuggestion: exactMatch,
+      };
+    }
+
+    if (suggestions.length > 0) {
+      return {
+        status: RemoteValidationStatus.Invalid,
+        message: `Choose the correct ${label} in the validator.`,
+        suggestions,
+      };
+    }
+
+    return {
+      status: RemoteValidationStatus.Invalid,
+      message: `No matches found for ${label}.`,
+      suggestions: [],
+    };
+  };
+}
+
 function resolveContributionPreview(entry: ContributionDraft): {
   label: string;
   roleLabel: string | null;
@@ -491,8 +548,8 @@ function ContributionSummaryCell({
 }
 
 export function createCellMorphologyImportAdapter({
-  defaultBrainRegionId,
-  defaultLicenseId = DEFAULT_LICENSE_ID,
+  defaultBrainRegionId: _defaultBrainRegionId,
+  defaultLicenseId: _defaultLicenseId = DEFAULT_LICENSE_ID,
   services = createCellMorphologyImportServices(),
 }: CreateCellMorphologyImportAdapterOptions): IEntityImportAdapter<
   CellMorphologySubmissionPayload,
@@ -686,7 +743,7 @@ export function createCellMorphologyImportAdapter({
             querySuggestions: services.queryProtocol,
           }),
           evaluate: async ({ query, context }) =>
-            createSingleSuggestionRemoteEvaluator({
+            createExactOnlyRemoteEvaluator({
               label: 'Protocol',
               queryField: 'ilike_search',
               querySuggestions: services.queryProtocol,
@@ -746,6 +803,35 @@ export function createCellMorphologyImportAdapter({
               rawValue,
               context,
               services,
+              resolveExactMatches: false,
+            });
+            const nextEntries =
+              parsedContributions.issues.length > 0 && rawValue.trim()
+                ? [
+                    {
+                      id: 'csv-contribution-import-error',
+                      source_tuple: rawValue.trim(),
+                      agent_id: '',
+                      role_id: '',
+                      agent_label: '',
+                      role_label: '',
+                      imported_agent_text: rawValue.trim(),
+                      issues: parsedContributions.issues,
+                    } satisfies ContributionDraft,
+                  ]
+                : parsedContributions.entries;
+
+            return {
+              rawValue: summarizeContributions(countRenderableEntries(nextEntries)),
+              parsedValue: nextEntries,
+            };
+          },
+          backgroundHydrateCell: async ({ rawValue, context, importCache }) => {
+            const parsedContributions = await parseContributionCsvValue({
+              rawValue,
+              context,
+              services,
+              lookupCache: importCache,
             });
             const nextEntries =
               parsedContributions.issues.length > 0 && rawValue.trim()
@@ -823,13 +909,13 @@ export function createCellMorphologyImportAdapter({
       sourceFile: '',
       name: '',
       description: '',
-      brainRegionId: '',
+      brainRegionId: _defaultBrainRegionId,
       experimentDate: '',
       contactEmail: '',
       publishedIn: '',
       location: '',
       subjectId: '',
-      licenseId: '',
+      licenseId: _defaultLicenseId,
       protocolId: '',
       repairPipelineState: '',
       mtypeClassId: '',

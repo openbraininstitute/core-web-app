@@ -4,6 +4,7 @@ import {
   CellStatus,
   DependencyState,
   type IImportCellState,
+  type IImportFieldDefinition,
   type IImportRowState,
   RemoteValidationStatus,
   RowStatus,
@@ -37,6 +38,10 @@ export function isAmbiguousRemoteCell(cell: IImportCellState): boolean {
 }
 
 export function getCellStatusMessage(cell: IImportCellState): string | null {
+  if (isAmbiguousRemoteCell(cell)) {
+    return 'We found multiple possible matches. Use the validator to choose the correct option before importing.';
+  }
+
   return cell.issues[0] ?? cell.remoteState.message ?? null;
 }
 
@@ -51,7 +56,12 @@ export function hasCellAttentionIssue(cell: IImportCellState): boolean {
 }
 
 export function shouldDisplayCellStatusBadge(cell: IImportCellState): boolean {
-  return hasCellAttentionIssue(cell) || getTableCellUiStatus(cell) === TableCellUiStatus.Validating;
+  const cellUiStatus = getTableCellUiStatus(cell);
+  return (
+    hasCellAttentionIssue(cell) ||
+    cellUiStatus === TableCellUiStatus.Validating ||
+    cellUiStatus === TableCellUiStatus.NeedsSelection
+  );
 }
 
 export function getTableCellUiStatus(cell: IImportCellState): TTableCellUiStatus {
@@ -83,19 +93,40 @@ export function getTableCellUiStatus(cell: IImportCellState): TTableCellUiStatus
   return TableCellUiStatus.Idle;
 }
 
-export function getTableRowUiStatus(row: IImportRowState): TTableRowUiStatus {
+function isProblemCellStatus(status: TTableCellUiStatus): boolean {
+  return (
+    status === TableCellUiStatus.Validating ||
+    status === TableCellUiStatus.Warning ||
+    status === TableCellUiStatus.NeedsSelection
+  );
+}
+
+export function getTableRowUiStatus(
+  row: IImportRowState,
+  fields?: Array<IImportFieldDefinition>
+): TTableRowUiStatus {
   const cellStatuses = Object.values(row.cells).map(getTableCellUiStatus);
 
-  if (cellStatuses.includes(TableCellUiStatus.Validating)) {
-    return TableRowUiStatus.Validating;
-  }
-
-  if (cellStatuses.includes(TableCellUiStatus.NeedsSelection)) {
-    return TableRowUiStatus.NeedsSelection;
-  }
-
-  if (Object.values(row.cells).some(hasCellAttentionIssue)) {
+  if (row.rowStatus !== RowStatus.Valid) {
     return TableRowUiStatus.NeedsAttention;
+  }
+
+  if (!fields) {
+    return cellStatuses.some(isProblemCellStatus)
+      ? TableRowUiStatus.NeedsSelection
+      : TableRowUiStatus.Ready;
+  }
+
+  const hasOptionalProblem = fields.some((field) => {
+    if (field.required) {
+      return false;
+    }
+
+    return isProblemCellStatus(getTableCellUiStatus(row.cells[field.path]));
+  });
+
+  if (hasOptionalProblem) {
+    return TableRowUiStatus.NeedsSelection;
   }
 
   if (row.rowStatus === RowStatus.Valid || cellStatuses.includes(TableCellUiStatus.Ready)) {

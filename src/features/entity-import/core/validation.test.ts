@@ -128,4 +128,29 @@ describe('validateSessionRows', () => {
     expect(next.rows[0].cells.location.status).toBe(CellStatus.Invalid);
     expect(next.rows[0].cells.location.issues).toContain('Location tuple is invalid.');
   });
+
+  it('supports row-targeted validation without recreating untouched rows', () => {
+    const session = createImportSessionState({
+      fields,
+      rows: [
+        { name: 'Neuron A', species: 'Mouse', brainRegion: 'Isocortex' },
+        { name: '', species: 'Mouse', brainRegion: 'Thalamus' },
+      ],
+    });
+
+    const next = validateSessionRows({
+      session,
+      fields,
+      schema,
+      rowIds: [session.rows[1].id],
+      buildPayload({ values }) {
+        return values;
+      },
+    });
+
+    expect(next.rows[0]).toBe(session.rows[0]);
+    expect(next.rows[1]).not.toBe(session.rows[1]);
+    expect(next.rows[1].cells.name.status).toBe(CellStatus.Invalid);
+    expect(next.summary.invalidRequiredCellCount).toBeGreaterThan(0);
+  });
 });

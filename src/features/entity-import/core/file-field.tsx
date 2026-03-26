@@ -67,19 +67,18 @@ export function getImportFileButtonLabel(field: IAdapterFieldDefinition): ReactN
   }
 
   const allowedExtensions = normalizedConfig.allowedExtensions.map(normalizeExtension);
+
   if (allowedExtensions.length === 0) {
     return DEFAULT_FILE_BUTTON_LABEL;
   }
 
+  const primaryExtension =
+    uniqWith(allowedExtensions, (a, b) => a.toLowerCase() === b.toLowerCase())[0] ?? '';
+
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="flex items-center gap-2">
-        {DEFAULT_FILE_BUTTON_LABEL}
-        <RiFolderUploadFill className="size-4" />
-      </div>
-      <div className="text-xs text-muted-foreground">
-        {uniqWith(allowedExtensions, (a, b) => a.toLowerCase() === b.toLowerCase()).join(', ')}
-      </div>
+    <div className="flex items-center justify-center gap-2">
+      <span>{`${DEFAULT_FILE_BUTTON_LABEL} (${primaryExtension})`}</span>
+      <RiFolderUploadFill className="size-4" />
     </div>
   );
 }

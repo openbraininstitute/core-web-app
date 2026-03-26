@@ -9,8 +9,12 @@ import {
 } from '@ant-design/icons';
 import { RiInfoI, RiSearchLine } from '@remixicon/react';
 import { DatePicker } from 'antd';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 
+import {
+  ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
+  ValidatorManualApplyMode,
+} from '@/features/entity-import/core/adapter';
 import {
   CellStatus,
   ENTITY_IMPORT_ALL_COLUMNS,
@@ -18,6 +22,7 @@ import {
   type IImportSessionState,
   ImportInputType,
   type ISuggestion,
+  RemoteValidationStatus,
   RowStatus,
 } from '@/features/entity-import/core/contracts';
 import {
@@ -54,6 +59,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/molecules/select';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -121,9 +127,25 @@ function resolveActiveField<TPayload, TResult>(
   return null;
 }
 
-function resolveRowStatus(row: IImportRowState): TValidatorFieldStatus {
+function resolveRowStatus<TPayload, TResult>(
+  adapter: IEntityImportAdapter<TPayload, TResult>,
+  row: IImportRowState
+): TValidatorFieldStatus {
+  const hasOptionalProblem = adapter.fields.some((field) => {
+    if (field.required) {
+      return false;
+    }
+
+    const cell = row.cells[field.path];
+    return cell.status === CellStatus.Invalid || cell.status === CellStatus.Disabled;
+  });
+
   if (row.rowStatus === RowStatus.Invalid) {
     return ValidatorFieldStatus.Warning;
+  }
+
+  if (row.rowStatus === RowStatus.Valid && hasOptionalProblem) {
+    return ValidatorFieldStatus.Idle;
   }
 
   if (row.rowStatus === RowStatus.Valid) {
@@ -133,9 +155,27 @@ function resolveRowStatus(row: IImportRowState): TValidatorFieldStatus {
   return ValidatorFieldStatus.Idle;
 }
 
-function resolveRowsSummaryStatus(session: IImportSessionState): TValidatorFieldStatus {
+function resolveRowsSummaryStatus<TPayload, TResult>(
+  adapter: IEntityImportAdapter<TPayload, TResult>,
+  session: IImportSessionState
+): TValidatorFieldStatus {
   if (session.rows.some((row) => row.rowStatus === RowStatus.Invalid)) {
     return ValidatorFieldStatus.Warning;
+  }
+
+  if (
+    session.rows.some((row) =>
+      adapter.fields.some((field) => {
+        if (field.required) {
+          return false;
+        }
+
+        const cell = row.cells[field.path];
+        return cell.status === CellStatus.Invalid || cell.status === CellStatus.Disabled;
+      })
+    )
+  ) {
+    return ValidatorFieldStatus.Idle;
   }
 
   if (session.rows.length > 0 && session.rows.every((row) => row.rowStatus === RowStatus.Valid)) {
@@ -173,6 +213,12 @@ function createManualDraftSuggestion(draftValue: ValidatorDraftValue): ISuggesti
   return {
     value: draftValue.rawValue,
     label,
+    metadata:
+      draftValue.parsedValue === undefined
+        ? undefined
+        : {
+            parsedValue: draftValue.parsedValue,
+          },
   };
 }
 
@@ -201,6 +247,60 @@ function resolveValidatorDisplayValue(
   return draftValue.displayValue ?? draftValue.rawValue;
 }
 
+function resolveTableBodyContainer(trigger: HTMLElement | null): HTMLElement | null {
+  const root = trigger?.closest('[data-entity-import-root]') ?? document;
+  return root.querySelector<HTMLElement>('.ant-table-body');
+}
+
+function captureTableBodyScrollTop(trigger: HTMLElement | null): number | null {
+  return resolveTableBodyContainer(trigger)?.scrollTop ?? null;
+}
+
+function restoreCapturedTableBodyScroll(
+  trigger: HTMLElement | null,
+  scrollTop: number | null,
+  action: () => void
+): void {
+  const root = trigger?.closest('[data-entity-import-root]') ?? document;
+
+  action();
+
+  if (scrollTop === null) {
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const tableBody = root.querySelector<HTMLElement>('.ant-table-body');
+      if (!tableBody || !tableBody.isConnected) {
+        return;
+      }
+
+      tableBody.scrollTop = scrollTop;
+    });
+  });
+}
+
+function ValidatorSuggestionSkeletonList() {
+  return (
+    <div className="px-4 flex flex-col gap-1.5">
+      {Array.from({ length: ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE }).map((_, index) => (
+        <div
+          key={`validator-suggestion-skeleton-${index}`}
+          className="flex min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-neutral-200 bg-white px-3 py-3"
+          data-testid="validator-suggestion-skeleton"
+        >
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-5 w-3/4 rounded-md" />
+            <Skeleton className="h-3 w-1/2 rounded-md" />
+          </div>
+          <Skeleton className="size-5 shrink-0 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface SingleColumnValidatorCardProps {
   field: IAdapterFieldDefinition;
   row: IImportRowState;
@@ -225,34 +325,22 @@ function SingleColumnValidatorCard({
   const rowPosition = session.rows.findIndex((candidate) => candidate.id === row.id);
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const previousSelectionKeyRef = useRef('');
-  const selectionKey = `${row.id}:${field.path}`;
-  const [draftValue, setDraftValue] = useState<ValidatorDraftValue>(() =>
-    createValidatorDraftValue(cell)
-  );
-  const [hasPendingManualChange, setHasPendingManualChange] = useState(false);
-
-  useEffect(() => {
-    if (previousSelectionKeyRef.current === selectionKey) {
-      return;
-    }
-
-    previousSelectionKeyRef.current = selectionKey;
-    setDraftValue(createValidatorDraftValue(cell));
-    setHasPendingManualChange(false);
-  }, [cell, selectionKey]);
-
-  useEffect(() => {
-    if (selectedSuggestion || hasPendingManualChange) {
-      return;
-    }
-
-    setDraftValue(createValidatorDraftValue(cell));
-  }, [cell, hasPendingManualChange, selectedSuggestion]);
+  const pendingTableScrollTopRef = useRef<number | null>(null);
+  const [manualDraftValue, setManualDraftValue] = useState<ValidatorDraftValue | null>(null);
+  const stagedDraftValue =
+    field.validatorManualApplyMode === ValidatorManualApplyMode.Stage && cell.correctionDraft
+      ? {
+          rawValue: cell.correctionDraft.suggestion.label,
+          displayValue: cell.correctionDraft.suggestion.label,
+          parsedValue:
+            (cell.correctionDraft.suggestion.metadata as { parsedValue?: unknown } | undefined)
+              ?.parsedValue ?? cell.correctionDraft.suggestion.value,
+        }
+      : null;
+  const draftValue = manualDraftValue ?? stagedDraftValue ?? createValidatorDraftValue(cell);
 
   const updateDraftValue = useCallback((nextValue: ValidatorDraftValue) => {
-    setDraftValue(nextValue);
-    setHasPendingManualChange(true);
+    setManualDraftValue(nextValue);
   }, []);
 
   const commitManualValueToRow = useCallback(
@@ -300,16 +388,16 @@ function SingleColumnValidatorCard({
           suggestion: selectedSuggestion,
           applyToAllMatching: applyToAll,
         });
-        setHasPendingManualChange(false);
+        setManualDraftValue(null);
         return;
       }
 
       if (isDraftValueUnchanged(cell, draftValue)) {
-        setHasPendingManualChange(false);
+        setManualDraftValue(null);
         return;
       }
 
-      if (field.validatorManualApplyMode === 'stage') {
+      if (field.validatorManualApplyMode === ValidatorManualApplyMode.Stage) {
         actions.applySuggestion({
           fieldPath: field.path,
           targetRowId: row.id,
@@ -317,7 +405,7 @@ function SingleColumnValidatorCard({
           suggestion: createManualDraftSuggestion(draftValue),
           applyToAllMatching: applyToAll,
         });
-        setHasPendingManualChange(false);
+        setManualDraftValue(null);
         return;
       }
 
@@ -325,7 +413,7 @@ function SingleColumnValidatorCard({
       targetRows.forEach((targetRow) => {
         commitManualValueToRow(targetRow.id);
       });
-      setHasPendingManualChange(false);
+      setManualDraftValue(null);
     },
     [
       actions,
@@ -339,6 +427,18 @@ function SingleColumnValidatorCard({
       session.rows,
     ]
   );
+  const captureApplyScrollPosition = useCallback((trigger: HTMLElement | null) => {
+    pendingTableScrollTopRef.current = captureTableBodyScrollTop(trigger);
+  }, []);
+  const applyWithPreservedTableScroll = useCallback(
+    (trigger: HTMLElement | null, applyToAll: boolean) => {
+      const preservedScrollTop =
+        pendingTableScrollTopRef.current ?? captureTableBodyScrollTop(trigger);
+      pendingTableScrollTopRef.current = null;
+      restoreCapturedTableBodyScroll(trigger, preservedScrollTop, () => handleApply(applyToAll));
+    },
+    [handleApply]
+  );
 
   const previewValue = resolveValidatorDisplayValue(field, draftValue);
   const rowValues = getRowSubmissionValues(row);
@@ -351,6 +451,19 @@ function SingleColumnValidatorCard({
   const visibleSuggestionPaging =
     activeValidatorSuggestions?.suggestionPaging ?? cell.remoteState.suggestionPaging;
   const visibleMessage = activeValidatorSuggestions?.message ?? cell.remoteState.message;
+  const shouldShowSuggestionSkeleton =
+    field.inputType === ImportInputType.RemoteSelect &&
+    Boolean(field.remote?.query) &&
+    activeValidatorSuggestions?.status === RemoteValidationStatus.Pending &&
+    visibleSuggestions.length === 0;
+  const shouldShowSuggestions =
+    field.inputType !== ImportInputType.Select &&
+    visibleSuggestions.length > 0 &&
+    !(
+      field.inputType === ImportInputType.Compound &&
+      field.validatorManualApplyMode === ValidatorManualApplyMode.Stage &&
+      cell.correctionDraft
+    );
 
   const goNeighborRow = (delta: number) => {
     const nextIndex = rowPosition + delta;
@@ -377,6 +490,7 @@ function SingleColumnValidatorCard({
           <div className="flex min-w-0 items-stretch gap-2">
             <Button
               rounded
+              data-import-control="previous-row-button"
               type="button"
               variant="ghost"
               size="md"
@@ -397,6 +511,7 @@ function SingleColumnValidatorCard({
             </div>
             <Button
               rounded
+              data-import-control-trigger="next-row-button"
               type="button"
               variant="ghost"
               size="md"
@@ -442,6 +557,8 @@ function SingleColumnValidatorCard({
               )}
             >
               <Input
+                data-import-input-type={field.inputType}
+                autoComplete="off"
                 id="validator-value"
                 aria-label="Validator value"
                 type="text"
@@ -463,11 +580,6 @@ function SingleColumnValidatorCard({
                     fieldPath: field.path,
                     query: nextRawValue,
                   });
-                  actions.updateCellValue({
-                    rowId: row.id,
-                    fieldPath: field.path,
-                    rawValue: nextRawValue,
-                  });
                 }}
               />
               <div className="flex items-center gap-2">
@@ -478,6 +590,7 @@ function SingleColumnValidatorCard({
           {!field.panelRenderer && field.inputType === ImportInputType.Textarea && (
             <Textarea
               rows={1}
+              data-import-input-type={field.inputType}
               id="validator-value"
               aria-label="Validator value"
               value={draftValue.displayValue ?? draftValue.rawValue}
@@ -497,6 +610,7 @@ function SingleColumnValidatorCard({
 
           {!field.panelRenderer && field.inputType === ImportInputType.Date && (
             <DatePicker
+              data-import-input-type={field.inputType}
               id="validator-value"
               aria-label="Validator value"
               value={parseImportDatePickerValue(draftValue.rawValue)}
@@ -518,6 +632,7 @@ function SingleColumnValidatorCard({
               {(field.inputType === ImportInputType.Text ||
                 field.inputType === ImportInputType.Number) && (
                 <Input
+                  data-import-input-type={field.inputType}
                   id="validator-value"
                   aria-label="Validator value"
                   type={field.inputType === ImportInputType.Number ? 'number' : 'text'}
@@ -534,39 +649,56 @@ function SingleColumnValidatorCard({
               )}
 
               {field.inputType === ImportInputType.Select && (
-                <div>
-                  <Select
-                    value={draftValue.rawValue}
-                    onValueChange={(value) =>
-                      updateDraftValue({
-                        rawValue: value,
-                        displayValue: null,
-                        parsedValue: value,
-                      })
-                    }
+                <Select
+                  data-import-input-type={ImportInputType.Select}
+                  value={draftValue.rawValue}
+                  onValueChange={(value) =>
+                    updateDraftValue({
+                      rawValue: value,
+                      displayValue: null,
+                      parsedValue: value,
+                    })
+                  }
+                >
+                  <SelectTrigger
+                    id="validator-select"
+                    data-import-input-type-trigger={`${field.inputType}-select-trigger`}
+                    aria-label="Validator value"
+                    className={cn(
+                      'w-full rounded-xl border-neutral-200 bg-white',
+                      'h-11! text-primary-9 font-bold'
+                    )}
                   >
-                    <SelectTrigger
-                      id="validator-select"
-                      aria-label="Validator value"
-                      className="w-full rounded-xl border-neutral-200 bg-white"
-                    >
-                      <SelectValue placeholder={field.placeholder ?? `Select ${field.label}`} />
-                    </SelectTrigger>
-                    <SelectContent className={ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME}>
-                      {field.options?.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <SelectValue
+                      data-import-input-type-value={`${field.inputType}-select-value`}
+                      placeholder={field.placeholder ?? `Select ${field.label}`}
+                    />
+                  </SelectTrigger>
+                  <SelectContent
+                    className={ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME}
+                    style={{
+                      width: 'var(--radix-select-trigger-width)',
+                    }}
+                  >
+                    {field.options?.map((option) => (
+                      <SelectItem
+                        data-import-input-type-item={`${field.inputType}-option`}
+                        key={option.value}
+                        value={option.value}
+                        className="w-full text-left h-11 cursor-pointer font-semibold text-primary-9"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
 
               {(field.inputType === ImportInputType.File ||
                 field.inputType === ImportInputType.FileBundle) && (
                 <div>
                   <Button
+                    data-import-input-type-trigger={`${field.inputType}-file-button`}
                     rounded
                     type="button"
                     variant="outline"
@@ -578,6 +710,7 @@ function SingleColumnValidatorCard({
                       getImportFileButtonLabel(field)}
                   </Button>
                   <input
+                    data-import-input-type={field.inputType}
                     ref={fileInputRef}
                     id={fileInputId}
                     type="file"
@@ -628,7 +761,9 @@ function SingleColumnValidatorCard({
           )}
         </div>
 
-        {visibleSuggestions.length > 0 && (
+        {shouldShowSuggestionSkeleton && <ValidatorSuggestionSkeletonList />}
+
+        {shouldShowSuggestions && (
           <div className="px-4 flex flex-col gap-1.5">
             {visibleSuggestions.map((suggestion) => {
               const isSelected = selectedSuggestion?.value === suggestion.value;
@@ -641,6 +776,7 @@ function SingleColumnValidatorCard({
 
               return (
                 <div
+                  data-import-input-type-item={`${field.inputType}-suggestion`}
                   key={suggestion.value}
                   className={cn(
                     'flex min-w-0 items-center gap-2 overflow-hidden rounded-xl border',
@@ -760,7 +896,13 @@ function SingleColumnValidatorCard({
               size="md"
               className="flex-1 cursor-pointer"
               disabled={Boolean(cell.correctionDraft)}
-              onClick={() => handleApply(true)}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                captureApplyScrollPosition(event.currentTarget);
+              }}
+              onClick={(event) => {
+                applyWithPreservedTableScroll(event.currentTarget, true);
+              }}
             >
               Apply to all
             </Button>
@@ -771,7 +913,13 @@ function SingleColumnValidatorCard({
               size="md"
               className="flex-1 cursor-pointer"
               disabled={Boolean(cell.correctionDraft)}
-              onClick={() => handleApply(false)}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                captureApplyScrollPosition(event.currentTarget);
+              }}
+              onClick={(event) => {
+                applyWithPreservedTableScroll(event.currentTarget, false);
+              }}
             >
               Apply
             </Button>
@@ -816,7 +964,7 @@ export function ValidatorPanel<TPayload, TResult>({
           </div>
           <div className="mt-3 h-px bg-neutral-2" />
 
-          <div className="mt-5 space-y-4">
+          <div className="mt-5 space-y-1">
             <div className="grid grid-cols-[auto_1fr] items-center justify-between gap-1 w-full">
               <div className="text-base font-light text-gray-400">Columns</div>
               <Select
@@ -838,7 +986,7 @@ export function ValidatorPanel<TPayload, TResult>({
                   >
                     <span className="flex text-base w-full items-center justify-between gap-6">
                       <span>All</span>
-                      <ValidationStatusIcon status={resolveRowsSummaryStatus(session)} />
+                      <ValidationStatusIcon status={resolveRowsSummaryStatus(adapter, session)} />
                     </span>
                   </SelectItem>
                   <SelectSeparator className="mx-3 my-1 bg-neutral-200" />
@@ -893,7 +1041,7 @@ export function ValidatorPanel<TPayload, TResult>({
                       >
                         <span className="flex w-full items-center justify-between gap-6">
                           <span>{row.rowIndex + 1}</span>
-                          <ValidationStatusIcon status={resolveRowStatus(row)} />
+                          <ValidationStatusIcon status={resolveRowStatus(adapter, row)} />
                         </span>
                       </SelectItem>
                     ))}
@@ -906,7 +1054,7 @@ export function ValidatorPanel<TPayload, TResult>({
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto secondary-scrollbar overflow-x-hidden px-3 py-5">
           {showSelectionPrompt ? (
-            <Card className="rounded-2xl border border-neutral-200 py-0">
+            <Card className="py-0 border-none! shadow-none!">
               <CardContent className="px-6 py-8 text-sm text-neutral-500">
                 {hasRows
                   ? 'Select a row and column to begin validation.'
@@ -916,7 +1064,10 @@ export function ValidatorPanel<TPayload, TResult>({
           ) : isAllColumnsMode && activeRow ? (
             <div className="space-y-4">
               {adapter.fields.map((field, index) => (
-                <section key={field.path} aria-label={`Validator box ${field.label}`}>
+                <section
+                  key={`${activeRow.id}:${field.path}`}
+                  aria-label={`Validator box ${field.label}`}
+                >
                   <SingleColumnValidatorCard
                     field={field}
                     row={activeRow}

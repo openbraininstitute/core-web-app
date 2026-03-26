@@ -330,12 +330,34 @@ describe('createCellMorphologyImportAdapter', () => {
     });
     const contributionsField = adapter.fields.find((field) => field.path === 'contributions');
     const locationField = adapter.fields.find((field) => field.path === 'location');
+    const importCache = new Map<string, unknown>();
 
     await expect(
       contributionsField?.csv?.hydrateCell?.({
         rawValue: '[(person, Jane Doe, Author)]',
         row: adapter.createBlankRow?.() ?? {},
         context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+        importCache,
+      })
+    ).resolves.toMatchObject({
+      rawValue: '',
+      parsedValue: [
+        expect.objectContaining({
+          agent_type: AgentType.Person.key,
+          agent_id: '',
+          role_id: '',
+          imported_agent_text: 'Jane Doe',
+          imported_role_text: 'Author',
+        }),
+      ],
+    });
+
+    await expect(
+      contributionsField?.csv?.backgroundHydrateCell?.({
+        rawValue: '[(person, Jane Doe, Author)]',
+        row: adapter.createBlankRow?.() ?? {},
+        context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+        importCache,
       })
     ).resolves.toMatchObject({
       rawValue: '1 contributor',

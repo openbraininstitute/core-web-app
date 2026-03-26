@@ -40,8 +40,11 @@ export function EntityImportFeature<TPayload, TResult>({
       isSubmitting={controller.isSubmitting}
       csvUploadPhase={controller.csvUploadPhase}
       csvRowValidationProgress={controller.csvRowValidationProgress}
+      csvUploadNotifications={controller.csvUploadNotifications}
       validatorSuggestions={controller.validatorSuggestions}
+      onDismissCsvUploadNotifications={controller.dismissCsvUploadNotifications}
       onDownloadCsvTemplate={controller.downloadCsvTemplate}
+      onDownloadCurrentCsv={controller.downloadCurrentCsv}
       onDownloadGuideTemplate={controller.downloadGuideTemplate}
       onUploadCsvFile={controller.handleCsvUpload}
       onClose={onClose}

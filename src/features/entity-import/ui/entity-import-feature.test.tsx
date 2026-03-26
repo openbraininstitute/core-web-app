@@ -298,6 +298,27 @@ function getOpenSelectContent(): HTMLElement {
   return content;
 }
 
+function getTableScrollContainer(container: HTMLElement): HTMLDivElement {
+  const tableBody =
+    (container.querySelector('.ant-table-body') as HTMLDivElement | null) ??
+    (container.querySelector('.rc-virtual-list-holder') as HTMLDivElement | null) ??
+    (container.querySelector('[class*="virtual-holder"]') as HTMLDivElement | null);
+  if (!tableBody) {
+    throw new Error('Expected AntD table body to exist');
+  }
+
+  return tableBody;
+}
+
+function getTableCellElement(target: HTMLElement): HTMLElement {
+  const cell = target.closest('.ant-table-cell') ?? target.closest('td');
+  if (!(cell instanceof HTMLElement)) {
+    throw new Error('Expected table cell to exist');
+  }
+
+  return cell;
+}
+
 function createMockCellMorphologyImportServices(
   overrides: Partial<ICellMorphologyImportServices> = {}
 ): ICellMorphologyImportServices {
@@ -373,7 +394,7 @@ describe('EntityImportFeature', () => {
       />
     );
 
-    expect(container.querySelector('.ant-table-body')).toBeInTheDocument();
+    expect(getTableScrollContainer(container)).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Add row' }).closest('.ant-table-footer')
     ).not.toBeNull();
@@ -446,11 +467,7 @@ describe('EntityImportFeature', () => {
       />
     );
 
-    const tableBody = container.querySelector('.ant-table-body') as HTMLDivElement | null;
-    expect(tableBody).toBeInTheDocument();
-    if (!tableBody) {
-      throw new Error('Expected AntD table body to exist');
-    }
+    const tableBody = getTableScrollContainer(container);
 
     Object.defineProperty(tableBody, 'scrollHeight', {
       configurable: true,
@@ -461,10 +478,8 @@ describe('EntityImportFeature', () => {
     await user.click(screen.getByRole('button', { name: 'Add row' }));
 
     await waitFor(() => {
-      const nextTableBody = container.querySelector('.ant-table-body') as HTMLDivElement | null;
-      expect(nextTableBody?.scrollTop).toBe(640);
+      expect(getTableScrollContainer(container).scrollTop).toBe(640);
     });
-    expect(screen.getByLabelText('Name row 9')).toBeInTheDocument();
   });
 
   it('shows row actions in a dropdown and clears the row back to adapter defaults', async () => {
@@ -543,6 +558,7 @@ describe('EntityImportFeature', () => {
     });
 
     await user.click(suggestion);
+    expect(screen.getByText('Isocortex')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Apply to all/i }));
 
     expect(
@@ -584,6 +600,76 @@ describe('EntityImportFeature', () => {
       expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron Z');
       expect(screen.getByLabelText('Name row 2')).toHaveValue('Neuron Z');
     });
+  });
+
+  it('preserves table scroll position when applying validator edits', async () => {
+    const user = userEvent.setup();
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        adapter={textApplyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={Array.from({ length: 30 }, (_, index) => ({
+          name: `Neuron ${index + 1}`,
+        }))}
+      />
+    );
+
+    const tableBody = getTableScrollContainer(container);
+    tableBody.scrollTop = 240;
+
+    await user.click(screen.getByLabelText('Name row 1'));
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.clear(validatorInput);
+    await user.type(validatorInput, 'Neuron Stable');
+
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron Stable');
+    });
+    expect(getTableScrollContainer(container).scrollTop).toBe(240);
+  });
+
+  it('restores table scroll position after apply when button focus nudges the table body', async () => {
+    const user = userEvent.setup();
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        adapter={textApplyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={Array.from({ length: 30 }, (_, index) => ({
+          name: `Neuron ${index + 1}`,
+        }))}
+      />
+    );
+
+    const tableBody = getTableScrollContainer(container);
+    tableBody.scrollTop = 240;
+
+    await user.click(screen.getByLabelText('Name row 1'));
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.clear(validatorInput);
+    await user.type(validatorInput, 'Neuron Stable');
+
+    const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function focus(
+      this: HTMLElement
+    ) {
+      if (this instanceof HTMLButtonElement && this.textContent?.trim() === 'Apply') {
+        tableBody.scrollTop = 180;
+      }
+    });
+
+    try {
+      await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron Stable');
+      });
+      await waitFor(() => {
+        expect(getTableScrollContainer(container).scrollTop).toBe(240);
+      });
+    } finally {
+      focusSpy.mockRestore();
+    }
   });
 
   it('shows formatted date values in the validator summary header', async () => {
@@ -660,7 +746,7 @@ describe('EntityImportFeature', () => {
     });
   });
 
-  it('shows csv preparation before imported rows render and row validation progress after rows mount', async () => {
+  it('shows csv loading progress in the upload tooltip and closes it after validation finishes', async () => {
     const user = userEvent.setup();
     const hydrateDeferred = createDeferred<{
       rawValue: string;
@@ -725,6 +811,8 @@ describe('EntityImportFeature', () => {
     };
     const { container } = renderWithQueryClient(
       <EntityImportFeature
+        title="CSV Progress Import"
+        onClose={() => {}}
         adapter={csvProgressAdapter}
         context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
       />
@@ -735,7 +823,14 @@ describe('EntityImportFeature', () => {
       createCsvUploadFile('Name,Brain Region\nNeuron A,Isocortex\n')
     );
 
-    expect(await screen.findByText('Preparing CSV rows...')).toBeInTheDocument();
+    const loadingTooltip = await screen.findByRole('tooltip');
+    expect(within(loadingTooltip).getByText('Uploading CSV')).toBeInTheDocument();
+    expect(
+      within(loadingTooltip).getByText(
+        /Parsing CSV\.\.\.|Preparing imported values\.\.\.|Preparing CSV rows\.\.\./
+      )
+    ).toBeInTheDocument();
+    expect(container.querySelector('.absolute.inset-0.z-10')).not.toBeInTheDocument();
     expect(screen.queryByDisplayValue('Neuron A')).not.toBeInTheDocument();
 
     hydrateDeferred.resolve({
@@ -748,8 +843,14 @@ describe('EntityImportFeature', () => {
       expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron A');
     });
 
-    expect(await screen.findByText('Validating 0 of 1 row(s)...')).toBeInTheDocument();
-    expect(screen.getByLabelText('Row 1 status: Validating')).toBeInTheDocument();
+    const validationTooltip = await screen.findByRole('tooltip');
+    expect(within(validationTooltip).getByText('Validating 0 of 1 row(s)...')).toBeInTheDocument();
+    expect(within(validationTooltip).getByText('0 of 1 rows validated')).toBeInTheDocument();
+    expect(within(validationTooltip).queryByText('0/1')).not.toBeInTheDocument();
+    expect(
+      container.querySelector('.mx-4.mt-4.rounded-2xl.border.border-neutral-200.bg-neutral-50')
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Row 1 status: Needs attention')).toBeInTheDocument();
 
     validateDeferred.resolve({
       status: 'valid',
@@ -760,35 +861,147 @@ describe('EntityImportFeature', () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryByText('Validating 0 of 1 row(s)...')).not.toBeInTheDocument();
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
       expect(screen.getByLabelText('Row 1 status: Ready')).toBeInTheDocument();
     });
   });
 
-  it('warns when Papa Parse renames duplicate CSV headers during upload', async () => {
+  it('keeps csv upload issues in the tooltip until the user closes them', async () => {
     const user = userEvent.setup();
+    const hydrateDeferred = createDeferred<{
+      rawValue: string;
+      displayValue: string | null;
+      parsedValue: string;
+    }>();
+    const validateDeferred = createDeferred<RemoteValidationResult>();
+    const validateSpy = vi.fn(async ({ query }: { query: string }) => {
+      if (query !== 'Isocortex') {
+        return {
+          status: 'invalid',
+          suggestions: [],
+          message: 'No matches found for Brain Region.',
+        } as const;
+      }
+
+      return validateDeferred.promise;
+    });
+    const csvProgressAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+      id: 'csv-progress-with-warning-import',
+      title: 'CSV Progress Import',
+      templateFileName: 'csv-progress.csv',
+      submitLabel: 'Import rows',
+      fields: [
+        {
+          label: 'Name',
+          path: 'name',
+          required: true,
+          inputType: ImportInputType.Text,
+          csv: {
+            hydrateCell: async ({ rawValue }) => {
+              if (rawValue === 'Neuron A') {
+                return hydrateDeferred.promise;
+              }
+
+              return {
+                rawValue,
+                displayValue: rawValue || null,
+                parsedValue: rawValue,
+              };
+            },
+          },
+        },
+        {
+          label: 'Brain Region',
+          path: 'brainRegion',
+          required: true,
+          inputType: ImportInputType.RemoteSelect,
+          remote: {
+            evaluate: ({ query }) => validateSpy({ query }),
+          },
+        },
+      ],
+      schema: z.object({
+        name: z.string().min(1, 'Name is required'),
+        brainRegion: z.string().min(1, 'Brain Region is required'),
+      }),
+      buildPayload({ values }) {
+        return values;
+      },
+      submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
+    };
     const { container } = renderWithQueryClient(
       <EntityImportFeature
-        adapter={adapter}
+        title="CSV Progress Import"
+        onClose={() => {}}
+        adapter={csvProgressAdapter}
         context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
       />
     );
 
     await user.upload(
       getCsvUploadInput(container),
-      createCsvUploadFile('Name,name,Brain Region\nNeuron A,Neuron B,Cortex\n')
+      createCsvUploadFile('Name,name,Brain Region\nNeuron A,Neuron B,Isocortex,Extra\n')
     );
 
+    hydrateDeferred.resolve({
+      rawValue: 'Neuron A',
+      displayValue: 'Neuron A',
+      parsedValue: 'Neuron A',
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('tooltip')).toHaveTextContent(
+        /Duplicate CSV headers were renamed by the parser\./i
+      );
+    });
+    const warningTooltip = screen.getByRole('tooltip');
+    expect(within(warningTooltip).getAllByRole('alert')).toHaveLength(3);
     expect(
-      await screen.findByText(/Duplicate CSV headers were renamed by the parser\./i)
+      within(warningTooltip).getByText(/Duplicate CSV headers were renamed by the parser\./i)
     ).toBeInTheDocument();
+    expect(
+      within(warningTooltip).getByText(/CSV parsing reported 1 issue during upload\./i)
+    ).toBeInTheDocument();
+    expect(within(warningTooltip).getByText(/Row 2: Too many fields:/i)).toBeInTheDocument();
+    expect(within(warningTooltip).getByText('Validating 0 of 1 row(s)...')).toBeInTheDocument();
+
+    validateDeferred.resolve({
+      status: 'valid',
+      resolvedSuggestion: {
+        value: 'brain-region-1',
+        label: 'Isocortex',
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Row 1 status: Ready')).toBeInTheDocument();
+    });
+
+    const postValidationTooltip = await screen.findByRole('tooltip');
+    expect(within(postValidationTooltip).getAllByRole('alert')).toHaveLength(3);
+    expect(
+      within(postValidationTooltip).getByText(/Duplicate CSV headers were renamed by the parser\./i)
+    ).toBeInTheDocument();
+    expect(
+      within(postValidationTooltip).getByText(/CSV parsing reported 1 issue during upload\./i)
+    ).toBeInTheDocument();
+    expect(within(postValidationTooltip).getByText(/Row 2: Too many fields:/i)).toBeInTheDocument();
+    await user.click(
+      within(postValidationTooltip).getByRole('button', { name: 'Close CSV upload status' })
+    );
+    await waitFor(() => {
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
     expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron A');
+    expect(container.querySelector('.absolute.inset-0.z-10')).not.toBeInTheDocument();
   });
 
   it('warns when Papa Parse reports CSV field mismatch errors during upload', async () => {
     const user = userEvent.setup();
     const { container } = renderWithQueryClient(
       <EntityImportFeature
+        title="Mock Entity Import"
+        onClose={() => {}}
         adapter={adapter}
         context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
       />
@@ -799,9 +1012,17 @@ describe('EntityImportFeature', () => {
       createCsvUploadFile('Name,Brain Region\nNeuron A,Cortex,Extra\n')
     );
 
+    await waitFor(() => {
+      expect(screen.getByRole('tooltip')).toHaveTextContent(
+        /CSV parsing reported 1 issue during upload\./i
+      );
+    });
+    const tooltip = screen.getByRole('tooltip');
+    expect(within(tooltip).getAllByRole('alert')).toHaveLength(2);
     expect(
-      await screen.findByText(/CSV parsing reported 1 issue during upload\./i)
+      within(tooltip).getByText(/CSV parsing reported 1 issue during upload\./i)
     ).toBeInTheDocument();
+    expect(within(tooltip).getByText(/Row 2: Too many fields:/i)).toBeInTheDocument();
     expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron A');
     expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Cortex');
     expect(
@@ -845,7 +1066,7 @@ describe('EntityImportFeature', () => {
       expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Atlantis');
     });
 
-    const brainRegionCell = screen.getByLabelText('Brain Region row 1').closest('td');
+    const brainRegionCell = getTableCellElement(screen.getByLabelText('Brain Region row 1'));
     expect(brainRegionCell).toHaveClass('bg-amber-50/70');
     expect(
       screen.queryByRole('button', { name: 'Show status for Brain Region row 1' })
@@ -951,12 +1172,12 @@ describe('EntityImportFeature', () => {
       expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Cortex');
     });
 
-    const brainRegionCell = screen.getByLabelText('Brain Region row 1').closest('td');
+    const brainRegionCell = getTableCellElement(screen.getByLabelText('Brain Region row 1'));
     expect(brainRegionCell).not.toHaveClass('bg-amber-50/70');
     expect(brainRegionCell).toHaveClass('bg-sky-50/70');
     expect(
-      screen.queryByRole('button', { name: 'Show status for Brain Region row 1' })
-    ).not.toBeInTheDocument();
+      screen.getByRole('button', { name: 'Show status for Brain Region row 1' })
+    ).toBeInTheDocument();
 
     await user.click(screen.getByLabelText('Brain Region row 1'));
 
@@ -968,6 +1189,11 @@ describe('EntityImportFeature', () => {
     expect(screen.getByLabelText('Validator value')).toHaveValue('Cortex');
     expect(screen.queryByText('Evaluation only layer 2')).not.toBeInTheDocument();
     expect(screen.queryByText('Evaluation only layer 5')).not.toBeInTheDocument();
+    expect(screen.getByText('Cortex layer 2')).toBeInTheDocument();
+    expect(screen.getByText('Cortex layer 5')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Select suggestion Cortex layer 2' }));
+
     expect(screen.getByText('Cortex layer 2')).toBeInTheDocument();
     expect(screen.getByText('Cortex layer 5')).toBeInTheDocument();
   });
@@ -1073,6 +1299,10 @@ describe('EntityImportFeature', () => {
       createCsvUploadFile('Name,Brain Region\nNeuron A,Cortex\n')
     );
 
+    await waitFor(() => {
+      expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Cortex');
+    });
+
     await user.click(screen.getByLabelText('Brain Region row 1'));
 
     await waitFor(() => {
@@ -1172,6 +1402,114 @@ describe('EntityImportFeature', () => {
       expect(querySpy).toHaveBeenCalledWith(expect.objectContaining({ query: 'Cortex' }));
     });
   }, 10000);
+
+  it('keeps validator remote-select typing local until apply', async () => {
+    const user = userEvent.setup();
+    const ambiguousAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+      ...adapter,
+      id: 'validator-local-draft-import',
+      fields: [
+        adapter.fields[0],
+        {
+          ...adapter.fields[1],
+          remote: {
+            query: async ({ query }) => ({
+              suggestions:
+                query.toLowerCase() === 'cortex'
+                  ? [
+                      { value: 'ctx-layer-2', label: 'Cortex layer 2' },
+                      { value: 'ctx-layer-5', label: 'Cortex layer 5' },
+                    ]
+                  : [],
+              nextPageParam: null,
+            }),
+          },
+        },
+      ],
+    };
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        adapter={ambiguousAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A', brainRegion: '' }]}
+      />
+    );
+
+    const tableInput = screen.getByRole('textbox', { name: 'Brain Region row 1' });
+    await user.click(tableInput);
+
+    const validatorInput = screen.getByRole('textbox', { name: 'Validator value' });
+    await user.type(validatorInput, 'Cortex');
+
+    expect(validatorInput).toHaveValue('Cortex');
+    expect(tableInput).toHaveValue('');
+
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: 'Brain Region row 1' })).toHaveValue('Cortex');
+    });
+  });
+
+  it('shows five skeleton suggestion rows while validator remote suggestions are loading', async () => {
+    const user = userEvent.setup();
+    const queryDeferred = createDeferred<{
+      suggestions: Array<{ value: string; label: string }>;
+      nextPageParam: null;
+    }>();
+    const loadingAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+      ...adapter,
+      id: 'validator-loading-skeleton-import',
+      fields: [
+        adapter.fields[0],
+        {
+          ...adapter.fields[1],
+          remote: {
+            query: async ({ query }) => {
+              if (query.toLowerCase() !== 'cortex') {
+                return { suggestions: [], nextPageParam: null };
+              }
+
+              return queryDeferred.promise;
+            },
+          },
+        },
+      ],
+    };
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Validator Loading Skeleton Import"
+        onClose={() => {}}
+        adapter={loadingAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A', brainRegion: '' }]}
+      />
+    );
+
+    await user.click(screen.getByRole('textbox', { name: 'Brain Region row 1' }));
+
+    const validatorInput = screen.getByRole('textbox', { name: 'Validator value' });
+    await user.type(validatorInput, 'Cortex');
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('validator-suggestion-skeleton')).toHaveLength(5);
+    });
+
+    queryDeferred.resolve({
+      suggestions: [
+        { value: 'ctx-layer-2', label: 'Cortex layer 2' },
+        { value: 'ctx-layer-5', label: 'Cortex layer 5' },
+      ],
+      nextPageParam: null,
+    });
+
+    expect(
+      await screen.findByRole('button', { name: 'Select suggestion Cortex layer 2' })
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('validator-suggestion-skeleton')).not.toBeInTheDocument();
+  });
 
   it('keeps repair pipeline state visible but disabled until a digital reconstruction protocol is selected', async () => {
     const user = userEvent.setup();
@@ -1359,11 +1697,7 @@ describe('EntityImportFeature', () => {
       />
     );
 
-    const tableBody = container.querySelector('.ant-table-body') as HTMLDivElement | null;
-    expect(tableBody).toBeInTheDocument();
-    if (!tableBody) {
-      throw new Error('Expected AntD table body to exist');
-    }
+    const tableBody = getTableScrollContainer(container);
 
     Object.defineProperty(tableBody, 'clientWidth', {
       configurable: true,
@@ -1379,6 +1713,41 @@ describe('EntityImportFeature', () => {
     await waitFor(() => {
       expect(tableBody.scrollLeft).toBeGreaterThan(0);
     });
+  });
+
+  it('shows selected static options in the validator dropdown without suggestion buttons', async () => {
+    const user = userEvent.setup();
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Validator Multi Column Import"
+        onClose={() => {}}
+        adapter={validatorMultiColumnAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A', status: 'draft', notes: 'Alpha' }]}
+      />
+    );
+
+    await user.click(screen.getByLabelText('Status row 1'));
+    await user.click(within(getOpenSelectContent()).getByText('Published'));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Status row 1')).toHaveTextContent('Published');
+      expect(screen.getByRole('combobox', { name: 'Validator value' })).toHaveTextContent(
+        'Published'
+      );
+    });
+
+    expect(
+      screen.queryByRole('button', {
+        name: 'Select suggestion Published',
+      })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', {
+        name: 'Select suggestion Draft',
+      })
+    ).not.toBeInTheDocument();
   });
 
   it('renders repair pipeline state as a full-cell select and keeps the chosen label visible', async () => {
@@ -1445,6 +1814,137 @@ describe('EntityImportFeature', () => {
     });
   });
 
+  it('does not auto-assign protocol while typing a partial query in the table', async () => {
+    const user = userEvent.setup();
+    const services = createMockCellMorphologyImportServices({
+      queryProtocol: vi.fn(async ({ query }) => ({
+        suggestions: query.toLowerCase().includes('digital')
+          ? [
+              {
+                value: 'protocol-digital',
+                label: 'Digital Protocol (digital_reconstruction)',
+                metadata: {
+                  generationType: CellMorphologyGenerationType.DigitalReconstruction.key,
+                },
+              },
+            ]
+          : [],
+        nextPageParam: null,
+      })),
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      services,
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    const protocolInput = screen.getByLabelText('Protocol row 1');
+    await user.click(protocolInput);
+    await user.type(protocolInput, 'Digital');
+    await new Promise((resolve) => {
+      setTimeout(resolve, 500);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Protocol row 1')).toHaveValue('Digital');
+    });
+  });
+
+  it('keeps paginated protocol suggestions visible in the validator and after opening details', async () => {
+    const user = userEvent.setup();
+    const firstSuggestion = {
+      value: 'protocol-digital',
+      label: 'Digital Protocol (digital_reconstruction)',
+      metadata: {
+        generationType: CellMorphologyGenerationType.DigitalReconstruction.key,
+        description: 'Primary digital protocol',
+      },
+    };
+    const secondSuggestion = {
+      value: 'protocol-digital-alt',
+      label: 'Digital Protocol Variant (digital_reconstruction)',
+      metadata: {
+        generationType: CellMorphologyGenerationType.DigitalReconstruction.key,
+        description: 'Additional digital protocol',
+      },
+    };
+    const services = createMockCellMorphologyImportServices({
+      queryProtocol: vi.fn(async ({ query, pageParam = 0, pageSize }) => {
+        if (!query.toLowerCase().includes('digital')) {
+          return { suggestions: [], nextPageParam: null };
+        }
+
+        if (pageParam === 1) {
+          return { suggestions: [firstSuggestion], nextPageParam: null };
+        }
+
+        if (pageParam >= 5) {
+          return { suggestions: [secondSuggestion], nextPageParam: null };
+        }
+
+        return {
+          suggestions: [firstSuggestion],
+          nextPageParam: pageSize ?? 5,
+        };
+      }),
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      services,
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    const protocolInput = screen.getByLabelText('Protocol row 1');
+    await user.click(protocolInput);
+    await user.type(protocolInput, 'Digital');
+    await new Promise((resolve) => {
+      setTimeout(resolve, 500);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Protocol row 1')).toHaveValue('Digital');
+    });
+
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.clear(validatorInput);
+    await user.type(validatorInput, 'Digital');
+
+    const suggestionButton = await screen.findByRole('button', {
+      name: /Select suggestion Digital Protocol \(digital_reconstruction\)/i,
+    });
+    expect(suggestionButton).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Load more' })).toBeInTheDocument();
+    });
+
+    const detailsTrigger = screen.getByLabelText(
+      'Show details for suggestion Digital Protocol (digital_reconstruction) (protocol-digital)'
+    );
+    await user.click(detailsTrigger);
+
+    expect(
+      screen.getByRole('button', {
+        name: /Select suggestion Digital Protocol \(digital_reconstruction\)/i,
+      })
+    ).toBeInTheDocument();
+  });
+
   it('keeps blank optional location neutral and does not surface object validation errors', async () => {
     const user = userEvent.setup();
     const morphologyAdapter = createCellMorphologyImportAdapter({
@@ -1463,7 +1963,7 @@ describe('EntityImportFeature', () => {
     const locationXInput = screen.getByLabelText('Location X row 1');
 
     await waitFor(() => {
-      expect(locationXInput.closest('td')).not.toHaveClass('bg-amber-50/70');
+      expect(getTableCellElement(locationXInput)).not.toHaveClass('bg-amber-50/70');
     });
 
     await user.click(locationXInput);
@@ -1648,6 +2148,77 @@ describe('EntityImportFeature', () => {
     expect(queryRole).toHaveBeenCalledTimes(1);
   });
 
+  it('reuses contribution lookups across imported rows in the same morphology upload', async () => {
+    const user = userEvent.setup();
+    const queryPerson = vi.fn(async ({ query }: { query: string }) => ({
+      suggestions: query === 'Jane Doe' ? [{ value: 'person-1', label: 'Jane Doe' }] : [],
+      nextPageParam: null,
+    }));
+    const queryRole = vi.fn(async ({ query }: { query: string }) => ({
+      suggestions: query === 'Author' ? [{ value: 'role-1', label: 'Author' }] : [],
+      nextPageParam: null,
+    }));
+    const services = createMockCellMorphologyImportServices({
+      queryBrainRegion: vi.fn(async ({ query }) => ({
+        suggestions: query === 'Isocortex' ? [{ value: 'brain-region-1', label: 'Isocortex' }] : [],
+        nextPageParam: null,
+      })),
+      querySubject: vi.fn(async ({ query }) => ({
+        suggestions: query === 'Subject 1' ? [{ value: 'subject-1', label: 'Subject 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryLicense: vi.fn(async ({ query }) => ({
+        suggestions: query === 'License 1' ? [{ value: 'license-1', label: 'License 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryProtocol: vi.fn(async ({ query }) => ({
+        suggestions:
+          query === 'Protocol 1'
+            ? [
+                {
+                  value: 'protocol-1',
+                  label: 'Protocol 1 (digital_reconstruction)',
+                  metadata: {
+                    generationType: CellMorphologyGenerationType.DigitalReconstruction.key,
+                  },
+                },
+              ]
+            : [],
+        nextPageParam: null,
+      })),
+      queryMtype: vi.fn(async ({ query }) => ({
+        suggestions: query === 'M-type 1' ? [{ value: 'mtype-1', label: 'M-type 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryPerson,
+      queryRole,
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      services,
+    });
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile(
+        'Name,Description,Brain Region,Subject,License,Protocol,M-type,Contributions\nNeuron A,Imported morphology,Isocortex,Subject 1,License 1,Protocol 1,M-type 1,"[(person, Jane Doe, Author)]"\nNeuron B,Imported morphology,Isocortex,Subject 1,License 1,Protocol 1,M-type 1,"[(person, Jane Doe, Author)]"\n'
+      )
+    );
+
+    await waitFor(() => {
+      expect(queryPerson).toHaveBeenCalledTimes(1);
+      expect(queryRole).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('keeps partial imported contribution tuples visible and invalid in the editor', async () => {
     const user = userEvent.setup();
     const services = createMockCellMorphologyImportServices({
@@ -1816,6 +2387,23 @@ describe('EntityImportFeature', () => {
     ).not.toHaveLength(0);
   });
 
+  it('bounds rendered table rows when many rows are loaded', () => {
+    renderWithQueryClient(
+      <EntityImportFeature
+        adapter={rowActionsAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={Array.from({ length: 100 }, (_, index) => ({
+          name: `Neuron ${index + 1}`,
+          status: 'draft',
+          notes: '',
+        }))}
+      />
+    );
+
+    expect(screen.getByLabelText('Actions row 1')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Actions row 100')).not.toBeInTheDocument();
+  });
+
   it('renders configurable full-cell file triggers with generic labels', () => {
     renderWithQueryClient(
       <EntityImportFeature
@@ -1953,5 +2541,42 @@ describe('EntityImportFeature', () => {
     await expect(guideBlob.text()).resolves.toContain('# Cell Morphology CSV Guide');
     expect(clickSpy).toHaveBeenCalledTimes(2);
     expect(revokeObjectURL).toHaveBeenCalledTimes(2);
+  });
+
+  it('downloads the current csv state from the toolbar action', async () => {
+    const user = userEvent.setup();
+    const createObjectURL = vi.fn(() => 'blob:current-state');
+    const revokeObjectURL = vi.fn();
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: revokeObjectURL,
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Text Apply Import"
+        onClose={() => {}}
+        adapter={textApplyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A' }, { name: 'Neuron B' }]}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Download Current CSV' }));
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    const csvBlob = createObjectURL.mock.calls[0]?.[0] as Blob;
+    expect(csvBlob.type).toBe('text/csv;charset=utf-8;');
+    await expect(csvBlob.text()).resolves.toContain('Name');
+    await expect(csvBlob.text()).resolves.toContain('Neuron A');
+    await expect(csvBlob.text()).resolves.toContain('Neuron B');
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURL).toHaveBeenCalledTimes(1);
   });
 });

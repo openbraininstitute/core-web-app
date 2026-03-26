@@ -6,6 +6,7 @@ import { Table } from 'antd';
 import {
   type MouseEvent as ReactMouseEvent,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -45,6 +46,7 @@ import type { IImportSessionState } from '@/features/entity-import/core/contract
 
 const DEFAULT_FIELD_COLUMN_WIDTH = 200;
 const DEFAULT_TABLE_BODY_SCROLL_HEIGHT = 1;
+const MIN_ROW_COUNT_FOR_VIRTUAL_TABLE = 20;
 const ROW_INDEX_COLUMN_WIDTH = 68;
 const ROW_ACTIONS_COLUMN_WIDTH = 72;
 
@@ -53,6 +55,19 @@ interface ImportTableProps<TPayload, TResult> {
   context: EntityImportRuntimeContext;
   session: IImportSessionState;
   actions: IEntityImportActions;
+}
+
+function findScrollableTableBody(tableRef: TableRef | null): HTMLDivElement | null {
+  const element = tableRef?.nativeElement;
+  if (!element) {
+    return null;
+  }
+
+  return (
+    (element.querySelector('.ant-table-body') as HTMLDivElement | null) ??
+    (element.querySelector('.rc-virtual-list-holder') as HTMLDivElement | null) ??
+    (element.querySelector('[class*="virtual-holder"]') as HTMLDivElement | null)
+  );
 }
 
 function fieldColumnWidth(
@@ -68,34 +83,82 @@ export function ImportTable<TPayload, TResult>({
   session,
   actions,
 }: ImportTableProps<TPayload, TResult>) {
+  const shouldUseVirtualTable = session.rows.length > MIN_ROW_COUNT_FOR_VIRTUAL_TABLE;
+  const selectedCell = session.selectedCell;
+  const latestSessionRef = useRef(session);
   const previousRowCountRef = useRef(session.rows.length);
   const shouldScrollToNewRowRef = useRef(false);
   const tableRef = useRef<TableRef>(null);
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [resizeOverrides, setResizeOverrides] = useState<Record<string, number>>({});
   const [containerHeight, setContainerHeight] = useState(0);
+  const [tableChromeHeights, setTableChromeHeights] = useState({
+    footerHeight: 0,
+    headerHeight: 0,
+  });
+  const [wrapperElement, setWrapperElement] = useState<HTMLDivElement | null>(null);
   const resizeOverridesRef = useRef(resizeOverrides);
-  resizeOverridesRef.current = resizeOverrides;
 
-  const syncContainerHeight = useCallback((target?: HTMLElement | null) => {
-    const element = target ?? wrapperRef.current;
-    if (!element) {
+  useEffect(() => {
+    latestSessionRef.current = session;
+  }, [session]);
+
+  useEffect(() => {
+    resizeOverridesRef.current = resizeOverrides;
+  }, [resizeOverrides]);
+
+  const syncContainerHeight = useCallback(
+    (target?: HTMLElement | null) => {
+      const element = target ?? wrapperElement;
+      if (!element) {
+        return;
+      }
+
+      const nextHeight = element.getBoundingClientRect().height;
+      setContainerHeight((current) => (current === nextHeight ? current : nextHeight));
+    },
+    [wrapperElement]
+  );
+
+  const syncTableChromeHeights = useCallback(() => {
+    const nativeElement = tableRef.current?.nativeElement;
+    if (!nativeElement) {
       return;
     }
 
-    const nextHeight = element.getBoundingClientRect().height;
-    setContainerHeight((current) => (current === nextHeight ? current : nextHeight));
+    const headerHeight =
+      nativeElement.querySelector('.ant-table-header, .ant-table-thead')?.getBoundingClientRect()
+        .height ?? 0;
+    const footerHeight =
+      nativeElement.querySelector('.ant-table-footer')?.getBoundingClientRect().height ?? 0;
+
+    setTableChromeHeights((current) =>
+      current.headerHeight === headerHeight && current.footerHeight === footerHeight
+        ? current
+        : {
+            footerHeight,
+            headerHeight,
+          }
+    );
   }, []);
 
-  useLayoutEffect(() => {
-    syncContainerHeight();
-  }, [syncContainerHeight]);
+  const setWrapperRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      setWrapperElement(element);
+      if (!element) {
+        return;
+      }
+
+      syncContainerHeight(element);
+      requestAnimationFrame(() => {
+        syncTableChromeHeights();
+      });
+    },
+    [syncContainerHeight, syncTableChromeHeights]
+  );
 
   useLayoutEffect(() => {
     if (shouldScrollToNewRowRef.current && session.rows.length > previousRowCountRef.current) {
-      const tableBody = tableRef.current?.nativeElement.querySelector(
-        '.ant-table-body'
-      ) as HTMLDivElement | null;
+      const tableBody = findScrollableTableBody(tableRef.current);
       if (tableBody) {
         tableBody.scrollTop = tableBody.scrollHeight;
       }
@@ -111,9 +174,7 @@ export function ImportTable<TPayload, TResult>({
       return;
     }
 
-    const tableBody = tableRef.current?.nativeElement.querySelector(
-      '.ant-table-body'
-    ) as HTMLDivElement | null;
+    const tableBody = findScrollableTableBody(tableRef.current);
     if (!tableBody) {
       return;
     }
@@ -146,8 +207,11 @@ export function ImportTable<TPayload, TResult>({
   }, [adapter.fields, resizeOverrides, session.validatorSelection.fieldPath]);
 
   useResizeObserver({
-    element: wrapperRef.current ?? undefined,
-    callback: syncContainerHeight,
+    element: wrapperElement ?? undefined,
+    callback: (target) => {
+      syncContainerHeight(target);
+      syncTableChromeHeights();
+    },
   });
 
   const handleAddRow = useCallback(() => {
@@ -188,15 +252,8 @@ export function ImportTable<TPayload, TResult>({
     return ROW_INDEX_COLUMN_WIDTH + fieldsWidth + ROW_ACTIONS_COLUMN_WIDTH;
   }, [adapter.fields, resizeOverrides]);
 
-  const headerHeight =
-    tableRef.current?.nativeElement
-      .querySelector('.ant-table-header, .ant-table-thead')
-      ?.getBoundingClientRect().height ?? 0;
-  const footerHeight =
-    tableRef.current?.nativeElement.querySelector('.ant-table-footer')?.getBoundingClientRect()
-      .height ?? 0;
   const scrollHeight = Math.max(
-    containerHeight - headerHeight - footerHeight,
+    containerHeight - tableChromeHeights.headerHeight - tableChromeHeights.footerHeight,
     DEFAULT_TABLE_BODY_SCROLL_HEIGHT
   );
 
@@ -215,7 +272,7 @@ export function ImportTable<TPayload, TResult>({
         fixed: 'left',
         align: 'center',
         render: (_, row) => {
-          const rowUiStatus = getTableRowUiStatus(row);
+          const rowUiStatus = getTableRowUiStatus(row, adapter.fields);
           const rowStatusLabel = getTableRowUiStatusLabel(rowUiStatus);
 
           return (
@@ -271,15 +328,14 @@ export function ImportTable<TPayload, TResult>({
           render: (_: unknown, row: IImportSessionState['rows'][number]) => {
             const cell = row.cells[field.path];
             const isSelected =
-              session.selectedCell?.rowId === row.id &&
-              session.selectedCell?.fieldPath === field.path;
+              selectedCell?.rowId === row.id && selectedCell?.fieldPath === field.path;
 
             return (
               <InlineCell
                 field={field}
                 cell={cell}
                 row={row}
-                session={session}
+                session={latestSessionRef.current}
                 context={context}
                 actions={actions}
                 selected={isSelected}
@@ -289,8 +345,7 @@ export function ImportTable<TPayload, TResult>({
           onCell: (row: IImportSessionState['rows'][number]) => {
             const cell = row.cells[field.path];
             const isSelected =
-              session.selectedCell?.rowId === row.id &&
-              session.selectedCell?.fieldPath === field.path;
+              selectedCell?.rowId === row.id && selectedCell?.fieldPath === field.path;
             const cellUiStatus = getTableCellUiStatus(cell);
 
             return {
@@ -362,20 +417,21 @@ export function ImportTable<TPayload, TResult>({
         }),
       },
     ],
-    [actions, adapter.fields, beginResize, context, resizeOverrides, session]
+    [actions, adapter.fields, beginResize, context, resizeOverrides, selectedCell]
   );
 
   return (
-    <div ref={wrapperRef} className="h-full min-h-0 overflow-hidden bg-white">
+    <div ref={setWrapperRef} className="h-full min-h-0 overflow-hidden bg-white">
       <Table
         ref={tableRef}
         rowKey="id"
         size="small"
         pagination={false}
         tableLayout="fixed"
+        virtual={shouldUseVirtualTable}
         columns={columns}
         dataSource={session.rows}
-        scroll={{ x: scrollWidth, y: scrollHeight }}
+        scroll={{ x: scrollWidth, y: scrollHeight, scrollToFirstRowOnChange: false }}
         footer={() => (
           <button
             type="button"

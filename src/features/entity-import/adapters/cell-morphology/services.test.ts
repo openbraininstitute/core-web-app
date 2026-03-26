@@ -142,13 +142,13 @@ describe('createCellMorphologyImportServices query helpers', () => {
           value: 'brain-region-1',
           label: 'Isocortex',
           description: 'ISO',
-          metadata: { acronym: 'ISO' },
+          metadata: { acronym: 'ISO', species: null },
         },
         {
           value: 'brain-region-2',
           label: 'Hippocampus',
           description: 'HIP',
-          metadata: { acronym: 'HIP' },
+          metadata: { acronym: 'HIP', species: null },
         },
       ],
       nextPageParam: null,
@@ -156,14 +156,16 @@ describe('createCellMorphologyImportServices query helpers', () => {
 
     expect(mocks.entityCoreApi).toHaveBeenCalled();
     expect(mocks.entityCoreGet).toHaveBeenCalledWith('/brain-region', {
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        'project-id': 'project-1',
+        'virtual-lab-id': 'lab-1',
+      },
       queryParams: {
         page: 2,
         page_size: 2,
         semantic_search: 'iso',
-      },
-      headers: {
-        'project-id': 'project-1',
-        'virtual-lab-id': 'lab-1',
       },
     });
   });

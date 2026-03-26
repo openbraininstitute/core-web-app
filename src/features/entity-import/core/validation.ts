@@ -15,29 +15,167 @@ import {
 import type { ZodType } from 'zod';
 import type { IAdapterFieldDefinition } from '@/features/entity-import/core/adapter';
 
-function cloneRows(rows: Array<IImportRowState>): Array<IImportRowState> {
-  return rows.map((row) => ({
-    ...row,
-    cells: Object.fromEntries(
-      Object.entries(row.cells).map(([key, cell]) => [
-        key,
-        {
+function arrayEquals(left: Array<string>, right: Array<string>): boolean {
+  if (left === right) {
+    return true;
+  }
+
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((value, index) => value === right[index]);
+}
+
+function maybeReuseValidatedCell(
+  currentCell: IImportRowState['cells'][string],
+  candidate: IImportRowState['cells'][string]
+) {
+  if (
+    currentCell.status === candidate.status &&
+    currentCell.dependencyState === candidate.dependencyState &&
+    arrayEquals(currentCell.issues, candidate.issues)
+  ) {
+    return currentCell;
+  }
+
+  return candidate;
+}
+
+function validateRow<TPayload>({
+  row,
+  fields,
+  schema,
+  buildPayload,
+}: {
+  row: IImportRowState;
+  fields: Array<IAdapterFieldDefinition>;
+  schema: ZodType<TPayload>;
+  buildPayload: (args: { row: IImportRowState; values: TFlatImportValues }) => TPayload;
+}): IImportRowState {
+  const rowValues = getRowSubmissionValues(row);
+  const issueMap = new Map<string, Array<string>>();
+
+  const parseResult = schema.safeParse(
+    buildPayload({
+      row,
+      values: rowValues,
+    })
+  );
+  if (!parseResult.success) {
+    parseResult.error.issues.forEach((issue) => {
+      const key = resolveIssueFieldPath(fields, issue.path.join('.') || '_row');
+      const existing = issueMap.get(key) ?? [];
+      issueMap.set(key, [...existing, issue.message]);
+    });
+  }
+
+  let didChangeCells = false;
+  let nextCells = row.cells;
+
+  fields.forEach((field) => {
+    const cell = row.cells[field.path];
+    const enablementArgs = {
+      values: rowValues,
+      row,
+    };
+    const isExplicitlyEnabled = field.isEnabled?.(enablementArgs) ?? true;
+    const blockingDependency = field.dependencies?.find((dependencyPath) => {
+      const dependencyCell = row.cells[dependencyPath];
+      return !dependencyCell || dependencyCell.rawValue.trim() === '';
+    });
+
+    const candidateCell = (() => {
+      if (blockingDependency || !isExplicitlyEnabled) {
+        const blockingPath = blockingDependency ?? field.dependencies?.[0] ?? field.path;
+        const customDisabledMessage = !blockingDependency
+          ? field.getDisabledMessage?.(enablementArgs)
+          : null;
+        const disabledMessage =
+          customDisabledMessage ??
+          `Resolve ${labelForPath(fields, blockingPath)} before editing ${field.label}.`;
+
+        return {
           ...cell,
-          issues: [...cell.issues],
-          remoteState: {
-            ...cell.remoteState,
-            suggestions: [...cell.remoteState.suggestions],
-            suggestionPaging: cell.remoteState.suggestionPaging
-              ? { ...cell.remoteState.suggestionPaging }
-              : undefined,
-          },
-          correctionDraft: cell.correctionDraft
-            ? { ...cell.correctionDraft, suggestion: { ...cell.correctionDraft.suggestion } }
-            : null,
-        },
-      ])
-    ),
-  }));
+          status: CellStatus.Disabled,
+          dependencyState: DependencyState.Blocked,
+          issues: [disabledMessage],
+        };
+      }
+
+      const issues = issueMap.get(field.path) ?? [];
+      const localIssues =
+        field.getValidationIssues?.({
+          cell,
+          row,
+          values: rowValues,
+        }) ?? [];
+      const remoteIssues =
+        cell.remoteState.status === RemoteValidationStatus.Invalid && cell.remoteState.message
+          ? [cell.remoteState.message]
+          : [];
+      const combinedIssues = [...issues, ...localIssues, ...remoteIssues];
+      const hasRawValue = cell.rawValue.trim() !== '';
+      const needsRemoteConfirmation =
+        !cell.correctionDraft &&
+        fieldHasSuggestionResolution(field) &&
+        hasRawValue &&
+        cell.remoteState.status !== RemoteValidationStatus.Valid &&
+        combinedIssues.length === 0;
+      const needsRemoteIssue = needsRemoteConfirmation
+        ? [`Confirm ${field.label} from the suggestion list before importing.`]
+        : [];
+      const stagedIssues = cell.correctionDraft
+        ? ['Accept or reject the suggested correction in the table before importing.']
+        : [];
+      const finalIssues = [...combinedIssues, ...needsRemoteIssue, ...stagedIssues];
+
+      return {
+        ...cell,
+        dependencyState: DependencyState.Ready,
+        issues: finalIssues,
+        status:
+          finalIssues.length > 0
+            ? CellStatus.Invalid
+            : hasRawValue
+              ? CellStatus.Valid
+              : CellStatus.Idle,
+      };
+    })();
+
+    const nextCell = maybeReuseValidatedCell(cell, candidateCell);
+    if (nextCell === cell) {
+      return;
+    }
+
+    if (!didChangeCells) {
+      nextCells = { ...row.cells };
+      didChangeCells = true;
+    }
+    nextCells[field.path] = nextCell;
+  });
+
+  const validatedCells = didChangeCells ? nextCells : row.cells;
+  const nextRowStatus = fields.every((field) => {
+    if (!field.required) {
+      return true;
+    }
+
+    const cell = validatedCells[field.path];
+    return cell.status === CellStatus.Valid;
+  })
+    ? RowStatus.Valid
+    : RowStatus.Invalid;
+
+  if (!didChangeCells && nextRowStatus === row.rowStatus) {
+    return row;
+  }
+
+  return {
+    ...row,
+    rowStatus: nextRowStatus,
+    cells: validatedCells,
+  };
 }
 
 function labelForPath(fields: Array<IAdapterFieldDefinition>, path: string): string {
@@ -86,117 +224,35 @@ export function validateSessionRows<TPayload>({
   session,
   fields,
   schema,
+  rowIds,
   buildPayload,
 }: {
   session: IImportSessionState;
   fields: Array<IAdapterFieldDefinition>;
   schema: ZodType<TPayload>;
+  rowIds?: Array<string>;
   buildPayload: (args: { row: IImportRowState; values: TFlatImportValues }) => TPayload;
 }): IImportSessionState {
-  const nextRows = cloneRows(session.rows).map((row) => {
-    const rowValues = getRowSubmissionValues(row);
-    const issueMap = new Map<string, Array<string>>();
-
-    const parseResult = schema.safeParse(
-      buildPayload({
-        row,
-        values: rowValues,
-      })
-    );
-    if (!parseResult.success) {
-      parseResult.error.issues.forEach((issue) => {
-        const key = resolveIssueFieldPath(fields, issue.path.join('.') || '_row');
-        const existing = issueMap.get(key) ?? [];
-        issueMap.set(key, [...existing, issue.message]);
-      });
+  const rowIdSet = rowIds?.length ? new Set(rowIds) : null;
+  let didChange = false;
+  const nextRows = session.rows.map((row) => {
+    if (rowIdSet && !rowIdSet.has(row.id)) {
+      return row;
     }
 
-    fields.forEach((field) => {
-      const cell = row.cells[field.path];
-      const enablementArgs = {
-        values: rowValues,
-        row,
-      };
-      const isExplicitlyEnabled = field.isEnabled?.(enablementArgs) ?? true;
-      const blockingDependency = field.dependencies?.find((dependencyPath) => {
-        const dependencyCell = row.cells[dependencyPath];
-        return !dependencyCell || dependencyCell.rawValue.trim() === '';
-      });
-
-      if (blockingDependency || !isExplicitlyEnabled) {
-        const blockingPath = blockingDependency ?? field.dependencies?.[0] ?? field.path;
-        const customDisabledMessage = !blockingDependency
-          ? field.getDisabledMessage?.(enablementArgs)
-          : null;
-        const disabledMessage =
-          customDisabledMessage ??
-          `Resolve ${labelForPath(fields, blockingPath)} before editing ${field.label}.`;
-        row.cells[field.path] = {
-          ...cell,
-          status: CellStatus.Disabled,
-          dependencyState: DependencyState.Blocked,
-          issues: [disabledMessage],
-        };
-        return;
-      }
-
-      const issues = issueMap.get(field.path) ?? [];
-      const localIssues =
-        field.getValidationIssues?.({
-          cell,
-          row,
-          values: rowValues,
-        }) ?? [];
-      const remoteIssues =
-        cell.remoteState.status === RemoteValidationStatus.Invalid && cell.remoteState.message
-          ? [cell.remoteState.message]
-          : [];
-      const combinedIssues = [...issues, ...localIssues, ...remoteIssues];
-      const hasRawValue = cell.rawValue.trim() !== '';
-      const needsRemoteConfirmation =
-        !cell.correctionDraft &&
-        fieldHasSuggestionResolution(field) &&
-        hasRawValue &&
-        cell.remoteState.status !== RemoteValidationStatus.Valid &&
-        combinedIssues.length === 0;
-      const needsRemoteIssue = needsRemoteConfirmation
-        ? [`Confirm ${field.label} from the suggestion list before importing.`]
-        : [];
-      const stagedIssues = cell.correctionDraft
-        ? ['Accept or reject the suggested correction in the table before importing.']
-        : [];
-      const finalIssues = [...combinedIssues, ...needsRemoteIssue, ...stagedIssues];
-
-      row.cells[field.path] = {
-        ...cell,
-        dependencyState: DependencyState.Ready,
-        issues: finalIssues,
-        status:
-          finalIssues.length > 0
-            ? CellStatus.Invalid
-            : hasRawValue
-              ? CellStatus.Valid
-              : CellStatus.Idle,
-      };
+    const nextRow = validateRow({
+      row,
+      fields,
+      schema,
+      buildPayload,
     });
-
-    row.rowStatus = fields.every((field) => {
-      if (!field.required) {
-        return true;
-      }
-
-      const cell = row.cells[field.path];
-      return cell.status === CellStatus.Valid;
-    })
-      ? RowStatus.Valid
-      : RowStatus.Invalid;
-
-    return row;
+    didChange ||= nextRow !== row;
+    return nextRow;
   });
 
   return {
     ...session,
-    rows: nextRows,
+    rows: didChange ? nextRows : session.rows,
     summary: summarize(nextRows, fields),
   };
 }
