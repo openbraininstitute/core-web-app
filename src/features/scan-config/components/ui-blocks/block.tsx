@@ -81,9 +81,13 @@ export default function Block({
       <div className="flex flex-col gap-5">
         {blockSchema.properties &&
           Object.entries(blockSchema.properties)
-            .filter(([_, paramSchema]) => {
-              return !isType(paramSchema) && !paramSchema.ui_hidden;
-            })
+            .filter(
+              ([_, paramSchema]) =>
+                !isType(paramSchema) &&
+                !paramSchema.ui_hidden &&
+                (paramSchema.ui_element !== ScanConfigUIElementDict.Reference ||
+                  Boolean(schema.default_block_reference_labels?.[paramSchema.reference_type]))
+            )
             .map(([k, blockElementSchema]) => {
               if (isType(blockElementSchema)) return null;
               const isBooleanInput =
