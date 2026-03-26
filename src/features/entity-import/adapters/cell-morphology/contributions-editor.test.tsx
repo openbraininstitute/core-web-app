@@ -82,14 +82,18 @@ function createContributionRow(cell: IImportCellState): IImportRowState {
 function ContributionEditorHarness({
   onSetCustomValue,
   services,
+  initialParsedValue,
 }: {
   onSetCustomValue: ReturnType<typeof vi.fn>;
   services: Pick<
     ICellMorphologyImportServices,
     'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
   >;
+  initialParsedValue?: IImportCellState['parsedValue'];
 }) {
-  const [cell, setCell] = useState<IImportCellState>(() => createContributionCell());
+  const [cell, setCell] = useState<IImportCellState>(() =>
+    createContributionCell(initialParsedValue)
+  );
   const row = useMemo(() => createContributionRow(cell), [cell]);
   const actions = useMemo(() => {
     const baseActions = createMockActions();
@@ -358,6 +362,47 @@ describe('ContributionsEditor', () => {
     );
   });
 
+  it('shows imported unresolved tuple text in the async selects before ids are resolved', async () => {
+    const services = {
+      queryPerson: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryOrganization: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+    } as unknown as Pick<
+      ICellMorphologyImportServices,
+      'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
+    >;
+
+    renderWithQueryClient(
+      <ContributionEditorHarness
+        onSetCustomValue={vi.fn()}
+        services={services}
+        initialParsedValue={[
+          {
+            id: 'csv-contribution-1',
+            source_tuple: '(person, Jane Doe, Author)',
+            agent_type: 'person',
+            agent_id: '',
+            role_id: '',
+            agent_label: '',
+            role_label: '',
+            imported_agent_text: 'Jane Doe',
+            imported_role_text: 'Author',
+            issues: ['Role is required for contribution 1.'],
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole('combobox', { name: 'Contributor type row 1' })).toHaveTextContent(
+      'Person'
+    );
+    expect(screen.getByRole('combobox', { name: 'Contributor row 1' })).toHaveTextContent(
+      'Jane Doe'
+    );
+    expect(screen.getByRole('combobox', { name: 'Role row 1' })).toHaveTextContent('Author');
+  });
+
   it('renders a full-height single-contributor preview with an overflow count tooltip', async () => {
     const user = userEvent.setup();
 
@@ -414,6 +459,31 @@ describe('ContributionsEditor', () => {
     expect(within(tooltipList).getByText('Bob Example')).toBeInTheDocument();
     expect(within(tooltipList).getByText('Carol Example')).toBeInTheDocument();
     expect(within(tooltipList).getByText('Curator')).toBeInTheDocument();
+  });
+
+  it('renders imported unresolved contribution text in the table preview', () => {
+    render(
+      <ContributionSummaryHarness
+        initialEntries={[
+          {
+            id: 'csv-contribution-1',
+            source_tuple: '(person, Jane Doe, Author)',
+            agent_type: 'person',
+            agent_id: '',
+            role_id: '',
+            agent_label: '',
+            role_label: '',
+            imported_agent_text: 'Jane Doe',
+            imported_role_text: 'Author',
+            issues: ['Role is required for contribution 1.'],
+          },
+        ]}
+      />
+    );
+
+    const mainButton = screen.getByRole('button', { name: 'Contributions row 1' });
+    expect(within(mainButton).getByText('Jane Doe')).toBeInTheDocument();
+    expect(within(mainButton).getByText('Author')).toBeInTheDocument();
   });
 
   it('promotes a tooltip contribution to the main preview when selected', async () => {
@@ -484,7 +554,7 @@ describe('ContributionsEditor', () => {
     );
   });
 
-  it('keeps contribution fields aligned in a single row', () => {
+  it('preserves the current contribution row layout classes', () => {
     renderWithQueryClient(
       <ContributionEditorHarness
         onSetCustomValue={vi.fn()}
@@ -503,6 +573,6 @@ describe('ContributionsEditor', () => {
     );
 
     const rowLayout = screen.getByTestId('contribution-row-layout-0');
-    expect(rowLayout).toHaveClass('flex', 'flex-nowrap', 'items-end');
+    expect(rowLayout).toHaveClass('flex', 'flex-col', 'flex-nowrap', 'items-center');
   });
 });

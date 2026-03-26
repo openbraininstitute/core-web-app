@@ -115,6 +115,9 @@ export function LocationEditor({
 }: LocationEditorProps) {
   const location = value ?? resolveLocationValue(cell.parsedValue, cell.rawValue) ?? null;
   const correctionDraft = mode === 'table' ? cell.correctionDraft : null;
+  const invalidRawValue =
+    !correctionDraft && !location && cell.rawValue.trim() !== '' ? cell.rawValue.trim() : null;
+  const invalidMessage = invalidRawValue ? (cell.issues[0] ?? 'Invalid location value.') : null;
   const previousLocation = correctionDraft
     ? resolveLocationValue(correctionDraft.previousParsedValue, correctionDraft.previousRawValue)
     : null;
@@ -222,47 +225,65 @@ export function LocationEditor({
       data-testid={mode === 'table' ? 'location-editor-table' : 'location-editor-panel'}
       className={cn(
         mode === 'table'
-          ? 'flex h-full min-h-[52px] w-full items-stretch overflow-hidden rounded-none border-0 bg-transparent'
-          : 'grid grid-cols-3 gap-4 px-4'
+          ? 'flex h-full min-h-[52px] w-full flex-col overflow-hidden rounded-none border-0 bg-transparent'
+          : 'space-y-3 px-4'
       )}
     >
-      {LOCATION_AXES.map((axis) => (
-        <div
-          key={axis}
-          className={cn(
-            mode === 'table'
-              ? 'flex min-w-0 flex-1 flex-col justify-center border-r border-neutral-200 px-2 py-1 last:border-r-0'
-              : 'block'
-          )}
-        >
-          <label
+      <div
+        className={cn(
+          mode === 'table'
+            ? 'flex h-full min-h-[52px] w-full items-stretch overflow-hidden'
+            : 'grid grid-cols-3 gap-4'
+        )}
+      >
+        {LOCATION_AXES.map((axis) => (
+          <div
+            key={axis}
             className={cn(
-              'mb-auto flex',
               mode === 'table'
-                ? 'mb-1 flex-col  gap-0.5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400'
-                : 'mb-2 flex-row  gap-1 items-center text-sm font-medium text-neutral-700'
+                ? 'flex min-w-0 flex-1 flex-col justify-center border-r border-neutral-200 px-2 py-1 last:border-r-0'
+                : 'block'
             )}
-            htmlFor={`location-${row.id}-${axis}`}
           >
-            <div className=" text-primary-9">{axis.toUpperCase()}</div>
-            <div className="text-neutral-400 text-[9px] leading-none">(microns)</div>
-          </label>
-          <Input
-            id={`location-${row.id}-${axis}`}
-            aria-label={`Location ${axis.toUpperCase()} row ${row.rowIndex + 1}`}
-            type="number"
-            className={cn(
-              'text-base font-bold text-primary-9 self-end justify-self-end mt-auto',
-              mode === 'table'
-                ? 'h-8 min-w-0 rounded-lg border border-neutral-200 px-2 text-center shadow-none focus-visible:border-primary-6 focus-visible:ring-0'
-                : 'h-11 rounded-xl text-base shadow-none focus-visible:border-primary-6 focus-visible:ring-0'
-            )}
-            value={formatNumber(location?.[axis] ?? null)}
-            onFocus={() => actions.selectCell({ rowId: row.id, fieldPath })}
-            onChange={(event) => updateCoordinate(axis, event.target.value)}
-          />
+            <label
+              className={cn(
+                'mb-auto flex',
+                mode === 'table'
+                  ? 'mb-1 flex-col  gap-0.5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400'
+                  : 'mb-2 flex-row  gap-1 items-center text-sm font-medium text-neutral-700'
+              )}
+              htmlFor={`location-${row.id}-${axis}`}
+            >
+              <div className=" text-primary-9">{axis.toUpperCase()}</div>
+              <div className="text-neutral-400 text-[9px] leading-none">(microns)</div>
+            </label>
+            <Input
+              id={`location-${row.id}-${axis}`}
+              aria-label={`Location ${axis.toUpperCase()} row ${row.rowIndex + 1}`}
+              type="number"
+              className={cn(
+                'text-base font-bold text-primary-9 self-end justify-self-end mt-auto',
+                mode === 'table'
+                  ? 'h-8 min-w-0 rounded-lg border border-neutral-200 px-2 text-center shadow-none focus-visible:border-primary-6 focus-visible:ring-0'
+                  : 'h-11 rounded-xl text-base shadow-none focus-visible:border-primary-6 focus-visible:ring-0'
+              )}
+              value={formatNumber(location?.[axis] ?? null)}
+              onFocus={() => actions.selectCell({ rowId: row.id, fieldPath })}
+              onChange={(event) => updateCoordinate(axis, event.target.value)}
+            />
+          </div>
+        ))}
+      </div>
+
+      {invalidRawValue ? (
+        <div
+          data-testid={`location-invalid-raw-${mode}`}
+          className="mx-2 mt-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-950"
+        >
+          <div className="font-semibold">{invalidMessage}</div>
+          <div className="mt-1 break-all">{invalidRawValue}</div>
         </div>
-      ))}
+      ) : null}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { getEntityImportTemplateGuide } from '@/features/entity-import/templates
 
 import {
   type AdapterFieldDefinition,
+  type CsvHydratedCellValue,
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
   type EntityImportActions,
   type EntityImportAdapter,
@@ -24,7 +25,7 @@ import {
   RemoteValidationStatus,
   type TFlatImportValues,
 } from '../core/contracts';
-import { buildTemplateColumns, importCsvRows } from '../core/csv';
+import { buildTemplateColumns, importCsvRows, parseCsvFile } from '../core/csv';
 import {
   getImportFileDisplayValue,
   toParsedFileValue,
@@ -66,19 +67,77 @@ function findRow(session: IImportSessionState, rowId: string): IImportRowState |
   return session.rows.find((row) => row.id === rowId);
 }
 
-function parseCsvFile(file: File): Promise<Array<Record<string, string>>> {
-  return new Promise((resolve, reject) => {
-    Papa.parse<Record<string, string>>(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete(result) {
-        resolve(result.data);
-      },
-      error(error) {
-        reject(error);
-      },
-    });
-  });
+function getCsvRenamedHeaders(
+  renamedHeaders: unknown
+): Array<{ renamed: string; original: string }> {
+  if (!renamedHeaders || typeof renamedHeaders !== 'object') {
+    return [];
+  }
+
+  return Object.entries(renamedHeaders as Record<string, unknown>)
+    .filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+    .map(([renamed, original]) => ({ renamed, original }));
+}
+
+function buildCsvParseNotificationMessages(parsedCsv: Awaited<ReturnType<typeof parseCsvFile>>) {
+  const notifications: Array<string> = [];
+  const renamedHeaders = getCsvRenamedHeaders(parsedCsv.meta.renamedHeaders);
+
+  if (renamedHeaders.length > 0) {
+    const renamedSummary = renamedHeaders
+      .map(({ renamed, original }) => `${original} -> ${renamed}`)
+      .join(', ');
+    notifications.push(`Duplicate CSV headers were renamed by the parser. ${renamedSummary}`);
+  }
+
+  if (parsedCsv.errors.length > 0) {
+    const details = parsedCsv.errors
+      .slice(0, 3)
+      .map((error) => {
+        const rowLabel = typeof error.row === 'number' ? `Row ${error.row + 2}: ` : '';
+        return `${rowLabel}${error.message}`;
+      })
+      .join(' | ');
+    const issueLabel = parsedCsv.errors.length === 1 ? 'issue' : 'issues';
+    notifications.push(
+      `CSV parsing reported ${parsedCsv.errors.length} ${issueLabel} during upload. ${details}`
+    );
+  }
+
+  return notifications;
+}
+
+async function hydrateCsvRows({
+  fields,
+  rows,
+  context,
+}: {
+  fields: Array<AdapterFieldDefinition>;
+  rows: Array<TFlatImportValues>;
+  context: EntityImportRuntimeContext;
+}) {
+  return Promise.all(
+    rows.map(async (row) => {
+      const nextRow = { ...row } as Record<string, string | CsvHydratedCellValue>;
+
+      await Promise.all(
+        fields.map(async (field) => {
+          if (!field.csv?.hydrateCell) {
+            return;
+          }
+
+          const rawValue = row[field.path] ?? '';
+          nextRow[field.path] = await field.csv.hydrateCell({
+            rawValue,
+            row,
+            context,
+          });
+        })
+      );
+
+      return nextRow;
+    })
+  );
 }
 
 function downloadBlob({
@@ -917,9 +976,28 @@ export function useEntityImportController<TPayload, TResult>({
   const handleCsvUpload = useCallback(
     async (file: File) => {
       try {
-        const parsedRows = await parseCsvFile(file);
-        const imported = importCsvRows({ fields: adapter.fields, rows: parsedRows });
-        const hydratedSession = validate(hydrateSessionRows(sessionRef.current, imported));
+        const parsedCsv = await parseCsvFile(file);
+        const imported = importCsvRows({ fields: adapter.fields, rows: parsedCsv.data });
+        const csvHydratedRows = await hydrateCsvRows({
+          fields: adapter.fields,
+          rows: imported.rows,
+          context,
+        });
+        const parseNotifications = buildCsvParseNotificationMessages(parsedCsv);
+        const hydratedSession = parseNotifications.reduce(
+          (current, message, index) =>
+            pushNotification(current, {
+              id: `notification-${Date.now()}-${index}`,
+              tone: NotificationTone.Warning,
+              message,
+            }),
+          validate(
+            hydrateSessionRows(sessionRef.current, {
+              rows: csvHydratedRows,
+              strippedColumns: imported.strippedColumns,
+            })
+          )
+        );
         const remoteValidationTargets = hydratedSession.rows.flatMap((row) =>
           adapter.fields.flatMap((field) => {
             const query = row.cells[field.path]?.rawValue.trim();

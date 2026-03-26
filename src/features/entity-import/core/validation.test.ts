@@ -8,8 +8,10 @@ import {
   ImportInputType,
   RowStatus,
 } from './contracts';
-import { createImportSessionState } from './session';
+import { createImportSessionState, hydrateSessionRows } from './session';
 import { validateSessionRows } from './validation';
+
+import type { AdapterFieldDefinition } from './adapter';
 
 const fields: Array<IImportFieldDefinition> = [
   {
@@ -80,5 +82,50 @@ describe('validateSessionRows', () => {
     expect(next.rows[0].rowStatus).toBe(RowStatus.Valid);
     expect(next.summary.canSubmit).toBe(true);
     expect(next.summary.invalidRequiredCellCount).toBe(0);
+  });
+
+  it('merges field-local validation issues for hydrated compound csv cells', () => {
+    const compoundFields: Array<AdapterFieldDefinition> = [
+      {
+        label: 'Location',
+        path: 'location',
+        required: false,
+        inputType: ImportInputType.Compound,
+        getValidationIssues: ({ cell }) =>
+          cell.rawValue.trim() !== '' && !cell.parsedValue ? ['Location tuple is invalid.'] : [],
+      },
+    ];
+
+    const session = hydrateSessionRows(
+      createImportSessionState({
+        fields: compoundFields,
+        rows: [{ location: '' }],
+      }),
+      {
+        rows: [
+          {
+            location: {
+              rawValue: '(1, 2)',
+              parsedValue: null,
+            },
+          },
+        ],
+        strippedColumns: [],
+      }
+    );
+
+    const next = validateSessionRows({
+      session,
+      fields: compoundFields,
+      schema: z.object({
+        location: z.string(),
+      }),
+      buildPayload({ values }) {
+        return values;
+      },
+    });
+
+    expect(next.rows[0].cells.location.status).toBe(CellStatus.Invalid);
+    expect(next.rows[0].cells.location.issues).toContain('Location tuple is invalid.');
   });
 });

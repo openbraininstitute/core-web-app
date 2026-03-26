@@ -3,6 +3,7 @@ import type { ZodType } from 'zod';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   IImportCellState,
+  IImportFieldCsvConfig,
   IImportFieldDefinition,
   IImportRowState,
   IImportSessionState,
@@ -77,6 +78,30 @@ export interface ValidatorFieldRendererProps extends TableCellRendererProps {
   onDraftChange: (value: ValidatorDraftValue) => void;
 }
 
+export interface CsvHydratedCellValue {
+  rawValue: string;
+  displayValue?: string | null;
+  parsedValue?: unknown;
+}
+
+export interface CsvFieldHydrationArgs {
+  rawValue: string;
+  row: TFlatImportValues;
+  context: EntityImportRuntimeContext;
+}
+
+export interface AdapterFieldValidationArgs {
+  cell: IImportCellState;
+  row: IImportRowState;
+  values: TFlatImportValues;
+}
+
+export interface AdapterFieldCsvConfig extends IImportFieldCsvConfig {
+  hydrateCell?: (
+    args: CsvFieldHydrationArgs
+  ) => Promise<CsvHydratedCellValue> | CsvHydratedCellValue;
+}
+
 export interface ImportFileFieldConfig {
   accept?: Array<string>;
   allowedExtensions?: Array<string>;
@@ -99,10 +124,12 @@ export interface AdapterFieldDefinition extends IImportFieldDefinition {
   placeholder?: string;
   helpText?: string;
   validatorManualApplyMode?: 'commit' | 'stage';
+  csv?: AdapterFieldCsvConfig;
   options?: Array<ISuggestion>;
   fileConfig?: ImportFileFieldConfig;
   isEnabled?: (args: AdapterFieldEnablementArgs) => boolean;
   getDisabledMessage?: (args: AdapterFieldEnablementArgs) => string;
+  getValidationIssues?: (args: AdapterFieldValidationArgs) => Array<string>;
   remote?: {
     query?: (args: RemoteSearchPagedArgs) => Promise<RemoteSearchPageResult>;
     evaluate?: (args: RemoteValidationArgs) => Promise<RemoteValidationResult>;

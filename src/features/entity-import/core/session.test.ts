@@ -363,4 +363,27 @@ describe('hydrateSessionRows', () => {
     expect(next.rows[0].cells.name.rawValue).toBe('Neuron A');
     expect(next.notifications[0]?.message).toContain('IgnoreMe');
   });
+
+  it('hydrates imported cells with typed parsed values and display labels', () => {
+    const session = createImportSessionState({ fields, rowCount: 1 });
+
+    const next = hydrateSessionRows(session, {
+      rows: [
+        {
+          name: {
+            rawValue: 'Neuron A',
+            displayValue: 'Neuron Alpha',
+            parsedValue: { canonical: 'neuron-a' },
+          },
+          brainRegion: 'Ctx',
+        },
+      ],
+      strippedColumns: [],
+    });
+
+    expect(next.rows[0].cells.name.rawValue).toBe('Neuron A');
+    expect(next.rows[0].cells.name.displayValue).toBe('Neuron Alpha');
+    expect(next.rows[0].cells.name.parsedValue).toEqual({ canonical: 'neuron-a' });
+    expect(next.rows[0].cells.brainRegion.rawValue).toBe('Ctx');
+  });
 });
