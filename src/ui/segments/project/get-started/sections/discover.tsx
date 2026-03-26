@@ -2,7 +2,7 @@ import { tryCatch } from '@/api/utils';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
 import { EmptyTutorials, Grid } from '@/ui/segments/project/get-started/elements/discover';
-import { DiscoverQuery, type TTutorial } from '@/ui/segments/project/get-started/query';
+import { type TTutorial, TutorialQuery } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 
 export async function DiscoverList() {
@@ -12,7 +12,7 @@ export async function DiscoverList() {
   const { data: tutorials } = await tryCatch(
     queryClient.fetchQuery({
       queryKey: keyBuilderExternal.discoverTutorialsList(),
-      queryFn: () => client.fetch<Array<TTutorial>>(DiscoverQuery),
+      queryFn: () => client.fetch<Array<TTutorial>>(TutorialQuery),
     })
   );
 

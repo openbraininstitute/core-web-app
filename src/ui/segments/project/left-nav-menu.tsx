@@ -15,10 +15,10 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import {
   DEFAULT_GET_STARTED_VIDEO_SLUG,
-  DiscoverQuery,
   getQuickAccessQuery,
   type IQuickAccessList,
   type TTutorial,
+  TutorialQuery,
 } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
@@ -75,7 +75,10 @@ const links = [
 export function LeftMenu({ className }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
-  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
+  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({
+    virtualLabId,
+    projectId,
+  });
   const pathname = usePathname();
   const client = getClient();
 
@@ -100,7 +103,7 @@ export function LeftMenu({ className }: Props) {
       },
       {
         queryKey: keyBuilderExternal.discoverTutorialsList(),
-        queryFn: () => client.fetch<Array<TTutorial>>(DiscoverQuery),
+        queryFn: () => client.fetch<Array<TTutorial>>(TutorialQuery),
       },
     ],
     combine: ([quickAccessList, tutorials]) => {

@@ -5,7 +5,7 @@ import { config } from '@/config';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export const DEFAULT_GET_STARTED_VIDEO_SLUG = 'how-to-explore-data';
-export const DiscoverQuery = defineQuery(
+export const TutorialQuery = defineQuery(
   `*[_type == "tutorial"][]{
       _type,
       title, 

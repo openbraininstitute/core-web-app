@@ -3,7 +3,7 @@ import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
 import { ScrollToTop } from '@/ui/segments/project/get-started/elements/scroll-to-top';
 import { VideoPlayer } from '@/ui/segments/project/get-started/elements/video-player';
-import { DiscoverQuery, type TTutorial } from '@/ui/segments/project/get-started/query';
+import { type TTutorial, TutorialQuery } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 
 import type { Metadata } from 'next';
@@ -19,7 +19,7 @@ export async function generateMetadata({
   const { data: tutorials } = await tryCatch(
     queryClient.fetchQuery({
       queryKey: keyBuilderExternal.quickAccessList(),
-      queryFn: () => client.fetch<Array<TTutorial>>(DiscoverQuery),
+      queryFn: () => client.fetch<Array<TTutorial>>(TutorialQuery),
     })
   );
 
@@ -46,7 +46,7 @@ export default async function Page({ params }: ServerSideComponentProp<{ slug: s
   const { data: tutorials } = await tryCatch(
     queryClient.fetchQuery({
       queryKey: keyBuilderExternal.quickAccessList(),
-      queryFn: () => client.fetch<Array<TTutorial>>(DiscoverQuery),
+      queryFn: () => client.fetch<Array<TTutorial>>(TutorialQuery),
     })
   );
 

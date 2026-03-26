@@ -8,10 +8,10 @@ import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
 import { ProjectInnerLayout } from '@/ui/layouts/project-inner-layout';
 import {
-  DiscoverQuery,
   getQuickAccessQuery,
-  type IDiscoverTutorialsList,
   type IQuickAccessList,
+  type TTutorial,
+  TutorialQuery,
 } from '@/ui/segments/project/get-started/query';
 import { LeftMenu } from '@/ui/segments/project/left-nav-menu';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
@@ -45,8 +45,7 @@ export default async function Layout({
 
   queryClient.prefetchQuery({
     queryKey: keyBuilderExternal.discoverTutorialsList(),
-    queryFn: () =>
-      client.fetch<IDiscoverTutorialsList>(DiscoverQuery, {}, { next: { revalidate: 0 } }),
+    queryFn: () => client.fetch<Array<TTutorial>>(TutorialQuery, {}, { next: { revalidate: 0 } }),
   });
 
   queryClient.prefetchQuery({
