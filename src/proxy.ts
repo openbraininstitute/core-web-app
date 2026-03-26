@@ -72,7 +72,7 @@ function isFreeAccessRoute(requestUrl: string, paths: string[]) {
       // Remove the trailing '*' to get the base path
       const basePath = p.slice(0, -1);
       // Matches basePath or all subroutes
-      return requestUrl === basePath || requestUrl.startsWith(`${basePath}/`); //eslint-disable-line
+      return requestUrl === basePath || requestUrl.startsWith(basePath);
     }
     return p === requestUrl;
   });

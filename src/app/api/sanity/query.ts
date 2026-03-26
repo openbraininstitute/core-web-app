@@ -3,6 +3,8 @@ const singleShowcaseQuery = (
 ) => `*[_type == "publicProjects" && slug.current == "${slug}"][0] {
     name,
     'slug': slug.current,
+    virtualLabId,
+    projectId,
     authorsList,
     introduction,
     _updatedAt,

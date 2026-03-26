@@ -1,78 +1,80 @@
 'use client';
 
 import { RightOutlined } from '@ant-design/icons';
+import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/ui/molecules/button';
 import DescriptionSection from '@/ui/segments/reports/obi-showcases/description';
-import { cn } from '@/utils/css-class';
 
 import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
 
-const SECTIONS = [
-  { key: 'description', title: 'Description', url: 'description' },
-  { key: 'artifacts', title: 'Artifacts', url: 'artifacts' },
-  { key: 'notebooks', title: 'Notebooks', url: 'notebooks' },
-] as const;
+function buildPlatformLoginUrl(slug: string, section: string): string {
+  const syncUrl = `/app/virtual-lab/sync?showcaseSlug=${encodeURIComponent(slug)}&showcaseSection=${encodeURIComponent(section)}`;
+  return `/app/log-in?callbackUrl=${encodeURIComponent(syncUrl)}`;
+}
 
 export default function ShowcaseDetailContent({ project }: { project: SanityShowcaseType }) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const activeSection = searchParams.get('section') ?? 'description';
-
-  let activeSectionContent: React.ReactNode;
-  switch (activeSection) {
-    case 'description':
-      activeSectionContent = <DescriptionSection content={project} />;
-      break;
-    case 'artifacts':
-    case 'notebooks':
-      activeSectionContent = (
-        <div className="flex flex-col items-center justify-center gap-6 py-16 text-center border border-primary-7">
-          <p className="text-xl text-white">To read more, please login</p>
-          <button type="button" className="border border-white rounded-full px-12 py-5">
-            <Link href="/app/virtual-lab" className="text-white font-bold font-sans text-3xl!">
-              Login
-            </Link>
-          </button>
-        </div>
-      );
-      break;
-    default:
-      activeSectionContent = <DescriptionSection content={project} />;
-      break;
-  }
-
   return (
-    <div className="mx-auto grid min-h-[60vh] w-full py-56 grid-cols-1 gap-6 bg-primary-9 px-4 text-white md:grid-cols-[240px_1fr] lg:px-20">
-      <aside className="flex flex-col gap-2">
-        {SECTIONS.map(({ title, url }) => (
+    <div className="min-h-screen bg-transparent">
+      <div className="p-4">
+        <div className="grid min-h-[60vh] w-full grid-cols-1 gap-6 rounded-xl border border-neutral-2 p-5 md:grid-cols-[240px_1fr]">
+          <aside className="flex flex-col gap-2">
+            <Button
+              rounded
+              borderless
+              variant="outline"
+              className="h-auto w-full justify-start bg-primary-9 font-bold text-white shadow-sm"
+              size="lg"
+            >
+              Description
+              <RightOutlined className="ml-auto text-current" />
+            </Button>
+
+            <Link
+              href={buildPlatformLoginUrl(project.slug, 'artifacts')}
+              className="relative flex flex-col rounded-full border px-6 py-2 transition-colors hover:bg-neutral-1"
+            >
+              <span className="font-bold">Check Artifacts</span>
+              <span className="relative -top-1.5 text-sm text-neutral-4">on the platform</span>
+            </Link>
+
+            <Link
+              href={buildPlatformLoginUrl(project.slug, 'notebooks')}
+              className="relative flex flex-col rounded-full border px-6 py-2 transition-colors hover:bg-neutral-1"
+            >
+              <span className="font-bold">Check Notebooks</span>
+              <span className="relative -top-1.5 text-sm text-neutral-4">on the platform</span>
+            </Link>
+          </aside>
+
+          <main className="w-full overflow-y-auto">
+            <div className="space-y-8">
+              <DescriptionSection content={project} />
+            </div>
+          </main>
+        </div>
+
+        <div className="relative  w-full bg-primary-9 rounded-xl mt-12 flex flex-col items-start gap-6 p-20 overflow-hidden">
+          <h2 className="text-6xl! font-normal text-white">Launch your own analysis</h2>
           <Button
-            key={url}
             rounded
-            borderless
             asChild
             variant="outline"
-            className={cn(
-              'h-auto w-full justify-start font-bold shadow-sm',
-              activeSection === url
-                ? 'border-0 bg-white text-primary-9'
-                : 'border border-white bg-transparent text-white'
-            )}
             size="lg"
+            className="px-20 py-8 bg-primary-9 text-white hover:bg-primary-8 border-primary-4 text-2xl! font-normal"
           >
-            <Link href={`${pathname}?section=${url}`}>
-              {title}
-              <RightOutlined className="ml-auto text-current" />
-            </Link>
+            <Link href="/app/virtual-lab">Create virtual lab</Link>
           </Button>
-        ))}
-      </aside>
-
-      <main className="overflow-y-auto text-white [&_a]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_li]:text-white [&_p]:text-white [&_span]:text-white [&_td]:text-white [&_th]:text-white">
-        {activeSectionContent}
-      </main>
+          <Image
+            src="/images/brain-visualization-v3.webp"
+            alt="Brain visualization"
+            className="absolute w-auto h-[220%] bottom-0 right-0"
+            width={1000}
+            height={1000}
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import { EnumSection } from '@/components/LandingPage/sections/sections';
-import useScrollHasStarted from '@/hooks/use-scroll-has-started';
 import { classNames } from '@/util/utils';
 
 import VerticalSpace from '../../components/VerticalSpace';
@@ -13,12 +12,10 @@ import type { ReactNode } from 'react';
 import styles from '../../LandingPage.module.css';
 
 export default function ShowcaseDetailLayout({ children }: { children: ReactNode }) {
-  const scrollHasStarted = useScrollHasStarted();
-
   return (
     <div className={classNames(styles.landingPage)}>
-      <Menu scrollHasStarted={scrollHasStarted} section={EnumSection.Showcases} />
-      {children}
+      <Menu scrollHasStarted section={EnumSection.Showcases} />
+      <div className="pt-32">{children}</div>
       <VerticalSpace height="30px" />
       <FooterPanel />
     </div>

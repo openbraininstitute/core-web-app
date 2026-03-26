@@ -44,15 +44,6 @@ const MENU_ITEMS: MenuItem[] = [
     ],
   },
   {
-    caption: 'Resources',
-    slug: '/resources',
-    index: EnumSection.Resources,
-    submenu: [
-      { caption: 'Notebooks', slug: '/notebooks' },
-      { caption: 'Gallery', slug: '/gallery', index: EnumSection.Gallery },
-    ],
-  },
-  {
     caption: 'The Platform',
     slug: '/pricing',
     submenu: [

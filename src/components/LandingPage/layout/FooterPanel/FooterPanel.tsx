@@ -22,7 +22,6 @@ const FOOTER_LINKS: FooterLink[] = [
   { label: 'Our story', href: '/the-real-digital-brain-story' },
   { label: 'Mission', href: '/mission' },
   { label: 'Team', href: '/team' },
-  { label: 'Notebooks', href: '/notebooks' },
   { label: 'Gallery', href: '/gallery' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'News', href: '/news' },
