@@ -7,6 +7,7 @@ import { AgentType } from '@/ui/segments/contribute/shared/types';
 
 import { getRowSubmissionValues } from '../../core/helpers';
 import { createImportSessionState, resolveCellSuggestion, setCellValue } from '../../core/session';
+import { validateSessionRows } from '../../core/validation';
 import { type CellMorphologySubmissionPayload, createCellMorphologyImportAdapter } from './adapter';
 
 describe('createCellMorphologyImportAdapter', () => {
@@ -299,6 +300,140 @@ describe('createCellMorphologyImportAdapter', () => {
         context: { projectId: 'project-1', virtualLabId: 'lab-1' },
       }).metadata.location
     ).toBeNull();
+  });
+
+  it('hydrates contribution and location csv tuples through field csv hooks', async () => {
+    const services = {
+      queryBrainRegion: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryLicense: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      querySubject: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryProtocol: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryMtype: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryPerson: vi.fn(async ({ query }: { query: string }) => ({
+        suggestions: query === 'Jane Doe' ? [{ value: 'person-1', label: 'Jane Doe' }] : [],
+        nextPageParam: null,
+      })),
+      queryOrganization: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryRole: vi.fn(async ({ query }: { query: string }) => ({
+        suggestions: query === 'Author' ? [{ value: 'role-1', label: 'Author' }] : [],
+        nextPageParam: null,
+      })),
+      registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
+      createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
+      createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
+    } as never;
+    const adapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      defaultLicenseId: 'license-1',
+      services,
+    });
+    const contributionsField = adapter.fields.find((field) => field.path === 'contributions');
+    const locationField = adapter.fields.find((field) => field.path === 'location');
+
+    await expect(
+      contributionsField?.csv?.hydrateCell?.({
+        rawValue: '[(person, Jane Doe, Author)]',
+        row: adapter.createBlankRow?.() ?? {},
+        context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+      })
+    ).resolves.toMatchObject({
+      rawValue: '1 contributor',
+      parsedValue: [
+        expect.objectContaining({
+          agent_type: AgentType.Person.key,
+          agent_id: 'person-1',
+          role_id: 'role-1',
+          agent_label: 'Jane Doe',
+          role_label: 'Author',
+        }),
+      ],
+    });
+
+    expect(
+      locationField?.csv?.hydrateCell?.({
+        rawValue: '(10, 20, 30)',
+        row: adapter.createBlankRow?.() ?? {},
+        context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+      })
+    ).toEqual({
+      rawValue: '10, 20, 30',
+      parsedValue: { x: 10, y: 20, z: 30 },
+    });
+  });
+
+  it('surfaces local validation issues for imported partial contributions and malformed locations', () => {
+    const adapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      defaultLicenseId: 'license-1',
+    });
+    const session = createImportSessionState({
+      fields: adapter.fields,
+      rows: [
+        {
+          ...(adapter.createBlankRow?.() ?? {}),
+          sourceFile: '',
+          name: 'Neuron A',
+          description: 'A morphology',
+          brainRegionId: 'brain-region-1',
+          experimentDate: '',
+          contactEmail: '',
+          publishedIn: '',
+          location: '(1, 2)',
+          repairPipelineState: '',
+          subjectId: 'subject-1',
+          licenseId: 'license-1',
+          protocolId: 'protocol-1',
+          mtypeClassId: 'mtype-1',
+          contributions: '',
+        },
+      ],
+    });
+    const rowId = session.rows[0].id;
+    const withContributions = setCellValue(session, {
+      rowId,
+      fieldPath: 'contributions',
+      rawValue: '',
+      parsedValue: [
+        {
+          id: 'csv-contribution-1',
+          source_tuple: 'Jane Doe',
+          agent_type: AgentType.Person.key,
+          agent_id: '',
+          role_id: '',
+          agent_label: '',
+          role_label: '',
+          imported_agent_text: 'Jane Doe',
+          issues: ['Role is required for contribution 1.'],
+        },
+      ],
+    });
+    const withLocation = setCellValue(withContributions, {
+      rowId,
+      fieldPath: 'location',
+      rawValue: '(1, 2)',
+      parsedValue: null,
+    });
+
+    const next = validateSessionRows({
+      session: withLocation,
+      fields: adapter.fields,
+      schema: adapter.schema,
+      buildPayload({ row, values }) {
+        return adapter.buildPayload({
+          row,
+          values,
+          context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+        });
+      },
+    });
+
+    expect(next.rows[0].cells.contributions.issues).toContain(
+      'Role is required for contribution 1.'
+    );
+    expect(next.rows[0].cells.location.issues).toContain(
+      'Location must be provided as a tuple in the form `(x, y, z)`.'
+    );
   });
 
   it('builds the submission payload from compound row state', () => {

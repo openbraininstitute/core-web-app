@@ -141,11 +141,17 @@ export function validateSessionRows<TPayload>({
       }
 
       const issues = issueMap.get(field.path) ?? [];
+      const localIssues =
+        field.getValidationIssues?.({
+          cell,
+          row,
+          values: rowValues,
+        }) ?? [];
       const remoteIssues =
         cell.remoteState.status === RemoteValidationStatus.Invalid && cell.remoteState.message
           ? [cell.remoteState.message]
           : [];
-      const combinedIssues = [...issues, ...remoteIssues];
+      const combinedIssues = [...issues, ...localIssues, ...remoteIssues];
       const hasRawValue = cell.rawValue.trim() !== '';
       const needsRemoteConfirmation =
         !cell.correctionDraft &&

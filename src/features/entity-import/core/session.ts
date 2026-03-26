@@ -14,6 +14,8 @@ import {
   type TFlatImportValues,
 } from '@/features/entity-import/core/contracts';
 
+import type { CsvHydratedCellValue } from '@/features/entity-import/core/adapter';
+
 let rowIdCounter = 0;
 
 function nextRowId(): string {
@@ -21,12 +23,38 @@ function nextRowId(): string {
   return `import-row-${rowIdCounter}`;
 }
 
-function createCellState(field: IImportFieldDefinition, rawValue = ''): IImportCellState {
+function isHydratedCellValue(value: unknown): value is CsvHydratedCellValue {
+  return (
+    Boolean(value) && typeof value === 'object' && 'rawValue' in (value as CsvHydratedCellValue)
+  );
+}
+
+function createCellState(
+  field: IImportFieldDefinition,
+  value: string | CsvHydratedCellValue = ''
+): IImportCellState {
+  const isHydratedValue = isHydratedCellValue(value);
+  const rawValue = isHydratedValue ? value.rawValue : value;
+  const displayValue = isHydratedValue
+    ? 'displayValue' in value
+      ? (value.displayValue ?? null)
+      : rawValue
+        ? rawValue
+        : null
+    : rawValue
+      ? rawValue
+      : null;
+  const parsedCellValue = isHydratedValue
+    ? 'parsedValue' in value
+      ? value.parsedValue
+      : rawValue
+    : rawValue;
+
   return {
     fieldPath: field.path,
     rawValue,
-    displayValue: rawValue ? rawValue : null,
-    parsedValue: rawValue,
+    displayValue,
+    parsedValue: parsedCellValue,
     status: CellStatus.Idle,
     issues: [],
     dependencyState: DependencyState.Ready,
@@ -37,7 +65,7 @@ function createCellState(field: IImportFieldDefinition, rawValue = ''): IImportC
 
 function createRowCells(
   fields: Array<IImportFieldDefinition>,
-  values: TFlatImportValues
+  values: Record<string, string | CsvHydratedCellValue>
 ): IImportRowState['cells'] {
   return Object.fromEntries(
     fields.map((field) => [field.path, createCellState(field, values[field.path] ?? '')])
@@ -46,7 +74,7 @@ function createRowCells(
 
 function createRowState(
   fields: Array<IImportFieldDefinition>,
-  values: TFlatImportValues,
+  values: Record<string, string | CsvHydratedCellValue>,
   rowIndex: number
 ): IImportRowState {
   return {
@@ -346,13 +374,11 @@ export function setValidatorSelection(
 export function hydrateSessionRows(
   session: IImportSessionState,
   params: {
-    rows: Array<TFlatImportValues>;
+    rows: Array<Record<string, string | CsvHydratedCellValue>>;
     strippedColumns: Array<string>;
   }
 ): IImportSessionState {
-  const nextRows = params.rows.map((row, index) =>
-    createRowState(session.fields, normalizeFlatValues(session.fields, row), index)
-  );
+  const nextRows = params.rows.map((row, index) => createRowState(session.fields, row, index));
 
   const notification =
     params.strippedColumns.length > 0

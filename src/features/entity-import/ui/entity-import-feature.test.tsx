@@ -649,6 +649,52 @@ describe('EntityImportFeature', () => {
     });
   });
 
+  it('warns when Papa Parse renames duplicate CSV headers during upload', async () => {
+    const user = userEvent.setup();
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        adapter={adapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile('Name,name,Brain Region\nNeuron A,Neuron B,Cortex\n')
+    );
+
+    expect(
+      await screen.findByText(/Duplicate CSV headers were renamed by the parser\./i)
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron A');
+  });
+
+  it('warns when Papa Parse reports CSV field mismatch errors during upload', async () => {
+    const user = userEvent.setup();
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        adapter={adapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile('Name,Brain Region\nNeuron A,Cortex,Extra\n')
+    );
+
+    expect(
+      await screen.findByText(/CSV parsing reported 1 issue during upload\./i)
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron A');
+    expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Cortex');
+    expect(
+      screen.queryByText(
+        /The following columns were removed as they don't match the template: __parsed_extra/i
+      )
+    ).not.toBeInTheDocument();
+  });
+
   it('marks imported remote csv values invalid when validation finds no matches', async () => {
     const user = userEvent.setup();
     const validateSpy = vi.fn(async ({ query }: { query: string }) => {
@@ -1160,6 +1206,217 @@ describe('EntityImportFeature', () => {
         within(screen.getByTestId('location-editor-table')).getByLabelText('Location X row 1')
       ).toHaveValue(8);
     });
+  }, 15000);
+
+  it('hydrates contribution and location tuples during morphology csv upload', async () => {
+    const user = userEvent.setup();
+    const queryPerson = vi.fn(async ({ query }: { query: string }) => ({
+      suggestions: query === 'Jane Doe' ? [{ value: 'person-1', label: 'Jane Doe' }] : [],
+      nextPageParam: null,
+    }));
+    const queryRole = vi.fn(async ({ query }: { query: string }) => ({
+      suggestions: query === 'Author' ? [{ value: 'role-1', label: 'Author' }] : [],
+      nextPageParam: null,
+    }));
+    const services = createMockCellMorphologyImportServices({
+      queryBrainRegion: vi.fn(async ({ query }) => ({
+        suggestions: query === 'Isocortex' ? [{ value: 'brain-region-1', label: 'Isocortex' }] : [],
+        nextPageParam: null,
+      })),
+      querySubject: vi.fn(async ({ query }) => ({
+        suggestions: query === 'Subject 1' ? [{ value: 'subject-1', label: 'Subject 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryLicense: vi.fn(async ({ query }) => ({
+        suggestions: query === 'License 1' ? [{ value: 'license-1', label: 'License 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryProtocol: vi.fn(async ({ query }) => ({
+        suggestions:
+          query === 'Protocol 1'
+            ? [
+                {
+                  value: 'protocol-1',
+                  label: 'Protocol 1 (digital_reconstruction)',
+                  metadata: {
+                    generationType: CellMorphologyGenerationType.DigitalReconstruction.key,
+                  },
+                },
+              ]
+            : [],
+        nextPageParam: null,
+      })),
+      queryMtype: vi.fn(async ({ query }) => ({
+        suggestions: query === 'M-type 1' ? [{ value: 'mtype-1', label: 'M-type 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryPerson,
+      queryRole,
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      services,
+    });
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile(
+        'Name,Description,Brain Region,Subject,License,Protocol,M-type,Location,Contributions\nNeuron A,Imported morphology,Isocortex,Subject 1,License 1,Protocol 1,M-type 1,"(10, 20, 30)","[(person, Jane Doe, Author)]"\n'
+      )
+    );
+
+    await waitFor(() => {
+      expect(
+        within(screen.getByTestId('location-editor-table')).getByLabelText('Location X row 1')
+      ).toHaveValue(10);
+    });
+
+    const contributionButton = screen.getByRole('button', { name: 'Contributions row 1' });
+    expect(within(contributionButton).getByText('Jane Doe')).toBeInTheDocument();
+    expect(within(contributionButton).getByText('Author')).toBeInTheDocument();
+    expect(queryPerson).toHaveBeenCalledTimes(1);
+    expect(queryRole).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps partial imported contribution tuples visible and invalid in the editor', async () => {
+    const user = userEvent.setup();
+    const services = createMockCellMorphologyImportServices({
+      queryBrainRegion: vi.fn(async ({ query }) => ({
+        suggestions: query === 'Isocortex' ? [{ value: 'brain-region-1', label: 'Isocortex' }] : [],
+        nextPageParam: null,
+      })),
+      querySubject: vi.fn(async ({ query }) => ({
+        suggestions: query === 'Subject 1' ? [{ value: 'subject-1', label: 'Subject 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryLicense: vi.fn(async ({ query }) => ({
+        suggestions: query === 'License 1' ? [{ value: 'license-1', label: 'License 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryProtocol: vi.fn(async ({ query }) => ({
+        suggestions:
+          query === 'Protocol 1'
+            ? [
+                {
+                  value: 'protocol-1',
+                  label: 'Protocol 1 (digital_reconstruction)',
+                  metadata: {
+                    generationType: CellMorphologyGenerationType.DigitalReconstruction.key,
+                  },
+                },
+              ]
+            : [],
+        nextPageParam: null,
+      })),
+      queryMtype: vi.fn(async ({ query }) => ({
+        suggestions: query === 'M-type 1' ? [{ value: 'mtype-1', label: 'M-type 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryPerson: vi.fn(async ({ query }) => ({
+        suggestions: query === 'Jane Doe' ? [{ value: 'person-1', label: 'Jane Doe' }] : [],
+        nextPageParam: null,
+      })),
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      services,
+    });
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile(
+        'Name,Description,Brain Region,Subject,License,Protocol,M-type,Contributions\nNeuron A,Imported morphology,Isocortex,Subject 1,License 1,Protocol 1,M-type 1,"[(person, Jane Doe)]"\n'
+      )
+    );
+
+    const contributionButton = await screen.findByRole('button', { name: 'Contributions row 1' });
+    await user.click(contributionButton);
+
+    expect(screen.getByRole('combobox', { name: 'Contributor type row 1' })).toHaveTextContent(
+      'Person'
+    );
+    expect(screen.getByRole('combobox', { name: 'Contributor row 1' })).toHaveTextContent(
+      'Jane Doe'
+    );
+    expect(screen.getByText('Role is required for contribution 1.')).toBeInTheDocument();
+  });
+
+  it('keeps malformed imported location tuples visible and invalid after upload', async () => {
+    const user = userEvent.setup();
+    const services = createMockCellMorphologyImportServices({
+      queryBrainRegion: vi.fn(async ({ query }) => ({
+        suggestions: query === 'Isocortex' ? [{ value: 'brain-region-1', label: 'Isocortex' }] : [],
+        nextPageParam: null,
+      })),
+      querySubject: vi.fn(async ({ query }) => ({
+        suggestions: query === 'Subject 1' ? [{ value: 'subject-1', label: 'Subject 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryLicense: vi.fn(async ({ query }) => ({
+        suggestions: query === 'License 1' ? [{ value: 'license-1', label: 'License 1' }] : [],
+        nextPageParam: null,
+      })),
+      queryProtocol: vi.fn(async ({ query }) => ({
+        suggestions:
+          query === 'Protocol 1'
+            ? [
+                {
+                  value: 'protocol-1',
+                  label: 'Protocol 1 (digital_reconstruction)',
+                  metadata: {
+                    generationType: CellMorphologyGenerationType.DigitalReconstruction.key,
+                  },
+                },
+              ]
+            : [],
+        nextPageParam: null,
+      })),
+      queryMtype: vi.fn(async ({ query }) => ({
+        suggestions: query === 'M-type 1' ? [{ value: 'mtype-1', label: 'M-type 1' }] : [],
+        nextPageParam: null,
+      })),
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      services,
+    });
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile(
+        'Name,Description,Brain Region,Subject,License,Protocol,M-type,Location\nNeuron A,Imported morphology,Isocortex,Subject 1,License 1,Protocol 1,M-type 1,"(10, 20)"\n'
+      )
+    );
+
+    await user.click(screen.getByLabelText('Location X row 1'));
+
+    expect(
+      await screen.findAllByText('Location must be provided as a tuple in the form `(x, y, z)`.')
+    ).not.toHaveLength(0);
   });
 
   it('renders configurable full-cell file triggers with generic labels', () => {

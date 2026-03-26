@@ -28,7 +28,7 @@ function SkeletonLoader({ count = 5 }: { count?: number }) {
           key={`select-skeleton-${delay}`}
           className={cn(
             'from-neutral-1 via-neutral-2 to-neutral-1 animate-shimmer',
-            'relative h-10 overflow-hidden rounded-md bg-gradient-to-r bg-[length:200%_100%]'
+            'relative h-10 overflow-hidden rounded-md bg-linear-to-r bg-size-[200%_100%]'
           )}
           style={{
             animationDelay: `${delay}ms`,
@@ -164,8 +164,7 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
     if (!selectedValue) return undefined;
     return currentOptionsMap.get(selectedValue) ?? persistedOptionsRef.current?.get(selectedValue);
   }, [currentOptionsMap, selectedValue]);
-  const selectedText =
-    selectedOptionFromProps?.label ?? (selectedValue ? selectedLabel : undefined);
+  const selectedText = selectedOptionFromProps?.label ?? selectedLabel;
 
   const parentSetter = useCallback((el: HTMLDivElement | null) => {
     setParent(el);

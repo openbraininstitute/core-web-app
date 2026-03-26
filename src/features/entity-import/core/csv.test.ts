@@ -4,7 +4,11 @@ import {
   type IImportFieldDefinition,
   ImportInputType,
 } from '@/features/entity-import/core/contracts';
-import { buildTemplateColumns, importCsvRows } from '@/features/entity-import/core/csv';
+import {
+  buildTemplateColumns,
+  importCsvRows,
+  parseCsvFile,
+} from '@/features/entity-import/core/csv';
 
 const fields: Array<IImportFieldDefinition> = [
   {
@@ -78,5 +82,49 @@ describe('importCsvRows', () => {
         brainRegion: '',
       },
     ]);
+  });
+});
+
+describe('parseCsvFile', () => {
+  it('normalizes headers during parse and skips whitespace-only lines', async () => {
+    const file = new File(
+      [' Name , brain_region \nNeuron A,Cortex\n   \nNeuron B,Cerebellum\n'],
+      'entity-import.csv',
+      { type: 'text/csv' }
+    );
+
+    const result = await parseCsvFile(file);
+
+    expect(result.errors).toEqual([]);
+    expect(result.data).toEqual([
+      {
+        name: 'Neuron A',
+        'brain region': 'Cortex',
+      },
+      {
+        name: 'Neuron B',
+        'brain region': 'Cerebellum',
+      },
+    ]);
+  });
+
+  it('returns duplicate-header metadata and parser errors when papa parse reports them', async () => {
+    const file = new File(['Name,name\nNeuron A,Neuron B,Extra\n'], 'entity-import.csv', {
+      type: 'text/csv',
+    });
+
+    const result = await parseCsvFile(file);
+
+    expect(result.meta.renamedHeaders).toEqual({
+      name_1: 'name',
+    });
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'TooManyFields',
+          row: 0,
+        }),
+      ])
+    );
   });
 });

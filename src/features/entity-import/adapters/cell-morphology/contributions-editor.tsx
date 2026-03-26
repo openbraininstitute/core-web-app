@@ -12,6 +12,7 @@ import { cn } from '@/utils/css-class';
 
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { ParsedContributionCsvEntry } from '@/features/entity-import/adapters/cell-morphology/csv-tuple-parser';
 import type {
   CellMorphologyContributionInput,
   ICellMorphologyImportServices,
@@ -26,11 +27,8 @@ import type {
   ISuggestion,
 } from '@/features/entity-import/core/contracts';
 
-export interface ContributionDraft extends Partial<CellMorphologyContributionInput> {
-  id: string;
-  agent_label?: string;
-  role_label?: string;
-}
+export type ContributionDraft = ParsedContributionCsvEntry &
+  Partial<Pick<CellMorphologyContributionInput, 'agent_type' | 'agent_id' | 'role_id'>>;
 
 type ContributionSelectFilters = Partial<PaginationFilter & SearchFilter> & {
   pref_label__ilike?: string | null;
@@ -54,17 +52,26 @@ function createContributionId(): string {
 function createBlankContribution(): ContributionDraft {
   return {
     id: createContributionId(),
+    source_tuple: '',
     agent_type: undefined,
     agent_id: '',
     role_id: '',
     agent_label: '',
     role_label: '',
+    issues: [],
   };
 }
 
 function isRenderableContribution(entry: ContributionDraft): boolean {
   return Boolean(
-    entry.agent_type || entry.agent_id || entry.role_id || entry.agent_label || entry.role_label
+    entry.agent_type ||
+      entry.agent_id ||
+      entry.role_id ||
+      entry.agent_label ||
+      entry.role_label ||
+      entry.imported_agent_text ||
+      entry.imported_role_text ||
+      entry.imported_type_text
   );
 }
 
@@ -94,6 +101,16 @@ export function getRenderableContributionEntries(entries: unknown): Array<Contri
   return entries
     .filter((entry): entry is ContributionDraft => Boolean(entry))
     .filter(isRenderableContribution);
+}
+
+function clearContributionImportState(entry: ContributionDraft): ContributionDraft {
+  return {
+    ...entry,
+    imported_agent_text: undefined,
+    imported_role_text: undefined,
+    imported_type_text: undefined,
+    issues: [],
+  };
 }
 
 export function promoteContributionToPrimary(
@@ -301,7 +318,7 @@ export function ContributionsEditor({
                   getOptionValue={(option) => option.value}
                   placeholder="Select type"
                   selectedValue={entry.agent_type ?? undefined}
-                  selectedLabel={selectedTypeLabel}
+                  selectedLabel={selectedTypeLabel ?? entry.imported_type_text}
                   searchable={false}
                   clsx={{
                     trigger: CONTRIBUTION_TRIGGER_CLASSNAME,
@@ -312,10 +329,12 @@ export function ContributionsEditor({
                     const nextEntries = storedEntries.map((storedEntry, storedIndex) =>
                       storedIndex === index
                         ? {
-                            ...storedEntry,
+                            ...clearContributionImportState(storedEntry),
                             agent_type: option?.value as TAgentType | undefined,
                             agent_id: '',
                             agent_label: '',
+                            role_id: option ? storedEntry.role_id : '',
+                            role_label: option ? storedEntry.role_label : '',
                           }
                         : storedEntry
                     );
@@ -350,7 +369,7 @@ export function ContributionsEditor({
                   placeholder="Select contributor"
                   searchPlaceholder="Search contributor"
                   selectedValue={entry.agent_id || undefined}
-                  selectedLabel={entry.agent_label}
+                  selectedLabel={entry.agent_label || entry.imported_agent_text}
                   searchField="pref_label__ilike"
                   searchable
                   disabled={!entry.agent_type}
@@ -363,7 +382,7 @@ export function ContributionsEditor({
                     const nextEntries = storedEntries.map((storedEntry, storedIndex) =>
                       storedIndex === index
                         ? {
-                            ...storedEntry,
+                            ...clearContributionImportState(storedEntry),
                             agent_id: option?.value ?? '',
                             agent_label: option?.label ?? '',
                           }
@@ -396,7 +415,7 @@ export function ContributionsEditor({
                   placeholder="Select role"
                   searchPlaceholder="Search role"
                   selectedValue={entry.role_id || undefined}
-                  selectedLabel={entry.role_label}
+                  selectedLabel={entry.role_label || entry.imported_role_text}
                   searchField="query"
                   searchable
                   clsx={{
@@ -408,7 +427,7 @@ export function ContributionsEditor({
                     const nextEntries = storedEntries.map((storedEntry, storedIndex) =>
                       storedIndex === index
                         ? {
-                            ...storedEntry,
+                            ...clearContributionImportState(storedEntry),
                             role_id: option?.value ?? '',
                             role_label: option?.label ?? '',
                           }
@@ -442,6 +461,12 @@ export function ContributionsEditor({
                 </Button>
               </div>
             </div>
+
+            {entry.issues.length > 0 ? (
+              <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                {entry.issues[0]}
+              </div>
+            ) : null}
           </div>
         );
       })}

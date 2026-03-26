@@ -20,6 +20,10 @@ import {
   summarizeContributions,
 } from '@/features/entity-import/adapters/cell-morphology/contributions-editor';
 import {
+  parseContributionCsvValue,
+  parseLocationCsvValue,
+} from '@/features/entity-import/adapters/cell-morphology/csv-tuple-parser';
+import {
   LocationEditor,
   type LocationValue,
   normalizeLocationValue,
@@ -153,6 +157,22 @@ function readLocation(parsedValue: unknown, rawValue: string): LocationValue | n
   return normalizeLocationValue(parsedValue) ?? parseLocationSummary(rawValue) ?? null;
 }
 
+function getContributionIssues(entries: unknown): Array<string> {
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+
+  return entries.flatMap((entry) => {
+    if (!entry || typeof entry !== 'object' || !('issues' in entry)) {
+      return [];
+    }
+
+    return Array.isArray(entry.issues)
+      ? entry.issues.filter((issue: unknown): issue is string => typeof issue === 'string')
+      : [];
+  });
+}
+
 function getProtocolGenerationType(row: IImportRowState): string | null {
   const protocolCell = row.cells.protocolId;
 
@@ -252,8 +272,16 @@ function resolveContributionPreview(entry: ContributionDraft): {
   roleLabel: string | null;
 } {
   return {
-    label: entry.agent_label?.trim() || entry.agent_id?.trim() || 'Unnamed contributor',
-    roleLabel: entry.role_label?.trim() || entry.role_id?.trim() || null,
+    label:
+      entry.agent_label?.trim() ||
+      entry.imported_agent_text?.trim() ||
+      entry.agent_id?.trim() ||
+      entry.role_label?.trim() ||
+      entry.imported_role_text?.trim() ||
+      entry.role_id?.trim() ||
+      'Unnamed contributor',
+    roleLabel:
+      entry.role_label?.trim() || entry.imported_role_text?.trim() || entry.role_id?.trim() || null,
   };
 }
 
@@ -467,6 +495,17 @@ export function createCellMorphologyImportAdapter({
         validationPath: 'metadata.location',
         required: false,
         inputType: ImportInputType.Compound,
+        csv: {
+          hydrateCell: ({ rawValue }) => {
+            const parsedLocation = parseLocationCsvValue(rawValue);
+
+            return {
+              rawValue: parsedLocation.rawValue,
+              parsedValue: parsedLocation.parsedValue,
+            };
+          },
+        },
+        getValidationIssues: ({ cell }) => parseLocationCsvValue(cell.rawValue).issues,
         validatorManualApplyMode: 'stage',
         tableRenderer: ({ cell, row, field, actions }) => (
           <LocationEditor
@@ -609,7 +648,36 @@ export function createCellMorphologyImportAdapter({
         validationPath: 'contribution',
         required: true,
         inputType: ImportInputType.Compound,
-        csv: { include: false },
+        csv: {
+          hydrateCell: async ({ rawValue, context }) => {
+            const parsedContributions = await parseContributionCsvValue({
+              rawValue,
+              context,
+              services,
+            });
+            const nextEntries =
+              parsedContributions.issues.length > 0 && rawValue.trim()
+                ? [
+                    {
+                      id: 'csv-contribution-import-error',
+                      source_tuple: rawValue.trim(),
+                      agent_id: '',
+                      role_id: '',
+                      agent_label: '',
+                      role_label: '',
+                      imported_agent_text: rawValue.trim(),
+                      issues: parsedContributions.issues,
+                    } satisfies ContributionDraft,
+                  ]
+                : parsedContributions.entries;
+
+            return {
+              rawValue: summarizeContributions(countRenderableEntries(nextEntries)),
+              parsedValue: nextEntries,
+            };
+          },
+        },
+        getValidationIssues: ({ cell }) => getContributionIssues(cell.parsedValue),
         tableRenderer: ({ field, cell, row, actions }) => (
           <ContributionSummaryCell
             label={field.label}
