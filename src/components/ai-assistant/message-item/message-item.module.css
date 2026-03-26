@@ -1,5 +1,18 @@
 .messageItem {
   --size-icon: 48px;
+  animation: messageEnter 0.25s ease both;
+  animation-delay: calc(var(--index, 0) * 60ms);
+}
+
+@keyframes messageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .user {

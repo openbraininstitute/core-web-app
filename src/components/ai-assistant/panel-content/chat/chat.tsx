@@ -145,6 +145,11 @@ export default function Chat({
     }
   }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
 
+  // Reset scroll position when switching threads
+  React.useEffect(() => {
+    setIsAutoScrollEnabled(true);
+  }, [threadId]);
+
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
     append({
@@ -179,6 +184,7 @@ export default function Chat({
                 value={item}
                 status={status}
                 isLastMessage={index === messages.length - 1}
+                index={index}
               />
             ))}
 
@@ -198,7 +204,7 @@ export default function Chat({
               </div>
             )}
             {threadId && !isEmptyThread && status === 'ready' && (
-              <div className={styles.suggestedQuestionsContainer}>
+              <div className={styles.suggestedQuestionsContainerInChat}>
                 <SuggestedQuestions
                   threadId={threadId}
                   onClick={handlePrompt}

@@ -73,64 +73,81 @@ export default function History({ className, onBack }: HistoryProps) {
             <>
               {history && (
                 <div>
-                  {sections.map(
-                    ({ title, list }) =>
-                      list.length > 0 && (
-                        <div key={title}>
-                          <h1>{title}</h1>
-                          {list.map((thread) => (
-                            <div
-                              className={classNames(
-                                styles.card,
-                                threadId === thread.id && styles.currentThread
-                              )}
-                              key={thread.id}
+                  {
+                    sections.reduce<{ nodes: React.ReactNode[]; count: number }>(
+                      (acc, { title, list }) => {
+                        if (list.length === 0) return acc;
+                        acc.nodes.push(
+                          <div key={title}>
+                            <h1
+                              style={{ '--index': Math.min(acc.count, 20) } as React.CSSProperties}
                             >
-                              <Tooltip tooltip="Rename this thread" arrow="topLeft">
-                                <button
-                                  type="button"
-                                  className={styles.edit}
-                                  onClick={() => {
-                                    setCurrentThreadId(thread.id);
-                                    setCurrentThreadTitle(thread.title);
-                                    setOpenEdit(true);
-                                  }}
+                              {title}
+                            </h1>
+                            {list.map((thread) => {
+                              const idx = acc.count++;
+                              return (
+                                <div
+                                  className={classNames(
+                                    styles.card,
+                                    threadId === thread.id && styles.currentThread
+                                  )}
+                                  key={thread.id}
+                                  style={{ '--index': Math.min(idx, 20) } as React.CSSProperties}
                                 >
-                                  <IconEdit />
-                                </button>
-                              </Tooltip>
-                              <button
-                                key={thread.id}
-                                type="button"
-                                className={styles.mainButton}
-                                onClick={() => {
-                                  assistant.isEmptyThread.set(false);
-                                  setThreadId(thread.id);
-                                  onBack();
-                                }}
-                              >
-                                <Tooltip tooltip="Click to recover this thread">
-                                  {thread.title}
-                                </Tooltip>
-                              </button>
-                              <Tooltip tooltip="Delete this thread permanently" arrow="topRight">
-                                <button
-                                  type="button"
-                                  className={styles.delete}
-                                  onClick={() => {
-                                    setCurrentThreadId(thread.id);
-                                    setCurrentThreadTitle(thread.title);
-                                    setOpenDelete(true);
-                                  }}
-                                >
-                                  <IconDelete />
-                                </button>
-                              </Tooltip>
-                            </div>
-                          ))}
-                        </div>
-                      )
-                  )}
+                                  <Tooltip tooltip="Rename this thread" arrow="topLeft">
+                                    <button
+                                      type="button"
+                                      className={styles.edit}
+                                      onClick={() => {
+                                        setCurrentThreadId(thread.id);
+                                        setCurrentThreadTitle(thread.title);
+                                        setOpenEdit(true);
+                                      }}
+                                    >
+                                      <IconEdit />
+                                    </button>
+                                  </Tooltip>
+                                  <button
+                                    key={thread.id}
+                                    type="button"
+                                    className={styles.mainButton}
+                                    onClick={() => {
+                                      assistant.isEmptyThread.set(false);
+                                      setThreadId(thread.id);
+                                      onBack();
+                                    }}
+                                  >
+                                    <Tooltip tooltip="Click to recover this thread">
+                                      {thread.title}
+                                    </Tooltip>
+                                  </button>
+                                  <Tooltip
+                                    tooltip="Delete this thread permanently"
+                                    arrow="topRight"
+                                  >
+                                    <button
+                                      type="button"
+                                      className={styles.delete}
+                                      onClick={() => {
+                                        setCurrentThreadId(thread.id);
+                                        setCurrentThreadTitle(thread.title);
+                                        setOpenDelete(true);
+                                      }}
+                                    >
+                                      <IconDelete />
+                                    </button>
+                                  </Tooltip>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                        return acc;
+                      },
+                      { nodes: [], count: 0 }
+                    ).nodes
+                  }
                 </div>
               )}
               {hasMore && (
