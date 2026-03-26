@@ -20,18 +20,20 @@ export default function InteractivePlot({
   populationName,
   nodeId,
   units,
+  variableName,
 }: {
   worker: Remote<SonataWorkerImpl>;
   populationName: string;
   nodeId: number;
   units: string;
+  variableName?: string;
 }) {
   const [data, setData] = useState<NodeTraceData | null>(null);
   const [zoomRange, setZoomRange] = useState<{
     x: (number | undefined)[];
     y: (number | undefined)[];
   } | null>(null);
-  const { config, layout, font, style } = useInteractivePlotConfig(units);
+  const { config, layout, font, style } = useInteractivePlotConfig(units, variableName);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const plotRef = useRef<HTMLElement>(null);

@@ -7,6 +7,7 @@ import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import ReportDetailsView from '@/features/sonata-viewer/components/report-details-view';
 import ReportOverview from '@/features/sonata-viewer/components/report-overview';
 import useSonataReport from '@/features/sonata-viewer/hooks/use-sonata-report';
+import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
 
 import type { RadioChangeEvent } from 'antd';
 import type { ComponentType } from 'react';
@@ -31,6 +32,13 @@ export default function SonataViewer({
   ctx?: WorkspaceContext;
 }) {
   const { metadata, worker, error, isLoading } = useSonataReport({ entity, assetId, ctx });
+
+  const assetFileName = entity.assets
+    ?.find((a) => a.id === assetId)
+    ?.path.split('/')
+    .pop();
+  const report = useSimulationReport(assetFileName);
+  const variableName = report?.variable_name;
 
   const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
   const [defaultPopulation, setDefaultPopulation] = useState<string>();
@@ -70,7 +78,12 @@ export default function SonataViewer({
 
       {view === VIEW.OVERVIEW && (
         <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[metadata]}>
-          <ReportOverview metadata={metadata} worker={worker} onNodeClick={handleNodeClick} />
+          <ReportOverview
+            metadata={metadata}
+            worker={worker}
+            onNodeClick={handleNodeClick}
+            variableName={variableName}
+          />
         </ErrorBoundary>
       )}
 
@@ -84,6 +97,7 @@ export default function SonataViewer({
             worker={worker}
             defaultPopulation={defaultPopulation}
             defaultNodeId={defaultNodeId}
+            variableName={variableName}
           />
         </ErrorBoundary>
       )}

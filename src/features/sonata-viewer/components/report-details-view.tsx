@@ -17,11 +17,13 @@ export default function ReportDetailsView({
   worker,
   defaultPopulation,
   defaultNodeId,
+  variableName,
 }: {
   metadata: SonataReportMetadata;
   worker: Remote<SonataWorkerImpl>;
   defaultPopulation?: string;
   defaultNodeId?: number;
+  variableName?: string;
 }) {
   const populationNames = useMemo(
     () => metadata.populations.map((p) => p.name),
@@ -86,6 +88,7 @@ export default function ReportDetailsView({
             populationName={selectedPopulation}
             nodeId={nodeId}
             units={currentPop?.dataUnits ?? 'mV'}
+            variableName={variableName}
           />
         ))}
       </div>

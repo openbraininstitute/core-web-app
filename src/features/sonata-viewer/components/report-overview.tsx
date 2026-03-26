@@ -25,12 +25,18 @@ function ThumbnailPlot({
   data,
   plotRevision,
   units,
+  variableName,
 }: {
   data: NodeTraceData;
   plotRevision: number;
   units: string;
+  variableName?: string;
 }) {
-  const { layout, config } = useOverviewPlotConfig({ datarevision: plotRevision, units });
+  const { layout, config } = useOverviewPlotConfig({
+    datarevision: plotRevision,
+    units,
+    variableName,
+  });
 
   const plotData: Partial<PlotData>[] = [
     {
@@ -50,12 +56,14 @@ function ThumbnailContainer({
   populationName,
   nodeId,
   units,
+  variableName,
   onClick,
 }: {
   worker: Remote<SonataWorkerImpl>;
   populationName: string;
   nodeId: number;
   units: string;
+  variableName?: string;
   onClick: () => void;
 }) {
   const [data, setData] = useState<NodeTraceData | null>(null);
@@ -105,7 +113,14 @@ function ThumbnailContainer({
         className={cn('relative aspect-4/3 cursor-pointer overflow-hidden bg-gray-100')}
         onClick={onClick}
       >
-        {data ? <ThumbnailPlot data={data} plotRevision={plotRevision} units={units} /> : null}
+        {data ? (
+          <ThumbnailPlot
+            data={data}
+            plotRevision={plotRevision}
+            units={units}
+            variableName={variableName}
+          />
+        ) : null}
       </button>
     </div>
   );
@@ -115,10 +130,12 @@ export default function ReportOverview({
   metadata,
   worker,
   onNodeClick,
+  variableName,
 }: {
   metadata: SonataReportMetadata;
   worker: Remote<SonataWorkerImpl>;
   onNodeClick: (populationName: string, nodeId: number) => void;
+  variableName?: string;
 }) {
   const populationNames = useMemo(
     () => metadata.populations.map((p) => p.name),
@@ -164,6 +181,7 @@ export default function ReportOverview({
                 populationName={pop.name}
                 nodeId={nodeId}
                 units={pop.dataUnits}
+                variableName={variableName}
                 onClick={() => onNodeClick(pop.name, nodeId)}
               />
             ))}

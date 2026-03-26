@@ -11,7 +11,10 @@ interface UseConfigResponse {
   style?: CSSProperties;
 }
 
-export const useInteractivePlotConfig = (units: string): UseConfigResponse => {
+export const useInteractivePlotConfig = (
+  units: string,
+  variableName?: string
+): UseConfigResponse => {
   const antBreakpoints = useBreakpoint();
 
   return {
@@ -30,8 +33,10 @@ export const useInteractivePlotConfig = (units: string): UseConfigResponse => {
         zeroline: false,
       },
       yaxis: {
-        title: { text: `${getUnitLabel(units)} (${units})` },
+        title: { text: `${variableName ?? getUnitLabel(units)} (${units})`, standoff: 12 },
         zeroline: false,
+        automargin: true,
+        exponentformat: 'e',
       },
     },
     font: antBreakpoints.md ? {} : { size: 12 },
@@ -45,9 +50,11 @@ export const useInteractivePlotConfig = (units: string): UseConfigResponse => {
 export const useOverviewPlotConfig = ({
   datarevision,
   units,
+  variableName,
 }: {
   datarevision: number;
   units: string;
+  variableName?: string;
 }): UseConfigResponse => {
   return {
     layout: {
@@ -69,22 +76,27 @@ export const useOverviewPlotConfig = ({
       font: { size: 10 },
       margin: { l: 52, r: 0, t: 0, b: 42 },
       xaxis: {
-        ticks: 'outside',
-        ticklen: 6,
-        tickwidth: 1,
-        tickcolor: 'black',
         automargin: true,
-        zeroline: false,
+        tickcolor: 'black',
+        exponentformat: 'e',
+        ticklen: 6,
+        ticks: 'outside',
+        tickwidth: 1,
         title: { font: { size: 12 }, text: 'Time (ms)' },
+        zeroline: false,
       },
       yaxis: {
-        ticks: 'outside',
-        ticklen: 4,
-        tickwidth: 1,
-        tickcolor: 'black',
         automargin: true,
+        tickcolor: 'black',
+        ticklen: 4,
+        ticks: 'outside',
+        tickwidth: 1,
+        title: {
+          font: { size: 12 },
+          text: `${variableName ?? getUnitLabel(units)} (${units})`,
+          standoff: 12,
+        },
         zeroline: false,
-        title: { font: { size: 12 }, text: `${getUnitLabel(units)} (${units})` },
       },
     },
     config: { displaylogo: false, staticPlot: true, responsive: true },
