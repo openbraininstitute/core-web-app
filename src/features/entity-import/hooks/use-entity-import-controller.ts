@@ -451,7 +451,7 @@ export function useEntityImportController<TPayload, TResult>({
   const pendingCellSyncTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const backgroundQueueLimitRef = useRef(pLimit(ENTITY_IMPORT_BACKGROUND_QUEUE_CONCURRENCY));
 
-  // Microbatch buffer for async CSV completion writes.
+  // microbatch buffer for async CSV completion writes.
   // Instead of committing each result individually, results are buffered and
   // flushed together on the next animation frame.
   const asyncResultBufferRef = useRef<

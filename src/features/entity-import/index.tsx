@@ -59,6 +59,6 @@ export function EntityImportFeature<TPayload, TResult>({
 export { createCellMorphologyImportAdapter } from '@/features/entity-import/adapters/cell-morphology/adapter';
 
 export type {
-  IEntityImportAdapter as EntityImportAdapter,
-  IEntityImportRuntimeContext as EntityImportRuntimeContext,
+  IEntityImportAdapter,
+  IEntityImportRuntimeContext,
 } from '@/features/entity-import/core/adapter';
