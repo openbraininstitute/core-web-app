@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { AssetContentType } from '@/api/entitycore/types/shared/global';
 import {
   RepairPipelineState,
   RepairPipelineTypeSchema,
@@ -32,14 +33,18 @@ import {
 import {
   createBrainRegionImportField,
   createContributionsImportField,
+  createDescriptionImportField,
   createExactOnlyRemoteEvaluator,
   createFileBundleImportField,
   createLicenseImportField,
   createMtypeImportField,
+  createNameImportField,
   createRemoteQuery,
   createSubjectImportField,
+  normalizeOptionalString,
   readSuggestionString,
   renderSuggestionDetailRows,
+  sanitizeContributions,
 } from '@/features/entity-import/core/shared/field-builders';
 import {
   createEntityImportPostSubmitActions,
@@ -51,7 +56,6 @@ import type {
   IEntityImportAdapter,
   IValidatorSuggestionDetailsArgs,
 } from '@/features/entity-import/core/adapter';
-import type { ContributionDraft } from '@/features/entity-import/core/shared/contributions-editor';
 
 const REPAIR_PIPELINE_STATE_OPTIONS = Object.values(RepairPipelineState).map((option) => ({
   value: option.key,
@@ -169,23 +173,8 @@ interface CreateCellMorphologyImportAdapterOptions {
   postSubmitActions?: IEntityImportPostSubmitActions;
 }
 
-function normalizeOptionalString(value: string): string | null {
-  const normalized = value.trim();
-  return normalized ? normalized : null;
-}
-
 function summarizeCount(label: string, count: number): string {
   return count > 0 ? `${count} ${label}${count === 1 ? '' : 's'}` : '';
-}
-
-function sanitizeContributions(entries: unknown): Array<ContributionDraft> {
-  if (!Array.isArray(entries)) {
-    return [];
-  }
-
-  return entries.filter((entry) => {
-    return entry.agent_type || entry.agent_id || entry.role_id;
-  });
 }
 
 function readLocation(parsedValue: unknown, rawValue: string): LocationValue | null {
@@ -227,26 +216,14 @@ export function createCellMorphologyImportAdapter({
       guideFileName: 'cell-morphology-import-template.md',
     },
     fields: [
-      {
-        label: 'Name',
-        path: 'name',
+      createNameImportField({
         submissionPath: 'setup.name',
         validationPath: 'metadata.name',
-        required: true,
-        placeholder: 'Enter name',
-        inputType: ImportInputType.Text,
-        columnWidth: 180,
-      },
-      {
-        label: 'Description',
-        path: 'description',
+      }),
+      createDescriptionImportField({
         submissionPath: 'setup.description',
         validationPath: 'metadata.description',
-        required: true,
-        placeholder: 'Enter description',
-        inputType: ImportInputType.Textarea,
-        columnWidth: 260,
-      },
+      }),
       createBrainRegionImportField({
         path: 'brainRegionId',
         submissionPath: 'setup.brain_region_id',
@@ -394,7 +371,7 @@ export function createCellMorphologyImportAdapter({
         submissionPath: 'assets.sourceFile',
         validationPath: 'sourceFile',
         fileConfig: {
-          accept: ['application/swc', 'application/asc', 'application/x-hdf5'],
+          accept: [AssetContentType.swc, AssetContentType.asc, AssetContentType.h5],
           allowedExtensions: ['.swc', '.asc', '.h5', '.H5', '.SWC', '.ASC'],
           maxFiles: 1,
         },

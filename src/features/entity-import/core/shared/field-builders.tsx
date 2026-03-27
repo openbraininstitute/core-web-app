@@ -27,11 +27,11 @@ import type {
   IValidatorSuggestionDetailsArgs,
 } from '@/features/entity-import/core/adapter';
 import type {
-  BrainRegionQueryField,
   CommonQueryArgs,
   IEntityImportContributionLookupServices,
   IEntityImportSharedQueryServices,
-  SharedTextQueryField,
+  TBrainRegionQueryField,
+  TSharedTextQueryField,
 } from '@/features/entity-import/core/shared/common-query-services';
 
 export const DEFAULT_ENTITY_IMPORT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
@@ -101,6 +101,21 @@ export function renderSubjectSuggestionDetails({ suggestion }: IValidatorSuggest
 }
 
 export function renderMtypeSuggestionDetails({ suggestion }: IValidatorSuggestionDetailsArgs) {
+  return renderSuggestionDetailRows([
+    {
+      label: 'Alternative Label',
+      value: readSuggestionString(suggestion.description),
+    },
+    {
+      label: 'Definition',
+      value: readSuggestionString(
+        (suggestion.metadata as { definition?: string } | undefined)?.definition
+      ),
+    },
+  ]);
+}
+
+export function renderEtypeSuggestionDetails({ suggestion }: IValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
     {
       label: 'Alternative Label',
@@ -265,13 +280,13 @@ export function createBrainRegionImportField({
     placeholder,
     remote: {
       query: createRemoteQuery({
-        queryField: 'semantic_search' satisfies BrainRegionQueryField,
+        queryField: 'semantic_search' satisfies TBrainRegionQueryField,
         querySuggestions: services.queryBrainRegion,
       }),
       evaluate: async ({ query, context }) =>
         createSingleSuggestionRemoteEvaluator({
           label,
-          queryField: 'name__ilike' satisfies BrainRegionQueryField,
+          queryField: 'name__ilike' satisfies TBrainRegionQueryField,
           querySuggestions: services.queryBrainRegion,
         })({ query, context }),
     },
@@ -302,13 +317,13 @@ export function createSubjectImportField({
     placeholder,
     remote: {
       query: createRemoteQuery({
-        queryField: 'ilike_search' satisfies SharedTextQueryField,
+        queryField: 'ilike_search' satisfies TSharedTextQueryField,
         querySuggestions: services.querySubject,
       }),
       evaluate: async ({ query, context }) =>
         createSingleSuggestionRemoteEvaluator({
           label,
-          queryField: 'ilike_search' satisfies SharedTextQueryField,
+          queryField: 'ilike_search' satisfies TSharedTextQueryField,
           querySuggestions: services.querySubject,
         })({ query, context }),
     },
@@ -339,13 +354,13 @@ export function createLicenseImportField({
     placeholder,
     remote: {
       query: createRemoteQuery({
-        queryField: 'ilike_search' satisfies SharedTextQueryField,
+        queryField: 'ilike_search' satisfies TSharedTextQueryField,
         querySuggestions: services.queryLicense,
       }),
       evaluate: async ({ query, context }) =>
         createSingleSuggestionRemoteEvaluator({
           label,
-          queryField: 'label__ilike' satisfies SharedTextQueryField,
+          queryField: 'label__ilike' satisfies TSharedTextQueryField,
           querySuggestions: services.queryLicense,
         })({ query, context }),
     },
@@ -377,13 +392,13 @@ export function createMtypeImportField({
     remote: {
       autoResolveResolvedSuggestion: false,
       query: createRemoteQuery({
-        queryField: 'ilike_search' satisfies SharedTextQueryField,
+        queryField: 'ilike_search',
         querySuggestions: services.queryMtype,
       }),
       evaluate: async ({ query, context }) =>
         createSingleSuggestionRemoteEvaluator({
           label,
-          queryField: 'pref_label__ilike' satisfies SharedTextQueryField,
+          queryField: 'pref_label__ilike',
           querySuggestions: services.queryMtype,
         })({ query, context }),
     },
@@ -537,4 +552,60 @@ export function createFileBundleImportField({
     fileConfig,
     columnWidth,
   };
+}
+
+export function createNameImportField({
+  path = 'name',
+  submissionPath = 'name',
+  validationPath = 'name',
+  required = true,
+  columnWidth = 180,
+  label = 'Name',
+  placeholder = 'Enter name',
+}: Partial<CreateSharedRemoteFieldOptions> = {}): IAdapterFieldDefinition {
+  return {
+    label,
+    path,
+    submissionPath,
+    validationPath,
+    required,
+    inputType: ImportInputType.Text,
+    placeholder,
+    columnWidth,
+  };
+}
+
+export function createDescriptionImportField({
+  path = 'description',
+  submissionPath = 'description',
+  validationPath = 'description',
+  required = true,
+  columnWidth = 260,
+  label = 'Description',
+  placeholder = 'Enter description',
+}: Partial<CreateSharedRemoteFieldOptions> = {}): IAdapterFieldDefinition {
+  return {
+    label,
+    path,
+    submissionPath,
+    validationPath,
+    required,
+    inputType: ImportInputType.Textarea,
+    placeholder,
+    columnWidth,
+  };
+}
+
+/** trim a string and return null if empty. Used for optional text fields. */
+export function normalizeOptionalString(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+/** tilter contribution entries to only those with both agent_id and role_id. */
+export function sanitizeContributions<T extends { agent_id?: string; role_id?: string }>(
+  entries: unknown
+): Array<T> {
+  if (!Array.isArray(entries)) return [];
+  return entries.filter((e) => e.agent_id && e.role_id) as Array<T>;
 }

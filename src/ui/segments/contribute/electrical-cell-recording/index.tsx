@@ -1,6 +1,12 @@
 'use client';
 
+import { useMemo } from 'react';
+
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import {
+  createElectricalCellRecordingImportAdapter,
+  EntityImportFeature,
+} from '@/features/entity-import';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   createElectricalCellRecordingConfig,
@@ -86,6 +92,34 @@ export function ElectricalCellRecording({ sessionId }: IElectricalCellRecordingP
       progressSteps={ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
+    />
+  );
+}
+
+type IElectricalCellRecordingImportProps = {
+  title: string | null;
+  onClose: () => void;
+} & IElectricalCellRecordingProps;
+
+export function ElectricalCellRecordingImport({
+  title,
+  sessionId,
+  onClose,
+}: IElectricalCellRecordingImportProps) {
+  const { projectId, virtualLabId } = useWorkspace();
+
+  const adapter = useMemo(() => createElectricalCellRecordingImportAdapter(), []);
+
+  return (
+    <EntityImportFeature
+      title={title}
+      onClose={onClose}
+      adapter={adapter}
+      context={{
+        projectId,
+        virtualLabId,
+        sessionId,
+      }}
     />
   );
 }
