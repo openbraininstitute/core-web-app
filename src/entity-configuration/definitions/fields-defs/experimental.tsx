@@ -144,7 +144,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'etype__pref_label__in',
     order: [
       {
-        types: [ExtendedEntitiesTypeDict.ElectricalCellRecording, ExtendedEntitiesTypeDict.Emodel],
+        types: [
+          ExtendedEntitiesTypeDict.ElectricalCellRecording,
+          ExtendedEntitiesTypeDict.Emodel,
+          ExtendedEntitiesTypeDict.IonChannelRecording,
+          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+        ],
         property: 'order_by',
         value: 'etype__pref_label',
       },
@@ -521,6 +526,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return name;
     },
     defaultConstraint: 'ion_channel__name__ilike',
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.IonChannelRecording],
+        property: 'order_by',
+        value: 'ion_channel__name',
+      },
+    ],
   },
   [EntityCoreFields.Temperature]: {
     className: 'text-left',
@@ -535,6 +547,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return isNumber(temperature) || isString(temperature) ? `${temperature} °C` : EmptyValue;
     },
     defaultConstraint: 'temperature',
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.IonChannelRecording],
+        property: 'order_by',
+        value: 'temperature',
+      },
+    ],
   },
   [EntityCoreFields.CellLine]: {
     className: 'text-left',
@@ -548,6 +567,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return cellLine;
     },
     defaultConstraint: 'cell_line__ilike',
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.IonChannelRecording],
+        property: 'order_by',
+        value: 'cell_line',
+      },
+    ],
   },
   [EntityCoreFields.DenseReconstructionCellId]: {
     className: 'text-left',

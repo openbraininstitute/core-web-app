@@ -238,11 +238,11 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       {
         types: [
           ExtendedEntitiesTypeDict.Circuit,
-          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
-          ExtendedEntitiesTypeDict.SmallMicrocircuit,
-          ExtendedEntitiesTypeDict.Microcircuit,
           ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          ExtendedEntitiesTypeDict.Microcircuit,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+          ExtendedEntitiesTypeDict.SmallMicrocircuit,
         ],
         property: 'order_by',
         value: 'number_connections',
