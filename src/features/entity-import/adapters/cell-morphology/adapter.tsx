@@ -303,13 +303,14 @@ export function createCellMorphologyImportAdapter({
         },
         getValidationIssues: ({ cell }) => parseLocationCsvValue(cell.rawValue).issues,
         validatorManualApplyMode: 'stage',
-        tableRenderer: ({ cell, row, field, actions }) => (
+        tableRenderer: ({ cell, row, field, actions, validatorPreview }) => (
           <LocationEditor
             cell={cell}
             row={row}
             fieldPath={field.path}
             actions={actions}
             mode="table"
+            validatorPreview={validatorPreview}
           />
         ),
         panelRenderer: ({ cell, row, field, actions, draftValue, onDraftChange }) => (

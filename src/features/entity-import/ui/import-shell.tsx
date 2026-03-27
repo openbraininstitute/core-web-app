@@ -5,7 +5,6 @@ import { RiDownload2Line, RiUpload2Line } from '@remixicon/react';
 import { Progress } from 'antd';
 import { useRef } from 'react';
 
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
 import { ImportTable } from '@/features/entity-import/ui/import-table';
 import { NotificationStack } from '@/features/entity-import/ui/notification-stack';
 import { ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME } from '@/features/entity-import/ui/tooltip-styles';
@@ -21,10 +20,13 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '../core/shared/ui';
+
 import type {
   EntityImportRuntimeContext,
   IEntityImportActions,
   IEntityImportAdapter,
+  IValidatorPreviewState,
   IValidatorSuggestionState,
 } from '@/features/entity-import/core/adapter';
 import type { IImportRunState, IImportSessionState } from '@/features/entity-import/core/contracts';
@@ -37,6 +39,7 @@ interface ImportShellProps<TPayload, TResult> {
   actions: IEntityImportActions;
   isSubmitting: boolean;
   importRun: IImportRunState;
+  validatorPreview: IValidatorPreviewState;
   csvUploadPhase: string;
   csvRowValidationProgress: {
     active: boolean;
@@ -178,6 +181,7 @@ export function ImportShell<TPayload, TResult>({
   actions,
   isSubmitting,
   importRun,
+  validatorPreview,
   csvUploadPhase,
   csvRowValidationProgress,
   csvUploadNotifications,
@@ -399,6 +403,7 @@ export function ImportShell<TPayload, TResult>({
                 session={session}
                 actions={actions}
                 importRun={importRun}
+                validatorPreview={validatorPreview}
               />
             </div>
           </div>
@@ -411,6 +416,7 @@ export function ImportShell<TPayload, TResult>({
             actions={actions}
             isSubmitting={isSubmitting}
             importRun={importRun}
+            validatorPreview={validatorPreview}
             validatorSuggestions={validatorSuggestions}
           />
         </section>

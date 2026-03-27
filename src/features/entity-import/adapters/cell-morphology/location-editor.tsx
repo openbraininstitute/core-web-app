@@ -6,7 +6,10 @@ import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 
-import type { IEntityImportActions } from '@/features/entity-import/core/adapter';
+import type {
+  IEntityImportActions,
+  ValidatorDraftValue,
+} from '@/features/entity-import/core/adapter';
 import type { IImportCellState, IImportRowState } from '@/features/entity-import/core/contracts';
 
 export interface LocationValue {
@@ -95,6 +98,7 @@ interface LocationEditorProps {
   actions: IEntityImportActions;
   mode?: 'table' | 'panel';
   value?: LocationValue | null;
+  validatorPreview?: ValidatorDraftValue | null;
   onChange?: (value: LocationValue) => void;
 }
 
@@ -111,10 +115,16 @@ export function LocationEditor({
   actions,
   mode = 'panel',
   value,
+  validatorPreview,
   onChange,
 }: LocationEditorProps) {
   const location = value ?? resolveLocationValue(cell.parsedValue, cell.rawValue) ?? null;
   const correctionDraft = mode === 'table' ? cell.correctionDraft : null;
+  const previewLocation =
+    mode === 'table' && validatorPreview
+      ? (normalizeLocationValue(validatorPreview.parsedValue) ??
+        resolveLocationValue(null, validatorPreview.rawValue))
+      : null;
   const previousLocation = correctionDraft
     ? resolveLocationValue(correctionDraft.previousParsedValue, correctionDraft.previousRawValue)
     : null;
@@ -149,6 +159,47 @@ export function LocationEditor({
 
     emitChange(nextLocation);
   };
+
+  if (mode === 'table' && previewLocation) {
+    return (
+      <div
+        data-testid="location-editor-table"
+        className="flex h-full min-h-[96px] w-full flex-col overflow-hidden bg-transparent"
+      >
+        <div className="flex min-h-0 flex-1 items-stretch overflow-hidden">
+          {LOCATION_AXES.map((axis) => (
+            <div
+              key={axis}
+              className="flex min-w-0 flex-1 flex-col border-r border-neutral-200 px-2 py-1.5 last:border-r-0"
+            >
+              <label
+                className="mb-1 flex flex-col gap-0.5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400"
+                htmlFor={`location-${row.id}-${axis}`}
+              >
+                <div className="text-primary-9">{axis.toUpperCase()}</div>
+                <div className="text-[9px] leading-none text-neutral-400">(microns)</div>
+              </label>
+              <div
+                title="Original value"
+                className="mb-1 min-h-7 rounded-md border border-amber-600 bg-amber-600/16 px-2 py-1 text-center text-xs font-medium text-amber-950 line-through"
+              >
+                {formatNumber(location?.[axis] ?? null) || '—'}
+              </div>
+              <Input
+                id={`location-${row.id}-${axis}`}
+                aria-label={`Location ${axis.toUpperCase()} row ${row.rowIndex + 1}`}
+                type="number"
+                readOnly
+                className="mt-auto h-8 min-w-0 rounded-lg border border-green-main/30 bg-green-main/10 px-2 text-center text-base font-bold text-green-main shadow-none focus-visible:ring-0"
+                value={formatNumber(previewLocation?.[axis] ?? null)}
+                onClick={() => actions.selectCell({ rowId: row.id, fieldPath })}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (mode === 'table' && correctionDraft) {
     return (

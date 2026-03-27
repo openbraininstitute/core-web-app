@@ -65,12 +65,28 @@ export interface TableCellRendererProps {
   session: IImportSessionState;
   context: EntityImportRuntimeContext;
   actions: IEntityImportActions;
+  validatorPreview?: ValidatorDraftValue | null;
 }
 
 export interface ValidatorDraftValue {
   rawValue: string;
   displayValue: string | null;
   parsedValue: unknown;
+}
+
+export interface IValidatorPreviewState extends ValidatorDraftValue {
+  rowId: string | null;
+  fieldPath: string | null;
+}
+
+export function createIdleValidatorPreviewState(): IValidatorPreviewState {
+  return {
+    rowId: null,
+    fieldPath: null,
+    rawValue: '',
+    displayValue: null,
+    parsedValue: undefined,
+  };
 }
 
 export interface ValidatorFieldRendererProps extends TableCellRendererProps {
@@ -215,6 +231,11 @@ export interface IEntityImportActions {
   loadMoreSuggestions: () => void;
   selectCell: (params: { rowId: string; fieldPath: string }) => void;
   setValidatorSelection: (params: { rowId?: string | null; fieldPath?: string | null }) => void;
+  setValidatorPreview: (params: {
+    rowId: string;
+    fieldPath: string;
+    value: ValidatorDraftValue | null;
+  }) => void;
   setCustomValue: (params: {
     rowId: string;
     fieldPath: string;

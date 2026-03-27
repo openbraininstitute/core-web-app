@@ -5,19 +5,6 @@ import pLimit from 'p-limit';
 import Papa from 'papaparse';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getEntityImportTemplateGuide } from '@/features/entity-import/templates/registry';
-
-import {
-  type CsvHydratedCellValue,
-  ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
-  type EntityImportRuntimeContext,
-  type IAdapterFieldDefinition,
-  type IEntityImportActions,
-  type IEntityImportAdapter,
-  type IValidatorSuggestionState,
-  type RemoteValidationResult,
-  ValidatorManualApplyMode,
-} from '../core/adapter';
 import {
   createIdleImportRunState,
   createIdleRemoteState,
@@ -31,18 +18,22 @@ import {
   NotificationTone,
   RemoteValidationStatus,
   type TFlatImportValues,
-} from '../core/contracts';
-import { buildTemplateColumns, importCsvRows, parseCsvFile } from '../core/csv';
+} from '@/features/entity-import/core/contracts';
+import {
+  buildTemplateColumns,
+  importCsvRows,
+  parseCsvFile,
+} from '@/features/entity-import/core/csv';
 import {
   getImportFileDisplayValue,
   toParsedFileValue,
   validateImportFiles,
-} from '../core/file-field';
+} from '@/features/entity-import/core/file-field';
 import {
   fieldHasSuggestionResolution,
   findExactSuggestionMatch,
   getRowSubmissionValues,
-} from '../core/helpers';
+} from '@/features/entity-import/core/helpers';
 import {
   acceptCorrectionDraft,
   appendEmptyRow,
@@ -61,8 +52,24 @@ import {
   setValidatorSelection as setValidatorSelectionState,
   stageSuggestionToRows,
   updateCellRawValue,
-} from '../core/session';
-import { validateSessionRows } from '../core/validation';
+} from '@/features/entity-import/core/session';
+import { validateSessionRows } from '@/features/entity-import/core/validation';
+import { getEntityImportTemplateGuide } from '@/features/entity-import/templates/registry';
+
+import {
+  type CsvHydratedCellValue,
+  createIdleValidatorPreviewState,
+  ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
+  type EntityImportRuntimeContext,
+  type IAdapterFieldDefinition,
+  type IEntityImportActions,
+  type IEntityImportAdapter,
+  type IValidatorPreviewState,
+  type IValidatorSuggestionState,
+  type RemoteValidationResult,
+  type ValidatorDraftValue,
+  ValidatorManualApplyMode,
+} from '../core/adapter';
 
 function findField(
   fields: Array<IAdapterFieldDefinition>,
@@ -229,6 +236,27 @@ function downloadBlob({
 
 function buildCurrentCsvFileName(templateFileName: string): string {
   return templateFileName.replace(/(\.csv)?$/i, '-current-state.csv');
+}
+
+function createValidatorPreviewValueFromSuggestion(suggestion: ISuggestion): ValidatorDraftValue {
+  return {
+    rawValue: suggestion.label,
+    displayValue: suggestion.label,
+    parsedValue:
+      (suggestion.metadata as { parsedValue?: unknown } | undefined)?.parsedValue ??
+      suggestion.value,
+  };
+}
+
+function doesValidatorDraftMatchCell(
+  cell: IImportRowState['cells'][string],
+  draftValue: ValidatorDraftValue
+): boolean {
+  return (
+    cell.rawValue === draftValue.rawValue &&
+    (cell.displayValue ?? null) === (draftValue.displayValue ?? null) &&
+    Object.is(cell.parsedValue, draftValue.parsedValue)
+  );
 }
 
 function hasSuggestionSource(field?: IAdapterFieldDefinition): boolean {
@@ -403,6 +431,9 @@ export function useEntityImportController<TPayload, TResult>({
   const [validatorSuggestions, setValidatorSuggestions] = useState<IValidatorSuggestionState>(() =>
     createIdleValidatorSuggestionState()
   );
+  const [validatorPreview, setValidatorPreviewState] = useState<IValidatorPreviewState>(() =>
+    createIdleValidatorPreviewState()
+  );
   const [importRun, setImportRun] = useState<IImportRunState>(() => createIdleImportRunState());
   const validatorSelectionQueryKeyRef = useRef('');
   const pendingCellSyncTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -497,6 +528,43 @@ export function useEntityImportController<TPayload, TResult>({
   const resetImportRun = useCallback(() => {
     setImportRun(createIdleImportRunState());
   }, []);
+
+  const clearValidatorPreview = useCallback(() => {
+    setValidatorPreviewState(createIdleValidatorPreviewState());
+  }, []);
+
+  const clearValidatorPreviewForCell = useCallback((rowId: string, fieldPath: string) => {
+    setValidatorPreviewState((current) =>
+      current.rowId === rowId && current.fieldPath === fieldPath
+        ? createIdleValidatorPreviewState()
+        : current
+    );
+  }, []);
+
+  const updateValidatorPreview = useCallback(
+    ({
+      rowId,
+      fieldPath,
+      value,
+    }: {
+      rowId: string;
+      fieldPath: string;
+      value: ValidatorDraftValue | null;
+    }) => {
+      setValidatorPreviewState(
+        value
+          ? {
+              rowId,
+              fieldPath,
+              rawValue: value.rawValue,
+              displayValue: value.displayValue ?? null,
+              parsedValue: value.parsedValue,
+            }
+          : createIdleValidatorPreviewState()
+      );
+    },
+    []
+  );
 
   const beginImportRun = useCallback((rows: Array<IImportRowState>) => {
     setImportRun(createRunningImportRunState(rows));
@@ -756,6 +824,7 @@ export function useEntityImportController<TPayload, TResult>({
         const allowResolvedSuggestion = field.remote?.autoResolveResolvedSuggestion !== false;
 
         if (matchedSuggestion) {
+          clearValidatorPreviewForCell(rowId, fieldPath);
           commit(
             (current) =>
               resolveCellSuggestion(current, {
@@ -846,7 +915,7 @@ export function useEntityImportController<TPayload, TResult>({
         completeCsvRowValidationTarget(rowId);
       }
     },
-    [adapter.fields, commit, completeCsvRowValidationTarget, context]
+    [adapter.fields, clearValidatorPreviewForCell, commit, completeCsvRowValidationTarget, context]
   );
 
   const runBackgroundImportedCellHydration = useCallback(
@@ -1024,6 +1093,7 @@ export function useEntityImportController<TPayload, TResult>({
           );
           const allowResolvedSuggestion = field.remote?.autoResolveResolvedSuggestion !== false;
           if (matchedSuggestion) {
+            clearValidatorPreviewForCell(rowId, fieldPath);
             commit(
               (current) =>
                 resolveCellSuggestion(current, {
@@ -1121,6 +1191,7 @@ export function useEntityImportController<TPayload, TResult>({
           localSuggestions
         );
         if (matchedSuggestion) {
+          clearValidatorPreviewForCell(rowId, fieldPath);
           commit(
             (current) =>
               resolveCellSuggestion(current, {
@@ -1156,7 +1227,7 @@ export function useEntityImportController<TPayload, TResult>({
 
       await runDirectRemoteValidation({ rowId, fieldPath, query: normalizedQuery });
     },
-    [adapter.fields, commit, context, runDirectRemoteValidation]
+    [adapter.fields, clearValidatorPreviewForCell, commit, context, runDirectRemoteValidation]
   );
 
   const clearPendingCellSync = useCallback((rowId: string, fieldPath: string) => {
@@ -1249,6 +1320,10 @@ export function useEntityImportController<TPayload, TResult>({
         currentCell.remoteState.selectedSuggestion?.value !== autoResolvedSuggestion.value ||
         currentCell.rawValue.trim() !== autoResolvedSuggestion.label.trim())
     ) {
+      clearValidatorPreviewForCell(
+        validatorSuggestionRequest.rowId,
+        validatorSuggestionRequest.fieldPath
+      );
       commit(
         (current) =>
           resolveCellSuggestion(current, {
@@ -1306,6 +1381,7 @@ export function useEntityImportController<TPayload, TResult>({
     });
   }, [
     adapter.fields,
+    clearValidatorPreviewForCell,
     commit,
     validatorSuggestionRequest,
     validatorSuggestionsInfinite.data,
@@ -1338,6 +1414,7 @@ export function useEntityImportController<TPayload, TResult>({
         validatorSuggestions.rowId === rowId && validatorSuggestions.fieldPath === fieldPath
           ? validatorSuggestions.suggestions
           : currentCell.remoteState.suggestions;
+      const previewValue = createValidatorPreviewValueFromSuggestion(suggestion);
 
       commit(
         (current) =>
@@ -1364,8 +1441,13 @@ export function useEntityImportController<TPayload, TResult>({
             }
           : current
       );
+      updateValidatorPreview({
+        rowId,
+        fieldPath,
+        value: doesValidatorDraftMatchCell(currentCell, previewValue) ? null : previewValue,
+      });
     },
-    [clearPendingCellSync, commit, validatorSuggestions]
+    [clearPendingCellSync, commit, updateValidatorPreview, validatorSuggestions]
   );
 
   useEffect(() => {
@@ -1410,6 +1492,7 @@ export function useEntityImportController<TPayload, TResult>({
 
   const selectCell = useCallback(
     ({ rowId, fieldPath }: { rowId: string; fieldPath: string }) => {
+      clearValidatorPreview();
       commit((current) => selectCellState(current, { rowId, fieldPath }), { validate: false });
 
       const row = findRow(sessionRef.current, rowId);
@@ -1419,27 +1502,29 @@ export function useEntityImportController<TPayload, TResult>({
         void requestValidatorSuggestions({ rowId, fieldPath, query, source: 'selection' });
       }
     },
-    [adapter.fields, commit, requestValidatorSuggestions]
+    [adapter.fields, clearValidatorPreview, commit, requestValidatorSuggestions]
   );
 
   const setValidatorSelection = useCallback(
     ({ rowId, fieldPath }: { rowId?: string | null; fieldPath?: string | null }) => {
+      clearValidatorPreview();
       commit((current) => setValidatorSelectionState(current, { rowId, fieldPath }), {
         validate: false,
       });
     },
-    [commit]
+    [clearValidatorPreview, commit]
   );
 
   const updateCellValue = useCallback(
     ({ rowId, fieldPath, rawValue }: { rowId: string; fieldPath: string; rawValue: string }) => {
+      clearValidatorPreview();
       resetImportRun();
       commit((current) => updateCellRawValue(current, { rowId, fieldPath, rawValue }), {
         rowIds: [rowId],
       });
       scheduleDeferredCellSync({ rowId, fieldPath, rawValue });
     },
-    [commit, resetImportRun, scheduleDeferredCellSync]
+    [clearValidatorPreview, commit, resetImportRun, scheduleDeferredCellSync]
   );
 
   const setFileValue = useCallback(
@@ -1471,6 +1556,7 @@ export function useEntityImportController<TPayload, TResult>({
 
       const nextRawValue = displayValue ?? getImportFileDisplayValue(files);
       const resolvedDisplayValue = nextRawValue || null;
+      clearValidatorPreview();
       resetImportRun();
       commit(
         (current) =>
@@ -1484,7 +1570,7 @@ export function useEntityImportController<TPayload, TResult>({
         { rowIds: [rowId] }
       );
     },
-    [adapter.fields, commit, resetImportRun]
+    [adapter.fields, clearValidatorPreview, commit, resetImportRun]
   );
 
   const setCustomValue = useCallback(
@@ -1502,6 +1588,7 @@ export function useEntityImportController<TPayload, TResult>({
       parsedValue?: unknown;
     }) => {
       clearPendingCellSync(rowId, fieldPath);
+      clearValidatorPreview();
       resetImportRun();
       commit(
         (current) =>
@@ -1515,37 +1602,41 @@ export function useEntityImportController<TPayload, TResult>({
         { rowIds: [rowId] }
       );
     },
-    [clearPendingCellSync, commit, resetImportRun]
+    [clearPendingCellSync, clearValidatorPreview, commit, resetImportRun]
   );
 
   const addRow = useCallback(() => {
     const blankRow = adapter.createBlankRow?.();
+    clearValidatorPreview();
     resetImportRun();
     commit((current) => appendEmptyRow(current, blankRow));
-  }, [adapter, commit, resetImportRun]);
+  }, [adapter, clearValidatorPreview, commit, resetImportRun]);
 
   const clearRow = useCallback(
     (rowId: string) => {
       const blankRow = adapter.createBlankRow?.();
+      clearValidatorPreview();
       resetImportRun();
       commit((current) => clearSessionRow(current, { rowId, values: blankRow }), {
         rowIds: [rowId],
       });
     },
-    [adapter, commit, resetImportRun]
+    [adapter, clearValidatorPreview, commit, resetImportRun]
   );
 
   const deleteRow = useCallback(
     (rowId: string) => {
+      clearValidatorPreview();
       resetImportRun();
       commit((current) => deleteSessionRow(current, { rowId }));
     },
-    [commit, resetImportRun]
+    [clearValidatorPreview, commit, resetImportRun]
   );
 
   const applySuggestion = useCallback(
     (params: Parameters<IEntityImportActions['applySuggestion']>[0]) => {
       clearPendingCellSync(params.targetRowId, params.fieldPath);
+      clearValidatorPreview();
       resetImportRun();
       commit(
         (current) =>
@@ -1559,29 +1650,31 @@ export function useEntityImportController<TPayload, TResult>({
         }
       );
     },
-    [clearPendingCellSync, commit, resetImportRun]
+    [clearPendingCellSync, clearValidatorPreview, commit, resetImportRun]
   );
 
   const acceptCorrection = useCallback(
     (params: { rowId: string; fieldPath: string }) => {
       clearPendingCellSync(params.rowId, params.fieldPath);
+      clearValidatorPreview();
       resetImportRun();
       commit((current) => acceptCorrectionDraft(current, params), {
         rowIds: [params.rowId],
       });
     },
-    [clearPendingCellSync, commit, resetImportRun]
+    [clearPendingCellSync, clearValidatorPreview, commit, resetImportRun]
   );
 
   const rejectCorrection = useCallback(
     (params: { rowId: string; fieldPath: string }) => {
       clearPendingCellSync(params.rowId, params.fieldPath);
+      clearValidatorPreview();
       resetImportRun();
       commit((current) => rejectCorrectionDraft(current, params), {
         rowIds: [params.rowId],
       });
     },
-    [clearPendingCellSync, commit, resetImportRun]
+    [clearPendingCellSync, clearValidatorPreview, commit, resetImportRun]
   );
 
   const dismissFeatureNotification = useCallback(
@@ -1594,6 +1687,7 @@ export function useEntityImportController<TPayload, TResult>({
   const handleCsvUpload = useCallback(
     async (file: File) => {
       try {
+        clearValidatorPreview();
         resetImportRun();
         setCsvUploadPhase(CsvUploadPhase.Parsing);
         setCsvUploadNotifications([]);
@@ -1704,6 +1798,7 @@ export function useEntityImportController<TPayload, TResult>({
     [
       adapter.fields,
       beginCsvRowValidationProgress,
+      clearValidatorPreview,
       clearValidatorSuggestions,
       context,
       resetImportRun,
@@ -1837,12 +1932,15 @@ export function useEntityImportController<TPayload, TResult>({
   });
 
   const submitRows = useCallback(() => {
-    if (!sessionRef.current.summary.canSubmit) {
+    if (
+      !sessionRef.current.summary.canSubmit ||
+      (validatorPreview.rowId !== null && validatorPreview.fieldPath !== null)
+    ) {
       return;
     }
 
     importMutation.mutate();
-  }, [importMutation]);
+  }, [importMutation, validatorPreview.fieldPath, validatorPreview.rowId]);
 
   const actions = useMemo<IEntityImportActions>(
     () => ({
@@ -1859,6 +1957,7 @@ export function useEntityImportController<TPayload, TResult>({
       loadMoreSuggestions,
       selectCell,
       setValidatorSelection,
+      setValidatorPreview: updateValidatorPreview,
       setCustomValue,
       setFileValue,
       submitRows,
@@ -1877,6 +1976,7 @@ export function useEntityImportController<TPayload, TResult>({
       loadMoreSuggestions,
       selectCell,
       setValidatorSelection,
+      updateValidatorPreview,
       setCustomValue,
       setFileValue,
       submitRows,
@@ -1892,6 +1992,7 @@ export function useEntityImportController<TPayload, TResult>({
     csvUploadPhase,
     csvRowValidationProgress,
     csvUploadNotifications,
+    validatorPreview,
     validatorSuggestions,
     dismissCsvUploadNotifications,
     downloadCsvTemplate,

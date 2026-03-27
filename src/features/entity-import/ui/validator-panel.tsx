@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { RiInfoI, RiSearchLine } from '@remixicon/react';
 import { DatePicker } from 'antd';
-import { type CSSProperties, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useId, useRef } from 'react';
 
 import {
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
@@ -70,6 +70,7 @@ import type {
   IAdapterFieldDefinition,
   IEntityImportActions,
   IEntityImportAdapter,
+  IValidatorPreviewState,
   IValidatorSuggestionState,
   ValidatorDraftValue,
 } from '@/features/entity-import/core/adapter';
@@ -81,6 +82,7 @@ interface ValidatorPanelProps<TPayload, TResult> {
   actions: IEntityImportActions;
   isSubmitting: boolean;
   importRun: IImportRunState;
+  validatorPreview: IValidatorPreviewState;
   validatorSuggestions: IValidatorSuggestionState;
 }
 
@@ -304,19 +306,23 @@ function createValidatorDraftValue(
   };
 }
 
-function createManualDraftSuggestion(draftValue: ValidatorDraftValue): ISuggestion {
-  const label = draftValue.displayValue ?? draftValue.rawValue;
+function doesDraftMatchSuggestion(
+  draftValue: ValidatorDraftValue,
+  suggestion: ISuggestion | null
+): suggestion is ISuggestion {
+  if (!suggestion) {
+    return false;
+  }
 
-  return {
-    value: draftValue.rawValue,
-    label,
-    metadata:
-      draftValue.parsedValue === undefined
-        ? undefined
-        : {
-            parsedValue: draftValue.parsedValue,
-          },
-  };
+  return (
+    draftValue.rawValue === suggestion.label &&
+    (draftValue.displayValue ?? suggestion.label) === suggestion.label &&
+    Object.is(
+      draftValue.parsedValue,
+      (suggestion.metadata as { parsedValue?: unknown } | undefined)?.parsedValue ??
+        suggestion.value
+    )
+  );
 }
 
 function isDraftValueUnchanged(
@@ -357,8 +363,46 @@ function resolveTableBodyContainer(trigger: HTMLElement | null): HTMLElement | n
   return queryTableBodyContainer(root);
 }
 
+function rememberTableBodyScrollTop(trigger: HTMLElement | null, scrollTop: number | null): void {
+  const root = trigger?.closest('[data-entity-import-root]');
+  if (!(root instanceof HTMLElement) || scrollTop === null) {
+    return;
+  }
+
+  if (scrollTop !== 0 || !root.dataset.entityImportScrollTop) {
+    root.dataset.entityImportScrollTop = String(scrollTop);
+  }
+}
+
+function readRememberedTableBodyScrollTop(trigger: HTMLElement | null): number | null {
+  const root = trigger?.closest('[data-entity-import-root]');
+  if (!(root instanceof HTMLElement)) {
+    return null;
+  }
+
+  const value = Number(root.dataset.entityImportScrollTop ?? '');
+  return Number.isFinite(value) ? value : null;
+}
+
+function resolvePreferredTableBodyScrollTop(
+  trigger: HTMLElement | null,
+  scrollTop: number | null
+): number | null {
+  if (scrollTop === null) {
+    return readRememberedTableBodyScrollTop(trigger);
+  }
+
+  if (scrollTop === 0) {
+    return readRememberedTableBodyScrollTop(trigger) ?? 0;
+  }
+
+  return scrollTop;
+}
+
 function captureTableBodyScrollTop(trigger: HTMLElement | null): number | null {
-  return resolveTableBodyContainer(trigger)?.scrollTop ?? null;
+  const scrollTop = resolveTableBodyContainer(trigger)?.scrollTop ?? null;
+  rememberTableBodyScrollTop(trigger, scrollTop);
+  return scrollTop;
 }
 
 function restoreCapturedTableBodyScroll(
@@ -422,6 +466,7 @@ interface SingleColumnValidatorCardProps {
   session: IImportSessionState;
   context: EntityImportRuntimeContext;
   actions: IEntityImportActions;
+  validatorPreview: IValidatorPreviewState;
   validatorSuggestions: IValidatorSuggestionState;
 }
 
@@ -432,6 +477,7 @@ function SingleColumnValidatorCard({
   session,
   context,
   actions,
+  validatorPreview,
   validatorSuggestions,
 }: SingleColumnValidatorCardProps) {
   const cell = row.cells[field.path];
@@ -440,7 +486,11 @@ function SingleColumnValidatorCard({
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pendingTableScrollTopRef = useRef<number | null>(null);
-  const [manualDraftValue, setManualDraftValue] = useState<ValidatorDraftValue | null>(null);
+  const previewScrollRestoreFrameRef = useRef<number | null>(null);
+  const activeValidatorPreview =
+    validatorPreview.rowId === row.id && validatorPreview.fieldPath === field.path
+      ? validatorPreview
+      : null;
   const stagedDraftValue =
     field.validatorManualApplyMode === ValidatorManualApplyMode.Stage && cell.correctionDraft
       ? {
@@ -451,11 +501,58 @@ function SingleColumnValidatorCard({
               ?.parsedValue ?? cell.correctionDraft.suggestion.value,
         }
       : null;
-  const draftValue = manualDraftValue ?? stagedDraftValue ?? createValidatorDraftValue(cell);
+  const draftValue = activeValidatorPreview ?? stagedDraftValue ?? createValidatorDraftValue(cell);
 
-  const updateDraftValue = useCallback((nextValue: ValidatorDraftValue) => {
-    setManualDraftValue(nextValue);
+  useEffect(() => {
+    return () => {
+      if (previewScrollRestoreFrameRef.current !== null) {
+        cancelAnimationFrame(previewScrollRestoreFrameRef.current);
+      }
+    };
   }, []);
+
+  const preservePreviewTableScroll = useCallback(
+    (trigger: HTMLElement | null, action: () => void) => {
+      const preservedScrollTop = resolvePreferredTableBodyScrollTop(
+        trigger,
+        captureTableBodyScrollTop(trigger)
+      );
+      action();
+
+      if (preservedScrollTop === null) {
+        return;
+      }
+
+      if (previewScrollRestoreFrameRef.current !== null) {
+        cancelAnimationFrame(previewScrollRestoreFrameRef.current);
+      }
+
+      previewScrollRestoreFrameRef.current = requestAnimationFrame(() => {
+        const tableBody = resolveTableBodyContainer(trigger);
+        if (tableBody?.isConnected) {
+          tableBody.scrollTop = preservedScrollTop;
+        }
+        previewScrollRestoreFrameRef.current = null;
+      });
+    },
+    []
+  );
+
+  const updateDraftValue = useCallback(
+    (nextValue: ValidatorDraftValue) => {
+      const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      const nextPreviewValue = isDraftValueUnchanged(cell, nextValue) ? null : nextValue;
+
+      preservePreviewTableScroll(trigger, () => {
+        actions.setValidatorPreview({
+          rowId: row.id,
+          fieldPath: field.path,
+          value: nextPreviewValue,
+        });
+      });
+    },
+    [actions, cell, field.path, preservePreviewTableScroll, row.id]
+  );
 
   const commitManualValueToRow = useCallback(
     (rowId: string) => {
@@ -494,34 +591,21 @@ function SingleColumnValidatorCard({
 
   const handleApply = useCallback(
     (applyToAll: boolean) => {
-      if (selectedSuggestion) {
+      if (doesDraftMatchSuggestion(draftValue, selectedSuggestion)) {
         actions.applySuggestion({
           fieldPath: field.path,
           targetRowId: row.id,
           sourceValue: cell.rawValue,
           suggestion: selectedSuggestion,
           applyToAllMatching: applyToAll,
-          mode: field.validatorManualApplyMode ?? ValidatorManualApplyMode.Stage,
+          mode: ValidatorManualApplyMode.Commit,
         });
-        setManualDraftValue(null);
+        actions.setValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
         return;
       }
 
       if (isDraftValueUnchanged(cell, draftValue)) {
-        setManualDraftValue(null);
-        return;
-      }
-
-      if (field.validatorManualApplyMode === ValidatorManualApplyMode.Stage) {
-        actions.applySuggestion({
-          fieldPath: field.path,
-          targetRowId: row.id,
-          sourceValue: cell.rawValue,
-          suggestion: createManualDraftSuggestion(draftValue),
-          applyToAllMatching: applyToAll,
-          mode: ValidatorManualApplyMode.Stage,
-        });
-        setManualDraftValue(null);
+        actions.setValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
         return;
       }
 
@@ -529,7 +613,7 @@ function SingleColumnValidatorCard({
       targetRows.forEach((targetRow) => {
         commitManualValueToRow(targetRow.id);
       });
-      setManualDraftValue(null);
+      actions.setValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
     },
     [
       actions,
@@ -537,19 +621,22 @@ function SingleColumnValidatorCard({
       commitManualValueToRow,
       draftValue,
       field.path,
-      field.validatorManualApplyMode,
       row,
       selectedSuggestion,
       session.rows,
     ]
   );
   const captureApplyScrollPosition = useCallback((trigger: HTMLElement | null) => {
-    pendingTableScrollTopRef.current = captureTableBodyScrollTop(trigger);
+    pendingTableScrollTopRef.current = resolvePreferredTableBodyScrollTop(
+      trigger,
+      captureTableBodyScrollTop(trigger)
+    );
   }, []);
   const applyWithPreservedTableScroll = useCallback(
     (trigger: HTMLElement | null, applyToAll: boolean) => {
       const preservedScrollTop =
-        pendingTableScrollTopRef.current ?? captureTableBodyScrollTop(trigger);
+        resolvePreferredTableBodyScrollTop(trigger, pendingTableScrollTopRef.current) ??
+        resolvePreferredTableBodyScrollTop(trigger, captureTableBodyScrollTop(trigger));
       pendingTableScrollTopRef.current = null;
       restoreCapturedTableBodyScroll(trigger, preservedScrollTop, () => handleApply(applyToAll));
     },
@@ -883,7 +970,9 @@ function SingleColumnValidatorCard({
         {shouldShowSuggestions && (
           <div className="px-4 flex flex-col gap-1.5">
             {visibleSuggestions.map((suggestion) => {
-              const isSelected = selectedSuggestion?.value === suggestion.value;
+              const isSelected =
+                doesDraftMatchSuggestion(draftValue, selectedSuggestion) &&
+                selectedSuggestion.value === suggestion.value;
               const suggestionDetails = field.validatorSuggestionDetails?.({
                 suggestion,
                 cell,
@@ -908,12 +997,14 @@ function SingleColumnValidatorCard({
                     className={cn(
                       'flex min-w-0 flex-1 items-center gap-3 overflow-hidden whitespace-normal text-left text-base'
                     )}
-                    onClick={() =>
-                      actions.chooseSuggestion({
-                        rowId: row.id,
-                        fieldPath: field.path,
-                        suggestion,
-                      })
+                    onClick={(event) =>
+                      preservePreviewTableScroll(event.currentTarget, () =>
+                        actions.chooseSuggestion({
+                          rowId: row.id,
+                          fieldPath: field.path,
+                          suggestion,
+                        })
+                      )
                     }
                   >
                     <div className="min-w-0 flex-1 text-left">
@@ -1053,6 +1144,7 @@ export function ValidatorPanel<TPayload, TResult>({
   actions,
   isSubmitting,
   importRun,
+  validatorPreview,
   validatorSuggestions,
 }: ValidatorPanelProps<TPayload, TResult>) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -1073,6 +1165,8 @@ export function ValidatorPanel<TPayload, TResult>({
   const submitProgressPercent = resolveImportRunProgressPercent(importRun);
   const submitButtonTone = resolveSubmitButtonTone(importRun);
   const submitButtonLabel = resolveSubmitButtonLabel(adapter, session, importRun);
+  const hasPendingValidatorPreview =
+    validatorPreview.rowId !== null && validatorPreview.fieldPath !== null;
   const showImportFailureTooltip =
     importRun.phase === ImportRunPhase.Completed && importRun.failureCards.length > 0;
   const validatorScrollResetKey = `${session.validatorSelection.rowId ?? ''}:${session.validatorSelection.fieldPath ?? ''}:${validatorSuggestions.query}`;
@@ -1215,6 +1309,7 @@ export function ValidatorPanel<TPayload, TResult>({
                     session={session}
                     context={context}
                     actions={actions}
+                    validatorPreview={validatorPreview}
                     validatorSuggestions={validatorSuggestions}
                   />
                 </section>
@@ -1229,6 +1324,7 @@ export function ValidatorPanel<TPayload, TResult>({
               session={session}
               context={context}
               actions={actions}
+              validatorPreview={validatorPreview}
               validatorSuggestions={validatorSuggestions}
             />
           ) : null}
@@ -1256,7 +1352,7 @@ export function ValidatorPanel<TPayload, TResult>({
             )}
             style={submitButtonStyle}
             data-import-run-tone={submitButtonTone}
-            disabled={!session.summary.canSubmit || isSubmitting}
+            disabled={!session.summary.canSubmit || isSubmitting || hasPendingValidatorPreview}
             onClick={() => void actions.submitRows()}
           >
             <span
