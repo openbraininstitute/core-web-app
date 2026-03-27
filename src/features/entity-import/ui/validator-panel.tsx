@@ -55,6 +55,10 @@ import {
   ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
   getEntityImportSelectLabel,
 } from '@/features/entity-import/core/shared/ui';
+import {
+  type TValidatorFieldStatus,
+  ValidatorFieldStatus,
+} from '@/features/entity-import/core/summary';
 import { Alert, AlertContent, AlertDescription } from '@/ui/molecules/alert';
 import { Button } from '@/ui/molecules/button';
 import { Card, CardContent } from '@/ui/molecules/card';
@@ -91,39 +95,18 @@ interface IValidatorPanelProps<TPayload, TResult> {
   importRun: IImportRunState;
   validatorPreview: IValidatorPreviewState;
   validatorSuggestions: IValidatorSuggestionState;
+  fieldStatusMap: Record<string, TValidatorFieldStatus>;
+  rowsSummaryStatus: TValidatorFieldStatus;
   collapsed: boolean;
   hoverExpanded: boolean;
   onToggleCollapsed: () => void;
   onHoverExpandedChange: (expanded: boolean) => void;
 }
 
-const ValidatorFieldStatus = {
-  Idle: 'idle',
-  Valid: 'valid',
-  Warning: 'warning',
-} as const;
-
-type TValidatorFieldStatus = (typeof ValidatorFieldStatus)[keyof typeof ValidatorFieldStatus];
 const VALIDATOR_SUGGESTION_SKELETON_KEYS = Array.from(
   { length: ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE },
   (_, index) => `validator-suggestion-skeleton-${index}`
 );
-
-function resolveFieldStatus(
-  session: IImportSessionState,
-  fieldPath: string
-): TValidatorFieldStatus {
-  const cells = session.rows.map((row) => row.cells[fieldPath]);
-  if (
-    cells.some((cell) => cell.status === CellStatus.Invalid || cell.status === CellStatus.Disabled)
-  ) {
-    return ValidatorFieldStatus.Warning;
-  }
-  if (cells.length > 0 && cells.every((cell) => cell.status === CellStatus.Valid)) {
-    return ValidatorFieldStatus.Valid;
-  }
-  return ValidatorFieldStatus.Idle;
-}
 
 function resolveActiveRow(session: IImportSessionState): IImportRowState | null {
   if (session.validatorSelection.rowId) {
@@ -169,36 +152,6 @@ function resolveRowStatus<TPayload, TResult>(
   }
 
   if (row.rowStatus === RowStatus.Valid) {
-    return ValidatorFieldStatus.Valid;
-  }
-
-  return ValidatorFieldStatus.Idle;
-}
-
-function resolveRowsSummaryStatus<TPayload, TResult>(
-  adapter: IEntityImportAdapter<TPayload, TResult>,
-  session: IImportSessionState
-): TValidatorFieldStatus {
-  if (session.rows.some((row) => row.rowStatus === RowStatus.Invalid)) {
-    return ValidatorFieldStatus.Warning;
-  }
-
-  if (
-    session.rows.some((row) =>
-      adapter.fields.some((field) => {
-        if (field.required) {
-          return false;
-        }
-
-        const cell = row.cells[field.path];
-        return cell.status === CellStatus.Invalid || cell.status === CellStatus.Disabled;
-      })
-    )
-  ) {
-    return ValidatorFieldStatus.Idle;
-  }
-
-  if (session.rows.length > 0 && session.rows.every((row) => row.rowStatus === RowStatus.Valid)) {
     return ValidatorFieldStatus.Valid;
   }
 
@@ -771,10 +724,18 @@ function SingleColumnValidatorCard({
         return;
       }
 
-      const targetRows = applyToAll ? session.rows : [row];
-      targetRows.forEach((targetRow) => {
-        commitManualValueToRow(targetRow.id);
-      });
+      if (applyToAll) {
+        // Batch all rows into a single commit instead of N individual commits.
+        actions.applyManualValueToAll({
+          fieldPath: field.path,
+          targetRowIds: session.rows.map((r) => r.id),
+          rawValue: draftValue.rawValue,
+          displayValue: draftValue.displayValue,
+          parsedValue: draftValue.parsedValue,
+        });
+      } else {
+        commitManualValueToRow(row.id);
+      }
       actions.setValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
     },
     [
@@ -1272,6 +1233,8 @@ export function ValidatorPanel<TPayload, TResult>({
   importRun,
   validatorPreview,
   validatorSuggestions,
+  fieldStatusMap,
+  rowsSummaryStatus,
   collapsed,
   hoverExpanded,
   onToggleCollapsed,
@@ -1433,7 +1396,7 @@ export function ValidatorPanel<TPayload, TResult>({
                   >
                     <span className="flex text-base w-full items-center justify-between gap-6">
                       <span>All</span>
-                      <ValidationStatusIcon status={resolveRowsSummaryStatus(adapter, session)} />
+                      <ValidationStatusIcon status={rowsSummaryStatus} />
                     </span>
                   </SelectItem>
                   <SelectSeparator className="mx-3 my-1 bg-neutral-200" />
@@ -1450,7 +1413,9 @@ export function ValidatorPanel<TPayload, TResult>({
                     >
                       <span className="flex text-base w-full items-center justify-between gap-6">
                         <span>{index + 1}</span>
-                        <ValidationStatusIcon status={resolveFieldStatus(session, field.path)} />
+                        <ValidationStatusIcon
+                          status={fieldStatusMap[field.path] ?? ValidatorFieldStatus.Idle}
+                        />
                       </span>
                     </SelectItem>
                   ))}

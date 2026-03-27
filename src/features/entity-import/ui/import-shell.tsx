@@ -59,6 +59,11 @@ interface IImportShellProps<TPayload, TResult> {
     message: string;
   }>;
   validatorSuggestions: IValidatorSuggestionState;
+  fieldStatusMap: Record<
+    string,
+    import('@/features/entity-import/core/summary').TValidatorFieldStatus
+  >;
+  rowsSummaryStatus: import('@/features/entity-import/core/summary').TValidatorFieldStatus;
   onClose: () => void;
   onDismissCsvUploadNotifications: () => void;
   onDownloadCsvTemplate: () => void;
@@ -192,6 +197,8 @@ export function ImportShell<TPayload, TResult>({
   csvRowValidationProgress,
   csvUploadNotifications,
   validatorSuggestions,
+  fieldStatusMap,
+  rowsSummaryStatus,
   onClose,
   onDismissCsvUploadNotifications,
   onDownloadCsvTemplate,
@@ -443,6 +450,8 @@ export function ImportShell<TPayload, TResult>({
             importRun={importRun}
             validatorPreview={validatorPreview}
             validatorSuggestions={validatorSuggestions}
+            fieldStatusMap={fieldStatusMap}
+            rowsSummaryStatus={rowsSummaryStatus}
             collapsed={validatorCollapsed}
             hoverExpanded={validatorHoverExpanded}
             onToggleCollapsed={toggleValidatorCollapsed}
