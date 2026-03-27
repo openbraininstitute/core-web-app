@@ -38,7 +38,7 @@ export default function SonataViewer({
     ?.path.split('/')
     .pop();
   const report = useSimulationReport(assetFileName);
-  const variableName = report?.variable_name;
+  const variableName = report?.variable_name !== 'v' ? report?.variable_name : undefined;
 
   const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
   const [defaultPopulation, setDefaultPopulation] = useState<string>();
