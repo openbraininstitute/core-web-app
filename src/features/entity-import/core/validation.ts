@@ -224,7 +224,18 @@ export function validateSessionRows<TPayload>({
   });
 
   const resolvedRows = didChange ? nextRows : session.rows;
-  const summary = summaryModule.summarizeImportRows(resolvedRows, fields);
+
+  // Use incremental summary when we know exactly which rows changed.
+  const summary =
+    rowIdSet && didChange
+      ? summaryModule.summarizeImportRowsIncremental(
+          session.rows,
+          resolvedRows,
+          fields,
+          session.summary,
+          rowIdSet
+        )
+      : summaryModule.summarizeImportRows(resolvedRows, fields);
 
   return replaceSessionRows(session, resolvedRows, { summary });
 }

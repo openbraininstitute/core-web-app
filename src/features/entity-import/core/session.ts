@@ -104,16 +104,31 @@ function cloneRemoteState(
 export function replaceSessionRows(
   session: IImportSessionState,
   nextRows: Array<IImportRowState>,
-  options?: { summary?: IImportSessionState['summary'] }
+  options?: {
+    summary?: IImportSessionState['summary'];
+    changedRowIds?: Set<string>;
+  }
 ): IImportSessionState {
   if (nextRows === session.rows && !options?.summary) {
     return session;
   }
 
+  const summary =
+    options?.summary ??
+    (options?.changedRowIds
+      ? summaryModule.summarizeImportRowsIncremental(
+          session.rows,
+          nextRows,
+          session.fields,
+          session.summary,
+          options.changedRowIds
+        )
+      : summaryModule.summarizeImportRows(nextRows, session.fields));
+
   return {
     ...session,
     rows: nextRows,
-    summary: options?.summary ?? summaryModule.summarizeImportRows(nextRows, session.fields),
+    summary,
   };
 }
 
@@ -631,5 +646,56 @@ export function rejectCorrectionDraft(
         },
       },
     };
+  });
+}
+
+/**
+ * Batch-apply a manual value to multiple rows in a single pass.
+ * This replaces the per-row loop that previously dispatched N individual commits.
+ */
+export function applyValueToRows(
+  session: IImportSessionState,
+  params: {
+    fieldPath: string;
+    targetRowIds: Array<string>;
+    rawValue: string;
+    displayValue?: string | null;
+    parsedValue?: unknown;
+  }
+): IImportSessionState {
+  const targetSet = new Set(params.targetRowIds);
+  let didChange = false;
+  const nextRows = session.rows.map((row) => {
+    if (!targetSet.has(row.id)) {
+      return row;
+    }
+
+    const currentCell = row.cells[params.fieldPath];
+    if (!currentCell) {
+      return row;
+    }
+
+    didChange = true;
+    return {
+      ...row,
+      cells: {
+        ...row.cells,
+        [params.fieldPath]: {
+          ...currentCell,
+          rawValue: params.rawValue,
+          displayValue: params.displayValue ?? null,
+          parsedValue: params.parsedValue ?? params.rawValue,
+          status: CellStatus.Idle,
+          issues: [],
+          dependencyState: DependencyState.Ready,
+          remoteState: createIdleRemoteState(),
+          correctionDraft: null,
+        },
+      },
+    };
+  });
+
+  return replaceSessionRows(session, didChange ? nextRows : session.rows, {
+    changedRowIds: targetSet,
   });
 }

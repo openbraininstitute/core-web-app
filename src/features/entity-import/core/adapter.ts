@@ -251,4 +251,11 @@ export interface IEntityImportActions {
   }) => void;
   submitRows: () => void;
   updateCellValue: (params: { rowId: string; fieldPath: string; rawValue: string }) => void;
+  applyManualValueToAll: (params: {
+    fieldPath: string;
+    targetRowIds: Array<string>;
+    rawValue: string;
+    displayValue?: string | null;
+    parsedValue?: unknown;
+  }) => void;
 }
