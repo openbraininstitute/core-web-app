@@ -244,7 +244,14 @@ export function createCellMorphologyImportServices(): ICellMorphologyImportServi
       return makeRemoteSearchResult({
         suggestions: response.data
           .filter((subject) => normalizeQuery(subject.name) !== 'unknown')
-          .map((subject) => makeSuggestion(subject.id, subject.name)),
+          .map((subject) =>
+            makeSuggestion(subject.id, subject.name, subject.description, {
+              species: subject.species?.name ?? null,
+              strain: subject.strain?.name ?? null,
+              sex: subject.sex,
+              age: subject.age_value ? `${(subject.age_value ?? 0) / 86400} days` : null,
+            })
+          ),
         pageParam: paging.pageParam,
         pageSize: paging.pageSize,
         totalItems: response.pagination.total_items,

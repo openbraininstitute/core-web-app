@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import {
@@ -6,9 +6,11 @@ import {
   DependencyState,
   type IImportFieldDefinition,
   ImportInputType,
+  RemoteValidationStatus,
   RowStatus,
 } from './contracts';
 import { createImportSessionState, hydrateSessionRows } from './session';
+import * as summaryModule from './summary';
 import { validateSessionRows } from './validation';
 
 import type { IAdapterFieldDefinition } from './adapter';
@@ -82,6 +84,45 @@ describe('validateSessionRows', () => {
     expect(next.rows[0].rowStatus).toBe(RowStatus.Valid);
     expect(next.summary.canSubmit).toBe(true);
     expect(next.summary.invalidRequiredCellCount).toBe(0);
+  });
+
+  it('preserves submit summary semantics while using the shared summary helper once', () => {
+    const session = createImportSessionState({
+      fields,
+      rows: [
+        { name: 'Neuron A', species: 'Mouse', brainRegion: 'Isocortex' },
+        { name: 'Neuron B', species: '', brainRegion: 'Thalamus' },
+      ],
+    });
+    session.rows[0].cells.brainRegion.remoteState = {
+      status: RemoteValidationStatus.Valid,
+      suggestions: [],
+      selectedSuggestion: null,
+      message: null,
+    };
+
+    const summarySpy = vi.spyOn(summaryModule, 'summarizeImportRows');
+
+    try {
+      const next = validateSessionRows({
+        session,
+        fields,
+        schema,
+        buildPayload({ values }) {
+          return values;
+        },
+      });
+
+      expect(next.rows[0].rowStatus).toBe(RowStatus.Valid);
+      expect(next.rows[1].rowStatus).toBe(RowStatus.Invalid);
+      expect(next.summary).toEqual({
+        canSubmit: false,
+        invalidRequiredCellCount: 2,
+      });
+      expect(summarySpy).toHaveBeenCalledTimes(1);
+    } finally {
+      summarySpy.mockRestore();
+    }
   });
 
   it('merges field-local validation issues for hydrated compound csv cells', () => {

@@ -13,6 +13,7 @@ import {
   RowStatus,
   type TFlatImportValues,
 } from '@/features/entity-import/core/contracts';
+import * as summaryModule from '@/features/entity-import/core/summary';
 
 import type { CsvHydratedCellValue } from '@/features/entity-import/core/adapter';
 
@@ -100,18 +101,19 @@ function cloneRemoteState(
     : { ...remoteState };
 }
 
-function replaceRows(
+export function replaceSessionRows(
   session: IImportSessionState,
-  nextRows: Array<IImportRowState>
+  nextRows: Array<IImportRowState>,
+  options?: { summary?: IImportSessionState['summary'] }
 ): IImportSessionState {
-  if (nextRows === session.rows) {
+  if (nextRows === session.rows && !options?.summary) {
     return session;
   }
 
   return {
     ...session,
     rows: nextRows,
-    summary: summarizeSession(nextRows, session.fields),
+    summary: options?.summary ?? summaryModule.summarizeImportRows(nextRows, session.fields),
   };
 }
 
@@ -131,7 +133,7 @@ function updateRowById(
     return nextRow;
   });
 
-  return replaceRows(session, didChange ? nextRows : session.rows);
+  return replaceSessionRows(session, didChange ? nextRows : session.rows);
 }
 
 function updateRows(
@@ -145,7 +147,7 @@ function updateRows(
     return nextRow;
   });
 
-  return replaceRows(session, didChange ? nextRows : session.rows);
+  return replaceSessionRows(session, didChange ? nextRows : session.rows);
 }
 
 function upsertSuggestion(
@@ -159,35 +161,6 @@ function upsertSuggestion(
   }
 
   return [suggestion, ...suggestions];
-}
-
-function summarizeSession(
-  rows: Array<IImportRowState>,
-  fields: Array<IImportFieldDefinition>
-): IImportSessionState['summary'] {
-  let invalidRequiredCellCount = 0;
-
-  rows.forEach((row) => {
-    fields.forEach((field) => {
-      const cell = row.cells[field.path];
-
-      const isEmpty = cell.rawValue.trim() === '';
-      const isInvalid =
-        cell.status === CellStatus.Invalid ||
-        cell.status === CellStatus.Disabled ||
-        cell.remoteState.status === RemoteValidationStatus.Invalid ||
-        cell.remoteState.status === RemoteValidationStatus.Pending;
-
-      if (field.required && (isEmpty || isInvalid)) {
-        invalidRequiredCellCount += 1;
-      }
-    });
-  });
-
-  return {
-    canSubmit: rows.length > 0 && invalidRequiredCellCount === 0,
-    invalidRequiredCellCount,
-  };
 }
 
 function toSelectedCell(
@@ -266,7 +239,7 @@ export function createImportSessionState({
       fieldPath: null,
     },
     notifications: [],
-    summary: summarizeSession(sessionRows, fields),
+    summary: summaryModule.summarizeImportRows(sessionRows, fields),
   };
 }
 
@@ -283,11 +256,7 @@ export function appendEmptyRow(
     ),
   ];
 
-  return {
-    ...session,
-    rows: nextRows,
-    summary: summarizeSession(nextRows, session.fields),
-  };
+  return replaceSessionRows(session, nextRows);
 }
 
 export function clearRow(
@@ -316,7 +285,7 @@ export function deleteRow(
   const nextSelection = resolveSelectionAfterRowDelete(session, params.rowId, nextRows);
 
   return {
-    ...replaceRows(session, nextRows),
+    ...replaceSessionRows(session, nextRows),
     ...nextSelection,
   };
 }
@@ -400,7 +369,7 @@ export function hydrateSessionRows(
       : [];
 
   return {
-    ...replaceRows(session, nextRows),
+    ...replaceSessionRows(session, nextRows),
     notifications: [...notification, ...session.notifications],
   };
 }

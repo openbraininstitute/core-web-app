@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   ENTITY_IMPORT_ALL_COLUMNS,
@@ -22,6 +22,7 @@ import {
   stageSuggestionToRows,
   updateCellRawValue,
 } from './session';
+import * as summaryModule from './summary';
 
 const fields: Array<IImportFieldDefinition> = [
   {
@@ -63,6 +64,27 @@ describe('appendEmptyRow', () => {
     expect(next.rows).toHaveLength(2);
     expect(next.rows[1].cells.name.rawValue).toBe('');
     expect(next.rows[1].cells.brainRegion.rawValue).toBe('');
+  });
+
+  it('keeps session summary correct through the shared summary helper', () => {
+    const session = createImportSessionState({
+      fields,
+      rows: [{ name: 'Neuron A', brainRegion: 'Isocortex' }],
+    });
+
+    const summarySpy = vi.spyOn(summaryModule, 'summarizeImportRows');
+
+    try {
+      const next = appendEmptyRow(session);
+
+      expect(next.summary).toEqual({
+        canSubmit: false,
+        invalidRequiredCellCount: 2,
+      });
+      expect(summarySpy).toHaveBeenCalledTimes(1);
+    } finally {
+      summarySpy.mockRestore();
+    }
   });
 });
 

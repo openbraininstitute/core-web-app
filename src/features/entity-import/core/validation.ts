@@ -11,6 +11,8 @@ import {
   fieldHasSuggestionResolution,
   getRowSubmissionValues,
 } from '@/features/entity-import/core/helpers';
+import { replaceSessionRows } from '@/features/entity-import/core/session';
+import * as summaryModule from '@/features/entity-import/core/summary';
 
 import type { ZodType } from 'zod';
 import type { IAdapterFieldDefinition } from '@/features/entity-import/core/adapter';
@@ -191,35 +193,6 @@ function resolveIssueFieldPath(fields: Array<IAdapterFieldDefinition>, issuePath
   return matchingField?.path ?? issuePath;
 }
 
-function summarize(
-  rows: Array<IImportRowState>,
-  fields: Array<IAdapterFieldDefinition>
-): IImportSessionState['summary'] {
-  let invalidRequiredCellCount = 0;
-
-  rows.forEach((row) => {
-    fields.forEach((field) => {
-      const cell = row.cells[field.path];
-      const isRequiredInvalid =
-        field.required &&
-        (cell.rawValue.trim() === '' ||
-          cell.status === CellStatus.Invalid ||
-          cell.status === CellStatus.Disabled ||
-          cell.remoteState.status === RemoteValidationStatus.Invalid ||
-          cell.remoteState.status === RemoteValidationStatus.Pending);
-
-      if (isRequiredInvalid) {
-        invalidRequiredCellCount += 1;
-      }
-    });
-  });
-
-  return {
-    canSubmit: rows.length > 0 && invalidRequiredCellCount === 0,
-    invalidRequiredCellCount,
-  };
-}
-
 export function validateSessionRows<TPayload>({
   session,
   fields,
@@ -250,9 +223,8 @@ export function validateSessionRows<TPayload>({
     return nextRow;
   });
 
-  return {
-    ...session,
-    rows: didChange ? nextRows : session.rows,
-    summary: summarize(nextRows, fields),
-  };
+  const resolvedRows = didChange ? nextRows : session.rows;
+  const summary = summaryModule.summarizeImportRows(resolvedRows, fields);
+
+  return replaceSessionRows(session, resolvedRows, { summary });
 }

@@ -86,11 +86,11 @@ export function CellStatusBadge({
         >
           <div className="space-y-2 px-1 py-1 text-pretty">
             <div>{tooltipMessage}</div>
-            {isSelectionState ? (
+            {/* {isSelectionState ? (
               <div className="text-neutral-600">
                 Use the validator panel to review the matches and select the correct value.
               </div>
-            ) : null}
+            ) : null} */}
             {extraContent}
           </div>
         </TooltipContent>
