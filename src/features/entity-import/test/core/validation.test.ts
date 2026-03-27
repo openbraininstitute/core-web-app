@@ -8,12 +8,12 @@ import {
   ImportInputType,
   RemoteValidationStatus,
   RowStatus,
-} from './contracts';
-import { createImportSessionState, hydrateSessionRows } from './session';
-import * as summaryModule from './summary';
-import { validateSessionRows } from './validation';
+} from '../../core/contracts';
+import { createImportSessionState, hydrateSessionRows } from '../../core/session';
+import * as summaryModule from '../../core/summary';
+import { validateSessionRows } from '../../core/validation';
 
-import type { IAdapterFieldDefinition } from './adapter';
+import type { IAdapterFieldDefinition } from '../../core/adapter';
 
 const fields: Array<IImportFieldDefinition> = [
   {

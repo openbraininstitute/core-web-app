@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    include: ['src/features/entity-import/**/*.{test,spec}.{ts,tsx}'],
+    include: ['src/features/entity-import/test/**/*.{test,spec}.{ts,tsx}'],
     setupFiles: ['src/features/entity-import/test/setup.ts'],
   },
 });
