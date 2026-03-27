@@ -2,18 +2,24 @@
 
 import { AgentType, type TAgentType } from '@/ui/segments/contribute/shared/types';
 
-import type { EntityImportRuntimeContext } from '@/features/entity-import/core/adapter';
+import type { IEntityImportRuntimeContext } from '@/features/entity-import/core/adapter';
 import type { ISuggestion } from '@/features/entity-import/core/contracts';
 import type { IEntityImportContributionLookupServices } from '@/features/entity-import/core/shared/common-query-services';
 
-type ExactLookupResult =
-  | { status: 'none' }
-  | { status: 'ambiguous' }
-  | { status: 'unique'; suggestion: ISuggestion };
+const ExactLookupResultStatus = {
+  None: 'none',
+  Ambiguous: 'ambiguous',
+  Unique: 'unique',
+} as const;
 
-type ExactLookupCache = Map<string, Promise<ExactLookupResult>>;
+type TExactLookupResult =
+  | { status: typeof ExactLookupResultStatus.None }
+  | { status: typeof ExactLookupResultStatus.Ambiguous }
+  | { status: typeof ExactLookupResultStatus.Unique; suggestion: ISuggestion };
 
-export interface ParsedContributionCsvEntry {
+type TExactLookupCache = Map<string, Promise<TExactLookupResult>>;
+
+export interface IParsedContributionCsvEntry {
   id: string;
   source_tuple: string;
   agent_type?: TAgentType;
@@ -27,13 +33,13 @@ export interface ParsedContributionCsvEntry {
   issues: Array<string>;
 }
 
-export interface ParsedContributionCsvValue {
-  entries: Array<ParsedContributionCsvEntry>;
+export interface IParsedContributionCsvValue {
+  entries: Array<IParsedContributionCsvEntry>;
   issues: Array<string>;
 }
 
 const CONTRIBUTION_TUPLE_ERROR =
-  'Contributions must be provided as tuples in the form `[(type, name, role), ...]`.';
+  'Contributions must be provided as tuples in the form [(type, name, role), ...].';
 const EXACT_QUERY_PAGE_SIZE = 100;
 
 const CONTRIBUTOR_QUERY_FIELDS = {
@@ -46,7 +52,7 @@ function normalizeToken(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function createEntry(index: number, tupleText: string): ParsedContributionCsvEntry {
+function createEntry(index: number, tupleText: string): IParsedContributionCsvEntry {
   return {
     id: `csv-contribution-${index + 1}`,
     source_tuple: tupleText,
@@ -61,7 +67,7 @@ function createEntry(index: number, tupleText: string): ParsedContributionCsvEnt
 function createStructureOnlyContributionEntry(
   tupleText: string,
   index: number
-): ParsedContributionCsvEntry {
+): IParsedContributionCsvEntry {
   const entry = createEntry(index, tupleText);
   const contributionNumber = index + 1;
   const tokens = splitTupleTokens(tupleText);
@@ -201,7 +207,7 @@ function resolveAgentTypeToken(token: string): TAgentType | null {
   return match?.key ?? null;
 }
 
-function toExactLookupResult(suggestions: Array<ISuggestion>, query: string): ExactLookupResult {
+function toExactLookupResult(suggestions: Array<ISuggestion>, query: string): TExactLookupResult {
   const normalizedQuery = normalizeToken(query);
   const matches = suggestions.filter(
     (suggestion) =>
@@ -211,20 +217,20 @@ function toExactLookupResult(suggestions: Array<ISuggestion>, query: string): Ex
 
   if (matches.length === 1) {
     return {
-      status: 'unique',
+      status: ExactLookupResultStatus.Unique,
       suggestion: matches[0],
     };
   }
 
   if (matches.length > 1) {
-    return { status: 'ambiguous' };
+    return { status: ExactLookupResultStatus.Ambiguous };
   }
 
-  return { status: 'none' };
+  return { status: ExactLookupResultStatus.None };
 }
 
 function setContributorMatch(
-  entry: ParsedContributionCsvEntry,
+  entry: IParsedContributionCsvEntry,
   params: {
     agentType: TAgentType;
     suggestion: ISuggestion;
@@ -236,13 +242,13 @@ function setContributorMatch(
   entry.imported_agent_text = undefined;
 }
 
-function setRoleMatch(entry: ParsedContributionCsvEntry, suggestion: ISuggestion) {
+function setRoleMatch(entry: IParsedContributionCsvEntry, suggestion: ISuggestion) {
   entry.role_id = suggestion.value;
   entry.role_label = suggestion.label;
   entry.imported_role_text = undefined;
 }
 
-function addMissingFieldIssues(entry: ParsedContributionCsvEntry, contributionNumber: number) {
+function addMissingFieldIssues(entry: IParsedContributionCsvEntry, contributionNumber: number) {
   if (!entry.agent_id && !entry.issues.some((issue) => issue.includes('Contributor'))) {
     entry.issues.push(`Contributor is required for contribution ${contributionNumber}.`);
   }
@@ -260,16 +266,16 @@ async function queryExactMatch({
   queryField,
   context,
 }: {
-  cache: ExactLookupCache;
+  cache: TExactLookupCache;
   cacheKey: string;
   query: string;
   querySuggestions: IEntityImportContributionLookupServices[keyof IEntityImportContributionLookupServices];
   queryField: 'pref_label__ilike' | 'name__ilike';
-  context: EntityImportRuntimeContext;
-}): Promise<ExactLookupResult> {
+  context: IEntityImportRuntimeContext;
+}): Promise<TExactLookupResult> {
   const normalizedQuery = normalizeToken(query);
   if (!normalizedQuery) {
-    return { status: 'none' };
+    return { status: ExactLookupResultStatus.None };
   }
 
   const cachedLookup = cache.get(cacheKey);
@@ -297,8 +303,8 @@ async function resolveContributorTokenAcrossAllTypes({
 }: {
   token: string;
   services: IEntityImportContributionLookupServices;
-  context: EntityImportRuntimeContext;
-  cache: ExactLookupCache;
+  context: IEntityImportRuntimeContext;
+  cache: TExactLookupCache;
 }) {
   const matches = await Promise.all(
     (
@@ -324,23 +330,25 @@ async function resolveContributorTokenAcrossAllTypes({
     (
       match
     ): match is { agentType: TAgentType; result: { status: 'unique'; suggestion: ISuggestion } } =>
-      match.result.status === 'unique'
+      match.result.status === ExactLookupResultStatus.Unique
   );
-  const hasAmbiguousMatch = matches.some((match) => match.result.status === 'ambiguous');
+  const hasAmbiguousMatch = matches.some(
+    (match) => match.result.status === ExactLookupResultStatus.Ambiguous
+  );
 
   if (uniqueMatches.length === 1 && !hasAmbiguousMatch) {
     return {
-      status: 'unique' as const,
+      status: ExactLookupResultStatus.Unique,
       agentType: uniqueMatches[0].agentType,
       suggestion: uniqueMatches[0].result.suggestion,
     };
   }
 
   if (uniqueMatches.length > 1 || hasAmbiguousMatch) {
-    return { status: 'ambiguous' as const };
+    return { status: ExactLookupResultStatus.Ambiguous };
   }
 
-  return { status: 'none' as const };
+  return { status: ExactLookupResultStatus.None };
 }
 
 async function resolveRoleToken({
@@ -351,8 +359,8 @@ async function resolveRoleToken({
 }: {
   token: string;
   services: IEntityImportContributionLookupServices;
-  context: EntityImportRuntimeContext;
-  cache: ExactLookupCache;
+  context: IEntityImportRuntimeContext;
+  cache: TExactLookupCache;
 }) {
   return queryExactMatch({
     cache,
@@ -374,8 +382,8 @@ async function resolveContributorTokenByType({
   token: string;
   agentType: TAgentType;
   services: IEntityImportContributionLookupServices;
-  context: EntityImportRuntimeContext;
-  cache: ExactLookupCache;
+  context: IEntityImportRuntimeContext;
+  cache: TExactLookupCache;
 }) {
   const querySuggestions =
     agentType === AgentType.Organization.key
@@ -402,12 +410,12 @@ async function hydrateThreeSlotContribution({
   context,
   cache,
 }: {
-  entry: ParsedContributionCsvEntry;
+  entry: IParsedContributionCsvEntry;
   tupleText: string;
   contributionNumber: number;
   services: IEntityImportContributionLookupServices;
-  context: EntityImportRuntimeContext;
-  cache: ExactLookupCache;
+  context: IEntityImportRuntimeContext;
+  cache: TExactLookupCache;
 }) {
   const [typeToken = '', agentToken = '', roleToken = ''] = splitTupleTokens(tupleText);
   entry.imported_type_text = typeToken || undefined;
@@ -436,12 +444,12 @@ async function hydrateThreeSlotContribution({
         cache,
       });
 
-      if (contributorLookup.status === 'unique') {
+      if (contributorLookup.status === ExactLookupResultStatus.Unique) {
         setContributorMatch(entry, {
           agentType: entry.agent_type,
           suggestion: contributorLookup.suggestion,
         });
-      } else if (contributorLookup.status === 'ambiguous') {
+      } else if (contributorLookup.status === ExactLookupResultStatus.Ambiguous) {
         entry.issues.push(
           `Contribution ${contributionNumber}: contributor \`${agentToken}\` matches multiple ${entry.agent_type} records.`
         );
@@ -458,10 +466,10 @@ async function hydrateThreeSlotContribution({
         cache,
       });
 
-      if (contributorLookup.status === 'unique') {
+      if (contributorLookup.status === ExactLookupResultStatus.Unique) {
         setContributorMatch(entry, contributorLookup);
         entry.imported_type_text = undefined;
-      } else if (contributorLookup.status === 'ambiguous') {
+      } else if (contributorLookup.status === ExactLookupResultStatus.Ambiguous) {
         entry.issues.push(
           `Contribution ${contributionNumber}: contributor \`${agentToken}\` matches multiple contributor records.`
         );
@@ -481,9 +489,9 @@ async function hydrateThreeSlotContribution({
       cache,
     });
 
-    if (roleLookup.status === 'unique') {
+    if (roleLookup.status === ExactLookupResultStatus.Unique) {
       setRoleMatch(entry, roleLookup.suggestion);
-    } else if (roleLookup.status === 'ambiguous') {
+    } else if (roleLookup.status === ExactLookupResultStatus.Ambiguous) {
       entry.issues.push(
         `Contribution ${contributionNumber}: role \`${roleToken}\` matches multiple roles.`
       );
@@ -505,12 +513,12 @@ async function hydrateSingleTokenContribution({
   context,
   cache,
 }: {
-  entry: ParsedContributionCsvEntry;
+  entry: IParsedContributionCsvEntry;
   token: string;
   contributionNumber: number;
   services: IEntityImportContributionLookupServices;
-  context: EntityImportRuntimeContext;
-  cache: ExactLookupCache;
+  context: IEntityImportRuntimeContext;
+  cache: TExactLookupCache;
 }) {
   const resolvedType = resolveAgentTypeToken(token);
   if (resolvedType) {
@@ -534,21 +542,30 @@ async function hydrateSingleTokenContribution({
     }),
   ]);
 
-  if (contributorLookup.status === 'unique' && roleLookup.status === 'none') {
+  if (
+    contributorLookup.status === ExactLookupResultStatus.Unique &&
+    roleLookup.status === ExactLookupResultStatus.None
+  ) {
     setContributorMatch(entry, contributorLookup);
     entry.imported_agent_text = undefined;
     addMissingFieldIssues(entry, contributionNumber);
     return;
   }
 
-  if (roleLookup.status === 'unique' && contributorLookup.status === 'none') {
+  if (
+    roleLookup.status === ExactLookupResultStatus.Unique &&
+    contributorLookup.status === ExactLookupResultStatus.None
+  ) {
     setRoleMatch(entry, roleLookup.suggestion);
     entry.imported_role_text = undefined;
     addMissingFieldIssues(entry, contributionNumber);
     return;
   }
 
-  if (contributorLookup.status !== 'none' && roleLookup.status !== 'none') {
+  if (
+    contributorLookup.status !== ExactLookupResultStatus.None &&
+    roleLookup.status !== ExactLookupResultStatus.None
+  ) {
     entry.imported_agent_text = token;
     entry.imported_role_text = token;
     entry.issues.push(
@@ -572,12 +589,12 @@ async function hydrateTwoTokenContribution({
   context,
   cache,
 }: {
-  entry: ParsedContributionCsvEntry;
+  entry: IParsedContributionCsvEntry;
   tokens: Array<string>;
   contributionNumber: number;
   services: IEntityImportContributionLookupServices;
-  context: EntityImportRuntimeContext;
-  cache: ExactLookupCache;
+  context: IEntityImportRuntimeContext;
+  cache: TExactLookupCache;
 }) {
   const [firstToken = '', secondToken = ''] = tokens;
   const resolvedType = resolveAgentTypeToken(firstToken);
@@ -594,7 +611,7 @@ async function hydrateTwoTokenContribution({
             context,
             cache,
           })
-        : Promise.resolve<ExactLookupResult>({ status: 'none' }),
+        : Promise.resolve<TExactLookupResult>({ status: ExactLookupResultStatus.None }),
       secondToken
         ? resolveRoleToken({
             token: secondToken,
@@ -602,10 +619,13 @@ async function hydrateTwoTokenContribution({
             context,
             cache,
           })
-        : Promise.resolve<ExactLookupResult>({ status: 'none' }),
+        : Promise.resolve<TExactLookupResult>({ status: ExactLookupResultStatus.None }),
     ]);
 
-    if (contributorLookup.status === 'unique' && roleLookup.status === 'none') {
+    if (
+      contributorLookup.status === ExactLookupResultStatus.Unique &&
+      roleLookup.status === ExactLookupResultStatus.None
+    ) {
       setContributorMatch(entry, {
         agentType: resolvedType,
         suggestion: contributorLookup.suggestion,
@@ -614,7 +634,10 @@ async function hydrateTwoTokenContribution({
       return;
     }
 
-    if (roleLookup.status === 'unique' && contributorLookup.status === 'none') {
+    if (
+      roleLookup.status === ExactLookupResultStatus.Unique &&
+      contributorLookup.status === ExactLookupResultStatus.None
+    ) {
       setRoleMatch(entry, roleLookup.suggestion);
       addMissingFieldIssues(entry, contributionNumber);
       return;
@@ -655,10 +678,18 @@ async function hydrateTwoTokenContribution({
     }),
   ]);
 
-  const firstIsContributor = firstContributor.status === 'unique' && firstRole.status === 'none';
-  const secondIsContributor = secondContributor.status === 'unique' && secondRole.status === 'none';
-  const firstIsRole = firstRole.status === 'unique' && firstContributor.status === 'none';
-  const secondIsRole = secondRole.status === 'unique' && secondContributor.status === 'none';
+  const firstIsContributor =
+    firstContributor.status === ExactLookupResultStatus.Unique &&
+    firstRole.status === ExactLookupResultStatus.None;
+  const secondIsContributor =
+    secondContributor.status === ExactLookupResultStatus.Unique &&
+    secondRole.status === ExactLookupResultStatus.None;
+  const firstIsRole =
+    firstRole.status === ExactLookupResultStatus.Unique &&
+    firstContributor.status === ExactLookupResultStatus.None;
+  const secondIsRole =
+    secondRole.status === ExactLookupResultStatus.Unique &&
+    secondContributor.status === ExactLookupResultStatus.None;
 
   if (firstIsContributor && secondIsRole) {
     setContributorMatch(entry, firstContributor);
@@ -687,11 +718,11 @@ export async function parseContributionCsvValue({
   resolveExactMatches = true,
 }: {
   rawValue: string;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   services: IEntityImportContributionLookupServices;
   lookupCache?: Map<string, unknown>;
   resolveExactMatches?: boolean;
-}): Promise<ParsedContributionCsvValue> {
+}): Promise<IParsedContributionCsvValue> {
   const parsedList = parseTupleList(rawValue);
   if (parsedList.issues.length > 0 || parsedList.tuples.length === 0) {
     return {
@@ -710,7 +741,8 @@ export async function parseContributionCsvValue({
   }
 
   const cache =
-    (lookupCache as ExactLookupCache | undefined) ?? new Map<string, Promise<ExactLookupResult>>();
+    (lookupCache as TExactLookupCache | undefined) ??
+    new Map<string, Promise<TExactLookupResult>>();
   const entries = await Promise.all(
     parsedList.tuples.map(async (tupleText, index) => {
       const entry = createEntry(index, tupleText);

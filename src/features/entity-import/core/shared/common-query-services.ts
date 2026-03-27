@@ -11,8 +11,8 @@ import { getSubjects } from '@/api/entitycore/queries/general/subject';
 
 import type { IRoleFilter } from '@/api/entitycore/types/shared/role';
 import type {
-  EntityImportRuntimeContext,
-  RemoteSearchPageResult,
+  IEntityImportRuntimeContext,
+  IRemoteSearchPageResult,
 } from '@/features/entity-import/core/adapter';
 import type { ISuggestion } from '@/features/entity-import/core/contracts';
 import type { WorkspaceContext } from '@/types/common';
@@ -25,7 +25,7 @@ export type RoleQueryField = 'query' | 'name__ilike';
 export interface CommonQueryArgs<TQueryField extends string> {
   query: string;
   queryField: TQueryField;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   pageParam?: number;
   pageSize?: number;
 }
@@ -33,16 +33,16 @@ export interface CommonQueryArgs<TQueryField extends string> {
 export interface IEntityImportSharedQueryServices {
   queryBrainRegion: (
     args: CommonQueryArgs<BrainRegionQueryField>
-  ) => Promise<RemoteSearchPageResult>;
-  queryLicense: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<RemoteSearchPageResult>;
-  querySubject: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<RemoteSearchPageResult>;
-  queryMtype: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<RemoteSearchPageResult>;
-  queryPerson: (args: CommonQueryArgs<PrefLabelQueryField>) => Promise<RemoteSearchPageResult>;
+  ) => Promise<IRemoteSearchPageResult>;
+  queryLicense: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
+  querySubject: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
+  queryMtype: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
+  queryPerson: (args: CommonQueryArgs<PrefLabelQueryField>) => Promise<IRemoteSearchPageResult>;
   queryOrganization: (
     args: CommonQueryArgs<PrefLabelQueryField>
-  ) => Promise<RemoteSearchPageResult>;
-  queryConsortium: (args: CommonQueryArgs<PrefLabelQueryField>) => Promise<RemoteSearchPageResult>;
-  queryRole: (args: CommonQueryArgs<RoleQueryField>) => Promise<RemoteSearchPageResult>;
+  ) => Promise<IRemoteSearchPageResult>;
+  queryConsortium: (args: CommonQueryArgs<PrefLabelQueryField>) => Promise<IRemoteSearchPageResult>;
+  queryRole: (args: CommonQueryArgs<RoleQueryField>) => Promise<IRemoteSearchPageResult>;
 }
 
 export type IEntityImportContributionLookupServices = Pick<
@@ -50,7 +50,7 @@ export type IEntityImportContributionLookupServices = Pick<
   'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
 >;
 
-export function toWorkspaceContext(context: EntityImportRuntimeContext): WorkspaceContext {
+export function toWorkspaceContext(context: IEntityImportRuntimeContext): WorkspaceContext {
   return {
     projectId: context.projectId,
     virtualLabId: context.virtualLabId,
@@ -122,7 +122,7 @@ export function makeRemoteSearchResult({
   pageParam: number;
   pageSize: number;
   totalItems?: number | null;
-}): RemoteSearchPageResult {
+}): IRemoteSearchPageResult {
   return {
     suggestions,
     nextPageParam: makeNextPageParam({

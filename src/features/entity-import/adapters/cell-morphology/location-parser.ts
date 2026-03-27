@@ -3,19 +3,20 @@
 import { type LocationValue, parseLocationSummary, summarizeLocation } from './location-editor';
 
 export {
-  type ParsedContributionCsvEntry,
-  type ParsedContributionCsvValue,
+  type IParsedContributionCsvEntry as ParsedContributionCsvEntry,
+  type IParsedContributionCsvValue as ParsedContributionCsvValue,
   parseContributionCsvValue,
 } from '@/features/entity-import/core/shared/contribution-csv-parser';
 
-export interface ParsedLocationCsvValue {
+export interface IParsedLocationCsvValue {
   rawValue: string;
   parsedValue: LocationValue | null;
   issues: Array<string>;
 }
 
-const LOCATION_TUPLE_ERROR = 'Location must be provided as a tuple in the form `(x, y, z)`.';
-export function parseLocationCsvValue(rawValue: string): ParsedLocationCsvValue {
+const LOCATION_TUPLE_ERROR = 'Location must be provided as a tuple in the form (x, y, z).';
+
+export function parseLocationCsvValue(rawValue: string): IParsedLocationCsvValue {
   const normalized = rawValue.trim();
   if (!normalized) {
     return {

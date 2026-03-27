@@ -13,7 +13,7 @@ import { createCellMorphologyImportAdapter, EntityImportFeature } from '../../in
 
 import type { ReactElement } from 'react';
 import type { ICellMorphologyImportServices } from '../../adapters/cell-morphology/services';
-import type { IEntityImportAdapter, RemoteValidationResult } from '../../core/adapter';
+import type { IEntityImportAdapter, IRemoteValidationResult } from '../../core/adapter';
 
 const adapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
   id: 'mock-import',
@@ -229,7 +229,7 @@ const rowActionsAdapter: IEntityImportAdapter<Record<string, string>, { id: stri
 };
 
 function createCsvRemoteValidationAdapter(
-  evaluate: (args: { query: string }) => Promise<RemoteValidationResult>
+  evaluate: (args: { query: string }) => Promise<IRemoteValidationResult>
 ): IEntityImportAdapter<Record<string, string>, { id: string }> {
   return {
     id: 'csv-remote-validation-import',
@@ -308,7 +308,7 @@ function createCsvTooltipProgressAdapter({
   templateFileName,
   title,
 }: {
-  evaluate: (args: { query: string }) => Promise<RemoteValidationResult>;
+  evaluate: (args: { query: string }) => Promise<IRemoteValidationResult>;
   hydrateDeferred: ReturnType<typeof createDeferred<CsvHydratedValue>>;
   id: string;
   templateFileName: string;
@@ -1161,7 +1161,7 @@ describe('EntityImportFeature', () => {
   it('does not duplicate identical csv remote validation requests when the field enables reuse', async () => {
     const user = userEvent.setup();
     const validateSpy = vi.fn(
-      async ({ query }: { query: string }): Promise<RemoteValidationResult> => {
+      async ({ query }: { query: string }): Promise<IRemoteValidationResult> => {
         if (query === 'Isocortex') {
           return {
             status: 'valid',
@@ -1235,7 +1235,7 @@ describe('EntityImportFeature', () => {
   it('shows csv loading progress in the upload tooltip and closes it after validation finishes', async () => {
     const user = userEvent.setup();
     const hydrateDeferred = createDeferred<CsvHydratedValue>();
-    const validateDeferred = createDeferred<RemoteValidationResult>();
+    const validateDeferred = createDeferred<IRemoteValidationResult>();
     const validateSpy = vi.fn(async ({ query }: { query: string }) => {
       if (query !== 'Isocortex') {
         return {
@@ -1308,7 +1308,7 @@ describe('EntityImportFeature', () => {
   it('keeps csv upload issues in the tooltip until the user closes them', async () => {
     const user = userEvent.setup();
     const hydrateDeferred = createDeferred<CsvHydratedValue>();
-    const validateDeferred = createDeferred<RemoteValidationResult>();
+    const validateDeferred = createDeferred<IRemoteValidationResult>();
     const validateSpy = vi.fn(async ({ query }: { query: string }) => {
       if (query !== 'Isocortex') {
         return {
@@ -1397,7 +1397,7 @@ describe('EntityImportFeature', () => {
   it('keeps csv tooltip progress and warning cards unchanged while remote validation work is optimized', async () => {
     const user = userEvent.setup();
     const hydrateDeferred = createDeferred<CsvHydratedValue>();
-    const validateDeferred = createDeferred<RemoteValidationResult>();
+    const validateDeferred = createDeferred<IRemoteValidationResult>();
     const validateSpy = vi.fn(async ({ query }: { query: string }) => {
       if (query !== 'Isocortex') {
         return {

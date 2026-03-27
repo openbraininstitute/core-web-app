@@ -12,9 +12,12 @@ import {
   NotificationTone,
   type TNotificationTone,
 } from '@/features/entity-import/core/contracts';
+import {
+  ENTITY_IMPORT_POPOVER_Z_CLASS,
+  ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
+} from '@/features/entity-import/core/shared/ui';
 import { ImportTable } from '@/features/entity-import/ui/import-table';
 import { NotificationStack } from '@/features/entity-import/ui/notification-stack';
-import { ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME } from '@/features/entity-import/ui/tooltip-styles';
 import { ValidatorPanel } from '@/features/entity-import/ui/validator-panel';
 import { Alert, AlertContent, AlertDescription, AlertTitle } from '@/ui/molecules/alert';
 import { Button } from '@/ui/molecules/button';
@@ -27,20 +30,18 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '../core/shared/ui';
-
 import type {
-  EntityImportRuntimeContext,
   IEntityImportActions,
   IEntityImportAdapter,
+  IEntityImportRuntimeContext,
   IValidatorPreviewState,
   IValidatorSuggestionState,
 } from '@/features/entity-import/core/adapter';
 
-interface ImportShellProps<TPayload, TResult> {
+interface IImportShellProps<TPayload, TResult> {
   title: string | null;
   adapter: IEntityImportAdapter<TPayload, TResult>;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   session: IImportSessionState;
   actions: IEntityImportActions;
   isSubmitting: boolean;
@@ -66,7 +67,7 @@ interface ImportShellProps<TPayload, TResult> {
   onUploadCsvFile: (file: File) => Promise<void>;
 }
 
-type CsvUploadStatus =
+type ICsvUploadStatus =
   | {
       kind: 'loading';
       title: string;
@@ -92,8 +93,8 @@ type TCsvUploadPhase = (typeof CsvUploadPhase)[keyof typeof CsvUploadPhase];
 
 function resolveCsvUploadStatus(args: {
   csvUploadPhase: TCsvUploadPhase;
-  csvRowValidationProgress: ImportShellProps<unknown, unknown>['csvRowValidationProgress'];
-}): CsvUploadStatus | null {
+  csvRowValidationProgress: IImportShellProps<unknown, unknown>['csvRowValidationProgress'];
+}): ICsvUploadStatus | null {
   const { csvUploadPhase, csvRowValidationProgress } = args;
 
   if (csvRowValidationProgress.active) {
@@ -119,7 +120,7 @@ function resolveCsvUploadStatus(args: {
           kind: 'loading',
           title: 'Uploading CSV',
           message: 'Parsing CSV...',
-        }) as CsvUploadStatus
+        }) as ICsvUploadStatus
     )
     .with(
       CsvUploadPhase.Hydrating,
@@ -128,7 +129,7 @@ function resolveCsvUploadStatus(args: {
           kind: 'loading',
           title: 'Uploading CSV',
           message: 'Preparing imported values...',
-        }) as CsvUploadStatus
+        }) as ICsvUploadStatus
     )
     .with(
       CsvUploadPhase.PreparingRows,
@@ -137,7 +138,7 @@ function resolveCsvUploadStatus(args: {
           kind: 'loading',
           title: 'Uploading CSV',
           message: 'Preparing CSV rows...',
-        }) as CsvUploadStatus
+        }) as ICsvUploadStatus
     )
     .otherwise(() => null);
 }
@@ -161,7 +162,7 @@ function resolveCsvUploadNotificationTitle(
 }
 
 function resolveCsvUploadNotificationsTone(
-  notifications: ImportShellProps<unknown, unknown>['csvUploadNotifications']
+  notifications: IImportShellProps<unknown, unknown>['csvUploadNotifications']
 ) {
   if (notifications.some((notification) => notification.tone === NotificationTone.Error)) {
     return NotificationTone.Error;
@@ -197,7 +198,7 @@ export function ImportShell<TPayload, TResult>({
   onDownloadCurrentCsv,
   onDownloadGuideTemplate,
   onUploadCsvFile,
-}: ImportShellProps<TPayload, TResult>) {
+}: IImportShellProps<TPayload, TResult>) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const [validatorCollapsed, setValidatorCollapsed] = useState(false);
   const [validatorHoverExpanded, setValidatorHoverExpanded] = useState(false);

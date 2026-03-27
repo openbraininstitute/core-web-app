@@ -16,8 +16,8 @@ import {
 
 import type { TRepairPipelineState } from '@/api/entitycore/types/shared/protocol';
 import type {
-  EntityImportRuntimeContext,
-  RemoteSearchPageResult,
+  IEntityImportRuntimeContext,
+  IRemoteSearchPageResult,
 } from '@/features/entity-import/core/adapter';
 import type { TAgentType } from '@/ui/segments/contribute/shared/types';
 
@@ -47,11 +47,11 @@ export interface RegisterMorphologyResult {
 }
 
 export interface ICellMorphologyImportServices extends IEntityImportSharedQueryServices {
-  queryProtocol: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<RemoteSearchPageResult>;
+  queryProtocol: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
   registerMorphology: (args: {
     file: File;
     metadata: CellMorphologyRegistrationMetadata;
-    context: EntityImportRuntimeContext;
+    context: IEntityImportRuntimeContext;
   }) => Promise<RegisterMorphologyResult>;
 }
 

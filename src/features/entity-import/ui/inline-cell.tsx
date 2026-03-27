@@ -23,11 +23,12 @@ import {
   importDatePickerChangeToRawValue,
   parseImportDatePickerValue,
 } from '@/features/entity-import/core/helpers';
-import { CellStatusBadge } from '@/features/entity-import/ui/cell-status-badge';
 import {
+  ENTITY_IMPORT_POPOVER_Z_CLASS,
   ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
   getEntityImportSelectLabel,
-} from '@/features/entity-import/ui/select-styles';
+} from '@/features/entity-import/core/shared/ui';
+import { CellStatusBadge } from '@/features/entity-import/ui/cell-status-badge';
 import {
   getTableCellUiStatus,
   shouldDisplayCellStatusBadge,
@@ -45,24 +46,22 @@ import {
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '../core/shared/ui';
-
 import type {
-  EntityImportRuntimeContext,
   IAdapterFieldDefinition,
   IEntityImportActions,
-  ValidatorDraftValue,
+  IEntityImportRuntimeContext,
+  IValidatorDraftValue,
 } from '@/features/entity-import/core/adapter';
 
-interface InlineCellProps {
+interface IInlineCellProps {
   field: IAdapterFieldDefinition;
   cell: IImportCellState;
   row: IImportRowState;
   session: IImportSessionState;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   actions: IEntityImportActions;
   selected: boolean;
-  validatorPreview: ValidatorDraftValue | null;
+  validatorPreview: IValidatorDraftValue | null;
 }
 
 const INLINE_CELL_DRAFT_COMMIT_DELAY_MS = 250;
@@ -77,7 +76,7 @@ function getDisplayValue(cell: IImportCellState): string {
 
 function resolveTablePreviewValue(
   field: IAdapterFieldDefinition,
-  value: Pick<ValidatorDraftValue, 'rawValue' | 'displayValue'>
+  value: Pick<IValidatorDraftValue, 'rawValue' | 'displayValue'>
 ): string {
   if (field.inputType === ImportInputType.Select) {
     return getEntityImportSelectLabel(field, value.rawValue);
@@ -132,7 +131,7 @@ function InlineCellComponent({
   actions,
   selected,
   validatorPreview,
-}: InlineCellProps) {
+}: IInlineCellProps) {
   const fileInputId = useId();
   const correctionDetailsPopoverId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -610,7 +609,7 @@ function InlineCellComponent({
   );
 }
 
-function inlineCellPropsAreEqual(previous: InlineCellProps, next: InlineCellProps): boolean {
+function inlineCellPropsAreEqual(previous: IInlineCellProps, next: IInlineCellProps): boolean {
   const shouldCompareFullRow = Boolean(previous.field.tableRenderer || next.field.tableRenderer);
   const rowIsEqual = shouldCompareFullRow
     ? previous.row === next.row

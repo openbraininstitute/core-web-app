@@ -5,13 +5,13 @@ import { AgentType } from '@/ui/segments/contribute/shared/types';
 import {
   parseContributionCsvValue,
   parseLocationCsvValue,
-} from '../../../adapters/cell-morphology/csv-tuple-parser';
+} from '../../../adapters/cell-morphology/location-parser';
 
-import type { EntityImportRuntimeContext } from '@/features/entity-import/core/adapter';
+import type { IEntityImportRuntimeContext } from '@/features/entity-import/core/adapter';
 import type { ISuggestion } from '@/features/entity-import/core/contracts';
 import type { ICellMorphologyImportServices } from '../../../adapters/cell-morphology/services';
 
-const context: EntityImportRuntimeContext = {
+const context: IEntityImportRuntimeContext = {
   projectId: 'project-1',
   virtualLabId: 'lab-1',
 };
