@@ -1,3 +1,5 @@
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import type { IEntityImportTemplateGuideConfig } from '../core/adapter';
 
 const cellMorphologyImportTemplateGuide = `# Cell Morphology CSV Guide
@@ -33,6 +35,9 @@ Use the CSV template to bulk import one morphology per row.
 `;
 
 const ENTITY_IMPORT_TEMPLATE_GUIDES: Record<string, Record<string, string>> = {
+  [ExtendedEntitiesTypeDict.CellMorphology]: {
+    'cell-morphology-import-template.md': cellMorphologyImportTemplateGuide,
+  },
   'cell-morphology': {
     'cell-morphology-import-template.md': cellMorphologyImportTemplateGuide,
   },

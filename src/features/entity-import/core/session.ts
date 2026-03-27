@@ -496,6 +496,49 @@ export function resolveCellSuggestion(
   });
 }
 
+export function resolveSuggestionToRows(
+  session: IImportSessionState,
+  params: {
+    fieldPath: string;
+    targetRowId: string;
+    sourceValue: string;
+    suggestion: ISuggestion;
+    applyToAllMatching: boolean;
+  }
+): IImportSessionState {
+  return updateRows(session, (row) => {
+    const currentCell = row.cells[params.fieldPath];
+    const shouldApply = params.applyToAllMatching || row.id === params.targetRowId;
+
+    if (!currentCell || !shouldApply) {
+      return row;
+    }
+
+    return {
+      ...row,
+      cells: {
+        ...row.cells,
+        [params.fieldPath]: {
+          ...currentCell,
+          rawValue: params.suggestion.label,
+          displayValue: params.suggestion.label,
+          parsedValue: params.suggestion.value,
+          status: CellStatus.Idle,
+          issues: [],
+          dependencyState: DependencyState.Ready,
+          remoteState: {
+            status: RemoteValidationStatus.Valid,
+            suggestions: upsertSuggestion(currentCell.remoteState.suggestions, params.suggestion),
+            selectedSuggestion: params.suggestion,
+            message: null,
+          },
+          correctionDraft: null,
+        },
+      },
+    };
+  });
+}
+
 export function stageSuggestionToRows(
   session: IImportSessionState,
   params: {

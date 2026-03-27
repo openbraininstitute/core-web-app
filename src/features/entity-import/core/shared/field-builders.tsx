@@ -1,5 +1,6 @@
 'use client';
 
+import { ValidatorManualApplyMode } from '@/features/entity-import/core/adapter';
 import {
   ImportInputType,
   type ISuggestion,
@@ -340,6 +341,7 @@ export function createLicenseImportField({
           querySuggestions: services.queryLicense,
         })({ query, context }),
     },
+    validatorManualApplyMode: ValidatorManualApplyMode.Commit,
     columnWidth,
   };
 }

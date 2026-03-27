@@ -501,6 +501,7 @@ function SingleColumnValidatorCard({
           sourceValue: cell.rawValue,
           suggestion: selectedSuggestion,
           applyToAllMatching: applyToAll,
+          mode: field.validatorManualApplyMode ?? ValidatorManualApplyMode.Stage,
         });
         setManualDraftValue(null);
         return;
@@ -518,6 +519,7 @@ function SingleColumnValidatorCard({
           sourceValue: cell.rawValue,
           suggestion: createManualDraftSuggestion(draftValue),
           applyToAllMatching: applyToAll,
+          mode: ValidatorManualApplyMode.Stage,
         });
         setManualDraftValue(null);
         return;
@@ -1290,8 +1292,9 @@ export function ValidatorPanel<TPayload, TResult>({
             align="end"
             className={cn(
               ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
-              'w-full max-w-100! p-3 text-left text-neutral-900 shadow-2xl'
+              'w-[calc(100vw-2rem)] p-3 text-left text-neutral-900 shadow-2xl sm:w-[500px]'
             )}
+            style={{ maxWidth: '500px' }}
             arrowClassName="bg-white"
           >
             <div className="space-y-3">

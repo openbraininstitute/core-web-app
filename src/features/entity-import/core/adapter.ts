@@ -206,6 +206,7 @@ export interface IEntityImportActions {
     sourceValue: string;
     suggestion: ISuggestion;
     applyToAllMatching: boolean;
+    mode?: TValidatorManualApplyMode;
   }) => void;
   chooseSuggestion: (params: { rowId: string; fieldPath: string; suggestion: ISuggestion }) => void;
   clearRow: (rowId: string) => void;
