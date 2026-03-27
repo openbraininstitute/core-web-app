@@ -1,11 +1,11 @@
 import { tryCatch } from '@/api/utils';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
-import { EmptyTutorials, Grid } from '@/ui/segments/project/get-started/elements/discover';
+import { EmptyTutorials, TutorialGrid } from '@/ui/segments/project/get-started/elements/tutorial';
 import { type TTutorial, TutorialQuery } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 
-export async function DiscoverList() {
+export async function TutorialList() {
   const client = getClient();
   const queryClient = getQueryClient();
 
@@ -20,5 +20,5 @@ export async function DiscoverList() {
     return <EmptyTutorials />;
   }
 
-  return <Grid tutorials={tutorials} />;
+  return <TutorialGrid tutorials={tutorials} />;
 }

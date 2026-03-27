@@ -2,6 +2,7 @@
 
 import { VideoCameraOutlined } from '@ant-design/icons';
 import { RiCloseLargeFill, RiPlayFill } from '@remixicon/react';
+import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -18,7 +19,7 @@ import type { TTutorial } from '@/ui/segments/project/get-started/query';
 
 const INITIAL_COUNT = 4;
 
-export function DiscoverCard({
+export function TutorialCard({
   title,
   slug,
   image,
@@ -30,6 +31,7 @@ export function DiscoverCard({
   image: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
+  const t = upperFirst(lowerCase(title));
   return (
     <Link
       href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/tutorials/${slug}`}
@@ -44,12 +46,12 @@ export function DiscoverCard({
         )}
       >
         <CardTitle className="text-primary-9 group-hover:text-primary-8 group-hover:font-black">
-          {title}
+          {t}
         </CardTitle>
         <CardDescription className="relative h-30.75 w-auto px-4 mt-auto">
           <Image
             fill
-            alt={title}
+            alt={t}
             src={image}
             className={cn('rounded-md transition-all ease-in-out', {
               'grayscale brightness-90 contrast-60 opacity-80': isSelected,
@@ -69,14 +71,14 @@ export function DiscoverCard({
   );
 }
 
-export function Grid({ tutorials }: { tutorials: Array<TTutorial> }) {
+export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? tutorials : tutorials.slice(0, INITIAL_COUNT);
   const hasMore = tutorials.length > INITIAL_COUNT;
   const { slug } = useParams<{ slug: string }>();
 
   return (
-    <section id="discover-tutorials" className="w-full flex flex-col my-6 @container">
+    <section id="tutorials-list" className="w-full flex flex-col my-6 @container">
       <div className="flex items-center justify-between w-full px-2 mb-2">
         <h2 className="font-medium text-primary-9">Tutorials</h2>
         {hasMore && (
@@ -107,7 +109,7 @@ export function Grid({ tutorials }: { tutorials: Array<TTutorial> }) {
               transition={{ duration: 0.25 }}
               className="w-full flex"
             >
-              <DiscoverCard
+              <TutorialCard
                 title={p.title}
                 image={p.poster}
                 slug={p.slug}

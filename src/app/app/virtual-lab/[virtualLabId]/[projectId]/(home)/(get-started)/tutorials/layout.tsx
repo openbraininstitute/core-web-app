@@ -1,6 +1,6 @@
 import { config } from '@/config';
 import { BackButton } from '@/ui/segments/project/get-started/elements/back-button';
-import { DiscoverList } from '@/ui/segments/project/get-started/sections/discover';
+import { TutorialList } from '@/ui/segments/project/get-started/sections/tutorials';
 
 import type { PropsWithChildren } from 'react';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -25,7 +25,7 @@ export default async function Layout({
         ]}
       />
       {children}
-      <DiscoverList />
+      <TutorialList />
     </section>
   );
 }
