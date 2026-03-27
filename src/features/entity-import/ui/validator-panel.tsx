@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { RiInfoI, RiSearchLine } from '@remixicon/react';
 import { DatePicker } from 'antd';
-import { useCallback, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import {
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
@@ -247,9 +247,17 @@ function resolveValidatorDisplayValue(
   return draftValue.displayValue ?? draftValue.rawValue;
 }
 
+function queryTableBodyContainer(root: ParentNode): HTMLElement | null {
+  return (
+    root.querySelector<HTMLElement>('.rc-virtual-list-holder') ??
+    root.querySelector<HTMLElement>('[class*="virtual-holder"]') ??
+    root.querySelector<HTMLElement>('.ant-table-body')
+  );
+}
+
 function resolveTableBodyContainer(trigger: HTMLElement | null): HTMLElement | null {
   const root = trigger?.closest('[data-entity-import-root]') ?? document;
-  return root.querySelector<HTMLElement>('.ant-table-body');
+  return queryTableBodyContainer(root);
 }
 
 function captureTableBodyScrollTop(trigger: HTMLElement | null): number | null {
@@ -269,15 +277,24 @@ function restoreCapturedTableBodyScroll(
     return;
   }
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const tableBody = root.querySelector<HTMLElement>('.ant-table-body');
-      if (!tableBody || !tableBody.isConnected) {
-        return;
-      }
-
+  const restoreAttempts = 4;
+  const restore = (attempt: number) => {
+    const tableBody = queryTableBodyContainer(root);
+    if (tableBody?.isConnected) {
       tableBody.scrollTop = scrollTop;
+    }
+
+    if (attempt + 1 >= restoreAttempts) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      restore(attempt + 1);
     });
+  };
+
+  requestAnimationFrame(() => {
+    restore(0);
   });
 }
 
@@ -938,6 +955,7 @@ export function ValidatorPanel<TPayload, TResult>({
   isSubmitting,
   validatorSuggestions,
 }: ValidatorPanelProps<TPayload, TResult>) {
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const activeRow = resolveActiveRow(session);
   const activeField = resolveActiveField(adapter, session);
   const selectedFieldPath = session.validatorSelection.fieldPath;
@@ -952,6 +970,18 @@ export function ValidatorPanel<TPayload, TResult>({
     (!activeRow && !isAllColumnsMode) ||
     (isAllColumnsMode && !activeRow) ||
     (!activeField && !isAllColumnsMode);
+
+  useEffect(() => {
+    if (!scrollContainerRef.current) {
+      return;
+    }
+
+    scrollContainerRef.current.scrollTop = 0;
+  }, [
+    session.validatorSelection.rowId,
+    session.validatorSelection.fieldPath,
+    validatorSuggestions.query,
+  ]);
 
   return (
     <aside className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden px-2">
@@ -1052,7 +1082,10 @@ export function ValidatorPanel<TPayload, TResult>({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto secondary-scrollbar overflow-x-hidden px-3 py-5">
+        <div
+          ref={scrollContainerRef}
+          className="min-h-0 flex-1 space-y-5 overflow-y-auto secondary-scrollbar overflow-x-hidden px-3 py-5"
+        >
           {showSelectionPrompt ? (
             <Card className="py-0 border-none! shadow-none!">
               <CardContent className="px-6 py-8 text-sm text-neutral-500">
