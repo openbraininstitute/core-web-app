@@ -11,12 +11,13 @@ import { Input } from 'antd';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { AnimatePresence, motion } from 'framer-motion';
-import { atom } from 'jotai';
+import { atom, useAtom } from 'jotai';
 import { Fragment } from 'react';
 
 import AIAdd from '@/components/icons/ai/add_icon';
 import AIIcon from '@/components/icons/ai/ai_icon';
 import AIEdit from '@/components/icons/ai/edit_icon';
+import { fieldErrorsAtom } from '@/features/scan-config/components/hooks/field-errors';
 import { cn } from '@/utils/css-class';
 
 import { isAtom, isPlainObject } from './utils';
@@ -73,6 +74,7 @@ export default function BlockDictionaryEntries({
   visible: boolean;
 }) {
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
+  const [fieldErrors] = useAtom(fieldErrorsAtom);
 
   const onNameChangeConfirm = (
     e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>
@@ -317,6 +319,9 @@ export default function BlockDictionaryEntries({
                       <div className="flex gap-2 text-[14px]">
                         {errors?.find((error) =>
                           error.instancePath.startsWith(`/${rootElement}/${subkey}`)
+                        ) ||
+                        Array.from(fieldErrors.keys()).some((key) =>
+                          key.startsWith(`${rootElement}/${subkey}`)
                         ) ? (
                           <WarningFilled className="text-yellow-400!" />
                         ) : (
