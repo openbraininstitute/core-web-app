@@ -19,6 +19,7 @@ import {
 } from 'react';
 
 import {
+  DependencyState,
   ENTITY_IMPORT_ALL_COLUMNS,
   ImportRowResultStatus,
 } from '@/features/entity-import/core/contracts';
@@ -381,16 +382,26 @@ export function ImportTable<TPayload, TResult>({
                 aria-label={`Row ${row.rowIndex + 1} status: ${rowStatusLabel}`}
                 className={cn(
                   'inline-flex size-3 rounded-full border',
-                  rowUiStatus === TableRowUiStatus.Ready &&
-                    'border-emerald-300 bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]',
-                  rowUiStatus === TableRowUiStatus.Validating &&
-                    'border-neutral-300 bg-neutral-500 shadow-[0_0_0_3px_rgba(115,115,115,0.12)]',
-                  rowUiStatus === TableRowUiStatus.NeedsSelection &&
-                    'border-sky-300 bg-sky-500 shadow-[0_0_0_3px_rgba(14,165,233,0.12)]',
-                  rowUiStatus === TableRowUiStatus.NeedsAttention &&
-                    'border-amber-300 bg-amber-500 shadow-[0_0_0_3px_rgba(245,158,11,0.12)]',
-                  rowUiStatus === TableRowUiStatus.Idle &&
-                    'border-neutral-200 bg-neutral-200 shadow-[0_0_0_3px_rgba(229,229,229,0.5)]'
+                  {
+                    'border-emerald-300 bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]':
+                      rowUiStatus === TableRowUiStatus.Ready,
+                  },
+                  {
+                    'border-neutral-300 bg-neutral-500 shadow-[0_0_0_3px_rgba(115,115,115,0.12)]':
+                      rowUiStatus === TableRowUiStatus.Validating,
+                  },
+                  {
+                    'border-sky-300 bg-sky-500 shadow-[0_0_0_3px_rgba(14,165,233,0.12)]':
+                      rowUiStatus === TableRowUiStatus.NeedsSelection,
+                  },
+                  {
+                    'border-amber-300 bg-amber-500 shadow-[0_0_0_3px_rgba(245,158,11,0.12)]':
+                      rowUiStatus === TableRowUiStatus.NeedsAttention,
+                  },
+                  {
+                    'border-neutral-200 bg-neutral-200 shadow-[0_0_0_3px_rgba(229,229,229,0.5)]':
+                      rowUiStatus === TableRowUiStatus.Idle,
+                  }
                 )}
               />
               <span className="text-xs text-center font-semibold text-neutral-4">
@@ -402,9 +413,9 @@ export function ImportTable<TPayload, TResult>({
                   aria-label={`Row ${row.rowIndex + 1} import status: ${importStatusLabel}`}
                   className={cn(
                     'inline-flex items-center justify-center text-sm',
-                    importRowStatus === ImportRowResultStatus.Pending && 'text-primary-9',
-                    importRowStatus === ImportRowResultStatus.Succeeded && 'text-emerald-600',
-                    importRowStatus === ImportRowResultStatus.Failed && 'text-rose-600'
+                    { 'text-primary-9': importRowStatus === ImportRowResultStatus.Pending },
+                    { 'text-emerald-600': importRowStatus === ImportRowResultStatus.Succeeded },
+                    { 'text-rose-600': importRowStatus === ImportRowResultStatus.Failed }
                   )}
                 >
                   {importRowStatus === ImportRowResultStatus.Pending ? (
@@ -440,7 +451,10 @@ export function ImportTable<TPayload, TResult>({
               <button
                 type="button"
                 tabIndex={0}
-                className="absolute top-0 right-0 z-10 h-full w-3 translate-x-1/2 cursor-col-resize rounded-sm border-0 bg-transparent p-0 hover:bg-neutral-200/80"
+                className={cn(
+                  'absolute top-0 right-0 z-10 h-full w-3 translate-x-1/2',
+                  'cursor-col-resize rounded-sm border-0 bg-transparent p-0 hover:bg-neutral-200/80'
+                )}
                 aria-label={`Resize ${field.label} column`}
                 onMouseDown={(event) => beginResize(event, field.path)}
               />
@@ -481,13 +495,17 @@ export function ImportTable<TPayload, TResult>({
             return {
               className: cn(
                 'align-top !p-0 transition-colors',
-                isSelected && 'bg-blue-50/60',
-                cellUiStatus === TableCellUiStatus.Warning && INVALID_CONTROL_CLASSNAME,
-                cellUiStatus === TableCellUiStatus.NeedsSelection &&
-                  'bg-sky-50/70 text-sky-950 [&_textarea]:bg-sky-50/70 [&_textarea]:text-sky-950',
-                cellUiStatus === TableCellUiStatus.Validating &&
-                  'bg-neutral-50 text-neutral-700 [&_textarea]:bg-neutral-50 [&_textarea]:text-neutral-700',
-                cell.dependencyState === 'blocked' && BLOCKED_CONTROL_CLASSNAME
+                { 'bg-blue-50/60': isSelected },
+                { [INVALID_CONTROL_CLASSNAME]: cellUiStatus === TableCellUiStatus.Warning },
+                {
+                  'bg-sky-50/70 text-sky-950 [&_textarea]:bg-sky-50/70 [&_textarea]:text-sky-950':
+                    cellUiStatus === TableCellUiStatus.NeedsSelection,
+                },
+                {
+                  'bg-neutral-50 text-neutral-700 [&_textarea]:bg-neutral-50 [&_textarea]:text-neutral-700':
+                    cellUiStatus === TableCellUiStatus.Validating,
+                },
+                { [BLOCKED_CONTROL_CLASSNAME]: cell.dependencyState === DependencyState.Blocked }
               ),
             };
           },
@@ -530,7 +548,8 @@ export function ImportTable<TPayload, TResult>({
                   type="button"
                   aria-label={`Actions row ${row.rowIndex + 1}`}
                   className={cn(
-                    'inline-flex size-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-primary-9 transition',
+                    'inline-flex size-8 items-center justify-center rounded-full',
+                    'border border-neutral-200 bg-white text-primary-9 transition',
                     'hover:border-neutral-300 hover:bg-neutral-50'
                   )}
                 >
@@ -596,7 +615,10 @@ export function ImportTable<TPayload, TResult>({
           <button
             type="button"
             onClick={handleAddRow}
-            className="flex w-full items-center justify-center gap-3 px-5 py-4 text-sm font-semibold text-primary-9 transition-colors hover:bg-neutral-50"
+            className={cn(
+              'flex w-full items-center justify-center gap-3 px-5 py-4 text-sm',
+              'font-semibold text-primary-9 transition-colors hover:bg-neutral-50'
+            )}
           >
             <span>Add row</span>
             <RiInsertRowBottom />
@@ -610,7 +632,8 @@ export function ImportTable<TPayload, TResult>({
           '[&_.ant-spin-container]:h-full',
           '[&_.ant-spin-nested-loading]:h-full',
           '[&_th.ant-table-cell>span]:text-sm',
-          // allow in-cell controls (Input, DatePicker) fill row height via absolute inset-0; h-full on td children is often unresolved.
+          // allow in-cell controls (Input, DatePicker) fill row height via
+          // absolute inset-0; h-full on td children is often unresolved.
           '[&_.ant-table-tbody>tr>td.ant-table-cell]:relative'
         )}
       />

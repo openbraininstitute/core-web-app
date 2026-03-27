@@ -4,7 +4,14 @@ import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { RiDownload2Line, RiUpload2Line } from '@remixicon/react';
 import { Progress } from 'antd';
 import { useRef } from 'react';
+import { match } from 'ts-pattern';
 
+import {
+  type IImportRunState,
+  type IImportSessionState,
+  NotificationTone,
+  type TNotificationTone,
+} from '@/features/entity-import/core/contracts';
 import { ImportTable } from '@/features/entity-import/ui/import-table';
 import { NotificationStack } from '@/features/entity-import/ui/notification-stack';
 import { ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME } from '@/features/entity-import/ui/tooltip-styles';
@@ -29,7 +36,6 @@ import type {
   IValidatorPreviewState,
   IValidatorSuggestionState,
 } from '@/features/entity-import/core/adapter';
-import type { IImportRunState, IImportSessionState } from '@/features/entity-import/core/contracts';
 
 interface ImportShellProps<TPayload, TResult> {
   title: string | null;
@@ -40,7 +46,7 @@ interface ImportShellProps<TPayload, TResult> {
   isSubmitting: boolean;
   importRun: IImportRunState;
   validatorPreview: IValidatorPreviewState;
-  csvUploadPhase: string;
+  csvUploadPhase: TCsvUploadPhase;
   csvRowValidationProgress: {
     active: boolean;
     totalRowCount: number;
@@ -75,8 +81,17 @@ type CsvUploadStatus =
       percent: number;
     };
 
+const CsvUploadPhase = {
+  Idle: 'idle',
+  Parsing: 'parsing',
+  Hydrating: 'hydrating',
+  PreparingRows: 'preparing-rows',
+} as const;
+
+type TCsvUploadPhase = (typeof CsvUploadPhase)[keyof typeof CsvUploadPhase];
+
 function resolveCsvUploadStatus(args: {
-  csvUploadPhase: string;
+  csvUploadPhase: TCsvUploadPhase;
   csvRowValidationProgress: ImportShellProps<unknown, unknown>['csvRowValidationProgress'];
 }): CsvUploadStatus | null {
   const { csvUploadPhase, csvRowValidationProgress } = args;
@@ -96,81 +111,71 @@ function resolveCsvUploadStatus(args: {
     };
   }
 
-  if (csvUploadPhase === 'parsing') {
-    return {
-      kind: 'loading',
-      title: 'Uploading CSV',
-      message: 'Parsing CSV...',
-    };
-  }
-
-  if (csvUploadPhase === 'hydrating') {
-    return {
-      kind: 'loading',
-      title: 'Uploading CSV',
-      message: 'Preparing imported values...',
-    };
-  }
-
-  if (csvUploadPhase === 'preparing-rows') {
-    return {
-      kind: 'loading',
-      title: 'Uploading CSV',
-      message: 'Preparing CSV rows...',
-    };
-  }
-
-  return null;
+  return match(csvUploadPhase)
+    .with(
+      CsvUploadPhase.Parsing,
+      () =>
+        ({
+          kind: 'loading',
+          title: 'Uploading CSV',
+          message: 'Parsing CSV...',
+        }) as CsvUploadStatus
+    )
+    .with(
+      CsvUploadPhase.Hydrating,
+      () =>
+        ({
+          kind: 'loading',
+          title: 'Uploading CSV',
+          message: 'Preparing imported values...',
+        }) as CsvUploadStatus
+    )
+    .with(
+      CsvUploadPhase.PreparingRows,
+      () =>
+        ({
+          kind: 'loading',
+          title: 'Uploading CSV',
+          message: 'Preparing CSV rows...',
+        }) as CsvUploadStatus
+    )
+    .otherwise(() => null);
 }
 
-function resolveCsvUploadNotificationVariant(
-  tone: IImportSessionState['notifications'][number]['tone']
-) {
-  if (tone === 'error') {
-    return 'destructive';
-  }
-
-  if (tone === 'warning') {
-    return 'warning';
-  }
-
-  if (tone === 'success') {
-    return 'success';
-  }
-
-  return 'info';
+function resolveCsvUploadNotificationVariant(tone: TNotificationTone) {
+  return match(tone)
+    .with(NotificationTone.Error, () => 'destructive')
+    .with(NotificationTone.Warning, () => 'warning')
+    .with(NotificationTone.Success, () => 'success')
+    .otherwise(() => 'info');
 }
 
 function resolveCsvUploadNotificationTitle(
   tone: IImportSessionState['notifications'][number]['tone']
 ) {
-  if (tone === 'error') {
-    return 'CSV upload failed';
-  }
-
-  if (tone === 'warning') {
-    return 'CSV upload issue';
-  }
-
-  return 'CSV upload notice';
+  return match(tone)
+    .with(NotificationTone.Error, () => 'CSV upload failed')
+    .with(NotificationTone.Warning, () => 'CSV upload issue')
+    .with(NotificationTone.Success, () => 'CSV upload notice')
+    .otherwise(() => 'CSV upload notice');
 }
 
 function resolveCsvUploadNotificationsTone(
   notifications: ImportShellProps<unknown, unknown>['csvUploadNotifications']
 ) {
-  if (notifications.some((notification) => notification.tone === 'error')) {
-    return 'error';
+  if (notifications.some((notification) => notification.tone === NotificationTone.Error)) {
+    return NotificationTone.Error;
   }
 
-  if (notifications.some((notification) => notification.tone === 'warning')) {
-    return 'warning';
+  if (notifications.some((notification) => notification.tone === NotificationTone.Warning)) {
+    return NotificationTone.Warning;
   }
 
-  if (notifications.some((notification) => notification.tone === 'success')) {
-    return 'success';
+  if (notifications.some((notification) => notification.tone === NotificationTone.Success)) {
+    return NotificationTone.Success;
   }
 
-  return 'info';
+  return NotificationTone.Info;
 }
 
 export function ImportShell<TPayload, TResult>({
@@ -217,7 +222,7 @@ export function ImportShell<TPayload, TResult>({
           <div className="mt-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button rounded type="button" variant="outline" size="md" className="gap-3">
+                <Button rounded type="button" variant="outline" size="sm" className="gap-3 text-sm">
                   <span>{adapter.templateFileName}</span>
                   <RiDownload2Line />
                 </Button>
@@ -225,18 +230,18 @@ export function ImportShell<TPayload, TResult>({
               <DropdownMenuContent
                 align="start"
                 className={cn(ENTITY_IMPORT_POPOVER_Z_CLASS, 'bg-white border border-neutral-200')}
-                style={{
+                /* style={{
                   width: 'var(--radix-dropdown-menu-trigger-width)',
-                }}
+                }} */
               >
                 <DropdownMenuItem
-                  className="text-primary-9 w-full cursor-pointer h-9"
+                  className="text-primary-9 w-full cursor-pointer h-8 font-medium text-sm"
                   onSelect={onDownloadCsvTemplate}
                 >
                   Download CSV
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="text-primary-9 w-full cursor-pointer h-9"
+                  className="text-primary-9 w-full cursor-pointer h-8 font-medium text-sm"
                   onSelect={onDownloadGuideTemplate}
                 >
                   Download Guide
@@ -255,7 +260,7 @@ export function ImportShell<TPayload, TResult>({
                   type="button"
                   variant="outline"
                   size="md"
-                  disabled={csvUploadPhase !== 'idle'}
+                  disabled={csvUploadPhase !== CsvUploadPhase.Idle}
                   onClick={() => uploadInputRef.current?.click()}
                 >
                   <span>Upload CSV</span>
@@ -294,7 +299,11 @@ export function ImportShell<TPayload, TResult>({
                       <button
                         type="button"
                         aria-label="Close CSV upload status"
-                        className="flex size-7 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500 transition hover:border-neutral-300 hover:text-primary-9"
+                        className={cn(
+                          'flex size-7 shrink-0 items-center justify-center rounded-full',
+                          'border border-neutral-200 bg-white text-neutral-500 transition ',
+                          'hover:border-neutral-300 hover:text-primary-9'
+                        )}
                         onClick={onDismissCsvUploadNotifications}
                       >
                         <CloseOutlined className="text-xs" />

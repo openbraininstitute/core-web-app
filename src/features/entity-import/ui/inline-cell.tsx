@@ -2,7 +2,6 @@
 
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { DatePicker } from 'antd';
-import clsx from 'clsx';
 import dayjs from 'dayjs';
 import { memo, useCallback, useEffect, useId, useRef, useState, useTransition } from 'react';
 
@@ -107,17 +106,20 @@ export const BLOCKED_CONTROL_CLASSNAME =
 function getControlClassName(cell: IImportCellState, selected: boolean): string {
   const cellUiStatus = getTableCellUiStatus(cell);
 
-  return clsx(
+  return cn(
     'h-full w-full rounded-none border-0 bg-transparent px-3 py-2 text-base! font-semibold!',
     'placeholder:font-light! placeholder:text-gray-400! text-primary-9! placeholder:text-sm!',
     'shadow-none outline-none focus-visible:border-transparent focus-visible:ring-0',
-    selected && 'text-blue-950',
-    cellUiStatus === TableCellUiStatus.NeedsSelection &&
-      'bg-sky-50/70 text-sky-950 [&_textarea]:bg-sky-50/70 [&_textarea]:text-sky-950',
-    cellUiStatus !== TableCellUiStatus.NeedsSelection &&
-      cell.status === CellStatus.Invalid &&
-      INVALID_CONTROL_CLASSNAME,
-    cell.dependencyState === DependencyState.Blocked && BLOCKED_CONTROL_CLASSNAME
+    { 'text-blue-950': selected },
+    {
+      'bg-sky-50/70 text-sky-950 [&_textarea]:bg-sky-50/70 [&_textarea]:text-sky-950':
+        cellUiStatus === TableCellUiStatus.NeedsSelection,
+    },
+    {
+      [INVALID_CONTROL_CLASSNAME]:
+        cellUiStatus !== TableCellUiStatus.NeedsSelection && cell.status === CellStatus.Invalid,
+    },
+    { [BLOCKED_CONTROL_CLASSNAME]: cell.dependencyState === DependencyState.Blocked }
   );
 }
 
@@ -250,12 +252,20 @@ function InlineCellComponent({
     return (
       <div className="flex min-w-0 w-full flex-col gap-1.5 py-2 px-3">
         <div
-          className="min-w-0 w-full wrap-break-word rounded-md border border-amber-600 bg-amber-600/16 px-2 py-1.5 text-left text-base font-medium text-amber-950 line-through"
+          className={cn(
+            'min-w-0 w-full wrap-break-word rounded-md border border-amber-600 bg-amber-600/16 ',
+            'px-2 py-1.5 text-left text-base font-medium text-amber-950 line-through'
+          )}
           title="Original value"
         >
           {previousLabel || '—'}
         </div>
-        <p className="min-w-0 flex-1 wrap-break-word rounded-xl px-2 py-1.5 text-left text-base font-semibold whitespace-normal text-green-main">
+        <p
+          className={cn(
+            'min-w-0 flex-1 wrap-break-word rounded-xl px-2 py-1.5',
+            'text-left text-base font-semibold whitespace-normal text-green-main'
+          )}
+        >
           {previewLabel || '—'}
         </p>
       </div>
@@ -269,13 +279,21 @@ function InlineCellComponent({
     return (
       <div className="flex min-w-0 w-full flex-col gap-1.5 py-2 px-3">
         <div
-          className="min-w-0 w-full wrap-break-word rounded-md border border-amber-600 bg-amber-600/16 px-2 py-1.5 text-left text-base font-medium text-amber-950 line-through"
+          className={cn(
+            'min-w-0 w-full wrap-break-word rounded-md border border-amber-600 bg-amber-600/16',
+            'px-2 py-1.5 text-left text-base font-medium text-amber-950 line-through'
+          )}
           title="Original value"
         >
           {previousLabel || '—'}
         </div>
         <div className="flex min-w-0 w-full items-center justify-center gap-2">
-          <p className="min-w-0 flex-1 wrap-break-word rounded-xl px-2 py-1.5 text-left text-base font-semibold whitespace-normal text-green-main">
+          <p
+            className={cn(
+              'min-w-0 flex-1 wrap-break-word rounded-xl px-2 py-1.5',
+              'text-left text-base font-semibold whitespace-normal text-green-main'
+            )}
+          >
             {draft.suggestion.label}
           </p>
           <div className="flex shrink-0 items-center justify-center gap-1">
@@ -283,7 +301,10 @@ function InlineCellComponent({
               rounded
               type="button"
               variant="icon"
-              className="shrink-0 rounded-full border border-green-main p-0 group hover:bg-green-main  size-6 [&_svg]:size-3!"
+              className={cn(
+                'shrink-0 rounded-full border border-green-main p-0 group hover:bg-green-main',
+                'size-6 [&_svg]:size-3!'
+              )}
               aria-label={`Accept suggested ${field.label} row ${row.rowIndex + 1}`}
               onClick={(event) => {
                 event.stopPropagation();
@@ -296,7 +317,10 @@ function InlineCellComponent({
               rounded
               type="button"
               variant="icon"
-              className="shrink-0 rounded-full border border-destructive p-0 group hover:bg-destructive  size-6 [&_svg]:size-3!"
+              className={cn(
+                'shrink-0 rounded-full border border-destructive p-0 group hover:bg-destructive',
+                'size-6 [&_svg]:size-3!'
+              )}
               aria-label={`Reject suggested ${field.label} row ${row.rowIndex + 1}`}
               onClick={(event) => {
                 event.stopPropagation();
@@ -370,12 +394,13 @@ function InlineCellComponent({
           <SelectTrigger
             aria-label={`${field.label} row ${row.rowIndex + 1}`}
             data-import-input-type-trigger={`${field.inputType}-select-trigger`}
-            className={clsx(
+            className={cn(
               getControlClassName(cell, selected),
-              'pointer-events-auto box-border h-11 w-full justify-between rounded-none border-0 bg-transparent text-left',
+              'pointer-events-auto box-border h-11 w-full justify-between rounded-none',
+              'border-0 bg-transparent text-left',
               'data-[size=default]:h-full [&_svg]:opacity-100'
             )}
-            iconClassName="text-[#0b4dbb] border p-1 [&_svg]:size-3 size-5 border-neutral-200 rounded-full"
+            iconClassName="text-primary-9 border p-1 [&_svg]:size-3 size-5 border-neutral-200 rounded-full"
           >
             <SelectValue
               data-import-input-type-value={`${field.inputType}-select-value`}
@@ -419,8 +444,10 @@ function InlineCellComponent({
           aria-label={`${field.label} row ${row.rowIndex + 1}`}
           variant="ghost"
           size="md"
-          className={clsx(
-            'pointer-events-auto box-border h-full min-h-[52px] w-full justify-center rounded-none border-0 bg-transparent px-3 py-2 text-left text-sm text-inherit shadow-none hover:bg-transparent hover:text-inherit',
+          className={cn(
+            'pointer-events-auto box-border h-full min-h-[52px] w-full justify-center rounded-none',
+            'border-0 bg-transparent px-3 py-2 text-left text-sm text-inherit',
+            'shadow-none hover:bg-transparent hover:text-inherit',
             getControlClassName(cell, selected)
           )}
           onClick={(event) => {
@@ -465,15 +492,15 @@ function InlineCellComponent({
           aria-label={`${field.label} row ${row.rowIndex + 1}`}
           className={cn(
             getControlClassName(cell, selected),
-            'pointer-events-auto flex h-full min-h-[52px] w-full flex-col rounded-none border-none border-neutral-200 bg-white shadow-none ring-0',
+            'pointer-events-auto flex h-full min-h-[52px] w-full flex-col rounded-none ',
+            'border-none border-neutral-200 bg-white shadow-none! ring-0!',
             'focus-within:border-none! focus-visible:ring-0! focus-visible:outline-none!',
-            '[&_textarea]:box-border [&_textarea]:h-full [&_textarea]:min-h-0! [&_textarea]:flex-1 [&_textarea]:resize-none ',
-            '[&_textarea]:rounded-none [&_textarea]:p-2 [&_textarea]:field-sizing-fixed',
+            '[&_textarea]:box-border [&_textarea]:h-full [&_textarea]:min-h-0! [&_textarea]:flex-1 ',
+            '[&_textarea]:resize-none [&_textarea]:rounded-none [&_textarea]:p-2 [&_textarea]:field-sizing-fixed',
             '[&_textarea]:placeholder:font-light! [&_textarea]:placeholder:text-gray-400! [&_textarea]:placeholder:text-sm!',
-            'focus:border border-neutral-200 bg-white p-2 focus-within:border-primary-6! focus-visible:ring-0! focus-visible:outline-none!',
-            'shadow-none! ring-0!',
-            cell.status === CellStatus.Invalid && INVALID_CONTROL_CLASSNAME,
-            cell.dependencyState === DependencyState.Blocked && BLOCKED_CONTROL_CLASSNAME
+            'focus:border border-neutral-200 bg-white p-2 focus-within:border-primary-6! ',
+            { [INVALID_CONTROL_CLASSNAME]: cell.status === CellStatus.Invalid },
+            { [BLOCKED_CONTROL_CLASSNAME]: cell.dependencyState === DependencyState.Blocked }
           )}
           disabled={cell.dependencyState === DependencyState.Blocked}
           placeholder={field.placeholder}
@@ -510,9 +537,11 @@ function InlineCellComponent({
             getControlClassName(cell, selected),
             'pointer-events-auto flex h-full min-h-[52px] w-full items-stretch text-lg text-primary-9',
             'rounded-none border-none shadow-none outline-none focus-within:border-primary-6',
-            '[&_.ant-picker-input]:flex [&_.ant-picker-input]:min-h-0 [&_.ant-picker-input]:flex-1 [&_.ant-picker-input]:items-center',
-            '[&_.ant-picker-input>input]:box-border [&_.ant-picker-input>input]:h-full [&_.ant-picker-input>input]:min-h-0',
-            '[&_input]:placeholder:text-gray-400! [&_input]:placeholder:text-sm! [&_input]:placeholder:font-light! '
+            '[&_.ant-picker-input]:flex [&_.ant-picker-input]:min-h-0 [&_.ant-picker-input]:flex-1 ',
+            '[&_.ant-picker-input]:items-center [&_.ant-picker-input>input]:box-border ',
+            '[&_.ant-picker-input>input]:h-full [&_.ant-picker-input>input]:min-h-0',
+            '[&_input]:placeholder:text-gray-400! [&_input]:placeholder:text-sm!',
+            '[&_input]:placeholder:font-light!'
           )}
           styles={{
             root: {

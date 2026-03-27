@@ -37,7 +37,6 @@ import {
   createMtypeImportField,
   createRemoteQuery,
   createSubjectImportField,
-  DEFAULT_ENTITY_IMPORT_LICENSE_ID,
   readSuggestionString,
   renderSuggestionDetailRows,
 } from '@/features/entity-import/core/shared/field-builders';
@@ -103,7 +102,7 @@ const contributionEntrySchema = z.object({
   agent_id: z
     .uuid({ error: 'Contributor is required' })
     .nonempty({ message: 'Contributor is required' }),
-  role_id: z.string({ error: 'Role is required' }).min(1, 'Role is required'),
+  role_id: z.string({ error: 'Contributor role is required' }).min(1, 'Role is required'),
 });
 
 const locationSchema = z
@@ -165,8 +164,6 @@ export interface CellMorphologySubmissionPayload {
 }
 
 interface CreateCellMorphologyImportAdapterOptions {
-  defaultBrainRegionId: string;
-  defaultLicenseId?: string;
   services?: ICellMorphologyImportServices;
   postSubmitActions?: IEntityImportPostSubmitActions;
 }
@@ -213,8 +210,6 @@ function hasDigitalReconstructionProtocol(row: IImportRowState): boolean {
 }
 
 export function createCellMorphologyImportAdapter({
-  defaultBrainRegionId: _defaultBrainRegionId,
-  defaultLicenseId: _defaultLicenseId = DEFAULT_ENTITY_IMPORT_LICENSE_ID,
   services = createCellMorphologyImportServices(),
   postSubmitActions = createEntityImportPostSubmitActions(),
 }: CreateCellMorphologyImportAdapterOptions): IEntityImportAdapter<
@@ -225,7 +220,7 @@ export function createCellMorphologyImportAdapter({
     id: 'cell-morphology-import',
     title: 'Cell Morphology Import',
     submitLabel: 'Import',
-    templateFileName: 'cell-morphology-import-template.csv',
+    templateFileName: 'Cell Morphology template a guide',
     templateGuide: {
       entityType: ExtendedEntitiesTypeDict.CellMorphology,
       guideFileName: 'cell-morphology-import-template.md',
@@ -409,13 +404,13 @@ export function createCellMorphologyImportAdapter({
       sourceFile: '',
       name: '',
       description: '',
-      brainRegionId: _defaultBrainRegionId,
+      brainRegionId: '',
       experimentDate: '',
       contactEmail: '',
       publishedIn: '',
       location: '',
       subjectId: '',
-      licenseId: _defaultLicenseId,
+      licenseId: '',
       protocolId: '',
       repairPipelineState: '',
       mtypeClassId: '',
