@@ -1,6 +1,6 @@
 'use client';
 
-import ChevronRightIcon from '@/components/icons/ChevronRightIcon';
+import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import { classNames } from '@/util/utils';
 
 import styles from './suggested-questions.module.css';
@@ -46,7 +46,7 @@ export default function SuggestedQuestions({
                   clearSuggestions();
                 }}
               >
-                <ChevronRightIcon />
+                <ArrowReturnRight />
                 <div>{prompt}</div>
               </button>
             ))}

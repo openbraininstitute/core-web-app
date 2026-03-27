@@ -167,7 +167,7 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
                 />
               </svg>
               <span className={styles.thinkingLabel}>
-                {isExpanded ? `Hide steps (${stepCount})` : `Show steps (${stepCount})`}
+                {isExpanded ? `Hide reasoning (${stepCount})` : `Show reasoning (${stepCount})`}
               </span>
             </div>
           </button>

@@ -84,13 +84,14 @@
 }
 
 .prompt > button.cancelButton {
-  background-color: var(--color-error);
+  background-color: color-mix(in srgb, var(--color-error) 70%, var(--color-neutral-3));
   color: white;
   transition: all 0.2s ease;
 }
 
 .prompt > button.cancelButton:hover {
-  background-color: color-mix(in srgb, var(--color-error) 70%, var(--color-neutral-7));
+  background-color: color-mix(in srgb, var(--color-error) 90%, var(--color-neutral-9));
+  box-shadow: 0 0 4px 1px color-mix(in srgb, var(--color-error) 30%, transparent);
 }
 
 .spinner {
