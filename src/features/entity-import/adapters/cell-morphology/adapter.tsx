@@ -145,6 +145,29 @@ function renderProtocolSuggestionDetails({ suggestion }: ValidatorSuggestionDeta
   ]);
 }
 
+function renderSubjectSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
+  return renderSuggestionDetailRows([
+    {
+      label: 'Species',
+      value: readSuggestionString(
+        (suggestion.metadata as { species?: string } | undefined)?.species
+      ),
+    },
+    {
+      label: 'Strain',
+      value: readSuggestionString((suggestion.metadata as { strain?: string } | undefined)?.strain),
+    },
+    {
+      label: 'Sex',
+      value: readSuggestionString((suggestion.metadata as { sex?: string } | undefined)?.sex),
+    },
+    {
+      label: 'Age',
+      value: readSuggestionString((suggestion.metadata as { age?: number } | undefined)?.age),
+    },
+  ]);
+}
+
 function renderMtypeSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
     {
@@ -705,6 +728,7 @@ export function createCellMorphologyImportAdapter({
               querySuggestions: services.querySubject,
             })({ query, context }),
         },
+        validatorSuggestionDetails: renderSubjectSuggestionDetails,
         columnWidth: 200,
       },
       {

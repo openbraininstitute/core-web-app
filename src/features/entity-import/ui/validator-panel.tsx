@@ -465,6 +465,7 @@ function SingleColumnValidatorCard({
       : null;
   const visibleSuggestions =
     activeValidatorSuggestions?.suggestions ?? cell.remoteState.suggestions;
+
   const visibleSuggestionPaging =
     activeValidatorSuggestions?.suggestionPaging ?? cell.remoteState.suggestionPaging;
   const visibleMessage = activeValidatorSuggestions?.message ?? cell.remoteState.message;
@@ -790,7 +791,6 @@ function SingleColumnValidatorCard({
                 row,
                 values: rowValues,
               });
-
               return (
                 <div
                   data-import-input-type-item={`${field.inputType}-suggestion`}
