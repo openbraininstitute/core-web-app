@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -8,9 +8,53 @@ import { ImportInputType } from '../core/contracts';
 import { EntityImportFeature } from '../index';
 
 import type { ReactElement } from 'react';
-import type { IEntityImportAdapter, TableCellRendererProps } from '../core/adapter';
+import type { IEntityImportAdapter } from '../core/adapter';
 
-const inlineCellRenderCounts: Record<string, number> = {};
+const standardInputRenderHarness = vi.hoisted(() => {
+  const counts: Record<string, number> = {};
+  const trackedLabelPattern = /^(Name|Notes) row \d+$/;
+
+  return {
+    counts,
+    reset() {
+      for (const key of Object.keys(counts)) {
+        delete counts[key];
+      }
+    },
+    track(label: unknown) {
+      if (typeof label !== 'string' || !trackedLabelPattern.test(label)) {
+        return;
+      }
+
+      counts[label] = (counts[label] ?? 0) + 1;
+    },
+    renderedLabels() {
+      return Object.entries(counts)
+        .filter(([, count]) => count > 0)
+        .map(([label]) => label)
+        .sort();
+    },
+  };
+});
+
+vi.mock('@/ui/molecules/input', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/ui/molecules/input')>();
+
+  return {
+    ...actual,
+    Input: ({ 'aria-label': ariaLabel, ...props }: any) => {
+      standardInputRenderHarness.track(ariaLabel);
+
+      return (
+        <input
+          aria-label={typeof ariaLabel === 'string' ? ariaLabel : undefined}
+          {...props}
+        />
+      );
+    },
+  };
+});
+
 const htmlElementPrototypeDescriptors = {
   hasPointerCapture: Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'hasPointerCapture'),
   setPointerCapture: Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'setPointerCapture'),
@@ -21,34 +65,10 @@ const htmlElementPrototypeDescriptors = {
   scrollIntoView: Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'scrollIntoView'),
 } as const;
 
-function trackInlineCellRender(rowIndex: number, fieldPath: string) {
-  const key = `${rowIndex}:${fieldPath}`;
-  inlineCellRenderCounts[key] = (inlineCellRenderCounts[key] ?? 0) + 1;
-}
-
-function createCountingCellRenderer(fieldPath: string) {
-  return function CountingCellRenderer({ actions, field, row, session }: TableCellRendererProps) {
-    trackInlineCellRender(row.rowIndex, fieldPath);
-
-    return (
-      <button
-        type="button"
-        aria-label={`${field.label} row ${row.rowIndex + 1}`}
-        className="h-full w-full px-3 py-2 text-left"
-        onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
-      >
-        {session.selectedCell?.rowId === row.id && session.selectedCell?.fieldPath === field.path
-          ? `Selected: ${row.cells[field.path].rawValue || '—'}`
-          : row.cells[field.path].rawValue || '—'}
-      </button>
-    );
-  };
-}
-
 const tableHarnessAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
-  id: 'import-table-rerender-harness',
-  title: 'Import Table Rerender Harness',
-  templateFileName: 'import-table-rerender.csv',
+  id: 'import-table-standard-rerender-harness',
+  title: 'Import Table Standard Rerender Harness',
+  templateFileName: 'import-table-standard-rerender.csv',
   submitLabel: 'Import rows',
   fields: [
     {
@@ -57,27 +77,21 @@ const tableHarnessAdapter: IEntityImportAdapter<Record<string, string>, { id: st
       required: true,
       inputType: ImportInputType.Text,
       columnWidth: 200,
-      tableRenderer: createCountingCellRenderer('name'),
     },
     {
-      label: 'Status',
-      path: 'status',
+      label: 'Notes',
+      path: 'notes',
       required: true,
-      inputType: ImportInputType.Select,
+      inputType: ImportInputType.Text,
       columnWidth: 200,
-      options: [
-        { value: 'draft', label: 'Draft' },
-        { value: 'published', label: 'Published' },
-      ],
-      tableRenderer: createCountingCellRenderer('status'),
     },
   ],
   schema: z.object({
     name: z.string().min(1, 'Name is required'),
-    status: z.string().min(1, 'Status is required'),
+    notes: z.string().min(1, 'Notes are required'),
   }),
   createBlankRow() {
-    return { name: '', status: 'draft' };
+    return { name: '', notes: '' };
   },
   buildPayload({ values }) {
     return values;
@@ -108,9 +122,7 @@ function renderWithQueryClient(ui: ReactElement) {
 describe('ImportTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    for (const key of Object.keys(inlineCellRenderCounts)) {
-      delete inlineCellRenderCounts[key];
-    }
+    standardInputRenderHarness.reset();
 
     if (!HTMLElement.prototype.hasPointerCapture) {
       Object.defineProperty(HTMLElement.prototype, 'hasPointerCapture', {
@@ -165,8 +177,8 @@ describe('ImportTable', () => {
         adapter={tableHarnessAdapter}
         context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
         initialRows={[
-          { name: 'Neuron A', status: 'draft' },
-          { name: 'Neuron B', status: 'draft' },
+          { name: 'Neuron A', notes: 'Alpha' },
+          { name: 'Neuron B', notes: 'Beta' },
         ]}
       />
     );
@@ -178,9 +190,7 @@ describe('ImportTable', () => {
       expect(getFieldCell(1, 'Name')).toHaveClass('bg-blue-50/60');
     });
 
-    for (const key of Object.keys(inlineCellRenderCounts)) {
-      delete inlineCellRenderCounts[key];
-    }
+    standardInputRenderHarness.reset();
 
     await user.click(screen.getByLabelText('Name row 2'));
 
@@ -188,13 +198,47 @@ describe('ImportTable', () => {
       expect(getFieldCell(2, 'Name')).toHaveClass('bg-blue-50/60');
     });
 
-    const rerenderedKeys = Object.entries(inlineCellRenderCounts)
-      .filter(([, count]) => count > 0)
-      .map(([key]) => key);
+    expect(
+      standardInputRenderHarness.renderedLabels(),
+      'expected only the prior and newly selected field cells to re-render when selection moves between rows'
+    ).toEqual(['Name row 1', 'Name row 2']);
+  });
+
+  it('does not re-render unrelated visible text cells when editing one standard field', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Import Table Standard Edit Rerender"
+        onClose={() => {}}
+        adapter={tableHarnessAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[
+          { name: 'Neuron A', notes: 'Alpha' },
+          { name: 'Neuron B', notes: 'Beta' },
+        ]}
+      />
+    );
+
+    const nameRowOne = await screen.findByLabelText('Name row 1');
+
+    await user.click(nameRowOne);
+    await waitFor(() => {
+      expect(getFieldCell(1, 'Name')).toHaveClass('bg-blue-50/60');
+    });
+
+    standardInputRenderHarness.reset();
+
+    await user.clear(nameRowOne);
+    await user.type(nameRowOne, 'Neuron A updated');
+    fireEvent.blur(nameRowOne);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron A updated');
+    });
 
     expect(
-      rerenderedKeys.sort(),
-      'expected only the prior and newly selected field cells to re-render when selection moves between rows'
-    ).toEqual(['0:name', '1:name']);
+      standardInputRenderHarness.renderedLabels(),
+      'expected only the edited text cell to re-render while unrelated visible text cells keep their previous render output'
+    ).toEqual(['Name row 1']);
   });
 });
