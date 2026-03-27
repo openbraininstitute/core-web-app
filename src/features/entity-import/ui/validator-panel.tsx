@@ -5,11 +5,21 @@ import {
   ExclamationCircleOutlined,
   LeftOutlined,
   LoadingOutlined,
+  MinusOutlined,
+  PlusOutlined,
   RightOutlined,
 } from '@ant-design/icons';
-import { RiInfoI, RiSearchLine } from '@remixicon/react';
+import { RiFolderUploadFill, RiInfoI, RiSearchLine, RiUpload2Line } from '@remixicon/react';
 import { DatePicker } from 'antd';
-import { type CSSProperties, useCallback, useEffect, useId, useRef } from 'react';
+import {
+  type CSSProperties,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
@@ -29,7 +39,6 @@ import {
 } from '@/features/entity-import/core/contracts';
 import {
   buildFileAcceptValue,
-  getImportFileButtonLabel,
   getImportFileInputMultiple,
   toFileArray,
 } from '@/features/entity-import/core/file-field';
@@ -84,6 +93,10 @@ interface ValidatorPanelProps<TPayload, TResult> {
   importRun: IImportRunState;
   validatorPreview: IValidatorPreviewState;
   validatorSuggestions: IValidatorSuggestionState;
+  collapsed: boolean;
+  hoverExpanded: boolean;
+  onToggleCollapsed: () => void;
+  onHoverExpandedChange: (expanded: boolean) => void;
 }
 
 const ValidatorFieldStatus = {
@@ -214,26 +227,34 @@ function resolveImportRunProgressPercent(importRun: IImportRunState): number {
   return Math.min((importRun.completedRowCount / importRun.totalRowCount) * 100, 100);
 }
 
-type SubmitButtonTone = 'idle' | 'running' | 'success' | 'partial' | 'failed';
+const SubmitButtonTone = {
+  Idle: 'idle',
+  Running: 'running',
+  Success: 'success',
+  Partial: 'partial',
+  Failed: 'failed',
+} as const;
+
+type SubmitButtonTone = (typeof SubmitButtonTone)[keyof typeof SubmitButtonTone];
 
 function resolveSubmitButtonTone(importRun: IImportRunState): SubmitButtonTone {
   if (importRun.phase === ImportRunPhase.Running) {
-    return 'running';
+    return SubmitButtonTone.Running;
   }
 
   if (importRun.phase === ImportRunPhase.Completed) {
     if (importRun.failedRowCount === 0) {
-      return 'success';
+      return SubmitButtonTone.Success;
     }
 
     if (importRun.succeededRowCount === 0) {
-      return 'failed';
+      return SubmitButtonTone.Failed;
     }
 
-    return 'partial';
+    return SubmitButtonTone.Partial;
   }
 
-  return 'idle';
+  return SubmitButtonTone.Idle;
 }
 
 function resolveSubmitButtonLabel<TPayload, TResult>(
@@ -261,40 +282,38 @@ function resolveImportFailureSummary(importRun: IImportRunState): string {
 }
 
 function resolveSubmitButtonFillClassName(tone: SubmitButtonTone): string {
-  if (tone === 'success') {
+  if (tone === SubmitButtonTone.Success) {
     return 'bg-emerald-500';
   }
 
-  if (tone === 'failed') {
+  if (tone === SubmitButtonTone.Failed) {
     return 'bg-amber-500';
   }
 
   return 'bg-primary-8';
 }
 
-function resolveSubmitButtonChromeClassName(tone: SubmitButtonTone): string {
-  if (tone === 'success') {
-    return [
-      'border-emerald-500/30 text-emerald-900',
-      'hover:border-emerald-500 hover:bg-white hover:text-emerald-900 active:bg-white',
-      'disabled:bg-white disabled:text-emerald-900',
-    ].join(' ');
-  }
+const SUBMIT_BUTTON_IDLE_CHROME = [
+  'border-primary-8/20 text-primary-9',
+  'hover:border-primary-8 hover:bg-white hover:text-primary-9 active:bg-white',
+  'disabled:bg-white disabled:text-primary-9',
+] as const;
 
-  if (tone === 'failed') {
-    return [
-      'border-amber-500/30 text-amber-950',
-      'hover:border-amber-500 hover:bg-white hover:text-amber-950 active:bg-white',
-      'disabled:bg-white disabled:text-amber-950',
-    ].join(' ');
-  }
-
-  return [
-    'border-primary-8/20 text-primary-9',
-    'hover:border-primary-8 hover:bg-white hover:text-primary-9 active:bg-white',
-    'disabled:bg-white disabled:text-primary-9',
-  ].join(' ');
-}
+const SUBMIT_BUTTON_CHROME_CLASSNAME: Record<SubmitButtonTone, readonly string[]> = {
+  [SubmitButtonTone.Success]: [
+    'border-emerald-500/30 text-emerald-900',
+    'hover:border-emerald-500 hover:bg-white hover:text-emerald-900 active:bg-white',
+    'disabled:bg-white disabled:text-emerald-900',
+  ],
+  [SubmitButtonTone.Failed]: [
+    'border-amber-500/30 text-amber-950',
+    'hover:border-amber-500 hover:bg-white hover:text-amber-950 active:bg-white',
+    'disabled:bg-white disabled:text-amber-950',
+  ],
+  [SubmitButtonTone.Idle]: SUBMIT_BUTTON_IDLE_CHROME,
+  [SubmitButtonTone.Running]: SUBMIT_BUTTON_IDLE_CHROME,
+  [SubmitButtonTone.Partial]: SUBMIT_BUTTON_IDLE_CHROME,
+};
 
 function createValidatorDraftValue(
   cell: IImportSessionState['rows'][number]['cells'][string]
@@ -455,6 +474,151 @@ function ValidatorSuggestionSkeletonList() {
           <Skeleton className="size-5 shrink-0 rounded-full" />
         </div>
       ))}
+    </div>
+  );
+}
+
+interface ValidatorFileDropzoneProps {
+  field: IAdapterFieldDefinition;
+  fileInputRef: RefObject<HTMLInputElement | null>;
+  fileInputId: string;
+  draftValue: ValidatorDraftValue;
+  updateDraftValue: (value: ValidatorDraftValue) => void;
+}
+
+function ValidatorFileDropzone({
+  field,
+  fileInputRef,
+  fileInputId,
+  draftValue,
+  updateDraftValue,
+}: ValidatorFileDropzoneProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounterRef = useRef(0);
+
+  const processFiles = useCallback(
+    (files: Array<File>) => {
+      updateDraftValue({
+        rawValue:
+          files.length === 0
+            ? ''
+            : files.length === 1
+              ? (files[0]?.name ?? '')
+              : `${files.length} files selected`,
+        displayValue:
+          files.length === 0
+            ? null
+            : files.length === 1
+              ? (files[0]?.name ?? null)
+              : `${files.length} files selected`,
+        parsedValue: files,
+      });
+    },
+    [updateDraftValue]
+  );
+
+  const handleDragEnter = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragCounterRef.current += 1;
+    if (event.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setIsDragging(false);
+      dragCounterRef.current = 0;
+      const files = Array.from(event.dataTransfer.files);
+      if (files.length > 0) {
+        processFiles(files);
+      }
+    },
+    [processFiles]
+  );
+
+  const hasFile = Boolean(draftValue.displayValue ?? draftValue.rawValue);
+
+  return (
+    <div>
+      {/** biome-ignore lint/a11y/useSemanticElements: already have a button as child */}
+      <div
+        data-import-input-type-trigger={`${field.inputType}-file-dropzone`}
+        className={cn(
+          'relative flex flex-col items-center gap-2 rounded-xl border border-dashed py-5 text-center transition-colors cursor-pointer',
+          isDragging
+            ? 'border-primary-8 bg-primary-8/5'
+            : hasFile
+              ? 'border-neutral-300 bg-neutral-50'
+              : 'border-neutral-300 hover:border-neutral-400'
+        )}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
+        aria-label="Drop files here or click to browse"
+      >
+        <RiFolderUploadFill
+          className={cn('size-6', isDragging ? 'text-primary-8' : 'text-neutral-400')}
+        />
+
+        {hasFile ? (
+          <p className="text-sm font-medium text-primary-9 truncate max-w-full">
+            {draftValue.displayValue ?? draftValue.rawValue}
+          </p>
+        ) : (
+          <div className="space-y-0.5 select-none">
+            <p className="text-sm text-neutral-500">
+              Drop {getImportFileInputMultiple(field) ? 'files' : 'file'} here or{' '}
+              <span className="font-medium text-primary-8 underline underline-offset-2">
+                browse
+              </span>
+            </p>
+          </div>
+        )}
+      </div>
+
+      <input
+        data-import-input-type={field.inputType}
+        ref={fileInputRef}
+        id={fileInputId}
+        type="file"
+        aria-label="Validator file input"
+        accept={buildFileAcceptValue(field.fileConfig)}
+        multiple={getImportFileInputMultiple(field)}
+        className="sr-only"
+        onChange={(event) => {
+          const files = Array.from(event.currentTarget.files ?? []);
+          processFiles(files);
+          event.currentTarget.value = '';
+        }}
+      />
     </div>
   );
 }
@@ -900,49 +1064,13 @@ function SingleColumnValidatorCard({
 
               {(field.inputType === ImportInputType.File ||
                 field.inputType === ImportInputType.FileBundle) && (
-                <div>
-                  <Button
-                    data-import-input-type-trigger={`${field.inputType}-file-button`}
-                    rounded
-                    type="button"
-                    variant="outline"
-                    size="md"
-                    className="w-full justify-start text-left"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {(draftValue.displayValue ?? draftValue.rawValue) ||
-                      getImportFileButtonLabel(field)}
-                  </Button>
-                  <input
-                    data-import-input-type={field.inputType}
-                    ref={fileInputRef}
-                    id={fileInputId}
-                    type="file"
-                    aria-label="Validator file input"
-                    accept={buildFileAcceptValue(field.fileConfig)}
-                    multiple={getImportFileInputMultiple(field)}
-                    className="sr-only"
-                    onChange={(event) => {
-                      const files = Array.from(event.currentTarget.files ?? []);
-                      updateDraftValue({
-                        rawValue:
-                          files.length === 0
-                            ? ''
-                            : files.length === 1
-                              ? (files[0]?.name ?? '')
-                              : `${files.length} files selected`,
-                        displayValue:
-                          files.length === 0
-                            ? null
-                            : files.length === 1
-                              ? (files[0]?.name ?? null)
-                              : `${files.length} files selected`,
-                        parsedValue: files,
-                      });
-                      event.currentTarget.value = '';
-                    }}
-                  />
-                </div>
+                <ValidatorFileDropzone
+                  field={field}
+                  fileInputRef={fileInputRef}
+                  fileInputId={fileInputId}
+                  draftValue={draftValue}
+                  updateDraftValue={updateDraftValue}
+                />
               )}
             </div>
           )}
@@ -1146,8 +1274,33 @@ export function ValidatorPanel<TPayload, TResult>({
   importRun,
   validatorPreview,
   validatorSuggestions,
+  collapsed,
+  hoverExpanded,
+  onToggleCollapsed,
+  onHoverExpandedChange,
 }: ValidatorPanelProps<TPayload, TResult>) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = useCallback(() => {
+    if (!collapsed) return;
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    onHoverExpandedChange(true);
+  }, [collapsed, onHoverExpandedChange]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (!collapsed) return;
+    hoverTimeoutRef.current = setTimeout(() => {
+      onHoverExpandedChange(false);
+    }, 200);
+  }, [collapsed, onHoverExpandedChange]);
+
+  // Reset hover state when user explicitly expands
+  useEffect(() => {
+    if (!collapsed) {
+      onHoverExpandedChange(false);
+    }
+  }, [collapsed, onHoverExpandedChange]);
   const activeRow = resolveActiveRow(session);
   const activeField = resolveActiveField(adapter, session);
   const selectedFieldPath = session.validatorSelection.fieldPath;
@@ -1184,14 +1337,79 @@ export function ValidatorPanel<TPayload, TResult>({
     scrollContainerRef.current.scrollTop = 0;
   }, [validatorScrollResetKey]);
 
+  // Collapsed vertical bar view
+  if (collapsed && !hoverExpanded) {
+    return (
+      <aside
+        className="flex h-full min-h-0 flex-col items-center gap-3 px-0.5"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="flex h-full flex-col items-center gap-3 rounded-full border border-neutral-200 bg-white px-1.5 py-3 shadow-sm">
+          <button
+            type="button"
+            aria-label="Expand validator panel"
+            className="flex size-7 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-primary-9"
+            onClick={onToggleCollapsed}
+          >
+            <PlusOutlined className="text-xs" />
+          </button>
+
+          <span className="text-[11px] font-semibold tracking-widest text-primary-9 [writing-mode:vertical-lr] rotate-180 select-none">
+            Validator
+          </span>
+        </div>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              rounded
+              type="button"
+              variant="icon"
+              size="md"
+              className={cn(
+                'shrink-0 border bg-white shadow-none',
+                SUBMIT_BUTTON_CHROME_CLASSNAME[submitButtonTone]
+              )}
+              disabled={!session.summary.canSubmit || isSubmitting || hasPendingValidatorPreview}
+              onClick={() => void actions.submitRows()}
+              aria-label="Import rows"
+            >
+              <RiUpload2Line className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="text-xs">
+            {submitButtonLabel}
+          </TooltipContent>
+        </Tooltip>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden px-2">
+    <aside
+      className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden px-2"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="flex flex-col h-full min-h-0 max-h-[calc(100%-42px)] shadow-sm hover:shadow-md py-4 rounded-3xl border border-neutral-200 bg-white">
         <div className="shrink-0 px-3 pb-4 text-white">
           <div className="flex items-start justify-between gap-4">
             <h3 className="text-2xl font-semibold leading-none tracking-tight text-primary-9">
               Validator
             </h3>
+            <button
+              type="button"
+              aria-label={collapsed ? 'Expand validator panel' : 'Collapse validator panel'}
+              className="flex size-7 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-primary-9"
+              onClick={onToggleCollapsed}
+            >
+              {collapsed ? (
+                <PlusOutlined className="text-xs" />
+              ) : (
+                <MinusOutlined className="text-xs" />
+              )}
+            </button>
           </div>
           <div className="mt-3 h-px bg-neutral-2" />
 
@@ -1348,7 +1566,7 @@ export function ValidatorPanel<TPayload, TResult>({
             size="lg"
             className={cn(
               'relative mt-auto w-full overflow-hidden border bg-white shadow-none',
-              resolveSubmitButtonChromeClassName(submitButtonTone)
+              SUBMIT_BUTTON_CHROME_CLASSNAME[submitButtonTone]
             )}
             style={submitButtonStyle}
             data-import-run-tone={submitButtonTone}

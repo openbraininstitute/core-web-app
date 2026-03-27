@@ -234,7 +234,9 @@ export function createCommonEntityImportQueryServices(): IEntityImportSharedQuer
 
       return makeRemoteSearchResult({
         suggestions: response.data.map((mtype) =>
-          makeSuggestion(mtype.id, mtype.pref_label, mtype.alt_label ?? undefined)
+          makeSuggestion(mtype.id, mtype.pref_label, mtype.alt_label ?? undefined, {
+            definition: mtype.definition ?? null,
+          })
         ),
         pageParam: paging.pageParam,
         pageSize: paging.pageSize,

@@ -104,6 +104,12 @@ export function renderMtypeSuggestionDetails({ suggestion }: ValidatorSuggestion
       label: 'Alternative Label',
       value: readSuggestionString(suggestion.description),
     },
+    {
+      label: 'Definition',
+      value: readSuggestionString(
+        (suggestion.metadata as { definition?: string } | undefined)?.definition
+      ),
+    },
   ]);
 }
 
@@ -367,6 +373,7 @@ export function createMtypeImportField({
     inputType: ImportInputType.RemoteSelect,
     placeholder,
     remote: {
+      autoResolveResolvedSuggestion: false,
       query: createRemoteQuery({
         queryField: 'ilike_search' satisfies SharedTextQueryField,
         querySuggestions: services.queryMtype,

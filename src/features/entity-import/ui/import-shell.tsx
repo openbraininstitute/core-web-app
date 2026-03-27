@@ -3,7 +3,7 @@
 import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { RiDownload2Line, RiUpload2Line } from '@remixicon/react';
 import { Progress } from 'antd';
-import { useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -199,6 +199,14 @@ export function ImportShell<TPayload, TResult>({
   onUploadCsvFile,
 }: ImportShellProps<TPayload, TResult>) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const [validatorCollapsed, setValidatorCollapsed] = useState(false);
+  const [validatorHoverExpanded, setValidatorHoverExpanded] = useState(false);
+
+  const toggleValidatorCollapsed = useCallback(() => {
+    setValidatorCollapsed((prev) => !prev);
+  }, []);
+
+  const showExpandedValidator = !validatorCollapsed || validatorHoverExpanded;
   const csvUploadStatus = resolveCsvUploadStatus({
     csvUploadPhase,
     csvRowValidationProgress,
@@ -402,7 +410,14 @@ export function ImportShell<TPayload, TResult>({
         onDismiss={actions.dismissNotification}
       />
 
-      <div className="grid min-h-0 flex-1 overflow-hidden gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
+      <div
+        className={cn(
+          'grid min-h-0 flex-1 overflow-hidden gap-5 transition-[grid-template-columns] duration-300 ease-in-out',
+          showExpandedValidator
+            ? 'xl:grid-cols-[minmax(0,1fr)_24rem]'
+            : 'xl:grid-cols-[minmax(0,1fr)_3.5rem]'
+        )}
+      >
         <section className="min-h-0 overflow-hidden bg-white">
           <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
             <div className="relative min-h-0 flex-1">
@@ -427,6 +442,10 @@ export function ImportShell<TPayload, TResult>({
             importRun={importRun}
             validatorPreview={validatorPreview}
             validatorSuggestions={validatorSuggestions}
+            collapsed={validatorCollapsed}
+            hoverExpanded={validatorHoverExpanded}
+            onToggleCollapsed={toggleValidatorCollapsed}
+            onHoverExpandedChange={setValidatorHoverExpanded}
           />
         </section>
       </div>
