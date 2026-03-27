@@ -579,63 +579,8 @@ export function useEntityImportController<TPayload, TResult>({
           isFetchingNextPage: false,
         },
       });
-
-      const remoteQuery = field.remote?.query;
-      if (!remoteQuery) {
-        return;
-      }
-
-      try {
-        const remoteResult = await remoteQuery({
-          query: normalizedQuery,
-          row,
-          values: getRowSubmissionValues(row),
-          context,
-          pageParam: 0,
-          pageSize: ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
-        });
-
-        if (validatorSelectionQueryKeyRef.current !== `${rowId}:${fieldPath}:${normalizedQuery}`) {
-          return;
-        }
-
-        setValidatorSuggestions({
-          rowId,
-          fieldPath,
-          query: normalizedQuery,
-          status: cell.remoteState.status,
-          suggestions: mergeSuggestions(localSuggestions, remoteResult.suggestions),
-          selectedSuggestion: cell.remoteState.selectedSuggestion,
-          message: cell.remoteState.message,
-          suggestionPaging: {
-            hasNextPage: remoteResult.nextPageParam !== null,
-            isFetchingNextPage: false,
-          },
-        });
-      } catch (error) {
-        if (validatorSelectionQueryKeyRef.current !== `${rowId}:${fieldPath}:${normalizedQuery}`) {
-          return;
-        }
-
-        const message =
-          error instanceof Error ? error.message : `Failed to load suggestions for ${field.label}.`;
-
-        setValidatorSuggestions({
-          rowId,
-          fieldPath,
-          query: normalizedQuery,
-          status: RemoteValidationStatus.Invalid,
-          suggestions: localSuggestions,
-          selectedSuggestion: cell.remoteState.selectedSuggestion,
-          message,
-          suggestionPaging: {
-            hasNextPage: false,
-            isFetchingNextPage: false,
-          },
-        });
-      }
     },
-    [adapter.fields, clearValidatorSuggestions, context]
+    [adapter.fields, clearValidatorSuggestions]
   );
 
   const runDirectRemoteValidation = useCallback(
@@ -1197,12 +1142,12 @@ export function useEntityImportController<TPayload, TResult>({
         fieldPath: validatorSuggestionRequest.fieldPath,
         query: validatorSuggestionRequest.query,
         status: RemoteValidationStatus.Valid,
-        suggestions: [],
+        suggestions,
         selectedSuggestion: autoResolvedSuggestion,
         message: null,
         suggestionPaging: {
-          hasNextPage: false,
-          isFetchingNextPage: false,
+          hasNextPage: validatorSuggestionsInfinite.hasNextPage ?? false,
+          isFetchingNextPage: validatorSuggestionsInfinite.isFetchingNextPage,
         },
       });
       return;
@@ -1230,7 +1175,7 @@ export function useEntityImportController<TPayload, TResult>({
       status: hasResolvedCommittedValue
         ? RemoteValidationStatus.Valid
         : RemoteValidationStatus.Invalid,
-      suggestions: hasResolvedCommittedValue ? [] : suggestions,
+      suggestions,
       selectedSuggestion,
       message: hasResolvedCommittedValue ? null : unresolvedMessage,
       suggestionPaging: {

@@ -263,6 +263,17 @@ function createCsvRemoteValidationAdapter(
   };
 }
 
+type FutureRemoteValidationConfig = NonNullable<
+  IEntityImportAdapter<Record<string, string>, { id: string }>['fields'][number]['remote']
+> & {
+  getValidationCacheKey: (args: { query: string }) => string | null;
+};
+type CsvHydratedValue = {
+  rawValue: string;
+  displayValue: string | null;
+  parsedValue: string;
+};
+
 function getCsvUploadInput(container: HTMLElement): HTMLInputElement {
   const input = container.querySelector('input[accept=".csv,text/csv"]');
   if (!(input instanceof HTMLInputElement)) {
@@ -289,6 +300,72 @@ function createDeferred<T>() {
   return { promise, resolve, reject };
 }
 
+function createCsvTooltipProgressAdapter({
+  evaluate,
+  hydrateDeferred,
+  id,
+  templateFileName,
+  title,
+}: {
+  evaluate: (args: { query: string }) => Promise<RemoteValidationResult>;
+  hydrateDeferred: ReturnType<typeof createDeferred<CsvHydratedValue>>;
+  id: string;
+  templateFileName: string;
+  title: string;
+}): IEntityImportAdapter<Record<string, string>, { id: string }> {
+  return {
+    id,
+    title,
+    templateFileName,
+    submitLabel: 'Import rows',
+    fields: [
+      {
+        label: 'Name',
+        path: 'name',
+        required: true,
+        inputType: ImportInputType.Text,
+        csv: {
+          hydrateCell: async ({ rawValue }) => {
+            if (rawValue === 'Neuron A') {
+              return hydrateDeferred.promise;
+            }
+
+            return {
+              rawValue,
+              displayValue: rawValue || null,
+              parsedValue: rawValue,
+            };
+          },
+        },
+      },
+      {
+        label: 'Brain Region',
+        path: 'brainRegion',
+        required: true,
+        inputType: ImportInputType.RemoteSelect,
+        remote: {
+          evaluate: ({ query }) => evaluate({ query }),
+        },
+      },
+    ],
+    schema: z.object({
+      name: z.string().min(1, 'Name is required'),
+      brainRegion: z.string().min(1, 'Brain Region is required'),
+    }),
+    buildPayload({ values }) {
+      return values;
+    },
+    submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
+  };
+}
+
+function expectNoLegacyCsvStatusBanner(container: HTMLElement) {
+  // The removed banner has no stable role or copy; keep its selector localized in one helper.
+  expect(
+    container.querySelector('.mx-4.mt-4.rounded-2xl.border.border-neutral-200.bg-neutral-50')
+  ).not.toBeInTheDocument();
+}
+
 function getOpenSelectContent(): HTMLElement {
   const content = document.querySelector('[data-slot="select-content"]');
   if (!(content instanceof HTMLElement)) {
@@ -308,6 +385,18 @@ function getTableScrollContainer(container: HTMLElement): HTMLDivElement {
   }
 
   return tableBody;
+}
+
+function getValidatorScrollContainer(container: HTMLElement): HTMLDivElement {
+  const validatorPanel = container.querySelector('aside');
+  const scrollRegion = validatorPanel?.querySelector(
+    '.secondary-scrollbar.overflow-y-auto.overflow-x-hidden'
+  );
+  if (!(scrollRegion instanceof HTMLDivElement)) {
+    throw new Error('Expected validator scroll container to exist');
+  }
+
+  return scrollRegion;
 }
 
 function getTableCellElement(target: HTMLElement): HTMLElement {
@@ -672,6 +761,116 @@ describe('EntityImportFeature', () => {
     }
   });
 
+  it('restores table scroll position when applying a selected validator suggestion in the virtual table path', async () => {
+    const user = userEvent.setup();
+    const remoteQuerySpy = vi.fn(
+      async ({ query }: { query: string; pageParam: number; pageSize: number }) => {
+        if (query.trim().toLowerCase() !== 'cortex') {
+          return { suggestions: [], nextPageParam: null };
+        }
+
+        return {
+          suggestions: [
+            { value: 'ctx-layer-2', label: 'Cortex layer 2' },
+            { value: 'ctx-layer-5', label: 'Cortex layer 5' },
+          ],
+          nextPageParam: null,
+        };
+      }
+    );
+    const suggestionApplyAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+      ...adapter,
+      id: 'suggestion-scroll-apply-import',
+      title: 'Suggestion Scroll Apply Import',
+      templateFileName: 'suggestion-scroll-apply.csv',
+      schema: z.object({
+        name: z.string().min(1, 'Name is required'),
+        brainRegion: z.string().min(1, 'Brain Region is required'),
+      }),
+      buildPayload({ values }) {
+        return values;
+      },
+      submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
+      fields: [
+        adapter.fields[0],
+        {
+          ...adapter.fields[1],
+          remote: {
+            query: remoteQuerySpy,
+          },
+        },
+      ],
+    };
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Suggestion Scroll Apply Import"
+        onClose={() => {}}
+        adapter={suggestionApplyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={Array.from({ length: 30 }, (_, index) => ({
+          name: `Neuron ${index + 1}`,
+          brainRegion: '',
+        }))}
+      />
+    );
+
+    const getCurrentTableBody = () => getTableScrollContainer(container);
+    getCurrentTableBody().scrollTop = 240;
+    const originalQuerySelector = Element.prototype.querySelector;
+    const querySelectorSpy = vi
+      .spyOn(Element.prototype, 'querySelector')
+      .mockImplementation(function querySelector(this: Element, selector: string) {
+        if (this instanceof HTMLElement && this.dataset.entityImportRoot === 'true') {
+          if (selector === '.ant-table-body') {
+            return null;
+          }
+
+          if (selector === '.rc-virtual-list-holder' || selector === '[class*="virtual-holder"]') {
+            return getCurrentTableBody();
+          }
+        }
+
+        return originalQuerySelector.call(this, selector);
+      });
+
+    await user.click(screen.getByLabelText('Brain Region row 1'));
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.clear(validatorInput);
+    await user.type(validatorInput, 'Cortex');
+
+    await screen.findByRole('button', { name: 'Select suggestion Cortex layer 2' });
+    await user.click(screen.getByRole('button', { name: 'Select suggestion Cortex layer 2' }));
+
+    const frameQueue: Array<FrameRequestCallback> = [];
+    const requestAnimationFrameSpy = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback: FrameRequestCallback) => {
+        frameQueue.push(callback);
+        return frameQueue.length;
+      });
+
+    try {
+      await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', { name: 'Accept suggested Brain Region row 1' })
+        ).toBeInTheDocument();
+      });
+      getCurrentTableBody().scrollTop = 180;
+      while (frameQueue.length > 0) {
+        const callback = frameQueue.shift();
+        callback?.(performance.now());
+      }
+      await waitFor(() => {
+        expect(getTableScrollContainer(container).scrollTop).toBe(240);
+      });
+    } finally {
+      querySelectorSpy.mockRestore();
+      requestAnimationFrameSpy.mockRestore();
+    }
+  });
+
   it('shows formatted date values in the validator summary header', async () => {
     const user = userEvent.setup();
     const isoDate = '2026-03-16T23:00:00.000Z';
@@ -746,13 +945,83 @@ describe('EntityImportFeature', () => {
     });
   });
 
+  it('does not duplicate identical csv remote validation requests when the field enables reuse', async () => {
+    const user = userEvent.setup();
+    const validateSpy = vi.fn(
+      async ({ query }: { query: string }): Promise<RemoteValidationResult> => {
+        if (query === 'Isocortex') {
+          return {
+            status: 'valid',
+            resolvedSuggestion: {
+              value: 'brain-region-1',
+              label: 'Isocortex',
+            },
+          };
+        }
+
+        return {
+          status: 'invalid',
+          suggestions: [],
+        };
+      }
+    );
+    const reusableValidationRemote: FutureRemoteValidationConfig = {
+      evaluate: validateSpy,
+      // Task 3 adds `getValidationCacheKey` to the public adapter contract.
+      getValidationCacheKey: ({ query }) => query.trim().toLowerCase() || null,
+    };
+    const csvAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+      id: 'csv-remote-validation-reuse-import',
+      title: 'CSV Remote Validation Reuse Import',
+      templateFileName: 'csv-remote-validation-reuse.csv',
+      submitLabel: 'Import rows',
+      fields: [
+        {
+          label: 'Name',
+          path: 'name',
+          required: true,
+          inputType: ImportInputType.Text,
+        },
+        {
+          label: 'Brain Region',
+          path: 'brainRegion',
+          required: true,
+          inputType: ImportInputType.RemoteSelect,
+          remote: reusableValidationRemote,
+        },
+      ],
+      schema: z.object({
+        name: z.string().min(1, 'Name is required'),
+        brainRegion: z.string().min(1, 'Brain Region is required'),
+      }),
+      buildPayload({ values }) {
+        return values;
+      },
+      submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
+    };
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        adapter={csvAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile('Name,Brain Region\nNeuron A,Isocortex\nNeuron B,Isocortex\n')
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Isocortex');
+      expect(screen.getByLabelText('Brain Region row 2')).toHaveValue('Isocortex');
+    });
+
+    expect(validateSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('shows csv loading progress in the upload tooltip and closes it after validation finishes', async () => {
     const user = userEvent.setup();
-    const hydrateDeferred = createDeferred<{
-      rawValue: string;
-      displayValue: string | null;
-      parsedValue: string;
-    }>();
+    const hydrateDeferred = createDeferred<CsvHydratedValue>();
     const validateDeferred = createDeferred<RemoteValidationResult>();
     const validateSpy = vi.fn(async ({ query }: { query: string }) => {
       if (query !== 'Isocortex') {
@@ -765,50 +1034,13 @@ describe('EntityImportFeature', () => {
 
       return validateDeferred.promise;
     });
-    const csvProgressAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+    const csvProgressAdapter = createCsvTooltipProgressAdapter({
       id: 'csv-progress-import',
       title: 'CSV Progress Import',
       templateFileName: 'csv-progress.csv',
-      submitLabel: 'Import rows',
-      fields: [
-        {
-          label: 'Name',
-          path: 'name',
-          required: true,
-          inputType: ImportInputType.Text,
-          csv: {
-            hydrateCell: async ({ rawValue }) => {
-              if (rawValue === 'Neuron A') {
-                return hydrateDeferred.promise;
-              }
-
-              return {
-                rawValue,
-                displayValue: rawValue || null,
-                parsedValue: rawValue,
-              };
-            },
-          },
-        },
-        {
-          label: 'Brain Region',
-          path: 'brainRegion',
-          required: true,
-          inputType: ImportInputType.RemoteSelect,
-          remote: {
-            evaluate: ({ query }) => validateSpy({ query }),
-          },
-        },
-      ],
-      schema: z.object({
-        name: z.string().min(1, 'Name is required'),
-        brainRegion: z.string().min(1, 'Brain Region is required'),
-      }),
-      buildPayload({ values }) {
-        return values;
-      },
-      submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
-    };
+      hydrateDeferred,
+      evaluate: validateSpy,
+    });
     const { container } = renderWithQueryClient(
       <EntityImportFeature
         title="CSV Progress Import"
@@ -825,11 +1057,7 @@ describe('EntityImportFeature', () => {
 
     const loadingTooltip = await screen.findByRole('tooltip');
     expect(within(loadingTooltip).getByText('Uploading CSV')).toBeInTheDocument();
-    expect(
-      within(loadingTooltip).getByText(
-        /Parsing CSV\.\.\.|Preparing imported values\.\.\.|Preparing CSV rows\.\.\./
-      )
-    ).toBeInTheDocument();
+    expect(within(loadingTooltip).getByText('Working on your CSV...')).toBeInTheDocument();
     expect(container.querySelector('.absolute.inset-0.z-10')).not.toBeInTheDocument();
     expect(screen.queryByDisplayValue('Neuron A')).not.toBeInTheDocument();
 
@@ -844,12 +1072,10 @@ describe('EntityImportFeature', () => {
     });
 
     const validationTooltip = await screen.findByRole('tooltip');
-    expect(within(validationTooltip).getByText('Validating 0 of 1 row(s)...')).toBeInTheDocument();
+    expect(within(validationTooltip).getByText('Validating imported rows')).toBeInTheDocument();
     expect(within(validationTooltip).getByText('0 of 1 rows validated')).toBeInTheDocument();
     expect(within(validationTooltip).queryByText('0/1')).not.toBeInTheDocument();
-    expect(
-      container.querySelector('.mx-4.mt-4.rounded-2xl.border.border-neutral-200.bg-neutral-50')
-    ).not.toBeInTheDocument();
+    expectNoLegacyCsvStatusBanner(container);
     expect(screen.getByLabelText('Row 1 status: Needs attention')).toBeInTheDocument();
 
     validateDeferred.resolve({
@@ -868,11 +1094,7 @@ describe('EntityImportFeature', () => {
 
   it('keeps csv upload issues in the tooltip until the user closes them', async () => {
     const user = userEvent.setup();
-    const hydrateDeferred = createDeferred<{
-      rawValue: string;
-      displayValue: string | null;
-      parsedValue: string;
-    }>();
+    const hydrateDeferred = createDeferred<CsvHydratedValue>();
     const validateDeferred = createDeferred<RemoteValidationResult>();
     const validateSpy = vi.fn(async ({ query }: { query: string }) => {
       if (query !== 'Isocortex') {
@@ -885,50 +1107,13 @@ describe('EntityImportFeature', () => {
 
       return validateDeferred.promise;
     });
-    const csvProgressAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+    const csvProgressAdapter = createCsvTooltipProgressAdapter({
       id: 'csv-progress-with-warning-import',
       title: 'CSV Progress Import',
       templateFileName: 'csv-progress.csv',
-      submitLabel: 'Import rows',
-      fields: [
-        {
-          label: 'Name',
-          path: 'name',
-          required: true,
-          inputType: ImportInputType.Text,
-          csv: {
-            hydrateCell: async ({ rawValue }) => {
-              if (rawValue === 'Neuron A') {
-                return hydrateDeferred.promise;
-              }
-
-              return {
-                rawValue,
-                displayValue: rawValue || null,
-                parsedValue: rawValue,
-              };
-            },
-          },
-        },
-        {
-          label: 'Brain Region',
-          path: 'brainRegion',
-          required: true,
-          inputType: ImportInputType.RemoteSelect,
-          remote: {
-            evaluate: ({ query }) => validateSpy({ query }),
-          },
-        },
-      ],
-      schema: z.object({
-        name: z.string().min(1, 'Name is required'),
-        brainRegion: z.string().min(1, 'Brain Region is required'),
-      }),
-      buildPayload({ values }) {
-        return values;
-      },
-      submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
-    };
+      hydrateDeferred,
+      evaluate: validateSpy,
+    });
     const { container } = renderWithQueryClient(
       <EntityImportFeature
         title="CSV Progress Import"
@@ -963,7 +1148,7 @@ describe('EntityImportFeature', () => {
       within(warningTooltip).getByText(/CSV parsing reported 1 issue during upload\./i)
     ).toBeInTheDocument();
     expect(within(warningTooltip).getByText(/Row 2: Too many fields:/i)).toBeInTheDocument();
-    expect(within(warningTooltip).getByText('Validating 0 of 1 row(s)...')).toBeInTheDocument();
+    expect(within(warningTooltip).getByText('Validating imported rows')).toBeInTheDocument();
 
     validateDeferred.resolve({
       status: 'valid',
@@ -994,6 +1179,101 @@ describe('EntityImportFeature', () => {
     });
     expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron A');
     expect(container.querySelector('.absolute.inset-0.z-10')).not.toBeInTheDocument();
+  });
+
+  it('keeps csv tooltip progress and warning cards unchanged while remote validation work is optimized', async () => {
+    const user = userEvent.setup();
+    const hydrateDeferred = createDeferred<CsvHydratedValue>();
+    const validateDeferred = createDeferred<RemoteValidationResult>();
+    const validateSpy = vi.fn(async ({ query }: { query: string }) => {
+      if (query !== 'Isocortex') {
+        return {
+          status: 'invalid',
+          suggestions: [],
+          message: 'No matches found for Brain Region.',
+        } as const;
+      }
+
+      return validateDeferred.promise;
+    });
+    const csvTooltipRegressionAdapter = createCsvTooltipProgressAdapter({
+      id: 'csv-tooltip-regression-import',
+      title: 'CSV Tooltip Regression Import',
+      templateFileName: 'csv-tooltip-regression.csv',
+      hydrateDeferred,
+      evaluate: validateSpy,
+    });
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="CSV Tooltip Regression Import"
+        onClose={() => {}}
+        adapter={csvTooltipRegressionAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile('Name,name,Brain Region\nNeuron A,Neuron B,Isocortex,Extra\n')
+    );
+
+    const loadingTooltip = await screen.findByRole('tooltip');
+    expect(within(loadingTooltip).getByText('Uploading CSV')).toBeInTheDocument();
+    expect(within(loadingTooltip).getByText('Working on your CSV...')).toBeInTheDocument();
+    expect(container.querySelector('.absolute.inset-0.z-10')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Neuron A')).not.toBeInTheDocument();
+
+    hydrateDeferred.resolve({
+      rawValue: 'Neuron A',
+      displayValue: 'Neuron A',
+      parsedValue: 'Neuron A',
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron A');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('tooltip')).toHaveTextContent(
+        /Duplicate CSV headers were renamed by the parser\./i
+      );
+    });
+    const warningTooltip = screen.getByRole('tooltip');
+    expect(within(warningTooltip).getAllByRole('alert')).toHaveLength(3);
+    expect(
+      within(warningTooltip).getByText(/Duplicate CSV headers were renamed by the parser\./i)
+    ).toBeInTheDocument();
+    expect(
+      within(warningTooltip).getByText(/CSV parsing reported 1 issue during upload\./i)
+    ).toBeInTheDocument();
+    expect(within(warningTooltip).getByText(/Row 2: Too many fields:/i)).toBeInTheDocument();
+    expect(within(warningTooltip).getByText('Validating imported rows')).toBeInTheDocument();
+    expect(within(warningTooltip).getByText('0 of 1 rows validated')).toBeInTheDocument();
+    expect(within(warningTooltip).queryByText('0/1')).not.toBeInTheDocument();
+    expectNoLegacyCsvStatusBanner(container);
+    expect(screen.getByLabelText('Row 1 status: Needs attention')).toBeInTheDocument();
+
+    validateDeferred.resolve({
+      status: 'valid',
+      resolvedSuggestion: {
+        value: 'brain-region-1',
+        label: 'Isocortex',
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Row 1 status: Ready')).toBeInTheDocument();
+    });
+
+    const postValidationTooltip = await screen.findByRole('tooltip');
+    expect(within(postValidationTooltip).getAllByRole('alert')).toHaveLength(3);
+    expect(
+      within(postValidationTooltip).getByText(/Duplicate CSV headers were renamed by the parser\./i)
+    ).toBeInTheDocument();
+    expect(
+      within(postValidationTooltip).getByText(/CSV parsing reported 1 issue during upload\./i)
+    ).toBeInTheDocument();
+    expect(within(postValidationTooltip).getByText(/Row 2: Too many fields:/i)).toBeInTheDocument();
   });
 
   it('warns when Papa Parse reports CSV field mismatch errors during upload', async () => {
@@ -1076,6 +1356,78 @@ describe('EntityImportFeature', () => {
 
     expect(await screen.findByText('No matches found for Brain Region.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Import rows 1 row\(s\)/i })).toBeDisabled();
+  });
+
+  it('keeps validator suggestions visible after auto-resolving an exact remote match', async () => {
+    const user = userEvent.setup();
+    const querySpy = vi.fn(async ({ query, pageParam, pageSize }) => {
+      if (query.toLowerCase() !== 'isocortex') {
+        return { suggestions: [], nextPageParam: null };
+      }
+
+      return {
+        suggestions: [
+          { value: 'brain-region-1', label: 'Isocortex' },
+          { value: 'brain-region-2', label: 'Isocortex layer 2' },
+        ].slice(pageParam, pageParam + pageSize),
+        nextPageParam: null,
+      };
+    });
+
+    const exactMatchAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+      ...adapter,
+      id: 'exact-match-validator-import',
+      title: 'Exact Match Validator Import',
+      templateFileName: 'exact-match-validator.csv',
+      schema: z.object({
+        name: z.string().min(1, 'Name is required'),
+        brainRegion: z.string().min(1, 'Brain Region is required'),
+      }),
+      buildPayload({ values }) {
+        return values;
+      },
+      submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
+      fields: adapter.fields.map((field) =>
+        field.path === 'brainRegion'
+          ? {
+              ...field,
+              remote: {
+                query: ({ query, pageParam, pageSize }) => querySpy({ query, pageParam, pageSize }),
+              },
+            }
+          : field
+      ),
+    };
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Exact Match Validator Import"
+        onClose={() => {}}
+        adapter={exactMatchAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A', brainRegion: '' }]}
+      />
+    );
+
+    await user.click(screen.getByLabelText('Brain Region row 1'));
+
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.clear(validatorInput);
+    await user.type(validatorInput, 'Isocortex');
+
+    await waitFor(() => {
+      expect(querySpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          query: 'Isocortex',
+        })
+      );
+      expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Isocortex');
+    });
+
+    expect(screen.getByLabelText('Validator value')).toHaveValue('Isocortex');
+    expect(
+      await screen.findByRole('button', { name: 'Select suggestion Isocortex layer 2' })
+    ).toBeInTheDocument();
   });
 
   it('uses validator queries for ambiguous imported csv values and keeps the table cell in a selection state', async () => {
@@ -1511,6 +1863,79 @@ describe('EntityImportFeature', () => {
     expect(screen.queryByTestId('validator-suggestion-skeleton')).not.toBeInTheDocument();
   });
 
+  it('fetches the first validator remote suggestion page only once per query', async () => {
+    const user = userEvent.setup();
+    const queryDeferred = createDeferred<{
+      suggestions: Array<{ value: string; label: string }>;
+      nextPageParam: null;
+    }>();
+    const remoteQuerySpy = vi.fn(
+      async (args: { query: string; pageParam: number; pageSize: number }) => {
+        if (args.query.toLowerCase() !== 'cortex') {
+          return { suggestions: [], nextPageParam: null };
+        }
+        if (args.pageParam !== 0) {
+          return { suggestions: [], nextPageParam: null };
+        }
+
+        return queryDeferred.promise;
+      }
+    );
+    const duplicateFetchAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+      ...adapter,
+      id: 'validator-duplicate-fetch-import',
+      fields: [
+        adapter.fields[0],
+        {
+          ...adapter.fields[1],
+          remote: {
+            query: remoteQuerySpy,
+          },
+        },
+      ],
+    };
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Validator Duplicate Fetch Import"
+        onClose={() => {}}
+        adapter={duplicateFetchAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A', brainRegion: '' }]}
+      />
+    );
+
+    await user.click(screen.getByRole('textbox', { name: 'Brain Region row 1' }));
+
+    const validatorInput = screen.getByRole('textbox', { name: 'Validator value' });
+    await user.clear(validatorInput);
+    await user.paste('Cortex');
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('validator-suggestion-skeleton')).toHaveLength(5);
+    });
+
+    const firstPageCalls = remoteQuerySpy.mock.calls.filter((call) => {
+      const query = call[0]?.query;
+      return (
+        call[0]?.pageParam === 0 &&
+        typeof query === 'string' &&
+        query.trim().toLowerCase() === 'cortex'
+      );
+    });
+    expect(
+      firstPageCalls,
+      'expected a single remote query for the first suggestion page (duplicate fetches should be removed)'
+    ).toHaveLength(1);
+
+    queryDeferred.resolve({
+      suggestions: [{ value: 'ctx-layer-2', label: 'Cortex layer 2' }],
+      nextPageParam: null,
+    });
+
+    await screen.findByRole('button', { name: 'Select suggestion Cortex layer 2' });
+  });
+
   it('keeps repair pipeline state visible but disabled until a digital reconstruction protocol is selected', async () => {
     const user = userEvent.setup();
     const searchProtocols = vi.fn(async (query: string) => {
@@ -1943,6 +2368,68 @@ describe('EntityImportFeature', () => {
         name: /Select suggestion Digital Protocol \(digital_reconstruction\)/i,
       })
     ).toBeInTheDocument();
+  });
+
+  it('resets the validator suggestion scroll when selecting another remote cell', async () => {
+    const user = userEvent.setup();
+    const firstSuggestion = {
+      value: 'protocol-digital',
+      label: 'Digital Protocol (digital_reconstruction)',
+      metadata: {
+        generationType: CellMorphologyGenerationType.DigitalReconstruction.key,
+        description: 'Primary digital protocol',
+      },
+    };
+    const services = createMockCellMorphologyImportServices({
+      queryProtocol: vi.fn(async ({ query, pageParam = 0, pageSize }) => {
+        if (!query.toLowerCase().includes('digital')) {
+          return { suggestions: [], nextPageParam: null };
+        }
+
+        if (pageParam >= 5) {
+          return { suggestions: [firstSuggestion], nextPageParam: null };
+        }
+
+        return {
+          suggestions: [firstSuggestion],
+          nextPageParam: pageSize ?? 5,
+        };
+      }),
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      services,
+    });
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[
+          { name: 'Neuron A', protocol: 'Digital' },
+          { name: 'Neuron B', protocol: 'Digital' },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByLabelText('Protocol row 1'));
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.clear(validatorInput);
+    await user.type(validatorInput, 'Digital');
+
+    await screen.findByRole('button', {
+      name: /Select suggestion Digital Protocol \(digital_reconstruction\)/i,
+    });
+
+    const validatorScrollContainer = getValidatorScrollContainer(container);
+    validatorScrollContainer.scrollTop = 320;
+
+    await user.click(screen.getByLabelText('Protocol row 2'));
+
+    await waitFor(() => {
+      expect(getValidatorScrollContainer(container).scrollTop).toBe(0);
+    });
   });
 
   it('keeps blank optional location neutral and does not surface object validation errors', async () => {
