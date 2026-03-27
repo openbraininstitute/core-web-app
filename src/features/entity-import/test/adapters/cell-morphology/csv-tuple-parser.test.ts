@@ -60,7 +60,7 @@ describe('parseLocationCsvValue', () => {
     expect(parseLocationCsvValue('(10, 20)')).toEqual({
       rawValue: '(10, 20)',
       parsedValue: null,
-      issues: ['Location must be provided as a tuple in the form `(x, y, z)`.'],
+      issues: ['Location must be provided as a tuple in the form (x, y, z).'],
     });
   });
 });
@@ -217,7 +217,7 @@ describe('parseContributionCsvValue', () => {
 
     expect(result.entries).toEqual([]);
     expect(result.issues).toEqual([
-      'Contributions must be provided as tuples in the form `[(type, name, role), ...]`.',
+      'Contributions must be provided as tuples in the form [(type, name, role), ...].',
     ]);
   });
 

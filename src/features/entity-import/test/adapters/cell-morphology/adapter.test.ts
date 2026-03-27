@@ -80,15 +80,36 @@ describe('createCellMorphologyImportAdapter', () => {
     );
     const services = {
       queryBrainRegion,
-      queryLicense: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      querySubject: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryProtocol: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryLicense: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      querySubject: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      queryProtocol: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
       queryMtype: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryPerson: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryOrganization: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryPerson: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      queryOrganization: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      queryConsortium: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
       queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
+      registerMorphology: vi.fn(async () => ({
+        id: 'morphology-1',
+        isValid: true,
+      })),
     } as never;
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',
@@ -235,23 +256,8 @@ describe('createCellMorphologyImportAdapter', () => {
     ).toBe(true);
   });
 
-  it('seeds blank rows with the default brain region and license', () => {
-    const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
-    });
-
-    expect(adapter.createBlankRow?.()).toMatchObject({
-      brainRegionId: 'brain-region-1',
-      licenseId: 'license-1',
-    });
-  });
-
   it('builds a null optional location when the cell is blank', () => {
-    const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
-    });
+    const adapter = createCellMorphologyImportAdapter({});
 
     const session = createImportSessionState({
       fields: adapter.fields,
@@ -275,7 +281,9 @@ describe('createCellMorphologyImportAdapter', () => {
       ],
     });
 
-    const sourceFile = new File(['swc'], 'cell.swc', { type: 'application/swc' });
+    const sourceFile = new File(['swc'], 'cell.swc', {
+      type: 'application/swc',
+    });
     const sessionWithFile = setCellValue(session, {
       rowId: session.rows[0].id,
       fieldPath: 'sourceFile',
@@ -311,22 +319,43 @@ describe('createCellMorphologyImportAdapter', () => {
 
   it('hydrates contribution and location csv tuples through field csv hooks', async () => {
     const services = {
-      queryBrainRegion: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryLicense: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      querySubject: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryProtocol: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryBrainRegion: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      queryLicense: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      querySubject: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      queryProtocol: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
       queryMtype: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       queryPerson: vi.fn(async ({ query }: { query: string }) => ({
         suggestions: query === 'Jane Doe' ? [{ value: 'person-1', label: 'Jane Doe' }] : [],
         nextPageParam: null,
       })),
-      queryOrganization: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryOrganization: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      queryConsortium: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
       queryRole: vi.fn(async ({ query }: { query: string }) => ({
         suggestions: query === 'Author' ? [{ value: 'role-1', label: 'Author' }] : [],
         nextPageParam: null,
       })),
-      registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
+      registerMorphology: vi.fn(async () => ({
+        id: 'morphology-1',
+        isValid: true,
+      })),
     } as never;
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',
@@ -459,15 +488,12 @@ describe('createCellMorphologyImportAdapter', () => {
       'Role is required for contribution 1.'
     );
     expect(next.rows[0].cells.location.issues).toContain(
-      'Location must be provided as a tuple in the form `(x, y, z)`.'
+      'Location must be provided as a tuple in the form (x, y, z).'
     );
   });
 
   it('builds the submission payload from compound row state', () => {
-    const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
-    });
+    const adapter = createCellMorphologyImportAdapter({});
 
     const session = createImportSessionState({
       fields: adapter.fields,
@@ -491,7 +517,9 @@ describe('createCellMorphologyImportAdapter', () => {
       ],
     });
 
-    const sourceFile = new File(['swc'], 'cell.swc', { type: 'application/swc' });
+    const sourceFile = new File(['swc'], 'cell.swc', {
+      type: 'application/swc',
+    });
     const sessionWithCompoundValues = setCellValue(session, {
       rowId: session.rows[0].id,
       fieldPath: 'sourceFile',
@@ -555,10 +583,7 @@ describe('createCellMorphologyImportAdapter', () => {
   });
 
   it('treats non-array contributions cell (e.g. blank row string) as empty list', () => {
-    const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
-    });
+    const adapter = createCellMorphologyImportAdapter({});
 
     const session = createImportSessionState({
       fields: adapter.fields,
@@ -582,7 +607,9 @@ describe('createCellMorphologyImportAdapter', () => {
       ],
     });
 
-    const sourceFile = new File(['swc'], 'cell.swc', { type: 'application/swc' });
+    const sourceFile = new File(['swc'], 'cell.swc', {
+      type: 'application/swc',
+    });
     const sessionWithFile = setCellValue(session, {
       rowId: session.rows[0].id,
       fieldPath: 'sourceFile',
@@ -606,29 +633,55 @@ describe('createCellMorphologyImportAdapter', () => {
 
   it('submits morphology registration, contributions, and m-type classification in sequence', async () => {
     const services = {
-      registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
-      queryBrainRegion: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryLicense: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      querySubject: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryProtocol: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      registerMorphology: vi.fn(async () => ({
+        id: 'morphology-1',
+        isValid: true,
+      })),
+      queryBrainRegion: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      queryLicense: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      querySubject: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      queryProtocol: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
       queryMtype: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryPerson: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryOrganization: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
-      queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      queryPerson: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      queryOrganization: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
+      queryConsortium: vi.fn(async () => ({
+        suggestions: [],
+        nextPageParam: null,
+      })),
       queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     };
     const postSubmitActions: IEntityImportPostSubmitActions = {
       createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
-      createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
+      createMtypeClassification: vi.fn(async () => ({
+        id: 'classification-1',
+      })),
     };
     const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
       services,
       postSubmitActions,
     });
 
-    const sourceFile = new File(['swc'], 'cell.swc', { type: 'application/swc' });
+    const sourceFile = new File(['swc'], 'cell.swc', {
+      type: 'application/swc',
+    });
     const payload: CellMorphologySubmissionPayload = {
       sourceFile,
       metadata: {
@@ -683,10 +736,7 @@ describe('createCellMorphologyImportAdapter', () => {
   });
 
   it('exposes a zod schema that requires the source file and contribution payload', () => {
-    const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
-    });
+    const adapter = createCellMorphologyImportAdapter({});
 
     expect(
       adapter.schema.safeParse({

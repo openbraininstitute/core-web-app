@@ -134,7 +134,7 @@ describe('ContributionModal', () => {
     expect(csvImportSelector.getByRole('button', { name: cellMorphologyLabel })).toBeEnabled();
     expect(
       csvImportSelector.getByRole('button', { name: electricalCellRecordingLabel })
-    ).toBeDisabled();
+    ).toBeEnabled();
   });
 
   it('opens the import renderer when selecting a supported artifact from the csv import selector', async () => {
