@@ -1,12 +1,7 @@
 'use client';
 
-import {
-  CheckCircleFilled,
-  CloseCircleFilled,
-  LoadingOutlined,
-  MoreOutlined,
-} from '@ant-design/icons';
-import { RiInsertRowBottom } from '@remixicon/react';
+import { CheckCircleFilled, CloseCircleFilled, LoadingOutlined } from '@ant-design/icons';
+import { RiDeleteBinLine, RiEraserLine, RiInsertRowBottom, RiMore2Line } from '@remixicon/react';
 import { Table } from 'antd';
 import {
   type MouseEvent as ReactMouseEvent,
@@ -553,7 +548,7 @@ export function ImportTable<TPayload, TResult>({
                     'hover:border-neutral-300 hover:bg-neutral-50'
                   )}
                 >
-                  <MoreOutlined />
+                  <RiMore2Line aria-hidden className="size-4" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -562,17 +557,20 @@ export function ImportTable<TPayload, TResult>({
               >
                 <DropdownMenuItem
                   aria-label={`Clear row ${row.rowIndex + 1}`}
-                  className="text-primary-9"
+                  className="text-primary-9 h-11! font-medium text-sm cursor-pointer"
                   onSelect={() => actions.clearRow(row.id)}
                 >
-                  Clear
+                  <RiEraserLine aria-hidden className="size-4 shrink-0 text-primary-9" />
+                  Clear row
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   aria-label={`Delete row ${row.rowIndex + 1}`}
                   variant="destructive"
+                  className="text-primary-9 h-11! font-medium text-sm cursor-pointer"
                   onSelect={() => actions.deleteRow(row.id)}
                 >
-                  Delete
+                  <RiDeleteBinLine aria-hidden className="size-4 shrink-0" />
+                  Delete row
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

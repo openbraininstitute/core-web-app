@@ -144,10 +144,10 @@ function resolveCsvUploadStatus(args: {
 
 function resolveCsvUploadNotificationVariant(tone: TNotificationTone) {
   return match(tone)
-    .with(NotificationTone.Error, () => 'destructive')
-    .with(NotificationTone.Warning, () => 'warning')
-    .with(NotificationTone.Success, () => 'success')
-    .otherwise(() => 'info');
+    .with(NotificationTone.Error, () => 'destructive' as const)
+    .with(NotificationTone.Warning, () => 'warning' as const)
+    .with(NotificationTone.Success, () => 'success' as const)
+    .otherwise(() => 'info' as const);
 }
 
 function resolveCsvUploadNotificationTitle(
