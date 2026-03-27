@@ -5,10 +5,19 @@ import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/ce
 import { RepairPipelineState } from '@/api/entitycore/types/shared/protocol';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
 
-import { getRowSubmissionValues } from '../../core/helpers';
-import { createImportSessionState, resolveCellSuggestion, setCellValue } from '../../core/session';
-import { validateSessionRows } from '../../core/validation';
-import { type CellMorphologySubmissionPayload, createCellMorphologyImportAdapter } from './adapter';
+import {
+  type CellMorphologySubmissionPayload,
+  createCellMorphologyImportAdapter,
+} from '../../../adapters/cell-morphology/adapter';
+import { getRowSubmissionValues } from '../../../core/helpers';
+import {
+  createImportSessionState,
+  resolveCellSuggestion,
+  setCellValue,
+} from '../../../core/session';
+import { validateSessionRows } from '../../../core/validation';
+
+import type { IEntityImportPostSubmitActions } from '../../../core/shared/post-submit-actions';
 
 describe('createCellMorphologyImportAdapter', () => {
   it('exposes remote query and evaluate handlers for all remotely resolved fields', () => {
@@ -80,8 +89,6 @@ describe('createCellMorphologyImportAdapter', () => {
       queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
-      createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
-      createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
     } as never;
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',
@@ -320,8 +327,6 @@ describe('createCellMorphologyImportAdapter', () => {
         nextPageParam: null,
       })),
       registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
-      createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
-      createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
     } as never;
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',
@@ -602,8 +607,6 @@ describe('createCellMorphologyImportAdapter', () => {
   it('submits morphology registration, contributions, and m-type classification in sequence', async () => {
     const services = {
       registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
-      createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
-      createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
       queryBrainRegion: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       queryLicense: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       querySubject: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
@@ -614,10 +617,15 @@ describe('createCellMorphologyImportAdapter', () => {
       queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
       queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     };
+    const postSubmitActions: IEntityImportPostSubmitActions = {
+      createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
+      createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
+    };
     const adapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',
       defaultLicenseId: 'license-1',
       services,
+      postSubmitActions,
     });
 
     const sourceFile = new File(['swc'], 'cell.swc', { type: 'application/swc' });
@@ -662,12 +670,12 @@ describe('createCellMorphologyImportAdapter', () => {
       metadata: payload.metadata,
       context: { projectId: 'project-1', virtualLabId: 'lab-1' },
     });
-    expect(services.createContribution).toHaveBeenCalledWith({
+    expect(postSubmitActions.createContribution).toHaveBeenCalledWith({
       entityId: 'morphology-1',
       contribution: payload.contribution[0],
       context: { projectId: 'project-1', virtualLabId: 'lab-1' },
     });
-    expect(services.createMtypeClassification).toHaveBeenCalledWith({
+    expect(postSubmitActions.createMtypeClassification).toHaveBeenCalledWith({
       entityId: 'morphology-1',
       mtypeClassId: 'mtype-1',
       context: { projectId: 'project-1', virtualLabId: 'lab-1' },

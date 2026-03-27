@@ -1,2 +1,1 @@
-// Keep import editor dropdowns above sticky table and validator chrome.
-export const ENTITY_IMPORT_POPOVER_Z_CLASS = 'z-[99999]';
+export { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/core/shared/ui';

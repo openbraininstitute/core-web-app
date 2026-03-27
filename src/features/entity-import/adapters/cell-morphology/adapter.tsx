@@ -1,7 +1,4 @@
 'use client';
-
-import { RiEditBoxLine } from '@remixicon/react';
-import { type ReactNode, useState } from 'react';
 import { z } from 'zod';
 
 import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
@@ -11,18 +8,7 @@ import {
   RepairPipelineTypeSchema,
   type TRepairPipelineState,
 } from '@/api/entitycore/types/shared/protocol';
-import {
-  type ContributionDraft,
-  ContributionsEditor,
-  countRenderableEntries,
-  getRenderableContributionEntries,
-  promoteContributionToPrimary,
-  summarizeContributions,
-} from '@/features/entity-import/adapters/cell-morphology/contributions-editor';
-import {
-  parseContributionCsvValue,
-  parseLocationCsvValue,
-} from '@/features/entity-import/adapters/cell-morphology/csv-tuple-parser';
+import { parseLocationCsvValue } from '@/features/entity-import/adapters/cell-morphology/csv-tuple-parser';
 import {
   LocationEditor,
   type LocationValue,
@@ -42,25 +28,31 @@ import {
   type ISuggestion,
   RemoteValidationStatus,
 } from '@/features/entity-import/core/contracts';
-import { findExactSuggestionMatch } from '@/features/entity-import/core/helpers';
 import {
-  ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
-  ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
-} from '@/features/entity-import/ui/tooltip-styles';
-import { Button } from '@/ui/molecules/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+  createBrainRegionImportField,
+  createContributionsImportField,
+  createExactOnlyRemoteEvaluator,
+  createFileBundleImportField,
+  createLicenseImportField,
+  createMtypeImportField,
+  createRemoteQuery,
+  createSubjectImportField,
+  DEFAULT_ENTITY_IMPORT_LICENSE_ID,
+  readSuggestionString,
+  renderSuggestionDetailRows,
+} from '@/features/entity-import/core/shared/field-builders';
+import {
+  createEntityImportPostSubmitActions,
+  type IEntityImportPostSubmitActions,
+} from '@/features/entity-import/core/shared/post-submit-actions';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
-import { cn } from '@/utils/css-class';
 
 import type {
-  EntityImportRuntimeContext,
   IEntityImportAdapter,
-  RemoteSearchPagedArgs,
-  RemoteValidationResult,
   ValidatorSuggestionDetailsArgs,
 } from '@/features/entity-import/core/adapter';
+import type { ContributionDraft } from '@/features/entity-import/core/shared/contributions-editor';
 
-const DEFAULT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
 const REPAIR_PIPELINE_STATE_OPTIONS = Object.values(RepairPipelineState).map((option) => ({
   value: option.key,
   label: option.label,
@@ -71,45 +63,6 @@ const contributionAgentKeys = [
   AgentType.Organization.key,
   AgentType.Consortium.key,
 ] as const;
-
-function readSuggestionString(value: unknown): string | null {
-  return typeof value === 'string' && value.trim() ? value : null;
-}
-
-function renderSuggestionDetailRows(rows: Array<{ label: string; value: ReactNode }>) {
-  const presentRows = rows.filter((row) => row.value);
-  if (presentRows.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="space-y-1 max-w-full">
-      {presentRows.map((row) => (
-        <div key={row.label} className="max-w-full">
-          <span className="font-semibold text-primary-9 mr-0.5">{row.label}:</span>
-          {row.value}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function renderBrainRegionSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
-  return renderSuggestionDetailRows([
-    {
-      label: 'Species',
-      value: readSuggestionString(
-        (suggestion.metadata as { species: string; acronym: string })?.species
-      ),
-    },
-    {
-      label: 'Acronym',
-      value: readSuggestionString(
-        (suggestion.metadata as { species: string; acronym: string })?.acronym
-      ),
-    },
-  ]);
-}
 
 function renderProtocolSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
@@ -141,38 +94,6 @@ function renderProtocolSuggestionDetails({ suggestion }: ValidatorSuggestionDeta
           </a>
         </span>
       ) : null,
-    },
-  ]);
-}
-
-function renderSubjectSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
-  return renderSuggestionDetailRows([
-    {
-      label: 'Species',
-      value: readSuggestionString(
-        (suggestion.metadata as { species?: string } | undefined)?.species
-      ),
-    },
-    {
-      label: 'Strain',
-      value: readSuggestionString((suggestion.metadata as { strain?: string } | undefined)?.strain),
-    },
-    {
-      label: 'Sex',
-      value: readSuggestionString((suggestion.metadata as { sex?: string } | undefined)?.sex),
-    },
-    {
-      label: 'Age',
-      value: readSuggestionString((suggestion.metadata as { age?: number } | undefined)?.age),
-    },
-  ]);
-}
-
-function renderMtypeSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
-  return renderSuggestionDetailRows([
-    {
-      label: 'Alternative Label',
-      value: readSuggestionString(suggestion.description),
     },
   ]);
 }
@@ -247,6 +168,7 @@ interface CreateCellMorphologyImportAdapterOptions {
   defaultBrainRegionId: string;
   defaultLicenseId?: string;
   services?: ICellMorphologyImportServices;
+  postSubmitActions?: IEntityImportPostSubmitActions;
 }
 
 function normalizeOptionalString(value: string): string | null {
@@ -272,22 +194,6 @@ function readLocation(parsedValue: unknown, rawValue: string): LocationValue | n
   return normalizeLocationValue(parsedValue) ?? parseLocationSummary(rawValue) ?? null;
 }
 
-function getContributionIssues(entries: unknown): Array<string> {
-  if (!Array.isArray(entries)) {
-    return [];
-  }
-
-  return entries.flatMap((entry) => {
-    if (!entry || typeof entry !== 'object' || !('issues' in entry)) {
-      return [];
-    }
-
-    return Array.isArray(entry.issues)
-      ? entry.issues.filter((issue: unknown): issue is string => typeof issue === 'string')
-      : [];
-  });
-}
-
 function getProtocolGenerationType(row: IImportRowState): string | null {
   const protocolCell = row.cells.protocolId;
 
@@ -306,274 +212,11 @@ function hasDigitalReconstructionProtocol(row: IImportRowState): boolean {
   return getProtocolGenerationType(row) === CellMorphologyGenerationType.DigitalReconstruction.key;
 }
 
-function createRemoteQuery<TQueryField extends string>({
-  queryField,
-  querySuggestions,
-}: {
-  queryField: TQueryField;
-  querySuggestions: (args: {
-    query: string;
-    queryField: TQueryField;
-    context: EntityImportRuntimeContext;
-    pageParam?: number;
-    pageSize?: number;
-  }) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>;
-}) {
-  return async ({ query, context, pageParam, pageSize }: RemoteSearchPagedArgs) =>
-    querySuggestions({
-      query,
-      queryField,
-      context,
-      pageParam,
-      pageSize,
-    });
-}
-
-function createSingleSuggestionRemoteEvaluator<TQueryField extends string>({
-  label,
-  queryField,
-  querySuggestions,
-}: {
-  label: string;
-  queryField: TQueryField;
-  querySuggestions: (args: {
-    query: string;
-    queryField: TQueryField;
-    context: EntityImportRuntimeContext;
-    pageParam?: number;
-    pageSize?: number;
-  }) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>;
-}) {
-  return async ({
-    query,
-    context,
-  }: {
-    query: string;
-    context: EntityImportRuntimeContext;
-  }): Promise<RemoteValidationResult> => {
-    const { suggestions } = await querySuggestions({
-      query,
-      queryField,
-      context,
-      pageParam: 1,
-      pageSize: 5,
-    });
-
-    if (suggestions.length === 1) {
-      return {
-        status: RemoteValidationStatus.Valid,
-        resolvedSuggestion: suggestions[0],
-      };
-    }
-
-    if (suggestions.length > 1) {
-      return {
-        status: RemoteValidationStatus.Invalid,
-        message: `Multiple matches found for ${label}. Choose one in the validator.`,
-        suggestions,
-      };
-    }
-
-    return {
-      status: RemoteValidationStatus.Invalid,
-      message: `No matches found for ${label}.`,
-      suggestions: [],
-    };
-  };
-}
-
-function createExactOnlyRemoteEvaluator<TQueryField extends string>({
-  label,
-  queryField,
-  querySuggestions,
-}: {
-  label: string;
-  queryField: TQueryField;
-  querySuggestions: (args: {
-    query: string;
-    queryField: TQueryField;
-    context: EntityImportRuntimeContext;
-    pageParam?: number;
-    pageSize?: number;
-  }) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>;
-}) {
-  return async ({
-    query,
-    context,
-  }: {
-    query: string;
-    context: EntityImportRuntimeContext;
-  }): Promise<RemoteValidationResult> => {
-    const { suggestions } = await querySuggestions({
-      query,
-      queryField,
-      context,
-      pageParam: 1,
-      pageSize: 5,
-    });
-
-    const exactMatch = findExactSuggestionMatch(suggestions, query);
-    if (exactMatch) {
-      return {
-        status: RemoteValidationStatus.Valid,
-        resolvedSuggestion: exactMatch,
-      };
-    }
-
-    if (suggestions.length > 0) {
-      return {
-        status: RemoteValidationStatus.Invalid,
-        message: `Choose the correct ${label} in the validator.`,
-        suggestions,
-      };
-    }
-
-    return {
-      status: RemoteValidationStatus.Invalid,
-      message: `No matches found for ${label}.`,
-      suggestions: [],
-    };
-  };
-}
-
-function resolveContributionPreview(entry: ContributionDraft): {
-  label: string;
-  roleLabel: string | null;
-} {
-  return {
-    label:
-      entry.agent_label?.trim() ||
-      entry.imported_agent_text?.trim() ||
-      entry.agent_id?.trim() ||
-      entry.role_label?.trim() ||
-      entry.imported_role_text?.trim() ||
-      entry.role_id?.trim() ||
-      'Unnamed contributor',
-    roleLabel:
-      entry.role_label?.trim() || entry.imported_role_text?.trim() || entry.role_id?.trim() || null,
-  };
-}
-
-function ContributionPreviewText({
-  entry,
-  emptyLabel,
-}: {
-  entry: ContributionDraft | null;
-  emptyLabel: string;
-}) {
-  if (!entry) {
-    return (
-      <span className="flex items-center gap-1 font-bold text-primary-9 hover:text-primary-7">
-        {emptyLabel}
-        <RiEditBoxLine />
-      </span>
-    );
-  }
-
-  const preview = resolveContributionPreview(entry);
-
-  return (
-    <span className="min-w-0 flex-1 text-left">
-      <span className="block truncate text-sm font-medium text-neutral-900" title={preview.label}>
-        {preview.label}
-      </span>
-      {preview.roleLabel ? (
-        <span className="block truncate text-xs text-neutral-500" title={preview.roleLabel}>
-          {preview.roleLabel}
-        </span>
-      ) : null}
-    </span>
-  );
-}
-
-function ContributionSummaryCell({
-  label,
-  triggerLabel,
-  entries,
-  onClick,
-  onPromoteContribution,
-}: {
-  label: string;
-  triggerLabel: string;
-  entries: unknown;
-  onClick: () => void;
-  onPromoteContribution: (contributionId: string) => void;
-}) {
-  const contributions = getRenderableContributionEntries(entries);
-  const primary = contributions[0] ?? null;
-  const overflowCount = Math.max(contributions.length - 1, 0);
-  const [tooltipOpen, setTooltipOpen] = useState(false);
-
-  return (
-    <div className="flex h-full min-h-[52px] w-full items-stretch gap-2 px-3 py-2">
-      <Button
-        type="button"
-        aria-label={triggerLabel}
-        variant="ghost"
-        size="md"
-        className="h-full min-h-[52px] min-w-0 flex-1 justify-start rounded-none border-0 bg-transparent px-0 py-0 text-left shadow-none hover:bg-neutral-50"
-        onClick={onClick}
-      >
-        <ContributionPreviewText entry={primary} emptyLabel={`Add ${label.toLowerCase()}`} />
-      </Button>
-
-      {overflowCount > 0 ? (
-        <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label={`Show ${overflowCount} more contribution${overflowCount === 1 ? '' : 's'}`}
-              className={cn(ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME, 'size-8!')}
-              onClick={(event) => event.stopPropagation()}
-            >
-              +{overflowCount}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent
-            side="top"
-            align="end"
-            sideOffset={0}
-            arrowClassName="bg-white"
-            className={ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME}
-          >
-            <div data-testid="contribution-tooltip-list" className="max-h-64 overflow-y-auto pr-1">
-              {contributions.map((entry, index) => {
-                const preview = resolveContributionPreview(entry);
-
-                return (
-                  <button
-                    key={entry.id}
-                    type="button"
-                    aria-label={`Make ${preview.label} primary contribution`}
-                    className={cn(
-                      'flex w-full items-start justify-between gap-3 rounded-xl border px-3 py-2 text-left transition',
-                      index === 0
-                        ? 'border-primary-6 bg-primary-0/10'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50',
-                      index > 0 && 'mt-2'
-                    )}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onPromoteContribution(entry.id);
-                      setTooltipOpen(false);
-                    }}
-                  >
-                    <ContributionPreviewText entry={entry} emptyLabel="" />
-                  </button>
-                );
-              })}
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      ) : null}
-    </div>
-  );
-}
-
 export function createCellMorphologyImportAdapter({
   defaultBrainRegionId: _defaultBrainRegionId,
-  defaultLicenseId: _defaultLicenseId = DEFAULT_LICENSE_ID,
+  defaultLicenseId: _defaultLicenseId = DEFAULT_ENTITY_IMPORT_LICENSE_ID,
   services = createCellMorphologyImportServices(),
+  postSubmitActions = createEntityImportPostSubmitActions(),
 }: CreateCellMorphologyImportAdapterOptions): IEntityImportAdapter<
   CellMorphologySubmissionPayload,
   { id: string; isValid: boolean }
@@ -608,29 +251,12 @@ export function createCellMorphologyImportAdapter({
         inputType: ImportInputType.Textarea,
         columnWidth: 260,
       },
-      {
-        label: 'Brain Region',
+      createBrainRegionImportField({
         path: 'brainRegionId',
         submissionPath: 'setup.brain_region_id',
         validationPath: 'metadata.brain_region_id',
-        required: true,
-        inputType: ImportInputType.RemoteSelect,
-        placeholder: 'Search brain region',
-        remote: {
-          query: createRemoteQuery({
-            queryField: 'semantic_search',
-            querySuggestions: services.queryBrainRegion,
-          }),
-          evaluate: async ({ query, context }) =>
-            createSingleSuggestionRemoteEvaluator({
-              label: 'Brain Region',
-              queryField: 'name__ilike',
-              querySuggestions: services.queryBrainRegion,
-            })({ query, context }),
-        },
-        validatorSuggestionDetails: renderBrainRegionSuggestionDetails,
-        columnWidth: 200,
-      },
+        services,
+      }),
       {
         label: 'Experiment Date',
         path: 'experimentDate',
@@ -708,51 +334,18 @@ export function createCellMorphologyImportAdapter({
         ),
         columnWidth: 240,
       },
-      {
-        label: 'Subject',
+      createSubjectImportField({
         path: 'subjectId',
         submissionPath: 'subject_id',
         validationPath: 'metadata.subject_id',
-        required: true,
-        inputType: ImportInputType.RemoteSelect,
-        placeholder: 'Search subject',
-        remote: {
-          query: createRemoteQuery({
-            queryField: 'ilike_search',
-            querySuggestions: services.querySubject,
-          }),
-          evaluate: async ({ query, context }) =>
-            createSingleSuggestionRemoteEvaluator({
-              label: 'Subject',
-              queryField: 'ilike_search',
-              querySuggestions: services.querySubject,
-            })({ query, context }),
-        },
-        validatorSuggestionDetails: renderSubjectSuggestionDetails,
-        columnWidth: 200,
-      },
-      {
-        label: 'License',
+        services,
+      }),
+      createLicenseImportField({
         path: 'licenseId',
         submissionPath: 'license_id',
         validationPath: 'metadata.license_id',
-        required: true,
-        inputType: ImportInputType.RemoteSelect,
-        placeholder: 'Search license',
-        remote: {
-          query: createRemoteQuery({
-            queryField: 'ilike_search',
-            querySuggestions: services.queryLicense,
-          }),
-          evaluate: async ({ query, context }) =>
-            createSingleSuggestionRemoteEvaluator({
-              label: 'License',
-              queryField: 'label__ilike',
-              querySuggestions: services.queryLicense,
-            })({ query, context }),
-        },
-        columnWidth: 200,
-      },
+        services,
+      }),
       {
         label: 'Protocol',
         path: 'protocolId',
@@ -791,142 +384,24 @@ export function createCellMorphologyImportAdapter({
           'Select a digital reconstruction protocol to enable Repair Pipeline State.',
         columnWidth: 190,
       },
-      {
-        label: 'M-Type',
+      createMtypeImportField({
         path: 'mtypeClassId',
         submissionPath: 'mtype_class_id',
         validationPath: 'mtype_class_id',
-        required: true,
-        inputType: ImportInputType.RemoteSelect,
-        placeholder: 'Search m-type',
-        remote: {
-          query: createRemoteQuery({
-            queryField: 'ilike_search',
-            querySuggestions: services.queryMtype,
-          }),
-          evaluate: async ({ query, context }) =>
-            createSingleSuggestionRemoteEvaluator({
-              label: 'M-Type',
-              queryField: 'pref_label__ilike',
-              querySuggestions: services.queryMtype,
-            })({ query, context }),
-        },
-        validatorSuggestionDetails: renderMtypeSuggestionDetails,
-        columnWidth: 180,
-      },
-      {
-        label: 'Contributions',
-        path: 'contributions',
-        submissionPath: 'contribution',
-        validationPath: 'contribution',
-        required: true,
-        inputType: ImportInputType.Compound,
-        csv: {
-          hydrateCell: async ({ rawValue, context }) => {
-            const parsedContributions = await parseContributionCsvValue({
-              rawValue,
-              context,
-              services,
-              resolveExactMatches: false,
-            });
-            const nextEntries =
-              parsedContributions.issues.length > 0 && rawValue.trim()
-                ? [
-                    {
-                      id: 'csv-contribution-import-error',
-                      source_tuple: rawValue.trim(),
-                      agent_id: '',
-                      role_id: '',
-                      agent_label: '',
-                      role_label: '',
-                      imported_agent_text: rawValue.trim(),
-                      issues: parsedContributions.issues,
-                    } satisfies ContributionDraft,
-                  ]
-                : parsedContributions.entries;
-
-            return {
-              rawValue: summarizeContributions(countRenderableEntries(nextEntries)),
-              parsedValue: nextEntries,
-            };
-          },
-          backgroundHydrateCell: async ({ rawValue, context, importCache }) => {
-            const parsedContributions = await parseContributionCsvValue({
-              rawValue,
-              context,
-              services,
-              lookupCache: importCache,
-            });
-            const nextEntries =
-              parsedContributions.issues.length > 0 && rawValue.trim()
-                ? [
-                    {
-                      id: 'csv-contribution-import-error',
-                      source_tuple: rawValue.trim(),
-                      agent_id: '',
-                      role_id: '',
-                      agent_label: '',
-                      role_label: '',
-                      imported_agent_text: rawValue.trim(),
-                      issues: parsedContributions.issues,
-                    } satisfies ContributionDraft,
-                  ]
-                : parsedContributions.entries;
-
-            return {
-              rawValue: summarizeContributions(countRenderableEntries(nextEntries)),
-              parsedValue: nextEntries,
-            };
-          },
-        },
-        getValidationIssues: ({ cell }) => getContributionIssues(cell.parsedValue),
-        tableRenderer: ({ field, cell, row, actions }) => (
-          <ContributionSummaryCell
-            label={field.label}
-            triggerLabel={`${field.label} row ${row.rowIndex + 1}`}
-            entries={cell.parsedValue}
-            onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
-            onPromoteContribution={(contributionId) => {
-              const currentEntries = Array.isArray(cell.parsedValue)
-                ? (cell.parsedValue as Array<ContributionDraft>)
-                : [];
-              const nextEntries = promoteContributionToPrimary(currentEntries, contributionId);
-              actions.setCustomValue({
-                rowId: row.id,
-                fieldPath: field.path,
-                rawValue: summarizeContributions(countRenderableEntries(nextEntries)),
-                parsedValue: nextEntries,
-              });
-            }}
-          />
-        ),
-        panelRenderer: ({ cell, row, field, actions, context }) => (
-          <ContributionsEditor
-            cell={cell}
-            row={row}
-            fieldPath={field.path}
-            context={context}
-            actions={actions}
-            services={services}
-          />
-        ),
-        columnWidth: 220,
-      },
-      {
+        services,
+      }),
+      createContributionsImportField({ services }),
+      createFileBundleImportField({
         label: 'Morphology File',
         path: 'sourceFile',
         submissionPath: 'assets.sourceFile',
         validationPath: 'sourceFile',
-        required: true,
-        inputType: ImportInputType.FileBundle,
-        csv: { include: false },
         fileConfig: {
           accept: ['application/swc', 'application/asc', 'application/x-hdf5'],
           allowedExtensions: ['.swc', '.asc', '.h5', '.H5', '.SWC', '.ASC'],
           maxFiles: 1,
         },
-        columnWidth: 200,
-      },
+      }),
     ],
     schema: cellMorphologySubmissionSchema as z.ZodType<CellMorphologySubmissionPayload>,
     createBlankRow: () => ({
@@ -983,14 +458,14 @@ export function createCellMorphologyImportAdapter({
       });
 
       for (const contribution of payload.contribution) {
-        await services.createContribution({
+        await postSubmitActions.createContribution({
           entityId: registration.id,
           contribution: contribution as CellMorphologyContributionInput,
           context,
         });
       }
 
-      await services.createMtypeClassification({
+      await postSubmitActions.createMtypeClassification({
         entityId: registration.id,
         mtypeClassId: payload.mtype_class_id,
         context,

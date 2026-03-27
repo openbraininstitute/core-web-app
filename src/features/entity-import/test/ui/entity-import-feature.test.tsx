@@ -7,12 +7,12 @@ import { z } from 'zod';
 
 import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 
-import { ImportInputType } from '../core/contracts';
-import { createCellMorphologyImportAdapter, EntityImportFeature } from '../index';
+import { ImportInputType } from '../../core/contracts';
+import { createCellMorphologyImportAdapter, EntityImportFeature } from '../../index';
 
 import type { ReactElement } from 'react';
-import type { ICellMorphologyImportServices } from '../adapters/cell-morphology/services';
-import type { IEntityImportAdapter, RemoteValidationResult } from '../core/adapter';
+import type { ICellMorphologyImportServices } from '../../adapters/cell-morphology/services';
+import type { IEntityImportAdapter, RemoteValidationResult } from '../../core/adapter';
 
 const adapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
   id: 'mock-import',
@@ -422,8 +422,6 @@ function createMockCellMorphologyImportServices(
     queryConsortium: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     queryRole: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     registerMorphology: vi.fn(async () => ({ id: 'morphology-1', isValid: true })),
-    createContribution: vi.fn(async () => ({ id: 'contribution-1' })),
-    createMtypeClassification: vi.fn(async () => ({ id: 'classification-1' })),
     ...overrides,
   };
 }

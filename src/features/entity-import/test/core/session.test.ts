@@ -6,7 +6,7 @@ import {
   ImportInputType,
   type ISuggestion,
   RemoteValidationStatus,
-} from './contracts';
+} from '../../core/contracts';
 import {
   acceptCorrectionDraft,
   appendEmptyRow,
@@ -21,8 +21,8 @@ import {
   setValidatorSelection,
   stageSuggestionToRows,
   updateCellRawValue,
-} from './session';
-import * as summaryModule from './summary';
+} from '../../core/session';
+import * as summaryModule from '../../core/summary';
 
 const fields: Array<IImportFieldDefinition> = [
   {

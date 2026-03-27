@@ -4,16 +4,19 @@ import { useMemo, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  LocationEditor,
+  summarizeLocation,
+} from '../../../adapters/cell-morphology/location-editor';
+import {
   CellStatus,
   createIdleRemoteState,
   DependencyState,
   RowStatus,
-} from '../../core/contracts';
-import { LocationEditor, summarizeLocation } from './location-editor';
+} from '../../../core/contracts';
 
-import type { IEntityImportActions } from '../../core/adapter';
-import type { IImportCellState, IImportRowState } from '../../core/contracts';
-import type { LocationValue } from './location-editor';
+import type { LocationValue } from '../../../adapters/cell-morphology/location-editor';
+import type { IEntityImportActions } from '../../../core/adapter';
+import type { IImportCellState, IImportRowState } from '../../../core/contracts';
 
 function createMockActions(): IEntityImportActions {
   return {

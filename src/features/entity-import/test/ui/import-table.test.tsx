@@ -4,11 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { ImportInputType } from '../core/contracts';
-import { EntityImportFeature } from '../index';
+import { ImportInputType } from '../../core/contracts';
+import { EntityImportFeature } from '../../index';
 
 import type { ReactElement } from 'react';
-import type { IEntityImportAdapter } from '../core/adapter';
+import type { IEntityImportAdapter } from '../../core/adapter';
 
 const standardInputRenderHarness = vi.hoisted(() => {
   const counts: Record<string, number> = {};
@@ -46,10 +46,7 @@ vi.mock('@/ui/molecules/input', async (importOriginal) => {
       standardInputRenderHarness.track(ariaLabel);
 
       return (
-        <input
-          aria-label={typeof ariaLabel === 'string' ? ariaLabel : undefined}
-          {...props}
-        />
+        <input aria-label={typeof ariaLabel === 'string' ? ariaLabel : undefined} {...props} />
       );
     },
   };

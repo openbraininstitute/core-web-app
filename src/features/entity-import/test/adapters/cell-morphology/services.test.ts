@@ -32,7 +32,7 @@ vi.mock('@/api/entitycore/utils', () => ({
   getEntityCoreContext: mocks.getEntityCoreContext,
 }));
 
-import { createCellMorphologyImportServices } from './services';
+import { createCellMorphologyImportServices } from '../../../adapters/cell-morphology/services';
 
 describe('createCellMorphologyImportServices query helpers', () => {
   beforeEach(() => {

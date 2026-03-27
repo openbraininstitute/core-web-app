@@ -1,22 +1,23 @@
 'use client';
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { useCallback, useMemo } from 'react';
+import { RiEditBoxLine } from '@remixicon/react';
+import { useCallback, useMemo, useState } from 'react';
 
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
+import {
+  ENTITY_IMPORT_POPOVER_Z_CLASS,
+  ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
+  ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
+} from '@/features/entity-import/core/shared/ui';
 import { AsyncSelect } from '@/ui/molecules/async-select';
 import { Button } from '@/ui/molecules/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { AgentType, type TAgentType } from '@/ui/segments/contribute/shared/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import type { ParsedContributionCsvEntry } from '@/features/entity-import/adapters/cell-morphology/csv-tuple-parser';
-import type {
-  CellMorphologyContributionInput,
-  ICellMorphologyImportServices,
-} from '@/features/entity-import/adapters/cell-morphology/services';
 import type {
   EntityImportRuntimeContext,
   IEntityImportActions,
@@ -26,9 +27,10 @@ import type {
   IImportRowState,
   ISuggestion,
 } from '@/features/entity-import/core/contracts';
+import type { IEntityImportContributionLookupServices } from '@/features/entity-import/core/shared/common-query-services';
+import type { ParsedContributionCsvEntry } from '@/features/entity-import/core/shared/contribution-csv-parser';
 
-export type ContributionDraft = ParsedContributionCsvEntry &
-  Partial<Pick<CellMorphologyContributionInput, 'agent_type' | 'agent_id' | 'role_id'>>;
+export type ContributionDraft = ParsedContributionCsvEntry;
 
 type ContributionSelectFilters = Partial<PaginationFilter & SearchFilter> & {
   pref_label__ilike?: string | null;
@@ -101,6 +103,22 @@ export function getRenderableContributionEntries(entries: unknown): Array<Contri
   return entries
     .filter((entry): entry is ContributionDraft => Boolean(entry))
     .filter(isRenderableContribution);
+}
+
+export function getContributionIssues(entries: unknown): Array<string> {
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+
+  return entries.flatMap((entry) => {
+    if (!entry || typeof entry !== 'object' || !('issues' in entry)) {
+      return [];
+    }
+
+    return Array.isArray(entry.issues)
+      ? entry.issues.filter((issue: unknown): issue is string => typeof issue === 'string')
+      : [];
+  });
 }
 
 function clearContributionImportState(entry: ContributionDraft): ContributionDraft {
@@ -222,10 +240,7 @@ async function querySuggestionPage<TQueryField extends 'pref_label__ilike' | 'qu
 
 function resolveContributorSearchPage(
   agentType: TAgentType | undefined,
-  services: Pick<
-    ICellMorphologyImportServices,
-    'queryPerson' | 'queryOrganization' | 'queryConsortium'
-  >
+  services: IEntityImportContributionLookupServices
 ) {
   if (agentType === AgentType.Organization.key) {
     return services.queryOrganization;
@@ -242,16 +257,147 @@ function resolveContributorSearchPage(
   return undefined;
 }
 
+function resolveContributionPreview(entry: ContributionDraft): {
+  label: string;
+  roleLabel: string | null;
+} {
+  return {
+    label:
+      entry.agent_label?.trim() ||
+      entry.imported_agent_text?.trim() ||
+      entry.agent_id?.trim() ||
+      entry.role_label?.trim() ||
+      entry.imported_role_text?.trim() ||
+      entry.role_id?.trim() ||
+      'Unnamed contributor',
+    roleLabel:
+      entry.role_label?.trim() || entry.imported_role_text?.trim() || entry.role_id?.trim() || null,
+  };
+}
+
+function ContributionPreviewText({
+  entry,
+  emptyLabel,
+}: {
+  entry: ContributionDraft | null;
+  emptyLabel: string;
+}) {
+  if (!entry) {
+    return (
+      <span className="flex items-center gap-1 font-bold text-primary-9 hover:text-primary-7">
+        {emptyLabel}
+        <RiEditBoxLine />
+      </span>
+    );
+  }
+
+  const preview = resolveContributionPreview(entry);
+
+  return (
+    <span className="min-w-0 flex-1 text-left">
+      <span className="block truncate text-sm font-medium text-neutral-900" title={preview.label}>
+        {preview.label}
+      </span>
+      {preview.roleLabel ? (
+        <span className="block truncate text-xs text-neutral-500" title={preview.roleLabel}>
+          {preview.roleLabel}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+export function ContributionSummaryCell({
+  label,
+  triggerLabel,
+  entries,
+  onClick,
+  onPromoteContribution,
+}: {
+  label: string;
+  triggerLabel: string;
+  entries: unknown;
+  onClick: () => void;
+  onPromoteContribution: (contributionId: string) => void;
+}) {
+  const contributions = getRenderableContributionEntries(entries);
+  const primary = contributions[0] ?? null;
+  const overflowCount = Math.max(contributions.length - 1, 0);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+
+  return (
+    <div className="flex h-full min-h-[52px] w-full items-stretch gap-2 px-3 py-2">
+      <Button
+        type="button"
+        aria-label={triggerLabel}
+        variant="ghost"
+        size="md"
+        className="h-full min-h-[52px] min-w-0 flex-1 justify-start rounded-none border-0 bg-transparent px-0 py-0 text-left shadow-none hover:bg-neutral-50"
+        onClick={onClick}
+      >
+        <ContributionPreviewText entry={primary} emptyLabel={`Add ${label.toLowerCase()}`} />
+      </Button>
+
+      {overflowCount > 0 ? (
+        <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Show ${overflowCount} more contribution${overflowCount === 1 ? '' : 's'}`}
+              className={cn(ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME, 'size-8!')}
+              onClick={(event) => event.stopPropagation()}
+            >
+              +{overflowCount}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            align="end"
+            sideOffset={0}
+            arrowClassName="bg-white"
+            className={ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME}
+          >
+            <div data-testid="contribution-tooltip-list" className="max-h-64 overflow-y-auto pr-1">
+              {contributions.map((entry, index) => {
+                const preview = resolveContributionPreview(entry);
+
+                return (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    aria-label={`Make ${preview.label} primary contribution`}
+                    className={cn(
+                      'flex w-full items-start justify-between gap-3 rounded-xl border px-3 py-2 text-left transition',
+                      index === 0
+                        ? 'border-primary-6 bg-primary-0/10'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50',
+                      index > 0 && 'mt-2'
+                    )}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onPromoteContribution(entry.id);
+                      setTooltipOpen(false);
+                    }}
+                  >
+                    <ContributionPreviewText entry={entry} emptyLabel="" />
+                  </button>
+                );
+              })}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
+    </div>
+  );
+}
+
 interface ContributionsEditorProps {
   cell: IImportCellState;
   row: IImportRowState;
   fieldPath: string;
   context: EntityImportRuntimeContext;
   actions: IEntityImportActions;
-  services: Pick<
-    ICellMorphologyImportServices,
-    'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
-  >;
+  services: IEntityImportContributionLookupServices;
 }
 
 export function ContributionsEditor({
