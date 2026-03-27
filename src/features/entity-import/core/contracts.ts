@@ -77,7 +77,7 @@ export interface IImportFieldDefinition {
   inputType: TImportInputType;
   dependencies?: Array<string>;
   csv?: IImportFieldCsvConfig;
-  /** When set, table column uses this width (px) and prefers it over auto layout. */
+  /** when set, table column uses this width (px) and prefers it over auto layout. */
   columnWidth?: number;
 }
 
@@ -91,7 +91,7 @@ export interface IRemoteState {
   suggestions: Array<ISuggestion>;
   selectedSuggestion: ISuggestion | null;
   message: string | null;
-  /** Present when remote search supports pagination (validator load more). */
+  /** present when remote search supports pagination (validator load more). */
   suggestionPaging?: IRemoteSuggestionPaging;
 }
 
@@ -112,7 +112,7 @@ export interface IImportCellState {
   issues: Array<string>;
   dependencyState: TDependencyState;
   remoteState: IRemoteState;
-  /** Staged remote suggestion; raw value stays as user-entered until accept. */
+  /** staged remote suggestion; raw value stays as user-entered until accept. */
   correctionDraft: CellCorrectionDraft | null;
 }
 

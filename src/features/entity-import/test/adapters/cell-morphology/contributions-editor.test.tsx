@@ -19,7 +19,7 @@ import {
 
 import type { ReactElement } from 'react';
 import type { ICellMorphologyImportServices } from '../../../adapters/cell-morphology/services';
-import type { EntityImportRuntimeContext, IEntityImportActions } from '../../../core/adapter';
+import type { IEntityImportActions, IEntityImportRuntimeContext } from '../../../core/adapter';
 
 function renderWithQueryClient(ui: ReactElement) {
   const client = new QueryClient({
@@ -201,7 +201,7 @@ function ContributionSummaryHarness({
   });
 }
 
-const context: EntityImportRuntimeContext = {
+const context: IEntityImportRuntimeContext = {
   projectId: 'project-1',
   virtualLabId: 'lab-1',
 };

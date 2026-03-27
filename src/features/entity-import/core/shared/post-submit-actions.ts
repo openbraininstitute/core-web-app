@@ -4,7 +4,7 @@ import { createMtypeClassification as createMtypeClassificationMutation } from '
 import { createContribution as createContributionMutation } from '@/api/entitycore/queries/general/contribution';
 import { toWorkspaceContext } from '@/features/entity-import/core/shared/common-query-services';
 
-import type { EntityImportRuntimeContext } from '@/features/entity-import/core/adapter';
+import type { IEntityImportRuntimeContext } from '@/features/entity-import/core/adapter';
 
 export interface IEntityImportContributionActionInput {
   agent_id: string;
@@ -15,12 +15,12 @@ export interface IEntityImportPostSubmitActions {
   createContribution: (args: {
     entityId: string;
     contribution: IEntityImportContributionActionInput;
-    context: EntityImportRuntimeContext;
+    context: IEntityImportRuntimeContext;
   }) => Promise<{ id: string }>;
   createMtypeClassification: (args: {
     entityId: string;
     mtypeClassId: string;
-    context: EntityImportRuntimeContext;
+    context: IEntityImportRuntimeContext;
   }) => Promise<{ id: string }>;
 }
 

@@ -6,6 +6,20 @@ import Papa from 'papaparse';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
+  createIdleValidatorPreviewState,
+  ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
+  type IAdapterFieldDefinition,
+  type ICsvHydratedCellValue,
+  type IEntityImportActions,
+  type IEntityImportAdapter,
+  type IEntityImportRuntimeContext,
+  type IRemoteValidationResult,
+  type IValidatorDraftValue,
+  type IValidatorPreviewState,
+  type IValidatorSuggestionState,
+  ValidatorManualApplyMode,
+} from '@/features/entity-import/core/adapter';
+import {
   createIdleImportRunState,
   createIdleRemoteState,
   ENTITY_IMPORT_ALL_COLUMNS,
@@ -55,21 +69,6 @@ import {
 } from '@/features/entity-import/core/session';
 import { validateSessionRows } from '@/features/entity-import/core/validation';
 import { getEntityImportTemplateGuide } from '@/features/entity-import/templates/registry';
-
-import {
-  type CsvHydratedCellValue,
-  createIdleValidatorPreviewState,
-  ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
-  type EntityImportRuntimeContext,
-  type IAdapterFieldDefinition,
-  type IEntityImportActions,
-  type IEntityImportAdapter,
-  type IValidatorPreviewState,
-  type IValidatorSuggestionState,
-  type RemoteValidationResult,
-  type ValidatorDraftValue,
-  ValidatorManualApplyMode,
-} from '../core/adapter';
 
 function findField(
   fields: Array<IAdapterFieldDefinition>,
@@ -182,7 +181,7 @@ async function hydrateCsvRows({
 }: {
   fields: Array<IAdapterFieldDefinition>;
   rows: Array<TFlatImportValues>;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   importCache?: Map<string, unknown>;
 }) {
   const limit = pLimit(6);
@@ -190,7 +189,7 @@ async function hydrateCsvRows({
   return Promise.all(
     rows.map((row) =>
       limit(async () => {
-        const nextRow = { ...row } as Record<string, string | CsvHydratedCellValue>;
+        const nextRow = { ...row } as Record<string, string | ICsvHydratedCellValue>;
 
         await Promise.all(
           fields.map(async (field) => {
@@ -238,7 +237,7 @@ function buildCurrentCsvFileName(templateFileName: string): string {
   return templateFileName.replace(/(\.csv)?$/i, '-current-state.csv');
 }
 
-function createValidatorPreviewValueFromSuggestion(suggestion: ISuggestion): ValidatorDraftValue {
+function createValidatorPreviewValueFromSuggestion(suggestion: ISuggestion): IValidatorDraftValue {
   return {
     rawValue: suggestion.label,
     displayValue: suggestion.label,
@@ -250,7 +249,7 @@ function createValidatorPreviewValueFromSuggestion(suggestion: ISuggestion): Val
 
 function doesValidatorDraftMatchCell(
   cell: IImportRowState['cells'][string],
-  draftValue: ValidatorDraftValue
+  draftValue: IValidatorDraftValue
 ): boolean {
   return (
     cell.rawValue === draftValue.rawValue &&
@@ -314,7 +313,7 @@ function cellStillMatchesQuery(
 
 function resolveSuggestionMessage(
   field: IAdapterFieldDefinition,
-  validationResult: RemoteValidationResult | null,
+  validationResult: IRemoteValidationResult | null,
   suggestions: Array<ISuggestion>
 ): string | null {
   if (validationResult?.message) {
@@ -331,7 +330,7 @@ function resolveSuggestionMessage(
 function resolveMatchedSuggestion(
   field: IAdapterFieldDefinition,
   query: string,
-  validationResult: RemoteValidationResult | null,
+  validationResult: IRemoteValidationResult | null,
   suggestions: Array<ISuggestion>
 ): ISuggestion | null {
   if (
@@ -362,6 +361,13 @@ interface CsvRowValidationProgress {
 const ENTITY_IMPORT_INPUT_SYNC_DELAY_MS = 150;
 const ENTITY_IMPORT_BACKGROUND_QUEUE_CONCURRENCY = 6;
 
+const ValidationSource = {
+  Selection: 'selection',
+  Validator: 'validator',
+} as const;
+
+type TValidationSource = (typeof ValidationSource)[keyof typeof ValidationSource];
+
 function createIdleValidatorSuggestionState(): IValidatorSuggestionState {
   return {
     rowId: null,
@@ -385,7 +391,7 @@ export function useEntityImportController<TPayload, TResult>({
   initialRows,
 }: {
   adapter: IEntityImportAdapter<TPayload, TResult>;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   initialRows?: Array<TFlatImportValues>;
 }) {
   const validate = useCallback(
@@ -425,7 +431,7 @@ export function useEntityImportController<TPayload, TResult>({
     rowId: string;
     fieldPath: string;
     query: string;
-    source: 'selection' | 'validator';
+    source: TValidationSource;
   } | null>(null);
   const validatorSuggestionRequestRef = useRef(validatorSuggestionRequest);
   const [validatorSuggestions, setValidatorSuggestions] = useState<IValidatorSuggestionState>(() =>
@@ -470,7 +476,10 @@ export function useEntityImportController<TPayload, TResult>({
     queryFn: async ({ pageParam }) => {
       const req = validatorSuggestionRequestRef.current;
       if (!req) {
-        return { suggestions: [] as Array<ISuggestion>, nextPageParam: null as number | null };
+        return {
+          suggestions: [] as Array<ISuggestion>,
+          nextPageParam: null as number | null,
+        };
       }
 
       const row = findRow(sessionRef.current, req.rowId);
@@ -549,7 +558,7 @@ export function useEntityImportController<TPayload, TResult>({
     }: {
       rowId: string;
       fieldPath: string;
-      value: ValidatorDraftValue | null;
+      value: IValidatorDraftValue | null;
     }) => {
       setValidatorPreviewState(
         value
@@ -611,7 +620,11 @@ export function useEntityImportController<TPayload, TResult>({
           didFail && errorMessage
             ? [
                 ...current.failureCards,
-                { rowId: row.id, rowNumber: row.rowIndex + 1, message: errorMessage },
+                {
+                  rowId: row.id,
+                  rowNumber: row.rowIndex + 1,
+                  message: errorMessage,
+                },
               ].sort((left, right) => left.rowNumber - right.rowNumber)
             : current.failureCards;
 
@@ -754,7 +767,12 @@ export function useEntityImportController<TPayload, TResult>({
         query: normalizedQuery,
         source,
       };
-      setValidatorSuggestionRequest({ rowId, fieldPath, query: normalizedQuery, source });
+      setValidatorSuggestionRequest({
+        rowId,
+        fieldPath,
+        query: normalizedQuery,
+        source,
+      });
       setValidatorSuggestions({
         rowId,
         fieldPath,
@@ -1225,7 +1243,11 @@ export function useEntityImportController<TPayload, TResult>({
         return;
       }
 
-      await runDirectRemoteValidation({ rowId, fieldPath, query: normalizedQuery });
+      await runDirectRemoteValidation({
+        rowId,
+        fieldPath,
+        query: normalizedQuery,
+      });
     },
     [adapter.fields, clearValidatorPreviewForCell, commit, context, runDirectRemoteValidation]
   );
@@ -1251,7 +1273,11 @@ export function useEntityImportController<TPayload, TResult>({
 
         const field = findField(adapter.fields, fieldPath);
         if (field && hasSuggestionSource(field)) {
-          void runInlineSuggestionResolution({ rowId, fieldPath, query: rawValue });
+          void runInlineSuggestionResolution({
+            rowId,
+            fieldPath,
+            query: rawValue,
+          });
         }
       }, ENTITY_IMPORT_INPUT_SYNC_DELAY_MS);
 
@@ -1308,7 +1334,7 @@ export function useEntityImportController<TPayload, TResult>({
     const exactSuggestion = findExactSuggestionMatch(suggestions, normalizedValidatorQuery);
     const autoResolvedSuggestion =
       exactSuggestion ??
-      (validatorSuggestionRequest.source === 'validator' &&
+      (validatorSuggestionRequest.source === ValidationSource.Validator &&
       field.remote?.evaluate &&
       suggestions.length === 1 &&
       !(validatorSuggestionsInfinite.hasNextPage ?? false)
@@ -1320,6 +1346,46 @@ export function useEntityImportController<TPayload, TResult>({
         currentCell.remoteState.selectedSuggestion?.value !== autoResolvedSuggestion.value ||
         currentCell.rawValue.trim() !== autoResolvedSuggestion.label.trim())
     ) {
+      if (validatorSuggestionRequest.source === ValidationSource.Validator) {
+        // validator-sourced: stage as selected suggestion + preview, don't commit to cell.
+        // The user must click Apply to commit.
+        const previewValue = createValidatorPreviewValueFromSuggestion(autoResolvedSuggestion);
+        commit(
+          (current) =>
+            setCellRemoteState(current, {
+              rowId: validatorSuggestionRequest.rowId,
+              fieldPath: validatorSuggestionRequest.fieldPath,
+              remoteState: {
+                ...currentCell.remoteState,
+                suggestions,
+                status: RemoteValidationStatus.Invalid,
+                selectedSuggestion: autoResolvedSuggestion,
+                message: 'Apply the selected suggestion to continue.',
+              },
+            }),
+          { rowIds: [validatorSuggestionRequest.rowId] }
+        );
+        updateValidatorPreview({
+          rowId: validatorSuggestionRequest.rowId,
+          fieldPath: validatorSuggestionRequest.fieldPath,
+          value: doesValidatorDraftMatchCell(currentCell, previewValue) ? null : previewValue,
+        });
+        setValidatorSuggestions({
+          rowId: validatorSuggestionRequest.rowId,
+          fieldPath: validatorSuggestionRequest.fieldPath,
+          query: validatorSuggestionRequest.query,
+          status: RemoteValidationStatus.Invalid,
+          suggestions,
+          selectedSuggestion: autoResolvedSuggestion,
+          message: 'Review the selected option, then apply it to continue.',
+          suggestionPaging: {
+            hasNextPage: validatorSuggestionsInfinite.hasNextPage ?? false,
+            isFetchingNextPage: validatorSuggestionsInfinite.isFetchingNextPage,
+          },
+        });
+        return;
+      }
+
       clearValidatorPreviewForCell(
         validatorSuggestionRequest.rowId,
         validatorSuggestionRequest.fieldPath
@@ -1383,6 +1449,7 @@ export function useEntityImportController<TPayload, TResult>({
     adapter.fields,
     clearValidatorPreviewForCell,
     commit,
+    updateValidatorPreview,
     validatorSuggestionRequest,
     validatorSuggestionsInfinite.data,
     validatorSuggestionsInfinite.error,
@@ -1473,7 +1540,12 @@ export function useEntityImportController<TPayload, TResult>({
     }
 
     validatorSelectionQueryKeyRef.current = nextQueryKey;
-    void requestValidatorSuggestions({ rowId, fieldPath, query, source: 'selection' });
+    void requestValidatorSuggestions({
+      rowId,
+      fieldPath,
+      query,
+      source: 'selection',
+    });
   }, [
     adapter.fields,
     clearValidatorSuggestions,
@@ -1493,13 +1565,20 @@ export function useEntityImportController<TPayload, TResult>({
   const selectCell = useCallback(
     ({ rowId, fieldPath }: { rowId: string; fieldPath: string }) => {
       clearValidatorPreview();
-      commit((current) => selectCellState(current, { rowId, fieldPath }), { validate: false });
+      commit((current) => selectCellState(current, { rowId, fieldPath }), {
+        validate: false,
+      });
 
       const row = findRow(sessionRef.current, rowId);
       const field = findField(adapter.fields, fieldPath);
       const query = row?.cells[fieldPath]?.rawValue ?? '';
       if (field && hasSuggestionSource(field) && query.trim()) {
-        void requestValidatorSuggestions({ rowId, fieldPath, query, source: 'selection' });
+        void requestValidatorSuggestions({
+          rowId,
+          fieldPath,
+          query,
+          source: 'selection',
+        });
       }
     },
     [adapter.fields, clearValidatorPreview, commit, requestValidatorSuggestions]
@@ -1679,7 +1758,9 @@ export function useEntityImportController<TPayload, TResult>({
 
   const dismissFeatureNotification = useCallback(
     (notificationId: string) => {
-      commit((current) => dismissNotification(current, notificationId), { validate: false });
+      commit((current) => dismissNotification(current, notificationId), {
+        validate: false,
+      });
     },
     [commit]
   );
@@ -1695,7 +1776,10 @@ export function useEntityImportController<TPayload, TResult>({
         clearValidatorSuggestions();
         const parsedCsv = await parseCsvFile(file);
         setCsvUploadPhase(CsvUploadPhase.Hydrating);
-        const imported = importCsvRows({ fields: adapter.fields, rows: parsedCsv.data });
+        const imported = importCsvRows({
+          fields: adapter.fields,
+          rows: parsedCsv.data,
+        });
         const importCache = new Map<string, unknown>();
         const csvHydratedRows = await hydrateCsvRows({
           fields: adapter.fields,

@@ -20,11 +20,11 @@ import {
 
 import type { ReactNode } from 'react';
 import type {
-  EntityImportRuntimeContext,
   IAdapterFieldDefinition,
-  RemoteSearchPagedArgs,
-  RemoteValidationResult,
-  ValidatorSuggestionDetailsArgs,
+  IEntityImportRuntimeContext,
+  IRemoteSearchPagedArgs,
+  IRemoteValidationResult,
+  IValidatorSuggestionDetailsArgs,
 } from '@/features/entity-import/core/adapter';
 import type {
   BrainRegionQueryField,
@@ -58,7 +58,9 @@ export function renderSuggestionDetailRows(rows: Array<{ label: string; value: R
   );
 }
 
-export function renderBrainRegionSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
+export function renderBrainRegionSuggestionDetails({
+  suggestion,
+}: IValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
     {
       label: 'Species',
@@ -75,7 +77,7 @@ export function renderBrainRegionSuggestionDetails({ suggestion }: ValidatorSugg
   ]);
 }
 
-export function renderSubjectSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
+export function renderSubjectSuggestionDetails({ suggestion }: IValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
     {
       label: 'Species',
@@ -98,7 +100,7 @@ export function renderSubjectSuggestionDetails({ suggestion }: ValidatorSuggesti
   ]);
 }
 
-export function renderMtypeSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
+export function renderMtypeSuggestionDetails({ suggestion }: IValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
     {
       label: 'Alternative Label',
@@ -122,7 +124,7 @@ export function createRemoteQuery<TQueryField extends string>({
     args: CommonQueryArgs<TQueryField>
   ) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>;
 }) {
-  return async ({ query, context, pageParam, pageSize }: RemoteSearchPagedArgs) =>
+  return async ({ query, context, pageParam, pageSize }: IRemoteSearchPagedArgs) =>
     querySuggestions({
       query,
       queryField,
@@ -148,8 +150,8 @@ export function createSingleSuggestionRemoteEvaluator<TQueryField extends string
     context,
   }: {
     query: string;
-    context: EntityImportRuntimeContext;
-  }): Promise<RemoteValidationResult> => {
+    context: IEntityImportRuntimeContext;
+  }): Promise<IRemoteValidationResult> => {
     const { suggestions } = await querySuggestions({
       query,
       queryField,
@@ -197,8 +199,8 @@ export function createExactOnlyRemoteEvaluator<TQueryField extends string>({
     context,
   }: {
     query: string;
-    context: EntityImportRuntimeContext;
-  }): Promise<RemoteValidationResult> => {
+    context: IEntityImportRuntimeContext;
+  }): Promise<IRemoteValidationResult> => {
     const { suggestions } = await querySuggestions({
       query,
       queryField,

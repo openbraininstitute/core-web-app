@@ -15,7 +15,7 @@ import {
 } from '@/features/entity-import/core/contracts';
 import * as summaryModule from '@/features/entity-import/core/summary';
 
-import type { CsvHydratedCellValue } from '@/features/entity-import/core/adapter';
+import type { ICsvHydratedCellValue } from '@/features/entity-import/core/adapter';
 
 let rowIdCounter = 0;
 
@@ -24,15 +24,15 @@ function nextRowId(): string {
   return `import-row-${rowIdCounter}`;
 }
 
-function isHydratedCellValue(value: unknown): value is CsvHydratedCellValue {
+function isHydratedCellValue(value: unknown): value is ICsvHydratedCellValue {
   return (
-    Boolean(value) && typeof value === 'object' && 'rawValue' in (value as CsvHydratedCellValue)
+    Boolean(value) && typeof value === 'object' && 'rawValue' in (value as ICsvHydratedCellValue)
   );
 }
 
 function createCellState(
   field: IImportFieldDefinition,
-  value: string | CsvHydratedCellValue = ''
+  value: string | ICsvHydratedCellValue = ''
 ): IImportCellState {
   const isHydratedValue = isHydratedCellValue(value);
   const rawValue = isHydratedValue ? value.rawValue : value;
@@ -66,7 +66,7 @@ function createCellState(
 
 function createRowCells(
   fields: Array<IImportFieldDefinition>,
-  values: Record<string, string | CsvHydratedCellValue>
+  values: Record<string, string | ICsvHydratedCellValue>
 ): IImportRowState['cells'] {
   return Object.fromEntries(
     fields.map((field) => [field.path, createCellState(field, values[field.path] ?? '')])
@@ -75,7 +75,7 @@ function createRowCells(
 
 function createRowState(
   fields: Array<IImportFieldDefinition>,
-  values: Record<string, string | CsvHydratedCellValue>,
+  values: Record<string, string | ICsvHydratedCellValue>,
   rowIndex: number
 ): IImportRowState {
   return {
@@ -351,7 +351,7 @@ export function setValidatorSelection(
 export function hydrateSessionRows(
   session: IImportSessionState,
   params: {
-    rows: Array<Record<string, string | CsvHydratedCellValue>>;
+    rows: Array<Record<string, string | ICsvHydratedCellValue>>;
     strippedColumns: Array<string>;
   }
 ): IImportSessionState {

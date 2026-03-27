@@ -19,8 +19,8 @@ import { cn } from '@/utils/css-class';
 import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
-  EntityImportRuntimeContext,
   IEntityImportActions,
+  IEntityImportRuntimeContext,
 } from '@/features/entity-import/core/adapter';
 import type {
   IImportCellState,
@@ -28,9 +28,9 @@ import type {
   ISuggestion,
 } from '@/features/entity-import/core/contracts';
 import type { IEntityImportContributionLookupServices } from '@/features/entity-import/core/shared/common-query-services';
-import type { ParsedContributionCsvEntry } from '@/features/entity-import/core/shared/contribution-csv-parser';
+import type { IParsedContributionCsvEntry } from '@/features/entity-import/core/shared/contribution-csv-parser';
 
-export type ContributionDraft = ParsedContributionCsvEntry;
+export type ContributionDraft = IParsedContributionCsvEntry;
 
 type ContributionSelectFilters = Partial<PaginationFilter & SearchFilter> & {
   pref_label__ilike?: string | null;
@@ -206,12 +206,12 @@ async function querySuggestionPage<TQueryField extends 'pref_label__ilike' | 'qu
 }: {
   filters: ContributionSelectFilters;
   searchField: TQueryField;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   querySuggestions?:
     | ((args: {
         query: string;
         queryField: TQueryField;
-        context: EntityImportRuntimeContext;
+        context: IEntityImportRuntimeContext;
         pageParam?: number;
         pageSize?: number;
       }) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>)
@@ -357,7 +357,10 @@ export function ContributionSummaryCell({
             arrowClassName="bg-white"
             className={ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME}
           >
-            <div data-testid="contribution-tooltip-list" className="max-h-64 overflow-y-auto pr-1">
+            <div
+              data-testid="contribution-tooltip-list"
+              className="max-h-64 overflow-y-auto secondary-scrollbar pr-1"
+            >
               {contributions.map((entry, index) => {
                 const preview = resolveContributionPreview(entry);
 
@@ -395,7 +398,7 @@ interface ContributionsEditorProps {
   cell: IImportCellState;
   row: IImportRowState;
   fieldPath: string;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   actions: IEntityImportActions;
   services: IEntityImportContributionLookupServices;
 }

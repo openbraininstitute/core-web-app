@@ -4,17 +4,17 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { RiInfoI } from '@remixicon/react';
 
 import {
+  ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
+  ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
+} from '@/features/entity-import/core/shared/ui';
+import {
   getCellStatusMessage,
   getTableCellUiStatus,
   hasCellAttentionIssue,
-  isAmbiguousRemoteCell,
+  // isAmbiguousRemoteCell,
   shouldDisplayCellStatusBadge,
   TableCellUiStatus,
 } from '@/features/entity-import/ui/status';
-import {
-  ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
-  ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
-} from '@/features/entity-import/ui/tooltip-styles';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -49,7 +49,7 @@ export function CellStatusBadge({
     return null;
   }
 
-  const isSelectionState = isAmbiguousRemoteCell(cell);
+  // const isSelectionState = isAmbiguousRemoteCell(cell);
   const isValidating = cellUiStatus === TableCellUiStatus.Validating;
   const hasAttentionIssue = hasCellAttentionIssue(cell);
 

@@ -4,15 +4,15 @@ import { useEntityImportController } from '@/features/entity-import/hooks/use-en
 import { ImportShell } from '@/features/entity-import/ui/import-shell';
 
 import type {
-  EntityImportRuntimeContext,
   IEntityImportAdapter,
+  IEntityImportRuntimeContext,
 } from '@/features/entity-import/core/adapter';
 import type { TFlatImportValues } from '@/features/entity-import/core/contracts';
 
 interface EntityImportFeatureProps<TPayload, TResult> {
   title: string | null;
   adapter: IEntityImportAdapter<TPayload, TResult>;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   initialRows?: Array<TFlatImportValues>;
   onClose: () => void;
 }
@@ -57,6 +57,6 @@ export function EntityImportFeature<TPayload, TResult>({
 export { createCellMorphologyImportAdapter } from '@/features/entity-import/adapters/cell-morphology/adapter';
 
 export type {
-  EntityImportRuntimeContext,
   IEntityImportAdapter as EntityImportAdapter,
+  IEntityImportRuntimeContext as EntityImportRuntimeContext,
 } from '@/features/entity-import/core/adapter';

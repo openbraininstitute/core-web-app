@@ -18,6 +18,7 @@ import {
   ENTITY_IMPORT_ALL_COLUMNS,
   ImportRowResultStatus,
 } from '@/features/entity-import/core/contracts';
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/core/shared/ui';
 import {
   BLOCKED_CONTROL_CLASSNAME,
   INVALID_CONTROL_CLASSNAME,
@@ -40,13 +41,11 @@ import {
 } from '@/ui/molecules/dropdown-menu';
 import { cn } from '@/utils/css-class';
 
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '../core/shared/ui';
-
 import type { ColumnsType, TableRef } from 'antd/es/table';
 import type {
-  EntityImportRuntimeContext,
   IEntityImportActions,
   IEntityImportAdapter,
+  IEntityImportRuntimeContext,
   IValidatorPreviewState,
 } from '@/features/entity-import/core/adapter';
 import type { IImportRunState, IImportSessionState } from '@/features/entity-import/core/contracts';
@@ -59,7 +58,7 @@ const ROW_ACTIONS_COLUMN_WIDTH = 72;
 
 interface ImportTableProps<TPayload, TResult> {
   adapter: IEntityImportAdapter<TPayload, TResult>;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   session: IImportSessionState;
   actions: IEntityImportActions;
   importRun: IImportRunState;

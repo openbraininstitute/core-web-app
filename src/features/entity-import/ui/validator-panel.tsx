@@ -51,12 +51,10 @@ import {
 import {
   ENTITY_IMPORT_PANEL_SELECT_TRIGGER_CLASSNAME,
   ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
-  getEntityImportSelectLabel,
-} from '@/features/entity-import/ui/select-styles';
-import {
   ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
   ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
-} from '@/features/entity-import/ui/tooltip-styles';
+  getEntityImportSelectLabel,
+} from '@/features/entity-import/core/shared/ui';
 import { Alert, AlertContent, AlertDescription } from '@/ui/molecules/alert';
 import { Button } from '@/ui/molecules/button';
 import { Card, CardContent } from '@/ui/molecules/card';
@@ -75,18 +73,18 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import type {
-  EntityImportRuntimeContext,
   IAdapterFieldDefinition,
   IEntityImportActions,
   IEntityImportAdapter,
+  IEntityImportRuntimeContext,
+  IValidatorDraftValue,
   IValidatorPreviewState,
   IValidatorSuggestionState,
-  ValidatorDraftValue,
 } from '@/features/entity-import/core/adapter';
 
-interface ValidatorPanelProps<TPayload, TResult> {
+interface IValidatorPanelProps<TPayload, TResult> {
   adapter: IEntityImportAdapter<TPayload, TResult>;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   session: IImportSessionState;
   actions: IEntityImportActions;
   isSubmitting: boolean;
@@ -317,7 +315,7 @@ const SUBMIT_BUTTON_CHROME_CLASSNAME: Record<SubmitButtonTone, readonly string[]
 
 function createValidatorDraftValue(
   cell: IImportSessionState['rows'][number]['cells'][string]
-): ValidatorDraftValue {
+): IValidatorDraftValue {
   return {
     rawValue: cell.rawValue,
     displayValue: cell.displayValue ?? null,
@@ -326,7 +324,7 @@ function createValidatorDraftValue(
 }
 
 function doesDraftMatchSuggestion(
-  draftValue: ValidatorDraftValue,
+  draftValue: IValidatorDraftValue,
   suggestion: ISuggestion | null
 ): suggestion is ISuggestion {
   if (!suggestion) {
@@ -346,7 +344,7 @@ function doesDraftMatchSuggestion(
 
 function isDraftValueUnchanged(
   cell: IImportSessionState['rows'][number]['cells'][string],
-  draftValue: ValidatorDraftValue
+  draftValue: IValidatorDraftValue
 ): boolean {
   return (
     cell.rawValue === draftValue.rawValue &&
@@ -356,7 +354,7 @@ function isDraftValueUnchanged(
 
 function resolveValidatorDisplayValue(
   field: IAdapterFieldDefinition,
-  draftValue: ValidatorDraftValue
+  draftValue: IValidatorDraftValue
 ): string {
   if (field.inputType === ImportInputType.Select) {
     return getEntityImportSelectLabel(field, draftValue.rawValue);
@@ -482,8 +480,8 @@ interface ValidatorFileDropzoneProps {
   field: IAdapterFieldDefinition;
   fileInputRef: RefObject<HTMLInputElement | null>;
   fileInputId: string;
-  draftValue: ValidatorDraftValue;
-  updateDraftValue: (value: ValidatorDraftValue) => void;
+  draftValue: IValidatorDraftValue;
+  updateDraftValue: (value: IValidatorDraftValue) => void;
 }
 
 function ValidatorFileDropzone({
@@ -628,7 +626,7 @@ interface SingleColumnValidatorCardProps {
   row: IImportRowState;
   fieldPosition: number;
   session: IImportSessionState;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   actions: IEntityImportActions;
   validatorPreview: IValidatorPreviewState;
   validatorSuggestions: IValidatorSuggestionState;
@@ -703,7 +701,7 @@ function SingleColumnValidatorCard({
   );
 
   const updateDraftValue = useCallback(
-    (nextValue: ValidatorDraftValue) => {
+    (nextValue: IValidatorDraftValue) => {
       const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       const nextPreviewValue = isDraftValueUnchanged(cell, nextValue) ? null : nextValue;
 
@@ -1278,7 +1276,7 @@ export function ValidatorPanel<TPayload, TResult>({
   hoverExpanded,
   onToggleCollapsed,
   onHoverExpandedChange,
-}: ValidatorPanelProps<TPayload, TResult>) {
+}: IValidatorPanelProps<TPayload, TResult>) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

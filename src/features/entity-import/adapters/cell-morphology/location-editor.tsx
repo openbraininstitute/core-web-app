@@ -8,7 +8,7 @@ import { cn } from '@/utils/css-class';
 
 import type {
   IEntityImportActions,
-  ValidatorDraftValue,
+  IValidatorDraftValue,
 } from '@/features/entity-import/core/adapter';
 import type { IImportCellState, IImportRowState } from '@/features/entity-import/core/contracts';
 
@@ -91,14 +91,21 @@ export function parseLocationSummary(summary: string): LocationValue | null {
   return { x, y, z };
 }
 
+const LocationEditorMode = {
+  Table: 'table',
+  Panel: 'panel',
+} as const;
+
+type TLocationEditorMode = (typeof LocationEditorMode)[keyof typeof LocationEditorMode];
+
 interface LocationEditorProps {
   cell: IImportCellState;
   row: IImportRowState;
   fieldPath: string;
   actions: IEntityImportActions;
-  mode?: 'table' | 'panel';
+  mode?: TLocationEditorMode;
   value?: LocationValue | null;
-  validatorPreview?: ValidatorDraftValue | null;
+  validatorPreview?: IValidatorDraftValue | null;
   onChange?: (value: LocationValue) => void;
 }
 
@@ -113,15 +120,15 @@ export function LocationEditor({
   row,
   fieldPath,
   actions,
-  mode = 'panel',
+  mode = LocationEditorMode.Panel,
   value,
   validatorPreview,
   onChange,
 }: LocationEditorProps) {
   const location = value ?? resolveLocationValue(cell.parsedValue, cell.rawValue) ?? null;
-  const correctionDraft = mode === 'table' ? cell.correctionDraft : null;
+  const correctionDraft = mode === LocationEditorMode.Table ? cell.correctionDraft : null;
   const previewLocation =
-    mode === 'table' && validatorPreview
+    mode === LocationEditorMode.Table && validatorPreview
       ? (normalizeLocationValue(validatorPreview.parsedValue) ??
         resolveLocationValue(null, validatorPreview.rawValue))
       : null;
@@ -160,7 +167,7 @@ export function LocationEditor({
     emitChange(nextLocation);
   };
 
-  if (mode === 'table' && previewLocation) {
+  if (mode === LocationEditorMode.Table && previewLocation) {
     return (
       <div
         data-testid="location-editor-table"
@@ -201,7 +208,7 @@ export function LocationEditor({
     );
   }
 
-  if (mode === 'table' && correctionDraft) {
+  if (mode === LocationEditorMode.Table && correctionDraft) {
     return (
       <div
         data-testid="location-editor-table"
@@ -272,7 +279,9 @@ export function LocationEditor({
 
   return (
     <div
-      data-testid={mode === 'table' ? 'location-editor-table' : 'location-editor-panel'}
+      data-testid={
+        mode === LocationEditorMode.Table ? 'location-editor-table' : 'location-editor-panel'
+      }
       className={cn(
         mode === 'table'
           ? 'flex h-full min-h-[52px] w-full flex-col overflow-hidden rounded-none border-0 bg-transparent'
@@ -281,7 +290,7 @@ export function LocationEditor({
     >
       <div
         className={cn(
-          mode === 'table'
+          mode === LocationEditorMode.Table
             ? 'flex h-full min-h-[52px] w-full items-stretch overflow-hidden'
             : 'grid grid-cols-3 gap-4'
         )}
@@ -290,7 +299,7 @@ export function LocationEditor({
           <div
             key={axis}
             className={cn(
-              mode === 'table'
+              mode === LocationEditorMode.Table
                 ? 'flex min-w-0 flex-1 flex-col justify-center border-r border-neutral-200 px-2 py-1 last:border-r-0'
                 : 'block'
             )}
@@ -298,7 +307,7 @@ export function LocationEditor({
             <label
               className={cn(
                 'mb-auto flex',
-                mode === 'table'
+                mode === LocationEditorMode.Table
                   ? 'mb-1 flex-col  gap-0.5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400'
                   : 'mb-2 flex-row  gap-1 items-center text-sm font-medium text-neutral-700'
               )}

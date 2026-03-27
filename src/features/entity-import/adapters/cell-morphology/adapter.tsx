@@ -1,4 +1,5 @@
 'use client';
+
 import { z } from 'zod';
 
 import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
@@ -8,7 +9,6 @@ import {
   RepairPipelineTypeSchema,
   type TRepairPipelineState,
 } from '@/api/entitycore/types/shared/protocol';
-import { parseLocationCsvValue } from '@/features/entity-import/adapters/cell-morphology/csv-tuple-parser';
 import {
   LocationEditor,
   type LocationValue,
@@ -16,6 +16,7 @@ import {
   parseLocationSummary,
   summarizeLocation,
 } from '@/features/entity-import/adapters/cell-morphology/location-editor';
+import { parseLocationCsvValue } from '@/features/entity-import/adapters/cell-morphology/location-parser';
 import {
   type CellMorphologyContributionInput,
   type CellMorphologyRegistrationMetadata,
@@ -48,7 +49,7 @@ import { AgentType } from '@/ui/segments/contribute/shared/types';
 
 import type {
   IEntityImportAdapter,
-  ValidatorSuggestionDetailsArgs,
+  IValidatorSuggestionDetailsArgs,
 } from '@/features/entity-import/core/adapter';
 import type { ContributionDraft } from '@/features/entity-import/core/shared/contributions-editor';
 
@@ -63,7 +64,7 @@ const contributionAgentKeys = [
   AgentType.Consortium.key,
 ] as const;
 
-function renderProtocolSuggestionDetails({ suggestion }: ValidatorSuggestionDetailsArgs) {
+function renderProtocolSuggestionDetails({ suggestion }: IValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
     {
       label: 'Generation Type',

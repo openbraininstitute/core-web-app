@@ -12,7 +12,7 @@ import type {
   TFlatImportValues,
 } from '@/features/entity-import/core/contracts';
 
-export interface EntityImportRuntimeContext {
+export interface IEntityImportRuntimeContext {
   projectId: string;
   virtualLabId: string;
   sessionId?: string;
@@ -22,23 +22,23 @@ export interface RemoteSearchArgs {
   query: string;
   row: IImportRowState;
   values: TFlatImportValues;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
 }
 
-export interface RemoteValidationArgs extends RemoteSearchArgs {
+export interface IRemoteValidationArgs extends RemoteSearchArgs {
   value: string;
 }
 
 /** Page size for validator remote suggestions (first page + load more). */
 export const ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE = 5;
 
-export interface RemoteSearchPageResult {
+export interface IRemoteSearchPageResult {
   suggestions: Array<ISuggestion>;
   /** Offset for the next page, or null when there are no more results. */
   nextPageParam: number | null;
 }
 
-export type RemoteSearchPagedArgs = RemoteSearchArgs & {
+export type IRemoteSearchPagedArgs = RemoteSearchArgs & {
   pageParam: number;
   pageSize: number;
 };
@@ -51,30 +51,30 @@ export const RemoteValidationResultStatus = {
 export type TRemoteValidationResultStatus =
   (typeof RemoteValidationResultStatus)[keyof typeof RemoteValidationResultStatus];
 
-export interface RemoteValidationResult {
+export interface IRemoteValidationResult {
   status: TRemoteValidationResultStatus;
   message?: string | null;
   suggestions?: Array<ISuggestion>;
   resolvedSuggestion?: ISuggestion | null;
 }
 
-export interface TableCellRendererProps {
+export interface ITableCellRendererProps {
   field: IAdapterFieldDefinition;
   cell: IImportCellState;
   row: IImportRowState;
   session: IImportSessionState;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   actions: IEntityImportActions;
-  validatorPreview?: ValidatorDraftValue | null;
+  validatorPreview?: IValidatorDraftValue | null;
 }
 
-export interface ValidatorDraftValue {
+export interface IValidatorDraftValue {
   rawValue: string;
   displayValue: string | null;
   parsedValue: unknown;
 }
 
-export interface IValidatorPreviewState extends ValidatorDraftValue {
+export interface IValidatorPreviewState extends IValidatorDraftValue {
   rowId: string | null;
   fieldPath: string | null;
 }
@@ -89,32 +89,32 @@ export function createIdleValidatorPreviewState(): IValidatorPreviewState {
   };
 }
 
-export interface ValidatorFieldRendererProps extends TableCellRendererProps {
+export interface IValidatorFieldRendererProps extends ITableCellRendererProps {
   suggestions: Array<ISuggestion>;
-  draftValue: ValidatorDraftValue;
-  onDraftChange: (value: ValidatorDraftValue) => void;
+  draftValue: IValidatorDraftValue;
+  onDraftChange: (value: IValidatorDraftValue) => void;
 }
 
-export interface CsvHydratedCellValue {
+export interface ICsvHydratedCellValue {
   rawValue: string;
   displayValue?: string | null;
   parsedValue?: unknown;
 }
 
-export interface CsvFieldHydrationArgs {
+export interface ICsvFieldHydrationArgs {
   rawValue: string;
   row: TFlatImportValues;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
   importCache?: Map<string, unknown>;
 }
 
-export interface AdapterFieldValidationArgs {
+export interface IAdapterFieldValidationArgs {
   cell: IImportCellState;
   row: IImportRowState;
   values: TFlatImportValues;
 }
 
-export interface ValidatorSuggestionDetailsArgs {
+export interface IValidatorSuggestionDetailsArgs {
   suggestion: ISuggestion;
   cell: IImportCellState;
   row: IImportRowState;
@@ -123,11 +123,11 @@ export interface ValidatorSuggestionDetailsArgs {
 
 export interface IAdapterFieldCsvConfig extends IImportFieldCsvConfig {
   hydrateCell?: (
-    args: CsvFieldHydrationArgs
-  ) => Promise<CsvHydratedCellValue> | CsvHydratedCellValue;
+    args: ICsvFieldHydrationArgs
+  ) => Promise<ICsvHydratedCellValue> | ICsvHydratedCellValue;
   backgroundHydrateCell?: (
-    args: CsvFieldHydrationArgs
-  ) => Promise<CsvHydratedCellValue> | CsvHydratedCellValue;
+    args: ICsvFieldHydrationArgs
+  ) => Promise<ICsvHydratedCellValue> | ICsvHydratedCellValue;
 }
 
 export interface IImportFileFieldConfig {
@@ -168,25 +168,25 @@ export interface IAdapterFieldDefinition extends IImportFieldDefinition {
   validatorManualApplyMode?: TValidatorManualApplyMode;
   csv?: IAdapterFieldCsvConfig;
   options?: Array<ISuggestion>;
-  validatorSuggestionDetails?: (args: ValidatorSuggestionDetailsArgs) => ReactNode;
+  validatorSuggestionDetails?: (args: IValidatorSuggestionDetailsArgs) => ReactNode;
   fileConfig?: IImportFileFieldConfig;
   isEnabled?: (args: IAdapterFieldEnablementArgs) => boolean;
   getDisabledMessage?: (args: IAdapterFieldEnablementArgs) => string;
-  getValidationIssues?: (args: AdapterFieldValidationArgs) => Array<string>;
+  getValidationIssues?: (args: IAdapterFieldValidationArgs) => Array<string>;
   remote?: {
     autoResolveResolvedSuggestion?: boolean;
-    query?: (args: RemoteSearchPagedArgs) => Promise<RemoteSearchPageResult>;
-    evaluate?: (args: RemoteValidationArgs) => Promise<RemoteValidationResult>;
+    query?: (args: IRemoteSearchPagedArgs) => Promise<IRemoteSearchPageResult>;
+    evaluate?: (args: IRemoteValidationArgs) => Promise<IRemoteValidationResult>;
   };
-  tableRenderer?: (props: TableCellRendererProps) => ReactNode;
-  panelRenderer?: (props: ValidatorFieldRendererProps) => ReactNode;
+  tableRenderer?: (props: ITableCellRendererProps) => ReactNode;
+  panelRenderer?: (props: IValidatorFieldRendererProps) => ReactNode;
 }
 
 export interface ISubmitRowArgs<TPayload> {
   payload: TPayload;
   row: IImportRowState;
   values: TFlatImportValues;
-  context: EntityImportRuntimeContext;
+  context: IEntityImportRuntimeContext;
 }
 
 export interface IEntityImportAdapter<TPayload = unknown, TResult = unknown> {
@@ -202,7 +202,7 @@ export interface IEntityImportAdapter<TPayload = unknown, TResult = unknown> {
   buildPayload: (args: {
     row: IImportRowState;
     values: TFlatImportValues;
-    context: EntityImportRuntimeContext;
+    context: IEntityImportRuntimeContext;
   }) => TPayload;
   submitRow: (args: ISubmitRowArgs<TPayload>) => Promise<TResult>;
 }
@@ -234,7 +234,7 @@ export interface IEntityImportActions {
   setValidatorPreview: (params: {
     rowId: string;
     fieldPath: string;
-    value: ValidatorDraftValue | null;
+    value: IValidatorDraftValue | null;
   }) => void;
   setCustomValue: (params: {
     rowId: string;
