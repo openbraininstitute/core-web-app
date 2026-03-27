@@ -497,6 +497,7 @@ function InlineCellComponent({
             'focus-within:border-none! focus-visible:ring-0! focus-visible:outline-none!',
             '[&_textarea]:box-border [&_textarea]:h-full [&_textarea]:min-h-0! [&_textarea]:flex-1 ',
             '[&_textarea]:resize-none [&_textarea]:rounded-none [&_textarea]:p-2 [&_textarea]:field-sizing-fixed',
+            '[&_textarea]:placeholder-shown:content-center',
             '[&_textarea]:placeholder:font-light! [&_textarea]:placeholder:text-gray-400! [&_textarea]:placeholder:text-sm!',
             'focus:border border-neutral-200 bg-white p-2 focus-within:border-primary-6! ',
             { [INVALID_CONTROL_CLASSNAME]: cell.status === CellStatus.Invalid },
