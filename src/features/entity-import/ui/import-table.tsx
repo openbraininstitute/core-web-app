@@ -1,6 +1,11 @@
 'use client';
 
-import { MoreOutlined } from '@ant-design/icons';
+import {
+  CheckCircleFilled,
+  CloseCircleFilled,
+  LoadingOutlined,
+  MoreOutlined,
+} from '@ant-design/icons';
 import { RiInsertRowBottom } from '@remixicon/react';
 import { Table } from 'antd';
 import {
@@ -13,7 +18,10 @@ import {
   useState,
 } from 'react';
 
-import { ENTITY_IMPORT_ALL_COLUMNS } from '@/features/entity-import/core/contracts';
+import {
+  ENTITY_IMPORT_ALL_COLUMNS,
+  ImportRowResultStatus,
+} from '@/features/entity-import/core/contracts';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
 import {
   BLOCKED_CONTROL_CLASSNAME,
@@ -42,7 +50,7 @@ import type {
   IEntityImportActions,
   IEntityImportAdapter,
 } from '@/features/entity-import/core/adapter';
-import type { IImportSessionState } from '@/features/entity-import/core/contracts';
+import type { IImportRunState, IImportSessionState } from '@/features/entity-import/core/contracts';
 
 const DEFAULT_FIELD_COLUMN_WIDTH = 200;
 const DEFAULT_TABLE_BODY_SCROLL_HEIGHT = 1;
@@ -55,6 +63,7 @@ interface ImportTableProps<TPayload, TResult> {
   context: EntityImportRuntimeContext;
   session: IImportSessionState;
   actions: IEntityImportActions;
+  importRun: IImportRunState;
 }
 
 function isSelectedImportCell(
@@ -85,16 +94,36 @@ function fieldColumnWidth(
   return overrides[field.path] ?? field.columnWidth ?? DEFAULT_FIELD_COLUMN_WIDTH;
 }
 
+function resolveImportRowStatusLabel(
+  status: IImportRunState['rowResults'][string]['status'] | undefined
+): string | null {
+  if (status === ImportRowResultStatus.Pending) {
+    return 'importing';
+  }
+
+  if (status === ImportRowResultStatus.Succeeded) {
+    return 'imported successfully';
+  }
+
+  if (status === ImportRowResultStatus.Failed) {
+    return 'failed to import';
+  }
+
+  return null;
+}
+
 export function ImportTable<TPayload, TResult>({
   adapter,
   context,
   session,
   actions,
+  importRun,
 }: ImportTableProps<TPayload, TResult>) {
   const shouldUseVirtualTable = session.rows.length > MIN_ROW_COUNT_FOR_VIRTUAL_TABLE;
   const selectedCell = session.selectedCell;
   const latestSessionRef = useRef(session);
   const previousSelectedCellRef = useRef(session.selectedCell);
+  const previousImportRowResultsRef = useRef(importRun.rowResults);
   const previousRowCountRef = useRef(session.rows.length);
   const shouldScrollToNewRowRef = useRef(false);
   const tableRef = useRef<TableRef>(null);
@@ -118,6 +147,10 @@ export function ImportTable<TPayload, TResult>({
   useLayoutEffect(() => {
     previousSelectedCellRef.current = selectedCell;
   }, [selectedCell]);
+
+  useLayoutEffect(() => {
+    previousImportRowResultsRef.current = importRun.rowResults;
+  }, [importRun.rowResults]);
 
   const syncContainerHeight = useCallback(
     (target?: HTMLElement | null) => {
@@ -304,9 +337,11 @@ export function ImportTable<TPayload, TResult>({
         render: (_, row) => {
           const rowUiStatus = getTableRowUiStatus(row, adapter.fields);
           const rowStatusLabel = getTableRowUiStatusLabel(rowUiStatus);
+          const importRowStatus = importRun.rowResults[row.id]?.status;
+          const importStatusLabel = resolveImportRowStatusLabel(importRowStatus);
 
           return (
-            <div className="flex min-h-[52px] flex-col items-center justify-center gap-1 py-2">
+            <div className="flex min-h-[52px] flex-col items-center justify-center gap-1.5 py-2">
               <span
                 role="img"
                 aria-label={`Row ${row.rowIndex + 1} status: ${rowStatusLabel}`}
@@ -327,6 +362,26 @@ export function ImportTable<TPayload, TResult>({
               <span className="text-xs text-center font-semibold text-neutral-4">
                 {row.rowIndex + 1}
               </span>
+              {importStatusLabel ? (
+                <span
+                  role="img"
+                  aria-label={`Row ${row.rowIndex + 1} import status: ${importStatusLabel}`}
+                  className={cn(
+                    'inline-flex items-center justify-center text-sm',
+                    importRowStatus === ImportRowResultStatus.Pending && 'text-primary-9',
+                    importRowStatus === ImportRowResultStatus.Succeeded && 'text-emerald-600',
+                    importRowStatus === ImportRowResultStatus.Failed && 'text-rose-600'
+                  )}
+                >
+                  {importRowStatus === ImportRowResultStatus.Pending ? (
+                    <LoadingOutlined spin />
+                  ) : importRowStatus === ImportRowResultStatus.Succeeded ? (
+                    <CheckCircleFilled />
+                  ) : (
+                    <CloseCircleFilled />
+                  )}
+                </span>
+              ) : null}
             </div>
           );
         },
@@ -334,7 +389,9 @@ export function ImportTable<TPayload, TResult>({
           className: 'align-center',
         }),
         shouldCellUpdate: (record, prevRecord) =>
-          record !== prevRecord || record.rowIndex !== prevRecord.rowIndex,
+          record !== prevRecord ||
+          previousImportRowResultsRef.current[record.id]?.status !==
+            importRun.rowResults[record.id]?.status,
       },
       ...adapter.fields.map((field) => {
         const width = fieldColumnWidth(field, resizeOverrides);
@@ -394,7 +451,10 @@ export function ImportTable<TPayload, TResult>({
           },
           shouldCellUpdate: usesCustomTableRenderer
             ? undefined
-            : (record: IImportSessionState['rows'][number], prevRecord: IImportSessionState['rows'][number]) =>
+            : (
+                record: IImportSessionState['rows'][number],
+                prevRecord: IImportSessionState['rows'][number]
+              ) =>
                 record.id !== prevRecord.id ||
                 record.rowIndex !== prevRecord.rowIndex ||
                 record.cells[field.path] !== prevRecord.cells[field.path] ||
@@ -465,7 +525,7 @@ export function ImportTable<TPayload, TResult>({
       didCellSelectionChange,
       isCellSelected,
       resizeOverrides,
-      selectedCell,
+      importRun.rowResults,
     ]
   );
 

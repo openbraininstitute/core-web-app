@@ -359,6 +359,36 @@ function createCsvTooltipProgressAdapter({
   };
 }
 
+function createImportRunAdapter({
+  id,
+  submitRow,
+}: {
+  id: string;
+  submitRow: IEntityImportAdapter<Record<string, string>, { id: string }>['submitRow'];
+}): IEntityImportAdapter<Record<string, string>, { id: string }> {
+  return {
+    id,
+    title: 'Import Run Adapter',
+    templateFileName: `${id}.csv`,
+    submitLabel: 'Import rows',
+    fields: [
+      {
+        label: 'Name',
+        path: 'name',
+        required: true,
+        inputType: ImportInputType.Text,
+      },
+    ],
+    schema: z.object({
+      name: z.string().min(1, 'Name is required'),
+    }),
+    buildPayload({ values }) {
+      return values;
+    },
+    submitRow,
+  };
+}
+
 function expectNoLegacyCsvStatusBanner(container: HTMLElement) {
   // The removed banner has no stable role or copy; keep its selector localized in one helper.
   expect(
@@ -539,6 +569,173 @@ describe('EntityImportFeature', () => {
         })
       );
     });
+  });
+
+  it('keeps the import button green with the final imported count when every row succeeds', async () => {
+    const user = userEvent.setup();
+    const firstRowSubmit = createDeferred<{ id: string }>();
+    const secondRowSubmit = createDeferred<{ id: string }>();
+    const submitRow = vi.fn(async ({ payload }: { payload: Record<string, string> }) =>
+      payload.name === 'Neuron A' ? firstRowSubmit.promise : secondRowSubmit.promise
+    );
+    const importRunAdapter = createImportRunAdapter({
+      id: 'import-progress-ui',
+      submitRow,
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Import Progress UI"
+        onClose={() => {}}
+        adapter={importRunAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A' }, { name: 'Neuron B' }]}
+      />
+    );
+
+    const submitButton = screen.getByRole('button', { name: /Import rows 2 row\(s\)/i });
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Importing 0\/2 rows/i })).toHaveStyle(
+        '--entity-import-submit-progress: 0%'
+      );
+    });
+
+    firstRowSubmit.resolve({ id: 'import-1' });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Importing 1\/2 rows/i })).toHaveStyle(
+        '--entity-import-submit-progress: 50%'
+      );
+      expect(
+        screen.getByLabelText('Row 1 import status: imported successfully')
+      ).toBeInTheDocument();
+    });
+
+    secondRowSubmit.resolve({ id: 'import-2' });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Imported 2\/2 rows/i })).toHaveStyle(
+        '--entity-import-submit-progress: 100%'
+      );
+      expect(screen.getByRole('button', { name: /Imported 2\/2 rows/i })).toHaveAttribute(
+        'data-import-run-tone',
+        'success'
+      );
+      expect(
+        screen.getByLabelText('Row 2 import status: imported successfully')
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByText('2 row(s) imported successfully.')).not.toBeInTheDocument();
+  });
+
+  it('keeps the import button blue with a bounded scrollable tooltip when the run partially succeeds', async () => {
+    const user = userEvent.setup();
+    const firstRowSubmit = createDeferred<{ id: string }>();
+    const secondRowSubmit = createDeferred<{ id: string }>();
+    const submitRow = vi.fn(async ({ payload }: { payload: Record<string, string> }) =>
+      payload.name === 'Neuron A' ? firstRowSubmit.promise : secondRowSubmit.promise
+    );
+    const importRunAdapter = createImportRunAdapter({
+      id: 'import-progress-errors',
+      submitRow,
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Import Progress Errors"
+        onClose={() => {}}
+        adapter={importRunAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A' }, { name: 'Neuron B' }]}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /Import rows 2 row\(s\)/i }));
+
+    firstRowSubmit.reject(new Error('Entity already exists for Neuron A.'));
+    secondRowSubmit.resolve({ id: 'import-2' });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Row 1 import status: failed to import')).toBeInTheDocument();
+      expect(
+        screen.getByLabelText('Row 2 import status: imported successfully')
+      ).toBeInTheDocument();
+    });
+
+    const submitButton = screen.getByRole('button', { name: /Imported 1\/2 rows/i });
+    await waitFor(() => {
+      expect(submitButton).toBeEnabled();
+      expect(submitButton).toHaveAttribute('data-import-run-tone', 'partial');
+      expect(submitButton).toHaveStyle('--entity-import-submit-progress: 100%');
+    });
+    await user.hover(submitButton);
+
+    const failureTooltip = await screen.findByRole('tooltip');
+    expect(screen.getByTestId('import-run-failure-tooltip')).toHaveStyle('max-width: 500px');
+    expect(within(failureTooltip).getByText('1 row failed to import')).toBeInTheDocument();
+    expect(within(failureTooltip).getByText('Row 1')).toBeInTheDocument();
+    expect(
+      within(failureTooltip).getByText('Entity already exists for Neuron A.')
+    ).toBeInTheDocument();
+    expect(within(failureTooltip).getByTestId('import-run-failure-list')).toHaveClass(
+      'overflow-y-auto'
+    );
+  });
+
+  it('keeps the import button in a warning state and shows all errors when every row fails', async () => {
+    const user = userEvent.setup();
+    const firstRowSubmit = createDeferred<{ id: string }>();
+    const secondRowSubmit = createDeferred<{ id: string }>();
+    const submitRow = vi.fn(async ({ payload }: { payload: Record<string, string> }) =>
+      payload.name === 'Neuron A' ? firstRowSubmit.promise : secondRowSubmit.promise
+    );
+    const importRunAdapter = createImportRunAdapter({
+      id: 'import-progress-all-errors',
+      submitRow,
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Import Progress All Errors"
+        onClose={() => {}}
+        adapter={importRunAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A' }, { name: 'Neuron B' }]}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /Import rows 2 row\(s\)/i }));
+
+    firstRowSubmit.reject(new Error('Entity already exists for Neuron A.'));
+    secondRowSubmit.reject(new Error('Entity already exists for Neuron B.'));
+
+    const submitButton = await screen.findByRole('button', { name: /Imported 0\/2 rows/i });
+    await waitFor(() => {
+      expect(submitButton).toBeEnabled();
+      expect(submitButton).toHaveAttribute('data-import-run-tone', 'failed');
+      expect(submitButton).toHaveStyle('--entity-import-submit-progress: 100%');
+      expect(screen.getByLabelText('Row 1 import status: failed to import')).toBeInTheDocument();
+      expect(screen.getByLabelText('Row 2 import status: failed to import')).toBeInTheDocument();
+    });
+
+    await user.hover(submitButton);
+
+    const failureTooltip = await screen.findByRole('tooltip');
+    expect(screen.getByTestId('import-run-failure-tooltip')).toHaveStyle('max-width: 500px');
+    expect(within(failureTooltip).getByText('2 rows failed to import')).toBeInTheDocument();
+    expect(within(failureTooltip).getByText('Row 1')).toBeInTheDocument();
+    expect(within(failureTooltip).getByText('Row 2')).toBeInTheDocument();
+    expect(
+      within(failureTooltip).getByText('Entity already exists for Neuron A.')
+    ).toBeInTheDocument();
+    expect(
+      within(failureTooltip).getByText('Entity already exists for Neuron B.')
+    ).toBeInTheDocument();
+    expect(within(failureTooltip).getByTestId('import-run-failure-list')).toHaveClass(
+      'overflow-y-auto'
+    );
   });
 
   it('scrolls the table body to the new row when adding a row', async () => {
@@ -3053,7 +3250,7 @@ describe('EntityImportFeature', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: 'Download Current CSV' }));
+    await user.click(screen.getByRole('button', { name: 'Download CSV' }));
 
     expect(createObjectURL).toHaveBeenCalledTimes(1);
     const csvBlob = createObjectURL.mock.calls[0]?.[0] as Blob;

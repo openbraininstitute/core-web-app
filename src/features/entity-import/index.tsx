@@ -38,6 +38,7 @@ export function EntityImportFeature<TPayload, TResult>({
       session={controller.session}
       actions={controller.actions}
       isSubmitting={controller.isSubmitting}
+      importRun={controller.importRun}
       csvUploadPhase={controller.csvUploadPhase}
       csvRowValidationProgress={controller.csvRowValidationProgress}
       csvUploadNotifications={controller.csvUploadNotifications}

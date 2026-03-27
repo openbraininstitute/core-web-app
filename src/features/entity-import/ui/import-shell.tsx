@@ -27,7 +27,7 @@ import type {
   IEntityImportAdapter,
   IValidatorSuggestionState,
 } from '@/features/entity-import/core/adapter';
-import type { IImportSessionState } from '@/features/entity-import/core/contracts';
+import type { IImportRunState, IImportSessionState } from '@/features/entity-import/core/contracts';
 
 interface ImportShellProps<TPayload, TResult> {
   title: string | null;
@@ -36,6 +36,7 @@ interface ImportShellProps<TPayload, TResult> {
   session: IImportSessionState;
   actions: IEntityImportActions;
   isSubmitting: boolean;
+  importRun: IImportRunState;
   csvUploadPhase: string;
   csvRowValidationProgress: {
     active: boolean;
@@ -176,6 +177,7 @@ export function ImportShell<TPayload, TResult>({
   session,
   actions,
   isSubmitting,
+  importRun,
   csvUploadPhase,
   csvRowValidationProgress,
   csvUploadNotifications,
@@ -372,7 +374,7 @@ export function ImportShell<TPayload, TResult>({
             size="md"
             onClick={onDownloadCurrentCsv}
           >
-            <span>Download Current CSV</span>
+            <span>Download CSV</span>
             <RiDownload2Line />
           </Button>
           <Button rounded type="button" variant="icon" size="md" onClick={onClose}>
@@ -395,6 +397,7 @@ export function ImportShell<TPayload, TResult>({
                 context={context}
                 session={session}
                 actions={actions}
+                importRun={importRun}
               />
             </div>
           </div>
@@ -406,6 +409,7 @@ export function ImportShell<TPayload, TResult>({
             session={session}
             actions={actions}
             isSubmitting={isSubmitting}
+            importRun={importRun}
             validatorSuggestions={validatorSuggestions}
           />
         </section>
