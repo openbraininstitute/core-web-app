@@ -10,7 +10,10 @@ import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 import { SelectPopover } from '@/ui/molecules/select-popover';
 import { CellMorphology, CellMorphologyImport } from '@/ui/segments/contribute/cell-morphology';
-import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
+import {
+  ElectricalCellRecording,
+  ElectricalCellRecordingImport,
+} from '@/ui/segments/contribute/electrical-cell-recording';
 import { EMCellMesh } from '@/ui/segments/contribute/em-cell-mesh';
 import {
   makeSelectContributionEntityClickEvent,
@@ -32,6 +35,7 @@ type TContributionEntryMode = (typeof ContributionEntryMode)[keyof typeof Contri
 
 const ImportArtifactSupport = {
   [ExtendedEntitiesTypeDict.CellMorphology]: true,
+  [ExtendedEntitiesTypeDict.ElectricalCellRecording]: true,
 } as const as Partial<Record<TExtendedEntitiesTypeDict, boolean>>;
 
 interface IExtendedEntitiesSelectorProps {
@@ -205,6 +209,12 @@ function RenderImportEntityTypeContent({
         type: ExtendedEntitiesTypeDict.CellMorphology,
       },
       () => <CellMorphologyImport title={title} sessionId={sId} onClose={onClose} />
+    )
+    .with(
+      {
+        type: ExtendedEntitiesTypeDict.ElectricalCellRecording,
+      },
+      () => <ElectricalCellRecordingImport title={title} sessionId={sId} onClose={onClose} />
     )
     .otherwise(() => null);
 }

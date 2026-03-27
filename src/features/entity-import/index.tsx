@@ -57,6 +57,7 @@ export function EntityImportFeature<TPayload, TResult>({
 }
 
 export { createCellMorphologyImportAdapter } from '@/features/entity-import/adapters/cell-morphology/adapter';
+export { createElectricalCellRecordingImportAdapter } from '@/features/entity-import/adapters/electrical-cell-recording/adapter';
 
 export type {
   IEntityImportAdapter,
