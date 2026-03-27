@@ -13,8 +13,8 @@
     "ci": "biome ci",
     "format": "biome format --write",
     "analyze": "next experimental-analyze",
-    "test:entity-import": "vitest run --config vitest.entity-import.config.ts",
-    "test:entity-import:watch": "vitest --config vitest.entity-import.config.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "npx tsc --noEmit",
     "typecheck:watch": "npx tsc --noEmit --watch",
     "knip": "knip"

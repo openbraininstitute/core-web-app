@@ -25,9 +25,7 @@ Object.defineProperty(window, 'getComputedStyle', {
 
 class ResizeObserverMock {
   observe() {}
-
   unobserve() {}
-
   disconnect() {}
 }
 
