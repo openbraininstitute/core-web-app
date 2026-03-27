@@ -19,7 +19,7 @@ export function parseCsvFile(file: File): Promise<ParseResult<Record<string, str
   return new Promise((resolve, reject) => {
     Papa.parse<Record<string, string>>(file, {
       header: true,
-      // Worker mode cannot be combined with transformHeader: functions are not structured-cloneable for postMessage.
+      // worker mode cannot be combined with transformHeader: functions are not structured-cloneable for postMessage.
       worker: false,
       skipEmptyLines: 'greedy',
       transformHeader: normalizeColumnKey,

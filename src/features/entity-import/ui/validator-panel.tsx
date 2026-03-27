@@ -725,7 +725,7 @@ function SingleColumnValidatorCard({
       }
 
       if (applyToAll) {
-        // Batch all rows into a single commit instead of N individual commits.
+        // batch all rows into a single commit instead of N individual commits.
         actions.applyManualValueToAll({
           fieldPath: field.path,
           targetRowIds: session.rows.map((r) => r.id),
@@ -1256,7 +1256,7 @@ export function ValidatorPanel<TPayload, TResult>({
     }, 200);
   }, [collapsed, onHoverExpandedChange]);
 
-  // Reset hover state when user explicitly expands
+  // reset hover state when user explicitly expands
   useEffect(() => {
     if (!collapsed) {
       onHoverExpandedChange(false);
@@ -1298,7 +1298,6 @@ export function ValidatorPanel<TPayload, TResult>({
     scrollContainerRef.current.scrollTop = 0;
   }, [validatorScrollResetKey]);
 
-  // Collapsed vertical bar view
   if (collapsed && !hoverExpanded) {
     return (
       <aside
