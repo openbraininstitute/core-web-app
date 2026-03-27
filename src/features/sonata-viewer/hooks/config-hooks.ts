@@ -33,7 +33,10 @@ export const useInteractivePlotConfig = (
         zeroline: false,
       },
       yaxis: {
-        title: { text: `${variableName ?? getUnitLabel(units)} (${units})`, standoff: 12 },
+        title: {
+          text: `${variableName ?? getUnitLabel(units)} (${units})`,
+          standoff: 12,
+        },
         zeroline: false,
         automargin: true,
         exponentformat: 'e',
@@ -82,7 +85,7 @@ export const useOverviewPlotConfig = ({
         ticklen: 6,
         ticks: 'outside',
         tickwidth: 1,
-        title: { font: { size: 12 }, text: 'Time (ms)' },
+        title: { font: { size: 10 }, text: 'Time (ms)' },
         zeroline: false,
       },
       yaxis: {
@@ -91,8 +94,9 @@ export const useOverviewPlotConfig = ({
         ticklen: 4,
         ticks: 'outside',
         tickwidth: 1,
+        exponentformat: 'e',
         title: {
-          font: { size: 12 },
+          font: { size: 10 },
           text: `${variableName ?? getUnitLabel(units)} (${units})`,
           standoff: 12,
         },
