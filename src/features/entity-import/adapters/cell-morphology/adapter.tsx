@@ -220,7 +220,7 @@ export function createCellMorphologyImportAdapter({
     id: 'cell-morphology-import',
     title: 'Cell Morphology Import',
     submitLabel: 'Import',
-    templateFileName: 'Cell Morphology template a guide',
+    templateFileName: 'Cell Morphology csv template and guide',
     templateGuide: {
       entityType: ExtendedEntitiesTypeDict.CellMorphology,
       guideFileName: 'cell-morphology-import-template.md',

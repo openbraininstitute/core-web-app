@@ -31,6 +31,7 @@ import {
   TableRowUiStatus,
 } from '@/features/entity-import/ui/status';
 import useResizeObserver from '@/hooks/useResizeObserver';
+import { Badge } from '@/ui/molecules/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -439,10 +440,19 @@ export function ImportTable<TPayload, TResult>({
 
         return {
           title: (
-            <div className="relative -mx-2 flex min-h-9 items-center overflow-visible px-2">
-              <span className="text-sm font-semibold uppercase tracking-wide text-neutral-4">
+            <div className="relative -mx-2 flex min-h-9 w-full min-w-0 items-center gap-1.5 overflow-visible px-2 pr-3">
+              <span className="min-w-0 shrink truncate text-sm font-semibold uppercase tracking-wide text-neutral-4">
                 {field.label}
               </span>
+              {field.required ? (
+                <Badge
+                  variant="outline"
+                  rounded
+                  className="shrink-0 border-transparent bg-primary-8 px-2 py-0.5 text-xs font-semibold leading-none text-white shadow-none"
+                >
+                  Required
+                </Badge>
+              ) : null}
               <button
                 type="button"
                 tabIndex={0}
