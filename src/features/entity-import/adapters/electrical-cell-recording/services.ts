@@ -5,7 +5,7 @@ import { createEtypeClassification } from '@/api/entitycore/queries/annotations/
 import { createAsset } from '@/api/entitycore/queries/assets';
 import { createElectricalCellRecording } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import {
   type CommonQueryArgs,
   createCommonEntityImportQueryServices,
@@ -13,9 +13,9 @@ import {
   makeRemoteSearchResult,
   makeSuggestion,
   makeWildcardIlikeQuery,
+  makeWorkspaceContext,
   resolveQueryPaging,
   type TSharedTextQueryField,
-  toWorkspaceContext,
 } from '@/features/entity-import/core/shared/common-query-services';
 
 import type {
@@ -74,7 +74,7 @@ export function createElectricalCellRecordingImportServices(): IElectricalCellRe
           ilike_search: queryValue,
           ...(queryField !== 'ilike_search' && queryValue ? { [queryField]: queryValue } : {}),
         },
-        ctx: toWorkspaceContext(context),
+        ctx: makeWorkspaceContext(context),
       });
 
       return makeRemoteSearchResult({
@@ -90,14 +90,14 @@ export function createElectricalCellRecordingImportServices(): IElectricalCellRe
     },
     async registerRecording({ metadata, context }) {
       const result = await createElectricalCellRecording({
-        context: toWorkspaceContext(context),
+        context: makeWorkspaceContext(context),
         payload: metadata,
       });
       return { id: result.id };
     },
     async createEtypeClassification({ entityId, etypeClassId, context }) {
       const result = await createEtypeClassification({
-        context: toWorkspaceContext(context),
+        context: makeWorkspaceContext(context),
         payload: {
           authorized_public: true,
           entity_id: entityId,
@@ -111,10 +111,10 @@ export function createElectricalCellRecordingImportServices(): IElectricalCellRe
         entityId,
         entityType: EntityTypeDict.ElectricalCellRecording,
         fileName: file.name || '',
-        mimeType: 'application/nwb',
+        mimeType: AssetContentType.nwb,
         label: AssetLabel.nwb,
         payload: file,
-        ctx: toWorkspaceContext(context),
+        ctx: makeWorkspaceContext(context),
       });
       return { id: result.id };
     },

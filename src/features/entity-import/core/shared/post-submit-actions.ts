@@ -2,7 +2,7 @@
 
 import { createMtypeClassification as createMtypeClassificationMutation } from '@/api/entitycore/queries/annotations/mtype-classification';
 import { createContribution as createContributionMutation } from '@/api/entitycore/queries/general/contribution';
-import { toWorkspaceContext } from '@/features/entity-import/core/shared/common-query-services';
+import { makeWorkspaceContext } from '@/features/entity-import/core/shared/common-query-services';
 
 import type { IEntityImportRuntimeContext } from '@/features/entity-import/core/adapter';
 
@@ -28,7 +28,7 @@ export function createEntityImportPostSubmitActions(): IEntityImportPostSubmitAc
   return {
     async createContribution({ entityId, contribution, context }) {
       const createdContribution = await createContributionMutation({
-        context: toWorkspaceContext(context),
+        context: makeWorkspaceContext(context),
         contributor: {
           agent_id: contribution.agent_id,
           role_id: contribution.role_id,
@@ -40,7 +40,7 @@ export function createEntityImportPostSubmitActions(): IEntityImportPostSubmitAc
     },
     async createMtypeClassification({ entityId, mtypeClassId, context }) {
       const classification = await createMtypeClassificationMutation({
-        context: toWorkspaceContext(context),
+        context: makeWorkspaceContext(context),
         payload: {
           authorized_public: true,
           entity_id: entityId,

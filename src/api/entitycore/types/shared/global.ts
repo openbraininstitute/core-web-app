@@ -160,7 +160,7 @@ export type TypeFilter = {
 };
 
 export interface IMTypeFilter extends PaginationFilter, TypeFilter, IlikeSearchFilter {}
-export interface IETypeFilter extends PaginationFilter, TypeFilter {}
+export interface IETypeFilter extends PaginationFilter, TypeFilter, IlikeSearchFilter {}
 
 type RoleBase = {
   name: string;

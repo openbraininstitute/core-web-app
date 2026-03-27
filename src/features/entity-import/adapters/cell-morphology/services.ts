@@ -9,9 +9,9 @@ import {
   makeRemoteSearchResult,
   makeSuggestion,
   makeWildcardIlikeQuery,
+  makeWorkspaceContext,
   resolveQueryPaging,
-  type SharedTextQueryField,
-  toWorkspaceContext,
+  type TSharedTextQueryField,
 } from '@/features/entity-import/core/shared/common-query-services';
 
 import type { TRepairPipelineState } from '@/api/entitycore/types/shared/protocol';
@@ -47,7 +47,7 @@ export interface RegisterMorphologyResult {
 }
 
 export interface ICellMorphologyImportServices extends IEntityImportSharedQueryServices {
-  queryProtocol: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
+  queryProtocol: (args: CommonQueryArgs<TSharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
   registerMorphology: (args: {
     file: File;
     metadata: CellMorphologyRegistrationMetadata;
@@ -69,7 +69,7 @@ export function createCellMorphologyImportServices(): ICellMorphologyImportServi
           page_size: paging.pageSize,
           ...(queryValue ? { [queryField]: queryValue } : {}),
         },
-        context: toWorkspaceContext(context),
+        context: makeWorkspaceContext(context),
       });
 
       return makeRemoteSearchResult({
@@ -91,7 +91,7 @@ export function createCellMorphologyImportServices(): ICellMorphologyImportServi
       });
     },
     async registerMorphology({ file, metadata, context }) {
-      return await createAndRegisterMorphometrics(file, metadata, toWorkspaceContext(context));
+      return await createAndRegisterMorphometrics(file, metadata, makeWorkspaceContext(context));
     },
   };
 }
