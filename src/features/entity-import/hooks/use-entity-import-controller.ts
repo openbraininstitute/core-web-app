@@ -16,6 +16,7 @@ import {
   type IEntityImportAdapter,
   type IValidatorSuggestionState,
   type RemoteValidationResult,
+  ValidatorManualApplyMode,
 } from '../core/adapter';
 import {
   createIdleImportRunState,
@@ -53,6 +54,7 @@ import {
   pushNotification,
   rejectCorrectionDraft,
   resolveCellSuggestion,
+  resolveSuggestionToRows,
   selectCell as selectCellState,
   setCellRemoteState,
   setCellValue,
@@ -1542,14 +1544,20 @@ export function useEntityImportController<TPayload, TResult>({
   );
 
   const applySuggestion = useCallback(
-    (params: Parameters<typeof stageSuggestionToRows>[1]) => {
+    (params: Parameters<IEntityImportActions['applySuggestion']>[0]) => {
       clearPendingCellSync(params.targetRowId, params.fieldPath);
       resetImportRun();
-      commit((current) => stageSuggestionToRows(current, params), {
-        rowIds: params.applyToAllMatching
-          ? sessionRef.current.rows.map((row) => row.id)
-          : [params.targetRowId],
-      });
+      commit(
+        (current) =>
+          params.mode === ValidatorManualApplyMode.Stage
+            ? stageSuggestionToRows(current, params)
+            : resolveSuggestionToRows(current, params),
+        {
+          rowIds: params.applyToAllMatching
+            ? sessionRef.current.rows.map((row) => row.id)
+            : [params.targetRowId],
+        }
+      );
     },
     [clearPendingCellSync, commit, resetImportRun]
   );

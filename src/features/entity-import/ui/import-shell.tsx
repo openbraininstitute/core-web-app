@@ -333,22 +333,23 @@ export function ImportShell<TPayload, TResult>({
                       )}
                     </div>
                   ) : null}
-
-                  {csvUploadNotifications.map((notification) => (
-                    <Alert
-                      key={notification.id}
-                      appearance="light"
-                      variant={resolveCsvUploadNotificationVariant(notification.tone)}
-                      size="sm"
-                    >
-                      <AlertContent>
-                        <AlertTitle>
-                          {resolveCsvUploadNotificationTitle(notification.tone)}
-                        </AlertTitle>
-                        <AlertDescription>{notification.message}</AlertDescription>
-                      </AlertContent>
-                    </Alert>
-                  ))}
+                  <div className="max-h-72 space-y-2 overflow-y-auto secondary-scrollbar pr-1">
+                    {csvUploadNotifications.map((notification) => (
+                      <Alert
+                        key={notification.id}
+                        appearance="light"
+                        variant={resolveCsvUploadNotificationVariant(notification.tone)}
+                        size="sm"
+                      >
+                        <AlertContent>
+                          <AlertTitle>
+                            {resolveCsvUploadNotificationTitle(notification.tone)}
+                          </AlertTitle>
+                          <AlertDescription>{notification.message}</AlertDescription>
+                        </AlertContent>
+                      </Alert>
+                    ))}
+                  </div>
                 </div>
               </TooltipContent>
             ) : null}

@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import { ImportInputType } from '../../core/contracts';
 import { createCellMorphologyImportAdapter, EntityImportFeature } from '../../index';
@@ -110,7 +111,7 @@ const fileAdapter = {
   title: 'File Import',
   templateFileName: 'cell-morphology-import-template.csv',
   templateGuide: {
-    entityType: 'cell-morphology',
+    entityType: ExtendedEntitiesTypeDict.CellMorphology,
     guideFileName: 'cell-morphology-import-template.md',
   },
   submitLabel: 'Import rows',
@@ -814,7 +815,7 @@ describe('EntityImportFeature', () => {
     expect(screen.queryByLabelText('Name row 2')).not.toBeInTheDocument();
   });
 
-  it('stages a selected remote suggestion and applies it after accepting the draft', async () => {
+  it('previews a selected remote suggestion in the table and commits it when applied to all rows', async () => {
     const user = userEvent.setup();
 
     renderWithQueryClient(
@@ -828,7 +829,12 @@ describe('EntityImportFeature', () => {
       />
     );
 
-    await user.click(screen.getByLabelText('Brain Region row 1'));
+    const row1Field = screen.getByLabelText('Brain Region row 1');
+    const row2Field = screen.getByLabelText('Brain Region row 2');
+    const row1Cell = getTableCellElement(row1Field);
+    const row2Cell = getTableCellElement(row2Field);
+
+    await user.click(row1Field);
 
     expect(screen.getByText('Validator')).toBeInTheDocument();
 
@@ -843,23 +849,28 @@ describe('EntityImportFeature', () => {
 
     await user.click(suggestion);
     expect(screen.getByText('Isocortex')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(within(row1Cell).getByText('Ctx')).toBeInTheDocument();
+      expect(within(row1Cell).getByText('Isocortex')).toBeInTheDocument();
+      expect(within(row2Cell).queryByText('Isocortex')).not.toBeInTheDocument();
+    });
+    expect(
+      screen.queryByRole('button', { name: 'Accept suggested Brain Region row 1' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Reject suggested Brain Region row 1' })
+    ).not.toBeInTheDocument();
+
     await user.click(screen.getByRole('button', { name: /Apply to all/i }));
 
-    expect(
-      screen.getByRole('button', { name: 'Accept suggested Brain Region row 1' })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Accept suggested Brain Region row 2' })
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Accept suggested Brain Region row 1' }));
-    await user.click(screen.getByRole('button', { name: 'Accept suggested Brain Region row 2' }));
-
-    expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Isocortex');
-    expect(screen.getByLabelText('Brain Region row 2')).toHaveValue('Isocortex');
+    await waitFor(() => {
+      expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Isocortex');
+      expect(screen.getByLabelText('Brain Region row 2')).toHaveValue('Isocortex');
+    });
   });
 
-  it('applies manual validator text edits to all rows', async () => {
+  it('previews manual validator text edits before applying them to all rows', async () => {
     const user = userEvent.setup();
 
     renderWithQueryClient(
@@ -870,13 +881,22 @@ describe('EntityImportFeature', () => {
       />
     );
 
-    await user.click(screen.getByLabelText('Name row 1'));
+    const row1Field = screen.getByLabelText('Name row 1');
+    const row2Field = screen.getByLabelText('Name row 2');
+    const row1Cell = getTableCellElement(row1Field);
+    const row2Cell = getTableCellElement(row2Field);
+
+    await user.click(row1Field);
 
     const validatorInput = screen.getByLabelText('Validator value');
     await user.clear(validatorInput);
     await user.type(validatorInput, 'Neuron Z');
 
-    expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron A');
+    await waitFor(() => {
+      expect(within(row1Cell).getByText('Neuron A')).toBeInTheDocument();
+      expect(within(row1Cell).getByText('Neuron Z')).toBeInTheDocument();
+      expect(within(row2Cell).queryByText('Neuron Z')).not.toBeInTheDocument();
+    });
 
     await user.click(screen.getByRole('button', { name: /Apply to all/i }));
 
@@ -1048,9 +1068,7 @@ describe('EntityImportFeature', () => {
       await user.click(screen.getByRole('button', { name: 'Apply' }));
 
       await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: 'Accept suggested Brain Region row 1' })
-        ).toBeInTheDocument();
+        expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Cortex layer 2');
       });
       getCurrentTableBody().scrollTop = 180;
       while (frameQueue.length > 0) {
@@ -2207,6 +2225,79 @@ describe('EntityImportFeature', () => {
     });
   });
 
+  it('commits a selected license suggestion directly instead of staging an extra accept/reject step', async () => {
+    const user = userEvent.setup();
+    const services = createMockCellMorphologyImportServices({
+      queryLicense: vi.fn(async ({ query }) => {
+        const normalizedQuery = query.trim().toLowerCase();
+        if (!normalizedQuery.includes('license')) {
+          return { suggestions: [], nextPageParam: null };
+        }
+
+        return {
+          suggestions: [
+            { value: 'license-a', label: 'License A' },
+            { value: 'license-b', label: 'License B' },
+          ],
+          nextPageParam: null,
+        };
+      }),
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+      services,
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="License Suggestion Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[
+          {
+            sourceFile: '',
+            name: 'Neuron A',
+            description: 'Imported morphology',
+            brainRegionId: '',
+            experimentDate: '',
+            contactEmail: '',
+            publishedIn: '',
+            location: '',
+            subjectId: '',
+            licenseId: '',
+            protocolId: '',
+            repairPipelineState: '',
+            mtypeClassId: '',
+            contributions: '[(person, Jane Doe, Author)]',
+          },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByLabelText('License row 1'));
+
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.clear(validatorInput);
+    await user.type(validatorInput, 'License');
+
+    const licenseSuggestion = await screen.findByRole('button', {
+      name: 'Select suggestion License A',
+    });
+    await user.click(licenseSuggestion);
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('License row 1')).toHaveValue('License A');
+      expect(
+        screen.queryByRole('button', { name: 'Accept suggested License row 1' })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Reject suggested License row 1' })
+      ).not.toBeInTheDocument();
+    });
+  });
+
   it('keeps the validator open with select placeholders and exposes all only in the column selector', async () => {
     const user = userEvent.setup();
 
@@ -2655,7 +2746,7 @@ describe('EntityImportFeature', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('stages panel location edits until the user accepts or rejects them in the table', async () => {
+  it('previews panel location edits in the table and commits them when applied', async () => {
     const user = userEvent.setup();
     const morphologyAdapter = createCellMorphologyImportAdapter({
       defaultBrainRegionId: 'brain-region-1',
@@ -2694,19 +2785,10 @@ describe('EntityImportFeature', () => {
     await user.clear(panelXInput);
     await user.type(panelXInput, '9');
 
-    expect(
-      within(screen.getByTestId('location-editor-table')).getByLabelText('Location X row 1')
-    ).toHaveValue(1);
-
-    await user.click(screen.getByRole('button', { name: 'Apply' }));
-
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'Accept suggested Location row 1' })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: 'Reject suggested Location row 1' })
-      ).toBeInTheDocument();
+        within(screen.getByTestId('location-editor-table')).getByLabelText('Location X row 1')
+      ).toHaveValue(9);
     });
 
     const stagedTable = screen.getByTestId('location-editor-table');
@@ -2716,36 +2798,35 @@ describe('EntityImportFeature', () => {
         .getAllByTitle('Original value')
         .map((node) => node.textContent)
     ).toEqual(expect.arrayContaining(['1', '2', '3']));
+    expect(
+      screen.queryByRole('button', { name: 'Accept suggested Location row 1' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Reject suggested Location row 1' })
+    ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Reject suggested Location row 1' }));
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
 
     await waitFor(() => {
       expect(
-        screen.queryByRole('button', { name: 'Accept suggested Location row 1' })
-      ).not.toBeInTheDocument();
-      expect(
         within(screen.getByTestId('location-editor-table')).getByLabelText('Location X row 1')
-      ).toHaveValue(1);
+      ).toHaveValue(9);
     });
 
     const refreshedPanel = screen.getByTestId('location-editor-panel');
     const refreshedPanelXInput = within(refreshedPanel).getByLabelText('Location X row 1');
     await user.clear(refreshedPanelXInput);
     await user.type(refreshedPanelXInput, '8');
+
+    await waitFor(() => {
+      expect(
+        within(screen.getByTestId('location-editor-table')).getByLabelText('Location X row 1')
+      ).toHaveValue(8);
+    });
+
     await user.click(screen.getByRole('button', { name: 'Apply' }));
 
     await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Accept suggested Location row 1' })
-      ).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Accept suggested Location row 1' }));
-
-    await waitFor(() => {
-      expect(
-        screen.queryByRole('button', { name: 'Accept suggested Location row 1' })
-      ).not.toBeInTheDocument();
       expect(
         within(screen.getByTestId('location-editor-table')).getByLabelText('Location X row 1')
       ).toHaveValue(8);
