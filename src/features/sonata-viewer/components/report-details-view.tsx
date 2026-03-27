@@ -89,6 +89,7 @@ export default function ReportDetailsView({
             nodeId={nodeId}
             units={currentPop?.dataUnits ?? 'mV'}
             variableName={variableName}
+            showTitle={nodeIds.length > 1}
           />
         ))}
       </div>

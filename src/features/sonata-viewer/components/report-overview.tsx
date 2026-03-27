@@ -57,6 +57,7 @@ function ThumbnailContainer({
   nodeId,
   units,
   variableName,
+  showTitle,
   onClick,
 }: {
   worker: Remote<SonataWorkerImpl>;
@@ -64,6 +65,7 @@ function ThumbnailContainer({
   nodeId: number;
   units: string;
   variableName?: string;
+  showTitle?: boolean;
   onClick: () => void;
 }) {
   const [data, setData] = useState<NodeTraceData | null>(null);
@@ -104,9 +106,11 @@ function ThumbnailContainer({
 
   return (
     <div className="flex flex-col gap-8">
-      <span className="text-lg">
-        {populationName}_{nodeId}
-      </span>
+      {showTitle && (
+        <span className="text-lg">
+          {populationName}_{nodeId}
+        </span>
+      )}
       <button
         ref={ref}
         type="button"
@@ -182,6 +186,7 @@ export default function ReportOverview({
                 nodeId={nodeId}
                 units={pop.dataUnits}
                 variableName={variableName}
+                showTitle={pop.nodeIds.length > 1}
                 onClick={() => onNodeClick(pop.name, nodeId)}
               />
             ))}

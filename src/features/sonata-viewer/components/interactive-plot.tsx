@@ -21,12 +21,14 @@ export default function InteractivePlot({
   nodeId,
   units,
   variableName,
+  showTitle,
 }: {
   worker: Remote<SonataWorkerImpl>;
   populationName: string;
   nodeId: number;
   units: string;
   variableName?: string;
+  showTitle?: boolean;
 }) {
   const [data, setData] = useState<NodeTraceData | null>(null);
   const [zoomRange, setZoomRange] = useState<{
@@ -79,9 +81,11 @@ export default function InteractivePlot({
 
   return (
     <div ref={containerRef} className="flex flex-col gap-1">
-      <span className="text-lg">
-        {populationName}_{nodeId}
-      </span>
+      {showTitle && (
+        <span className="text-lg">
+          {populationName}_{nodeId}
+        </span>
+      )}
       <Plot
         onInitialized={(_, graphDiv) => {
           plotRef.current = graphDiv;
@@ -102,7 +106,7 @@ export default function InteractivePlot({
         }}
         layout={{
           ...layout,
-          title: `${populationName}_${nodeId}`,
+          title: showTitle ? `${populationName}_${nodeId}` : undefined,
           xaxis: {
             ...layout.xaxis,
             title: { font, text: 'Time (ms)' },
