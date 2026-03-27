@@ -25,22 +25,27 @@ import {
   type ICellMorphologyImportServices,
 } from '@/features/entity-import/adapters/cell-morphology/services';
 import {
+  type IEntityImportAdapter,
+  type IValidatorSuggestionDetailsArgs,
+  ValidatorManualApplyMode,
+} from '@/features/entity-import/core/adapter';
+import {
   type IImportRowState,
   ImportInputType,
   type ISuggestion,
   RemoteValidationStatus,
 } from '@/features/entity-import/core/contracts';
 import {
-  createBrainRegionImportField,
-  createContributionsImportField,
-  createDescriptionImportField,
-  createExactOnlyRemoteEvaluator,
-  createFileBundleImportField,
-  createLicenseImportField,
-  createMtypeImportField,
-  createNameImportField,
-  createRemoteQuery,
-  createSubjectImportField,
+  makeBrainRegionImportField,
+  makeContributionsImportField,
+  makeDescriptionImportField,
+  makeExactOnlyRemoteEvaluator,
+  makeFileBundleImportField,
+  makeLicenseImportField,
+  makeMtypeImportField,
+  makeNameImportField,
+  makeRemoteQuery,
+  makeSubjectImportField,
   normalizeOptionalString,
   readSuggestionString,
   renderSuggestionDetailRows,
@@ -51,11 +56,6 @@ import {
   type IEntityImportPostSubmitActions,
 } from '@/features/entity-import/core/shared/post-submit-actions';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
-
-import type {
-  IEntityImportAdapter,
-  IValidatorSuggestionDetailsArgs,
-} from '@/features/entity-import/core/adapter';
 
 const REPAIR_PIPELINE_STATE_OPTIONS = Object.values(RepairPipelineState).map((option) => ({
   value: option.key,
@@ -216,15 +216,15 @@ export function createCellMorphologyImportAdapter({
       guideFileName: 'cell-morphology-import-template.md',
     },
     fields: [
-      createNameImportField({
+      makeNameImportField({
         submissionPath: 'setup.name',
         validationPath: 'metadata.name',
       }),
-      createDescriptionImportField({
+      makeDescriptionImportField({
         submissionPath: 'setup.description',
         validationPath: 'metadata.description',
       }),
-      createBrainRegionImportField({
+      makeBrainRegionImportField({
         path: 'brainRegionId',
         submissionPath: 'setup.brain_region_id',
         validationPath: 'metadata.brain_region_id',
@@ -275,7 +275,7 @@ export function createCellMorphologyImportAdapter({
           },
         },
         getValidationIssues: ({ cell }) => parseLocationCsvValue(cell.rawValue).issues,
-        validatorManualApplyMode: 'stage',
+        validatorManualApplyMode: ValidatorManualApplyMode.Stage,
         tableRenderer: ({ cell, row, field, actions, validatorPreview }) => (
           <LocationEditor
             cell={cell}
@@ -308,13 +308,13 @@ export function createCellMorphologyImportAdapter({
         ),
         columnWidth: 240,
       },
-      createSubjectImportField({
+      makeSubjectImportField({
         path: 'subjectId',
         submissionPath: 'subject_id',
         validationPath: 'metadata.subject_id',
         services,
       }),
-      createLicenseImportField({
+      makeLicenseImportField({
         path: 'licenseId',
         submissionPath: 'license_id',
         validationPath: 'metadata.license_id',
@@ -329,12 +329,12 @@ export function createCellMorphologyImportAdapter({
         inputType: ImportInputType.RemoteSelect,
         placeholder: 'Search protocol',
         remote: {
-          query: createRemoteQuery({
+          query: makeRemoteQuery({
             queryField: 'ilike_search',
             querySuggestions: services.queryProtocol,
           }),
           evaluate: async ({ query, context }) =>
-            createExactOnlyRemoteEvaluator({
+            makeExactOnlyRemoteEvaluator({
               label: 'Protocol',
               queryField: 'ilike_search',
               querySuggestions: services.queryProtocol,
@@ -358,14 +358,14 @@ export function createCellMorphologyImportAdapter({
           'Select a digital reconstruction protocol to enable Repair Pipeline State.',
         columnWidth: 190,
       },
-      createMtypeImportField({
+      makeMtypeImportField({
         path: 'mtypeClassId',
         submissionPath: 'mtype_class_id',
         validationPath: 'mtype_class_id',
         services,
       }),
-      createContributionsImportField({ services }),
-      createFileBundleImportField({
+      makeContributionsImportField({ services }),
+      makeFileBundleImportField({
         label: 'Morphology File',
         path: 'sourceFile',
         submissionPath: 'assets.sourceFile',

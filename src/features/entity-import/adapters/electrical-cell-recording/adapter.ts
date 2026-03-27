@@ -9,17 +9,17 @@ import { AssetContentType } from '@/api/entitycore/types/shared/global';
 import { createElectricalCellRecordingImportServices } from '@/features/entity-import/adapters/electrical-cell-recording/services';
 import { ImportInputType } from '@/features/entity-import/core/contracts';
 import {
-  createBrainRegionImportField,
-  createContributionsImportField,
-  createDescriptionImportField,
-  createFileBundleImportField,
-  createLicenseImportField,
-  createNameImportField,
-  createRemoteQuery,
-  createSingleSuggestionRemoteEvaluator,
-  createSubjectImportField,
+  makeBrainRegionImportField,
+  makeContributionsImportField,
+  makeDescriptionImportField,
+  makeFileBundleImportField,
+  makeLicenseImportField,
+  makeNameImportField,
+  makeRemoteQuery,
+  makeSingleSuggestionRemoteEvaluator,
+  makeSubjectImportField,
   normalizeOptionalString,
-  renderEtypeSuggestionDetails,
+  renderEtypeSuggestionTooltip,
   sanitizeContributions,
 } from '@/features/entity-import/core/shared/field-builders';
 import {
@@ -103,29 +103,29 @@ export function createElectricalCellRecordingImportAdapter({
   { id: string }
 > {
   const fields: Array<IAdapterFieldDefinition> = [
-    createNameImportField({
+    makeNameImportField({
       submissionPath: 'metadata.name',
       validationPath: 'metadata.name',
       placeholder: 'Recording name',
     }),
-    createDescriptionImportField({
+    makeDescriptionImportField({
       submissionPath: 'metadata.description',
       validationPath: 'metadata.description',
       placeholder: 'Recording description',
     }),
-    createBrainRegionImportField({
+    makeBrainRegionImportField({
       path: 'brain_region_id',
       submissionPath: 'metadata.brain_region_id',
       validationPath: 'metadata.brain_region_id',
       services,
     }),
-    createSubjectImportField({
+    makeSubjectImportField({
       path: 'subject_id',
       submissionPath: 'metadata.subject_id',
       validationPath: 'metadata.subject_id',
       services,
     }),
-    createLicenseImportField({
+    makeLicenseImportField({
       path: 'license_id',
       submissionPath: 'metadata.license_id',
       validationPath: 'metadata.license_id',
@@ -140,18 +140,18 @@ export function createElectricalCellRecordingImportAdapter({
       inputType: ImportInputType.RemoteSelect,
       placeholder: 'Search e-type',
       remote: {
-        query: createRemoteQuery({
+        query: makeRemoteQuery({
           queryField: 'ilike_search',
           querySuggestions: services.queryEtype,
         }),
         evaluate: async ({ query, context }) =>
-          createSingleSuggestionRemoteEvaluator({
+          makeSingleSuggestionRemoteEvaluator({
             label: 'E-Type',
             queryField: 'pref_label__ilike',
             querySuggestions: services.queryEtype,
           })({ query, context }),
       },
-      validatorSuggestionDetails: renderEtypeSuggestionDetails,
+      validatorSuggestionDetails: renderEtypeSuggestionTooltip,
       columnWidth: 200,
     },
     {
@@ -246,8 +246,8 @@ export function createElectricalCellRecordingImportAdapter({
       placeholder: 'Additional notes',
       columnWidth: 220,
     },
-    createContributionsImportField({ services }),
-    createFileBundleImportField({
+    makeContributionsImportField({ services }),
+    makeFileBundleImportField({
       label: 'NWB File',
       path: 'asset',
       submissionPath: 'asset',

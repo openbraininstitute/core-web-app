@@ -58,7 +58,7 @@ export function renderSuggestionDetailRows(rows: Array<{ label: string; value: R
   );
 }
 
-export function renderBrainRegionSuggestionDetails({
+export function renderBrainRegionSuggestionTooltip({
   suggestion,
 }: IValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
@@ -77,7 +77,7 @@ export function renderBrainRegionSuggestionDetails({
   ]);
 }
 
-export function renderSubjectSuggestionDetails({ suggestion }: IValidatorSuggestionDetailsArgs) {
+export function renderSubjectSuggestionTooltip({ suggestion }: IValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
     {
       label: 'Species',
@@ -100,7 +100,7 @@ export function renderSubjectSuggestionDetails({ suggestion }: IValidatorSuggest
   ]);
 }
 
-export function renderMtypeSuggestionDetails({ suggestion }: IValidatorSuggestionDetailsArgs) {
+export function renderMtypeSuggestionTooltip({ suggestion }: IValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
     {
       label: 'Alternative Label',
@@ -115,7 +115,7 @@ export function renderMtypeSuggestionDetails({ suggestion }: IValidatorSuggestio
   ]);
 }
 
-export function renderEtypeSuggestionDetails({ suggestion }: IValidatorSuggestionDetailsArgs) {
+export function renderEtypeSuggestionTooltip({ suggestion }: IValidatorSuggestionDetailsArgs) {
   return renderSuggestionDetailRows([
     {
       label: 'Alternative Label',
@@ -130,7 +130,7 @@ export function renderEtypeSuggestionDetails({ suggestion }: IValidatorSuggestio
   ]);
 }
 
-export function createRemoteQuery<TQueryField extends string>({
+export function makeRemoteQuery<TQueryField extends string>({
   queryField,
   querySuggestions,
 }: {
@@ -149,7 +149,7 @@ export function createRemoteQuery<TQueryField extends string>({
     });
 }
 
-export function createSingleSuggestionRemoteEvaluator<TQueryField extends string>({
+export function makeSingleSuggestionRemoteEvaluator<TQueryField extends string>({
   label,
   queryField,
   querySuggestions,
@@ -198,7 +198,7 @@ export function createSingleSuggestionRemoteEvaluator<TQueryField extends string
   };
 }
 
-export function createExactOnlyRemoteEvaluator<TQueryField extends string>({
+export function makeExactOnlyRemoteEvaluator<TQueryField extends string>({
   label,
   queryField,
   querySuggestions,
@@ -248,7 +248,7 @@ export function createExactOnlyRemoteEvaluator<TQueryField extends string>({
   };
 }
 
-interface CreateSharedRemoteFieldOptions {
+interface ISharedRemoteFieldOptions {
   path: string;
   submissionPath: string;
   validationPath: string;
@@ -258,7 +258,7 @@ interface CreateSharedRemoteFieldOptions {
   placeholder?: string;
 }
 
-export function createBrainRegionImportField({
+export function makeBrainRegionImportField({
   path,
   submissionPath,
   validationPath,
@@ -267,7 +267,7 @@ export function createBrainRegionImportField({
   label = 'Brain Region',
   placeholder = 'Search brain region',
   services,
-}: CreateSharedRemoteFieldOptions & {
+}: ISharedRemoteFieldOptions & {
   services: Pick<IEntityImportSharedQueryServices, 'queryBrainRegion'>;
 }): IAdapterFieldDefinition {
   return {
@@ -279,23 +279,23 @@ export function createBrainRegionImportField({
     inputType: ImportInputType.RemoteSelect,
     placeholder,
     remote: {
-      query: createRemoteQuery({
+      query: makeRemoteQuery({
         queryField: 'semantic_search' satisfies TBrainRegionQueryField,
         querySuggestions: services.queryBrainRegion,
       }),
       evaluate: async ({ query, context }) =>
-        createSingleSuggestionRemoteEvaluator({
+        makeSingleSuggestionRemoteEvaluator({
           label,
           queryField: 'name__ilike' satisfies TBrainRegionQueryField,
           querySuggestions: services.queryBrainRegion,
         })({ query, context }),
     },
-    validatorSuggestionDetails: renderBrainRegionSuggestionDetails,
+    validatorSuggestionDetails: renderBrainRegionSuggestionTooltip,
     columnWidth,
   };
 }
 
-export function createSubjectImportField({
+export function makeSubjectImportField({
   path,
   submissionPath,
   validationPath,
@@ -304,7 +304,7 @@ export function createSubjectImportField({
   label = 'Subject',
   placeholder = 'Search subject',
   services,
-}: CreateSharedRemoteFieldOptions & {
+}: ISharedRemoteFieldOptions & {
   services: Pick<IEntityImportSharedQueryServices, 'querySubject'>;
 }): IAdapterFieldDefinition {
   return {
@@ -316,23 +316,23 @@ export function createSubjectImportField({
     inputType: ImportInputType.RemoteSelect,
     placeholder,
     remote: {
-      query: createRemoteQuery({
+      query: makeRemoteQuery({
         queryField: 'ilike_search' satisfies TSharedTextQueryField,
         querySuggestions: services.querySubject,
       }),
       evaluate: async ({ query, context }) =>
-        createSingleSuggestionRemoteEvaluator({
+        makeSingleSuggestionRemoteEvaluator({
           label,
           queryField: 'ilike_search' satisfies TSharedTextQueryField,
           querySuggestions: services.querySubject,
         })({ query, context }),
     },
-    validatorSuggestionDetails: renderSubjectSuggestionDetails,
+    validatorSuggestionDetails: renderSubjectSuggestionTooltip,
     columnWidth,
   };
 }
 
-export function createLicenseImportField({
+export function makeLicenseImportField({
   path,
   submissionPath,
   validationPath,
@@ -341,7 +341,7 @@ export function createLicenseImportField({
   label = 'License',
   placeholder = 'Search license',
   services,
-}: CreateSharedRemoteFieldOptions & {
+}: ISharedRemoteFieldOptions & {
   services: Pick<IEntityImportSharedQueryServices, 'queryLicense'>;
 }): IAdapterFieldDefinition {
   return {
@@ -353,12 +353,12 @@ export function createLicenseImportField({
     inputType: ImportInputType.RemoteSelect,
     placeholder,
     remote: {
-      query: createRemoteQuery({
+      query: makeRemoteQuery({
         queryField: 'ilike_search' satisfies TSharedTextQueryField,
         querySuggestions: services.queryLicense,
       }),
       evaluate: async ({ query, context }) =>
-        createSingleSuggestionRemoteEvaluator({
+        makeSingleSuggestionRemoteEvaluator({
           label,
           queryField: 'label__ilike' satisfies TSharedTextQueryField,
           querySuggestions: services.queryLicense,
@@ -369,7 +369,7 @@ export function createLicenseImportField({
   };
 }
 
-export function createMtypeImportField({
+export function makeMtypeImportField({
   path,
   submissionPath,
   validationPath,
@@ -378,7 +378,7 @@ export function createMtypeImportField({
   label = 'M-Type',
   placeholder = 'Search m-type',
   services,
-}: CreateSharedRemoteFieldOptions & {
+}: ISharedRemoteFieldOptions & {
   services: Pick<IEntityImportSharedQueryServices, 'queryMtype'>;
 }): IAdapterFieldDefinition {
   return {
@@ -391,23 +391,23 @@ export function createMtypeImportField({
     placeholder,
     remote: {
       autoResolveResolvedSuggestion: false,
-      query: createRemoteQuery({
+      query: makeRemoteQuery({
         queryField: 'ilike_search',
         querySuggestions: services.queryMtype,
       }),
       evaluate: async ({ query, context }) =>
-        createSingleSuggestionRemoteEvaluator({
+        makeSingleSuggestionRemoteEvaluator({
           label,
           queryField: 'pref_label__ilike',
           querySuggestions: services.queryMtype,
         })({ query, context }),
     },
-    validatorSuggestionDetails: renderMtypeSuggestionDetails,
+    validatorSuggestionDetails: renderMtypeSuggestionTooltip,
     columnWidth,
   };
 }
 
-export function createContributionsImportField({
+export function makeContributionsImportField({
   services,
   label = 'Contributions',
   path = 'contributions',
@@ -524,7 +524,7 @@ export function createContributionsImportField({
   };
 }
 
-export function createFileBundleImportField({
+export function makeFileBundleImportField({
   label,
   path,
   submissionPath,
@@ -554,7 +554,7 @@ export function createFileBundleImportField({
   };
 }
 
-export function createNameImportField({
+export function makeNameImportField({
   path = 'name',
   submissionPath = 'name',
   validationPath = 'name',
@@ -562,7 +562,7 @@ export function createNameImportField({
   columnWidth = 180,
   label = 'Name',
   placeholder = 'Enter name',
-}: Partial<CreateSharedRemoteFieldOptions> = {}): IAdapterFieldDefinition {
+}: Partial<ISharedRemoteFieldOptions> = {}): IAdapterFieldDefinition {
   return {
     label,
     path,
@@ -575,7 +575,7 @@ export function createNameImportField({
   };
 }
 
-export function createDescriptionImportField({
+export function makeDescriptionImportField({
   path = 'description',
   submissionPath = 'description',
   validationPath = 'description',
@@ -583,7 +583,7 @@ export function createDescriptionImportField({
   columnWidth = 260,
   label = 'Description',
   placeholder = 'Enter description',
-}: Partial<CreateSharedRemoteFieldOptions> = {}): IAdapterFieldDefinition {
+}: Partial<ISharedRemoteFieldOptions> = {}): IAdapterFieldDefinition {
   return {
     label,
     path,

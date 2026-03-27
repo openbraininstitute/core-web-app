@@ -17,10 +17,10 @@ import type {
 import type { ISuggestion } from '@/features/entity-import/core/contracts';
 import type { WorkspaceContext } from '@/types/common';
 
-export type BrainRegionQueryField = 'semantic_search' | 'name__ilike';
-export type SharedTextQueryField = 'ilike_search' | 'label__ilike' | 'pref_label__ilike';
-export type PrefLabelQueryField = 'pref_label__ilike';
-export type RoleQueryField = 'query' | 'name__ilike';
+export type TBrainRegionQueryField = 'semantic_search' | 'name__ilike';
+export type TSharedTextQueryField = 'ilike_search' | 'label__ilike' | 'pref_label__ilike';
+export type TPrefLabelQueryField = 'pref_label__ilike';
+export type TRoleQueryField = 'query' | 'name__ilike';
 
 export interface CommonQueryArgs<TQueryField extends string> {
   query: string;
@@ -32,17 +32,19 @@ export interface CommonQueryArgs<TQueryField extends string> {
 
 export interface IEntityImportSharedQueryServices {
   queryBrainRegion: (
-    args: CommonQueryArgs<BrainRegionQueryField>
+    args: CommonQueryArgs<TBrainRegionQueryField>
   ) => Promise<IRemoteSearchPageResult>;
-  queryLicense: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
-  querySubject: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
-  queryMtype: (args: CommonQueryArgs<SharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
-  queryPerson: (args: CommonQueryArgs<PrefLabelQueryField>) => Promise<IRemoteSearchPageResult>;
+  queryLicense: (args: CommonQueryArgs<TSharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
+  querySubject: (args: CommonQueryArgs<TSharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
+  queryMtype: (args: CommonQueryArgs<TSharedTextQueryField>) => Promise<IRemoteSearchPageResult>;
+  queryPerson: (args: CommonQueryArgs<TPrefLabelQueryField>) => Promise<IRemoteSearchPageResult>;
   queryOrganization: (
-    args: CommonQueryArgs<PrefLabelQueryField>
+    args: CommonQueryArgs<TPrefLabelQueryField>
   ) => Promise<IRemoteSearchPageResult>;
-  queryConsortium: (args: CommonQueryArgs<PrefLabelQueryField>) => Promise<IRemoteSearchPageResult>;
-  queryRole: (args: CommonQueryArgs<RoleQueryField>) => Promise<IRemoteSearchPageResult>;
+  queryConsortium: (
+    args: CommonQueryArgs<TPrefLabelQueryField>
+  ) => Promise<IRemoteSearchPageResult>;
+  queryRole: (args: CommonQueryArgs<TRoleQueryField>) => Promise<IRemoteSearchPageResult>;
 }
 
 export type IEntityImportContributionLookupServices = Pick<
@@ -50,7 +52,7 @@ export type IEntityImportContributionLookupServices = Pick<
   'queryPerson' | 'queryOrganization' | 'queryConsortium' | 'queryRole'
 >;
 
-export function toWorkspaceContext(context: IEntityImportRuntimeContext): WorkspaceContext {
+export function makeWorkspaceContext(context: IEntityImportRuntimeContext): WorkspaceContext {
   return {
     projectId: context.projectId,
     virtualLabId: context.virtualLabId,
@@ -155,7 +157,7 @@ export function createCommonEntityImportQueryServices(): IEntityImportSharedQuer
           page_size: paging.pageSize,
           ...(queryValue ? { [queryField]: queryValue } : {}),
         },
-        context: toWorkspaceContext(context),
+        context: makeWorkspaceContext(context),
       });
 
       return makeRemoteSearchResult({
@@ -179,7 +181,7 @@ export function createCommonEntityImportQueryServices(): IEntityImportSharedQuer
           page_size: paging.pageSize,
           ...(queryValue ? { [queryField]: queryValue } : {}),
         },
-        context: toWorkspaceContext(context),
+        context: makeWorkspaceContext(context),
       });
 
       return makeRemoteSearchResult({
@@ -200,7 +202,7 @@ export function createCommonEntityImportQueryServices(): IEntityImportSharedQuer
           page_size: paging.pageSize,
           ...(queryValue ? { [queryField]: queryValue } : {}),
         },
-        context: toWorkspaceContext(context),
+        context: makeWorkspaceContext(context),
       });
 
       return makeRemoteSearchResult({
@@ -229,7 +231,7 @@ export function createCommonEntityImportQueryServices(): IEntityImportSharedQuer
           ilike_search: queryValue,
           ...(queryField !== 'ilike_search' && queryValue ? { [queryField]: queryValue } : {}),
         },
-        ctx: toWorkspaceContext(context),
+        ctx: makeWorkspaceContext(context),
       });
 
       return makeRemoteSearchResult({
@@ -310,7 +312,7 @@ export function createCommonEntityImportQueryServices(): IEntityImportSharedQuer
           page_size: paging.pageSize,
           ...(queryValue ? { [queryField]: queryValue } : {}),
         } as Partial<IRoleFilter> & { query?: string },
-        context: toWorkspaceContext(context),
+        context: makeWorkspaceContext(context),
       });
 
       return makeRemoteSearchResult({

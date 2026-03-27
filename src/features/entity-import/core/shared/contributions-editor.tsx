@@ -394,7 +394,7 @@ export function ContributionSummaryCell({
   );
 }
 
-interface ContributionsEditorProps {
+interface IContributionsEditorProps {
   cell: IImportCellState;
   row: IImportRowState;
   fieldPath: string;
@@ -410,7 +410,7 @@ export function ContributionsEditor({
   context,
   actions,
   services,
-}: ContributionsEditorProps) {
+}: IContributionsEditorProps) {
   const storedEntries = useMemo(
     () =>
       (cell.parsedValue as Array<ContributionDraft> | undefined)?.length

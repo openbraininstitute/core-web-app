@@ -26,15 +26,15 @@ export const RecordingType = {
   },
   Extracellular: {
     key: 'extracellular',
-    label: 'extracellular',
+    label: 'Extracellular',
   },
   Both: {
     key: 'both',
-    label: 'both',
+    label: 'Both',
   },
   Unknown: {
     key: 'unknown',
-    label: 'unknown',
+    label: 'Unknown',
   },
 } as const;
 
@@ -50,19 +50,19 @@ export type TRecordingTypeDictionary =
 export const ElectricalRecordingOrigin = {
   InVivo: {
     key: 'in_vivo',
-    label: 'in vivo',
+    label: 'In vivo',
   },
   InVitro: {
     key: 'in_vitro',
-    label: 'in vitro',
+    label: 'In vitro',
   },
   InSilico: {
     key: 'in_silico',
-    label: 'in silico',
+    label: 'In silico',
   },
   Unknown: {
     key: 'unknown',
-    label: 'unknown',
+    label: 'Unknown',
   },
 } as const;
 
