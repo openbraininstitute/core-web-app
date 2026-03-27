@@ -169,7 +169,7 @@ function SectionConfigRow({
           )}
         />
       </div>
-      {draftError && <div className="mt-1 text-xs text-red-500">{draftError}</div>}
+      {draftError && <div className="mt-1 text-base text-red-500">{draftError}</div>}
     </div>
   );
 }
