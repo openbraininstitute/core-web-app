@@ -18,10 +18,14 @@ import {
   type RemoteValidationResult,
 } from '../core/adapter';
 import {
+  createIdleImportRunState,
   createIdleRemoteState,
   ENTITY_IMPORT_ALL_COLUMNS,
   type IImportRowState,
+  type IImportRunState,
   type IImportSessionState,
+  ImportRowResultStatus,
+  ImportRunPhase,
   type ISuggestion,
   NotificationTone,
   RemoteValidationStatus,
@@ -88,6 +92,7 @@ type CsvUploadNotification = {
 };
 
 const ENTITY_IMPORT_CSV_PARSE_ISSUE_PREVIEW_LIMIT = 3;
+const ENTITY_IMPORT_SUBMIT_QUEUE_CONCURRENCY = 4;
 
 function buildCsvParseNotificationMessages(
   parsedCsv: Awaited<ReturnType<typeof parseCsvFile>>
@@ -130,6 +135,34 @@ function buildCsvParseNotificationMessages(
   }
 
   return notifications;
+}
+
+function createRunningImportRunState(rows: Array<IImportRowState>): IImportRunState {
+  return {
+    phase: ImportRunPhase.Running,
+    totalRowCount: rows.length,
+    completedRowCount: 0,
+    succeededRowCount: 0,
+    failedRowCount: 0,
+    rowResults: Object.fromEntries(
+      rows.map((row) => [
+        row.id,
+        {
+          status: ImportRowResultStatus.Idle,
+          errorMessage: null,
+        },
+      ])
+    ),
+    failureCards: [],
+  };
+}
+
+function getImportFailureMessage(error: unknown, row: IImportRowState): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return `Row ${row.rowIndex + 1} failed to import.`;
 }
 
 async function hydrateCsvRows({
@@ -368,6 +401,7 @@ export function useEntityImportController<TPayload, TResult>({
   const [validatorSuggestions, setValidatorSuggestions] = useState<IValidatorSuggestionState>(() =>
     createIdleValidatorSuggestionState()
   );
+  const [importRun, setImportRun] = useState<IImportRunState>(() => createIdleImportRunState());
   const validatorSelectionQueryKeyRef = useRef('');
   const pendingCellSyncTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const backgroundQueueLimitRef = useRef(pLimit(ENTITY_IMPORT_BACKGROUND_QUEUE_CONCURRENCY));
@@ -456,6 +490,91 @@ export function useEntityImportController<TPayload, TResult>({
 
   const dismissCsvUploadNotifications = useCallback(() => {
     setCsvUploadNotifications([]);
+  }, []);
+
+  const resetImportRun = useCallback(() => {
+    setImportRun(createIdleImportRunState());
+  }, []);
+
+  const beginImportRun = useCallback((rows: Array<IImportRowState>) => {
+    setImportRun(createRunningImportRunState(rows));
+  }, []);
+
+  const markImportRowPending = useCallback((rowId: string) => {
+    setImportRun((current) => {
+      if (current.phase !== ImportRunPhase.Running) {
+        return current;
+      }
+
+      const previous = current.rowResults[rowId];
+      if (!previous || previous.status === ImportRowResultStatus.Pending) {
+        return current;
+      }
+
+      return {
+        ...current,
+        rowResults: {
+          ...current.rowResults,
+          [rowId]: {
+            status: ImportRowResultStatus.Pending,
+            errorMessage: null,
+          },
+        },
+      };
+    });
+  }, []);
+
+  const markImportRowCompleted = useCallback(
+    ({ row, errorMessage }: { row: IImportRowState; errorMessage: string | null }) => {
+      setImportRun((current) => {
+        if (current.phase !== ImportRunPhase.Running) {
+          return current;
+        }
+
+        const previous = current.rowResults[row.id];
+        if (!previous) {
+          return current;
+        }
+
+        const didFail = Boolean(errorMessage);
+        const nextFailureCards =
+          didFail && errorMessage
+            ? [
+                ...current.failureCards,
+                { rowId: row.id, rowNumber: row.rowIndex + 1, message: errorMessage },
+              ].sort((left, right) => left.rowNumber - right.rowNumber)
+            : current.failureCards;
+
+        return {
+          ...current,
+          completedRowCount: Math.min(current.completedRowCount + 1, current.totalRowCount),
+          succeededRowCount: current.succeededRowCount + (didFail ? 0 : 1),
+          failedRowCount: current.failedRowCount + (didFail ? 1 : 0),
+          rowResults: {
+            ...current.rowResults,
+            [row.id]: {
+              status: didFail ? ImportRowResultStatus.Failed : ImportRowResultStatus.Succeeded,
+              errorMessage,
+            },
+          },
+          failureCards: nextFailureCards,
+        };
+      });
+    },
+    []
+  );
+
+  const completeImportRun = useCallback(() => {
+    setImportRun((current) => {
+      if (current.phase !== ImportRunPhase.Running) {
+        return current;
+      }
+
+      return {
+        ...current,
+        phase: ImportRunPhase.Completed,
+      };
+    });
   }, []);
 
   const beginCsvRowValidationProgress = useCallback((targets: Array<{ rowId: string }>) => {
@@ -1312,12 +1431,13 @@ export function useEntityImportController<TPayload, TResult>({
 
   const updateCellValue = useCallback(
     ({ rowId, fieldPath, rawValue }: { rowId: string; fieldPath: string; rawValue: string }) => {
+      resetImportRun();
       commit((current) => updateCellRawValue(current, { rowId, fieldPath, rawValue }), {
         rowIds: [rowId],
       });
       scheduleDeferredCellSync({ rowId, fieldPath, rawValue });
     },
-    [commit, scheduleDeferredCellSync]
+    [commit, resetImportRun, scheduleDeferredCellSync]
   );
 
   const setFileValue = useCallback(
@@ -1349,6 +1469,7 @@ export function useEntityImportController<TPayload, TResult>({
 
       const nextRawValue = displayValue ?? getImportFileDisplayValue(files);
       const resolvedDisplayValue = nextRawValue || null;
+      resetImportRun();
       commit(
         (current) =>
           setCellValue(current, {
@@ -1361,7 +1482,7 @@ export function useEntityImportController<TPayload, TResult>({
         { rowIds: [rowId] }
       );
     },
-    [adapter.fields, commit]
+    [adapter.fields, commit, resetImportRun]
   );
 
   const setCustomValue = useCallback(
@@ -1379,6 +1500,7 @@ export function useEntityImportController<TPayload, TResult>({
       parsedValue?: unknown;
     }) => {
       clearPendingCellSync(rowId, fieldPath);
+      resetImportRun();
       commit(
         (current) =>
           setCellValue(current, {
@@ -1391,61 +1513,67 @@ export function useEntityImportController<TPayload, TResult>({
         { rowIds: [rowId] }
       );
     },
-    [clearPendingCellSync, commit]
+    [clearPendingCellSync, commit, resetImportRun]
   );
 
   const addRow = useCallback(() => {
     const blankRow = adapter.createBlankRow?.();
+    resetImportRun();
     commit((current) => appendEmptyRow(current, blankRow));
-  }, [adapter, commit]);
+  }, [adapter, commit, resetImportRun]);
 
   const clearRow = useCallback(
     (rowId: string) => {
       const blankRow = adapter.createBlankRow?.();
+      resetImportRun();
       commit((current) => clearSessionRow(current, { rowId, values: blankRow }), {
         rowIds: [rowId],
       });
     },
-    [adapter, commit]
+    [adapter, commit, resetImportRun]
   );
 
   const deleteRow = useCallback(
     (rowId: string) => {
+      resetImportRun();
       commit((current) => deleteSessionRow(current, { rowId }));
     },
-    [commit]
+    [commit, resetImportRun]
   );
 
   const applySuggestion = useCallback(
     (params: Parameters<typeof stageSuggestionToRows>[1]) => {
       clearPendingCellSync(params.targetRowId, params.fieldPath);
+      resetImportRun();
       commit((current) => stageSuggestionToRows(current, params), {
         rowIds: params.applyToAllMatching
           ? sessionRef.current.rows.map((row) => row.id)
           : [params.targetRowId],
       });
     },
-    [clearPendingCellSync, commit]
+    [clearPendingCellSync, commit, resetImportRun]
   );
 
   const acceptCorrection = useCallback(
     (params: { rowId: string; fieldPath: string }) => {
       clearPendingCellSync(params.rowId, params.fieldPath);
+      resetImportRun();
       commit((current) => acceptCorrectionDraft(current, params), {
         rowIds: [params.rowId],
       });
     },
-    [clearPendingCellSync, commit]
+    [clearPendingCellSync, commit, resetImportRun]
   );
 
   const rejectCorrection = useCallback(
     (params: { rowId: string; fieldPath: string }) => {
       clearPendingCellSync(params.rowId, params.fieldPath);
+      resetImportRun();
       commit((current) => rejectCorrectionDraft(current, params), {
         rowIds: [params.rowId],
       });
     },
-    [clearPendingCellSync, commit]
+    [clearPendingCellSync, commit, resetImportRun]
   );
 
   const dismissFeatureNotification = useCallback(
@@ -1458,6 +1586,7 @@ export function useEntityImportController<TPayload, TResult>({
   const handleCsvUpload = useCallback(
     async (file: File) => {
       try {
+        resetImportRun();
         setCsvUploadPhase(CsvUploadPhase.Parsing);
         setCsvUploadNotifications([]);
         resetCsvRowValidationProgress();
@@ -1569,6 +1698,7 @@ export function useEntityImportController<TPayload, TResult>({
       beginCsvRowValidationProgress,
       clearValidatorSuggestions,
       context,
+      resetImportRun,
       resetCsvRowValidationProgress,
       runBackgroundImportedCellHydration,
       runDirectRemoteValidation,
@@ -1634,32 +1764,57 @@ export function useEntityImportController<TPayload, TResult>({
         throw new Error('Cannot import until validation passes.');
       }
 
-      await Promise.all(
-        current.rows.map(async (row) => {
-          const values = getRowSubmissionValues(row);
-          const payload = adapter.buildPayload({ row, values, context });
-          await adapter.submitRow({
-            payload,
-            row,
-            values,
-            context,
-          });
-        })
-      );
+      beginImportRun(current.rows);
 
-      return { rowCount: current.rows.length };
+      try {
+        const submitLimit = pLimit(ENTITY_IMPORT_SUBMIT_QUEUE_CONCURRENCY);
+        const results = await Promise.all(
+          current.rows.map((row) =>
+            submitLimit(async () => {
+              markImportRowPending(row.id);
+
+              try {
+                const values = getRowSubmissionValues(row);
+                const payload = adapter.buildPayload({ row, values, context });
+                await adapter.submitRow({
+                  payload,
+                  row,
+                  values,
+                  context,
+                });
+                markImportRowCompleted({ row, errorMessage: null });
+
+                return { ok: true as const };
+              } catch (error) {
+                const errorMessage = getImportFailureMessage(error, row);
+                markImportRowCompleted({ row, errorMessage });
+
+                return {
+                  ok: false as const,
+                  rowNumber: row.rowIndex + 1,
+                  message: errorMessage,
+                };
+              }
+            })
+          )
+        );
+        const failureCards = results
+          .filter(
+            (result): result is { ok: false; rowNumber: number; message: string } => !result.ok
+          )
+          .sort((left, right) => left.rowNumber - right.rowNumber);
+
+        return {
+          rowCount: current.rows.length,
+          succeededRowCount: current.rows.length - failureCards.length,
+          failedRowCount: failureCards.length,
+          failureCards,
+        };
+      } finally {
+        completeImportRun();
+      }
     },
-    onSuccess: (data) => {
-      commit(
-        (current) =>
-          pushNotification(current, {
-            id: `notification-${Date.now()}`,
-            tone: NotificationTone.Success,
-            message: `${data.rowCount} row(s) imported successfully.`,
-          }),
-        { validate: false }
-      );
-    },
+    onSuccess: () => {},
     onError: (error) => {
       commit(
         (current) =>
@@ -1725,6 +1880,7 @@ export function useEntityImportController<TPayload, TResult>({
     session,
     actions,
     isSubmitting: importMutation.isPending,
+    importRun,
     csvUploadPhase,
     csvRowValidationProgress,
     csvUploadNotifications,

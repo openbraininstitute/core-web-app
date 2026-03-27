@@ -155,6 +155,45 @@ export interface IImportSessionState {
   summary: ISessionSummary;
 }
 
+export const ImportRowResultStatus = {
+  Idle: 'idle',
+  Pending: 'pending',
+  Succeeded: 'succeeded',
+  Failed: 'failed',
+} as const;
+
+export type TImportRowResultStatus =
+  (typeof ImportRowResultStatus)[keyof typeof ImportRowResultStatus];
+
+export interface IImportRowResultState {
+  status: TImportRowResultStatus;
+  errorMessage: string | null;
+}
+
+export interface IImportFailureCard {
+  rowId: string;
+  rowNumber: number;
+  message: string;
+}
+
+export const ImportRunPhase = {
+  Idle: 'idle',
+  Running: 'running',
+  Completed: 'completed',
+} as const;
+
+export type TImportRunPhase = (typeof ImportRunPhase)[keyof typeof ImportRunPhase];
+
+export interface IImportRunState {
+  phase: TImportRunPhase;
+  totalRowCount: number;
+  completedRowCount: number;
+  succeededRowCount: number;
+  failedRowCount: number;
+  rowResults: Record<string, IImportRowResultState>;
+  failureCards: Array<IImportFailureCard>;
+}
+
 export type TFlatImportValues = Record<string, string>;
 
 export function createIdleRemoteState(): IRemoteState {
@@ -163,5 +202,17 @@ export function createIdleRemoteState(): IRemoteState {
     suggestions: [],
     selectedSuggestion: null,
     message: null,
+  };
+}
+
+export function createIdleImportRunState(): IImportRunState {
+  return {
+    phase: ImportRunPhase.Idle,
+    totalRowCount: 0,
+    completedRowCount: 0,
+    succeededRowCount: 0,
+    failedRowCount: 0,
+    rowResults: {},
+    failureCards: [],
   };
 }

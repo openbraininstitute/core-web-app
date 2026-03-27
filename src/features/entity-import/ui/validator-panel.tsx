@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { RiInfoI, RiSearchLine } from '@remixicon/react';
 import { DatePicker } from 'antd';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import {
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
@@ -19,8 +19,10 @@ import {
   CellStatus,
   ENTITY_IMPORT_ALL_COLUMNS,
   type IImportRowState,
+  type IImportRunState,
   type IImportSessionState,
   ImportInputType,
+  ImportRunPhase,
   type ISuggestion,
   RemoteValidationStatus,
   RowStatus,
@@ -78,6 +80,7 @@ interface ValidatorPanelProps<TPayload, TResult> {
   session: IImportSessionState;
   actions: IEntityImportActions;
   isSubmitting: boolean;
+  importRun: IImportRunState;
   validatorSuggestions: IValidatorSuggestionState;
 }
 
@@ -88,6 +91,10 @@ const ValidatorFieldStatus = {
 } as const;
 
 type TValidatorFieldStatus = (typeof ValidatorFieldStatus)[keyof typeof ValidatorFieldStatus];
+const VALIDATOR_SUGGESTION_SKELETON_KEYS = Array.from(
+  { length: ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE },
+  (_, index) => `validator-suggestion-skeleton-${index}`
+);
 
 function resolveFieldStatus(
   session: IImportSessionState,
@@ -197,6 +204,96 @@ function ValidationStatusIcon({ status }: { status: TValidatorFieldStatus }) {
   return <span className="inline-flex size-4" />;
 }
 
+function resolveImportRunProgressPercent(importRun: IImportRunState): number {
+  if (importRun.totalRowCount === 0) {
+    return 0;
+  }
+
+  return Math.min((importRun.completedRowCount / importRun.totalRowCount) * 100, 100);
+}
+
+type SubmitButtonTone = 'idle' | 'running' | 'success' | 'partial' | 'failed';
+
+function resolveSubmitButtonTone(importRun: IImportRunState): SubmitButtonTone {
+  if (importRun.phase === ImportRunPhase.Running) {
+    return 'running';
+  }
+
+  if (importRun.phase === ImportRunPhase.Completed) {
+    if (importRun.failedRowCount === 0) {
+      return 'success';
+    }
+
+    if (importRun.succeededRowCount === 0) {
+      return 'failed';
+    }
+
+    return 'partial';
+  }
+
+  return 'idle';
+}
+
+function resolveSubmitButtonLabel<TPayload, TResult>(
+  adapter: IEntityImportAdapter<TPayload, TResult>,
+  session: IImportSessionState,
+  importRun: IImportRunState
+): string {
+  if (importRun.phase === ImportRunPhase.Running) {
+    const rowLabel = importRun.totalRowCount === 1 ? 'row' : 'rows';
+    return `Importing ${importRun.completedRowCount}/${importRun.totalRowCount} ${rowLabel}`;
+  }
+
+  if (importRun.phase === ImportRunPhase.Completed) {
+    const rowLabel = importRun.totalRowCount === 1 ? 'row' : 'rows';
+    return `Imported ${importRun.succeededRowCount}/${importRun.totalRowCount} ${rowLabel}`;
+  }
+
+  return `${adapter.submitLabel ?? 'Import'} ${session.rows.length} row(s)`;
+}
+
+function resolveImportFailureSummary(importRun: IImportRunState): string {
+  return importRun.failedRowCount === 1
+    ? '1 row failed to import'
+    : `${importRun.failedRowCount} rows failed to import`;
+}
+
+function resolveSubmitButtonFillClassName(tone: SubmitButtonTone): string {
+  if (tone === 'success') {
+    return 'bg-emerald-500';
+  }
+
+  if (tone === 'failed') {
+    return 'bg-amber-500';
+  }
+
+  return 'bg-primary-8';
+}
+
+function resolveSubmitButtonChromeClassName(tone: SubmitButtonTone): string {
+  if (tone === 'success') {
+    return [
+      'border-emerald-500/30 text-emerald-900',
+      'hover:border-emerald-500 hover:bg-white hover:text-emerald-900 active:bg-white',
+      'disabled:bg-white disabled:text-emerald-900',
+    ].join(' ');
+  }
+
+  if (tone === 'failed') {
+    return [
+      'border-amber-500/30 text-amber-950',
+      'hover:border-amber-500 hover:bg-white hover:text-amber-950 active:bg-white',
+      'disabled:bg-white disabled:text-amber-950',
+    ].join(' ');
+  }
+
+  return [
+    'border-primary-8/20 text-primary-9',
+    'hover:border-primary-8 hover:bg-white hover:text-primary-9 active:bg-white',
+    'disabled:bg-white disabled:text-primary-9',
+  ].join(' ');
+}
+
 function createValidatorDraftValue(
   cell: IImportSessionState['rows'][number]['cells'][string]
 ): ValidatorDraftValue {
@@ -301,9 +398,9 @@ function restoreCapturedTableBodyScroll(
 function ValidatorSuggestionSkeletonList() {
   return (
     <div className="px-4 flex flex-col gap-1.5">
-      {Array.from({ length: ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE }).map((_, index) => (
+      {VALIDATOR_SUGGESTION_SKELETON_KEYS.map((key) => (
         <div
-          key={`validator-suggestion-skeleton-${index}`}
+          key={key}
           className="flex min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-neutral-200 bg-white px-3 py-3"
           data-testid="validator-suggestion-skeleton"
         >
@@ -953,6 +1050,7 @@ export function ValidatorPanel<TPayload, TResult>({
   session,
   actions,
   isSubmitting,
+  importRun,
   validatorSuggestions,
 }: ValidatorPanelProps<TPayload, TResult>) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -970,18 +1068,25 @@ export function ValidatorPanel<TPayload, TResult>({
     (!activeRow && !isAllColumnsMode) ||
     (isAllColumnsMode && !activeRow) ||
     (!activeField && !isAllColumnsMode);
+  const submitProgressPercent = resolveImportRunProgressPercent(importRun);
+  const submitButtonTone = resolveSubmitButtonTone(importRun);
+  const submitButtonLabel = resolveSubmitButtonLabel(adapter, session, importRun);
+  const showImportFailureTooltip =
+    importRun.phase === ImportRunPhase.Completed && importRun.failureCards.length > 0;
+  const validatorScrollResetKey = `${session.validatorSelection.rowId ?? ''}:${session.validatorSelection.fieldPath ?? ''}:${validatorSuggestions.query}`;
+  const submitButtonStyle = {
+    '--entity-import-submit-progress': `${submitProgressPercent}%`,
+  } as CSSProperties;
 
   useEffect(() => {
+    void validatorScrollResetKey;
+
     if (!scrollContainerRef.current) {
       return;
     }
 
     scrollContainerRef.current.scrollTop = 0;
-  }, [
-    session.validatorSelection.rowId,
-    session.validatorSelection.fieldPath,
-    validatorSuggestions.query,
-  ]);
+  }, [validatorScrollResetKey]);
 
   return (
     <aside className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden px-2">
@@ -1128,18 +1233,96 @@ export function ValidatorPanel<TPayload, TResult>({
         </div>
       </div>
 
-      <Button
-        rounded
-        type="button"
-        size="lg"
-        className="w-full mt-auto"
-        disabled={!session.summary.canSubmit || isSubmitting}
-        onClick={() => void actions.submitRows()}
+      <Tooltip
+        open
+        key={
+          showImportFailureTooltip
+            ? `import-failures-${importRun.failedRowCount}`
+            : 'import-failures-idle'
+        }
+        defaultOpen={showImportFailureTooltip}
       >
-        {isSubmitting
-          ? 'Importing...'
-          : `${adapter.submitLabel ?? 'Import'} ${session.rows.length} row(s)`}
-      </Button>
+        <TooltipTrigger asChild>
+          <Button
+            rounded
+            type="button"
+            variant="outline"
+            size="lg"
+            className={cn(
+              'relative mt-auto w-full overflow-hidden border bg-white shadow-none',
+              resolveSubmitButtonChromeClassName(submitButtonTone)
+            )}
+            style={submitButtonStyle}
+            data-import-run-tone={submitButtonTone}
+            disabled={!session.summary.canSubmit || isSubmitting}
+            onClick={() => void actions.submitRows()}
+          >
+            <span
+              aria-hidden
+              className={cn(
+                'pointer-events-none absolute inset-0 rounded-full transition-[clip-path] duration-300 ease-out',
+                resolveSubmitButtonFillClassName(submitButtonTone)
+              )}
+              style={{
+                clipPath: `inset(0 ${Math.max(0, 100 - submitProgressPercent)}% 0 0 round 9999px)`,
+              }}
+            />
+            <span className="relative z-10 flex w-full items-center justify-center">
+              <span className="text-primary-9">{submitButtonLabel}</span>
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 overflow-hidden"
+                style={{
+                  clipPath: `inset(0 ${Math.max(0, 100 - submitProgressPercent)}% 0 0)`,
+                }}
+              >
+                <span className="flex h-full w-full items-center justify-center text-white">
+                  {submitButtonLabel}
+                </span>
+              </span>
+            </span>
+          </Button>
+        </TooltipTrigger>
+        {showImportFailureTooltip ? (
+          <TooltipContent
+            data-testid="import-run-failure-tooltip"
+            side="top"
+            align="end"
+            className={cn(
+              ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
+              'w-full max-w-100! p-3 text-left text-neutral-900 shadow-2xl'
+            )}
+            arrowClassName="bg-white"
+          >
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-primary-9">
+                  {resolveImportFailureSummary(importRun)}
+                </p>
+                <p className="mt-1 text-xs text-neutral-500">
+                  Review the failing rows below, fix the issues, then retry the import.
+                </p>
+              </div>
+              <div
+                data-testid="import-run-failure-list"
+                className="max-h-72 space-y-2 overflow-y-auto secondary-scrollbar pr-1"
+              >
+                {importRun.failureCards.map((failure) => (
+                  <Card
+                    key={failure.rowId}
+                    className="border border-rose-200 bg-rose-50 shadow-none p-0!"
+                  >
+                    <CardContent className="px-3 py-3">
+                      <p className="text-sm font-semibold text-rose-900">Row {failure.rowNumber}</p>
+                      <p className="mt-1 text-sm leading-5 text-rose-900/90">{failure.message}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </TooltipContent>
+        ) : null}
+      </Tooltip>
     </aside>
   );
 }
