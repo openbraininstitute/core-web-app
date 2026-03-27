@@ -20,11 +20,11 @@ import {
   getImportFileInputMultiple,
 } from '@/features/entity-import/core/file-field';
 import {
+  formatImportDateDisplayValue,
   importDatePickerChangeToRawValue,
   parseImportDatePickerValue,
 } from '@/features/entity-import/core/helpers';
 import { CellStatusBadge } from '@/features/entity-import/ui/cell-status-badge';
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
 import {
   ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
   getEntityImportSelectLabel,
@@ -46,10 +46,13 @@ import {
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '../core/shared/ui';
+
 import type {
   EntityImportRuntimeContext,
   IAdapterFieldDefinition,
   IEntityImportActions,
+  ValidatorDraftValue,
 } from '@/features/entity-import/core/adapter';
 
 interface InlineCellProps {
@@ -60,6 +63,7 @@ interface InlineCellProps {
   context: EntityImportRuntimeContext;
   actions: IEntityImportActions;
   selected: boolean;
+  validatorPreview: ValidatorDraftValue | null;
 }
 
 const INLINE_CELL_DRAFT_COMMIT_DELAY_MS = 250;
@@ -70,6 +74,29 @@ function getDisplayValue(cell: IImportCellState): string {
   }
 
   return cell.rawValue;
+}
+
+function resolveTablePreviewValue(
+  field: IAdapterFieldDefinition,
+  value: Pick<ValidatorDraftValue, 'rawValue' | 'displayValue'>
+): string {
+  if (field.inputType === ImportInputType.Select) {
+    return getEntityImportSelectLabel(field, value.rawValue);
+  }
+
+  if (field.inputType === ImportInputType.Date) {
+    return formatImportDateDisplayValue(value.rawValue);
+  }
+
+  return value.displayValue ?? value.rawValue;
+}
+
+function queryTableBodyContainer(root: ParentNode): HTMLElement | null {
+  return (
+    root.querySelector<HTMLElement>('.rc-virtual-list-holder') ??
+    root.querySelector<HTMLElement>('[class*="virtual-holder"]') ??
+    root.querySelector<HTMLElement>('.ant-table-body')
+  );
 }
 
 export const INVALID_CONTROL_CLASSNAME =
@@ -102,6 +129,7 @@ function InlineCellComponent({
   context,
   actions,
   selected,
+  validatorPreview,
 }: InlineCellProps) {
   const fileInputId = useId();
   const correctionDetailsPopoverId = useId();
@@ -113,6 +141,11 @@ function InlineCellComponent({
   const hasStatusBadge = shouldDisplayCellStatusBadge(cell);
   const [draftInputValue, setDraftInputValue] = useState(displayValue);
   const [, startCellUpdateTransition] = useTransition();
+  const hasValidatorPreview =
+    validatorPreview !== null &&
+    (validatorPreview.rawValue !== cell.rawValue ||
+      (validatorPreview.displayValue ?? null) !== (cell.displayValue ?? null) ||
+      !Object.is(validatorPreview.parsedValue, cell.parsedValue));
 
   useEffect(() => {
     latestCommittedValueRef.current = displayValue;
@@ -163,7 +196,39 @@ function InlineCellComponent({
     [flushDraftInputValue]
   );
 
-  if (field.tableRenderer && cell.correctionDraft && field.inputType === ImportInputType.Compound) {
+  const selectCellWithPreservedTableScroll = useCallback(
+    (trigger: HTMLElement | null) => {
+      const root = trigger?.closest('[data-entity-import-root]') ?? document;
+      const scrollTop = queryTableBodyContainer(root)?.scrollTop ?? null;
+      if (
+        root instanceof HTMLElement &&
+        scrollTop !== null &&
+        (scrollTop !== 0 || !root.dataset.entityImportScrollTop)
+      ) {
+        root.dataset.entityImportScrollTop = String(scrollTop);
+      }
+
+      actions.selectCell({ rowId: row.id, fieldPath: field.path });
+
+      if (scrollTop === null) {
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        const tableBody = queryTableBodyContainer(root);
+        if (tableBody?.isConnected) {
+          tableBody.scrollTop = scrollTop;
+        }
+      });
+    },
+    [actions, field.path, row.id]
+  );
+
+  if (
+    field.tableRenderer &&
+    field.inputType === ImportInputType.Compound &&
+    (cell.correctionDraft || hasValidatorPreview)
+  ) {
     return field.tableRenderer({
       field,
       cell,
@@ -171,7 +236,30 @@ function InlineCellComponent({
       session,
       context,
       actions,
+      validatorPreview: hasValidatorPreview ? validatorPreview : null,
     });
+  }
+
+  if (hasValidatorPreview && validatorPreview) {
+    const previousLabel = resolveTablePreviewValue(field, {
+      rawValue: cell.rawValue,
+      displayValue: cell.displayValue,
+    });
+    const previewLabel = resolveTablePreviewValue(field, validatorPreview);
+
+    return (
+      <div className="flex min-w-0 w-full flex-col gap-1.5 py-2 px-3">
+        <div
+          className="min-w-0 w-full wrap-break-word rounded-md border border-amber-600 bg-amber-600/16 px-2 py-1.5 text-left text-base font-medium text-amber-950 line-through"
+          title="Original value"
+        >
+          {previousLabel || '—'}
+        </div>
+        <p className="min-w-0 flex-1 wrap-break-word rounded-xl px-2 py-1.5 text-left text-base font-semibold whitespace-normal text-green-main">
+          {previewLabel || '—'}
+        </p>
+      </div>
+    );
   }
 
   if (cell.correctionDraft) {
@@ -261,11 +349,14 @@ function InlineCellComponent({
     return (
       <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0">
         <Select
+          data-import-input-type={ImportInputType.Select}
           disabled={cell.dependencyState === 'blocked'}
           value={cell.rawValue}
           onOpenChange={(open) => {
             if (open) {
-              actions.selectCell({ rowId: row.id, fieldPath: field.path });
+              const trigger =
+                document.activeElement instanceof HTMLElement ? document.activeElement : null;
+              selectCellWithPreservedTableScroll(trigger);
             }
           }}
           onValueChange={(value) =>
@@ -278,19 +369,32 @@ function InlineCellComponent({
         >
           <SelectTrigger
             aria-label={`${field.label} row ${row.rowIndex + 1}`}
+            data-import-input-type-trigger={`${field.inputType}-select-trigger`}
             className={clsx(
               getControlClassName(cell, selected),
-              'pointer-events-auto box-border h-full min-h-[52px] w-full justify-start rounded-none border-0 bg-transparent text-left',
+              'pointer-events-auto box-border h-11 w-full justify-between rounded-none border-0 bg-transparent text-left',
               'data-[size=default]:h-full [&_svg]:opacity-100'
             )}
+            iconClassName="text-[#0b4dbb] border p-1 [&_svg]:size-3 size-5 border-neutral-200 rounded-full"
           >
-            <SelectValue placeholder={field.placeholder ?? `Select ${field.label}`}>
+            <SelectValue
+              data-import-input-type-value={`${field.inputType}-select-value`}
+              placeholder={field.placeholder ?? `Select ${field.label}`}
+            >
               {getEntityImportSelectLabel(field, cell.rawValue) || undefined}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className={ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME}>
+          <SelectContent
+            className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME)}
+            style={{ width: 'var(--radix-select-trigger-width)' }}
+          >
             {field.options?.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
+              <SelectItem
+                data-import-input-type-item={`${field.inputType}-option`}
+                key={option.value}
+                value={option.value}
+                className="w-full text-left h-11 cursor-pointer font-semibold text-primary-9"
+              >
                 {option.label}
               </SelectItem>
             ))}
@@ -316,11 +420,11 @@ function InlineCellComponent({
           variant="ghost"
           size="md"
           className={clsx(
-            'pointer-events-auto box-border h-full min-h-[52px] w-full justify-start rounded-none border-0 bg-transparent px-3 py-2 text-left text-sm text-inherit shadow-none hover:bg-transparent hover:text-inherit',
+            'pointer-events-auto box-border h-full min-h-[52px] w-full justify-center rounded-none border-0 bg-transparent px-3 py-2 text-left text-sm text-inherit shadow-none hover:bg-transparent hover:text-inherit',
             getControlClassName(cell, selected)
           )}
-          onClick={() => {
-            actions.selectCell({ rowId: row.id, fieldPath: field.path });
+          onClick={(event) => {
+            selectCellWithPreservedTableScroll(event.currentTarget);
             fileInputRef.current?.click();
           }}
         >
@@ -374,7 +478,9 @@ function InlineCellComponent({
           disabled={cell.dependencyState === DependencyState.Blocked}
           placeholder={field.placeholder}
           value={draftInputValue}
-          onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+          onClick={(event) => {
+            selectCellWithPreservedTableScroll(event.currentTarget);
+          }}
           onChange={(event) => {
             const nextRawValue = event.target.value;
             setDraftInputValue(nextRawValue);
@@ -418,7 +524,9 @@ function InlineCellComponent({
           }}
           format="DD/MM/YYYY"
           maxDate={dayjs().endOf('day')}
-          onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+          onClick={(event) => {
+            selectCellWithPreservedTableScroll(event.currentTarget as HTMLElement);
+          }}
           onChange={(date) => {
             actions.updateCellValue({
               rowId: row.id,
@@ -451,7 +559,9 @@ function InlineCellComponent({
           disabled={cell.dependencyState === DependencyState.Blocked}
           placeholder={field.placeholder}
           value={draftInputValue}
-          onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+          onClick={(event) => {
+            selectCellWithPreservedTableScroll(event.currentTarget);
+          }}
           onChange={(event) => {
             const nextRawValue = event.target.value;
             setDraftInputValue(nextRawValue);
@@ -482,7 +592,8 @@ function inlineCellPropsAreEqual(previous: InlineCellProps, next: InlineCellProp
     rowIsEqual &&
     previous.context === next.context &&
     previous.actions === next.actions &&
-    previous.selected === next.selected
+    previous.selected === next.selected &&
+    previous.validatorPreview === next.validatorPreview
   );
 }
 

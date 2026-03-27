@@ -22,7 +22,6 @@ import {
   ENTITY_IMPORT_ALL_COLUMNS,
   ImportRowResultStatus,
 } from '@/features/entity-import/core/contracts';
-import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/ui/entity-import-popover';
 import {
   BLOCKED_CONTROL_CLASSNAME,
   INVALID_CONTROL_CLASSNAME,
@@ -44,11 +43,14 @@ import {
 } from '@/ui/molecules/dropdown-menu';
 import { cn } from '@/utils/css-class';
 
+import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '../core/shared/ui';
+
 import type { ColumnsType, TableRef } from 'antd/es/table';
 import type {
   EntityImportRuntimeContext,
   IEntityImportActions,
   IEntityImportAdapter,
+  IValidatorPreviewState,
 } from '@/features/entity-import/core/adapter';
 import type { IImportRunState, IImportSessionState } from '@/features/entity-import/core/contracts';
 
@@ -64,6 +66,7 @@ interface ImportTableProps<TPayload, TResult> {
   session: IImportSessionState;
   actions: IEntityImportActions;
   importRun: IImportRunState;
+  validatorPreview: IValidatorPreviewState;
 }
 
 function isSelectedImportCell(
@@ -72,6 +75,14 @@ function isSelectedImportCell(
   fieldPath: string
 ): boolean {
   return selectedCell?.rowId === rowId && selectedCell?.fieldPath === fieldPath;
+}
+
+function isValidatorPreviewTarget(
+  validatorPreview: IValidatorPreviewState,
+  rowId: string,
+  fieldPath: string
+): boolean {
+  return validatorPreview.rowId === rowId && validatorPreview.fieldPath === fieldPath;
 }
 
 function findScrollableTableBody(tableRef: TableRef | null): HTMLDivElement | null {
@@ -118,12 +129,14 @@ export function ImportTable<TPayload, TResult>({
   session,
   actions,
   importRun,
+  validatorPreview,
 }: ImportTableProps<TPayload, TResult>) {
   const shouldUseVirtualTable = session.rows.length > MIN_ROW_COUNT_FOR_VIRTUAL_TABLE;
   const selectedCell = session.selectedCell;
   const latestSessionRef = useRef(session);
   const previousSelectedCellRef = useRef(session.selectedCell);
   const previousImportRowResultsRef = useRef(importRun.rowResults);
+  const previousValidatorPreviewRef = useRef(validatorPreview);
   const previousRowCountRef = useRef(session.rows.length);
   const shouldScrollToNewRowRef = useRef(false);
   const tableRef = useRef<TableRef>(null);
@@ -151,6 +164,10 @@ export function ImportTable<TPayload, TResult>({
   useLayoutEffect(() => {
     previousImportRowResultsRef.current = importRun.rowResults;
   }, [importRun.rowResults]);
+
+  useLayoutEffect(() => {
+    previousValidatorPreviewRef.current = validatorPreview;
+  }, [validatorPreview]);
 
   const syncContainerHeight = useCallback(
     (target?: HTMLElement | null) => {
@@ -320,6 +337,23 @@ export function ImportTable<TPayload, TResult>({
     [selectedCell]
   );
 
+  const didCellPreviewChange = useCallback(
+    (rowId: string, fieldPath: string) => {
+      const previousMatches = isValidatorPreviewTarget(
+        previousValidatorPreviewRef.current,
+        rowId,
+        fieldPath
+      );
+      const currentMatches = isValidatorPreviewTarget(validatorPreview, rowId, fieldPath);
+
+      return (
+        previousMatches !== currentMatches ||
+        (currentMatches && previousValidatorPreviewRef.current !== validatorPreview)
+      );
+    },
+    [validatorPreview]
+  );
+
   const columns = useMemo<ColumnsType<IImportSessionState['rows'][number]>>(
     () => [
       {
@@ -418,6 +452,13 @@ export function ImportTable<TPayload, TResult>({
           render: (_: unknown, row: IImportSessionState['rows'][number]) => {
             const cell = row.cells[field.path];
             const isSelected = isCellSelected(row.id, field.path);
+            const activeValidatorPreview = isValidatorPreviewTarget(
+              validatorPreview,
+              row.id,
+              field.path
+            )
+              ? validatorPreview
+              : null;
 
             return (
               <InlineCell
@@ -428,6 +469,7 @@ export function ImportTable<TPayload, TResult>({
                 context={context}
                 actions={actions}
                 selected={isSelected}
+                validatorPreview={activeValidatorPreview}
               />
             );
           },
@@ -450,7 +492,13 @@ export function ImportTable<TPayload, TResult>({
             };
           },
           shouldCellUpdate: usesCustomTableRenderer
-            ? undefined
+            ? (
+                record: IImportSessionState['rows'][number],
+                prevRecord: IImportSessionState['rows'][number]
+              ) =>
+                record !== prevRecord ||
+                didCellSelectionChange(record.id, field.path) ||
+                didCellPreviewChange(record.id, field.path)
             : (
                 record: IImportSessionState['rows'][number],
                 prevRecord: IImportSessionState['rows'][number]
@@ -458,7 +506,8 @@ export function ImportTable<TPayload, TResult>({
                 record.id !== prevRecord.id ||
                 record.rowIndex !== prevRecord.rowIndex ||
                 record.cells[field.path] !== prevRecord.cells[field.path] ||
-                didCellSelectionChange(record.id, field.path),
+                didCellSelectionChange(record.id, field.path) ||
+                didCellPreviewChange(record.id, field.path),
         };
       }),
       {
@@ -522,10 +571,12 @@ export function ImportTable<TPayload, TResult>({
       adapter.fields,
       beginResize,
       context,
+      didCellPreviewChange,
       didCellSelectionChange,
       isCellSelected,
       resizeOverrides,
       importRun.rowResults,
+      validatorPreview,
     ]
   );
 

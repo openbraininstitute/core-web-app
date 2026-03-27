@@ -848,7 +848,6 @@ describe('EntityImportFeature', () => {
     });
 
     await user.click(suggestion);
-    expect(screen.getByText('Isocortex')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(within(row1Cell).getByText('Ctx')).toBeInTheDocument();
@@ -1055,6 +1054,7 @@ describe('EntityImportFeature', () => {
 
     await screen.findByRole('button', { name: 'Select suggestion Cortex layer 2' });
     await user.click(screen.getByRole('button', { name: 'Select suggestion Cortex layer 2' }));
+    const scrollBeforeApply = getCurrentTableBody().scrollTop;
 
     const frameQueue: Array<FrameRequestCallback> = [];
     const requestAnimationFrameSpy = vi
@@ -1076,7 +1076,7 @@ describe('EntityImportFeature', () => {
         callback?.(performance.now());
       }
       await waitFor(() => {
-        expect(getTableScrollContainer(container).scrollTop).toBe(240);
+        expect(getTableScrollContainer(container).scrollTop).toBe(scrollBeforeApply);
       });
     } finally {
       querySelectorSpy.mockRestore();
@@ -1759,8 +1759,12 @@ describe('EntityImportFeature', () => {
 
     await user.click(screen.getByRole('button', { name: 'Select suggestion Cortex layer 2' }));
 
-    expect(screen.getByText('Cortex layer 2')).toBeInTheDocument();
-    expect(screen.getByText('Cortex layer 5')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Select suggestion Cortex layer 2' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Select suggestion Cortex layer 5' })
+    ).toBeInTheDocument();
   });
 
   it('shows configured suggestion detail tooltips for duplicate validator option labels', async () => {
