@@ -57,6 +57,14 @@ interface ImportTableProps<TPayload, TResult> {
   actions: IEntityImportActions;
 }
 
+function isSelectedImportCell(
+  selectedCell: IImportSessionState['selectedCell'],
+  rowId: string,
+  fieldPath: string
+): boolean {
+  return selectedCell?.rowId === rowId && selectedCell?.fieldPath === fieldPath;
+}
+
 function findScrollableTableBody(tableRef: TableRef | null): HTMLDivElement | null {
   const element = tableRef?.nativeElement;
   if (!element) {
@@ -86,6 +94,7 @@ export function ImportTable<TPayload, TResult>({
   const shouldUseVirtualTable = session.rows.length > MIN_ROW_COUNT_FOR_VIRTUAL_TABLE;
   const selectedCell = session.selectedCell;
   const latestSessionRef = useRef(session);
+  const previousSelectedCellRef = useRef(session.selectedCell);
   const previousRowCountRef = useRef(session.rows.length);
   const shouldScrollToNewRowRef = useRef(false);
   const tableRef = useRef<TableRef>(null);
@@ -105,6 +114,10 @@ export function ImportTable<TPayload, TResult>({
   useEffect(() => {
     resizeOverridesRef.current = resizeOverrides;
   }, [resizeOverrides]);
+
+  useLayoutEffect(() => {
+    previousSelectedCellRef.current = selectedCell;
+  }, [selectedCell]);
 
   const syncContainerHeight = useCallback(
     (target?: HTMLElement | null) => {
@@ -257,6 +270,23 @@ export function ImportTable<TPayload, TResult>({
     DEFAULT_TABLE_BODY_SCROLL_HEIGHT
   );
 
+  const isCellSelected = useCallback(
+    (rowId: string, fieldPath: string) => {
+      return isSelectedImportCell(selectedCell, rowId, fieldPath);
+    },
+    [selectedCell]
+  );
+
+  const didCellSelectionChange = useCallback(
+    (rowId: string, fieldPath: string) => {
+      return (
+        isSelectedImportCell(previousSelectedCellRef.current, rowId, fieldPath) !==
+        isSelectedImportCell(selectedCell, rowId, fieldPath)
+      );
+    },
+    [selectedCell]
+  );
+
   const columns = useMemo<ColumnsType<IImportSessionState['rows'][number]>>(
     () => [
       {
@@ -303,9 +333,12 @@ export function ImportTable<TPayload, TResult>({
         onCell: () => ({
           className: 'align-center',
         }),
+        shouldCellUpdate: (record, prevRecord) =>
+          record !== prevRecord || record.rowIndex !== prevRecord.rowIndex,
       },
       ...adapter.fields.map((field) => {
         const width = fieldColumnWidth(field, resizeOverrides);
+        const usesCustomTableRenderer = Boolean(field.tableRenderer);
 
         return {
           title: (
@@ -327,8 +360,7 @@ export function ImportTable<TPayload, TResult>({
           ellipsis: false,
           render: (_: unknown, row: IImportSessionState['rows'][number]) => {
             const cell = row.cells[field.path];
-            const isSelected =
-              selectedCell?.rowId === row.id && selectedCell?.fieldPath === field.path;
+            const isSelected = isCellSelected(row.id, field.path);
 
             return (
               <InlineCell
@@ -344,8 +376,7 @@ export function ImportTable<TPayload, TResult>({
           },
           onCell: (row: IImportSessionState['rows'][number]) => {
             const cell = row.cells[field.path];
-            const isSelected =
-              selectedCell?.rowId === row.id && selectedCell?.fieldPath === field.path;
+            const isSelected = isCellSelected(row.id, field.path);
             const cellUiStatus = getTableCellUiStatus(cell);
 
             return {
@@ -361,6 +392,13 @@ export function ImportTable<TPayload, TResult>({
               ),
             };
           },
+          shouldCellUpdate: usesCustomTableRenderer
+            ? undefined
+            : (record: IImportSessionState['rows'][number], prevRecord: IImportSessionState['rows'][number]) =>
+                record.id !== prevRecord.id ||
+                record.rowIndex !== prevRecord.rowIndex ||
+                record.cells[field.path] !== prevRecord.cells[field.path] ||
+                didCellSelectionChange(record.id, field.path),
         };
       }),
       {
@@ -415,9 +453,20 @@ export function ImportTable<TPayload, TResult>({
         onCell: () => ({
           className: 'align-top !p-0 bg-white',
         }),
+        shouldCellUpdate: (record, prevRecord) =>
+          record.id !== prevRecord.id || record.rowIndex !== prevRecord.rowIndex,
       },
     ],
-    [actions, adapter.fields, beginResize, context, resizeOverrides, selectedCell]
+    [
+      actions,
+      adapter.fields,
+      beginResize,
+      context,
+      didCellSelectionChange,
+      isCellSelected,
+      resizeOverrides,
+      selectedCell,
+    ]
   );
 
   return (

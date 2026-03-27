@@ -471,10 +471,15 @@ function InlineCellComponent({
 }
 
 function inlineCellPropsAreEqual(previous: InlineCellProps, next: InlineCellProps): boolean {
+  const shouldCompareFullRow = Boolean(previous.field.tableRenderer || next.field.tableRenderer);
+  const rowIsEqual = shouldCompareFullRow
+    ? previous.row === next.row
+    : previous.row.id === next.row.id && previous.row.rowIndex === next.row.rowIndex;
+
   return (
     previous.field === next.field &&
     previous.cell === next.cell &&
-    previous.row === next.row &&
+    rowIsEqual &&
     previous.context === next.context &&
     previous.actions === next.actions &&
     previous.selected === next.selected
