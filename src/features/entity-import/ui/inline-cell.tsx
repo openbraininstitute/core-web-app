@@ -501,9 +501,7 @@ function InlineCellComponent({
           disabled={cell.dependencyState === DependencyState.Blocked}
           placeholder={field.placeholder}
           value={draftInputValue}
-          onClick={() => {
-            selectCell();
-          }}
+          onFocus={selectCell}
           onChange={(event) => {
             const nextRawValue = event.target.value;
             setDraftInputValue(nextRawValue);
@@ -584,9 +582,7 @@ function InlineCellComponent({
           disabled={cell.dependencyState === DependencyState.Blocked}
           placeholder={field.placeholder}
           value={draftInputValue}
-          onClick={() => {
-            selectCell();
-          }}
+          onFocus={selectCell}
           onChange={(event) => {
             const nextRawValue = event.target.value;
             setDraftInputValue(nextRawValue);
