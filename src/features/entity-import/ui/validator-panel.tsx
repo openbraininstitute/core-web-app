@@ -944,9 +944,11 @@ function SingleColumnValidatorCard({
                 values: rowValues,
               });
               return (
-                <div
-                  data-import-input-type-item={`${field.inputType}-suggestion`}
+                <button
+                  type="button"
                   key={suggestion.value}
+                  data-import-input-type-item={`${field.inputType}-suggestion`}
+                  aria-label={`Select suggestion ${suggestion.label}`}
                   className={cn(
                     'flex min-w-0 items-center gap-2 overflow-hidden rounded-xl border',
                     'px-3 py-3 transition-all ease-out-expo select-none',
@@ -954,20 +956,18 @@ function SingleColumnValidatorCard({
                       ? 'border-green-main bg-green-main/10 text-green-main border-2'
                       : 'border-neutral-200 bg-white hover:border-neutral-300'
                   )}
+                  onClick={() =>
+                    actions.chooseSuggestion({
+                      rowId: row.id,
+                      fieldPath: field.path,
+                      suggestion,
+                    })
+                  }
                 >
-                  <button
-                    type="button"
-                    aria-label={`Select suggestion ${suggestion.label}`}
+                  <div
                     className={cn(
                       'flex min-w-0 flex-1 items-center gap-3 overflow-hidden whitespace-normal text-left text-base'
                     )}
-                    onClick={() =>
-                      actions.chooseSuggestion({
-                        rowId: row.id,
-                        fieldPath: field.path,
-                        suggestion,
-                      })
-                    }
                   >
                     <div className="min-w-0 flex-1 text-left">
                       <span
@@ -983,7 +983,7 @@ function SingleColumnValidatorCard({
                         </span>
                       )} */}
                     </div>
-                  </button>
+                  </div>
                   {suggestionDetails ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -1026,7 +1026,7 @@ function SingleColumnValidatorCard({
                   >
                     {isSelected && <CheckOutlined className="opacity-100 size-2.5!" />}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
