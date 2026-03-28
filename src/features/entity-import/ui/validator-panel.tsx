@@ -246,9 +246,9 @@ function resolveSubmitButtonFillClassName(tone: SubmitButtonTone): string {
 }
 
 const SUBMIT_BUTTON_IDLE_CHROME = [
-  'border-primary-8/20 text-primary-9',
-  'hover:border-primary-8 hover:bg-white hover:text-primary-9 active:bg-white',
-  'disabled:bg-white disabled:text-primary-9',
+  'border-primary-8 bg-primary-8 text-white',
+  'hover:bg-primary-9 hover:border-primary-9 hover:text-white active:bg-primary-9',
+  'disabled:bg-[#595959] disabled:border-[#595959] disabled:text-white disabled:opacity-100',
 ] as const;
 
 const SUBMIT_BUTTON_CHROME_CLASSNAME: Record<SubmitButtonTone, readonly string[]> = {
@@ -797,7 +797,7 @@ function SingleColumnValidatorCard({
                     displayValue: null,
                     parsedValue: nextRawValue,
                   });
-                  void actions.requestSuggestions({
+                  void actions.onRequestSuggestions({
                     rowId: row.id,
                     fieldPath: field.path,
                     query: nextRawValue,
@@ -1243,7 +1243,7 @@ export function ValidatorPanel<TPayload, TResult>({
               variant="icon"
               size="md"
               className={cn(
-                'shrink-0 border bg-white shadow-none',
+                'shrink-0 border shadow-none',
                 SUBMIT_BUTTON_CHROME_CLASSNAME[submitButtonTone]
               )}
               disabled={!session.summary.canSubmit || isSubmitting || hasPendingValidatorPreview}
@@ -1525,7 +1525,7 @@ export function ValidatorPanel<TPayload, TResult>({
           variant="outline"
           size="lg"
           className={cn(
-            'relative w-full min-w-0 flex-1 overflow-hidden border bg-white shadow-none',
+            'relative w-full min-w-0 flex-1 overflow-hidden border shadow-none',
             SUBMIT_BUTTON_CHROME_CLASSNAME[submitButtonTone]
           )}
           style={submitButtonStyle}
@@ -1544,7 +1544,7 @@ export function ValidatorPanel<TPayload, TResult>({
             }}
           />
           <span className="relative z-10 flex w-full items-center justify-center">
-            <span className="text-primary-9">{submitButtonLabel}</span>
+            <span>{submitButtonLabel}</span>
             <span
               aria-hidden
               className="pointer-events-none absolute inset-0 overflow-hidden"

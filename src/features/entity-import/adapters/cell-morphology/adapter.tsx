@@ -32,7 +32,6 @@ import {
 import {
   type IImportRowState,
   ImportInputType,
-  type ISuggestion,
   RemoteValidationStatus,
 } from '@/features/entity-import/core/contracts';
 import {
@@ -171,10 +170,6 @@ export interface CellMorphologySubmissionPayload {
 interface CreateCellMorphologyImportAdapterOptions {
   services?: ICellMorphologyImportServices;
   postSubmitActions?: IEntityImportPostSubmitActions;
-}
-
-function summarizeCount(label: string, count: number): string {
-  return count > 0 ? `${count} ${label}${count === 1 ? '' : 's'}` : '';
 }
 
 function readLocation(parsedValue: unknown, rawValue: string): LocationValue | null {
@@ -447,27 +442,4 @@ export function createCellMorphologyImportAdapter({
       return registration;
     },
   };
-}
-
-export function getContributionSummary(entries: unknown): string {
-  return summarizeCount('contributor', sanitizeContributions(entries).length);
-}
-
-export function getLocationSummary(location: LocationValue | null): string {
-  if (!location) {
-    return '';
-  }
-
-  return [location.x, location.y, location.z]
-    .map((value) => (value === null || value === undefined ? '' : value))
-    .join(', ');
-}
-
-export function isCellMorphologySuggestionRecommended(
-  suggestions: Array<ISuggestion>,
-  candidate: ISuggestion
-): boolean {
-  return suggestions.some(
-    (suggestion) => suggestion.value === candidate.value && suggestion.recommended
-  );
 }

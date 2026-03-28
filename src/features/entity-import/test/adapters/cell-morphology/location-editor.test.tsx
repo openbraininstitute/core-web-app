@@ -29,7 +29,7 @@ function createMockActions(): IEntityImportActions {
     onDuplicateRow: vi.fn(),
     onDismissFeatureNotification: vi.fn(),
     onRejectCorrection: vi.fn(),
-    requestSuggestions: vi.fn(async () => {}),
+    onRequestSuggestions: vi.fn(async () => {}),
     loadMoreSuggestions: vi.fn(),
     onSelectCell: vi.fn(),
     onSetValidatorSelection: vi.fn(),

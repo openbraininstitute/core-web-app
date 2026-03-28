@@ -105,7 +105,6 @@ type CsvUploadNotification = {
   message: string;
 };
 
-const ENTITY_IMPORT_CSV_PARSE_ISSUE_PREVIEW_LIMIT = 3;
 const ENTITY_IMPORT_SUBMIT_QUEUE_CONCURRENCY = 4;
 
 function buildCsvParseNotificationMessages(
@@ -126,7 +125,7 @@ function buildCsvParseNotificationMessages(
   }
 
   if (parsedCsv.errors.length > 0) {
-    const previewErrors = parsedCsv.errors.slice(0, ENTITY_IMPORT_CSV_PARSE_ISSUE_PREVIEW_LIMIT);
+    const previewErrors = parsedCsv.errors;
     const issueLabel = parsedCsv.errors.length === 1 ? 'issue' : 'issues';
     notifications.push({
       id: 'csv-parse-summary',
@@ -492,7 +491,7 @@ export function useEntityImportController<TPayload, TResult>({
     setCsvRowValidationProgress(createIdleCsvRowValidationProgress());
   }, []);
 
-  const dismissCsvUploadNotifications = useCallback(() => {
+  const onDismissCsvUploadNotifications = useCallback(() => {
     setCsvUploadNotifications([]);
   }, []);
 
@@ -1579,12 +1578,12 @@ export function useEntityImportController<TPayload, TResult>({
                 const payload = adapter.buildPayload({ row, values, context });
                 await adapter.submitRow({ payload, row, values, context });
                 markImportRowCompleted({ row, errorMessage: null });
-                return { ok: true as const };
+                return { ok: true };
               } catch (error) {
                 const errorMessage = getImportFailureMessage(error, row);
                 markImportRowCompleted({ row, errorMessage });
                 return {
-                  ok: false as const,
+                  ok: false,
                   rowNumber: row.rowIndex + 1,
                   message: errorMessage,
                 };
@@ -1645,8 +1644,8 @@ export function useEntityImportController<TPayload, TResult>({
       onDeleteRow,
       onDuplicateRow,
       onDismissFeatureNotification,
-      requestSuggestions: async (params) => {
-        requestValidatorSuggestions({ ...params, source: 'validator' });
+      onRequestSuggestions: async (params) => {
+        void requestValidatorSuggestions({ ...params, source: 'validator' });
       },
       loadMoreSuggestions,
       onSelectCell,
@@ -1704,7 +1703,7 @@ export function useEntityImportController<TPayload, TResult>({
     validatorSuggestions,
     fieldStatusMap,
     rowsSummaryStatus,
-    dismissCsvUploadNotifications,
+    onDismissCsvUploadNotifications,
     onDownloadCsvTemplate,
     onDownloadCurrentCsv,
     onDownloadGuideTemplate,

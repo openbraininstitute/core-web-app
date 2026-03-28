@@ -31,7 +31,7 @@ const DEFAULT_FIELD_COLUMN_WIDTH = 200;
 const DEFAULT_TABLE_BODY_SCROLL_HEIGHT = 1;
 
 /** width of the fixed row-index column on the left */
-export const ROW_INDEX_COLUMN_WIDTH = 68;
+export const ROW_INDEX_COLUMN_WIDTH = 88;
 
 /** width of the fixed row-actions column on the right. */
 export const ROW_ACTIONS_COLUMN_WIDTH = 72;

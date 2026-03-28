@@ -1,6 +1,11 @@
 'use client';
 
-import { CheckCircleFilled, CloseCircleFilled, LoadingOutlined } from '@ant-design/icons';
+import {
+  CheckCircleFilled,
+  CloseCircleFilled,
+  ExclamationCircleFilled,
+  LoadingOutlined,
+} from '@ant-design/icons';
 import {
   RiDeleteRow,
   RiEraserLine,
@@ -11,7 +16,14 @@ import {
 import { Table } from 'antd';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { DependencyState, ImportRowResultStatus } from '@/features/entity-import/core/contracts';
+import {
+  CellStatus,
+  DependencyState,
+  ImportRowResultStatus,
+  ImportRunPhase,
+  RemoteValidationStatus,
+  RowStatus,
+} from '@/features/entity-import/core/contracts';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/core/shared/ui';
 import {
   fieldColumnWidth,
@@ -25,13 +37,7 @@ import {
   INVALID_CONTROL_CLASSNAME,
   InlineCell,
 } from '@/features/entity-import/ui/inline-cell';
-import {
-  getTableCellUiStatus,
-  getTableRowUiStatus,
-  getTableRowUiStatusLabel,
-  TableCellUiStatus,
-  TableRowUiStatus,
-} from '@/features/entity-import/ui/status';
+import { getTableCellUiStatus, TableCellUiStatus } from '@/features/entity-import/ui/status';
 import { Badge } from '@/ui/molecules/badge';
 import {
   DropdownMenu,
@@ -73,24 +79,6 @@ function isValidatorPreviewTarget(
   fieldPath: string
 ): boolean {
   return validatorPreview.rowId === rowId && validatorPreview.fieldPath === fieldPath;
-}
-
-function resolveImportRowStatusLabel(
-  status: IImportRunState['rowResults'][string]['status'] | undefined
-): string | null {
-  if (status === ImportRowResultStatus.Pending) {
-    return 'importing';
-  }
-
-  if (status === ImportRowResultStatus.Succeeded) {
-    return 'imported successfully';
-  }
-
-  if (status === ImportRowResultStatus.Failed) {
-    return 'failed to import';
-  }
-
-  return null;
 }
 
 export function ImportTable<TPayload, TResult>({
@@ -189,61 +177,49 @@ export function ImportTable<TPayload, TResult>({
         fixed: 'left',
         align: 'center',
         render: (_, row) => {
-          const rowUiStatus = getTableRowUiStatus(row, adapter.fields);
-          const rowStatusLabel = getTableRowUiStatusLabel(rowUiStatus);
           const importRowStatus = importRun.rowResults[row.id]?.status;
-          const importStatusLabel = resolveImportRowStatusLabel(importRowStatus);
+          const isImportPhase =
+            importRun.phase === ImportRunPhase.Running ||
+            importRun.phase === ImportRunPhase.Completed;
+
+          const hasAnyCellProblem = Object.values(row.cells).some(
+            (cell) =>
+              cell.status === CellStatus.Invalid ||
+              cell.remoteState.status === RemoteValidationStatus.Invalid ||
+              cell.remoteState.status === RemoteValidationStatus.Pending
+          );
+          const isRowFullyValid = row.rowStatus === RowStatus.Valid && !hasAnyCellProblem;
 
           return (
             <div className="flex min-h-[52px] flex-col items-center justify-center gap-1.5 py-2">
-              <span
-                role="img"
-                aria-label={`Row ${row.rowIndex + 1} status: ${rowStatusLabel}`}
-                className={cn(
-                  'inline-flex size-3 rounded-full border',
-                  {
-                    'border-emerald-300 bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]':
-                      rowUiStatus === TableRowUiStatus.Ready,
-                  },
-                  {
-                    'border-neutral-300 bg-neutral-500 shadow-[0_0_0_3px_rgba(115,115,115,0.12)]':
-                      rowUiStatus === TableRowUiStatus.Validating,
-                  },
-                  {
-                    'border-sky-300 bg-sky-500 shadow-[0_0_0_3px_rgba(14,165,233,0.12)]':
-                      rowUiStatus === TableRowUiStatus.NeedsSelection,
-                  },
-                  {
-                    'border-amber-300 bg-amber-500 shadow-[0_0_0_3px_rgba(245,158,11,0.12)]':
-                      rowUiStatus === TableRowUiStatus.NeedsAttention,
-                  },
-                  {
-                    'border-neutral-200 bg-neutral-200 shadow-[0_0_0_3px_rgba(229,229,229,0.5)]':
-                      rowUiStatus === TableRowUiStatus.Idle,
-                  }
-                )}
-              />
               <span className="text-xs text-center font-semibold text-neutral-4">
                 {row.rowIndex + 1}
               </span>
-              {importStatusLabel ? (
-                <span
-                  role="img"
-                  aria-label={`Row ${row.rowIndex + 1} import status: ${importStatusLabel}`}
-                  className={cn(
-                    'inline-flex items-center justify-center text-sm',
-                    { 'text-primary-9': importRowStatus === ImportRowResultStatus.Pending },
-                    { 'text-emerald-600': importRowStatus === ImportRowResultStatus.Succeeded },
-                    { 'text-rose-600': importRowStatus === ImportRowResultStatus.Failed }
-                  )}
-                >
-                  {importRowStatus === ImportRowResultStatus.Pending ? (
-                    <LoadingOutlined spin />
-                  ) : importRowStatus === ImportRowResultStatus.Succeeded ? (
-                    <CheckCircleFilled />
-                  ) : (
-                    <CloseCircleFilled />
-                  )}
+              {isImportPhase ? (
+                importRowStatus === ImportRowResultStatus.Pending ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-1 px-2 py-0.5 text-[10px] font-semibold text-primary-9">
+                    <LoadingOutlined spin className="text-[10px]" />
+                  </span>
+                ) : importRowStatus === ImportRowResultStatus.Succeeded ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                    <CheckCircleFilled className="text-[10px]" />
+                    Imported
+                  </span>
+                ) : importRowStatus === ImportRowResultStatus.Failed ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+                    <CloseCircleFilled className="text-[10px]" />
+                    Failed
+                  </span>
+                ) : null
+              ) : isRowFullyValid ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                  <CheckCircleFilled className="text-[10px]" />
+                  Valid
+                </span>
+              ) : row.rowStatus === RowStatus.Invalid || hasAnyCellProblem ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                  <ExclamationCircleFilled className="text-[10px]" />
+                  Invalid
                 </span>
               ) : null}
             </div>
@@ -442,8 +418,30 @@ export function ImportTable<TPayload, TResult>({
       isCellSelected,
       resizeOverrides,
       importRun.rowResults,
+      importRun.phase,
       validatorPreview,
     ]
+  );
+
+  const scroll = useMemo(
+    () => ({ x: scrollWidth, y: scrollHeight, scrollToFirstRowOnChange: false }),
+    [scrollWidth, scrollHeight]
+  );
+  const footer = useCallback(
+    () => (
+      <button
+        type="button"
+        onClick={handleAddRow}
+        className={cn(
+          'flex w-full items-center justify-center gap-3 px-5 py-4 text-sm',
+          'font-semibold text-primary-9 transition-colors hover:bg-neutral-50'
+        )}
+      >
+        <span>Add row</span>
+        <RiInsertRowBottom />
+      </button>
+    ),
+    [handleAddRow]
   );
 
   return (
@@ -456,20 +454,8 @@ export function ImportTable<TPayload, TResult>({
         tableLayout="fixed"
         columns={columns}
         dataSource={session.rows}
-        scroll={{ x: scrollWidth, y: scrollHeight, scrollToFirstRowOnChange: false }}
-        footer={() => (
-          <button
-            type="button"
-            onClick={handleAddRow}
-            className={cn(
-              'flex w-full items-center justify-center gap-3 px-5 py-4 text-sm',
-              'font-semibold text-primary-9 transition-colors hover:bg-neutral-50'
-            )}
-          >
-            <span>Add row</span>
-            <RiInsertRowBottom />
-          </button>
-        )}
+        scroll={scroll}
+        footer={footer}
         className={cn(
           'entity-import-table',
           '[&_.ant-table-thead_.ant-table-cell]:bg-white',

@@ -370,7 +370,7 @@ export interface IEntityImportActions {
    * Fetches matching suggestions from the adapter's remote query endpoint
    * and updates the validator suggestion state.
    */
-  requestSuggestions: (params: {
+  onRequestSuggestions: (params: {
     rowId: string;
     fieldPath: string;
     query: string;

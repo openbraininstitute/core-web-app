@@ -37,6 +37,7 @@ import type {
   IValidatorPreviewState,
   IValidatorSuggestionState,
 } from '@/features/entity-import/core/adapter';
+import type { TValidatorFieldStatus } from '@/features/entity-import/core/summary';
 
 interface IImportShellProps<TPayload, TResult> {
   title: string | null;
@@ -59,11 +60,8 @@ interface IImportShellProps<TPayload, TResult> {
     message: string;
   }>;
   validatorSuggestions: IValidatorSuggestionState;
-  fieldStatusMap: Record<
-    string,
-    import('@/features/entity-import/core/summary').TValidatorFieldStatus
-  >;
-  rowsSummaryStatus: import('@/features/entity-import/core/summary').TValidatorFieldStatus;
+  fieldStatusMap: Record<string, TValidatorFieldStatus>;
+  rowsSummaryStatus: TValidatorFieldStatus;
   onClose: () => void;
   onDismissCsvUploadNotifications: () => void;
   onDownloadCsvTemplate: () => void;
@@ -72,14 +70,19 @@ interface IImportShellProps<TPayload, TResult> {
   onUploadCsvFile: (file: File) => Promise<void>;
 }
 
+const CsvUploadStatus = {
+  Loading: 'loading',
+  Validating: 'validating',
+} as const;
+
 type ICsvUploadStatus =
   | {
-      kind: 'loading';
+      kind: typeof CsvUploadStatus.Loading;
       title: string;
       message: string;
     }
   | {
-      kind: 'validating';
+      kind: typeof CsvUploadStatus.Validating;
       title: string;
       message: string;
       completedRowCount: number;
@@ -108,7 +111,7 @@ function resolveCsvUploadStatus(args: {
       totalRowCount > 0 ? Math.min((completedRowCount / totalRowCount) * 100, 100) : 0;
 
     return {
-      kind: 'validating',
+      kind: CsvUploadStatus.Validating,
       title: 'Validating imported rows',
       message: `Validating ${completedRowCount} of ${totalRowCount} row(s)...`,
       completedRowCount,
@@ -122,7 +125,7 @@ function resolveCsvUploadStatus(args: {
       CsvUploadPhase.Parsing,
       () =>
         ({
-          kind: 'loading',
+          kind: CsvUploadStatus.Loading,
           title: 'Uploading CSV',
           message: 'Parsing CSV...',
         }) as ICsvUploadStatus
@@ -131,7 +134,7 @@ function resolveCsvUploadStatus(args: {
       CsvUploadPhase.Hydrating,
       () =>
         ({
-          kind: 'loading',
+          kind: CsvUploadStatus.Loading,
           title: 'Uploading CSV',
           message: 'Preparing imported values...',
         }) as ICsvUploadStatus
@@ -140,7 +143,7 @@ function resolveCsvUploadStatus(args: {
       CsvUploadPhase.PreparingRows,
       () =>
         ({
-          kind: 'loading',
+          kind: CsvUploadStatus.Loading,
           title: 'Uploading CSV',
           message: 'Preparing CSV rows...',
         }) as ICsvUploadStatus
@@ -333,7 +336,7 @@ export function ImportShell<TPayload, TResult>({
                       aria-live="polite"
                       className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3"
                     >
-                      {csvUploadStatus.kind === 'validating' ? (
+                      {csvUploadStatus.kind === CsvUploadStatus.Validating ? (
                         <div className="flex flex-col items-start gap-3">
                           <Progress
                             type="circle"

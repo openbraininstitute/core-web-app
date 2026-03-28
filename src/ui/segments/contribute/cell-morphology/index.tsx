@@ -103,16 +103,7 @@ type ICellMorphologyImportProps = {
 
 export function CellMorphologyImport({ title, sessionId, onClose }: ICellMorphologyImportProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
-  const adapter = useMemo(
-    () =>
-      createCellMorphologyImportAdapter({
-        defaultBrainRegionId: defaultBrainRegion.id,
-      }),
-    [defaultBrainRegion.id]
-  );
+  const adapter = useMemo(() => createCellMorphologyImportAdapter({}), []);
 
   return (
     <EntityImportFeature
