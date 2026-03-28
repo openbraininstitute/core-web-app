@@ -89,14 +89,6 @@ function resolveTablePreviewValue(
   return value.displayValue ?? value.rawValue;
 }
 
-function queryTableBodyContainer(root: ParentNode): HTMLElement | null {
-  return (
-    root.querySelector<HTMLElement>('.rc-virtual-list-holder') ??
-    root.querySelector<HTMLElement>('[class*="virtual-holder"]') ??
-    root.querySelector<HTMLElement>('.ant-table-body')
-  );
-}
-
 export const INVALID_CONTROL_CLASSNAME =
   'bg-transparent text-amber-950 [&_textarea]:text-amber-950 bg-amber-50/70 [&_textarea]:bg-amber-50/70';
 export const BLOCKED_CONTROL_CLASSNAME =
@@ -197,33 +189,9 @@ function InlineCellComponent({
     [flushDraftInputValue]
   );
 
-  const selectCellWithPreservedTableScroll = useCallback(
-    (trigger: HTMLElement | null) => {
-      const root = trigger?.closest('[data-entity-import-root]') ?? document;
-      const scrollTop = queryTableBodyContainer(root)?.scrollTop ?? null;
-      if (
-        root instanceof HTMLElement &&
-        scrollTop !== null &&
-        (scrollTop !== 0 || !root.dataset.entityImportScrollTop)
-      ) {
-        root.dataset.entityImportScrollTop = String(scrollTop);
-      }
-
-      actions.selectCell({ rowId: row.id, fieldPath: field.path });
-
-      if (scrollTop === null) {
-        return;
-      }
-
-      requestAnimationFrame(() => {
-        const tableBody = queryTableBodyContainer(root);
-        if (tableBody?.isConnected) {
-          tableBody.scrollTop = scrollTop;
-        }
-      });
-    },
-    [actions, field.path, row.id]
-  );
+  const selectCell = useCallback(() => {
+    actions.selectCell({ rowId: row.id, fieldPath: field.path });
+  }, [actions, field.path, row.id]);
 
   if (
     field.tableRenderer &&
@@ -377,9 +345,7 @@ function InlineCellComponent({
           value={cell.rawValue}
           onOpenChange={(open) => {
             if (open) {
-              const trigger =
-                document.activeElement instanceof HTMLElement ? document.activeElement : null;
-              selectCellWithPreservedTableScroll(trigger);
+              selectCell();
             }
           }}
           onValueChange={(value) =>
@@ -453,7 +419,7 @@ function InlineCellComponent({
             getControlClassName(cell, selected)
           )}
           onClick={(event) => {
-            selectCellWithPreservedTableScroll(event.currentTarget);
+            selectCell();
             fileInputRef.current?.click();
           }}
         >
@@ -509,7 +475,7 @@ function InlineCellComponent({
           placeholder={field.placeholder}
           value={draftInputValue}
           onClick={(event) => {
-            selectCellWithPreservedTableScroll(event.currentTarget);
+            selectCell();
           }}
           onChange={(event) => {
             const nextRawValue = event.target.value;
@@ -557,7 +523,7 @@ function InlineCellComponent({
           format="DD/MM/YYYY"
           maxDate={dayjs().endOf('day')}
           onClick={(event) => {
-            selectCellWithPreservedTableScroll(event.currentTarget as HTMLElement);
+            selectCell();
           }}
           onChange={(date) => {
             actions.updateCellValue({
@@ -592,7 +558,7 @@ function InlineCellComponent({
           placeholder={field.placeholder}
           value={draftInputValue}
           onClick={(event) => {
-            selectCellWithPreservedTableScroll(event.currentTarget);
+            selectCell();
           }}
           onChange={(event) => {
             const nextRawValue = event.target.value;

@@ -315,95 +315,6 @@ function resolveValidatorDisplayValue(
   return draftValue.displayValue ?? draftValue.rawValue;
 }
 
-function queryTableBodyContainer(root: ParentNode): HTMLElement | null {
-  return (
-    root.querySelector<HTMLElement>('.rc-virtual-list-holder') ??
-    root.querySelector<HTMLElement>('[class*="virtual-holder"]') ??
-    root.querySelector<HTMLElement>('.ant-table-body')
-  );
-}
-
-function resolveTableBodyContainer(trigger: HTMLElement | null): HTMLElement | null {
-  const root = trigger?.closest('[data-entity-import-root]') ?? document;
-  return queryTableBodyContainer(root);
-}
-
-function rememberTableBodyScrollTop(trigger: HTMLElement | null, scrollTop: number | null): void {
-  const root = trigger?.closest('[data-entity-import-root]');
-  if (!(root instanceof HTMLElement) || scrollTop === null) {
-    return;
-  }
-
-  if (scrollTop !== 0 || !root.dataset.entityImportScrollTop) {
-    root.dataset.entityImportScrollTop = String(scrollTop);
-  }
-}
-
-function readRememberedTableBodyScrollTop(trigger: HTMLElement | null): number | null {
-  const root = trigger?.closest('[data-entity-import-root]');
-  if (!(root instanceof HTMLElement)) {
-    return null;
-  }
-
-  const value = Number(root.dataset.entityImportScrollTop ?? '');
-  return Number.isFinite(value) ? value : null;
-}
-
-function resolvePreferredTableBodyScrollTop(
-  trigger: HTMLElement | null,
-  scrollTop: number | null
-): number | null {
-  if (scrollTop === null) {
-    return readRememberedTableBodyScrollTop(trigger);
-  }
-
-  if (scrollTop === 0) {
-    return readRememberedTableBodyScrollTop(trigger) ?? 0;
-  }
-
-  return scrollTop;
-}
-
-function captureTableBodyScrollTop(trigger: HTMLElement | null): number | null {
-  const scrollTop = resolveTableBodyContainer(trigger)?.scrollTop ?? null;
-  rememberTableBodyScrollTop(trigger, scrollTop);
-  return scrollTop;
-}
-
-function restoreCapturedTableBodyScroll(
-  trigger: HTMLElement | null,
-  scrollTop: number | null,
-  action: () => void
-): void {
-  const root = trigger?.closest('[data-entity-import-root]') ?? document;
-
-  action();
-
-  if (scrollTop === null) {
-    return;
-  }
-
-  const restoreAttempts = 4;
-  const restore = (attempt: number) => {
-    const tableBody = queryTableBodyContainer(root);
-    if (tableBody?.isConnected) {
-      tableBody.scrollTop = scrollTop;
-    }
-
-    if (attempt + 1 >= restoreAttempts) {
-      return;
-    }
-
-    requestAnimationFrame(() => {
-      restore(attempt + 1);
-    });
-  };
-
-  requestAnimationFrame(() => {
-    restore(0);
-  });
-}
-
 function ValidatorSuggestionSkeletonList() {
   return (
     <div className="px-4 flex flex-col gap-1.5">
@@ -601,8 +512,6 @@ function SingleColumnValidatorCard({
   const rowPosition = session.rows.findIndex((candidate) => candidate.id === row.id);
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const pendingTableScrollTopRef = useRef<number | null>(null);
-  const previewScrollRestoreFrameRef = useRef<number | null>(null);
   const activeValidatorPreview =
     validatorPreview.rowId === row.id && validatorPreview.fieldPath === field.path
       ? validatorPreview
@@ -619,55 +528,17 @@ function SingleColumnValidatorCard({
       : null;
   const draftValue = activeValidatorPreview ?? stagedDraftValue ?? createValidatorDraftValue(cell);
 
-  useEffect(() => {
-    return () => {
-      if (previewScrollRestoreFrameRef.current !== null) {
-        cancelAnimationFrame(previewScrollRestoreFrameRef.current);
-      }
-    };
-  }, []);
-
-  const preservePreviewTableScroll = useCallback(
-    (trigger: HTMLElement | null, action: () => void) => {
-      const preservedScrollTop = resolvePreferredTableBodyScrollTop(
-        trigger,
-        captureTableBodyScrollTop(trigger)
-      );
-      action();
-
-      if (preservedScrollTop === null) {
-        return;
-      }
-
-      if (previewScrollRestoreFrameRef.current !== null) {
-        cancelAnimationFrame(previewScrollRestoreFrameRef.current);
-      }
-
-      previewScrollRestoreFrameRef.current = requestAnimationFrame(() => {
-        const tableBody = resolveTableBodyContainer(trigger);
-        if (tableBody?.isConnected) {
-          tableBody.scrollTop = preservedScrollTop;
-        }
-        previewScrollRestoreFrameRef.current = null;
-      });
-    },
-    []
-  );
-
   const updateDraftValue = useCallback(
     (nextValue: IValidatorDraftValue) => {
-      const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       const nextPreviewValue = isDraftValueUnchanged(cell, nextValue) ? null : nextValue;
 
-      preservePreviewTableScroll(trigger, () => {
-        actions.setValidatorPreview({
-          rowId: row.id,
-          fieldPath: field.path,
-          value: nextPreviewValue,
-        });
+      actions.setValidatorPreview({
+        rowId: row.id,
+        fieldPath: field.path,
+        value: nextPreviewValue,
       });
     },
-    [actions, cell, field.path, preservePreviewTableScroll, row.id]
+    [actions, cell, field.path, row.id]
   );
 
   const commitManualValueToRow = useCallback(
@@ -750,23 +621,6 @@ function SingleColumnValidatorCard({
       session.rows,
     ]
   );
-  const captureApplyScrollPosition = useCallback((trigger: HTMLElement | null) => {
-    pendingTableScrollTopRef.current = resolvePreferredTableBodyScrollTop(
-      trigger,
-      captureTableBodyScrollTop(trigger)
-    );
-  }, []);
-  const applyWithPreservedTableScroll = useCallback(
-    (trigger: HTMLElement | null, applyToAll: boolean) => {
-      const preservedScrollTop =
-        resolvePreferredTableBodyScrollTop(trigger, pendingTableScrollTopRef.current) ??
-        resolvePreferredTableBodyScrollTop(trigger, captureTableBodyScrollTop(trigger));
-      pendingTableScrollTopRef.current = null;
-      restoreCapturedTableBodyScroll(trigger, preservedScrollTop, () => handleApply(applyToAll));
-    },
-    [handleApply]
-  );
-
   const previewValue = resolveValidatorDisplayValue(field, draftValue);
   const rowValues = getRowSubmissionValues(row);
   const activeValidatorSuggestions =
@@ -1107,14 +961,12 @@ function SingleColumnValidatorCard({
                     className={cn(
                       'flex min-w-0 flex-1 items-center gap-3 overflow-hidden whitespace-normal text-left text-base'
                     )}
-                    onClick={(event) =>
-                      preservePreviewTableScroll(event.currentTarget, () =>
-                        actions.chooseSuggestion({
-                          rowId: row.id,
-                          fieldPath: field.path,
-                          suggestion,
-                        })
-                      )
+                    onClick={() =>
+                      actions.chooseSuggestion({
+                        rowId: row.id,
+                        fieldPath: field.path,
+                        suggestion,
+                      })
                     }
                   >
                     <div className="min-w-0 flex-1 text-left">
@@ -1213,12 +1065,8 @@ function SingleColumnValidatorCard({
               size="md"
               className="flex-1 cursor-pointer"
               disabled={Boolean(cell.correctionDraft)}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                captureApplyScrollPosition(event.currentTarget);
-              }}
-              onClick={(event) => {
-                applyWithPreservedTableScroll(event.currentTarget, true);
+              onClick={() => {
+                handleApply(true);
               }}
             >
               Apply to all
@@ -1230,12 +1078,8 @@ function SingleColumnValidatorCard({
               size="md"
               className="flex-1 cursor-pointer"
               disabled={Boolean(cell.correctionDraft)}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                captureApplyScrollPosition(event.currentTarget);
-              }}
-              onClick={(event) => {
-                applyWithPreservedTableScroll(event.currentTarget, false);
+              onClick={() => {
+                handleApply(false);
               }}
             >
               Apply
@@ -1263,7 +1107,6 @@ export function ValidatorPanel<TPayload, TResult>({
   onToggleCollapsed,
   onHoverExpandedChange,
 }: IValidatorPanelProps<TPayload, TResult>) {
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMouseEnter = useCallback(() => {
@@ -1306,20 +1149,9 @@ export function ValidatorPanel<TPayload, TResult>({
     validatorPreview.rowId !== null && validatorPreview.fieldPath !== null;
   const showImportFailureTooltip =
     importRun.phase === ImportRunPhase.Completed && importRun.failureCards.length > 0;
-  const validatorScrollResetKey = `${session.validatorSelection.rowId ?? ''}:${session.validatorSelection.fieldPath ?? ''}:${validatorSuggestions.query}`;
   const submitButtonStyle = {
     '--entity-import-submit-progress': `${submitProgressPercent}%`,
   } as CSSProperties;
-
-  useEffect(() => {
-    void validatorScrollResetKey;
-
-    if (!scrollContainerRef.current) {
-      return;
-    }
-
-    scrollContainerRef.current.scrollTop = 0;
-  }, [validatorScrollResetKey]);
 
   if (collapsed && !hoverExpanded) {
     return (
@@ -1521,10 +1353,7 @@ export function ValidatorPanel<TPayload, TResult>({
           </div>
         </div>
 
-        <div
-          ref={scrollContainerRef}
-          className="min-h-0 flex-1 space-y-5 overflow-y-auto secondary-scrollbar overflow-x-hidden px-3 py-5"
-        >
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto secondary-scrollbar overflow-x-hidden px-3 py-5">
           {showSelectionPrompt ? (
             <Card className="py-0 border-none! shadow-none!">
               <CardContent className="px-6 py-8 text-sm text-neutral-500">

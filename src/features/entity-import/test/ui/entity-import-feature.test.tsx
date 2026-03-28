@@ -942,7 +942,7 @@ describe('EntityImportFeature', () => {
     expect(getTableScrollContainer(container).scrollTop).toBe(240);
   });
 
-  it('restores table scroll position after apply when button focus nudges the table body', async () => {
+  it('does not restore table scroll position after apply when button focus nudges the table body', async () => {
     const user = userEvent.setup();
     const { container } = renderWithQueryClient(
       <EntityImportFeature
@@ -977,14 +977,14 @@ describe('EntityImportFeature', () => {
         expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron Stable');
       });
       await waitFor(() => {
-        expect(getTableScrollContainer(container).scrollTop).toBe(240);
+        expect(getTableScrollContainer(container).scrollTop).toBe(180);
       });
     } finally {
       focusSpy.mockRestore();
     }
   });
 
-  it('restores table scroll position when applying a selected validator suggestion in the virtual table path', async () => {
+  it('does not restore table scroll position when applying a selected validator suggestion in the virtual table path', async () => {
     const user = userEvent.setup();
     const remoteQuerySpy = vi.fn(
       async ({ query }: { query: string; pageParam: number; pageSize: number }) => {
@@ -1063,8 +1063,6 @@ describe('EntityImportFeature', () => {
 
     await screen.findByRole('button', { name: 'Select suggestion Cortex layer 2' });
     await user.click(screen.getByRole('button', { name: 'Select suggestion Cortex layer 2' }));
-    const scrollBeforeApply = getCurrentTableBody().scrollTop;
-
     const frameQueue: Array<FrameRequestCallback> = [];
     const requestAnimationFrameSpy = vi
       .spyOn(window, 'requestAnimationFrame')
@@ -1085,7 +1083,7 @@ describe('EntityImportFeature', () => {
         callback?.(performance.now());
       }
       await waitFor(() => {
-        expect(getTableScrollContainer(container).scrollTop).toBe(scrollBeforeApply);
+        expect(getTableScrollContainer(container).scrollTop).toBe(180);
       });
     } finally {
       querySelectorSpy.mockRestore();
@@ -2685,7 +2683,7 @@ describe('EntityImportFeature', () => {
     ).toBeInTheDocument();
   });
 
-  it('resets the validator suggestion scroll when selecting another remote cell', async () => {
+  it('keeps the validator suggestion scroll when selecting another remote cell', async () => {
     const user = userEvent.setup();
     const firstSuggestion = {
       value: 'protocol-digital',
@@ -2743,7 +2741,7 @@ describe('EntityImportFeature', () => {
     await user.click(screen.getByLabelText('Protocol row 2'));
 
     await waitFor(() => {
-      expect(getValidatorScrollContainer(container).scrollTop).toBe(0);
+      expect(getValidatorScrollContainer(container).scrollTop).toBe(320);
     });
   });
 
