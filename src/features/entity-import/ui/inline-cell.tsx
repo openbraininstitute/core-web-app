@@ -409,15 +409,18 @@ function InlineCellComponent({
             </SelectValue>
           </SelectTrigger>
           <SelectContent
-            className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME)}
-            style={{ width: 'var(--radix-select-trigger-width)' }}
+            className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'px-2 rounded-2xl')}
+            style={{
+              maxWidth: 'var(--radix-select-trigger-width)',
+            }}
           >
             {field.options?.map((option) => (
               <SelectItem
                 data-import-input-type-item={`${field.inputType}-option`}
                 key={option.value}
                 value={option.value}
-                className="w-full text-left h-11 cursor-pointer font-semibold text-primary-9"
+                className="w-full text-left h-11 cursor-pointer font-semibold text-primary-9 rounded-2xl"
+                style={{ width: 'calc(var(--radix-select-trigger-width) - 1rem)' }}
               >
                 {option.label}
               </SelectItem>

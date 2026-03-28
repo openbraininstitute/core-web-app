@@ -98,9 +98,11 @@ function SelectItem({
   className,
   children,
   checkClassName,
+  withIndicator = true,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item> & {
   checkClassName?: string;
+  withIndicator?: boolean;
 }) {
   return (
     <SelectPrimitive.Item
@@ -111,11 +113,13 @@ function SelectItem({
       )}
       {...props}
     >
-      <span className="absolute right-2 flex size-3.5 items-center justify-center indicator">
-        <SelectPrimitive.ItemIndicator>
-          <CheckIcon className={cn('size-4', checkClassName)} />
-        </SelectPrimitive.ItemIndicator>
-      </span>
+      {withIndicator && (
+        <span className="absolute right-2 flex size-3.5 items-center justify-center indicator">
+          <SelectPrimitive.ItemIndicator>
+            <CheckIcon className={cn('size-4', checkClassName)} />
+          </SelectPrimitive.ItemIndicator>
+        </span>
+      )}
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckCircleFilled, CloseCircleFilled, LoadingOutlined } from '@ant-design/icons';
-import { RiDeleteBinLine, RiEraserLine, RiInsertRowBottom, RiMore2Line } from '@remixicon/react';
+import { RiDeleteRow, RiEraserLine, RiInsertRowBottom, RiMore2Line } from '@remixicon/react';
 import { Table } from 'antd';
 import {
   type MouseEvent as ReactMouseEvent,
@@ -562,11 +562,14 @@ export function ImportTable<TPayload, TResult>({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className={cn(ENTITY_IMPORT_POPOVER_Z_CLASS, 'border border-neutral-200 bg-white')}
+                className={cn(
+                  ENTITY_IMPORT_POPOVER_Z_CLASS,
+                  'border border-neutral-200 bg-white rounded-2xl'
+                )}
               >
                 <DropdownMenuItem
                   aria-label={`Clear row ${row.rowIndex + 1}`}
-                  className="text-primary-9 h-11! font-medium text-sm cursor-pointer"
+                  className="text-primary-9 h-11! font-medium text-sm cursor-pointer rounded-2xl"
                   onSelect={() => actions.clearRow(row.id)}
                 >
                   <RiEraserLine aria-hidden className="size-4 shrink-0 text-primary-9" />
@@ -574,11 +577,10 @@ export function ImportTable<TPayload, TResult>({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   aria-label={`Delete row ${row.rowIndex + 1}`}
-                  variant="destructive"
-                  className="text-primary-9 h-11! font-medium text-sm cursor-pointer"
+                  className="text-primary-9 h-11! font-medium text-sm cursor-pointer rounded-2xl"
                   onSelect={() => actions.deleteRow(row.id)}
                 >
-                  <RiDeleteBinLine aria-hidden className="size-4 shrink-0" />
+                  <RiDeleteRow aria-hidden className="size-4 shrink-0" />
                   Delete row
                 </DropdownMenuItem>
               </DropdownMenuContent>

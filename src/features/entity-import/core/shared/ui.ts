@@ -2,7 +2,7 @@ import { cn } from '@/utils/css-class';
 
 import type { IAdapterFieldDefinition } from '@/features/entity-import/core/adapter';
 
-// Keep import editor dropdowns above sticky table and validator chrome.
+// keep import editor dropdowns above sticky table and validator
 export const ENTITY_IMPORT_POPOVER_Z_CLASS = 'z-[99999]';
 
 export const ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME = cn(

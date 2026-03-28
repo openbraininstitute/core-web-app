@@ -20,6 +20,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { match } from 'ts-pattern';
 
 import {
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
@@ -159,15 +160,14 @@ function resolveRowStatus<TPayload, TResult>(
 }
 
 function ValidationStatusIcon({ status }: { status: TValidatorFieldStatus }) {
-  if (status === ValidatorFieldStatus.Valid) {
-    return <CheckOutlined className="text-base text-[#2ea43a]" />;
-  }
-
-  if (status === ValidatorFieldStatus.Warning) {
-    return <ExclamationCircleOutlined className="text-base text-[#c87a14]" />;
-  }
-
-  return <span className="inline-flex size-4" />;
+  return match(status)
+    .with(ValidatorFieldStatus.Valid, () => (
+      <CheckOutlined className="text-base text-green-main!" />
+    ))
+    .with(ValidatorFieldStatus.Warning, () => (
+      <ExclamationCircleOutlined className="text-base text-warning!" />
+    ))
+    .otherwise(() => <span className="inline-flex size-4" />);
 }
 
 function resolveImportRunProgressPercent(importRun: IImportRunState): number {
@@ -233,15 +233,10 @@ function resolveImportFailureSummary(importRun: IImportRunState): string {
 }
 
 function resolveSubmitButtonFillClassName(tone: SubmitButtonTone): string {
-  if (tone === SubmitButtonTone.Success) {
-    return 'bg-emerald-500';
-  }
-
-  if (tone === SubmitButtonTone.Failed) {
-    return 'bg-amber-500';
-  }
-
-  return 'bg-primary-8';
+  return match(tone)
+    .with(SubmitButtonTone.Success, () => 'bg-emerald-500')
+    .with(SubmitButtonTone.Failed, () => 'bg-amber-500')
+    .otherwise(() => 'bg-primary-8');
 }
 
 const SUBMIT_BUTTON_IDLE_CHROME = [
@@ -415,7 +410,10 @@ function ValidatorSuggestionSkeletonList() {
       {VALIDATOR_SUGGESTION_SKELETON_KEYS.map((key) => (
         <div
           key={key}
-          className="flex min-w-0 items-center gap-2 overflow-hidden rounded-xl border border-neutral-200 bg-white px-3 py-3"
+          className={cn(
+            'flex min-w-0 items-center gap-2 overflow-hidden rounded-xl',
+            'border border-neutral-200 bg-white px-3 py-3'
+          )}
           data-testid="validator-suggestion-skeleton"
         >
           <div className="min-w-0 flex-1 space-y-2">
@@ -513,12 +511,11 @@ function ValidatorFileDropzone({
       <div
         data-import-input-type-trigger={`${field.inputType}-file-dropzone`}
         className={cn(
-          'relative flex flex-col items-center gap-2 rounded-xl border border-dashed py-5 text-center transition-colors cursor-pointer',
-          isDragging
-            ? 'border-primary-8 bg-primary-8/5'
-            : hasFile
-              ? 'border-neutral-300 bg-neutral-50'
-              : 'border-neutral-300 hover:border-neutral-400'
+          'relative flex flex-col items-center gap-2 rounded-xl',
+          'border border-dashed py-5 text-center transition-colors cursor-pointer',
+          { 'border-primary-8 bg-primary-8/5': isDragging },
+          { 'border-neutral-300 bg-neutral-50': hasFile && !isDragging },
+          { 'border-neutral-300 hover:border-neutral-400': !isDragging && !hasFile }
         )}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
@@ -536,7 +533,11 @@ function ValidatorFileDropzone({
         aria-label="Drop files here or click to browse"
       >
         <RiFolderUploadFill
-          className={cn('size-6', isDragging ? 'text-primary-8' : 'text-neutral-400')}
+          className={cn(
+            'size-6',
+            { 'text-primary-8': isDragging },
+            { 'text-neutral-400': !isDragging }
+          )}
         />
 
         {hasFile ? (
@@ -829,7 +830,10 @@ function SingleColumnValidatorCard({
               <LeftOutlined />
             </Button>
             <div
-              className="flex h-10 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-base font-semibold text-blue-950"
+              className={cn(
+                'flex h-10 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl',
+                'border border-neutral-200 bg-neutral-50 px-3 py-2 text-base font-semibold text-blue-950'
+              )}
               title={previewValue.trim() ? previewValue : undefined}
             >
               <span className="block min-w-0 w-full truncate text-center">
@@ -857,7 +861,12 @@ function SingleColumnValidatorCard({
 
         <div className="px-4">
           {field.required && (
-            <span className="inline-flex rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-700">
+            <span
+              className={cn(
+                'inline-flex rounded-full bg-neutral-100 px-2.5',
+                'py-1 text-xs font-semibold text-neutral-700'
+              )}
+            >
               Required
             </span>
           )}
@@ -910,7 +919,12 @@ function SingleColumnValidatorCard({
                 }}
               />
               <div className="flex items-center gap-2">
-                <RiSearchLine className="text-primary-9 size-4 group-focus-within:text-primary-6 group-focus-within:scale-110 transition-all duration-100" />
+                <RiSearchLine
+                  className={cn(
+                    'text-primary-9 size-4 group-focus-within:text-primary-6',
+                    'group-focus-within:scale-110 transition-all duration-100'
+                  )}
+                />
               </div>
             </div>
           )}
@@ -922,7 +936,8 @@ function SingleColumnValidatorCard({
               aria-label="Validator value"
               value={draftValue.displayValue ?? draftValue.rawValue}
               className={cn(
-                'border border-neutral-200 bg-white rounded-xl p-2 focus-within:border-primary-6! focus-visible:ring-0! focus-visible:outline-none!',
+                'border border-neutral-200 bg-white rounded-xl p-2',
+                ' focus-within:border-primary-6! focus-visible:ring-0! focus-visible:outline-none!',
                 'shadow-none! ring-0!'
               )}
               onChange={(event) => {
@@ -992,7 +1007,7 @@ function SingleColumnValidatorCard({
                     data-import-input-type-trigger={`${field.inputType}-select-trigger`}
                     aria-label="Validator value"
                     className={cn(
-                      'w-full rounded-xl border-neutral-200 bg-white',
+                      'w-full rounded-2xl border-neutral-200 bg-white',
                       'h-11! text-primary-9 font-bold'
                     )}
                   >
@@ -1002,9 +1017,13 @@ function SingleColumnValidatorCard({
                     />
                   </SelectTrigger>
                   <SelectContent
-                    className={ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME}
+                    className={cn(
+                      ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
+                      'px-4! rounded-2xl',
+                      '[&>div:first-of-type]:min-w-[calc(var(--radix-select-trigger-width)-3rem)]'
+                    )}
                     style={{
-                      width: 'var(--radix-select-trigger-width)',
+                      maxWidth: 'var(--radix-select-trigger-width)',
                     }}
                   >
                     {field.options?.map((option) => (
@@ -1012,7 +1031,11 @@ function SingleColumnValidatorCard({
                         data-import-input-type-item={`${field.inputType}-option`}
                         key={option.value}
                         value={option.value}
-                        className="w-full text-left h-11 cursor-pointer font-semibold text-primary-9"
+                        className={cn(
+                          'w-full text-left h-11 cursor-pointer font-semibold text-primary-9 rounded-2xl',
+                          '[&_span]:right-4'
+                        )}
+                        style={{ width: 'calc(var(--radix-select-trigger-width) - 2rem)' }}
                       >
                         {option.label}
                       </SelectItem>
@@ -1305,17 +1328,30 @@ export function ValidatorPanel<TPayload, TResult>({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="flex h-full flex-col items-center gap-3 rounded-full border border-neutral-200 bg-white px-1.5 py-3 shadow-sm">
+        <div
+          className={cn(
+            'flex h-full flex-col items-center gap-3 rounded-full',
+            'border border-neutral-200 bg-white px-1.5 py-3 shadow-sm'
+          )}
+        >
           <button
             type="button"
             aria-label="Expand validator panel"
-            className="flex size-7 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-primary-9"
+            className={cn(
+              'flex size-7 shrink-0 items-center justify-center rounded-full',
+              'text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-primary-9'
+            )}
             onClick={onToggleCollapsed}
           >
             <PlusOutlined className="text-xs" />
           </button>
 
-          <span className="text-[11px] font-semibold tracking-widest text-primary-9 [writing-mode:vertical-lr] rotate-180 select-none">
+          <span
+            className={cn(
+              'text-[11px] font-semibold tracking-widest text-primary-9',
+              '[writing-mode:vertical-lr] rotate-180 select-none'
+            )}
+          >
             Validator
           </span>
         </div>
@@ -1352,8 +1388,13 @@ export function ValidatorPanel<TPayload, TResult>({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="flex flex-col h-full min-h-0 max-h-[calc(100%-42px)] shadow-sm hover:shadow-md py-4 rounded-3xl border border-neutral-200 bg-white">
-        <div className="shrink-0 px-3 pb-4 text-white">
+      <div
+        className={cn(
+          'flex flex-col h-full min-h-0 max-h-[calc(100%-42px)] shadow-sm',
+          'hover:shadow-md py-4 rounded-3xl border border-neutral-200 bg-white'
+        )}
+      >
+        <div className={cn('shrink-0 px-3 pb-4 text-white', { 'text-white': !collapsed })}>
           <div className="flex items-start justify-between gap-4">
             <h3 className="text-2xl font-semibold leading-none tracking-tight text-primary-9">
               Validator
@@ -1361,7 +1402,10 @@ export function ValidatorPanel<TPayload, TResult>({
             <button
               type="button"
               aria-label={collapsed ? 'Expand validator panel' : 'Collapse validator panel'}
-              className="flex size-7 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-primary-9"
+              className={cn(
+                'flex size-7 shrink-0 items-center justify-center rounded-full',
+                'text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-primary-9'
+              )}
               onClick={onToggleCollapsed}
             >
               {collapsed ? (
@@ -1383,15 +1427,22 @@ export function ValidatorPanel<TPayload, TResult>({
                 <SelectTrigger
                   id="validator-column-select"
                   aria-label="Select column"
-                  className={ENTITY_IMPORT_PANEL_SELECT_TRIGGER_CLASSNAME}
+                  className={cn(ENTITY_IMPORT_PANEL_SELECT_TRIGGER_CLASSNAME)}
                 >
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
-                <SelectContent className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-80')}>
+                <SelectContent
+                  className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-80')}
+                  align="end"
+                >
                   <SelectItem
+                    withIndicator={false}
                     value={ENTITY_IMPORT_ALL_COLUMNS}
                     checkClassName="hidden"
-                    className="px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50 [&_.indicator]:hidden"
+                    className={cn(
+                      'px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50',
+                      '[&_span:first-of-type]:w-full justify-between cursor-pointer'
+                    )}
                   >
                     <span className="flex text-base w-full items-center justify-between gap-6">
                       <span>All</span>
@@ -1401,14 +1452,16 @@ export function ValidatorPanel<TPayload, TResult>({
                   <SelectSeparator className="mx-3 my-1 bg-neutral-200" />
                   {adapter.fields.map((field, index) => (
                     <SelectItem
+                      withIndicator={false}
                       key={field.path}
                       value={field.path}
                       checkClassName="hidden"
                       className={cn(
                         'px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50',
-                        '[&_.indicator]:hidden',
-                        field.path === selectedFieldPath && 'text-neutral-700'
+                        '[&_span:first-of-type]:w-full justify-between cursor-pointer',
+                        { 'text-primary-8': field.path === selectedFieldPath }
                       )}
+                      style={{ maxWidth: 'var(--radix-select-trigger-width)' }}
                     >
                       <span className="flex text-base w-full items-center justify-between gap-6">
                         <span>{index + 1}</span>
@@ -1438,17 +1491,22 @@ export function ValidatorPanel<TPayload, TResult>({
                   >
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
-                  <SelectContent className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-40')}>
+                  <SelectContent
+                    className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-80')}
+                    align="end"
+                  >
                     {session.rows.map((row) => (
                       <SelectItem
+                        withIndicator={false}
                         key={row.id}
                         value={row.id}
                         checkClassName="hidden"
                         className={cn(
                           'px-4 py-2.5 text-sm text-neutral-500 focus:bg-neutral-50',
-                          '[&_.indicator]:hidden',
-                          row.id === session.validatorSelection.rowId && 'text-neutral-700'
+                          '[&_span:first-of-type]:w-full justify-between cursor-pointer',
+                          { 'text-neutral-700': row.id === session.validatorSelection.rowId }
                         )}
+                        style={{ maxWidth: 'var(--radix-select-trigger-width)' }}
                       >
                         <span className="flex w-full items-center justify-between gap-6">
                           <span>{row.rowIndex + 1}</span>

@@ -372,6 +372,12 @@ const ValidationSource = {
   Validator: 'validator',
 } as const;
 
+const AsyncResultBufferKind = {
+  Value: 'value',
+  RemoteState: 'remoteState',
+  Suggestion: 'suggestion',
+} as const;
+
 type TValidationSource = (typeof ValidationSource)[keyof typeof ValidationSource];
 
 function createIdleValidatorSuggestionState(): IValidatorSuggestionState {
@@ -462,14 +468,17 @@ export function useEntityImportController<TPayload, TResult>({
         fieldPath: string;
       } & (
         | {
-            kind: 'value';
+            kind: typeof AsyncResultBufferKind.Value;
             rawValue: string;
             displayValue: string | null;
             parsedValue: unknown;
           }
-        | { kind: 'remoteState'; remoteState: IImportCellState['remoteState'] }
         | {
-            kind: 'suggestion';
+            kind: typeof AsyncResultBufferKind.RemoteState;
+            remoteState: IImportCellState['remoteState'];
+          }
+        | {
+            kind: typeof AsyncResultBufferKind.Suggestion;
             suggestion: ISuggestion;
           }
       )
@@ -510,7 +519,7 @@ export function useEntityImportController<TPayload, TResult>({
     ],
     enabled: Boolean(validatorSuggestionRequest),
     initialPageParam: 0,
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam }: { pageParam: number }) => {
       const req = validatorSuggestionRequestRef.current;
       if (!req) {
         return {
@@ -542,7 +551,7 @@ export function useEntityImportController<TPayload, TResult>({
 
       return { suggestions: [], nextPageParam: null };
     },
-    getNextPageParam: (lastPage) => lastPage.nextPageParam,
+    getNextPageParam: (lastPage: { nextPageParam: number | null }) => lastPage.nextPageParam,
     retry: 1,
   });
 
@@ -585,7 +594,7 @@ export function useEntityImportController<TPayload, TResult>({
             (current) => {
               let session = current;
               for (const entry of entries) {
-                if (entry.kind === 'value') {
+                if (entry.kind === AsyncResultBufferKind.Value) {
                   session = setCellValue(session, {
                     rowId: entry.rowId,
                     fieldPath: entry.fieldPath,
@@ -593,13 +602,13 @@ export function useEntityImportController<TPayload, TResult>({
                     displayValue: entry.displayValue,
                     parsedValue: entry.parsedValue,
                   });
-                } else if (entry.kind === 'remoteState') {
+                } else if (entry.kind === AsyncResultBufferKind.RemoteState) {
                   session = setCellRemoteState(session, {
                     rowId: entry.rowId,
                     fieldPath: entry.fieldPath,
                     remoteState: entry.remoteState,
                   });
-                } else if (entry.kind === 'suggestion') {
+                } else if (entry.kind === AsyncResultBufferKind.Suggestion) {
                   session = resolveCellSuggestion(session, {
                     rowId: entry.rowId,
                     fieldPath: entry.fieldPath,
@@ -941,7 +950,7 @@ export function useEntityImportController<TPayload, TResult>({
             scheduleBufferedAsyncResult({
               rowId,
               fieldPath,
-              kind: 'suggestion',
+              kind: AsyncResultBufferKind.Suggestion,
               suggestion: matchedSuggestion,
             });
           } else {
@@ -967,7 +976,7 @@ export function useEntityImportController<TPayload, TResult>({
           scheduleBufferedAsyncResult({
             rowId,
             fieldPath,
-            kind: 'remoteState',
+            kind: AsyncResultBufferKind.RemoteState,
             remoteState: {
               status:
                 validationResult.status === RemoteValidationStatus.Valid && allowResolvedSuggestion
@@ -1018,7 +1027,7 @@ export function useEntityImportController<TPayload, TResult>({
             scheduleBufferedAsyncResult({
               rowId,
               fieldPath,
-              kind: 'remoteState',
+              kind: AsyncResultBufferKind.RemoteState,
               remoteState: {
                 status: RemoteValidationStatus.Invalid,
                 suggestions: localSuggestions,
@@ -1120,7 +1129,7 @@ export function useEntityImportController<TPayload, TResult>({
         scheduleBufferedAsyncResult({
           rowId,
           fieldPath,
-          kind: 'value',
+          kind: AsyncResultBufferKind.Value,
           rawValue: nextValue.rawValue,
           displayValue: nextValue.displayValue ?? null,
           parsedValue: nextValue.parsedValue,
@@ -1139,7 +1148,7 @@ export function useEntityImportController<TPayload, TResult>({
         scheduleBufferedAsyncResult({
           rowId,
           fieldPath,
-          kind: 'remoteState',
+          kind: AsyncResultBufferKind.RemoteState,
           remoteState: {
             status: RemoteValidationStatus.Invalid,
             suggestions: [],
@@ -1465,7 +1474,7 @@ export function useEntityImportController<TPayload, TResult>({
     }
 
     const remoteSuggestions = validatorSuggestionsInfinite.data.pages.flatMap(
-      (page) => page.suggestions
+      (page: { suggestions: Array<ISuggestion> }) => page.suggestions
     );
     const suggestions = mergeSuggestions(localSuggestions, remoteSuggestions);
     const normalizedValidatorQuery = validatorSuggestionRequest.query.trim();
@@ -2158,7 +2167,7 @@ export function useEntityImportController<TPayload, TResult>({
       }
     },
     onSuccess: () => {},
-    onError: (error) => {
+    onError: (error: unknown) => {
       commit(
         (current) =>
           pushNotification(current, {

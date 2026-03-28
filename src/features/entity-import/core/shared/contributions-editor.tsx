@@ -1,7 +1,6 @@
 'use client';
 
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { RiEditBoxLine } from '@remixicon/react';
+import { RiAddCircleLine, RiDeleteBin7Line, RiDropdownList } from '@remixicon/react';
 import { useCallback, useMemo, useState } from 'react';
 
 import {
@@ -286,7 +285,7 @@ function ContributionPreviewText({
     return (
       <span className="flex items-center gap-1 font-bold text-primary-9 hover:text-primary-7">
         {emptyLabel}
-        <RiEditBoxLine />
+        <RiDropdownList />
       </span>
     );
   }
@@ -605,7 +604,7 @@ export function ContributionsEditor({
                     syncEntries(nextEntries);
                   }}
                 >
-                  <DeleteOutlined />
+                  <RiDeleteBin7Line />
                   Remove
                 </Button>
               </div>
@@ -628,7 +627,7 @@ export function ContributionsEditor({
         className="ml-auto flex gap-2 rounded-full active:text-white"
         onClick={() => syncEntries([...storedEntries, createBlankContribution()])}
       >
-        <PlusOutlined />
+        <RiAddCircleLine />
         Add contribution
       </Button>
     </div>

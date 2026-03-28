@@ -1,4 +1,4 @@
-import { RiFolderUploadFill } from '@remixicon/react';
+import { RiUpload2Line } from '@remixicon/react';
 import { uniqWith } from 'es-toolkit/compat';
 
 import { formatBytes } from '@/utils/format';
@@ -81,7 +81,7 @@ export function getImportFileButtonLabel(field: IAdapterFieldDefinition): ReactN
     <div className="flex flex-col items-center justify-center gap-2">
       <div className="flex items-center justify-center gap-2">
         <span>{DEFAULT_FILE_BUTTON_LABEL}</span>
-        <RiFolderUploadFill className="size-4" />
+        <RiUpload2Line className="size-4" />
       </div>
       <span>{`(${primaryExtension})`}</span>
     </div>
