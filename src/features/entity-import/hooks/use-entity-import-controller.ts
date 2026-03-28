@@ -56,6 +56,7 @@ import {
   createImportSessionState,
   deleteRow as deleteSessionRow,
   dismissNotification,
+  duplicateRow as duplicateSessionRow,
   hydrateSessionRows,
   pushNotification,
   rejectCorrectionDraft,
@@ -1305,6 +1306,15 @@ export function useEntityImportController<TPayload, TResult>({
     [clearValidatorPreview, commit, resetImportRun]
   );
 
+  const onDuplicateRow = useCallback(
+    (rowId: string) => {
+      clearValidatorPreview();
+      resetImportRun();
+      commit((current) => duplicateSessionRow(current, { rowId }));
+    },
+    [clearValidatorPreview, commit, resetImportRun]
+  );
+
   const onApplySuggestion = useCallback(
     (params: Parameters<IEntityImportActions['onApplySuggestion']>[0]) => {
       clearPendingCellSync(params.targetRowId, params.fieldPath);
@@ -1633,6 +1643,7 @@ export function useEntityImportController<TPayload, TResult>({
       },
       onClearRow,
       onDeleteRow,
+      onDuplicateRow,
       onDismissFeatureNotification,
       requestSuggestions: async (params) => {
         requestValidatorSuggestions({ ...params, source: 'validator' });
@@ -1658,6 +1669,7 @@ export function useEntityImportController<TPayload, TResult>({
       loadMoreSuggestions,
       onClearRow,
       onDeleteRow,
+      onDuplicateRow,
       onDismissFeatureNotification,
       onSelectCell,
       onSetValidatorSelection,

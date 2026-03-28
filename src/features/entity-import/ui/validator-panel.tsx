@@ -1486,9 +1486,8 @@ export function ValidatorPanel<TPayload, TResult>({
             align="end"
             className={cn(
               ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
-              'w-[calc(100vw-2rem)] p-3 text-left text-neutral-900 shadow-2xl sm:w-[500px]'
+              'w-[calc(100vw-2rem)] max-w-100 p-3 text-left text-neutral-900 shadow-2xl'
             )}
-            style={{ maxWidth: '500px' }}
             arrowClassName="bg-white"
           >
             <div className="space-y-3">

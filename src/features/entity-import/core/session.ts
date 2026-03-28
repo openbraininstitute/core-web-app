@@ -274,6 +274,41 @@ export function appendEmptyRow(
   return replaceSessionRows(session, nextRows);
 }
 
+export function duplicateRow(
+  session: IImportSessionState,
+  params: { rowId: string }
+): IImportSessionState {
+  const sourceIndex = session.rows.findIndex((row) => row.id === params.rowId);
+  if (sourceIndex === -1) return session;
+
+  const source = session.rows[sourceIndex];
+  const clonedCells = Object.fromEntries(
+    Object.entries(source.cells).map(([key, cell]) => [
+      key,
+      {
+        ...cell,
+        remoteState: cloneRemoteState(cell.remoteState),
+        correctionDraft: null,
+      },
+    ])
+  );
+
+  const clonedRow: IImportRowState = {
+    id: nextRowId(),
+    rowIndex: sourceIndex + 1,
+    rowStatus: source.rowStatus,
+    cells: clonedCells,
+  };
+
+  const nextRows = reindexRows([
+    ...session.rows.slice(0, sourceIndex + 1),
+    clonedRow,
+    ...session.rows.slice(sourceIndex + 1),
+  ]);
+
+  return replaceSessionRows(session, nextRows);
+}
+
 export function clearRow(
   session: IImportSessionState,
   params: {

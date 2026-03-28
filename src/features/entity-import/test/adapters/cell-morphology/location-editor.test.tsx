@@ -26,6 +26,7 @@ function createMockActions(): IEntityImportActions {
     chooseSuggestion: vi.fn(),
     onClearRow: vi.fn(),
     onDeleteRow: vi.fn(),
+    onDuplicateRow: vi.fn(),
     onDismissFeatureNotification: vi.fn(),
     onRejectCorrection: vi.fn(),
     requestSuggestions: vi.fn(async () => {}),

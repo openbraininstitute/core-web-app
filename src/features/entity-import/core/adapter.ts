@@ -404,6 +404,9 @@ export interface IEntityImportActions {
   /** Remove a row from the session and reindex remaining rows. */
   onDeleteRow: (rowId: string) => void;
 
+  /** Clone a row and insert the duplicate immediately after the source row */
+  onDuplicateRow: (rowId: string) => void;
+
   /** Dismiss a session-level notification by its ID. */
   onDismissFeatureNotification: (notificationId: string) => void;
 
