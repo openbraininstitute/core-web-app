@@ -185,7 +185,14 @@ function InlineCellComponent({
     }
 
     const nextRawValue = draftInputValueRef.current;
-    // mark what we're about to commit so the sync effect can recognize it
+
+    // skip if the value hasn't changed, avoids resetting remoteState
+    // (which would wipe a (Valid) status and trigger redundant fetches)
+    if (nextRawValue === getDisplayValue(cell)) {
+      return;
+    }
+
+    // mark what we're about to commit so the sync effect can recognize it.
     lastFlushedValueRef.current = nextRawValue;
 
     actions.onUpdateCellValue({
@@ -193,7 +200,7 @@ function InlineCellComponent({
       fieldPath: field.path,
       rawValue: nextRawValue,
     });
-  }, [actions, field.path, row.id]);
+  }, [actions, cell, field.path, row.id]);
 
   const scheduleDraftCommit = useCallback(
     (nextRawValue: string) => {

@@ -1128,13 +1128,15 @@ export function useEntityImportController<TPayload, TResult>({
     const nextQueryKey = `${rowId}:${fieldPath}:${query.trim()}`;
     if (validatorSelectionQueryKeyRef.current === nextQueryKey) return;
 
-    // when the cell is already resolved (e.g. after the user clicked Apply),
-    // update the query key to prevent future re-triggers but skip the
-    // remote fetch, the suggestion list is already correct
+    // when the cell's remote state has already been resolved by the inline
+    // path or csv background validation, skip the remote fetch, the
+    // suggestions are already in (cell.remoteState) and the validator panel
+    // reads them as a fallback, only re-fetch when the cell is Idle
+    // (never validated) or Pending (in-flight, will land on its own)
     const cell = row.cells[fieldPath];
     if (
-      cell.remoteState.status === RemoteValidationStatus.Valid &&
-      cell.remoteState.selectedSuggestion !== null
+      cell.remoteState.status !== RemoteValidationStatus.Idle &&
+      cell.remoteState.status !== RemoteValidationStatus.Pending
     ) {
       validatorSelectionQueryKeyRef.current = nextQueryKey;
       return;
