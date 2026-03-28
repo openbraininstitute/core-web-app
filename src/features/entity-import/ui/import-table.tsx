@@ -5,11 +5,7 @@ import { RiDeleteRow, RiEraserLine, RiInsertRowBottom, RiMore2Line } from '@remi
 import { Table } from 'antd';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
-import {
-  DependencyState,
-  ENTITY_IMPORT_ALL_COLUMNS,
-  ImportRowResultStatus,
-} from '@/features/entity-import/core/contracts';
+import { DependencyState, ImportRowResultStatus } from '@/features/entity-import/core/contracts';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/core/shared/ui';
 import {
   fieldColumnWidth,
@@ -17,6 +13,7 @@ import {
   ROW_INDEX_COLUMN_WIDTH,
   useImportTableLayout,
 } from '@/features/entity-import/hooks/use-import-table-layout';
+import { useImportTableScroll } from '@/features/entity-import/hooks/use-import-table-scroll';
 import {
   BLOCKED_CONTROL_CLASSNAME,
   INVALID_CONTROL_CLASSNAME,
@@ -72,19 +69,6 @@ function isValidatorPreviewTarget(
   return validatorPreview.rowId === rowId && validatorPreview.fieldPath === fieldPath;
 }
 
-function findScrollableTableBody(tableRef: TableRef | null): HTMLDivElement | null {
-  const element = tableRef?.nativeElement;
-  if (!element) {
-    return null;
-  }
-
-  return (
-    (element.querySelector('.ant-table-body') as HTMLDivElement | null) ??
-    (element.querySelector('.rc-virtual-list-holder') as HTMLDivElement | null) ??
-    (element.querySelector('[class*="virtual-holder"]') as HTMLDivElement | null)
-  );
-}
-
 function resolveImportRowStatusLabel(
   status: IImportRunState['rowResults'][string]['status'] | undefined
 ): string | null {
@@ -116,12 +100,18 @@ export function ImportTable<TPayload, TResult>({
   const previousSelectedCellRef = useRef(session.selectedCell);
   const previousImportRowResultsRef = useRef(importRun.rowResults);
   const previousValidatorPreviewRef = useRef(validatorPreview);
-  const previousRowCountRef = useRef(session.rows.length);
-  const shouldScrollToNewRowRef = useRef(false);
   const tableRef = useRef<TableRef>(null);
 
   const { setWrapperRef, resizeOverrides, beginResize, scrollWidth, scrollHeight } =
     useImportTableLayout({ fields: adapter.fields, tableRef });
+
+  const { scrollToNewRowOnNextCommit } = useImportTableScroll({
+    tableRef,
+    fields: adapter.fields,
+    resizeOverrides,
+    rowCount: session.rows.length,
+    selectedFieldPath: session.validatorSelection.fieldPath,
+  });
 
   useEffect(() => {
     latestSessionRef.current = session;
@@ -139,60 +129,10 @@ export function ImportTable<TPayload, TResult>({
     previousValidatorPreviewRef.current = validatorPreview;
   }, [validatorPreview]);
 
-  useLayoutEffect(() => {
-    if (shouldScrollToNewRowRef.current && session.rows.length > previousRowCountRef.current) {
-      const tableBody = findScrollableTableBody(tableRef.current);
-      if (tableBody) {
-        tableBody.scrollTop = tableBody.scrollHeight;
-      }
-      shouldScrollToNewRowRef.current = false;
-    }
-
-    previousRowCountRef.current = session.rows.length;
-  }, [session.rows.length]);
-
-  useLayoutEffect(() => {
-    const selectedFieldPath = session.validatorSelection.fieldPath;
-    if (!selectedFieldPath || selectedFieldPath === ENTITY_IMPORT_ALL_COLUMNS) {
-      return;
-    }
-
-    const tableBody = findScrollableTableBody(tableRef.current);
-    if (!tableBody) {
-      return;
-    }
-
-    const selectedFieldIndex = adapter.fields.findIndex(
-      (field) => field.path === selectedFieldPath
-    );
-    if (selectedFieldIndex < 0) {
-      return;
-    }
-
-    const targetLeft =
-      ROW_INDEX_COLUMN_WIDTH +
-      adapter.fields
-        .slice(0, selectedFieldIndex)
-        .reduce((width, field) => width + fieldColumnWidth(field, resizeOverrides), 0);
-    const targetRight =
-      targetLeft + fieldColumnWidth(adapter.fields[selectedFieldIndex], resizeOverrides);
-    const viewportLeft = tableBody.scrollLeft;
-    const viewportRight = viewportLeft + tableBody.clientWidth;
-
-    if (targetLeft < viewportLeft) {
-      tableBody.scrollLeft = targetLeft;
-      return;
-    }
-
-    if (targetRight > viewportRight) {
-      tableBody.scrollLeft = Math.max(targetRight - tableBody.clientWidth, 0);
-    }
-  }, [adapter.fields, resizeOverrides, session.validatorSelection.fieldPath]);
-
   const handleAddRow = useCallback(() => {
-    shouldScrollToNewRowRef.current = true;
+    scrollToNewRowOnNextCommit();
     actions.addRow();
-  }, [actions]);
+  }, [actions, scrollToNewRowOnNextCommit]);
 
   const isCellSelected = useCallback(
     (rowId: string, fieldPath: string) => {
