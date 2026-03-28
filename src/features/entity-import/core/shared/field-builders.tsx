@@ -9,13 +9,13 @@ import {
 import { findExactSuggestionMatch } from '@/features/entity-import/core/helpers';
 import { parseContributionCsvValue } from '@/features/entity-import/core/shared/contribution-csv-parser';
 import {
-  type ContributionDraft,
   ContributionSummaryCell,
   ContributionsEditor,
   countRenderableEntries,
   getContributionIssues,
   promoteContributionToPrimary,
   summarizeContributions,
+  type TContributionDraft,
 } from '@/features/entity-import/core/shared/contributions-editor';
 
 import type { ReactNode } from 'react';
@@ -451,7 +451,7 @@ export function makeContributionsImportField({
                   role_label: '',
                   imported_agent_text: rawValue.trim(),
                   issues: parsedContributions.issues,
-                } satisfies ContributionDraft,
+                } satisfies TContributionDraft,
               ]
             : parsedContributions.entries;
 
@@ -479,7 +479,7 @@ export function makeContributionsImportField({
                   role_label: '',
                   imported_agent_text: rawValue.trim(),
                   issues: parsedContributions.issues,
-                } satisfies ContributionDraft,
+                } satisfies TContributionDraft,
               ]
             : parsedContributions.entries;
 
@@ -498,7 +498,7 @@ export function makeContributionsImportField({
         onClick={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
         onPromoteContribution={(contributionId) => {
           const currentEntries = Array.isArray(cell.parsedValue)
-            ? (cell.parsedValue as Array<ContributionDraft>)
+            ? (cell.parsedValue as Array<TContributionDraft>)
             : [];
           const nextEntries = promoteContributionToPrimary(currentEntries, contributionId);
           actions.onSetCustomValue({

@@ -1012,10 +1012,12 @@ function SingleColumnValidatorCard({
                   </div>
                   {suggestionDetails ? (
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          aria-label={`Show details for suggestion ${suggestion.label} (${suggestion.value})`}
+                      <TooltipTrigger
+                        asChild
+                        aria-label={`Show details for suggestion ${suggestion.label} (${suggestion.value})`}
+                      >
+                        {/** biome-ignore lint/a11y/noStaticElementInteractions: parent already a button */}
+                        <div
                           className={cn(
                             ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
                             'size-5.5! shrink-0 self-center bg-white group'
@@ -1026,9 +1028,12 @@ function SingleColumnValidatorCard({
                           onMouseDown={(event) => {
                             event.stopPropagation();
                           }}
+                          onKeyDown={(event) => {
+                            event.stopPropagation();
+                          }}
                         >
                           <RiInfoI className="size-3.5! text-primary-8! group-hover:text-primary-6!" />
-                        </button>
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent
                         side="top"

@@ -1,6 +1,7 @@
 'use client';
 
 import { RiAddCircleLine, RiDeleteBin7Line, RiDropdownList } from '@remixicon/react';
+import { upperFirst } from 'es-toolkit/compat';
 import { useCallback, useMemo, useState } from 'react';
 
 import {
@@ -29,9 +30,9 @@ import type {
 import type { IEntityImportContributionLookupServices } from '@/features/entity-import/core/shared/common-query-services';
 import type { IParsedContributionCsvEntry } from '@/features/entity-import/core/shared/contribution-csv-parser';
 
-export type ContributionDraft = IParsedContributionCsvEntry;
+export type TContributionDraft = IParsedContributionCsvEntry;
 
-type ContributionSelectFilters = Partial<PaginationFilter & SearchFilter> & {
+type TContributionSelectFilters = Partial<PaginationFilter & SearchFilter> & {
   pref_label__ilike?: string | null;
   query?: string | null;
 };
@@ -50,7 +51,7 @@ function createContributionId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `contribution-${Math.random().toString(36).slice(2)}`;
 }
 
-function createBlankContribution(): ContributionDraft {
+function createBlankContribution(): TContributionDraft {
   return {
     id: createContributionId(),
     source_tuple: '',
@@ -63,7 +64,7 @@ function createBlankContribution(): ContributionDraft {
   };
 }
 
-function isRenderableContribution(entry: ContributionDraft): boolean {
+function isRenderableContribution(entry: TContributionDraft): boolean {
   return Boolean(
     entry.agent_type ||
       entry.agent_id ||
@@ -76,7 +77,7 @@ function isRenderableContribution(entry: ContributionDraft): boolean {
   );
 }
 
-export function summarizeContributions(entries: Array<ContributionDraft>): string {
+export function summarizeContributions(entries: Array<TContributionDraft>): string {
   const completedEntries = entries.filter(
     (entry) => entry.agent_type && entry.agent_id && entry.role_id
   );
@@ -89,18 +90,18 @@ export function summarizeContributions(entries: Array<ContributionDraft>): strin
 }
 
 export function countRenderableEntries(
-  entries: Array<ContributionDraft>
-): Array<ContributionDraft> {
+  entries: Array<TContributionDraft>
+): Array<TContributionDraft> {
   return entries.filter(isRenderableContribution);
 }
 
-export function getRenderableContributionEntries(entries: unknown): Array<ContributionDraft> {
+export function getRenderableContributionEntries(entries: unknown): Array<TContributionDraft> {
   if (!Array.isArray(entries)) {
     return [];
   }
 
   return entries
-    .filter((entry): entry is ContributionDraft => Boolean(entry))
+    .filter((entry): entry is TContributionDraft => Boolean(entry))
     .filter(isRenderableContribution);
 }
 
@@ -120,7 +121,7 @@ export function getContributionIssues(entries: unknown): Array<string> {
   });
 }
 
-function clearContributionImportState(entry: ContributionDraft): ContributionDraft {
+function clearContributionImportState(entry: TContributionDraft): TContributionDraft {
   return {
     ...entry,
     imported_agent_text: undefined,
@@ -131,9 +132,9 @@ function clearContributionImportState(entry: ContributionDraft): ContributionDra
 }
 
 export function promoteContributionToPrimary(
-  entries: Array<ContributionDraft>,
+  entries: Array<TContributionDraft>,
   contributionId: string
-): Array<ContributionDraft> {
+): Array<TContributionDraft> {
   const targetIndex = entries.findIndex((entry) => entry.id === contributionId);
   if (targetIndex <= 0) {
     return entries;
@@ -165,7 +166,7 @@ function createSuggestionResponse<T>(
   };
 }
 
-function readPagedFilters(filters: ContributionSelectFilters) {
+function readPagedFilters(filters: TContributionSelectFilters) {
   const page = Math.max(filters.page ?? 1, 1);
   const pageSize = Math.max(filters.page_size ?? 10, 1);
 
@@ -176,7 +177,7 @@ function readPagedFilters(filters: ContributionSelectFilters) {
   };
 }
 
-function readFilterQuery(filters: ContributionSelectFilters, key: 'pref_label__ilike' | 'query') {
+function readFilterQuery(filters: TContributionSelectFilters, key: 'pref_label__ilike' | 'query') {
   const value = filters[key];
   return typeof value === 'string' ? value : '';
 }
@@ -184,7 +185,7 @@ function readFilterQuery(filters: ContributionSelectFilters, key: 'pref_label__i
 async function queryContributionTypes({
   filters,
 }: {
-  filters: ContributionSelectFilters;
+  filters: TContributionSelectFilters;
 }): Promise<EntityCoreResponse<ISuggestion>> {
   const { page, pageSize, offset } = readPagedFilters(filters);
   const pageEntries = CONTRIBUTOR_TYPES.slice(offset, offset + pageSize);
@@ -203,7 +204,7 @@ async function querySuggestionPage<TQueryField extends 'pref_label__ilike' | 'qu
   context,
   querySuggestions,
 }: {
-  filters: ContributionSelectFilters;
+  filters: TContributionSelectFilters;
   searchField: TQueryField;
   context: IEntityImportRuntimeContext;
   querySuggestions?:
@@ -256,7 +257,7 @@ function resolveContributorSearchPage(
   return undefined;
 }
 
-function resolveContributionPreview(entry: ContributionDraft): {
+function resolveContributionPreview(entry: TContributionDraft): {
   label: string;
   roleLabel: string | null;
 } {
@@ -278,7 +279,7 @@ function ContributionPreviewText({
   entry,
   emptyLabel,
 }: {
-  entry: ContributionDraft | null;
+  entry: TContributionDraft | null;
   emptyLabel: string;
 }) {
   if (!entry) {
@@ -291,15 +292,15 @@ function ContributionPreviewText({
   }
 
   const preview = resolveContributionPreview(entry);
-
+  const role = upperFirst(preview.roleLabel?.toLowerCase());
   return (
     <span className="min-w-0 flex-1 text-left">
       <span className="block truncate text-sm font-medium text-neutral-900" title={preview.label}>
         {preview.label}
       </span>
-      {preview.roleLabel ? (
-        <span className="block truncate text-xs text-neutral-500" title={preview.roleLabel}>
-          {preview.roleLabel}
+      {role ? (
+        <span className="block truncate text-xs text-neutral-500" title={role}>
+          {role}
         </span>
       ) : null}
     </span>
@@ -331,7 +332,10 @@ export function ContributionSummaryCell({
         aria-label={triggerLabel}
         variant="ghost"
         size="md"
-        className="h-full min-h-[52px] min-w-0 flex-1 justify-start rounded-none border-0 bg-transparent px-0 py-0 text-left shadow-none hover:bg-neutral-50"
+        className={cn(
+          'h-full min-h-[52px] min-w-0 flex-1 justify-start rounded-none border-0',
+          'bg-transparent px-0 py-0 text-left shadow-none hover:bg-neutral-50'
+        )}
         onClick={onClick}
       >
         <ContributionPreviewText entry={primary} emptyLabel={`Add ${label.toLowerCase()}`} />
@@ -369,11 +373,14 @@ export function ContributionSummaryCell({
                     type="button"
                     aria-label={`Make ${preview.label} primary contribution`}
                     className={cn(
-                      'flex w-full items-start justify-between gap-3 rounded-xl border px-3 py-2 text-left transition',
-                      index === 0
-                        ? 'border-primary-6 bg-primary-0/10'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50',
-                      index > 0 && 'mt-2'
+                      'flex w-full items-start justify-between gap-3',
+                      'rounded-xl border px-3 py-2 text-left transition',
+                      { 'border-primary-6 bg-primary-0/10': index === 0 },
+                      {
+                        'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50':
+                          index !== 0,
+                      },
+                      { 'mt-2': index > 0 }
                     )}
                     onClick={(event) => {
                       event.stopPropagation();
@@ -412,8 +419,8 @@ export function ContributionsEditor({
 }: IContributionsEditorProps) {
   const storedEntries = useMemo(
     () =>
-      (cell.parsedValue as Array<ContributionDraft> | undefined)?.length
-        ? (cell.parsedValue as Array<ContributionDraft>).map((entry) => ({
+      (cell.parsedValue as Array<TContributionDraft> | undefined)?.length
+        ? (cell.parsedValue as Array<TContributionDraft>).map((entry) => ({
             ...entry,
             id: entry.id ?? createContributionId(),
           }))
@@ -422,7 +429,7 @@ export function ContributionsEditor({
   );
 
   const syncEntries = useCallback(
-    (nextEntries: Array<ContributionDraft>) => {
+    (nextEntries: Array<TContributionDraft>) => {
       const rawSummaryEntries = countRenderableEntries(nextEntries);
 
       actions.onSetCustomValue({
@@ -457,7 +464,7 @@ export function ContributionsEditor({
             >
               <div className="w-full shrink-0 space-y-2">
                 <div className="text-sm font-medium text-neutral-700">Contributor type</div>
-                <AsyncSelect<ContributionSelectFilters, ISuggestion>
+                <AsyncSelect<TContributionSelectFilters, ISuggestion>
                   id={contributorTypeId}
                   ariaLabel={`Contributor type row ${row.rowIndex + 1}`}
                   dataKey={['entity-import', 'contributions', 'types']}
@@ -493,7 +500,7 @@ export function ContributionsEditor({
 
               <div className="min-w-0 w-full space-y-2">
                 <div className="text-sm font-medium text-neutral-700">Contributor</div>
-                <AsyncSelect<ContributionSelectFilters, ISuggestion>
+                <AsyncSelect<TContributionSelectFilters, ISuggestion>
                   id={contributorInputId}
                   ariaLabel={`Contributor row ${row.rowIndex + 1}`}
                   dataKey={
@@ -543,7 +550,7 @@ export function ContributionsEditor({
 
               <div className="min-w-0 w-full space-y-2">
                 <div className="text-sm font-medium text-neutral-700">Role</div>
-                <AsyncSelect<ContributionSelectFilters, ISuggestion>
+                <AsyncSelect<TContributionSelectFilters, ISuggestion>
                   id={roleInputId}
                   ariaLabel={`Role row ${row.rowIndex + 1}`}
                   dataKey={[

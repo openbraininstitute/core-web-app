@@ -265,7 +265,10 @@ export function ImportTable<TPayload, TResult>({
                 <Badge
                   variant="outline"
                   rounded
-                  className="shrink-0 border-transparent bg-primary-8 px-2 py-0.5 text-xs font-semibold leading-none text-white shadow-none"
+                  className={cn(
+                    'shrink-0 border-transparent bg-primary-5 px-2 py-0.5',
+                    'text-[8px] font-semibold leading-none text-white shadow-none'
+                  )}
                 >
                   Required
                 </Badge>
