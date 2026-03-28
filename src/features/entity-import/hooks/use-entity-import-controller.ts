@@ -1128,6 +1128,18 @@ export function useEntityImportController<TPayload, TResult>({
     const nextQueryKey = `${rowId}:${fieldPath}:${query.trim()}`;
     if (validatorSelectionQueryKeyRef.current === nextQueryKey) return;
 
+    // when the cell is already resolved (e.g. after the user clicked Apply),
+    // update the query key to prevent future re-triggers but skip the
+    // remote fetch, the suggestion list is already correct
+    const cell = row.cells[fieldPath];
+    if (
+      cell.remoteState.status === RemoteValidationStatus.Valid &&
+      cell.remoteState.selectedSuggestion !== null
+    ) {
+      validatorSelectionQueryKeyRef.current = nextQueryKey;
+      return;
+    }
+
     validatorSelectionQueryKeyRef.current = nextQueryKey;
     requestValidatorSuggestions({
       rowId,
@@ -1138,7 +1150,7 @@ export function useEntityImportController<TPayload, TResult>({
   }, [
     adapter.fields,
     session.validatorSelection,
-    // We intentionally depend on session.rows to pick up rawValue changes
+    // we intentionally depend on session.rows to pick up rawValue changes
     // from inline edits that should refresh the validator panel.
     session.rows,
     clearSuggestions,
@@ -1148,7 +1160,7 @@ export function useEntityImportController<TPayload, TResult>({
   const selectCell = useCallback(
     ({ rowId, fieldPath }: { rowId: string; fieldPath: string }) => {
       clearValidatorPreview();
-      // Only commit the selection. The effect above handles suggestion sync.
+      // only commit the selection, the effect above handles suggestion sync.
       commit((current) => selectCellState(current, { rowId, fieldPath }), {
         validate: false,
       });
