@@ -1445,106 +1445,120 @@ export function ValidatorPanel<TPayload, TResult>({
         </div>
       </div>
 
-      <Tooltip
-        open
-        key={
-          showImportFailureTooltip
-            ? `import-failures-${importRun.failedRowCount}`
-            : 'import-failures-idle'
-        }
-        defaultOpen={showImportFailureTooltip}
-      >
-        <TooltipTrigger asChild>
-          <Button
-            rounded
-            type="button"
-            variant="outline"
-            size="lg"
-            className={cn(
-              'relative mt-auto w-full overflow-hidden border bg-white shadow-none',
-              SUBMIT_BUTTON_CHROME_CLASSNAME[submitButtonTone]
-            )}
-            style={submitButtonStyle}
-            data-import-run-tone={submitButtonTone}
-            disabled={!session.summary.canSubmit || isSubmitting || hasPendingValidatorPreview}
-            onClick={() => void actions.onSubmitRows()}
+      <div className="mt-auto flex items-center gap-1">
+        {importRun.phase === ImportRunPhase.Completed && importRun.failureCards.length > 0 && (
+          <Tooltip
+            open={showImportFailureTooltip}
+            onOpenChange={(open) => setFailureTooltipDismissed(!open)}
           >
+            <TooltipTrigger asChild>
+              <Button
+                rounded
+                type="button"
+                variant="icon"
+                size="lg"
+                aria-label="Show import failures"
+                className={cn(
+                  'flex size-10 shrink-0 items-center justify-center rounded-full',
+                  'border border-destructive/80 bg-white text-destructive transition',
+                  'hover:border-destructive hover:bg-destructive/20 size-12!'
+                )}
+                onClick={() => setFailureTooltipDismissed((d) => !d)}
+              >
+                <RiInfoI className="text-base" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              data-testid="import-run-failure-tooltip"
+              side="top"
+              align="end"
+              className={cn(
+                ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
+                'w-[calc(100vw-2rem)] max-w-100 p-3 text-left text-neutral-900 shadow-2xl'
+              )}
+              arrowClassName="bg-white"
+            >
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-primary-9">
+                      {resolveImportFailureSummary(importRun)}
+                    </p>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Review the failing rows below, fix the issues, then retry the import.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Dismiss failure summary"
+                    className="shrink-0 rounded-full p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600"
+                    onClick={() => setFailureTooltipDismissed(true)}
+                  >
+                    <RiCloseLine className="size-4" />
+                  </button>
+                </div>
+                <div
+                  data-testid="import-run-failure-list"
+                  className="max-h-72 space-y-2 overflow-y-auto secondary-scrollbar pr-1"
+                >
+                  {importRun.failureCards.map((failure) => (
+                    <Card
+                      key={failure.rowId}
+                      className="border border-rose-200 bg-rose-50 shadow-none p-0!"
+                    >
+                      <CardContent className="px-3 py-3">
+                        <p className="text-sm font-semibold text-rose-900">
+                          Row {failure.rowNumber}
+                        </p>
+                        <p className="mt-1 text-sm leading-5 text-rose-900/90">{failure.message}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        )}
+        <Button
+          rounded
+          type="button"
+          variant="outline"
+          size="lg"
+          className={cn(
+            'relative w-full min-w-0 flex-1 overflow-hidden border bg-white shadow-none',
+            SUBMIT_BUTTON_CHROME_CLASSNAME[submitButtonTone]
+          )}
+          style={submitButtonStyle}
+          data-import-run-tone={submitButtonTone}
+          disabled={!session.summary.canSubmit || isSubmitting || hasPendingValidatorPreview}
+          onClick={() => void actions.onSubmitRows()}
+        >
+          <span
+            aria-hidden
+            className={cn(
+              'pointer-events-none absolute inset-0 rounded-full transition-[clip-path] duration-300 ease-out',
+              resolveSubmitButtonFillClassName(submitButtonTone)
+            )}
+            style={{
+              clipPath: `inset(0 ${Math.max(0, 100 - submitProgressPercent)}% 0 0 round 9999px)`,
+            }}
+          />
+          <span className="relative z-10 flex w-full items-center justify-center">
+            <span className="text-primary-9">{submitButtonLabel}</span>
             <span
               aria-hidden
-              className={cn(
-                'pointer-events-none absolute inset-0 rounded-full transition-[clip-path] duration-300 ease-out',
-                resolveSubmitButtonFillClassName(submitButtonTone)
-              )}
+              className="pointer-events-none absolute inset-0 overflow-hidden"
               style={{
-                clipPath: `inset(0 ${Math.max(0, 100 - submitProgressPercent)}% 0 0 round 9999px)`,
+                clipPath: `inset(0 ${Math.max(0, 100 - submitProgressPercent)}% 0 0)`,
               }}
-            />
-            <span className="relative z-10 flex w-full items-center justify-center">
-              <span className="text-primary-9">{submitButtonLabel}</span>
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 overflow-hidden"
-                style={{
-                  clipPath: `inset(0 ${Math.max(0, 100 - submitProgressPercent)}% 0 0)`,
-                }}
-              >
-                <span className="flex h-full w-full items-center justify-center text-white">
-                  {submitButtonLabel}
-                </span>
+            >
+              <span className="flex h-full w-full items-center justify-center text-white">
+                {submitButtonLabel}
               </span>
             </span>
-          </Button>
-        </TooltipTrigger>
-        {showImportFailureTooltip ? (
-          <TooltipContent
-            data-testid="import-run-failure-tooltip"
-            side="top"
-            align="end"
-            className={cn(
-              ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
-              'w-[calc(100vw-2rem)] max-w-100 p-3 text-left text-neutral-900 shadow-2xl'
-            )}
-            arrowClassName="bg-white"
-          >
-            <div className="space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-sm font-semibold text-primary-9">
-                    {resolveImportFailureSummary(importRun)}
-                  </p>
-                  <p className="mt-1 text-xs text-neutral-500">
-                    Review the failing rows below, fix the issues, then retry the import.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  aria-label="Dismiss failure summary"
-                  className="shrink-0 rounded-full p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600"
-                  onClick={() => setFailureTooltipDismissed(true)}
-                >
-                  <RiCloseLine className="size-4" />
-                </button>
-              </div>
-              <div
-                data-testid="import-run-failure-list"
-                className="max-h-72 space-y-2 overflow-y-auto secondary-scrollbar pr-1"
-              >
-                {importRun.failureCards.map((failure) => (
-                  <Card
-                    key={failure.rowId}
-                    className="border border-rose-200 bg-rose-50 shadow-none p-0!"
-                  >
-                    <CardContent className="px-3 py-3">
-                      <p className="text-sm font-semibold text-rose-900">Row {failure.rowNumber}</p>
-                      <p className="mt-1 text-sm leading-5 text-rose-900/90">{failure.message}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </TooltipContent>
-        ) : null}
-      </Tooltip>
+          </span>
+        </Button>
+      </div>
     </aside>
   );
 }
