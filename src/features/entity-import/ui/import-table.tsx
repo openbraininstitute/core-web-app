@@ -3,15 +3,7 @@
 import { CheckCircleFilled, CloseCircleFilled, LoadingOutlined } from '@ant-design/icons';
 import { RiDeleteRow, RiEraserLine, RiInsertRowBottom, RiMore2Line } from '@remixicon/react';
 import { Table } from 'antd';
-import {
-  type MouseEvent as ReactMouseEvent,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
   DependencyState,
@@ -19,6 +11,12 @@ import {
   ImportRowResultStatus,
 } from '@/features/entity-import/core/contracts';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/core/shared/ui';
+import {
+  fieldColumnWidth,
+  ROW_ACTIONS_COLUMN_WIDTH,
+  ROW_INDEX_COLUMN_WIDTH,
+  useImportTableLayout,
+} from '@/features/entity-import/hooks/use-import-table-layout';
 import {
   BLOCKED_CONTROL_CLASSNAME,
   INVALID_CONTROL_CLASSNAME,
@@ -31,7 +29,6 @@ import {
   TableCellUiStatus,
   TableRowUiStatus,
 } from '@/features/entity-import/ui/status';
-import useResizeObserver from '@/hooks/useResizeObserver';
 import { Badge } from '@/ui/molecules/badge';
 import {
   DropdownMenu,
@@ -49,12 +46,6 @@ import type {
   IValidatorPreviewState,
 } from '@/features/entity-import/core/adapter';
 import type { IImportRunState, IImportSessionState } from '@/features/entity-import/core/contracts';
-
-const DEFAULT_FIELD_COLUMN_WIDTH = 200;
-const DEFAULT_TABLE_BODY_SCROLL_HEIGHT = 1;
-const MIN_ROW_COUNT_FOR_VIRTUAL_TABLE = 20;
-const ROW_INDEX_COLUMN_WIDTH = 68;
-const ROW_ACTIONS_COLUMN_WIDTH = 72;
 
 interface ImportTableProps<TPayload, TResult> {
   adapter: IEntityImportAdapter<TPayload, TResult>;
@@ -94,13 +85,6 @@ function findScrollableTableBody(tableRef: TableRef | null): HTMLDivElement | nu
   );
 }
 
-function fieldColumnWidth(
-  field: IImportSessionState['fields'][number],
-  overrides: Record<string, number>
-): number {
-  return overrides[field.path] ?? field.columnWidth ?? DEFAULT_FIELD_COLUMN_WIDTH;
-}
-
 function resolveImportRowStatusLabel(
   status: IImportRunState['rowResults'][string]['status'] | undefined
 ): string | null {
@@ -127,7 +111,6 @@ export function ImportTable<TPayload, TResult>({
   importRun,
   validatorPreview,
 }: ImportTableProps<TPayload, TResult>) {
-  const shouldUseVirtualTable = session.rows.length > MIN_ROW_COUNT_FOR_VIRTUAL_TABLE;
   const selectedCell = session.selectedCell;
   const latestSessionRef = useRef(session);
   const previousSelectedCellRef = useRef(session.selectedCell);
@@ -136,22 +119,13 @@ export function ImportTable<TPayload, TResult>({
   const previousRowCountRef = useRef(session.rows.length);
   const shouldScrollToNewRowRef = useRef(false);
   const tableRef = useRef<TableRef>(null);
-  const [resizeOverrides, setResizeOverrides] = useState<Record<string, number>>({});
-  const [containerHeight, setContainerHeight] = useState(0);
-  const [tableChromeHeights, setTableChromeHeights] = useState({
-    footerHeight: 0,
-    headerHeight: 0,
-  });
-  const [wrapperElement, setWrapperElement] = useState<HTMLDivElement | null>(null);
-  const resizeOverridesRef = useRef(resizeOverrides);
+
+  const { setWrapperRef, resizeOverrides, beginResize, scrollWidth, scrollHeight } =
+    useImportTableLayout({ fields: adapter.fields, tableRef });
 
   useEffect(() => {
     latestSessionRef.current = session;
   }, [session]);
-
-  useEffect(() => {
-    resizeOverridesRef.current = resizeOverrides;
-  }, [resizeOverrides]);
 
   useLayoutEffect(() => {
     previousSelectedCellRef.current = selectedCell;
@@ -164,56 +138,6 @@ export function ImportTable<TPayload, TResult>({
   useLayoutEffect(() => {
     previousValidatorPreviewRef.current = validatorPreview;
   }, [validatorPreview]);
-
-  const syncContainerHeight = useCallback(
-    (target?: HTMLElement | null) => {
-      const element = target ?? wrapperElement;
-      if (!element) {
-        return;
-      }
-
-      const nextHeight = element.getBoundingClientRect().height;
-      setContainerHeight((current) => (current === nextHeight ? current : nextHeight));
-    },
-    [wrapperElement]
-  );
-
-  const syncTableChromeHeights = useCallback(() => {
-    const nativeElement = tableRef.current?.nativeElement;
-    if (!nativeElement) {
-      return;
-    }
-
-    const headerHeight =
-      nativeElement.querySelector('.ant-table-header, .ant-table-thead')?.getBoundingClientRect()
-        .height ?? 0;
-    const footerHeight =
-      nativeElement.querySelector('.ant-table-footer')?.getBoundingClientRect().height ?? 0;
-
-    setTableChromeHeights((current) =>
-      current.headerHeight === headerHeight && current.footerHeight === footerHeight
-        ? current
-        : {
-            footerHeight,
-            headerHeight,
-          }
-    );
-  }, []);
-
-  const setWrapperRef = useCallback(
-    (element: HTMLDivElement | null) => {
-      setWrapperElement(element);
-      if (!element) {
-        return;
-      }
-
-      syncContainerHeight(element);
-      requestAnimationFrame(() => {
-        syncTableChromeHeights();
-      });
-    },
-    [syncContainerHeight, syncTableChromeHeights]
-  );
 
   useLayoutEffect(() => {
     if (shouldScrollToNewRowRef.current && session.rows.length > previousRowCountRef.current) {
@@ -265,56 +189,10 @@ export function ImportTable<TPayload, TResult>({
     }
   }, [adapter.fields, resizeOverrides, session.validatorSelection.fieldPath]);
 
-  useResizeObserver({
-    element: wrapperElement ?? undefined,
-    callback: (target) => {
-      syncContainerHeight(target);
-      syncTableChromeHeights();
-    },
-  });
-
   const handleAddRow = useCallback(() => {
     shouldScrollToNewRowRef.current = true;
     actions.addRow();
   }, [actions]);
-
-  const beginResize = useCallback(
-    (event: ReactMouseEvent, fieldPath: string) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const field = adapter.fields.find((f) => f.path === fieldPath);
-      const startX = event.clientX;
-      const startWidth =
-        resizeOverridesRef.current[fieldPath] ?? field?.columnWidth ?? DEFAULT_FIELD_COLUMN_WIDTH;
-
-      const onMove = (moveEvent: MouseEvent) => {
-        const next = Math.max(64, startWidth + moveEvent.clientX - startX);
-        setResizeOverrides((current) => ({ ...current, [fieldPath]: next }));
-      };
-
-      const onUp = () => {
-        window.removeEventListener('mousemove', onMove);
-        window.removeEventListener('mouseup', onUp);
-      };
-
-      window.addEventListener('mousemove', onMove);
-      window.addEventListener('mouseup', onUp);
-    },
-    [adapter.fields]
-  );
-
-  const scrollWidth = useMemo(() => {
-    const fieldsWidth = adapter.fields.reduce(
-      (acc, field) => acc + fieldColumnWidth(field, resizeOverrides),
-      0
-    );
-    return ROW_INDEX_COLUMN_WIDTH + fieldsWidth + ROW_ACTIONS_COLUMN_WIDTH;
-  }, [adapter.fields, resizeOverrides]);
-
-  const scrollHeight = Math.max(
-    containerHeight - tableChromeHeights.headerHeight - tableChromeHeights.footerHeight,
-    DEFAULT_TABLE_BODY_SCROLL_HEIGHT
-  );
 
   const isCellSelected = useCallback(
     (rowId: string, fieldPath: string) => {
@@ -439,7 +317,7 @@ export function ImportTable<TPayload, TResult>({
 
         return {
           title: (
-            <div className="relative -mx-2 flex min-h-9 w-full min-w-0 items-center gap-1.5 overflow-visible px-2 pr-3">
+            <div className="-mx-2 flex min-h-9 w-full min-w-0 items-center gap-1.5 px-2">
               <span className="min-w-0 shrink truncate text-sm font-semibold uppercase tracking-wide text-neutral-4">
                 {field.label}
               </span>
@@ -456,7 +334,7 @@ export function ImportTable<TPayload, TResult>({
                 type="button"
                 tabIndex={0}
                 className={cn(
-                  'absolute top-0 right-0 z-10 h-full w-3 translate-x-1/2',
+                  'absolute top-1/2 right-0 z-10 -translate-y-1/2 translate-x-1/2 w-1.5 h-[calc(100%-16px)]',
                   'cursor-col-resize rounded-sm border-0 bg-transparent p-0 hover:bg-neutral-200/80'
                 )}
                 aria-label={`Resize ${field.label} column`}
@@ -464,6 +342,9 @@ export function ImportTable<TPayload, TResult>({
               />
             </div>
           ),
+          onHeaderCell: () => ({
+            className: 'relative! overflow-visible!',
+          }),
           key: field.path,
           width,
           ellipsis: false,
@@ -616,7 +497,6 @@ export function ImportTable<TPayload, TResult>({
         size="small"
         pagination={false}
         tableLayout="fixed"
-        virtual={shouldUseVirtualTable}
         columns={columns}
         dataSource={session.rows}
         scroll={{ x: scrollWidth, y: scrollHeight, scrollToFirstRowOnChange: false }}
