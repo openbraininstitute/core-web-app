@@ -3,7 +3,7 @@
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
-import { memo, useCallback, useEffect, useId, useRef, useState, useTransition } from 'react';
+import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import {
   CellStatus,
@@ -129,19 +129,43 @@ function InlineCellComponent({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const draftCommitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const displayValue = getDisplayValue(cell);
-  const latestCommittedValueRef = useRef(displayValue);
-  const draftInputValueRef = useRef(displayValue);
   const hasStatusBadge = shouldDisplayCellStatusBadge(cell);
+
+  // the input is (uncontrolled-ish), local state (draftInputValue) drives
+  // the input's (value) prop so keystrokes are reflected immediately. A
+  // 250ms debounce commits the draft to the session via (updateCellValue)
+  //
+  // the tricky part is the sync effect that reconciles the local draft with
+  // the committed cell value. two rules:
+  //
+  // 1. when we commit a value (via the debounce), the session will update
+  //    and `displayValue` will change to match what we sent. We must NOT
+  //    reset the draft in that case — the user may have typed more since.
+  //
+  // 2. when an external source changes the cell (csv upload, suggestion
+  //    resolution, validator apply, clear row), (displayValue) will differ
+  //    from what we last committed. we must reset the draft to pick up the
+  //    external change
+  //
+  // `lastFlushedValueRef` tracks what we last sent to (updateCellValue)
+  // the sync effect compares incoming `displayValue` against it to
+  // distinguish case 1 from case 2
+
   const [draftInputValue, setDraftInputValue] = useState(displayValue);
-  const [, startCellUpdateTransition] = useTransition();
-  const hasValidatorPreview =
-    validatorPreview !== null &&
-    (validatorPreview.rawValue !== cell.rawValue ||
-      (validatorPreview.displayValue ?? null) !== (cell.displayValue ?? null) ||
-      !Object.is(validatorPreview.parsedValue, cell.parsedValue));
+  const draftInputValueRef = useRef(displayValue);
+  const lastFlushedValueRef = useRef<string | null>(null);
 
   useEffect(() => {
-    latestCommittedValueRef.current = displayValue;
+    // if the incoming displayValue matches what we last flushed, this is
+    // our own commit landing — don't overwrite the draft (the user may
+    // have typed ahead). Just clear the flushed marker
+    if (lastFlushedValueRef.current !== null && displayValue === lastFlushedValueRef.current) {
+      lastFlushedValueRef.current = null;
+      return;
+    }
+
+    // external change, reset the draft to the new committed value
+    lastFlushedValueRef.current = null;
     draftInputValueRef.current = displayValue;
     setDraftInputValue(displayValue);
   }, [displayValue]);
@@ -161,16 +185,13 @@ function InlineCellComponent({
     }
 
     const nextRawValue = draftInputValueRef.current;
-    if (nextRawValue === latestCommittedValueRef.current) {
-      return;
-    }
+    // mark what we're about to commit so the sync effect can recognize it
+    lastFlushedValueRef.current = nextRawValue;
 
-    startCellUpdateTransition(() => {
-      actions.updateCellValue({
-        rowId: row.id,
-        fieldPath: field.path,
-        rawValue: nextRawValue,
-      });
+    actions.updateCellValue({
+      rowId: row.id,
+      fieldPath: field.path,
+      rawValue: nextRawValue,
     });
   }, [actions, field.path, row.id]);
 
@@ -192,6 +213,12 @@ function InlineCellComponent({
   const selectCell = useCallback(() => {
     actions.selectCell({ rowId: row.id, fieldPath: field.path });
   }, [actions, field.path, row.id]);
+
+  const hasValidatorPreview =
+    validatorPreview !== null &&
+    (validatorPreview.rawValue !== cell.rawValue ||
+      (validatorPreview.displayValue ?? null) !== (cell.displayValue ?? null) ||
+      !Object.is(validatorPreview.parsedValue, cell.parsedValue));
 
   if (
     field.tableRenderer &&
@@ -418,7 +445,7 @@ function InlineCellComponent({
             'shadow-none hover:bg-transparent hover:text-inherit',
             getControlClassName(cell, selected)
           )}
-          onClick={(event) => {
+          onClick={() => {
             selectCell();
             fileInputRef.current?.click();
           }}
@@ -474,7 +501,7 @@ function InlineCellComponent({
           disabled={cell.dependencyState === DependencyState.Blocked}
           placeholder={field.placeholder}
           value={draftInputValue}
-          onClick={(event) => {
+          onClick={() => {
             selectCell();
           }}
           onChange={(event) => {
@@ -522,7 +549,7 @@ function InlineCellComponent({
           }}
           format="DD/MM/YYYY"
           maxDate={dayjs().endOf('day')}
-          onClick={(event) => {
+          onClick={() => {
             selectCell();
           }}
           onChange={(date) => {
@@ -557,7 +584,7 @@ function InlineCellComponent({
           disabled={cell.dependencyState === DependencyState.Blocked}
           placeholder={field.placeholder}
           value={draftInputValue}
-          onClick={(event) => {
+          onClick={() => {
             selectCell();
           }}
           onChange={(event) => {

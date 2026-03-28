@@ -1159,8 +1159,16 @@ export function useEntityImportController<TPayload, TResult>({
 
   const selectCell = useCallback(
     ({ rowId, fieldPath }: { rowId: string; fieldPath: string }) => {
+      const current = sessionRef.current;
+      // skip if the cell is already selected, avoids clearing an active
+      // validator preview (e.g. when tabbing between inputs within a
+      // compound field like LocationEditor)
+      if (current.selectedCell?.rowId === rowId && current.selectedCell?.fieldPath === fieldPath) {
+        return;
+      }
+
       clearValidatorPreview();
-      // only commit the selection, the effect above handles suggestion sync.
+      // only commit the selection, the effect above handles suggestion sync
       commit((current) => selectCellState(current, { rowId, fieldPath }), {
         validate: false,
       });

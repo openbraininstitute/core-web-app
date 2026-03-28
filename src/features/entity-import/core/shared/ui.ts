@@ -11,7 +11,7 @@ export const ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME = cn(
 );
 
 export const ENTITY_IMPORT_PANEL_SELECT_TRIGGER_CLASSNAME =
-  'h-8 min-w-20 justify-self-end rounded-full border-2 border-gray-200 bg-transparent text-left text-sm font-medium text-primary-9 shadow-none data-placeholder:text-gray-400 [&_svg]:text-[#0b4dbb] [&_svg]:opacity-100';
+  'h-8 w-[6.55rem] justify-self-end justify-between rounded-full border-2 border-gray-200 bg-transparent text-left text-sm font-medium text-primary-9 shadow-none data-placeholder:text-gray-400 [&_svg]:text-[#0b4dbb] [&_svg]:opacity-100';
 
 export const ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME = cn(
   ENTITY_IMPORT_POPOVER_Z_CLASS,
