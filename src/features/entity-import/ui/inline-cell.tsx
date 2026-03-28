@@ -188,7 +188,7 @@ function InlineCellComponent({
     // mark what we're about to commit so the sync effect can recognize it
     lastFlushedValueRef.current = nextRawValue;
 
-    actions.updateCellValue({
+    actions.onUpdateCellValue({
       rowId: row.id,
       fieldPath: field.path,
       rawValue: nextRawValue,
@@ -211,7 +211,7 @@ function InlineCellComponent({
   );
 
   const selectCell = useCallback(() => {
-    actions.selectCell({ rowId: row.id, fieldPath: field.path });
+    actions.onSelectCell({ rowId: row.id, fieldPath: field.path });
   }, [actions, field.path, row.id]);
 
   const hasValidatorPreview =
@@ -302,7 +302,7 @@ function InlineCellComponent({
               aria-label={`Accept suggested ${field.label} row ${row.rowIndex + 1}`}
               onClick={(event) => {
                 event.stopPropagation();
-                actions.acceptCorrection({ rowId: row.id, fieldPath: field.path });
+                actions.onAcceptCorrection({ rowId: row.id, fieldPath: field.path });
               }}
             >
               <CheckOutlined className="text-green-main! group-hover:text-white!" />
@@ -318,7 +318,7 @@ function InlineCellComponent({
               aria-label={`Reject suggested ${field.label} row ${row.rowIndex + 1}`}
               onClick={(event) => {
                 event.stopPropagation();
-                actions.rejectCorrection({ rowId: row.id, fieldPath: field.path });
+                actions.onRejectCorrection({ rowId: row.id, fieldPath: field.path });
               }}
             >
               <CloseOutlined className="text-destructive! group-hover:text-white!" />
@@ -357,7 +357,7 @@ function InlineCellComponent({
           cell={cell}
           fieldLabel={field.label}
           rowIndex={row.rowIndex + 1}
-          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+          onSelect={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
         />
       </div>
     );
@@ -376,7 +376,7 @@ function InlineCellComponent({
             }
           }}
           onValueChange={(value) =>
-            actions.updateCellValue({
+            actions.onUpdateCellValue({
               rowId: row.id,
               fieldPath: field.path,
               rawValue: value,
@@ -424,7 +424,7 @@ function InlineCellComponent({
           cell={cell}
           fieldLabel={field.label}
           rowIndex={row.rowIndex + 1}
-          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+          onSelect={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
         />
       </div>
     );
@@ -462,7 +462,7 @@ function InlineCellComponent({
           className="sr-only"
           onChange={(event) => {
             const files = Array.from(event.currentTarget.files ?? []);
-            actions.setFileValue({
+            actions.onSetFileValue({
               rowId: row.id,
               fieldPath: field.path,
               files,
@@ -474,7 +474,7 @@ function InlineCellComponent({
           cell={cell}
           fieldLabel={field.label}
           rowIndex={row.rowIndex + 1}
-          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+          onSelect={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
         />
       </div>
     );
@@ -515,7 +515,7 @@ function InlineCellComponent({
           cell={cell}
           fieldLabel={field.label}
           rowIndex={row.rowIndex + 1}
-          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+          onSelect={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
         />
       </div>
     );
@@ -553,7 +553,7 @@ function InlineCellComponent({
             selectCell();
           }}
           onChange={(date) => {
-            actions.updateCellValue({
+            actions.onUpdateCellValue({
               rowId: row.id,
               fieldPath: field.path,
               rawValue: importDatePickerChangeToRawValue(date),
@@ -564,7 +564,7 @@ function InlineCellComponent({
           cell={cell}
           fieldLabel={field.label}
           rowIndex={row.rowIndex + 1}
-          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+          onSelect={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
         />
       </div>
     );
@@ -598,7 +598,7 @@ function InlineCellComponent({
           cell={cell}
           fieldLabel={field.label}
           rowIndex={row.rowIndex + 1}
-          onSelect={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+          onSelect={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
         />
       </div>
     </div>

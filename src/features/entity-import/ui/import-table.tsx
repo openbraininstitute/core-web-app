@@ -131,7 +131,7 @@ export function ImportTable<TPayload, TResult>({
 
   const handleAddRow = useCallback(() => {
     scrollToNewRowOnNextCommit();
-    actions.addRow();
+    actions.onAddRow();
   }, [actions, scrollToNewRowOnNextCommit]);
 
   const isCellSelected = useCallback(
@@ -391,7 +391,7 @@ export function ImportTable<TPayload, TResult>({
                 <DropdownMenuItem
                   aria-label={`Clear row ${row.rowIndex + 1}`}
                   className="text-primary-9 h-11! font-medium text-sm cursor-pointer rounded-2xl"
-                  onSelect={() => actions.clearRow(row.id)}
+                  onSelect={() => actions.onClearRow(row.id)}
                 >
                   <RiEraserLine aria-hidden className="size-4 shrink-0 text-primary-9" />
                   Clear row
@@ -399,7 +399,7 @@ export function ImportTable<TPayload, TResult>({
                 <DropdownMenuItem
                   aria-label={`Delete row ${row.rowIndex + 1}`}
                   className="text-primary-9 h-11! font-medium text-sm cursor-pointer rounded-2xl"
-                  onSelect={() => actions.deleteRow(row.id)}
+                  onSelect={() => actions.onDeleteRow(row.id)}
                 >
                   <RiDeleteRow aria-hidden className="size-4 shrink-0" />
                   Delete row

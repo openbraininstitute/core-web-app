@@ -27,7 +27,7 @@ import {
 import {
   type IEntityImportAdapter,
   type IValidatorSuggestionDetailsArgs,
-  ValidatorManualApplyMode,
+  ValidatorWriteStrategy,
 } from '@/features/entity-import/core/adapter';
 import {
   type IImportRowState,
@@ -267,7 +267,6 @@ export function createCellMorphologyImportAdapter({
         csv: {
           hydrateCell: ({ rawValue }) => {
             const parsedLocation = parseLocationCsvValue(rawValue);
-
             return {
               rawValue: parsedLocation.rawValue,
               parsedValue: parsedLocation.parsedValue,
@@ -275,7 +274,7 @@ export function createCellMorphologyImportAdapter({
           },
         },
         getValidationIssues: ({ cell }) => parseLocationCsvValue(cell.rawValue).issues,
-        validatorManualApplyMode: ValidatorManualApplyMode.Stage,
+        writeStrategy: ValidatorWriteStrategy.Stage,
         tableRenderer: ({ cell, row, field, actions, validatorPreview }) => (
           <LocationEditor
             cell={cell}

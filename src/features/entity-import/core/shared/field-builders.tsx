@@ -1,6 +1,6 @@
 'use client';
 
-import { ValidatorManualApplyMode } from '@/features/entity-import/core/adapter';
+import { ValidatorWriteStrategy } from '@/features/entity-import/core/adapter';
 import {
   ImportInputType,
   type ISuggestion,
@@ -364,7 +364,7 @@ export function makeLicenseImportField({
           querySuggestions: services.queryLicense,
         })({ query, context }),
     },
-    validatorManualApplyMode: ValidatorManualApplyMode.Commit,
+    writeStrategy: ValidatorWriteStrategy.Commit,
     columnWidth,
   };
 }
@@ -495,13 +495,13 @@ export function makeContributionsImportField({
         label={field.label}
         triggerLabel={`${field.label} row ${row.rowIndex + 1}`}
         entries={cell.parsedValue}
-        onClick={() => actions.selectCell({ rowId: row.id, fieldPath: field.path })}
+        onClick={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
         onPromoteContribution={(contributionId) => {
           const currentEntries = Array.isArray(cell.parsedValue)
             ? (cell.parsedValue as Array<ContributionDraft>)
             : [];
           const nextEntries = promoteContributionToPrimary(currentEntries, contributionId);
-          actions.setCustomValue({
+          actions.onSetCustomValue({
             rowId: row.id,
             fieldPath: field.path,
             rawValue: summarizeContributions(countRenderableEntries(nextEntries)),

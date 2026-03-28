@@ -20,22 +20,24 @@ import type { IImportCellState, IImportRowState } from '../../../core/contracts'
 
 function createMockActions(): IEntityImportActions {
   return {
-    addRow: vi.fn(),
-    acceptCorrection: vi.fn(),
-    applySuggestion: vi.fn(),
+    onAddRow: vi.fn(),
+    onAcceptCorrection: vi.fn(),
+    onApplySuggestion: vi.fn(),
     chooseSuggestion: vi.fn(),
-    clearRow: vi.fn(),
-    deleteRow: vi.fn(),
-    dismissNotification: vi.fn(),
-    rejectCorrection: vi.fn(),
+    onClearRow: vi.fn(),
+    onDeleteRow: vi.fn(),
+    onDismissFeatureNotification: vi.fn(),
+    onRejectCorrection: vi.fn(),
     requestSuggestions: vi.fn(async () => {}),
     loadMoreSuggestions: vi.fn(),
-    selectCell: vi.fn(),
-    setValidatorSelection: vi.fn(),
-    setCustomValue: vi.fn(),
-    setFileValue: vi.fn(),
-    submitRows: vi.fn(),
-    updateCellValue: vi.fn(),
+    onSelectCell: vi.fn(),
+    onSetValidatorSelection: vi.fn(),
+    onSetCustomValue: vi.fn(),
+    onSetFileValue: vi.fn(),
+    onSubmitRows: vi.fn(),
+    onUpdateCellValue: vi.fn(),
+    updateValidatorPreview: vi.fn(),
+    onApplyManualValueToAll: vi.fn(),
   };
 }
 
@@ -81,7 +83,7 @@ function InlineLocationHarness({
     const baseActions = createMockActions();
     return {
       ...baseActions,
-      setCustomValue: (params: {
+      onSetCustomValue: (params: {
         rowId: string;
         fieldPath: string;
         rawValue: string;

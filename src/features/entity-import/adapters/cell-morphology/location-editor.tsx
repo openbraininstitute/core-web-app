@@ -147,7 +147,7 @@ export function LocationEditor({
       return;
     }
 
-    actions.setCustomValue({
+    actions.onSetCustomValue({
       rowId: row.id,
       fieldPath,
       rawValue: summarizeLocation(nextLocation),
@@ -199,7 +199,7 @@ export function LocationEditor({
                 readOnly
                 className="mt-auto h-8 min-w-0 rounded-lg border border-green-main/30 bg-green-main/10 px-2 text-center text-base font-bold text-green-main shadow-none focus-visible:ring-0"
                 value={formatNumber(previewLocation?.[axis] ?? null)}
-                onClick={() => actions.selectCell({ rowId: row.id, fieldPath })}
+                onClick={() => actions.onSelectCell({ rowId: row.id, fieldPath })}
               />
             </div>
           ))}
@@ -240,7 +240,7 @@ export function LocationEditor({
                 readOnly
                 className="mt-auto h-8 min-w-0 rounded-lg border border-green-main/30 bg-green-main/10 px-2 text-center text-base font-bold text-green-main shadow-none focus-visible:ring-0"
                 value={formatNumber(stagedLocation?.[axis] ?? null)}
-                onClick={() => actions.selectCell({ rowId: row.id, fieldPath })}
+                onClick={() => actions.onSelectCell({ rowId: row.id, fieldPath })}
               />
             </div>
           ))}
@@ -254,7 +254,7 @@ export function LocationEditor({
             aria-label={`Accept suggested Location row ${row.rowIndex + 1}`}
             onClick={(event) => {
               event.stopPropagation();
-              actions.acceptCorrection({ rowId: row.id, fieldPath });
+              actions.onAcceptCorrection({ rowId: row.id, fieldPath });
             }}
           >
             <CheckOutlined className="text-green-main! group-hover:text-white!" />
@@ -267,7 +267,7 @@ export function LocationEditor({
             aria-label={`Reject suggested Location row ${row.rowIndex + 1}`}
             onClick={(event) => {
               event.stopPropagation();
-              actions.rejectCorrection({ rowId: row.id, fieldPath });
+              actions.onRejectCorrection({ rowId: row.id, fieldPath });
             }}
           >
             <CloseOutlined className="text-destructive! group-hover:text-white!" />
@@ -329,7 +329,7 @@ export function LocationEditor({
               value={formatNumber(
                 (mode === 'table' && correctionDraft ? stagedLocation : location)?.[axis] ?? null
               )}
-              onFocus={() => actions.selectCell({ rowId: row.id, fieldPath })}
+              onFocus={() => actions.onSelectCell({ rowId: row.id, fieldPath })}
               onChange={(event) => updateCoordinate(axis, event.target.value)}
             />
           </div>

@@ -415,7 +415,7 @@ export function ImportShell<TPayload, TResult>({
 
       <NotificationStack
         notifications={session.notifications}
-        onDismiss={actions.dismissNotification}
+        onDismiss={actions.onDismissFeatureNotification}
       />
 
       <div

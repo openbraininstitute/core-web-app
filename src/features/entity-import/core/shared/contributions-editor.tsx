@@ -425,7 +425,7 @@ export function ContributionsEditor({
     (nextEntries: Array<ContributionDraft>) => {
       const rawSummaryEntries = countRenderableEntries(nextEntries);
 
-      actions.setCustomValue({
+      actions.onSetCustomValue({
         rowId: row.id,
         fieldPath,
         rawValue: summarizeContributions(rawSummaryEntries),

@@ -154,13 +154,20 @@ export interface IAdapterFieldEnablementArgs {
   row: IImportRowState;
 }
 
-export const ValidatorManualApplyMode = {
+/**
+ * controls how the validator panel writes values to cells on click "Apply" or "Apply to all".
+ *
+ * - `Commit` — writes the value directly to the cell, immediately no review
+ * - `Stage` — creates a correction draft on the cell, the user must accept
+ *   or reject the change per row before it takes effect.
+ */
+export const ValidatorWriteStrategy = {
   Commit: 'commit' as const,
   Stage: 'stage' as const,
 } as const;
 
-export type TValidatorManualApplyMode =
-  (typeof ValidatorManualApplyMode)[keyof typeof ValidatorManualApplyMode];
+export type TValidatorWriteStrategy =
+  (typeof ValidatorWriteStrategy)[keyof typeof ValidatorWriteStrategy];
 
 /**
  * Extended field definition used by import adapters.
@@ -182,7 +189,7 @@ export interface IAdapterFieldDefinition extends IImportFieldDefinition {
    * - `'stage'`: stages the value as a correction draft that the user must
    *   accept or reject per row before it takes effect.
    */
-  validatorManualApplyMode?: TValidatorManualApplyMode;
+  writeStrategy?: TValidatorWriteStrategy;
 
   /** CSV-specific configuration: column aliases, hydration hooks, background hydration. */
   csv?: IAdapterFieldCsvConfig;
@@ -344,19 +351,19 @@ export interface IEntityImportAdapter<TPayload = unknown, TResult = unknown> {
  */
 export interface IEntityImportActions {
   /** Append a new empty row at the end of the import table. */
-  addRow: () => void;
+  onAddRow: () => void;
 
   /**
    * Accept a staged correction draft on a cell.
    * Commits the draft suggestion as the cell's resolved value and clears the draft.
    */
-  acceptCorrection: (params: { rowId: string; fieldPath: string }) => void;
+  onAcceptCorrection: (params: { rowId: string; fieldPath: string }) => void;
 
   /**
    * Reject a staged correction draft on a cell.
    * Restores the cell to its previous value before the draft was staged.
    */
-  rejectCorrection: (params: { rowId: string; fieldPath: string }) => void;
+  onRejectCorrection: (params: { rowId: string; fieldPath: string }) => void;
 
   /**
    * Trigger a remote suggestion lookup for a cell in the validator panel.
@@ -376,13 +383,13 @@ export interface IEntityImportActions {
    * suggestion for the given field. When `mode` is `'stage'`, the suggestion
    * is staged as a correction draft instead of committed immediately.
    */
-  applySuggestion: (params: {
+  onApplySuggestion: (params: {
     fieldPath: string;
     targetRowId: string;
     sourceValue: string;
     suggestion: ISuggestion;
     applyToAllMatching: boolean;
-    mode?: TValidatorManualApplyMode;
+    mode?: TValidatorWriteStrategy;
   }) => void;
 
   /**
@@ -392,13 +399,13 @@ export interface IEntityImportActions {
   chooseSuggestion: (params: { rowId: string; fieldPath: string; suggestion: ISuggestion }) => void;
 
   /** Reset all cells in a row to their default empty state. */
-  clearRow: (rowId: string) => void;
+  onClearRow: (rowId: string) => void;
 
   /** Remove a row from the session and reindex remaining rows. */
-  deleteRow: (rowId: string) => void;
+  onDeleteRow: (rowId: string) => void;
 
   /** Dismiss a session-level notification by its ID. */
-  dismissNotification: (notificationId: string) => void;
+  onDismissFeatureNotification: (notificationId: string) => void;
 
   /**
    * Fetch the next page of remote suggestions for the current validator
@@ -410,20 +417,20 @@ export interface IEntityImportActions {
    * Select a cell in the table and synchronize the validator panel to it.
    * Updates both the table highlight and the validator's row/field selection.
    */
-  selectCell: (params: { rowId: string; fieldPath: string }) => void;
+  onSelectCell: (params: { rowId: string; fieldPath: string }) => void;
 
   /**
    * Update the validator panel's row and/or field selection independently.
    * Pass `null` to clear a dimension; omit a key to leave it unchanged.
    */
-  setValidatorSelection: (params: { rowId?: string | null; fieldPath?: string | null }) => void;
+  onSetValidatorSelection: (params: { rowId?: string | null; fieldPath?: string | null }) => void;
 
   /**
    * Set or clear the validator preview value for a cell.
    * The preview is shown in the table as a pending change before the user
    * commits it via "Apply" or "Apply to all".
    */
-  setValidatorPreview: (params: {
+  updateValidatorPreview: (params: {
     rowId: string;
     fieldPath: string;
     value: IValidatorDraftValue | null;
@@ -434,7 +441,7 @@ export interface IEntityImportActions {
    * representations. Used by compound and custom-rendered fields that manage
    * their own value shape (e.g. location, contributions).
    */
-  setCustomValue: (params: {
+  onSetCustomValue: (params: {
     rowId: string;
     fieldPath: string;
     rawValue: string;
@@ -446,7 +453,7 @@ export interface IEntityImportActions {
    * Set a file-type cell's value from one or more selected files.
    * Validates file constraints (size, extension, count) before committing.
    */
-  setFileValue: (params: {
+  onSetFileValue: (params: {
     rowId: string;
     fieldPath: string;
     files: Array<File>;
@@ -457,21 +464,21 @@ export interface IEntityImportActions {
    * Submit all valid rows to the adapter's `submitRow` endpoint.
    * Blocked when `summary.canSubmit` is false or a validator preview is active.
    */
-  submitRows: () => void;
+  onSubmitRows: () => void;
 
   /**
    * Update a primitive cell's raw text value (text, number, date, select).
    * Triggers row-scoped validation and schedules deferred remote sync
    * for fields with remote constraints.
    */
-  updateCellValue: (params: { rowId: string; fieldPath: string; rawValue: string }) => void;
+  onUpdateCellValue: (params: { rowId: string; fieldPath: string; rawValue: string }) => void;
 
   /**
    * Batch-apply a manual value to multiple rows in a single commit.
    * Replaces the per-row loop that previously dispatched N individual actions
    * when the user clicks "Apply to all" in the validator panel.
    */
-  applyManualValueToAll: (params: {
+  onApplyManualValueToAll: (params: {
     fieldPath: string;
     targetRowIds: Array<string>;
     rawValue: string;

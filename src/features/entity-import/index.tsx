@@ -47,10 +47,10 @@ export function EntityImportFeature<TPayload, TResult>({
       fieldStatusMap={controller.fieldStatusMap}
       rowsSummaryStatus={controller.rowsSummaryStatus}
       onDismissCsvUploadNotifications={controller.dismissCsvUploadNotifications}
-      onDownloadCsvTemplate={controller.downloadCsvTemplate}
-      onDownloadCurrentCsv={controller.downloadCurrentCsv}
-      onDownloadGuideTemplate={controller.downloadGuideTemplate}
-      onUploadCsvFile={controller.handleCsvUpload}
+      onDownloadCsvTemplate={controller.onDownloadCsvTemplate}
+      onDownloadCurrentCsv={controller.onDownloadCurrentCsv}
+      onDownloadGuideTemplate={controller.onDownloadGuideTemplate}
+      onUploadCsvFile={controller.onHandleCsvUpload}
       onClose={onClose}
     />
   );

@@ -24,7 +24,7 @@ import { match } from 'ts-pattern';
 
 import {
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
-  ValidatorManualApplyMode,
+  ValidatorWriteStrategy,
 } from '@/features/entity-import/core/adapter';
 import {
   CellStatus,
@@ -517,7 +517,7 @@ function SingleColumnValidatorCard({
       ? validatorPreview
       : null;
   const stagedDraftValue =
-    field.validatorManualApplyMode === ValidatorManualApplyMode.Stage && cell.correctionDraft
+    field.writeStrategy === ValidatorWriteStrategy.Stage && cell.correctionDraft
       ? {
           rawValue: cell.correctionDraft.suggestion.label,
           displayValue: cell.correctionDraft.suggestion.label,
@@ -532,7 +532,7 @@ function SingleColumnValidatorCard({
     (nextValue: IValidatorDraftValue) => {
       const nextPreviewValue = isDraftValueUnchanged(cell, nextValue) ? null : nextValue;
 
-      actions.setValidatorPreview({
+      actions.updateValidatorPreview({
         rowId: row.id,
         fieldPath: field.path,
         value: nextPreviewValue,
@@ -547,7 +547,7 @@ function SingleColumnValidatorCard({
         field.inputType === ImportInputType.File ||
         field.inputType === ImportInputType.FileBundle
       ) {
-        actions.setFileValue({
+        actions.onSetFileValue({
           rowId,
           fieldPath: field.path,
           files: toFileArray(draftValue.parsedValue),
@@ -557,7 +557,7 @@ function SingleColumnValidatorCard({
       }
 
       if (field.inputType === ImportInputType.RemoteSelect) {
-        actions.updateCellValue({
+        actions.onUpdateCellValue({
           rowId,
           fieldPath: field.path,
           rawValue: draftValue.rawValue,
@@ -565,7 +565,7 @@ function SingleColumnValidatorCard({
         return;
       }
 
-      actions.setCustomValue({
+      actions.onSetCustomValue({
         rowId,
         fieldPath: field.path,
         rawValue: draftValue.rawValue,
@@ -578,27 +578,52 @@ function SingleColumnValidatorCard({
 
   const handleApply = useCallback(
     (applyToAll: boolean) => {
+      const applyMode = field.writeStrategy ?? ValidatorWriteStrategy.Commit;
+
       if (doesDraftMatchSuggestion(draftValue, selectedSuggestion)) {
-        actions.applySuggestion({
+        actions.onApplySuggestion({
           fieldPath: field.path,
           targetRowId: row.id,
           sourceValue: cell.rawValue,
           suggestion: selectedSuggestion,
           applyToAllMatching: applyToAll,
-          mode: ValidatorManualApplyMode.Commit,
+          mode: applyMode,
         });
-        actions.setValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
+        actions.updateValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
         return;
       }
 
       if (isDraftValueUnchanged(cell, draftValue)) {
-        actions.setValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
+        actions.updateValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
+        return;
+      }
+
+      // for Stage mode with manual edits (no matching suggestion), create a
+      // synthetic suggestion from the draft and route through applySuggestion
+      // so that a correctionDraft is created on each target row.
+      if (applyMode === ValidatorWriteStrategy.Stage) {
+        const syntheticSuggestion: ISuggestion = {
+          value:
+            typeof draftValue.parsedValue === 'string'
+              ? draftValue.parsedValue
+              : draftValue.rawValue,
+          label: draftValue.displayValue ?? draftValue.rawValue,
+          metadata: { parsedValue: draftValue.parsedValue },
+        };
+        actions.onApplySuggestion({
+          fieldPath: field.path,
+          targetRowId: row.id,
+          sourceValue: cell.rawValue,
+          suggestion: syntheticSuggestion,
+          applyToAllMatching: applyToAll,
+          mode: ValidatorWriteStrategy.Stage,
+        });
+        actions.updateValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
         return;
       }
 
       if (applyToAll) {
-        // batch all rows into a single commit instead of N individual commits.
-        actions.applyManualValueToAll({
+        actions.onApplyManualValueToAll({
           fieldPath: field.path,
           targetRowIds: session.rows.map((r) => r.id),
           rawValue: draftValue.rawValue,
@@ -608,19 +633,20 @@ function SingleColumnValidatorCard({
       } else {
         commitManualValueToRow(row.id);
       }
-      actions.setValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
+      actions.updateValidatorPreview({ rowId: row.id, fieldPath: field.path, value: null });
     },
     [
       actions,
       cell,
       commitManualValueToRow,
       draftValue,
-      field.path,
+      field,
       row,
       selectedSuggestion,
       session.rows,
     ]
   );
+
   const previewValue = resolveValidatorDisplayValue(field, draftValue);
   const rowValues = getRowSubmissionValues(row);
   const activeValidatorSuggestions =
@@ -643,7 +669,7 @@ function SingleColumnValidatorCard({
     visibleSuggestions.length > 0 &&
     !(
       field.inputType === ImportInputType.Compound &&
-      field.validatorManualApplyMode === ValidatorManualApplyMode.Stage &&
+      field.writeStrategy === ValidatorWriteStrategy.Stage &&
       cell.correctionDraft
     );
 
@@ -653,7 +679,7 @@ function SingleColumnValidatorCard({
       return;
     }
 
-    actions.setValidatorSelection({ rowId: session.rows[nextIndex].id });
+    actions.onSetValidatorSelection({ rowId: session.rows[nextIndex].id });
   };
 
   return (
@@ -1200,7 +1226,7 @@ export function ValidatorPanel<TPayload, TResult>({
                 SUBMIT_BUTTON_CHROME_CLASSNAME[submitButtonTone]
               )}
               disabled={!session.summary.canSubmit || isSubmitting || hasPendingValidatorPreview}
-              onClick={() => void actions.submitRows()}
+              onClick={() => void actions.onSubmitRows()}
               aria-label="Import rows"
             >
               <RiUpload2Line className="size-4" />
@@ -1254,7 +1280,7 @@ export function ValidatorPanel<TPayload, TResult>({
               <div className="text-base font-light text-gray-400">Columns</div>
               <Select
                 value={session.validatorSelection.fieldPath ?? ''}
-                onValueChange={(fieldPath) => actions.setValidatorSelection({ fieldPath })}
+                onValueChange={(fieldPath) => actions.onSetValidatorSelection({ fieldPath })}
               >
                 <SelectTrigger
                   id="validator-column-select"
@@ -1313,7 +1339,7 @@ export function ValidatorPanel<TPayload, TResult>({
                 <Select
                   value={session.validatorSelection.rowId ?? ''}
                   onValueChange={(rowId) => {
-                    actions.setValidatorSelection({ rowId });
+                    actions.onSetValidatorSelection({ rowId });
                   }}
                 >
                   <SelectTrigger
@@ -1420,7 +1446,7 @@ export function ValidatorPanel<TPayload, TResult>({
             style={submitButtonStyle}
             data-import-run-tone={submitButtonTone}
             disabled={!session.summary.canSubmit || isSubmitting || hasPendingValidatorPreview}
-            onClick={() => void actions.submitRows()}
+            onClick={() => void actions.onSubmitRows()}
           >
             <span
               aria-hidden
