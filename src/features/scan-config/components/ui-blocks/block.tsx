@@ -30,6 +30,7 @@ export default function Block({
   entity,
   hideTitle,
   schemaMappingConfig,
+  errorPathPrefix,
 }: {
   schemaName: SchemaName;
   schema: ConfigSchema;
@@ -40,6 +41,7 @@ export default function Block({
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   hideTitle?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  errorPathPrefix?: string;
 }) {
   const [state, setState] = useAtom(stateAtom ?? atom<Record<string, ConfigValue>>({}));
 
@@ -129,6 +131,9 @@ export default function Block({
                               schemaMappingConfig={schemaMappingConfig}
                               state={state}
                               setState={setState}
+                              errorPathPrefix={
+                                errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined
+                              }
                             />
                           </div>
                         </div>

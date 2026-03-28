@@ -3,6 +3,7 @@ import { lowerCase, upperFirst } from 'es-toolkit/compat';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
+import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
@@ -66,6 +67,7 @@ export function RootElement({
   setIsEditingKey: (k: boolean) => void;
 }) {
   const { isChatReady } = useAIConfig();
+  const hasFieldErrors = useFieldErrorsForPath(rootElement);
   if (!schema || !schema?.properties) return;
 
   const handleEntryClick = (subkey: string) => {
@@ -118,7 +120,8 @@ export function RootElement({
               />
             </span>
             <div className="flex gap-3">
-              {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
+              {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
+              hasFieldErrors ? (
                 <WarningFilled className="text-yellow-400!" />
               ) : (
                 <CheckCircleFilled className="text-green-600!" />

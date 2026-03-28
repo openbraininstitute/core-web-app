@@ -21,20 +21,20 @@ import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/
 export * from '@/api/entitycore/types/entity-type';
 
 export type {
-  ICellMorphologyExpanded,
-  IExperimentalSynapsesPerConnection,
-  IExperimentalNeuronDensity,
-  IExperimentalBoutonDensity,
   ICellMorphology,
-  IElectricalCellRecording,
-  ISingleNeuronSynaptome,
-  IMEModel,
-  IEModel,
-  IonChannelModel,
+  ICellMorphologyExpanded,
   ICircuit,
-  ISingleNeuronSimulation,
-  ISingleNeuronSynaptomeSimulation,
+  IElectricalCellRecording,
+  IEModel,
+  IExperimentalBoutonDensity,
+  IExperimentalNeuronDensity,
+  IExperimentalSynapsesPerConnection,
   IIonChannelRecording,
+  IMEModel,
+  IonChannelModel,
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptome,
+  ISingleNeuronSynaptomeSimulation,
 };
 
 export type EntityCoreDensityObjectTypes =

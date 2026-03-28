@@ -9,9 +9,10 @@ import {
 } from '@ant-design/icons';
 import { Input } from 'antd';
 import { AnimatePresence, motion } from 'framer-motion';
-import { atom } from 'jotai';
+import { atom, useAtom } from 'jotai';
 import { memo } from 'react';
 
+import { fieldErrorsAtom } from '@/features/scan-config/components/hooks/field-errors';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -75,6 +76,7 @@ export default function BlockDictionaryEntries({
   visible: boolean;
 }) {
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
+  const [fieldErrors] = useAtom(fieldErrorsAtom);
 
   const onNameChangeConfirm = (
     e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>
@@ -251,6 +253,9 @@ export default function BlockDictionaryEntries({
                       <div className="flex gap-2 text-[14px]">
                         {errors?.find((error) =>
                           error.instancePath.startsWith(`/${rootElement}/${subkey}`)
+                        ) ||
+                        Array.from(fieldErrors.keys()).some((key) =>
+                          key.startsWith(`${rootElement}/${subkey}`)
                         ) ? (
                           <WarningFilled className="text-yellow-400!" />
                         ) : (

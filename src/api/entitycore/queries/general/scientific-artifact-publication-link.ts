@@ -1,4 +1,5 @@
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+import { compactRecord } from '@/utils/dictionary';
 
 import type {
   IScientificArtifactPublicationLink,
@@ -6,7 +7,6 @@ import type {
 } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import { compactRecord } from '@/utils/dictionary';
 
 const baseUri = '/scientific-artifact-publication-link';
 

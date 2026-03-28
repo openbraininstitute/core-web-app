@@ -1,6 +1,7 @@
-import { isEmpty, sortBy, omit, map } from 'es-toolkit/compat';
+import { isEmpty, map, omit, sortBy } from 'es-toolkit/compat';
 
-import { AgentType, type Agent, type IContributor } from '@/api/entitycore/types/shared/global';
+import { type Agent, AgentType, type IContributor } from '@/api/entitycore/types/shared/global';
+
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type TransformFiltersToQueryReturnValue = Record<

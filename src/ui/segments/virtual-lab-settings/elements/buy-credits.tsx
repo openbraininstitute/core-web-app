@@ -1,17 +1,17 @@
 'use client';
 
 import { ArrowLeftOutlined } from '@ant-design/icons';
-import { match } from 'ts-pattern';
 import { useState } from 'react';
+import { match } from 'ts-pattern';
 
-import { PromotionCode } from '@/ui/segments/virtual-lab-settings/elements/promotion-code-form';
-import { StripePaymentFlow } from '@/ui/segments/virtual-lab-settings/elements/stripe-payment';
+import { Button as UiButton } from '@/ui/molecules/button';
 import {
   PaymentModeSelection,
   PurchaseModeDictionary,
-  TPurchaseModeDictionary,
+  type TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
-import { Button as UiButton } from '@/ui/molecules/button';
+import { PromotionCode } from '@/ui/segments/virtual-lab-settings/elements/promotion-code-form';
+import { StripePaymentFlow } from '@/ui/segments/virtual-lab-settings/elements/stripe-payment';
 
 type Props = {
   virtualLabId: string;
@@ -47,7 +47,7 @@ export function BuyCredits({ onBack, virtualLabId }: Props) {
             variant="ghost"
             size="sm"
             onClick={onBack}
-            className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
+            className="hover:bg-neutral-2/20 h-auto px-4! py-2! text-white hover:text-white"
           >
             <ArrowLeftOutlined className="text-lg" />
             <span className="ml-4 text-lg font-bold text-white select-none">Credits</span>

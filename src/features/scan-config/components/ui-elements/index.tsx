@@ -46,6 +46,7 @@ export function UIElementRender({
   setState,
   entity,
   schemaMappingConfig,
+  errorPathPrefix,
 }: {
   k: string;
   disabled: boolean;
@@ -58,6 +59,7 @@ export function UIElementRender({
   state: Record<string, ConfigValue>;
   setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  errorPathPrefix?: string;
 }) {
   return match({ entity, paramSchema })
     .with(
@@ -104,6 +106,7 @@ export function UIElementRender({
           onChange={(value) => {
             setState({ ...state, [k]: value });
           }}
+          errorPathPrefix={errorPathPrefix}
         />
       )
     )
@@ -239,6 +242,7 @@ export function UIElementRender({
             setState={setState}
             fieldKey={k}
             modificationType={modificationType}
+            errorPathPrefix={errorPathPrefix}
           />
         );
       }
@@ -268,6 +272,7 @@ export function UIElementRender({
             setState={setState}
             fieldKey={k}
             modificationType={modificationType}
+            errorPathPrefix={errorPathPrefix}
           />
         );
       }
