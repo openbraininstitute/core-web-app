@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
 import {
+  RepairPipelineType,
+  type TRepairPipelineType,
+} from '@/api/entitycore/types/entities/cell-morphology';
+import {
   BaseSetupSchema,
   ContributionArraySchema,
   createFileSchema,
   LicenseIdSchema,
   SubjectIdSchema,
 } from '@/ui/segments/contribute/shared/schemas';
-import {
-  RepairPipelineType,
-  type TRepairPipelineType,
-} from '@/api/entitycore/types/entities/cell-morphology';
 
 export const ProtocolSchema = z.uuid().nonempty({ error: 'Protocol is required' });
 
