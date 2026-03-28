@@ -4,6 +4,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Spin } from 'antd';
+import { min } from 'date-fns';
 import { isObject } from 'es-toolkit/compat';
 import { useState, useTransition } from 'react';
 import { match, P } from 'ts-pattern';
@@ -51,7 +52,7 @@ export const PaymentModeDictionary = Object.fromEntries(
 export type TPaymentModeDictionary =
   (typeof PaymentModeDictionary)[keyof typeof PaymentModeDictionary];
 
-const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => ({
+export const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => ({
   clientSecret,
   fonts: [
     {
@@ -102,6 +103,7 @@ function AmountForm({
   onModeChange,
   onStepChange,
   showControls,
+  minCredits = 1,
 }: {
   credits: number | undefined;
   onCreditsChange: (credits: number | undefined) => void;
@@ -109,6 +111,7 @@ function AmountForm({
   onModeChange?: (m: TPurchaseModeDictionary) => void;
   onStepChange?: (s: TPaymentModeDictionary) => void;
   showControls: boolean;
+  minCredits?: number;
 }) {
   return (
     <div className="rounded-2xl bg-[#0a3a76] p-4 backdrop-blur-lg px-4">
@@ -154,7 +157,7 @@ function AmountForm({
               <Button
                 rounded
                 onClick={() => onStepChange?.(PaymentModeDictionary.Apply)}
-                disabled={!credits || credits <= 0}
+                disabled={!credits || credits < minCredits}
                 className={cn(
                   'h-12 flex-1 bg-white text-base font-semibold',
                   'text-blue-900 hover:bg-white/90 disabled:opacity-50'
@@ -335,7 +338,7 @@ function StripePayment({
   virtualLabId: string;
   credits: number;
   onCreditsChange: (credits: number | undefined) => void;
-  onModeChange: (m: TPurchaseModeDictionary) => void;
+  onModeChange?: (m: TPurchaseModeDictionary) => void;
 }) {
   const [
     { data: setupIntent, isLoading: loadingIntent },
@@ -372,7 +375,7 @@ function StripePayment({
       <PaymentForm
         virtualLabId={virtualLabId}
         credits={credits}
-        onCancel={() => onModeChange(PurchaseModeDictionary.Selection)}
+        onCancel={() => onModeChange?.(PurchaseModeDictionary.Selection)}
         onCreditsChange={onCreditsChange}
       />
     </Elements>
@@ -382,9 +385,11 @@ function StripePayment({
 export function StripePaymentFlow({
   virtualLabId,
   onModeChange,
+  minCredits = 1,
 }: {
   virtualLabId: string;
-  onModeChange: (m: TPurchaseModeDictionary) => void;
+  onModeChange?: (m: TPurchaseModeDictionary) => void;
+  minCredits?: number;
 }) {
   const [step, setStep] = useState<TPaymentModeDictionary>(PaymentModeDictionary.SetCredits);
   const [credits, setCredits] = useState<number | undefined>(undefined);
@@ -420,6 +425,7 @@ export function StripePaymentFlow({
           onModeChange,
           onStepChange,
         }}
+        minCredits={minCredits}
       />
     ))
     .with({ mode: PaymentModeDictionary.Apply, credits: P.not(P.nullish.select()) }, (value) => (

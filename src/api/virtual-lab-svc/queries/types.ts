@@ -58,6 +58,11 @@ export type ProjectCreationResponse = VlmResponse<{
   balance_added: boolean;
 }>;
 
+export type Course = {
+  project_template_id: string;
+  is_initialized: boolean;
+};
+
 export type TVirtualLab = {
   id: string;
   name: string;
@@ -71,6 +76,7 @@ export type TVirtualLab = {
   projects_count: number | null;
   created_by: string | null;
   compute_cell: string;
+  course: Course | null;
 };
 
 export type TVirtualLabExistsVerificationResponse = VlmResponse<{
