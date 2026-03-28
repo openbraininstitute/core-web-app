@@ -9,7 +9,13 @@ import {
   PlusOutlined,
   RightOutlined,
 } from '@ant-design/icons';
-import { RiFolderUploadFill, RiInfoI, RiSearchLine, RiUpload2Line } from '@remixicon/react';
+import {
+  RiCloseLine,
+  RiFolderUploadFill,
+  RiInfoI,
+  RiSearchLine,
+  RiUpload2Line,
+} from '@remixicon/react';
 import { DatePicker } from 'antd';
 import {
   type CSSProperties,
@@ -1178,8 +1184,18 @@ export function ValidatorPanel<TPayload, TResult>({
   const submitButtonLabel = resolveSubmitButtonLabel(adapter, session, importRun);
   const hasPendingValidatorPreview =
     validatorPreview.rowId !== null && validatorPreview.fieldPath !== null;
+  const [failureTooltipDismissed, setFailureTooltipDismissed] = useState(false);
   const showImportFailureTooltip =
-    importRun.phase === ImportRunPhase.Completed && importRun.failureCards.length > 0;
+    importRun.phase === ImportRunPhase.Completed &&
+    importRun.failureCards.length > 0 &&
+    !failureTooltipDismissed;
+
+  // Reset dismissed state when a new import run completes.
+  useEffect(() => {
+    if (importRun.phase === ImportRunPhase.Running) {
+      setFailureTooltipDismissed(false);
+    }
+  }, [importRun.phase]);
   const submitButtonStyle = {
     '--entity-import-submit-progress': `${submitProgressPercent}%`,
   } as CSSProperties;
@@ -1491,13 +1507,23 @@ export function ValidatorPanel<TPayload, TResult>({
             arrowClassName="bg-white"
           >
             <div className="space-y-3">
-              <div>
-                <p className="text-sm font-semibold text-primary-9">
-                  {resolveImportFailureSummary(importRun)}
-                </p>
-                <p className="mt-1 text-xs text-neutral-500">
-                  Review the failing rows below, fix the issues, then retry the import.
-                </p>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-primary-9">
+                    {resolveImportFailureSummary(importRun)}
+                  </p>
+                  <p className="mt-1 text-xs text-neutral-500">
+                    Review the failing rows below, fix the issues, then retry the import.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Dismiss failure summary"
+                  className="shrink-0 rounded-full p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600"
+                  onClick={() => setFailureTooltipDismissed(true)}
+                >
+                  <RiCloseLine className="size-4" />
+                </button>
               </div>
               <div
                 data-testid="import-run-failure-list"
