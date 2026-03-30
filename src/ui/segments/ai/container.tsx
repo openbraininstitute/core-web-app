@@ -1,7 +1,6 @@
 'use client';
 import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import { useAgentState } from '@/services/ai-agent';
@@ -13,23 +12,16 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import styles from '@/ui/segments/ai/container.module.css';
 export function Container() {
   const { state, setState } = usePanelState();
-  const [isPending, startTransition] = useTransition();
-  const [contentState, setContentState] = useState(state);
-
-  useEffect(() => {
-    if (!isPending) setContentState(state);
-  }, [state, isPending]);
 
   useAgentState('smc_simulation_config');
 
-  const isCollapsed = contentState === PanelState.Collapsed;
-  const isFullscreen = contentState === PanelState.Fullscreen;
-  const targetWidth = contentState === PanelState.Collapsed ? '3rem' : '400px';
+  const isCollapsed = state === PanelState.Collapsed;
+  const isFullscreen = state === PanelState.Fullscreen;
+  const targetWidth = state === PanelState.Collapsed ? '3rem' : '400px';
 
   function updateState(next: PanelState) {
-    if (next === contentState) return;
-    setContentState(next);
-    startTransition(() => setState(next));
+    if (next === state) return;
+    setState(next);
   }
 
   return (
@@ -57,7 +49,6 @@ export function Container() {
             onClick={() => updateState(PanelState.Expanded)}
             className="flex h-full w-full cursor-pointer flex-col items-center px-2 select-none"
             aria-label="expand AI assistant"
-            disabled={isPending}
           >
             <div className="mt-3 flex h-8 w-8 items-center justify-center text-white">
               <PlusOutlined className="h-4 w-4" />
@@ -91,7 +82,6 @@ export function Container() {
                   }
                   aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                   onCollapse={() => updateState(PanelState.Collapsed)}
-                  disabled={isPending}
                 />
               </HydrateWrapper>
             )}

@@ -1,15 +1,10 @@
-import { useCallback } from 'react';
+import { useAtom } from 'jotai';
 
-import { setFlag, useFlags, aiPanelStateFlag } from '@/features/feature-flags';
+import { aiPanelStateAtom } from '@/ui/segments/ai/store';
 import { PanelState } from '@/ui/segments/ai/types';
 
 export function usePanelState() {
-  const { aiPanelState: state } = useFlags();
-
-  const setState = useCallback(
-    (newState: PanelState) => setFlag(aiPanelStateFlag.key, newState),
-    []
-  );
+  const [state, setState] = useAtom(aiPanelStateAtom);
 
   return {
     state,
