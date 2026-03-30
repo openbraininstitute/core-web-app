@@ -37,6 +37,7 @@ export function NotebooksLayout({ children, active }: Props) {
   const [loading, setLoading] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [numberStudents, setNumberStudents] = useState<number | null>(10);
+  const [step, setStep] = useState(0);
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
@@ -145,28 +146,36 @@ export function NotebooksLayout({ children, active }: Props) {
         {children}
       </div>
       <Modal open={showCourseModal} onCancel={() => setShowCourseModal(false)} footer={false}>
-        <div className="mb-4 text-xl text-primary-8">Initialize Course</div>
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-col">
-            <label htmlFor="quantity-input">Number of students</label>
-            <InputNumber
-              id="quantity-input"
-              min={1}
-              value={numberStudents}
-              onChange={(n) => {
-                setNumberStudents(n);
-              }}
-            />
-            {!numberStudents && <div className="text-red-500">Required</div>}
-          </div>
-          <div className="flex flex-col">
-            <div>Upload CSV with student information</div>
-            <CsvUploadValidator
-              maxStudents={numberStudents}
-              vlabId={virtualLabId}
-              onCancel={() => setShowCourseModal(false)}
-            />
-          </div>
+        <div>
+          {step === 0 && (
+            <div>
+              <div className="mb-4 text-xl text-primary-8">Initialize Course</div>
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col">
+                  <label htmlFor="quantity-input">Number of students</label>
+                  <InputNumber
+                    id="quantity-input"
+                    min={1}
+                    value={numberStudents}
+                    onChange={(n) => {
+                      setNumberStudents(n);
+                    }}
+                  />
+                  {!numberStudents && <div className="text-red-500">Required</div>}
+                </div>
+                <div className="flex flex-col">
+                  <div>Upload CSV with student information</div>
+                  <CsvUploadValidator
+                    maxStudents={numberStudents}
+                    vlabId={virtualLabId}
+                    onCancel={() => setShowCourseModal(false)}
+                    onSuccess={() => setStep(1)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          {step === 1 && <div>Setting up course ...</div>}
         </div>
       </Modal>
     </div>
@@ -177,10 +186,12 @@ const CsvUploadValidator = ({
   maxStudents,
   vlabId,
   onCancel,
+  onSuccess,
 }: {
   maxStudents: number | null;
   vlabId: string;
   onCancel: () => void;
+  onSuccess: () => void;
 }) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [studentEmails, setStudentEmails] = useState<string[]>([]);
@@ -303,7 +314,12 @@ const CsvUploadValidator = ({
             <div className="text-red-500">{`Minimum of ${Math.max(studentEmails.length, 5)} required`}</div>
           )}
 
-          <PaymentFlow credits={credits} vlabId={vlabId} onCancel={onCancel} />
+          <PaymentFlow
+            credits={credits}
+            vlabId={vlabId}
+            onCancel={onCancel}
+            onSuccess={onSuccess}
+          />
         </div>
       )}
     </div>
@@ -314,14 +330,16 @@ function PaymentFlow({
   credits,
   vlabId,
   onCancel,
+  onSuccess,
 }: {
   credits: number;
   vlabId: string;
   onCancel: () => void;
+  onSuccess: () => void;
 }) {
   const [
-    { data: setupIntent, isLoading: loadingIntent },
-    { data: stripeData, isLoading: loadingStripeInstance },
+    { data: setupIntent, isPending: loadingIntent },
+    { data: stripeData, isPending: loadingStripeInstance },
   ] = useQueries({
     queries: [
       {
@@ -352,7 +370,7 @@ function PaymentFlow({
 
   return (
     <Elements stripe={stripeData} options={buildStripeFormOptions(setupIntent.data?.client_secret)}>
-      <PaymentForm credits={credits} vlabId={vlabId} onCancel={onCancel} />
+      <PaymentForm credits={credits} vlabId={vlabId} onCancel={onCancel} onSuccess={onSuccess} />
     </Elements>
   );
 }
@@ -361,10 +379,12 @@ function PaymentForm({
   credits,
   vlabId,
   onCancel,
+  onSuccess,
 }: {
   credits: number;
   vlabId: string;
   onCancel: () => void;
+  onSuccess: () => void;
 }) {
   const [stripeElementsReady, setElementsReady] = useState(false);
   const onReady = () => setElementsReady(true);
@@ -436,6 +456,7 @@ function PaymentForm({
         await queryClient.invalidateQueries({
           queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
         });
+        onSuccess();
       }
 
       if (error) {
@@ -465,18 +486,17 @@ function PaymentForm({
 
   return (
     <div>
-      <div className="bg-[#0a3a76] text-white text-lg p-4">
+      <div className="bg-[#0a3a76] text-white text-lg p-4 rounded-md">
         Pay {`${credits * CONVERSION_RATE} CHF`}
       </div>
 
       <PaymentElement onReady={onReady} />
 
       {stripeElementsReady && (
-        <div className="ml-auto flex items-center justify-end gap-4">
+        <div className="ml-auto flex items-center justify-end gap-4 mt-5">
           <UiButton
             rounded
             type="button"
-            variant="ghost"
             size="lg"
             className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
             onClick={onCancel}
