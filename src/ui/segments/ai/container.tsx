@@ -2,7 +2,7 @@
 
 import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
-import { type JSX, useMemo, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import { useAgentState } from '@/services/ai-agent';
@@ -17,23 +17,22 @@ export function Container() {
   const { state, setState } = usePanelState();
   const [isPending, startTransition] = useTransition();
 
-  const [sizeState, setSizeState] = useState(state);
   const [contentState, setContentState] = useState(state);
+
+  useEffect(() => {
+    if (!isPending) setContentState(state);
+  }, [state, isPending]);
 
   useAgentState('smc_simulation_config');
 
   const isCollapsed = contentState === PanelState.Collapsed;
   const isFullscreen = contentState === PanelState.Fullscreen;
-  const targetWidth = sizeState === PanelState.Collapsed ? '3rem' : '400px';
+  const targetWidth = contentState === PanelState.Collapsed ? '3rem' : '400px';
 
   function updateState(next: PanelState) {
-    setSizeState(next);
-    if (next !== PanelState.Collapsed) setContentState(next);
+    if (next === contentState) return;
+    setContentState(next);
     startTransition(() => setState(next));
-  }
-
-  function handleAnimationComplete() {
-    setContentState(sizeState);
   }
 
   return (
@@ -41,68 +40,66 @@ export function Container() {
       id="workspace-ai"
       className={cn(
         styles.aiPanel,
-        'text-white [grid-area:ai] z-[30] overflow-hidden',
+        'text-white [grid-area:ai] z-[30]',
         isCollapsed
-          ? 'bg-primary-9 border-primary-9 mr-3 shadow-md rounded-full!'
+          ? 'bg-primary-9 border-primary-9 mr-3 shadow-md rounded-full! [transition:background-color_150ms_ease_200ms,border-color_150ms_ease_200ms]'
           : cn(
-              'text-primary-9 mr-3 outline outline-1 outline-[#ddd] [outline-offset:-1px] bg-white',
+              'text-primary-9 mr-3 outline outline-1 outline-[#ddd] [outline-offset:-1px] bg-white [transition:none]',
               isFullscreen ? 'rounded-lg!' : 'rounded-2xl!'
             )
       )}
       animate={{ width: targetWidth, height: 'calc(100vh - 6rem)' }}
       initial={false}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      onAnimationComplete={handleAnimationComplete}
     >
-      {isCollapsed ? (
-        <button
-          type="button"
-          onClick={() => updateState(PanelState.Expanded)}
-          className="flex h-full w-full cursor-pointer flex-col items-center px-2 select-none"
-          aria-label="expand AI assistant"
-          disabled={isPending}
-        >
-          <div className="mt-3 flex h-8 w-8 items-center justify-center text-white">
-            <PlusOutlined className="h-4 w-4" />
-          </div>
-          <div
-            className="text-xl font-bold"
-            style={{
-              transform: 'rotate(-90deg)',
-              transformOrigin: 'center',
-              whiteSpace: 'nowrap',
-              position: 'relative',
-              top: '45px',
-              margin: 0,
-            }}
+      <AnimatePresence>
+        {isCollapsed ? (
+          <button
+            key="collapsed"
+            type="button"
+            onClick={() => updateState(PanelState.Expanded)}
+            className="flex h-full w-full cursor-pointer flex-col items-center px-2 select-none"
+            aria-label="expand AI assistant"
+            disabled={isPending}
           >
-            OBI Assistant
-          </div>
-        </button>
-      ) : (
-        <div className="flex h-full w-full flex-col rounded-lg relative overflow-visible">
-          <AnimatePresence mode="wait">
-            {sizeState !== PanelState.Collapsed && (
+            <div className="mt-3 flex h-8 w-8 items-center justify-center text-white">
+              <PlusOutlined className="h-4 w-4" />
+            </div>
+            <div
+              className="text-xl font-bold"
+              style={{
+                transform: 'rotate(-90deg)',
+                transformOrigin: 'center',
+                whiteSpace: 'nowrap',
+                position: 'relative',
+                top: '45px',
+                margin: 0,
+              }}
+            >
+              OBI Assistant
+            </div>
+          </button>
+        ) : (
+          <div
+            key="expanded"
+            className="flex h-full w-full flex-col rounded-lg relative overflow-visible"
+          >
+            {!isCollapsed && (
               <HydrateWrapper key="ai-assistant">
                 <AiAssistant
                   section="explore"
                   fullscreen={isFullscreen}
                   onFullscreenToggle={() =>
-                    updateState(
-                      sizeState === PanelState.Fullscreen
-                        ? PanelState.Expanded
-                        : PanelState.Fullscreen
-                    )
+                    updateState(isFullscreen ? PanelState.Expanded : PanelState.Fullscreen)
                   }
                   aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                   onCollapse={() => updateState(PanelState.Collapsed)}
-                  disabled={isPending}
                 />
               </HydrateWrapper>
             )}
-          </AnimatePresence>
-        </div>
-      )}
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
