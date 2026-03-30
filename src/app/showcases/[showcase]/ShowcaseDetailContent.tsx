@@ -7,12 +7,9 @@ import Link from 'next/link';
 import { Button } from '@/ui/molecules/button';
 import DescriptionSection from '@/ui/segments/reports/obi-showcases/description';
 
-import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
+import { buildPlatformLoginUrl } from '../build-platform-login-url';
 
-function buildPlatformLoginUrl(slug: string, section: string): string {
-  const syncUrl = `/app/virtual-lab/sync?showcaseSlug=${encodeURIComponent(slug)}&showcaseSection=${encodeURIComponent(section)}`;
-  return `/app/log-in?callbackUrl=${encodeURIComponent(syncUrl)}`;
-}
+import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
 
 export default function ShowcaseDetailContent({ project }: { project: SanityShowcaseType }) {
   return (

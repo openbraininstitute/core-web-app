@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { buildPlatformLoginUrl } from '@/app/showcases/build-platform-login-url';
+
 import type { OBIShowcaseProjectType } from '@/ui/segments/reports/obi-showcases/types';
 
 function formatAuthors(authorsList: OBIShowcaseProjectType['authorsList']): string {
@@ -29,7 +31,7 @@ export default function ShowcaseCard({ project }: { project: OBIShowcaseProjectT
 
   return (
     <Link
-      href={`/showcases/${encodeURIComponent(slug)}`}
+      href={buildPlatformLoginUrl(slug, 'description')}
       className="group relative w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 ease-in-out hover:scale-[0.98] hover:shadow-lg"
     >
       {/* Hero Image */}
