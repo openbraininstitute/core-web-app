@@ -1,10 +1,10 @@
 import Link from 'next/link';
 
+import { classNames } from '@/util/utils';
+
 import SocialMediaLinks from '../../components/social-media-links';
 import { getSection } from '../../utils';
 import NewsLetterSubscription from './NewsLetterSubscription';
-
-import { classNames } from '@/util/utils';
 
 import styles from './FooterPanel.module.css';
 
@@ -38,7 +38,9 @@ export default function FooterPanel({ className }: FooterPanelProps) {
     <div className={classNames(className, styles.footerPanel)}>
       <div className={styles.title}>
         <h2>Open Brain Institute</h2>
-        <div className={styles.copyright}>Copyright © {new Date().getFullYear()} - Open Brain Institute</div>
+        <div className={styles.copyright}>
+          Copyright © {new Date().getFullYear()} - Open Brain Institute
+        </div>
       </div>
       <div className={styles.links}>
         {FOOTER_LINKS.map((link) => (

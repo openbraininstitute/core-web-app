@@ -4,7 +4,17 @@ import { obioneApi } from '@/api/one/utils';
 import type { WorkspaceContext } from '@/types/common';
 import type { TObiOneTaskType } from './types/task';
 
-type LaunchExtractionParams = {
+export type TTaskEstimation = {
+  task_type: TObiOneTaskType;
+  config_id: string;
+  cost: number;
+  parameters: {
+    service_subtype: string;
+    count: number;
+  };
+};
+
+type TEstimateTaskParams = {
   ctx: WorkspaceContext;
   task_type: TObiOneTaskType;
   config_id: string;
@@ -22,15 +32,15 @@ type LaunchExtractionParams = {
  *
  * @returns A promise that resolves to the execution activity ID.
  */
-export async function launchExtraction({
+export async function estimateTask({
   ctx,
   task_type,
   config_id,
   signal,
-}: LaunchExtractionParams): Promise<string> {
+}: TEstimateTaskParams): Promise<TTaskEstimation> {
   const api = await obioneApi();
 
-  const response = await api.post<string>(`/declared/task/launch`, {
+  const response = await api.post<TTaskEstimation>(`/declared/task/estimate`, {
     headers: {
       ...getEntityCoreContext(ctx).headers,
       accept: 'application/json',

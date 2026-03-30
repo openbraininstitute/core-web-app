@@ -32,6 +32,7 @@ interface GlobalProps {
   setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
   fieldKey: string;
   modificationType: string;
+  errorPathPrefix?: string;
 }
 
 export function Global({
@@ -41,6 +42,7 @@ export function Global({
   setState,
   fieldKey,
   modificationType,
+  errorPathPrefix,
 }: GlobalProps) {
   const currentModification = state[fieldKey];
   const isValidModification =
@@ -152,6 +154,7 @@ export function Global({
           values={editorValues}
           onChange={handleSectionChange}
           disabled={disabled}
+          errorPathPrefix={errorPathPrefix}
         />
       )}
     </div>

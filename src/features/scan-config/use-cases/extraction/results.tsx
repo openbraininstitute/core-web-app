@@ -15,7 +15,8 @@ import {
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ApiError } from '@/api/error';
-import { launchExtraction, ObiOneTaskTypeDict } from '@/api/one/extraction';
+import { launchExtraction } from '@/api/one/extraction';
+import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
 import { WorkspaceSection } from '@/constants';

@@ -32,9 +32,18 @@ interface RangeProps {
   setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
   fieldKey: string;
   modificationType: string;
+  errorPathPrefix?: string;
 }
 
-export function Range({ data, disabled, state, setState, fieldKey, modificationType }: RangeProps) {
+export function Range({
+  data,
+  disabled,
+  state,
+  setState,
+  fieldKey,
+  modificationType,
+  errorPathPrefix,
+}: RangeProps) {
   const currentModification = state[fieldKey];
   const isValidModification =
     !!currentModification &&
@@ -151,6 +160,7 @@ export function Range({ data, disabled, state, setState, fieldKey, modificationT
           values={sectionValues}
           onChange={handleSectionChange}
           disabled={disabled}
+          errorPathPrefix={errorPathPrefix}
         />
       )}
     </div>
