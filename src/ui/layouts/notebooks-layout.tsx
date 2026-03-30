@@ -6,6 +6,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
 import Image from 'next/image';
 import NextLink from 'next/link';
+import { on } from 'process';
 import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react';
 
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
@@ -172,7 +173,7 @@ export function NotebooksLayout({ children, active }: Props) {
       >
         {children}
       </div>
-      <Modal open={showCourseModal} onCancel={() => setShowCourseModal(false)} footer={false}>
+      <Modal open={showCourseModal} footer={false} closable={false}>
         <div>
           {step === 0 && (
             <div>
@@ -202,7 +203,15 @@ export function NotebooksLayout({ children, active }: Props) {
               </div>
             </div>
           )}
-          {step === 1 && <CourseSetup />}
+          {step === 1 && (
+            <CourseSetup
+              onFinnish={() => {
+                setTimeout(() => {
+                  setShowCourseModal(false);
+                }, 3000);
+              }}
+            />
+          )}
         </div>
       </Modal>
     </div>
@@ -556,7 +565,7 @@ function PaymentForm({
   );
 }
 
-function CourseSetup() {
+function CourseSetup({ onFinnish }: { onFinnish: () => void }) {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
 
@@ -586,20 +595,8 @@ function CourseSetup() {
 
       return await Promise.all(createPromises);
     },
-    onSuccess: () => {
-      notification.success({
-        message: `Successfully synchronized notebooks`,
-        key: 'notebooks-created-success',
-        placement: 'topRight',
-      });
-    },
-    onError: () => {
-      notification.error({
-        message: `Failed to sync notebooks`,
-        key: 'notebooks-creation-error',
-        placement: 'topRight',
-      });
-    },
+    onSuccess: onFinnish,
+    onError: onFinnish,
   });
 
   useEffect(() => {
@@ -656,8 +653,6 @@ function CourseSetup() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div>Setting up course ...</div>
-
       {createNotebooksMutation.isPending && (
         <div className="text-blue-500">Syncing notebooks across student projects...</div>
       )}
