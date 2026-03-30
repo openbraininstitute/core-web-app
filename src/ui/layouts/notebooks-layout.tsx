@@ -577,7 +577,7 @@ function CourseSetup() {
           page: 1,
           size: 100,
         })
-      )?.data?.results;
+      )?.data?.results.filter((p) => p.id !== projectId);
     },
   });
 
