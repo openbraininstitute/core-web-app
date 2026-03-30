@@ -161,7 +161,11 @@ export function NotebooksLayout({ children, active }: Props) {
           </div>
           <div className="flex flex-col">
             <div>Upload CSV with student information</div>
-            <CsvUploadValidator maxStudents={numberStudents} vlabId={virtualLabId} />
+            <CsvUploadValidator
+              maxStudents={numberStudents}
+              vlabId={virtualLabId}
+              onCancel={() => setShowCourseModal(false)}
+            />
           </div>
         </div>
       </Modal>
@@ -172,9 +176,11 @@ export function NotebooksLayout({ children, active }: Props) {
 const CsvUploadValidator = ({
   maxStudents,
   vlabId,
+  onCancel,
 }: {
   maxStudents: number | null;
   vlabId: string;
+  onCancel: () => void;
 }) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [studentEmails, setStudentEmails] = useState<string[]>([]);
@@ -297,16 +303,22 @@ const CsvUploadValidator = ({
             <div className="text-red-500">{`Minimum of ${Math.max(studentEmails.length, 5)} required`}</div>
           )}
 
-          <div>
-            <PaymentFlow credits={credits} vlabId={vlabId} />
-          </div>
+          <PaymentFlow credits={credits} vlabId={vlabId} onCancel={onCancel} />
         </div>
       )}
     </div>
   );
 };
 
-function PaymentFlow({ credits, vlabId }: { credits: number; vlabId: string }) {
+function PaymentFlow({
+  credits,
+  vlabId,
+  onCancel,
+}: {
+  credits: number;
+  vlabId: string;
+  onCancel: () => void;
+}) {
   const [
     { data: setupIntent, isLoading: loadingIntent },
     { data: stripeData, isLoading: loadingStripeInstance },
@@ -340,12 +352,20 @@ function PaymentFlow({ credits, vlabId }: { credits: number; vlabId: string }) {
 
   return (
     <Elements stripe={stripeData} options={buildStripeFormOptions(setupIntent.data?.client_secret)}>
-      <PaymentForm credits={credits} vlabId={vlabId} />
+      <PaymentForm credits={credits} vlabId={vlabId} onCancel={onCancel} />
     </Elements>
   );
 }
 
-function PaymentForm({ credits, vlabId }: { credits: number; vlabId: string }) {
+function PaymentForm({
+  credits,
+  vlabId,
+  onCancel,
+}: {
+  credits: number;
+  vlabId: string;
+  onCancel: () => void;
+}) {
   const [stripeElementsReady, setElementsReady] = useState(false);
   const onReady = () => setElementsReady(true);
   const { success: successNotify, error: errorNotify } = useAppNotification();
@@ -459,6 +479,7 @@ function PaymentForm({ credits, vlabId }: { credits: number; vlabId: string }) {
             variant="ghost"
             size="lg"
             className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
+            onClick={onCancel}
           >
             Cancel
           </UiButton>
