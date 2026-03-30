@@ -10,13 +10,14 @@ import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { classNames } from '@/util/utils';
 
-import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
-import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
+import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
+import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
+import type { TTaskConfigMeta } from '@/features/scan-config/use-cases/extraction/types';
 
 type Props = {
-  config: ICircuitExtractionConfig;
+  config: ITaskConfig<TTaskConfigMeta>;
   execStatus?: TActivityStatus;
-  execution?: IExecutionActivity;
+  execution?: ITaskActivity;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
   context: { virtualLabId: string; projectId: string };
@@ -30,7 +31,7 @@ export function ExtractionInOutFiles({
   onSelect,
   context,
 }: Props) {
-  const { entity: circuit } = useModelQuery({ id: config.circuit_id, context });
+  const { entity: circuit } = useModelQuery({ id: execution?.generated.at(0)?.id, context });
   const extractionConfigAsset = config.assets.find(
     (o) => o.label === AssetLabel.circuit_extraction_config
   );

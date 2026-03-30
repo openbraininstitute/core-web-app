@@ -7,11 +7,8 @@ import { includes } from 'es-toolkit/compat';
 import pMap from 'p-map';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  getCircuitExtractionConfig,
-  getCircuitExtractionConfigGenerations,
-  getCircuitExtractionExecutions,
-} from '@/api/entitycore/queries/extraction';
+import { getTaskActivities, getTaskConfigs } from '@/api/entitycore/queries/task';
+import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ApiError } from '@/api/error';
@@ -26,13 +23,14 @@ import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features
 import { ExtractionInOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
 import { ExtractionConfigsLeftMenu } from '@/features/scan-config/use-cases/extraction/left-menu';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
 import type { CheckboxProps } from 'antd';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
+import type { TTaskConfigMeta } from '@/features/scan-config/use-cases/extraction/types';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
@@ -45,17 +43,6 @@ type Props = {
   projectId: string;
 };
 
-const queryKeys = {
-  configGeneration: (campaignId: string, context: { virtualLabId: string; projectId: string }) =>
-    ['extraction-config-generation', campaignId, context] as const,
-  extractionConfigs: (configIds: string[], context: { virtualLabId: string; projectId: string }) =>
-    ['extraction-configs', configIds, context] as const,
-  extractionExecutions: (
-    configIds: string[],
-    context: { virtualLabId: string; projectId: string }
-  ) => ['extraction-executions', configIds, context] as const,
-};
-
 export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const queryClient = useQueryClient();
   const notification = useAppNotification();
@@ -63,59 +50,46 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
 
   const [extractionRequestInProgress, setExtractionRequestInProgress] = useState<boolean>(false);
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);
-  const [activeConfig, setActiveConfig] = useState<ICircuitExtractionConfig | null>(null);
+  const [activeConfig, setActiveConfig] = useState<ITaskConfig<TTaskConfigMeta> | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
 
   // 1. get the generation activity that used the campaign
-  const { data: generationResponse, isLoading: generationLoading } = useQuery({
-    queryKey: queryKeys.configGeneration(campaignId, context),
+  const { data: configsResponse, isLoading: configsLoading } = useQuery({
+    queryKey: keyBuilder.taskConfigs({
+      context,
+      filters: {
+        task_config_type: TaskConfigType.CircuitExtractionConfig,
+        task_config_generator_id: campaignId,
+      },
+    }),
     queryFn: () =>
-      getCircuitExtractionConfigGenerations({
-        filters: { used__id: campaignId },
+      getTaskConfigs<TTaskConfigMeta>({
+        filters: {
+          task_config_generator_id: campaignId,
+          task_config_type: TaskConfigType.CircuitExtractionConfig,
+        },
         withFacets: false,
         context,
       }),
   });
 
-  // 2. extract config IDs from the generation activity's "generated" field
-  const generatedConfigIds = useMemo(() => {
-    const generations = generationResponse?.data ?? [];
-    const configIds: string[] = [];
-    for (const generation of generations) {
-      for (const generated of generation.generated ?? []) {
-        if (generated.id) {
-          configIds.push(generated.id);
-        }
-      }
-    }
-    return configIds;
-  }, [generationResponse?.data]);
-
-  // 3. fetch full config details for each generated config
-  const { data: configs, isLoading: configsLoading } = useQuery({
-    queryKey: queryKeys.extractionConfigs(generatedConfigIds, context),
-    queryFn: async () => {
-      const configPromises = generatedConfigIds.map((id) =>
-        getCircuitExtractionConfig({ id, context })
-      );
-      return Promise.all(configPromises);
-    },
-    enabled: generatedConfigIds.length > 0,
-  });
-
+  const configs = configsResponse?.data ?? [];
   const configList = useMemo(() => {
     const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
     return [...(configs ?? [])].sort((a, b) => collator.compare(a.name, b.name));
   }, [configs]);
 
   const configIds = configList.map((c) => c.id);
-  const queryKey = queryKeys.extractionExecutions(configIds, context);
-
   const { data: executionsResponse, isLoading: executionsLoading } = useQuery({
-    queryKey,
+    queryKey: keyBuilder.taskActivities({
+      context,
+      filters: {
+        used__id__in: configList.map((c) => c.id),
+      },
+    }),
     queryFn: () =>
-      getCircuitExtractionExecutions({
+      getTaskActivities({
         filters: { used__id__in: configIds },
         context,
       }),
@@ -162,9 +136,12 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
 
   const activeConfigExecStatus = activeConfigExecution?.status;
 
-  const onActiveConfigChange = useCallback((config: ICircuitExtractionConfig) => {
-    setActiveConfig(config);
-  }, []);
+  const onActiveConfigChange = useCallback(
+    (config: ITaskConfig<{ scan_parameters: Record<string, unknown> }>) => {
+      setActiveConfig(config);
+    },
+    []
+  );
 
   const onSelectedForExtractionChange = useCallback((configId: string, selected: boolean) => {
     if (selected) {
@@ -184,11 +161,11 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   }, [configList, statusMap]);
 
   useEffect(() => {
-    if (configList.length > 0 && !initialSelectionDone && !configsLoading && !executionsLoading) {
+    if (configList.length > 0 && !initialSelectionDone && !executionsLoading) {
       setSelectedConfigIds(selectableConfigIds);
       setInitialSelectionDone(true);
     }
-  }, [configList, configsLoading, executionsLoading, initialSelectionDone, selectableConfigIds]);
+  }, [configList, executionsLoading, initialSelectionDone, selectableConfigIds]);
 
   useEffect(() => {
     if (configList.length > 0 && !activeConfig) {
@@ -208,7 +185,12 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     onSuccess: (result, vars) => {
       log('info', `Extraction for ${vars} launched successfully, execution ID`, { result });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.extractionExecutions(configIds, context),
+        queryKey: keyBuilder.taskActivities({
+          context,
+          filters: {
+            used__id__in: configIds,
+          },
+        }),
       });
     },
     onError: (error, vars) => {
@@ -248,7 +230,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   );
 
   const launchBtnLabelPrefix = selectedConfigIds.length ? `(${selectedConfigIds.length})` : '';
-  const loading = generationLoading || configsLoading || executionsLoading;
+  const loading = configsLoading || executionsLoading;
 
   return (
     <div className={styles.threeColumns}>

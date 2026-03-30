@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type {
   EntityAuthorization,
   EntityCoreIdentifiable,
@@ -14,6 +13,17 @@ import type {
   SearchFilter,
   TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
+
+export enum ActivityStatus {
+  CREATED = 'created',
+  PENDING = 'pending',
+  RUNNING = 'running',
+  DONE = 'done',
+  ERROR = 'error',
+  CANCELLED = 'cancelled',
+}
+
+export type TActivityStatus = `${ActivityStatus}`;
 
 export const TaskActivityType = {
   CircuitSimulationConfigGeneration: 'circuit_simulation__config_generation',
