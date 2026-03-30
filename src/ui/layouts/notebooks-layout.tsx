@@ -8,6 +8,7 @@ import Image from 'next/image';
 import NextLink from 'next/link';
 import { type ReactNode, useState, useTransition } from 'react';
 
+import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { tryCatch } from '@/api/utils';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -15,6 +16,7 @@ import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { Button as UiButton } from '@/ui/molecules/button';
+import { keyBuilder as dataKeyBuilder } from '@/ui/use-query-keys/data';
 import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { isObject } from '@/util/type-guards';
@@ -37,7 +39,7 @@ export function NotebooksLayout({ children, active }: Props) {
   const [loading, setLoading] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [numberStudents, setNumberStudents] = useState<number | null>(10);
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
@@ -175,7 +177,7 @@ export function NotebooksLayout({ children, active }: Props) {
               </div>
             </div>
           )}
-          {step === 1 && <div>Setting up course ...</div>}
+          {step === 1 && <CourseSetup />}
         </div>
       </Modal>
     </div>
@@ -527,4 +529,17 @@ function PaymentForm({
       )}
     </div>
   );
+}
+
+function CourseSetup() {
+  const { virtualLabId, projectId } = useWorkspace();
+
+  const { data: notebooks } = useQuery({
+    queryKey: dataKeyBuilder.allNotebooks({ virtualLabId, projectId }),
+    queryFn: () => getNotebooks({ context: { virtualLabId, projectId } }),
+  });
+
+  console.log(notebooks);
+
+  return <div>Setting up course ...</div>;
 }
