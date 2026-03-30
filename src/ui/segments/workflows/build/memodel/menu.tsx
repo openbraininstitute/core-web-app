@@ -78,8 +78,10 @@ export function Menu({ sessionId }: { sessionId: string }) {
     queryFn: ({ signal }) =>
       checkSingleNeuronCompatibility({
         ctx: { virtualLabId, projectId },
-        morphologyId: morphologyId as string,
-        emodelId: emodelId as string,
+        // biome-ignore lint/style/noNonNullAssertion: Guaranteed by selectionComplete
+        morphologyId: morphologyId!,
+        // biome-ignore lint/style/noNonNullAssertion: Guaranteed by selectionComplete
+        emodelId: emodelId!,
         signal,
       }),
     enabled: selectionComplete,
