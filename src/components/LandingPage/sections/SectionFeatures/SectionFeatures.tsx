@@ -150,7 +150,7 @@ export default function SectionFeatures() {
           </button>
         ))}
       </nav>
-      <div className="relative w-full">
+      <div className="relative w-screen">
         {featureBlocks.map((block, index) => (
           <FeatureBlock
             key={block.titleH1 ?? block.titleH2 ?? index}
