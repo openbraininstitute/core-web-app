@@ -1,5 +1,5 @@
-import type { ScientificArtifactBase } from '@/api/entitycore/types/entities/scientific-artifact';
 import type { IPublication } from '@/api/entitycore/types/entities/publication';
+import type { ScientificArtifactBase } from '@/api/entitycore/types/entities/scientific-artifact';
 import type {
   EntityCoreIdentifiable,
   EntityCoreOwnership,

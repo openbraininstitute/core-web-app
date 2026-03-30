@@ -7,8 +7,9 @@ import { classNames } from '@/util/utils';
 
 import { HintContent } from '../hint';
 import { useRecordingsAndInjection } from '../hooks';
-import { PainterManager } from '../painter';
 import { useEscapeHandler } from './hooks';
+
+import type { PainterManager } from '../painter';
 
 import styles from './add-recording-dialog.module.css';
 

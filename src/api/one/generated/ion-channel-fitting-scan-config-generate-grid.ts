@@ -1,4 +1,5 @@
 import { obioneApi } from '@/api/one/utils';
+
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/generated/ion-channel-fitting-scan-config-generate-grid';

@@ -1,10 +1,10 @@
 'use client';
 
 import { LinkOutlined } from '@ant-design/icons';
+import { RiArrowDownSLine } from '@remixicon/react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
-import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import {
   buildChannelGroups,
   type ChannelGroupOption,
@@ -234,7 +234,7 @@ function ChannelHeader({
             <LinkOutlined className="size-3 text-gray-400" />
           </Link>
         )}
-        <ChevronDownIcon
+        <RiArrowDownSLine
           className={cn(
             'size-3 shrink-0 text-gray-400 transition-transform',
             isExpanded && 'rotate-180'

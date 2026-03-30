@@ -1,7 +1,7 @@
 'use client';
 
 import { isString } from 'es-toolkit/compat';
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
@@ -121,12 +121,18 @@ export function useDataTableColumns<T>({
     );
   }, [keys]);
 
+  // Use a ref so columnOrderBy always reads the latest sortState,
+  // even when Ant Design caches the column header cell and the onClick closure goes stale.
+  const sortStateRef = useRef(sortState);
+  sortStateRef.current = sortState;
+
   const columnOrderBy = useCallback(
     (field: EntityCoreFields, backendField: EntityCoreFields) => {
+      const current = sortStateRef.current;
       let order: TSortOrder | null = SortOrder.ASC;
 
-      if (sortState?.order && field === sortState.field) {
-        order = sortState.order === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC;
+      if (current?.order && field === current.field) {
+        order = current.order === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC;
       }
 
       setSortState?.({
@@ -135,7 +141,7 @@ export function useDataTableColumns<T>({
         order,
       });
     },
-    [setSortState, sortState]
+    [setSortState]
   );
 
   const updateColumnWidths = useCallback((resizeInit: ResizeInit, clientX: number) => {
@@ -264,9 +270,8 @@ export function useDataTableColumns<T>({
               },
             };
           },
-          defaultSortOrder: 'descend',
           sortOrder: getOrderDirection(key),
-          sortDirections: ['ascend', 'descend', 'descend'],
+          sortDirections: ['ascend', 'descend'],
           align: term?.style?.align,
         });
         return acc;

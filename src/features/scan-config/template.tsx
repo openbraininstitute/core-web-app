@@ -6,11 +6,12 @@ import { match } from 'ts-pattern';
 
 import { useEntries } from '@/features/scan-config/components/hooks';
 import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
-import { type TSchemaMappingConfiguration, useAtomsMap } from '@/features/scan-config/components/hooks/schema';
-import ModelPreview from '@/features/scan-config/components/model-preview';
+import {
+  type TSchemaMappingConfiguration,
+  useAtomsMap,
+} from '@/features/scan-config/components/hooks/schema';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
-import Left from '@/features/scan-config/components/ui-columns/left';
-import Middle from '@/features/scan-config/components/ui-columns/middle';
+import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
@@ -22,6 +23,8 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSupportedEntitiesForScanConfiguration,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
@@ -30,11 +33,28 @@ import { useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config } from '@/features/scan-config/components/components';
+import type { Nullish } from '@/utils/type';
 
 import styles from '@/features/scan-config/scan-config.module.css';
+
+type Props = {
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
+  virtualLabId: string;
+  projectId: string;
+  initialCampaignId?: string;
+  initialConfig?: Config;
+  defaultTab?: TScanConfigTabs;
+  readOnly?: boolean;
+  className?: string;
+  activity: TScanConfigActivity;
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  schema: ConfigSchema;
+  schemaName: SchemaName;
+  aiEnabled: boolean;
+  generatedEndpoint: string;
+  entityType: TSupportedEntityTypesForScanConfiguration;
+};
 
 export function ScanConfigTemplate({
   entity,
@@ -49,20 +69,10 @@ export function ScanConfigTemplate({
   schema,
   schemaName,
   schemaMappingConfig,
-}: {
-  entity: ICircuit | IMEModel;
-  virtualLabId: string;
-  projectId: string;
-  initialCampaignId?: string;
-  initialConfig?: Config;
-  defaultTab?: TScanConfigTabs;
-  readOnly?: boolean;
-  className?: string;
-  activity: TScanConfigActivity;
-  schemaMappingConfig: TSchemaMappingConfiguration | undefined;
-  schema: ConfigSchema;
-  schemaName: SchemaName;
-}) {
+  aiEnabled,
+  generatedEndpoint,
+  entityType,
+}: Props) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
   const [editing, setEditing] = useState(true);
@@ -72,17 +82,22 @@ export function ScanConfigTemplate({
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
   const allEntries = useEntries({ initialConfig, schema });
-  const [atomsMap, setAtomsMap] = useAtomsMap({ schema, initialConfig, model: entity });
+  const [atomsMap, setAtomsMap] = useAtomsMap({
+    schema,
+    initialConfig,
+    model: entity,
+  });
   const config = useConfigAtom(schema, atomsMap);
-
-  const aiEnabled = 'scale' in entity && entity.scale !== 'single';
 
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
 
   const results = match({ activity, tab })
     .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)
     .with(
-      { activity: ScanConfigActivity.Simulate, tab: { id: SimulateScanConfigTabs.simulations } },
+      {
+        activity: ScanConfigActivity.Simulate,
+        tab: { id: SimulateScanConfigTabs.simulations },
+      },
       () => (
         <Suspense>
           <SimulationsTab
@@ -94,7 +109,10 @@ export function ScanConfigTemplate({
       )
     )
     .with(
-      { activity: ScanConfigActivity.Extract, tab: { id: ExtractScanConfigTabs.extractions } },
+      {
+        activity: ScanConfigActivity.Extract,
+        tab: { id: ExtractScanConfigTabs.extractions },
+      },
       () => (
         <Suspense>
           <ExtractionTab
@@ -145,7 +163,6 @@ export function ScanConfigTemplate({
             readOnly={readOnly}
             setCampaignId={setCampaignId}
             setLoading={setLoading}
-            model={entity}
             initialConfig={initialConfig}
             setTab={setTab}
             allEntries={allEntries}
@@ -154,6 +171,8 @@ export function ScanConfigTemplate({
             isEditingKey={isEditingKey}
             setIsEditingKey={setIsEditingKey}
             activity={activity}
+            generatedEndpoint={generatedEndpoint}
+            entityType={entityType}
           />
           <div
             className={cn(
@@ -175,7 +194,7 @@ export function ScanConfigTemplate({
                 campaignId={campaignId}
                 loading={loading}
                 config={config}
-                model={entity}
+                entity={entity}
                 allEntries={allEntries}
                 onNewBlockClick={() => {
                   setNewKey('');
@@ -183,13 +202,19 @@ export function ScanConfigTemplate({
                 }}
                 selectedSchema={schema.properties[selectedRootElement]}
                 schemaMappingConfig={schemaMappingConfig}
+                entityType={entityType}
               />
             )}
           </div>
 
-          <div className="rounded-lg">
-            <ModelPreview model={entity} />
-          </div>
+          <Right
+            activity={activity}
+            entityType={entityType}
+            entity={entity}
+            selectedEntry={selectedEntry}
+            selectedRootElement={selectedRootElement}
+            config={config}
+          />
         </div>
       )}
 

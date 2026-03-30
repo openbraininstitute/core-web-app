@@ -188,6 +188,9 @@ export class Painter {
       this.pointCloudId = annotationValue;
       if (annotationValue !== -1) {
         const dataPoint = await getPointCouldData(annotationValue, accessToken);
+        // Check if context was deleted while fetching data (e.g., user navigated away)
+        if (!this.context) return;
+
         const painter = new TgdPainterPointsCloud(context, {
           dataPoint,
           minSizeInPixels: 5,

@@ -1,7 +1,3 @@
-import {
-  isRootBlock,
-  type TSchemaMappingConfiguration,
-} from '@/features/scan-config/components/hooks/schema';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
@@ -15,11 +11,13 @@ import {
   type IRootBlockUnion,
   ScanConfigUIElementDict,
   type SchemaName,
+  type TSupportedEntitiesForScanConfiguration,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { Nullish } from '@/utils/type';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
@@ -35,7 +33,8 @@ type MiddleProps = {
   campaignId: string;
   loading: boolean;
   config: Config;
-  model: ICircuit | IMEModel;
+  entity: TSupportedEntitiesForScanConfiguration | Nullish;
+  entityType: TSupportedEntityTypesForScanConfiguration;
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   selectedSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
@@ -53,13 +52,20 @@ export default function Middle({
   campaignId,
   loading,
   config,
-  model,
+  entity,
   allEntries,
   onNewBlockClick,
   selectedSchema,
   schemaMappingConfig,
+  entityType,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
+
+  // for BlockDictionary the path includes the entry; for others just the root element
+  const errorPathPrefix =
+    selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
+      ? `${selectedRootElement}/${selectedEntry}`
+      : selectedRootElement;
 
   return (
     <div className={styles.animateFadeUp}>
@@ -68,7 +74,7 @@ export default function Middle({
           campaignId={campaignId}
           loading={loading}
           config={config}
-          model={model}
+          entity={entity}
           allEntries={allEntries}
           schema={schema}
           atomsMap={atomsMap}
@@ -80,24 +86,28 @@ export default function Middle({
           selectedRootElement={selectedRootElement}
           onNewBlockClick={onNewBlockClick}
           schemaMappingConfig={schemaMappingConfig}
+          errorPathPrefix={errorPathPrefix}
         />
       )}
 
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockSingle &&
         isAtom(atomsMap[selectedRootElement]) && (
           <Block
+            schema={schema}
             schemaName={schemaName}
             disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
             config={config}
             blockSchema={selectedSchema}
             stateAtom={atomsMap[selectedRootElement]}
-            entity={model}
+            entity={entity}
             schemaMappingConfig={schemaMappingConfig}
+            errorPathPrefix={errorPathPrefix}
           />
         )}
 
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockUnion && (
         <BlockUnion
+          schema={schema}
           schemaName={schemaName}
           blockUnionSchema={selectedSchema}
           selectedRootElement={selectedRootElement}
@@ -106,8 +116,10 @@ export default function Middle({
           campaignId={campaignId}
           loading={loading}
           config={config}
-          model={model}
+          entity={entity}
+          entityType={entityType}
           schemaMappingConfig={schemaMappingConfig}
+          errorPathPrefix={errorPathPrefix}
         />
       )}
     </div>

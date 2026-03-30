@@ -1,21 +1,22 @@
-import { Fragment, useEffect } from 'react';
+import { useEffect } from 'react';
 
 import { RootElement } from '@/features/scan-config/components/root-element';
 import {
   type AtomsMap,
   type ConfigSchema,
   isType,
+  ScanConfigUIElementDict,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
 import { resetConfig } from '../hooks/schema';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { Config } from '@/features/scan-config/components/components';
 
 import styles from '@/features/scan-config/scan-config.module.css';
@@ -35,7 +36,6 @@ export default function Left({
   readOnly,
   setCampaignId,
   setLoading,
-  model,
   initialConfig,
   setTab,
   allEntries,
@@ -44,6 +44,8 @@ export default function Left({
   isEditingKey,
   setIsEditingKey,
   activity,
+  generatedEndpoint,
+  entityType,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -60,7 +62,6 @@ export default function Left({
   setCampaignId: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setTab: React.Dispatch<React.SetStateAction<TScanConfigTabs>>;
-  model: ICircuit | IMEModel;
   initialConfig?: Config;
   allEntries: Set<string>;
   newKey: string;
@@ -68,6 +69,8 @@ export default function Left({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
   activity: TScanConfigActivity;
+  generatedEndpoint: string;
+  entityType: TSupportedEntityTypesForScanConfiguration;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig, setAiConfig } = useAIConfig();
@@ -85,8 +88,8 @@ export default function Left({
       <div className="flex grow flex-col items-center gap-5 overflow-y-auto overflow-x-hidden secondary-scrollbar px-2 pb-5">
         {schema.group_order.map((group) => {
           return (
-            <Fragment key={group}>
-              <div className="self-start text-gray-500 uppercase">{group}</div>
+            <div key={group} className="w-full flex flex-col gap-1.5">
+              <h4 className="self-start text-gray-500 uppercase">{group}</h4>
               {schema.properties &&
                 Object.entries(schema.properties)
                   .filter(
@@ -125,24 +128,25 @@ export default function Left({
                       />
                     );
                   })}
-            </Fragment>
+            </div>
           );
         })}
       </div>
 
-      {!readOnly &&
+      {!readOnly && (
         <GenerateConfigButton
           loading={loading}
           campaignId={campaignId}
           setCampaignId={setCampaignId}
           errors={errors}
           config={config}
-          model={model}
           setTab={setTab}
           setLoading={setLoading}
           activity={activity}
+          entityType={entityType}
+          generatedApiUrl={generatedEndpoint}
         />
-      }
+      )}
     </div>
   );
 }

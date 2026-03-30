@@ -1,11 +1,13 @@
 import z from 'zod';
+
 import { measurementSchema } from '@/api/entitycore/queries/experimental/neuron-density';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
+
 import type {
   ExperimentalBoutonDensityFilter,
   IExperimentalBoutonDensity,
 } from '@/api/entitycore/types/entities/bouton-density';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
-import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/experimental-bouton-density';
@@ -65,27 +67,16 @@ export async function getExperimentalBoutonDensity({
 
 const ExperimentalBoutonDensitySchema = z.object({
   name: z
-    .string({ message: 'Experimental bouton density name is required' })
-    .nonempty({ message: 'Experimental bouton density name is required' }),
-  description: z
-    .string({ message: 'Experimental bouton density description is required' })
-    .nonempty({
-      message: 'Experimental bouton density description is required',
-    }),
-  brain_region_id: z
-    .string({ message: 'Brain region is required' })
-    .uuid()
-    .nonempty({ message: 'Brain region is required' }),
-  subject_id: z
-    .string({ message: 'Subject is required' })
-    .uuid()
-    .nonempty({ message: 'Subject is required' }),
-  license_id: z
-    .string({ message: 'License is required' })
-    .uuid()
-    .nonempty({ message: 'License is required' }),
+    .string({ error: 'Experimental bouton density name is required' })
+    .nonempty({ error: 'Experimental bouton density name is required' }),
+  description: z.string({ error: 'Experimental bouton density description is required' }).nonempty({
+    error: 'Experimental bouton density description is required',
+  }),
+  brain_region_id: z.uuid({ error: 'Brain region is required' }),
+  subject_id: z.uuid({ error: 'Subject is required' }),
+  license_id: z.uuid({ error: 'License is required' }),
   measurements: z.array(measurementSchema),
-  legacy_id: z.string().uuid().nullable().optional(),
+  legacy_id: z.uuid().nullable().optional(),
 });
 
 export type TExperimentalBoutonDensityCreate = z.infer<typeof ExperimentalBoutonDensitySchema>;

@@ -23,9 +23,7 @@ import {
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/selector';
 
 import type { SetStateAction } from 'jotai';
-import type { ConfigValue } from '@/features/scan-config/types';
-
-type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
+import type { ConfigValue, SetAtom } from '@/features/scan-config/types';
 
 interface RangeProps {
   data: MechanismVariablesRoot | null;
@@ -34,9 +32,18 @@ interface RangeProps {
   setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
   fieldKey: string;
   modificationType: string;
+  errorPathPrefix?: string;
 }
 
-export function Range({ data, disabled, state, setState, fieldKey, modificationType }: RangeProps) {
+export function Range({
+  data,
+  disabled,
+  state,
+  setState,
+  fieldKey,
+  modificationType,
+  errorPathPrefix,
+}: RangeProps) {
   const currentModification = state[fieldKey];
   const isValidModification =
     !!currentModification &&
@@ -153,6 +160,7 @@ export function Range({ data, disabled, state, setState, fieldKey, modificationT
           values={sectionValues}
           onChange={handleSectionChange}
           disabled={disabled}
+          errorPathPrefix={errorPathPrefix}
         />
       )}
     </div>

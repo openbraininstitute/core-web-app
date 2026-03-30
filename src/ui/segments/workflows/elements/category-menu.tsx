@@ -17,7 +17,6 @@ type Props = {
 
 export function CategoryMenu({ current, onItemClick }: Props) {
   const featureFlags = useFlags();
-
   return (
     <Carousel
       id="workflow-category-menu"

@@ -1,6 +1,6 @@
 import { find, snakeCase } from 'es-toolkit/compat';
 
-import { authApiClient } from '@/api/apiClient';
+import { authApiClient } from '@/api/api-client';
 import { config as appConfig } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';

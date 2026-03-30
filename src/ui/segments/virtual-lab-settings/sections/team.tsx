@@ -26,9 +26,9 @@ import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 
 import type { ColumnType } from 'antd/es/table';
-import type { Member, Role } from '@/api/virtual-lab-svc/queries/types';
+import type { Member, TRole } from '@/api/virtual-lab-svc/queries/types';
 
-const emailSchema = z.string().min(3, 'Email is required').email('Email is not valid');
+const emailSchema = z.email('Email is not valid').min(3, 'Email is required');
 
 const Steps = {
   InviteMember: 'invite-member',
@@ -39,7 +39,7 @@ type Step = (typeof Steps)[keyof typeof Steps] | null;
 
 type InvitePayload = {
   email: string;
-  role: Role;
+  role: TRole;
 };
 
 type InviteMemberStepProps = {
@@ -489,7 +489,9 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
         dataIndex: 'role',
         align: 'right',
         width: '200px',
-        render: (_: Role, record) => <CancelInvitation virtualLabId={virtualLabId} user={record} />,
+        render: (_: TRole, record) => (
+          <CancelInvitation virtualLabId={virtualLabId} user={record} />
+        ),
       },
     ],
     [ownerId, virtualLabId]

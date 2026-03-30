@@ -27,8 +27,11 @@ export const EntityGroupDict = {
 
 export type TEntityGroupValue = keyof typeof EntityGroupDict;
 
-type EntityTypeProperties = {
+type TEntityTypeProperties = {
+  order?: number;
+  label?: string;
   disabled: boolean;
+  sourceType?: TExtendedEntitiesTypeDict;
   type: TExtendedEntitiesTypeDict;
   requiredFeatures?: Array<FlagKey>;
 };
@@ -38,6 +41,7 @@ type EntityTypeOption = {
   value: TExtendedEntitiesTypeDict | undefined;
   label: string;
   disabled: boolean;
+  order?: number;
 };
 
 type EntityTypeGroupedOptions = {
@@ -49,8 +53,8 @@ type TBuildSimulateWorkflowConfigProperties = {
   group: TEntityGroupValue;
   label: string;
   properties: {
-    build?: EntityTypeProperties;
-    simulate?: EntityTypeProperties;
+    build?: TEntityTypeProperties;
+    simulate?: TEntityTypeProperties;
   };
   requiredFeatures?: Array<FlagKey>;
 };
@@ -65,6 +69,7 @@ export type TExtractWorkflowConfig = {
   value: TExtendedEntitiesTypeDict;
   label: string;
   disabled: boolean;
+  properties?: null;
   requiredFeatures?: Array<FlagKey>;
 };
 
@@ -76,10 +81,15 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+        order: 3,
       },
       simulate: {
-        disabled: true,
-        type: ExtendedEntitiesTypeDict.IonChannelModel,
+        label: 'Ion channel (beta)',
+        disabled: false,
+        sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
+        type: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+        requiredFeatures: [ExtendedEntitiesTypeDict.IonChannelModelSimulation],
+        order: 3,
       },
     },
   },
@@ -118,10 +128,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.Memodel,
+        order: 1,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+        order: 1,
       },
     },
   },
@@ -132,10 +144,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+        order: 2,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+        order: 2,
       },
     },
   },
@@ -146,10 +160,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: true,
         type: ExtendedEntitiesTypeDict.MemodelCircuit,
+        order: 4,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+        order: 4,
       },
     },
   },
@@ -160,10 +176,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: true,
         type: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+        order: 5,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+        order: 5,
       },
     },
   },
@@ -174,10 +192,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: true,
         type: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+        order: 6,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+        order: 6,
       },
     },
   },
@@ -188,10 +208,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: true,
         type: ExtendedEntitiesTypeDict.SmallMicrocircuit,
+        order: 7,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+        order: 7,
       },
     },
   },
@@ -289,9 +311,12 @@ export const extractActivitiesConfiguration: Array<TExtractWorkflowConfig> = [
 ] as const;
 
 type ActivityConfigType =
-  | { configType: 'buildSimulate'; config: Partial<TBuildSimulateWorkflowConfig> }
+  | {
+      configType: 'buildSimulate';
+      config: Partial<TBuildSimulateWorkflowConfig>;
+    }
   | { configType: 'extract'; config: Array<TExtractWorkflowConfig> }
-  | { configType: 'none' };
+  | { configType: 'none'; config: null };
 
 type ActivityDictEntry = {
   label: string;
@@ -333,6 +358,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     disabled: true,
     name: 'Optimization',
     configType: 'none',
+    config: null,
   },
   {
     label: 'Validate',
@@ -340,6 +366,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     disabled: true,
     name: 'Validation',
     configType: 'none',
+    config: null,
   },
   {
     label: 'Process Data',
@@ -347,6 +374,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     disabled: true,
     name: 'Processing Data',
     configType: 'none',
+    config: null,
   },
 ] as const;
 
@@ -418,7 +446,7 @@ export function getDropdownOptionsByCategory(
 
         return {
           group: config.group,
-          label: config.label,
+          label: propertyConfig?.label ?? config.label,
           value: propertyConfig?.type,
           disabled: disabled || !satisfiesFeatureRequirements,
         };
@@ -500,13 +528,17 @@ export function getAllOptionsOrdered(
 
         return {
           group: config.group,
-          label: config.label,
+          label: propertyConfig?.label ?? config.label,
           value: propertyConfig?.type,
           disabled: disabled || !satisfiesFeatureRequirements,
+          order: propertyConfig?.order ?? Number.MAX_SAFE_INTEGER,
         };
       });
 
-    return sortBy(options, ['disabled', 'group']);
+    return sortBy(options, [
+      (o) => (o.disabled ? 1 : 0),
+      (o) => o.order ?? Number.MAX_SAFE_INTEGER,
+    ]);
   }
 
   return [];
@@ -573,3 +605,31 @@ export function getBaseModelTypeFromActivityType({
     )
     .otherwise(() => undefined);
 }
+
+export const getSourceTypeByActivityAndType = (
+  activity: TActivityValue,
+  type: TExtendedEntitiesTypeDict
+) => {
+  const config = ActivityDict.find((a) => a.value === activity)?.config;
+  if (!config || Array.isArray(config)) return undefined;
+  const activityKey = activity as 'build' | 'simulate';
+
+  return find(values(config), (c) => {
+    const props = c?.properties[activityKey];
+    return props?.type === type;
+  })?.properties[activityKey]?.sourceType;
+};
+
+export const getTypeByActivityAndSourceType = (
+  activity: TActivityValue,
+  sourceType: TExtendedEntitiesTypeDict
+) => {
+  const config = ActivityDict.find((a) => a.value === activity)?.config;
+  if (!config || Array.isArray(config)) return undefined;
+  const activityKey = activity as 'build' | 'simulate';
+
+  return find(values(config), (c) => {
+    const props = c?.properties[activityKey];
+    return props?.sourceType === sourceType;
+  })?.properties[activityKey]?.type;
+};
