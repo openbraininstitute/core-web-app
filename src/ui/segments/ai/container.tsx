@@ -38,7 +38,7 @@ export function Container() {
             )
       )}
       animate={{ width: targetWidth, height: 'calc(100vh - 6rem)' }}
-      initial={false}
+      initial={{ width: targetWidth, height: 'calc(100vh - 6rem)' }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
       <AnimatePresence>
