@@ -11,7 +11,9 @@ import { type ReactNode, useState, useTransition } from 'react';
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { tryCatch } from '@/api/utils';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
-import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { getVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
@@ -534,12 +536,59 @@ function PaymentForm({
 function CourseSetup() {
   const { virtualLabId, projectId } = useWorkspace();
 
-  const { data: notebooks } = useQuery({
-    queryKey: dataKeyBuilder.allNotebooks({ virtualLabId, projectId }),
-    queryFn: () => getNotebooks({ context: { virtualLabId, projectId } }),
+  const fetchAllPrivateNotebooks = async () => {
+    const firstResponse = await getNotebooks({
+      context: { virtualLabId, projectId },
+      filters: { page: 1, page_size: 1000 },
+    });
+
+    const { total_items, page_size } = firstResponse.pagination;
+
+    const totalPages = Math.ceil(total_items / page_size);
+
+    if (totalPages === 1) {
+      return firstResponse.data.filter((notebook) => notebook.authorized_public === false);
+    }
+
+    const remainingPages = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
+    const remainingRequests = remainingPages.map((page) =>
+      getNotebooks({
+        context: { virtualLabId, projectId },
+        filters: { page, page_size: 1000 },
+      })
+    );
+
+    const remainingResponses = await Promise.all(remainingRequests);
+
+    const allNotebooks = [
+      ...firstResponse.data,
+      ...remainingResponses.flatMap((response) => response.data),
+    ];
+
+    return allNotebooks.filter((notebook) => notebook.authorized_public === false);
+  };
+
+  const { data: projects, isLoading: loadingProjects } = useQuery({
+    queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
+    queryFn: async () => {
+      return (
+        await listProjects({
+          virtualLabId,
+          page: 1,
+          size: 100,
+        })
+      )?.data?.results;
+    },
   });
 
-  console.log(notebooks);
+  const { data: notebooks, isLoading } = useQuery({
+    queryKey: dataKeyBuilder.privateNotebooks({ virtualLabId, projectId }),
+    queryFn: fetchAllPrivateNotebooks,
+  });
 
-  return <div>Setting up course ...</div>;
+  if (isLoading || loadingProjects) {
+    return <div>Loading notebooks and projects...</div>;
+  }
+
+  return 'Setting up course ...';
 }

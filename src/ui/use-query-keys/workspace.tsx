@@ -98,4 +98,5 @@ export const keyBuilder = {
     pageSize?: number;
     category: TExtendedEntitiesTypeDict;
   }) => [`${prefix}/bookmark-categories`, { virtualLabId, projectId, category, page, pageSize }],
+  allProjects: () => [`${prefix}/all-projects`],
 };
