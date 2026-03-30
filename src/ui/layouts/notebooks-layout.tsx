@@ -557,6 +557,7 @@ function PaymentForm({
 
 function CourseSetup() {
   const { virtualLabId, projectId } = useWorkspace();
+  const notification = useAppNotification();
 
   const fetchAllPrivateNotebooks = async () => {
     const firstResponse = await getNotebooks({
@@ -608,44 +609,41 @@ function CourseSetup() {
     queryFn: fetchAllPrivateNotebooks,
   });
 
-  console.log(projects);
-
   const createNotebooksMutation = useMutation({
     mutationFn: async () => {
       if (!notebooks || !projects) return;
 
-      // Create all notebook-project combinations in parallel
       const createPromises = projects.flatMap((project) =>
         notebooks.map(async (notebook) => {
-          try {
-            const result = await createNotebook({
-              payload: {
-                name: notebook.name,
-                description: notebook.description,
-                specifications: notebook.specifications,
-                scale: notebook.scale,
-              },
-              context: { virtualLabId, projectId: project.id },
-            });
-            return { project: project.id, notebook: notebook.id, result };
-          } catch (error) {
-            console.error(
-              `Failed to create notebook ${notebook.name} in project ${project.name}:`,
-              error
-            );
-            return { project: project.id, notebook: notebook.id, error };
-          }
+          const result = await createNotebook({
+            payload: {
+              name: notebook.name,
+              description: notebook.description,
+              specifications: notebook.specifications,
+              scale: notebook.scale,
+            },
+            context: { virtualLabId, projectId: project.id },
+          });
+          return { project: project.id, notebook: notebook.id, result };
         })
       );
 
       const results = await Promise.all(createPromises);
-
       return results;
     },
-    onSuccess: (results) => {
-      const successful = results?.filter((r) => !r.error).length || 0;
-      const failed = results?.filter((r) => r.error).length || 0;
-      console.log(`Created ${successful} notebooks successfully, ${failed} failed`);
+    onSuccess: () => {
+      notification.success({
+        message: `Successfully syncronized notebooks`,
+        key: 'notebooks-created-success',
+        placement: 'topRight',
+      });
+    },
+    onError: () => {
+      notification.error({
+        message: `Failed to sync notebooks`,
+        key: 'notebooks-creation-error',
+        placement: 'topRight',
+      });
     },
   });
 
