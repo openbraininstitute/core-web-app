@@ -2,15 +2,11 @@
 
 import { FullscreenOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { motion } from 'motion/react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useMemo, useTransition } from 'react';
+import { useState } from 'react';
+
 import { NeuronViewerContainer } from '@/components/neuron-viewer/neuron-viewer-with-actions';
-import {
-  type ThreeDVisualizerQueryParamKeys,
-  threeDVisualizerQueryParam,
-  threeDVisualizerState,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { cn } from '@/utils/css-class';
+
 import { useFullscreenSwitcher } from './hooks';
 
 import styles from './neuron-visualizer.module.css';
@@ -29,26 +25,9 @@ export function NeuronVisualizer({
   disableSynapses,
 }: Props) {
   const { refContainer, toggleFullscreen } = useFullscreenSwitcher();
-  const queryParams = useSearchParams();
-  const [, startTransition] = useTransition();
-  const { replace } = useRouter();
-  const visualizerState = queryParams.get('3d') as ThreeDVisualizerQueryParamKeys;
-  const isCollapsed = visualizerState === threeDVisualizerState.Collapsed;
-  const isExpanded = visualizerState === threeDVisualizerState.Expanded;
-
-  const pathname = usePathname();
-  const targetWidth = useMemo<string>(() => {
-    if (isCollapsed) return '3rem';
-    return '100%';
-  }, [isCollapsed]);
-
-  const updateVisualizerState = (v: ThreeDVisualizerQueryParamKeys) => {
-    startTransition(() => {
-      const params = new URLSearchParams(queryParams);
-      params.set(threeDVisualizerQueryParam, v);
-      replace(`${pathname}?${params.toString()}`);
-    });
-  };
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const isExpanded = !isCollapsed;
+  const targetWidth = isCollapsed ? '3rem' : '100%';
 
   return (
     memodelId && (
@@ -72,7 +51,7 @@ export function NeuronVisualizer({
             type="button"
             className="relative flex h-full w-full cursor-pointer items-start justify-center px-2 select-none"
             aria-label="Expand 3D visualizer"
-            onClick={() => updateVisualizerState(threeDVisualizerState.Expanded)}
+            onClick={() => setIsCollapsed(false)}
           >
             <div className="absolute top-3 flex items-center justify-center text-white">
               <PlusOutlined className="h-5 w-5" />
@@ -110,7 +89,7 @@ export function NeuronVisualizer({
                     styles.hideInFullscreen
                   )}
                   aria-label="Collapse 3D visualizer"
-                  onClick={() => updateVisualizerState(threeDVisualizerState.Collapsed)}
+                  onClick={() => setIsCollapsed(true)}
                 >
                   <MinusOutlined className="text-white" />
                 </button>

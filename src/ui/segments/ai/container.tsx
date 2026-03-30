@@ -15,7 +15,7 @@ export function Container() {
 
   useAgentState('smc_simulation_config');
 
-  const isCollapsed = state === PanelState.Collapsed;
+  const isChatCollapsed = state === PanelState.Collapsed;
   const isFullscreen = state === PanelState.Fullscreen;
   const targetWidth = state === PanelState.Collapsed ? '3rem' : '400px';
 
@@ -30,7 +30,7 @@ export function Container() {
       className={cn(
         styles.aiPanel,
         'text-white [grid-area:ai] z-[30]',
-        isCollapsed
+        isChatCollapsed
           ? 'bg-primary-9 border-primary-9 mr-3 shadow-md rounded-full! [transition:background-color_150ms_ease_200ms,border-color_150ms_ease_200ms]'
           : cn(
               'text-primary-9 mr-3 outline outline-1 outline-[#ddd] [outline-offset:-1px] bg-white [transition:none]',
@@ -42,7 +42,7 @@ export function Container() {
       transition={{ duration: 0.3, ease: 'easeInOut' }}
     >
       <AnimatePresence>
-        {isCollapsed ? (
+        {isChatCollapsed ? (
           <button
             key="collapsed"
             type="button"
@@ -72,7 +72,7 @@ export function Container() {
             key="expanded"
             className="flex h-full w-full flex-col rounded-lg relative overflow-visible"
           >
-            {!isCollapsed && (
+            {!isChatCollapsed && (
               <HydrateWrapper key="ai-assistant">
                 <AiAssistant
                   section="explore"

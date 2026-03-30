@@ -4,21 +4,16 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { use } from 'react';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import {
-  type ThreeDVisualizerQueryParamKeys,
-  threeDVisualizerState,
-  type WorkflowSimulatePanelKeys,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';
 import { PanelSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { cn } from '@/utils/css-class';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
 
 export default function Page({
@@ -30,12 +25,9 @@ export default function Page({
     step: ExperimentStepKeys;
     sessionId: string;
     panel: WorkflowSimulatePanelKeys;
-    '3d': ThreeDVisualizerQueryParamKeys;
   }
 >) {
   const queryParams = use(searchParams);
-  const visualizerState =
-    (queryParams['3d'] as ThreeDVisualizerQueryParamKeys) ?? threeDVisualizerState.Expanded;
   const { virtualLabId, projectId, id: modelId } = use(pathParams);
   let sessionId = queryParams?.sessionId;
   if (!sessionId) sessionId = crypto.randomUUID();
@@ -70,11 +62,7 @@ export default function Page({
           <div
             id="simulation-panel-wrapper"
             data-testid="simulation-panel-wrapper"
-            className={cn(
-              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto',
-              { 'grid-cols-[2fr_3fr]': visualizerState === threeDVisualizerState.Expanded },
-              { 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed }
-            )}
+            className="grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto grid-cols-[2fr_3fr]"
           >
             <HydrateWrapper>
               <PanelSelector
