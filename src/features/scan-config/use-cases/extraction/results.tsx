@@ -8,9 +8,10 @@ import pMap from 'p-map';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getTaskActivities, getTaskConfigs } from '@/api/entitycore/queries/task';
+import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ApiError } from '@/api/error';
 import { launchExtraction } from '@/api/one/extraction';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
@@ -19,6 +20,10 @@ import { useAppNotification } from '@/components/notification';
 import { WorkspaceSection } from '@/constants';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { errorRegistry } from '@/features/scan-config/error-registry';
+import {
+  buildActivityStatusMap,
+  findLatestExecutionForEntity,
+} from '@/features/scan-config/helpers';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { ExtractionInOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
 import { ExtractionConfigsLeftMenu } from '@/features/scan-config/use-cases/extraction/left-menu';
@@ -55,42 +60,68 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
 
   // 1. get the generation activity that used the campaign
-  const { data: configsResponse, isLoading: configsLoading } = useQuery({
+  const { data: configGenerationIds, isLoading: configGenerationLoading } = useQuery({
+    queryKey: keyBuilder.taskActivities({
+      context,
+      filters: {
+        task_activity_type: TaskActivityType.CircuitExtractionConfigGeneration,
+        used__id: campaignId,
+      },
+    }),
+    queryFn: () =>
+      getTaskActivities({
+        filters: {
+          task_activity_type: TaskActivityType.CircuitExtractionConfigGeneration,
+          used__id: campaignId,
+        },
+        withFacets: false,
+        context,
+      }),
+    select: (data) => data.data.at(0)?.generated?.map((g) => g.id) ?? [],
+  });
+
+  // 2. get the config generation activities
+  const { data: taskConfigs, isLoading: configsLoading } = useQuery({
     queryKey: keyBuilder.taskConfigs({
       context,
       filters: {
         task_config_type: TaskConfigType.CircuitExtractionConfig,
-        task_config_generator_id: campaignId,
+        id__in: configGenerationIds,
       },
     }),
     queryFn: () =>
       getTaskConfigs<TTaskConfigMeta>({
         filters: {
-          task_config_generator_id: campaignId,
           task_config_type: TaskConfigType.CircuitExtractionConfig,
+          id__in: configGenerationIds,
         },
         withFacets: false,
         context,
       }),
+    select: (data) => data.data,
   });
 
-  const configs = configsResponse?.data ?? [];
   const configList = useMemo(() => {
     const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
-    return [...(configs ?? [])].sort((a, b) => collator.compare(a.name, b.name));
-  }, [configs]);
+    return [...(taskConfigs ?? [])].sort((a, b) => collator.compare(a.name, b.name));
+  }, [taskConfigs]);
 
   const configIds = configList.map((c) => c.id);
+  // 3. get the execution activities
   const { data: executionsResponse, isLoading: executionsLoading } = useQuery({
     queryKey: keyBuilder.taskActivities({
       context,
       filters: {
-        used__id__in: configList.map((c) => c.id),
+        task_activity_type: TaskActivityType.CircuitExtractionExecution,
+        used__id__in: configIds,
       },
     }),
     queryFn: () =>
       getTaskActivities({
-        filters: { used__id__in: configIds },
+        filters: {
+          task_activity_type: TaskActivityType.CircuitExtractionExecution,
+          used__id__in: configIds,
+        },
         context,
       }),
     enabled: configIds.length > 0,
@@ -104,34 +135,16 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   });
 
   const statusMap = useMemo(() => {
-    const map = new Map<string, TActivityStatus>();
-    const executions = executionsResponse?.data ?? [];
-
-    for (const config of configList) {
-      const configExecutions = executions.filter((exec) =>
-        exec.used?.some((used) => used.id === config.id)
-      );
-      if (configExecutions.length > 0) {
-        const latestExecution = configExecutions.sort(
-          (a, b) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime()
-        )[0];
-        map.set(config.id, latestExecution.status);
-      }
-    }
-
-    return map;
+    return buildActivityStatusMap({
+      entityIds: configList.map((c) => c.id),
+      executions: executionsResponse?.data ?? [],
+    });
   }, [configList, executionsResponse?.data]);
 
   const activeConfigExecution = useMemo(() => {
     if (!activeConfig) return undefined;
     const executions = executionsResponse?.data ?? [];
-    const configExecutions = executions.filter((exec) =>
-      exec.used?.some((used) => used.id === activeConfig.id)
-    );
-    if (configExecutions.length === 0) return undefined;
-    return configExecutions.sort(
-      (a, b) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime()
-    )[0];
+    return findLatestExecutionForEntity(executions, activeConfig.id);
   }, [activeConfig, executionsResponse?.data]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
@@ -230,7 +243,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   );
 
   const launchBtnLabelPrefix = selectedConfigIds.length ? `(${selectedConfigIds.length})` : '';
-  const loading = configsLoading || executionsLoading;
+  const loading = configsLoading || configGenerationLoading || executionsLoading;
 
   return (
     <div className={styles.threeColumns}>
