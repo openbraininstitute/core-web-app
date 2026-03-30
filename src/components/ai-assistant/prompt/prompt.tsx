@@ -71,21 +71,25 @@ export default function Prompt({
         {/* <button type="button" onClick={handleToolsClick} aria-label="Select tools">
           <IconGear />
         </button> */}
-        <button
-          type="button"
-          onClick={isStreaming ? onCancel : handleSendClick}
-          aria-label={isStreaming ? 'Cancel' : 'Send prompt'}
-          disabled={isStreaming ? false : value.trim().length === 0 || disabled}
-          className={isStreaming ? styles.cancelButton : undefined}
-        >
-          {isStreaming ? (
+        {isStreaming ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            aria-label="Cancel"
+            className={styles.stopButton}
+          >
             <StopIcon />
-          ) : disabled ? (
-            <div className={styles.spinner} />
-          ) : (
-            <SendIcon />
-          )}
-        </button>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSendClick}
+            aria-label="Send prompt"
+            disabled={value.trim().length === 0 || disabled}
+          >
+            {disabled ? <div className={styles.spinner} /> : <SendIcon />}
+          </button>
+        )}
       </div>
       <ToolsSelector
         open={showToolsSelector}

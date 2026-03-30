@@ -54,45 +54,52 @@
 
 .prompt > button {
   flex: 0 0 auto;
-  transition: 0.2s all;
-  background-color: var(--color-neutral-8);
-  color: var(--color-neutral-3);
+  transition: background-color 0.2s ease;
   border: none;
-  border-radius: 50%;
-  padding: 0.5em;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.prompt > button:not(.stopButton) {
+  background-color: var(--color-neutral-8);
+  color: var(--color-neutral-3);
+  border-radius: 50%;
+  padding: 0.5em;
   width: 2.5em;
   height: 2.5em;
 }
 
-.prompt > button:not([disabled]) {
+.prompt > button:not(.stopButton):not([disabled]) {
   background-color: var(--color-primary-8);
   color: var(--color-neutral-9);
 }
 
-.prompt > button:hover:not([disabled]) {
+.prompt > button:not(.stopButton):hover:not([disabled]) {
   background-color: var(--color-primary-6);
 }
 
-.prompt > button[disabled] {
+.prompt > button:not(.stopButton)[disabled] {
   cursor: default;
   color: var(--color-neutral-9);
   background-color: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
 }
 
-.prompt > button.cancelButton {
-  background-color: color-mix(in srgb, var(--color-error) 70%, var(--color-neutral-3));
-  color: white;
-  transition: all 0.2s ease;
+.stopButton {
+  border-radius: 50%;
+  background-color: transparent;
+  width: 2.5em;
+  height: 2.5em;
+  transition: box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
-.prompt > button.cancelButton:hover {
-  background-color: color-mix(in srgb, var(--color-error) 90%, var(--color-neutral-9));
-  box-shadow: 0 0 4px 1px color-mix(in srgb, var(--color-error) 30%, transparent);
+.stopButton:hover {
+  background-color: color-mix(in srgb, var(--color-error) 35%, transparent);
+  box-shadow: 0 0 1px color-mix(in srgb, var(--color-error) 20%, transparent);
+  transition: box-shadow 0.15s ease, background-color 0.15s ease;
 }
+
 
 .spinner {
   width: 20px;
