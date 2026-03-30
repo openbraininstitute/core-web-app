@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-loop-func */
-/* tslint:disable no-magic-numbers */
-/* tslint:disable number-literal-format */
-
 import Color from './color';
 
 describe('Tfw.Color', () => {
