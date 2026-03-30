@@ -140,11 +140,11 @@
 }
 
 .thinkingContent {
-  padding: 8px 12px 8px 12px;
   background: transparent;
-  overflow: hidden;
-  transform-origin: top;
-  animation: expandContent 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.thinkingContentInner {
+  padding: 8px 12px;
 }
 
 .slideToCollapsible {
