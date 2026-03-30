@@ -32,7 +32,7 @@ export interface INotebook
     EntityCoreType,
     EntityCoreOwnership {
   description: string;
-  // biome-ignore lint/complexity/noBannedTypes: EntityCore API uses generic Object type
+  // biome-ignore lint/complexity/noBannedTypes: Specifications not accessed, just copied as is
   specifications: Object;
   scale: 'subcellular' | 'cellular' | 'circuit' | 'system';
 }
