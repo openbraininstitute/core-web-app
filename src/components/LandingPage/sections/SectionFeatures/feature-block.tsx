@@ -1,6 +1,8 @@
 import { useInView } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 
+export type FeatureInViewOptions = NonNullable<Parameters<typeof useInView>[1]>;
+
 export type ContentForFeatures = {
   titleH1?: string;
   titleH2?: string;
@@ -16,14 +18,16 @@ export type ContentForFeatures = {
 export default function FeatureBlock({
   content,
   id,
+  inViewOptions,
   onInView,
 }: {
   content: ContentForFeatures;
   id: number;
+  inViewOptions?: FeatureInViewOptions;
   onInView?: (index: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { amount: 0.5 });
+  const isInView = useInView(ref, inViewOptions ?? { amount: 0.5 });
 
   useEffect(() => {
     if (isInView && onInView) onInView(id);
@@ -42,7 +46,7 @@ export default function FeatureBlock({
   return (
     <div
       ref={ref}
-      className="relative w-full min-h-screen md:h-dvh md:min-h-0 md:snap-start flex flex-col lg:flex-row items-center gap-12 flex-nowrap py-[16vh] px-32"
+      className="relative w-screen md:w-full min-h-screen md:h-dvh md:min-h-0 md:snap-start flex flex-col lg:flex-row items-center gap-12 flex-nowrap py-[16vh] px-4 sm:px-8 lg:px-32"
       style={style}
       id={`feature-block-${id}`}
     >
@@ -52,22 +56,22 @@ export default function FeatureBlock({
       >
         <div className="relative leading-1.2 font-normal">
           <h2
-            className="relative text-7xl!"
+            className="relative text-5xl! lg:text-7xl!"
             style={{ color: content.theme === 'dark' ? '#91D5FF' : '#A5A5A5' }}
           >
             {content.titleH2}
           </h2>
           <h1
-            className="relative -top-6 text-7xl!"
+            className="relative -top-4 lg:-top-6 text-5xl! lg:text-7xl!"
             style={{ color: content.theme === 'dark' ? '#fff' : '#002766' }}
           >
             {content.titleH1}
           </h1>
         </div>
-        <p className="text-base leading-normal">{content.description}</p>
+        <p className="text-lg lg:text-base leading-normal">{content.description}</p>
       </aside>
       <section className="w-full lg:w-2/3">
-        <div className="grid grid-cols-2 gap-4 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-10">
           {content.useCases.map((useCase, index) => (
             <div
               key={useCase}
@@ -89,7 +93,7 @@ export default function FeatureBlock({
         </div>
 
         <div
-          className="grid grid-cols-3 gap-4 border p-4 rounded-lg mt-10"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-4 border p-4 rounded-lg mt-10"
           style={{
             borderColor: content.theme === 'dark' ? '#096DD9' : '#D9D9D9',
           }}

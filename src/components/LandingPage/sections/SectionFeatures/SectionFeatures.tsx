@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { useSanityContentForPage } from '@/components/LandingPage/content/content';
 import { EnumSection } from '@/components/LandingPage/sections/sections';
@@ -9,7 +9,15 @@ import { cn } from '@/utils/css-class';
 import FeatureBlock from './feature-block';
 
 import type { ContentForSingleFeature } from '@/components/LandingPage/content/types';
-import type { ContentForFeatures } from './feature-block';
+import type { ContentForFeatures, FeatureInViewOptions } from './feature-block';
+
+/** Mobile: active section updates when it intersects the middle 60% of the viewport (20% inset top & bottom). */
+const MOBILE_IN_VIEW_OPTIONS: FeatureInViewOptions = {
+  margin: '-20% 0px -20% 0px',
+  amount: 'some',
+};
+
+const DESKTOP_IN_VIEW_OPTIONS: FeatureInViewOptions = { amount: 0.5 };
 
 function toContentForFeatures(source: {
   titleH1?: unknown;
@@ -75,6 +83,18 @@ function isSingleFeature(item: unknown): item is ContentForSingleFeature {
 export default function SectionFeatures() {
   const pageContent = useSanityContentForPage(EnumSection.Features);
   const [activeSection, setActiveSection] = useState(0);
+  const [inViewOptions, setInViewOptions] = useState<FeatureInViewOptions>(DESKTOP_IN_VIEW_OPTIONS);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const sync = () => {
+      setInViewOptions(mq.matches ? MOBILE_IN_VIEW_OPTIONS : DESKTOP_IN_VIEW_OPTIONS);
+    };
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
   const handleInView = useCallback((index: number) => setActiveSection(index), []);
 
   const featureBlocks: ContentForFeatures[] = [];
@@ -93,7 +113,7 @@ export default function SectionFeatures() {
 
   if (featureBlocks.length === 0) {
     return (
-      <div className="relative w-screen px-32 py-16">
+      <div className="relative w-full px-4 sm:px-8 lg:px-32 py-16">
         <p className="text-gray-500">No features content available.</p>
       </div>
     );
@@ -130,12 +150,13 @@ export default function SectionFeatures() {
           </button>
         ))}
       </nav>
-      <div className="relative w-screen">
+      <div className="relative w-full">
         {featureBlocks.map((block, index) => (
           <FeatureBlock
             key={block.titleH1 ?? block.titleH2 ?? index}
             id={index}
             content={block}
+            inViewOptions={inViewOptions}
             onInView={handleInView}
           />
         ))}
