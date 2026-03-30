@@ -15,6 +15,7 @@ import {
   EntityTypeDict,
   type TEntityTypeDict,
 } from '@/api/entitycore/types';
+import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
@@ -61,6 +62,7 @@ const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [
   EntityTypeDict.SimulationCampaign,
   EntityTypeDict.CircuitExtractionCampaign,
   EntityTypeDict.IonChannelModelingCampaign,
+  EntityTypeDict.TaskConfig,
 ];
 export interface WorkflowActivityRef {
   dataCount: number;
@@ -242,7 +244,6 @@ export function WorkflowActivity() {
   });
 
   const selectedRow = selectedRows.at(0);
-
   const [isResolvingResults, setIsResolvingResults] = useState(false);
 
   const onViewIonChannelResults = useCallback(async () => {
@@ -294,6 +295,19 @@ export function WorkflowActivity() {
     : null;
 
   const onDuplicate = () => {
+    if (selectedRow?.type === ExtendedEntitiesTypeDict.TaskConfig) {
+      if (
+        (selectedRow as ITaskConfig<any>).task_config_type ===
+        TaskConfigType.CircuitExtractionCampaign
+      ) {
+        const circuitId = (selectedRow as ITaskConfig<any>).inputs.at(0)?.id;
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
+            circuitId
+          }?initialCampaignId=${selectedRow.id}`
+        );
+      }
+    }
     if (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/ion-channel-modeling-campaign?${ORIGINAL_CAMPAIGN_ID_QUERY}=${selectedRow?.id}`
@@ -321,18 +335,6 @@ export function WorkflowActivity() {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
           (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
-        }?initialCampaignId=${selectedRow.id}`
-      );
-    }
-    if (selectedRow?.type === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
-      const circuitId = (
-        selectedRow as unknown as TExtendedExtractionCampaignsType['data'][0]
-      ).generations
-        .at(0)
-        ?.configs.at(0)?.circuit_id;
-      navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
-          circuitId
         }?initialCampaignId=${selectedRow.id}`
       );
     }

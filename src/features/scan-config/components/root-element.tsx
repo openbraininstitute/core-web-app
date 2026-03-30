@@ -80,60 +80,64 @@ export function RootElement({
   return (
     <div className="w-full flex flex-col gap-0.5">
       <Tooltip>
-        <TooltipTrigger>
-          <LeftMenuTab
-            tab={rootElement}
-            selectedTab={selectedRootElement}
-            onClick={() => {
-              const isCollapseClick =
-                selectedRootElement === rootElement &&
-                !isRootBlock(schema, rootElement) &&
-                rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
+        <TooltipTrigger asChild>
+          <span>
+            <LeftMenuTab
+              tab={rootElement}
+              selectedTab={selectedRootElement}
+              onClick={() => {
+                const isCollapseClick =
+                  selectedRootElement === rootElement &&
+                  !isRootBlock(schema, rootElement) &&
+                  rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
 
-              // for block_dictionary, clicking again collapses it
-              // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
-              if (isCollapseClick) {
-                setEditing(false);
-                setSelectedEntry('');
-                setSelectedRootElement('');
-                return;
-              }
-
-              setSelectedRootElement(rootElement);
-              setSelectedEntry('');
-
-              if (
-                rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
-                rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
-              )
-                setEditing(true);
-              else setEditing(false);
-            }}
-            extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
-          >
-            <span className="flex items-center gap-2 wrap-break-word min-w-0">
-              <SelectedUnionVariantLabel
-                rootElementSchema={rootElementSchema}
-                config={config}
-                rootElement={rootElement}
-                fallbackTitle={schema.properties?.[rootElement]?.title}
-              />
-            </span>
-            <div className="flex gap-3">
-              {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
-              hasFieldErrors ? (
-                <WarningFilled className="text-yellow-400!" />
-              ) : (
-                <CheckCircleFilled className="text-green-600!" />
-              )}
-
-              <Chevron
-                rotate={
-                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary ? 90 : 0
+                // for block_dictionary, clicking again collapses it
+                // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
+                if (isCollapseClick) {
+                  setEditing(false);
+                  setSelectedEntry('');
+                  setSelectedRootElement('');
+                  return;
                 }
-              />
-            </div>
-          </LeftMenuTab>
+
+                setSelectedRootElement(rootElement);
+                setSelectedEntry('');
+
+                if (
+                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
+                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
+                )
+                  setEditing(true);
+                else setEditing(false);
+              }}
+              extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
+            >
+              <span className="flex items-center gap-2 wrap-break-word min-w-0">
+                <SelectedUnionVariantLabel
+                  rootElementSchema={rootElementSchema}
+                  config={config}
+                  rootElement={rootElement}
+                  fallbackTitle={schema.properties?.[rootElement]?.title}
+                />
+              </span>
+              <div className="flex gap-3">
+                {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
+                hasFieldErrors ? (
+                  <WarningFilled className="text-yellow-400!" />
+                ) : (
+                  <CheckCircleFilled className="text-green-600!" />
+                )}
+
+                <Chevron
+                  rotate={
+                    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
+                      ? 90
+                      : 0
+                  }
+                />
+              </div>
+            </LeftMenuTab>
+          </span>
         </TooltipTrigger>
         <TooltipContent
           avoidCollisions
