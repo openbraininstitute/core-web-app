@@ -7,7 +7,7 @@ import {
   type TSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
 import Block from '@/features/scan-config/components/ui-blocks/block';
-import { type ConfigObject, isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type AtomsMap,
   type Config,
@@ -44,6 +44,7 @@ type Props = {
   allEntries: Set<string>;
   onNewBlockClick?: () => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  errorPathPrefix?: string;
 };
 
 export default function BlockDictionary({
@@ -62,6 +63,7 @@ export default function BlockDictionary({
   allEntries,
   onNewBlockClick,
   schemaMappingConfig,
+  errorPathPrefix,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
 
@@ -93,6 +95,7 @@ export default function BlockDictionary({
         stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
         entity={entity}
         schemaMappingConfig={schemaMappingConfig}
+        errorPathPrefix={errorPathPrefix}
       />
     );
   }

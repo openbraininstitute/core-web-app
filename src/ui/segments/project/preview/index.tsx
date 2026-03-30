@@ -2,19 +2,19 @@
 
 import { CloseOutlined, RightOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 
-import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
-import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Bar } from '@/ui/segments/project/metrics/metrics-skeleton';
-import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { PeopleCommunity } from '@/components/icons/buttons';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { Button } from '@/ui/molecules/button';
 import { config } from '@/config';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
+import { ExpandableText } from '@/ui/molecules/more-less-text';
+import { Bar } from '@/ui/segments/project/metrics/metrics-skeleton';
+import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { Member, Project } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -48,11 +48,13 @@ function buildUsersList(users: Array<Member> | undefined) {
         return {
           id: user.id,
           name: `${user.first_name} ${user.last_name}`,
+          email: user.email,
         };
       }
       return {
         id: user.id,
         name: user.username,
+        email: user.email,
       };
     }) ?? []
   );
@@ -66,12 +68,16 @@ function Users({
   virtualLabId: string | undefined;
 }) {
   const { isLoading, data: result } = useQuery({
-    queryKey: keyBuilder.listProjectTeam({ virtualLabId: virtualLabId!, projectId: data?.id! }),
+    queryKey: keyBuilder.listProjectTeam({
+      virtualLabId: virtualLabId!,
+      projectId: data?.id!,
+    }),
     queryFn: () => listProjectMembers({ virtualLabId: virtualLabId!, projectId: data?.id! }),
     enabled: Boolean(virtualLabId && data?.id),
   });
 
-  const users = buildUsersList(result?.data?.users);
+  const confirmedUsers = buildUsersList(result?.data?.users.filter((o) => !!o.invite_accepted));
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-lg text-white">
@@ -80,7 +86,6 @@ function Users({
           .fill(1)
           .map((_, i) => (
             <Bar
-              // eslint-disable-next-line react/no-array-index-key
               key={`loader-user-${i}`}
               aria-label="Loading label"
               className="h-3 w-20 rounded-full"
@@ -89,19 +94,23 @@ function Users({
       </div>
     );
   }
-  if (users.length) {
+  if (confirmedUsers.length) {
     return (
       <div className="border-primary-4 flex items-start gap-2 border-y py-1.5 text-lg text-white select-none">
         <PeopleCommunity className="text-primary-4 mt-0.5 min-h-5 min-w-5" />
-        <div className="flex max-w-full flex-wrap items-center gap-1 overflow-hidden text-ellipsis">
-          {users.map((user) => (
-            <div
-              key={user.id}
-              className="after:text-white after:content-[','] last:after:content-none"
-            >
-              {user.name}
-            </div>
-          ))}
+        <div className="flex max-w-full flex-wrap items-center gap-1 overflow-hidden text-ellipsis max-h-30 overflow-y-auto primary-scrollbar">
+          {confirmedUsers.map((user) => {
+            let name = user.name;
+            if (name.includes('unknown')) name = user.email;
+            return (
+              <div
+                key={user.id}
+                className="after:text-white after:content-[','] last:after:content-none"
+              >
+                {name}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -165,7 +174,9 @@ function Content({
   const breakpoint = useDefaultBreakpoint();
   const mutateRecentWorkspace = useMutation({
     mutationFn: ({ vlabId, prjId }: { vlabId: string; prjId: string }) =>
-      setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
+      setUserRecentWorkspace({
+        workspace: { virtualLabId: vlabId, projectId: prjId },
+      }),
   });
 
   const onProjectClick = () => {
@@ -207,7 +218,13 @@ function Content({
               onClick={onProjectClick}
               className="h-auto w-full justify-start font-semibold shadow-[0px_2px_16px_0px_#0000003D,-2px_-2px_16px_0px_#9FC4FF24]"
             >
-              <Link prefetch href={url({ virtualLabId: virtualLabId!, projectId: data?.id! })}>
+              <Link
+                prefetch
+                href={url({
+                  virtualLabId: virtualLabId!,
+                  projectId: data?.id!,
+                })}
+              >
                 {title}
                 <RightOutlined className="ml-auto text-current" />
               </Link>

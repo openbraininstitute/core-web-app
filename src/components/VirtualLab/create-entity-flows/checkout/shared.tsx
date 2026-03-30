@@ -32,7 +32,7 @@ type TierPrice = {
   yearDiscount: Array<PriceValue>;
 };
 
-export type TierFeature = {
+export type TTierFeature = {
   title: string;
   specialLabel?: Array<string>;
   tooltip?: Array<string>;
@@ -41,9 +41,9 @@ export type TierFeature = {
 type FeatureCategory = {
   title: string;
   available: boolean;
-  featuresList: Array<TierFeature>;
+  featuresList: Array<TTierFeature>;
 };
-export type Tier = {
+export type TSingleTier = {
   id: string;
   title: string;
   notes?: Array<string>;
@@ -52,7 +52,7 @@ export type Tier = {
 };
 export type Interval = 'month' | 'year';
 
-export type ExtendedTier = Tier & {
+export type TExtendedTier = TSingleTier & {
   app_id: string;
   sanity_id: string;
   prices: Array<{
@@ -67,12 +67,12 @@ export type ExtendedTier = Tier & {
 };
 
 type TiersData = {
-  tiers: Tier[];
+  tiers: TSingleTier[];
 };
 
 export const flowAtom = atom<{
-  step: 'select' | 'pay' | null;
-  tier: ExtendedTier | null;
+  step: 'select' | 'email-verification' | 'pay' | null;
+  tier: TExtendedTier | null;
   interval: 'month' | 'year';
   currency?: string;
 }>({
@@ -83,7 +83,7 @@ export const flowAtom = atom<{
 });
 
 export const Switch = forwardRef<
-  React.ElementRef<typeof SwitchPrimitives.Root>,
+  React.ComponentRef<typeof SwitchPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root> & {
     thumbCls: string;
   }
@@ -112,7 +112,7 @@ export const Switch = forwardRef<
 Switch.displayName = 'Switch';
 
 function transformData(data: any): TiersData {
-  const transformedTiers: Tier[] = data.plans?.map((plan: any) => {
+  const transformedTiers: TSingleTier[] = data.plans?.map((plan: any) => {
     const tierFeatures: FeatureCategory[] = data.features?.map((category: any) => {
       // transform features within this category for this plan
       const featuresList = category.features
@@ -123,7 +123,7 @@ function transformData(data: any): TiersData {
           if (!planFeature) {
             return null;
           }
-          const transformedFeature: TierFeature = {
+          const transformedFeature: TTierFeature = {
             title: feature.title,
           };
           if (planFeature.label) {
@@ -144,7 +144,7 @@ function transformData(data: any): TiersData {
       };
     });
 
-    const transformedTier: Tier = {
+    const transformedTier: TSingleTier = {
       id: plan.id,
       title: plan.title,
       features: tierFeatures,
@@ -176,7 +176,7 @@ const renameAndRemove = (arr: Array<any>, oldKey: string, newKey: string) =>
     obj[oldKey] !== undefined ? { ...omit(obj, oldKey), [newKey]: obj[oldKey] } : obj
   );
 
-export async function getAllTiers(): Promise<Array<ExtendedTier>> {
+export async function getAllTiers(): Promise<Array<TExtendedTier>> {
   const [appTiers, sanityTiers] = await Promise.all([listSubscriptionTiers(), getSanityTiers()]);
   if (!appTiers || !sanityTiers) {
     throw new Error('Tiers can not be fetched');

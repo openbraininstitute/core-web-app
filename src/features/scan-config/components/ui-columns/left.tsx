@@ -5,11 +5,13 @@ import {
   type AtomsMap,
   type ConfigSchema,
   isType,
+  ScanConfigUIElementDict,
   type TScanConfigActivity,
   type TScanConfigTabs,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';

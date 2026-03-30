@@ -1,4 +1,4 @@
-import { redirect, RedirectType } from 'next/navigation';
+import { RedirectType, redirect } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 
 import { tryCatch } from '@/api/utils';

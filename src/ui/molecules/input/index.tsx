@@ -1,8 +1,6 @@
-/* eslint-disable react/jsx-props-no-spreading */
+import { cn } from '@/utils/css-class';
 
 import type { ComponentProps } from 'react';
-
-import { cn } from '@/utils/css-class';
 
 function Input({ className, type, ref, ...props }: ComponentProps<'input'>) {
   return (

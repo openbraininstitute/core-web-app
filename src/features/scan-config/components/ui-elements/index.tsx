@@ -46,6 +46,7 @@ export function UIElementRender({
   setState,
   entity,
   schemaMappingConfig,
+  errorPathPrefix,
 }: {
   k: string;
   disabled: boolean;
@@ -58,6 +59,7 @@ export function UIElementRender({
   state: Record<string, ConfigValue>;
   setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  errorPathPrefix?: string;
 }) {
   return match({ entity, paramSchema })
     .with(
@@ -104,6 +106,7 @@ export function UIElementRender({
           onChange={(value) => {
             setState({ ...state, [k]: value });
           }}
+          errorPathPrefix={errorPathPrefix}
         />
       )
     )
@@ -136,100 +139,43 @@ export function UIElementRender({
       );
     })
     .with({ paramSchema: { ui_element: ScanConfigUIElementDict.NeuronIds } }, () => {
-      // neuron_ids can be either a single NamedTuple or an array of NamedTuples
-      // Extract all elements from all NamedTuples
-      const elements: number[] = [];
+      const namedTupleArray = Array.isArray(value) ? value : [value];
 
-      if (Array.isArray(value)) {
-        // Array of NamedTuples
-        value.forEach((namedTuple) => {
-          if (isPlainObject(namedTuple) && Array.isArray(namedTuple.elements)) {
-            elements.push(...namedTuple.elements);
-          }
-        });
-      } else if (isPlainObject(value) && Array.isArray(value.elements)) {
-        // Single NamedTuple
-        elements.push(...value.elements);
-      }
+      // If it's an array of named tuples flatten it to a single array.
+      const elements: number[] = namedTupleArray.flatMap((v) => {
+        if (isPlainObject(v) && Array.isArray(v.elements)) {
+          return v.elements;
+        }
+        return [];
+      });
 
       return (
         <NeuronIds
           elements={elements}
           disabled={disabled}
           onDeleteElement={(i: number) => {
-            // Handle both single NamedTuple and array of NamedTuples
-            if (Array.isArray(state[k])) {
-              // Array of NamedTuples - flatten, remove element, rebuild
-              const allElements: number[] = [];
-              state[k].forEach((nt: any) => {
-                if (isPlainObject(nt) && Array.isArray(nt.elements)) {
-                  allElements.push(...nt.elements);
-                }
-              });
+            const copy = [...elements];
+            copy.splice(i, 1);
 
-              if (allElements.length === 1) {
-                setState({ ...state, [k]: null });
-                return;
-              }
-
-              allElements.splice(i, 1);
-
-              setState({
-                ...state,
-                [k]: [
-                  { type: 'NamedTuple', name: 'id_list', elements: allElements },
-                ] as unknown as ConfigValue,
-              });
-            } else if (isPlainObject(state[k]) && Array.isArray(state[k].elements)) {
-              // Single NamedTuple
-              if (state[k].elements.length === 1) {
-                setState({ ...state, [k]: null });
-                return;
-              }
-
-              state[k].elements.splice(i, 1);
-
-              setState({
-                ...state,
-                [k]: { ...state[k], elements: [...state[k].elements] },
-              });
-            }
+            setState({
+              ...state,
+              [k]: { elements: copy },
+            });
           }}
           onAddElement={(newElement: number) => {
             if (!state[k]) {
-              // Initialize as array of NamedTuples (the more common case)
-              setState({
+              const newState = {
                 ...state,
-                [k]: [
-                  { type: 'NamedTuple', name: 'id_list', elements: [newElement] },
-                ] as unknown as ConfigValue,
-              });
-            } else if (Array.isArray(state[k])) {
-              // Array of NamedTuples - add to the first one or create new
-              const firstTuple = state[k][0] as any;
-              if (isPlainObject(firstTuple) && Array.isArray(firstTuple.elements)) {
-                setState({
-                  ...state,
-                  [k]: [
-                    { ...firstTuple, elements: [...firstTuple.elements, newElement] },
-                    ...(state[k] as any[]).slice(1),
-                  ] as unknown as ConfigValue,
-                });
-              } else {
-                setState({
-                  ...state,
-                  [k]: [
-                    { type: 'NamedTuple', name: 'id_list', elements: [newElement] },
-                  ] as unknown as ConfigValue,
-                });
-              }
-            } else if (isPlainObject(state[k]) && Array.isArray(state[k].elements)) {
-              // Single NamedTuple
-              setState({
-                ...state,
-                [k]: { ...state[k], elements: [...state[k].elements, newElement] },
-              });
+                [k]: { elements: [newElement] },
+              };
+              setState(newState);
+              return;
             }
+
+            setState({
+              ...state,
+              [k]: { elements: [...elements, newElement] },
+            });
           }}
         />
       );
@@ -296,6 +242,7 @@ export function UIElementRender({
             setState={setState}
             fieldKey={k}
             modificationType={modificationType}
+            errorPathPrefix={errorPathPrefix}
           />
         );
       }
@@ -325,6 +272,7 @@ export function UIElementRender({
             setState={setState}
             fieldKey={k}
             modificationType={modificationType}
+            errorPathPrefix={errorPathPrefix}
           />
         );
       }
