@@ -2,29 +2,30 @@ import { flatMap, get, keyBy, sortBy } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import {
-  createCircuitExtractionCampaign,
-  getCircuitExtractionCampaign,
-  getCircuitExtractionCampaigns,
-  getCircuitExtractionConfigGenerations,
-  getCircuitExtractionConfigs,
-  getCircuitExtractionExecutions,
-} from '@/api/entitycore/queries/extraction';
+  createTaskConfig,
+  getTaskActivities,
+  getTaskConfig,
+  getTaskConfigs,
+} from '@/api/entitycore/queries/task';
+import { getAsset } from '@/api/entitycore/selectors/assets';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
+import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import type {
-  ICircuitExtractionCampaign,
-  ICircuitExtractionCampaignFilter,
-} from '@/api/entitycore/types/entities/circuit-extraction-campaign';
+import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
+
+export type TTaskConfigMeta = {
+  scan_parameters: Record<string, unknown>;
+};
 
 async function resolveExtractionCampaigns({
   withFacets,
@@ -33,22 +34,26 @@ async function resolveExtractionCampaigns({
 }: {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
-  filters?: Partial<ICircuitExtractionCampaignFilter>;
+  filters?: Partial<ITaskConfigFilter>;
 }) {
   filters = discardBrainRegionQueryParams(filters);
 
-  const source = await getCircuitExtractionCampaigns({
+  const source = await getTaskConfigs({
     context,
     withFacets,
-    filters,
+    filters: {
+      task_config_type: TaskConfigType.CircuitExtractionCampaign,
+      ...filters,
+    },
   });
-  const campaignIDs = source.data.map((o) => o.id);
 
-  // fetch all generations linked to these campaigns
-  const generations = await getCircuitExtractionConfigGenerations({
+  const campaignIDs = source.data.map((o) => o.id);
+  const generations = await getTaskActivities({
     context,
-    withFacets: false,
-    filters: { used__id__in: campaignIDs },
+    filters: {
+      task_activity_type: TaskActivityType.CircuitExtractionConfigGeneration,
+      used__id__in: campaignIDs,
+    },
   });
 
   // map campaignId → generations that used it
@@ -66,10 +71,13 @@ async function resolveExtractionCampaigns({
   const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
   const configs =
     allConfigIds.length > 0
-      ? await getCircuitExtractionConfigs({
+      ? await getTaskConfigs({
           context,
           withFacets: false,
-          filters: { id__in: allConfigIds },
+          filters: {
+            task_config_type: TaskConfigType.CircuitExtractionConfig,
+            id__in: allConfigIds,
+          },
         })
       : { data: [] };
   const configById = keyBy(configs.data, 'id');
@@ -78,13 +86,16 @@ async function resolveExtractionCampaigns({
   const configIDs = configs.data.map((c) => c.id);
   const executionsResponse =
     configIDs.length > 0
-      ? await getCircuitExtractionExecutions({
+      ? await getTaskActivities({
           context,
           withFacets: false,
-          filters: { used__id__in: configIDs },
+          filters: {
+            task_activity_type: TaskActivityType.CircuitExtractionExecution,
+            used__id__in: configIDs,
+          },
         })
       : {
-          data: [] as Awaited<ReturnType<typeof getCircuitExtractionExecutions>>['data'],
+          data: [] as Awaited<ReturnType<typeof getTaskActivities>>['data'],
         };
 
   // map configId → executions that used it
@@ -127,50 +138,57 @@ export async function resolveExtractionByCampaignId({
   id: string;
   context: WorkspaceContext | undefined;
 }) {
-  const campaign = await getCircuitExtractionCampaign({ id, context });
+  const campaign = await getTaskConfig({ id, context });
 
   if (!campaign) {
     throw new Error(`No extraction campaign with id ${id} found`);
   }
 
   // campaign → config generations
-  const generations = await getCircuitExtractionConfigGenerations({
+  const generations = await getTaskActivities({
     context,
     withFacets: false,
-    filters: { used__id: id },
+    filters: {
+      task_activity_type: TaskActivityType.CircuitExtractionConfigGeneration,
+      used__id: id,
+    },
   });
 
   // config generations → configs
   const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
   const configs =
     allConfigIds.length > 0
-      ? await getCircuitExtractionConfigs({
+      ? await getTaskConfigs({
           context,
           withFacets: false,
-          filters: { id__in: allConfigIds },
+          filters: {
+            task_config_type: TaskConfigType.CircuitExtractionConfig,
+            id__in: allConfigIds,
+          },
         })
       : { data: [] };
 
   const firstConfig = configs.data.at(0);
-
   // get the generation config asset from the campaign
   const assets = campaign.assets ?? [];
-  const configAsset = getAssetElement({
-    assets,
-    filter: (asset) => asset.label === AssetLabel.campaign_generation_config,
-  });
 
+  const configAsset = getAsset({
+    assets,
+    label: AssetLabel.task_config,
+  }).getOneOrNull();
+
+  const circuitId = firstConfig?.inputs.at(0)?.id ?? null;
   if (!configAsset) {
     return {
       campaign,
       config: null,
-      circuitId: firstConfig?.circuit_id ?? null,
+      circuitId,
     };
   }
 
   const rawConfig = await downloadAsset({
     entityId: campaign.id,
-    entityType: EntityTypeDict.CircuitExtractionCampaign,
+    entityType: EntityTypeDict.TaskConfig,
     id: configAsset.id,
     ctx: context,
     asRawResponse: true,
@@ -180,7 +198,7 @@ export async function resolveExtractionByCampaignId({
   return {
     campaign,
     config,
-    circuitId: firstConfig?.circuit_id ?? null,
+    circuitId,
   };
 }
 
@@ -209,11 +227,20 @@ export function getStatusCountMap(campaign: TEnrichedExtractionCampaign) {
   }, new Map<ActivityStatus, number>());
 }
 
-export const CircuitExtractionCampaign: EntityCoreTypeConfig<ICircuitExtractionCampaign> = {
+export type TResolvedExtractionByCampaign = Awaited<
+  ReturnType<typeof resolveExtractionByCampaignId>
+>;
+export type TResolvedExtractionByCampaigns = Awaited<ReturnType<typeof resolveExtractionCampaigns>>;
+
+export const CircuitExtractionCampaign: EntityCoreTypeConfig<
+  ITaskConfig<TTaskConfigMeta>,
+  TResolvedExtractionByCampaign,
+  TResolvedExtractionByCampaigns
+> = {
   group: EntityTypeGroup.Extractions,
   title: 'Circuit extraction campaign',
   extendedType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
-  type: EntityTypeDict.CircuitExtractionCampaign,
+  type: EntityTypeDict.TaskConfig,
   slug: EntitySlug.CircuitExtraction,
   api: {
     config: {
@@ -222,13 +249,9 @@ export const CircuitExtractionCampaign: EntityCoreTypeConfig<ICircuitExtractionC
     },
     query: {
       list: resolveExtractionCampaigns,
-      one: getCircuitExtractionCampaign,
-      create: createCircuitExtractionCampaign,
+      one: (params) => getTaskConfig({ id: params.id, context: params.context }),
+      create: (data) => createTaskConfig({ data, context: data.context }),
     },
-  },
-  explore: {
-    basePrefix: 'extract',
-    routePrefix: 'extract',
   },
   asset: {
     extension: 'application/json',

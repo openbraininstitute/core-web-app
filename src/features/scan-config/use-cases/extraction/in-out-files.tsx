@@ -4,7 +4,7 @@ import { type ReactNode, useEffect, useMemo } from 'react';
 
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
+import { AssetContentType, AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -12,7 +12,7 @@ import { classNames } from '@/util/utils';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TTaskConfigMeta } from '@/features/scan-config/use-cases/extraction/types';
+import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 
 type Props = {
   config: ITaskConfig<TTaskConfigMeta>;
@@ -32,9 +32,7 @@ export function ExtractionInOutFiles({
   context,
 }: Props) {
   const { entity: circuit } = useModelQuery({ id: execution?.generated.at(0)?.id, context });
-  const extractionConfigAsset = config.assets.find(
-    (o) => o.label === AssetLabel.circuit_extraction_config
-  );
+  const extractionConfigAsset = config.assets.find((o) => o.label === AssetLabel.task_config);
   const circuitAssets = circuit && 'assets' in circuit ? circuit.assets : [];
   const circuitConfigAsset = circuitAssets?.find(
     (o: IAsset) => o.label === AssetLabel.sonata_circuit
@@ -44,6 +42,7 @@ export function ExtractionInOutFiles({
     const files: TActivityCustomFile[] = [];
     if (extractionConfigAsset) {
       files.push({
+        id: extractionConfigAsset.id,
         entity: config,
         asset: extractionConfigAsset,
         renderer: ActivityCustomFileRenderer.Default,
@@ -51,9 +50,11 @@ export function ExtractionInOutFiles({
     }
     if (circuit && circuitConfigAsset) {
       files.push({
+        id: circuitConfigAsset.id,
         entity: circuit,
         asset: circuitConfigAsset,
         assetPath: 'circuit_config.json',
+        enforcedRenderType: AssetContentType.json,
         renderer: ActivityCustomFileRenderer.Default,
       });
     }
@@ -95,15 +96,18 @@ export function ExtractionInOutFiles({
       <h4 className="uppercase">Inputs</h4>
       <div className="mt-4 mb-8 flex flex-col gap-4">
         {inputFiles.length === 0 && <div className="text-gray-400">No input files available</div>}
-        {inputFiles.map((file) => (
-          <ExtractionResultItem
-            selected={file.asset.id === selectedFile?.asset.id}
-            key={file.asset?.id}
-            file={file}
-            onSelect={onSelect}
-            name={file.name}
-          />
-        ))}
+        {inputFiles.map((file) => {
+          return (
+            <ExtractionResultItem
+              id={file.asset.id}
+              selected={file.asset.id === selectedFile?.id}
+              key={file.asset?.id}
+              file={file}
+              onSelect={onSelect}
+              name={file.name}
+            />
+          );
+        })}
       </div>
 
       {outputAvailable && (
@@ -115,10 +119,12 @@ export function ExtractionInOutFiles({
             )}
             {extractedCircuit && (
               <ExtractionResultItem
+                id={extractedCircuit.id}
                 label={<small className="uppercase">Circuit</small>}
-                selected={extractedCircuit?.id === selectedFile?.entity.id}
+                selected={extractedCircuit?.id === selectedFile?.id}
                 key={extractedCircuit.id}
                 file={{
+                  id: extractedCircuit.id,
                   entity: extractedCircuit,
                   asset: extractedCircuit.assets[0],
                   name: extractedCircuit.name,
@@ -136,6 +142,7 @@ export function ExtractionInOutFiles({
 }
 
 type TExtractionResultItemProps = {
+  id: string;
   label?: ReactNode;
   name?: string;
   file: TActivityCustomFile;
@@ -144,6 +151,7 @@ type TExtractionResultItemProps = {
 };
 
 function ExtractionResultItem({
+  id,
   label,
   name,
   file,
@@ -153,9 +161,9 @@ function ExtractionResultItem({
   const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
   const fileExt = label ?? fileName?.split('.').at(-1);
   const displayName = name ?? fileName;
-
   return (
     <button
+      id={id}
       type="button"
       title={displayName}
       className={classNames(

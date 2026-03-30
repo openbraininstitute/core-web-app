@@ -35,7 +35,7 @@ import { log } from '@/utils/logger';
 
 import type { CheckboxProps } from 'antd';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TTaskConfigMeta } from '@/features/scan-config/use-cases/extraction/types';
+import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
@@ -60,7 +60,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
 
   // 1. get the generation activity that used the campaign
-  const { data: configGenerationIds, isLoading: configGenerationLoading } = useQuery({
+  const { data: configGenerationIds, isPending: configGenerationLoading } = useQuery({
     queryKey: keyBuilder.taskActivities({
       context,
       filters: {
@@ -98,6 +98,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
         withFacets: false,
         context,
       }),
+    enabled: configGenerationIds && configGenerationIds.length > 0,
     select: (data) => data.data,
   });
 
