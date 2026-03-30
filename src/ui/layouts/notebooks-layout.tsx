@@ -6,7 +6,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
 import Image from 'next/image';
 import NextLink from 'next/link';
-import { type ReactNode, useState, useTransition } from 'react';
+import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react';
 
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
@@ -31,6 +31,7 @@ import { buildStripeFormOptions } from '../segments/virtual-lab-settings/element
 
 import type { UploadFile, UploadProps } from 'antd';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+import type { Project } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
 // Add createNotebook function
@@ -559,63 +560,19 @@ function CourseSetup() {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
 
-  const fetchAllPrivateNotebooks = async () => {
-    const firstResponse = await getNotebooks({
-      context: { virtualLabId, projectId },
-      filters: { page: 1, page_size: 1000 },
-    });
-
-    const { total_items, page_size } = firstResponse.pagination;
-
-    const totalPages = Math.ceil(total_items / page_size);
-
-    if (totalPages === 1) {
-      return firstResponse.data.filter((notebook) => notebook.authorized_public === false);
-    }
-
-    const remainingPages = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
-    const remainingRequests = remainingPages.map((page) =>
-      getNotebooks({
-        context: { virtualLabId, projectId },
-        filters: { page, page_size: 1000 },
-      })
-    );
-
-    const remainingResponses = await Promise.all(remainingRequests);
-
-    const allNotebooks = [
-      ...firstResponse.data,
-      ...remainingResponses.flatMap((response) => response.data),
-    ];
-
-    return allNotebooks.filter((notebook) => notebook.authorized_public === false);
-  };
-
-  const { data: projects, isLoading: loadingProjects } = useQuery({
-    queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
-    queryFn: async () => {
-      return (
-        await listProjects({
-          virtualLabId,
-          page: 1,
-          size: 100,
-        })
-      )?.data?.results.filter((p) => p.id !== projectId);
-    },
-  });
-
-  const { data: notebooks, isLoading } = useQuery({
-    queryKey: dataKeyBuilder.privateNotebooks({ virtualLabId, projectId }),
-    queryFn: fetchAllPrivateNotebooks,
-  });
+  const hasTriggered = useRef(false);
 
   const createNotebooksMutation = useMutation({
-    mutationFn: async () => {
-      if (!notebooks || !projects) return;
-
+    mutationFn: async ({
+      projects,
+      notebooks,
+    }: {
+      projects: Project[];
+      notebooks: INotebook[];
+    }) => {
       const createPromises = projects.flatMap((project) =>
-        notebooks.map(async (notebook) => {
-          const result = await createNotebook({
+        notebooks.map((notebook) =>
+          createNotebook({
             payload: {
               name: notebook.name,
               description: notebook.description,
@@ -623,17 +580,15 @@ function CourseSetup() {
               scale: notebook.scale,
             },
             context: { virtualLabId, projectId: project.id },
-          });
-          return { project: project.id, notebook: notebook.id, result };
-        })
+          })
+        )
       );
 
-      const results = await Promise.all(createPromises);
-      return results;
+      return await Promise.all(createPromises);
     },
     onSuccess: () => {
       notification.success({
-        message: `Successfully syncronized notebooks`,
+        message: `Successfully synchronized notebooks`,
         key: 'notebooks-created-success',
         placement: 'topRight',
       });
@@ -647,33 +602,70 @@ function CourseSetup() {
     },
   });
 
-  const handleCreateNotebooks = () => {
-    createNotebooksMutation.mutate();
-  };
+  useEffect(() => {
+    if (hasTriggered.current) return;
 
-  if (isLoading || loadingProjects) {
-    return <div>Loading notebooks and projects...</div>;
-  }
+    hasTriggered.current = true;
+
+    const setupCourse = async () => {
+      try {
+        const [projectsRes, firstNotebookRes] = await Promise.all([
+          listProjects({ virtualLabId, page: 1, size: 100 }),
+          getNotebooks({
+            context: { virtualLabId, projectId },
+            filters: { page: 1, page_size: 1000 },
+          }),
+        ]);
+
+        const filteredProjects = projectsRes?.data?.results.filter((p) => p.id !== projectId) || [];
+
+        let allNotebooks = [...firstNotebookRes.data];
+        const { total_items, page_size } = firstNotebookRes.pagination;
+        const totalPages = Math.ceil(total_items / page_size);
+
+        if (totalPages > 1) {
+          const remainingRequests = Array.from({ length: totalPages - 1 }, (_, i) =>
+            getNotebooks({
+              context: { virtualLabId, projectId },
+              filters: { page: i + 2, page_size: 1000 },
+            })
+          );
+          const remainingRes = await Promise.all(remainingRequests);
+          allNotebooks = [...allNotebooks, ...remainingRes.flatMap((r) => r.data)];
+        }
+
+        const privateNotebooks = allNotebooks.filter((n) => n.authorized_public === false);
+
+        if (filteredProjects.length > 0 && privateNotebooks.length > 0) {
+          createNotebooksMutation.mutate({
+            projects: filteredProjects,
+            notebooks: privateNotebooks,
+          });
+        }
+      } catch {
+        notification.error({
+          message: `Failed to setup course`,
+          key: 'course-setup-error',
+          placement: 'topRight',
+        });
+      }
+    };
+
+    setupCourse();
+  }, [virtualLabId, projectId, createNotebooksMutation, notification]);
 
   return (
     <div className="flex flex-col gap-4">
       <div>Setting up course ...</div>
-      <div>
-        <p>Found {notebooks?.length || 0} private notebooks</p>
-        <p>Found {projects?.length || 0} other projects</p>
-      </div>
-      <button
-        onClick={handleCreateNotebooks}
-        disabled={createNotebooksMutation.isPending || !notebooks?.length || !projects?.length}
-        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-      >
-        {createNotebooksMutation.isPending ? 'Creating...' : 'Create Notebooks in All Projects'}
-      </button>
-      {createNotebooksMutation.isError && (
-        <div className="text-red-500">Error creating notebooks</div>
+
+      {createNotebooksMutation.isPending && (
+        <div className="text-blue-500">Syncing notebooks across student projects...</div>
       )}
-      {createNotebooksMutation.isSuccess && (
-        <div className="text-green-500">Notebooks creation completed!</div>
+
+      {createNotebooksMutation.isSuccess && <div className="text-green-500">Setup complete!</div>}
+
+      {createNotebooksMutation.isError && (
+        <div className="text-red-500">Error during synchronization.</div>
       )}
     </div>
   );

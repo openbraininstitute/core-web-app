@@ -1,4 +1,4 @@
-import { VlmResponse } from './common';
+import type { VlmResponse } from './common';
 
 export type ProjectResponse = VlmResponse<{ project: Project }>;
 
