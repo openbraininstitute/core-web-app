@@ -32,4 +32,6 @@ export interface INotebook
     EntityCoreType,
     EntityCoreOwnership {
   description: string;
+  specifications: Object;
+  scale: string;
 }

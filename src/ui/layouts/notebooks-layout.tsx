@@ -2,13 +2,14 @@
 
 import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import { type ReactNode, useState, useTransition } from 'react';
 
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
+import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
@@ -29,6 +30,27 @@ import { CONVERSION_RATE } from '../segments/virtual-lab-settings/elements/helpe
 import { buildStripeFormOptions } from '../segments/virtual-lab-settings/elements/stripe-payment';
 
 import type { UploadFile, UploadProps } from 'antd';
+import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+import type { WorkspaceContext } from '@/types/common';
+
+// Add createNotebook function
+export async function createNotebook({
+  payload,
+  context,
+}: {
+  payload: any;
+  context?: WorkspaceContext | null;
+}) {
+  const api = await entityCoreApi();
+  return await api.post<INotebook>('/analysis-notebook-template', {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+    body: payload,
+  });
+}
 
 type Props = {
   children: ReactNode;
@@ -586,9 +608,75 @@ function CourseSetup() {
     queryFn: fetchAllPrivateNotebooks,
   });
 
+  console.log(projects);
+
+  const createNotebooksMutation = useMutation({
+    mutationFn: async () => {
+      if (!notebooks || !projects) return;
+
+      // Create all notebook-project combinations in parallel
+      const createPromises = projects.flatMap((project) =>
+        notebooks.map(async (notebook) => {
+          try {
+            const result = await createNotebook({
+              payload: {
+                name: notebook.name,
+                description: notebook.description,
+                specifications: notebook.specifications,
+                scale: notebook.scale,
+              },
+              context: { virtualLabId, projectId: project.id },
+            });
+            return { project: project.id, notebook: notebook.id, result };
+          } catch (error) {
+            console.error(
+              `Failed to create notebook ${notebook.name} in project ${project.name}:`,
+              error
+            );
+            return { project: project.id, notebook: notebook.id, error };
+          }
+        })
+      );
+
+      const results = await Promise.all(createPromises);
+
+      return results;
+    },
+    onSuccess: (results) => {
+      const successful = results?.filter((r) => !r.error).length || 0;
+      const failed = results?.filter((r) => r.error).length || 0;
+      console.log(`Created ${successful} notebooks successfully, ${failed} failed`);
+    },
+  });
+
+  const handleCreateNotebooks = () => {
+    createNotebooksMutation.mutate();
+  };
+
   if (isLoading || loadingProjects) {
     return <div>Loading notebooks and projects...</div>;
   }
 
-  return 'Setting up course ...';
+  return (
+    <div className="flex flex-col gap-4">
+      <div>Setting up course ...</div>
+      <div>
+        <p>Found {notebooks?.length || 0} private notebooks</p>
+        <p>Found {projects?.length || 0} other projects</p>
+      </div>
+      <button
+        onClick={handleCreateNotebooks}
+        disabled={createNotebooksMutation.isPending || !notebooks?.length || !projects?.length}
+        className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+      >
+        {createNotebooksMutation.isPending ? 'Creating...' : 'Create Notebooks in All Projects'}
+      </button>
+      {createNotebooksMutation.isError && (
+        <div className="text-red-500">Error creating notebooks</div>
+      )}
+      {createNotebooksMutation.isSuccess && (
+        <div className="text-green-500">Notebooks creation completed!</div>
+      )}
+    </div>
+  );
 }
