@@ -318,5 +318,4 @@ export const keyBuilder = {
     id: string;
   } & Record<string, any>) => [`${prefix}-validation-results`, { context, id, ...props }],
   obiOneJsonSchema: (schemaName: string) => [`${prefix}-${schemaName}`, { schemaName }],
-  privateNotebooks: (context: WorkspaceContext) => [`${prefix}-all-notebooks`, { context }],
 };
