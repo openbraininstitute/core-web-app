@@ -8,7 +8,7 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import delay from 'es-toolkit/compat/delay';
 import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
@@ -17,6 +17,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { checkSingleNeuronCompatibility } from '@/api/small-scale-simulator';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
 import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
@@ -35,6 +36,7 @@ import {
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
 import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { browserHistoryReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
@@ -61,6 +63,32 @@ export function Menu({ sessionId }: { sessionId: string }) {
     virtualLabId,
     projectId,
   });
+
+  const morphologyId = sessionValue.mmodel?.id;
+  const emodelId = sessionValue.emodel?.id;
+  const selectionComplete = !!morphologyId && !!emodelId;
+
+  const compatibilityCheck = useQuery({
+    queryKey: keyBuilder.meModelCompatibility({
+      virtualLabId,
+      projectId,
+      morphologyId: morphologyId ?? '',
+      emodelId: emodelId ?? '',
+    }),
+    queryFn: ({ signal }) =>
+      checkSingleNeuronCompatibility({
+        ctx: { virtualLabId, projectId },
+        morphologyId: morphologyId as string,
+        emodelId: emodelId as string,
+        signal,
+      }),
+    enabled: selectionComplete,
+    retry: false,
+    staleTime: Infinity,
+  });
+
+  const isCheckingCompatibility = selectionComplete && compatibilityCheck.isFetching;
+  const isIncompatible = selectionComplete && compatibilityCheck.data?.data.compatible === false;
 
   const onStepChange = (s: BuildStepKeys) => {
     const query = new URLSearchParams(searchParams);
@@ -147,7 +175,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
   });
 
   const result = CreateSingleNeuronContextSchema.safeParse(payload);
-  const disabled = mutate.isPending || !!result.error;
+  const disabled = mutate.isPending || !!result.error || isCheckingCompatibility || isIncompatible;
 
   return (
     <>
@@ -290,6 +318,11 @@ export function Menu({ sessionId }: { sessionId: string }) {
             />
           </div>
         </Button>
+        {isIncompatible && (
+          <div className="mx-1 rounded-md px-3 py-2 text-sm text-destructive">
+            {messages.IncompatibleModels}
+          </div>
+        )}
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="mt-auto w-full">
@@ -303,16 +336,33 @@ export function Menu({ sessionId }: { sessionId: string }) {
                 onClick={() => mutate.mutateAsync()}
                 disabled={disabled}
               >
-                <div className="shrink-0 font-bold">Build model</div>
-                {mutate.isPending && <LoadingOutlined className="ml-2 text-white" />}
+                <div className="shrink-0 font-bold">
+                  {isCheckingCompatibility ? messages.CheckingCompatibility : 'Build model'}
+                </div>
+                {(mutate.isPending || isCheckingCompatibility) && (
+                  <LoadingOutlined
+                    className={cn(
+                      'ml-2',
+                      isCheckingCompatibility ? 'text-neutral-4' : 'text-white'
+                    )}
+                  />
+                )}
               </Button>
             </div>
           </TooltipTrigger>
           {disabled && (
             <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
               <p className={cn('text-justify text-base')}>
-                Please fill all the required information <br /> along with selecting m-model and
-                e-model
+                {isIncompatible ? (
+                  messages.IncompatibleModels
+                ) : isCheckingCompatibility ? (
+                  messages.CheckingCompatibility
+                ) : (
+                  <>
+                    Please fill all the required information <br /> along with selecting m-model and
+                    e-model
+                  </>
+                )}
               </p>
             </TooltipContent>
           )}
