@@ -196,6 +196,10 @@ export const createSingleNeuronSimulationAtom = atom(
  * When the setter of this writable atom is called, it will update this atom:
  * `genericSingleNeuronSimulationPlotDataAtomFamily( sessionId )`
  */
+/**
+ * When the setter of this writable atom is called, it will update this atom:
+ * `genericSingleNeuronSimulationPlotDataAtomFamily( sessionId )`
+ */
 export const launchSimulationAtom = atom<
   null,
   [
