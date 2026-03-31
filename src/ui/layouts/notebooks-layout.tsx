@@ -585,6 +585,60 @@ function PaymentForm({
   );
 }
 
+async function syncNotebook({
+  notebook,
+  virtualLabId,
+  projectId,
+}: {
+  notebook: INotebook;
+  virtualLabId: string;
+  projectId: string;
+}) {
+  const createdNotebook = await createNotebook({
+    payload: {
+      name: notebook.name,
+      description: notebook.description,
+      specifications: notebook.specifications,
+      scale: notebook.scale,
+    },
+    context: { virtualLabId, projectId },
+  });
+
+  if (!notebook.assets || notebook.assets.length === 0) {
+    return createdNotebook;
+  }
+
+  const downloadedAssets = await Promise.all(
+    notebook.assets.map(async (asset) => {
+      const response = await fetch(asset.url);
+      if (!response.ok) throw new Error(`Failed to download asset: ${asset.name}`);
+      return {
+        name: asset.name,
+        blob: await response.blob(),
+      };
+    })
+  );
+
+  const newNotebookId = createdNotebook?.data?.id;
+  if (!newNotebookId) throw new Error('Failed to get created notebook ID');
+
+  await Promise.all(
+    downloadedAssets.map(async (asset) => {
+      const formData = new FormData();
+      formData.append('file', asset.blob, asset.name);
+
+      const response = await fetch(`/api/notebooks/${newNotebookId}/assets`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error(`Failed to upload asset: ${asset.name}`);
+    })
+  );
+
+  return createdNotebook;
+}
+
 function CourseSetup({
   onFinnish,
   studentEmails,
@@ -724,14 +778,10 @@ function CourseSetup({
 
         const createPromises = projectIds.flatMap((projectId) =>
           privateNotebooks.map((notebook) =>
-            createNotebook({
-              payload: {
-                name: notebook.name,
-                description: notebook.description,
-                specifications: notebook.specifications,
-                scale: notebook.scale,
-              },
-              context: { virtualLabId, projectId },
+            syncNotebook({
+              notebook,
+              virtualLabId,
+              projectId,
             })
           )
         );
