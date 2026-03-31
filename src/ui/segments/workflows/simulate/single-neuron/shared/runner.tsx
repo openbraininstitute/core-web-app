@@ -196,10 +196,6 @@ export const createSingleNeuronSimulationAtom = atom(
  * When the setter of this writable atom is called, it will update this atom:
  * `genericSingleNeuronSimulationPlotDataAtomFamily( sessionId )`
  */
-/**
- * When the setter of this writable atom is called, it will update this atom:
- * `genericSingleNeuronSimulationPlotDataAtomFamily( sessionId )`
- */
 export const launchSimulationAtom = atom<
   null,
   [
@@ -670,7 +666,7 @@ function checkArguments(
       throw new Error(messages.CurrentInjectionConfigMissingError)
     }
   } else if (simulationType === 'synaptome-simulation') {
-    if (!stimulationConfiguration && !synaptomeConfiguration?.length) {
+    if (!stimulationConfiguration && (!synaptomeConfiguration || !synaptomeConfiguration.length)) {
       throw new Error(messages.SynaptomeConfigurationError)
     }
   }
