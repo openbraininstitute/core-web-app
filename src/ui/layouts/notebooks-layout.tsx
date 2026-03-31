@@ -641,7 +641,7 @@ function CourseSetup({
           throw new Error('Not enough credits to initialize course');
         }
 
-        await Promise.all(
+        const projectCreationResults = await Promise.allSettled(
           studentEmails.map((email) =>
             createProject(virtualLabId, {
               name: `${nameBase} ${email}`,
@@ -650,6 +650,16 @@ function CourseSetup({
             })
           )
         );
+
+        const failedProjects = projectCreationResults.filter((r) => r.status === 'rejected');
+
+        if (failedProjects.length > 0) {
+          notification.warning({
+            message: `Warning: ${failedProjects.length} out of ${studentEmails.length} student projects failed to create`,
+            key: 'project-creation-warning',
+            placement: 'topRight',
+          });
+        }
 
         const [projectsRes, firstNotebookRes] = await Promise.all([
           listProjects({ virtualLabId, page: 1, size: 100 }),
