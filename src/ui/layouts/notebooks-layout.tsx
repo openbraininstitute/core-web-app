@@ -674,11 +674,8 @@ function CourseSetup({
 
         const failedSetups = setupResults.filter((r) => r.status === 'rejected');
         if (failedSetups.length > 0) {
-          const failureDetails = failedSetups
-            .map((r) => (r as PromiseRejectedResult).reason?.message || 'Unknown error')
-            .join('; ');
           notification.warning({
-            message: `Warning: ${failedSetups.length} out of ${studentEmails.length} student projects failed to setup. Details: ${failureDetails}`,
+            message: `Warning: ${failedSetups.length} out of ${studentEmails.length} student projects failed to setup (create, invite or assign budget)`,
             key: 'setup-warning',
             placement: 'topRight',
           });
