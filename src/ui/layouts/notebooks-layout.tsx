@@ -644,39 +644,71 @@ function CourseSetup({
           throw new Error('Not enough credits to initialize course');
         }
 
-        const setupResults = await Promise.allSettled(
-          studentEmails.map(async (email) => {
-            const project = await createProject(virtualLabId, {
+        const projectCreationResults = await Promise.allSettled(
+          studentEmails.map((email) =>
+            createProject(virtualLabId, {
               name: `${nameBase} ${email}`,
               description: `Project for ${email}`,
               include_members: [],
-            });
+            })
+          )
+        );
 
-            const projectId = project?.data?.project.id;
-            if (!projectId) throw new Error(`Failed to get project ID for ${email}`);
+        const failedProjectCreations = projectCreationResults.filter(
+          (r) => r.status === 'rejected'
+        );
+        if (failedProjectCreations.length > 0) {
+          notification.warning({
+            message: `Warning: ${failedProjectCreations.length} out of ${studentEmails.length} student projects failed to create`,
+            key: 'project-creation-warning',
+            placement: 'topRight',
+          });
+        }
 
-            await inviteToProject({
+        const successfulProjects = projectCreationResults
+          .filter((item) => item.status === 'fulfilled')
+          .map((item) => item.value as ProjectCreationResponse)
+          .filter((p) => !!p.data);
+
+        const inviteResults = await Promise.allSettled(
+          successfulProjects.map((project, index) => {
+            return inviteToProject({
               virtualLabId,
-              projectId,
-              email,
+              //@ts-expect-error
+              projectId: project.data.project.id,
+              email: studentEmails[index],
               role: 'member',
             });
-
-            await assignProjectBudget({
-              virtualLabId,
-              projectId,
-              amount: budgetPerStudent,
-            });
-
-            return project;
           })
         );
 
-        const failedSetups = setupResults.filter((r) => r.status === 'rejected');
-        if (failedSetups.length > 0) {
+        const failedInvites = inviteResults.filter((r) => r.status === 'rejected');
+        if (failedInvites.length > 0) {
           notification.warning({
-            message: `Warning: ${failedSetups.length} out of ${studentEmails.length} student projects failed to setup (create, invite or assign budget)`,
-            key: 'setup-warning',
+            message: `Warning: ${failedInvites.length} out of ${successfulProjects.length} student invitations failed to send`,
+            key: 'invite-warning',
+            placement: 'topRight',
+          });
+        }
+
+        const budgetAssignmentResults = await Promise.allSettled(
+          successfulProjects.map((project) =>
+            assignProjectBudget({
+              virtualLabId,
+              //@ts-expect-error
+              projectId: project.data.project.id,
+              amount: budgetPerStudent,
+            })
+          )
+        );
+
+        const failedBudgetAssignments = budgetAssignmentResults.filter(
+          (r) => r.status === 'rejected'
+        );
+        if (failedBudgetAssignments.length > 0) {
+          notification.warning({
+            message: `Warning: Credits couldn't be transferred to ${failedBudgetAssignments.length} out of ${successfulProjects.length} student projects`,
+            key: 'budget-assignment-warning',
             placement: 'topRight',
           });
         }
