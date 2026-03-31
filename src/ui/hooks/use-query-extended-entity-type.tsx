@@ -1,4 +1,5 @@
 import {
+  Enabled,
   hashKey,
   keepPreviousData,
   type QueryFunction,
@@ -10,6 +11,7 @@ import { useAtomValue } from 'jotai';
 
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
+import { TFacets } from '@/api/entitycore/types/shared/response';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
@@ -198,6 +200,7 @@ export function useQueryExtendedEntityTypeFacets({
   workspace,
   queryFilters,
   extraQueryKey,
+  enabled,
 }: {
   dataKey: string;
   section: TWorkspaceSection;
@@ -206,9 +209,10 @@ export function useQueryExtendedEntityTypeFacets({
   workspace: WorkspaceContext;
   queryFilters?: Record<string, any>;
   extraQueryKey?: Record<string, any>;
+  enabled?: boolean | (() => boolean);
 }) {
   const entity = getEntityByExtendedType({ type: dataType });
-  // @ts-ignore
+  // @ts-expect-error
   return useQuery({
     queryKey: [
       'facets',
@@ -231,6 +235,17 @@ export function useQueryExtendedEntityTypeFacets({
         })
       )?.facets;
     },
-    enabled: !!entity?.api?.query.list,
+    enabled: () => {
+      let enable = false;
+
+      if (typeof enabled === 'function') {
+        enable = enabled?.();
+      }
+      if (typeof enabled === 'boolean') {
+        enable = enabled;
+      }
+
+      return !!entity?.api?.query.list && enable;
+    },
   });
 }

@@ -13,6 +13,7 @@ import {
   useEffect,
   useMemo,
 } from 'react';
+
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
@@ -236,8 +237,7 @@ export function BrowseEntityScope({
     defaultBrainRegion,
     useKeepPreviousData: true,
     extraQueryParams,
-    enabled: ({ queryKey }) => {
-      const [{ queryParameters }] = queryKey;
+    enabled: () => {
       if (!allowQuery) return false;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
         return false;
@@ -256,6 +256,12 @@ export function BrowseEntityScope({
     dataType,
     workspace: { virtualLabId, projectId },
     queryFilters,
+    enabled: () => {
+      if (!allowQuery) return false;
+      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+        return false;
+      return true;
+    },
   });
 
   const dataSource = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.data;
