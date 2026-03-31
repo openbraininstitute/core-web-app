@@ -8,6 +8,7 @@
     "dev:inspect": "APP_VERSION=$(make version) next dev --inspect",
     "build": "next build",
     "start": "next start",
+    "test:node": "pnpm dlx tsx --experimental-test-module-mocks --test \"./**/*.nodetest.*\"",
     "lint": "biome check",
     "ci": "biome ci",
     "format": "biome format --write",
