@@ -1,17 +1,16 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import { match, P } from 'ts-pattern';
-import { useState } from 'react';
 import { Spin } from 'antd';
+import { useState } from 'react';
+import { match, P } from 'ts-pattern';
 
-import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
-import AnalysisTab from '@/components/simulate/SimulationDetails/AnalysisTab';
-import ResultsTab from '@/components/simulate/SimulationDetails/recording-tab';
 import { ErrorData } from '@/components/message-banners/error';
-
+import AnalysisTab from '@/components/simulate/SimulationDetails/AnalysisTab';
+import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
+import ResultsTab from '@/components/simulate/SimulationDetails/recording-tab/recording-tab';
 import { classNames } from '@/util/utils';
 
-import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 import type { IMEModel } from '@/api/entitycore/types';
+import type { SimulationPayload } from '@/types/small-scale-simulator/single-neuron';
 
 type TabKeys = 'configuration' | 'results' | 'analysis';
 type Tab = { key: TabKeys; title: string };
@@ -79,7 +78,7 @@ export default function ExperimentSetupTab({
     .with({ experimentSetup: P.nonNullable.select() }, (_experimentSetup) => (
       <>
         {activeTab === 'configuration' && (
-          <SimulationConfigurationTab type={type} simulation={_experimentSetup} />
+          <SimulationConfigurationTab type={type} simulation={_experimentSetup} meModel={meModel} />
         )}
 
         {activeTab === 'results' && <ResultsTab recordings={_experimentSetup.simulation} />}

@@ -47,6 +47,11 @@ export type Morphology = {
 export type PlotDataEntry = {
   x: number[];
   y: number[];
+  /**
+   * The times where spikes are detected.
+   * Must be a subset of `x[]`, sorted.
+   */
+  spikes?: number[];
   type: 'scatter';
   name: string;
   recording?: string;

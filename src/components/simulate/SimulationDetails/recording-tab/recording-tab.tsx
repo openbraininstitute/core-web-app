@@ -1,12 +1,19 @@
 'use client';
 
-import { Fragment } from 'react';
+import { MorphoViewerSimul } from '@bbp/morphoviewer';
+import { SpinnerIcon } from '@bprogress/next';
 import dynamic from 'next/dynamic';
+import React, { Fragment } from 'react';
 
-// import PlotRenderer from '@/features/entities/neuron-simulation/experiment/visualization/plot-renderer';
-
-import { PlotData } from '@/services/bluenaas-single-cell/types';
+import IconPlus from '@/components/icons/Plus';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
+import { cn } from '@/utils/css-class';
+
+import { useMorphology } from './hooks';
+
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
+
+import styles from './recording-tab.module.css';
 
 const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
@@ -17,12 +24,17 @@ const PlotRenderer = dynamic(
 
 type Props = {
   recordings: Record<string, PlotData>;
+  meModelId: string;
 };
 
-export default function ResultsTab({ recordings }: Props) {
+export default function ResultsTab({ recordings, meModelId }: Props) {
+  const [collapsed, setCollapsed] = React.useState(true);
+  const tree = useMorphology(meModelId);
+
   return (
-    <div className="mx-auto flex w-full justify-center">
-      <div className="mt-6 flex w-full max-w-4xl flex-col items-start gap-4">
+    <div className={cn(styles.layout, collapsed && styles.collapsed)}>
+      <div className={styles.plotsContainer}>
+        {/* "mt-6 flex w-full max-w-4xl flex-col items-start gap-4"> */}
         {Object.entries(recordings).map(([key, value]) => {
           return (
             <Fragment key={key}>
@@ -48,6 +60,23 @@ export default function ResultsTab({ recordings }: Props) {
             </Fragment>
           );
         })}
+      </div>
+      <div className={cn(styles.morphoViewerSimulContainer)}>
+        {tree &&
+          (collapsed ? (
+            <button type="button" onClick={() => setCollapsed(false)}>
+              <IconPlus />
+              <div>Spike activity</div>
+            </button>
+          ) : (
+            <MorphoViewerSimul morphology={tree} onClose={() => setCollapsed(true)} />
+          ))}
+        {!tree && (
+          <div className={styles.spinnerContainer}>
+            <SpinnerIcon />
+            <div>Loading morphology...</div>
+          </div>
+        )}
       </div>
     </div>
   );
