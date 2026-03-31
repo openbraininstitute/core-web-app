@@ -597,35 +597,9 @@ function CourseSetup({
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
 
+  studentEmails = ['gbarv2+test3@gmail.com'];
+
   const hasTriggered = useRef(false);
-
-  const createNotebooksMutation = useMutation({
-    mutationFn: async ({
-      projects,
-      notebooks,
-    }: {
-      projects: Project[];
-      notebooks: INotebook[];
-    }) => {
-      const createPromises = projects.flatMap((project) =>
-        notebooks.map((notebook) =>
-          createNotebook({
-            payload: {
-              name: notebook.name,
-              description: notebook.description,
-              specifications: notebook.specifications,
-              scale: notebook.scale,
-            },
-            context: { virtualLabId, projectId: project.id },
-          })
-        )
-      );
-
-      return await Promise.all(createPromises);
-    },
-    onSuccess: onFinnish,
-    onError: onFinnish,
-  });
 
   useEffect(() => {
     if (hasTriggered.current) return;
@@ -634,96 +608,102 @@ function CourseSetup({
 
     const setupCourse = async () => {
       try {
-        const balanceRes = await getVirtualLabAccountBalance({
-          virtualLabId,
-          includeProjects: false,
+        // const balanceRes = await getVirtualLabAccountBalance({
+        //   virtualLabId,
+        //   includeProjects: false,
+        // });
+        // const balance = balanceRes?.data?.balance;
+        // const budgetPerStudent = Math.floor(parseInt(balance, 10) / studentEmails.length);
+
+        // if (isNil(balance)) throw new Error('Could not fetch account balance for the virtual lab');
+        // if (budgetPerStudent < 1) {
+        //   throw new Error('Not enough credits to initialize course');
+        // }
+
+        // const projectCreationResults = await Promise.allSettled(
+        //   studentEmails.map((email) =>
+        //     createProject(virtualLabId, {
+        //       name: `${nameBase} ${email}`,
+        //       description: `Project for ${email}`,
+        //       include_members: [],
+        //     })
+        //   )
+        // );
+
+        // const failedProjectCreations = projectCreationResults.filter(
+        //   (r) => r.status === 'rejected'
+        // );
+
+        // if (failedProjectCreations.length > 0) {
+        //   notification.warning({
+        //     message: `Warning: ${failedProjectCreations.length} out of ${studentEmails.length} student projects failed to create`,
+        //     key: 'project-creation-warning',
+        //     placement: 'topRight',
+        //   });
+        // }
+
+        // const successfulProjects = projectCreationResults
+        //   .map((result, index) => ({ result, email: studentEmails[index] }))
+        //   .filter((item) => item.result.status === 'fulfilled' && !!item.result.value.data);
+
+        // const inviteResults = await Promise.allSettled(
+        //   successfulProjects.map((project) => {
+        //     return inviteToProject({
+        //       virtualLabId,
+        //       //@ts-expect-error
+        //       projectId: (project.result as PromiseFulfilledResult<ProjectCreationResponse>).value
+        //         .data.project.id,
+        //       email: project.email,
+        //       role: 'member',
+        //     });
+        //   })
+        // );
+
+        // const failedInvites = inviteResults.filter((r) => r.status === 'rejected');
+        // if (failedInvites.length > 0) {
+        //   notification.warning({
+        //     message: `Warning: ${failedInvites.length} out of ${successfulProjects.length} student invitations failed to send`,
+        //     key: 'invite-warning',
+        //     placement: 'topRight',
+        //   });
+        // }
+
+        // const budgetAssignmentResults = await Promise.allSettled(
+        //   successfulProjects.map((project) =>
+        //     assignProjectBudget({
+        //       virtualLabId,
+        //       //@ts-expect-error
+        //       projectId: (project.result as PromiseFulfilledResult<ProjectCreationResponse>).value
+        //         .data.project.id,
+        //       amount: budgetPerStudent,
+        //     })
+        //   )
+        // );
+
+        // const failedBudgetAssignments = budgetAssignmentResults.filter(
+        //   (r) => r.status === 'rejected'
+        // );
+        // if (failedBudgetAssignments.length > 0) {
+        //   notification.warning({
+        //     message: `Warning: Credits couldn't be transferred to ${failedBudgetAssignments.length} out of ${successfulProjects.length} student projects`,
+        //     key: 'budget-assignment-warning',
+        //     placement: 'topRight',
+        //   });
+        // }
+
+        // const projectIds = successfulProjects.map(
+        //   (project) =>
+        //     // @ts-expect-error
+        //     (project.result as PromiseFulfilledResult<ProjectCreationResponse>).value.data.project
+        //       .id
+        // );
+
+        const firstNotebookRes = await getNotebooks({
+          context: { virtualLabId, projectId },
+          filters: { page: 1, page_size: 1000 },
         });
-        const balance = balanceRes?.data?.balance;
-        const budgetPerStudent = Math.floor(parseInt(balance, 10) / studentEmails.length);
 
-        if (isNil(balance)) throw new Error('Could not fetch account balance for the virtual lab');
-        if (budgetPerStudent < 1) {
-          throw new Error('Not enough credits to initialize course');
-        }
-
-        const projectCreationResults = await Promise.allSettled(
-          studentEmails.map((email) =>
-            createProject(virtualLabId, {
-              name: `${nameBase} ${email}`,
-              description: `Project for ${email}`,
-              include_members: [],
-            })
-          )
-        );
-
-        const failedProjectCreations = projectCreationResults.filter(
-          (r) => r.status === 'rejected'
-        );
-        if (failedProjectCreations.length > 0) {
-          notification.warning({
-            message: `Warning: ${failedProjectCreations.length} out of ${studentEmails.length} student projects failed to create`,
-            key: 'project-creation-warning',
-            placement: 'topRight',
-          });
-        }
-
-        const successfulProjects = projectCreationResults
-          .filter((item) => item.status === 'fulfilled')
-          .map((item) => item.value as ProjectCreationResponse)
-          .filter((p) => !!p.data);
-
-        const inviteResults = await Promise.allSettled(
-          successfulProjects.map((project, index) => {
-            return inviteToProject({
-              virtualLabId,
-              //@ts-expect-error
-              projectId: project.data.project.id,
-              email: studentEmails[index],
-              role: 'member',
-            });
-          })
-        );
-
-        const failedInvites = inviteResults.filter((r) => r.status === 'rejected');
-        if (failedInvites.length > 0) {
-          notification.warning({
-            message: `Warning: ${failedInvites.length} out of ${successfulProjects.length} student invitations failed to send`,
-            key: 'invite-warning',
-            placement: 'topRight',
-          });
-        }
-
-        const budgetAssignmentResults = await Promise.allSettled(
-          successfulProjects.map((project) =>
-            assignProjectBudget({
-              virtualLabId,
-              //@ts-expect-error
-              projectId: project.data.project.id,
-              amount: budgetPerStudent,
-            })
-          )
-        );
-
-        const failedBudgetAssignments = budgetAssignmentResults.filter(
-          (r) => r.status === 'rejected'
-        );
-        if (failedBudgetAssignments.length > 0) {
-          notification.warning({
-            message: `Warning: Credits couldn't be transferred to ${failedBudgetAssignments.length} out of ${successfulProjects.length} student projects`,
-            key: 'budget-assignment-warning',
-            placement: 'topRight',
-          });
-        }
-
-        const [projectsRes, firstNotebookRes] = await Promise.all([
-          listProjects({ virtualLabId, page: 1, size: 100 }),
-          getNotebooks({
-            context: { virtualLabId, projectId },
-            filters: { page: 1, page_size: 1000 },
-          }),
-        ]);
-
-        const filteredProjects = projectsRes?.data?.results.filter((p) => p.id !== projectId) || [];
+        const projectIds = ['9b49ed4d-b2df-4cc4-8e07-a657748f58ae'];
 
         let allNotebooks = [...firstNotebookRes.data];
         const { total_items, page_size } = firstNotebookRes.pagination;
@@ -742,12 +722,21 @@ function CourseSetup({
 
         const privateNotebooks = allNotebooks.filter((n) => n.authorized_public === false);
 
-        if (filteredProjects.length > 0 && privateNotebooks.length > 0) {
-          createNotebooksMutation.mutate({
-            projects: filteredProjects,
-            notebooks: privateNotebooks,
-          });
-        }
+        const createPromises = projectIds.flatMap((projectId) =>
+          privateNotebooks.map((notebook) =>
+            createNotebook({
+              payload: {
+                name: notebook.name,
+                description: notebook.description,
+                specifications: notebook.specifications,
+                scale: notebook.scale,
+              },
+              context: { virtualLabId, projectId },
+            })
+          )
+        );
+
+        const results = await Promise.all(createPromises);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'Failed to initialize course';
         notification.error({
@@ -759,19 +748,7 @@ function CourseSetup({
     };
 
     setupCourse();
-  }, [virtualLabId, projectId, createNotebooksMutation, notification, studentEmails, nameBase]);
+  }, [virtualLabId, projectId, notification, studentEmails, nameBase]);
 
-  return (
-    <div className="flex flex-col gap-4">
-      {createNotebooksMutation.isPending && (
-        <div className="text-blue-500">Syncing notebooks across student projects...</div>
-      )}
-
-      {createNotebooksMutation.isSuccess && <div className="text-green-500">Setup complete!</div>}
-
-      {createNotebooksMutation.isError && (
-        <div className="text-red-500">Error during synchronization.</div>
-      )}
-    </div>
-  );
+  return null;
 }
