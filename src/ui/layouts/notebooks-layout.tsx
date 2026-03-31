@@ -6,7 +6,6 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
 import Image from 'next/image';
 import NextLink from 'next/link';
-import { on } from 'process';
 import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react';
 
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
@@ -14,13 +13,11 @@ import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { getVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { Button as UiButton } from '@/ui/molecules/button';
-import { keyBuilder as dataKeyBuilder } from '@/ui/use-query-keys/data';
 import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { isObject } from '@/util/type-guards';
