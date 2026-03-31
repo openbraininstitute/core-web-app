@@ -25,13 +25,14 @@ const buttonVariants = cva(
         ghost: 'hover:bg-neutral-1 hover:text-primary-9',
         link: 'text-primary underline-offset-4 hover:underline',
         icon: '',
-        shadow: 'flex w-full px-8 py-6 bg-gradient-to-r from-[#003A8C] to-[#001026] text-white',
+        shadow: 'flex w-full px-8 py-6 bg-linear-to-r from-[#003A8C] to-[#001026] text-white',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
         sm: 'h-8 rounded-sm gap-1.5 text-sm py-3 px-3 has-[>svg]:px-2.5',
         md: 'h-10 rounded-md gap-1.5 text-base py-3 px-4 has-[>svg]:px-3',
         lg: 'h-12 rounded-lg py-3 px-6 text-lg has-[>svg]:px-4',
+        responsive: `h-10 rounded-md gap-1.5 text-md py-3 px-4 has-[>svg]:px-3 xl:h-12 xl:rounded-lg xl:py-3 xl:px-6 xl:text-lg xl:has-[>svg]:px-4`,
       },
       active: {
         true: '',
@@ -52,6 +53,11 @@ const buttonVariants = cva(
         active: true,
         variant: 'outline',
         className: 'bg-primary-9 text-white',
+      },
+      {
+        active: true,
+        variant: 'ghost',
+        className: 'bg-neutral-1 text-primary-9 font-semibold',
       },
       {
         size: 'sm',

@@ -2,9 +2,9 @@
 
 import { hashKey, keepPreviousData, useQuery } from '@tanstack/react-query';
 
+import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { ACTIVITY_DEFAULT_PAGE_SIZE } from '@/ui/segments/project/activities/elements/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -24,7 +24,7 @@ export function useQueryActivity({
   activity,
   entityType,
   page,
-  pageSize = ACTIVITY_DEFAULT_PAGE_SIZE,
+  pageSize = DEFAULT_PAGE_MEDIUM_SIZE,
   useKeepPreviousData = false,
 }: {
   selectionType: TExtendedEntitiesTypeDict;

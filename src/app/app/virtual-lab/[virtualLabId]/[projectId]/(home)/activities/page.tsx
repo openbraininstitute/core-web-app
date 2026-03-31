@@ -1,19 +1,19 @@
+import { RedirectType, redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { tryCatch } from '@/api/utils';
-import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
+import { config } from '@/config';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
-import { TeamManager } from '@/ui/segments/project/team/team';
-import { ProjectTeamSkeleton } from '@/ui/segments/project/team/team-skeleton';
+import { ProjectActivities } from '@/ui/segments/project/activities';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { Metadata } from 'next';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { ServerSideComponentProp } from '@/types/common';
 
 export async function generateMetadata({
   params,
-}: ServerSideComponentProp<WorkspaceContext, null>): Promise<Metadata> {
+}: ServerSideComponentProp<{ virtualLabId: string; projectId: string }, null>): Promise<Metadata> {
   const { virtualLabId, projectId } = await params;
   const queryClient = getQueryClient();
 
@@ -25,8 +25,8 @@ export async function generateMetadata({
   );
   const projectName = res?.data?.project?.name ?? 'Project';
 
-  const title = `Project: ${projectName} - Members | Open Brain Institute`;
-  const description = `View and manage team members for ${projectName} on the Open Brain Institute.`;
+  const title = `Project: ${projectName} - Activities | Open Brain Institute`;
+  const description = `View and manage activities for ${projectName} on the Open Brain Institute.`;
 
   return {
     title,
@@ -41,22 +41,28 @@ export async function generateMetadata({
 
 export default async function Home({
   params: promisedParams,
-}: ServerSideComponentProp<WorkspaceContext, null>) {
+}: ServerSideComponentProp<{ virtualLabId: string; projectId: string }, null>) {
   const { virtualLabId, projectId } = await promisedParams;
   const queryClient = getQueryClient();
 
-  queryClient.prefetchQuery({
-    queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
-    queryFn: () => listProjectMembers({ virtualLabId, projectId }),
-  });
+  const { data, error } = await tryCatch(
+    queryClient.fetchQuery({
+      queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
+      queryFn: () => getProject({ virtualLabId, projectId }),
+    })
+  );
+
+  if (!data || error) {
+    redirect(`${config.ROOT_ROUTE}/sync`, RedirectType.replace);
+  }
 
   return (
     <HydrateClient>
-      <Suspense fallback={<ProjectTeamSkeleton />}>
-        <div className="flex h-full w-full flex-col gap-6 p-3">
-          <TeamManager />
-        </div>
-      </Suspense>
+      <div className="flex flex-col gap-6 pr-1.5 h-full">
+        <Suspense>
+          <ProjectActivities />
+        </Suspense>
+      </div>
     </HydrateClient>
   );
 }

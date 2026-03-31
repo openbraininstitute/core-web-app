@@ -643,10 +643,7 @@ class IonChannelSimulationTrace extends NWBTrace {
     return sweepNumbers.map(String);
   }
 
-  private getTimeData(
-    parentKey: string,
-    groupKey: string
-  ): { timeUnit: string; timeRate: number } {
+  private getTimeData(parentKey: string, groupKey: string): { timeUnit: string; timeRate: number } {
     const timeDatasetKey = `${parentKey}/${groupKey}/${NWBKey.STARTING_TIME}`;
 
     const timeDataset = this.getDataset(timeDatasetKey);
@@ -674,9 +671,7 @@ class IonChannelSimulationTrace extends NWBTrace {
     const sweepNumber = parseInt(sweep, 10);
 
     const parentKey =
-      recordingType === RecordingType.STIMULUS
-        ? NWBKey.STIMULUS_PRESENTATION
-        : NWBKey.ACQUISITION;
+      recordingType === RecordingType.STIMULUS ? NWBKey.STIMULUS_PRESENTATION : NWBKey.ACQUISITION;
 
     if (recordingType === RecordingType.STIMULUS) {
       const groupKey = this.findGroupKey(parentKey, sweepNumber);
