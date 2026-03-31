@@ -21,8 +21,8 @@ export type TEntityConfigDiscriminatorFilter = {
 
 export type EntityCoreTypeConfig<
   T extends EntityCoreIdentifiable,
-  S = null, // Single endpoint
-  L = null, // List endpoint
+  S = never, // single endpoint
+  L = never, // List endpoint
 > = {
   group: TEntityTypeGroup;
   extendedType: TExtendedEntitiesTypeDict;

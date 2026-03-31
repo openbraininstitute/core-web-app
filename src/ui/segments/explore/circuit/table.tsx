@@ -23,7 +23,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   Pagination as EntitycorePagination,
-  Facets,
+  TFacets,
 } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
@@ -31,7 +31,13 @@ import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-ro
 import type { TCircuitRepresentationView } from '@/ui/segments/explore/circuit/helpers';
 
 export type Props<T> = {
-  facets: Facets | undefined;
+  facets?:
+    | {
+        data: TFacets | undefined;
+        loading: boolean;
+        error: Error | null;
+      }
+    | undefined;
   resultPagination?: {
     pagination: EntitycorePagination;
     totalData: number;

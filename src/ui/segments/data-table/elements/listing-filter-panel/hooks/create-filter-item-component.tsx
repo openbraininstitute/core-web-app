@@ -9,7 +9,7 @@ import { DropdownList } from '@/ui/segments/data-table/elements/listing-filter-p
 import { ValueOrRange } from '@/ui/segments/data-table/elements/listing-filter-panel/value-or-range';
 import { ValueRange } from '@/ui/segments/data-table/elements/listing-filter-panel/value-range';
 
-import type { Facets } from '@/api/entitycore/types/shared/response';
+import type { TFacets } from '@/api/entitycore/types/shared/response';
 import type {
   CoreFilterValues,
   GteLteValue,
@@ -19,7 +19,7 @@ import type {
 
 export function createFilterItemComponent(
   filter: TCoreFilter,
-  facets: Facets | undefined,
+  facets: TFacets | undefined,
   filterValues: CoreFilterValues,
   setFilterValues: React.Dispatch<React.SetStateAction<CoreFilterValues>>,
   items?: Array<{ value: string; label: string }> | undefined
