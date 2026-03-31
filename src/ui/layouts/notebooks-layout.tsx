@@ -604,38 +604,6 @@ async function syncNotebook({
     context: { virtualLabId, projectId },
   });
 
-  if (!notebook.assets || notebook.assets.length === 0) {
-    return createdNotebook;
-  }
-
-  const downloadedAssets = await Promise.all(
-    notebook.assets.map(async (asset) => {
-      const response = await fetch(asset.url);
-      if (!response.ok) throw new Error(`Failed to download asset: ${asset.name}`);
-      return {
-        name: asset.name,
-        blob: await response.blob(),
-      };
-    })
-  );
-
-  const newNotebookId = createdNotebook?.data?.id;
-  if (!newNotebookId) throw new Error('Failed to get created notebook ID');
-
-  await Promise.all(
-    downloadedAssets.map(async (asset) => {
-      const formData = new FormData();
-      formData.append('file', asset.blob, asset.name);
-
-      const response = await fetch(`/api/notebooks/${newNotebookId}/assets`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error(`Failed to upload asset: ${asset.name}`);
-    })
-  );
-
   return createdNotebook;
 }
 
@@ -776,17 +744,33 @@ function CourseSetup({
 
         const privateNotebooks = allNotebooks.filter((n) => n.authorized_public === false);
 
-        const createPromises = projectIds.flatMap((projectId) =>
-          privateNotebooks.map((notebook) =>
-            syncNotebook({
-              notebook,
-              virtualLabId,
-              projectId,
-            })
-          )
-        );
+        const api = await entityCoreApi();
+        const headers = getEntityCoreContext({ virtualLabId, projectId }).headers;
 
-        const results = await Promise.all(createPromises);
+        // const notebookAssets = Object.fromEntries(
+        //   privateNotebooks.map((notebook) => [
+        //     notebook.id,
+        //     await Promise.all(
+        //       notebook.assets.map((asset) =>
+        //         api.get(`/analysis-notebook-template/${notebook.id}/assets/${asset.id}/download`, {
+        //           headers,
+        //         })
+        //       )
+        //     ),
+        //   ])
+        // );
+
+        // const createPromises = projectIds.flatMap((projectId) =>
+        //   privateNotebooks.map((notebook) =>
+        //     syncNotebook({
+        //       notebook,
+        //       virtualLabId,
+        //       projectId,
+        //     })
+        //   )
+        // );
+
+        // const results = await Promise.all(createPromises);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'Failed to initialize course';
         notification.error({
