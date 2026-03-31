@@ -12,6 +12,7 @@ import { type ReactNode, useEffect, useRef, useState, useTransition } from 'reac
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
+import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { createProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -643,49 +644,42 @@ function CourseSetup({
           throw new Error('Not enough credits to initialize course');
         }
 
-        const projectCreationResults = await Promise.allSettled(
-          studentEmails.map((email) =>
-            createProject(virtualLabId, {
+        const setupResults = await Promise.allSettled(
+          studentEmails.map(async (email) => {
+            const project = await createProject(virtualLabId, {
               name: `${nameBase} ${email}`,
               description: `Project for ${email}`,
               include_members: [],
-            })
-          )
-        );
+            });
 
-        const failedProjects = projectCreationResults.filter((r) => r.status === 'rejected');
+            const projectId = project?.data?.project.id;
+            if (!projectId) throw new Error(`Failed to get project ID for ${email}`);
 
-        if (failedProjects.length > 0) {
-          notification.warning({
-            message: `Warning: ${failedProjects.length} out of ${studentEmails.length} student projects failed to create`,
-            key: 'project-creation-warning',
-            placement: 'topRight',
-          });
-        }
-
-        const successfulProjects = projectCreationResults
-          .filter((item) => item.status === 'fulfilled')
-          .map((item) => item.value as ProjectCreationResponse)
-          .filter((p) => !!p.data);
-
-        const budgetAssignmentResults = await Promise.allSettled(
-          successfulProjects.map((project) =>
-            assignProjectBudget({
+            await inviteToProject({
               virtualLabId,
-              // @ts-expect-error
-              projectId: project?.data?.project.id,
+              projectId,
+              email,
+              role: 'member',
+            });
+
+            await assignProjectBudget({
+              virtualLabId,
+              projectId,
               amount: budgetPerStudent,
-            })
-          )
+            });
+
+            return project;
+          })
         );
 
-        const failedBudgetAssignments = budgetAssignmentResults.filter(
-          (r) => r.status === 'rejected'
-        );
-        if (failedBudgetAssignments.length > 0) {
+        const failedSetups = setupResults.filter((r) => r.status === 'rejected');
+        if (failedSetups.length > 0) {
+          const failureDetails = failedSetups
+            .map((r) => (r as PromiseRejectedResult).reason?.message || 'Unknown error')
+            .join('; ');
           notification.warning({
-            message: `Warning: Credits couldn't be transferred to ${failedBudgetAssignments.length} out of ${successfulProjects.length} student projects`,
-            key: 'budget-assignment-warning',
+            message: `Warning: ${failedSetups.length} out of ${studentEmails.length} student projects failed to setup. Details: ${failureDetails}`,
+            key: 'setup-warning',
             placement: 'topRight',
           });
         }
