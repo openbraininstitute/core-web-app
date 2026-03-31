@@ -9,7 +9,9 @@ import Image from 'next/image';
 import NextLink from 'next/link';
 import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react';
 
+import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
@@ -36,16 +38,15 @@ import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 import type { Project, ProjectCreationResponse } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
-// Add createNotebook function
 export async function createNotebook({
   payload,
   context,
 }: {
-  payload: any;
+  payload: INotebook;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.post<INotebook>('/analysis-notebook-template', {
+  const cratedNotebook = await api.post<INotebook>('/analysis-notebook-template', {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -53,6 +54,10 @@ export async function createNotebook({
     },
     body: payload,
   });
+
+
+  const crea
+
 }
 
 type Props = {
@@ -593,18 +598,51 @@ async function syncNotebook({
   notebook: INotebook;
   virtualLabId: string;
   projectId: string;
+  targetProjectIds: string[];
 }) {
-  const createdNotebook = await createNotebook({
-    payload: {
-      name: notebook.name,
-      description: notebook.description,
-      specifications: notebook.specifications,
-      scale: notebook.scale,
-    },
-    context: { virtualLabId, projectId },
-  });
+  const sourceAssets = await Promise.all(
+    notebook.assets.map((asset) =>
+      downloadAsset({
+        ctx: {
+          virtualLabId,
+          projectId,
+        },
+        entityType: EntityTypeDict.Notebook,
+        entityId: notebook.id,
+        id: asset.id,
+        asRawResponse: false,
+      })
+    )
+  );
 
-  return createdNotebook;
+  // const createdNotebook = await createNotebook({
+  //   payload: notebook,
+  //   context: { virtualLabId, projectId },
+  // });
+
+
+  // createAsset({
+  //   ctx: { virtualLabId, projectId },
+  //   entityType: EntityTypeDict.Notebook,
+  //   entityId: notebook.id,
+  //   fileName: asset.name,
+  //   payload: asset.data,
+  //   mimeType: asset.mime_type,
+  // })
+
+
+  
+
+  // console.log(`HERE ${notebook.id}`, createNotebook);
+
+  // await Promise.all(
+  //   sourceAssets.map((asset) =>
+  //     api.post(`/analysis-notebook-template/${createdNotebook.data.id}/assets`, {
+  //       body: asset.data,
+  //       headers,
+  //     })
+  //   )
+  // );
 }
 
 function CourseSetup({
@@ -744,31 +782,14 @@ function CourseSetup({
 
         const privateNotebooks = allNotebooks.filter((n) => n.authorized_public === false);
 
-        const api = await entityCoreApi();
-        const headers = getEntityCoreContext({ virtualLabId, projectId }).headers;
-
-        // const notebookAssets = Object.fromEntries(
-        //   privateNotebooks.map((notebook) => [
-        //     notebook.id,
-        //     await Promise.all(
-        //       notebook.assets.map((asset) =>
-        //         api.get(`/analysis-notebook-template/${notebook.id}/assets/${asset.id}/download`, {
-        //           headers,
-        //         })
-        //       )
-        //     ),
-        //   ])
-        // );
-
-        // const createPromises = projectIds.flatMap((projectId) =>
-        //   privateNotebooks.map((notebook) =>
-        //     syncNotebook({
-        //       notebook,
-        //       virtualLabId,
-        //       projectId,
-        //     })
-        //   )
-        // );
+        const syncNotebookPromises = privateNotebooks.slice(0, 1).map((n) => {
+          return syncNotebook({
+            notebook: n,
+            virtualLabId,
+            projectId,
+            targetProjectIds: projectIds,
+          });
+        });
 
         // const results = await Promise.all(createPromises);
       } catch (e) {
@@ -784,5 +805,13 @@ function CourseSetup({
     setupCourse();
   }, [virtualLabId, projectId, notification, studentEmails, nameBase]);
 
-  return null;
+  return (
+    <Button
+      onClick={() =>
+        syncNotebook({
+          notebook: privateNotebooks,
+        })
+      }
+    />
+  );
 }
