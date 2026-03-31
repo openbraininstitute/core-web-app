@@ -684,9 +684,10 @@ function CourseSetup({
             notebooks: privateNotebooks,
           });
         }
-      } catch {
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : 'Failed to initialize course';
         notification.error({
-          message: `Failed to setup course`,
+          message: errorMessage,
           key: 'course-setup-error',
           placement: 'topRight',
         });
