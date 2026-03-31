@@ -4,6 +4,7 @@ import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
+import { isNil } from 'es-toolkit';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react';
@@ -12,11 +13,12 @@ import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { createProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
+import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { Button as UiButton } from '@/ui/molecules/button';
 import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -63,6 +65,7 @@ export function NotebooksLayout({ children, active }: Props) {
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [numberStudents, setNumberStudents] = useState<number | null>(10);
   const [step, setStep] = useState(1);
+  const [studentEmails, setStudentEmails] = useState<string[]>([]);
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
@@ -111,6 +114,14 @@ export function NotebooksLayout({ children, active }: Props) {
       setLoading(false);
     }
   }
+
+  if (!virtualLabData)
+    return (
+      <div className="h-full flex justify-center items-center text-4xl">
+        <LoadingOutlined />
+      </div>
+    );
+
   return (
     <div>
       <div className="mb-5 ml-5 flex justify-between">
@@ -195,6 +206,8 @@ export function NotebooksLayout({ children, active }: Props) {
                     vlabId={virtualLabId}
                     onCancel={() => setShowCourseModal(false)}
                     onSuccess={() => setStep(1)}
+                    studentEmails={studentEmails}
+                    setStudentEmails={setStudentEmails}
                   />
                 </div>
               </div>
@@ -207,6 +220,8 @@ export function NotebooksLayout({ children, active }: Props) {
                   setShowCourseModal(false);
                 }, 3000);
               }}
+              studentEmails={studentEmails}
+              nameBase={virtualLabData.data?.virtual_lab.name ?? 'Course'}
             />
           )}
         </div>
@@ -220,14 +235,18 @@ const CsvUploadValidator = ({
   vlabId,
   onCancel,
   onSuccess,
+  studentEmails,
+  setStudentEmails,
 }: {
   maxStudents: number | null;
   vlabId: string;
   onCancel: () => void;
   onSuccess: () => void;
+  studentEmails: string[];
+  setStudentEmails: (emails: string[]) => void;
 }) => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
-  const [studentEmails, setStudentEmails] = useState<string[]>([]);
+
   const [error, setError] = useState('');
   const [credits, setCredits] = useState(0);
 
@@ -562,7 +581,15 @@ function PaymentForm({
   );
 }
 
-function CourseSetup({ onFinnish }: { onFinnish: () => void }) {
+function CourseSetup({
+  onFinnish,
+  studentEmails,
+  nameBase,
+}: {
+  onFinnish: () => void;
+  studentEmails: string[];
+  nameBase: string;
+}) {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
 
@@ -603,6 +630,27 @@ function CourseSetup({ onFinnish }: { onFinnish: () => void }) {
 
     const setupCourse = async () => {
       try {
+        const balanceRes = await getVirtualLabAccountBalance({
+          virtualLabId,
+          includeProjects: false,
+        });
+        const balance = balanceRes?.data?.balance;
+
+        if (isNil(balance)) throw new Error('Could not fetch account balance for the virtual lab');
+        if (parseInt(balance, 10) / studentEmails.length < 1) {
+          throw new Error('Not enough credits to initialize course');
+        }
+
+        await Promise.all(
+          studentEmails.map((email) =>
+            createProject(virtualLabId, {
+              name: `${nameBase} ${email}`,
+              description: `Project for ${email}`,
+              include_members: [],
+            })
+          )
+        );
+
         const [projectsRes, firstNotebookRes] = await Promise.all([
           listProjects({ virtualLabId, page: 1, size: 100 }),
           getNotebooks({
@@ -646,7 +694,7 @@ function CourseSetup({ onFinnish }: { onFinnish: () => void }) {
     };
 
     setupCourse();
-  }, [virtualLabId, projectId, createNotebooksMutation, notification]);
+  }, [virtualLabId, projectId, createNotebooksMutation, notification, studentEmails, nameBase]);
 
   return (
     <div className="flex flex-col gap-4">
