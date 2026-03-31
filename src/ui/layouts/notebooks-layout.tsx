@@ -12,6 +12,7 @@ import { type ReactNode, useEffect, useRef, useState, useTransition } from 'reac
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
@@ -597,8 +598,8 @@ async function syncNotebook({
   targetProjectIds: string[];
 }) {
   const sourceAssets = await Promise.all(
-    notebook.assets.map((asset) =>
-      downloadAsset({
+    notebook.assets.map(async (asset) => {
+      const arrayBuffer = (await downloadAsset({
         ctx: {
           virtualLabId,
           projectId,
@@ -607,25 +608,28 @@ async function syncNotebook({
         entityId: notebook.id,
         id: asset.id,
         asRawResponse: false,
-      })
-    )
-  );
+      })) as ArrayBuffer;
 
-  console.log(sourceAssets);
+      return new Blob([arrayBuffer]);
+    })
+  );
 
   // const createdNotebook = await createNotebook({
   //   payload: notebook,
   //   context: { virtualLabId, projectId },
   // });
 
-  // createAsset({
-  //   ctx: { virtualLabId, projectId },
-  //   entityType: EntityTypeDict.Notebook,
-  //   entityId: notebook.id,
-  //   fileName: "test",
-  //   payload: sourceAssets[0],
-  //   mimeType: asset.mime_type,
-  // })
+  // Upload asset notebook
+
+  const createAssetRes = await createAsset({
+    ctx: { virtualLabId, projectId },
+    entityType: EntityTypeDict.Notebook,
+    entityId: notebook.id,
+    fileName: 'test.ipynb',
+    payload: sourceAssets[0],
+    mimeType: 'application/x-ipynb+json',
+    label: AssetLabel.jupyter_notebook,
+  });
 
   // console.log(`HERE ${notebook.id}`, createNotebook);
 
@@ -776,14 +780,21 @@ function CourseSetup({
 
         const privateNotebooks = allNotebooks.filter((n) => n.authorized_public === false);
 
-        const syncNotebookPromises = privateNotebooks.slice(0, 1).map((n) => {
-          return syncNotebook({
-            notebook: n,
-            virtualLabId,
-            projectId,
-            targetProjectIds: projectIds,
-          });
+        syncNotebook({
+          notebook: privateNotebooks[1],
+          virtualLabId,
+          projectId,
+          targetProjectIds: projectIds,
         });
+
+        // const syncNotebookPromises = privateNotebooks[1].map((n) => {
+        //   return syncNotebook({
+        //     notebook: ,
+        //     virtualLabId,
+        //     projectId,
+        //     targetProjectIds: projectIds,
+        //   });
+        // });
 
         // const results = await Promise.all(createPromises);
       } catch (e) {
