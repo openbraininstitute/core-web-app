@@ -1,4 +1,4 @@
-import { flatMap, get, keyBy, sortBy } from 'es-toolkit/compat';
+import { flatMap, keyBy } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import {
@@ -13,18 +13,24 @@ import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity'
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import {
+  buildTaskCampaignRows,
+  getLatestExecutionStatusFromRows,
+  getTaskCampaignStatusCountMap,
+  type TTaskCampaignExecutionRow,
+  type TTaskCampaignRows,
+} from '@/entity-configuration/domain/task-helpers';
 
 import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 export type TTaskConfigMeta = {
-  scan_parameters: Record<string, unknown>;
+  scan_parameters?: Record<string, unknown>;
 };
 
 async function resolveExtractionCampaigns({
@@ -108,20 +114,11 @@ async function resolveExtractionCampaigns({
     return acc;
   }, {});
 
-  // enrich each campaign with its generations → configs → executions
-  const enrichedData = source.data.map((campaign) => {
-    const campaignGenerations = generationsByCampaignId[campaign.id] ?? [];
-    const enrichedGenerations = campaignGenerations.map((gen) => {
-      const genConfigs = (gen.generated ?? []).map((g) => {
-        const config = configById[g.id];
-        return {
-          ...config,
-          executions: executionsByConfigId[g.id] ?? [],
-        };
-      });
-      return { ...gen, configs: genConfigs };
-    });
-    return { ...campaign, generations: enrichedGenerations };
+  const enrichedData: TTaskCampaignRows<TTaskConfigMeta> = buildTaskCampaignRows({
+    campaigns: source.data,
+    generationsByCampaignId,
+    configById,
+    executionsByConfigId,
   });
 
   return {
@@ -207,24 +204,14 @@ export type TExtendedExtractionCampaignsType = AwaitedType<
 >;
 
 type TEnrichedExtractionCampaign = TExtendedExtractionCampaignsType['data'][number];
-type TEnrichedConfig = TEnrichedExtractionCampaign['generations'][number]['configs'][number];
 
-export function getExtractionStatus(config: TEnrichedConfig) {
-  const executions = get(config, 'executions', []) as Array<{
-    status?: string;
-    creation_date?: string;
-  }>;
-  const sorted = sortBy(executions, (e) => e.creation_date);
-  return (sorted.at(-1)?.status as ActivityStatus) ?? ActivityStatus.CREATED;
+// FIXME: remove this after Pavlo changes, use only `getLatestExecutionStatusFromRows`
+export function getExtractionStatus(rows: TTaskCampaignExecutionRow<TTaskConfigMeta>[]) {
+  return getLatestExecutionStatusFromRows(rows);
 }
-
+// FIXME: remove this after Pavlo changes, use only `getTaskCampaignStatusCountMap`
 export function getStatusCountMap(campaign: TEnrichedExtractionCampaign) {
-  const allConfigs = campaign.generations.flatMap((gen) => gen.configs);
-
-  return allConfigs.reduce((map, config) => {
-    const status = getExtractionStatus(config);
-    return map.set(status, (map.get(status) ?? 0) + 1);
-  }, new Map<ActivityStatus, number>());
+  return getTaskCampaignStatusCountMap(campaign);
 }
 
 export type TResolvedExtractionByCampaign = Awaited<
