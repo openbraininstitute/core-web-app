@@ -8,7 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -33,9 +33,31 @@ type Props = {
   className: ComponentProps<'div'>['className'];
 };
 
+type ResolveCurrentProjectNameParams = {
+  projectId: string | null | undefined;
+  listedProjectName?: string | null;
+  activeProjectName?: string | null;
+};
+
+export function resolveCurrentProjectName({
+  projectId,
+  listedProjectName,
+  activeProjectName,
+}: ResolveCurrentProjectNameParams) {
+  if (!projectId) {
+    return 'Select project';
+  }
+  return activeProjectName ?? listedProjectName ?? null;
+}
+
 export function SpaceSwitcher({ className }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
+  const workspaceProjectList = { virtualLabId: virtualLabId ?? '' };
+  const activeWorkspace = {
+    virtualLabId: virtualLabId ?? '',
+    projectId: projectId ?? '',
+  };
   const [tryingToExpand, setTryingToExpand] = useState<Set<string>>(new Set([]));
   const [expandedLabs, setExpandedLabs] = useState<Set<string>>(new Set([]));
   const [currentVirtualLabId, setCurrentVirtualLabId] = useState<string | null>(null);
@@ -66,6 +88,8 @@ export function SpaceSwitcher({ className }: Props) {
         }),
         queryFn: async () =>
           await listVirtualLabs({ include: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
+        staleTime: Infinity,
+        gcTime: Infinity,
       },
       {
         queryKey: userKeyBuilder.subscription(),
@@ -82,7 +106,7 @@ export function SpaceSwitcher({ className }: Props) {
 
   const username = user?.profile.first_name
     ? `${user.profile.first_name} ${user.profile.last_name}`
-    : user?.profile.preferred_username;
+    : (user?.profile.preferred_username ?? user?.profile.email);
 
   const myVirtualLab = useMemo(
     () =>
@@ -104,8 +128,8 @@ export function SpaceSwitcher({ className }: Props) {
   );
 
   const { isLoading: projectsLoading, data: projects } = useQuery({
-    queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId: virtualLabId! }),
-    queryFn: async () => await listProjects({ virtualLabId: virtualLabId!, page: 1, size: 40 }),
+    queryKey: keyBuilder.listWorkspaceProjects(workspaceProjectList),
+    queryFn: async () => await listProjects({ ...workspaceProjectList, page: 1, size: 40 }),
     enabled: !!virtualLabId,
   });
 
@@ -175,9 +199,25 @@ export function SpaceSwitcher({ className }: Props) {
 
   const currentVirtualLabName = labs.find((lab) => lab.id === virtualLabId)?.name;
 
-  const currentProjectName = projectId
-    ? projects?.data?.results.find((o) => o.id === projectId)?.name
-    : 'Select project';
+  const listedProjectName = projectId
+    ? (projects?.data?.results.find((project) => project.id === projectId)?.name ?? null)
+    : null;
+
+  const { data: activeProject, isLoading: activeProjectLoading } = useQuery({
+    queryKey: keyBuilder.getWorkspace(activeWorkspace),
+    queryFn: () => getProject(activeWorkspace),
+    enabled: !!virtualLabId && !!projectId && !listedProjectName,
+  });
+
+  const currentProjectName = resolveCurrentProjectName({
+    projectId,
+    listedProjectName,
+    activeProjectName: activeProject?.data.project.name ?? null,
+  });
+
+  const currentProjectLabel = currentProjectName ?? (projectId ? 'Project' : 'Select project');
+  const isCurrentProjectLoading =
+    !!projectId && !currentProjectName && (projectsLoading || activeProjectLoading);
 
   useWorkspaceConfigurationClickEvent((event) => {
     if (isExpanded && event.detail.on) setBoardModalOpen(event.detail.on);
@@ -230,10 +270,10 @@ export function SpaceSwitcher({ className }: Props) {
             { 'z-1001': boardModalOpen },
             { 'h-12': breakpoint === 'xl' }
           )}
-          aria-label={`${currentVirtualLabName}/${currentProjectName}`}
-          disabled={labsLoading || projectsLoading}
+          aria-label={`${currentVirtualLabName}/${currentProjectLabel}`}
+          disabled={labsLoading || isCurrentProjectLoading}
         >
-          {projectsLoading ? (
+          {isCurrentProjectLoading ? (
             <div
               className={cn('flex items-center justify-center gap-2', {
                 hidden: isExpanded,
@@ -250,7 +290,7 @@ export function SpaceSwitcher({ className }: Props) {
                 hidden: isExpanded,
               })}
             >
-              {/** biome-ignore lint/a11y/useSemanticElements: button can not have nested buttons */}
+              {/** biome-ignore lint/a11y/noStaticElementInteractions: button can not have nested buttons */}
               <div
                 className={cn(
                   'flex items-center gap-1.5 rounded-full',
@@ -258,10 +298,9 @@ export function SpaceSwitcher({ className }: Props) {
                 )}
                 onKeyDown={onProfileClick}
                 onClick={onProfileClick}
-                role="button"
                 tabIndex={-1}
                 title={username}
-                aria-label={username}
+                data-label={username}
               >
                 <UserFilled className="hover:text-primary-6 text-primary-9 shrink-0 text-lg xl:text-xl" />
               </div>
@@ -298,18 +337,18 @@ export function SpaceSwitcher({ className }: Props) {
               >
                 {virtualLabId && (
                   <>
-                    {projectsLoading ? (
+                    {isCurrentProjectLoading ? (
                       <Skeleton className="h-5 w-24 flex-1 rounded-full" />
                     ) : (
                       <span className="text-primary-9 min-w-0 flex-1 truncate pl-2 text-left font-bold">
-                        {currentProjectName}
+                        {currentProjectLabel}
                       </span>
                     )}
                     <motion.div
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ duration: 0.15, ease: 'easeOut' }}
                     >
-                      {projectsLoading ? (
+                      {isCurrentProjectLoading ? (
                         <Skeleton className="h-4 w-4 rounded-full" />
                       ) : (
                         <DownOutlined
@@ -340,7 +379,7 @@ export function SpaceSwitcher({ className }: Props) {
                   )}
                 >
                   <ProfileButton username={username} onProfileClick={onProfileClick} />
-                  <div className="ml-2 flex flex-shrink-0 items-center gap-2">
+                  <div className="ml-2 flex shrink-0 items-center gap-2">
                     <motion.div
                       className="hover:bg-neutral-2/50 group flex size-8 items-center justify-center rounded-full"
                       animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -371,14 +410,14 @@ export function SpaceSwitcher({ className }: Props) {
                 'relative flex flex-col pt-1 pb-2 shadow-2xl',
                 'h-full max-h-[calc(100vh-4.5rem)] min-h-[calc(100vh-5rem)] lg:max-h-[calc(100vh-4.5rem)]',
                 { 'rounded-t-none': isExpanded },
-                { 'z-[1001]': boardModalOpen }
+                { 'z-1001': boardModalOpen }
               )}
             >
               {subscription?.subscription.tier === 'FREE' && (
                 <button
                   type="button"
                   aria-label="get pro subscription"
-                  className="m-2 rounded-md bg-gradient-to-r from-[#003A8C] to-[#2D5A99]"
+                  className="m-2 rounded-md bg-linear-to-r from-[#003A8C] to-[#2D5A99]"
                   onClick={onProClick}
                 >
                   <div className="flex flex-col items-start px-4 py-2 text-left text-white">
@@ -453,7 +492,7 @@ function ProfileButton({
 }) {
   const [isActive, setIsActive] = useState(false);
   useWorkspaceConfigurationClickEvent(
-    useCallback((data: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<any>>) => {
+    useCallback((data: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<unknown>>) => {
       const incomingType = data.detail.type;
       if (incomingType === WorkspaceActions.ProfileSettings) {
         setIsActive(true);
@@ -462,7 +501,7 @@ function ProfileButton({
   );
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: button can't have nested buttons
+    // biome-ignore lint/a11y/noStaticElementInteractions: button can't have nested buttons
     <div
       className={cn(
         'flex max-w-[calc(100%-100px)] flex-row items-center gap-1.5 rounded-full bg-white px-5 py-2 shadow-md md:h-9 lg:h-10',
@@ -471,10 +510,9 @@ function ProfileButton({
       )}
       onKeyDown={onProfileClick}
       onClick={onProfileClick}
-      role="button"
       tabIndex={-1}
       title={username}
-      aria-label={username}
+      data-label={username}
     >
       <UserFilled className="shrink-0 text-base text-current xl:text-lg" />
       <h3 className="line-clamp-1 min-w-0 truncate text-left text-sm font-bold">{username}</h3>
