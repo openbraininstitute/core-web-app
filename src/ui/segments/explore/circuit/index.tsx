@@ -54,7 +54,7 @@ import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { TFacets, Pagination } from '@/api/entitycore/types/shared/response';
+import type { Pagination, TFacets } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 
 const CircuitTable = dynamic(() => import('@/ui/segments/explore/circuit/table'), { ssr: false });
@@ -190,8 +190,7 @@ export function BrowseCircuit({
     defaultBrainRegion,
     useKeepPreviousData: true,
     extraQueryParams,
-    enabled: ({ queryKey }) => {
-      const [{ queryParameters }] = queryKey;
+    enabled: () => {
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
         return false;
       return true;
@@ -210,6 +209,11 @@ export function BrowseCircuit({
     workspace: { virtualLabId, projectId },
     queryFilters,
     extraQueryKey: { view },
+    enabled: () => {
+      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+        return false;
+      return true;
+    },
   });
 
   let dataSource: Array<ICircuit> = [];
