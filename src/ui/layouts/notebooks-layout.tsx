@@ -326,6 +326,8 @@ const CsvUploadValidator = ({
     }
   };
 
+  const minCredits = Math.max(studentEmails.length, 5);
+
   return (
     <div className="flex flex-col gap-3">
       <Upload
@@ -364,8 +366,8 @@ const CsvUploadValidator = ({
               setCredits(n ?? 0);
             }}
           />
-          {!credits && (
-            <div className="text-red-500">{`Minimum of ${Math.max(studentEmails.length, 5)} required`}</div>
+          {credits < minCredits && (
+            <div className="text-red-500">{`Minimum of ${minCredits} required`}`</div>
           )}
 
           <PaymentFlow
