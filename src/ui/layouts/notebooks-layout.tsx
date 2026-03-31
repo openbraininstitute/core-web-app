@@ -19,6 +19,7 @@ import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
+import { assignProjectBudget } from '@/services/virtual-lab/projects';
 import { Button as UiButton } from '@/ui/molecules/button';
 import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -31,7 +32,7 @@ import { buildStripeFormOptions } from '../segments/virtual-lab-settings/element
 
 import type { UploadFile, UploadProps } from 'antd';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
-import type { Project } from '@/api/virtual-lab-svc/queries/types';
+import type { Project, ProjectCreationResponse } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
 // Add createNotebook function
@@ -635,9 +636,10 @@ function CourseSetup({
           includeProjects: false,
         });
         const balance = balanceRes?.data?.balance;
+        const budgetPerStudent = Math.floor(parseInt(balance, 10) / studentEmails.length);
 
         if (isNil(balance)) throw new Error('Could not fetch account balance for the virtual lab');
-        if (parseInt(balance, 10) / studentEmails.length < 1) {
+        if (budgetPerStudent < 1) {
           throw new Error('Not enough credits to initialize course');
         }
 
@@ -660,6 +662,22 @@ function CourseSetup({
             placement: 'topRight',
           });
         }
+
+        const successfulProjects = projectCreationResults
+          .filter((item) => item.status === 'fulfilled')
+          .map((item) => item.value as ProjectCreationResponse)
+          .filter((p) => !!p.data);
+
+        await Promise.all(
+          successfulProjects.map((project) =>
+            assignProjectBudget({
+              virtualLabId,
+              // @ts-expect-error
+              projectId: project?.data?.project.id,
+              amount: budgetPerStudent,
+            })
+          )
+        );
 
         const [projectsRes, firstNotebookRes] = await Promise.all([
           listProjects({ virtualLabId, page: 1, size: 100 }),
