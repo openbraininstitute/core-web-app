@@ -46,7 +46,7 @@ export async function createNotebook({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  const cratedNotebook = await api.post<INotebook>('/analysis-notebook-template', {
+  return await api.post<INotebook>('/analysis-notebook-template', {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -54,10 +54,6 @@ export async function createNotebook({
     },
     body: payload,
   });
-
-
-  const crea
-
 }
 
 type Props = {
@@ -615,23 +611,21 @@ async function syncNotebook({
     )
   );
 
+  console.log(sourceAssets);
+
   // const createdNotebook = await createNotebook({
   //   payload: notebook,
   //   context: { virtualLabId, projectId },
   // });
 
-
   // createAsset({
   //   ctx: { virtualLabId, projectId },
   //   entityType: EntityTypeDict.Notebook,
   //   entityId: notebook.id,
-  //   fileName: asset.name,
-  //   payload: asset.data,
+  //   fileName: "test",
+  //   payload: sourceAssets[0],
   //   mimeType: asset.mime_type,
   // })
-
-
-  
 
   // console.log(`HERE ${notebook.id}`, createNotebook);
 
@@ -805,13 +799,5 @@ function CourseSetup({
     setupCourse();
   }, [virtualLabId, projectId, notification, studentEmails, nameBase]);
 
-  return (
-    <Button
-      onClick={() =>
-        syncNotebook({
-          notebook: privateNotebooks,
-        })
-      }
-    />
-  );
+  return null;
 }
