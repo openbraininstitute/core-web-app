@@ -668,7 +668,7 @@ function CourseSetup({
           .map((item) => item.value as ProjectCreationResponse)
           .filter((p) => !!p.data);
 
-        await Promise.all(
+        const budgetAssignmentResults = await Promise.allSettled(
           successfulProjects.map((project) =>
             assignProjectBudget({
               virtualLabId,
@@ -678,6 +678,17 @@ function CourseSetup({
             })
           )
         );
+
+        const failedBudgetAssignments = budgetAssignmentResults.filter(
+          (r) => r.status === 'rejected'
+        );
+        if (failedBudgetAssignments.length > 0) {
+          notification.warning({
+            message: `Warning: Credits couldn't be transferred to ${failedBudgetAssignments.length} out of ${successfulProjects.length} student projects`,
+            key: 'budget-assignment-warning',
+            placement: 'topRight',
+          });
+        }
 
         const [projectsRes, firstNotebookRes] = await Promise.all([
           listProjects({ virtualLabId, page: 1, size: 100 }),
