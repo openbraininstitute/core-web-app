@@ -1,37 +1,37 @@
-'use client';
+'use client'
 
-import dynamic from 'next/dynamic';
-import { Fragment } from 'react';
+import dynamic from 'next/dynamic'
+import { Fragment } from 'react'
 
-import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
-import { cn } from '@/utils/css-class';
+import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron'
+import { cn } from '@/utils/css-class'
 
-import { useTimelineManager } from './hooks';
-import { SpikesTimeline } from './spikes-timeline';
+import { useTimelineManager } from './hooks'
+import { SpikesTimeline } from './spikes-timeline'
 
-import type { PlotData } from '@/services/bluenaas-single-cell/types';
+import type { PlotData } from '@/services/bluenaas-single-cell/types'
 
-import styles from './recording-tab.module.css';
+import styles from './recording-tab.module.css'
 
 const PlotRenderer = dynamic(
   () => import('@/features/entities/neuron-simulation/experiment/visualization/plot-renderer'),
   {
     ssr: false,
   }
-);
+)
 
 type Props = {
-  recordings: Record<string, PlotData>;
-  meModelId: string;
-};
+  recordings: Record<string, PlotData>
+  meModelId: string
+}
 
 export default function ResultsTab({ recordings }: Props) {
   // @TODO: restore this part after phase 2: when small-scale-simulator is in staging
   // const [collapsed, setCollapsed] = React.useState(true);
   // const tree = useMorphology(meModelId);
   // const spikes = useSpikes(recordings);
-  const collapsed = true;
-  const timelineManager = useTimelineManager();
+  const collapsed = true
+  const timelineManager = useTimelineManager()
 
   return (
     <div className={cn(styles.layout, collapsed && styles.collapsed)}>
@@ -60,7 +60,7 @@ export default function ResultsTab({ recordings }: Props) {
               </div>
               <div className="my-5 h-px w-full bg-gray-200 last:hidden" />
             </Fragment>
-          );
+          )
         })}
       </div>
       {/* @TODO: restore this part after phase 2: when small-scale-simulator is in staging */}
@@ -87,5 +87,5 @@ export default function ResultsTab({ recordings }: Props) {
         )}
       </div> */}
     </div>
-  );
+  )
 }
