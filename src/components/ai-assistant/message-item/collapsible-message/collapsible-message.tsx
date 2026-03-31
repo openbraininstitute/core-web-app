@@ -1,6 +1,5 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
 import React from 'react';
 
 import type { UIMessage } from '@ai-sdk/ui-utils';
@@ -172,20 +171,11 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
               </span>
             </div>
           </button>
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div
-                className={styles.thinkingContent}
-                initial={{ opacity: 0, height: 0, y: -6 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0, y: -6 }}
-                transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
-                style={{ overflow: 'hidden', transformOrigin: 'top' }}
-              >
-                <div className={styles.thinkingContentInner}>{collapsedChildren}</div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div
+            className={`${styles.thinkingContent} ${isExpanded ? styles.thinkingContentExpanded : ''}`}
+          >
+            <div className={styles.thinkingContentInner}>{collapsedChildren}</div>
+          </div>
         </div>
       )}
       <div className={styles.contentWrapper} data-visible-tools="true">
