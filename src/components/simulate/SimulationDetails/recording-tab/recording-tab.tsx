@@ -1,15 +1,16 @@
 'use client';
 
 import { MorphoViewerSimul } from '@bbp/morphoviewer';
-import { SpinnerIcon } from '@bprogress/next';
 import dynamic from 'next/dynamic';
 import React, { Fragment } from 'react';
 
 import IconPlus from '@/components/icons/Plus';
+import { IconSpinner } from '@/components/icons/spinner';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
 import { cn } from '@/utils/css-class';
 
-import { useMorphology, useSpikes } from './hooks';
+import { useMorphology, useSpikes, useTimelineManager } from './hooks';
+import { SpikesTimeline } from './spikes-timeline';
 
 import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
@@ -31,7 +32,7 @@ export default function ResultsTab({ recordings, meModelId }: Props) {
   const [collapsed, setCollapsed] = React.useState(true);
   const tree = useMorphology(meModelId);
   const spikes = useSpikes(recordings);
-  console.log('🐞 [recording-tab@34] spikes =', spikes); // @FIXME: Remove this line written on 2026-03-31 at 15:43
+  const timelineManager = useTimelineManager();
 
   return (
     <div className={cn(styles.layout, collapsed && styles.collapsed)}>
@@ -56,6 +57,7 @@ export default function ResultsTab({ recordings, meModelId }: Props) {
                     }}
                   />
                 </div>
+                {!collapsed && <SpikesTimeline manager={timelineManager} />}
               </div>
               <div className="my-5 h-px w-full bg-gray-200 last:hidden" />
             </Fragment>
@@ -73,12 +75,13 @@ export default function ResultsTab({ recordings, meModelId }: Props) {
             <MorphoViewerSimul
               morphology={tree}
               spikes={spikes}
+              onReady={timelineManager.onReady}
               onClose={() => setCollapsed(true)}
             />
           ))}
         {!tree && (
           <div className={styles.spinnerContainer}>
-            <SpinnerIcon />
+            <IconSpinner />
             <div>Loading morphology...</div>
           </div>
         )}

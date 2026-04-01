@@ -1,0 +1,16 @@
+.spikesTimeline {
+    width: 100%;
+    border-radius: 999vmax;
+    border: 1px solid #0004;
+    padding: .5em 32px .5em .5em;
+    display: grid;
+    grid-template-columns: 3em 1fr;
+    gap: 0;
+
+    > button {
+        font: inherit;
+        border: none;
+        display: grid;
+        place-items: center;
+    }
+}
