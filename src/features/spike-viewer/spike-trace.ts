@@ -1,9 +1,34 @@
 import { Dataset, File, Group, ready } from 'h5wasm';
 
+/** Convert any TypedArray from h5wasm to Float32Array without unnecessary copies. */
+function toFloat32(arr: ArrayLike<number | bigint>): Float32Array {
+  if (arr instanceof Float32Array) return arr;
+  if (arr instanceof Float64Array || arr instanceof Int32Array || arr instanceof Uint32Array) {
+    return new Float32Array(arr);
+  }
+  // Handle BigInt64Array / BigUint64Array from int64/uint64 HDF5 datasets
+  const result = new Float32Array(arr.length);
+  for (let i = 0; i < arr.length; i++) {
+    result[i] = Number(arr[i]);
+  }
+  return result;
+}
+
+/** Loop-based min/max that avoids stack overflow from Math.min/max spread on large arrays. */
+function float32MinMax(arr: Float32Array): [number, number] {
+  let min = arr[0];
+  let max = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] < min) min = arr[i];
+    if (arr[i] > max) max = arr[i];
+  }
+  return [min, max];
+}
+
 export type SpikePopulation = {
   name: string;
-  nodeIds: number[];
-  timestamps: number[];
+  nodeIds: Float32Array;
+  timestamps: Float32Array;
   units?: string;
 };
 
@@ -101,8 +126,12 @@ export default class SpikeTrace {
         continue;
       }
 
-      const nodeIds = Array.from(nodeIdsDataset.to_array() as number[]);
-      const timestamps = Array.from(timestampsDataset.to_array() as number[]);
+      const rawNodeIds = nodeIdsDataset.to_array();
+      const rawTimestamps = timestampsDataset.to_array();
+      if (!rawNodeIds || !rawTimestamps) continue;
+
+      const nodeIds = toFloat32(rawNodeIds as ArrayLike<number | bigint>);
+      const timestamps = toFloat32(rawTimestamps as ArrayLike<number | bigint>);
 
       // Get units attribute if available
       let units: string | undefined;
@@ -119,17 +148,15 @@ export default class SpikeTrace {
         units,
       });
 
-      // Update global ranges
+      // Update global ranges using loop-based min/max (spread operator crashes on large arrays)
       if (timestamps.length > 0) {
-        const minTime = Math.min(...timestamps);
-        const maxTime = Math.max(...timestamps);
+        const [minTime, maxTime] = float32MinMax(timestamps);
         globalMinTime = Math.min(globalMinTime, minTime);
         globalMaxTime = Math.max(globalMaxTime, maxTime);
       }
 
       if (nodeIds.length > 0) {
-        const minNodeId = Math.min(...nodeIds);
-        const maxNodeId = Math.max(...nodeIds);
+        const [minNodeId, maxNodeId] = float32MinMax(nodeIds);
         globalMinNodeId = Math.min(globalMinNodeId, minNodeId);
         globalMaxNodeId = Math.max(globalMaxNodeId, maxNodeId);
       }
