@@ -16,13 +16,11 @@ import { cn } from '@/utils/css-class';
 import { logError } from '@/utils/logger';
 
 import ReloadIcon from '../icons/Reload';
-import { IconSpinner } from '../icons/spinner';
 import { CollapsedViewer } from './collapsed-viewer';
 import { DebugPanel } from './debug-panel';
 import { useElectrodes } from './hooks/electrodes';
 import { useSynapses } from './hooks/synapses';
 import { LoadingNeuronSpinner } from './loading-neuron-spinner';
-import { NeuronLoader } from './plugins/neuron-loader';
 
 import styles from './neuron-viewer-with-actions.module.css';
 

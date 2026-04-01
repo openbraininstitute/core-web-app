@@ -4,6 +4,7 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { use } from 'react';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
+import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
 import {
   type ThreeDVisualizerQueryParamKeys,
   threeDVisualizerState,
@@ -34,12 +35,9 @@ export default function Page({
   }
 >) {
   const queryParams = use(searchParams);
-  const visualizerState =
-    (queryParams['3d'] as ThreeDVisualizerQueryParamKeys) ?? threeDVisualizerState.Expanded;
   const { virtualLabId, projectId, id: modelId } = use(pathParams);
   let sessionId = queryParams?.sessionId;
   if (!sessionId) sessionId = crypto.randomUUID();
-
   const { data: entity } = useSuspenseQuery({
     queryKey: keyBuilder.synaptome({ virtualLabId, projectId, entityId: modelId }),
     queryFn: () => getSingleNeuronSynaptome({ id: modelId, context: { virtualLabId, projectId } }),
@@ -67,15 +65,7 @@ export default function Page({
           data-testid="synaptome-simulation-panel"
           className="flex h-full max-h-full min-h-0 w-full flex-col [grid-area:content]"
         >
-          <div
-            id="simulation-panel-wrapper"
-            data-testid="simulation-panel-wrapper"
-            className={cn(
-              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto',
-              { 'grid-cols-[2fr_3fr]': visualizerState === threeDVisualizerState.Expanded },
-              { 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed }
-            )}
-          >
+          <ResponsiveSideViewer>
             <HydrateWrapper>
               <PanelSelector
                 sessionId={sessionId}
@@ -89,7 +79,17 @@ export default function Page({
               memodelId={entity.me_model.id}
               disableSynapses={false}
             />
-          </div>
+          </ResponsiveSideViewer>
+          {/* <div
+            id="simulation-panel-wrapper"
+            data-testid="simulation-panel-wrapper"
+            className={cn(
+              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto',
+              { 'grid-cols-[2fr_3fr]': visualizerState === threeDVisualizerState.Expanded },
+              { 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed }
+            )}
+          >
+          </div> */}
         </div>
       </div>
     </>
