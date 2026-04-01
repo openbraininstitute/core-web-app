@@ -223,7 +223,7 @@ export function BrowseEntityScope({
     context: {
       key: dataKey,
       workspaceScope: scope,
-      extendedEntityType: dataType as TExtendedEntitiesTypeDict,
+      extendedEntityType: dataType,
     },
     workspace: { virtualLabId, projectId },
     queryFn: async () => {
