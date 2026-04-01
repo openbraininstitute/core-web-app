@@ -3,18 +3,21 @@ import { includes } from 'es-toolkit/compat';
 import { useEffect, useMemo } from 'react';
 
 import { getCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
-import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
+import {
+  ActivityStatus,
+  type TActivityStatus,
+} from '@/api/entitycore/types/entities/task-activity';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 import { classNames } from '@/util/utils';
 
-import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
-import type { ISkeletonizationConfig } from '@/api/entitycore/types/entities/skeletonization-config';
+import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
+import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
+import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 
 type Props = {
-  config: ISkeletonizationConfig;
+  config: ITaskConfig<TSkeletonizationTaskConfigMeta>;
   execStatus?: TActivityStatus;
-  execution?: IExecutionActivity;
+  execution?: ITaskActivity;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
   context: { virtualLabId: string; projectId: string };

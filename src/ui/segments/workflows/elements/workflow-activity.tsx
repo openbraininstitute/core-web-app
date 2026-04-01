@@ -25,10 +25,6 @@ import { TaskViewConfig } from '@/entity-configuration/definitions/list-expanded
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
-  getSkeletonizationStatusCountMap,
-  type TExtendedSkeletonizationCampaignsType,
-} from '@/entity-configuration/domain/processing/skeletonization-campaign';
-import {
   getStatusCountMap as getIonChannelModelingStatusCountMap,
   resolveIonChannelModelingByCampaignId,
   type TExtendedIonChannelModelingCampaignsType,
@@ -214,10 +210,6 @@ export function WorkflowActivity() {
             );
             return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
           })
-          .with({ type: EntityTypeDict.SkeletonizationCampaign }, () => {
-            const statusCountMap = getSkeletonizationStatusCountMap(record as any);
-            return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
-          })
           .otherwise(() => {
             const status = get(record, 'status', 'default');
             const mapper = get(StatusMap, status, null);
@@ -311,14 +303,20 @@ export function WorkflowActivity() {
 
   const onDuplicate = () => {
     if (selectedRow?.type === ExtendedEntitiesTypeDict.TaskConfig) {
-      if (
-        (selectedRow as ITaskConfig<any>).task_config_type ===
-        TaskConfigType.CircuitExtractionCampaign
-      ) {
-        const circuitId = (selectedRow as ITaskConfig<any>).inputs.at(0)?.id;
+      const taskConfig = selectedRow as ITaskConfig<any>;
+      if (taskConfig.task_config_type === TaskConfigType.CircuitExtractionCampaign) {
+        const circuitId = taskConfig.inputs.at(0)?.id;
         navigate(
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
             circuitId
+          }?initialCampaignId=${selectedRow.id}`
+        );
+      }
+      if (taskConfig.task_config_type === TaskConfigType.SkeletonizationCampaign) {
+        const emCellMeshId = taskConfig.inputs.at(0)?.id;
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/process/configure/em-cell-mesh/${
+            emCellMeshId
           }?initialCampaignId=${selectedRow.id}`
         );
       }
