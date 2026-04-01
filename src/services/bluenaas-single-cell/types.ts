@@ -51,7 +51,7 @@ export type PlotDataEntry = {
    * The times where spikes are detected.
    * Must be a subset of `x[]`, sorted.
    */
-  spikes?: number[];
+  spike_times?: number[];
   type: 'scatter';
   name: string;
   recording?: string;

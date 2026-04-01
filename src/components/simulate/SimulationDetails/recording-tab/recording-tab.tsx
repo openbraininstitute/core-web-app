@@ -9,7 +9,7 @@ import IconPlus from '@/components/icons/Plus';
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron';
 import { cn } from '@/utils/css-class';
 
-import { useMorphology } from './hooks';
+import { useMorphology, useSpikes } from './hooks';
 
 import type { PlotData } from '@/services/bluenaas-single-cell/types';
 
@@ -30,11 +30,12 @@ type Props = {
 export default function ResultsTab({ recordings, meModelId }: Props) {
   const [collapsed, setCollapsed] = React.useState(true);
   const tree = useMorphology(meModelId);
+  const spikes = useSpikes(recordings);
+  console.log('🐞 [recording-tab@34] spikes =', spikes); // @FIXME: Remove this line written on 2026-03-31 at 15:43
 
   return (
     <div className={cn(styles.layout, collapsed && styles.collapsed)}>
       <div className={styles.plotsContainer}>
-        {/* "mt-6 flex w-full max-w-4xl flex-col items-start gap-4"> */}
         {Object.entries(recordings).map(([key, value]) => {
           return (
             <Fragment key={key}>
@@ -69,7 +70,11 @@ export default function ResultsTab({ recordings, meModelId }: Props) {
               <div>Spike activity</div>
             </button>
           ) : (
-            <MorphoViewerSimul morphology={tree} onClose={() => setCollapsed(true)} />
+            <MorphoViewerSimul
+              morphology={tree}
+              spikes={spikes}
+              onClose={() => setCollapsed(true)}
+            />
           ))}
         {!tree && (
           <div className={styles.spinnerContainer}>
