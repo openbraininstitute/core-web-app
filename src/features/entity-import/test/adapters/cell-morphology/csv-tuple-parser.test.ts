@@ -1,15 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { AgentType } from '@/ui/segments/contribute/shared/types';
-
 import {
   parseContributionCsvValue,
   parseLocationCsvValue,
-} from '../../../adapters/cell-morphology/location-parser';
+} from '@/ui/segments/contribute/multiple/adapters/cell-morphology/location-parser';
+import { AgentType } from '@/ui/segments/contribute/shared/types';
 
 import type { IEntityImportRuntimeContext } from '@/features/entity-import/core/adapter';
 import type { ISuggestion } from '@/features/entity-import/core/contracts';
-import type { ICellMorphologyImportServices } from '../../../adapters/cell-morphology/services';
+import type { ICellMorphologyImportServices } from '@/ui/segments/contribute/multiple/adapters/cell-morphology/services';
 
 const context: IEntityImportRuntimeContext = {
   projectId: 'project-1',

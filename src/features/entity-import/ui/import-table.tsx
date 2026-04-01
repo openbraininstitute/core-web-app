@@ -24,6 +24,10 @@ import {
   RemoteValidationStatus,
   RowStatus,
 } from '@/features/entity-import/core/contracts';
+import {
+  BLOCKED_CONTROL_CLASSNAME,
+  INVALID_CONTROL_CLASSNAME,
+} from '@/features/entity-import/core/shared/helpers';
 import { ENTITY_IMPORT_POPOVER_Z_CLASS } from '@/features/entity-import/core/shared/ui';
 import {
   fieldColumnWidth,
@@ -32,11 +36,7 @@ import {
   useImportTableLayout,
 } from '@/features/entity-import/hooks/use-import-table-layout';
 import { useImportTableScroll } from '@/features/entity-import/hooks/use-import-table-scroll';
-import {
-  BLOCKED_CONTROL_CLASSNAME,
-  INVALID_CONTROL_CLASSNAME,
-  InlineCell,
-} from '@/features/entity-import/ui/inline-cell';
+import { InlineCell } from '@/features/entity-import/ui/inline-cell';
 import { getTableCellUiStatus, TableCellUiStatus } from '@/features/entity-import/ui/status';
 import { Badge } from '@/ui/molecules/badge';
 import {
@@ -55,6 +55,44 @@ import type {
   IValidatorPreviewState,
 } from '@/features/entity-import/core/adapter';
 import type { IImportRunState, IImportSessionState } from '@/features/entity-import/core/contracts';
+
+function getImportRowIndexCellAriaLabel(
+  row: IImportSessionState['rows'][number],
+  importRun: IImportRunState
+): string {
+  const importRowStatus = importRun.rowResults[row.id]?.status;
+  const isImportPhase =
+    importRun.phase === ImportRunPhase.Running || importRun.phase === ImportRunPhase.Completed;
+
+  const hasAnyCellProblem = Object.values(row.cells).some(
+    (cell) =>
+      cell.status === CellStatus.Invalid ||
+      cell.remoteState.status === RemoteValidationStatus.Invalid ||
+      cell.remoteState.status === RemoteValidationStatus.Pending
+  );
+  const isRowFullyValid = row.rowStatus === RowStatus.Valid && !hasAnyCellProblem;
+
+  const n = row.rowIndex + 1;
+  if (isImportPhase) {
+    if (importRowStatus === ImportRowResultStatus.Pending) {
+      return `Row ${n} import status: importing`;
+    }
+    if (importRowStatus === ImportRowResultStatus.Succeeded) {
+      return `Row ${n} import status: imported successfully`;
+    }
+    if (importRowStatus === ImportRowResultStatus.Failed) {
+      return `Row ${n} import status: failed to import`;
+    }
+    return `Row ${n} import status: pending`;
+  }
+  if (isRowFullyValid) {
+    return `Row ${n} status: Ready`;
+  }
+  if (row.rowStatus === RowStatus.Invalid || hasAnyCellProblem) {
+    return `Row ${n} status: Needs attention`;
+  }
+  return `Row ${n} status: Needs attention`;
+}
 
 interface ImportTableProps<TPayload, TResult> {
   adapter: IEntityImportAdapter<TPayload, TResult>;
@@ -225,8 +263,9 @@ export function ImportTable<TPayload, TResult>({
             </div>
           );
         },
-        onCell: () => ({
+        onCell: (record) => ({
           className: 'align-center',
+          'aria-label': getImportRowIndexCellAriaLabel(record, importRun),
         }),
         shouldCellUpdate: (record, prevRecord) =>
           record !== prevRecord ||
@@ -417,8 +456,7 @@ export function ImportTable<TPayload, TResult>({
       didCellSelectionChange,
       isCellSelected,
       resizeOverrides,
-      importRun.rowResults,
-      importRun.phase,
+      importRun,
       validatorPreview,
     ]
   );
@@ -455,6 +493,7 @@ export function ImportTable<TPayload, TResult>({
         columns={columns}
         dataSource={session.rows}
         scroll={scroll}
+        virtual={session.rows.length >= 50}
         footer={footer}
         className={cn(
           'entity-import-table',

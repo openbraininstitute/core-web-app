@@ -13,7 +13,6 @@ export type EntityCoreDataType =
 
 export type EntityCoreIdentifiable = {
   id: string;
-  legacy_id: Array<string> | null;
 };
 
 export type EntityCoreType = {

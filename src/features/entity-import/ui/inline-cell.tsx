@@ -19,21 +19,23 @@ import {
   getImportFileInputMultiple,
 } from '@/features/entity-import/core/file-field';
 import {
+  BLOCKED_CONTROL_CLASSNAME,
   formatImportDateDisplayValue,
+  getControlClassName,
+  getDisplayValue,
+  INLINE_CELL_DRAFT_COMMIT_DELAY_MS,
+  INVALID_CONTROL_CLASSNAME,
   importDatePickerChangeToRawValue,
   parseImportDatePickerValue,
-} from '@/features/entity-import/core/helpers';
+} from '@/features/entity-import/core/shared/helpers';
 import {
   ENTITY_IMPORT_POPOVER_Z_CLASS,
-  ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
+  ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME,
+  ENTITY_IMPORT_SELECT_MENU_PANEL_CLASSNAME,
   getEntityImportSelectLabel,
 } from '@/features/entity-import/core/shared/ui';
 import { CellStatusBadge } from '@/features/entity-import/ui/cell-status-badge';
-import {
-  getTableCellUiStatus,
-  shouldDisplayCellStatusBadge,
-  TableCellUiStatus,
-} from '@/features/entity-import/ui/status';
+import { shouldDisplayCellStatusBadge } from '@/features/entity-import/ui/status';
 import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import { Textarea } from '@/ui/molecules/input/text-area';
@@ -64,16 +66,6 @@ interface IInlineCellProps {
   validatorPreview: IValidatorDraftValue | null;
 }
 
-const INLINE_CELL_DRAFT_COMMIT_DELAY_MS = 250;
-
-function getDisplayValue(cell: IImportCellState): string {
-  if (cell.displayValue) {
-    return cell.displayValue;
-  }
-
-  return cell.rawValue;
-}
-
 function resolveTablePreviewValue(
   field: IAdapterFieldDefinition,
   value: Pick<IValidatorDraftValue, 'rawValue' | 'displayValue'>
@@ -87,31 +79,6 @@ function resolveTablePreviewValue(
   }
 
   return value.displayValue ?? value.rawValue;
-}
-
-export const INVALID_CONTROL_CLASSNAME =
-  'bg-transparent text-amber-950 [&_textarea]:text-amber-950 bg-amber-50/70 [&_textarea]:bg-amber-50/70';
-export const BLOCKED_CONTROL_CLASSNAME =
-  'bg-neutral-100 text-neutral-500 [&_textarea]:text-neutral-500 bg-neutral-100 [&_textarea]:bg-neutral-100';
-
-function getControlClassName(cell: IImportCellState, selected: boolean): string {
-  const cellUiStatus = getTableCellUiStatus(cell);
-
-  return cn(
-    'h-full w-full rounded-none border-0 bg-transparent px-3 py-2 text-base! font-semibold!',
-    'placeholder:font-light! placeholder:text-gray-400! text-primary-9! placeholder:text-sm!',
-    'shadow-none outline-none focus-visible:border-transparent focus-visible:ring-0',
-    { 'text-blue-950': selected },
-    {
-      'bg-sky-50/70 text-sky-950 [&_textarea]:bg-sky-50/70 [&_textarea]:text-sky-950':
-        cellUiStatus === TableCellUiStatus.NeedsSelection,
-    },
-    {
-      [INVALID_CONTROL_CLASSNAME]:
-        cellUiStatus !== TableCellUiStatus.NeedsSelection && cell.status === CellStatus.Invalid,
-    },
-    { [BLOCKED_CONTROL_CLASSNAME]: cell.dependencyState === DependencyState.Blocked }
-  );
 }
 
 function InlineCellComponent({
@@ -152,6 +119,7 @@ function InlineCellComponent({
   // distinguish case 1 from case 2
 
   const [draftInputValue, setDraftInputValue] = useState(displayValue);
+  const [tableSelectOpen, setTableSelectOpen] = useState(false);
   const draftInputValueRef = useRef(displayValue);
   const lastFlushedValueRef = useRef<string | null>(null);
 
@@ -177,6 +145,12 @@ function InlineCellComponent({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!selected) {
+      setTableSelectOpen(false);
+    }
+  }, [selected]);
 
   const flushDraftInputValue = useCallback(() => {
     if (draftCommitTimeoutRef.current) {
@@ -239,6 +213,7 @@ function InlineCellComponent({
       session,
       context,
       actions,
+      selected,
       validatorPreview: hasValidatorPreview ? validatorPreview : null,
     });
   }
@@ -351,21 +326,58 @@ function InlineCellComponent({
 
   if (field.tableRenderer) {
     return (
-      <div className="relative h-full w-full">
-        {field.tableRenderer({
-          field,
-          cell,
-          row,
-          session,
-          context,
-          actions,
-        })}
-        <CellStatusBadge
-          cell={cell}
-          fieldLabel={field.label}
-          rowIndex={row.rowIndex + 1}
-          onSelect={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
-        />
+      <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0">
+        <div className="relative h-full min-h-[52px] w-full">
+          {field.tableRenderer({
+            field,
+            cell,
+            row,
+            session,
+            context,
+            actions,
+            selected,
+          })}
+          <CellStatusBadge
+            cell={cell}
+            fieldLabel={field.label}
+            rowIndex={row.rowIndex + 1}
+            onSelect={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (field.inputType === ImportInputType.RemoteSelect) {
+    return (
+      <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0">
+        <div className="relative h-full w-full">
+          <Input
+            aria-label={`${field.label} row ${row.rowIndex + 1}`}
+            type="text"
+            className={cn(
+              getControlClassName(cell, selected),
+              'pointer-events-auto box-border h-full min-h-[52px] w-full',
+              hasStatusBadge && 'pr-10'
+            )}
+            disabled={cell.dependencyState === DependencyState.Blocked}
+            placeholder={field.placeholder}
+            value={draftInputValue}
+            onFocus={selectCell}
+            onChange={(event) => {
+              const nextRawValue = event.target.value;
+              setDraftInputValue(nextRawValue);
+              scheduleDraftCommit(nextRawValue);
+            }}
+            onBlur={flushDraftInputValue}
+          />
+          <CellStatusBadge
+            cell={cell}
+            fieldLabel={field.label}
+            rowIndex={row.rowIndex + 1}
+            onSelect={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
+          />
+        </div>
       </div>
     );
   }
@@ -376,19 +388,27 @@ function InlineCellComponent({
         <Select
           data-import-input-type={ImportInputType.Select}
           disabled={cell.dependencyState === 'blocked'}
+          open={tableSelectOpen}
           value={cell.rawValue}
           onOpenChange={(open) => {
+            if (open && !cell.rawValue.trim() && !selected) {
+              selectCell();
+              setTableSelectOpen(false);
+              return;
+            }
             if (open) {
               selectCell();
             }
+            setTableSelectOpen(open);
           }}
-          onValueChange={(value) =>
+          onValueChange={(value) => {
+            setTableSelectOpen(false);
             actions.onUpdateCellValue({
               rowId: row.id,
               fieldPath: field.path,
               rawValue: value,
-            })
-          }
+            });
+          }}
         >
           <SelectTrigger
             aria-label={`${field.label} row ${row.rowIndex + 1}`}
@@ -409,18 +429,15 @@ function InlineCellComponent({
             </SelectValue>
           </SelectTrigger>
           <SelectContent
-            className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'px-2 rounded-2xl')}
-            style={{
-              maxWidth: 'var(--radix-select-trigger-width)',
-            }}
+            viewportClassName="p-1.5"
+            className={cn(ENTITY_IMPORT_SELECT_MENU_PANEL_CLASSNAME, 'max-h-80')}
           >
             {field.options?.map((option) => (
               <SelectItem
                 data-import-input-type-item={`${field.inputType}-option`}
                 key={option.value}
                 value={option.value}
-                className="w-full text-left h-11 cursor-pointer font-semibold text-primary-9 rounded-2xl"
-                style={{ width: 'calc(var(--radix-select-trigger-width) - 1rem)' }}
+                className={ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME}
               >
                 {option.label}
               </SelectItem>
@@ -441,13 +458,12 @@ function InlineCellComponent({
     return (
       <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0">
         <Button
-          rounded
           type="button"
           aria-label={`${field.label} row ${row.rowIndex + 1}`}
           variant="ghost"
           size="md"
           className={cn(
-            'pointer-events-auto box-border h-full min-h-[52px] w-full justify-center rounded-none',
+            'pointer-events-auto box-border h-full min-h-[52px] w-full justify-center rounded-none!',
             'border-0 bg-transparent px-3 py-2 text-left text-sm text-inherit',
             'shadow-none hover:bg-transparent hover:text-inherit',
             getControlClassName(cell, selected)
@@ -532,17 +548,22 @@ function InlineCellComponent({
         <DatePicker
           id={`${field.label} row ${row.rowIndex + 1}`}
           aria-label={`${field.label} row ${row.rowIndex + 1}`}
+          variant="borderless"
           disabled={cell.dependencyState === DependencyState.Blocked}
           value={parseImportDatePickerValue(cell.rawValue)}
+          placeholder={field.placeholder ?? 'Select date'}
           className={cn(
             getControlClassName(cell, selected),
             'pointer-events-auto flex h-full min-h-[52px] w-full items-stretch text-lg text-primary-9',
-            'rounded-none border-none shadow-none outline-none focus-within:border-primary-6',
+            'rounded-none border-none! bg-transparent! shadow-none! outline-none ring-0!',
+            'focus-within:border-none! focus-within:shadow-none!',
+            '[&_.ant-picker]:border-none! [&_.ant-picker]:bg-transparent! [&_.ant-picker]:shadow-none!',
+            '[&_.ant-picker-focused]:border-none! [&_.ant-picker-focused]:shadow-none!',
             '[&_.ant-picker-input]:flex [&_.ant-picker-input]:min-h-0 [&_.ant-picker-input]:flex-1 ',
             '[&_.ant-picker-input]:items-center [&_.ant-picker-input>input]:box-border ',
             '[&_.ant-picker-input>input]:h-full [&_.ant-picker-input>input]:min-h-0',
             '[&_input]:placeholder:text-gray-400! [&_input]:placeholder:text-sm!',
-            '[&_input]:placeholder:font-light!'
+            'placeholder:text-sm placeholder:font-light placeholder:text-gray-400'
           )}
           styles={{
             root: {
@@ -550,6 +571,9 @@ function InlineCellComponent({
               minHeight: '100%',
               display: 'flex',
               alignItems: 'stretch',
+              border: 'none',
+              boxShadow: 'none',
+              background: 'transparent',
             },
           }}
           format="DD/MM/YYYY"
@@ -584,10 +608,11 @@ function InlineCellComponent({
           className={cn(
             getControlClassName(cell, selected),
             'pointer-events-auto box-border h-full min-h-[52px] w-full',
-            hasStatusBadge && 'pr-10'
+            hasStatusBadge && 'pr-10',
+            'placeholder:text-sm placeholder:font-light placeholder:text-gray-400'
           )}
           disabled={cell.dependencyState === DependencyState.Blocked}
-          placeholder={field.placeholder}
+          placeholder={field.placeholder ?? 'Enter value'}
           value={draftInputValue}
           onFocus={selectCell}
           onChange={(event) => {

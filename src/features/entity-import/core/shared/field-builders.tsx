@@ -5,8 +5,10 @@ import {
   ImportInputType,
   type ISuggestion,
   RemoteValidationStatus,
+  type TFlatImportValues,
 } from '@/features/entity-import/core/contracts';
 import { findExactSuggestionMatch } from '@/features/entity-import/core/helpers';
+import { BrainRegionInlineCell } from '@/features/entity-import/core/shared/brain-region-inline-cell';
 import { parseContributionCsvValue } from '@/features/entity-import/core/shared/contribution-csv-parser';
 import {
   ContributionSummaryCell,
@@ -17,6 +19,13 @@ import {
   summarizeContributions,
   type TContributionDraft,
 } from '@/features/entity-import/core/shared/contributions-editor';
+import {
+  createSpeciesMismatchMessage,
+  readSpeciesSuggestionFromSuggestion,
+  resolveRowSpeciesSuggestion,
+} from '@/features/entity-import/core/shared/species-context';
+import { SpeciesScopedFieldPanel } from '@/features/entity-import/core/shared/species-scoped-field-panel';
+import { DEFAULT_LICENSE_ID, DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/helpers';
 
 import type { ReactNode } from 'react';
 import type {
@@ -33,8 +42,6 @@ import type {
   TBrainRegionQueryField,
   TSharedTextQueryField,
 } from '@/features/entity-import/core/shared/common-query-services';
-
-export const DEFAULT_ENTITY_IMPORT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
 
 export function readSuggestionString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value : null;
@@ -133,19 +140,27 @@ export function renderEtypeSuggestionTooltip({ suggestion }: IValidatorSuggestio
 export function makeRemoteQuery<TQueryField extends string>({
   queryField,
   querySuggestions,
+  resolveFilters,
 }: {
   queryField: TQueryField;
   querySuggestions: (
     args: CommonQueryArgs<TQueryField>
   ) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>;
+  resolveFilters?: (args: {
+    row: IRemoteSearchPagedArgs['row'];
+    values: TFlatImportValues;
+  }) => CommonQueryArgs<TQueryField>['filters'];
 }) {
-  return async ({ query, context, pageParam, pageSize }: IRemoteSearchPagedArgs) =>
+  return async ({ query, context, pageParam, pageSize, row, values }: IRemoteSearchPagedArgs) =>
     querySuggestions({
       query,
       queryField,
       context,
       pageParam,
       pageSize,
+      row,
+      values,
+      filters: resolveFilters?.({ row, values }),
     });
 }
 
@@ -153,19 +168,28 @@ export function makeSingleSuggestionRemoteEvaluator<TQueryField extends string>(
   label,
   queryField,
   querySuggestions,
+  resolveFilters,
 }: {
   label: string;
   queryField: TQueryField;
   querySuggestions: (
     args: CommonQueryArgs<TQueryField>
   ) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>;
+  resolveFilters?: (args: {
+    row: IRemoteSearchPagedArgs['row'];
+    values: TFlatImportValues;
+  }) => CommonQueryArgs<TQueryField>['filters'];
 }) {
   return async ({
     query,
     context,
+    row,
+    values,
   }: {
     query: string;
     context: IEntityImportRuntimeContext;
+    row: IRemoteSearchPagedArgs['row'];
+    values: TFlatImportValues;
   }): Promise<IRemoteValidationResult> => {
     const { suggestions } = await querySuggestions({
       query,
@@ -173,6 +197,9 @@ export function makeSingleSuggestionRemoteEvaluator<TQueryField extends string>(
       context,
       pageParam: 1,
       pageSize: 5,
+      row,
+      values,
+      filters: resolveFilters?.({ row, values }),
     });
 
     if (suggestions.length === 1) {
@@ -202,19 +229,28 @@ export function makeExactOnlyRemoteEvaluator<TQueryField extends string>({
   label,
   queryField,
   querySuggestions,
+  resolveFilters,
 }: {
   label: string;
   queryField: TQueryField;
   querySuggestions: (
     args: CommonQueryArgs<TQueryField>
   ) => Promise<{ suggestions: Array<ISuggestion>; nextPageParam: number | null }>;
+  resolveFilters?: (args: {
+    row: IRemoteSearchPagedArgs['row'];
+    values: TFlatImportValues;
+  }) => CommonQueryArgs<TQueryField>['filters'];
 }) {
   return async ({
     query,
     context,
+    row,
+    values,
   }: {
     query: string;
     context: IEntityImportRuntimeContext;
+    row: IRemoteSearchPagedArgs['row'];
+    values: TFlatImportValues;
   }): Promise<IRemoteValidationResult> => {
     const { suggestions } = await querySuggestions({
       query,
@@ -222,6 +258,9 @@ export function makeExactOnlyRemoteEvaluator<TQueryField extends string>({
       context,
       pageParam: 1,
       pageSize: 5,
+      row,
+      values,
+      filters: resolveFilters?.({ row, values }),
     });
 
     const exactMatch = findExactSuggestionMatch(suggestions, query);
@@ -258,6 +297,56 @@ interface ISharedRemoteFieldOptions {
   placeholder?: string;
 }
 
+function createSpeciesFilterResolver({
+  fieldPath,
+  relatedFieldPath,
+}: {
+  fieldPath: string;
+  relatedFieldPath?: string;
+}) {
+  return ({
+    row,
+  }: {
+    row: IRemoteSearchPagedArgs['row'];
+    values: TFlatImportValues;
+  }): { speciesId?: string | null } => ({
+    speciesId:
+      resolveRowSpeciesSuggestion({
+        row,
+        fieldPath,
+        relatedFieldPath,
+      })?.value ?? null,
+  });
+}
+
+function createSpeciesMismatchValidator({
+  fieldPath,
+  relatedFieldPath,
+  fieldLabel,
+  relatedFieldLabel,
+}: {
+  fieldPath: string;
+  relatedFieldPath?: string;
+  fieldLabel: string;
+  relatedFieldLabel: string;
+}) {
+  return ({ row }: { row: IRemoteSearchPagedArgs['row'] }) => {
+    const ownSpecies = readSpeciesSuggestionFromSuggestion(
+      row.cells[fieldPath]?.remoteState.selectedSuggestion
+    );
+    const relatedSpecies = relatedFieldPath
+      ? readSpeciesSuggestionFromSuggestion(
+          row.cells[relatedFieldPath]?.remoteState.selectedSuggestion
+        )
+      : null;
+    if (!ownSpecies?.value || !relatedSpecies?.value || ownSpecies.value === relatedSpecies.value) {
+      return [];
+    }
+
+    return [createSpeciesMismatchMessage(fieldLabel, relatedFieldLabel)];
+  };
+}
+
 export function makeBrainRegionImportField({
   path,
   submissionPath,
@@ -267,9 +356,16 @@ export function makeBrainRegionImportField({
   label = 'Brain Region',
   placeholder = 'Search brain region',
   services,
+  relatedSubjectPath = 'subjectId',
 }: ISharedRemoteFieldOptions & {
-  services: Pick<IEntityImportSharedQueryServices, 'queryBrainRegion'>;
+  services: Pick<IEntityImportSharedQueryServices, 'queryBrainRegion' | 'querySpecies'>;
+  relatedSubjectPath?: string;
 }): IAdapterFieldDefinition {
+  const resolveFilters = createSpeciesFilterResolver({
+    fieldPath: path,
+    relatedFieldPath: relatedSubjectPath,
+  });
+
   return {
     label,
     path,
@@ -282,15 +378,45 @@ export function makeBrainRegionImportField({
       query: makeRemoteQuery({
         queryField: 'semantic_search' satisfies TBrainRegionQueryField,
         querySuggestions: services.queryBrainRegion,
+        resolveFilters,
       }),
-      evaluate: async ({ query, context }) =>
+      evaluate: async ({ query, context, row, values }) =>
         makeSingleSuggestionRemoteEvaluator({
           label,
           queryField: 'name__ilike' satisfies TBrainRegionQueryField,
           querySuggestions: services.queryBrainRegion,
-        })({ query, context }),
+          resolveFilters,
+        })({ query, context, row, values }),
     },
     validatorSuggestionDetails: renderBrainRegionSuggestionTooltip,
+    getValidationIssues: createSpeciesMismatchValidator({
+      fieldPath: path,
+      relatedFieldPath: relatedSubjectPath,
+      fieldLabel: label,
+      relatedFieldLabel: 'Subject',
+    }),
+    tableRenderer: ({ field, cell, row, actions, selected }) => (
+      <BrainRegionInlineCell
+        field={field}
+        cell={cell}
+        row={row}
+        actions={actions}
+        selected={selected}
+      />
+    ),
+    panelRenderer: ({ field, row, cell, actions, context, draftValue, onDraftChange }) => (
+      <SpeciesScopedFieldPanel
+        field={field}
+        row={row}
+        cell={cell}
+        actions={actions}
+        context={context}
+        draftValue={draftValue}
+        onDraftChange={onDraftChange}
+        querySpecies={services.querySpecies}
+        relatedFieldPath={relatedSubjectPath}
+      />
+    ),
     columnWidth,
   };
 }
@@ -304,9 +430,16 @@ export function makeSubjectImportField({
   label = 'Subject',
   placeholder = 'Search subject',
   services,
+  relatedBrainRegionPath = 'brainRegionId',
 }: ISharedRemoteFieldOptions & {
-  services: Pick<IEntityImportSharedQueryServices, 'querySubject'>;
+  services: Pick<IEntityImportSharedQueryServices, 'querySubject' | 'querySpecies'>;
+  relatedBrainRegionPath?: string;
 }): IAdapterFieldDefinition {
+  const resolveFilters = createSpeciesFilterResolver({
+    fieldPath: path,
+    relatedFieldPath: relatedBrainRegionPath,
+  });
+
   return {
     label,
     path,
@@ -319,15 +452,36 @@ export function makeSubjectImportField({
       query: makeRemoteQuery({
         queryField: 'ilike_search' satisfies TSharedTextQueryField,
         querySuggestions: services.querySubject,
+        resolveFilters,
       }),
-      evaluate: async ({ query, context }) =>
+      evaluate: async ({ query, context, row, values }) =>
         makeSingleSuggestionRemoteEvaluator({
           label,
           queryField: 'ilike_search' satisfies TSharedTextQueryField,
           querySuggestions: services.querySubject,
-        })({ query, context }),
+          resolveFilters,
+        })({ query, context, row, values }),
     },
     validatorSuggestionDetails: renderSubjectSuggestionTooltip,
+    getValidationIssues: createSpeciesMismatchValidator({
+      fieldPath: path,
+      relatedFieldPath: relatedBrainRegionPath,
+      fieldLabel: label,
+      relatedFieldLabel: 'Brain Region',
+    }),
+    panelRenderer: ({ field, row, cell, actions, context, draftValue, onDraftChange }) => (
+      <SpeciesScopedFieldPanel
+        field={field}
+        row={row}
+        cell={cell}
+        actions={actions}
+        context={context}
+        draftValue={draftValue}
+        onDraftChange={onDraftChange}
+        querySpecies={services.querySpecies}
+        relatedFieldPath={relatedBrainRegionPath}
+      />
+    ),
     columnWidth,
   };
 }
@@ -341,8 +495,11 @@ export function makeLicenseImportField({
   label = 'License',
   placeholder = 'Search license',
   services,
+  /** when true (default), prefills manual table rows with the app default license (not CSV rows). */
+  applyManualTableDefaultLicense = true,
 }: ISharedRemoteFieldOptions & {
   services: Pick<IEntityImportSharedQueryServices, 'queryLicense'>;
+  applyManualTableDefaultLicense?: boolean;
 }): IAdapterFieldDefinition {
   return {
     label,
@@ -352,17 +509,25 @@ export function makeLicenseImportField({
     required,
     inputType: ImportInputType.RemoteSelect,
     placeholder,
+    ...(applyManualTableDefaultLicense
+      ? {
+          manualDefault: {
+            rawValue: DEFAULT_LICENSE_ID,
+            displayValue: DEFAULT_LICENSE_NAME,
+          },
+        }
+      : {}),
     remote: {
       query: makeRemoteQuery({
         queryField: 'ilike_search' satisfies TSharedTextQueryField,
         querySuggestions: services.queryLicense,
       }),
-      evaluate: async ({ query, context }) =>
+      evaluate: async ({ query, context, row, values }) =>
         makeSingleSuggestionRemoteEvaluator({
           label,
           queryField: 'label__ilike' satisfies TSharedTextQueryField,
           querySuggestions: services.queryLicense,
-        })({ query, context }),
+        })({ query, context, row, values }),
     },
     writeStrategy: ValidatorWriteStrategy.Commit,
     columnWidth,
@@ -395,12 +560,12 @@ export function makeMtypeImportField({
         queryField: 'ilike_search',
         querySuggestions: services.queryMtype,
       }),
-      evaluate: async ({ query, context }) =>
+      evaluate: async ({ query, context, row, values }) =>
         makeSingleSuggestionRemoteEvaluator({
           label,
           queryField: 'pref_label__ilike',
           querySuggestions: services.queryMtype,
-        })({ query, context }),
+        })({ query, context, row, values }),
     },
     validatorSuggestionDetails: renderMtypeSuggestionTooltip,
     columnWidth,
@@ -593,6 +758,48 @@ export function makeDescriptionImportField({
     inputType: ImportInputType.Textarea,
     placeholder,
     columnWidth,
+  };
+}
+
+export function makeExperimentDateImportField({
+  path = 'experimentDate',
+  submissionPath = 'setup.experiment_date',
+  validationPath = 'metadata.experiment_date',
+  required = false,
+  columnWidth = 140,
+  label = 'Experiment Date',
+  placeholder = 'Enter experiment date',
+}: Partial<ISharedRemoteFieldOptions> = {}): IAdapterFieldDefinition {
+  return {
+    label,
+    path,
+    submissionPath,
+    validationPath,
+    required,
+    inputType: ImportInputType.Date,
+    columnWidth,
+    ...(placeholder !== undefined ? { placeholder } : {}),
+  };
+}
+
+export function makeContactEmailImportField({
+  path = 'contactEmail',
+  submissionPath = 'setup.contact_email',
+  validationPath = 'metadata.contact_email',
+  required = false,
+  columnWidth = 200,
+  label = 'Contact Email',
+  placeholder = 'Enter contact email',
+}: Partial<ISharedRemoteFieldOptions> = {}): IAdapterFieldDefinition {
+  return {
+    label,
+    path,
+    submissionPath,
+    validationPath,
+    required,
+    inputType: ImportInputType.Text,
+    columnWidth,
+    ...(placeholder !== undefined ? { placeholder } : {}),
   };
 }
 

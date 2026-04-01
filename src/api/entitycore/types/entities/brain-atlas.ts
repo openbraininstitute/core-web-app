@@ -9,8 +9,8 @@ import type {
   PaginationFilter,
   SharedFilter,
   SpeciesFilter,
-  StainFilter,
   TimestampsFilter,
+  TStrainFilter,
 } from '@/api/entitycore/types/shared/request';
 
 interface BrainAtlasBase {
@@ -37,7 +37,7 @@ export interface IBrainAtlasFilter
   extends SharedFilter,
     TimestampsFilter,
     SpeciesFilter,
-    StainFilter,
+    TStrainFilter,
     EntityAuthorization {}
 
 export interface IBrainAtlasRegionFilter extends SharedFilter, PaginationFilter {}

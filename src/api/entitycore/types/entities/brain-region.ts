@@ -1,5 +1,17 @@
-import type { ISpecies, IStrain } from '@/api/entitycore/types/shared/global';
-import type { PaginationFilter } from '@/api/entitycore/types/shared/request';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreOwnership,
+  ISpecies,
+  IStrain,
+  Timestamps,
+} from '@/api/entitycore/types/shared/global';
+import type {
+  IDFilter,
+  NameFilter,
+  PaginationFilter,
+  SpeciesFilter,
+  TStrainFilter,
+} from '@/api/entitycore/types/shared/request';
 
 export interface IBrainRegion {
   id: string;
@@ -12,22 +24,16 @@ export interface IBrainRegion {
   species: ISpecies;
   strain: IStrain | null;
 }
-export interface IBrainRegionFilter extends PaginationFilter {
+export interface IBrainRegionFilter
+  extends IDFilter,
+    NameFilter,
+    PaginationFilter,
+    SpeciesFilter,
+    TStrainFilter {
   acronym: string | null;
   acronym__in: string[] | null;
   annotation_value: number | null;
   hierarchy_id: string | null;
-  species_id__in: string[] | null;
-  species__name: string | null;
-  species__name__in: string[] | null;
-  species__name__ilike: string | null;
-  species__id: string | null;
-  species__id__in: string[] | null;
-  strain__name: string | null;
-  strain__name__in: string[] | null;
-  strain__name__ilike: string | null;
-  strain__id: string | null;
-  strain__id__in: string[] | null;
 }
 
 export type BrainRegionHierarchyBase = {
@@ -43,10 +49,14 @@ export interface IBrainRegionHierarchy extends BrainRegionHierarchyBase {
   children: Array<IBrainRegionHierarchy>;
 }
 
-// order of values: id: number, name: string, acronym: string, children: Array, level: number
-export type TemporaryFlatBrainRegionHierarchy = Array<
-  [number, string, string, Array<number>, number]
->;
+export interface IBrainRegionHierarchyObject
+  extends EntityCoreIdentifiable,
+    EntityCoreOwnership,
+    Timestamps {
+  name: string;
+  species: ISpecies;
+  strain: IStrain | null;
+}
 
 // TODO: temporary placing this here, remove it after get the correct implementation  from entity-core
 type DefaultBrainViewId = 'https://neuroshapes.org/BrainRegion';

@@ -32,7 +32,7 @@ vi.mock('@/api/entitycore/utils', () => ({
   getEntityCoreContext: mocks.getEntityCoreContext,
 }));
 
-import { createCellMorphologyImportServices } from '../../../adapters/cell-morphology/services';
+import { createCellMorphologyImportServices } from '@/ui/segments/contribute/multiple/adapters/cell-morphology/services';
 
 describe('createCellMorphologyImportServices query helpers', () => {
   beforeEach(() => {
@@ -142,13 +142,13 @@ describe('createCellMorphologyImportServices query helpers', () => {
           value: 'brain-region-1',
           label: 'Isocortex',
           description: 'ISO',
-          metadata: { acronym: 'ISO', species: null },
+          metadata: { acronym: 'ISO', species: null, speciesId: null },
         },
         {
           value: 'brain-region-2',
           label: 'Hippocampus',
           description: 'HIP',
-          metadata: { acronym: 'HIP', species: null },
+          metadata: { acronym: 'HIP', species: null, speciesId: null },
         },
       ],
       nextPageParam: null,
@@ -166,6 +166,7 @@ describe('createCellMorphologyImportServices query helpers', () => {
         page: 2,
         page_size: 2,
         semantic_search: 'iso',
+        species__id: null,
       },
     });
   });

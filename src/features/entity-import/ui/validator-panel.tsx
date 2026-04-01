@@ -54,10 +54,12 @@ import {
   getRowSubmissionValues,
   importDatePickerChangeToRawValue,
   parseImportDatePickerValue,
-} from '@/features/entity-import/core/helpers';
+} from '@/features/entity-import/core/shared/helpers';
 import {
   ENTITY_IMPORT_PANEL_SELECT_TRIGGER_CLASSNAME,
   ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
+  ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME,
+  ENTITY_IMPORT_SELECT_MENU_PANEL_CLASSNAME,
   ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
   ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
   getEntityImportSelectLabel,
@@ -93,13 +95,6 @@ import type {
   IValidatorSuggestionState,
 } from '@/features/entity-import/core/adapter';
 
-/** delay before peek-open on hover (symmetric with close; avoids edge flicker). */
-const VALIDATOR_HOVER_OPEN_MS = 300;
-/** delay before peek closes after pointer leaves (slightly longer than open feels calmer). */
-const VALIDATOR_HOVER_CLOSE_MS = 380;
-/** if pointer never leaves after collapse, allow hover peek again after this. */
-const VALIDATOR_SUPPRESS_HOVER_FALLBACK_MS = 1000;
-
 interface IValidatorPanelProps<TPayload, TResult> {
   adapter: IEntityImportAdapter<TPayload, TResult>;
   context: IEntityImportRuntimeContext;
@@ -112,9 +107,7 @@ interface IValidatorPanelProps<TPayload, TResult> {
   fieldStatusMap: Record<string, TValidatorFieldStatus>;
   rowsSummaryStatus: TValidatorFieldStatus;
   collapsed: boolean;
-  hoverExpanded: boolean;
   onToggleCollapsed: () => void;
-  onHoverExpandedChange: (expanded: boolean) => void;
 }
 
 const VALIDATOR_SUGGESTION_SKELETON_KEYS = Array.from(
@@ -666,19 +659,27 @@ function SingleColumnValidatorCard({
     validatorSuggestions.rowId === row.id && validatorSuggestions.fieldPath === field.path
       ? validatorSuggestions
       : null;
+  const shouldShowSelectSuggestions =
+    field.inputType === ImportInputType.Select && draftValue.rawValue.trim().length === 0;
   const visibleSuggestions =
-    activeValidatorSuggestions?.suggestions ?? cell.remoteState.suggestions;
+    field.inputType === ImportInputType.Select
+      ? shouldShowSelectSuggestions
+        ? (field.options ?? [])
+        : []
+      : (activeValidatorSuggestions?.suggestions ?? cell.remoteState.suggestions);
 
   const visibleSuggestionPaging =
     activeValidatorSuggestions?.suggestionPaging ?? cell.remoteState.suggestionPaging;
-  const visibleMessage = activeValidatorSuggestions?.message ?? cell.remoteState.message;
+  const visibleMessage =
+    field.inputType === ImportInputType.Select
+      ? null
+      : (activeValidatorSuggestions?.message ?? cell.remoteState.message);
   const shouldShowSuggestionSkeleton =
     field.inputType === ImportInputType.RemoteSelect &&
     Boolean(field.remote?.query) &&
     activeValidatorSuggestions?.status === RemoteValidationStatus.Pending &&
     visibleSuggestions.length === 0;
   const shouldShowSuggestions =
-    field.inputType !== ImportInputType.Select &&
     visibleSuggestions.length > 0 &&
     !(
       field.inputType === ImportInputType.Compound &&
@@ -696,7 +697,10 @@ function SingleColumnValidatorCard({
   };
 
   return (
-    <Card className="rounded-2xl border border-neutral-200 py-0">
+    <Card
+      id={`single-column-validator-card-${field.path}`}
+      className="rounded-2xl border border-neutral-200 py-0"
+    >
       <CardContent className="space-y-4 py-4 px-0">
         <div className="flex items-start justify-between gap-3 px-4">
           <p className="text-base text-left font-bold uppercase tracking-wide text-primary-9">
@@ -772,6 +776,7 @@ function SingleColumnValidatorCard({
           session,
           context,
           actions,
+          selected: true,
           suggestions: visibleSuggestions,
           draftValue,
           onDraftChange: updateDraftValue,
@@ -794,8 +799,10 @@ function SingleColumnValidatorCard({
                 className={cn(
                   'h-11 text-lg! text-primary-9! focus-visible:border-none',
                   'focus-visible:outline-none focus-visible:ring-0 shadow-none border-none',
-                  'font-semibold'
+                  'font-semibold',
+                  'placeholder:text-sm placeholder:font-light placeholder:text-gray-400'
                 )}
+                placeholder={field.placeholder}
                 value={draftValue.displayValue ?? draftValue.rawValue}
                 onChange={(event) => {
                   const nextRawValue = event.target.value;
@@ -827,11 +834,13 @@ function SingleColumnValidatorCard({
               data-import-input-type={field.inputType}
               id="validator-value"
               aria-label="Validator value"
+              placeholder={field.placeholder ?? 'Enter value'}
               value={draftValue.displayValue ?? draftValue.rawValue}
               className={cn(
                 'border border-neutral-200 bg-white rounded-xl p-2',
                 ' focus-within:border-primary-6! focus-visible:ring-0! focus-visible:outline-none!',
-                'shadow-none! ring-0!'
+                'shadow-none! ring-0!',
+                'placeholder:text-sm placeholder:font-light placeholder:text-gray-400'
               )}
               onChange={(event) => {
                 updateDraftValue({
@@ -870,8 +879,12 @@ function SingleColumnValidatorCard({
                   data-import-input-type={field.inputType}
                   id="validator-value"
                   aria-label="Validator value"
+                  placeholder={field.placeholder ?? 'Enter value'}
                   type={field.inputType === ImportInputType.Number ? 'number' : 'text'}
-                  className="h-11 text-lg! rounded-full text-primary-9! focus-within:border-primary-6"
+                  className={cn(
+                    'h-11 text-lg! rounded-full text-primary-9! focus-within:border-primary-6',
+                    'placeholder:text-sm placeholder:font-light placeholder:text-gray-400'
+                  )}
                   value={draftValue.displayValue ?? draftValue.rawValue}
                   onChange={(event) => {
                     updateDraftValue({
@@ -907,28 +920,19 @@ function SingleColumnValidatorCard({
                     <SelectValue
                       data-import-input-type-value={`${field.inputType}-select-value`}
                       placeholder={field.placeholder ?? `Select ${field.label}`}
+                      className="placeholder:text-sm placeholder:font-light placeholder:text-gray-400"
                     />
                   </SelectTrigger>
                   <SelectContent
-                    className={cn(
-                      ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
-                      'px-4! rounded-2xl',
-                      '[&>div:first-of-type]:min-w-[calc(var(--radix-select-trigger-width)-3rem)]'
-                    )}
-                    style={{
-                      maxWidth: 'var(--radix-select-trigger-width)',
-                    }}
+                    viewportClassName="p-1.5"
+                    className={cn(ENTITY_IMPORT_SELECT_MENU_PANEL_CLASSNAME, 'max-h-80')}
                   >
                     {field.options?.map((option) => (
                       <SelectItem
                         data-import-input-type-item={`${field.inputType}-option`}
                         key={option.value}
                         value={option.value}
-                        className={cn(
-                          'w-full text-left h-11 cursor-pointer font-semibold text-primary-9 rounded-2xl',
-                          '[&_span]:right-4'
-                        )}
-                        style={{ width: 'calc(var(--radix-select-trigger-width) - 2rem)' }}
+                        className={ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME}
                       >
                         {option.label}
                       </SelectItem>
@@ -973,8 +977,10 @@ function SingleColumnValidatorCard({
           <div className="px-4 flex flex-col gap-1.5">
             {visibleSuggestions.map((suggestion) => {
               const isSelected =
-                doesDraftMatchSuggestion(draftValue, selectedSuggestion) &&
-                selectedSuggestion.value === suggestion.value;
+                field.inputType === ImportInputType.Select
+                  ? draftValue.rawValue === suggestion.value
+                  : doesDraftMatchSuggestion(draftValue, selectedSuggestion) &&
+                    selectedSuggestion.value === suggestion.value;
               const suggestionDetails = field.validatorSuggestionDetails?.({
                 suggestion,
                 cell,
@@ -994,13 +1000,22 @@ function SingleColumnValidatorCard({
                       ? 'border-green-main bg-green-main/10 text-green-main border-2'
                       : 'border-neutral-200 bg-white hover:border-neutral-300'
                   )}
-                  onClick={() =>
+                  onClick={() => {
+                    if (field.inputType === ImportInputType.Select) {
+                      updateDraftValue({
+                        rawValue: suggestion.value,
+                        displayValue: null,
+                        parsedValue: suggestion.value,
+                      });
+                      return;
+                    }
+
                     actions.chooseSuggestion({
                       rowId: row.id,
                       fieldPath: field.path,
                       suggestion,
-                    })
-                  }
+                    });
+                  }}
                 >
                   <div
                     className={cn(
@@ -1146,88 +1161,8 @@ export function ValidatorPanel<TPayload, TResult>({
   fieldStatusMap,
   rowsSummaryStatus,
   collapsed,
-  hoverExpanded,
   onToggleCollapsed,
-  onHoverExpandedChange,
 }: IValidatorPanelProps<TPayload, TResult>) {
-  const hoverOpenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hoverCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const suppressHoverPeekRef = useRef(false);
-  const suppressHoverFallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearSuppressHoverFallback = useCallback(() => {
-    if (suppressHoverFallbackTimeoutRef.current) {
-      clearTimeout(suppressHoverFallbackTimeoutRef.current);
-      suppressHoverFallbackTimeoutRef.current = null;
-    }
-  }, []);
-
-  const armSuppressHoverPeekFallback = useCallback(() => {
-    clearSuppressHoverFallback();
-    suppressHoverFallbackTimeoutRef.current = setTimeout(() => {
-      suppressHoverPeekRef.current = false;
-      suppressHoverFallbackTimeoutRef.current = null;
-    }, VALIDATOR_SUPPRESS_HOVER_FALLBACK_MS);
-  }, [clearSuppressHoverFallback]);
-
-  const handleCollapsePointerDown = useCallback(() => {
-    suppressHoverPeekRef.current = true;
-    armSuppressHoverPeekFallback();
-  }, [armSuppressHoverPeekFallback]);
-
-  const handleMouseEnter = useCallback(() => {
-    if (!collapsed) return;
-    if (suppressHoverPeekRef.current) return;
-
-    if (hoverCloseTimeoutRef.current) {
-      clearTimeout(hoverCloseTimeoutRef.current);
-      hoverCloseTimeoutRef.current = null;
-    }
-
-    if (hoverOpenTimeoutRef.current) return;
-
-    hoverOpenTimeoutRef.current = setTimeout(() => {
-      hoverOpenTimeoutRef.current = null;
-      if (!suppressHoverPeekRef.current) {
-        onHoverExpandedChange(true);
-      }
-    }, VALIDATOR_HOVER_OPEN_MS);
-  }, [collapsed, onHoverExpandedChange]);
-
-  const handleMouseLeave = useCallback(() => {
-    if (hoverOpenTimeoutRef.current) {
-      clearTimeout(hoverOpenTimeoutRef.current);
-      hoverOpenTimeoutRef.current = null;
-    }
-
-    if (!collapsed) return;
-
-    suppressHoverPeekRef.current = false;
-    clearSuppressHoverFallback();
-
-    if (hoverCloseTimeoutRef.current) {
-      clearTimeout(hoverCloseTimeoutRef.current);
-    }
-    hoverCloseTimeoutRef.current = setTimeout(() => {
-      hoverCloseTimeoutRef.current = null;
-      onHoverExpandedChange(false);
-    }, VALIDATOR_HOVER_CLOSE_MS);
-  }, [collapsed, onHoverExpandedChange, clearSuppressHoverFallback]);
-
-  useEffect(() => {
-    return () => {
-      if (hoverOpenTimeoutRef.current) clearTimeout(hoverOpenTimeoutRef.current);
-      if (hoverCloseTimeoutRef.current) clearTimeout(hoverCloseTimeoutRef.current);
-      clearSuppressHoverFallback();
-    };
-  }, [clearSuppressHoverFallback]);
-
-  // reset hover state when user explicitly expands
-  useEffect(() => {
-    if (!collapsed) {
-      onHoverExpandedChange(false);
-    }
-  }, [collapsed, onHoverExpandedChange]);
   const activeRow = resolveActiveRow(session);
   const activeField = resolveActiveField(adapter, session);
   const selectedFieldPath = session.validatorSelection.fieldPath;
@@ -1263,17 +1198,16 @@ export function ValidatorPanel<TPayload, TResult>({
     '--entity-import-submit-progress': `${submitProgressPercent}%`,
   } as CSSProperties;
 
-  if (collapsed && !hoverExpanded) {
+  if (collapsed) {
     return (
       <aside
-        className="flex h-full min-h-0 flex-col items-center gap-3 px-0.5 w-12"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        id="validator-panel-collapsed"
+        className="flex h-full min-h-0 flex-col items-center gap-3 min-w-12 max-w-12"
       >
         <div
           className={cn(
             'flex h-full flex-col items-center gap-3 rounded-full w-full',
-            'border border-neutral-200 bg-white px-1.5 py-3 shadow-sm'
+            'border border-neutral-200 bg-white px-1.5 py-3'
           )}
         >
           <button
@@ -1326,36 +1260,30 @@ export function ValidatorPanel<TPayload, TResult>({
 
   return (
     <aside
-      className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden px-2 "
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      id="validator-panel-expanded"
+      className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden w-full"
     >
       <div
         className={cn(
-          'flex flex-col h-full min-h-0 max-h-[calc(100%-42px)] shadow-sm',
-          'hover:shadow-md py-4 rounded-3xl border border-neutral-200 bg-white'
+          'flex flex-col h-full min-h-0 max-h-[calc(100%-42px)]',
+          'hover:shadow-md py-3 rounded-3xl border border-neutral-200 bg-white'
         )}
       >
-        <div className={cn('shrink-0 px-3 pb-4 text-white', { 'text-white': !collapsed })}>
+        <div className="shrink-0 px-3 pb-4 text-white">
           <div className="flex items-start justify-between gap-4">
             <h3 className="text-2xl font-semibold leading-none tracking-tight text-primary-9">
               Validator
             </h3>
             <button
               type="button"
-              aria-label={collapsed ? 'Expand validator panel' : 'Collapse validator panel'}
+              aria-label="Collapse validator panel"
               className={cn(
                 'flex size-7 shrink-0 items-center justify-center rounded-full',
                 'text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-primary-9'
               )}
-              onPointerDown={!collapsed ? handleCollapsePointerDown : undefined}
               onClick={onToggleCollapsed}
             >
-              {collapsed ? (
-                <PlusOutlined className="text-xs" />
-              ) : (
-                <MinusOutlined className="text-xs" />
-              )}
+              <MinusOutlined className="text-xs" />
             </button>
           </div>
           <div className="mt-3 h-px bg-neutral-2" />
@@ -1375,7 +1303,8 @@ export function ValidatorPanel<TPayload, TResult>({
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent
-                  className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-80')}
+                  viewportClassName="p-1"
+                  className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-80 rounded-2xl')}
                   align="end"
                 >
                   <SelectItem
@@ -1435,7 +1364,8 @@ export function ValidatorPanel<TPayload, TResult>({
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent
-                    className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-80')}
+                    viewportClassName="p-1"
+                    className={cn(ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME, 'max-h-80 rounded-2xl')}
                     align="end"
                   >
                     {session.rows.map((row) => (
@@ -1467,16 +1397,17 @@ export function ValidatorPanel<TPayload, TResult>({
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto secondary-scrollbar overflow-x-hidden px-3 py-5">
           {showSelectionPrompt ? (
             <Card className="py-0 border-none! shadow-none!">
-              <CardContent className="px-6 py-8 text-sm text-neutral-500">
+              <CardContent className="select-none px-6 py-8 text-sm text-neutral-500 flex items-center justify-center text-center">
                 {hasRows
-                  ? 'Select a row and column to begin validation.'
-                  : 'Add at least one row to begin validating data.'}
+                  ? 'Select a row and a column to review and validate its data. You can edit values, apply suggestions, and resolve any issues before importing.'
+                  : 'Add at least one row to start validating your data. Once rows are added, you can review each field, fix errors, and prepare the data for import.'}
               </CardContent>
             </Card>
           ) : isAllColumnsMode && activeRow ? (
             <div className="space-y-4">
               {adapter.fields.map((field, index) => (
                 <section
+                  id={`single-column-validator-card-container-${field.path}`}
                   key={`${activeRow.id}:${field.path}`}
                   aria-label={`Validator box ${field.label}`}
                 >
@@ -1523,9 +1454,9 @@ export function ValidatorPanel<TPayload, TResult>({
                 size="lg"
                 aria-label="Show import failures"
                 className={cn(
-                  'flex size-10 shrink-0 items-center justify-center rounded-full',
+                  'flex shrink-0 items-center justify-center rounded-full',
                   'border border-destructive/80 bg-white text-destructive transition',
-                  'hover:border-destructive hover:bg-destructive/20 size-12!'
+                  'hover:border-destructive hover:bg-destructive/20 size-14!'
                 )}
                 onClick={() => setFailureTooltipDismissed((d) => !d)}
               >
@@ -1555,7 +1486,10 @@ export function ValidatorPanel<TPayload, TResult>({
                   <button
                     type="button"
                     aria-label="Dismiss failure summary"
-                    className="shrink-0 rounded-full p-1 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-600"
+                    className={cn(
+                      'shrink-0 rounded-full p-1 text-neutral-400 transition',
+                      'hover:bg-neutral-100 hover:text-neutral-600'
+                    )}
                     onClick={() => setFailureTooltipDismissed(true)}
                   >
                     <RiCloseLine className="size-4" />

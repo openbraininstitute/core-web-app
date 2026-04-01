@@ -32,6 +32,13 @@ export type BrainRegionFilter = {
   brain_region__hierarchy_id?: string | null; // UUID
 };
 
+export interface IBrainRegionHierarchyRequestFilter
+  extends IDFilter,
+    NameFilter,
+    PaginationFilter,
+    SpeciesFilter,
+    TStrainFilter {}
+
 export type BrainRegionHierarchyFilter = {
   /**
    * this two parameters should go together
@@ -63,14 +70,15 @@ export type IlikeSearchFilter = {
 };
 export type SpeciesFilter = {
   species__id: string | null;
-  species_id__in: number | null;
+  /** Filter hierarchies / entities to these species ids (UUID strings; repeated query params when sent as array). */
+  species_id__in: Array<string> | number | Array<number> | null;
   species__name: string | null;
   species__name__in: string | null;
   species__name__ilike: string | null;
   species__order_by: string | null;
 };
 
-export type StainFilter = {
+export type TStrainFilter = {
   strain__id: string | null;
   strain__name: string | null;
   strain__name__in: string | null;

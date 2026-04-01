@@ -8,9 +8,9 @@ import type {
   MtypeFilter,
   PaginationFilter,
   SharedFilter,
-  StainFilter,
   SubjectFilter,
   TimestampsFilter,
+  TStrainFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface IExperimentalNeuronDensity extends IExperimentalDensity, EntityCoreType {
@@ -25,7 +25,7 @@ export type ExperimentalNeuronDensityFilter = Partial<
     EtypeFilter &
     MtypeFilter &
     PaginationFilter &
-    StainFilter &
+    TStrainFilter &
     SubjectFilter &
     TimestampsFilter &
     IlikeSearchFilter

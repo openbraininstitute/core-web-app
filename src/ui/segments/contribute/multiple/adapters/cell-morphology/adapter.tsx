@@ -22,9 +22,11 @@ import {
 } from '@/features/entity-import/core/contracts';
 import {
   makeBrainRegionImportField,
+  makeContactEmailImportField,
   makeContributionsImportField,
   makeDescriptionImportField,
   makeExactOnlyRemoteEvaluator,
+  makeExperimentDateImportField,
   makeFileBundleImportField,
   makeLicenseImportField,
   makeMtypeImportField,
@@ -225,24 +227,14 @@ export function createCellMorphologyImportAdapter({
         validationPath: 'metadata.brain_region_id',
         services,
       }),
-      {
-        label: 'Experiment Date',
-        path: 'experimentDate',
-        submissionPath: 'setup.experiment_date',
-        validationPath: 'metadata.experiment_date',
-        required: false,
-        inputType: ImportInputType.Date,
-        columnWidth: 140,
-      },
-      {
-        label: 'Contact Email',
-        path: 'contactEmail',
-        submissionPath: 'setup.contact_email',
-        validationPath: 'metadata.contact_email',
-        required: false,
-        inputType: ImportInputType.Text,
-        columnWidth: 200,
-      },
+      makeSubjectImportField({
+        path: 'subjectId',
+        submissionPath: 'subject_id',
+        validationPath: 'metadata.subject_id',
+        services,
+      }),
+      makeExperimentDateImportField(),
+      makeContactEmailImportField(),
       {
         label: 'Published In',
         path: 'publishedIn',
@@ -302,12 +294,7 @@ export function createCellMorphologyImportAdapter({
         ),
         columnWidth: 240,
       },
-      makeSubjectImportField({
-        path: 'subjectId',
-        submissionPath: 'subject_id',
-        validationPath: 'metadata.subject_id',
-        services,
-      }),
+
       makeLicenseImportField({
         path: 'licenseId',
         submissionPath: 'license_id',
@@ -327,12 +314,12 @@ export function createCellMorphologyImportAdapter({
             queryField: 'ilike_search',
             querySuggestions: services.queryProtocol,
           }),
-          evaluate: async ({ query, context }) =>
+          evaluate: async ({ query, context, row, values }) =>
             makeExactOnlyRemoteEvaluator({
               label: 'Protocol',
               queryField: 'ilike_search',
               querySuggestions: services.queryProtocol,
-            })({ query, context }),
+            })({ query, context, row, values }),
         },
         validatorSuggestionDetails: renderProtocolSuggestionDetails,
         columnWidth: 220,
@@ -350,7 +337,7 @@ export function createCellMorphologyImportAdapter({
         isEnabled: ({ row }) => hasDigitalReconstructionProtocol(row),
         getDisabledMessage: () =>
           'Select a digital reconstruction protocol to enable Repair Pipeline State.',
-        columnWidth: 190,
+        columnWidth: 220,
       },
       makeMtypeImportField({
         path: 'mtypeClassId',

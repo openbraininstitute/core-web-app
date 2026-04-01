@@ -72,13 +72,12 @@ export function ImportShell<TPayload, TResult>({
   onUploadCsvFile,
 }: IImportShellProps<TPayload, TResult>) {
   const [validatorCollapsed, setValidatorCollapsed] = useState(false);
-  const [validatorHoverExpanded, setValidatorHoverExpanded] = useState(false);
 
   const toggleValidatorCollapsed = useCallback(() => {
     setValidatorCollapsed((prev) => !prev);
   }, []);
 
-  const showExpandedValidator = !validatorCollapsed || validatorHoverExpanded;
+  const showExpandedValidator = !validatorCollapsed;
 
   return (
     <div data-entity-import-root className="flex h-full min-h-0 flex-col gap-5 overflow-hidden">
@@ -95,7 +94,7 @@ export function ImportShell<TPayload, TResult>({
             : 'grid-cols-[minmax(0,1fr)_3.5rem]'
         )}
       >
-        <section className="min-h-0 overflow-hidden bg-background">
+        <section id="import-shell" className="min-h-0 overflow-hidden bg-background">
           <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
             <div className="relative min-h-0 flex-1 flex flex-col gap-5">
               <ImportHeader
@@ -122,7 +121,7 @@ export function ImportShell<TPayload, TResult>({
             </div>
           </div>
         </section>
-        <section className="min-h-0 w-full">
+        <section id="validator-panel" className="min-h-0 w-full flex items-center justify-end">
           <ValidatorPanel
             adapter={adapter}
             context={context}
@@ -135,9 +134,7 @@ export function ImportShell<TPayload, TResult>({
             fieldStatusMap={fieldStatusMap}
             rowsSummaryStatus={rowsSummaryStatus}
             collapsed={validatorCollapsed}
-            hoverExpanded={validatorHoverExpanded}
             onToggleCollapsed={toggleValidatorCollapsed}
-            onHoverExpandedChange={setValidatorHoverExpanded}
           />
         </section>
       </div>

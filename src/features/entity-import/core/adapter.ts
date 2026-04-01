@@ -64,6 +64,7 @@ export interface ITableCellRendererProps {
   session: IImportSessionState;
   context: IEntityImportRuntimeContext;
   actions: IEntityImportActions;
+  selected: boolean;
   validatorPreview?: IValidatorDraftValue | null;
 }
 
@@ -205,6 +206,12 @@ export interface IAdapterFieldDefinition extends IImportFieldDefinition {
    */
   validatorSuggestionDetails?: (args: IValidatorSuggestionDetailsArgs) => ReactNode;
 
+  /**
+   * Render a compact badge or label for a resolved remote selection in the table
+   * or validator panel summary.
+   */
+  remoteSelectionBadge?: (args: IValidatorSuggestionDetailsArgs) => ReactNode;
+
   /** File upload constraints: accepted MIME types, extensions, max size, max count. */
   fileConfig?: IImportFileFieldConfig;
 
@@ -316,9 +323,9 @@ export interface IEntityImportAdapter<TPayload = unknown, TResult = unknown> {
   schema: ZodType<TPayload>;
 
   /**
-   * Factory for a blank row's default values. Called when the user adds a new
-   * row or when a row is cleared. Returns a flat key-value map of field paths
-   * to default raw values. When not provided, all fields default to empty strings.
+   * string template for **manual** grid rows only (initial empty row, add row, clear row).
+   * the session merges this with each field's `manualDefault` (see contracts); empty paths
+   * stay empty unless a field defines a manual default. Not used when rows come from CSV.
    */
   createBlankRow?: () => TFlatImportValues;
 
@@ -426,6 +433,12 @@ export interface IEntityImportActions {
    * Pass `null` to clear a dimension; omit a key to leave it unchanged.
    */
   onSetValidatorSelection: (params: { rowId?: string | null; fieldPath?: string | null }) => void;
+
+  /**
+   * Persist row-scoped lookup context that is not submitted, such as species
+   * filters used to constrain related remote selects.
+   */
+  onSetRowLookupSpecies: (params: { rowId: string; suggestion: ISuggestion | null }) => void;
 
   /**
    * Set or clear the validator preview value for a cell.

@@ -4,9 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { useMemo, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ContributionsEditor } from '@/features/entity-import/core/shared/contributions-editor';
-
-import { createCellMorphologyImportAdapter } from '../../../adapters/cell-morphology/adapter';
 import {
   CellStatus,
   createIdleRemoteState,
@@ -15,10 +12,12 @@ import {
   type IImportRowState,
   type IImportSessionState,
   RowStatus,
-} from '../../../core/contracts';
+} from '@/features/entity-import/core/contracts';
+import { ContributionsEditor } from '@/features/entity-import/core/shared/contributions-editor';
+import { createCellMorphologyImportAdapter } from '@/ui/segments/contribute/multiple/adapters/cell-morphology/adapter';
 
 import type { ReactElement } from 'react';
-import type { ICellMorphologyImportServices } from '../../../adapters/cell-morphology/services';
+import type { ICellMorphologyImportServices } from '@/ui/segments/contribute/multiple/adapters/cell-morphology/services';
 import type { IEntityImportActions, IEntityImportRuntimeContext } from '../../../core/adapter';
 
 function renderWithQueryClient(ui: ReactElement) {

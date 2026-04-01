@@ -7,13 +7,15 @@ import { z } from 'zod';
 
 import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-import { ImportInputType } from '../../core/contracts';
-import { createCellMorphologyImportAdapter, EntityImportFeature } from '../../index';
+import { createCellMorphologyImportAdapter, EntityImportFeature } from '@/features/entity-import';
+import { ImportInputType } from '@/features/entity-import/core/contracts';
 
 import type { ReactElement } from 'react';
-import type { ICellMorphologyImportServices } from '../../adapters/cell-morphology/services';
-import type { IEntityImportAdapter, IRemoteValidationResult } from '../../core/adapter';
+import type {
+  IEntityImportAdapter,
+  IRemoteValidationResult,
+} from '@/features/entity-import/core/adapter';
+import type { ICellMorphologyImportServices } from '@/ui/segments/contribute/multiple/adapters/cell-morphology/services';
 
 const adapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
   id: 'mock-import',
@@ -443,6 +445,7 @@ function createMockCellMorphologyImportServices(
   overrides: Partial<ICellMorphologyImportServices> = {}
 ): ICellMorphologyImportServices {
   return {
+    querySpecies: vi.fn(async () => []),
     queryBrainRegion: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     queryLicense: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
     querySubject: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
@@ -683,7 +686,7 @@ describe('EntityImportFeature', () => {
     await user.hover(submitButton);
 
     const failureTooltip = await screen.findByRole('tooltip');
-    expect(screen.getByTestId('import-run-failure-tooltip')).toHaveStyle('max-width: 500px');
+    expect(screen.getByTestId('import-run-failure-tooltip')).toHaveClass('max-w-100');
     expect(within(failureTooltip).getByText('1 row failed to import')).toBeInTheDocument();
     expect(within(failureTooltip).getByText('Row 1')).toBeInTheDocument();
     expect(
@@ -733,7 +736,7 @@ describe('EntityImportFeature', () => {
     await user.hover(submitButton);
 
     const failureTooltip = await screen.findByRole('tooltip');
-    expect(screen.getByTestId('import-run-failure-tooltip')).toHaveStyle('max-width: 500px');
+    expect(screen.getByTestId('import-run-failure-tooltip')).toHaveClass('max-w-100');
     expect(within(failureTooltip).getByText('2 rows failed to import')).toBeInTheDocument();
     expect(within(failureTooltip).getByText('Row 1')).toBeInTheDocument();
     expect(within(failureTooltip).getByText('Row 2')).toBeInTheDocument();
@@ -2321,6 +2324,259 @@ describe('EntityImportFeature', () => {
         screen.queryByRole('button', { name: 'Reject suggested License row 1' })
       ).not.toBeInTheDocument();
     });
+  });
+
+  it('shares a species selector between brain region and subject lookups and keeps species cached forever', async () => {
+    const user = userEvent.setup();
+    const querySpecies = vi.fn(async () => [
+      { value: 'species-mouse', label: 'Mouse' },
+      { value: 'species-rat', label: 'Rat' },
+    ]);
+    const queryBrainRegion = vi.fn(async ({ query, row }: { query: string; row: any }) => {
+      const normalizedQuery = query.trim().toLowerCase();
+      const selectedSpeciesId =
+        row.lookupContext?.selectedSpecies?.value ??
+        (
+          row.cells.subjectId.remoteState.selectedSuggestion?.metadata as
+            | { speciesId?: string }
+            | undefined
+        )?.speciesId ??
+        null;
+      const suggestions = [
+        {
+          value: 'brain-region-mouse',
+          label: 'Isocortex',
+          metadata: {
+            acronym: 'ISO',
+            species: 'Mouse',
+            speciesId: 'species-mouse',
+          },
+        },
+        {
+          value: 'brain-region-rat',
+          label: 'Somatosensory cortex',
+          metadata: {
+            acronym: 'SSCTX',
+            species: 'Rat',
+            speciesId: 'species-rat',
+          },
+        },
+      ];
+
+      return {
+        suggestions: suggestions.filter(
+          (suggestion) =>
+            (!normalizedQuery || suggestion.label.toLowerCase().includes(normalizedQuery)) &&
+            (!selectedSpeciesId ||
+              (suggestion.metadata as { speciesId?: string }).speciesId === selectedSpeciesId)
+        ),
+        nextPageParam: null,
+      };
+    });
+    const querySubject = vi.fn(async ({ query, row }: { query: string; row: any }) => {
+      const normalizedQuery = query.trim().toLowerCase();
+      const selectedSpeciesId =
+        row.lookupContext?.selectedSpecies?.value ??
+        (
+          row.cells.brainRegionId.remoteState.selectedSuggestion?.metadata as
+            | { speciesId?: string }
+            | undefined
+        )?.speciesId ??
+        null;
+      const suggestions = [
+        {
+          value: 'subject-mouse',
+          label: 'Mouse Subject 1',
+          metadata: {
+            species: 'Mouse',
+            speciesId: 'species-mouse',
+          },
+        },
+        {
+          value: 'subject-rat',
+          label: 'Rat Subject 1',
+          metadata: {
+            species: 'Rat',
+            speciesId: 'species-rat',
+          },
+        },
+      ];
+
+      return {
+        suggestions: suggestions.filter(
+          (suggestion) =>
+            (!normalizedQuery || suggestion.label.toLowerCase().includes(normalizedQuery)) &&
+            (!selectedSpeciesId ||
+              (suggestion.metadata as { speciesId?: string }).speciesId === selectedSpeciesId)
+        ),
+        nextPageParam: null,
+      };
+    });
+    const services = createMockCellMorphologyImportServices({
+      querySpecies,
+      queryBrainRegion,
+      querySubject,
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({ services });
+    const blankRow = morphologyAdapter.createBlankRow?.() ?? {};
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[
+          { ...blankRow, name: 'Neuron A' },
+          { ...blankRow, name: 'Neuron B' },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByLabelText('Brain Region row 1'));
+
+    await waitFor(() => {
+      expect(querySpecies).toHaveBeenCalledTimes(1);
+    });
+
+    await user.click(screen.getByLabelText('Species'));
+    await user.click(within(getOpenSelectContent()).getByText('Mouse'));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Select suggestion Isocortex' })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Select suggestion Somatosensory cortex' })
+      ).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Select suggestion Isocortex' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Validator value')).toHaveValue('Isocortex');
+      expect(screen.getByLabelText('Species')).toHaveTextContent('Mouse');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Isocortex');
+    });
+
+    await user.click(screen.getByLabelText('Subject row 1'));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Select suggestion Mouse Subject 1' })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Select suggestion Rat Subject 1' })
+      ).not.toBeInTheDocument();
+      expect(querySpecies).toHaveBeenCalledTimes(1);
+    });
+
+    await user.click(screen.getByLabelText('Subject row 2'));
+    await user.click(screen.getByLabelText('Species'));
+    await user.click(within(getOpenSelectContent()).getByText('Rat'));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Select suggestion Rat Subject 1' })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Select suggestion Mouse Subject 1' })
+      ).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Select suggestion Rat Subject 1' }));
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Subject row 2')).toHaveValue('Rat Subject 1');
+    });
+
+    await user.click(screen.getByLabelText('Brain Region row 2'));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Select suggestion Somatosensory cortex' })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Select suggestion Isocortex' })
+      ).not.toBeInTheDocument();
+      expect(querySpecies).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('styles the species selector like validator dropdowns and disables species without hierarchies', async () => {
+    const user = userEvent.setup();
+    const querySpecies = vi.fn(async () => [
+      { value: 'species-mouse', label: 'Mouse', metadata: { disabled: false } },
+      { value: 'species-human', label: 'Human', metadata: { disabled: true } },
+    ]);
+    const services = createMockCellMorphologyImportServices({
+      querySpecies,
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({ services });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.click(screen.getByLabelText('Brain Region row 1'));
+
+    await waitFor(() => {
+      expect(querySpecies).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByLabelText('Species')).toHaveClass('rounded-full');
+
+    await user.click(screen.getByLabelText('Species'));
+
+    const selectContent = getOpenSelectContent();
+    expect(selectContent).toHaveClass(
+      'bg-white',
+      'border-neutral-200',
+      'max-h-80',
+      'overflow-y-auto'
+    );
+
+    const mouseOption = within(selectContent)
+      .getByText('Mouse')
+      .closest('[data-slot="select-item"]');
+    const humanOption = within(selectContent)
+      .getByText('Human')
+      .closest('[data-slot="select-item"]');
+
+    expect(mouseOption).not.toHaveAttribute('data-disabled');
+    expect(humanOption).toHaveAttribute('data-disabled');
+  });
+
+  it('shows hardcoded select suggestions in the validator when the field is empty', async () => {
+    const user = userEvent.setup();
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Validator Multi Column Import"
+        onClose={() => {}}
+        adapter={validatorMultiColumnAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A', status: '', notes: '' }]}
+      />
+    );
+
+    await user.click(screen.getByLabelText('Status row 1'));
+
+    expect(
+      await screen.findByRole('button', { name: 'Select suggestion Draft' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select suggestion Published' })).toBeInTheDocument();
   });
 
   it('keeps the validator open with select placeholders and exposes all only in the column selector', async () => {

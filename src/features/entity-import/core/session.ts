@@ -12,7 +12,9 @@ import {
   RemoteValidationStatus,
   RowStatus,
   type TFlatImportValues,
+  type TImportManualDefault,
 } from '@/features/entity-import/core/contracts';
+import { readSpeciesSuggestionFromSuggestion } from '@/features/entity-import/core/shared/species-context';
 import * as summaryModule from '@/features/entity-import/core/summary';
 
 import type { ICsvHydratedCellValue } from '@/features/entity-import/core/adapter';
@@ -81,6 +83,9 @@ function createRowState(
   return {
     id: nextRowId(),
     rowIndex,
+    lookupContext: {
+      selectedSpecies: null,
+    },
     rowStatus: RowStatus.Idle,
     cells: createRowCells(fields, values),
   };
@@ -202,6 +207,41 @@ function normalizeFlatValues(
   return Object.fromEntries(fields.map((field) => [field.path, values?.[field.path] ?? '']));
 }
 
+function manualDefaultToCellSeed(def: TImportManualDefault): string | ICsvHydratedCellValue {
+  if (typeof def === 'string') {
+    return def;
+  }
+  return {
+    rawValue: def.rawValue,
+    displayValue: def.displayValue ?? null,
+    parsedValue: def.parsedValue,
+  };
+}
+
+/**
+ * Builds cell seeds for manual table operations (initial empty rows, add row, clear row).
+ * Applies each field's `manualDefault` when the base value for that path is empty.
+ * Explicit row payloads (e.g. from CSV) should use {@link normalizeFlatValues} only.
+ */
+export function resolveManualRowCellSeeds(
+  fields: Array<IImportFieldDefinition>,
+  base?: TFlatImportValues
+): Record<string, string | ICsvHydratedCellValue> {
+  const flat = normalizeFlatValues(fields, base);
+  return Object.fromEntries(
+    fields.map((field) => {
+      const s = flat[field.path];
+      if (s !== '') {
+        return [field.path, s];
+      }
+      if (field.manualDefault !== undefined) {
+        return [field.path, manualDefaultToCellSeed(field.manualDefault)];
+      }
+      return [field.path, ''];
+    })
+  );
+}
+
 function resolveSelectionAfterRowDelete(
   session: IImportSessionState,
   deletedRowId: string,
@@ -231,16 +271,23 @@ export function createImportSessionState({
   fields,
   rowCount,
   rows,
+  manualTableSeedBase,
 }: {
   fields: Array<IImportFieldDefinition>;
   rowCount?: number;
   rows?: Array<TFlatImportValues>;
+  /**
+   * When rows are synthesized (no explicit `rows`), merged with each field's
+   * {@link IImportFieldDefinition.manualDefault} via {@link resolveManualRowCellSeeds}.
+   * Typically `adapter.createBlankRow()`. Never used for explicit `rows` (e.g. CSV).
+   */
+  manualTableSeedBase?: TFlatImportValues;
 }): IImportSessionState {
   const normalizedRows =
     rows && rows.length > 0
-      ? rows
+      ? rows.map((row) => normalizeFlatValues(fields, row))
       : Array.from({ length: rowCount ?? 1 }, () =>
-          Object.fromEntries(fields.map((field) => [field.path, '']))
+          resolveManualRowCellSeeds(fields, manualTableSeedBase)
         );
 
   const sessionRows = normalizedRows.map((row, index) => createRowState(fields, row, index));
@@ -266,7 +313,7 @@ export function appendEmptyRow(
     ...session.rows,
     createRowState(
       session.fields,
-      normalizeFlatValues(session.fields, values),
+      resolveManualRowCellSeeds(session.fields, values),
       session.rows.length
     ),
   ];
@@ -296,6 +343,9 @@ export function duplicateRow(
   const clonedRow: IImportRowState = {
     id: nextRowId(),
     rowIndex: sourceIndex + 1,
+    lookupContext: {
+      selectedSpecies: source.lookupContext.selectedSpecies,
+    },
     rowStatus: source.rowStatus,
     cells: clonedCells,
   };
@@ -316,9 +366,12 @@ export function clearRow(
     values?: TFlatImportValues;
   }
 ): IImportSessionState {
-  const normalizedValues = normalizeFlatValues(session.fields, params.values);
+  const normalizedValues = resolveManualRowCellSeeds(session.fields, params.values);
   return updateRowById(session, params.rowId, (row) => ({
     ...row,
+    lookupContext: {
+      selectedSpecies: null,
+    },
     rowStatus: RowStatus.Idle,
     cells: createRowCells(session.fields, normalizedValues),
   }));
@@ -451,6 +504,32 @@ export function setCellRemoteState(
   });
 }
 
+export function setRowLookupSpecies(
+  session: IImportSessionState,
+  params: {
+    rowId: string;
+    suggestion: ISuggestion | null;
+  }
+): IImportSessionState {
+  return updateRowById(session, params.rowId, (row) => {
+    const currentSpecies = row.lookupContext.selectedSpecies;
+    if (
+      currentSpecies?.value === params.suggestion?.value &&
+      currentSpecies?.label === params.suggestion?.label
+    ) {
+      return row;
+    }
+
+    return {
+      ...row,
+      lookupContext: {
+        ...row.lookupContext,
+        selectedSpecies: params.suggestion,
+      },
+    };
+  });
+}
+
 export function updateCellRawValue(
   session: IImportSessionState,
   params: {
@@ -513,8 +592,15 @@ export function resolveCellSuggestion(
       return row;
     }
 
+    const nextSelectedSpecies =
+      readSpeciesSuggestionFromSuggestion(params.suggestion) ?? row.lookupContext.selectedSpecies;
+
     return {
       ...row,
+      lookupContext: {
+        ...row.lookupContext,
+        selectedSpecies: nextSelectedSpecies,
+      },
       cells: {
         ...row.cells,
         [params.fieldPath]: {
@@ -564,8 +650,15 @@ export function resolveSuggestionToRows(
       return row;
     }
 
+    const nextSelectedSpecies =
+      readSpeciesSuggestionFromSuggestion(params.suggestion) ?? row.lookupContext.selectedSpecies;
+
     return {
       ...row,
+      lookupContext: {
+        ...row.lookupContext,
+        selectedSpecies: nextSelectedSpecies,
+      },
       cells: {
         ...row.cells,
         [params.fieldPath]: {

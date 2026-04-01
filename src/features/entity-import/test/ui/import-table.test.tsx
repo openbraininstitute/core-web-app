@@ -4,11 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { ImportInputType } from '../../core/contracts';
-import { EntityImportFeature } from '../../index';
+import { EntityImportFeature } from '@/features/entity-import';
+import { ImportInputType } from '@/features/entity-import/core/contracts';
 
 import type { ReactElement } from 'react';
-import type { IEntityImportAdapter } from '../../core/adapter';
+import type { IEntityImportAdapter } from '@/features/entity-import/core/adapter';
 
 const standardInputRenderHarness = vi.hoisted(() => {
   const counts: Record<string, number> = {};

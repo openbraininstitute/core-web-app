@@ -12,8 +12,8 @@ import type {
   MtypeFilter,
   PaginationFilter,
   SharedFilter,
-  StainFilter,
   TimestampsFilter,
+  TStrainFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface IExperimentalBoutonDensity extends IExperimentalDensity, EntityCoreType {
@@ -27,7 +27,7 @@ export type ExperimentalBoutonDensityFilter = Partial<
     ContributionFilter &
     BrainRegionFilter &
     BrainRegionHierarchyFilter &
-    StainFilter &
+    TStrainFilter &
     MtypeFilter &
     EntityAuthorization &
     IlikeSearchFilter

@@ -68,6 +68,22 @@ export interface IImportFieldCsvConfig {
   aliases?: Array<string>;
 }
 
+/**
+ * rich seed for manual table rows (same information as a hydrated CSV cell).
+ * lets remote/select columns show a label while submitting `rawValue`.
+ */
+export interface IImportManualCellSeed {
+  rawValue: string;
+  displayValue?: string | null;
+  parsedValue?: unknown;
+}
+
+/**
+ * default used only for **manual** grid rows: first empty row, add row, clear row.
+ * not merged for rows supplied explicitly (e.g. CSV upload); an empty cell in a file stays empty.
+ */
+export type TImportManualDefault = string | IImportManualCellSeed;
+
 export interface IImportFieldDefinition {
   label: string;
   path: string;
@@ -79,6 +95,8 @@ export interface IImportFieldDefinition {
   csv?: IImportFieldCsvConfig;
   /** when set, table column uses this width (px) and prefers it over auto layout. */
   columnWidth?: number;
+  /** See {@link TImportManualDefault}. */
+  manualDefault?: TImportManualDefault;
 }
 
 export interface IRemoteSuggestionPaging {
@@ -119,6 +137,9 @@ export interface IImportCellState {
 export interface IImportRowState {
   id: string;
   rowIndex: number;
+  lookupContext: {
+    selectedSpecies: ISuggestion | null;
+  };
   cells: Record<string, IImportCellState>;
   rowStatus: TRowStatus;
 }

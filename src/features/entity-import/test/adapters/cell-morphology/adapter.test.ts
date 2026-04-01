@@ -3,28 +3,24 @@ import { z } from 'zod';
 
 import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { RepairPipelineState } from '@/api/entitycore/types/shared/protocol';
-import { AgentType } from '@/ui/segments/contribute/shared/types';
-
-import {
-  type CellMorphologySubmissionPayload,
-  createCellMorphologyImportAdapter,
-} from '../../../adapters/cell-morphology/adapter';
-import { getRowSubmissionValues } from '../../../core/helpers';
+import { getRowSubmissionValues } from '@/features/entity-import/core/helpers';
 import {
   createImportSessionState,
   resolveCellSuggestion,
   setCellValue,
-} from '../../../core/session';
-import { validateSessionRows } from '../../../core/validation';
+} from '@/features/entity-import/core/session';
+import { validateSessionRows } from '@/features/entity-import/core/validation';
+import {
+  type CellMorphologySubmissionPayload,
+  createCellMorphologyImportAdapter,
+} from '@/ui/segments/contribute/multiple/adapters/cell-morphology/adapter';
+import { AgentType } from '@/ui/segments/contribute/shared/types';
 
-import type { IEntityImportPostSubmitActions } from '../../../core/shared/post-submit-actions';
+import type { IEntityImportPostSubmitActions } from '@/features/entity-import/core/shared/post-submit-actions';
 
 describe('createCellMorphologyImportAdapter', () => {
   it('exposes remote query and evaluate handlers for all remotely resolved fields', () => {
-    const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
-    });
+    const adapter = createCellMorphologyImportAdapter({});
 
     expect(
       adapter.fields
@@ -112,8 +108,6 @@ describe('createCellMorphologyImportAdapter', () => {
       })),
     } as never;
     const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
       services,
     });
     const session = createImportSessionState({
@@ -196,10 +190,7 @@ describe('createCellMorphologyImportAdapter', () => {
   });
 
   it('keeps repair pipeline state visible and only enables it for digital reconstruction protocols', () => {
-    const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
-    });
+    const adapter = createCellMorphologyImportAdapter({});
     const repairField = adapter.fields.find((field) => field.path === 'repairPipelineState');
 
     expect(repairField?.options).toEqual(
@@ -358,8 +349,6 @@ describe('createCellMorphologyImportAdapter', () => {
       })),
     } as never;
     const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
       services,
     });
     const contributionsField = adapter.fields.find((field) => field.path === 'contributions');
@@ -419,10 +408,7 @@ describe('createCellMorphologyImportAdapter', () => {
   });
 
   it('surfaces local validation issues for imported partial contributions and malformed locations', () => {
-    const adapter = createCellMorphologyImportAdapter({
-      defaultBrainRegionId: 'brain-region-1',
-      defaultLicenseId: 'license-1',
-    });
+    const adapter = createCellMorphologyImportAdapter({});
     const session = createImportSessionState({
       fields: adapter.fields,
       rows: [
@@ -675,7 +661,10 @@ describe('createCellMorphologyImportAdapter', () => {
       })),
     };
     const adapter = createCellMorphologyImportAdapter({
-      services,
+      services: {
+        ...services,
+        querySpecies: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+      },
       postSubmitActions,
     });
 

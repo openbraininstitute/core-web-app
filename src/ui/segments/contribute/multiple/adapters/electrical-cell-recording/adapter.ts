@@ -144,12 +144,12 @@ export function createElectricalCellRecordingImportAdapter({
           queryField: 'ilike_search',
           querySuggestions: services.queryEtype,
         }),
-        evaluate: async ({ query, context }) =>
+        evaluate: async ({ query, context, row, values }) =>
           makeSingleSuggestionRemoteEvaluator({
             label: 'E-Type',
             queryField: 'pref_label__ilike',
             querySuggestions: services.queryEtype,
-          })({ query, context }),
+          })({ query, context, row, values }),
       },
       validatorSuggestionDetails: renderEtypeSuggestionTooltip,
       columnWidth: 200,

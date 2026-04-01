@@ -5,9 +5,32 @@ import type { IAdapterFieldDefinition } from '@/features/entity-import/core/adap
 // keep import editor dropdowns above sticky table and validator
 export const ENTITY_IMPORT_POPOVER_Z_CLASS = 'z-[99999]';
 
+/** Base shell for import-related selects (z-index, border, shadow). Use `p-0`; pad via viewport or items. */
 export const ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME = cn(
   ENTITY_IMPORT_POPOVER_Z_CLASS,
-  'border border-neutral-200 bg-white p-2 shadow-[0_16px_40px_rgba(0,0,0,0.16)]'
+  'border border-neutral-200 bg-white p-0 shadow-[0_16px_40px_rgba(0,0,0,0.16)]'
+);
+
+/**
+ * Trigger-aligned menu: width matches trigger, rounded panel, items get inset `rounded-lg` highlights
+ * (species, repair pipeline, validator enum fields).
+ */
+export const ENTITY_IMPORT_SELECT_MENU_PANEL_CLASSNAME = cn(
+  ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
+  'rounded-2xl overflow-x-hidden',
+  'min-w-[var(--radix-select-trigger-width)] w-[var(--radix-select-trigger-width)]'
+);
+
+/** Option row: full width inside viewport, rounded highlight aligned with panel curvature. */
+export const ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME = cn(
+  'relative flex w-full min-w-0 max-w-full items-center rounded-lg',
+  'min-h-11 h-11 px-3 pr-10 text-left text-base font-semibold text-primary-9',
+  'cursor-pointer outline-none select-none',
+  'focus:bg-sky-50 focus:text-primary-9',
+  'data-[highlighted]:bg-sky-50 data-[highlighted]:text-primary-9',
+  'data-[state=checked]:bg-sky-100/80 data-[state=checked]:text-primary-9',
+  'data-[disabled]:pointer-events-none data-[disabled]:text-neutral-400 data-[disabled]:opacity-100',
+  '[&_span.indicator]:right-3'
 );
 
 export const ENTITY_IMPORT_PANEL_SELECT_TRIGGER_CLASSNAME =

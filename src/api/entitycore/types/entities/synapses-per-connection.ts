@@ -8,9 +8,9 @@ import type {
   IlikeSearchFilter,
   PaginationFilter,
   SharedFilter,
-  StainFilter,
   SubjectFilter,
   TimestampsFilter,
+  TStrainFilter,
 } from '@/api/entitycore/types/shared/request';
 
 export interface IExperimentalSynapsesPerConnection extends IExperimentalDensity, EntityCoreType {
@@ -67,7 +67,7 @@ export type ExperimentalSynapsesPerConnectionFilter = Partial<
     PostRegionFilter &
     PreMtypeFilter &
     PreRegionFilter &
-    StainFilter &
+    TStrainFilter &
     SubjectFilter &
     TimestampsFilter &
     IlikeSearchFilter

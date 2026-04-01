@@ -61,6 +61,7 @@ import {
   selectCell as selectCellState,
   setCellRemoteState,
   setCellValue,
+  setRowLookupSpecies,
   setValidatorSelection as setValidatorSelectionState,
   stageSuggestionToRows,
   updateCellRawValue,
@@ -306,11 +307,11 @@ export function useEntityImportController<TPayload, TResult>({
   );
 
   const [session, setSession] = useState<IImportSessionState>(() => {
-    const blankRow = adapter.createBlankRow?.() ?? undefined;
     const baseSession = createImportSessionState({
       fields: adapter.fields,
-      rows: initialRows?.length ? initialRows : blankRow ? [blankRow] : undefined,
+      rows: initialRows?.length ? initialRows : undefined,
       rowCount: initialRows?.length ? undefined : 1,
+      manualTableSeedBase: adapter.createBlankRow?.(),
     });
     return validate(baseSession);
   });
@@ -1099,7 +1100,7 @@ export function useEntityImportController<TPayload, TResult>({
     const field = findField(adapter.fields, fieldPath);
     const query = row?.cells[fieldPath]?.rawValue ?? '';
 
-    if (!row || !field || !hasSuggestionSource(field) || !query.trim()) {
+    if (!row || !field || !hasSuggestionSource(field)) {
       validatorSelectionQueryKeyRef.current = '';
       clearSuggestions();
       return;
@@ -1108,15 +1109,14 @@ export function useEntityImportController<TPayload, TResult>({
     const nextQueryKey = `${rowId}:${fieldPath}:${query.trim()}`;
     if (validatorSelectionQueryKeyRef.current === nextQueryKey) return;
 
-    // when the cell's remote state has already been resolved by the inline
-    // path or csv background validation, skip the remote fetch, the
-    // suggestions are already in (cell.remoteState) and the validator panel
-    // reads them as a fallback, only re-fetch when the cell is Idle
-    // (never validated) or Pending (in-flight, will land on its own)
+    // when the cell has already been resolved, or an inline/csv lookup is
+    // still in flight, skip re-requesting suggestions. Invalid cells should
+    // still request validator suggestions so the panel can show the richer
+    // query-backed option list for ambiguous values.
     const cell = row.cells[fieldPath];
     if (
-      cell.remoteState.status !== RemoteValidationStatus.Idle &&
-      cell.remoteState.status !== RemoteValidationStatus.Pending
+      cell.remoteState.status === RemoteValidationStatus.Valid ||
+      cell.remoteState.status === RemoteValidationStatus.Pending
     ) {
       validatorSelectionQueryKeyRef.current = nextQueryKey;
       return;
@@ -1255,6 +1255,20 @@ export function useEntityImportController<TPayload, TResult>({
       );
     },
     [clearPendingCellSync, clearValidatorPreview, commit, resetImportRun]
+  );
+
+  const onSetRowLookupSpecies = useCallback(
+    ({ rowId, suggestion }: { rowId: string; suggestion: ISuggestion | null }) => {
+      commit(
+        (current) =>
+          setRowLookupSpecies(current, {
+            rowId,
+            suggestion,
+          }),
+        { validate: false }
+      );
+    },
+    [commit]
   );
 
   const onAddRow = useCallback(() => {
@@ -1615,6 +1629,7 @@ export function useEntityImportController<TPayload, TResult>({
       loadMoreSuggestions,
       onSelectCell,
       onSetValidatorSelection,
+      onSetRowLookupSpecies,
       updateValidatorPreview,
       onSetCustomValue,
       onSetFileValue,
@@ -1637,6 +1652,7 @@ export function useEntityImportController<TPayload, TResult>({
       onDismissFeatureNotification,
       onSelectCell,
       onSetValidatorSelection,
+      onSetRowLookupSpecies,
       updateValidatorPreview,
       onSetCustomValue,
       onSetFileValue,

@@ -8,12 +8,18 @@ import {
   ImportInputType,
   RemoteValidationStatus,
   RowStatus,
-} from '../../core/contracts';
-import { createImportSessionState, hydrateSessionRows } from '../../core/session';
-import * as summaryModule from '../../core/summary';
-import { validateSessionRows } from '../../core/validation';
+} from '@/features/entity-import/core/contracts';
+import {
+  createImportSessionState,
+  hydrateSessionRows,
+  resolveCellSuggestion,
+  setCellValue,
+} from '@/features/entity-import/core/session';
+import * as summaryModule from '@/features/entity-import/core/summary';
+import { validateSessionRows } from '@/features/entity-import/core/validation';
+import { createCellMorphologyImportAdapter } from '@/ui/segments/contribute/multiple/adapters/cell-morphology/adapter';
 
-import type { IAdapterFieldDefinition } from '../../core/adapter';
+import type { IAdapterFieldDefinition } from '@/features/entity-import/core/adapter';
 
 const fields: Array<IImportFieldDefinition> = [
   {
@@ -193,5 +199,116 @@ describe('validateSessionRows', () => {
     expect(next.rows[1]).not.toBe(session.rows[1]);
     expect(next.rows[1].cells.name.status).toBe(CellStatus.Invalid);
     expect(next.summary.invalidRequiredCellCount).toBeGreaterThan(0);
+  });
+
+  it('marks subject and brain region invalid when they resolve to different species', () => {
+    const adapter = createCellMorphologyImportAdapter({});
+    const session = createImportSessionState({
+      fields: adapter.fields,
+      rows: [adapter.createBlankRow?.() ?? {}],
+    });
+    const rowId = session.rows[0].id;
+    const withName = setCellValue(session, {
+      rowId,
+      fieldPath: 'name',
+      rawValue: 'Neuron A',
+      displayValue: 'Neuron A',
+      parsedValue: 'Neuron A',
+    });
+    const withDescription = setCellValue(withName, {
+      rowId,
+      fieldPath: 'description',
+      rawValue: 'A morphology',
+      displayValue: 'A morphology',
+      parsedValue: 'A morphology',
+    });
+    const withSourceFile = setCellValue(withDescription, {
+      rowId,
+      fieldPath: 'sourceFile',
+      rawValue: 'cell.swc',
+      displayValue: 'cell.swc',
+      parsedValue: new File(['swc'], 'cell.swc', { type: 'application/swc' }),
+    });
+    const withLicense = resolveCellSuggestion(withSourceFile, {
+      rowId,
+      fieldPath: 'licenseId',
+      suggestion: {
+        value: '11111111-1111-4111-8111-111111111111',
+        label: 'License A',
+      },
+    });
+    const withProtocol = resolveCellSuggestion(withLicense, {
+      rowId,
+      fieldPath: 'protocolId',
+      suggestion: {
+        value: '22222222-2222-4222-8222-222222222222',
+        label: 'Protocol A',
+      },
+    });
+    const withMtype = resolveCellSuggestion(withProtocol, {
+      rowId,
+      fieldPath: 'mtypeClassId',
+      suggestion: {
+        value: '33333333-3333-4333-8333-333333333333',
+        label: 'M-Type A',
+      },
+    });
+    const withContributions = setCellValue(withMtype, {
+      rowId,
+      fieldPath: 'contributions',
+      rawValue: '1 contributor',
+      displayValue: '1 contributor',
+      parsedValue: [
+        {
+          agent_type: 'person',
+          agent_id: '44444444-4444-4444-8444-444444444444',
+          role_id: '55555555-5555-4555-8555-555555555555',
+        },
+      ],
+    });
+    const withBrainRegion = resolveCellSuggestion(withContributions, {
+      rowId,
+      fieldPath: 'brainRegionId',
+      suggestion: {
+        value: '66666666-6666-4666-8666-666666666666',
+        label: 'Isocortex',
+        metadata: {
+          species: 'Mouse',
+          speciesId: 'species-mouse',
+        },
+      },
+    });
+    const withSubject = resolveCellSuggestion(withBrainRegion, {
+      rowId,
+      fieldPath: 'subjectId',
+      suggestion: {
+        value: '77777777-7777-4777-8777-777777777777',
+        label: 'Rat Subject 1',
+        metadata: {
+          species: 'Rat',
+          speciesId: 'species-rat',
+        },
+      },
+    });
+
+    const next = validateSessionRows({
+      session: withSubject,
+      fields: adapter.fields,
+      schema: adapter.schema,
+      buildPayload({ row, values }) {
+        return adapter.buildPayload({
+          row,
+          values,
+          context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+        });
+      },
+    });
+
+    expect(next.rows[0].cells.brainRegionId.issues).toContain(
+      'Brain Region and Subject must belong to the same species.'
+    );
+    expect(next.rows[0].cells.subjectId.issues).toContain(
+      'Brain Region and Subject must belong to the same species.'
+    );
   });
 });

@@ -8,13 +8,13 @@ import {
   type IImportRowState,
   RemoteValidationStatus,
   RowStatus,
-} from '../../core/contracts';
+} from '@/features/entity-import/core/contracts';
 import {
   getCellStatusMessage,
   getTableRowUiStatus,
   shouldDisplayCellStatusBadge,
   TableRowUiStatus,
-} from '../../ui/status';
+} from '@/features/entity-import/ui/status';
 
 function createCell(overrides: Partial<IImportCellState> = {}): IImportCellState {
   return {
