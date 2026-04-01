@@ -591,43 +591,49 @@ async function syncNotebook({
   projectId: string;
   targetProjectId: string;
 }) {
-  const createdNotebook = await createNotebook({
-    payload: notebook,
-    context: { virtualLabId, projectId: targetProjectId },
-  });
+  try {
+    const createdNotebook = await createNotebook({
+      payload: notebook,
+      context: { virtualLabId, projectId: targetProjectId },
+    });
 
-  const sourceAssets = await Promise.all(
-    notebook.assets.map(async (asset) => {
-      const arrayBuffer = (await downloadAsset({
-        ctx: {
-          virtualLabId,
-          projectId,
-        },
-        entityType: EntityTypeDict.Notebook,
-        entityId: notebook.id,
-        id: asset.id,
-        asRawResponse: false,
-      })) as ArrayBuffer;
+    const sourceAssets = await Promise.all(
+      notebook.assets.map(async (asset) => {
+        const arrayBuffer = (await downloadAsset({
+          ctx: {
+            virtualLabId,
+            projectId,
+          },
+          entityType: EntityTypeDict.Notebook,
+          entityId: notebook.id,
+          id: asset.id,
+          asRawResponse: false,
+        })) as ArrayBuffer;
 
-      return {
-        ctx: { virtualLabId, projectId: targetProjectId },
-        entityType: EntityTypeDict.Notebook,
-        entityId: createdNotebook.id,
-        fileName: asset.path.split('/').pop() ?? asset.id,
-        payload: arrayBuffer,
-        mimeType: asset.content_type,
-        label: asset.label,
-      };
-    })
-  );
+        return {
+          ctx: { virtualLabId, projectId: targetProjectId },
+          entityType: EntityTypeDict.Notebook,
+          entityId: createdNotebook.id,
+          fileName: asset.path.split('/').pop() ?? asset.id,
+          payload: arrayBuffer,
+          mimeType: asset.content_type,
+          label: asset.label,
+        };
+      })
+    );
 
-  // Upload assets to new notebook
+    // Upload assets to new notebook
 
-  await Promise.all(
-    sourceAssets.map((asset) => {
-      return createAsset(asset);
-    })
-  );
+    await Promise.all(
+      sourceAssets.map((asset) => {
+        return createAsset(asset);
+      })
+    );
+  } catch {
+    throw new Error(
+      `Failed to sync notebook ${notebook.id} from project ${projectId} to project ${targetProjectId}`
+    );
+  }
 }
 
 function CourseSetup({
