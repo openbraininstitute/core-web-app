@@ -1,15 +1,16 @@
 'use client'
 
 import { MorphoViewerSimul } from '@bbp/morphoviewer'
-import { SpinnerIcon } from '@bprogress/next'
 import dynamic from 'next/dynamic'
 import React, { Fragment } from 'react'
 
 import IconPlus from '@/components/icons/Plus'
+import { IconSpinner } from '@/components/icons/spinner'
 import { SIMULATION_COLORS } from '@/constants/simulate/single-neuron'
 import { cn } from '@/utils/css-class'
 
-import { useMorphology } from './hooks'
+import { useMorphology, useSpikes, useTimelineManager } from './hooks'
+import { SpikesTimeline } from './spikes-timeline'
 
 import type { PlotData } from '@/services/bluenaas-single-cell/types'
 
