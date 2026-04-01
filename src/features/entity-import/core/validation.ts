@@ -7,11 +7,11 @@ import {
   RowStatus,
   type TFlatImportValues,
 } from '@/features/entity-import/core/contracts';
+import { replaceSessionRows } from '@/features/entity-import/core/session';
 import {
   fieldHasSuggestionResolution,
   getRowSubmissionValues,
-} from '@/features/entity-import/core/helpers';
-import { replaceSessionRows } from '@/features/entity-import/core/session';
+} from '@/features/entity-import/core/shared/helpers';
 import * as summaryModule from '@/features/entity-import/core/summary';
 
 import type { ZodType } from 'zod';

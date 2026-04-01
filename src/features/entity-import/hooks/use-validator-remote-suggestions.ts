@@ -19,15 +19,15 @@ import {
   RemoteValidationStatus,
 } from '@/features/entity-import/core/contracts';
 import {
-  fieldHasSuggestionResolution,
-  findExactSuggestionMatch,
-  getRowSubmissionValues,
-} from '@/features/entity-import/core/helpers';
-import {
   resolveCellSuggestion,
   setCellRemoteState,
   setRowLookupSpecies,
 } from '@/features/entity-import/core/session';
+import {
+  fieldHasSuggestionResolution,
+  findExactSuggestionMatch,
+  getRowSubmissionValues,
+} from '@/features/entity-import/core/shared/helpers';
 import { readSpeciesSuggestionFromSuggestion } from '@/features/entity-import/core/shared/species-context';
 
 const ValidationSource = {

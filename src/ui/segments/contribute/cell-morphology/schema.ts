@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 import {
   RepairPipelineType,
-  type TRepairPipelineType,
 } from '@/api/entitycore/types/entities/cell-morphology';
 import {
   BaseSetupSchema,
@@ -25,6 +24,12 @@ export const CELL_MORPHOLOGY_FILE_TYPES = [
   { type: 'asc', extension: 'asc', mimeType: 'application/asc' },
   { type: 'h5', extension: 'h5', mimeType: 'application/x-hdf5' },
 ] as const;
+
+/** For `<input type="file" accept="…">`: extensions + MIME types from config. */
+export const CELL_MORPHOLOGY_FILE_INPUT_ACCEPT = CELL_MORPHOLOGY_FILE_TYPES.flatMap((f) => [
+  `.${f.extension}`,
+  f.mimeType,
+]).join(',');
 
 export const CellMorphologyAssetsSchema = createFileSchema(['swc', 'asc', 'h5']);
 

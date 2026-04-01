@@ -6,9 +6,9 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { buildTemplateColumns } from '@/features/entity-import/core/csv';
-import { getEntityImportTemplateGuide } from '@/features/entity-import/templates/registry';
 import { createCellMorphologyImportAdapter } from '@/ui/segments/contribute/multiple/adapters/cell-morphology/adapter';
 import { createElectricalCellRecordingImportAdapter } from '@/ui/segments/contribute/multiple/adapters/electrical-cell-recording/adapter';
+import { getEntityImportTemplateGuide } from '@/ui/segments/contribute/multiple/templates/registry';
 
 import type { IEntityImportAdapter } from '@/features/entity-import/core/adapter';
 

@@ -1,6 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-import type { IEntityImportTemplateGuideConfig } from '../core/adapter';
+import type { IEntityImportTemplateGuideConfig } from '@/features/entity-import/core/adapter';
 
 const cellMorphologyImportTemplateGuide = `# Cell Morphology CSV Guide
 

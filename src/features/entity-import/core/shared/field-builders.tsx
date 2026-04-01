@@ -7,7 +7,6 @@ import {
   RemoteValidationStatus,
   type TFlatImportValues,
 } from '@/features/entity-import/core/contracts';
-import { findExactSuggestionMatch } from '@/features/entity-import/core/helpers';
 import { BrainRegionInlineCell } from '@/features/entity-import/core/shared/brain-region-inline-cell';
 import { parseContributionCsvValue } from '@/features/entity-import/core/shared/contribution-csv-parser';
 import {
@@ -19,6 +18,7 @@ import {
   summarizeContributions,
   type TContributionDraft,
 } from '@/features/entity-import/core/shared/contributions-editor';
+import { findExactSuggestionMatch } from '@/features/entity-import/core/shared/helpers';
 import {
   createSpeciesMismatchMessage,
   readSpeciesSuggestionFromSuggestion,

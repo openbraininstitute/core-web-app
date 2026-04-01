@@ -18,7 +18,7 @@ import {
   getControlClassName,
   getDisplayValue,
   INLINE_CELL_DRAFT_COMMIT_DELAY_MS,
-} from '@/features/entity-import/core/helpers';
+} from '@/features/entity-import/core/shared/helpers';
 import { readSpeciesSuggestionFromSuggestion } from '@/features/entity-import/core/shared/species-context';
 import { shouldDisplayCellStatusBadge } from '@/features/entity-import/ui/status';
 import { Badge } from '@/ui/molecules/badge';

@@ -40,11 +40,6 @@ import {
   validateImportFiles,
 } from '@/features/entity-import/core/file-field';
 import {
-  fieldHasSuggestionResolution,
-  findExactSuggestionMatch,
-  getRowSubmissionValues,
-} from '@/features/entity-import/core/helpers';
-import {
   acceptCorrectionDraft,
   appendEmptyRow,
   applyValueToRows,
@@ -66,6 +61,11 @@ import {
   stageSuggestionToRows,
   updateCellRawValue,
 } from '@/features/entity-import/core/session';
+import {
+  fieldHasSuggestionResolution,
+  findExactSuggestionMatch,
+  getRowSubmissionValues,
+} from '@/features/entity-import/core/shared/helpers';
 import {
   computeFieldStatusMap,
   computeRowsSummaryStatus,
