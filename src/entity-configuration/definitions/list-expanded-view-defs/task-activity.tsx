@@ -4,7 +4,6 @@ import { get, lowerCase, upperFirst } from 'es-toolkit/compat';
 
 import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
 import { ExecutionStatus } from '@/ui/segments/activity-execution/status';
-import { cn } from '@/utils/css-class';
 
 import type { ColumnsType } from 'antd/es/table';
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
@@ -13,10 +12,24 @@ import type {
   TTaskCampaignRow,
 } from '@/entity-configuration/domain/task-helpers';
 
-const className = 'text-primary-7';
-
 export function getParamLabel(param: string) {
   return upperFirst(lowerCase(param.split('.').at(-1))); // e.g. "initialize.random_seed" -> "Random seed"
+}
+export function getParamTitle(param: string) {
+  const parts = param.split('.');
+  return (
+    <div className="flex items-start flex-col gap-1">
+      {parts.map((part) => (
+        <span
+          className="text-sm leading-3 first-of-type:font-bold text-primary-9"
+          key={part.toLocaleLowerCase()}
+        >
+          {upperFirst(lowerCase(part))}
+        </span>
+      ))}
+    </div>
+  );
+  /* return upperFirst(lowerCase(param.split('.').at(-1))); // e.g. "initialize.random_seed" -> "Random seed" */
 }
 
 /** API may return scan params as a string[], object map, or omit them. */
@@ -30,7 +43,7 @@ export function scanParameterKeys(scanParameters: unknown): string[] {
   }
   return [];
 }
-
+const className = 'text-primary-9! whitespace-nowrap';
 type Row = {
   id: string;
   name: string;
@@ -60,8 +73,8 @@ export const TaskViewConfig: ListExpandedViewConfig<
     ]);
 
     const extraColumns: ColumnsType<Row> = [...paramKeySet].map((param) => ({
-      title: <span title={param}>{getParamLabel(param)}</span>,
-      className: cn(className, 'whitespace-nowrap'),
+      title: <span title={param}>{getParamTitle(param)}</span>,
+      className,
       dataIndex: ['scan_parameters', param],
       ellipsis: true,
       key: param,
@@ -79,8 +92,8 @@ export const TaskViewConfig: ListExpandedViewConfig<
 
     const columns: ColumnsType<Row> = [
       {
-        title: 'Name',
-        className: cn(className, 'whitespace-nowrap'),
+        title: <span className={className}>Name</span>,
+        className,
         dataIndex: 'name',
         key: 'name',
         ellipsis: true,
@@ -88,7 +101,7 @@ export const TaskViewConfig: ListExpandedViewConfig<
       },
       ...extraColumns,
       {
-        title: 'Status',
+        title: <span className={className}>Status</span>,
         render: (r: Row) => (
           <div className="flex items-center justify-center">
             <ExecutionStatus status={r.status} />
@@ -112,7 +125,7 @@ export const TaskViewConfig: ListExpandedViewConfig<
             dataSource={rows}
             rowKey="id"
             pagination={false}
-            className="[&_.ant-table-cell]:bg-background! [&_.ant-table-row:hover>td]:bg-gray-100!"
+            className="[&_.ant-table-cell]:bg-background! [&_.ant-table-thead>th]:text-primary-9! [&_.ant-table-row:hover>td]:bg-gray-100!"
           />
         </ConfigProvider>
       </div>
