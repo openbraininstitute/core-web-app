@@ -328,15 +328,17 @@ function InlineCellComponent({
     return (
       <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0">
         <div className="relative h-full min-h-[52px] w-full">
-          {field.tableRenderer({
-            field,
-            cell,
-            row,
-            session,
-            context,
-            actions,
-            selected,
-          })}
+          <div className="pointer-events-auto h-full min-h-[52px] w-full">
+            {field.tableRenderer({
+              field,
+              cell,
+              row,
+              session,
+              context,
+              actions,
+              selected,
+            })}
+          </div>
           <CellStatusBadge
             cell={cell}
             fieldLabel={field.label}
@@ -456,24 +458,29 @@ function InlineCellComponent({
 
   if (field.inputType === ImportInputType.File || field.inputType === ImportInputType.FileBundle) {
     return (
-      <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0">
+      <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0 overflow-hidden">
         <Button
           type="button"
           aria-label={`${field.label} row ${row.rowIndex + 1}`}
           variant="ghost"
           size="md"
           className={cn(
-            'pointer-events-auto box-border h-full min-h-[52px] w-full justify-center rounded-none!',
+            'pointer-events-auto flex h-full min-h-[52px] w-full min-w-0 max-w-full items-center justify-start gap-1 rounded-none!',
             'border-0 bg-transparent px-3 py-2 text-left text-sm text-inherit',
             'shadow-none hover:bg-transparent hover:text-inherit',
+            'overflow-hidden',
+            hasStatusBadge && 'pr-10',
             getControlClassName(cell, selected)
           )}
           onClick={() => {
             selectCell();
             fileInputRef.current?.click();
           }}
+          title={displayValue}
         >
-          {displayValue || getImportFileButtonLabel(field)}
+          <span className="min-w-0 flex-1 truncate text-left">
+            {displayValue || getImportFileButtonLabel(field)}
+          </span>
         </Button>
         <input
           ref={fileInputRef}

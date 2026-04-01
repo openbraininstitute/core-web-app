@@ -73,6 +73,8 @@ export function useImportTableScroll({
 }: UseImportTableScrollParams): UseImportTableScrollResult {
   const previousRowCountRef = useRef(rowCount);
   const shouldScrollToNewRowRef = useRef(false);
+  const resizeOverridesRef = useRef(resizeOverrides);
+  resizeOverridesRef.current = resizeOverrides;
 
   const scrollToNewRowOnNextCommit = useCallback(() => {
     shouldScrollToNewRowRef.current = true;
@@ -105,15 +107,17 @@ export function useImportTableScroll({
       return;
     }
 
+    const ro = resizeOverridesRef.current;
+
     // pixel offset of the target column's left edge relative to the start
     // of the scrollable content (after the fixed row-index column)
     const columnLeft =
       ROW_INDEX_COLUMN_WIDTH +
       fields
         .slice(0, selectedFieldIndex)
-        .reduce((sum, field) => sum + fieldColumnWidth(field, resizeOverrides), 0);
+        .reduce((sum, field) => sum + fieldColumnWidth(field, ro), 0);
 
-    const columnWidth = fieldColumnWidth(fields[selectedFieldIndex], resizeOverrides);
+    const columnWidth = fieldColumnWidth(fields[selectedFieldIndex], ro);
     const columnRight = columnLeft + columnWidth;
 
     // the fixed left/right columns overlay the scrollable area, so the
@@ -128,7 +132,9 @@ export function useImportTableScroll({
       // column is (partially) hidden behind the fixed right column.
       tableBody.scrollLeft = columnRight - tableBody.clientWidth + ROW_ACTIONS_COLUMN_WIDTH;
     }
-  }, [fields, resizeOverrides, selectedFieldPath, tableRef]);
+    // `resizeOverrides` is read via ref so this effect does not rerun on every drag mousemove
+    // (which would fight resize and snap horizontal scroll).
+  }, [fields, selectedFieldPath, tableRef]);
 
   return { scrollToNewRowOnNextCommit };
 }

@@ -5,6 +5,7 @@ import pLimit from 'p-limit';
 import Papa from 'papaparse';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import ApiError from '@/api/error';
 import {
   createIdleValidatorPreviewState,
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
@@ -164,7 +165,9 @@ function createRunningImportRunState(rows: Array<IImportRowState>): IImportRunSt
 }
 
 function getImportFailureMessage(error: unknown, row: IImportRowState): string {
-  if (error instanceof Error && error.message.trim()) return error.message;
+  if (error instanceof ApiError) {
+    return error.cause?.message ?? error.message;
+  }
   return `Row ${row.rowIndex + 1} failed to import.`;
 }
 

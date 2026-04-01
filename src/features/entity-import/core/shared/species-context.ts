@@ -5,9 +5,9 @@
  *
  * remote suggestions (e.g. brain region, subject) may carry `metadata.speciesId` /
  * `metadata.species` so the UI can show which species a resolved entity belongs to.
- * `resolveRowSpeciesSuggestion` merges: related field’s suggestion species → row
- * `lookupContext.selectedSpecies` (validator species dropdown) → current field’s suggestion
- * species, so table cells and validator panels stay aligned when filtering queries by species.
+ * `resolveRowSpeciesSuggestion` merges: row `lookupContext.selectedSpecies` (validator dropdown)
+ * first, then related field’s suggestion species, then current field’s suggestion. Validator choice
+ * must win so users can override inferred species when filtering remote lookups.
  */
 
 import type { IImportRowState, ISuggestion } from '@/features/entity-import/core/contracts';
@@ -63,7 +63,7 @@ export function resolveRowSpeciesSuggestion({
       )
     : null;
 
-  return relatedFieldSpecies ?? row.lookupContext.selectedSpecies ?? currentFieldSpecies;
+  return row.lookupContext.selectedSpecies ?? relatedFieldSpecies ?? currentFieldSpecies;
 }
 
 /** true when two fields’ selected suggestions refer to different species (both known). */
