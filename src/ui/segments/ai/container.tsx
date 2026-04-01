@@ -1,6 +1,5 @@
 'use client';
 
-import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useState, useTransition } from 'react';
 
