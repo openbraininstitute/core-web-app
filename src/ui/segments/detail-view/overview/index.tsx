@@ -40,6 +40,7 @@ import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-view
 import { ScanConfiguration } from '@/features/scan-config';
 import {
   ExtractScanConfigTabs,
+  ProcessScanConfigTabs,
   ScanConfigActivity,
   SimulateScanConfigTabs,
 } from '@/features/scan-config/types';
@@ -271,7 +272,7 @@ export default async function Overview({
 
   if (extendedType === ExtendedEntitiesTypeDict.SkeletonizationCampaign) {
     const { data: extractionConfig, error } = await tryCatch(
-      resolveSkeletonizationByCampaignId({ id: entity.id, context: ctx })
+      resolveSkeletonizationByCampaignId({ id: entity.id, context })
     );
 
     if (error || !extractionConfig.emCellMeshId) {
@@ -281,15 +282,16 @@ export default async function Overview({
     return (
       <>
         <ScanConfiguration
-          modelId={extractionConfig.emCellMeshId}
-          virtualLabId={ctx.virtualLabId}
-          projectId={ctx.projectId}
+          entityId={extractionConfig.emCellMeshId}
+          entityType={extendedType}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
           initialCampaignId={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
           readOnly={!isWorkflow}
           defaultTab={{
             __activity: ScanConfigActivity.Process,
-            id: ExtractScanConfigTabs.configuration,
+            id: ProcessScanConfigTabs.configuration,
           }}
           activity={ScanConfigActivity.Process}
         />

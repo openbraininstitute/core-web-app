@@ -1,9 +1,4 @@
 export { runBatch as runCircuitSimulationBatch } from './circuit/simulation';
-export { runBatch as runMeshSkeletonizationBatch } from './em-cell-mesh/skeletonization';
-export {
-  type CompatibilityCheckResponse,
-  checkCompatibility as checkSingleNeuronCompatibility,
-} from './single-neuron/compatibility';
 export { getMorphology as getSingleNeuronMorphology } from './single-neuron/morphology';
 export { runSimulation as runSingleNeuronSimulation } from './single-neuron/simulation';
 export { createModel as createSingleNeuronModel } from './single-neuron/single-neuron';

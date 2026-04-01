@@ -1,15 +1,19 @@
 import { RightOutlined } from '@ant-design/icons';
 import { Checkbox, ConfigProvider } from 'antd';
 
-import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
+import {
+  ActivityStatus,
+  type TActivityStatus,
+} from '@/api/entitycore/types/entities/task-activity';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { StatusBadge } from '@/features/scan-config/status-badge';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
-import type { ISkeletonizationConfig } from '@/api/entitycore/types/entities/skeletonization-config';
+import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
+import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 
 type Props = {
-  config: ISkeletonizationConfig;
+  config: ITaskConfig<TSkeletonizationTaskConfigMeta>;
   execStatus?: TActivityStatus;
   onSelect: () => void;
   selected?: boolean;
@@ -53,7 +57,9 @@ export function SkeletonizationConfigsLeftMenu({
                   <Checkbox
                     className="mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap"
                     disabled={selectionDisabled}
-                    onChange={(e) => onSelectedForSkeletonizationChange(config.id, e.target.checked)}
+                    onChange={(e) =>
+                      onSelectedForSkeletonizationChange(config.id, e.target.checked)
+                    }
                     checked={selectedForSkeletonization}
                     style={{ color, maxWidth: '100%', display: 'flex' }}
                   >
@@ -76,7 +82,7 @@ export function SkeletonizationConfigsLeftMenu({
           </div>
         </button>
         <ScanParams
-          scanParams={config.scan_parameters as Record<string, string | number>}
+          scanParams={config.meta.scan_parameters as Record<string, string | number>}
           color={color}
         />
       </div>

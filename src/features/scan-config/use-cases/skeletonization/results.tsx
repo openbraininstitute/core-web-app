@@ -1,23 +1,25 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Checkbox } from 'antd';
-import { get, includes } from 'es-toolkit/compat';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { match } from 'ts-pattern';
 
-import {
-  getSkeletonizationConfig,
-  getSkeletonizationConfigGenerations,
-  getSkeletonizationExecutions,
-} from '@/api/entitycore/queries/processing/em-cell-mesh';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
+import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
+import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { Loader } from '@/components/loader';
-import { useAppNotification } from '@/components/notification';
 import { WorkspaceSection } from '@/constants';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
+import {
+  buildActivityStatusMap,
+  findLatestExecutionForEntity,
+} from '@/features/scan-config/helpers';
+import {
+  useScanConfigLaunchMutation,
+  useScanConfigTaskRunner,
+} from '@/features/scan-config/task-runner';
 import {
   ActivityCustomFileRenderer,
   ScanConfigActivity,
@@ -26,19 +28,14 @@ import {
 import { SkeletonizationInOutFiles } from '@/features/scan-config/use-cases/skeletonization/in-out-files';
 import { SkeletonizationConfigsLeftMenu } from '@/features/scan-config/use-cases/skeletonization/left-menu';
 import { messages as textMessages } from '@/i18n/en/scan-config';
-import { runSkeletonizationBatch } from '@/services/small-scale-simulator/mesh';
-import { JobStatus, MessageType } from '@/services/small-scale-simulator/types';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { classNames } from '@/util/utils';
 
 import type { CheckboxProps } from 'antd';
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
-import type { ISkeletonizationConfig } from '@/api/entitycore/types/entities/skeletonization-config';
+import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 
 import styles from '@/features/scan-config/scan-config.module.css';
-
-const STATUS_POLL_INTERVAL = 20_000;
 
 type Props = {
   campaignId: string;
@@ -46,128 +43,61 @@ type Props = {
   projectId: string;
 };
 
-// Sorts strings which might contain indexes.
-const collator = new Intl.Collator(undefined, {
-  numeric: true,
-  sensitivity: 'base',
-});
-
-const queryKeys = {
-  configGeneration: (campaignId: string, context: { virtualLabId: string; projectId: string }) =>
-    ['skeletonization-config-generation', campaignId, context] as const,
-  skeletonizationConfigs: (
-    configIds: string[],
-    context: { virtualLabId: string; projectId: string }
-  ) => ['skeletonization-configs', configIds, context] as const,
-  skeletonizationExecutions: (
-    configIds: string[],
-    context: { virtualLabId: string; projectId: string }
-  ) => ['skeletonization-executions', configIds, context] as const,
-};
-
 export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Props) {
-  const queryClient = useQueryClient();
-  const notification = useAppNotification();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  const [skeletonizationRequestInProgress, setSkeletonizationRequestInProgress] =
-    useState<boolean>(false);
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);
-  const [activeConfig, setActiveConfig] = useState<ISkeletonizationConfig | null>(null);
+  const [activeConfig, setActiveConfig] =
+    useState<ITaskConfig<TSkeletonizationTaskConfigMeta> | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
 
-  const { data: generationResponse, isLoading: generationLoading } = useQuery({
-    queryKey: queryKeys.configGeneration(campaignId, context),
-    queryFn: () =>
-      getSkeletonizationConfigGenerations({
-        filters: { used__id: campaignId },
-        withFacets: false,
-        context,
-      }),
-  });
+  const { mutateAsync: runSkeletonization, isPending: runSkeletonizationPending } =
+    useScanConfigLaunchMutation({
+      context,
+      obiOneTaskType: ObiOneTaskTypeDict.Skeletonization,
+      executionActivityType: TaskActivityType.SkeletonizationExecution,
+      notificationKey: 'skeletonization-config-error',
+      failureMessage: textMessages[ScanConfigActivity.Process].GenericFailed,
+      logTopic: 'Skeletonization',
+    });
 
-  const generatedConfigIds = useMemo(() => {
-    const generations = generationResponse?.data ?? [];
-    const configIds: string[] = [];
-    for (const generation of generations) {
-      for (const generated of generation.generated ?? []) {
-        if (generated.id) {
-          configIds.push(generated.id);
-        }
-      }
-    }
-    return configIds;
-  }, [generationResponse?.data]);
-
-  const { data: configs, isLoading: configsLoading } = useQuery({
-    queryKey: queryKeys.skeletonizationConfigs(generatedConfigIds, context),
-    queryFn: async () => {
-      const configPromises = generatedConfigIds.map((id) =>
-        getSkeletonizationConfig({ id, context })
-      );
-      return Promise.all(configPromises);
-    },
-    enabled: generatedConfigIds.length > 0,
-  });
-
-  const configList = configs?.sort((a, b) => collator.compare(a.name, b.name)) ?? [];
-  const configIds = configList.map((c) => c.id);
-  const queryKey = queryKeys.skeletonizationExecutions(configIds, context);
-
-  const { data: executionsResponse, isLoading: executionsLoading } = useQuery({
-    queryKey,
-    queryFn: () =>
-      getSkeletonizationExecutions({
-        filters: { used__id__in: configIds },
-        context,
-      }),
-    enabled: configIds.length > 0,
-    refetchInterval: (query) => {
-      const executions = query.state.data?.data ?? [];
-      const hasActiveSkeletonizations = executions.some((exec) =>
-        includes([ActivityStatus.PENDING, ActivityStatus.RUNNING], exec.status)
-      );
-      return hasActiveSkeletonizations && !skeletonizationRequestInProgress
-        ? STATUS_POLL_INTERVAL
-        : false;
-    },
+  const {
+    configGenerationLoading,
+    configsResponse,
+    configsLoading,
+    executionsResponse,
+    executionsLoading,
+  } = useScanConfigTaskRunner<TSkeletonizationTaskConfigMeta>({
+    context,
+    campaignId,
+    configGenerationActivityType: TaskActivityType.SkeletonizationConfigGeneration,
+    executionActivityType: TaskActivityType.SkeletonizationExecution,
+    taskConfigType: TaskConfigType.SkeletonizationConfig,
+    pauseExecutionPolling: runSkeletonizationPending,
   });
 
   const statusMap = useMemo(() => {
-    const map = new Map<string, TActivityStatus>();
-    const executions = executionsResponse?.data ?? [];
-
-    for (const config of configList) {
-      const configExecutions = executions.filter((exec) =>
-        exec.used?.some((used) => used.id === config.id)
-      );
-      const latestExecution = configExecutions.sort(
-        (a, b) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime()
-      )[0];
-      map.set(config.id, latestExecution?.status ?? ActivityStatus.CREATED);
-    }
-
-    return map;
-  }, [configList, executionsResponse?.data]);
+    return buildActivityStatusMap({
+      entityIds: configsResponse?.configIds ?? [],
+      executions: executionsResponse?.data ?? [],
+    });
+  }, [configsResponse?.configIds, executionsResponse?.data]);
 
   const activeConfigExecution = useMemo(() => {
     if (!activeConfig) return undefined;
     const executions = executionsResponse?.data ?? [];
-    const configExecutions = executions.filter((exec) =>
-      exec.used?.some((used) => used.id === activeConfig.id)
-    );
-    if (configExecutions.length === 0) return undefined;
-    return configExecutions.sort(
-      (a, b) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime()
-    )[0];
+    return findLatestExecutionForEntity(executions, activeConfig.id);
   }, [activeConfig, executionsResponse?.data]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
 
-  const onActiveConfigChange = useCallback((config: ISkeletonizationConfig) => {
-    setActiveConfig(config);
-  }, []);
+  const onActiveConfigChange = useCallback(
+    (config: ITaskConfig<TSkeletonizationTaskConfigMeta>) => {
+      setActiveConfig(config);
+    },
+    []
+  );
 
   const onSelectedForSkeletonizationChange = useCallback((configId: string, selected: boolean) => {
     if (selected) {
@@ -178,75 +108,39 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
   }, []);
 
   const selectableConfigIds = useMemo(() => {
-    return configList
-      .filter((config) => {
-        const status = statusMap.get(config.id);
-        return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
-      })
-      .map((c) => c.id);
-  }, [configList, statusMap]);
+    return (
+      (configsResponse?.configList ?? [])
+        .filter((config) => {
+          const status = statusMap.get(config.id);
+          return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
+        })
+        .map((c) => c.id) ?? []
+    );
+  }, [configsResponse?.configList, statusMap]);
 
   useEffect(() => {
-    if (configList.length > 0 && !initialSelectionDone && !configsLoading && !executionsLoading) {
+    if (
+      configsResponse?.configList &&
+      configsResponse.configList.length > 0 &&
+      !initialSelectionDone &&
+      !executionsLoading
+    ) {
       setSelectedConfigIds(selectableConfigIds);
       setInitialSelectionDone(true);
     }
-  }, [configList, configsLoading, executionsLoading, initialSelectionDone, selectableConfigIds]);
+  }, [configsResponse?.configList, executionsLoading, initialSelectionDone, selectableConfigIds]);
 
   useEffect(() => {
-    if (configList.length > 0 && !activeConfig) {
-      onActiveConfigChange(configList[0]);
+    if (configsResponse?.configList && configsResponse.configList.length > 0 && !activeConfig) {
+      onActiveConfigChange(configsResponse.configList[0]);
     }
-  }, [configList, activeConfig, onActiveConfigChange]);
+  }, [configsResponse?.configList, activeConfig, onActiveConfigChange]);
 
-  const runSkeletonization = async (configIdsToRun: string[]) => {
-    setSkeletonizationRequestInProgress(true);
-
-    const genericErrorMsg = get(
-      textMessages,
-      `${ScanConfigActivity.Process}.GenericFailed`,
-      'Unknown error'
-    );
-
-    try {
-      await runSkeletonizationBatch({
-        ctx: { virtualLabId, projectId },
-        configIds: configIdsToRun,
-        onInit: () => {
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.skeletonizationExecutions(configIds, context),
-          });
-          setSelectedConfigIds([]);
-          setSkeletonizationRequestInProgress(false);
-        },
-        onMessage: (message) => {
-          match(message)
-            .with({ message_type: MessageType.STATUS }, (msg) => {
-              queryClient.invalidateQueries({
-                queryKey: queryKeys.skeletonizationExecutions(configIds, context),
-              });
-
-              const configId = msg.ctx?.skeletonization_config_id;
-              const config = configList.find((c) => c.id === configId);
-              if (!config) return;
-
-              if (msg.status === JobStatus.RUNNING) {
-                queryClient.invalidateQueries({ queryKey: keyBuilder.wallet(context) });
-              } else if (msg.status === JobStatus.DONE) {
-                notification.success({ message: `${config.name} done` });
-              } else if (msg.status === JobStatus.ERROR) {
-                const errorMsg = msg.extra?.includes('ACCOUNTING_INSUFFICIENT_FUNDS_ERROR')
-                  ? get(textMessages, `${ScanConfigActivity.Process}.LowFunds`, 'Unknown error')
-                  : genericErrorMsg;
-                notification.error({ message: errorMsg, duration: null });
-              }
-            })
-            .otherwise(() => null);
-        },
-      });
-    } catch {
-      notification.error({ message: genericErrorMsg });
+  const onRun = async (configIdsToRun: string[]) => {
+    for (const configId of configIdsToRun) {
+      await runSkeletonization(configId);
     }
+    setSelectedConfigIds([]);
   };
 
   const onSelectedAll: CheckboxProps['onChange'] = (e) => {
@@ -259,7 +153,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
   );
 
   const launchBtnLabelPrefix = selectedConfigIds.length ? `(${selectedConfigIds.length})` : '';
-  const loading = generationLoading || configsLoading || executionsLoading;
+  const loading = configsLoading || configGenerationLoading || executionsLoading;
 
   return (
     <div className={styles.threeColumns}>
@@ -271,7 +165,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
             }
             onChange={onSelectedAll}
             checked={allSelected}
-            disabled={skeletonizationRequestInProgress || selectableConfigIds.length === 0}
+            disabled={runSkeletonizationPending || selectableConfigIds.length === 0}
           >
             Select all
           </Checkbox>
@@ -282,7 +176,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
               </div>
             )}
             {!loading &&
-              configList.map((config) => (
+              configsResponse?.configList?.map((config) => (
                 <SkeletonizationConfigsLeftMenu
                   key={config.id}
                   selected={activeConfig?.id === config.id}
@@ -291,7 +185,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
                   onSelect={() => onActiveConfigChange(config)}
                   onSelectedForSkeletonizationChange={onSelectedForSkeletonizationChange}
                   selectedForSkeletonization={selectedConfigIds.includes(config.id)}
-                  selectionDisabled={skeletonizationRequestInProgress}
+                  selectionDisabled={runSkeletonizationPending}
                 />
               ))}
           </div>
@@ -302,12 +196,12 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
               'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"
-            onClick={() => runSkeletonization(selectedConfigIds)}
-            disabled={skeletonizationRequestInProgress || selectedConfigIds.length === 0}
+            onClick={() => onRun(selectedConfigIds)}
+            disabled={runSkeletonizationPending || selectedConfigIds.length === 0}
           >
             <div className="flex justify-center gap-4">
               <span className="pl-10">Launch skeletonizations {launchBtnLabelPrefix}</span>
-              <div className="w-6">{skeletonizationRequestInProgress && <LoadingOutlined />}</div>
+              <div className="w-6">{runSkeletonizationPending && <LoadingOutlined />}</div>
             </div>
           </button>
         </div>
