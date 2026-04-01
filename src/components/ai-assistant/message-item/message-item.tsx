@@ -20,7 +20,6 @@ interface MessageItemProps {
   value: UIMessage;
   status?: 'submitted' | 'streaming' | 'ready' | 'error';
   isLastMessage?: boolean;
-  index?: number;
 }
 
 export const MessageItem = React.memo(RawMessageItem);
@@ -30,7 +29,6 @@ function RawMessageItem({
   value,
   status = 'ready',
   isLastMessage = false,
-  index,
 }: MessageItemProps) {
   const debug = useDebug();
 
@@ -39,14 +37,7 @@ function RawMessageItem({
   }
 
   return (
-    <div
-      className={classNames(className, styles.messageItem)}
-      style={
-        index !== undefined
-          ? ({ '--index': Math.min(index, 10) } as React.CSSProperties)
-          : undefined
-      }
-    >
+    <div className={classNames(className, styles.messageItem)}>
       <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} />
     </div>
   );

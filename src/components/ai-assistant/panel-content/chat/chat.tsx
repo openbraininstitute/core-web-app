@@ -184,7 +184,6 @@ export default function Chat({
                 value={item}
                 status={status}
                 isLastMessage={index === messages.length - 1}
-                index={index}
               />
             ))}
 
