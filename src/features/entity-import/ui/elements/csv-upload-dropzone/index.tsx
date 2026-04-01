@@ -94,7 +94,7 @@ export function CsvUploadDropzone({
       <p className="mt-2 text-center text-sm font-medium text-neutral-400">or</p>
       <label
         htmlFor={inputId}
-        className="mt-2 cursor-pointer text-center text-base font-medium text-primary-9 underline decoration-primary-9 underline-offset-2"
+        className="mt-2 cursor-pointer rounded-full text-center text-base font-medium text-primary-9 underline decoration-primary-9 underline-offset-2"
       >
         Browse files from your computer
       </label>

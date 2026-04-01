@@ -32,7 +32,7 @@ export function ImportOptionsScreen({
   onUploadBreadcrumbClick,
   continueHref,
 }: IImportOptionsScreenProps) {
-  const multipleEnabled = selectedType.isMultipleContributeSupport === true;
+  const multipleEnabled = selectedType?.isMultipleContributeSupport === true;
   const multipleCardActive = mode === ImportMode.Multiple && multipleEnabled;
 
   return (
@@ -49,7 +49,7 @@ export function ImportOptionsScreen({
               </BreadcrumbItem>
               <BreadcrumbSeparator className="[&_svg]:size-3!" />
               <BreadcrumbItem className="text-primary-9 text-lg font-bold [&_span]:hover:text-primary-8! hover:font-medium!">
-                <div className="transition-colors hover:text-primary-8">{selectedType.title}</div>
+                <div className="transition-colors hover:text-primary-8">{selectedType?.title}</div>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -75,7 +75,7 @@ export function ImportOptionsScreen({
             >
               <CardContent>
                 <CardTitle className=" mb-10 text-xl">
-                  Single {selectedType.title.toLocaleLowerCase()}
+                  Single {selectedType?.title.toLocaleLowerCase()}
                 </CardTitle>
                 <CardDescription>
                   Upload your morphology asset and define its core details: name, species, strain,
@@ -100,7 +100,7 @@ export function ImportOptionsScreen({
             >
               <CardContent>
                 <CardTitle className=" mb-10 text-xl">
-                  Multiple {selectedType.title.toLocaleLowerCase()}
+                  Multiple {selectedType?.title.toLocaleLowerCase()}
                 </CardTitle>
                 <CardDescription>
                   Upload a CSV file containing the name, description, brain region, morphological
@@ -131,6 +131,25 @@ export function ImportOptionsScreen({
                 <span>Upload CSV or Fill table</span>
                 <PlusOutlined className="ml-auto text-sm" />
               </div>
+            </Link>
+          </Button>
+        </div>
+      ) : mode === ImportMode.Single ? (
+        <div className="mt-auto flex w-full items-center justify-end">
+          <Button
+            rounded
+            asChild
+            variant="success"
+            type="button"
+            className={cn(
+              'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+              'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
+              'transition-all duration-300 ease-out disabled:cursor-not-allowed disabled:opacity-70',
+              'hover:scale-[1.02] active:scale-[0.98]'
+            )}
+          >
+            <Link href={continueHref} className="flex items-center justify-center gap-2">
+              Continue to upload
             </Link>
           </Button>
         </div>

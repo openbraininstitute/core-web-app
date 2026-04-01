@@ -5,7 +5,6 @@ import { use } from 'react';
 import { DataInnerLayout } from '@/ui/layouts/explore-inner-layout';
 import { DataLayout } from '@/ui/layouts/explore-layout';
 import { dataTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
-import { ContributionModal } from '@/ui/segments/contribute/modal';
 import { DefaultContent as ExploreDefaultContent } from '@/ui/segments/explore/default-content';
 import { DataHeader } from '@/ui/segments/explore/header';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
@@ -29,7 +28,6 @@ export default function Page({
       <DataHeader />
       <DataInnerLayout>
         <ExploreDefaultContent dataKey={dataKey}>{children}</ExploreDefaultContent>
-        <ContributionModal />
       </DataInnerLayout>
     </DataLayout>
   );

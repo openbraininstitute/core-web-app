@@ -19,7 +19,10 @@ import {
   Setup,
   Subject,
 } from '@/ui/segments/contribute/cell-morphology/steps';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+import {
+  ContributionForm,
+  type TSingleContributionPageShell,
+} from '@/ui/segments/contribute/shared/components/contribution-form';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
@@ -27,6 +30,7 @@ import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
 
 interface ICellMorphologyProps {
   sessionId: string;
+  pageShell: TSingleContributionPageShell;
 }
 
 const CELL_MORPHOLOGY_STEP_CONFIG: Array<IContributionStep<TCellMorphologyForm>> = [
@@ -77,7 +81,7 @@ const CELL_MORPHOLOGY_STEP_CONFIG: Array<IContributionStep<TCellMorphologyForm>>
 
 const cellMorphologyConfig = createCellMorphologyConfig(CELL_MORPHOLOGY_STEP_CONFIG);
 
-export function CellMorphology({ sessionId }: ICellMorphologyProps) {
+export function CellMorphology({ sessionId, pageShell }: ICellMorphologyProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
@@ -92,6 +96,7 @@ export function CellMorphology({ sessionId }: ICellMorphologyProps) {
       virtualLabId={virtualLabId}
       projectId={projectId}
       sessionId={sessionId}
+      pageShell={pageShell}
     />
   );
 }

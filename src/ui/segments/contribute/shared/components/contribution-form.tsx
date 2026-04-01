@@ -1,12 +1,17 @@
 'use client';
 
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { CloseOutlined } from '@ant-design/icons';
 import { Form } from 'antd';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { useState } from 'react';
 
-import { Button } from '@/ui/molecules/button';
-import { StepNavigation } from '@/ui/segments/contribute/shared/components/step-navigation';
+import {
+  ImportLeftSideTab,
+  ImportMode,
+  UploadFlowSidebar,
+} from '@/ui/segments/contribute/flow-elements';
+import { VerticalStepNavigation } from '@/ui/segments/contribute/shared/components/step-navigation';
 import { SubmitButton } from '@/ui/segments/contribute/shared/components/submit-button';
 import { SubmitEntityProgress } from '@/ui/segments/contribute/shared/components/submit-progress';
 import {
@@ -23,6 +28,18 @@ import type {
   TPipelineHookFactory,
 } from '@/ui/segments/contribute/shared/types';
 
+export type TSingleContributionPageShell = {
+  /** Contribute page URL (Type step). */
+  typeHref: string;
+  /** Contribute page URL with Options step (see contribute page `view` query). */
+  optionsHref: string;
+  /** Contribute page URL for header close (typically same as type or options). */
+  backHref: string;
+  entityTitle: string;
+  /** Main panel title; defaults to “Upload new {entityTitle} files”. */
+  formHeading?: string;
+};
+
 interface IContributionFormProps<
   TFormValues extends Record<string, unknown>,
   TSchema extends ZodObject<ZodRawShape>,
@@ -36,6 +53,7 @@ interface IContributionFormProps<
     readonly label: string;
     readonly mutationKey: string;
   }>;
+  pageShell: TSingleContributionPageShell;
 }
 
 interface IFormContentProps<
@@ -59,15 +77,7 @@ function FormContent<
   virtualLabId,
   projectId,
 }: IFormContentProps<TFormValues, TSchema>) {
-  const {
-    form,
-    activeStep,
-    goToPreviousStep,
-    goToNextStep,
-    isFirstStep,
-    isLastStep,
-    progressSteps: steps,
-  } = useContributionPipeline<TFormValues>();
+  const { form, activeStep, progressSteps: steps } = useContributionPipeline<TFormValues>();
 
   const { createEntity, loading, status } = pipeline({ sessionId });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,13 +98,12 @@ function FormContent<
   };
 
   return (
-    <div className={cn('relative mx-auto h-full w-full py-2 flex flex-col')}>
+    <div className="relative mx-auto flex min-h-0 w-full flex-1 flex-col py-0">
       <Form.Item noStyle>
         <input type="hidden" />
       </Form.Item>
-      <StepNavigation />
 
-      <div className="border-neutral-2 h-full max-h-full min-h-0 flex-1 rounded-md border py-6 pr-1">
+      <div className="h-full max-h-full min-h-0 flex-1 bg-background py-6 pr-1 shadow-none">
         {isSubmitting ? (
           <div className="flex h-full w-full items-center justify-center">
             <SubmitEntityProgress steps={progressStepsWithStatus} />
@@ -121,7 +130,7 @@ function FormContent<
                     pointerEvents: isActive ? 'auto' : 'none',
                   }}
                   className={cn(
-                    'secondary-scrollbar h-full flex-1 overflow-auto rounded-xl pr-4 pl-4',
+                    'secondary-scrollbar h-full flex-1 overflow-auto rounded-xl px-2',
                     isActive ? 'relative' : 'absolute inset-0'
                   )}
                 >
@@ -133,21 +142,7 @@ function FormContent<
         )}
       </div>
 
-      <div className="flex w-full shrink-0 items-center justify-between gap-2 py-3 mt-auto">
-        <Button
-          rounded
-          variant="outline"
-          className={cn(
-            'text-primary-9 border-primary-9 disabled:border-neutral-1',
-            'shadow-bnb size-12 active:text-white'
-          )}
-          size="lg"
-          type="button"
-          onClick={goToPreviousStep}
-          disabled={isFirstStep}
-        >
-          <LeftOutlined />
-        </Button>
+      <div className="mt-auto flex w-full shrink-0 items-center justify-end gap-2 py-3">
         <SubmitButton
           loading={loading}
           createdEntityId={createdEntityId}
@@ -156,20 +151,6 @@ function FormContent<
           virtualLabId={virtualLabId}
           projectId={projectId}
         />
-        <Button
-          rounded
-          variant="outline"
-          type="button"
-          size="lg"
-          className={cn(
-            'text-primary-9 border-primary-9 disabled:border-neutral-1',
-            'shadow-bnb size-12 active:text-white'
-          )}
-          onClick={goToNextStep}
-          disabled={isLastStep}
-        >
-          <RightOutlined />
-        </Button>
       </div>
     </div>
   );
@@ -179,8 +160,19 @@ export function ContributionForm<
   TFormValues extends Record<string, unknown>,
   TSchema extends ZodObject<ZodRawShape>,
 >(props: IContributionFormProps<TFormValues, TSchema>) {
-  const { config, sessionId, brainRegionId, pipeline, progressSteps, virtualLabId, projectId } =
-    props;
+  const {
+    config,
+    sessionId,
+    brainRegionId,
+    pipeline,
+    progressSteps,
+    virtualLabId,
+    projectId,
+    pageShell,
+  } = props;
+
+  const formHeading =
+    pageShell.formHeading ?? `Upload new ${pageShell.entityTitle.toLowerCase()} files`;
 
   return (
     <ContributionPipelineProvider
@@ -188,14 +180,44 @@ export function ContributionForm<
       sessionId={sessionId}
       brainRegionId={brainRegionId}
     >
-      <FormContent
-        config={config}
-        sessionId={sessionId}
-        pipeline={pipeline}
-        progressSteps={progressSteps}
-        virtualLabId={virtualLabId}
-        projectId={projectId}
-      />
+      <div className="grid h-full min-h-0 w-full grid-cols-[25rem_auto] gap-3">
+        <div className="min-h-0 min-w-0 overflow-y-auto">
+          <UploadFlowSidebar
+            bottomSlot={<VerticalStepNavigation />}
+            currentTab={ImportLeftSideTab.Type}
+            hasTypeSelected
+            mode={ImportMode.Single}
+            optionsHref={pageShell.optionsHref}
+            optionsValueLabel="Single"
+            suppressUploadTabActiveStyle
+            typeHref={pageShell.typeHref}
+            typeValueLabel={pageShell.entityTitle}
+          />
+        </div>
+        <div className="flex min-h-0 flex-col overflow-hidden">
+          <div className="mb-4 flex shrink-0 items-center justify-between gap-2 pl-3">
+            <h3 className="text-primary-9 text-2xl font-bold">{formHeading}</h3>
+            <Link
+              href={pageShell.backHref}
+              className={cn(
+                'hover:bg-neutral-1 text-neutral-5 hover:text-primary-6 ',
+                'flex items-center justify-center rounded-full p-2 hover:shadow-bnb'
+              )}
+              aria-label="Back to contribute"
+            >
+              <CloseOutlined />
+            </Link>
+          </div>
+          <FormContent
+            config={config}
+            sessionId={sessionId}
+            pipeline={pipeline}
+            progressSteps={progressSteps}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          />
+        </div>
+      </div>
     </ContributionPipelineProvider>
   );
 }

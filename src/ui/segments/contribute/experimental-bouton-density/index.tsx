@@ -15,7 +15,10 @@ import {
   Setup,
   Subject,
 } from '@/ui/segments/contribute/experimental-bouton-density/steps';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+import {
+  ContributionForm,
+  type TSingleContributionPageShell,
+} from '@/ui/segments/contribute/shared/components/contribution-form';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { TExperimentalBoutonDensityForm } from '@/ui/segments/contribute/experimental-bouton-density/schema';
@@ -69,9 +72,13 @@ const experimentalBoutonDensityConfig = createExperimentalBoutonDensityConfig(
 
 interface IExperimentalBoutonDensityProps {
   sessionId: string;
+  pageShell: TSingleContributionPageShell;
 }
 
-export function ExperimentalBoutonDensity({ sessionId }: IExperimentalBoutonDensityProps) {
+export function ExperimentalBoutonDensity({
+  sessionId,
+  pageShell,
+}: IExperimentalBoutonDensityProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
@@ -86,6 +93,7 @@ export function ExperimentalBoutonDensity({ sessionId }: IExperimentalBoutonDens
       progressSteps={EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
+      pageShell={pageShell}
     />
   );
 }

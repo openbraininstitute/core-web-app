@@ -10,7 +10,6 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-// import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
@@ -51,14 +50,6 @@ export function DataHeader() {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
 
-  /* const onContribute = () => {
-    makeSelectContributionEntityClickEvent({
-      display: true,
-      entityType: null,
-      sessionId: crypto.randomUUID(),
-    });
-  }; */
-
   const isProject = scope === WorkspaceScope.Project;
 
   return (
@@ -74,7 +65,6 @@ export function DataHeader() {
             variant="success"
             size={breakpoint === 'xl' ? 'lg' : 'md'}
             type="button"
-            // onClick={onContribute}
             className={cn(
               'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
               'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',

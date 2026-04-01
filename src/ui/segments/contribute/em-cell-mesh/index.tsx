@@ -15,7 +15,10 @@ import {
   Setup,
   Subject,
 } from '@/ui/segments/contribute/em-cell-mesh/steps';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+import {
+  ContributionForm,
+  type TSingleContributionPageShell,
+} from '@/ui/segments/contribute/shared/components/contribution-form';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
@@ -65,9 +68,10 @@ const cellMorphologyConfig = createEMCellMeshConfig(EM_CELL_MESH_STEP_CONFIG);
 
 interface IEMCellMeshProps {
   sessionId: string;
+  pageShell: TSingleContributionPageShell;
 }
 
-export function EMCellMesh({ sessionId }: IEMCellMeshProps) {
+export function EMCellMesh({ sessionId, pageShell }: IEMCellMeshProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
@@ -82,6 +86,7 @@ export function EMCellMesh({ sessionId }: IEMCellMeshProps) {
       progressSteps={EM_CELL_MESH_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
+      pageShell={pageShell}
     />
   );
 }

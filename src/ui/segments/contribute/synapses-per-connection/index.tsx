@@ -4,7 +4,10 @@
 
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+import {
+  ContributionForm,
+  type TSingleContributionPageShell,
+} from '@/ui/segments/contribute/shared/components/contribution-form';
 import {
   createExperimentalSynapsesPerConnectionConfig,
   EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS,
@@ -83,10 +86,12 @@ const experimentalSynapsesPerConnectionConfig = createExperimentalSynapsesPerCon
 
 interface IExperimentalSynapsesPerConnectionProps {
   sessionId: string;
+  pageShell: TSingleContributionPageShell;
 }
 
 export function ExperimentalSynapsesPerConnection({
   sessionId,
+  pageShell,
 }: IExperimentalSynapsesPerConnectionProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
@@ -102,6 +107,7 @@ export function ExperimentalSynapsesPerConnection({
       progressSteps={EXPERIMENTAL_SYNAPSES_PER_CONNECTION_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
+      pageShell={pageShell}
     />
   );
 }

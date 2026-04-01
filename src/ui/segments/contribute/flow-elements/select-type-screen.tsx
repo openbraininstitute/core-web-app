@@ -31,9 +31,10 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
           <CloseOutlined />
         </button>
       </div>
-      <Card className="px-4">
-        <CardDescription>
+      <Card className="borderless shadowless px-4 py-4">
+        <CardDescription className="text-card-foreground m-0 p-0 text-base">
           <SelectPopover<TArtifactOption>
+            layout="inline"
             options={options}
             placeholder="select an artifact"
             searchPlaceholder="search an artifact"
@@ -45,8 +46,9 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
             searchable={true}
             selectedValue={selectedType ?? undefined}
             clsx={{
-              trigger: 'rounded-full border-none w-full h-12! shadow-bnb text-primary-9 text-lg',
-              content: 'z-[99999]',
+              inlineContainer:
+                'bg-card overflow-hidden rounded-2xl border border-neutral-2 shadow-bnb',
+              trigger: 'h-12! w-full text-primary-9 text-lg hover:!border-none',
             }}
           />
         </CardDescription>

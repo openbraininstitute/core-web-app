@@ -3,20 +3,20 @@
 'use client';
 
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
-import { isNil } from 'es-toolkit/compat';
 import { Form, Spin } from 'antd';
+import { isNil } from 'es-toolkit/compat';
 import { useState } from 'react';
 
-import { ELECTRICAL_CELL_RECORDING_FILE_TYPES } from '@/ui/segments/contribute/electrical-cell-recording/schema';
-import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
-import { formatBytes, useFileUpload, type FileWithPreview } from '@/ui/hooks/use-file-upload';
-import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
 import { resolveNWBFile } from '@/api/one/electrical-cell-recording';
+import { tryCatch } from '@/api/utils';
 import { DownloadAsBoxIcon } from '@/components/icons/buttons';
 import { FileDownloadLine } from '@/components/icons/File';
-import { Button } from '@/ui/molecules/button';
 import { messages } from '@/i18n/en/upload';
-import { tryCatch } from '@/api/utils';
+import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use-file-upload';
+import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
+import { Button } from '@/ui/molecules/button';
+import { ELECTRICAL_CELL_RECORDING_FILE_TYPES } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
 
 import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
@@ -137,7 +137,7 @@ export function AssetUpload({
         <div className={cn('w-full', className)}>
           <div
             className={cn(
-              'border-neutral-1 shadow-bnb relative rounded-xl border p-8 text-center transition-colors',
+              'border-neutral-1 bg-white! shadow-md relative rounded-xl border p-8 text-center transition-colors',
               isDragging
                 ? 'border-primary-8 bg-primary/5'
                 : 'border-neutral-1 hover:border-neutral-1'
@@ -174,6 +174,7 @@ export function AssetUpload({
                   <p>Drag and drop your files here </p>
                   <p>or</p>
                   <Button
+                    rounded
                     type="button"
                     variant="ghost"
                     onClick={openFileDialog}

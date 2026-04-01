@@ -3,11 +3,7 @@
 import { Form } from 'antd';
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-import {
-  getCurrentStepIndex,
-  getDirtyFields,
-  getValidationStatus,
-} from '@/ui/segments/contribute/shared/helpers';
+import { getCurrentStepIndex } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
 
 import type { FormInstance } from 'antd';
@@ -63,14 +59,12 @@ export function ContributionPipelineProvider<
   const { progressSteps, schema } = config;
 
   const stepValidationStatus = useMemo(() => {
-    const dirtyFields = getDirtyFields(form);
     const statusMap: Record<string, TStepValidationStatus> = {};
 
     progressSteps.forEach((step) => {
       const fieldKey = step.schemaFieldKey;
 
       if (Array.isArray(fieldKey)) {
-        // Create a pick object with all fields set to true
         const pickObject = fieldKey.reduce(
           (acc, key) => {
             acc[key] = true;
@@ -81,27 +75,16 @@ export function ContributionPipelineProvider<
 
         const partialSchema = schema.pick(pickObject);
         const parseResult = partialSchema.safeParse(allValues);
-
-        // For array fields, check if ANY field is dirty
-        const isDirty = fieldKey.some((key) => dirtyFields.includes(key));
-        const hasErrors = !parseResult.success;
-
-        if (!isDirty) {
-          statusMap[step.key] = 'non-touched';
-        } else if (hasErrors) {
-          statusMap[step.key] = 'invalid';
-        } else {
-          statusMap[step.key] = 'valid';
-        }
+        statusMap[step.key] = parseResult.success ? 'valid' : 'invalid';
       } else {
         const partialSchema = schema.pick({ [fieldKey]: true } as Record<string, true>);
         const parseResult = partialSchema.safeParse(allValues);
-        statusMap[step.key] = getValidationStatus(parseResult, fieldKey as string, dirtyFields);
+        statusMap[step.key] = parseResult.success ? 'valid' : 'invalid';
       }
     });
 
     return statusMap;
-  }, [progressSteps, schema, allValues, form]);
+  }, [progressSteps, schema, allValues]);
 
   const currentStepIndex = useMemo(
     () => getCurrentStepIndex(progressSteps, activeStep),
@@ -173,7 +156,7 @@ export function ContributionPipelineProvider<
         form={form}
         id={config.formId}
         rootClassName={cn(
-          'relative flex flex-col w-full h-[calc(100%-60px)]! [&_.ant-form-item-explain-error]:text-sm! ',
+          'relative flex h-full min-h-0 w-full flex-1 flex-col [&_.ant-form-item-explain-error]:text-sm! ',
           '[&_.ant-form-item-explain-error]:pl-1.5! [&_.ant-form-item-explain-error]:select-none!'
         )}
         layout="vertical"

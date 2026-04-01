@@ -26,7 +26,7 @@ export default function Page() {
 
   const options = useMemo(() => buildContributionArtifactOptions(), []);
 
-  const [{ mode, type }, onStateChange] = useQueryStates(
+  const [{ mode, type, view }, onStateChange] = useQueryStates(
     {
       mode: parseAsString
         .withOptions({
@@ -38,11 +38,16 @@ export default function Page() {
         clearOnDefault: false,
         shallow: true,
       }) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
+      view: parseAsString.withOptions({
+        clearOnDefault: true,
+        shallow: true,
+      }),
     },
     {
       urlKeys: {
         mode: 'm',
         type: 't',
+        view: 'view',
       },
     }
   );
@@ -78,6 +83,14 @@ export default function Page() {
     });
   }, [selectedType, mode, onStateChange]);
 
+  useEffect(() => {
+    if (view !== 'options' || type == null) {
+      return;
+    }
+    setCurrentTab(ImportLeftSideTab.Options);
+    onStateChange({ view: null });
+  }, [view, type, onStateChange]);
+
   const onTypeSelect = (nextType: TExtendedEntitiesTypeDict) => {
     const selected = options.find((option) => option.value === nextType);
     onStateChange({
@@ -92,12 +105,14 @@ export default function Page() {
   return (
     <div className="bg-background border-neutral-2 mx-2 ml-3 h-full w-[calc(100%-10px)] gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]">
       <div className="grid h-full w-full grid-cols-[25rem_auto] gap-3">
-        <UploadFlowSidebar
-          currentTab={currentTab}
-          onTabChange={setCurrentTab}
-          mode={effectiveImportMode}
-          hasTypeSelected={type !== null}
-        />
+        <div className="min-h-0 min-w-0 overflow-y-auto">
+          <UploadFlowSidebar
+            currentTab={currentTab}
+            hasTypeSelected={type !== null}
+            mode={effectiveImportMode}
+            onTabChange={setCurrentTab}
+          />
+        </div>
         {isTypeMenuActive && (
           <SelectTypeScreen options={options} selectedType={type} onSelectType={onTypeSelect} />
         )}

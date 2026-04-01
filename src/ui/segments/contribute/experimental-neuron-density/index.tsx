@@ -16,7 +16,10 @@ import {
   Setup,
   Subject,
 } from '@/ui/segments/contribute/experimental-neuron-density/steps';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+import {
+  ContributionForm,
+  type TSingleContributionPageShell,
+} from '@/ui/segments/contribute/shared/components/contribution-form';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { TExperimentalNeuronDensityForm } from '@/ui/segments/contribute/experimental-neuron-density/schema';
@@ -76,9 +79,13 @@ const experimentalNeuronDensityConfig = createExperimentalNeuronDensityConfig(
 
 interface IExperimentalNeuronDensityProps {
   sessionId: string;
+  pageShell: TSingleContributionPageShell;
 }
 
-export function ExperimentalNeuronDensity({ sessionId }: IExperimentalNeuronDensityProps) {
+export function ExperimentalNeuronDensity({
+  sessionId,
+  pageShell,
+}: IExperimentalNeuronDensityProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
@@ -93,6 +100,7 @@ export function ExperimentalNeuronDensity({ sessionId }: IExperimentalNeuronDens
       progressSteps={EXPERIMENTAL_NEURON_DENSITY_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
+      pageShell={pageShell}
     />
   );
 }

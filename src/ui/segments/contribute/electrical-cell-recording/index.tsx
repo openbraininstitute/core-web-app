@@ -21,7 +21,10 @@ import {
   Setup,
   Subject,
 } from '@/ui/segments/contribute/electrical-cell-recording/steps';
-import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
+import {
+  ContributionForm,
+  type TSingleContributionPageShell,
+} from '@/ui/segments/contribute/shared/components/contribution-form';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
@@ -75,9 +78,10 @@ const electricalCellRecordingConfig = createElectricalCellRecordingConfig(
 
 interface IElectricalCellRecordingProps {
   sessionId: string;
+  pageShell: TSingleContributionPageShell;
 }
 
-export function ElectricalCellRecording({ sessionId }: IElectricalCellRecordingProps) {
+export function ElectricalCellRecording({ sessionId, pageShell }: IElectricalCellRecordingProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
     dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
@@ -92,6 +96,7 @@ export function ElectricalCellRecording({ sessionId }: IElectricalCellRecordingP
       progressSteps={ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
+      pageShell={pageShell}
     />
   );
 }

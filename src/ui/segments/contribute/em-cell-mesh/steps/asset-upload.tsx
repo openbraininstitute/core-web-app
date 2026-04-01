@@ -1,10 +1,10 @@
-/* eslint-disable react/jsx-props-no-spreading */
 'use client';
 
 import { AlertOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Form, Spin } from 'antd';
 import { isNil } from 'es-toolkit/compat';
 import { useEffect, useMemo, useState } from 'react';
+
 import { resolveOBJFile } from '@/api/one/em-cell-mesh';
 import { tryCatch } from '@/api/utils';
 import { DownloadAsBoxIcon } from '@/components/icons/buttons';
@@ -14,9 +14,10 @@ import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use
 import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
 import { Button } from '@/ui/molecules/button';
 import { EM_CELL_MESH_FILE_TYPES } from '@/ui/segments/contribute/em-cell-mesh/schema';
-import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
 import { getFileExtension } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
+
+import type { IFileTypeConfig } from '@/ui/segments/contribute/shared/helpers';
 
 interface IAssetUploadProps {
   maxFiles?: number;
@@ -146,7 +147,7 @@ export function AssetUpload({
           {/* Main interactive element changed from div to label to fix a11y error */}
           <label
             className={cn(
-              'border-neutral-1 shadow-bnb relative rounded-xl border p-8 text-center transition-colors block cursor-pointer',
+              'border-neutral-1 bg-white! shadow-md relative rounded-xl border p-8 text-center transition-colors block cursor-pointer',
               isDragging ? 'border-primary-8 bg-primary/5' : 'hover:border-neutral-2'
             )}
             onDragEnter={handleDragEnter}
@@ -180,7 +181,7 @@ export function AssetUpload({
                   <p>Drag and drop your files here </p>
                   <p>or</p>
                   {/* Changed from Button to span to avoid nested button inside label */}
-                  <span className="text-primary-9 underline cursor-pointer inline-block mt-2 font-medium">
+                  <span className="rounded-full text-primary-9 underline cursor-pointer inline-block mt-2 font-medium">
                     Browse files from your computer
                   </span>
                   <div className="text-label my-1.5 text-sm">Accepted file type: obj</div>

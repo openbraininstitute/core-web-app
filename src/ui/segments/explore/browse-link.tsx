@@ -4,7 +4,7 @@ import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { kebabCase, snakeCase } from 'es-toolkit/compat';
 import Link from 'next/link';
-import { useParams, usePathname, useSearchParams } from 'next/navigation';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
@@ -17,7 +17,6 @@ import { useTableQueryCount } from '@/ui/hooks/use-table-query-count';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Skeleton } from '@/ui/molecules/skeleton';
-import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
@@ -44,6 +43,7 @@ type BrowseLinkContentProps = {
   title: string;
   count: ReactNode;
   href: string;
+  contributeArtifactHref: string;
 };
 
 export function BrowseLinkContent({
@@ -53,19 +53,18 @@ export function BrowseLinkContent({
   title,
   count,
   href,
+  contributeArtifactHref,
 }: BrowseLinkContentProps) {
   const breakpoint = useDefaultBreakpoint();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const router = useRouter();
   const scope = (searchParams.get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
   const entityType = snakeCase(getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
 
-  const onContribute = () =>
-    makeSelectContributionEntityClickEvent({
-      display: true,
-      entityType: extendedType,
-      sessionId: crypto.randomUUID(),
-    });
+  const onContribute = () => {
+    router.push(contributeArtifactHref);
+  };
 
   const onClick = () => userJourneyTracker.registerArtifactClick(title);
 
@@ -203,6 +202,7 @@ export function BrowseLink({
 
   const entity = getEntityByExtendedType({ type: extendedType });
   const href = buildDataUrl({ virtualLabId, projectId, extendedType });
+  const contributeArtifactHref = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/contribute/single/${kebabCase(extendedType)}`;
 
   // determine if this entity type is the one currently displayed in the data table
   const activeEntityType = snakeCase(type);
@@ -308,6 +308,7 @@ export function BrowseLink({
       <BrowseLinkContent
         key={`${href.replace('/', '-')}`}
         {...{
+          contributeArtifactHref,
           extendedType,
           href,
           scope,
