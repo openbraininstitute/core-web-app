@@ -580,7 +580,7 @@ function PaymentForm({
   );
 }
 
-async function syncNotebook({
+async function _syncNotebook({
   notebook,
   virtualLabId,
   projectId,
@@ -591,49 +591,61 @@ async function syncNotebook({
   projectId: string;
   targetProjectId: string;
 }) {
-  try {
-    const createdNotebook = await createNotebook({
-      payload: notebook,
-      context: { virtualLabId, projectId: targetProjectId },
-    });
+  const createdNotebook = await createNotebook({
+    payload: notebook,
+    context: { virtualLabId, projectId: targetProjectId },
+  });
 
-    const sourceAssets = await Promise.all(
-      notebook.assets.map(async (asset) => {
-        const arrayBuffer = (await downloadAsset({
-          ctx: {
-            virtualLabId,
-            projectId,
-          },
-          entityType: EntityTypeDict.Notebook,
-          entityId: notebook.id,
-          id: asset.id,
-          asRawResponse: false,
-        })) as ArrayBuffer;
+  const sourceAssets = await Promise.all(
+    notebook.assets.map(async (asset) => {
+      const arrayBuffer = (await downloadAsset({
+        ctx: {
+          virtualLabId,
+          projectId,
+        },
+        entityType: EntityTypeDict.Notebook,
+        entityId: notebook.id,
+        id: asset.id,
+        asRawResponse: false,
+      })) as ArrayBuffer;
 
-        return {
-          ctx: { virtualLabId, projectId: targetProjectId },
-          entityType: EntityTypeDict.Notebook,
-          entityId: createdNotebook.id,
-          fileName: asset.path.split('/').pop() ?? asset.id,
-          payload: arrayBuffer,
-          mimeType: asset.content_type,
-          label: asset.label,
-        };
-      })
-    );
+      return {
+        ctx: { virtualLabId, projectId: targetProjectId },
+        entityType: EntityTypeDict.Notebook,
+        entityId: createdNotebook.id,
+        fileName: asset.path.split('/').pop() ?? asset.id,
+        payload: arrayBuffer,
+        mimeType: asset.content_type,
+        label: asset.label,
+      };
+    })
+  );
 
-    // Upload assets to new notebook
+  // Upload assets to new notebook
 
-    await Promise.all(
-      sourceAssets.map((asset) => {
-        return createAsset(asset);
-      })
-    );
-  } catch {
-    throw new Error(
-      `Failed to sync notebook ${notebook.id} from project ${projectId} to project ${targetProjectId}`
-    );
-  }
+  await Promise.all(
+    sourceAssets.map((asset) => {
+      return createAsset(asset);
+    })
+  );
+}
+
+async function syncNotebook({
+  notebook,
+  virtualLabId,
+  projectId,
+  targetProjectIds,
+}: {
+  notebook: INotebook;
+  virtualLabId: string;
+  projectId: string;
+  targetProjectIds: string[];
+}) {
+  const promises = targetProjectIds.map((id) => {
+    return _syncNotebook({ notebook, virtualLabId, projectId, targetProjectId: id });
+  });
+
+  return await Promise.all(promises);
 }
 
 function CourseSetup({
@@ -773,23 +785,26 @@ function CourseSetup({
 
         const privateNotebooks = allNotebooks.filter((n) => n.authorized_public === false);
 
-        syncNotebook({
-          notebook: privateNotebooks[1],
-          virtualLabId,
-          projectId,
-          targetProjectIds: projectIds,
-        });
+        const syncNotebookResults = await Promise.allSettled(
+          privateNotebooks.map((n) => {
+            return syncNotebook({
+              notebook: n,
+              virtualLabId,
+              projectId,
+              targetProjectIds: projectIds,
+            });
+          })
+        );
 
-        // const syncNotebookPromises = privateNotebooks[1].map((n) => {
-        //   return syncNotebook({
-        //     notebook: ,
-        //     virtualLabId,
-        //     projectId,
-        //     targetProjectIds: projectIds,
-        //   });
-        // });
+        const failedSyncNotebook = syncNotebookResults.filter((r) => r.status === 'rejected');
 
-        // const results = await Promise.all(createPromises);
+        if (failedSyncNotebook.length > 0) {
+          notification.warning({
+            message: `Warning:  ${failedSyncNotebook.length} out of ${syncNotebookResults.length} notebooks couldn't be synchronizec`,
+            key: 'notebook-sync-warning',
+            placement: 'topRight',
+          });
+        }
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'Failed to initialize course';
         notification.error({
