@@ -86,34 +86,32 @@ export function CellMorphology({ sessionId }: ICellMorphologyProps) {
   return (
     <ContributionForm
       config={cellMorphologyConfig}
-      sessionId={sessionId}
       brainRegionId={defaultBrainRegion.id}
       pipeline={useCellMorphologyPipeline}
       progressSteps={CELL_MORPHOLOGY_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
+      sessionId={sessionId}
     />
   );
 }
 
 type ICellMorphologyImportProps = {
   title: string | null;
-  onClose: () => void;
-} & ICellMorphologyProps;
+};
 
-export function CellMorphologyImport({ title, sessionId, onClose }: ICellMorphologyImportProps) {
+export function CellMorphologyImport({ title }: ICellMorphologyImportProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const adapter = useMemo(() => createCellMorphologyImportAdapter({}), []);
 
   return (
     <EntityImportFeature
       title={title}
-      onClose={onClose}
+      onClose={() => {}}
       adapter={adapter}
       context={{
         projectId,
         virtualLabId,
-        sessionId,
       }}
     />
   );

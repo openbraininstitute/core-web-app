@@ -38,5 +38,6 @@ export const UniversalCellMorphology: EntityCoreTypeConfig<
     },
   },
   isContributable: false,
-  isContributionOption: false,
+  isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;

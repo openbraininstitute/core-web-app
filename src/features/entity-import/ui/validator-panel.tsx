@@ -1203,13 +1203,13 @@ export function ValidatorPanel<TPayload, TResult>({
   if (collapsed && !hoverExpanded) {
     return (
       <aside
-        className="flex h-full min-h-0 flex-col items-center gap-3 px-0.5"
+        className="flex h-full min-h-0 flex-col items-center gap-3 px-0.5 w-12"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         <div
           className={cn(
-            'flex h-full flex-col items-center gap-3 rounded-full',
+            'flex h-full flex-col items-center gap-3 rounded-full w-full',
             'border border-neutral-200 bg-white px-1.5 py-3 shadow-sm'
           )}
         >
@@ -1222,12 +1222,12 @@ export function ValidatorPanel<TPayload, TResult>({
             )}
             onClick={onToggleCollapsed}
           >
-            <PlusOutlined className="text-xs" />
+            <PlusOutlined className="text-lg" />
           </button>
 
           <span
             className={cn(
-              'text-[11px] font-semibold tracking-widest text-primary-9',
+              'text-xl font-semibold tracking-widest text-primary-9',
               '[writing-mode:vertical-lr] rotate-180 select-none'
             )}
           >
@@ -1263,7 +1263,7 @@ export function ValidatorPanel<TPayload, TResult>({
 
   return (
     <aside
-      className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden px-2"
+      className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden px-2 "
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

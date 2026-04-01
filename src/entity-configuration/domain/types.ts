@@ -92,7 +92,8 @@ export type EntityCoreTypeConfig<
   isCopyable?: boolean;
   isDeletable?: boolean;
   isSimulatable: boolean | ((scale: TCircuitScaleDictionary) => boolean);
-  isContributionOption?: boolean;
+  isSingleContributeSupport?: boolean;
+  isMultipleContributeSupport?: boolean;
   isContributable?: boolean;
 };
 

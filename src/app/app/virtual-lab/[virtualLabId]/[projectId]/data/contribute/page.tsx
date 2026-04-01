@@ -1,0 +1,127 @@
+'use client';
+
+import { kebabCase } from 'es-toolkit/compat';
+import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
+import { useEffect, useMemo, useState } from 'react';
+
+import { config } from '@/config';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import {
+  buildContributionArtifactOptions,
+  ImportLeftSideTab,
+  ImportMode,
+  ImportOptionsScreen,
+  SelectTypeScreen,
+  type TImportLeftSideTab,
+  type TImportMode,
+  UploadFlowSidebar,
+} from '@/ui/segments/contribute/flow-elements';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
+export default function Page() {
+  const { virtualLabId, projectId } = useWorkspace();
+  const [currentTab, setCurrentTab] = useState<TImportLeftSideTab>(ImportLeftSideTab.Type);
+
+  const options = useMemo(() => buildContributionArtifactOptions(), []);
+
+  const [{ mode, type }, onStateChange] = useQueryStates(
+    {
+      mode: parseAsString
+        .withOptions({
+          clearOnDefault: true,
+          shallow: true,
+        })
+        .withDefault(ImportMode.Single) as SingleParserBuilder<TImportMode>,
+      type: parseAsString.withOptions({
+        clearOnDefault: false,
+        shallow: true,
+      }) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
+    },
+    {
+      urlKeys: {
+        mode: 'm',
+        type: 't',
+      },
+    }
+  );
+
+  const isTypeMenuActive = currentTab === ImportLeftSideTab.Type;
+  const isOptionsMenuActive = currentTab === ImportLeftSideTab.Options;
+  const selectedType = getEntityByExtendedType({ type: type ?? undefined });
+
+  const effectiveImportMode = useMemo((): TImportMode => {
+    if (
+      selectedType &&
+      selectedType.isMultipleContributeSupport !== true &&
+      mode === ImportMode.Multiple
+    ) {
+      return ImportMode.Single;
+    }
+    return mode ?? ImportMode.Single;
+  }, [selectedType, mode]);
+
+  useEffect(() => {
+    if (!selectedType) {
+      return;
+    }
+    if (selectedType.isMultipleContributeSupport === true) {
+      return;
+    }
+    if (mode !== ImportMode.Multiple) {
+      return;
+    }
+    onStateChange({
+      mode: ImportMode.Single,
+      type: selectedType.extendedType,
+    });
+  }, [selectedType, mode, onStateChange]);
+
+  const onTypeSelect = (nextType: TExtendedEntitiesTypeDict) => {
+    const selected = options.find((option) => option.value === nextType);
+    onStateChange({
+      mode: null,
+      type: selected?.value,
+    });
+    setCurrentTab(ImportLeftSideTab.Options);
+  };
+
+  const continueHref = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/contribute/${effectiveImportMode}/${kebabCase(selectedType?.extendedType ?? '')}`;
+
+  return (
+    <div className="bg-background border-neutral-2 mx-2 ml-3 h-full w-[calc(100%-10px)] gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]">
+      <div className="grid h-full w-full grid-cols-[25rem_auto] gap-3">
+        <UploadFlowSidebar
+          currentTab={currentTab}
+          onTabChange={setCurrentTab}
+          mode={effectiveImportMode}
+          hasTypeSelected={type !== null}
+        />
+        {isTypeMenuActive && (
+          <SelectTypeScreen options={options} selectedType={type} onSelectType={onTypeSelect} />
+        )}
+        {isOptionsMenuActive && selectedType ? (
+          <ImportOptionsScreen
+            selectedType={selectedType}
+            mode={effectiveImportMode}
+            onModeChange={(nextMode) => {
+              onStateChange({
+                mode: nextMode,
+                type: selectedType.extendedType,
+              });
+            }}
+            onUploadBreadcrumbClick={() => {
+              setCurrentTab(ImportLeftSideTab.Type);
+              onStateChange({
+                mode: null,
+                type: null,
+              });
+            }}
+            continueHref={continueHref}
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+}

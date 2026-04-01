@@ -5,7 +5,7 @@ import NextLink from 'next/link';
 
 import { cn } from '@/utils/css-class';
 
-export default function Close({ href, className }: { href: string; className?: string }) {
+export default function CloseLink({ href, className }: { href: string; className?: string }) {
   return (
     <NextLink
       href={href}

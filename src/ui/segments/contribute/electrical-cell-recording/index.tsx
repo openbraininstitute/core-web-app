@@ -98,14 +98,9 @@ export function ElectricalCellRecording({ sessionId }: IElectricalCellRecordingP
 
 type IElectricalCellRecordingImportProps = {
   title: string | null;
-  onClose: () => void;
-} & IElectricalCellRecordingProps;
+};
 
-export function ElectricalCellRecordingImport({
-  title,
-  sessionId,
-  onClose,
-}: IElectricalCellRecordingImportProps) {
+export function ElectricalCellRecordingImport({ title }: IElectricalCellRecordingImportProps) {
   const { projectId, virtualLabId } = useWorkspace();
 
   const adapter = useMemo(() => createElectricalCellRecordingImportAdapter(), []);
@@ -113,12 +108,11 @@ export function ElectricalCellRecordingImport({
   return (
     <EntityImportFeature
       title={title}
-      onClose={onClose}
+      onClose={() => {}}
       adapter={adapter}
       context={{
         projectId,
         virtualLabId,
-        sessionId,
       }}
     />
   );

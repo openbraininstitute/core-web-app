@@ -69,5 +69,5 @@ export const SynthesizedCellMorphology: EntityCoreTypeConfig<
   // this is a subtype, only universal should be uploadable
   // link: src/entity-configuration/domain/experimental/universal-cell-morphology.ts
   isContributable: false,
-  isContributionOption: false,
+  isSingleContributeSupport: false,
 } as const;

@@ -47,7 +47,7 @@ interface IExtendedEntitiesSelectorProps {
 
 function buildContributionArtifactOptions(mode: TContributionEntryMode) {
   const options = Object.entries(EntityCoreConfiguration)
-    .filter(([, p]) => p.isContributionOption ?? true)
+    .filter(([, p]) => p.isSingleContributeSupport ?? true)
     .map(([, value]) => ({
       label: value.title,
       value: value.extendedType,

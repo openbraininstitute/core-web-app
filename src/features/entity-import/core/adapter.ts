@@ -15,7 +15,6 @@ import type {
 export interface IEntityImportRuntimeContext {
   projectId: string;
   virtualLabId: string;
-  sessionId?: string;
 }
 
 export interface RemoteSearchArgs {

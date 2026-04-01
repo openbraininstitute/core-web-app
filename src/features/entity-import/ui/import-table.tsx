@@ -445,7 +445,7 @@ export function ImportTable<TPayload, TResult>({
   );
 
   return (
-    <div ref={setWrapperRef} className="h-full min-h-0 overflow-hidden bg-white">
+    <div ref={setWrapperRef} className="h-full min-h-0 overflow-hidden bg-background">
       <Table
         ref={tableRef}
         rowKey="id"
@@ -464,6 +464,9 @@ export function ImportTable<TPayload, TResult>({
           '[&_.ant-spin-container]:h-full',
           '[&_.ant-spin-nested-loading]:h-full',
           '[&_th.ant-table-cell>span]:text-sm',
+          '[&_.ant-table-cell]:bg-background',
+          '[&_.ant-table-footer]:bg-white [&_.ant-table-footer_button]:bg-white!',
+          '[&_.ant-table-footer]:hover:bg-gray-100! [&_.ant-table-footer]:p-0! [&_.ant-table-footer:hover_button]:bg-gray-100! ',
           // allow in-cell controls (Input, DatePicker) fill row height via
           // absolute inset-0; h-full on td children is often unresolved.
           '[&_.ant-table-tbody>tr>td.ant-table-cell]:relative'

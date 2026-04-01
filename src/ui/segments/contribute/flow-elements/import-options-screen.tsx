@@ -1,0 +1,140 @@
+'use client';
+
+import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
+import Link from 'next/link';
+
+import Breadcrumb from '@/ui/molecules/breadcrumb';
+import {
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from '@/ui/molecules/breadcrumb/index';
+import { Button } from '@/ui/molecules/button';
+import { Card, CardContent, CardDescription, CardTitle } from '@/ui/molecules/card';
+import { ImportMode } from '@/ui/segments/contribute/flow-elements/constants';
+import { cn } from '@/utils/css-class';
+
+import type { TEntityByExtendedTypeConfig } from '@/entity-configuration/domain/helpers';
+import type { TImportMode } from '@/ui/segments/contribute/flow-elements/constants';
+
+export interface IImportOptionsScreenProps {
+  selectedType: TEntityByExtendedTypeConfig;
+  mode: TImportMode | null;
+  onModeChange: (mode: TImportMode) => void;
+  onUploadBreadcrumbClick: () => void;
+  continueHref: string;
+}
+
+export function ImportOptionsScreen({
+  selectedType,
+  mode,
+  onModeChange,
+  onUploadBreadcrumbClick,
+  continueHref,
+}: IImportOptionsScreenProps) {
+  const multipleEnabled = selectedType.isMultipleContributeSupport === true;
+  const multipleCardActive = mode === ImportMode.Multiple && multipleEnabled;
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col">
+        <div className="mb-5 flex w-full items-center justify-between">
+          <Breadcrumb showChevron={false}>
+            <BreadcrumbList className="select-none">
+              <BreadcrumbItem
+                onClick={onUploadBreadcrumbClick}
+                className="text-primary-9 text-lg font-bold [&_a]:hover:text-primary-8! cursor-pointer  hover:font-medium!"
+              >
+                <div className="transition-colors hover:text-primary-8">Upload</div>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="[&_svg]:size-3!" />
+              <BreadcrumbItem className="text-primary-9 text-lg font-bold [&_span]:hover:text-primary-8! hover:font-medium!">
+                <div className="transition-colors hover:text-primary-8">{selectedType.title}</div>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          <button
+            type="button"
+            className={cn(
+              'hover:bg-neutral-1 text-neutral-5 hover:text-primary-6 ',
+              'flex items-center justify-center rounded-full p-2 hover:shadow-bnb'
+            )}
+          >
+            <CloseOutlined />
+          </button>
+        </div>
+        <Card className="flex w-full items-center justify-between">
+          <CardContent className="flex w-full cursor-pointer items-stretch justify-between gap-2.5">
+            <Card
+              className={cn('w-full border-none bg-white text-primary-9 shadow-md', {
+                ' bg-primary-9 text-white': mode === ImportMode.Single,
+              })}
+              onClick={() => {
+                onModeChange(ImportMode.Single);
+              }}
+            >
+              <CardContent>
+                <CardTitle className=" mb-10 text-xl">
+                  Single {selectedType.title.toLocaleLowerCase()}
+                </CardTitle>
+                <CardDescription>
+                  Upload your morphology asset and define its core details: name, species, strain,
+                  and brain region. Complete the setup by assigning a license and selecting the OBI
+                  morphological type.
+                </CardDescription>
+              </CardContent>
+            </Card>
+            <Card
+              aria-disabled={!multipleEnabled}
+              className={cn('w-full border-none bg-white text-primary-9 shadow-md', {
+                ' bg-primary-9 text-white': multipleCardActive,
+                'cursor-not-allowed opacity-45': !multipleEnabled,
+              })}
+              onClick={
+                multipleEnabled
+                  ? () => {
+                      onModeChange(ImportMode.Multiple);
+                    }
+                  : undefined
+              }
+            >
+              <CardContent>
+                <CardTitle className=" mb-10 text-xl">
+                  Multiple {selectedType.title.toLocaleLowerCase()}
+                </CardTitle>
+                <CardDescription>
+                  Upload a CSV file containing the name, description, brain region, morphological
+                  type, and contributor for each entry. Please validate all fields to ensure a
+                  successful bulk import.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </CardContent>
+        </Card>
+      </div>
+      {mode === ImportMode.Multiple && multipleEnabled ? (
+        <div className="mt-auto flex w-full items-center justify-end">
+          <Button
+            rounded
+            asChild
+            variant="success"
+            type="button"
+            className={cn(
+              'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+              'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
+              'transition-all duration-300 ease-out disabled:cursor-not-allowed disabled:opacity-70',
+              'hover:scale-[1.02] active:scale-[0.98]'
+            )}
+          >
+            <Link href={continueHref} className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-between gap-5">
+                <span>Upload CSV or Fill table</span>
+                <PlusOutlined className="ml-auto text-sm" />
+              </div>
+            </Link>
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
