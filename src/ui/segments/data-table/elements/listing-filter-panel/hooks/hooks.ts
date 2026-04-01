@@ -9,14 +9,14 @@ import { fieldTitleSentenceCase } from '@/util/utils';
 import { createFilterItemComponent } from './create-filter-item-component';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Facets } from '@/api/entitycore/types/shared/response';
+import type { TFacets } from '@/api/entitycore/types/shared/response';
 import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export function useFilterItems(
   filters: TCoreFilter[],
   entity: ViewDefinitionConfig | null,
-  facets: Facets | undefined,
+  facets: TFacets | undefined,
   filterValues: CoreFilterValues,
   setFilterValues: React.Dispatch<React.SetStateAction<CoreFilterValues>>,
   activeColumns: string[] | undefined,

@@ -1,7 +1,7 @@
 'use client';
 
 import * as SelectPrimitive from '@radix-ui/react-select';
-import { RiCheckFill } from '@remixicon/react';
+import { RiArrowDownSLine, RiCheckFill } from '@remixicon/react';
 
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { cn } from '@/utils/css-class';
@@ -24,9 +24,11 @@ function SelectTrigger({
   className,
   size = 'default',
   children,
+  icoClassName,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: 'sm' | 'default';
+  icoClassName?: string;
 }) {
   return (
     <SelectPrimitive.Trigger
@@ -39,8 +41,8 @@ function SelectTrigger({
       {...props}
     >
       {children}
-      <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 opacity-50" />
+      <SelectPrimitive.Icon asChild className={icoClassName}>
+        <RiArrowDownSLine className="size-4 opacity-50" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );

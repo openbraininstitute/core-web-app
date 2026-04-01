@@ -1,5 +1,6 @@
-import { CloseOutlined } from '@ant-design/icons';
+import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useIsFetching } from '@tanstack/react-query';
+import { Spin } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { useAtom, useSetAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
@@ -8,6 +9,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 
 import { DEFAULT_PAGE_NUMBER, type TWorkspaceScope, type TWorkspaceSection } from '@/constants';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { Button } from '@/ui/molecules/button';
 import {
   coreActiveColumnsAtom,
@@ -23,7 +25,7 @@ import { useFilterItems } from '@/ui/segments/data-table/elements/listing-filter
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { Facets } from '@/api/entitycore/types/shared/response';
+import type { TFacets } from '@/api/entitycore/types/shared/response';
 import type { CoreFilterValues, TCoreFilter } from '@/entity-configuration/definitions/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -34,7 +36,6 @@ type Props = {
   dataScope?: TWorkspaceScope;
   dataKey: string;
   filters: TCoreFilter[];
-  facets: Facets | undefined;
   setFilters: any;
   showDisplayTrigger?: boolean;
   workspace?: WorkspaceContext;
@@ -42,6 +43,13 @@ type Props = {
     container?: string;
   };
   section?: TWorkspaceSection;
+  facets?:
+    | {
+        data: TFacets | undefined;
+        loading: boolean;
+        error: Error | null;
+      }
+    | undefined;
 };
 
 export function ListingFilterPanel({
@@ -51,22 +59,25 @@ export function ListingFilterPanel({
   dataKey,
   filters,
   setFilters,
-  facets,
   showDisplayTrigger = true,
   classNames,
   section,
+  facets,
 }: Props) {
   useHotkeys('Escape', toggleDisplay);
+
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [filterValues, setFilterValues] = useState<CoreFilterValues>({});
   const [isApplyingFilters, setIsApplyingFilters] = useState(false);
-
   const resetFilters = useResetAtom(
     coreFiltersAtom({
       dataType,
       key: dataKey,
     })
   );
+  const entityViewDefs = getViewDefinitionByExtendedType(dataType);
+  const entityConfig = getEntityByExtendedType({ type: dataType });
+
   const { sync: runStorageSync } = useDataListStateSnapshotActions({
     dataKey,
     dataType,
@@ -149,11 +160,10 @@ export function ListingFilterPanel({
     setIsApplyingFilters(false);
   };
 
-  const entity = getViewDefinitionByExtendedType(dataType);
   const filterItems = useFilterItems(
     filters,
-    entity,
-    facets,
+    entityViewDefs,
+    facets?.data,
     filterValues,
     setFilterValues,
     activeColumns,
@@ -203,7 +213,7 @@ export function ListingFilterPanel({
           classNames?.container
         )}
       >
-        <div className="mb-auto">
+        <div className="mb-auto flex-1 flex flex-col relative">
           <div className="mb-2 flex items-center justify-between gap-4">
             <span className="flex items-baseline gap-2 text-2xl font-bold text-white">
               Filters
@@ -224,16 +234,33 @@ export function ListingFilterPanel({
             the option(s).
           </p>
 
-          <div className="flex flex-col gap-12">
-            <FilterGroup items={filterItems} filters={filters} setFilters={setFilters} />
-            {children}
-          </div>
+          {facets?.error ? (
+            <div className="mt-4 flex flex-1 flex-col items-center justify-center gap-3 text-center text-white">
+              <span className="text-lg font-semibold">Unable to load filters</span>
+              <p className="text-primary-3 text-sm">
+                Something went wrong while fetching filter options for "
+                {entityConfig?.title.toLowerCase()}" entities.
+                <br />
+                Please try again later or contact support if the issue persists.
+              </p>
+            </div>
+          ) : facets?.loading ? (
+            <div className="flex flex-1 items-center justify-center">
+              <Spin indicator={<LoadingOutlined className="text-white size-10" />} />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-12">
+              <FilterGroup items={filterItems} filters={filters} setFilters={setFilters} />
+              {children}
+            </div>
+          )}
         </div>
 
         <div className="bg-primary-8 sticky bottom-0 left-0 mt-auto flex w-full items-center justify-between py-6">
-          <ClearFilters onClick={clearFilters} />
+          <ClearFilters onClick={clearFilters} disabled={!!facets?.loading} />
           <Button
             type="button"
+            disabled={facets?.loading}
             onClick={submitValues}
             variant="default"
             className="bg-primary-2 text-primary-9 hover:bg-primary-2/80 flex items-center justify-center gap-1.5 rounded-none px-10 md:h-10 lg:h-12"

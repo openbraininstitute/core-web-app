@@ -25,7 +25,7 @@ import { compactRecord } from '@/utils/dictionary';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
 
 export type QueryContext = {
@@ -57,7 +57,10 @@ export function buildQueryKey({
     {
       workspace,
       context,
-      queryParameters: { ...(entity?.api.config.extraQueryKeyBuilder ?? {}), ...queryParameters },
+      queryParameters: {
+        ...(entity?.api.config.extraQueryKeyBuilder ?? {}),
+        ...queryParameters,
+      },
       requireBrainRegion,
     },
   ];
@@ -185,4 +188,62 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
     ...query,
     queryKeyHash,
   };
+}
+
+export function useQueryExtendedEntityTypeFacets({
+  dataKey,
+  section,
+  scope,
+  dataType,
+  workspace,
+  queryFilters,
+  extraQueryKey,
+  enabled,
+}: {
+  dataKey: string;
+  section: TWorkspaceSection;
+  scope: TWorkspaceScope;
+  dataType: TExtendedEntitiesTypeDict;
+  workspace: WorkspaceContext;
+  queryFilters?: Record<string, any>;
+  extraQueryKey?: Record<string, any>;
+  enabled?: boolean | (() => boolean);
+}) {
+  const entity = getEntityByExtendedType({ type: dataType });
+  // @ts-expect-error
+  return useQuery({
+    queryKey: [
+      'facets',
+      {
+        dataKey,
+        with_facets: true,
+        section,
+        scope,
+        dataType,
+        workspace,
+        ...extraQueryKey,
+      },
+    ],
+    queryFn: async () => {
+      return (
+        await entity?.api?.query.list?.({
+          filters: { ...queryFilters, page: 1, page_size: 1 },
+          withFacets: true,
+          context: workspace,
+        })
+      )?.facets;
+    },
+    enabled: () => {
+      let enable = false;
+
+      if (typeof enabled === 'function') {
+        enable = enabled?.();
+      }
+      if (typeof enabled === 'boolean') {
+        enable = enabled;
+      }
+
+      return !!entity?.api?.query.list && enable;
+    },
+  });
 }

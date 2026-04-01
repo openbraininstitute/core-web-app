@@ -73,4 +73,4 @@ function TooltipContent({
   );
 }
 
-export { Tooltip, TooltipTrigger, TooltipArrow, TooltipContent, TooltipProvider };
+export { Tooltip, TooltipArrow, TooltipContent, TooltipProvider, TooltipTrigger };

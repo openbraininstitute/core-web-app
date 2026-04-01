@@ -1,20 +1,17 @@
 'use client';
 
-import isNil from 'es-toolkit/compat/isNil';
-
-import type { ReactNode } from 'react';
+import { isNil } from 'es-toolkit/compat';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import EmptyCircleIcon from '@/components/icons/EmptyCircle';
-import PartialCircleIcon from '@/components/icons/PartialCircle';
 import FullCircleIcon from '@/components/icons/FullCircle';
+import PartialCircleIcon from '@/components/icons/PartialCircle';
 import TriangleIcon from '@/components/icons/Triangle';
 import { ActivityDict } from '@/ui/segments/workflows/elements/helpers';
 
+import type { ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
-
-export const ACTIVITY_DEFAULT_PAGE_SIZE = 5;
 
 export const StatusMap: Record<string, { class: string; icon: ReactNode; title: string }> = {
   started: {
@@ -131,7 +128,7 @@ export const getScaleAvailableActivities = (
     if (buildActivity) {
       availableActivities.push({
         label: buildActivity.label,
-        value: buildActivity.value,
+        value: buildActivity.value as TActivityValue,
       });
     }
   }
@@ -141,7 +138,7 @@ export const getScaleAvailableActivities = (
     if (simulateActivity) {
       availableActivities.push({
         label: simulateActivity.label,
-        value: simulateActivity.value,
+        value: simulateActivity.value as TActivityValue,
       });
     }
   }

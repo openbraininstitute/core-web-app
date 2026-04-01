@@ -26,7 +26,7 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type {
   Pagination as EntitycorePagination,
-  Facets,
+  TFacets,
 } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
@@ -34,7 +34,6 @@ import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-ro
 import type { UseExpandableTableOptions } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 
 export type Props<T extends EntityCoreIdentifiable> = {
-  facets: Facets | undefined;
   resultPagination?: {
     pagination: EntitycorePagination;
     totalData: number;
@@ -75,6 +74,11 @@ export type Props<T extends EntityCoreIdentifiable> = {
   left?: ReactNode;
   /** when false, disables vertical scroll so the table sizes to its content (use with h-max/h-fit on container) */
   scrollable?: boolean;
+  facets?: {
+    data: TFacets | undefined;
+    loading: boolean;
+    error: Error | null;
+  };
 };
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
@@ -84,7 +88,6 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   dataType,
   workspace,
   cls,
-  facets,
   renderButton,
   showLoadingState,
   isLoading,
@@ -112,6 +115,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   showExpandButtons,
   left,
   scrollable = true,
+  facets,
 }: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -251,10 +255,10 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           toggleDisplay={() => setDisplayControlPanel(false)}
           dataType={dataType}
           dataKey={dataKey}
-          facets={facets}
           workspace={workspace}
           classNames={filterClassNames}
           section={section}
+          facets={facets}
         />
       )}
     </>

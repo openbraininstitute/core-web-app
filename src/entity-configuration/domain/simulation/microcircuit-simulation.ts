@@ -1,7 +1,7 @@
 import { flatMap, keyBy } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getCircuits } from '@/api/entitycore/queries/model/circuit';
+import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import {
   createSimulationCampaign,
   getSimulationCampaign,
@@ -21,7 +21,7 @@ import { getExtendedSimMap } from '@/entity-configuration/domain/simulation/util
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { microcircuitFlag } from '@/features/feature-flags';
 
-import type { ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
+import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {
   ICircuitSimulationCampaign,
   ISimulationCampaignFilter,
@@ -131,9 +131,11 @@ async function resolveSimulationCampaigns({
 export async function resolveSimulationByCampaignId({
   id,
   context,
+  populate = ['entity', 'config'],
 }: {
   id: string;
   context: WorkspaceContext | undefined;
+  populate?: Array<string>;
 }) {
   const campaign = await getSimulationCampaign({ id, context });
 
@@ -155,18 +157,28 @@ export async function resolveSimulationByCampaignId({
 
   if (!configAsset) throw Error('No campaign config asset found');
 
-  const rawConfig = await downloadAsset({
-    entityId: campaign.id,
-    entityType: EntityTypeDict.SimulationCampaign,
-    id: configAsset?.id,
-    ctx: context,
-    asRawResponse: true,
-  });
-  const config = await rawConfig.json();
+  let config = null;
+  let entity: ICircuit | null = null;
+
+  if (simulation?.entity_id && populate.includes('entity')) {
+    entity = await getCircuit({ id: simulation?.entity_id, context });
+  }
+
+  if (populate.includes('config')) {
+    const rawConfig = await downloadAsset({
+      entityId: campaign.id,
+      entityType: EntityTypeDict.SimulationCampaign,
+      id: configAsset?.id,
+      ctx: context,
+      asRawResponse: true,
+    });
+    config = await rawConfig.json();
+  }
 
   return {
     campaign,
     simulation,
+    entity,
     config,
   };
 }

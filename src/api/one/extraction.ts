@@ -2,13 +2,7 @@ import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 
 import type { WorkspaceContext } from '@/types/common';
-
-export const ObiOneTaskTypeDict = {
-  CircuitExtraction: 'circuit_extraction',
-  CircuitSimulation: 'circuit_simulation',
-} as const;
-
-export type TObiOneTaskType = (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];
+import type { TObiOneTaskType } from './types/task';
 
 type LaunchExtractionParams = {
   ctx: WorkspaceContext;

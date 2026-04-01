@@ -3,7 +3,7 @@ export const AUTO_INIT_WORKSPACE = 'automatic-init-workspace';
 export const AUTO_ONBOARDING_TOURS = 'automatic-app-onboarding-tours';
 export const LAST_REGISTERED_WORKFLOW = 'last-registered-workflow';
 
-export const DEFAULT_CHECKLIST_RENDER_LENGTH = 8;
+export const DEFAULT_CHECKLIST_RENDER_LENGTH = 5;
 export const DEFAULT_PAGE_SIZE = 30;
 export const DEFAULT_PAGE_MEDIUM_SIZE = 15;
 export const DEFAULT_PAGE_SMALL_SIZE = 10;

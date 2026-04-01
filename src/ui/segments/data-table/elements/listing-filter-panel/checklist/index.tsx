@@ -1,17 +1,17 @@
 'use client';
 
 import { InfoCircleFilled } from '@ant-design/icons';
-import { useState, type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 
-import { useOptions } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
-import { SearchFilter } from '@/ui/segments/data-table/elements/listing-filter-panel/search-filter';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { CenteredMessage } from '@/components/CenteredMessage';
 import { DEFAULT_CHECKLIST_RENDER_LENGTH } from '@/constants';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { useOptions } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
+import { SearchFilter } from '@/ui/segments/data-table/elements/listing-filter-panel/search-filter';
 
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 import type { CheckListProps } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/default-checklist';
 import type { FacetLabelValuePair } from '@/ui/segments/data-table/elements/listing-filter-panel/checklist/use-options';
-import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 type Props = {
   children: (props: CheckListProps) => ReactNode;
@@ -22,9 +22,10 @@ type Props = {
 };
 
 export function CheckList({ children, data, filter, values, onChange }: Props) {
-  const [filtersRenderLength, setFiltersRenderLength] = useState(() => 5);
+  const [filtersRenderLength, setFiltersRenderLength] = useState(
+    () => DEFAULT_CHECKLIST_RENDER_LENGTH
+  );
   const options = useOptions(values, data);
-
   const handleCheckedChange = (value: string) => {
     let newValues = [...values];
 
@@ -36,7 +37,7 @@ export function CheckList({ children, data, filter, values, onChange }: Props) {
     onChange(newValues);
   };
 
-  const loadMoreLength = 5;
+  const loadMoreLength = DEFAULT_CHECKLIST_RENDER_LENGTH;
   const remainingLength = (data?.length || 0) - filtersRenderLength;
   const adjustedLoadMoreLength =
     remainingLength >= loadMoreLength ? loadMoreLength : remainingLength;
