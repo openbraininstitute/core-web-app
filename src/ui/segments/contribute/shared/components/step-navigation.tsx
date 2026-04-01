@@ -17,8 +17,8 @@ import {
 } from '@/ui/molecules/breadcrumb/index';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/helpers';
 import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
-import { DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/schemas';
 import { cn } from '@/utils/css-class';
 
 import type { TStepValidationStatus } from '@/ui/segments/contribute/shared/types';

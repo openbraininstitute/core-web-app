@@ -89,23 +89,24 @@ export const LocationSchema = z
     z: z.number({ error: 'Z coordinate should be a number' }).nullish(),
   })
   .nullable()
-  .refine(
-    (val) => {
-      if (!val) return true;
-      const defined = pickBy(val, (v) => !isNil(v) && !Number.isNaN(v));
-      return isEmpty(defined) || size(defined) === 3;
-    },
-    (val) => {
-      if (!val) return { message: '', path: [] };
-      const defined = pickBy(val, (v) => !isNil(v) && !Number.isNaN(v));
-      const allKeys = Object.keys(val);
-      const difference = allKeys.filter((key) => !defined[key]);
-      return {
-        message: 'All coordinates (x, y, z) are required if one is provided',
-        path: difference,
-      };
+  .superRefine((val, ctx) => {
+    if (!val) {
+      return;
     }
-  );
+    const defined = pickBy(val, (v) => !isNil(v) && !Number.isNaN(v));
+    if (isEmpty(defined) || size(defined) === 3) {
+      return;
+    }
+    const allKeys = Object.keys(val);
+    const difference = allKeys.filter((key) => !defined[key]);
+    for (const key of difference) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'All coordinates (x, y, z) are required if one is provided',
+        path: [key],
+      });
+    }
+  });
 
 export const ExperimentDateSchema = z
   .custom((data) => dayjs.isDayjs(data), {

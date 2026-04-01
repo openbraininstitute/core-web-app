@@ -11,20 +11,6 @@ import {
   type TRepairPipelineState,
 } from '@/api/entitycore/types/shared/protocol';
 import {
-  LocationEditor,
-  type LocationValue,
-  normalizeLocationValue,
-  parseLocationSummary,
-  summarizeLocation,
-} from '@/features/entity-import/adapters/cell-morphology/location-editor';
-import { parseLocationCsvValue } from '@/features/entity-import/adapters/cell-morphology/location-parser';
-import {
-  type CellMorphologyContributionInput,
-  type CellMorphologyRegistrationMetadata,
-  createCellMorphologyImportServices,
-  type ICellMorphologyImportServices,
-} from '@/features/entity-import/adapters/cell-morphology/services';
-import {
   type IEntityImportAdapter,
   type IValidatorSuggestionDetailsArgs,
   ValidatorWriteStrategy,
@@ -54,6 +40,20 @@ import {
   createEntityImportPostSubmitActions,
   type IEntityImportPostSubmitActions,
 } from '@/features/entity-import/core/shared/post-submit-actions';
+import {
+  LocationEditor,
+  type LocationValue,
+  normalizeLocationValue,
+  parseLocationSummary,
+  summarizeLocation,
+} from '@/ui/segments/contribute/multiple/adapters/cell-morphology/location-editor';
+import { parseLocationCsvValue } from '@/ui/segments/contribute/multiple/adapters/cell-morphology/location-parser';
+import {
+  type CellMorphologyContributionInput,
+  type CellMorphologyRegistrationMetadata,
+  createCellMorphologyImportServices,
+  type ICellMorphologyImportServices,
+} from '@/ui/segments/contribute/multiple/adapters/cell-morphology/services';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
 
 const REPAIR_PIPELINE_STATE_OPTIONS = Object.values(RepairPipelineState).map((option) => ({

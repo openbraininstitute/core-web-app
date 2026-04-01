@@ -1,6 +1,10 @@
 'use client';
 
-import { type LocationValue, parseLocationSummary, summarizeLocation } from './location-editor';
+import {
+  type LocationValue,
+  parseLocationSummary,
+  summarizeLocation,
+} from '@/ui/segments/contribute/multiple/adapters/cell-morphology/location-editor';
 
 export {
   type IParsedContributionCsvEntry as ParsedContributionCsvEntry,

@@ -6,7 +6,6 @@ import {
 } from '@/api/entitycore/types/entities/electrical-cell-recording';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetContentType } from '@/api/entitycore/types/shared/global';
-import { createElectricalCellRecordingImportServices } from '@/features/entity-import/adapters/electrical-cell-recording/services';
 import { ImportInputType } from '@/features/entity-import/core/contracts';
 import {
   makeBrainRegionImportField,
@@ -27,14 +26,15 @@ import {
   type IEntityImportPostSubmitActions,
 } from '@/features/entity-import/core/shared/post-submit-actions';
 import { RECORDING_LOCATION_OPTIONS } from '@/ui/segments/contribute/electrical-cell-recording/schema';
+import { createElectricalCellRecordingImportServices } from '@/ui/segments/contribute/multiple/adapters/electrical-cell-recording/services';
 
-import type { IElectricalCellRecordingImportServices } from '@/features/entity-import/adapters/electrical-cell-recording/services';
 import type {
   IAdapterFieldDefinition,
   IEntityImportAdapter,
   IEntityImportRuntimeContext,
 } from '@/features/entity-import/core/adapter';
 import type { IImportRowState, TFlatImportValues } from '@/features/entity-import/core/contracts';
+import type { IElectricalCellRecordingImportServices } from '@/ui/segments/contribute/multiple/adapters/electrical-cell-recording/services';
 
 interface IElectricalCellRecordingSubmissionPayload {
   name: string;
