@@ -8,6 +8,7 @@ import {
   type TEntityTypeDict,
 } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 // biome-ignore lint/style/useImportType: biome hallucination
 import {
   ExtendedEntitiesTypeDict,
@@ -384,13 +385,14 @@ export type TActivityCustomFile = {
   renderer: TActivityCustomFileRenderer;
 };
 
-export type TSupportedEntitiesForScanConfiguration = ICircuit | IMEModel | IonChannelModel;
+export type TSupportedEntitiesForScanConfiguration = ICircuit | IMEModel | IonChannelModel | IEMCellMesh;
 
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
   | typeof ExtendedEntitiesTypeDict.MemodelCircuit
   | typeof ExtendedEntitiesTypeDict.MEModelWithSynapses
-  | typeof ExtendedEntitiesTypeDict.IonChannelModel;
+  | typeof ExtendedEntitiesTypeDict.IonChannelModel
+  | typeof ExtendedEntitiesTypeDict.EMCellMesh;
 
 export const getSupportedEntityTypesForScanConfiguration = ({
   entity,
@@ -415,6 +417,10 @@ export const getSupportedEntityTypesForScanConfiguration = ({
     .with(
       { entity: { type: EntityTypeDict.IonChannelModel } },
       () => ExtendedEntitiesTypeDict.IonChannelModel
+    )
+    .with(
+      { entity: { type: EntityTypeDict.EMCellMesh } },
+      () => ExtendedEntitiesTypeDict.EMCellMesh
     )
     .otherwise(() => {
       throw new Error('Not supported entity for scan configuration');
