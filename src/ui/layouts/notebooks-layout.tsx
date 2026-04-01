@@ -4,20 +4,25 @@ import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
+import { isNil } from 'es-toolkit';
 import Image from 'next/image';
 import NextLink from 'next/link';
-import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
+import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
+import { createProject } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
+import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
+import { assignProjectBudget } from '@/services/virtual-lab/projects';
 import { Button as UiButton } from '@/ui/molecules/button';
 import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -30,6 +35,7 @@ import { buildStripeFormOptions } from '../segments/virtual-lab-settings/element
 
 import type { UploadFile, UploadProps } from 'antd';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
+import type { ProjectCreationResponse } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function createNotebook({
@@ -74,6 +80,10 @@ export function NotebooksLayout({ children, active }: Props) {
     template_project_id: projectId,
     is_initialized: false,
   };
+
+  const onFinnish = useCallback(() => {
+    setShowCourseModal(false);
+  }, []);
 
   async function handleRunNotebook() {
     setLoading(true);
@@ -212,11 +222,7 @@ export function NotebooksLayout({ children, active }: Props) {
           )}
           {step === 1 && (
             <CourseSetup
-              onFinnish={() => {
-                setTimeout(() => {
-                  setShowCourseModal(false);
-                }, 3000);
-              }}
+              onFinnish={onFinnish}
               studentEmails={studentEmails}
               nameBase={virtualLabData.data?.virtual_lab.name ?? 'Course'}
             />
@@ -671,102 +677,100 @@ function CourseSetup({
 
     const setupCourse = async () => {
       try {
-        // const balanceRes = await getVirtualLabAccountBalance({
-        //   virtualLabId,
-        //   includeProjects: false,
-        // });
-        // const balance = balanceRes?.data?.balance;
-        // const budgetPerStudent = Math.floor(parseInt(balance, 10) / studentEmails.length);
+        const balanceRes = await getVirtualLabAccountBalance({
+          virtualLabId,
+          includeProjects: false,
+        });
+        const balance = balanceRes?.data?.balance;
+        const budgetPerStudent = Math.floor(parseInt(balance, 10) / studentEmails.length);
 
-        // if (isNil(balance)) throw new Error('Could not fetch account balance for the virtual lab');
-        // if (budgetPerStudent < 1) {
-        //   throw new Error('Not enough credits to initialize course');
-        // }
+        if (isNil(balance)) throw new Error('Could not fetch account balance for the virtual lab');
+        if (budgetPerStudent < 1) {
+          throw new Error('Not enough credits to initialize course');
+        }
 
-        // const projectCreationResults = await Promise.allSettled(
-        //   studentEmails.map((email) =>
-        //     createProject(virtualLabId, {
-        //       name: `${nameBase} ${email}`,
-        //       description: `Project for ${email}`,
-        //       include_members: [],
-        //     })
-        //   )
-        // );
+        const projectCreationResults = await Promise.allSettled(
+          studentEmails.map((email) =>
+            createProject(virtualLabId, {
+              name: `${nameBase} ${email}`,
+              description: `Project for ${email}`,
+              include_members: [],
+            })
+          )
+        );
 
-        // const failedProjectCreations = projectCreationResults.filter(
-        //   (r) => r.status === 'rejected'
-        // );
+        const failedProjectCreations = projectCreationResults.filter(
+          (r) => r.status === 'rejected'
+        );
 
-        // if (failedProjectCreations.length > 0) {
-        //   notification.warning({
-        //     message: `Warning: ${failedProjectCreations.length} out of ${studentEmails.length} student projects failed to create`,
-        //     key: 'project-creation-warning',
-        //     placement: 'topRight',
-        //   });
-        // }
+        if (failedProjectCreations.length > 0) {
+          notification.warning({
+            message: `Warning: ${failedProjectCreations.length} out of ${studentEmails.length} student projects failed to create`,
+            key: 'project-creation-warning',
+            placement: 'topRight',
+          });
+        }
 
-        // const successfulProjects = projectCreationResults
-        //   .map((result, index) => ({ result, email: studentEmails[index] }))
-        //   .filter((item) => item.result.status === 'fulfilled' && !!item.result.value.data);
+        const successfulProjects = projectCreationResults
+          .map((result, index) => ({ result, email: studentEmails[index] }))
+          .filter((item) => item.result.status === 'fulfilled' && !!item.result.value.data);
 
-        // const inviteResults = await Promise.allSettled(
-        //   successfulProjects.map((project) => {
-        //     return inviteToProject({
-        //       virtualLabId,
-        //       //@ts-expect-error
-        //       projectId: (project.result as PromiseFulfilledResult<ProjectCreationResponse>).value
-        //         .data.project.id,
-        //       email: project.email,
-        //       role: 'member',
-        //     });
-        //   })
-        // );
+        const inviteResults = await Promise.allSettled(
+          successfulProjects.map((project) => {
+            return inviteToProject({
+              virtualLabId,
+              //@ts-expect-error
+              projectId: (project.result as PromiseFulfilledResult<ProjectCreationResponse>).value
+                .data.project.id,
+              email: project.email,
+              role: 'member',
+            });
+          })
+        );
 
-        // const failedInvites = inviteResults.filter((r) => r.status === 'rejected');
-        // if (failedInvites.length > 0) {
-        //   notification.warning({
-        //     message: `Warning: ${failedInvites.length} out of ${successfulProjects.length} student invitations failed to send`,
-        //     key: 'invite-warning',
-        //     placement: 'topRight',
-        //   });
-        // }
+        const failedInvites = inviteResults.filter((r) => r.status === 'rejected');
+        if (failedInvites.length > 0) {
+          notification.warning({
+            message: `Warning: ${failedInvites.length} out of ${successfulProjects.length} student invitations failed to send`,
+            key: 'invite-warning',
+            placement: 'topRight',
+          });
+        }
 
-        // const budgetAssignmentResults = await Promise.allSettled(
-        //   successfulProjects.map((project) =>
-        //     assignProjectBudget({
-        //       virtualLabId,
-        //       //@ts-expect-error
-        //       projectId: (project.result as PromiseFulfilledResult<ProjectCreationResponse>).value
-        //         .data.project.id,
-        //       amount: budgetPerStudent,
-        //     })
-        //   )
-        // );
+        const budgetAssignmentResults = await Promise.allSettled(
+          successfulProjects.map((project) =>
+            assignProjectBudget({
+              virtualLabId,
+              //@ts-expect-error
+              projectId: (project.result as PromiseFulfilledResult<ProjectCreationResponse>).value
+                .data.project.id,
+              amount: budgetPerStudent,
+            })
+          )
+        );
 
-        // const failedBudgetAssignments = budgetAssignmentResults.filter(
-        //   (r) => r.status === 'rejected'
-        // );
-        // if (failedBudgetAssignments.length > 0) {
-        //   notification.warning({
-        //     message: `Warning: Credits couldn't be transferred to ${failedBudgetAssignments.length} out of ${successfulProjects.length} student projects`,
-        //     key: 'budget-assignment-warning',
-        //     placement: 'topRight',
-        //   });
-        // }
+        const failedBudgetAssignments = budgetAssignmentResults.filter(
+          (r) => r.status === 'rejected'
+        );
+        if (failedBudgetAssignments.length > 0) {
+          notification.warning({
+            message: `Warning: Credits couldn't be transferred to ${failedBudgetAssignments.length} out of ${successfulProjects.length} student projects`,
+            key: 'budget-assignment-warning',
+            placement: 'topRight',
+          });
+        }
 
-        // const projectIds = successfulProjects.map(
-        //   (project) =>
-        //     // @ts-expect-error
-        //     (project.result as PromiseFulfilledResult<ProjectCreationResponse>).value.data.project
-        //       .id
-        // );
+        const projectIds = successfulProjects.map(
+          (project) =>
+            // @ts-expect-error
+            (project.result as PromiseFulfilledResult<ProjectCreationResponse>).value.data.project
+              .id
+        );
 
         const firstNotebookRes = await getNotebooks({
           context: { virtualLabId, projectId },
           filters: { page: 1, page_size: 1000 },
         });
-
-        const projectIds = ['9b49ed4d-b2df-4cc4-8e07-a657748f58ae'];
 
         let allNotebooks = [...firstNotebookRes.data];
         const { total_items, page_size } = firstNotebookRes.pagination;
@@ -812,11 +816,13 @@ function CourseSetup({
           key: 'course-setup-error',
           placement: 'topRight',
         });
+      } finally {
+        onFinnish();
       }
     };
 
     setupCourse();
-  }, [virtualLabId, projectId, notification, studentEmails, nameBase]);
+  }, [virtualLabId, projectId, notification, studentEmails, nameBase, onFinnish]);
 
-  return null;
+  return 'Settup up course...';
 }
