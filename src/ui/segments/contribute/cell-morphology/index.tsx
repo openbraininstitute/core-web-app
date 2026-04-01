@@ -1,7 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useMemo } from 'react';
 
+import { config } from '@/config';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import { createCellMorphologyImportAdapter, EntityImportFeature } from '@/features/entity-import';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -107,12 +109,17 @@ type ICellMorphologyImportProps = {
 
 export function CellMorphologyImport({ title }: ICellMorphologyImportProps) {
   const { projectId, virtualLabId } = useWorkspace();
+  const router = useRouter();
   const adapter = useMemo(() => createCellMorphologyImportAdapter({}), []);
+
+  const handleClose = useCallback(() => {
+    router.push(`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/contribute`);
+  }, [router, projectId, virtualLabId]);
 
   return (
     <EntityImportFeature
       title={title}
-      onClose={() => {}}
+      onClose={handleClose}
       adapter={adapter}
       context={{
         projectId,

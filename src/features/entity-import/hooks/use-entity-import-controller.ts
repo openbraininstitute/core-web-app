@@ -33,11 +33,7 @@ import {
   RemoteValidationStatus,
   type TFlatImportValues,
 } from '@/features/entity-import/core/contracts';
-import {
-  buildTemplateColumns,
-  importCsvRows,
-  parseCsvFile,
-} from '@/features/entity-import/core/csv';
+import { importCsvRows, parseCsvFile } from '@/features/entity-import/core/csv';
 import {
   getImportFileDisplayValue,
   toParsedFileValue,
@@ -78,7 +74,11 @@ import {
   mergeSuggestions,
   useValidatorRemoteSuggestions,
 } from '@/features/entity-import/hooks/use-validator-remote-suggestions';
-import { getEntityImportTemplateGuide } from '@/features/entity-import/templates/registry';
+import {
+  downloadBlob,
+  downloadImportCsvTemplate,
+  tryDownloadImportGuide,
+} from '@/features/entity-import/lib/download-import-artifacts';
 
 function findField(
   fields: Array<IAdapterFieldDefinition>,
@@ -199,26 +199,6 @@ async function hydrateCsvRows({
       })
     )
   );
-}
-
-function downloadBlob({
-  content,
-  type,
-  fileName,
-}: {
-  content: BlobPart;
-  type: string;
-  fileName: string;
-}) {
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
 }
 
 function buildCurrentCsvFileName(templateFileName: string): string {
@@ -1511,16 +1491,8 @@ export function useEntityImportController<TPayload, TResult>({
   );
 
   const onDownloadCsvTemplate = useCallback(() => {
-    const csv = Papa.unparse({
-      fields: buildTemplateColumns(adapter.fields),
-      data: [],
-    });
-    downloadBlob({
-      content: csv,
-      type: 'text/csv;charset=utf-8;',
-      fileName: adapter.templateFileName,
-    });
-  }, [adapter.fields, adapter.templateFileName]);
+    downloadImportCsvTemplate(adapter);
+  }, [adapter]);
 
   const onDownloadCurrentCsv = useCallback(() => {
     const exportableFields = adapter.fields.filter((field) => field.csv?.include !== false);
@@ -1538,8 +1510,7 @@ export function useEntityImportController<TPayload, TResult>({
   }, [adapter.fields, adapter.templateFileName]);
 
   const onDownloadGuideTemplate = useCallback(() => {
-    const templateGuide = getEntityImportTemplateGuide(adapter.templateGuide);
-    if (!templateGuide) {
+    if (!tryDownloadImportGuide(adapter)) {
       commit(
         (current) =>
           pushNotification(current, {
@@ -1549,14 +1520,8 @@ export function useEntityImportController<TPayload, TResult>({
           }),
         { validate: false }
       );
-      return;
     }
-    downloadBlob({
-      content: templateGuide.content,
-      type: 'text/markdown;charset=utf-8;',
-      fileName: templateGuide.fileName,
-    });
-  }, [adapter.templateGuide, commit]);
+  }, [adapter, commit]);
 
   const importMutation = useMutation({
     mutationFn: async () => {

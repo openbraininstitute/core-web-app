@@ -1,7 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useMemo } from 'react';
 
+import { config } from '@/config';
 import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
 import {
   createElectricalCellRecordingImportAdapter,
@@ -107,13 +109,18 @@ type IElectricalCellRecordingImportProps = {
 
 export function ElectricalCellRecordingImport({ title }: IElectricalCellRecordingImportProps) {
   const { projectId, virtualLabId } = useWorkspace();
+  const router = useRouter();
 
   const adapter = useMemo(() => createElectricalCellRecordingImportAdapter(), []);
+
+  const handleClose = useCallback(() => {
+    router.push(`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/contribute`);
+  }, [router, projectId, virtualLabId]);
 
   return (
     <EntityImportFeature
       title={title}
-      onClose={() => {}}
+      onClose={handleClose}
       adapter={adapter}
       context={{
         projectId,

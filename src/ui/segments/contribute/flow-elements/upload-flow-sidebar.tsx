@@ -17,22 +17,21 @@ import type { ReactNode } from 'react';
 
 export interface IUploadFlowSidebarProps {
   currentTab: TImportLeftSideTab;
-  /** Omitted when Type/Options use `typeHref` / `optionsHref` only. */
+  /** omitted when Type/Options use `typeHref` / `optionsHref` only. */
   onTabChange?: (tab: TImportLeftSideTab) => void;
   mode: TImportMode | null;
   hasTypeSelected: boolean;
-  /** When set, Type navigates here (single-artifact page) instead of switching tab. */
+  /** when set, Type navigates here (single-artifact page) instead of switching tab. */
   typeHref?: string;
-  /** When set, Options navigates here instead of switching tab. */
+  /** when set, Options navigates here instead of switching tab. */
   optionsHref?: string;
-  /** Shown on the same row as “Type”, end-aligned (justify-between). */
   typeValueLabel?: string;
-  /** Shown on the same row as “Options”, end-aligned (justify-between). */
   optionsValueLabel?: string;
-  /** Renders below Type/Options (e.g. vertical step nav on single upload page). */
   bottomSlot?: ReactNode;
-  /** When true, Type/Options never use the filled “active” style (single-artifact upload page). */
   suppressUploadTabActiveStyle?: boolean;
+  onMultipleDownloadGuide?: () => void;
+  onMultipleDownloadTemplate?: () => void;
+  multipleImportDownloadsDisabled?: boolean;
 }
 
 function typeLabelClass(isActive: boolean) {
@@ -52,6 +51,9 @@ export function UploadFlowSidebar({
   optionsValueLabel,
   bottomSlot,
   suppressUploadTabActiveStyle = false,
+  onMultipleDownloadGuide,
+  onMultipleDownloadTemplate,
+  multipleImportDownloadsDisabled = false,
 }: IUploadFlowSidebarProps) {
   const tabHighlight = !suppressUploadTabActiveStyle;
   const isTypeMenuActive = tabHighlight && currentTab === ImportLeftSideTab.Type;
@@ -190,9 +192,12 @@ export function UploadFlowSidebar({
             <div className="flex w-full flex-col items-center justify-between gap-1.5 px-5 py-3">
               <Button
                 rounded
+                type="button"
                 size="responsive"
                 variant="ghost"
                 className={cn('md:h-10 lg:h-12', 'w-full justify-between font-normal', 'group')}
+                disabled={multipleImportDownloadsDisabled || onMultipleDownloadGuide == null}
+                onClick={onMultipleDownloadGuide}
               >
                 <span className={cn('text-primary-9 flex-1 text-left', 'group-active:text-white!')}>
                   Download guide
@@ -201,9 +206,12 @@ export function UploadFlowSidebar({
               </Button>
               <Button
                 rounded
+                type="button"
                 size="responsive"
                 variant="ghost"
                 className={cn('md:h-10 lg:h-12', 'w-full justify-between font-normal', 'group')}
+                disabled={multipleImportDownloadsDisabled || onMultipleDownloadTemplate == null}
+                onClick={onMultipleDownloadTemplate}
               >
                 <span className={cn('text-primary-9 flex-1 text-left', 'group-active:text-white!')}>
                   Download template

@@ -2,10 +2,15 @@
 
 import { kebabCase } from 'es-toolkit/compat';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { config } from '@/config';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import {
+  downloadImportCsvTemplate,
+  resolveContributeMultipleImportAdapter,
+  tryDownloadImportGuide,
+} from '@/features/entity-import/lib/download-import-artifacts';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   buildContributionArtifactOptions,
@@ -102,6 +107,31 @@ export default function Page() {
 
   const continueHref = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/contribute/${effectiveImportMode}/${kebabCase(selectedType?.extendedType ?? '')}`;
 
+  const multipleDownloadsDisabled = type == null;
+
+  const handleMultipleDownloadTemplate = useCallback(() => {
+    if (type == null) {
+      return;
+    }
+    const adapter = resolveContributeMultipleImportAdapter(type);
+    if (adapter) {
+      downloadImportCsvTemplate(adapter);
+    }
+  }, [type]);
+
+  const handleMultipleDownloadGuide = useCallback(() => {
+    if (type == null) {
+      return;
+    }
+    const adapter = resolveContributeMultipleImportAdapter(type);
+    if (!adapter) {
+      return;
+    }
+    if (!tryDownloadImportGuide(adapter)) {
+      window.alert('No import guide is available for this artifact type.');
+    }
+  }, [type]);
+
   return (
     <div className="bg-background border-neutral-2 mx-2 ml-3 h-full w-[calc(100%-10px)] gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]">
       <div className="grid h-full w-full grid-cols-[25rem_auto] gap-3">
@@ -111,6 +141,9 @@ export default function Page() {
             hasTypeSelected={type !== null}
             mode={effectiveImportMode}
             onTabChange={setCurrentTab}
+            onMultipleDownloadGuide={handleMultipleDownloadGuide}
+            onMultipleDownloadTemplate={handleMultipleDownloadTemplate}
+            multipleImportDownloadsDisabled={multipleDownloadsDisabled}
           />
         </div>
         {isTypeMenuActive && (

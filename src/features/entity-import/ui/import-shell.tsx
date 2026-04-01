@@ -89,7 +89,7 @@ export function ImportShell<TPayload, TResult>({
 
       <div
         className={cn(
-          'grid min-h-0 flex-1 overflow-hidden gap-2 transition-[grid-template-columns] duration-300 ease-in-out',
+          'grid min-h-0 flex-1 overflow-hidden gap-2 transition-[grid-template-columns] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-200 motion-reduce:ease-out',
           showExpandedValidator
             ? 'grid-cols-[minmax(0,1fr)_24rem]'
             : 'grid-cols-[minmax(0,1fr)_3.5rem]'

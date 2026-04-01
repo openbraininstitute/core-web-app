@@ -352,6 +352,19 @@ export function ImportHeader({
           <span className="sr-only">Download CSV</span>
           <RiDownload2Line />
         </Button>
+        <Button
+          rounded
+          type="button"
+          variant="ghost"
+          className={cn(
+            'border-none bg-transparent text-neutral-400 shadow-none md:h-10 md:w-10 lg:h-12 lg:w-12'
+          )}
+          onClick={onClose}
+          aria-label="Back to contribute"
+        >
+          <span className="sr-only">Back to contribute</span>
+          <CloseOutlined className="text-base" />
+        </Button>
       </div>
     </div>
   );

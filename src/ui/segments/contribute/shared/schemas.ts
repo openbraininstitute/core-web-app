@@ -4,9 +4,6 @@ import { z } from 'zod';
 
 import { AgentType, type TAgentType } from '@/ui/segments/contribute/shared/types';
 
-export const DEFAULT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
-export const DEFAULT_LICENSE_NAME = 'CC BY 4.0';
-
 export const ContributionSchema = z.object({
   agent_type: z.enum(
     Object.values(AgentType).map((type) => type.key) as [TAgentType, ...Array<TAgentType>],

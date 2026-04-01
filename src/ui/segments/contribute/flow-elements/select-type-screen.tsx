@@ -46,9 +46,8 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
             searchable={true}
             selectedValue={selectedType ?? undefined}
             clsx={{
-              inlineContainer:
-                'bg-card overflow-hidden rounded-2xl border border-neutral-2 shadow-bnb',
-              trigger: 'h-12! w-full text-primary-9 text-lg hover:!border-none',
+              inlineContainer: 'bg-card overflow-hidden border border-neutral-2 shadow-bnb',
+              trigger: 'min-h-14! w-full text-primary-9 text-lg hover:!border-none',
             }}
           />
         </CardDescription>

@@ -1,15 +1,12 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
 import {
   ExperimentalBoutonDensitySchema,
   type TExperimentalBoutonDensityForm,
 } from '@/ui/segments/contribute/experimental-bouton-density/schema';
-import {
-  DEFAULT_LICENSE_ID,
-  type IContributionFormConfig,
-  type IContributionStep,
-} from '@/ui/segments/contribute/shared';
+import { DEFAULT_LICENSE_ID } from '@/ui/segments/contribute/shared/helpers';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+
+import type { IContributionFormConfig, IContributionStep } from '@/ui/segments/contribute/shared';
 
 export const EXPERIMENTAL_BOUTON_DENSITY_PROGRESS_STEPS: Array<{
   key: string;

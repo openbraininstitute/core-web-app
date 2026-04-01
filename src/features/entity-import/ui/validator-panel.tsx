@@ -93,6 +93,13 @@ import type {
   IValidatorSuggestionState,
 } from '@/features/entity-import/core/adapter';
 
+/** delay before peek-open on hover (symmetric with close; avoids edge flicker). */
+const VALIDATOR_HOVER_OPEN_MS = 300;
+/** delay before peek closes after pointer leaves (slightly longer than open feels calmer). */
+const VALIDATOR_HOVER_CLOSE_MS = 380;
+/** if pointer never leaves after collapse, allow hover peek again after this. */
+const VALIDATOR_SUPPRESS_HOVER_FALLBACK_MS = 1000;
+
 interface IValidatorPanelProps<TPayload, TResult> {
   adapter: IEntityImportAdapter<TPayload, TResult>;
   context: IEntityImportRuntimeContext;
@@ -962,7 +969,6 @@ function SingleColumnValidatorCard({
         </div>
 
         {shouldShowSuggestionSkeleton && <ValidatorSuggestionSkeletonList />}
-
         {shouldShowSuggestions && (
           <div className="px-4 flex flex-col gap-1.5">
             {visibleSuggestions.map((suggestion) => {
@@ -1144,20 +1150,77 @@ export function ValidatorPanel<TPayload, TResult>({
   onToggleCollapsed,
   onHoverExpandedChange,
 }: IValidatorPanelProps<TPayload, TResult>) {
-  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverOpenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressHoverPeekRef = useRef(false);
+  const suppressHoverFallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearSuppressHoverFallback = useCallback(() => {
+    if (suppressHoverFallbackTimeoutRef.current) {
+      clearTimeout(suppressHoverFallbackTimeoutRef.current);
+      suppressHoverFallbackTimeoutRef.current = null;
+    }
+  }, []);
+
+  const armSuppressHoverPeekFallback = useCallback(() => {
+    clearSuppressHoverFallback();
+    suppressHoverFallbackTimeoutRef.current = setTimeout(() => {
+      suppressHoverPeekRef.current = false;
+      suppressHoverFallbackTimeoutRef.current = null;
+    }, VALIDATOR_SUPPRESS_HOVER_FALLBACK_MS);
+  }, [clearSuppressHoverFallback]);
+
+  const handleCollapsePointerDown = useCallback(() => {
+    suppressHoverPeekRef.current = true;
+    armSuppressHoverPeekFallback();
+  }, [armSuppressHoverPeekFallback]);
 
   const handleMouseEnter = useCallback(() => {
     if (!collapsed) return;
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    onHoverExpandedChange(true);
+    if (suppressHoverPeekRef.current) return;
+
+    if (hoverCloseTimeoutRef.current) {
+      clearTimeout(hoverCloseTimeoutRef.current);
+      hoverCloseTimeoutRef.current = null;
+    }
+
+    if (hoverOpenTimeoutRef.current) return;
+
+    hoverOpenTimeoutRef.current = setTimeout(() => {
+      hoverOpenTimeoutRef.current = null;
+      if (!suppressHoverPeekRef.current) {
+        onHoverExpandedChange(true);
+      }
+    }, VALIDATOR_HOVER_OPEN_MS);
   }, [collapsed, onHoverExpandedChange]);
 
   const handleMouseLeave = useCallback(() => {
+    if (hoverOpenTimeoutRef.current) {
+      clearTimeout(hoverOpenTimeoutRef.current);
+      hoverOpenTimeoutRef.current = null;
+    }
+
     if (!collapsed) return;
-    hoverTimeoutRef.current = setTimeout(() => {
+
+    suppressHoverPeekRef.current = false;
+    clearSuppressHoverFallback();
+
+    if (hoverCloseTimeoutRef.current) {
+      clearTimeout(hoverCloseTimeoutRef.current);
+    }
+    hoverCloseTimeoutRef.current = setTimeout(() => {
+      hoverCloseTimeoutRef.current = null;
       onHoverExpandedChange(false);
-    }, 200);
-  }, [collapsed, onHoverExpandedChange]);
+    }, VALIDATOR_HOVER_CLOSE_MS);
+  }, [collapsed, onHoverExpandedChange, clearSuppressHoverFallback]);
+
+  useEffect(() => {
+    return () => {
+      if (hoverOpenTimeoutRef.current) clearTimeout(hoverOpenTimeoutRef.current);
+      if (hoverCloseTimeoutRef.current) clearTimeout(hoverCloseTimeoutRef.current);
+      clearSuppressHoverFallback();
+    };
+  }, [clearSuppressHoverFallback]);
 
   // reset hover state when user explicitly expands
   useEffect(() => {
@@ -1285,6 +1348,7 @@ export function ValidatorPanel<TPayload, TResult>({
                 'flex size-7 shrink-0 items-center justify-center rounded-full',
                 'text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-primary-9'
               )}
+              onPointerDown={!collapsed ? handleCollapsePointerDown : undefined}
               onClick={onToggleCollapsed}
             >
               {collapsed ? (

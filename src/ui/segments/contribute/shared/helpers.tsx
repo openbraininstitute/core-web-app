@@ -11,6 +11,9 @@ import type {
   TStepValidationStatus,
 } from '@/ui/segments/contribute/shared/types';
 
+export const DEFAULT_LICENSE_ID = 'ad8686db-3cdd-4e3f-bcbd-812380a9eba7';
+export const DEFAULT_LICENSE_NAME = 'CC BY 4.0';
+
 export class CustomFormError extends Error {
   public readonly cause?: unknown;
 
@@ -53,7 +56,7 @@ export function renderLabel(
     <span
       className={cn(
         'text-base font-light',
-        type === 'main' && 'text-primary-8 !font-bold',
+        type === 'main' && 'text-primary-8 font-bold!',
         type === 'secondary' && 'text-label',
         cls
       )}

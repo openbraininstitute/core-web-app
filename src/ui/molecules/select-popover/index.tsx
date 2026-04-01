@@ -120,7 +120,7 @@ export function SelectPopover<T = unknown>({
   const selectedOption = options.find((option) => option?.value === selectedValue);
 
   const searchField = searchable ? (
-    <div className="border-neutral-2 shrink-0 border-b p-2">
+    <div className="border-neutral-2 shrink-0 border-b bg-white p-2">
       <div data-slot="command-input-wrapper" className={cn('flex h-9 items-center gap-2 px-3')}>
         <SearchOutlined className="size-4 shrink-0 opacity-50" />
         <input
@@ -204,8 +204,8 @@ export function SelectPopover<T = unknown>({
 
   const triggerClassName = cn(
     triggerBaseClassName,
-    layout === 'inline' &&
-      'rounded-none !border-none !shadow-none hover:!border-none active:!border-none',
+    layout === 'inline' && '!border-none !shadow-none hover:!border-none active:!border-none',
+    layout === 'inline' && (open ? 'rounded-t-2xl rounded-b-none' : 'rounded-full'),
     clsx?.trigger
   );
 
@@ -245,7 +245,14 @@ export function SelectPopover<T = unknown>({
 
   if (layout === 'inline') {
     return (
-      <div ref={containerRef} className={cn('flex w-full flex-col', clsx?.inlineContainer)}>
+      <div
+        ref={containerRef}
+        className={cn(
+          'flex w-full flex-col',
+          clsx?.inlineContainer,
+          open ? 'rounded-2xl' : 'rounded-full'
+        )}
+      >
         <Button
           variant="outline"
           role="combobox"
