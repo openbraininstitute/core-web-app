@@ -34,10 +34,6 @@ export class InteractionManager {
     element.style.touchAction = 'none';
   }
 
-  setView(bounds: ViewBounds) {
-    this.view = { ...bounds };
-  }
-
   setInitialView(bounds: ViewBounds) {
     this.initialView = { ...bounds };
     this.view = { ...bounds };

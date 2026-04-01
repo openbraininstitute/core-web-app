@@ -58,6 +58,9 @@ export default function useSpikeTrace({
   useEffect(() => {
     if (!spikeArrayBuffer) return;
 
+    setData(null);
+    setError(null);
+
     let cancelled = false;
     const worker = new Worker(new URL('../spike-trace.worker.ts', import.meta.url));
     const proxy = Comlink.wrap<SpikeTraceWorkerApi>(worker);
@@ -72,7 +75,6 @@ export default function useSpikeTrace({
       })
       .finally(() => {
         proxy[Comlink.releaseProxy]();
-        worker.terminate();
       });
 
     return () => {

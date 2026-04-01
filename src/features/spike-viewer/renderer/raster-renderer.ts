@@ -42,9 +42,10 @@ export class RasterRenderer {
   private initialView: ViewBounds = { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
   private plotRect: PlotRect = { x: 0, y: 0, width: 1, height: 1 };
   private sortedPops: SortedPopulation[] = [];
-  private totalSpikes = 0;
+  private visibleSpikes = 0;
   private dirty = true;
   private rafId: number | null = null;
+  private resizeRafId: number | null = null;
   private hasData = false;
 
   constructor(container: HTMLElement) {
@@ -75,6 +76,13 @@ export class RasterRenderer {
     container.appendChild(this.tooltipEl);
 
     this.webgl = new WebGLPoints(this.glCanvas);
+    this.webgl.onRestored = () => {
+      for (const pop of this.sortedPops) {
+        this.webgl.setVisibility(pop.name, pop.visible);
+      }
+      this.webgl.resize(this.glCanvas.width, this.glCanvas.height);
+      this.scheduleRender();
+    };
     this.axis = new AxisOverlay(this.axisCanvas);
     this.interaction = new InteractionManager(this.interactionLayer);
 
@@ -85,7 +93,14 @@ export class RasterRenderer {
 
     this.interaction.onHover = (info) => this.handleHover(info);
 
-    this.observer = new ResizeObserver(() => this.handleResize());
+    this.observer = new ResizeObserver(() => {
+      if (this.resizeRafId === null) {
+        this.resizeRafId = requestAnimationFrame(() => {
+          this.resizeRafId = null;
+          this.handleResize();
+        });
+      }
+    });
     this.observer.observe(container);
     this.handleResize();
   }
@@ -111,7 +126,7 @@ export class RasterRenderer {
       return { name: pop.name, timestamps, nodeIds, visible: true };
     });
 
-    this.totalSpikes = populations.reduce((sum, p) => sum + p.timestamps.length, 0);
+    this.visibleSpikes = populations.reduce((sum, p) => sum + p.timestamps.length, 0);
     this.hasData = true;
     this.scheduleRender();
   }
@@ -122,6 +137,9 @@ export class RasterRenderer {
       pop.visible = visible;
       this.webgl.setVisibility(pop.name, visible);
     }
+    this.visibleSpikes = this.sortedPops
+      .filter((p) => p.visible)
+      .reduce((sum, p) => sum + p.timestamps.length, 0);
     this.scheduleRender();
   }
 
@@ -147,7 +165,7 @@ export class RasterRenderer {
   private computePointSize(): number {
     // Density-aware base: large for sparse data, small for dense
     const visibleArea = this.plotRect.width * this.plotRect.height;
-    const density = this.totalSpikes / Math.max(1, visibleArea);
+    const density = this.visibleSpikes / Math.max(1, visibleArea);
     const baseSize = Math.min(6, Math.max(2, 4 - Math.log10(Math.max(1e-4, density))));
 
     // Zoom scaling: grows as user zooms in
@@ -189,8 +207,7 @@ export class RasterRenderer {
     }
 
     this.tooltipEl.style.display = 'block';
-    this.tooltipEl.textContent =
-      `${nearest.population}_${Math.round(nearest.nodeId)}: ${nearest.time.toFixed(2)} ms`;
+    this.tooltipEl.textContent = `${nearest.population}_${Math.round(nearest.nodeId)}: ${nearest.time.toFixed(2)} ms`;
 
     // Edge-aware placement: flip when tooltip would overflow container
     const container = this.glCanvas.parentElement;
@@ -283,6 +300,7 @@ export class RasterRenderer {
 
   destroy() {
     if (this.rafId !== null) cancelAnimationFrame(this.rafId);
+    if (this.resizeRafId !== null) cancelAnimationFrame(this.resizeRafId);
     this.observer.disconnect();
     this.interaction.destroy();
     this.webgl.destroy();

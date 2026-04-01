@@ -48,14 +48,20 @@ function glRequire<T>(value: T | null, name: string): T {
 }
 
 export class WebGLPoints {
+  private canvas: HTMLCanvasElement;
   private gl: WebGL2RenderingContext;
-  private program: WebGLProgram;
-  private uBounds: WebGLUniformLocation;
-  private uColor: WebGLUniformLocation;
-  private uPointSize: WebGLUniformLocation;
+  private program!: WebGLProgram;
+  private uBounds!: WebGLUniformLocation;
+  private uColor!: WebGLUniformLocation;
+  private uPointSize!: WebGLUniformLocation;
   private populations: PopulationBuffer[] = [];
+  private lastData: { populations: SpikePopulation[]; colors: string[] } | null = null;
+  private contextLost = false;
+
+  onRestored: (() => void) | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
     const gl = canvas.getContext('webgl2', {
       antialias: true,
       alpha: true,
@@ -64,16 +70,67 @@ export class WebGLPoints {
     if (!gl) throw new Error('WebGL2 not supported');
     this.gl = gl;
 
+    this.initGL();
+
+    canvas.addEventListener('webglcontextlost', this.handleContextLost);
+    canvas.addEventListener('webglcontextrestored', this.handleContextRestored);
+  }
+
+  setData(populations: SpikePopulation[], colors: string[]) {
+    this.lastData = { populations, colors };
+    this.initBuffers(populations, colors);
+  }
+
+  draw(bounds: { xMin: number; yMin: number; xMax: number; yMax: number }, pointSize: number) {
+    if (this.contextLost) return;
+    const { gl } = this;
+
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // biome-ignore lint/correctness/useHookAtTopLevel: WebGL API, not a React hook
+    gl.useProgram(this.program);
+    gl.uniform4f(this.uBounds, bounds.xMin, bounds.yMin, bounds.xMax, bounds.yMax);
+    gl.uniform1f(this.uPointSize, pointSize * (window.devicePixelRatio || 1));
+
+    for (const pop of this.populations) {
+      if (!pop.visible || pop.count === 0) continue;
+      gl.uniform4fv(this.uColor, pop.color);
+      gl.bindVertexArray(pop.vao);
+      gl.drawArrays(gl.POINTS, 0, pop.count);
+    }
+
+    gl.bindVertexArray(null);
+  }
+
+  setVisibility(name: string, visible: boolean) {
+    const pop = this.populations.find((p) => p.name === name);
+    if (pop) pop.visible = visible;
+  }
+
+  resize(width: number, height: number) {
+    if (!this.contextLost) this.gl.viewport(0, 0, width, height);
+  }
+
+  destroy() {
+    this.cleanup();
+    if (!this.contextLost) this.gl.deleteProgram(this.program);
+    this.canvas.removeEventListener('webglcontextlost', this.handleContextLost);
+    this.canvas.removeEventListener('webglcontextrestored', this.handleContextRestored);
+    this.lastData = null;
+  }
+
+  private initGL() {
+    const { gl } = this;
     this.program = this.createProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     this.uBounds = glRequire(gl.getUniformLocation(this.program, 'u_bounds'), 'u_bounds');
     this.uColor = glRequire(gl.getUniformLocation(this.program, 'u_color'), 'u_color');
     this.uPointSize = glRequire(gl.getUniformLocation(this.program, 'u_pointSize'), 'u_pointSize');
-
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
 
-  setData(populations: SpikePopulation[], colors: string[]) {
+  private initBuffers(populations: SpikePopulation[], colors: string[]) {
     this.cleanup();
     const { gl } = this;
 
@@ -112,35 +169,17 @@ export class WebGLPoints {
     }
   }
 
-  draw(bounds: { xMin: number; yMin: number; xMax: number; yMax: number }, pointSize: number) {
-    const { gl } = this;
+  private readonly handleContextLost = (e: Event) => {
+    e.preventDefault();
+    this.contextLost = true;
+  };
 
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // biome-ignore lint/correctness/useHookAtTopLevel: WebGL API, not a React hook
-    gl.useProgram(this.program);
-    gl.uniform4f(this.uBounds, bounds.xMin, bounds.yMin, bounds.xMax, bounds.yMax);
-    gl.uniform1f(this.uPointSize, pointSize * (window.devicePixelRatio || 1));
-
-    for (const pop of this.populations) {
-      if (!pop.visible || pop.count === 0) continue;
-      gl.uniform4fv(this.uColor, pop.color);
-      gl.bindVertexArray(pop.vao);
-      gl.drawArrays(gl.POINTS, 0, pop.count);
-    }
-
-    gl.bindVertexArray(null);
-  }
-
-  setVisibility(name: string, visible: boolean) {
-    const pop = this.populations.find((p) => p.name === name);
-    if (pop) pop.visible = visible;
-  }
-
-  resize(width: number, height: number) {
-    this.gl.viewport(0, 0, width, height);
-  }
+  private readonly handleContextRestored = () => {
+    this.contextLost = false;
+    this.initGL();
+    if (this.lastData) this.initBuffers(this.lastData.populations, this.lastData.colors);
+    this.onRestored?.();
+  };
 
   private createProgram(vsSrc: string, fsSrc: string): WebGLProgram {
     const { gl } = this;
@@ -174,6 +213,10 @@ export class WebGLPoints {
   }
 
   private cleanup() {
+    if (this.contextLost) {
+      this.populations = [];
+      return;
+    }
     const { gl } = this;
     for (const pop of this.populations) {
       gl.deleteVertexArray(pop.vao);
@@ -181,10 +224,5 @@ export class WebGLPoints {
       gl.deleteBuffer(pop.yBuffer);
     }
     this.populations = [];
-  }
-
-  destroy() {
-    this.cleanup();
-    this.gl.deleteProgram(this.program);
   }
 }

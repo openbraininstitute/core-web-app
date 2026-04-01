@@ -57,13 +57,16 @@ export class AxisOverlay {
     const ctx = this.ctx;
     const dpr = window.devicePixelRatio || 1;
 
+    const xTicks = computeTicks(bounds.xMin, bounds.xMax, 6);
+    const yTicks = computeTicks(bounds.yMin, bounds.yMax, 6);
+
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.save();
     ctx.scale(dpr, dpr);
 
     this.drawBackground(ctx, plotRect);
-    this.drawGrid(ctx, bounds, plotRect);
-    this.drawAxes(ctx, bounds, plotRect);
+    this.drawGrid(ctx, bounds, plotRect, xTicks, yTicks);
+    this.drawAxes(ctx, bounds, plotRect, xTicks, yTicks);
     this.drawAxisTitles(ctx, plotRect, ctx.canvas.height / dpr);
 
     ctx.restore();
@@ -74,10 +77,13 @@ export class AxisOverlay {
     ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
   }
 
-  private drawGrid(ctx: CanvasRenderingContext2D, bounds: ViewBounds, rect: PlotRect) {
-    const xTicks = computeTicks(bounds.xMin, bounds.xMax, 6);
-    const yTicks = computeTicks(bounds.yMin, bounds.yMax, 6);
-
+  private drawGrid(
+    ctx: CanvasRenderingContext2D,
+    bounds: ViewBounds,
+    rect: PlotRect,
+    xTicks: number[],
+    yTicks: number[]
+  ) {
     ctx.strokeStyle = '#e8e8e8';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -98,11 +104,15 @@ export class AxisOverlay {
     ctx.stroke();
   }
 
-  private drawAxes(ctx: CanvasRenderingContext2D, bounds: ViewBounds, rect: PlotRect) {
+  private drawAxes(
+    ctx: CanvasRenderingContext2D,
+    bounds: ViewBounds,
+    rect: PlotRect,
+    xTicks: number[],
+    yTicks: number[]
+  ) {
     const xRange = bounds.xMax - bounds.xMin;
     const yRange = bounds.yMax - bounds.yMin;
-    const xTicks = computeTicks(bounds.xMin, bounds.xMax, 6);
-    const yTicks = computeTicks(bounds.yMin, bounds.yMax, 6);
     const xStep = xTicks.length > 1 ? xTicks[1] - xTicks[0] : 1;
     const yStep = yTicks.length > 1 ? yTicks[1] - yTicks[0] : 1;
 
