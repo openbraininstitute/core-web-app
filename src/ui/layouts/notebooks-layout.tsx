@@ -584,24 +584,20 @@ async function syncNotebook({
   notebook,
   virtualLabId,
   projectId,
+  targetProjectId,
 }: {
   notebook: INotebook;
   virtualLabId: string;
   projectId: string;
-  targetProjectIds: string[];
+  targetProjectId: string;
 }) {
   const createdNotebook = await createNotebook({
     payload: notebook,
-    context: { virtualLabId, projectId },
+    context: { virtualLabId, projectId: targetProjectId },
   });
 
   const sourceAssets = await Promise.all(
     notebook.assets.map(async (asset) => {
-      const ctx = {
-        virtualLabId,
-        projectId,
-      };
-
       const arrayBuffer = (await downloadAsset({
         ctx: {
           virtualLabId,
@@ -614,7 +610,7 @@ async function syncNotebook({
       })) as ArrayBuffer;
 
       return {
-        ctx,
+        ctx: { virtualLabId, projectId: targetProjectId },
         entityType: EntityTypeDict.Notebook,
         entityId: createdNotebook.id,
         fileName: asset.path.split('/').pop() ?? asset.id,
