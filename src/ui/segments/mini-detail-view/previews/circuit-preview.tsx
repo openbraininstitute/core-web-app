@@ -1,8 +1,8 @@
 import { Empty } from 'antd';
 
 import { hasAssets } from '@/api/entitycore/guards';
+import { getAsset } from '@/api/entitycore/selectors/assets';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getAssetElement } from '@/api/entitycore/utils';
 import { EmptyPreview } from '@/entity-configuration/definitions/renderer';
 import { ProgressiveEntityImage } from '@/ui/segments/explore/circuit/elements/use-progressive-img';
 
@@ -10,10 +10,10 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
 export function CircuitPreview({ record }: { record: ICircuit }) {
   if (!hasAssets(record)) return EmptyPreview;
-  const visualizationAsset = getAssetElement({
+  const visualizationAsset = getAsset({
     assets: record.assets,
-    filter: (a) => a.label === AssetLabel.circuit_visualization,
-  });
+    label: AssetLabel.circuit_visualization,
+  }).getOneOrNull();
 
   if (!visualizationAsset)
     return (
@@ -31,7 +31,7 @@ export function CircuitPreview({ record }: { record: ICircuit }) {
         key={visualizationAsset.id}
         asset={visualizationAsset}
         entityId={record.id}
-        alt="hii"
+        alt={record.name}
         height={300}
         width="100%"
         maxHeight="auto"

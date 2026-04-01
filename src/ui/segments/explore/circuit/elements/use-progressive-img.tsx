@@ -115,7 +115,7 @@ export function ProgressiveEntityImage({
             entityId,
             assetPath,
             entityType: EntityTypeDict.Circuit,
-            id: asset?.id!,
+            id: asset!.id,
             ctx: context,
             asRawResponse: true,
           }),
@@ -123,7 +123,6 @@ export function ProgressiveEntityImage({
           setDownloadProgress(progress);
         }
       );
-
       const blob = new Blob(response as BlobPart[], { type: 'image/webp' });
       const tempUrl = URL.createObjectURL(blob);
       return new Promise<ImageCacheEntry>((resolve, reject) => {

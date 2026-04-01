@@ -1,10 +1,10 @@
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 
+import type { TObiOneTaskType } from '@/api/one/types/task';
 import type { WorkspaceContext } from '@/types/common';
-import type { TObiOneTaskType } from './types/task';
 
-type LaunchExtractionParams = {
+type RunTaskParams = {
   ctx: WorkspaceContext;
   task_type: TObiOneTaskType;
   config_id: string;
@@ -12,22 +12,22 @@ type LaunchExtractionParams = {
 };
 
 /**
- * Launches a circuit extraction task via the obi-one API.
+ * runs a task via the obi-one API.
  *
  * @param params - The parameters for the API request.
  * @param params.ctx - The workspace context (virtualLabId, projectId).
- * @param params.entityType - The entity type (e.g., 'CircuitExtractionConfig').
- * @param params.entityId - The entity ID (circuit extraction config ID).
+ * @param params.task_type - The task type.
+ * @param params.config_id - The config ID.
  * @param params.signal - Optional AbortSignal for request cancellation.
  *
  * @returns A promise that resolves to the execution activity ID.
  */
-export async function launchExtraction({
+export async function runTask({
   ctx,
   task_type,
   config_id,
   signal,
-}: LaunchExtractionParams): Promise<string> {
+}: RunTaskParams): Promise<string> {
   const api = await obioneApi();
 
   const response = await api.post<string>(`/declared/task/launch`, {

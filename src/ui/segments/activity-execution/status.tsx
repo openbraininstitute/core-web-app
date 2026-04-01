@@ -44,18 +44,18 @@ type ExecutionStatusProps = {
 
 export function ExecutionStatus({ status }: ExecutionStatusProps) {
   const color = getStatusColor(status);
-
   const statusConfig = StatusConfig[status];
 
   return (
     <div
-      className="flex w-32 items-center justify-center gap-2 rounded-full border px-1.5 py-0.5"
+      className="flex  min-w-20 w-full max-w-30  items-center justify-between gap-2 rounded-full border px-4 py-0.5"
       style={{
         color,
         borderColor: color,
+        backgroundColor: `${color}1A`,
       }}
     >
-      <span className="capitalize">{statusConfig.label}</span>
+      <span className="capitalize font-bold select-none">{statusConfig.label}</span>
       <span className="text-xs">{statusConfig.icon}</span>
     </div>
   );
@@ -96,10 +96,11 @@ export default function ExecutionAggregatedStatus({
 
         <TooltipContent
           avoidCollisions
-          side="left"
-          sideOffset={5}
+          side="bottom"
+          align="end"
+          sideOffset={0}
           collisionPadding={{ bottom: 20 }}
-          className="text-primary-8 max-w-2xs bg-white text-base shadow-lg"
+          className="rounded-xl border border-neutral-200 bg-white p-2 text-sm text-neutral-900 shadow-[0_16px_40px_rgba(0,0,0,0.16)]"
           arrowClassName="bg-white"
         >
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 p-2">
@@ -112,7 +113,10 @@ export default function ExecutionAggregatedStatus({
                     <span className="uppercase">{statusConfig.label}:</span>
                   </dt>
 
-                  <dd style={{ color: getColor(statusConfig.value) }}>
+                  <dd
+                    className="text-primary-8 font-bold"
+                    style={{ color: getColor(statusConfig.value) }}
+                  >
                     <span>{statusCountMap.get(statusConfig.value) ?? 0}</span>
                   </dd>
                 </Fragment>

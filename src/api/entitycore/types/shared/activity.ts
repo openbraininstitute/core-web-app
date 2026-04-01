@@ -1,3 +1,4 @@
+// TODO: this file should be removed as it get replaced by entities/task-activity
 import type {
   EntityAuthorization,
   EntityCoreIdentifiable,
@@ -13,6 +14,7 @@ import type {
 interface IUsedEntity extends EntityCoreIdentifiable, EntityAuthorization {}
 interface IGeneratedEntity extends EntityCoreIdentifiable, EntityAuthorization {}
 
+// @deprecated use ActivityStatus from entities/task-activity instead
 export enum ActivityStatus {
   CREATED = 'created',
   PENDING = 'pending',
@@ -22,6 +24,7 @@ export enum ActivityStatus {
   CANCELLED = 'cancelled',
 }
 
+// @deprecated use TActivityStatus from entities/task-activity instead
 export type TActivityStatus = `${ActivityStatus}`;
 
 export const ActivityTypeDict = {
