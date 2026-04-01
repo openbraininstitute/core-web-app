@@ -2,9 +2,8 @@
 
 import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
-import { isNil } from 'es-toolkit';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react';
@@ -12,18 +11,13 @@ import { type ReactNode, useEffect, useRef, useState, useTransition } from 'reac
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
-import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
-import { createProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
-import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
-import { assignProjectBudget } from '@/services/virtual-lab/projects';
 import { Button as UiButton } from '@/ui/molecules/button';
 import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -36,7 +30,6 @@ import { buildStripeFormOptions } from '../segments/virtual-lab-settings/element
 
 import type { UploadFile, UploadProps } from 'antd';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
-import type { Project, ProjectCreationResponse } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function createNotebook({
@@ -597,8 +590,18 @@ async function syncNotebook({
   projectId: string;
   targetProjectIds: string[];
 }) {
+  const createdNotebook = await createNotebook({
+    payload: notebook,
+    context: { virtualLabId, projectId },
+  });
+
   const sourceAssets = await Promise.all(
     notebook.assets.map(async (asset) => {
+      const ctx = {
+        virtualLabId,
+        projectId,
+      };
+
       const arrayBuffer = (await downloadAsset({
         ctx: {
           virtualLabId,
@@ -610,37 +613,25 @@ async function syncNotebook({
         asRawResponse: false,
       })) as ArrayBuffer;
 
-      return new Blob([arrayBuffer]);
+      return {
+        ctx,
+        entityType: EntityTypeDict.Notebook,
+        entityId: createdNotebook.id,
+        fileName: asset.path.split('/').pop() ?? asset.id,
+        payload: arrayBuffer,
+        mimeType: asset.content_type,
+        label: asset.label,
+      };
     })
   );
 
-  // const createdNotebook = await createNotebook({
-  //   payload: notebook,
-  //   context: { virtualLabId, projectId },
-  // });
+  // Upload assets to new notebook
 
-  // Upload asset notebook
-
-  const createAssetRes = await createAsset({
-    ctx: { virtualLabId, projectId },
-    entityType: EntityTypeDict.Notebook,
-    entityId: notebook.id,
-    fileName: 'test.ipynb',
-    payload: sourceAssets[0],
-    mimeType: 'application/x-ipynb+json',
-    label: AssetLabel.jupyter_notebook,
-  });
-
-  // console.log(`HERE ${notebook.id}`, createNotebook);
-
-  // await Promise.all(
-  //   sourceAssets.map((asset) =>
-  //     api.post(`/analysis-notebook-template/${createdNotebook.data.id}/assets`, {
-  //       body: asset.data,
-  //       headers,
-  //     })
-  //   )
-  // );
+  await Promise.all(
+    sourceAssets.map((asset) => {
+      return createAsset(asset);
+    })
+  );
 }
 
 function CourseSetup({
