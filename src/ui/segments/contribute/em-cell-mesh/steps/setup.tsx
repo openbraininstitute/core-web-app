@@ -27,7 +27,7 @@ export function Setup() {
       label: value.label,
       value: value.key,
     })),
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
+    clsx: { trigger: 'rounded-full! w-full h-12', content: 'z-[99999]' },
   });
 
   const EMCellMeshTypeFormInput = SelectPopoverFormItem<TEMCellMeshType>({
@@ -35,7 +35,7 @@ export function Setup() {
       label: value.label,
       value: value.key,
     })),
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
+    clsx: { trigger: 'rounded-full! w-full h-12', content: 'z-[99999]' },
   });
 
   return (
@@ -50,7 +50,7 @@ export function Setup() {
           },
         ]}
       >
-        <Input className="h-12 rounded-full" placeholder="Enter name" />
+        <Input className="h-12 rounded-full!" placeholder="Enter name" />
       </Form.Item>
 
       <Form.Item
@@ -63,7 +63,7 @@ export function Setup() {
           },
         ]}
       >
-        <Input.TextArea rows={4} className="rounded-xl" placeholder="Enter description" />
+        <Input.TextArea rows={4} className="rounded-xl!" placeholder="Enter description" />
       </Form.Item>
 
       <Form.Item
@@ -96,7 +96,7 @@ export function Setup() {
         ]}
       >
         <InputNumber
-          className="h-12 w-full rounded-full flex items-center [&_.ant-input-number-handler-wrap]:hidden"
+          className="h-12 w-full rounded-full! flex items-center [&_.ant-input-number-handler-wrap]:hidden"
           placeholder="Enter cell ID (int)"
         />
       </Form.Item>
@@ -111,7 +111,7 @@ export function Setup() {
           },
         ]}
       >
-        <DatePicker className="h-12 w-full rounded-full" format="DD/MM/YYYY" maxDate={dayjs()} />
+        <DatePicker className="h-12 w-full rounded-full!" format="DD/MM/YYYY" maxDate={dayjs()} />
       </Form.Item>
 
       <Form.Item
@@ -124,7 +124,7 @@ export function Setup() {
         ]}
       >
         <InputNumber
-          className="h-12 w-full rounded-full flex items-center [&_.ant-input-number-handler-wrap]:hidden"
+          className="h-12 w-full rounded-full! flex items-center [&_.ant-input-number-handler-wrap]:hidden"
           placeholder="Enter version (int)"
         />
       </Form.Item>
@@ -151,7 +151,7 @@ export function Setup() {
         ]}
       >
         <InputNumber
-          className="h-12 w-full rounded-full flex items-center [&_.ant-input-number-handler-wrap]:hidden"
+          className="h-12 w-full rounded-full! flex items-center [&_.ant-input-number-handler-wrap]:hidden"
           placeholder="Enter level (int)"
         />
       </Form.Item>

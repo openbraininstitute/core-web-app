@@ -74,11 +74,21 @@ export function ContributionPipelineProvider<
         );
 
         const partialSchema = schema.pick(pickObject);
-        const parseResult = partialSchema.safeParse(allValues);
+        const partialValues = fieldKey.reduce(
+          (acc, key) => {
+            if (allValues) acc[key] = allValues[key as keyof typeof allValues];
+            return acc;
+          },
+          {} as Record<string, unknown>
+        );
+        const parseResult = partialSchema.safeParse(partialValues);
         statusMap[step.key] = parseResult.success ? 'valid' : 'invalid';
       } else {
         const partialSchema = schema.pick({ [fieldKey]: true } as Record<string, true>);
-        const parseResult = partialSchema.safeParse(allValues);
+        const partialValues = allValues
+          ? { [fieldKey]: allValues[fieldKey as keyof typeof allValues] }
+          : {};
+        const parseResult = partialSchema.safeParse(partialValues);
         statusMap[step.key] = parseResult.success ? 'valid' : 'invalid';
       }
     });

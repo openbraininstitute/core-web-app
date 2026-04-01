@@ -31,7 +31,7 @@ export function Setup() {
       value: key,
       label: upperFirst(label),
     })),
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
+    clsx: { trigger: 'rounded-full! w-full h-12', content: 'z-[99999]' },
     placeholder: 'Select recording type',
   });
 
@@ -42,13 +42,13 @@ export function Setup() {
         value: key,
         label: upperFirst(label),
       })),
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
+    clsx: { trigger: 'rounded-full! w-full h-12', content: 'z-[99999]' },
     placeholder: 'Select recording origin',
   });
 
   const RecordingLocationFormInput = SelectPopoverFormItem({
     options: RECORDING_LOCATION_OPTIONS,
-    clsx: { trigger: 'rounded-full w-full h-12', content: 'z-[99999]' },
+    clsx: { trigger: 'rounded-full! w-full h-12', content: 'z-[99999]' },
     placeholder: 'Select recording location',
   });
 
@@ -65,7 +65,7 @@ export function Setup() {
         ]}
       >
         <Input
-          className="h-12 rounded-full placeholder:text-sm"
+          className="h-12 rounded-full! placeholder:text-sm"
           size="large"
           placeholder="Enter cell recording name"
         />
@@ -87,7 +87,7 @@ export function Setup() {
       >
         <Input.TextArea
           rows={5}
-          className="rounded-xl placeholder:text-sm"
+          className="rounded-xl! placeholder:text-sm"
           placeholder="Enter cell recording description"
         />
       </Form.Item>
@@ -123,7 +123,7 @@ export function Setup() {
           },
         ]}
       >
-        <DatePicker className="h-12 w-full rounded-full" format="DD/MM/YYYY" maxDate={dayjs()} />
+        <DatePicker className="h-12 w-full rounded-full!" format="DD/MM/YYYY" maxDate={dayjs()} />
       </Form.Item>
 
       <Form.Item
@@ -141,7 +141,7 @@ export function Setup() {
         ]}
       >
         <Input
-          className="h-12 rounded-full placeholder:text-sm"
+          className="h-12 rounded-full! placeholder:text-sm"
           placeholder="Enter contact email"
         />
       </Form.Item>
@@ -160,7 +160,10 @@ export function Setup() {
           },
         ]}
       >
-        <Input className="h-12 rounded-full placeholder:text-sm" placeholder="Enter published in" />
+        <Input
+          className="h-12 rounded-full! placeholder:text-sm"
+          placeholder="Enter published in"
+        />
       </Form.Item>
 
       <Form.Item
@@ -206,7 +209,7 @@ export function Setup() {
             <InputNumber
               placeholder="X (microns)"
               size="large"
-              className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
+              className="h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
             />
           </Form.Item>
           <Form.Item
@@ -227,7 +230,7 @@ export function Setup() {
             <InputNumber
               placeholder="Y (microns)"
               size="large"
-              className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
+              className="h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
             />
           </Form.Item>
           <Form.Item
@@ -248,7 +251,7 @@ export function Setup() {
             <InputNumber
               placeholder="Z (microns)"
               size="large"
-              className="h-12 w-full rounded-full placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
+              className="h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
             />
           </Form.Item>
         </Space.Compact>
@@ -371,7 +374,7 @@ export function Setup() {
       >
         <Input.TextArea
           rows={3}
-          className="rounded-xl placeholder:text-sm"
+          className="rounded-xl! placeholder:text-sm"
           placeholder="Add any relevant notes"
         />
       </Form.Item>

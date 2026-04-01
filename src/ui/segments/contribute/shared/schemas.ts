@@ -88,7 +88,7 @@ export const LocationSchema = z
     y: z.number({ error: 'Y coordinate should be a number' }).nullish(),
     z: z.number({ error: 'Z coordinate should be a number' }).nullish(),
   })
-  .nullable()
+  .nullish()
   .superRefine((val, ctx) => {
     if (!val) {
       return;

@@ -85,7 +85,7 @@ export function Setup() {
       >
         <Input.TextArea
           rows={5}
-          className="rounded-xl placeholder:text-sm"
+          className="rounded-xl! placeholder:text-sm"
           placeholder="Enter cell recording description"
         />
       </Form.Item>
