@@ -11,6 +11,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type {
+  CellMorphologyFilter,
   ICellMorphology,
   ICellMorphologyExpanded,
 } from '@/api/entitycore/types/entities/cell-morphology';
@@ -20,8 +21,16 @@ export const protocolTypeFilter = {
   cell_morphology_protocol__generation_type__in: [
     CellMorphologyGenerationTypeDictionary.ComputationallySynthesized,
     CellMorphologyGenerationTypeDictionary.ModifiedReconstruction,
+    CellMorphologyGenerationTypeDictionary.Placeholder,
   ],
 };
+
+function narrowFilters(filters?: CellMorphologyFilter) {
+  return {
+    ...filters,
+    ...protocolTypeFilter,
+  };
+}
 
 export const SynthesizedCellMorphology: EntityCoreTypeConfig<
   ICellMorphology | ICellMorphologyExpanded
@@ -38,14 +47,15 @@ export const SynthesizedCellMorphology: EntityCoreTypeConfig<
       extraQueryKeyBuilder: { ...protocolTypeFilter },
     },
     query: {
-      list: (params: Parameters<typeof getCellMorphologies>[0]) =>
-        getCellMorphologies({
+      list: (...params) => {
+        const mergedFilters = narrowFilters(params[0].filters);
+        return getCellMorphologies({
           ...params,
-          filters: {
-            ...params.filters,
-            ...protocolTypeFilter,
-          },
-        }),
+          context: params[0].context,
+          withFacets: params[0].withFacets,
+          filters: mergedFilters,
+        });
+      },
       one: getCellMorphology,
     },
   },
