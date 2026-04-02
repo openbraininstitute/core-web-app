@@ -15,6 +15,7 @@ export const viewDefForMEModelCircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.Description,
     EntityCoreFields.CircuitName,
     EntityCoreFields.CreatedBy,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.RegistrationDate,
     EntityCoreFields.SimulationCampaignStatus,
   ],

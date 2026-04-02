@@ -18,7 +18,7 @@ export default function Page({
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   null
 >) {
-  const { type, virtualLabId, projectId } = use(params);
+  const { type } = use(params);
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
   const baseModelType = getBaseModelTypeFromActivityType({
@@ -29,7 +29,6 @@ export default function Page({
   if (!baseModelType) return notFound();
   return (
     <WorkflowBrowseEntity
-      workspace={{ virtualLabId, projectId }}
       baseModelType={baseModelType}
       section={WorkspaceSection.SimulateWorkflow}
     />

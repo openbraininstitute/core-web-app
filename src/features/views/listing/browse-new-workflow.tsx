@@ -14,15 +14,13 @@ import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   section: TWorkspaceSection;
-  workspace: WorkspaceContext;
   baseModelType: TExtendedEntitiesTypeDict;
 };
 
-export function WorkflowBrowseEntity({ section, workspace, baseModelType }: Props) {
+export function WorkflowBrowseEntity({ section, baseModelType }: Props) {
   const dataType = getEntityByExtendedType({ type: baseModelType });
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
   const { changeBrainRegion } = useWorkspaceHierarchyRegistry();
