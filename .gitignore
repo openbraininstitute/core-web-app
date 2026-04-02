@@ -232,3 +232,9 @@ next-env.d.ts
 
 .kiro
 personal
+
+# AI coding agent and LLM related files
+AGENTS.md
+CLAUDE.md
+.claude
+.mcp.json
