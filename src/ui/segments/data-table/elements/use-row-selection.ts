@@ -1,3 +1,4 @@
+import { uniqBy } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 
 import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
@@ -32,7 +33,9 @@ export function useRowSelection<T extends { id: string }>({
   const clearSelectedRows = () => setSelectedRows([]);
 
   const onRowSelect = (_keys: Key[], rows: Array<T>) => {
-    setSelectedRows(() => rows);
+    setSelectedRows((prevRows) => {
+      return uniqBy([...prevRows, ...rows], (r) => r.id);
+    });
     onRowsSelected?.(rows);
   };
 

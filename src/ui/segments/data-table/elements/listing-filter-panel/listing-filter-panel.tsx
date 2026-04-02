@@ -161,7 +161,6 @@ export function ListingFilterPanel({
       Page: DEFAULT_PAGE_NUMBER,
     });
     setIsApplyingFilters(false);
-    setSelectedRows([]);
   };
 
   const filterItems = useFilterItems(
