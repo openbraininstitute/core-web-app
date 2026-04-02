@@ -679,7 +679,7 @@ describe('EntityImportFeature', () => {
 
     const submitButton = screen.getByRole('button', { name: /Imported 1\/2 rows/i });
     await waitFor(() => {
-      expect(submitButton).toBeEnabled();
+      expect(submitButton).toBeDisabled();
       expect(submitButton).toHaveAttribute('data-import-run-tone', 'partial');
       expect(submitButton).toHaveStyle('--entity-import-submit-progress: 100%');
     });
@@ -726,7 +726,7 @@ describe('EntityImportFeature', () => {
 
     const submitButton = await screen.findByRole('button', { name: /Imported 0\/2 rows/i });
     await waitFor(() => {
-      expect(submitButton).toBeEnabled();
+      expect(submitButton).toBeDisabled();
       expect(submitButton).toHaveAttribute('data-import-run-tone', 'failed');
       expect(submitButton).toHaveStyle('--entity-import-submit-progress: 100%');
       expect(screen.getByLabelText('Row 1 import status: failed to import')).toBeInTheDocument();
@@ -749,6 +749,42 @@ describe('EntityImportFeature', () => {
     expect(within(failureTooltip).getByTestId('import-run-failure-list')).toHaveClass(
       'overflow-y-auto'
     );
+  });
+
+  it('disables the import button after completion until the user edits the table', async () => {
+    const user = userEvent.setup();
+    const submitRow = vi.fn(async ({ row }: { row: { id: string } }) => ({ id: row.id }));
+    const importRunAdapter = createImportRunAdapter({
+      id: 'import-complete-lock',
+      submitRow,
+    });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Import Completion Lock"
+        onClose={() => {}}
+        adapter={importRunAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A' }, { name: 'Neuron B' }]}
+      />
+    );
+
+    const importButton = screen.getByRole('button', { name: /Import rows 2 row\(s\)/i });
+    await user.click(importButton);
+
+    const importedButton = await screen.findByRole('button', { name: /Imported 2\/2 rows/i });
+    await waitFor(() => {
+      expect(importedButton).toBeDisabled();
+    });
+
+    const nameInput = screen.getByLabelText('Name row 1') as HTMLInputElement;
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Neuron A edited');
+
+    const reenabledButton = await screen.findByRole('button', { name: /Import rows 2 row\(s\)/i });
+    await waitFor(() => {
+      expect(reenabledButton).toBeEnabled();
+    });
   });
 
   it('scrolls the table body to the new row when adding a row', async () => {

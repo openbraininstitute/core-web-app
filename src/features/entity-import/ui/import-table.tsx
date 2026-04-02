@@ -235,7 +235,7 @@ export function ImportTable<TPayload, TResult>({
               </span>
               {isImportPhase ? (
                 importRowStatus === ImportRowResultStatus.Pending ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-1 px-2 py-0.5 text-[10px] font-semibold text-primary-9">
+                  <span className="inline-flex items-center justify-center gap-1 rounded-full bg-primary-1 px-0.5 py-0.5 text-[10px] w-4.5! h-4.5! font-semibold text-primary-9">
                     <LoadingOutlined spin className="text-[10px]" />
                   </span>
                 ) : importRowStatus === ImportRowResultStatus.Succeeded ? (

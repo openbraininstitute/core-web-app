@@ -313,9 +313,9 @@ export function ImportHeader({
                       size="sm"
                     >
                       <AlertContent>
-                        <AlertTitle>
+                        {/* <AlertTitle>
                           {resolveCsvUploadNotificationTitle(notification.tone)}
-                        </AlertTitle>
+                        </AlertTitle> */}
                         <AlertDescription>{notification.message}</AlertDescription>
                       </AlertContent>
                     </Alert>

@@ -240,15 +240,15 @@ function resolveImportFailureSummary(importRun: IImportRunState): string {
 
 function resolveSubmitButtonFillClassName(tone: SubmitButtonTone): string {
   return match(tone)
-    .with(SubmitButtonTone.Success, () => 'bg-emerald-500')
+    .with(SubmitButtonTone.Success, () => 'bg-emerald-700')
     .with(SubmitButtonTone.Failed, () => 'bg-amber-500')
     .otherwise(() => 'bg-primary-8');
 }
 
 const SUBMIT_BUTTON_IDLE_CHROME = [
-  'border-primary-8 bg-primary-8 text-white',
+  'border-primary-8 bg-primary-8 text-white!',
   'hover:bg-primary-9 hover:border-primary-9 hover:text-white active:bg-primary-9',
-  'disabled:bg-[#595959] disabled:border-[#595959] disabled:text-white disabled:opacity-100',
+  'disabled:bg-gray-200 disabled:border-gray-200 disabled:text-primary-8! disabled:opacity-100',
 ] as const;
 
 const SUBMIT_BUTTON_CHROME_CLASSNAME: Record<SubmitButtonTone, readonly string[]> = {
@@ -1243,7 +1243,12 @@ export function ValidatorPanel<TPayload, TResult>({
                 'shrink-0 border shadow-none',
                 SUBMIT_BUTTON_CHROME_CLASSNAME[submitButtonTone]
               )}
-              disabled={!session.summary.canSubmit || isSubmitting || hasPendingValidatorPreview}
+              disabled={
+                !session.summary.canSubmit ||
+                isSubmitting ||
+                hasPendingValidatorPreview ||
+                importRun.phase === ImportRunPhase.Completed
+              }
               onClick={() => void actions.onSubmitRows()}
               aria-label="Import rows"
             >
@@ -1456,7 +1461,7 @@ export function ValidatorPanel<TPayload, TResult>({
                 className={cn(
                   'flex shrink-0 items-center justify-center rounded-full',
                   'border border-destructive/80 bg-white text-destructive transition',
-                  'hover:border-destructive hover:bg-destructive/20 size-14!'
+                  'hover:border-destructive hover:bg-destructive/20 size-12!'
                 )}
                 onClick={() => setFailureTooltipDismissed((d) => !d)}
               >
@@ -1528,7 +1533,12 @@ export function ValidatorPanel<TPayload, TResult>({
           )}
           style={submitButtonStyle}
           data-import-run-tone={submitButtonTone}
-          disabled={!session.summary.canSubmit || isSubmitting || hasPendingValidatorPreview}
+          disabled={
+            !session.summary.canSubmit ||
+            isSubmitting ||
+            hasPendingValidatorPreview ||
+            importRun.phase === ImportRunPhase.Completed
+          }
           onClick={() => void actions.onSubmitRows()}
         >
           <span
