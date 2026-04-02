@@ -118,7 +118,11 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
     } else if (animatingIndices.has(index)) {
       // Show animating items in visible area with animation
       visibleChildren.push(
-        <div key={`animating-${index}`} className={styles.slideToCollapsible}>
+        <div
+          key={`animating-${index}`}
+          className={styles.slideToCollapsible}
+          data-collapsing="true"
+        >
           {child}
         </div>
       );
@@ -135,46 +139,48 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
 
   return (
     <>
-      {collapsedChildren.length > 0 && (
-        <div
-          className={styles.thinkingContainer}
-          data-receiving={animatingIndices.size > 0}
-          data-collapsible="true"
-        >
-          <button
-            type="button"
-            className={styles.thinkingButton}
-            onClick={toggleExpanded}
-            aria-expanded={isExpanded}
-            data-collapsed={!isExpanded}
-          >
-            <div className={styles.thinkingHeader}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className={styles.chevron}
-                data-collapsed={!isExpanded}
-              >
-                <path
-                  d="M4 6L8 10L12 6"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className={styles.thinkingLabel}>
-                {isExpanded ? `Hide reasoning (${stepCount})` : `Show reasoning (${stepCount})`}
-              </span>
-            </div>
-          </button>
+      {(collapsedChildren.length > 0 || animatingIndices.size > 0) && (
+        <div className={styles.thinkingContainerWrapper}>
           <div
-            className={`${styles.thinkingContent} ${isExpanded ? styles.thinkingContentExpanded : ''}`}
+            className={styles.thinkingContainer}
+            data-receiving={animatingIndices.size > 0}
+            data-collapsible="true"
           >
-            <div className={styles.thinkingContentInner}>{collapsedChildren}</div>
+            <button
+              type="button"
+              className={styles.thinkingButton}
+              onClick={toggleExpanded}
+              aria-expanded={isExpanded}
+              data-collapsed={!isExpanded}
+            >
+              <div className={styles.thinkingHeader}>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={styles.chevron}
+                  data-collapsed={!isExpanded}
+                >
+                  <path
+                    d="M4 6L8 10L12 6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className={styles.thinkingLabel}>
+                  {isExpanded ? `Hide reasoning (${stepCount})` : `Show reasoning (${stepCount})`}
+                </span>
+              </div>
+            </button>
+            <div
+              className={`${styles.thinkingContent} ${isExpanded ? styles.thinkingContentExpanded : ''}`}
+            >
+              <div className={styles.thinkingContentInner}>{collapsedChildren}</div>
+            </div>
           </div>
         </div>
       )}

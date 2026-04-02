@@ -1,3 +1,13 @@
+.thinkingContainerWrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  animation: expandRow 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.thinkingContainerWrapper > * {
+  overflow: hidden;
+}
+
 .thinkingContainer {
   margin: 0;
   border: none;
@@ -7,6 +17,8 @@
   overflow: hidden;
   transition: border-color 300ms ease, background-color 300ms ease;
   will-change: border-color, background-color;
+  opacity: 0;
+  animation: slideInFromTop 300ms cubic-bezier(0.4, 0, 0.2, 1) 50ms forwards;
 }
 
 .thinkingContainer[data-receiving="true"] {
@@ -16,7 +28,7 @@
 
 .thinkingButton {
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 15px;
   border: none;
   cursor: pointer;
   display: flex;
@@ -160,12 +172,28 @@
 }
 
 .thinkingContentInner {
-  padding: 8px 12px;
+  padding: 4px 15px;
 }
 
 .slideToCollapsible {
   animation: slideUpToCollapsible 350ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
   overflow: hidden;
+}
+
+@keyframes expandRow {
+  0% { grid-template-rows: 0fr; }
+  100% { grid-template-rows: 1fr; }
+}
+
+@keyframes slideInFromTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeIn {
@@ -226,5 +254,5 @@
 }
 
 .contentWrapper {
-  padding: 12px 16px;
+  padding: 8px 15px;
 }
