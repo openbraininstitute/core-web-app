@@ -11,7 +11,7 @@ const clientSecret = config.KEYCLOAK_CLIENT_SECRET;
 
 // TODO: Lower this back to minutes after all tasks
 // (circuit simulations, mesh skeletonization) support token renewal via auth-manager.
-const ACCESS_TOKEN_RENEWAL_THRESHOLD = 30 * 60 * 1000; // 30 minutes
+const ACCESS_TOKEN_RENEWAL_THRESHOLD = 20 * 60 * 1000; // 20 minutes
 
 function getParentDomain(hostname: string): string {
   const parts = hostname.split('.');
