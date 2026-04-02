@@ -3,17 +3,19 @@ import { z } from 'zod';
 
 import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import { RepairPipelineState } from '@/api/entitycore/types/shared/protocol';
-import { getRowSubmissionValues } from '@/features/entity-import/core/helpers';
+import { CellStatus, RemoteValidationStatus } from '@/features/entity-import/core/contracts';
 import {
   createImportSessionState,
   resolveCellSuggestion,
   setCellValue,
 } from '@/features/entity-import/core/session';
+import { getRowSubmissionValues } from '@/features/entity-import/core/shared/helpers';
 import { validateSessionRows } from '@/features/entity-import/core/validation';
 import {
   type CellMorphologySubmissionPayload,
   createCellMorphologyImportAdapter,
 } from '@/ui/segments/contribute/multiple/adapters/cell-morphology/adapter';
+import { DEFAULT_LICENSE_ID, DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/helpers';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
 
 import type { IEntityImportPostSubmitActions } from '@/features/entity-import/core/shared/post-submit-actions';
@@ -306,6 +308,41 @@ describe('createCellMorphologyImportAdapter', () => {
         context: { projectId: 'project-1', virtualLabId: 'lab-1' },
       }).metadata.location
     ).toBeNull();
+  });
+
+  it('treats the manual default license as a resolved valid selection', () => {
+    const adapter = createCellMorphologyImportAdapter({});
+    const session = createImportSessionState({
+      fields: adapter.fields,
+      rowCount: 1,
+      manualTableSeedBase: adapter.createBlankRow?.(),
+    });
+
+    const next = validateSessionRows({
+      session,
+      fields: adapter.fields,
+      schema: adapter.schema,
+      rowIds: [session.rows[0].id],
+      buildPayload({ row, values }) {
+        return adapter.buildPayload({
+          row,
+          values,
+          context: { projectId: 'project-1', virtualLabId: 'lab-1' },
+        });
+      },
+    });
+
+    const licenseCell = next.rows[0].cells.licenseId;
+
+    expect(licenseCell.displayValue).toBe(DEFAULT_LICENSE_NAME);
+    expect(getRowSubmissionValues(next.rows[0]).licenseId).toBe(DEFAULT_LICENSE_ID);
+    expect(licenseCell.status).toBe(CellStatus.Valid);
+    expect(licenseCell.issues).toEqual([]);
+    expect(licenseCell.remoteState.status).toBe(RemoteValidationStatus.Valid);
+    expect(licenseCell.remoteState.selectedSuggestion).toEqual({
+      value: DEFAULT_LICENSE_ID,
+      label: DEFAULT_LICENSE_NAME,
+    });
   });
 
   it('hydrates contribution and location csv tuples through field csv hooks', async () => {
@@ -663,7 +700,7 @@ describe('createCellMorphologyImportAdapter', () => {
     const adapter = createCellMorphologyImportAdapter({
       services: {
         ...services,
-        querySpecies: vi.fn(async () => ({ suggestions: [], nextPageParam: null })),
+        querySpecies: vi.fn(async () => []),
       },
       postSubmitActions,
     });

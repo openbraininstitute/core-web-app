@@ -1101,9 +1101,10 @@ export function useEntityImportController<TPayload, TResult>({
 
     const row = session.rows.find((r) => r.id === rowId);
     const field = findField(adapter.fields, fieldPath);
-    const query = row?.cells[fieldPath]?.rawValue ?? '';
+    const cell = row?.cells[fieldPath];
+    const query = cell?.displayValue ?? cell?.rawValue ?? '';
 
-    if (!row || !field || !hasSuggestionSource(field)) {
+    if (!row || !field || !cell || !hasSuggestionSource(field)) {
       validatorSelectionQueryKeyRef.current = '';
       clearSuggestions();
       return;
@@ -1116,7 +1117,6 @@ export function useEntityImportController<TPayload, TResult>({
     // still in flight, skip re-requesting suggestions. Invalid cells should
     // still request validator suggestions so the panel can show the richer
     // query-backed option list for ambiguous values.
-    const cell = row.cells[fieldPath];
     if (
       cell.remoteState.status === RemoteValidationStatus.Valid ||
       cell.remoteState.status === RemoteValidationStatus.Pending

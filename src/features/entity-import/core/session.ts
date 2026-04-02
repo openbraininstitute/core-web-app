@@ -7,6 +7,7 @@ import {
   type IImportFieldDefinition,
   type IImportRowState,
   type IImportSessionState,
+  ImportInputType,
   type ISuggestion,
   NotificationTone,
   RemoteValidationStatus,
@@ -26,10 +27,70 @@ function nextRowId(): string {
   return `import-row-${rowIdCounter}`;
 }
 
+/**
+ *
+ * false: the cell was given a plain string like '' or 'isocortex'
+ * true: the cell was given a richer object shaped like ICsvHydratedCellValue, meaning it can carry:
+ * - rawValue
+ * - displayValue
+ * - parsedValue
+ * @param value
+ * @returns
+ */
 function isHydratedCellValue(value: unknown): value is ICsvHydratedCellValue {
   return (
     Boolean(value) && typeof value === 'object' && 'rawValue' in (value as ICsvHydratedCellValue)
   );
+}
+
+/**
+ * converts a rich hydrated/manual cell seed into an already-resolved remote
+ * suggestion when the seed carries enough information to prove that the cell is
+ * not just freeform text.
+ *
+ * We only synthesize a suggestion for `RemoteSelect` fields, and only when the
+ * seed contains either:
+ * - a string `parsedValue` (the canonical submitted id), or
+ * - a `displayValue` that differs from `rawValue` (for example: raw id +
+ *   human-readable label).
+ *
+ * This lets manual defaults like the license seed behave the same way as a user
+ * selection: the table shows the label, submission keeps the canonical value,
+ * and validation does not ask the user to resolve the field again.
+ */
+function createSeededRemoteSuggestion({
+  field,
+  value,
+  rawValue,
+  displayValue,
+}: {
+  field: IImportFieldDefinition;
+  value: ICsvHydratedCellValue;
+  rawValue: string;
+  displayValue: string | null;
+}): ISuggestion | null {
+  if (field.inputType !== ImportInputType.RemoteSelect) {
+    return null;
+  }
+
+  const label = displayValue ?? rawValue;
+  if (!label.trim()) {
+    return null;
+  }
+
+  const explicitParsedValue =
+    typeof value.parsedValue === 'string' && value.parsedValue.trim() ? value.parsedValue : null;
+  const hasDistinctDisplayValue =
+    displayValue !== null && displayValue.trim() !== '' && displayValue !== rawValue;
+
+  if (!explicitParsedValue && !hasDistinctDisplayValue) {
+    return null;
+  }
+
+  return {
+    value: explicitParsedValue ?? rawValue,
+    label,
+  };
 }
 
 function createCellState(
@@ -52,6 +113,14 @@ function createCellState(
       ? value.parsedValue
       : rawValue
     : rawValue;
+  const seededRemoteSuggestion = isHydratedValue
+    ? createSeededRemoteSuggestion({
+        field,
+        value,
+        rawValue,
+        displayValue,
+      })
+    : null;
 
   return {
     fieldPath: field.path,
@@ -61,7 +130,14 @@ function createCellState(
     status: CellStatus.Idle,
     issues: [],
     dependencyState: DependencyState.Ready,
-    remoteState: createIdleRemoteState(),
+    remoteState: seededRemoteSuggestion
+      ? {
+          status: RemoteValidationStatus.Valid,
+          suggestions: [],
+          selectedSuggestion: seededRemoteSuggestion,
+          message: null,
+        }
+      : createIdleRemoteState(),
     correctionDraft: null,
   };
 }

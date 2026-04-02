@@ -9,6 +9,7 @@ import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/ce
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createCellMorphologyImportAdapter, EntityImportFeature } from '@/features/entity-import';
 import { ImportInputType } from '@/features/entity-import/core/contracts';
+import { DEFAULT_LICENSE_ID, DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/helpers';
 
 import type { ReactElement } from 'react';
 import type {
@@ -2360,6 +2361,44 @@ describe('EntityImportFeature', () => {
         screen.queryByRole('button', { name: 'Reject suggested License row 1' })
       ).not.toBeInTheDocument();
     });
+  });
+
+  it('treats manual default licenses as already resolved when opening the validator', async () => {
+    const user = userEvent.setup();
+    const queryLicense = vi.fn(async ({ query }: { query: string }) => ({
+      suggestions:
+        query === DEFAULT_LICENSE_NAME
+          ? [{ value: DEFAULT_LICENSE_ID, label: DEFAULT_LICENSE_NAME }]
+          : [],
+      nextPageParam: null,
+    }));
+    const services = createMockCellMorphologyImportServices({ queryLicense });
+    const morphologyAdapter = createCellMorphologyImportAdapter({ services });
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Default License Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    const licenseCell = screen.getByLabelText('License row 1');
+    await waitFor(() => {
+      expect(licenseCell).toHaveValue(DEFAULT_LICENSE_NAME);
+    });
+
+    await user.click(licenseCell);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Validator value')).toHaveValue(DEFAULT_LICENSE_NAME);
+      expect(queryLicense).not.toHaveBeenCalled();
+    });
+    expect(screen.queryByText('License is required')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Confirm License from the suggestion list before importing.')
+    ).not.toBeInTheDocument();
   });
 
   it('shares a species selector between brain region and subject lookups and keeps species cached forever', async () => {
