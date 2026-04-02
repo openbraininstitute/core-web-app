@@ -2,14 +2,16 @@
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Form, InputNumber, Space } from 'antd';
+
 import { MeasurementStatistic, MeasurementUnit } from '@/api/entitycore/types/shared/global';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
 import { createZodFieldValidator, renderLabel } from '@/ui/segments/contribute/shared';
-import type { TMeasurement } from '@/ui/segments/contribute/synapses-per-connection/schema';
 import { ExperimentalSynapsesPerConnectionSchema } from '@/ui/segments/contribute/synapses-per-connection/schema';
 import { cn } from '@/utils/css-class';
+
+import type { TMeasurement } from '@/ui/segments/contribute/synapses-per-connection/schema';
 
 export function Measurements() {
   const form = Form.useFormInstance();
@@ -77,7 +79,7 @@ export function Measurements() {
                         <InputNumber
                           placeholder="Enter value"
                           size="large"
-                          className="h-12 w-full rounded-full! placeholder:text-sm"
+                          className="h-12 w-full! rounded-full! placeholder:text-sm"
                           controls={false}
                         />
                       </Form.Item>

@@ -135,7 +135,10 @@ export function AssetUpload({
 
       <Form.Item>
         <div className={cn('w-full', className)}>
+          {/** biome-ignore lint/a11y/noStaticElementInteractions: has nested button */}
           <div
+            id="asset-upload-container"
+            data-testid="asset-upload-container"
             className={cn(
               'border-neutral-1 bg-white! shadow-md relative rounded-xl border p-8 text-center transition-colors',
               isDragging
@@ -209,7 +212,7 @@ export function AssetUpload({
           )}
 
           {flattenedFiles.length > 0 && (
-            <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-8 select-none sm:grid-cols-3 md:grid-cols-4">
+            <div className="mt-5 select-none flex items-stretch flex-wrap gap-4">
               {flattenedFiles
                 .sort((a, b) => {
                   const aType = getFileExtensionByTypeOrMimeType(a) ?? '';
@@ -226,7 +229,7 @@ export function AssetUpload({
                     originalFileTypes.length > 0 && !originalFileTypes.includes(fileType);
 
                   return (
-                    <div key={fileItem.name} className="group relative aspect-square">
+                    <div key={fileItem.name} className="select-none flex items-stretch flex-wrap">
                       {isGenerated && (
                         <div className="absolute -top-6 right-0 left-0 flex items-center justify-center">
                           <span className="bg-primary-1 text-primary-8 rounded px-2 py-0.5 text-xs font-medium">
@@ -237,7 +240,7 @@ export function AssetUpload({
                       <div
                         className={cn(
                           'bg-background flex h-full w-full flex-col items-center justify-center rounded-t-lg border border-b-0',
-                          isGenerated ? 'border-primary-6 border-2' : 'border-neutral-1'
+                          isGenerated ? 'border-primary-6 border-2' : 'border-gray-200'
                         )}
                       >
                         <FileDownloadLine className="text-primary-6 h-8 w-8" />
@@ -245,12 +248,13 @@ export function AssetUpload({
                       </div>
                       <div
                         className={cn(
-                          'bg-neutral-1 text-primary-9 flex items-center justify-between gap-1.5 rounded-b-lg border border-t-0 py-2 pl-2 opacity-100 transition-opacity',
+                          'bg-neutral-1 text-primary-9 flex items-center justify-between',
+                          'w-full gap-1.5 rounded-b-lg border border-t-0 py-2 pl-2 opacity-100 transition-opacity',
                           isGenerated ? 'border-primary-6 border-2 border-t-0' : 'border-neutral-1'
                         )}
                       >
-                        <div className="flex max-w-full min-w-0 flex-col gap-1">
-                          <p className="line-clamp-1 truncate text-xs font-medium">
+                        <div className="flex max-w-full min-w-0 flex-col gap-1 w-full">
+                          <p className="line-clamp-1 truncate text-xs font-medium w-full">
                             {fileItem.name}
                           </p>
                           <p className="text-primary-8 text-xs">{formatBytes(fileItem.size)}</p>

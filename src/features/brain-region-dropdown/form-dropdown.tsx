@@ -51,7 +51,8 @@ export function BrainRegionDropdown({
     useAtomValue(loadable(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom)).state ===
     'loading';
 
-  const [selectedNode, updateSelectedNode] = useState(defaultBrainRegion);
+  const defaultBrainRegionId = defaultBrainRegion?.id;
+  const [selectedNodeOverrideId, updateSelectedNodeOverrideId] = useState<string | undefined>();
 
   const parentSetter = useCallback((el: HTMLDivElement) => {
     setParent(el);
@@ -83,10 +84,8 @@ export function BrainRegionDropdown({
 
   const onSelect = useCallback(
     (option: TBrainRegionHierarchyExtendedOption) => {
-      updateSelectedNode(() => {
-        onSelectBrainRegion?.(option.data);
-        return option.data;
-      });
+      updateSelectedNodeOverrideId(option.data.id);
+      onSelectBrainRegion?.(option.data);
       setOpen(false);
     },
     [onSelectBrainRegion]
@@ -106,13 +105,14 @@ export function BrainRegionDropdown({
     };
   }, [open, rowVirtualizer, parent]);
 
+  const selectedNodeId = selectedNodeOverrideId ?? defaultBrainRegionId;
+
   const currentValue = useMemo(
     () =>
-      selectedNode?.id
-        ? brainRegionHierarchy?.options.find(({ value: _value }) => selectedNode.id === _value)
-            ?.data
+      selectedNodeId
+        ? brainRegionHierarchy?.options.find(({ value: _value }) => selectedNodeId === _value)?.data
         : null,
-    [selectedNode?.id, brainRegionHierarchy?.options]
+    [selectedNodeId, brainRegionHierarchy?.options]
   );
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -223,7 +223,7 @@ export function BrainRegionDropdown({
                       <CheckOutlined
                         className={cn(
                           'ml-auto text-sm',
-                          v === selectedNode?.id ? 'opacity-100' : 'opacity-0'
+                          v === selectedNodeId ? 'opacity-100' : 'opacity-0'
                         )}
                       />
                     </button>

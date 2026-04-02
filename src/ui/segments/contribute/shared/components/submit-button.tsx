@@ -38,6 +38,7 @@ export function SubmitButton<
   const values = Form.useWatch([], form);
 
   const isValidForm = config.schema.safeParse(values).success;
+  const uploadLabel = `Upload ${config.title.toLowerCase()}`;
   const detailsUrl = createdEntityId
     ? config.buildDetailsUrl({
         entityId: createdEntityId,
@@ -80,7 +81,7 @@ export function SubmitButton<
         )}
         onClick={onSubmit}
       >
-        Confirm
+        {uploadLabel}
       </Button>
     </Form.Item>
   );

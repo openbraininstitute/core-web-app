@@ -19,9 +19,11 @@ import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/helpers';
 import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
+import {
+  StepValidationStatus,
+  type TStepValidationStatus,
+} from '@/ui/segments/contribute/shared/types';
 import { cn } from '@/utils/css-class';
-
-import type { TStepValidationStatus } from '@/ui/segments/contribute/shared/types';
 
 interface IStepLabelProps {
   label: string;
@@ -68,15 +70,16 @@ function StepIcon({ status, hasTooltip, tooltipContent }: IStepIconProps) {
         <TooltipTrigger asChild>{icon}</TooltipTrigger>
         {status !== 'invalid' && (
           <TooltipContent
-            side="bottom"
             sideOffset={0}
             avoidCollisions
-            className={cn('bg-primary-8 z-99999', {
-              'bg-teal-500!': status === 'valid',
-            })}
-            arrowClassName={cn('text-primary-8', {
-              'text-teal-500!': status === 'valid',
-            })}
+            data-testid="step-navigation-tooltip"
+            side="top"
+            align="end"
+            className={cn(
+              'border border-neutral-200 bg-white! p-0 shadow-[0_16px_40px_rgba(0,0,0,0.16)]',
+              'w-80 max-w-70 rounded-xl border border-neutral-200 bg-white p-2 text-sm text-neutral-900 shadow-[0_16px_40px_rgba(0,0,0,0.16)]'
+            )}
+            arrowClassName="bg-white"
           >
             {tooltipContent}
           </TooltipContent>
@@ -126,16 +129,16 @@ function VerticalStepTrailingIcon({
     />
   );
 
-  if (status === 'valid') {
+  if (status === StepValidationStatus.Valid) {
     if (hasTooltip) {
       return (
         <Tooltip>
           <TooltipTrigger asChild>{check}</TooltipTrigger>
           <TooltipContent
-            side="bottom"
-            sideOffset={0}
+            side="left"
+            sideOffset={2}
             avoidCollisions
-            className={cn('bg-primary-8 z-99999', {
+            className={cn('bg-primary-8! z-99999', {
               'bg-teal-500!': !isActive,
             })}
             arrowClassName={cn('text-primary-8', {
@@ -158,7 +161,7 @@ function VerticalStepTrailingIcon({
           side="bottom"
           sideOffset={0}
           avoidCollisions
-          className="bg-primary-8 z-99999 text-white"
+          className="border border-neutral-200 bg-white p-0 shadow-[0_16px_40px_rgba(0,0,0,0.16)]"
           arrowClassName="text-primary-8"
         >
           {DEFAULT_LICENSE_NAME}
@@ -231,24 +234,22 @@ export function VerticalStepNavigation() {
 
         return (
           <Button
-            key={step.key}
             rounded
+            id={`step-navigation-button-${step.key}`}
+            key={step.key}
             size="responsive"
             type="button"
             variant={isActive ? 'shadow' : 'outline'}
             onClick={() => setActiveStep(step.key)}
             className={cn(
               'md:h-10 lg:h-12 w-full justify-between font-normal',
-              'group',
-              !isActive && status === 'invalid' && '[&_.step-v-label]:text-error'
+              'group hover:bg-primary-9!'
             )}
           >
             <span
               className={cn('step-v-label flex-1 text-left text-sm font-light', {
                 'font-bold text-white': isActive,
-                'text-primary-8 font-bold': !isActive && status === 'valid',
-                'text-primary-9': !isActive && status === 'non-touched',
-                'text-error': !isActive && status === 'invalid',
+                'text-primary-9! group-hover:text-white!': !isActive,
               })}
             >
               {step.label}
@@ -270,7 +271,7 @@ export function VerticalStepNavigation() {
               <RightOutlined
                 className={cn('[&>svg]:size-2.5!', {
                   'text-white!': isActive,
-                  'text-primary-9!': !isActive,
+                  'text-primary-9! group-hover:text-white!': !isActive,
                 })}
               />
             </span>

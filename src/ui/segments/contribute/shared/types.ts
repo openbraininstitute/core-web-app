@@ -1,11 +1,16 @@
 import type { MutationStatus } from '@tanstack/react-query';
-import type { ReactNode, ComponentType } from 'react';
-import type { ZodObject, ZodRawShape, z } from 'zod';
 import type { FormInstance } from 'antd';
-
+import type { ComponentType, ReactNode } from 'react';
+import type { ZodObject, ZodRawShape, z } from 'zod';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-export type TStepValidationStatus = 'valid' | 'invalid' | 'non-touched';
+export const StepValidationStatus = {
+  Valid: 'valid',
+  Invalid: 'invalid',
+  NonTouched: 'non-touched',
+} as const;
+export type TStepValidationStatus =
+  (typeof StepValidationStatus)[keyof typeof StepValidationStatus];
 
 export type TStepIconRenderer = (status: TStepValidationStatus) => ReactNode;
 

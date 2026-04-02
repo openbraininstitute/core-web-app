@@ -4,6 +4,15 @@ import { z } from 'zod';
 
 import { AgentType, type TAgentType } from '@/ui/segments/contribute/shared/types';
 
+function normalizeOptionalTextInput(value: unknown): unknown {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmedValue = value.trim();
+  return trimmedValue === '' ? undefined : trimmedValue;
+}
+
 export const ContributionSchema = z.object({
   agent_type: z.enum(
     Object.values(AgentType).map((type) => type.key) as [TAgentType, ...Array<TAgentType>],
@@ -133,8 +142,11 @@ export const BaseSetupSchema = z.object({
     .nonempty({ error: 'Description is required' }),
   brain_region_id: z.uuid().nonempty({ error: 'Brain region is required' }),
   experiment_date: ExperimentDateSchema,
-  contact_email: z.email({ error: 'Contact email should be a valid email' }).nullish(),
-  published_in: z.string().nullish(),
+  contact_email: z.preprocess(
+    normalizeOptionalTextInput,
+    z.email({ error: 'Contact email should be a valid email' }).nullish()
+  ),
+  published_in: z.preprocess(normalizeOptionalTextInput, z.string().nullish()),
   location: LocationSchema,
 });
 

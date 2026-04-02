@@ -1,7 +1,7 @@
 'use client';
 
 import { InfoCircleFilled } from '@ant-design/icons';
-import { DatePicker, Form, Input, InputNumber, Space } from 'antd';
+import { DatePicker, Form, Input, InputNumber } from 'antd';
 import dayjs from 'dayjs';
 import { upperFirst } from 'es-toolkit/compat';
 
@@ -16,6 +16,7 @@ import {
   RECORDING_LOCATION_OPTIONS,
 } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import { BrainRegionSelector } from '@/ui/segments/contribute/shared/components/brain-region-selector';
+import { LocationFields } from '@/ui/segments/contribute/shared/components/location-fields';
 import {
   createZodFieldValidator,
   RequiredFieldMarker,
@@ -190,71 +191,7 @@ export function Setup() {
           ),
         }}
       >
-        <Space.Compact className="flex gap-2">
-          <Form.Item
-            name={['setup', 'location', 'x']}
-            required={false}
-            validateTrigger={['onChange', 'onBlur']}
-            rules={[
-              {
-                validator: createZodFieldValidator(
-                  ElectricalCellRecordingSchema,
-                  'setup.location.x',
-                  form
-                ),
-              },
-            ]}
-            className="w-1/3"
-          >
-            <InputNumber
-              placeholder="X (microns)"
-              size="large"
-              className="h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
-            />
-          </Form.Item>
-          <Form.Item
-            name={['setup', 'location', 'y']}
-            required={false}
-            validateTrigger={['onChange', 'onBlur']}
-            rules={[
-              {
-                validator: createZodFieldValidator(
-                  ElectricalCellRecordingSchema,
-                  'setup.location.y',
-                  form
-                ),
-              },
-            ]}
-            className="w-1/3"
-          >
-            <InputNumber
-              placeholder="Y (microns)"
-              size="large"
-              className="h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
-            />
-          </Form.Item>
-          <Form.Item
-            name={['setup', 'location', 'z']}
-            required={false}
-            validateTrigger={['onChange', 'onBlur']}
-            rules={[
-              {
-                validator: createZodFieldValidator(
-                  ElectricalCellRecordingSchema,
-                  'setup.location.z',
-                  form
-                ),
-              },
-            ]}
-            className="w-1/3"
-          >
-            <InputNumber
-              placeholder="Z (microns)"
-              size="large"
-              className="h-12 w-full rounded-full! placeholder:text-sm [&_.ant-input-number-handler-wrap]:hidden"
-            />
-          </Form.Item>
-        </Space.Compact>
+        <LocationFields schema={ElectricalCellRecordingSchema} form={form} />
       </Form.Item>
 
       <Form.Item

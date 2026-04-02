@@ -88,7 +88,6 @@ function FormContent<
     label: step.label,
     status: status[step.mutationKey],
   }));
-
   const onSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -183,13 +182,13 @@ export function ContributionForm<
       <div className="grid h-full min-h-0 w-full grid-cols-[25rem_auto] gap-3">
         <div className="min-h-0 min-w-0 overflow-y-auto">
           <UploadFlowSidebar
+            hasTypeSelected
+            suppressUploadTabActiveStyle
             bottomSlot={<VerticalStepNavigation />}
             currentTab={ImportLeftSideTab.Type}
-            hasTypeSelected
             mode={ImportMode.Single}
             optionsHref={pageShell.optionsHref}
             optionsValueLabel="Single"
-            suppressUploadTabActiveStyle
             typeHref={pageShell.typeHref}
             typeValueLabel={pageShell.entityTitle}
           />

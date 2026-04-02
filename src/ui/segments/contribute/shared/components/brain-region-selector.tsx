@@ -5,7 +5,12 @@ import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 
-export function BrainRegionSelector() {
+interface IBrainRegionSelectorProps {
+  value?: string;
+  onChange?: (value: string) => void;
+}
+
+export function BrainRegionSelector({ value, onChange }: IBrainRegionSelectorProps) {
   const { projectId } = useWorkspace();
 
   const { node: defaultBrainRegion } = useBrainRegionHierarchy({
@@ -17,6 +22,8 @@ export function BrainRegionSelector() {
       clsx={{ trigger: 'rounded-full w-full h-12', content: 'z-[99999]' }}
       showIcon={false}
       charsPerLine={200}
+      value={value}
+      onChange={onChange}
       defaultBrainRegion={defaultBrainRegion as IBrainRegionHierarchy}
     />
   );

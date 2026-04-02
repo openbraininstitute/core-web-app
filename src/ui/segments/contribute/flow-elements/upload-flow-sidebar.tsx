@@ -35,7 +35,7 @@ export interface IUploadFlowSidebarProps {
 }
 
 function typeLabelClass(isActive: boolean) {
-  return cn('text-primary-9', 'group-active:text-white!', {
+  return cn('text-primary-9', 'group-hover:text-white!', 'group-active:text-white!', {
     'font-bold text-white': isActive,
   });
 }
@@ -68,9 +68,14 @@ export function UploadFlowSidebar({
     </span>
   ) : (
     <span
-      className={cn('text-primary-9 flex-1 text-left', 'group-active:text-white!', {
-        'font-bold text-white': isTypeMenuActive,
-      })}
+      className={cn(
+        'text-primary-9 flex-1 text-left',
+        'group-hover:text-white!',
+        'group-active:text-white!',
+        {
+          'font-bold text-white': isTypeMenuActive,
+        }
+      )}
     >
       Type
     </span>
@@ -85,9 +90,14 @@ export function UploadFlowSidebar({
     </span>
   ) : (
     <span
-      className={cn('text-primary-9 flex-1 text-left', 'group-active:text-white!', {
-        'font-bold text-white': isOptionsMenuActive,
-      })}
+      className={cn(
+        'text-primary-9 flex-1 text-left',
+        'group-hover:text-white!',
+        'group-active:text-white!',
+        {
+          'font-bold text-white': isOptionsMenuActive,
+        }
+      )}
     >
       Options
     </span>
@@ -95,7 +105,7 @@ export function UploadFlowSidebar({
 
   const typeChevron = (
     <RightOutlined
-      className={cn('text-primary-9! shrink-0 [&>svg]:size-2.5!', {
+      className={cn('text-primary-9! shrink-0 group-hover:text-white! [&>svg]:size-2.5!', {
         'rotate-90 text-white': isTypeMenuActive,
       })}
     />
@@ -103,13 +113,18 @@ export function UploadFlowSidebar({
 
   const optionsChevron = (
     <RightOutlined
-      className={cn('text-primary-9! shrink-0 [&>svg]:size-2.5!', {
+      className={cn('text-primary-9! shrink-0 group-hover:text-white! [&>svg]:size-2.5!', {
         'rotate-90 text-white': isOptionsMenuActive,
       })}
     />
   );
 
-  const typeButtonClass = cn('md:h-10 lg:h-12', 'w-full justify-between font-normal', 'group');
+  const typeButtonClass = cn(
+    'md:h-10 lg:h-12',
+    'w-full justify-between font-normal',
+    'hover:bg-primary-9!',
+    'group'
+  );
 
   const typeButton =
     typeHref != null && typeHref !== '' ? (
@@ -179,6 +194,8 @@ export function UploadFlowSidebar({
 
   return (
     <div
+      id="upload-flow-sidebar"
+      data-testid="upload-flow-sidebar"
       className={cn('px-4', bottomSlot != null && 'flex min-h-0 flex-1 flex-col overflow-y-auto')}
     >
       <div className="mb-5 flex w-full items-center justify-between pl-3">
