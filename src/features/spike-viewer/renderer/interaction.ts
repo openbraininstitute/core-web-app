@@ -103,6 +103,7 @@ export class InteractionManager {
     if (!this.isInPlotArea(e.clientX, e.clientY)) return;
 
     this.isDragging = true;
+    this.onHover?.(null);
     this.lastMouse = { x: e.clientX, y: e.clientY };
     this.element.setPointerCapture(e.pointerId);
     this.element.style.cursor = 'grabbing';
