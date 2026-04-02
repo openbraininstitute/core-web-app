@@ -1,6 +1,13 @@
 'use client';
 
-import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
+import {
+  CheckCircleFilled,
+  CloseCircleFilled,
+  CloseOutlined,
+  ExclamationCircleFilled,
+  InfoCircleFilled,
+  LoadingOutlined,
+} from '@ant-design/icons';
 import { RiDownload2Line, RiFileList3Line, RiUpload2Line } from '@remixicon/react';
 import { Progress } from 'antd';
 import { useRef } from 'react';
@@ -11,18 +18,8 @@ import {
   NotificationTone,
   type TNotificationTone,
 } from '@/features/entity-import/core/contracts';
-import {
-  ENTITY_IMPORT_POPOVER_Z_CLASS,
-  ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
-} from '@/features/entity-import/core/shared/ui';
-import { Alert, AlertContent, AlertDescription, AlertTitle } from '@/ui/molecules/alert';
+import { ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME } from '@/features/entity-import/core/shared/ui';
 import { Button } from '@/ui/molecules/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/ui/molecules/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -133,14 +130,6 @@ function resolveCsvUploadStatus(args: {
     .otherwise(() => null);
 }
 
-function resolveCsvUploadNotificationVariant(tone: TNotificationTone) {
-  return match(tone)
-    .with(NotificationTone.Error, () => 'destructive' as const)
-    .with(NotificationTone.Warning, () => 'warning' as const)
-    .with(NotificationTone.Success, () => 'success' as const)
-    .otherwise(() => 'info' as const);
-}
-
 function resolveCsvUploadNotificationTitle(
   tone: IImportSessionState['notifications'][number]['tone']
 ) {
@@ -167,15 +156,56 @@ function resolveCsvUploadNotificationsTone(notifications: IImportHeaderNotificat
   return NotificationTone.Info;
 }
 
+function resolveCsvUploadNotificationPresentation(tone: TNotificationTone) {
+  return match(tone)
+    .with(NotificationTone.Error, () => ({
+      icon: <CloseCircleFilled className="text-xs" />,
+      iconClassName: 'bg-red-100 text-red-600',
+    }))
+    .with(NotificationTone.Warning, () => ({
+      icon: <ExclamationCircleFilled className="text-xs" />,
+      iconClassName: 'bg-amber-100 text-amber-600',
+    }))
+    .with(NotificationTone.Success, () => ({
+      icon: <CheckCircleFilled className="text-xs" />,
+      iconClassName: 'bg-emerald-100 text-emerald-600',
+    }))
+    .otherwise(() => ({
+      icon: <InfoCircleFilled className="text-xs" />,
+      iconClassName: 'bg-sky-100 text-sky-600',
+    }));
+}
+
+function CsvUploadNotificationItem({ notification }: { notification: IImportHeaderNotification }) {
+  const presentation = resolveCsvUploadNotificationPresentation(notification.tone);
+
+  return (
+    <div
+      data-testid="csv-upload-notification"
+      className="rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-xs"
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className={cn(
+            'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full',
+            presentation.iconClassName
+          )}
+        >
+          {presentation.icon}
+        </div>
+        <p className="min-w-0 text-sm leading-5 text-neutral-700">{notification.message}</p>
+      </div>
+    </div>
+  );
+}
+
 export function ImportHeader({
   title,
-  templateFileName,
   csvUploadPhase,
   csvRowValidationProgress,
   csvUploadNotifications,
   onClose,
   onDismissCsvUploadNotifications,
-  onDownloadCsvTemplate,
   onDownloadCurrentCsv,
   onDownloadGuideTemplate,
   onUploadCsvFile,
@@ -306,19 +336,7 @@ export function ImportHeader({
                 ) : null}
                 <div className="max-h-72 space-y-2 overflow-y-auto secondary-scrollbar pr-1">
                   {csvUploadNotifications.map((notification) => (
-                    <Alert
-                      key={notification.id}
-                      appearance="light"
-                      variant={resolveCsvUploadNotificationVariant(notification.tone)}
-                      size="sm"
-                    >
-                      <AlertContent>
-                        {/* <AlertTitle>
-                          {resolveCsvUploadNotificationTitle(notification.tone)}
-                        </AlertTitle> */}
-                        <AlertDescription>{notification.message}</AlertDescription>
-                      </AlertContent>
-                    </Alert>
+                    <CsvUploadNotificationItem key={notification.id} notification={notification} />
                   ))}
                 </div>
               </div>

@@ -414,7 +414,7 @@ describe('rejectCorrectionDraft', () => {
 });
 
 describe('hydrateSessionRows', () => {
-  it('replaces rows and pushes a stripped-column notification after csv import', () => {
+  it('replaces rows without pushing stripped-column warnings into session notifications', () => {
     const session = createImportSessionState({ fields, rowCount: 1 });
 
     const next = hydrateSessionRows(session, {
@@ -424,12 +424,11 @@ describe('hydrateSessionRows', () => {
           brainRegion: 'Ctx',
         },
       ],
-      strippedColumns: ['IgnoreMe'],
     });
 
     expect(next.rows).toHaveLength(1);
     expect(next.rows[0].cells.name.rawValue).toBe('Neuron A');
-    expect(next.notifications[0]?.message).toContain('IgnoreMe');
+    expect(next.notifications).toEqual([]);
   });
 
   it('hydrates imported cells with typed parsed values and display labels', () => {
@@ -446,7 +445,6 @@ describe('hydrateSessionRows', () => {
           brainRegion: 'Ctx',
         },
       ],
-      strippedColumns: [],
     });
 
     expect(next.rows[0].cells.name.rawValue).toBe('Neuron A');

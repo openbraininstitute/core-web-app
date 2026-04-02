@@ -101,6 +101,11 @@ function getCsvRenamedHeaders(
     .filter((entry): entry is [string, string] => typeof entry[1] === 'string')
     .map(([renamed, original]) => ({ renamed, original }));
 }
+
+function normalizeCsvUploadColumnKey(value: string): string {
+  return value.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+}
+
 type CsvUploadNotification = {
   id: string;
   tone: IImportSessionState['notifications'][number]['tone'];
@@ -109,11 +114,29 @@ type CsvUploadNotification = {
 
 const ENTITY_IMPORT_SUBMIT_QUEUE_CONCURRENCY = 4;
 
-function buildCsvParseNotificationMessages(
-  parsedCsv: Awaited<ReturnType<typeof parseCsvFile>>
-): Array<CsvUploadNotification> {
+function buildCsvUploadNotificationMessages({
+  parsedCsv,
+  strippedColumns,
+}: {
+  parsedCsv: Awaited<ReturnType<typeof parseCsvFile>>;
+  strippedColumns: Array<string>;
+}): Array<CsvUploadNotification> {
   const notifications: Array<CsvUploadNotification> = [];
   const renamedHeaders = getCsvRenamedHeaders(parsedCsv.meta.renamedHeaders);
+  const renamedHeaderKeys = new Set(
+    renamedHeaders.map(({ renamed }) => normalizeCsvUploadColumnKey(renamed))
+  );
+  const unmatchedTemplateColumns = strippedColumns.filter(
+    (columnName) => !renamedHeaderKeys.has(normalizeCsvUploadColumnKey(columnName))
+  );
+
+  if (unmatchedTemplateColumns.length > 0) {
+    notifications.push({
+      id: 'csv-stripped-columns',
+      tone: NotificationTone.Warning,
+      message: `The following columns were removed as they don't match the template: ${unmatchedTemplateColumns.join(', ')}`,
+    });
+  }
 
   if (renamedHeaders.length > 0) {
     const renamedSummary = renamedHeaders
@@ -1407,12 +1430,16 @@ export function useEntityImportController<TPayload, TResult>({
         });
 
         setCsvUploadPhase(CsvUploadPhase.PreparingRows);
-        setCsvUploadNotifications(buildCsvParseNotificationMessages(parsedCsv));
+        setCsvUploadNotifications(
+          buildCsvUploadNotificationMessages({
+            parsedCsv,
+            strippedColumns: imported.strippedColumns,
+          })
+        );
 
         const hydratedSession = validate(
           hydrateSessionRows(sessionRef.current, {
             rows: csvHydratedRows,
-            strippedColumns: imported.strippedColumns,
           })
         );
 

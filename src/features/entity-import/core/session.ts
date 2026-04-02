@@ -9,7 +9,6 @@ import {
   type IImportSessionState,
   ImportInputType,
   type ISuggestion,
-  NotificationTone,
   RemoteValidationStatus,
   RowStatus,
   type TFlatImportValues,
@@ -531,25 +530,12 @@ export function hydrateSessionRows(
   session: IImportSessionState,
   params: {
     rows: Array<Record<string, string | ICsvHydratedCellValue>>;
-    strippedColumns: Array<string>;
   }
 ): IImportSessionState {
   const nextRows = params.rows.map((row, index) => createRowState(session.fields, row, index));
 
-  const notification =
-    params.strippedColumns.length > 0
-      ? [
-          {
-            id: `notification-${Date.now()}`,
-            tone: NotificationTone.Warning,
-            message: `The following columns were removed as they don't match the template: ${params.strippedColumns.join(', ')}`,
-          },
-        ]
-      : [];
-
   return {
     ...replaceSessionRows(session, nextRows),
-    notifications: [...notification, ...session.notifications],
   };
 }
 

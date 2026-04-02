@@ -1402,7 +1402,7 @@ describe('EntityImportFeature', () => {
       );
     });
     const warningTooltip = screen.getByRole('tooltip');
-    expect(within(warningTooltip).getAllByRole('alert')).toHaveLength(3);
+    expect(within(warningTooltip).getAllByTestId('csv-upload-notification')).toHaveLength(3);
     expect(
       within(warningTooltip).getByText(/Duplicate CSV headers were renamed by the parser\./i)
     ).toBeInTheDocument();
@@ -1425,7 +1425,7 @@ describe('EntityImportFeature', () => {
     });
 
     const postValidationTooltip = await screen.findByRole('tooltip');
-    expect(within(postValidationTooltip).getAllByRole('alert')).toHaveLength(3);
+    expect(within(postValidationTooltip).getAllByTestId('csv-upload-notification')).toHaveLength(3);
     expect(
       within(postValidationTooltip).getByText(/Duplicate CSV headers were renamed by the parser\./i)
     ).toBeInTheDocument();
@@ -1501,7 +1501,7 @@ describe('EntityImportFeature', () => {
       );
     });
     const warningTooltip = screen.getByRole('tooltip');
-    expect(within(warningTooltip).getAllByRole('alert')).toHaveLength(3);
+    expect(within(warningTooltip).getAllByTestId('csv-upload-notification')).toHaveLength(3);
     expect(
       within(warningTooltip).getByText(/Duplicate CSV headers were renamed by the parser\./i)
     ).toBeInTheDocument();
@@ -1528,7 +1528,7 @@ describe('EntityImportFeature', () => {
     });
 
     const postValidationTooltip = await screen.findByRole('tooltip');
-    expect(within(postValidationTooltip).getAllByRole('alert')).toHaveLength(3);
+    expect(within(postValidationTooltip).getAllByTestId('csv-upload-notification')).toHaveLength(3);
     expect(
       within(postValidationTooltip).getByText(/Duplicate CSV headers were renamed by the parser\./i)
     ).toBeInTheDocument();
@@ -1560,7 +1560,7 @@ describe('EntityImportFeature', () => {
       );
     });
     const tooltip = screen.getByRole('tooltip');
-    expect(within(tooltip).getAllByRole('alert')).toHaveLength(2);
+    expect(within(tooltip).getAllByTestId('csv-upload-notification')).toHaveLength(2);
     expect(
       within(tooltip).getByText(/CSV parsing reported 1 issue during upload\./i)
     ).toBeInTheDocument();
@@ -1572,6 +1572,35 @@ describe('EntityImportFeature', () => {
         /The following columns were removed as they don't match the template: __parsed_extra/i
       )
     ).not.toBeInTheDocument();
+  });
+
+  it('shows stripped template-mismatch columns in the upload tooltip instead of the global notification stack', async () => {
+    const user = userEvent.setup();
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Mock Entity Import"
+        onClose={() => {}}
+        adapter={adapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile('Name,Brain Region,IgnoreMe\nNeuron A,Isocortex,extra value\n')
+    );
+
+    const strippedColumnsMessage =
+      /The following columns were removed as they don't match the template: IgnoreMe/i;
+    await waitFor(() => {
+      expect(screen.getByRole('tooltip')).toHaveTextContent(strippedColumnsMessage);
+    });
+    const tooltip = screen.getByRole('tooltip');
+
+    expect(within(tooltip).getByText(strippedColumnsMessage)).toBeInTheDocument();
+    expect(within(container).queryByText(strippedColumnsMessage)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Name row 1')).toHaveValue('Neuron A');
+    expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Isocortex');
   });
 
   it('marks imported remote csv values invalid when validation finds no matches', async () => {

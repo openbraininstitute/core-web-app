@@ -157,7 +157,6 @@ describe('validateSessionRows', () => {
             },
           },
         ],
-        strippedColumns: [],
       }
     );
 
