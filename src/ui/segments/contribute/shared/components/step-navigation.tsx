@@ -221,15 +221,23 @@ export function StepNavigation() {
   );
 }
 
-export function VerticalStepNavigation() {
+interface IVerticalStepNavigationProps {
+  forceValidState?: boolean;
+  suppressActiveSelection?: boolean;
+}
+
+export function VerticalStepNavigation({
+  forceValidState = false,
+  suppressActiveSelection = false,
+}: IVerticalStepNavigationProps) {
   const { progressSteps, activeStep, setActiveStep, stepValidationStatus } =
     useContributionPipeline();
 
   return (
     <div className="border-neutral-2 mt-4 flex w-full flex-col gap-2 border-t pt-4">
       {progressSteps.map((step) => {
-        const status = stepValidationStatus[step.key] ?? 'invalid';
-        const isActive = activeStep === step.key;
+        const status = forceValidState ? 'valid' : (stepValidationStatus[step.key] ?? 'invalid');
+        const isActive = !suppressActiveSelection && activeStep === step.key;
         const customIcon = step.iconRenderer?.(status);
 
         return (

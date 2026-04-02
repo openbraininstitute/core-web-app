@@ -1,11 +1,12 @@
 'use client';
 
-import { CloseOutlined } from '@ant-design/icons';
+import { CheckCircleFilled, CloseOutlined, RightOutlined } from '@ant-design/icons';
 import { Form } from 'antd';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { Button } from '@/ui/molecules/button';
 import {
   ImportLeftSideTab,
   ImportMode,
@@ -64,6 +65,8 @@ interface IFormContentProps<
   sessionId: string;
   pipeline: TPipelineHookFactory<TFormValues>;
   progressSteps: Array<{ key: string; label: string; mutationKey: string }>;
+  isSubmitting: boolean;
+  setIsSubmitting: (submitting: boolean) => void;
 }
 
 function FormContent<
@@ -76,12 +79,20 @@ function FormContent<
   progressSteps,
   virtualLabId,
   projectId,
+  isSubmitting,
+  setIsSubmitting,
 }: IFormContentProps<TFormValues, TSchema>) {
   const { form, activeStep, progressSteps: steps } = useContributionPipeline<TFormValues>();
 
   const { createEntity, loading, status } = pipeline({ sessionId });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdEntityId, setCreatedEntityId] = useState<string | undefined>(undefined);
+  const detailsUrl = createdEntityId
+    ? config.buildDetailsUrl({
+        entityId: createdEntityId,
+        virtualLabId,
+        projectId,
+      })
+    : null;
 
   const progressStepsWithStatus: Array<IProgressStep> = progressSteps.map((step) => ({
     key: step.key,
@@ -103,7 +114,33 @@ function FormContent<
       </Form.Item>
 
       <div className="h-full max-h-full min-h-0 flex-1 bg-background py-6 pr-1 shadow-none">
-        {isSubmitting ? (
+        {createdEntityId && detailsUrl ? (
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-6">
+              <div className="bg-success flex items-center justify-center rounded-full">
+                <CheckCircleFilled className="text-8xl text-accent-dark!" />
+              </div>
+              <p className="text-accent-dark text-center text-xl max-w-md font-medium leading-tight">
+                {`Your ${config.title.toLowerCase()} has been correctly added to your project`}
+              </p>
+              <Button
+                asChild
+                rounded
+                variant="outline"
+                size="responsive"
+                className={cn(
+                  'w-full max-w-md justify-between px-8 text-primary-9! font-semibold!',
+                  'hover:bg-primary-9/90 hover:text-white!'
+                )}
+              >
+                <Link href={detailsUrl} className="flex w-full items-center justify-between">
+                  <span>{`View ${config.title.toLowerCase()}`}</span>
+                  <RightOutlined className="text-primary-8 [&>svg]:size-4!" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        ) : isSubmitting ? (
           <div className="flex h-full w-full items-center justify-center">
             <SubmitEntityProgress steps={progressStepsWithStatus} />
           </div>
@@ -141,16 +178,18 @@ function FormContent<
         )}
       </div>
 
-      <div className="mt-auto flex w-full shrink-0 items-center justify-end gap-2 py-3">
-        <SubmitButton
-          loading={loading}
-          createdEntityId={createdEntityId}
-          config={config}
-          onSubmit={onSubmit}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
-        />
-      </div>
+      {!isSubmitting && (
+        <div className="mt-auto flex w-full shrink-0 items-center justify-end gap-2 py-3">
+          <SubmitButton
+            loading={loading}
+            createdEntityId={createdEntityId}
+            config={config}
+            onSubmit={onSubmit}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -169,6 +208,8 @@ export function ContributionForm<
     projectId,
     pageShell,
   } = props;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSidebarLocked = isSubmitting;
 
   const formHeading =
     pageShell.formHeading ?? `Upload new ${pageShell.entityTitle.toLowerCase()} files`;
@@ -180,11 +221,23 @@ export function ContributionForm<
       brainRegionId={brainRegionId}
     >
       <div className="grid h-full min-h-0 w-full grid-cols-[25rem_auto] gap-3">
-        <div className="min-h-0 min-w-0 overflow-y-auto">
+        <div
+          data-testid="single-upload-sidebar-container"
+          className={cn(
+            'min-h-0 min-w-0 overflow-y-auto',
+            isSidebarLocked &&
+              'pointer-events-none [&_a]:pointer-events-none [&_button]:pointer-events-none'
+          )}
+        >
           <UploadFlowSidebar
             hasTypeSelected
             suppressUploadTabActiveStyle
-            bottomSlot={<VerticalStepNavigation />}
+            bottomSlot={
+              <VerticalStepNavigation
+                forceValidState={isSubmitting}
+                suppressActiveSelection={isSidebarLocked}
+              />
+            }
             currentTab={ImportLeftSideTab.Type}
             mode={ImportMode.Single}
             optionsHref={pageShell.optionsHref}
@@ -214,6 +267,8 @@ export function ContributionForm<
             progressSteps={progressSteps}
             virtualLabId={virtualLabId}
             projectId={projectId}
+            isSubmitting={isSubmitting}
+            setIsSubmitting={setIsSubmitting}
           />
         </div>
       </div>
