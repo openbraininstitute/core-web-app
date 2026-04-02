@@ -78,9 +78,10 @@ export function ImportOptionsScreen({
                   Single {selectedType?.title.toLocaleLowerCase()}
                 </CardTitle>
                 <CardDescription>
-                  Upload your morphology asset and define its core details: name, species, strain,
-                  and brain region. Complete the setup by assigning a license and selecting the OBI
-                  morphological type.
+                  Upload a single entry and complete a guided, step-by-step workflow tailored to
+                  this entity. You will be prompted to provide all required information, including
+                  metadata, classification, and relevant attributes, ensuring accuracy and
+                  completeness throughout the process.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -103,9 +104,10 @@ export function ImportOptionsScreen({
                   Multiple {selectedType?.title.toLocaleLowerCase()}
                 </CardTitle>
                 <CardDescription>
-                  Upload a CSV file containing the name, description, brain region, morphological
-                  type, and contributor for each entry. Please validate all fields to ensure a
-                  successful bulk import.
+                  Upload multiple entries at once using a structured table or by importing a CSV
+                  file. You can edit data directly within the interface, while built-in validation
+                  and intelligent suggestions help ensure consistency, highlight errors, and
+                  streamline bulk data submission.
                 </CardDescription>
               </CardContent>
             </Card>
@@ -128,7 +130,7 @@ export function ImportOptionsScreen({
           >
             <Link href={continueHref} className="flex items-center justify-center gap-2">
               <div className="flex items-center justify-between gap-5">
-                <span>Upload CSV or Fill table</span>
+                <span> Continue to upload (CSV or table)</span>
                 <PlusOutlined className="ml-auto text-sm" />
               </div>
             </Link>
