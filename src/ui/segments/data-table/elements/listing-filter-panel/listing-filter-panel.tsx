@@ -16,7 +16,6 @@ import {
   coreFiltersAtom,
   corePageNumberAtom,
   coreSearchStringAtom,
-  coreSelectedRowsAtom,
   useDataListStateSnapshotActions,
 } from '@/ui/segments/data-table/elements/context';
 import { makeTypeDefaultFilters } from '@/ui/segments/data-table/elements/helpers';
