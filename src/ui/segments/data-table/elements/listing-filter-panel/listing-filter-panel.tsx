@@ -79,8 +79,6 @@ export function ListingFilterPanel({
   const entityViewDefs = getViewDefinitionByExtendedType(dataType);
   const entityConfig = getEntityByExtendedType({ type: dataType });
 
-  const [, setSelectedRows] = useAtom(coreSelectedRowsAtom(dataKey));
-
   const { sync: runStorageSync } = useDataListStateSnapshotActions({
     dataKey,
     dataType,
