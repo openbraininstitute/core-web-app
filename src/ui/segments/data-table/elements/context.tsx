@@ -19,7 +19,9 @@ import { SortOrder } from '@/entity-configuration/definitions/types';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { createSuperJsonStorage, memoryStorage } from '@/ui/hooks/use-storage-atom-with-validation';
 import {
+  extractPartsFromDataKey,
   makeDataListStateSnapshotAtomsInitialValue,
+  makeTypeDefaultActiveColumns,
   makeTypeDefaultFilters,
 } from '@/ui/segments/data-table/elements/helpers';
 import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
@@ -44,10 +46,10 @@ export const activeColumnsAtom = atomFamily(
 );
 
 export const coreActiveColumnsAtom = atomFamily(
-  ({ dataType }: { key: string; dataType: TExtendedEntitiesTypeDict }) =>
+  ({ dataType, key }: { key: string; dataType: TExtendedEntitiesTypeDict }) =>
     atomWithDefault<Promise<string[]> | string[]>(async () => {
-      const { columns } = { ...ViewsDefinitionRegistry[dataType] };
-      return ['index', ...(columns || [])];
+      const { section, scope } = extractPartsFromDataKey(key);
+      return ['index', ...makeTypeDefaultActiveColumns({ dataType, section, scope })];
     }),
   (a, b) => a.key === b.key
 );
@@ -55,7 +57,8 @@ export const coreActiveColumnsAtom = atomFamily(
 export const coreFiltersAtom = atomFamily(
   ({ dataType, key }: { key: string; dataType: TExtendedEntitiesTypeDict }) => {
     const childAtom = atomWithDefault<Array<TCoreFilter>>(() => {
-      return makeTypeDefaultFilters({ dataType });
+      const { section, scope } = extractPartsFromDataKey(key);
+      return makeTypeDefaultFilters({ dataType, section, scope });
     });
     childAtom.debugLabel = `filter-atom/${key}`;
     return childAtom;
@@ -105,7 +108,8 @@ export const coreSelectedRowsAtom = atomFamily(
 export const DataListStateSnapshotStorageAtomFamily = atomFamily(
   ({ dataKey, dataType }: { dataKey: string; dataType: TExtendedEntitiesTypeDict }) => {
     const resolvedStorage = typeof window !== 'undefined' ? sessionStorage : memoryStorage;
-    const initialValue = makeDataListStateSnapshotAtomsInitialValue({ dataType });
+    const { section, scope } = extractPartsFromDataKey(dataKey);
+    const initialValue = makeDataListStateSnapshotAtomsInitialValue({ dataType, section, scope });
     const childAtom = atomWithStorage(
       dataKey,
       initialValue,
@@ -160,15 +164,16 @@ export const DataListSnapshotSyncAtomFamily = atomFamily(
       },
       (_get, set, action: TDataListStoreParamsSyncAction) => {
         const readStorage = (): TDataLisStateSnapshot => {
+          const { section, scope } = extractPartsFromDataKey(dataKey);
           if (typeof window === 'undefined') {
-            return makeDataListStateSnapshotAtomsInitialValue({ dataType });
+            return makeDataListStateSnapshotAtomsInitialValue({ dataType, section, scope });
           }
           const raw = sessionStorage.getItem(dataKey);
-          if (!raw) return makeDataListStateSnapshotAtomsInitialValue({ dataType });
+          if (!raw) return makeDataListStateSnapshotAtomsInitialValue({ dataType, section, scope });
           try {
             return superjson.parse<TDataLisStateSnapshot>(raw);
           } catch {
-            return makeDataListStateSnapshotAtomsInitialValue({ dataType });
+            return makeDataListStateSnapshotAtomsInitialValue({ dataType, section, scope });
           }
         };
 
@@ -193,7 +198,12 @@ export const DataListSnapshotSyncAtomFamily = atomFamily(
             set(circuitRepresentationViewAtom, stored.View);
           })
           .with({ type: DataListStateSnapshotSyncAction.RESET }, () => {
-            const defaultListParams = makeDataListStateSnapshotAtomsInitialValue({ dataType });
+            const { section, scope } = extractPartsFromDataKey(dataKey);
+            const defaultListParams = makeDataListStateSnapshotAtomsInitialValue({
+              dataType,
+              section,
+              scope,
+            });
             set(coreFiltersAtom({ key: dataKey, dataType }), defaultListParams.Filters);
             set(corePageNumberAtom(dataKey), defaultListParams.Page);
             set(coreSearchStringAtom(dataKey), defaultListParams.Search);

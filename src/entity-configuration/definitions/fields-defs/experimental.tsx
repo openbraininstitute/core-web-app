@@ -3,6 +3,7 @@ import find from 'es-toolkit/compat/find';
 import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
+import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import {
   EMCellMeshGenerationMethodDict,
   EMCellMeshTypeDict,
@@ -11,6 +12,7 @@ import {
 import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type IEType, type IMType, MeasurementUnit } from '@/api/entitycore/types/shared/global';
+import { WorkspaceSection } from '@/constants';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -63,7 +65,74 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isFilterable: false,
     isDisplayable: true,
   },
+  [EntityCoreFields.GenerationType]: {
+    title: 'Generation type',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    presentation: {
+      column: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: true,
+            },
+          ],
+        },
+      },
+      filter: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: true,
+            },
+          ],
+        },
+        constraint: {
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: 'cell_morphology_protocol__generation_type__in',
+            },
+          ],
+        },
+        options: {
+          kind: 'static',
+          items: map(CellMorphologyGenerationType, (item) => ({
+            label: item.label,
+            value: item.key,
+          })),
+        },
+      },
+    },
+    render: (entity) => {
+      if ('cell_morphology_protocol' in entity) {
+        return renderEmptyOrValue(
+          find(CellMorphologyGenerationType, {
+            key: entity.cell_morphology_protocol.generation_type,
+          })?.label
+        );
+      }
 
+      return EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Generation types',
+      singular: 'Generation type',
+    },
+    style: { width: 190 },
+  },
   [EntityCoreFields.MType]: {
     fieldType: CoreFieldType.CellType,
     title: 'M-Type',

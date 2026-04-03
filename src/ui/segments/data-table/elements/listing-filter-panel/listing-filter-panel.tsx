@@ -4,7 +4,16 @@ import { Spin } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { useAtom, useSetAtom } from 'jotai';
 import { unwrap, useResetAtom } from 'jotai/utils';
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { DEFAULT_PAGE_NUMBER, type TWorkspaceScope, type TWorkspaceSection } from '@/constants';
@@ -36,7 +45,7 @@ type Props = {
   dataScope?: TWorkspaceScope;
   dataKey: string;
   filters: TCoreFilter[];
-  setFilters: any;
+  setFilters: Dispatch<SetStateAction<TCoreFilter[]>>;
   showDisplayTrigger?: boolean;
   workspace?: WorkspaceContext;
   classNames?: {
@@ -56,11 +65,13 @@ export function ListingFilterPanel({
   children,
   toggleDisplay,
   dataType,
+  dataScope,
   dataKey,
   filters,
   setFilters,
   showDisplayTrigger = true,
   classNames,
+  workspace,
   section,
   facets,
 }: Props) {
@@ -120,7 +131,7 @@ export function ListingFilterPanel({
   const onToggleActive = useCallback(
     (key: string) => {
       if (!activeColumns) return;
-      const existingIndex = activeColumns.findIndex((existingKey) => existingKey === key);
+      const existingIndex = activeColumns.indexOf(key);
 
       if (existingIndex === -1) {
         setActiveColumns([...activeColumns, key]);
@@ -133,6 +144,15 @@ export function ListingFilterPanel({
     },
 
     [activeColumns, setActiveColumns]
+  );
+
+  const fieldApiContext = useMemo(
+    () => ({
+      dataType,
+      section,
+      scope: dataScope,
+    }),
+    [dataScope, dataType, section]
   );
 
   useEffect(() => {
@@ -168,7 +188,9 @@ export function ListingFilterPanel({
     setFilterValues,
     activeColumns,
     showDisplayTrigger,
-    onToggleActive
+    onToggleActive,
+    fieldApiContext,
+    workspace
   );
 
   // The columnKeyToFilter method receives a string (key)
@@ -177,7 +199,7 @@ export function ListingFilterPanel({
     resetFilters();
     setSearchString('');
     runStorageSync({
-      Filters: makeTypeDefaultFilters({ dataType }),
+      Filters: makeTypeDefaultFilters({ dataType, section, scope: dataScope }),
       Search: '',
     });
   };
