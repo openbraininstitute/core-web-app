@@ -1,9 +1,20 @@
-import { sortBy } from 'es-toolkit/compat';
+import { flatMap, keyBy, sortBy } from 'es-toolkit/compat';
 
+import { getTaskActivities } from '@/api/entitycore/queries/task/task-activity';
+import { getTaskConfigs } from '@/api/entitycore/queries/task/task-config';
+import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
 
-import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
-import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
+import type {
+  ITaskActivity,
+  TTaskActivityType,
+} from '@/api/entitycore/types/entities/task-activity';
+import type {
+  ITaskConfig,
+  ITaskConfigFilter,
+  TTaskConfigType,
+} from '@/api/entitycore/types/entities/task-config';
+import type { WorkspaceContext } from '@/types/common';
 
 /**
  * one workflow row: an execution (or none yet) plus the config + generation activity that produced the config.
@@ -101,4 +112,94 @@ export function getTaskCampaignStatusCountMap<T extends TTaskCampaignExecutionRo
     map.set(status, (map.get(status) ?? 0) + 1);
   }
   return map;
+}
+
+export async function resolveTaskCampaigns<
+  TMeta extends Record<string, unknown> = Record<string, unknown>,
+>({
+  withFacets,
+  context,
+  filters,
+  campaignConfigType,
+  generationActivityType,
+  generationConfigType,
+  executionActivityType,
+}: {
+  withFacets?: boolean;
+  context: WorkspaceContext | undefined;
+  filters?: Partial<ITaskConfigFilter>;
+  campaignConfigType: TTaskConfigType;
+  generationActivityType: TTaskActivityType;
+  generationConfigType: TTaskConfigType;
+  executionActivityType: TTaskActivityType;
+}) {
+  filters = discardBrainRegionQueryParams(filters);
+  const source = await getTaskConfigs<TMeta>({
+    context,
+    withFacets,
+    filters: {
+      task_config_type: campaignConfigType,
+      ...filters,
+    },
+  });
+  const campaignIDs = source.data.map((o) => o.id);
+  const generations = await getTaskActivities({
+    context,
+    filters: {
+      task_activity_type: generationActivityType,
+      used__id__in: campaignIDs,
+    },
+  });
+  const generationsByCampaignId = generations.data.reduce<
+    Record<string, (typeof generations.data)[number][]>
+  >((acc, gen) => {
+    gen.used.forEach((u) => {
+      if (!acc[u.id]) acc[u.id] = [];
+      acc[u.id].push(gen);
+    });
+    return acc;
+  }, {});
+  const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
+  const configs = await getTaskConfigs<TMeta>({
+    context,
+    withFacets: false,
+    filters: {
+      task_config_type: generationConfigType,
+      id__in: allConfigIds,
+    },
+  });
+  const configById = keyBy<ITaskConfig<TMeta>>(configs.data, 'id');
+  const configIDs = configs.data.map((c) => c.id);
+  const executionsResponse =
+    configIDs.length > 0
+      ? await getTaskActivities({
+          context,
+          filters: {
+            task_activity_type: executionActivityType,
+            used__id__in: configIDs,
+          },
+        })
+      : { data: [] };
+
+  const executions = executionsResponse.data;
+  const executionsByConfigId = executions.reduce<Record<string, ITaskActivity[]>>((acc, exec) => {
+    for (const u of exec.used) {
+      if (!acc[u.id]) acc[u.id] = [];
+      acc[u.id].push(exec);
+    }
+    return acc;
+  }, {});
+
+  const enrichedData: TTaskCampaignRows<TMeta> = buildTaskCampaignRows<TMeta>({
+    campaigns: source.data,
+    generationsByCampaignId,
+    configById,
+    executionsByConfigId,
+  });
+
+  return {
+    data: enrichedData,
+    pagination: source.pagination,
+    facets: source.facets,
+  };
 }
