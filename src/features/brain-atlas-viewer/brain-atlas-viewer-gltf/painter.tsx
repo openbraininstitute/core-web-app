@@ -59,6 +59,10 @@ export class Painter {
 
   private pointCloudId = -1;
 
+  private contextVersion = 0;
+
+  private pointCloudRequestVersion = 0;
+
   private isAddingRegions = false;
 
   private nextRegionsToAdd: {
@@ -92,13 +96,24 @@ export class Painter {
   }
 
   public readonly start = (canvas: HTMLCanvasElement | null) => {
+    this.contextVersion += 1;
+    this.pointCloudRequestVersion += 1;
+
     if (this.context) {
       this.context.delete();
       this.context = null;
-      this.isAddingRegions = false;
-      this.nextRegionsToAdd = null;
-      this.pointCloudId = -1;
     }
+
+    this.cameraController = null;
+    this.group = null;
+    this.regionPainters.clear();
+    this.pointCloudPainter = null;
+    this.isAddingRegions = false;
+    this.nextRegionsToAdd = null;
+    this.pointCloudId = -1;
+    this.hasFittedCamera = false;
+    this.loadingMesh = false;
+    this.loadingPointCloud = false;
 
     if (canvas) {
       const context = new TgdContext(canvas, {
@@ -212,6 +227,8 @@ export class Painter {
   public async setPointCloud(annotationValue: number, color: string, accessToken: string) {
     const { context, group } = this;
     if (!context || !group || this.pointCloudId === annotationValue) return;
+    const requestVersion = ++this.pointCloudRequestVersion;
+    const contextVersion = this.contextVersion;
 
     // point cloud data is only available for the mouse atlas (legacy circuit)
     // for other species the coordinates live in a different space and would
@@ -237,17 +254,33 @@ export class Painter {
       this.pointCloudId = annotationValue;
       if (annotationValue !== -1) {
         const dataPoint = await getPointCouldData(annotationValue, accessToken);
-        // context may have been destroyed while awaiting the fetch
-        if (!this.context || !this.group) return;
-        const painter = new TgdPainterPointsCloud(context, {
+        if (
+          requestVersion !== this.pointCloudRequestVersion ||
+          contextVersion !== this.contextVersion
+        ) {
+          return;
+        }
+
+        const currentContext = this.context;
+        const currentGroup = this.group;
+        if (!currentContext || !currentGroup || this.pointCloudId !== annotationValue) return;
+
+        const painter = new TgdPainterPointsCloud(currentContext, {
           dataPoint,
           minSizeInPixels: 5,
-          texture: new TgdTexture2D(context).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
+          texture: new TgdTexture2D(currentContext).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
         });
-        group.add(painter);
+        currentGroup.add(painter);
         this.pointCloudPainter = painter;
       }
     } catch (ex) {
+      if (
+        requestVersion !== this.pointCloudRequestVersion ||
+        contextVersion !== this.contextVersion
+      ) {
+        return;
+      }
+
       if (
         ex instanceof Error &&
         ex.message.includes('[TgdContext] This context has been deleted:')
@@ -261,8 +294,11 @@ export class Painter {
       // only log, never show a user-facing error for point cloud failures.
       logError(`Point cloud unavailable for annotation ${annotationValue}:`, ex);
       this.eventError.dispatch(`Unable to load points cloud!`);
+    } finally {
+      if (requestVersion === this.pointCloudRequestVersion) {
+        this.loadingPointCloud = false;
+      }
     }
-    this.loadingPointCloud = false;
   }
 
   private getNextRegionsToAdd() {

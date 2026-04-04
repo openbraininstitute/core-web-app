@@ -1,3 +1,5 @@
+import { DEFAULT_PAGE_SIZE } from '@/utils/pagination';
+
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 
@@ -16,7 +18,7 @@ describe('brain atlas region query', () => {
 
           if (filters?.page === 1) {
             return {
-              data: Array.from({ length: 200 }, (_, index) => ({
+              data: Array.from({ length: DEFAULT_PAGE_SIZE }, (_, index) => ({
                 id: `region-${index + 1}`,
                 brain_region_id: `brain-region-${index + 1}`,
                 assets: [],
@@ -52,7 +54,7 @@ describe('brain atlas region query', () => {
     ]);
 
     assert.equal(calls, 2);
-    assert.equal(first.data.length, 201);
+    assert.equal(first.data.length, DEFAULT_PAGE_SIZE + 1);
     assert.deepEqual(first, second);
   });
 });
