@@ -12,7 +12,6 @@ import {
   extractionActivityFlag,
   type FeatureFlags,
   type FlagKey,
-  microcircuitFlag,
 } from '@/features/feature-flags/flags';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -233,7 +232,6 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       },
       simulate: {
         disabled: false,
-        requiredFeatures: [microcircuitFlag.key],
         type: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
       },
     },

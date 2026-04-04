@@ -19,7 +19,8 @@ import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getExtendedSimMap } from '@/entity-configuration/domain/simulation/utils';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { microcircuitFlag } from '@/features/feature-flags';
+
+//import { microcircuitFlag } from '@/features/feature-flags';
 
 import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {
@@ -191,12 +192,12 @@ export const MicrocircuitSimulation: EntityCoreTypeConfig<
   TResolvedSimulationByCampaigns
 > = {
   group: EntityTypeGroup.Simulations,
-  title: 'Microcircuit',
+  title: 'Microcircuit (beta)',
   extendedType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   discriminator: { key: 'scale', value: [SCALE] },
   slug: EntitySlug.MicrocircuitSimulation,
-  requiredFeatures: [microcircuitFlag.key],
+  //requiredFeatures: [microcircuitFlag.key],
   api: {
     config: {
       allowedFacets: true,

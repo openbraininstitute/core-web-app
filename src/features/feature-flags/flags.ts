@@ -11,13 +11,6 @@ export const aiPanelStateFlag = defineFlag<PanelState>({
   visible: false,
 });
 
-export const microcircuitFlag = defineFlag<boolean>({
-  key: 'microcircuit',
-  defaultValue: false,
-  values: [true, false],
-  description: 'Enable microcircuit (simulations)',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
-});
 
 export const extractionActivityFlag = defineFlag<boolean>({
   key: 'extraction-activity',
@@ -27,7 +20,12 @@ export const extractionActivityFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const flags = [aiPanelStateFlag, microcircuitFlag, extractionActivityFlag] as const;
+
+
+export const flags = [
+  aiPanelStateFlag,
+  extractionActivityFlag,
+] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 

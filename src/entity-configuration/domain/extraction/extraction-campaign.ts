@@ -1,4 +1,4 @@
-import { flatMap, keyBy } from 'es-toolkit/compat';
+import { flatMap } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import {
@@ -18,11 +18,10 @@ import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import {
-  buildTaskCampaignRows,
   getLatestExecutionStatusFromRows,
   getTaskCampaignStatusCountMap,
+  resolveTaskCampaigns,
   type TTaskCampaignExecutionRow,
-  type TTaskCampaignRows,
 } from '@/entity-configuration/domain/task-helpers';
 
 import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
@@ -43,89 +42,15 @@ async function resolveExtractionCampaigns({
   filters?: Partial<ITaskConfigFilter>;
 }) {
   filters = discardBrainRegionQueryParams(filters);
-
-  const source = await getTaskConfigs({
-    context,
+  return resolveTaskCampaigns({
     withFacets,
-    filters: {
-      task_config_type: TaskConfigType.CircuitExtractionCampaign,
-      ...filters,
-    },
-  });
-
-  const campaignIDs = source.data.map((o) => o.id);
-  const generations = await getTaskActivities({
     context,
-    filters: {
-      task_activity_type: TaskActivityType.CircuitExtractionConfigGeneration,
-      used__id__in: campaignIDs,
-    },
+    filters,
+    campaignConfigType: TaskConfigType.CircuitExtractionCampaign,
+    generationActivityType: TaskActivityType.CircuitExtractionConfigGeneration,
+    generationConfigType: TaskConfigType.CircuitExtractionConfig,
+    executionActivityType: TaskActivityType.CircuitExtractionExecution,
   });
-
-  // map campaignId → generations that used it
-  const generationsByCampaignId = generations.data.reduce<
-    Record<string, (typeof generations.data)[number][]>
-  >((acc, gen) => {
-    gen.used.forEach((u) => {
-      if (!acc[u.id]) acc[u.id] = [];
-      acc[u.id].push(gen);
-    });
-    return acc;
-  }, {});
-
-  // fetch all configs produced by those generations
-  const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
-  const configs =
-    allConfigIds.length > 0
-      ? await getTaskConfigs({
-          context,
-          withFacets: false,
-          filters: {
-            task_config_type: TaskConfigType.CircuitExtractionConfig,
-            id__in: allConfigIds,
-          },
-        })
-      : { data: [] };
-  const configById = keyBy(configs.data, 'id');
-
-  // fetch all executions linked to those configs
-  const configIDs = configs.data.map((c) => c.id);
-  const executionsResponse =
-    configIDs.length > 0
-      ? await getTaskActivities({
-          context,
-          withFacets: false,
-          filters: {
-            task_activity_type: TaskActivityType.CircuitExtractionExecution,
-            used__id__in: configIDs,
-          },
-        })
-      : {
-          data: [] as Awaited<ReturnType<typeof getTaskActivities>>['data'],
-        };
-
-  // map configId → executions that used it
-  const executions = executionsResponse.data;
-  const executionsByConfigId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
-    for (const u of exec.used) {
-      if (!acc[u.id]) acc[u.id] = [];
-      acc[u.id].push(exec);
-    }
-    return acc;
-  }, {});
-
-  const enrichedData: TTaskCampaignRows<TTaskConfigMeta> = buildTaskCampaignRows({
-    campaigns: source.data,
-    generationsByCampaignId,
-    configById,
-    executionsByConfigId,
-  });
-
-  return {
-    data: enrichedData,
-    pagination: source.pagination,
-    facets: source.facets,
-  };
 }
 
 export async function resolveExtractionByCampaignId({

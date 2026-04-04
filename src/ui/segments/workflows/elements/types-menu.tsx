@@ -27,7 +27,13 @@ export function TypesMenu({
       key={`workflow-types-menu-${category}`}
       id={`workflow-types-menu-${category}`}
       data-testid={`workflow-types-menu-${category}`}
-      opts={{ align: 'start' }}
+      opts={{
+        align: 'start',
+        containScroll: 'trimSnaps',
+        slidesToScroll: 2,
+        skipSnaps: true,
+        loop: false,
+      }}
       className="relative py-2"
       plugins={[WheelGesturesPlugin()]}
     >

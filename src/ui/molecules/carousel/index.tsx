@@ -1,9 +1,7 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 'use client';
 
-import React, { useMemo } from 'react';
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
+import React, { useMemo } from 'react';
 
 import ArrowLeft from '@/components/icons/ArrowLeft';
 import { Button } from '@/ui/molecules/button';
@@ -120,6 +118,7 @@ function Carousel({
 
   return (
     <CarouselContext.Provider value={value}>
+      {/** biome-ignore lint/a11y/useSemanticElements: use div for carousel */}
       <div
         onKeyDownCapture={handleKeyDown}
         className={cn('relative', className)}
@@ -152,6 +151,7 @@ function CarouselItem({ className, ...props }: React.ComponentProps<'div'>) {
   const { orientation } = useCarousel();
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: use div for carousel item
     <div
       role="group"
       aria-roledescription="slide"
@@ -227,10 +227,10 @@ function CarouselNext({
 }
 
 export {
-  type CarouselApi,
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
-  CarouselPrevious,
   CarouselNext,
+  CarouselPrevious,
 };
