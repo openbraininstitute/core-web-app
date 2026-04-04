@@ -21,6 +21,7 @@ import { type CameraController, setCamera } from './camera';
 import { makeColor } from './hooks';
 import { getCachedBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
 
+import type { QueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import type { SettingsValues } from './settings';
 import type { VisibleRegion } from './types';
@@ -73,6 +74,7 @@ export class Painter {
 
   constructor(
     readonly atlasId: string,
+    private readonly queryClient: QueryClient,
     private readonly backgroundColor = '#002766'
   ) {
     this.ID = globalId++;
@@ -176,6 +178,7 @@ export class Painter {
         const data = await getCachedBrainRegionMeshArrayBuffer({
           atlasId: this.AtlasID,
           regionId: region.id,
+          queryClient: this.queryClient,
         });
         const meshBounds = await this.addMesh(data, region);
         if (shouldAutoFitCamera && meshBounds) {

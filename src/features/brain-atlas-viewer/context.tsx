@@ -1,11 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 
-import {
-  getBrainAtlases,
-  getBrainAtlasRegions,
-} from '@/api/entitycore/queries/general/brain-atlas';
+import { getBrainAtlases } from '@/api/entitycore/queries/general/brain-atlas';
+import { brainRegionAtlasQueryOptions } from '@/features/brain-atlas-viewer/queries';
 import { keyBuilderAtlas } from '@/ui/use-query-keys/atlas';
-import { fetchAllPaginatedData } from '@/utils/pagination';
 
 export const useBrainAtlasQuery = (id?: string) => {
   const { data, isError, isLoading } = useQuery({
@@ -24,26 +21,8 @@ export const useBrainAtlasQuery = (id?: string) => {
 
 export const useBrainRegionAtlasQuery = ({ id }: { id?: string }) => {
   const { data, isLoading, error } = useQuery({
-    queryKey: keyBuilderAtlas.atlas({
-      atlasId: id ?? '',
-    }),
-    queryFn: async () => {
-      const atlasData = await fetchAllPaginatedData({
-        fn: async (page: number, pageSize: number) => {
-          const result = await getBrainAtlasRegions({
-            atlasId: id ?? '',
-            filters: { page, page_size: pageSize },
-          });
-          return { data: result.data || [] };
-        },
-        pageSize: 200,
-      });
-      return { data: atlasData };
-    },
+    ...brainRegionAtlasQueryOptions(id ?? ''),
     enabled: !!id,
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnWindowFocus: false,
   });
 
   return {

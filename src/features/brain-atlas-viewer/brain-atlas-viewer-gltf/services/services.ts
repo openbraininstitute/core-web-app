@@ -1,28 +1,30 @@
 import { tableFromIPC } from '@apache-arrow/es2015-esm';
 
-import { getBrainAtlasRegions } from '@/api/entitycore/queries/general/brain-atlas';
 import { AssetContentType } from '@/api/entitycore/types/shared/global';
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
 import { fetchPointCloud } from '@/features/brain-atlas-viewer/api';
-import { assertType } from '@/util/type-guards';
+import { ensureBrainRegionAtlasData } from '@/features/brain-atlas-viewer/queries';
 import { log } from '@/utils/logger';
-import { fetchAllPaginatedData } from '@/utils/pagination';
+
+import type { QueryClient } from '@tanstack/react-query';
 
 const cacheMeshes = new Map<string, Promise<ArrayBuffer>>();
 
 export async function getCachedBrainRegionMeshArrayBuffer({
   atlasId,
   regionId,
+  queryClient,
 }: {
   regionId: string;
   atlasId: string;
+  queryClient: QueryClient;
 }): Promise<ArrayBuffer> {
   const cacheKey = `${atlasId}:${regionId}`;
   const fromCache = cacheMeshes.get(cacheKey);
   if (fromCache) return fromCache;
 
-  const promise = getBrainRegionMeshArrayBufferQuery({ atlasId, regionId });
+  const promise = getBrainRegionMeshArrayBufferQuery({ atlasId, regionId, queryClient });
   cacheMeshes.set(cacheKey, promise);
   return promise;
 }
@@ -30,15 +32,17 @@ export async function getCachedBrainRegionMeshArrayBuffer({
 async function getBrainRegionMeshArrayBufferQuery({
   atlasId,
   regionId,
+  queryClient,
 }: {
   atlasId: string;
   regionId: string;
+  queryClient: QueryClient;
 }): Promise<ArrayBuffer> {
   log('info', '[GetBrainRegionMeshArrayBufferQuery]', {
     atlasId,
     regionId,
   });
-  const atlas = await getAtlas(atlasId);
+  const atlas = await getAtlas({ atlasId, queryClient });
   const entity = atlas.data.find((elem) => elem.brain_region_id === regionId);
   if (!entity) {
     throw new Error(`Unable to find region "${regionId}" in current Atlas ${atlasId}!`);
@@ -67,65 +71,8 @@ async function getBrainRegionMeshArrayBufferQuery({
   return mesh;
 }
 
-interface PartialAtlas {
-  data: Array<{
-    id: string;
-    brain_region_id: string;
-    assets: Array<{
-      id: string;
-      content_type: string;
-      label: string;
-      full_path: string;
-    }>;
-  }>;
-}
-
-const cacheAtlas = new Map<string, Promise<PartialAtlas>>();
-
-async function getAtlas(atlasId: string) {
-  const fromCache = cacheAtlas.get(atlasId);
-  if (fromCache) return fromCache;
-
-  const promise = actualGetAtlas(atlasId);
-  cacheAtlas.set(atlasId, promise);
-  return promise;
-}
-
-async function actualGetAtlas(atlasId: string) {
-  const data = await fetchAllPaginatedData({
-    fn: async (page: number, pageSize: number) => {
-      const result = await getBrainAtlasRegions({
-        atlasId,
-        filters: {
-          page,
-          page_size: pageSize,
-        },
-      });
-      return { data: result.data || [] };
-    },
-    pageSize: 200,
-  });
-
-  const atlas: PartialAtlas = { data };
-
-  assertType<PartialAtlas>(atlas, {
-    data: [
-      'array',
-      {
-        id: 'string',
-        brain_region_id: 'string',
-        assets: [
-          'array',
-          {
-            content_type: 'string',
-            label: 'string',
-            full_path: 'string',
-          },
-        ],
-      },
-    ],
-  });
-  return atlas;
+async function getAtlas({ atlasId, queryClient }: { atlasId: string; queryClient: QueryClient }) {
+  return ensureBrainRegionAtlasData(queryClient, atlasId);
 }
 
 const cachePointClouds = new Map<number, Promise<Float32Array>>();

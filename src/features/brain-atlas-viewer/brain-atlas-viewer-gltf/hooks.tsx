@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
 import { compact, find } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
@@ -27,6 +28,7 @@ export function usePainter({
   loading: boolean;
 }): Painter | null {
   const notifier = useAppNotification();
+  const queryClient = useQueryClient();
   const refPainter = React.useRef<Painter | null>(null);
   const refAtlasId = React.useRef<string>(atlasId);
 
@@ -39,7 +41,7 @@ export function usePainter({
 
   if (loading || !atlasId) return null;
   if (!refPainter.current) {
-    refPainter.current = new Painter(atlasId);
+    refPainter.current = new Painter(atlasId, queryClient);
     refAtlasId.current = atlasId;
     refPainter.current.eventError.addListener((message) => {
       notifier.warning({
