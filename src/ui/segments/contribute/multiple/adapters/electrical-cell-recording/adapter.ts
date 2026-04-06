@@ -268,7 +268,7 @@ export function createElectricalCellRecordingImportAdapter({
     templateFileName: 'Electrical Cell Recording csv template and guide',
     templateGuide: {
       entityType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
-      guideFileName: 'electrical-cell-recording-import-template.md',
+      guideFileName: 'electrical-cell-recording-import-guide.md',
     },
     fields,
     schema: electricalCellRecordingSubmissionSchema,

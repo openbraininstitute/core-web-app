@@ -53,6 +53,11 @@ const config = {
         loaders: ['raw-loader'],
         as: '*.js',
       },
+      '*.md': {
+        // Allow importing markdown files as plain text (used by import guide registry).
+        loaders: ['raw-loader'],
+        as: '*.js',
+      },
       mp4: {
         loaders: ['file-loader'],
         as: 'asset',

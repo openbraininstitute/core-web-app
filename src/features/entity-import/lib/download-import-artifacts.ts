@@ -27,12 +27,19 @@ export function downloadBlob({
   type: string;
   fileName: string;
 }): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName;
+  link.style.display = 'none';
   document.body.append(link);
+  // Ensure the click happens in the browser's gesture pipeline before
+  // revoking the URL.
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
@@ -53,6 +60,7 @@ export function downloadImportCsvTemplate(adapter: EntityImportTemplateSource): 
 /** @returns `true` if a guide was downloaded */
 export function tryDownloadImportGuide(adapter: EntityImportTemplateSource): boolean {
   const templateGuide = getEntityImportTemplateGuide(adapter.templateGuide);
+
   if (!templateGuide) {
     return false;
   }

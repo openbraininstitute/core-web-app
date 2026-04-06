@@ -36,3 +36,4 @@ Use the CSV template to bulk import one electrical cell recording per row.
 - `Contributions` supports abbreviated tuples such as `(person, Jane Doe)`, `(Jane Doe)`, or `(Author)`. Ambiguous tokens stay unresolved and must be fixed in the validator.
 - Supported contributor types are `person`, `organization`, and `consortium`.
 - `NWB File` is completed in the import UI, not in the CSV.
+

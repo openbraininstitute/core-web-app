@@ -28,3 +28,4 @@ Use the CSV template to bulk import one morphology per row.
 - Supported contributor types are `person`, `organization`, and `consortium`.
 - `Location` accepts `(x, y, z)` and also keeps backward compatibility with `x, y, z`.
 - `Morphology File` is still completed in the import UI, not in the CSV.
+
