@@ -34,6 +34,7 @@ const config = {
   },
   productionBrowserSourceMaps: !isPreviewBuild,
   experimental: {
+    viewTransition: true,
     turbopackFileSystemCacheForDev: true,
     serverSourceMaps: !isPreviewBuild,
   },
