@@ -53,6 +53,7 @@ export interface ISingleNeuronSynaptomeSimulationFilter
     ContributionFilter,
     BrainRegionFilter,
     BrainRegionHierarchyFilter,
+    OwnershipFilter,
     SharedFilter,
     TimestampsFilter,
     MeTypeFilter,

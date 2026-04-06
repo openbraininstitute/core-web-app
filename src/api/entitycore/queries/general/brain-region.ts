@@ -7,9 +7,9 @@ import type {
   IBrainRegionHierarchy,
   IBrainRegionHierarchyObject,
 } from '@/api/entitycore/types/entities/brain-region';
+import type { IBrainRegionHierarchyRequestFilter } from '@/api/entitycore/types/shared/request';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import type { IBrainRegionHierarchyRequestFilter } from '../../types/shared/request';
 
 /**
  * Retrieves the brain region hierarchy from the entity core API.

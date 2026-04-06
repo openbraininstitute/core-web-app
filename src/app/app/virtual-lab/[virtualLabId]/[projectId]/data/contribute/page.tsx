@@ -4,6 +4,7 @@ import { kebabCase } from 'es-toolkit/compat';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
@@ -28,6 +29,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 export default function Page() {
   const { virtualLabId, projectId } = useWorkspace();
   const [currentTab, setCurrentTab] = useState<TImportLeftSideTab>(ImportLeftSideTab.Type);
+  const notification = useAppNotification();
 
   const options = useMemo(() => buildContributionArtifactOptions(), []);
 
@@ -128,9 +130,12 @@ export default function Page() {
       return;
     }
     if (!tryDownloadImportGuide(adapter)) {
-      window.alert('No import guide is available for this artifact type.');
+      notification.error({
+        message: 'Guide unavailable',
+        description: 'No import guide is available for this artifact type.',
+      });
     }
-  }, [type]);
+  }, [notification, type]);
 
   return (
     <div className="bg-background border-neutral-2 mx-2 ml-3 h-full w-[calc(100%-10px)] gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]">

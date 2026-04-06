@@ -6,6 +6,7 @@ import Papa from 'papaparse';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import ApiError from '@/api/error';
+import { useAppNotification } from '@/components/notification';
 import {
   createIdleValidatorPreviewState,
   ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE,
@@ -319,6 +320,7 @@ export function useEntityImportController<TPayload, TResult>({
   context: IEntityImportRuntimeContext;
   initialRows?: Array<TFlatImportValues>;
 }) {
+  const notification = useAppNotification();
   const validate = useCallback(
     (session: IImportSessionState, rowIds?: Array<string>): IImportSessionState =>
       validateSessionRows({
@@ -1565,17 +1567,12 @@ export function useEntityImportController<TPayload, TResult>({
 
   const onDownloadGuideTemplate = useCallback(() => {
     if (!tryDownloadImportGuide(adapter)) {
-      commit(
-        (current) =>
-          pushNotification(current, {
-            id: `notification-${Date.now()}`,
-            tone: NotificationTone.Error,
-            message: 'No import guide is available for this artifact type.',
-          }),
-        { validate: false }
-      );
+      notification.error({
+        message: 'Guide unavailable',
+        description: 'No import guide is available for this artifact type.',
+      });
     }
-  }, [adapter, commit]);
+  }, [adapter, notification]);
 
   const importMutation = useMutation({
     mutationFn: async () => {

@@ -28,12 +28,12 @@ export interface IRemoteValidationArgs extends RemoteSearchArgs {
   value: string;
 }
 
-/** Page size for validator remote suggestions (first page + load more). */
+/** page size for validator remote suggestions (first page + load more) */
 export const ENTITY_IMPORT_REMOTE_SUGGESTION_PAGE_SIZE = 5;
 
 export interface IRemoteSearchPageResult {
   suggestions: Array<ISuggestion>;
-  /** Offset for the next page, or null when there are no more results. */
+  /** offset for the next page, or null when there are no more results */
   nextPageParam: number | null;
 }
 
@@ -155,7 +155,7 @@ export interface IAdapterFieldEnablementArgs {
 }
 
 /**
- * controls how the validator panel writes values to cells on click "Apply" or "Apply to all".
+ * controls how the validator panel writes values to cells on click "Apply" or "Apply to all"
  *
  * - `Commit` — writes the value directly to the cell, immediately no review
  * - `Stage` — creates a correction draft on the cell, the user must accept
@@ -170,17 +170,17 @@ export type TValidatorWriteStrategy =
   (typeof ValidatorWriteStrategy)[keyof typeof ValidatorWriteStrategy];
 
 /**
- * Extended field definition used by import adapters.
+ * extended field definition used by import adapters
  *
- * Adds adapter-specific behavior on top of the base `IImportFieldDefinition`:
+ * adds adapter-specific behavior on top of the base `IImportFieldDefinition`:
  * custom renderers, remote validation, CSV hydration, file constraints, and
  * conditional enablement logic.
  */
 export interface IAdapterFieldDefinition extends IImportFieldDefinition {
-  /** Placeholder text shown in empty input cells and validator inputs. */
+  /** placeholder text shown in empty input cells and validator inputs. */
   placeholder?: string;
 
-  /** Descriptive help text displayed alongside the field in the validator panel. */
+  /** descriptive help text displayed alongside the field in the validator panel */
   helpText?: string;
 
   /**
@@ -191,86 +191,86 @@ export interface IAdapterFieldDefinition extends IImportFieldDefinition {
    */
   writeStrategy?: TValidatorWriteStrategy;
 
-  /** CSV-specific configuration: column aliases, hydration hooks, background hydration. */
+  /** CSV-specific configuration: column aliases, hydration hooks, background hydration */
   csv?: IAdapterFieldCsvConfig;
 
   /**
-   * Static suggestion list for select-type fields.
-   * Also used as local fallback candidates during remote suggestion lookups.
+   * static suggestion list for select-type fields
+   * also used as local fallback candidates during remote suggestion lookups
    */
   options?: Array<ISuggestion>;
 
   /**
-   * Render additional detail content below a suggestion item in the validator panel.
-   * Useful for showing metadata, descriptions, or previews for each suggestion.
+   * render additional detail content below a suggestion item in the validator panel
+   * useful for showing metadata, descriptions, or previews for each suggestion
    */
   validatorSuggestionDetails?: (args: IValidatorSuggestionDetailsArgs) => ReactNode;
 
   /**
-   * Render a compact badge or label for a resolved remote selection in the table
-   * or validator panel summary.
+   * render a compact badge or label for a resolved remote selection in the table
+   * or validator panel summary
    */
   remoteSelectionBadge?: (args: IValidatorSuggestionDetailsArgs) => ReactNode;
 
-  /** File upload constraints: accepted MIME types, extensions, max size, max count. */
+  /** file upload constraints: accepted MIME types, extensions, max size, max count */
   fileConfig?: IImportFileFieldConfig;
 
   /**
-   * Dynamic enablement predicate. When it returns `false`, the cell is disabled
+   * dynamic enablement predicate. When it returns `false`, the cell is disabled
    * and shows a blocked state. Evaluated during validation with the current
    * row values.
    */
   isEnabled?: (args: IAdapterFieldEnablementArgs) => boolean;
 
   /**
-   * Custom message shown when the field is disabled by `isEnabled` returning false.
-   * Falls back to a generic dependency message if not provided.
+   * custom message shown when the field is disabled by `isEnabled` returning false
+   * falls back to a generic dependency message if not provided
    */
   getDisabledMessage?: (args: IAdapterFieldEnablementArgs) => string;
 
   /**
-   * Return additional validation issues beyond what the Zod schema catches.
-   * Issues are merged with schema errors and remote validation messages.
+   * return additional validation issues beyond what the Zod schema catches
+   * issues are merged with schema errors and remote validation messages
    */
   getValidationIssues?: (args: IAdapterFieldValidationArgs) => Array<string>;
 
   /**
-   * Remote validation and suggestion configuration.
-   * Fields with `remote` are validated against an external API (e.g. brain region
+   * remote validation and suggestion configuration
+   * fields with `remote` are validated against an external API (e.g. brain region
    * lookup, subject resolution) and can provide paginated suggestion results.
    */
   remote?: {
     /**
-     * When true (default), a resolved suggestion from `evaluate` is automatically
-     * accepted without requiring the user to pick from the suggestion list.
-     * Set to false to always show the suggestion list even when a match is found.
+     * when true (default), a resolved suggestion from `evaluate` is automatically
+     * accepted without requiring the user to pick from the suggestion list
+     * set to false to always show the suggestion list even when a match is found
      */
     autoResolveResolvedSuggestion?: boolean;
 
     /**
-     * Paginated remote search for the validator panel's suggestion list.
-     * Called when the user types in the validator input or requests more results.
+     * paginated remote search for the validator panel's suggestion list
+     * called when the user types in the validator input or requests more results
      */
     query?: (args: IRemoteSearchPagedArgs) => Promise<IRemoteSearchPageResult>;
 
     /**
-     * Remote constraint evaluation for a cell value.
-     * Called after CSV upload and after inline edits to determine whether the
-     * value is valid, invalid, or can be resolved to a known suggestion.
+     * remote constraint evaluation for a cell value
+     * called after CSV upload and after inline edits to determine whether the
+     * value is valid, invalid, or can be resolved to a known suggestion
      */
     evaluate?: (args: IRemoteValidationArgs) => Promise<IRemoteValidationResult>;
   };
 
   /**
-   * Custom table cell renderer. Replaces the default `InlineCell` for this field.
-   * Used by compound fields like `location` and `contributions` that need
+   * custom table cell renderer. Replaces the default `InlineCell` for this field
+   * used by compound fields like `location` and `contributions` that need
    * specialized display logic in the table.
    */
   tableRenderer?: (props: ITableCellRendererProps) => ReactNode;
 
   /**
-   * Custom validator panel renderer. Replaces the default input/suggestion UI
-   * for this field in the validator side panel.
+   * custom validator panel renderer. Replaces the default input/suggestion UI
+   * for this field in the validator side panel
    */
   panelRenderer?: (props: IValidatorFieldRendererProps) => ReactNode;
 }
@@ -283,15 +283,15 @@ export interface ISubmitRowArgs<TPayload> {
 }
 
 /**
- * Adapter configuration for a specific entity type's import workflow.
+ * adapter configuration for a specific entity type's import workflow
  *
- * Each adapter defines the field schema, validation rules, CSV template,
+ * each adapter defines the field schema, validation rules, CSV template
  * payload construction, and row submission logic for one importable entity
  * type (e.g. cell morphology). The controller is generic over the adapter's
  * payload and result types.
  *
- * @typeParam TPayload - The validated payload shape passed to `submitRow`.
- * @typeParam TResult - The return type of a successful `submitRow` call.
+ * @typeParam TPayload - The validated payload shape passed to `submitRow`
+ * @typeParam TResult - The return type of a successful `submitRow` call
  */
 export interface IEntityImportAdapter<TPayload = unknown, TResult = unknown> {
   /** Unique identifier for this adapter. Used in query keys and cache scoping. */

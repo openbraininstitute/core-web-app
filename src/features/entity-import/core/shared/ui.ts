@@ -5,15 +5,15 @@ import type { IAdapterFieldDefinition } from '@/features/entity-import/core/adap
 // keep import editor dropdowns above sticky table and validator
 export const ENTITY_IMPORT_POPOVER_Z_CLASS = 'z-[99999]';
 
-/** Base shell for import-related selects (z-index, border, shadow). Use `p-0`; pad via viewport or items. */
+/** base shell for import-related selects (z-index, border, shadow). Use `p-0`; pad via viewport or items */
 export const ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME = cn(
   ENTITY_IMPORT_POPOVER_Z_CLASS,
   'border border-neutral-200 bg-white p-0 shadow-[0_16px_40px_rgba(0,0,0,0.16)]'
 );
 
 /**
- * Trigger-aligned menu: width matches trigger, rounded panel, items get inset `rounded-lg` highlights
- * (species, repair pipeline, validator enum fields).
+ * trigger-aligned menu: width matches trigger, rounded panel, items get inset `rounded-lg` highlights
+ * (species, repair pipeline, validator enum fields)
  */
 export const ENTITY_IMPORT_SELECT_MENU_PANEL_CLASSNAME = cn(
   ENTITY_IMPORT_SELECT_CONTENT_CLASSNAME,
@@ -21,7 +21,7 @@ export const ENTITY_IMPORT_SELECT_MENU_PANEL_CLASSNAME = cn(
   'min-w-[var(--radix-select-trigger-width)] w-[var(--radix-select-trigger-width)]'
 );
 
-/** Option row: full width inside viewport, rounded highlight aligned with panel curvature. */
+/** option row: full width inside viewport, rounded highlight aligned with panel */
 export const ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME = cn(
   'relative flex w-full min-w-0 max-w-full items-center rounded-lg',
   'min-h-11 h-11 px-3 pr-10 text-left text-base font-semibold text-primary-9',
