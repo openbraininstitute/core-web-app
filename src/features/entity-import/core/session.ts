@@ -375,6 +375,8 @@ export function createImportSessionState({
       rowId: null,
       fieldPath: null,
     },
+    validatorScrollFieldPath: null,
+    validatorScrollRequestVersion: 0,
     notifications: [],
     summary: summaryModule.summarizeImportRows(sessionRows, fields),
   };
@@ -523,6 +525,17 @@ export function setValidatorSelection(
     ...session,
     validatorSelection,
     selectedCell: toSelectedCell(validatorSelection),
+  };
+}
+
+export function setValidatorScrollFieldPath(
+  session: IImportSessionState,
+  params: { fieldPath: string | null }
+): IImportSessionState {
+  return {
+    ...session,
+    validatorScrollFieldPath: params.fieldPath,
+    validatorScrollRequestVersion: session.validatorScrollRequestVersion + 1,
   };
 }
 

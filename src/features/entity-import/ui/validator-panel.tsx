@@ -696,10 +696,19 @@ function SingleColumnValidatorCard({
     actions.onSetValidatorSelection({ rowId: session.rows[nextIndex].id });
   };
 
+  const selectCurrentCard = useCallback(() => {
+    if (session.validatorSelection.fieldPath === ENTITY_IMPORT_ALL_COLUMNS) {
+      actions.onSetValidatorScrollFieldPath({ fieldPath: field.path });
+      return;
+    }
+    actions.onSetValidatorSelection({ rowId: row.id, fieldPath: field.path });
+  }, [actions, field.path, row.id, session.validatorSelection.fieldPath]);
+
   return (
     <Card
       id={`single-column-validator-card-${field.path}`}
       className="rounded-2xl border border-neutral-200 py-0"
+      onClick={selectCurrentCard}
     >
       <CardContent className="space-y-4 py-4 px-0">
         <div className="flex items-start justify-between gap-3 px-4">
@@ -1410,6 +1419,9 @@ export function ValidatorPanel<TPayload, TResult>({
                   id={`single-column-validator-card-container-${field.path}`}
                   key={`${activeRow.id}:${field.path}`}
                   aria-label={`Validator box ${field.label}`}
+                  onClickCapture={() => {
+                    actions.onSetValidatorScrollFieldPath({ fieldPath: field.path });
+                  }}
                 >
                   <SingleColumnValidatorCard
                     field={field}

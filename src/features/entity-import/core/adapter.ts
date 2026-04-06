@@ -435,6 +435,12 @@ export interface IEntityImportActions {
   onSetValidatorSelection: (params: { rowId?: string | null; fieldPath?: string | null }) => void;
 
   /**
+   * Set a field path target for horizontal table scroll without changing
+   * validator panel mode (e.g. while browsing cards in "All columns").
+   */
+  onSetValidatorScrollFieldPath: (params: { fieldPath: string | null }) => void;
+
+  /**
    * Persist row-scoped lookup context that is not submitted, such as species
    * filters used to constrain related remote selects.
    */

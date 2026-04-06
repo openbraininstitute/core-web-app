@@ -172,6 +172,8 @@ export interface IImportSessionState {
   rows: Array<IImportRowState>;
   selectedCell: ISelectedCellState | null;
   validatorSelection: IValidatorSelectionState;
+  validatorScrollFieldPath: string | null;
+  validatorScrollRequestVersion: number;
   notifications: Array<ISessionNotification>;
   summary: ISessionSummary;
 }

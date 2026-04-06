@@ -58,6 +58,7 @@ import {
   setCellRemoteState,
   setCellValue,
   setRowLookupSpecies,
+  setValidatorScrollFieldPath as setValidatorScrollFieldPathState,
   setValidatorSelection as setValidatorSelectionState,
   stageSuggestionToRows,
   updateCellRawValue,
@@ -1194,6 +1195,15 @@ export function useEntityImportController<TPayload, TResult>({
     [clearValidatorPreview, commit]
   );
 
+  const onSetValidatorScrollFieldPath = useCallback(
+    ({ fieldPath }: { fieldPath: string | null }) => {
+      commit((current) => setValidatorScrollFieldPathState(current, { fieldPath }), {
+        validate: false,
+      });
+    },
+    [commit]
+  );
+
   const onUpdateCellValue = useCallback(
     ({ rowId, fieldPath, rawValue }: { rowId: string; fieldPath: string; rawValue: string }) => {
       clearValidatorPreview();
@@ -1659,6 +1669,7 @@ export function useEntityImportController<TPayload, TResult>({
       loadMoreSuggestions,
       onSelectCell,
       onSetValidatorSelection,
+      onSetValidatorScrollFieldPath,
       onSetRowLookupSpecies,
       updateValidatorPreview,
       onSetCustomValue,
@@ -1682,6 +1693,7 @@ export function useEntityImportController<TPayload, TResult>({
       onDismissFeatureNotification,
       onSelectCell,
       onSetValidatorSelection,
+      onSetValidatorScrollFieldPath,
       onSetRowLookupSpecies,
       updateValidatorPreview,
       onSetCustomValue,
