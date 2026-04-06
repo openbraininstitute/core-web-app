@@ -48,6 +48,12 @@ interface UseImportTableScrollParams {
    * when nothing is selected.
    */
   selectedFieldPath: string | null | undefined;
+
+  /**
+   * rerun horizontal scroll when a selection action happens, even if the
+   * selected field path value itself did not change.
+   */
+  selectionTrigger: unknown;
 }
 
 interface UseImportTableScrollResult {
@@ -70,6 +76,7 @@ export function useImportTableScroll({
   resizeOverrides,
   rowCount,
   selectedFieldPath,
+  selectionTrigger,
 }: UseImportTableScrollParams): UseImportTableScrollResult {
   const previousRowCountRef = useRef(rowCount);
   const shouldScrollToNewRowRef = useRef(false);
@@ -93,6 +100,10 @@ export function useImportTableScroll({
   }, [rowCount, tableRef]);
 
   useLayoutEffect(() => {
+    // trigger this effect when selection actions occur, even if
+    // `selectedFieldPath` remains unchanged.
+    void selectionTrigger;
+
     if (!selectedFieldPath || selectedFieldPath === ENTITY_IMPORT_ALL_COLUMNS) {
       return;
     }
@@ -134,7 +145,7 @@ export function useImportTableScroll({
     }
     // `resizeOverrides` is read via ref so this effect does not rerun on every drag mousemove
     // (which would fight resize and snap horizontal scroll).
-  }, [fields, selectedFieldPath, tableRef]);
+  }, [fields, selectedFieldPath, selectionTrigger, tableRef]);
 
   return { scrollToNewRowOnNextCommit };
 }

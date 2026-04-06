@@ -79,13 +79,14 @@ export function Measurements() {
                         className="flex-1"
                       >
                         <InputNumber
+                          type="number"
                           placeholder="Enter value"
                           size="large"
                           className="h-12 w-full! rounded-full! placeholder:text-sm"
                           controls={false}
                         />
                       </Form.Item>
-                      <Form.Item label={<div className="h-[14px]" />}>
+                      <Form.Item label={<div className="h-3.5" />}>
                         <Button
                           rounded
                           type="button"

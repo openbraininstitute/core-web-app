@@ -143,6 +143,7 @@ export function ImportTable<TPayload, TResult>({
     resizeOverrides,
     rowCount: session.rows.length,
     selectedFieldPath: session.validatorSelection.fieldPath,
+    selectionTrigger: session.validatorSelection,
   });
 
   useEffect(() => {
