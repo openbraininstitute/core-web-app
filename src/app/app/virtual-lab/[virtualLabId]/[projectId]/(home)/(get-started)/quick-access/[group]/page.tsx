@@ -110,7 +110,7 @@ export default async function Page({
     <div
       id={`quick-access-${group}`}
       data-testid={`quick-access-${group}`}
-      className="grid grid-cols-3 gap-2 px-3 mb-10"
+      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 px-3 mb-10"
     >
       {results.map(({ title, thumbnail, entity, extendedType, artifactTitle, description }) => {
         return (

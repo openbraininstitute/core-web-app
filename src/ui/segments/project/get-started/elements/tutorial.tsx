@@ -48,7 +48,7 @@ export function TutorialCard({
         <CardTitle className="text-primary-9 group-hover:text-primary-8 group-hover:font-black">
           {t}
         </CardTitle>
-        <CardDescription className="relative h-30.75 w-auto px-4 mt-auto">
+        <CardDescription className="relative aspect-video w-full px-4 mt-auto">
           <Image
             fill
             alt={t}

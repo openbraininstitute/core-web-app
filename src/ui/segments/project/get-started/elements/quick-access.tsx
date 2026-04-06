@@ -109,9 +109,9 @@ export function MainCardItem({
           </Badge>
         </div>
       )}
-      <div className="relative h-41.75 w-auto">
+      <div className="relative aspect-video w-full">
         {thumbnail ? (
-          <Image fill alt={title ?? 'preview'} src={thumbnail} objectFit="contain" />
+          <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-contain" />
         ) : (
           <Skeleton
             active={false}
@@ -238,9 +238,9 @@ export function SingleCardItem({
           </Badge>
         </CardTitle>
       )}
-      <div className="relative h-41.75 w-auto">
+      <div className="relative aspect-video w-full">
         {thumbnail ? (
-          <Image fill alt={title ?? 'preview'} src={thumbnail} objectFit="contain" />
+          <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-contain" />
         ) : (
           <Skeleton
             active={false}
