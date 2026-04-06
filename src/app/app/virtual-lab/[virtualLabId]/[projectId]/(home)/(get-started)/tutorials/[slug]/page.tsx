@@ -1,3 +1,5 @@
+import { ViewTransition } from 'react';
+
 import { tryCatch } from '@/api/utils';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
@@ -60,9 +62,11 @@ export default async function Page({ params }: ServerSideComponentProp<{ slug: s
   return (
     <>
       <ScrollToTop />
-      <div className="relative w-full h-[522.19px] overflow-hidden rounded-xl">
-        <VideoPlayer url={video?.url} />
-      </div>
+      <ViewTransition enter="vt-slide-up-enter" exit="vt-slide-down-exit">
+        <div className="relative w-full h-[522.19px] overflow-hidden rounded-xl">
+          <VideoPlayer url={video?.url} />
+        </div>
+      </ViewTransition>
     </>
   );
 }
