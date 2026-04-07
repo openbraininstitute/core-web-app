@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
@@ -39,21 +40,22 @@ export type TTaskConfigType = (typeof TaskConfigType)[keyof typeof TaskConfigTyp
 
 export interface ITaskConfigInputEntity {
   id: string;
-  type?: string | null;
-  name?: string | null;
+  type?: TEntityTypeDict | null;
+  authorized_project_id: string | null;
+  authorized_public: boolean;
 }
 
-export interface ITaskConfigBase {
+export interface ITaskConfigBase<T extends Record<string, unknown>> {
   name: string;
   description: string;
   task_config_type: TTaskConfigType;
-  meta: Record<string, unknown>;
+  meta: T;
   task_config_generator_id: string | null;
   inputs: Array<ITaskConfigInputEntity>;
 }
 
-export interface ITaskConfig
-  extends ITaskConfigBase,
+export interface ITaskConfig<T extends Record<string, unknown>>
+  extends ITaskConfigBase<T>,
     EntityCoreIdentifiable,
     EntityCoreBaseAsset,
     Timestamps,

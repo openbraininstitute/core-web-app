@@ -246,6 +246,9 @@ export enum AssetLabel {
   jupyter_notebook = 'jupyter_notebook',
   ion_channel_model_thumbnail = 'ion_channel_model_thumbnail',
   circuit_extraction_config = 'circuit_extraction_config',
+  task_config = 'task_config',
+  skeletonization_config = 'skeletonization_config',
+  lod_mesh_block = 'lod_mesh_block',
 }
 
 export enum AssetContentType {

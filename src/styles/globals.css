@@ -477,3 +477,14 @@ dialog {
   border: 0;
   padding: 0;
 }
+
+/* Shiki syntax highlighting - explicit class-based dark mode */
+.shiki span {
+  color: var(--shiki-light);
+  background-color: transparent !important;
+}
+
+.dark .shiki span {
+  color: var(--shiki-dark);
+  background-color: transparent !important;
+}

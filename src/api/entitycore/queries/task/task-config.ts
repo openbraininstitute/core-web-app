@@ -15,7 +15,7 @@ const baseUri = '/task-config';
 /**
  * Retrieves a paginated list of task configs.
  */
-export async function getTaskConfigs({
+export async function getTaskConfigs<T extends Record<string, unknown>>({
   withFacets,
   filters,
   context,
@@ -25,7 +25,7 @@ export async function getTaskConfigs({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<ITaskConfig>>(baseUri, {
+  return await api.get<EntityCoreResponse<ITaskConfig<T>>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
       with_facets: withFacets,
@@ -41,7 +41,7 @@ export async function getTaskConfigs({
 /**
  * Retrieves a single task config by ID.
  */
-export async function getTaskConfig({
+export async function getTaskConfig<T extends Record<string, unknown>>({
   id,
   context,
 }: {
@@ -49,7 +49,7 @@ export async function getTaskConfig({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<ITaskConfig>(`${baseUri}/${id}`, {
+  return await api.get<ITaskConfig<T>>(`${baseUri}/${id}`, {
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
@@ -61,7 +61,7 @@ export async function getTaskConfig({
 /**
  * Creates a new task config.
  */
-export async function createTaskConfig({
+export async function createTaskConfig<T extends Record<string, unknown>>({
   data,
   context,
 }: {
@@ -69,7 +69,7 @@ export async function createTaskConfig({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.post<ITaskConfig>(baseUri, {
+  return await api.post<ITaskConfig<T>>(baseUri, {
     body: data,
     headers: {
       accept: 'application/json',
@@ -82,7 +82,7 @@ export async function createTaskConfig({
 /**
  * Updates an existing task config.
  */
-export async function updateTaskConfig({
+export async function updateTaskConfig<T extends Record<string, unknown>>({
   id,
   data,
   context,
@@ -92,7 +92,7 @@ export async function updateTaskConfig({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.patch<ITaskConfig>(`${baseUri}/${id}`, {
+  return await api.patch<ITaskConfig<T>>(`${baseUri}/${id}`, {
     body: data,
     headers: {
       accept: 'application/json',

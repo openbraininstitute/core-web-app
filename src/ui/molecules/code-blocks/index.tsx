@@ -61,18 +61,16 @@ export async function highlightCode(
 ) {
   const transformers: ShikiTransformer[] = showLineNumbers ? [lineNumberTransformer] : [];
 
-  return await Promise.all([
-    codeToHtml(code, {
-      lang: language,
-      theme: 'catppuccin-latte',
-      transformers,
-    }),
-    codeToHtml(code, {
-      lang: language,
-      theme: 'catppuccin-mocha',
-      transformers,
-    }),
-  ]);
+  // Use dual themes with CSS variables for class-based switching
+  return codeToHtml(code, {
+    lang: language,
+    themes: {
+      light: 'catppuccin-latte',
+      dark: 'catppuccin-mocha',
+    },
+    defaultColor: false, // Use CSS variables instead of inline colors
+    transformers,
+  });
 }
 
 export function CodeBlock({
@@ -84,14 +82,12 @@ export function CodeBlock({
   ...props
 }: CodeBlockProps) {
   const [html, setHtml] = useState<string>('');
-  const [darkHtml, setDarkHtml] = useState<string>('');
   const mounted = useRef(false);
 
   useEffect(() => {
-    highlightCode(code, language, showLineNumbers).then(([light, dark]) => {
+    highlightCode(code, language, showLineNumbers).then((highlighted) => {
       if (!mounted.current) {
-        setHtml(light);
-        setDarkHtml(dark);
+        setHtml(highlighted);
         mounted.current = true;
       }
     });
@@ -114,14 +110,9 @@ export function CodeBlock({
         {children}
         <div className="relative">
           <div
-            className="[&>pre]:bg-background! [&>pre]:text-foreground! overflow-hidden dark:hidden [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm"
+            className="[&>pre]:bg-background! [&>pre]:text-foreground! overflow-hidden [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm"
             // biome-ignore lint/security/noDangerouslySetInnerHtml: required
             dangerouslySetInnerHTML={{ __html: html }}
-          />
-          <div
-            className="[&>pre]:bg-background! [&>pre]:text-foreground! hidden overflow-hidden dark:block [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm"
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: required
-            dangerouslySetInnerHTML={{ __html: darkHtml }}
           />
         </div>
       </div>
