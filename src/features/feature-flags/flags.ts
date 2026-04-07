@@ -11,7 +11,6 @@ export const aiPanelStateFlag = defineFlag<PanelState>({
   visible: false,
 });
 
-
 export const extractionActivityFlag = defineFlag<boolean>({
   key: 'extraction-activity',
   defaultValue: false,

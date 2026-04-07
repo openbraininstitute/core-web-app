@@ -136,7 +136,10 @@ function useInputFiles(
   simulation: ISimulation,
   context: WorkspaceContext
 ): [boolean, TActivityCustomFile[]] {
-  const { entity, isLoading } = useModelQuery({ id: simulation.entity_id, context });
+  const { entity, isLoading } = useModelQuery({
+    id: simulation.entity_id,
+    context,
+  });
 
   const inputFiles: TActivityCustomFile[] = useMemo(() => {
     const sonataCircuitAsset =

@@ -20,8 +20,6 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getExtendedSimMap } from '@/entity-configuration/domain/simulation/utils';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-//import { microcircuitFlag } from '@/features/feature-flags';
-
 import type { ICircuit, ICircuitFilter } from '@/api/entitycore/types/entities/circuit';
 import type {
   ICircuitSimulationCampaign,
@@ -197,7 +195,6 @@ export const MicrocircuitSimulation: EntityCoreTypeConfig<
   type: EntityTypeDict.SimulationCampaign,
   discriminator: { key: 'scale', value: [SCALE] },
   slug: EntitySlug.MicrocircuitSimulation,
-  //requiredFeatures: [microcircuitFlag.key],
   api: {
     config: {
       allowedFacets: true,
