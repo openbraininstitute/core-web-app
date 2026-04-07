@@ -2811,6 +2811,65 @@ describe('EntityImportFeature', () => {
     });
   });
 
+  it('scrolls the virtualized table horizontally when an all-columns validator card is selected', async () => {
+    const user = userEvent.setup();
+    const morphologyAdapter = createCellMorphologyImportAdapter({
+      defaultBrainRegionId: 'brain-region-1',
+    });
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={Array.from({ length: 100 }, (_, index) => ({
+          sourceFile: '',
+          name: `Neuron ${index + 1}`,
+          description: '',
+          brainRegionId: '',
+          experimentDate: '',
+          contactEmail: '',
+          publishedIn: '',
+          location: '',
+          subjectId: '',
+          licenseId: '',
+          protocolId: '',
+          repairPipelineState: '',
+          mtypeClassId: '',
+          contributions: '',
+        }))}
+      />
+    );
+
+    const virtualInner = container.querySelector('.ant-table-tbody-virtual-holder-inner');
+    if (!(virtualInner instanceof HTMLDivElement)) {
+      throw new Error('Expected virtual table body inner to exist');
+    }
+    if (!(virtualInner.parentElement instanceof HTMLDivElement)) {
+      throw new Error('Expected virtual table horizontal scroll host to exist');
+    }
+    const horizontalHost = virtualInner.parentElement;
+    Object.defineProperty(horizontalHost, 'clientWidth', {
+      configurable: true,
+      value: 848,
+    });
+    Object.defineProperty(horizontalHost, 'scrollWidth', {
+      configurable: true,
+      value: 3000,
+    });
+    horizontalHost.scrollLeft = 0;
+
+    await user.click(screen.getByLabelText('Select column'));
+    await user.click(await screen.findByText('All'));
+    await user.click(screen.getByLabelText('Select row'));
+    await user.click(within(getOpenSelectContent()).getByText('1'));
+    await user.click(screen.getByRole('region', { name: 'Validator box Repair Pipeline State' }));
+
+    await waitFor(() => {
+      expect(horizontalHost.scrollLeft).toBeGreaterThan(0);
+    });
+  });
+
   it('shows selected static options in the validator dropdown without suggestion buttons', async () => {
     const user = userEvent.setup();
 

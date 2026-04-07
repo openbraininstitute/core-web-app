@@ -29,6 +29,44 @@ function findScrollableTableBody(tableRef: TableRef | null): HTMLDivElement | nu
   );
 }
 
+/**
+ * locate the horizontally scrollable container for AntD table
+ *
+ * in non-virtual mode this is the `.ant-table-body`
+ * in virtual mode the horizontal scroll host is the unnamed wrapper that
+ * contains `.ant-table-tbody-virtual-holder-inner`
+ */
+function hasHorizontalOverflow(el: HTMLElement): boolean {
+  return el.scrollWidth > el.clientWidth + 1;
+}
+
+function findHorizontalScrollContainer(tableRef: TableRef | null): HTMLDivElement | null {
+  const element = tableRef?.nativeElement;
+  if (!element) return null;
+
+  const tableBody = element.querySelector('.ant-table-body') as HTMLDivElement | null;
+  if (tableBody && hasHorizontalOverflow(tableBody)) {
+    return tableBody;
+  }
+
+  const virtualBodyInner = element.querySelector(
+    '.ant-table-tbody-virtual-holder-inner'
+  ) as HTMLDivElement | null;
+  if (!virtualBodyInner) {
+    return tableBody;
+  }
+
+  let current: HTMLElement | null = virtualBodyInner.parentElement;
+  while (current && current !== element) {
+    if (current instanceof HTMLDivElement && hasHorizontalOverflow(current)) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+
+  return hasHorizontalOverflow(virtualBodyInner) ? virtualBodyInner : tableBody;
+}
+
 interface UseImportTableScrollParams {
   /** Ref to the Ant Design `<Table>` instance */
   tableRef: RefObject<TableRef | null>;
@@ -54,6 +92,9 @@ interface UseImportTableScrollParams {
    * selected field path value itself did not change.
    */
   selectionTrigger: unknown;
+
+  /** selected row id in validator panel, if any */
+  selectedRowId: string | null | undefined;
 }
 
 interface UseImportTableScrollResult {
@@ -77,10 +118,12 @@ export function useImportTableScroll({
   rowCount,
   selectedFieldPath,
   selectionTrigger,
+  selectedRowId,
 }: UseImportTableScrollParams): UseImportTableScrollResult {
   const previousRowCountRef = useRef(rowCount);
   const shouldScrollToNewRowRef = useRef(false);
   const resizeOverridesRef = useRef(resizeOverrides);
+  const postPaintHeaderSyncFrameRef = useRef<number | null>(null);
   resizeOverridesRef.current = resizeOverrides;
 
   const scrollToNewRowOnNextCommit = useCallback(() => {
@@ -99,6 +142,15 @@ export function useImportTableScroll({
     previousRowCountRef.current = rowCount;
   }, [rowCount, tableRef]);
 
+  // keep selected validator row visible in the table body when
+  // the validator selection changes
+  useLayoutEffect(() => {
+    void selectionTrigger;
+    if (selectedRowId) {
+      tableRef.current?.scrollTo({ key: selectedRowId });
+    }
+  }, [selectedRowId, selectionTrigger, tableRef]);
+
   useLayoutEffect(() => {
     // trigger this effect when selection actions occur, even if
     // `selectedFieldPath` remains unchanged.
@@ -108,8 +160,8 @@ export function useImportTableScroll({
       return;
     }
 
-    const tableBody = findScrollableTableBody(tableRef.current);
-    if (!tableBody) {
+    const horizontalContainer = findHorizontalScrollContainer(tableRef.current);
+    if (!horizontalContainer) {
       return;
     }
 
@@ -119,6 +171,8 @@ export function useImportTableScroll({
     }
 
     const ro = resizeOverridesRef.current;
+    const tableElement = tableRef.current?.nativeElement ?? null;
+    const headerElement = tableElement?.querySelector('.ant-table-header') as HTMLDivElement | null;
 
     // pixel offset of the target column's left edge relative to the start
     // of the scrollable content (after the fixed row-index column)
@@ -133,16 +187,41 @@ export function useImportTableScroll({
 
     // the fixed left/right columns overlay the scrollable area, so the
     // *usable* viewport is narrower than `clientWidth`.
-    const usableLeft = tableBody.scrollLeft + ROW_INDEX_COLUMN_WIDTH;
-    const usableRight = tableBody.scrollLeft + tableBody.clientWidth - ROW_ACTIONS_COLUMN_WIDTH;
+    const usableLeft = horizontalContainer.scrollLeft + ROW_INDEX_COLUMN_WIDTH;
+    const usableRight =
+      horizontalContainer.scrollLeft + horizontalContainer.clientWidth - ROW_ACTIONS_COLUMN_WIDTH;
 
     if (columnLeft < usableLeft) {
       // column is (partially) hidden behind the fixed left column.
-      tableBody.scrollLeft = columnLeft - ROW_INDEX_COLUMN_WIDTH;
+      horizontalContainer.scrollLeft = columnLeft - ROW_INDEX_COLUMN_WIDTH;
     } else if (columnRight > usableRight) {
       // column is (partially) hidden behind the fixed right column.
-      tableBody.scrollLeft = columnRight - tableBody.clientWidth + ROW_ACTIONS_COLUMN_WIDTH;
+      horizontalContainer.scrollLeft =
+        columnRight - horizontalContainer.clientWidth + ROW_ACTIONS_COLUMN_WIDTH;
     }
+
+    if (headerElement && headerElement !== horizontalContainer) {
+      headerElement.scrollLeft = horizontalContainer.scrollLeft;
+    }
+
+    if (postPaintHeaderSyncFrameRef.current !== null) {
+      cancelAnimationFrame(postPaintHeaderSyncFrameRef.current);
+    }
+
+    postPaintHeaderSyncFrameRef.current = requestAnimationFrame(() => {
+      postPaintHeaderSyncFrameRef.current = null;
+
+      if (headerElement && headerElement !== horizontalContainer) {
+        headerElement.scrollLeft = horizontalContainer.scrollLeft;
+      }
+    });
+
+    return () => {
+      if (postPaintHeaderSyncFrameRef.current !== null) {
+        cancelAnimationFrame(postPaintHeaderSyncFrameRef.current);
+        postPaintHeaderSyncFrameRef.current = null;
+      }
+    };
     // `resizeOverrides` is read via ref so this effect does not rerun on every drag mousemove
     // (which would fight resize and snap horizontal scroll).
   }, [fields, selectedFieldPath, selectionTrigger, tableRef]);

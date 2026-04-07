@@ -149,6 +149,7 @@ export function ImportTable<TPayload, TResult>({
     resizeOverrides,
     rowCount: session.rows.length,
     selectedFieldPath: selectedFieldPathForScroll,
+    selectedRowId: session.validatorSelection.rowId,
     selectionTrigger: `${session.validatorSelection.rowId ?? ''}:${session.validatorSelection.fieldPath ?? ''}:${session.validatorScrollRequestVersion}`,
   });
 
@@ -472,6 +473,7 @@ export function ImportTable<TPayload, TResult>({
     () => ({ x: scrollWidth, y: scrollHeight, scrollToFirstRowOnChange: false }),
     [scrollWidth, scrollHeight]
   );
+
   const footer = useCallback(
     () => (
       <button
