@@ -19,7 +19,6 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import {
   CellStatus,
   DependencyState,
-  ENTITY_IMPORT_ALL_COLUMNS,
   ImportRowResultStatus,
   ImportRunPhase,
   RemoteValidationStatus,
@@ -138,19 +137,10 @@ export function ImportTable<TPayload, TResult>({
   const { setWrapperRef, resizeOverrides, beginResize, scrollWidth, scrollHeight } =
     useImportTableLayout({ fields: adapter.fields, tableRef });
 
-  const selectedFieldPathForScroll =
-    session.validatorSelection.fieldPath === ENTITY_IMPORT_ALL_COLUMNS
-      ? session.validatorScrollFieldPath
-      : session.validatorSelection.fieldPath;
-
   const { scrollToNewRowOnNextCommit } = useImportTableScroll({
     tableRef,
-    fields: adapter.fields,
-    resizeOverrides,
     rowCount: session.rows.length,
-    selectedFieldPath: selectedFieldPathForScroll,
     selectedRowId: session.validatorSelection.rowId,
-    selectionTrigger: `${session.validatorSelection.rowId ?? ''}:${session.validatorSelection.fieldPath ?? ''}:${session.validatorScrollRequestVersion}`,
   });
 
   useEffect(() => {
