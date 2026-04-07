@@ -1189,6 +1189,18 @@ export function useEntityImportController<TPayload, TResult>({
 
   const onSetValidatorSelection = useCallback(
     ({ rowId, fieldPath }: { rowId?: string | null; fieldPath?: string | null }) => {
+      const current = sessionRef.current;
+      const nextRowId = rowId !== undefined ? rowId : current.validatorSelection.rowId;
+      const nextFieldPath =
+        fieldPath !== undefined ? fieldPath : current.validatorSelection.fieldPath;
+
+      if (
+        nextRowId === current.validatorSelection.rowId &&
+        nextFieldPath === current.validatorSelection.fieldPath
+      ) {
+        return;
+      }
+
       clearValidatorPreview();
       commit((current) => setValidatorSelectionState(current, { rowId, fieldPath }), {
         validate: false,
