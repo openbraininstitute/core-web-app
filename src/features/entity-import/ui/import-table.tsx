@@ -494,6 +494,7 @@ export function ImportTable<TPayload, TResult>({
   return (
     <div ref={setWrapperRef} className="h-full min-h-0 overflow-hidden bg-background">
       <Table
+        virtual
         ref={tableRef}
         rowKey="id"
         size="small"
@@ -502,7 +503,6 @@ export function ImportTable<TPayload, TResult>({
         columns={columns}
         dataSource={session.rows}
         scroll={scroll}
-        virtual={session.rows.length >= 50}
         footer={footer}
         className={cn(
           'entity-import-table',
