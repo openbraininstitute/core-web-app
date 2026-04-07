@@ -19,6 +19,7 @@ import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/util
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
+import { fetchAllPaginatedData } from '@/utils/pagination';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
@@ -178,9 +179,16 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   ({ campaignId, context }: { campaignId: string; context: WorkspaceContext }) =>
     atom<Promise<ISimulation[]>>(async () => {
       const filters = { simulation_campaign_id: campaignId };
-      const res = await getSimulations({ filters, context });
-
-      const simulations = res.data;
+      const simulations = await fetchAllPaginatedData<ISimulation>({
+        fn: async (page, pageSize) => {
+          const res = await getSimulations({
+            filters: { ...filters, page, page_size: pageSize },
+            context,
+          });
+          return { data: res.data || [] };
+        },
+        pageSize: 100,
+      });
 
       // To correctly sort simulations by name which might contain a simulation index.
       const collator = new Intl.Collator(undefined, {
