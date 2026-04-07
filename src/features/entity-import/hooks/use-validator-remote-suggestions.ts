@@ -18,17 +18,12 @@ import {
   type ISuggestion,
   RemoteValidationStatus,
 } from '@/features/entity-import/core/contracts';
-import {
-  resolveCellSuggestion,
-  setCellRemoteState,
-  setRowLookupSpecies,
-} from '@/features/entity-import/core/session';
+import { resolveCellSuggestion, setCellRemoteState } from '@/features/entity-import/core/session';
 import {
   fieldHasSuggestionResolution,
   findExactSuggestionMatch,
   getRowSubmissionValues,
 } from '@/features/entity-import/core/shared/helpers';
-import { readSpeciesSuggestionFromSuggestion } from '@/features/entity-import/core/shared/species-context';
 
 const ValidationSource = {
   Selection: 'selection',
@@ -302,23 +297,17 @@ export function useValidatorRemoteSuggestions<TPayload, TResult>({
         const previewValue = createValidatorPreviewValueFromSuggestion(autoResolved);
         commit(
           (current) =>
-            setRowLookupSpecies(
-              setCellRemoteState(current, {
-                rowId: request.rowId,
-                fieldPath: request.fieldPath,
-                remoteState: {
-                  ...currentCell.remoteState,
-                  suggestions: merged,
-                  status: RemoteValidationStatus.Invalid,
-                  selectedSuggestion: autoResolved,
-                  message: 'Apply the selected suggestion to continue.',
-                },
-              }),
-              {
-                rowId: request.rowId,
-                suggestion: readSpeciesSuggestionFromSuggestion(autoResolved),
-              }
-            ),
+            setCellRemoteState(current, {
+              rowId: request.rowId,
+              fieldPath: request.fieldPath,
+              remoteState: {
+                ...currentCell.remoteState,
+                suggestions: merged,
+                status: RemoteValidationStatus.Invalid,
+                selectedSuggestion: autoResolved,
+                message: 'Apply the selected suggestion to continue.',
+              },
+            }),
           { rowIds: [request.rowId] }
         );
         updateValidatorPreview({
@@ -512,27 +501,20 @@ export function useValidatorRemoteSuggestions<TPayload, TResult>({
           ? currentSuggestions.suggestions
           : currentCell.remoteState.suggestions;
       const previewValue = createValidatorPreviewValueFromSuggestion(suggestion);
-      const nextSpeciesSuggestion = readSpeciesSuggestionFromSuggestion(suggestion);
 
       commit(
         (current) =>
-          setRowLookupSpecies(
-            setCellRemoteState(current, {
-              rowId,
-              fieldPath,
-              remoteState: {
-                ...currentCell.remoteState,
-                suggestions: persistedSuggestions,
-                status: RemoteValidationStatus.Invalid,
-                selectedSuggestion: suggestion,
-                message: 'Apply the selected suggestion to continue.',
-              },
-            }),
-            {
-              rowId,
-              suggestion: nextSpeciesSuggestion,
-            }
-          ),
+          setCellRemoteState(current, {
+            rowId,
+            fieldPath,
+            remoteState: {
+              ...currentCell.remoteState,
+              suggestions: persistedSuggestions,
+              status: RemoteValidationStatus.Invalid,
+              selectedSuggestion: suggestion,
+              message: 'Apply the selected suggestion to continue.',
+            },
+          }),
         { rowIds: [rowId] }
       );
       setSuggestions((current) =>

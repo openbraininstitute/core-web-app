@@ -2613,6 +2613,193 @@ describe('EntityImportFeature', () => {
     });
   });
 
+  it('does not refetch species-scoped suggestions after selecting a validator option', async () => {
+    const user = userEvent.setup();
+    const unexpectedRefetch = createDeferred<{
+      suggestions: Array<{
+        value: string;
+        label: string;
+        metadata: {
+          species: string;
+          speciesId: string;
+        };
+      }>;
+      nextPageParam: null;
+    }>();
+    const querySpecies = vi.fn(async () => [
+      { value: 'species-mouse', label: 'Mouse' },
+      { value: 'species-rat', label: 'Rat' },
+    ]);
+    const queryBrainRegion = vi.fn(async ({ query }: { query: string }) => {
+      if (!query.trim()) {
+        return {
+          suggestions: [],
+          nextPageParam: null,
+        };
+      }
+
+      if (query.trim().toLowerCase() === 'cortex') {
+        return {
+          suggestions: [
+            {
+              value: 'brain-region-mouse',
+              label: 'Isocortex',
+              metadata: {
+                species: 'Mouse',
+                speciesId: 'species-mouse',
+              },
+            },
+            {
+              value: 'brain-region-rat',
+              label: 'Somatosensory cortex',
+              metadata: {
+                species: 'Rat',
+                speciesId: 'species-rat',
+              },
+            },
+          ],
+          nextPageParam: null,
+        };
+      }
+
+      return unexpectedRefetch.promise;
+    });
+    const services = createMockCellMorphologyImportServices({
+      querySpecies,
+      queryBrainRegion,
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({ services });
+    const blankRow = morphologyAdapter.createBlankRow?.() ?? {};
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ ...blankRow, name: 'Neuron A' }]}
+      />
+    );
+
+    await user.click(screen.getByLabelText('Brain Region row 1'));
+
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.clear(validatorInput);
+    await user.paste('Cortex');
+    await waitFor(() => {
+      expect(queryBrainRegion).toHaveBeenCalledTimes(2);
+    });
+
+    expect(
+      await screen.findByRole('button', { name: 'Select suggestion Isocortex' })
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('validator-suggestion-skeleton')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Select suggestion Isocortex' }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Validator value')).toHaveValue('Isocortex');
+    });
+
+    expect(queryBrainRegion).toHaveBeenCalledTimes(2);
+    expect(screen.queryByTestId('validator-suggestion-skeleton')).not.toBeInTheDocument();
+
+    unexpectedRefetch.resolve({ suggestions: [], nextPageParam: null });
+  });
+
+  it('does not refetch species-scoped suggestions after applying a selected validator option', async () => {
+    const user = userEvent.setup();
+    const unexpectedRefetch = createDeferred<{
+      suggestions: Array<{
+        value: string;
+        label: string;
+        metadata: {
+          species: string;
+          speciesId: string;
+        };
+      }>;
+      nextPageParam: null;
+    }>();
+    const querySpecies = vi.fn(async () => [
+      { value: 'species-mouse', label: 'Mouse' },
+      { value: 'species-rat', label: 'Rat' },
+    ]);
+    const queryBrainRegion = vi.fn(async ({ query }: { query: string }) => {
+      if (!query.trim()) {
+        return {
+          suggestions: [],
+          nextPageParam: null,
+        };
+      }
+
+      if (query.trim().toLowerCase() === 'cortex') {
+        return {
+          suggestions: [
+            {
+              value: 'brain-region-mouse',
+              label: 'Isocortex',
+              metadata: {
+                species: 'Mouse',
+                speciesId: 'species-mouse',
+              },
+            },
+            {
+              value: 'brain-region-rat',
+              label: 'Somatosensory cortex',
+              metadata: {
+                species: 'Rat',
+                speciesId: 'species-rat',
+              },
+            },
+          ],
+          nextPageParam: null,
+        };
+      }
+
+      return unexpectedRefetch.promise;
+    });
+    const services = createMockCellMorphologyImportServices({
+      querySpecies,
+      queryBrainRegion,
+    });
+    const morphologyAdapter = createCellMorphologyImportAdapter({ services });
+    const blankRow = morphologyAdapter.createBlankRow?.() ?? {};
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Morphology Import"
+        onClose={() => {}}
+        adapter={morphologyAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ ...blankRow, name: 'Neuron A' }]}
+      />
+    );
+
+    await user.click(screen.getByLabelText('Brain Region row 1'));
+
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.clear(validatorInput);
+    await user.paste('Cortex');
+    await waitFor(() => {
+      expect(queryBrainRegion).toHaveBeenCalledTimes(2);
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Select suggestion Isocortex' }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Validator value')).toHaveValue('Isocortex');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Isocortex');
+    });
+
+    expect(queryBrainRegion).toHaveBeenCalledTimes(2);
+    expect(screen.queryByTestId('validator-suggestion-skeleton')).not.toBeInTheDocument();
+
+    unexpectedRefetch.resolve({ suggestions: [], nextPageParam: null });
+  });
+
   it('styles the species selector like validator dropdowns and disables species without hierarchies', async () => {
     const user = userEvent.setup();
     const querySpecies = vi.fn(async () => [

@@ -12,7 +12,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
-import { resolveRowSpeciesSuggestion } from '@/features/entity-import/core/shared/species-context';
+import {
+  readSpeciesSuggestionFromSuggestion,
+  resolveRowSpeciesSuggestion,
+} from '@/features/entity-import/core/shared/species-context';
 import {
   ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME,
   ENTITY_IMPORT_SELECT_MENU_PANEL_CLASSNAME,
@@ -79,22 +82,37 @@ export function SpeciesScopedFieldPanel({
     fieldPath: field.path,
     relatedFieldPath,
   });
-  const previousSpeciesValueRef = useRef(selectedSpecies?.value ?? ALL_SPECIES_VALUE);
+  const currentFieldSpecies = readSpeciesSuggestionFromSuggestion(
+    row.cells[field.path]?.remoteState.selectedSuggestion
+  );
+  const relatedFieldSpecies = relatedFieldPath
+    ? readSpeciesSuggestionFromSuggestion(
+        row.cells[relatedFieldPath]?.remoteState.selectedSuggestion
+      )
+    : null;
+  const lookupSpeciesOverridesCurrentField = Boolean(
+    row.lookupContext.selectedSpecies?.value &&
+      row.lookupContext.selectedSpecies.value !== currentFieldSpecies?.value
+  );
+  const requestSpecies = lookupSpeciesOverridesCurrentField
+    ? row.lookupContext.selectedSpecies
+    : relatedFieldSpecies;
+  const previousRequestSpeciesValueRef = useRef(requestSpecies?.value ?? ALL_SPECIES_VALUE);
   const displayValue = draftValue.displayValue ?? draftValue.rawValue;
 
   useEffect(() => {
-    const currentSpeciesValue = selectedSpecies?.value ?? ALL_SPECIES_VALUE;
-    if (previousSpeciesValueRef.current === currentSpeciesValue) {
+    const currentRequestSpeciesValue = requestSpecies?.value ?? ALL_SPECIES_VALUE;
+    if (previousRequestSpeciesValueRef.current === currentRequestSpeciesValue) {
       return;
     }
 
-    previousSpeciesValueRef.current = currentSpeciesValue;
+    previousRequestSpeciesValueRef.current = currentRequestSpeciesValue;
     void actions.onRequestSuggestions({
       rowId: row.id,
       fieldPath: field.path,
       query: draftValue.rawValue,
     });
-  }, [actions, draftValue.rawValue, field.path, row.id, selectedSpecies?.value]);
+  }, [actions, draftValue.rawValue, field.path, row.id, requestSpecies?.value]);
 
   return (
     <div className="space-y-2 px-4">
