@@ -8,6 +8,7 @@ import {
   type TFlatImportValues,
 } from '@/features/entity-import/core/contracts';
 import { BrainRegionInlineCell } from '@/features/entity-import/core/shared/brain-region-inline-cell';
+import { BrainRegionValidatorPanel } from '@/features/entity-import/core/shared/brain-region-validator-panel';
 import { parseContributionCsvValue } from '@/features/entity-import/core/shared/contribution-csv-parser';
 import {
   ContributionSummaryCell,
@@ -404,8 +405,17 @@ export function makeBrainRegionImportField({
         selected={selected}
       />
     ),
-    panelRenderer: ({ field, row, cell, actions, context, draftValue, onDraftChange }) => (
-      <SpeciesScopedFieldPanel
+    panelRenderer: ({
+      field,
+      row,
+      cell,
+      actions,
+      context,
+      draftValue,
+      onDraftChange,
+      remoteState,
+    }) => (
+      <BrainRegionValidatorPanel
         field={field}
         row={row}
         cell={cell}
@@ -413,10 +423,12 @@ export function makeBrainRegionImportField({
         context={context}
         draftValue={draftValue}
         onDraftChange={onDraftChange}
+        remoteState={remoteState}
         querySpecies={services.querySpecies}
         relatedFieldPath={relatedSubjectPath}
       />
     ),
+    panelRendererOwnsSuggestions: true,
     columnWidth,
   };
 }

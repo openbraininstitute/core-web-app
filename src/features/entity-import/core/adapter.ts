@@ -91,6 +91,7 @@ export function createIdleValidatorPreviewState(): IValidatorPreviewState {
 
 export interface IValidatorFieldRendererProps extends ITableCellRendererProps {
   suggestions: Array<ISuggestion>;
+  remoteState: IImportCellState['remoteState'];
   draftValue: IValidatorDraftValue;
   onDraftChange: (value: IValidatorDraftValue) => void;
 }
@@ -273,6 +274,12 @@ export interface IAdapterFieldDefinition extends IImportFieldDefinition {
    * for this field in the validator side panel
    */
   panelRenderer?: (props: IValidatorFieldRendererProps) => ReactNode;
+
+  /**
+   * when true, the custom validator panel renderer is responsible for rendering
+   * the remote suggestion list and pagination controls
+   */
+  panelRendererOwnsSuggestions?: boolean;
 }
 
 export interface ISubmitRowArgs<TPayload> {

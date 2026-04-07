@@ -674,12 +674,23 @@ function SingleColumnValidatorCard({
     field.inputType === ImportInputType.Select
       ? null
       : (activeValidatorSuggestions?.message ?? cell.remoteState.message);
+  const visibleRemoteState = {
+    status: activeValidatorSuggestions?.status ?? cell.remoteState.status,
+    suggestions: visibleSuggestions,
+    selectedSuggestion:
+      activeValidatorSuggestions?.selectedSuggestion ?? cell.remoteState.selectedSuggestion,
+    message: visibleMessage,
+    suggestionPaging: visibleSuggestionPaging,
+  };
+  const panelRendererOwnsSuggestions = field.panelRendererOwnsSuggestions === true;
   const shouldShowSuggestionSkeleton =
+    !panelRendererOwnsSuggestions &&
     field.inputType === ImportInputType.RemoteSelect &&
     Boolean(field.remote?.query) &&
     activeValidatorSuggestions?.status === RemoteValidationStatus.Pending &&
     visibleSuggestions.length === 0;
   const shouldShowSuggestions =
+    !panelRendererOwnsSuggestions &&
     visibleSuggestions.length > 0 &&
     !(
       field.inputType === ImportInputType.Compound &&
@@ -787,6 +798,7 @@ function SingleColumnValidatorCard({
           actions,
           selected: true,
           suggestions: visibleSuggestions,
+          remoteState: visibleRemoteState,
           draftValue,
           onDraftChange: updateDraftValue,
         })}
@@ -1099,7 +1111,8 @@ function SingleColumnValidatorCard({
           </div>
         )}
 
-        {field.remote?.query &&
+        {!panelRendererOwnsSuggestions &&
+          field.remote?.query &&
           (visibleSuggestionPaging?.hasNextPage || visibleSuggestionPaging?.isFetchingNextPage) && (
             <div className="px-4">
               <Button

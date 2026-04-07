@@ -9,6 +9,7 @@ import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/ce
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { createCellMorphologyImportAdapter, EntityImportFeature } from '@/features/entity-import';
 import { ImportInputType } from '@/features/entity-import/core/contracts';
+import { makeBrainRegionImportField } from '@/features/entity-import/core/shared/field-builders';
 import { DEFAULT_LICENSE_ID, DEFAULT_LICENSE_NAME } from '@/ui/segments/contribute/shared/helpers';
 
 import type { ReactElement } from 'react';
@@ -1976,6 +1977,87 @@ describe('EntityImportFeature', () => {
 
     expect(await screen.findAllByText('Acronym: CTX-L2')).not.toHaveLength(0);
     expect(screen.getAllByText('Hemisphere: left')).not.toHaveLength(0);
+  });
+
+  it('renders brain region validator suggestions with a visible species badge and keeps the info tooltip', async () => {
+    const user = userEvent.setup();
+    const queryBrainRegion = vi.fn(async ({ query }: { query: string }) => ({
+      suggestions: query.toLowerCase().includes('somato')
+        ? [
+            {
+              value: 'ssp',
+              label: 'Somatosensory cortex',
+              metadata: {
+                species: 'Mouse',
+                acronym: 'SSp',
+              },
+            },
+          ]
+        : [],
+      nextPageParam: null,
+    }));
+    const brainRegionAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+      id: 'brain-region-validator-panel-import',
+      title: 'Brain Region Validator Panel Import',
+      templateFileName: 'brain-region-validator-panel.csv',
+      submitLabel: 'Import rows',
+      fields: [
+        {
+          label: 'Name',
+          path: 'name',
+          required: true,
+          inputType: ImportInputType.Text,
+        },
+        makeBrainRegionImportField({
+          path: 'brainRegion',
+          submissionPath: 'brainRegion',
+          validationPath: 'brainRegion',
+          services: {
+            queryBrainRegion,
+            querySpecies: vi.fn(async () => []),
+          },
+        }),
+      ],
+      schema: z.object({
+        name: z.string().min(1, 'Name is required'),
+        brainRegion: z.string(),
+      }),
+      buildPayload({ values }) {
+        return values;
+      },
+      submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
+    };
+
+    renderWithQueryClient(
+      <EntityImportFeature
+        adapter={brainRegionAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A', brainRegion: '' }]}
+      />
+    );
+
+    await user.click(screen.getByLabelText('Brain Region row 1'));
+
+    const validatorInput = screen.getByLabelText('Validator value');
+    await user.type(validatorInput, 'Somato');
+
+    await waitFor(() => {
+      expect(queryBrainRegion).toHaveBeenCalledWith(expect.objectContaining({ query: 'Somato' }));
+    });
+
+    const suggestionButtons = await screen.findAllByRole('button', {
+      name: 'Select suggestion Somatosensory cortex',
+    });
+    expect(suggestionButtons).toHaveLength(1);
+    expect(within(suggestionButtons[0]).getByText('Mouse')).toBeInTheDocument();
+
+    const detailsTrigger = screen.getByLabelText(
+      'Show details for suggestion Somatosensory cortex (ssp)'
+    );
+    await user.hover(detailsTrigger);
+
+    expect(await screen.findAllByText('Acronym:')).not.toHaveLength(0);
+    expect(screen.getAllByText('SSp')).not.toHaveLength(0);
   });
 
   it('debounces inline remote validation while typing in the table', async () => {

@@ -18,6 +18,7 @@ describe('field builders', () => {
     });
 
     expect(field.tableRenderer).toBeDefined();
+    expect(field.panelRendererOwnsSuggestions).toBe(true);
     expect(field.remoteSelectionBadge).toBeUndefined();
   });
 
