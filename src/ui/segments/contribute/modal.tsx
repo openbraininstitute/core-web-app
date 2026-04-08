@@ -9,6 +9,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 import { SelectPopover } from '@/ui/molecules/select-popover';
+import { AnalysisNotebookTemplate } from '@/ui/segments/contribute/analysis-notebook-template';
 import { CellMorphology } from '@/ui/segments/contribute/cell-morphology';
 import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
 import { EMCellMesh } from '@/ui/segments/contribute/em-cell-mesh';
@@ -98,6 +99,9 @@ function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeCont
       <ExperimentalSynapsesPerConnection sessionId={sId} />
     ))
     .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
+    .with({ type: ExtendedEntitiesTypeDict.Notebook }, () => (
+      <AnalysisNotebookTemplate sessionId={sId} />
+    ))
     .otherwise(() => null);
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { LoadingOutlined, UploadOutlined } from '@ant-design/icons';
+import { LoadingOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
@@ -12,6 +12,7 @@ import { type ReactNode, useCallback, useEffect, useRef, useState, useTransition
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
@@ -27,7 +28,10 @@ import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { getVirtualLabAccountBalance } from '@/services/virtual-lab/labs';
 import { assignProjectBudget } from '@/services/virtual-lab/projects';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button as UiButton } from '@/ui/molecules/button';
+import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
+import { ContributionModal } from '@/ui/segments/contribute/modal';
 import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { isObject } from '@/util/type-guards';
@@ -73,6 +77,7 @@ export function NotebooksLayout({ children, active }: Props) {
   const [numberStudents, setNumberStudents] = useState<number | null>(10);
   const [step, setStep] = useState(0);
   const [studentEmails, setStudentEmails] = useState<string[]>([]);
+  const breakpoint = useDefaultBreakpoint();
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
@@ -84,10 +89,19 @@ export function NotebooksLayout({ children, active }: Props) {
     setShowCourseModal(false);
   }, []);
 
+  const handleUploadData = () => {
+    makeSelectContributionEntityClickEvent({
+      display: true,
+      entityType: ExtendedEntitiesTypeDict.Notebook,
+      sessionId: crypto.randomUUID(),
+    });
+  };
+
   async function handleRunNotebook() {
     setLoading(true);
     if (virtualLabData == null || virtualLabData.data == null) {
-      throw new Error(`Could not fetch virtual lab data with useQuery ${virtualLabData}`);
+      setLoading(false);
+      throw new Error(`Could not fetch virtual lab data`);
     }
     try {
       const retval = await startEmptyNotebook(
@@ -102,7 +116,6 @@ export function NotebooksLayout({ children, active }: Props) {
       });
       window.open(retval.url, '_blank');
     } catch (error) {
-      // Just show the hint message if we get some error
       if (error instanceof Error && 'cause' in error) {
         notification.error({
           message: (error.cause as { error_code: string; hint: string }).hint,
@@ -111,7 +124,7 @@ export function NotebooksLayout({ children, active }: Props) {
         });
       } else {
         notification.error({
-          message: `Failed to start notebook, unknown error: ${error}`,
+          message: `Failed to start notebook`,
           key: 'notebook-unknown-error',
           placement: 'topRight',
         });
@@ -132,12 +145,12 @@ export function NotebooksLayout({ children, active }: Props) {
 
   return (
     <div>
-      <div className="mb-5 ml-5 flex justify-between">
+      <div className="mb-5 ml-5 flex items-center justify-between">
         <div className="flex">
           <NextLink
             href="public"
             className={cn(
-              'flex h-[40px] min-w-[150px] items-center justify-center rounded-l-full px-4 py-2 text-white',
+              'flex h-[40px] min-w-[150px] items-center justify-center rounded-l-full px-4 py-2',
               active === 'public' ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white'
             )}
           >
@@ -147,7 +160,7 @@ export function NotebooksLayout({ children, active }: Props) {
           <NextLink
             href="private"
             className={cn(
-              'flex h-[40px] min-w-[150px] items-center justify-center rounded-r-full px-4 py-2 text-white',
+              'flex h-[40px] min-w-[150px] items-center justify-center rounded-r-full px-4 py-2',
               active === 'private' ? 'bg-primary-9 font-bold text-white' : 'text-primary-9 bg-white'
             )}
           >
@@ -156,19 +169,41 @@ export function NotebooksLayout({ children, active }: Props) {
         </div>
         <div className="flex gap-3">
           {active === 'private' && course && course.template_project_id === projectId && (
-            <button
-              type="button"
-              className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
-              onClick={() => setShowCourseModal(true)}
-            >
-              {course.is_initialized ? 'Add students to course' : 'Initialize course'}
-            </button>
+            <>
+              <button
+                type="button"
+                className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
+                onClick={() => setShowCourseModal(true)}
+              >
+                {course.is_initialized ? 'Add students to course' : 'Initialize course'}
+              </button>
+
+              <Button
+                rounded
+                variant="success"
+                size={breakpoint === 'xl' ? 'lg' : 'md'}
+                type="button"
+                onClick={handleUploadData}
+                className={cn(
+                  'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+                  'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
+                  'transition-all duration-300 ease-out',
+                  'hover:scale-[1.02] active:scale-[0.98]',
+                  'disabled:cursor-not-allowed disabled:opacity-70'
+                )}
+              >
+                <div className="flex items-center justify-between gap-5">
+                  <span>Upload notebook</span>
+                  <PlusOutlined className="ml-auto text-sm" />
+                </div>
+              </Button>
+            </>
           )}
 
           <button
             disabled={loading}
             type="button"
-            className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726]"
+            className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
             onClick={handleRunNotebook}
           >
             <div>Open JupyterHub</div>
@@ -227,6 +262,8 @@ export function NotebooksLayout({ children, active }: Props) {
           )}
         </div>
       </Modal>
+
+      <ContributionModal />
     </div>
   );
 }

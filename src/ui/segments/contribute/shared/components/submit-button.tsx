@@ -1,9 +1,10 @@
 'use client';
 
-import { useRouter } from '@bprogress/next';
 import { Form } from 'antd';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/ui/molecules/button';
+import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
 import { cn } from '@/utils/css-class';
 
@@ -33,7 +34,7 @@ export function SubmitButton<
   projectId,
   onSubmit,
 }: ISubmitButtonProps<TFormValues, TSchema>) {
-  const { replace: navigate } = useRouter();
+  const router = useRouter();
   const { form } = useContributionPipeline<TFormValues>();
   const values = Form.useWatch([], form);
 
@@ -58,7 +59,14 @@ export function SubmitButton<
             'disabled:bg-neutral-1 disabled:text-neutral-3!',
             'px-10 select-none hover:text-white disabled:cursor-not-allowed'
           )}
-          onClick={() => navigate(detailsUrl)}
+          onClick={() => {
+            makeSelectContributionEntityClickEvent({
+              display: false,
+              entityType: null,
+              sessionId: null,
+            });
+            router.push(detailsUrl);
+          }}
         >
           View Details
         </Button>

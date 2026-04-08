@@ -221,8 +221,10 @@ export enum AssetLabel {
   morphology = 'morphology',
   neuron_hoc = 'neuron_hoc',
   neuron_mechanisms = 'neuron_mechanisms',
+  notebook_required_files = 'notebook_required_files',
   nwb = 'nwb',
   replay_spikes = 'replay_spikes',
+  requirements = 'requirements',
   simulation_designer_image = 'simulation_designer_image',
   simulation_generation_config = 'simulation_generation_config',
   single_neuron_simulation_data = 'single_neuron_simulation_data',
@@ -249,6 +251,29 @@ export enum AssetLabel {
   task_config = 'task_config',
   skeletonization_config = 'skeletonization_config',
   lod_mesh_block = 'lod_mesh_block',
+}
+
+export enum AssetContentType {
+  abf = 'application/abf',
+  asc = 'application/asc',
+  directory = 'application/vnd.directory',
+  gltf_binary = 'model/gltf-binary',
+  gzip = 'application/gzip',
+  h5 = 'application/x-hdf5',
+  hoc = 'application/hoc',
+  ipynb = 'application/x-ipynb+json',
+  jpeg = 'image/jpeg',
+  json = 'application/json',
+  mod = 'application/mod',
+  nrrd = 'application/nrrd',
+  nwb = 'application/nwb',
+  obj = 'application/obj',
+  pdf = 'application/pdf',
+  png = 'image/png',
+  swc = 'application/swc',
+  text = 'text/plain',
+  webp = 'image/webp',
+  zip = 'application/zip',
 }
 
 export enum AssetContentType {
