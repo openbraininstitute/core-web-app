@@ -17,7 +17,7 @@ import { tryCatch } from '@/api/utils';
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
-import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { getVirtualLab, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
@@ -122,7 +122,7 @@ export function NotebooksLayout({ children, active }: Props) {
     }
   }
 
-  if (!virtualLabData)
+  if (!virtualLabData?.data)
     return (
       <div className="h-full flex justify-center items-center text-4xl">
         <LoadingOutlined />
@@ -224,6 +224,7 @@ export function NotebooksLayout({ children, active }: Props) {
             <CourseSetup
               onFinnish={onFinnish}
               studentEmails={studentEmails}
+              virtual_lab={virtualLabData.data?.virtual_lab}
               nameBase={virtualLabData.data?.virtual_lab.name ?? 'Course'}
             />
           )}
@@ -658,10 +659,12 @@ function CourseSetup({
   onFinnish,
   studentEmails,
   nameBase,
+  virtualLab
 }: {
   onFinnish: () => void;
   studentEmails: string[];
   nameBase: string;
+  virtualLab: 
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
@@ -809,6 +812,12 @@ function CourseSetup({
             placement: 'topRight',
           });
         }
+
+        await updateVirtualLab({
+          virtualLabId,
+          updatePayload: { course: virtualLab.course && {...virtualLab.course, is_initialized: true}},
+        }
+        )
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'Failed to initialize course';
         notification.error({
@@ -819,10 +828,12 @@ function CourseSetup({
       } finally {
         onFinnish();
       }
+        
     };
 
-    setupCourse();
-  }, [virtualLabId, projectId, notification, studentEmails, nameBase, onFinnish]);
+  setupCourse();
+}
+, [virtualLabId, projectId, notification, studentEmails, nameBase, onFinnish])
 
-  return 'Settup up course...';
+return 'Settup up course...';
 }

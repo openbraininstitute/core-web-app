@@ -6,6 +6,7 @@ import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 
 import type {
+  Course,
   TVirtualLab,
   TVirtualLabExistsVerificationResponse,
   TVirtualLabListResponse,
@@ -157,6 +158,7 @@ export interface VirtualLabUpdate {
   description?: string | null;
   reference_email?: string | null;
   entity?: string | null;
+  course?: Course | null;
 }
 
 /**
