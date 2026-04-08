@@ -24,7 +24,9 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
-export const EmptyValue = '—';
+import { EmptyValue } from '@/entity-configuration/definitions/empty-value';
+
+export { EmptyValue };
 
 export const EmptyPreview = (
   <Empty
