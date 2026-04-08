@@ -10,7 +10,9 @@ import {
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { syncNotebook } from '@/ui/layouts/notebooks-layout';
 import { ANALYSIS_NOTEBOOK_TEMPLATE_PROGRESS_STEPS } from '@/ui/segments/contribute/analysis-notebook-template/config';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 
@@ -45,13 +47,12 @@ export function useAnalysisNotebookTemplatePipeline({
       await Promise.all([
         queryClient.invalidateQueries({
           predicate: (query) =>
-            query.queryKey[0] ===
-            `data-entity-count-${ExtendedEntitiesTypeDict.AnalysisNotebookTemplate}`,
+            query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.Notebook}`,
         }),
         queryClient.invalidateQueries({
           predicate: (query) =>
             get((query.queryKey as ExtendedEntityTypeQueryKey)[0], 'context.extendedEntityType') ===
-            ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
+            ExtendedEntitiesTypeDict.Notebook,
         }),
         queryClient.invalidateQueries(),
       ]);
@@ -124,7 +125,7 @@ export function useAnalysisNotebookTemplatePipeline({
     createEntity: async ({ values }: { values: TAnalysisNotebookTemplateForm }) => {
       const notebook = await createNotebookAsync.mutateAsync(values);
       const entityId = notebook.id;
-      console.log('[pipeline] getNotebookFiles():', getNotebookFiles());
+
       await uploadAssetsAsync.mutateAsync({
         entityId,
         files: getNotebookFiles() as { notebook: File; requirements?: File; zip?: File },
