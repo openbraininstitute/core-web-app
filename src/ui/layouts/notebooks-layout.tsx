@@ -169,35 +169,35 @@ export function NotebooksLayout({ children, active }: Props) {
         </div>
         <div className="flex gap-3">
           {active === 'private' && course && course.template_project_id === projectId && (
-            <>
-              <button
-                type="button"
-                className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
-                onClick={() => setShowCourseModal(true)}
-              >
-                {course.is_initialized ? 'Add students to course' : 'Initialize course'}
-              </button>
+            <UiButton
+              type="button"
+              className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
+              onClick={() => setShowCourseModal(true)}
+            >
+              {course.is_initialized ? 'Add students to course' : 'Initialize course'}
+            </UiButton>
+          )}
 
-              <Button
-                rounded
-                variant="success"
-                size={breakpoint === 'xl' ? 'lg' : 'md'}
-                type="button"
-                onClick={handleUploadData}
-                className={cn(
-                  'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
-                  'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
-                  'transition-all duration-300 ease-out',
-                  'hover:scale-[1.02] active:scale-[0.98]',
-                  'disabled:cursor-not-allowed disabled:opacity-70'
-                )}
-              >
-                <div className="flex items-center justify-between gap-5">
-                  <span>Upload notebook</span>
-                  <PlusOutlined className="ml-auto text-sm" />
-                </div>
-              </Button>
-            </>
+          {active === 'private' && (
+            <UiButton
+              rounded
+              variant="success"
+              size={breakpoint === 'xl' ? 'lg' : 'md'}
+              type="button"
+              onClick={handleUploadData}
+              className={cn(
+                'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+                'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
+                'transition-all duration-300 ease-out',
+                'hover:scale-[1.02] active:scale-[0.98]',
+                'disabled:cursor-not-allowed disabled:opacity-70'
+              )}
+            >
+              <div className="flex items-center justify-between gap-5">
+                <span>Upload notebook</span>
+                <PlusOutlined className="ml-auto text-sm" />
+              </div>
+            </UiButton>
           )}
 
           <button
