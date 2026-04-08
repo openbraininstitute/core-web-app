@@ -1,22 +1,23 @@
 import { fieldsDefinitionRegistry, getFieldDefinition } from '@/entity-configuration/definitions';
+import {
+  type FieldDefinition,
+  type FieldsDefinitionRegistry,
+  FilterOptionsSourceKind,
+  type IFilterOptionItem,
+  type TContextualRule,
+  type TContextualValue,
+  type TFieldApiContext,
+  type TFieldApiWhen,
+  type TFilterOptionsSource,
+} from '@/entity-configuration/definitions/types';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import type {
-  FieldDefinition,
-  FieldsDefinitionRegistry,
-  IFilterOptionItem,
-  TContextualRule,
-  TContextualValue,
-  TFieldApiContext,
-  TFieldApiWhen,
-  TFilterOptionsSource,
-} from '@/entity-configuration/definitions/types';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 import type { WorkspaceContext } from '@/types/common';
 
 /**
- * Resolved field presentation state for one runtime context.
+ * resolved field presentation state for one runtime context.
  */
 export interface IResolvedFieldPresentation {
   columnAvailable: boolean;
@@ -26,20 +27,12 @@ export interface IResolvedFieldPresentation {
 }
 
 /**
- * Matches a single contextual property value.
+ * matches a single contextual property value.
  *
- * Rules:
+ * rules:
  * - `undefined` means "no constraint", so the match succeeds.
  * - arrays use OR semantics
  * - scalar values use strict equality
- *
- * @example
- * ```ts
- * matchesContextValue('data', 'data') // true
- * matchesContextValue(['data', 'build'], 'build') // true
- * matchesContextValue(undefined, 'build') // true
- * matchesContextValue(['data', 'build'], 'simulate') // false
- * ```
  */
 function matchesContextValue<T>(
   value: T | readonly T[] | undefined,
@@ -178,7 +171,7 @@ function resolveLegacyOptions(
   if (!Array.isArray(field.filterData)) return undefined;
 
   return {
-    kind: 'static',
+    kind: FilterOptionsSourceKind.Static,
     items: field.filterData as IFilterOptionItem[],
   };
 }
@@ -261,7 +254,7 @@ export async function resolveFilterOptions(
 ): Promise<IFilterOptionItem[] | undefined> {
   if (!optionsSource) return undefined;
 
-  if (optionsSource.kind === 'static') {
+  if (optionsSource.kind === FilterOptionsSourceKind.Static) {
     return optionsSource.items;
   }
 

@@ -51,7 +51,7 @@ export const makeTypeDefaultActiveColumns = ({
   return collectDefaultActiveColumns(getViewDefinitionByExtendedType(dataType), context);
 };
 
-type DataListStateSnapshot = {
+type TDataListStateSnapshot = {
   Sort: TSortState;
   Search: string;
   Page: number;
@@ -67,7 +67,7 @@ export const makeDataListStateSnapshotAtomsInitialValue = ({
   dataType: TExtendedEntitiesTypeDict;
   section?: TWorkspaceSection;
   scope?: TWorkspaceScope;
-}): DataListStateSnapshot => ({
+}): TDataListStateSnapshot => ({
   Sort: {
     field: EntityCoreFields.RegistrationDate,
     backendField: EntityCoreFields.RegistrationDate,

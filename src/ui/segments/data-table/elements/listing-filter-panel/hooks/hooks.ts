@@ -1,3 +1,4 @@
+import { useQueries } from '@tanstack/react-query';
 import { isNil } from 'es-toolkit/compat';
 import React from 'react';
 
@@ -13,7 +14,6 @@ import { createFilterItemComponent } from './create-filter-item-component';
 import type { TFacets } from '@/api/entitycore/types/shared/response';
 import type {
   CoreFilterValues,
-  IFilterOptionItem,
   TCoreFilter,
   TFieldApiContext,
 } from '@/entity-configuration/definitions/types';
@@ -32,34 +32,18 @@ export function useFilterItems(
   context: TFieldApiContext,
   workspace?: WorkspaceContext
 ) {
-  const [optionsByField, setOptionsByField] = React.useState<
-    Record<string, IFilterOptionItem[] | undefined>
-  >({});
-
-  React.useEffect(() => {
-    let cancelled = false;
-
-    const loadOptions = async () => {
-      const entries = await Promise.all(
-        filters.map(async (filter) => {
-          const item = getFieldDefinition(filter.field);
-          const { optionsSource } = resolveFieldListing(item, context);
-          const options = await resolveFilterOptions(optionsSource, context, workspace);
-          return [filter.field, options] as const;
-        })
-      );
-
-      if (!cancelled) {
-        setOptionsByField(Object.fromEntries(entries));
-      }
-    };
-
-    void loadOptions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [filters, context, workspace]);
+  const optionsByField = useQueries({
+    queries: filters.map((filter) => ({
+      queryKey: ['filter-options', filter.field, context, workspace] as const,
+      queryFn: async () => {
+        const item = getFieldDefinition(filter.field);
+        const { optionsSource } = resolveFieldListing(item, context);
+        return resolveFilterOptions(optionsSource, context, workspace);
+      },
+    })),
+    combine: (results) =>
+      Object.fromEntries(filters.map((filter, i) => [filter.field, results[i].data])),
+  });
 
   return React.useMemo(
     () =>

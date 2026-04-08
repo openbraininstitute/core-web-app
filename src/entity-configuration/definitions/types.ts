@@ -157,8 +157,8 @@ export interface IFilterOptionItem {
 }
 
 export const FilterOptionsSourceKind = {
-  static: 'static',
-  resolver: 'resolver',
+  Static: 'static',
+  Resolver: 'resolver',
 } as const;
 
 /**
@@ -168,9 +168,9 @@ export const FilterOptionsSourceKind = {
  * resolver sources compute options dynamically from the current field API context.
  */
 export type TFilterOptionsSource =
-  | { kind: typeof FilterOptionsSourceKind.static; items: IFilterOptionItem[] }
+  | { kind: typeof FilterOptionsSourceKind.Static; items: IFilterOptionItem[] }
   | {
-      kind: typeof FilterOptionsSourceKind.resolver;
+      kind: typeof FilterOptionsSourceKind.Resolver;
       resolve: (args: {
         context: TFieldApiContext;
         workspace?: WorkspaceContext;
