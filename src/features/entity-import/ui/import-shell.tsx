@@ -48,7 +48,6 @@ interface IImportShellProps<TPayload, TResult> {
   rowsSummaryStatus: TValidatorFieldStatus;
   onClose: () => void;
   onDismissCsvUploadNotifications: () => void;
-  onDownloadCsvTemplate: () => void;
   onDownloadCurrentCsv: () => void;
   onDownloadGuideTemplate: () => void;
   onUploadCsvFile: (file: File) => Promise<void>;
@@ -72,7 +71,6 @@ export function ImportShell<TPayload, TResult>({
   rowsSummaryStatus,
   onClose,
   onDismissCsvUploadNotifications,
-  onDownloadCsvTemplate,
   onDownloadCurrentCsv,
   onDownloadGuideTemplate,
   onUploadCsvFile,
@@ -105,14 +103,12 @@ export function ImportShell<TPayload, TResult>({
             <div className="relative min-h-0 flex-1 flex flex-col gap-5">
               <ImportHeader
                 title={title}
-                templateFileName={adapter.templateFileName}
                 csvUploadPhase={csvUploadPhase}
                 csvRowValidationProgress={csvRowValidationProgress}
                 csvUploadNotifications={csvUploadNotifications}
                 bulkFileUploadAction={bulkFileUploadAction}
                 onClose={onClose}
                 onDismissCsvUploadNotifications={onDismissCsvUploadNotifications}
-                onDownloadCsvTemplate={onDownloadCsvTemplate}
                 onDownloadCurrentCsv={onDownloadCurrentCsv}
                 onDownloadGuideTemplate={onDownloadGuideTemplate}
                 onUploadCsvFile={onUploadCsvFile}

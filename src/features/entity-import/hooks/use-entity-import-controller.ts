@@ -303,6 +303,31 @@ function buildBulkFileUploadNotifications({
   return notifications;
 }
 
+function hasBulkFileUploadCsvColumn({
+  fields,
+  csvFields,
+}: {
+  fields: Array<IAdapterFieldDefinition>;
+  csvFields: Array<string> | undefined;
+}): boolean {
+  if (!csvFields?.length) {
+    return false;
+  }
+
+  const normalizedCsvFields = new Set(csvFields.map(normalizeCsvUploadColumnKey));
+
+  return fields.some((field) => {
+    if (field.inputType !== ImportInputType.FileBundle || field.csv?.include === false) {
+      return false;
+    }
+
+    const candidateColumns = [field.label, ...(field.csv?.aliases ?? [])];
+    return candidateColumns.some((columnName) =>
+      normalizedCsvFields.has(normalizeCsvUploadColumnKey(columnName))
+    );
+  });
+}
+
 function createRunningImportRunState(rows: Array<IImportRowState>): IImportRunState {
   return {
     phase: ImportRunPhase.Running,
@@ -635,7 +660,6 @@ export function useEntityImportController<TPayload, TResult>({
 
   const onDismissCsvUploadNotifications = useCallback(() => {
     setCsvUploadNotifications([]);
-    setBulkFileUploadPrompt(null);
   }, []);
 
   const beginCsvRowValidationProgress = useCallback((targets: Array<{ rowId: string }>) => {
@@ -1583,6 +1607,12 @@ export function useEntityImportController<TPayload, TResult>({
           fields: adapter.fields,
           rows: parsedCsv.data,
         });
+        const hasEligibleBulkFileUploadColumn =
+          adapter.supportBulkFileUpload &&
+          hasBulkFileUploadCsvColumn({
+            fields: adapter.fields,
+            csvFields: parsedCsv.meta.fields,
+          });
         const importCache = new Map<string, unknown>();
         const csvHydratedRows = await hydrateCsvRows({
           fields: adapter.fields,
@@ -1653,14 +1683,14 @@ export function useEntityImportController<TPayload, TResult>({
         setCsvUploadPhase(CsvUploadPhase.Idle);
         sessionRef.current = pendingSession;
         setSession(pendingSession);
-        const bulkFileUploadTargets = adapter.supportBulkFileUpload
+        const bulkFileUploadTargets = hasEligibleBulkFileUploadColumn
           ? getBulkFileUploadTargets({
               session: pendingSession,
               fields: adapter.fields,
             })
           : [];
         setBulkFileUploadPrompt(
-          bulkFileUploadTargets.length > 0
+          hasEligibleBulkFileUploadColumn
             ? {
                 pendingReferenceCount: bulkFileUploadTargets.length,
               }
@@ -1725,7 +1755,14 @@ export function useEntityImportController<TPayload, TResult>({
       });
 
       if (bulkFileUploadTargets.length === 0) {
-        setBulkFileUploadPrompt(null);
+        setBulkFileUploadPrompt((current) =>
+          current
+            ? {
+                ...current,
+                pendingReferenceCount: 0,
+              }
+            : null
+        );
         return;
       }
 
@@ -1809,9 +1846,10 @@ export function useEntityImportController<TPayload, TResult>({
           session: nextSession,
           fields: adapter.fields,
         });
-        setBulkFileUploadPrompt(
-          remainingTargets.length > 0
+        setBulkFileUploadPrompt((current) =>
+          current
             ? {
+                ...current,
                 pendingReferenceCount: remainingTargets.length,
               }
             : null

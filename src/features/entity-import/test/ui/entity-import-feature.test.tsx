@@ -1643,7 +1643,7 @@ describe('EntityImportFeature', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('shows an optional bulk file upload action in the csv tooltip for adapters that opt in', async () => {
+  it('shows bulk file upload actions in the tooltip and header for adapters that opt in', async () => {
     const user = userEvent.setup();
     const bulkFileUploadAdapter = createBulkFileUploadAdapter();
     const { container } = renderWithQueryClient(
@@ -1658,12 +1658,16 @@ describe('EntityImportFeature', () => {
     await user.upload(getCsvUploadInput(container), createCsvUploadFile('Asset\nmatch.json\n'));
 
     await waitFor(() => {
-      expect(
-        within(screen.getByRole('tooltip')).getByRole('button', {
-          name: /choose the folder that contains the files from your csv/i,
-        })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Upload files folder' })).toBeInTheDocument();
     });
+    const tooltip = await screen.findByRole('tooltip');
+    expect(tooltip).toHaveTextContent(/choose the folder that contains the files from your csv/i);
+    expect(within(tooltip).getByRole('button', { name: /select a folder/i })).toBeInTheDocument();
+    expect(
+      within(tooltip).getByRole('button', {
+        name: 'Close CSV upload status',
+      })
+    ).toBeInTheDocument();
   });
 
   it('does not show the bulk file upload action when the adapter does not opt in', async () => {
@@ -1689,9 +1693,10 @@ describe('EntityImportFeature', () => {
         name: /choose the folder that contains the files from your csv/i,
       })
     ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Upload files folder' })).not.toBeInTheDocument();
   });
 
-  it('matches selected folder files to csv file names and reports skipped entries', async () => {
+  it('stops showing the bulk upload tooltip after the user closes it', async () => {
     const user = userEvent.setup();
     const bulkFileUploadAdapter = createBulkFileUploadAdapter();
     const { container } = renderWithQueryClient(
@@ -1709,18 +1714,20 @@ describe('EntityImportFeature', () => {
     );
 
     await waitFor(() => {
-      expect(
-        within(screen.getByRole('tooltip')).getByRole('button', {
-          name: /choose the folder that contains the files from your csv/i,
-        })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Upload files folder' })).toBeInTheDocument();
     });
-
+    const tooltip = await screen.findByRole('tooltip');
     await user.click(
-      within(screen.getByRole('tooltip')).getByRole('button', {
-        name: /choose the folder that contains the files from your csv/i,
+      within(tooltip).getByRole('button', {
+        name: 'Close CSV upload status',
       })
     );
+
+    await waitFor(() => {
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Upload files folder' }));
 
     await user.upload(getBulkFileUploadInput(container), [
       new File(['{}'], 'match.json', { type: 'application/json' }),
@@ -1730,12 +1737,10 @@ describe('EntityImportFeature', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Asset row 1' })).toHaveTextContent('match.json');
     });
-
-    const updatedTooltip = await screen.findByRole('tooltip');
-    expect(updatedTooltip).toHaveTextContent(/matched 1 csv file reference/i);
-    expect(updatedTooltip).toHaveTextContent(/skipped 2 csv file references/i);
-    expect(updatedTooltip).toHaveTextContent(/row 2.*missing\.json.*selected folder/i);
-    expect(updatedTooltip).toHaveTextContent(/row 3.*invalid\.txt.*allowed file types/i);
+    expect(screen.getByRole('button', { name: 'Asset row 2' })).toHaveTextContent('missing.json');
+    expect(screen.getByRole('button', { name: 'Show status for Asset row 2' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Upload files folder' })).toBeInTheDocument();
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
   it('shows stripped template-mismatch columns in the upload tooltip instead of the global notification stack', async () => {
