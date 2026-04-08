@@ -10,9 +10,7 @@ import {
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { syncNotebook } from '@/ui/layouts/notebooks-layout';
 import { ANALYSIS_NOTEBOOK_TEMPLATE_PROGRESS_STEPS } from '@/ui/segments/contribute/analysis-notebook-template/config';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
 
