@@ -18,7 +18,11 @@ import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import {
+  useQueryExtendedEntityType,
+  useQueryExtendedEntityTypeFacets,
+  useQueryParameters,
+} from '@/ui/hooks/use-query-extended-entity-type';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
@@ -124,7 +128,10 @@ export function BrowseEntityScope({
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
-  const scopeFilter = getWorkspaceScopeFilters(scope, { virtualLabId, projectId });
+  const scopeFilter = getWorkspaceScopeFilters(scope, {
+    virtualLabId,
+    projectId,
+  });
   const { dataKey } = makeDataKey({
     virtualLabId,
     projectId,
@@ -194,32 +201,62 @@ export function BrowseEntityScope({
     }
   }, [section, runStorageRestore]);
 
+  const queryParameters = useQueryParameters(
+    {
+      context: {
+        key: dataKey,
+        workspaceScope: scope,
+        extendedEntityType: dataType as TExtendedEntitiesTypeDict,
+      },
+      workspace: { virtualLabId, projectId },
+    },
+    { requireBrainRegion, defaultBrainRegion }
+  );
+
+  const queryFilters = {
+    ...queryParameters,
+    ...extraQueryParams,
+    ...scopeFilter,
+  };
+
   const { data, error, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
       workspaceScope: scope,
-      extendedEntityType: dataType as TExtendedEntitiesTypeDict,
+      extendedEntityType: dataType,
     },
     workspace: { virtualLabId, projectId },
-    queryFn: async ({ queryKey }) => {
-      const [{ workspace, queryParameters }] = queryKey;
-      const filters = {
-        ...queryParameters,
-        ...extraQueryParams,
-        ...scopeFilter,
-      };
+    queryFn: async () => {
       return entity?.api?.query.list?.({
-        filters,
-        withFacets: allowFilter,
-        context: workspace,
+        filters: queryFilters,
+        withFacets: false,
+        context: { virtualLabId, projectId },
       });
     },
     requireBrainRegion,
     defaultBrainRegion,
     useKeepPreviousData: true,
     extraQueryParams,
-    enabled: ({ queryKey }) => {
-      const [{ queryParameters }] = queryKey;
+    enabled: () => {
+      if (!allowQuery) return false;
+      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+        return false;
+      return true;
+    },
+  });
+
+  const {
+    data: facets,
+    error: facetsError,
+    isPending: facetsLoading,
+  } = useQueryExtendedEntityTypeFacets({
+    dataKey,
+    section,
+    scope,
+    dataType,
+    workspace: { virtualLabId, projectId },
+    queryFilters,
+    enabled: () => {
       if (!allowQuery) return false;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
         return false;
@@ -228,7 +265,6 @@ export function BrowseEntityScope({
   });
 
   const dataSource = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.data;
-  const facets = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.facets;
   const pagination = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.pagination;
 
   const onCellClick = (_: string, record: EntityCoreIdentifiableNamed) => {
@@ -311,7 +347,6 @@ export function BrowseEntityScope({
             workspace={{ virtualLabId, projectId }}
             dataKey={dataKey}
             columns={columns}
-            facets={facets}
             onCellClick={onCellClick}
             resultPagination={{
               pagination,
@@ -329,6 +364,11 @@ export function BrowseEntityScope({
             filterClassNames={classNames?.filterClassNames}
             expandableOptions={expandableOptions}
             left={left}
+            facets={{
+              data: facets,
+              error: facetsError,
+              loading: facetsLoading,
+            }}
           />
         </div>
       </div>

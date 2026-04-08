@@ -1,46 +1,54 @@
-import { redirect, RedirectType } from 'next/navigation';
-import { Suspense } from 'react';
-
-import { ProjectCardSkeletonShimmer } from '@/ui/segments/project/banner/banner-skeleton';
-import { getQueryClient, HydrateClient } from '@/query-provider/server';
-import { Shortcuts } from '@/ui/segments/project/bottom-nav-shortcuts';
-import { ProjectActivities } from '@/ui/segments/project/activities';
-import { getProject } from '@/api/virtual-lab-svc/queries/project';
-import { ProjectCard } from '@/ui/segments/project/banner/banner';
-import { config } from '@/config';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { tryCatch } from '@/api/utils';
+import { getProject } from '@/api/virtual-lab-svc/queries/project';
+import { getQueryClient } from '@/query-provider/server';
+import { MainVideo } from '@/ui/segments/project/get-started/sections/main-video';
+import { MainCards } from '@/ui/segments/project/get-started/sections/quick-access';
+import { TutorialList } from '@/ui/segments/project/get-started/sections/tutorials';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
-import type { ServerSideComponentProp } from '@/types/common';
+import type { Metadata } from 'next';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-export default async function Home({
-  params: promisedParams,
-}: ServerSideComponentProp<{ virtualLabId: string; projectId: string }, null>) {
-  const { virtualLabId, projectId } = await promisedParams;
+export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({
+  params,
+}: ServerSideComponentProp<WorkspaceContext, null>): Promise<Metadata> {
+  const { virtualLabId, projectId } = await params;
   const queryClient = getQueryClient();
 
-  const { data, error } = await tryCatch(
+  const { data: res } = await tryCatch(
     queryClient.fetchQuery({
       queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
       queryFn: () => getProject({ virtualLabId, projectId }),
     })
   );
+  const projectName = res?.data?.project?.name ?? 'Project';
+  const projectDescription = res?.data?.project?.description ?? '';
 
-  if (!data || error) {
-    redirect(`${config.ROOT_ROUTE}/sync`, RedirectType.replace);
-  }
+  const title = `Project: ${projectName} - Get Started | Open Brain Institute`;
+  const description =
+    projectDescription ||
+    `Get started with ${projectName}. Access curated data, workflows, notebooks, and tutorials on the Open Brain Institute.`;
 
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+    },
+  };
+}
+
+export default async function Page(props: ServerSideComponentProp<WorkspaceContext, null>) {
+  const context = await props.params;
   return (
-    <HydrateClient>
-      <div className="flex flex-col gap-6 pr-1.5">
-        <Suspense fallback={<ProjectCardSkeletonShimmer />}>
-          <ProjectCard />
-        </Suspense>
-        <Suspense>
-          <ProjectActivities />
-        </Suspense>
-        <Shortcuts />
-      </div>
-    </HydrateClient>
+    <div className="w-full flex flex-col pr-2">
+      <MainCards context={context} />
+      <MainVideo />
+      <TutorialList />
+    </div>
   );
 }

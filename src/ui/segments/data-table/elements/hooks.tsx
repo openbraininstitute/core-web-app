@@ -1,13 +1,15 @@
 'use client';
 
 import { Button, ConfigProvider } from 'antd';
-import type { ColumnGroupType, ColumnType } from 'antd/es/table';
 import { usePathname } from 'next/navigation';
 import { type MouseEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 import ChevronLast from '@/components/icons/ChevronLast';
 import { classNames } from '@/util/utils';
+
+import type { ColumnGroupType, ColumnType } from 'antd/es/table';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 

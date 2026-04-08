@@ -30,6 +30,34 @@ import type {
   TimestampsFilter,
 } from '@/api/entitycore/types/shared/request';
 
+export const RepairPipelineType = {
+  Raw: {
+    key: 'raw',
+    label: 'Raw',
+  },
+  Curated: {
+    key: 'curated',
+    label: 'Curated',
+  },
+  Unraveled: {
+    key: 'unraveled',
+    label: 'Unraveled',
+  },
+  Repaired: {
+    key: 'repaired',
+    label: 'Repaired',
+  },
+} as const;
+
+export const RepairPipelineTypeDictionary = Object.fromEntries(
+  Object.entries(RepairPipelineType).map(([name, value]) => [name, value.key])
+) as {
+  [K in keyof typeof RepairPipelineType]: (typeof RepairPipelineType)[K]['key'];
+};
+
+export type TRepairPipelineType =
+  (typeof RepairPipelineTypeDictionary)[keyof typeof RepairPipelineTypeDictionary];
+
 export type CellMorphologyFilter = Partial<
   IDFilter &
     TimestampsFilter &

@@ -15,16 +15,14 @@ import {
   EntityTypeDict,
   type TEntityTypeDict,
 } from '@/api/entitycore/types';
+import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
+import { TaskViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/task-activity';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
-import {
-  getStatusCountMap as getExtractionStatusCountMap,
-  type TExtendedExtractionCampaignsType,
-} from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   getStatusCountMap as getIonChannelModelingStatusCountMap,
@@ -35,6 +33,10 @@ import {
   type ExtendedCampaignsType,
   getStatusCountMap,
 } from '@/entity-configuration/domain/simulation';
+import {
+  getTaskCampaignStatusCountMap,
+  type TTaskCampaignRow,
+} from '@/entity-configuration/domain/task-helpers';
 import { usePrevious } from '@/hooks/hooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -42,7 +44,10 @@ import { Button } from '@/ui/molecules/button';
 import { CardContent } from '@/ui/molecules/card';
 import { ExecutionAggregatedStatus } from '@/ui/segments/activity-execution/status';
 import { useRowSelection } from '@/ui/segments/data-table/elements/use-row-selection';
-import { useExpandableTable } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
+import {
+  type UseExpandableTableOptions,
+  useExpandableTable,
+} from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
@@ -55,12 +60,14 @@ import { cn } from '@/utils/css-class';
 import type { ColumnsType } from 'antd/es/table/interface';
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [
   EntityTypeDict.SimulationCampaign,
   EntityTypeDict.CircuitExtractionCampaign,
   EntityTypeDict.IonChannelModelingCampaign,
+  EntityTypeDict.TaskConfig,
 ];
 export interface WorkflowActivityRef {
   dataCount: number;
@@ -189,9 +196,9 @@ export function WorkflowActivity() {
             const statusCountMap = getStatusCountMap(record as ICircuitSimulationCampaign);
             return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
           })
-          .with({ type: EntityTypeDict.CircuitExtractionCampaign }, () => {
-            const statusCountMap = getExtractionStatusCountMap(
-              record as unknown as TExtendedExtractionCampaignsType['data'][number]
+          .with({ type: EntityTypeDict.TaskConfig }, () => {
+            const statusCountMap = getTaskCampaignStatusCountMap(
+              record as unknown as TTaskCampaignRow<any>
             );
             return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
           })
@@ -242,7 +249,6 @@ export function WorkflowActivity() {
   });
 
   const selectedRow = selectedRows.at(0);
-
   const [isResolvingResults, setIsResolvingResults] = useState(false);
 
   const onViewIonChannelResults = useCallback(async () => {
@@ -294,6 +300,19 @@ export function WorkflowActivity() {
     : null;
 
   const onDuplicate = () => {
+    if (selectedRow?.type === ExtendedEntitiesTypeDict.TaskConfig) {
+      if (
+        (selectedRow as ITaskConfig<any>).task_config_type ===
+        TaskConfigType.CircuitExtractionCampaign
+      ) {
+        const circuitId = (selectedRow as ITaskConfig<any>).inputs.at(0)?.id;
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
+            circuitId
+          }?initialCampaignId=${selectedRow.id}`
+        );
+      }
+    }
     if (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/ion-channel-modeling-campaign?${ORIGINAL_CAMPAIGN_ID_QUERY}=${selectedRow?.id}`
@@ -324,18 +343,6 @@ export function WorkflowActivity() {
         }?initialCampaignId=${selectedRow.id}`
       );
     }
-    if (selectedRow?.type === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
-      const circuitId = (
-        selectedRow as unknown as TExtendedExtractionCampaignsType['data'][0]
-      ).generations
-        .at(0)
-        ?.configs.at(0)?.circuit_id;
-      navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
-          circuitId
-        }?initialCampaignId=${selectedRow.id}`
-      );
-    }
   };
 
   const shouldShowEmptyState = !activityResult?.pagination.total_items && !isFetching;
@@ -349,9 +356,30 @@ export function WorkflowActivity() {
       ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
       ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
       ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+      ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
     ];
 
     if (!entityType || !expandableTypes.includes(entityType)) return undefined;
+    if (entityType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
+      return {
+        getRowKey: (record: TTaskCampaignRow<any>) => record.id,
+        getFetchId: (record: TTaskCampaignRow<any>) => record.id,
+        fetcher: async (record: TTaskCampaignRow<any>) => {
+          return record.rows ?? [];
+        },
+        renderExpanded: (
+          records: EntityCoreIdentifiable[],
+          originalRecord: TTaskCampaignRow<any>
+        ) => TaskViewConfig.render(originalRecord, records),
+        expandIconColumnIndex: 5,
+        expandIcon: TaskViewConfig.expandIcon,
+        isRowExpandable: (record: TTaskCampaignRow<any>) => {
+          const subRecords = record.rows ?? [];
+          return subRecords.length > 1;
+        },
+        isTopLevel: true,
+      };
+    }
 
     return {
       getRowKey: (record: any) => record.id,
@@ -371,7 +399,9 @@ export function WorkflowActivity() {
     };
   }, [entityType]);
 
-  const { expandableConfig } = useExpandableTable(expandableOptions);
+  const { expandableConfig } = useExpandableTable(
+    expandableOptions as UseExpandableTableOptions<EntityCoreObjectTypes> | undefined
+  );
 
   return (
     <section

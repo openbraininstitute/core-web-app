@@ -16,7 +16,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
 import type {
   EntityCoreResponse,
-  Facets,
+  TFacets,
   Pagination,
 } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
@@ -73,14 +73,14 @@ export function useFullRawHierarchy({
               page: 1,
               page_size: DEFAULT_PAGE_SIZE,
               id__id: chunkIDs,
-              withFacets: true,
+              withFacets: false,
               virtualLabId,
               projectId,
               ...circuitScaleFilter,
             }),
             queryFn: () =>
               getCircuits({
-                withFacets: true,
+                withFacets: false,
                 context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
                 filters: {
                   page: 1,
@@ -96,7 +96,7 @@ export function useFullRawHierarchy({
       const allFacets = mergeWith(
         {},
         ...result.map((r) => r.facets || {}),
-        (objValue: Facets[], srcValue: Facets[]) => {
+        (objValue: TFacets[], srcValue: TFacets[]) => {
           if (isArray(objValue)) {
             return uniqBy([...objValue, ...srcValue], 'id');
           }
@@ -198,7 +198,7 @@ export function useHierarchy({
         }),
         queryFn: () =>
           getCircuits({
-            withFacets: true,
+            withFacets: false,
             context: workspace,
             filters: {
               ...circuitScaleFilter,
@@ -225,7 +225,7 @@ export function useHierarchy({
             }),
             queryFn: () =>
               getCircuits({
-                withFacets: true,
+                withFacets: false,
                 context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
                 filters: {
                   ...circuitScaleFilter,

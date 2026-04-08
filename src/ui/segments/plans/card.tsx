@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 
-import type { PlanV2 } from '@/types/virtual-lab/pricing';
 import PlanBody from '@/ui/segments/plans/body';
 import PlanHeader from '@/ui/segments/plans/header';
+
+import type { PlanV2 } from '@/types/virtual-lab/pricing';
 
 export default function PlanCard({ plan }: { plan: PlanV2 }) {
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');

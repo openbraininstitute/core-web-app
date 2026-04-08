@@ -1,4 +1,4 @@
-import { filter, find, set } from 'es-toolkit/compat';
+import { filter, find, intersection, set } from 'es-toolkit/compat';
 
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
@@ -7,7 +7,10 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type {
+  EntityCoreTypeConfig,
+  TEntityConfigDiscriminatorFilter,
+} from '@/entity-configuration/domain/types';
 
 export const circuitTypes: TExtendedEntitiesTypeDict[] = [
   'circuit',
@@ -59,3 +62,22 @@ export const applyEntityExpansions = async <
   }
   return data;
 };
+
+/**
+ * Returns the first entity config matching the given discriminator key/value.
+ *
+ * @param discriminator - The key and value to match
+ * @returns The entity config or undefined
+ */
+export function getEntityConfigByDiscriminator(
+  filter: TEntityConfigDiscriminatorFilter
+): EntityCoreTypeConfig<any, any, any> | undefined {
+  const entries = Object.values(EntityCoreConfiguration);
+
+  return entries.find((entity) => {
+    const { discriminator } = entity;
+    if (!discriminator) return false;
+    if (discriminator.key !== filter.key) return false;
+    return intersection(discriminator.value, filter.value).length > 0;
+  });
+}

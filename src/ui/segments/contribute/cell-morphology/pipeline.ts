@@ -62,6 +62,9 @@ export function useCellMorphologyPipeline({
         location,
         project_id: projectId, // Including context as part of the registration payload
         virtual_lab_id: virtualLabId,
+        ...(values.repair_pipeline_state
+          ? { repair_pipeline_state: values.repair_pipeline_state }
+          : {}),
       };
 
       // 3. Execute the new registration function

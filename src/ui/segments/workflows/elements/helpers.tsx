@@ -346,7 +346,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
   {
     label: 'Extract',
     value: WorkflowActivityDictValue.extract,
-    disabled: true,
+    disabled: false,
     name: 'Extraction',
     configType: 'extract',
     config: extractNewConfiguration,

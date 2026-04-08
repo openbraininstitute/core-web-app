@@ -462,6 +462,7 @@ export default function SimulationsTab({
           className="text-primary-9 mt-4 inline-block text-lg font-semibold"
           href={consent?.url}
           target="_blank"
+          rel="noopener"
         >
           Grant consent
         </a>

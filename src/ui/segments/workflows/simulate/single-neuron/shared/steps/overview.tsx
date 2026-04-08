@@ -6,15 +6,11 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useSession } from 'next-auth/react';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import z from 'zod';
+
 import {
   getSingleNeuronSimulations,
   getSingleNeuronSynaptomeSimulations,
 } from '@/api/entitycore/queries';
-import type {
-  ISingleNeuronSimulation,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { OVERVIEW_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
@@ -34,6 +30,12 @@ import {
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { makeDateToAppFormat } from '@/util/date';
 import { log } from '@/utils/logger';
+
+import type {
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 
 type Props = {
   sessionId: string;

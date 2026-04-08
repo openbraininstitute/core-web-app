@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 'use client';
 
 import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
@@ -273,7 +271,14 @@ export function BrowseLink({
   const rootCount = root?.pagination.total_items;
   const isLoading = loadingCurrent || loadingRoot;
 
-  const countRenderer = match({ isCurrentError, count, rootCount, isRootError, enabled, isLoading })
+  const countRenderer = match({
+    isCurrentError,
+    count,
+    rootCount,
+    isRootError,
+    enabled,
+    isLoading,
+  })
     .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (
       <span className="flex items-center justify-center gap-1">
         <span className="font-bold">{count}</span>

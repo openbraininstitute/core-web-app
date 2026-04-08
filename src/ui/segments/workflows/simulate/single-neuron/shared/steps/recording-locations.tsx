@@ -4,8 +4,14 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import z from 'zod';
 
-import { getColorFromGeneratedPalette } from './webgl-neuron-selector/colors';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import {
+  buildDefaultRecordingLocation,
+  getSimulationColor,
+  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   neuronSectionNamesAtomFamily,
   RecordLocationConfigurationAtomFamily,
@@ -17,18 +23,13 @@ import {
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
 import {
-  RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
-  buildDefaultRecordingLocation,
-  getSimulationColor,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import {
   type NeuronLocation,
   NeuronLocationSchema,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+
+import { getColorFromGeneratedPalette } from './webgl-neuron-selector/colors';
 
 type Props = {
   sessionId: string;
