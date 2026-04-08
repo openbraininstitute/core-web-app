@@ -14,6 +14,8 @@ import {
 
 import type { ComponentType } from 'react';
 
+export const CSV_BULK_UPLOAD_NOTIFICATION_ID_PREFIX = 'csv-bulk-upload';
+
 export const CsvUploadPhase = {
   Idle: 'idle',
   Parsing: 'parsing',
@@ -203,11 +205,11 @@ export function resolveImportHeaderCsvUploadUiState(args: {
     shouldShowBulkFileUploadAction && (bulkFileUploadAction?.pendingReferenceCount ?? 0) > 0;
   const shouldShowTooltipCloseButton =
     csvUploadNotifications.length > 0 || shouldShowBulkFileUploadTooltipAction;
-  const shouldRenderCsvUploadTooltip =
-    !hasDismissedCsvUploadTooltip &&
-    Boolean(
-      csvUploadStatus || csvUploadNotifications.length > 0 || shouldShowBulkFileUploadTooltipAction
-    );
+  const shouldRenderCsvUploadTooltip = Boolean(
+    csvUploadStatus ||
+      csvUploadNotifications.length > 0 ||
+      (!hasDismissedCsvUploadTooltip && shouldShowBulkFileUploadTooltipAction)
+  );
   const shouldForceCsvUploadTooltipOpen = shouldRenderCsvUploadTooltip;
   const csvUploadTooltipTitle =
     csvUploadStatus?.title ??
@@ -227,4 +229,24 @@ export function resolveImportHeaderCsvUploadUiState(args: {
     shouldForceCsvUploadTooltipOpen,
     csvUploadTooltipTitle,
   };
+}
+
+export function splitCsvUploadNotifications(notifications: IImportHeaderNotification[]): {
+  csvNotifications: IImportHeaderNotification[];
+  bulkUploadNotifications: IImportHeaderNotification[];
+} {
+  return notifications.reduce(
+    (acc, notification) => {
+      if (notification.id.startsWith(CSV_BULK_UPLOAD_NOTIFICATION_ID_PREFIX)) {
+        acc.bulkUploadNotifications.push(notification);
+      } else {
+        acc.csvNotifications.push(notification);
+      }
+      return acc;
+    },
+    {
+      csvNotifications: [] as IImportHeaderNotification[],
+      bulkUploadNotifications: [] as IImportHeaderNotification[],
+    }
+  );
 }

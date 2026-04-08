@@ -1696,7 +1696,7 @@ describe('EntityImportFeature', () => {
     expect(screen.queryByRole('button', { name: 'Upload files folder' })).not.toBeInTheDocument();
   });
 
-  it('stops showing the bulk upload tooltip after the user closes it', async () => {
+  it('shows folder upload issues in the tooltip even after the user closes the bulk prompt', async () => {
     const user = userEvent.setup();
     const bulkFileUploadAdapter = createBulkFileUploadAdapter();
     const { container } = renderWithQueryClient(
@@ -1740,7 +1740,46 @@ describe('EntityImportFeature', () => {
     expect(screen.getByRole('button', { name: 'Asset row 2' })).toHaveTextContent('missing.json');
     expect(screen.getByRole('button', { name: 'Show status for Asset row 2' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Upload files folder' })).toBeInTheDocument();
-    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    const uploadIssuesTooltip = await screen.findByRole('tooltip');
+    expect(uploadIssuesTooltip).toHaveTextContent(/matched 1 csv file reference/i);
+    expect(uploadIssuesTooltip).toHaveTextContent(/skipped 2 csv file references/i);
+    expect(uploadIssuesTooltip).toHaveTextContent(/row 2.*missing\.json.*selected folder/i);
+    expect(uploadIssuesTooltip).toHaveTextContent(/row 3.*invalid\.txt.*allowed file types/i);
+  });
+
+  it('does not reopen the csv tooltip when the user clicks upload csv after dismissing the bulk prompt', async () => {
+    const user = userEvent.setup();
+    const bulkFileUploadAdapter = createBulkFileUploadAdapter();
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Bulk File Upload Import"
+        onClose={() => {}}
+        adapter={bulkFileUploadAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile('Asset\nmatch.json\nmissing.json\ninvalid.txt\n')
+    );
+
+    const tooltip = await screen.findByRole('tooltip');
+    await user.click(
+      within(tooltip).getByRole('button', {
+        name: 'Close CSV upload status',
+      })
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Upload CSV' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
   });
 
   it('shows stripped template-mismatch columns in the upload tooltip instead of the global notification stack', async () => {

@@ -9,6 +9,7 @@ import { ImportHeaderUploadInputs } from '@/features/entity-import/ui/elements/h
 import {
   type IImportHeaderProps,
   resolveImportHeaderCsvUploadUiState,
+  splitCsvUploadNotifications,
 } from '@/features/entity-import/ui/elements/helpers';
 
 export {
@@ -36,11 +37,13 @@ export function ImportHeader({
   const bulkUploadInputRef = useRef<HTMLInputElement | null>(null);
   const [isCsvUploadTooltipInteractiveOpen, setIsCsvUploadTooltipInteractiveOpen] = useState(false);
   const [hasDismissedCsvUploadTooltip, setHasDismissedCsvUploadTooltip] = useState(false);
+  const { csvNotifications, bulkUploadNotifications } =
+    splitCsvUploadNotifications(csvUploadNotifications);
 
   const csvUploadUiState = resolveImportHeaderCsvUploadUiState({
     csvUploadPhase,
     csvRowValidationProgress,
-    csvUploadNotifications,
+    csvUploadNotifications: csvNotifications,
     bulkFileUploadAction,
     hasDismissedCsvUploadTooltip,
   });
@@ -54,7 +57,6 @@ export function ImportHeader({
   };
 
   const handleOpenCsvUploadDialog = () => {
-    resetCsvUploadTooltipSession();
     uploadInputRef.current?.click();
   };
 
@@ -83,7 +85,7 @@ export function ImportHeader({
       <div className="flex flex-wrap items-center gap-3">
         <ImportHeaderCsvUploadControl
           csvUploadPhase={csvUploadPhase}
-          csvUploadNotifications={csvUploadNotifications}
+          csvUploadNotifications={csvNotifications}
           bulkFileUploadAction={bulkFileUploadAction}
           uiState={csvUploadUiState}
           isCsvUploadTooltipOpen={isCsvUploadTooltipOpen}
@@ -102,7 +104,9 @@ export function ImportHeader({
         <ImportHeaderActionButtons
           shouldShowBulkFileUploadAction={csvUploadUiState.shouldShowBulkFileUploadAction}
           isBulkFileUploadProcessing={bulkFileUploadAction?.isProcessing ?? false}
+          bulkUploadNotifications={bulkUploadNotifications}
           onOpenBulkUploadDialog={handleOpenBulkUploadDialog}
+          onDismissBulkUploadNotifications={onDismissCsvUploadNotifications}
           onDownloadCurrentCsv={onDownloadCurrentCsv}
           onClose={onClose}
         />
