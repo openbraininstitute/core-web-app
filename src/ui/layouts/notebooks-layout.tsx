@@ -17,7 +17,11 @@ import { tryCatch } from '@/api/utils';
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
-import { getVirtualLab, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import {
+  getMissingStudentEmails,
+  getVirtualLab,
+  updateVirtualLab,
+} from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
@@ -35,7 +39,7 @@ import { buildStripeFormOptions } from '../segments/virtual-lab-settings/element
 
 import type { UploadFile, UploadProps } from 'antd';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
-import type { ProjectCreationResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { ProjectCreationResponse, TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function createNotebook({
@@ -67,7 +71,7 @@ export function NotebooksLayout({ children, active }: Props) {
   const [loading, setLoading] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [numberStudents, setNumberStudents] = useState<number | null>(10);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [studentEmails, setStudentEmails] = useState<string[]>([]);
 
   const { data: virtualLabData } = useQuery({
@@ -75,11 +79,6 @@ export function NotebooksLayout({ children, active }: Props) {
     queryFn: () => getVirtualLab(virtualLabId),
     enabled: Boolean(virtualLabId),
   });
-
-  const course = {
-    template_project_id: projectId,
-    is_initialized: false,
-  };
 
   const onFinnish = useCallback(() => {
     setShowCourseModal(false);
@@ -129,6 +128,8 @@ export function NotebooksLayout({ children, active }: Props) {
       </div>
     );
 
+  const course = virtualLabData.data.virtual_lab.course;
+
   return (
     <div>
       <div className="mb-5 ml-5 flex justify-between">
@@ -154,18 +155,15 @@ export function NotebooksLayout({ children, active }: Props) {
           </NextLink>
         </div>
         <div className="flex gap-3">
-          {active === 'private' &&
-            course &&
-            course.template_project_id === projectId &&
-            !course.is_initialized && (
-              <button
-                type="button"
-                className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
-                onClick={() => setShowCourseModal(true)}
-              >
-                Initialize Course
-              </button>
-            )}
+          {active === 'private' && course && course.template_project_id === projectId && (
+            <button
+              type="button"
+              className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
+              onClick={() => setShowCourseModal(true)}
+            >
+              {course.is_initialized ? 'Add students to course' : 'Initialize course'}
+            </button>
+          )}
 
           <button
             disabled={loading}
@@ -224,8 +222,7 @@ export function NotebooksLayout({ children, active }: Props) {
             <CourseSetup
               onFinnish={onFinnish}
               studentEmails={studentEmails}
-              virtual_lab={virtualLabData.data?.virtual_lab}
-              nameBase={virtualLabData.data?.virtual_lab.name ?? 'Course'}
+              virtualLab={virtualLabData.data.virtual_lab}
             />
           )}
         </div>
@@ -254,7 +251,7 @@ const CsvUploadValidator = ({
   const [error, setError] = useState('');
   const [credits, setCredits] = useState(0);
 
-  const validateCsvContent = (text: string): boolean => {
+  const validateCsvContent = async (text: string) => {
     const rows = text.trim().split('\n');
     if (rows.length < 1) {
       setError('CSV must contain data records.');
@@ -293,7 +290,12 @@ const CsvUploadValidator = ({
       }
     }
 
-    setStudentEmails([...emailSet]);
+    const missingEmails = await getMissingStudentEmails({
+      virtualLabId: vlabId,
+      emails: [...emailSet],
+    });
+
+    setStudentEmails([...missingEmails.emails]);
     return true;
   };
 
@@ -307,9 +309,9 @@ const CsvUploadValidator = ({
 
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const text = e.target?.result as string;
-        const isValid = validateCsvContent(text);
+        const isValid = await validateCsvContent(text);
         if (isValid) {
           message.success('File validation successful.');
           resolve(false);
@@ -346,6 +348,7 @@ const CsvUploadValidator = ({
       </Upload>
 
       {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
+      {studentEmails.length === 0 && fileList.length > 0 && 'No students without a project found'}
       {studentEmails.length > 0 && (
         <div style={{ marginTop: 20 }}>
           <h3>Student Email List:</h3>
@@ -658,18 +661,14 @@ async function syncNotebook({
 function CourseSetup({
   onFinnish,
   studentEmails,
-  nameBase,
-  virtualLab
+  virtualLab,
 }: {
   onFinnish: () => void;
   studentEmails: string[];
-  nameBase: string;
-  virtualLab: 
+  virtualLab: TVirtualLab;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
-
-  studentEmails = ['gbarv2+test3@gmail.com'];
 
   const hasTriggered = useRef(false);
 
@@ -695,7 +694,7 @@ function CourseSetup({
         const projectCreationResults = await Promise.allSettled(
           studentEmails.map((email) =>
             createProject(virtualLabId, {
-              name: `${nameBase} ${email}`,
+              name: `${virtualLab.name} ${email}`,
               description: `Project for ${email}`,
               include_members: [],
             })
@@ -815,9 +814,10 @@ function CourseSetup({
 
         await updateVirtualLab({
           virtualLabId,
-          updatePayload: { course: virtualLab.course && {...virtualLab.course, is_initialized: true}},
-        }
-        )
+          updatePayload: {
+            course: virtualLab.course && { ...virtualLab.course, is_initialized: true },
+          },
+        });
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'Failed to initialize course';
         notification.error({
@@ -828,12 +828,10 @@ function CourseSetup({
       } finally {
         onFinnish();
       }
-        
     };
 
-  setupCourse();
-}
-, [virtualLabId, projectId, notification, studentEmails, nameBase, onFinnish])
+    setupCourse();
+  }, [virtualLabId, projectId, notification, studentEmails, onFinnish, virtualLab]);
 
-return 'Settup up course...';
+  return 'Settup up course...';
 }

@@ -59,7 +59,7 @@ export type ProjectCreationResponse = VlmResponse<{
 }>;
 
 export type Course = {
-  project_template_id: string;
+  template_project_id: string;
   is_initialized: boolean;
 };
 

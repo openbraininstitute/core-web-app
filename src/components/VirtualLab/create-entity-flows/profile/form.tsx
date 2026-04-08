@@ -193,9 +193,7 @@ export function Profile({ data }: ProfileProps) {
             <div className="space-y-1 md:col-span-2">
               <Label title="Social login" />
               <div className="flex items-center gap-2 border-b border-white/30 py-2">
-                {
-                  getIdentityProviderDisplay(session?.user?.identityProvider).icon
-                }
+                {getIdentityProviderDisplay(session?.user?.identityProvider).icon}
                 <span className="font-bold text-white select-none">
                   {getIdentityProviderDisplay(session?.user?.identityProvider).name}
                   {data?.preferred_username && (
