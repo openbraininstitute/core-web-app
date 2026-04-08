@@ -1,11 +1,10 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Checkbox, ConfigProvider, Modal } from 'antd';
+import { Checkbox, ConfigProvider } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
@@ -16,6 +15,10 @@ import { runSimulation } from '@/api/one/circuit-simulation';
 import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { useAppNotification } from '@/components/notification';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
+import {
+  OfflineTokenConsentModal,
+  useEnsureOfflineTokenConsent,
+} from '@/features/offline-auth-management';
 import {
   simExecRemoteStatusMapAtomFamily,
   simExecStatusMapAtomFamily,
@@ -31,7 +34,6 @@ import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-r
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/simulation';
-import { useConsent } from '@/services/consent';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
@@ -47,7 +49,6 @@ import type { TActivityCustomFile } from '@/features/scan-config/types';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
-const USER_CANCELLED = 'user_cancelled';
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
 type SimulationTabProps = {
@@ -56,18 +57,12 @@ type SimulationTabProps = {
   projectId: string;
 };
 
-type Consent = {
-  controller: AbortController;
-  url: string;
-};
-
 export default function SimulationsTab({
   campaignId,
   virtualLabId,
   projectId,
 }: SimulationTabProps) {
   const notification = useAppNotification();
-  const { waitForConsent } = useConsent();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
   const simulationsAtom = simulationsByCampaignIdAtomFamily({
     campaignId,
@@ -97,8 +92,14 @@ export default function SimulationsTab({
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
-  const [consent, setConsent] = useState<Consent | null>(null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const {
+    modal: offlineTokenConsentModal,
+    ensure: ensureOfflineTokenConsent,
+    cancel: cancelOfflineTokenConsent,
+    openConsentLink,
+    prime: primeOfflineTokenConsent,
+  } = useEnsureOfflineTokenConsent({ useCache: true });
 
   const simConfigAsset = activeSimulation?.assets?.find(
     (a) => a.label === AssetLabel.sonata_simulation_config
@@ -197,35 +198,16 @@ export default function SimulationsTab({
     return () => clearInterval(intervalId);
   }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
 
-  const onConsentModalClose = () => {
-    if (consent) {
-      consent.controller.abort(USER_CANCELLED);
-    }
-    setConsent(null);
-  };
-
-  // TODO: this is a POC, refactor once confirmed viable.
   const runViaLaunchSystem = async (simIds: string[]) => {
-    const consentRes = await requestOfflineTokenConsent();
-    const consentUrl = consentRes.data.consent_url;
-
-    if (consentUrl) {
-      const controller = new AbortController();
-      setConsent({ controller, url: consentUrl });
-      window.open(consentUrl, '_blank');
-
-      try {
-        await waitForConsent(controller.signal);
-      } catch (error) {
-        if (error === USER_CANCELLED) return;
-
+    const consentResult = await ensureOfflineTokenConsent();
+    if (!consentResult.ok) {
+      if (consentResult.reason !== 'cancelled') {
         notification.error({
           message: 'Unexpected error occurred, please try again later',
           duration: 10,
         });
-
-        return;
       }
+      return;
     }
 
     let nSubmissions = 0;
@@ -294,7 +276,6 @@ export default function SimulationsTab({
         duration: 10,
       });
     }
-    setConsent(null);
   };
 
   // TODO Refactor
@@ -441,6 +422,8 @@ export default function SimulationsTab({
             )}
             type="button"
             onClick={() => run(selectedSimulationIds)}
+            onMouseEnter={primeOfflineTokenConsent}
+            onFocus={primeOfflineTokenConsent}
             disabled={simRequestInProgress || selectedSimulationIds.length === 0}
           >
             <div className="flex justify-center gap-4">
@@ -477,26 +460,12 @@ export default function SimulationsTab({
         </SimulationReportsProvider>
       </div>
 
-      <Modal
-        title="Waiting for the user consent"
-        open={!!consent}
-        onCancel={onConsentModalClose}
-        okButtonProps={{ style: { display: 'none' } }}
-      >
-        <p className="text-lg">
-          If the authorization window did not open automatically, please click the link below to
-          continue.
-        </p>
-
-        <a
-          className="text-primary-9 mt-4 inline-block text-lg font-semibold"
-          href={consent?.url}
-          target="_blank"
-          rel="noopener"
-        >
-          Grant consent
-        </a>
-      </Modal>
+      <OfflineTokenConsentModal
+        open={offlineTokenConsentModal.open}
+        consentUrl={offlineTokenConsentModal.consentUrl}
+        onCancel={cancelOfflineTokenConsent}
+        onOpenConsent={() => openConsentLink(offlineTokenConsentModal.consentUrl)}
+      />
 
       <CreditsTransferModal open={showCreditsModal} onClose={() => setShowCreditsModal(false)} />
     </div>
