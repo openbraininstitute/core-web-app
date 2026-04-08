@@ -64,17 +64,24 @@ export function ImportOptionsScreen({
           </button>
         </div>
         <Card className="flex w-full items-center justify-between">
-          <CardContent className="flex w-full cursor-pointer items-stretch justify-between gap-2.5">
+          <CardContent
+            className={cn('flex w-full cursor-pointer items-stretch justify-between gap-2.5')}
+          >
             <Card
               className={cn('w-full border-none bg-white text-primary-9 shadow-md', {
                 ' bg-primary-9 text-white': mode === ImportMode.Single,
+                'hover:bg-gray-100': mode !== ImportMode.Single,
               })}
               onClick={() => {
                 onModeChange(ImportMode.Single);
               }}
             >
               <CardContent>
-                <CardTitle className=" mb-10 text-xl">
+                <CardTitle
+                  className={cn('mb-10 text-xl', {
+                    'font-black text-2xl': mode === ImportMode.Single,
+                  })}
+                >
                   Single {selectedType?.title.toLocaleLowerCase()}
                 </CardTitle>
                 <CardDescription>
@@ -90,6 +97,7 @@ export function ImportOptionsScreen({
               className={cn('w-full border-none bg-white text-primary-9 shadow-md', {
                 ' bg-primary-9 text-white': multipleCardActive,
                 'cursor-not-allowed opacity-45': !multipleEnabled,
+                'hover:bg-gray-200': multipleEnabled && !multipleCardActive,
               })}
               onClick={
                 multipleEnabled
@@ -100,7 +108,11 @@ export function ImportOptionsScreen({
               }
             >
               <CardContent>
-                <CardTitle className=" mb-10 text-xl">
+                <CardTitle
+                  className={cn('mb-10 text-xl', {
+                    'font- text-2xl': multipleEnabled && multipleCardActive,
+                  })}
+                >
                   Multiple {selectedType?.title.toLocaleLowerCase()}
                 </CardTitle>
                 <CardDescription>
