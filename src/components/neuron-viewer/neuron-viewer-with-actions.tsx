@@ -94,7 +94,7 @@ export function NeuronViewerContainer({
                 disableClick={
                   disableElectrodes || simulationStatus?.status === SimulationStatus.LAUNCHED
                 }
-                onClose={() => setCollapsed(true)}
+                onMinimize={() => setCollapsed(true)}
               />
               <DebugPanel morphology={morphology} synapses={synapses} />
             </>
