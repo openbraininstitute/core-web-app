@@ -8,6 +8,7 @@ import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
 import { useAppNotification } from '@/components/notification';
+import { useRunWithOfflineTokenConsent } from '@/features/offline-auth-management';
 import { errorRegistry } from '@/features/scan-config/error-registry';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { getErrorMessage } from '@/utils/error';
@@ -95,14 +96,19 @@ export function useScanConfigLaunchMutation({
   const notification = useAppNotification();
   const logTopicLower = logTopic.toLowerCase();
 
+  const { runWithConsent } = useRunWithOfflineTokenConsent();
+
   return useMutation({
     throwOnError: false,
     mutationKey: [TASK_RUNNER_QUERY_KEY_HEAD, { obiOneTaskType, context }],
     mutationFn: (configId: string) =>
-      runTask({
-        ctx: context,
-        task_type: obiOneTaskType,
-        config_id: configId,
+      runWithConsent({
+        fn: () =>
+          runTask({
+            ctx: context,
+            task_type: obiOneTaskType,
+            config_id: configId,
+          }),
       }),
     onSuccess: (executionId, configId) => {
       log('info', `${logTopic} for ${configId} launched successfully, execution ID`, {
