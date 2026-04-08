@@ -656,7 +656,7 @@ export function makeContributionsImportField({
                   role_label: '',
                   imported_agent_text: rawValue.trim(),
                   issues: parsedContributions.issues,
-                } satisfies TContributionDraft,
+                },
               ]
             : parsedContributions.entries;
 
@@ -790,7 +790,7 @@ export function makeExperimentDateImportField({
     required,
     inputType: ImportInputType.Date,
     columnWidth,
-    ...(placeholder !== undefined ? { placeholder } : {}),
+    placeholder,
   };
 }
 
@@ -811,7 +811,7 @@ export function makeContactEmailImportField({
     required,
     inputType: ImportInputType.Text,
     columnWidth,
-    ...(placeholder !== undefined ? { placeholder } : {}),
+    placeholder,
   };
 }
 

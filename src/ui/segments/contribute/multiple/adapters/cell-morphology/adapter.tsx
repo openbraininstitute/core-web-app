@@ -10,6 +10,7 @@ import {
   RepairPipelineTypeSchema,
   type TRepairPipelineState,
 } from '@/api/entitycore/types/shared/protocol';
+import { config } from '@/config';
 import {
   type IEntityImportAdapter,
   type IValidatorSuggestionDetailsArgs,
@@ -180,6 +181,9 @@ function readLocation(parsedValue: unknown, rawValue: string): LocationValue | n
 
 function getProtocolGenerationType(row: IImportRowState): string | null {
   const protocolCell = row.cells.protocolId;
+  if (protocolCell.rawValue === getDefaultProtocolId()) {
+    return CellMorphologyGenerationType.DigitalReconstruction.key;
+  }
 
   if (protocolCell.remoteState.status !== RemoteValidationStatus.Valid) {
     return null;
@@ -194,6 +198,12 @@ function getProtocolGenerationType(row: IImportRowState): string | null {
 
 function hasDigitalReconstructionProtocol(row: IImportRowState): boolean {
   return getProtocolGenerationType(row) === CellMorphologyGenerationType.DigitalReconstruction.key;
+}
+
+function getDefaultProtocolId(): string {
+  return config.DEPLOYMENT_ENV === 'production'
+    ? '3bf3fce7-7743-45be-b61f-efb695ddf265'
+    : '49d61602-441f-4102-a7c5-7aedf8f20334';
 }
 
 export function createCellMorphologyImportAdapter({
@@ -294,7 +304,6 @@ export function createCellMorphologyImportAdapter({
         ),
         columnWidth: 240,
       },
-
       makeLicenseImportField({
         path: 'licenseId',
         submissionPath: 'license_id',
@@ -309,6 +318,10 @@ export function createCellMorphologyImportAdapter({
         required: true,
         inputType: ImportInputType.RemoteSelect,
         placeholder: 'Search protocol',
+        manualDefault: {
+          rawValue: getDefaultProtocolId(),
+          displayValue: 'Generic Protocol',
+        },
         remote: {
           query: makeRemoteQuery({
             queryField: 'ilike_search',
@@ -334,6 +347,10 @@ export function createCellMorphologyImportAdapter({
         placeholder: 'Select repair pipeline state',
         dependencies: ['protocolId'],
         options: REPAIR_PIPELINE_STATE_OPTIONS,
+        manualDefault: {
+          rawValue: RepairPipelineState.Raw.key,
+          displayValue: RepairPipelineState.Raw.label,
+        },
         isEnabled: ({ row }) => hasDigitalReconstructionProtocol(row),
         getDisabledMessage: () =>
           'Select a digital reconstruction protocol to enable Repair Pipeline State.',

@@ -188,7 +188,9 @@ export interface IAdapterFieldDefinition extends IImportFieldDefinition {
    * Controls how manual edits from the validator panel are applied.
    * - `'commit'` (default): writes the value directly to the cell.
    * - `'stage'`: stages the value as a correction draft that the user must
-   *   accept or reject per row before it takes effect.
+   *   accept or reject per row before it takes effect
+   *
+   * This is not applied to fields as contribution as it has multiple contributions per row.
    */
   writeStrategy?: TValidatorWriteStrategy;
 
@@ -206,12 +208,6 @@ export interface IAdapterFieldDefinition extends IImportFieldDefinition {
    * useful for showing metadata, descriptions, or previews for each suggestion
    */
   validatorSuggestionDetails?: (args: IValidatorSuggestionDetailsArgs) => ReactNode;
-
-  /**
-   * render a compact badge or label for a resolved remote selection in the table
-   * or validator panel summary
-   */
-  remoteSelectionBadge?: (args: IValidatorSuggestionDetailsArgs) => ReactNode;
 
   /** file upload constraints: accepted MIME types, extensions, max size, max count */
   fileConfig?: IImportFileFieldConfig;
