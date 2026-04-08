@@ -456,7 +456,7 @@ function InlineCellComponent({
     );
   }
 
-  if (field.inputType === ImportInputType.File || field.inputType === ImportInputType.FileBundle) {
+  if (field.inputType === ImportInputType.FileBundle) {
     return (
       <div className="pointer-events-none absolute inset-0 box-border min-h-[52px] min-w-0 overflow-hidden">
         <Button

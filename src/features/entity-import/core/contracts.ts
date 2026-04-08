@@ -5,7 +5,6 @@ export const ImportInputType = {
   Date: 'date',
   Select: 'select',
   RemoteSelect: 'remote-select',
-  File: 'file',
   FileBundle: 'file-bundle',
   Compound: 'compound',
 } as const;

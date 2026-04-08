@@ -549,10 +549,7 @@ function SingleColumnValidatorCard({
 
   const commitManualValueToRow = useCallback(
     (rowId: string) => {
-      if (
-        field.inputType === ImportInputType.File ||
-        field.inputType === ImportInputType.FileBundle
-      ) {
+      if (field.inputType === ImportInputType.FileBundle) {
         actions.onSetFileValue({
           rowId,
           fieldPath: field.path,
@@ -962,8 +959,7 @@ function SingleColumnValidatorCard({
                 </Select>
               )}
 
-              {(field.inputType === ImportInputType.File ||
-                field.inputType === ImportInputType.FileBundle) && (
+              {field.inputType === ImportInputType.FileBundle && (
                 <ValidatorFileDropzone
                   field={field}
                   fileInputRef={fileInputRef}
