@@ -142,6 +142,65 @@ const fileAdapter = {
   submitRow: vi.fn(async ({ row }: { row: { id: string } }) => ({ id: row.id })),
 } as unknown as IEntityImportAdapter<Record<string, unknown>, { id: string }>;
 
+type TestBulkFileUploadAdapter = IEntityImportAdapter<{ asset: File }, { id: string }> & {
+  supportBulkFileUpload?: boolean;
+};
+
+function getParsedCellFile(value: unknown): File | null {
+  if (value instanceof File) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.find((entry): entry is File => entry instanceof File) ?? null;
+  }
+
+  return null;
+}
+
+function createBulkFileUploadAdapter({
+  supportBulkFileUpload = true,
+  accept = ['application/json'],
+  allowedExtensions = ['.json'],
+}: {
+  supportBulkFileUpload?: boolean;
+  accept?: Array<string>;
+  allowedExtensions?: Array<string>;
+} = {}): TestBulkFileUploadAdapter {
+  return {
+    id: supportBulkFileUpload ? 'bulk-file-upload-import' : 'manual-file-upload-import',
+    title: 'Bulk File Upload Import',
+    templateFileName: 'bulk-file-upload.csv',
+    submitLabel: 'Import rows',
+    supportBulkFileUpload,
+    fields: [
+      {
+        label: 'Asset',
+        path: 'asset',
+        required: true,
+        inputType: ImportInputType.FileBundle,
+        csv: { include: true },
+        fileConfig: {
+          accept,
+          allowedExtensions,
+          maxFiles: 1,
+          maxSizeBytes: 1024,
+        },
+      },
+    ],
+    schema: z.object({
+      asset: z.instanceof(File, { message: 'Asset is required' }),
+    }),
+    buildPayload({ row }) {
+      const asset = getParsedCellFile(row.cells.asset?.parsedValue);
+      return {
+        asset: asset as File,
+      };
+    },
+    submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
+  };
+}
+
 const validatorMultiColumnAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
   id: 'validator-multi-column-import',
   title: 'Validator Multi Column Import',
@@ -283,6 +342,15 @@ function getCsvUploadInput(container: HTMLElement): HTMLInputElement {
   const input = container.querySelector('input[accept=".csv,text/csv"]');
   if (!(input instanceof HTMLInputElement)) {
     throw new Error('Expected CSV upload input');
+  }
+
+  return input;
+}
+
+function getBulkFileUploadInput(container: HTMLElement): HTMLInputElement {
+  const input = container.querySelector('input[data-bulk-file-upload-input="true"]');
+  if (!(input instanceof HTMLInputElement)) {
+    throw new Error('Expected bulk file upload input');
   }
 
   return input;
@@ -1573,6 +1641,101 @@ describe('EntityImportFeature', () => {
         /The following columns were removed as they don't match the template: __parsed_extra/i
       )
     ).not.toBeInTheDocument();
+  });
+
+  it('shows an optional bulk file upload action in the csv tooltip for adapters that opt in', async () => {
+    const user = userEvent.setup();
+    const bulkFileUploadAdapter = createBulkFileUploadAdapter();
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Bulk File Upload Import"
+        onClose={() => {}}
+        adapter={bulkFileUploadAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(getCsvUploadInput(container), createCsvUploadFile('Asset\nmatch.json\n'));
+
+    await waitFor(() => {
+      expect(
+        within(screen.getByRole('tooltip')).getByRole('button', {
+          name: /choose the folder that contains the files from your csv/i,
+        })
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('does not show the bulk file upload action when the adapter does not opt in', async () => {
+    const user = userEvent.setup();
+    const manualFileUploadAdapter = createBulkFileUploadAdapter({ supportBulkFileUpload: false });
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Manual File Upload Import"
+        onClose={() => {}}
+        adapter={manualFileUploadAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(getCsvUploadInput(container), createCsvUploadFile('Asset\nmatch.json\n'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Asset row 1' })).toHaveTextContent('match.json');
+    });
+
+    expect(
+      screen.queryByRole('button', {
+        name: /choose the folder that contains the files from your csv/i,
+      })
+    ).not.toBeInTheDocument();
+  });
+
+  it('matches selected folder files to csv file names and reports skipped entries', async () => {
+    const user = userEvent.setup();
+    const bulkFileUploadAdapter = createBulkFileUploadAdapter();
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Bulk File Upload Import"
+        onClose={() => {}}
+        adapter={bulkFileUploadAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile('Asset\nmatch.json\nmissing.json\ninvalid.txt\n')
+    );
+
+    await waitFor(() => {
+      expect(
+        within(screen.getByRole('tooltip')).getByRole('button', {
+          name: /choose the folder that contains the files from your csv/i,
+        })
+      ).toBeInTheDocument();
+    });
+
+    await user.click(
+      within(screen.getByRole('tooltip')).getByRole('button', {
+        name: /choose the folder that contains the files from your csv/i,
+      })
+    );
+
+    await user.upload(getBulkFileUploadInput(container), [
+      new File(['{}'], 'match.json', { type: 'application/json' }),
+      new File(['oops'], 'invalid.txt', { type: 'text/plain' }),
+    ]);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Asset row 1' })).toHaveTextContent('match.json');
+    });
+
+    const updatedTooltip = await screen.findByRole('tooltip');
+    expect(updatedTooltip).toHaveTextContent(/matched 1 csv file reference/i);
+    expect(updatedTooltip).toHaveTextContent(/skipped 2 csv file references/i);
+    expect(updatedTooltip).toHaveTextContent(/row 2.*missing\.json.*selected folder/i);
+    expect(updatedTooltip).toHaveTextContent(/row 3.*invalid\.txt.*allowed file types/i);
   });
 
   it('shows stripped template-mismatch columns in the upload tooltip instead of the global notification stack', async () => {

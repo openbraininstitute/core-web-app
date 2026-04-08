@@ -218,6 +218,7 @@ export function createCellMorphologyImportAdapter({
     title: 'Cell Morphology Import',
     submitLabel: 'Import',
     templateFileName: 'cell-morphology-import-template.csv',
+    supportBulkFileUpload: true,
     templateGuide: {
       entityType: ExtendedEntitiesTypeDict.CellMorphology,
       guideFileName: 'cell-morphology-import-guide.md',
@@ -368,6 +369,7 @@ export function createCellMorphologyImportAdapter({
         path: 'sourceFile',
         submissionPath: 'assets.sourceFile',
         validationPath: 'sourceFile',
+        csv: { include: true },
         fileConfig: {
           accept: [AssetContentType.swc, AssetContentType.asc, AssetContentType.h5],
           allowedExtensions: ['.swc', '.asc', '.h5', '.H5', '.SWC', '.ASC'],

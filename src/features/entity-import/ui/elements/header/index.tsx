@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import { RiDownload2Line, RiFileList3Line, RiUpload2Line } from '@remixicon/react';
 import { Progress } from 'antd';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -64,12 +64,20 @@ export interface IImportHeaderNotification {
   message: string;
 }
 
+export interface IImportHeaderBulkFileUploadAction {
+  visible: boolean;
+  isProcessing: boolean;
+  pendingReferenceCount: number;
+  onUploadFiles: (files: Array<File>) => Promise<void>;
+}
+
 export interface IImportHeaderProps {
   title: string | null;
   templateFileName: string;
   csvUploadPhase: TCsvUploadPhase;
   csvRowValidationProgress: IImportHeaderCsvRowValidationProgress;
   csvUploadNotifications: IImportHeaderNotification[];
+  bulkFileUploadAction?: IImportHeaderBulkFileUploadAction | null;
   onClose: () => void;
   onDismissCsvUploadNotifications: () => void;
   onDownloadCsvTemplate: () => void;
@@ -204,6 +212,7 @@ export function ImportHeader({
   csvUploadPhase,
   csvRowValidationProgress,
   csvUploadNotifications,
+  bulkFileUploadAction,
   onClose,
   onDismissCsvUploadNotifications,
   onDownloadCurrentCsv,
@@ -211,18 +220,34 @@ export function ImportHeader({
   onUploadCsvFile,
 }: IImportHeaderProps) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const bulkUploadInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    const input = bulkUploadInputRef.current;
+    if (!input) {
+      return;
+    }
+
+    input.setAttribute('webkitdirectory', '');
+    input.setAttribute('directory', '');
+  }, []);
 
   const csvUploadStatus = resolveCsvUploadStatus({
     csvUploadPhase,
     csvRowValidationProgress,
   });
   const uploadNotificationsTone = resolveCsvUploadNotificationsTone(csvUploadNotifications);
-  const isCsvUploadTooltipOpen = Boolean(csvUploadStatus || csvUploadNotifications.length > 0);
+  const shouldShowBulkFileUploadAction = bulkFileUploadAction?.visible === true;
+  const isCsvUploadTooltipOpen = Boolean(
+    csvUploadStatus || csvUploadNotifications.length > 0 || shouldShowBulkFileUploadAction
+  );
   const csvUploadTooltipTitle =
     csvUploadStatus?.title ??
     (csvUploadNotifications.length > 0
       ? resolveCsvUploadNotificationTitle(uploadNotificationsTone)
-      : null);
+      : shouldShowBulkFileUploadAction
+        ? 'Bulk file upload available'
+        : null);
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
@@ -284,7 +309,7 @@ export function ImportHeader({
                       </p>
                     ) : null}
                   </div>
-                  {csvUploadNotifications.length > 0 ? (
+                  {csvUploadNotifications.length > 0 || shouldShowBulkFileUploadAction ? (
                     <button
                       type="button"
                       aria-label="Close CSV upload status"
@@ -335,6 +360,36 @@ export function ImportHeader({
                     )}
                   </div>
                 ) : null}
+                {shouldShowBulkFileUploadAction ? (
+                  <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3">
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-primary-9">
+                          {bulkFileUploadAction.pendingReferenceCount === 1
+                            ? '1 file reference from your CSV is ready for bulk upload.'
+                            : `${bulkFileUploadAction.pendingReferenceCount} file references from your CSV are ready for bulk upload.`}
+                        </p>
+                        <p className="text-xs leading-5 text-neutral-500 py-1.5">
+                          Choose the folder that contains the files from your CSV. We&apos;ll match
+                          the file names automatically and report anything we skip.
+                        </p>
+                      </div>
+                      <Button
+                        rounded
+                        type="button"
+                        variant="default"
+                        size="sm"
+                        className="w-full justify-center"
+                        disabled={bulkFileUploadAction.isProcessing}
+                        onClick={() => bulkUploadInputRef.current?.click()}
+                      >
+                        {bulkFileUploadAction.isProcessing
+                          ? 'Matching files from the selected folder...'
+                          : 'Select a folder'}
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
                 <div className="max-h-72 space-y-2 overflow-y-auto secondary-scrollbar pr-1">
                   {csvUploadNotifications.map((notification) => (
                     <CsvUploadNotificationItem key={notification.id} notification={notification} />
@@ -355,6 +410,20 @@ export function ImportHeader({
               void onUploadCsvFile(file);
               event.currentTarget.value = '';
             }
+          }}
+        />
+        <input
+          ref={bulkUploadInputRef}
+          data-bulk-file-upload-input="true"
+          type="file"
+          multiple
+          className="sr-only"
+          onChange={(event) => {
+            const files = Array.from(event.currentTarget.files ?? []);
+            if (files.length > 0 && bulkFileUploadAction) {
+              void bulkFileUploadAction.onUploadFiles(files);
+            }
+            event.currentTarget.value = '';
           }}
         />
         <Button

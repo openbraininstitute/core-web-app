@@ -709,6 +709,7 @@ export function makeFileBundleImportField({
   required = true,
   columnWidth = 200,
   fileConfig,
+  csv,
 }: {
   label: string;
   path: string;
@@ -717,6 +718,7 @@ export function makeFileBundleImportField({
   required?: boolean;
   columnWidth?: number;
   fileConfig: NonNullable<IAdapterFieldDefinition['fileConfig']>;
+  csv?: IAdapterFieldDefinition['csv'];
 }): IAdapterFieldDefinition {
   return {
     label,
@@ -725,7 +727,7 @@ export function makeFileBundleImportField({
     validationPath,
     required,
     inputType: ImportInputType.FileBundle,
-    csv: { include: false },
+    csv: csv ?? { include: false },
     fileConfig,
     columnWidth,
   };

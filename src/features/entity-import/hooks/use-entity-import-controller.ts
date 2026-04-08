@@ -28,6 +28,7 @@ import {
   type IImportRowState,
   type IImportRunState,
   type IImportSessionState,
+  ImportInputType,
   ImportRowResultStatus,
   ImportRunPhase,
   type ISuggestion,
@@ -37,9 +38,10 @@ import {
 } from '@/features/entity-import/core/contracts';
 import { importCsvRows, parseCsvFile } from '@/features/entity-import/core/csv';
 import {
-  getImportFileDisplayValue,
-  toParsedFileValue,
-  validateImportFiles,
+  buildImportFileNameLookup,
+  normalizeImportFileName,
+  resolveImportFileSelection,
+  toFileArray,
 } from '@/features/entity-import/core/file-field';
 import {
   acceptCorrectionDraft,
@@ -114,7 +116,38 @@ type CsvUploadNotification = {
   message: string;
 };
 
+type BulkFileUploadTarget = {
+  rowId: string;
+  rowNumber: number;
+  fieldPath: string;
+  fieldLabel: string;
+  fileName: string;
+  field: IAdapterFieldDefinition;
+};
+
+type BulkFileUploadIssue =
+  | {
+      type: 'missing';
+      rowNumber: number;
+      fieldLabel: string;
+      fileName: string;
+    }
+  | {
+      type: 'ambiguous';
+      rowNumber: number;
+      fieldLabel: string;
+      fileName: string;
+    }
+  | {
+      type: 'invalid';
+      rowNumber: number;
+      fieldLabel: string;
+      fileName: string;
+      reason: string;
+    };
+
 const ENTITY_IMPORT_SUBMIT_QUEUE_CONCURRENCY = 4;
+const CSV_BULK_FILE_UPLOAD_NOTIFICATION_PREFIX = 'csv-bulk-upload';
 
 function buildCsvUploadNotificationMessages({
   parsedCsv,
@@ -168,6 +201,101 @@ function buildCsvUploadNotificationMessages({
         id: `csv-parse-issue-${index}`,
         tone: NotificationTone.Warning,
         message: `${rowLabel}${error.message}`,
+      });
+    });
+  }
+
+  return notifications;
+}
+
+function stripBulkFileUploadNotifications(
+  notifications: Array<CsvUploadNotification>
+): Array<CsvUploadNotification> {
+  return notifications.filter(
+    (notification) => !notification.id.startsWith(CSV_BULK_FILE_UPLOAD_NOTIFICATION_PREFIX)
+  );
+}
+
+function getBulkFileUploadTargets({
+  session,
+  fields,
+}: {
+  session: IImportSessionState;
+  fields: Array<IAdapterFieldDefinition>;
+}): Array<BulkFileUploadTarget> {
+  const bulkFileFields = fields.filter(
+    (field) => field.inputType === ImportInputType.FileBundle && field.csv?.include !== false
+  );
+
+  return session.rows.flatMap((row) =>
+    bulkFileFields.flatMap((field) => {
+      const cell = row.cells[field.path];
+      const fileName = cell?.rawValue.trim() ?? '';
+      if (!cell || !fileName || toFileArray(cell.parsedValue).length > 0) {
+        return [];
+      }
+
+      return [
+        {
+          rowId: row.id,
+          rowNumber: row.rowIndex + 1,
+          fieldPath: field.path,
+          fieldLabel: field.label,
+          fileName,
+          field,
+        },
+      ];
+    })
+  );
+}
+
+function buildBulkFileUploadNotifications({
+  matchedCount,
+  issues,
+}: {
+  matchedCount: number;
+  issues: Array<BulkFileUploadIssue>;
+}): Array<CsvUploadNotification> {
+  const notifications: Array<CsvUploadNotification> = [];
+
+  if (matchedCount > 0) {
+    notifications.push({
+      id: `${CSV_BULK_FILE_UPLOAD_NOTIFICATION_PREFIX}-matched-summary`,
+      tone: NotificationTone.Success,
+      message: `Matched ${matchedCount} CSV file reference${matchedCount === 1 ? '' : 's'} from the selected folder.`,
+    });
+  }
+
+  if (issues.length > 0) {
+    notifications.push({
+      id: `${CSV_BULK_FILE_UPLOAD_NOTIFICATION_PREFIX}-skipped-summary`,
+      tone: NotificationTone.Warning,
+      message: `Skipped ${issues.length} CSV file reference${issues.length === 1 ? '' : 's'} during bulk upload.`,
+    });
+
+    issues.forEach((issue, index) => {
+      if (issue.type === 'missing') {
+        notifications.push({
+          id: `${CSV_BULK_FILE_UPLOAD_NOTIFICATION_PREFIX}-missing-${index}`,
+          tone: NotificationTone.Warning,
+          message: `Row ${issue.rowNumber} ${issue.fieldLabel}: No file named "${issue.fileName}" was found in the selected folder.`,
+        });
+        return;
+      }
+
+      if (issue.type === 'ambiguous') {
+        notifications.push({
+          id: `${CSV_BULK_FILE_UPLOAD_NOTIFICATION_PREFIX}-ambiguous-${index}`,
+          tone: NotificationTone.Warning,
+          message: `Row ${issue.rowNumber} ${issue.fieldLabel}: "${issue.fileName}" matched multiple files in the selected folder, so it was skipped.`,
+        });
+        return;
+      }
+
+      notifications.push({
+        id: `${CSV_BULK_FILE_UPLOAD_NOTIFICATION_PREFIX}-invalid-${index}`,
+        tone: NotificationTone.Warning,
+        message: `Row ${issue.rowNumber} ${issue.fieldLabel}: "${issue.fileName}" was found but skipped. ${issue.reason}`,
       });
     });
   }
@@ -494,6 +622,10 @@ export function useEntityImportController<TPayload, TResult>({
   const [csvUploadNotifications, setCsvUploadNotifications] = useState<
     Array<CsvUploadNotification>
   >([]);
+  const [bulkFileUploadPrompt, setBulkFileUploadPrompt] = useState<{
+    pendingReferenceCount: number;
+  } | null>(null);
+  const [isBulkFileUploadProcessing, setIsBulkFileUploadProcessing] = useState(false);
   const csvRowValidationPendingCountsRef = useRef<Map<string, number>>(new Map());
 
   const resetCsvRowValidationProgress = useCallback(() => {
@@ -503,6 +635,7 @@ export function useEntityImportController<TPayload, TResult>({
 
   const onDismissCsvUploadNotifications = useCallback(() => {
     setCsvUploadNotifications([]);
+    setBulkFileUploadPrompt(null);
   }, []);
 
   const beginCsvRowValidationProgress = useCallback((targets: Array<{ rowId: string }>) => {
@@ -1243,21 +1376,24 @@ export function useEntityImportController<TPayload, TResult>({
       displayValue?: string | null;
     }) => {
       const field = findField(adapter.fields, fieldPath);
-      const validationError = validateImportFiles({ field, files });
-      if (validationError) {
+      const nextFileSelection = resolveImportFileSelection({
+        field,
+        files,
+        displayValue,
+      });
+      if (!nextFileSelection.ok) {
         commit(
           (current) =>
             pushNotification(current, {
               id: `notification-${Date.now()}`,
               tone: NotificationTone.Error,
-              message: validationError,
+              message: nextFileSelection.error,
             }),
           { validate: false }
         );
         return;
       }
 
-      const nextRawValue = displayValue ?? getImportFileDisplayValue(files);
       clearValidatorPreview();
       resetImportRun();
       commit(
@@ -1265,9 +1401,9 @@ export function useEntityImportController<TPayload, TResult>({
           setCellValue(current, {
             rowId,
             fieldPath,
-            rawValue: nextRawValue,
-            displayValue: nextRawValue || null,
-            parsedValue: toParsedFileValue(files, field),
+            rawValue: nextFileSelection.value.rawValue,
+            displayValue: nextFileSelection.value.displayValue,
+            parsedValue: nextFileSelection.value.parsedValue,
           }),
         { rowIds: [rowId] }
       );
@@ -1435,6 +1571,8 @@ export function useEntityImportController<TPayload, TResult>({
         resetImportRun();
         setCsvUploadPhase(CsvUploadPhase.Parsing);
         setCsvUploadNotifications([]);
+        setBulkFileUploadPrompt(null);
+        setIsBulkFileUploadProcessing(false);
         resetCsvRowValidationProgress();
         clearSuggestions();
 
@@ -1515,6 +1653,19 @@ export function useEntityImportController<TPayload, TResult>({
         setCsvUploadPhase(CsvUploadPhase.Idle);
         sessionRef.current = pendingSession;
         setSession(pendingSession);
+        const bulkFileUploadTargets = adapter.supportBulkFileUpload
+          ? getBulkFileUploadTargets({
+              session: pendingSession,
+              fields: adapter.fields,
+            })
+          : [];
+        setBulkFileUploadPrompt(
+          bulkFileUploadTargets.length > 0
+            ? {
+                pendingReferenceCount: bulkFileUploadTargets.length,
+              }
+            : null
+        );
 
         backgroundHydrationTargets.forEach((target) => {
           void backgroundQueueLimitRef.current(() =>
@@ -1534,6 +1685,8 @@ export function useEntityImportController<TPayload, TResult>({
       } catch (error) {
         setCsvUploadPhase(CsvUploadPhase.Idle);
         resetCsvRowValidationProgress();
+        setBulkFileUploadPrompt(null);
+        setIsBulkFileUploadProcessing(false);
         setCsvUploadNotifications([
           {
             id: 'csv-upload-error',
@@ -1546,6 +1699,7 @@ export function useEntityImportController<TPayload, TResult>({
     },
     [
       adapter.fields,
+      adapter.supportBulkFileUpload,
       beginCsvRowValidationProgress,
       clearValidatorPreview,
       clearSuggestions,
@@ -1556,6 +1710,117 @@ export function useEntityImportController<TPayload, TResult>({
       evaluateCellRemoteConstraint,
       validate,
     ]
+  );
+
+  const onHandleBulkFileUpload = useCallback(
+    async (files: Array<File>) => {
+      if (!adapter.supportBulkFileUpload || files.length === 0) {
+        return;
+      }
+
+      const currentSession = sessionRef.current;
+      const bulkFileUploadTargets = getBulkFileUploadTargets({
+        session: currentSession,
+        fields: adapter.fields,
+      });
+
+      if (bulkFileUploadTargets.length === 0) {
+        setBulkFileUploadPrompt(null);
+        return;
+      }
+
+      setIsBulkFileUploadProcessing(true);
+      setCsvUploadNotifications((current) => stripBulkFileUploadNotifications(current));
+
+      try {
+        const fileLookup = buildImportFileNameLookup(files);
+        const issues: Array<BulkFileUploadIssue> = [];
+        let matchedCount = 0;
+        let nextSession = currentSession;
+        const affectedRowIds = new Set<string>();
+
+        bulkFileUploadTargets.forEach((target) => {
+          const matchingFiles = fileLookup.get(normalizeImportFileName(target.fileName)) ?? [];
+
+          if (matchingFiles.length === 0) {
+            issues.push({
+              type: 'missing',
+              rowNumber: target.rowNumber,
+              fieldLabel: target.fieldLabel,
+              fileName: target.fileName,
+            });
+            return;
+          }
+
+          if (matchingFiles.length > 1) {
+            issues.push({
+              type: 'ambiguous',
+              rowNumber: target.rowNumber,
+              fieldLabel: target.fieldLabel,
+              fileName: target.fileName,
+            });
+            return;
+          }
+
+          const resolvedFileSelection = resolveImportFileSelection({
+            field: target.field,
+            files: [matchingFiles[0]],
+          });
+
+          if (!resolvedFileSelection.ok) {
+            issues.push({
+              type: 'invalid',
+              rowNumber: target.rowNumber,
+              fieldLabel: target.fieldLabel,
+              fileName: target.fileName,
+              reason: resolvedFileSelection.error,
+            });
+            return;
+          }
+
+          matchedCount += 1;
+          affectedRowIds.add(target.rowId);
+          nextSession = setCellValue(nextSession, {
+            rowId: target.rowId,
+            fieldPath: target.fieldPath,
+            rawValue: resolvedFileSelection.value.rawValue,
+            displayValue: resolvedFileSelection.value.displayValue,
+            parsedValue: resolvedFileSelection.value.parsedValue,
+          });
+        });
+
+        if (affectedRowIds.size > 0) {
+          clearValidatorPreview();
+          resetImportRun();
+          commit(() => nextSession, {
+            rowIds: Array.from(affectedRowIds),
+          });
+        }
+
+        setCsvUploadNotifications((current) => [
+          ...stripBulkFileUploadNotifications(current),
+          ...buildBulkFileUploadNotifications({
+            matchedCount,
+            issues,
+          }),
+        ]);
+
+        const remainingTargets = getBulkFileUploadTargets({
+          session: nextSession,
+          fields: adapter.fields,
+        });
+        setBulkFileUploadPrompt(
+          remainingTargets.length > 0
+            ? {
+                pendingReferenceCount: remainingTargets.length,
+              }
+            : null
+        );
+      } finally {
+        setIsBulkFileUploadProcessing(false);
+      }
+    },
+    [adapter.fields, adapter.supportBulkFileUpload, clearValidatorPreview, commit, resetImportRun]
   );
 
   const onDownloadCsvTemplate = useCallback(() => {
@@ -1723,6 +1988,25 @@ export function useEntityImportController<TPayload, TResult>({
     [session.rows, adapter.fields]
   );
 
+  const bulkFileUploadAction = useMemo(
+    () =>
+      !csvRowValidationProgress.active &&
+      (bulkFileUploadPrompt !== null || isBulkFileUploadProcessing)
+        ? {
+            visible: true,
+            isProcessing: isBulkFileUploadProcessing,
+            pendingReferenceCount: bulkFileUploadPrompt?.pendingReferenceCount ?? 0,
+            onUploadFiles: onHandleBulkFileUpload,
+          }
+        : null,
+    [
+      bulkFileUploadPrompt,
+      csvRowValidationProgress.active,
+      isBulkFileUploadProcessing,
+      onHandleBulkFileUpload,
+    ]
+  );
+
   return {
     session,
     actions,
@@ -1731,6 +2015,7 @@ export function useEntityImportController<TPayload, TResult>({
     csvUploadPhase,
     csvRowValidationProgress,
     csvUploadNotifications,
+    bulkFileUploadAction,
     validatorPreview,
     validatorSuggestions,
     fieldStatusMap,

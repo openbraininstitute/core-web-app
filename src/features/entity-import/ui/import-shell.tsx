@@ -2,7 +2,11 @@
 
 import { useCallback, useState } from 'react';
 
-import { ImportHeader, type TCsvUploadPhase } from '@/features/entity-import/ui/elements/header';
+import {
+  type IImportHeaderBulkFileUploadAction,
+  ImportHeader,
+  type TCsvUploadPhase,
+} from '@/features/entity-import/ui/elements/header';
 import { ImportTable } from '@/features/entity-import/ui/import-table';
 import { NotificationStack } from '@/features/entity-import/ui/notification-stack';
 import { ValidatorPanel } from '@/features/entity-import/ui/validator-panel';
@@ -38,6 +42,7 @@ interface IImportShellProps<TPayload, TResult> {
     tone: IImportSessionState['notifications'][number]['tone'];
     message: string;
   }>;
+  bulkFileUploadAction?: IImportHeaderBulkFileUploadAction | null;
   validatorSuggestions: IValidatorSuggestionState;
   fieldStatusMap: Record<string, TValidatorFieldStatus>;
   rowsSummaryStatus: TValidatorFieldStatus;
@@ -61,6 +66,7 @@ export function ImportShell<TPayload, TResult>({
   csvUploadPhase,
   csvRowValidationProgress,
   csvUploadNotifications,
+  bulkFileUploadAction,
   validatorSuggestions,
   fieldStatusMap,
   rowsSummaryStatus,
@@ -103,6 +109,7 @@ export function ImportShell<TPayload, TResult>({
                 csvUploadPhase={csvUploadPhase}
                 csvRowValidationProgress={csvRowValidationProgress}
                 csvUploadNotifications={csvUploadNotifications}
+                bulkFileUploadAction={bulkFileUploadAction}
                 onClose={onClose}
                 onDismissCsvUploadNotifications={onDismissCsvUploadNotifications}
                 onDownloadCsvTemplate={onDownloadCsvTemplate}

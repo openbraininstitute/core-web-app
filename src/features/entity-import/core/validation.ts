@@ -3,10 +3,12 @@ import {
   DependencyState,
   type IImportRowState,
   type IImportSessionState,
+  ImportInputType,
   RemoteValidationStatus,
   RowStatus,
   type TFlatImportValues,
 } from '@/features/entity-import/core/contracts';
+import { toFileArray } from '@/features/entity-import/core/file-field';
 import { replaceSessionRows } from '@/features/entity-import/core/session';
 import {
   fieldHasSuggestionResolution,
@@ -42,6 +44,29 @@ function maybeReuseValidatedCell(
   }
 
   return candidate;
+}
+
+function getMissingRequiredFileIssues({
+  field,
+  cell,
+  hasSchemaIssues,
+}: {
+  field: IAdapterFieldDefinition;
+  cell: IImportRowState['cells'][string];
+  hasSchemaIssues: boolean;
+}): Array<string> {
+  if (
+    field.inputType !== ImportInputType.FileBundle ||
+    !field.required ||
+    hasSchemaIssues ||
+    toFileArray(cell.parsedValue).length > 0
+  ) {
+    return [];
+  }
+
+  return cell.rawValue.trim()
+    ? [`No valid file has been selected for ${field.label}.`]
+    : [`${field.label} is required.`];
 }
 
 function validateRow<TPayload>({
@@ -106,12 +131,18 @@ function validateRow<TPayload>({
       }
 
       const issues = issueMap.get(field.path) ?? [];
-      const localIssues =
-        field.getValidationIssues?.({
+      const localIssues = [
+        ...(field.getValidationIssues?.({
           cell,
           row,
           values: rowValues,
-        }) ?? [];
+        }) ?? []),
+        ...getMissingRequiredFileIssues({
+          field,
+          cell,
+          hasSchemaIssues: issues.length > 0,
+        }),
+      ];
       const remoteIssues =
         cell.remoteState.status === RemoteValidationStatus.Invalid && cell.remoteState.message
           ? [cell.remoteState.message]

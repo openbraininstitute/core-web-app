@@ -120,6 +120,26 @@ export function toFileArray(value: unknown): Array<File> {
   return [];
 }
 
+export function normalizeImportFileName(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+export function buildImportFileNameLookup(files: Array<File>): Map<string, Array<File>> {
+  const lookup = new Map<string, Array<File>>();
+
+  files.forEach((file) => {
+    const normalizedName = normalizeImportFileName(file.name);
+    if (!normalizedName) {
+      return;
+    }
+
+    const matchingFiles = lookup.get(normalizedName) ?? [];
+    lookup.set(normalizedName, [...matchingFiles, file]);
+  });
+
+  return lookup;
+}
+
 export function toParsedFileValue(
   files: Array<File>,
   field?: IAdapterFieldDefinition
@@ -130,6 +150,46 @@ export function toParsedFileValue(
   }
 
   return maxFiles > 1 ? files : (files[0] ?? null);
+}
+
+export function resolveImportFileSelection({
+  field,
+  files,
+  displayValue,
+}: {
+  field?: IAdapterFieldDefinition;
+  files: Array<File>;
+  displayValue?: string | null;
+}):
+  | {
+      ok: true;
+      value: {
+        rawValue: string;
+        displayValue: string | null;
+        parsedValue: File | Array<File> | null;
+      };
+    }
+  | {
+      ok: false;
+      error: string;
+    } {
+  const validationError = validateImportFiles({ field, files });
+  if (validationError) {
+    return {
+      ok: false,
+      error: validationError,
+    };
+  }
+
+  const nextDisplayValue = displayValue ?? getImportFileDisplayValue(files);
+  return {
+    ok: true,
+    value: {
+      rawValue: nextDisplayValue,
+      displayValue: nextDisplayValue || null,
+      parsedValue: toParsedFileValue(files, field),
+    },
+  };
 }
 
 export function validateImportFiles({

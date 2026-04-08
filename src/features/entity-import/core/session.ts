@@ -107,11 +107,12 @@ function createCellState(
     : rawValue
       ? rawValue
       : null;
+  const fallbackParsedValue = field.inputType === ImportInputType.FileBundle ? null : rawValue;
   const parsedCellValue = isHydratedValue
     ? 'parsedValue' in value
       ? value.parsedValue
-      : rawValue
-    : rawValue;
+      : fallbackParsedValue
+    : fallbackParsedValue;
   const seededRemoteSuggestion = isHydratedValue
     ? createSeededRemoteSuggestion({
         field,

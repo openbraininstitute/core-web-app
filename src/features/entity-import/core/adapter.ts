@@ -315,6 +315,12 @@ export interface IEntityImportAdapter<TPayload = unknown, TResult = unknown> {
   /** Configuration for the downloadable import guide (entity type + file name). */
   templateGuide?: IEntityImportTemplateGuideConfig;
 
+  /**
+   * When true, CSV uploads may offer an optional bulk file-upload helper for
+   * `FileBundle` fields that are also included in the CSV template.
+   */
+  supportBulkFileUpload?: boolean;
+
   /** Ordered list of field definitions that define the import table columns. */
   fields: Array<IAdapterFieldDefinition>;
 

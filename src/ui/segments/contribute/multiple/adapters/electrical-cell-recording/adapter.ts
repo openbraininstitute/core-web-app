@@ -252,6 +252,7 @@ export function createElectricalCellRecordingImportAdapter({
       path: 'asset',
       submissionPath: 'asset',
       validationPath: 'asset',
+      csv: { include: true },
       fileConfig: {
         accept: [AssetContentType.nwb],
         allowedExtensions: ['.nwb'],
@@ -266,6 +267,7 @@ export function createElectricalCellRecordingImportAdapter({
     title: 'Electrical Cell Recording Import',
     submitLabel: 'Import',
     templateFileName: 'Electrical Cell Recording csv template and guide',
+    supportBulkFileUpload: true,
     templateGuide: {
       entityType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
       guideFileName: 'electrical-cell-recording-import-guide.md',
