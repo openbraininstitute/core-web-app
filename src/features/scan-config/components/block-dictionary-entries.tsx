@@ -340,7 +340,7 @@ export default function BlockDictionaryEntries({
                   <TooltipContent
                     avoidCollisions
                     hideWhenDetached
-                    align="center"
+                    align="end"
                     side="right"
                     className={cn(
                       'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
@@ -396,7 +396,7 @@ const BlockDictionaryEntryTooltip = memo(
     return (
       <div className="flex flex-col gap-2">
         <div className="font-bold">{blockType.title}</div>
-        <div>{blockType.description}</div>
+        <div className="max-w-2xs wrap-break-word">{blockType.description}</div>
       </div>
     );
   },
