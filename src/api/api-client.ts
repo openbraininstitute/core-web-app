@@ -26,7 +26,7 @@ type RequestOptions = {
     string,
     string | number | string[] | number[] | null | undefined | boolean | Date | (string | null)[]
   >;
-  body?: unknown;
+  body?: any;
   signal?: AbortSignal;
   cache?: RequestCache;
   next?: NextFetchRequestConfig;
@@ -48,7 +48,7 @@ type ApiClientOptions = {
   cache?: CacheConfiguration; // Add cache configuration to options
 };
 
-export type ErrorCause<T extends Record<string, unknown>> = {
+export type ErrorCause<T extends Record<string, any>> = {
   status: number;
   message: string;
   data: T;
@@ -99,6 +99,7 @@ class ApiClient {
   private shouldUseCache(url: string, cacheConfig?: CacheConfiguration): boolean {
     if (!cacheConfig?.enabled) return false;
 
+    // check if url is in the exclude list
     if (cacheConfig.excludeUrls) {
       for (const pattern of cacheConfig.excludeUrls) {
         if (pattern.test(url)) return false;
@@ -134,6 +135,7 @@ class ApiClient {
         return { valid: false, response: null };
       }
 
+      // check if the cache has expired
       const cacheDate = cachedResponse.headers.get('x-cache-timestamp');
 
       if (!cacheDate) {
@@ -172,8 +174,10 @@ class ApiClient {
     try {
       const cache = await caches.open(cacheConfig.cacheName);
 
+      // Clone the response before using it
       const responseToCache = response.clone();
 
+      // Create a new response with our custom timestamp header
       const headers = new Headers(responseToCache.headers);
       headers.set('x-cache-timestamp', Date.now().toString());
 
@@ -214,9 +218,7 @@ class ApiClient {
 
     Object.entries(omitBy(options.queryParams, isNil) || {}).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        for (const v of value) {
-          url.searchParams.append(`${key}`, `${v}`);
-        }
+        value.forEach((v) => void url.searchParams.append(`${key}`, `${v}`));
       } else {
         url.searchParams.append(key, String(value));
       }
@@ -224,12 +226,14 @@ class ApiClient {
 
     const urlString = url.toString();
 
+    // determine if caching should be used for this request
     const requestCacheConfig = config.cache ?? this._cacheConfig;
     const useCache =
       method.toLowerCase() === 'get' &&
       this.shouldUseCache(urlString, requestCacheConfig) &&
       !config.asRawResponse;
 
+    // get from cache first for "get" requests
     if (useCache && requestCacheConfig) {
       const { valid, response: cachedResponse } = await this.checkCache(
         urlString,
@@ -254,6 +258,7 @@ class ApiClient {
         return (await cachedResponse.arrayBuffer()) as unknown as T;
       }
 
+      // if cache is invalid or expired, continue with the request
       if (cachedResponse) {
         log('log', `Cache expired for ${urlString}, fetching fresh data`);
       }
@@ -301,6 +306,7 @@ class ApiClient {
         return runRequest();
       }
 
+      // store successful GET responses in cache if caching is enabled
       if (useCache && response.ok && requestCacheConfig) {
         await this.storeInCache(urlString, response, requestCacheConfig);
       }
@@ -308,7 +314,7 @@ class ApiClient {
       const contentType = response.headers.get('Content-Type') || '';
       let responseData: T;
       if (config.asRawResponse) {
-        return response as unknown as T;
+        responseData = response as unknown as T;
       } else if (contentType.includes('application/json')) {
         responseData = await response.json();
       } else if (contentType.includes('text')) {
@@ -331,9 +337,7 @@ class ApiClient {
         log('error', 'Request failed', {
           url: url.toString(),
           status: response.status,
-          message:
-            (responseData as Record<string, unknown>).message ||
-            `Request failed with status ${response.status}`,
+          message: (responseData as any).message || `Request failed with status ${response.status}`,
           data: responseData,
         });
         throw await parseApiError(request.url, response.status, responseData);
@@ -344,8 +348,8 @@ class ApiClient {
 
     try {
       return runRequest();
-    } catch (error: unknown) {
-      if (error instanceof Error && error.name === 'AbortError') {
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
         onAbort?.();
         throw new Error(`Request was aborted`);
       }
@@ -390,9 +394,11 @@ class ApiClient {
       const cache = await caches.open(this._cacheConfig.cacheName);
 
       if (url) {
+        // Clear specific URL
         const fullUrl = new URL(url, this._rootUrl).toString();
         await cache.delete(fullUrl);
       } else {
+        // Clear all cache
         await caches.delete(this._cacheConfig.cacheName);
       }
 
