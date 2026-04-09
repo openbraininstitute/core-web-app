@@ -18,12 +18,12 @@ export function IconSpinner({ className, style, size }: Props) {
         '--custom-icon-size': size ?? '1.5em',
         ...style,
       }}
-      viewBox="0 0 24 24"
-      fill="currentColor"
+      viewBox="-12 -12 24 24"
+      stroke="currentColor"
       xmlns="http://www.w3.org/2000/svg"
     >
       <title>spinner</title>
-      <path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z" />
+      <path d="M0,-8A8,8 0 0,0 -8,0" strokeWidth="1" strokeLinecap="round" fill="none" />
     </svg>
   );
 }

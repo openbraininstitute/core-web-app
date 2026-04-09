@@ -11,7 +11,11 @@ export function LoadingNeuronSpinner({ className }: LoadingNeuronSpinnerProps) {
   return (
     <div className={cn(className, styles.loadingNeuronSpinner)}>
       <IconSpinner />
-      <div>Loading Neuron...</div>
+      <div>
+        Loading
+        <br />
+        Neuron
+      </div>
     </div>
   );
 }

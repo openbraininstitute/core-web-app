@@ -1,43 +1,30 @@
-.loadingNeuronSpinner {  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  font: inherit;
-  font-size: var(--text-xl);
-  font-weight: normal;
-  border: none;
-  border-radius: 1.5em;
-  background: none;
-  background-color: #aaa;
-  color: #333;
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 1em;
-  padding: 0.5em 0 0 0;
-  cursor: pointer;
-  overflow: hidden;
+div.loadingNeuronSpinner {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    font: inherit;
+    font-size: 2em;
+    font-weight: normal;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    background-color: #000;
 
-  > div {
-    margin: 0;
-    padding: 0;
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-  }
-
-  @container (width < 800px) {
-    & {
-      flex-direction: row;
-      padding: 0 0 0 0.5em;
+    >div {
+        margin: 0;
+        padding: 0;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
     }
 
-    > div {
-      writing-mode: unset;
-      text-orientation: unset;
+    >svg {
+        font-size: 600%;
     }
-  }
-
 }

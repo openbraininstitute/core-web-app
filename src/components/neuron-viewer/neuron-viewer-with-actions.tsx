@@ -55,7 +55,7 @@ export function NeuronViewerContainer({
   }
   if (loading)
     return (
-      <div className={cn(styles.viewerContainer, styles.collapsed)}>
+      <div className={styles.viewerContainer}>
         <LoadingNeuronSpinner />
       </div>
     );
