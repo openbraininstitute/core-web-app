@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 'use client';
 
 import { WarningOutlined } from '@ant-design/icons';
@@ -14,7 +12,11 @@ import ApiError from '@/api/error';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
-import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import {
+  useQueryExtendedEntityType,
+  useQueryExtendedEntityTypeFacets,
+  useQueryParameters,
+} from '@/ui/hooks/use-query-extended-entity-type';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
@@ -52,7 +54,7 @@ import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { Facets, Pagination } from '@/api/entitycore/types/shared/response';
+import type { Pagination, TFacets } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 
 const CircuitTable = dynamic(() => import('@/ui/segments/explore/circuit/table'), { ssr: false });
@@ -134,13 +136,34 @@ export function BrowseCircuit({
     queryKeyHash,
     isLoading: loadingHierarchy,
     dataSource: hierarchyDataSource,
-    facets: hierarchyFacets,
     pagination: hierarchyPagination,
   } = useHierarchy({
     scope,
     dataKey,
     view,
   });
+  const scopeFilter = getWorkspaceScopeFilters(scope, {
+    virtualLabId,
+    projectId,
+  });
+
+  const queryParameters = useQueryParameters(
+    {
+      context: {
+        key: dataKey,
+        workspaceScope: scope,
+        extendedEntityType: dataType as TExtendedEntitiesTypeDict,
+      },
+      workspace: { virtualLabId, projectId },
+    },
+    { requireBrainRegion, defaultBrainRegion }
+  );
+
+  const queryFilters = {
+    ...queryParameters,
+    ...extraQueryParams,
+    ...scopeFilter,
+  };
 
   const {
     data,
@@ -156,25 +179,37 @@ export function BrowseCircuit({
       extendedEntityType: ExtendedEntitiesTypeDict.Circuit,
     },
     workspace: { virtualLabId, projectId },
-    queryFn: async ({ queryKey }) => {
-      const [{ workspace, queryParameters }] = queryKey;
-      const outgoingFilters = {
-        ...queryParameters,
-        ...extraQueryParams,
-        ...getWorkspaceScopeFilters(scope!, { virtualLabId, projectId }),
-      };
+    queryFn: async () => {
       return await Circuit.api.query.list?.({
-        withFacets: true,
-        filters: outgoingFilters,
-        context: workspace,
+        withFacets: false,
+        filters: queryFilters,
+        context: { virtualLabId, projectId },
       });
     },
     requireBrainRegion,
     defaultBrainRegion,
     useKeepPreviousData: true,
     extraQueryParams,
-    enabled: ({ queryKey }) => {
-      const [{ queryParameters }] = queryKey;
+    enabled: () => {
+      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+        return false;
+      return true;
+    },
+  });
+
+  const {
+    data: facetsResults,
+    error: facetsError,
+    isPending: facetsLoading,
+  } = useQueryExtendedEntityTypeFacets({
+    dataKey,
+    section,
+    scope,
+    dataType,
+    workspace: { virtualLabId, projectId },
+    queryFilters,
+    extraQueryKey: { view },
+    enabled: () => {
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
         return false;
       return true;
@@ -183,17 +218,15 @@ export function BrowseCircuit({
 
   let dataSource: Array<ICircuit> = [];
 
-  let facets: Facets | undefined;
+  const facets: TFacets | undefined = facetsResults;
   let pagination: Pagination | undefined;
 
   if (view === CircuitRepresentationView.Flat) {
     dataSource = data?.data ?? [];
-    facets = data?.facets;
     pagination = data?.pagination;
   } else if (view === CircuitRepresentationView.Hierarchy) {
     dataSource = hierarchyDataSource;
     pagination = hierarchyPagination;
-    facets = hierarchyFacets;
   }
 
   const onCellClick = (_: string, record: EntityCoreIdentifiableNamed) => {
@@ -334,7 +367,11 @@ export function BrowseCircuit({
             workspace={{ virtualLabId, projectId }}
             dataKey={dataKey}
             columns={columns}
-            facets={facets}
+            facets={{
+              data: facets,
+              error: facetsError,
+              loading: facetsLoading,
+            }}
             onCellClick={onCellClick}
             resultPagination={{
               pagination: pagination!,

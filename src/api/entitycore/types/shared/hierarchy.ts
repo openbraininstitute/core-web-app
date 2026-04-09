@@ -1,4 +1,4 @@
-import { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 
 export interface HierarchyNode {
   id: string;

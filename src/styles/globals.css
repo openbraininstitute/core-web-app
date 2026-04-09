@@ -289,6 +289,7 @@
       /* @apply scrollbar-size; */
       /* ! TOFIX */
       width: 5px;
+      height: 5px;
       margin-right: 5px;
       border-radius: 5px;
     }
@@ -304,6 +305,10 @@
 
     &::-webkit-scrollbar-thumb:hover {
       @apply bg-primary-8;
+    }
+
+    &::-webkit-scrollbar-corner {
+      background: transparent;
     }
   }
 }
@@ -479,3 +484,98 @@ dialog {
   padding: 0;
 }
 
+/* Shiki syntax highlighting - explicit class-based dark mode */
+.shiki span {
+  color: var(--shiki-light);
+  background-color: transparent !important;
+}
+
+.dark .shiki span {
+  color: var(--shiki-dark);
+  background-color: transparent !important;
+}
+
+/* Tutorial player: smooth crossfade between videos */
+::view-transition-old(tutorial-player),
+::view-transition-new(tutorial-player) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Slide up enter — new content rises into view */
+.vt-slide-up-enter::view-transition-new(*) {
+  animation: vt-enter-slide-up 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.vt-slide-up-enter::view-transition-old(*) {
+  animation: none;
+  display: none;
+}
+
+/* Slide down exit — old content drops away */
+.vt-slide-down-exit::view-transition-old(*) {
+  animation: vt-exit-slide-down 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.vt-slide-down-exit::view-transition-new(*) {
+  animation: none;
+  display: none;
+}
+
+/* Fade exit — old content fades out */
+.vt-fade-exit::view-transition-old(*) {
+  animation: vt-exit-fade 200ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.vt-fade-exit::view-transition-new(*) {
+  animation: none;
+  display: none;
+}
+
+/* Card crossfade: gentle fade for card grids */
+::view-transition-old(card-*) {
+  animation: vt-exit-fade 250ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+::view-transition-new(card-*) {
+  animation: vt-enter-slide-up 300ms cubic-bezier(0.16, 1, 0.3, 1) 80ms forwards;
+}
+
+@keyframes vt-enter-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vt-exit-slide-down {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes vt-exit-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0ms !important;
+  }
+}

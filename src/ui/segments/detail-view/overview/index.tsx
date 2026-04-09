@@ -3,6 +3,13 @@ import { notFound } from 'next/navigation';
 
 import { getMEModel } from '@/api/entitycore/queries';
 import {
+  EntityTypeDict,
+  type ICellMorphology,
+  type IElectricalCellRecording,
+  type ISingleNeuronSynaptome,
+} from '@/api/entitycore/types';
+import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
@@ -42,11 +49,6 @@ import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-p
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
 import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
 
-import type {
-  ICellMorphology,
-  IElectricalCellRecording,
-  ISingleNeuronSynaptome,
-} from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
@@ -107,6 +109,41 @@ export default async function Overview({
 
     (entity as ISingleNeuronSynaptome).me_model = meModel;
   }
+  // TODO: new simulation and extraction campaigns should be handled here
+  if (entity.type === EntityTypeDict.TaskConfig) {
+    if (
+      'task_config_type' in entity &&
+      entity.task_config_type === TaskConfigType.CircuitExtractionCampaign
+    ) {
+      const { data: extractionConfig, error } = await tryCatch(
+        resolveExtractionByCampaignId({ id: entity.id, context: context })
+      );
+
+      if (error || !extractionConfig.circuitId) {
+        notFound();
+      }
+
+      return (
+        <>
+          <ScanConfiguration
+            entityId={extractionConfig.circuitId}
+            entityType={extendedType}
+            virtualLabId={context.virtualLabId}
+            projectId={context.projectId}
+            initialCampaignId={extractionConfig.campaign.id}
+            initialConfig={extractionConfig.config?.form}
+            readOnly={!isWorkflow}
+            defaultTab={{
+              __activity: ScanConfigActivity.Extract,
+              id: ExtractScanConfigTabs.configuration,
+            }}
+            activity={ScanConfigActivity.Extract}
+          />
+          <DownloadPanel />
+        </>
+      );
+    }
+  }
 
   if (
     extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
@@ -147,6 +184,7 @@ export default async function Overview({
       />
     );
   }
+
   if (extendedType === ExtendedEntitiesTypeDict.IonChannelModelSimulation) {
     let config: TResolvedIonChannelModelSimulationByCampaign;
     try {
@@ -179,6 +217,8 @@ export default async function Overview({
       />
     );
   }
+  // FIXME: keeping this for backward compatibility with old extraction campaigns
+  // TODO: remove this after all old extraction campaigns are migrated to new ones
   if (extendedType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
     const { data: extractionConfig, error } = await tryCatch(
       resolveExtractionByCampaignId({ id: entity.id, context: context })
@@ -208,7 +248,6 @@ export default async function Overview({
       </>
     );
   }
-
   if (extendedType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
     const { data } = await tryCatch(
       resolveIonChannelModelingCampaignConfig({

@@ -61,8 +61,6 @@ class ApiClient {
 
   private _token?: string;
 
-  private _timeout?: number;
-
   private _attempts?: number;
 
   private _backoff?: BackoffStrategy;
@@ -84,7 +82,6 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
     this._token = token;
-    this._timeout = config.timeout;
     this._attempts = config.attempts;
     this._backoff = config.backoff;
     this._retryOnError = config.retryOnError;
@@ -221,7 +218,7 @@ class ApiClient {
 
     Object.entries(omitBy(options.queryParams, isNil) || {}).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        value.forEach((v) => url.searchParams.append(`${key}`, `${v}`));
+        value.forEach((v) => void url.searchParams.append(`${key}`, `${v}`));
       } else {
         url.searchParams.append(key, String(value));
       }

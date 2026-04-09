@@ -1,11 +1,12 @@
 import z from 'zod';
 
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+
 import type {
   ExperimentalNeuronDensityFilter,
   IExperimentalNeuronDensity,
 } from '@/api/entitycore/types/entities/neuron-density';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
 const baseUri = '/experimental-neuron-density';

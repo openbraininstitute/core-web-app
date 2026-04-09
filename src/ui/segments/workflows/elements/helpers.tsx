@@ -28,6 +28,7 @@ export const EntityGroupDict = {
 export type TEntityGroupValue = keyof typeof EntityGroupDict;
 
 type TEntityTypeProperties = {
+  order?: number;
   label?: string;
   disabled: boolean;
   sourceType?: TExtendedEntitiesTypeDict;
@@ -40,6 +41,7 @@ type EntityTypeOption = {
   value: TExtendedEntitiesTypeDict | undefined;
   label: string;
   disabled: boolean;
+  order?: number;
 };
 
 type EntityTypeGroupedOptions = {
@@ -79,6 +81,7 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+        order: 3,
       },
       simulate: {
         label: 'Ion channel (beta)',
@@ -86,6 +89,7 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
         sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
         type: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
         requiredFeatures: [ExtendedEntitiesTypeDict.IonChannelModelSimulation],
+        order: 3,
       },
     },
   },
@@ -124,10 +128,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.Memodel,
+        order: 1,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+        order: 1,
       },
     },
   },
@@ -138,10 +144,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+        order: 2,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+        order: 2,
       },
     },
   },
@@ -152,10 +160,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: true,
         type: ExtendedEntitiesTypeDict.MemodelCircuit,
+        order: 4,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+        order: 4,
       },
     },
   },
@@ -166,10 +176,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: true,
         type: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+        order: 5,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+        order: 5,
       },
     },
   },
@@ -180,10 +192,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: true,
         type: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+        order: 6,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+        order: 6,
       },
     },
   },
@@ -194,10 +208,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       build: {
         disabled: true,
         type: ExtendedEntitiesTypeDict.SmallMicrocircuit,
+        order: 7,
       },
       simulate: {
         disabled: false,
         type: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+        order: 7,
       },
     },
   },
@@ -295,7 +311,10 @@ export const extractActivitiesConfiguration: Array<TExtractWorkflowConfig> = [
 ] as const;
 
 type ActivityConfigType =
-  | { configType: 'buildSimulate'; config: Partial<TBuildSimulateWorkflowConfig> }
+  | {
+      configType: 'buildSimulate';
+      config: Partial<TBuildSimulateWorkflowConfig>;
+    }
   | { configType: 'extract'; config: Array<TExtractWorkflowConfig> }
   | { configType: 'none'; config: null };
 
@@ -327,7 +346,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
   {
     label: 'Extract',
     value: WorkflowActivityDictValue.extract,
-    disabled: true,
+    disabled: false,
     name: 'Extraction',
     configType: 'extract',
     config: extractNewConfiguration,
@@ -512,10 +531,14 @@ export function getAllOptionsOrdered(
           label: propertyConfig?.label ?? config.label,
           value: propertyConfig?.type,
           disabled: disabled || !satisfiesFeatureRequirements,
+          order: propertyConfig?.order ?? Number.MAX_SAFE_INTEGER,
         };
       });
 
-    return sortBy(options, ['disabled', 'group']);
+    return sortBy(options, [
+      (o) => (o.disabled ? 1 : 0),
+      (o) => o.order ?? Number.MAX_SAFE_INTEGER,
+    ]);
   }
 
   return [];

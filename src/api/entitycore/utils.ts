@@ -1,6 +1,6 @@
 import { find, snakeCase } from 'es-toolkit/compat';
 
-import { authApiClient } from '@/api/apiClient';
+import { authApiClient } from '@/api/api-client';
 import { config as appConfig } from '@/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -40,7 +40,10 @@ export function getAssetElement(
   if ('filter' in config) {
     return find(config.assets, config.filter);
   }
-  return find(config.assets, { path: config.path, content_type: config.type });
+  return config.assets?.find((o) => {
+    if (o.path === config.path && o.content_type === config.type) return true;
+    return false;
+  });
 }
 
 export const convertEntitySlugToExtendedType = ({

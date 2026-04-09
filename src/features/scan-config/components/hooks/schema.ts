@@ -1,6 +1,6 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { useQuery } from '@tanstack/react-query';
-import { get, omit, pick } from 'es-toolkit/compat';
+import { omit, pick } from 'es-toolkit/compat';
 import { atom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';

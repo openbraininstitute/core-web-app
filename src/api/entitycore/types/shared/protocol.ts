@@ -43,7 +43,7 @@ export const ProtocolBaseSchema = z.object({
   tissue_shrinkage: z.number().positive().nullable().optional(),
   corrected_for_shrinkage: z.boolean().nullable().optional(),
 
-  repair_pipeline_type: RepairPipelineTypeSchema,
+  repair_pipeline_state: RepairPipelineTypeSchema,
 
   modified_morphology_method: ModifiedMorphologyMethodTypeSchema,
 });

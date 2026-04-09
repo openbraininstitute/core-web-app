@@ -21,9 +21,13 @@ import {
   type IonChannelSelection,
   IonChannelVariableSelector,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/selector';
+import {
+  type ConfigValue,
+  ScanConfigUIElementDict,
+  type SetAtom,
+} from '@/features/scan-config/types';
 
 import type { SetStateAction } from 'jotai';
-import type { ConfigValue, SetAtom } from '@/features/scan-config/types';
 
 interface RangeProps {
   data: MechanismVariablesRoot | null;
@@ -32,9 +36,18 @@ interface RangeProps {
   setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
   fieldKey: string;
   modificationType: string;
+  errorPathPrefix?: string;
 }
 
-export function Range({ data, disabled, state, setState, fieldKey, modificationType }: RangeProps) {
+export function Range({
+  data,
+  disabled,
+  state,
+  setState,
+  fieldKey,
+  modificationType,
+  errorPathPrefix,
+}: RangeProps) {
   const currentModification = state[fieldKey];
   const isValidModification =
     !!currentModification &&
@@ -136,7 +149,11 @@ export function Range({ data, disabled, state, setState, fieldKey, modificationT
   };
 
   return (
-    <div>
+    <div
+      data-scan-config-block-element={
+        ScanConfigUIElementDict.ionChannelVariableModificationBySectionList
+      }
+    >
       <IonChannelVariableSelector
         data={data}
         variableType={MechanismVariableTypeDict.Range}
@@ -147,10 +164,12 @@ export function Range({ data, disabled, state, setState, fieldKey, modificationT
 
       {resolvedVariable && sectionListsWithDefaults.length > 0 && (
         <SectionListConfigEditor
+          uiElement={ScanConfigUIElementDict.ionChannelVariableModificationBySectionList}
           sectionLists={sectionListsWithDefaults}
           values={sectionValues}
           onChange={handleSectionChange}
           disabled={disabled}
+          errorPathPrefix={errorPathPrefix}
         />
       )}
     </div>

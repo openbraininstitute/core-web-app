@@ -32,6 +32,7 @@ type Props = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   entityType: TSupportedEntityTypesForScanConfiguration;
+  errorPathPrefix?: string;
 };
 
 function getDiscriminatorProperty(schema: IRootBlockUnion): string {
@@ -52,6 +53,7 @@ export default function BlockUnion({
   config,
   entity,
   schemaMappingConfig,
+  errorPathPrefix,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
   const showingDiffs = useShowingDiffs();
@@ -102,6 +104,7 @@ export default function BlockUnion({
           stateAtom={atomsMap[selectedRootElement]}
           entity={entity}
           schemaMappingConfig={schemaMappingConfig}
+          errorPathPrefix={errorPathPrefix}
         />
       </div>
     );

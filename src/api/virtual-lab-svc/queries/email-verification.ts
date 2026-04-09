@@ -1,93 +1,110 @@
-import { getSession } from '@/auth-fetch';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 
-import { VerificationCodeEmailResponse } from '@/api/virtual-lab-svc/queries/types';
-import { config } from '@/config';
+import type { VlmResponse } from '@/types/virtual-lab/common';
 
-type VerificationCodeResponse<T extends 'init' | 'verify'> = T extends 'init'
-  ? {
-      message: string;
-      status: 'registered' | 'locked' | 'code_sent' | 'error';
-      remaining_time: number | null;
-      remaining_attempts: number | null;
-      verified_at?: Date | null;
-    }
-  : T extends 'verify'
-    ? {
-        message: string;
-        status: 'not_match' | 'verified' | 'registered' | 'locked' | 'expired' | 'error';
-        remaining_time: number | null;
-        remaining_attempts: number | null;
-        verified_at?: Date | null;
-      }
-    : never;
+const baseUri = '/users';
+
+export const EmailVerificationCodeStatusDict = {
+  Locked: 'locked',
+  NotMatch: 'not_match',
+  Registered: 'registered',
+  CodeSent: 'code_sent',
+  Expired: 'expired',
+  Verified: 'verified',
+  Waiting: 'waiting',
+} as const;
+
+export type TEmailVerificationCodeStatus =
+  (typeof EmailVerificationCodeStatusDict)[keyof typeof EmailVerificationCodeStatusDict];
+
+type VerificationCodeResponse = {
+  message: string;
+  status: TEmailVerificationCodeStatus;
+  remaining_time: number | null;
+  remaining_attempts: number | null;
+};
 
 type VerificationCodeInitPayload = {
   email: string;
-  name: string;
-};
-type VerificationCodeVerifyPayload = VerificationCodeInitPayload & {
-  code: number;
+  virtualLabId: string;
 };
 
-export async function getEmailVerificationCode({
+type VerificationCodeStatusPayload = {
+  email: string;
+  virtualLabId: string;
+};
+
+type VerificationCodeVerifyPayload = VerificationCodeInitPayload & {
+  code: string;
+};
+
+export async function getEmailVerificationInitialStatus({
+  virtualLabId,
   email,
-  name,
-}: VerificationCodeInitPayload): Promise<VerificationCodeResponse<'init'>> {
-  try {
-    const session = await getSession();
-    const response = await fetch(
-      `${config.VIRTUAL_LAB_API_URL}/virtual-labs/email/initiate-verification`,
-      {
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({
-          email,
-          virtual_lab_name: name,
-        }),
-      }
-    );
-    const result = (await response.json()) as VerificationCodeEmailResponse;
-    return result.data as VerificationCodeResponse<'init'>;
-  } catch (error) {
-    return {
-      status: 'error',
-      message: 'Error during generating a new verification code',
-      remaining_attempts: null,
-      remaining_time: null,
-    } as VerificationCodeResponse<'init'>;
-  }
+}: VerificationCodeStatusPayload): Promise<VlmResponse<VerificationCodeResponse>> {
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/email/verification/initiate-status`;
+
+  return await api.get(url, {
+    queryParams: { email },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'virtual-lab-id': virtualLabId,
+    },
+  });
+}
+export async function getEmailVerificationVerifyStatus({
+  virtualLabId,
+  email,
+}: VerificationCodeStatusPayload): Promise<VlmResponse<VerificationCodeResponse>> {
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/email/verification/verify-status`;
+
+  return await api.get(url, {
+    queryParams: { email },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'virtual-lab-id': virtualLabId,
+    },
+  });
+}
+
+export async function generateEmailVerificationCode({
+  virtualLabId,
+  email,
+}: VerificationCodeInitPayload): Promise<VlmResponse<VerificationCodeResponse>> {
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/email/verification/generate`;
+
+  return await api.post(url, {
+    body: { email },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'virtual-lab-id': virtualLabId,
+    },
+  });
 }
 
 export async function verifyOtpCode({
   email,
-  name,
+  virtualLabId,
   code,
-}: VerificationCodeVerifyPayload): Promise<VerificationCodeResponse<'verify'>> {
-  try {
-    const session = await getSession();
-    const response = await fetch(`${config.VIRTUAL_LAB_API_URL}/virtual-labs/email/verify-code`, {
-      method: 'post',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-      body: JSON.stringify({
-        email,
-        code,
-        virtual_lab_name: name,
-      }),
-    });
-    const result = (await response.json()) as VerificationCodeEmailResponse;
-    return result.data as VerificationCodeResponse<'verify'>;
-  } catch (error) {
-    return {
-      status: 'error',
-      message: 'Error during verification the code',
-      remaining_attempts: null,
-      remaining_time: null,
-    } as VerificationCodeResponse<'verify'>;
-  }
+}: VerificationCodeVerifyPayload): Promise<VlmResponse<VerificationCodeResponse>> {
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/email/verification/confirm`;
+
+  return await api.post(url, {
+    body: {
+      email,
+      code,
+    },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'virtual-lab-id': virtualLabId,
+    },
+  });
 }

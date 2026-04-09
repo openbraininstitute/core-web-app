@@ -384,7 +384,7 @@ export function Output({
     queryOptions({
       queryKey: ['build-output-stream', { context, sessionId, payload }],
       queryFn: streamedQuery({
-        queryFn: async () => {
+        streamFn: async () => {
           try {
             const response = await buildIonChannel({ ctx: context, payload, stream: true });
             const stream = await createTextStream(response);

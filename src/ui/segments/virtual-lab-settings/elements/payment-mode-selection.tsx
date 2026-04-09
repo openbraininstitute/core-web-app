@@ -40,20 +40,21 @@ export function PaymentModeSelection({
   const { isVirtualLabOwner: isOwner } = useWorkspaceMembership({ virtualLabId });
   return (
     <div
-      className={cn('grid gap-4 p-5 select-none md:grid-cols-2', { 'md:grid-cols-1': !isOwner })}
+      id="payment-mode-selection"
+      className={cn('grid gap-4 py-5 select-none md:grid-cols-2', { 'md:grid-cols-1': !isOwner })}
     >
       <button
         type="button"
         onClick={() => onModeChange(PurchaseModeDictionary.Buy)}
         className={cn(
-          'group relative w-full overflow-hidden rounded-2xl bg-gradient-to-br',
+          'group relative w-full overflow-hidden rounded-2xl bg-linear-to-br',
           'from-[#0a3a76]/40 to-[#0a3a76]/10 p-8 text-left backdrop-blur-lg transition-all',
-          'hover:scale-105 hover:from-white/20 hover:to-white/10 hover:shadow-2xl'
+          'hover:from-white/20 hover:to-white/10 hover:shadow-2xl'
         )}
       >
         <div className="relative z-10">
           <div className="mb-4 inline-flex rounded-xl bg-white/20 p-3">
-            <CreditCardOutlined className="text-[2.5rem] text-white" />
+            <CreditCardOutlined className="text-[2.5rem] text-white!" />
           </div>
           <h2 className="mb-2 text-2xl font-bold text-white">Purchase Credits</h2>
           <p className="text-white/70">
@@ -77,10 +78,9 @@ export function PaymentModeSelection({
           type="button"
           onClick={() => onModeChange(PurchaseModeDictionary.Promo)}
           className={cn(
-            'group relative overflow-hidden rounded-2xl bg-gradient-to-br',
+            'group relative overflow-hidden rounded-2xl bg-linear-to-br',
             'from-emerald-500/30 to-emerald-500/10 hover:shadow-2xl',
-            'p-8 text-left backdrop-blur-lg',
-            'transition-all hover:scale-105'
+            'p-8 text-left backdrop-blur-lg'
           )}
         >
           <div className="relative z-10">
