@@ -86,11 +86,15 @@ export function Menu({ sessionId }: { sessionId: string }) {
       }),
     enabled: selectionComplete,
     retry: false,
+    refetchOnWindowFocus: false,
     staleTime: Infinity,
   });
 
   const isCheckingCompatibility = selectionComplete && compatibilityCheck.isFetching;
-  const isIncompatible = selectionComplete && compatibilityCheck.data?.data.compatible === false;
+  const isIncompatible =
+    selectionComplete &&
+    compatibilityCheck.isSuccess &&
+    compatibilityCheck.data?.data.compatible === false;
 
   const onStepChange = (s: BuildStepKeys) => {
     const query = new URLSearchParams(searchParams);
