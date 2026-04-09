@@ -41,7 +41,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function Home({
+export default async function CreditsPage({
   params: promisedParams,
 }: ServerSideComponentProp<WorkspaceContext, null>) {
   const { virtualLabId, projectId } = await promisedParams;
@@ -53,8 +53,12 @@ export default async function Home({
       queryFn: getUserGroups,
     });
 
-    const { isVirtualLabAdmin: isAdmin } = makeRoles(result, virtualLabId, projectId);
-    if (!isAdmin) {
+    const { isVirtualLabAdmin: isAdmin, isProjectAdmin } = makeRoles(
+      result,
+      virtualLabId,
+      projectId
+    );
+    if (!isAdmin && !isProjectAdmin) {
       throw new Error('User not allowed to access this page');
     }
   } catch {
