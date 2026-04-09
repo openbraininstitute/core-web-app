@@ -28,10 +28,12 @@ type Props = {
   meModelId: string;
 };
 
-export default function ResultsTab({ recordings, meModelId }: Props) {
-  const [collapsed, setCollapsed] = React.useState(true);
-  const tree = useMorphology(meModelId);
-  const spikes = useSpikes(recordings);
+export default function ResultsTab({ recordings }: Props) {
+  // @TODO: restore this part after phase 2: when small-scale-simulator is in staging
+  // const [collapsed, setCollapsed] = React.useState(true);
+  // const tree = useMorphology(meModelId);
+  // const spikes = useSpikes(recordings);
+  const collapsed = true;
   const timelineManager = useTimelineManager();
 
   return (
@@ -64,7 +66,8 @@ export default function ResultsTab({ recordings, meModelId }: Props) {
           );
         })}
       </div>
-      <div className={cn(styles.morphoViewerSimulContainer)}>
+      {/* @TODO: restore this part after phase 2: when small-scale-simulator is in staging */}
+      {/* <div className={cn(styles.morphoViewerSimulContainer)}>
         {tree &&
           (collapsed ? (
             <button type="button" onClick={() => setCollapsed(false)}>
@@ -85,7 +88,7 @@ export default function ResultsTab({ recordings, meModelId }: Props) {
             <div>Loading morphology...</div>
           </div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 }
