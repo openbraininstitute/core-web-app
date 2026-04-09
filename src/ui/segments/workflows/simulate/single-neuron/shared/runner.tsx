@@ -666,7 +666,7 @@ function checkArguments(
       throw new Error(messages.CurrentInjectionConfigMissingError);
     }
   } else if (simulationType === 'synaptome-simulation') {
-    if (!stimulationConfiguration && (!synaptomeConfiguration || !synaptomeConfiguration.length)) {
+    if (!stimulationConfiguration && !synaptomeConfiguration?.length) {
       throw new Error(messages.SynaptomeConfigurationError);
     }
   }
