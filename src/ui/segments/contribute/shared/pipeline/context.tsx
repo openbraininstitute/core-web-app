@@ -19,7 +19,7 @@ import type {
   TStepValidationStatus,
 } from '@/ui/segments/contribute/shared/types';
 
-interface IContributionPipelineContextValue<TFormValues extends Record<string, unknown>> {
+interface IContributionPipelineContextValue<TFormValues> {
   form: FormInstance<TFormValues>;
   activeStep: string;
   setActiveStep: (stepKey: string) => void;
@@ -37,20 +37,14 @@ const ContributionPipelineContext = createContext<IContributionPipelineContextVa
   Record<string, unknown>
 > | null>(null);
 
-interface IContributionPipelineProviderProps<
-  TFormValues extends Record<string, unknown>,
-  TSchema extends ZodObject<ZodRawShape>,
-> {
+interface IContributionPipelineProviderProps<TFormValues, TSchema extends ZodObject<ZodRawShape>> {
   config: IContributionFormConfig<TFormValues, TSchema>;
   sessionId: string;
   brainRegionId: string;
   children: ReactNode;
 }
 
-export function ContributionPipelineProvider<
-  TFormValues extends Record<string, unknown>,
-  TSchema extends ZodObject<ZodRawShape>,
->({
+export function ContributionPipelineProvider<TFormValues, TSchema extends ZodObject<ZodRawShape>>({
   config,
   sessionId,
   brainRegionId,

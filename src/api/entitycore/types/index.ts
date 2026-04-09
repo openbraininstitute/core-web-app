@@ -17,6 +17,7 @@ import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';
+import type { INotebook } from './entities/notebook';
 
 export * from '@/api/entitycore/types/entity-type';
 
@@ -63,4 +64,10 @@ export type EntityCoreObjectTypes =
   | ICircuitSimulationCampaign
   | IonChannelModel
   | IIonChannelModelingCampaign
-  | IEMCellMesh;
+  | IEMCellMesh
+  | INotebook;
+
+export function isNotebook(entity: EntityCoreObjectTypes): entity is INotebook {
+  if (entity.type === 'analysis_notebook_template') return true;
+  return false;
+}

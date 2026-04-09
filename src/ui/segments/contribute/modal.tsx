@@ -22,6 +22,7 @@ import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental
 import { ExperimentalSynapsesPerConnection } from '@/ui/segments/contribute/synapses-per-connection';
 import { cn } from '@/utils/css-class';
 
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 interface IExtendedEntitiesSelectorProps {
@@ -76,9 +77,14 @@ function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelec
 interface IRenderEntityTypeContentProps {
   type: TExtendedEntitiesTypeDict;
   sessionId: string;
+  onCreateSuccess?: (entity: EntityCoreObjectTypes) => Promise<void>;
 }
 
-function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeContentProps) {
+function RenderEntityTypeContent({
+  type,
+  sessionId: sId,
+  onCreateSuccess,
+}: IRenderEntityTypeContentProps) {
   return match({ type })
     .with(
       {
@@ -100,12 +106,16 @@ function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeCont
     ))
     .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
     .with({ type: ExtendedEntitiesTypeDict.Notebook }, () => (
-      <AnalysisNotebookTemplate sessionId={sId} />
+      <AnalysisNotebookTemplate sessionId={sId} onCreateSuccess={onCreateSuccess} />
     ))
     .otherwise(() => null);
 }
 
-export function ContributionModal() {
+export function ContributionModal({
+  onCreateSuccess,
+}: {
+  onCreateSuccess?: (entity: EntityCoreObjectTypes) => Promise<void>;
+}) {
   const [{ entityType, sessionId, display }, setEventPayload] = useState<{
     display: boolean;
     entityType: TExtendedEntitiesTypeDict | null;
@@ -144,7 +154,9 @@ export function ContributionModal() {
     .with(
       { sessionId: P.string.select('sId'), entityType: P.string.select('type') },
       ({ sId, type }) => {
-        return <RenderEntityTypeContent type={type} sessionId={sId} />;
+        return (
+          <RenderEntityTypeContent type={type} sessionId={sId} onCreateSuccess={onCreateSuccess} />
+        );
       }
     )
     .otherwise(() => null);

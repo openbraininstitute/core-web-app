@@ -1,15 +1,15 @@
 import type { MutationStatus } from '@tanstack/react-query';
-import type { ReactNode, ComponentType } from 'react';
-import type { ZodObject, ZodRawShape, z } from 'zod';
 import type { FormInstance } from 'antd';
-
+import type { ComponentType, ReactNode } from 'react';
+import type { ZodObject, ZodRawShape, z } from 'zod';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export type TStepValidationStatus = 'valid' | 'invalid' | 'non-touched';
 
 export type TStepIconRenderer = (status: TStepValidationStatus) => ReactNode;
 
-export interface IContributionStep<TFormValues extends Record<string, unknown>> {
+export interface IContributionStep<TFormValues> {
   key: string;
   label: string;
   schemaFieldKey: keyof TFormValues;
@@ -19,10 +19,7 @@ export interface IContributionStep<TFormValues extends Record<string, unknown>> 
   tooltipContent?: ReactNode;
 }
 
-export interface IContributionFormConfig<
-  TFormValues extends Record<string, unknown>,
-  TSchema extends ZodObject<ZodRawShape>,
-> {
+export interface IContributionFormConfig<TFormValues, TSchema extends ZodObject<ZodRawShape>> {
   entityType: TExtendedEntitiesTypeDict;
   title: string;
   formId: string;
@@ -42,7 +39,7 @@ export interface IMutationKeyConfig {
 }
 
 export interface IPipelineHookResult<TFormValues> {
-  createEntity: (params: { values: TFormValues }) => Promise<string>;
+  createEntity: (params: { values: TFormValues }) => Promise<EntityCoreObjectTypes>;
   loading: boolean;
   error: Error | null;
   status: Record<string, MutationStatus>;

@@ -16,6 +16,7 @@ import {
 import { cn } from '@/utils/css-class';
 
 import type { ZodObject, ZodRawShape } from 'zod';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 import type {
   IContributionFormConfig,
@@ -36,6 +37,7 @@ interface IContributionFormProps<
     readonly label: string;
     readonly mutationKey: string;
   }>;
+  onCreateSuccess?: (entity: EntityCoreObjectTypes) => Promise<void>;
 }
 
 interface IFormContentProps<
@@ -46,6 +48,7 @@ interface IFormContentProps<
   sessionId: string;
   pipeline: TPipelineHookFactory<TFormValues>;
   progressSteps: Array<{ key: string; label: string; mutationKey: string }>;
+  onCreateSuccess?: (entity: EntityCoreObjectTypes) => Promise<void>;
 }
 
 function FormContent<
@@ -58,6 +61,7 @@ function FormContent<
   progressSteps,
   virtualLabId,
   projectId,
+  onCreateSuccess,
 }: IFormContentProps<TFormValues, TSchema>) {
   const {
     form,
@@ -83,8 +87,9 @@ function FormContent<
     e.preventDefault();
     setIsSubmitting(true);
     const values = form.getFieldsValue(true) as TFormValues;
-    const id = await createEntity({ values });
-    setCreatedEntityId(id);
+    const entity = await createEntity({ values });
+    setCreatedEntityId(entity.id);
+    onCreateSuccess?.(entity);
   };
 
   return (
@@ -179,8 +184,16 @@ export function ContributionForm<
   TFormValues extends Record<string, unknown>,
   TSchema extends ZodObject<ZodRawShape>,
 >(props: IContributionFormProps<TFormValues, TSchema>) {
-  const { config, sessionId, brainRegionId, pipeline, progressSteps, virtualLabId, projectId } =
-    props;
+  const {
+    config,
+    sessionId,
+    brainRegionId,
+    pipeline,
+    progressSteps,
+    virtualLabId,
+    projectId,
+    onCreateSuccess,
+  } = props;
 
   return (
     <ContributionPipelineProvider
@@ -195,6 +208,7 @@ export function ContributionForm<
         progressSteps={progressSteps}
         virtualLabId={virtualLabId}
         projectId={projectId}
+        onCreateSuccess={onCreateSuccess}
       />
     </ContributionPipelineProvider>
   );

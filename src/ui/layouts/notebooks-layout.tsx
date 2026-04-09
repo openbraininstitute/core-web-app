@@ -5,19 +5,30 @@ import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
 import { isNil } from 'es-toolkit';
+import { template } from 'es-toolkit/compat';
+import { Entity } from 'h5wasm';
+import { TemplateContext } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import Image from 'next/image';
 import NextLink from 'next/link';
-import { type ReactNode, useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
-import { EntityTypeDict } from '@/api/entitycore/types';
+import { type EntityCoreObjectTypes, EntityTypeDict, isNotebook } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
-import { createProject } from '@/api/virtual-lab-svc/queries/project';
+import { createProject, listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
 import {
   getMissingStudentEmails,
   getVirtualLab,
@@ -134,6 +145,31 @@ export function NotebooksLayout({ children, active }: Props) {
     }
   }
 
+  const course = virtualLabData?.data?.virtual_lab.course;
+
+  const onNotebookCreateSuccess = useCallback(
+    async (notebook: EntityCoreObjectTypes) => {
+      if (
+        !isNotebook(notebook) ||
+        !course?.is_initialized ||
+        course.template_project_id !== projectId
+      ) {
+        return;
+      }
+      try {
+        const projectIds = (await listAllProjectIds(virtualLabId)).filter((id) => id !== projectId);
+        await syncNotebook({ notebook, virtualLabId, projectId, targetProjectIds: projectIds });
+      } catch {
+        notification.warning({
+          message: `Couldn't sync notebook to student projects`,
+          key: 'notebook-sync-warning',
+          placement: 'topRight',
+        });
+      }
+    },
+    [projectId, virtualLabId, notification.warning, course]
+  );
+
   if (!virtualLabData?.data)
     return (
       <div className="h-full flex justify-center items-center text-4xl">
@@ -141,7 +177,7 @@ export function NotebooksLayout({ children, active }: Props) {
       </div>
     );
 
-  const course = virtualLabData.data.virtual_lab.course;
+  // const course = virtualLabData.data.virtual_lab.course;
 
   return (
     <div>
@@ -263,7 +299,7 @@ export function NotebooksLayout({ children, active }: Props) {
         </div>
       </Modal>
 
-      <ContributionModal />
+      <ContributionModal onCreateSuccess={onNotebookCreateSuccess} />
     </div>
   );
 }

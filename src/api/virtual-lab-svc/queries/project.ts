@@ -117,6 +117,30 @@ export async function listProjects({
   return result;
 }
 
+export async function listAllProjectIds(virtualLabId: string) {
+  let allProjectIds: string[] = [];
+  let page = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await listProjects({ virtualLabId, page, size: 100 });
+    if (!response.data) throw new Error(`Fetching projects failed`);
+
+    allProjectIds = [...allProjectIds, ...(response.data?.results.map((r) => r.id) ?? [])];
+
+    const { total, page_size } = response.data;
+    const totalPages = Math.ceil(total / page_size);
+
+    if (page >= totalPages) {
+      hasMore = false;
+    } else {
+      page++;
+    }
+  }
+
+  return allProjectIds;
+}
+
 /**
  * Add users to project
  *

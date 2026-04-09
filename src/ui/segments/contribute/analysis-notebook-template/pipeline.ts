@@ -136,7 +136,7 @@ export function useAnalysisNotebookTemplatePipeline({
         }),
       ]);
 
-      return entityId;
+      return notebook;
     },
 
     loading:

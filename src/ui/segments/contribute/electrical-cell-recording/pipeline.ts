@@ -2,19 +2,20 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { get, isNil } from 'es-toolkit/compat';
+
 import { createElectricalCellRecording } from '@/api/entitycore/queries';
 import { createEtypeClassification } from '@/api/entitycore/queries/annotations/etype-classification';
 import { createAsset } from '@/api/entitycore/queries/assets';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
-import { EntityTypeDict } from '@/api/entitycore/types';
+import { type EntityCoreObjectTypes, EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS } from '@/ui/segments/contribute/electrical-cell-recording/config';
-
-import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import { ContributionSchema } from '@/ui/segments/contribute/shared/schemas';
+
+import type { ExtendedEntityTypeQueryKey } from '@/ui/hooks/use-query-extended-entity-type';
+import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import type {
   IMutationKeyConfig,
   IPipelineHookResult,
@@ -159,7 +160,7 @@ export function useElectricalCellRecordingPipeline({
     values,
   }: {
     values: TElectricalCellRecordingForm;
-  }): Promise<string> {
+  }): Promise<EntityCoreObjectTypes> {
     const electricalCellRecording = await createElectricalCellRecordingAsync.mutateAsync(values);
     await Promise.allSettled([
       createContributionAsync.mutateAsync({
@@ -175,7 +176,7 @@ export function useElectricalCellRecordingPipeline({
         assets: values.assets,
       }),
     ]);
-    return electricalCellRecording.id;
+    return electricalCellRecording;
   }
 
   const loading =
