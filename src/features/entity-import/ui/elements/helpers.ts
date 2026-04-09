@@ -185,6 +185,7 @@ export function resolveImportHeaderCsvUploadUiState(args: {
   csvUploadPhase: TCsvUploadPhase;
   csvRowValidationProgress: IImportHeaderCsvRowValidationProgress;
   csvUploadNotifications: IImportHeaderNotification[];
+  csvFlowBulkUploadNotifications: IImportHeaderNotification[];
   bulkFileUploadAction?: IImportHeaderBulkFileUploadAction | null;
   hasDismissedCsvUploadTooltip: boolean;
 }): IImportHeaderCsvUploadUiState {
@@ -192,28 +193,30 @@ export function resolveImportHeaderCsvUploadUiState(args: {
     csvUploadPhase,
     csvRowValidationProgress,
     csvUploadNotifications,
+    csvFlowBulkUploadNotifications,
     bulkFileUploadAction,
     hasDismissedCsvUploadTooltip,
   } = args;
+  const allCsvTooltipNotifications = [...csvUploadNotifications, ...csvFlowBulkUploadNotifications];
   const csvUploadStatus = resolveCsvUploadStatus({
     csvUploadPhase,
     csvRowValidationProgress,
   });
-  const uploadNotificationsTone = resolveCsvUploadNotificationsTone(csvUploadNotifications);
+  const uploadNotificationsTone = resolveCsvUploadNotificationsTone(allCsvTooltipNotifications);
   const shouldShowBulkFileUploadAction = bulkFileUploadAction?.visible === true;
   const shouldShowBulkFileUploadTooltipAction =
     shouldShowBulkFileUploadAction && (bulkFileUploadAction?.pendingReferenceCount ?? 0) > 0;
   const shouldShowTooltipCloseButton =
-    csvUploadNotifications.length > 0 || shouldShowBulkFileUploadTooltipAction;
+    allCsvTooltipNotifications.length > 0 || shouldShowBulkFileUploadTooltipAction;
   const shouldRenderCsvUploadTooltip = Boolean(
     csvUploadStatus ||
-      csvUploadNotifications.length > 0 ||
+      allCsvTooltipNotifications.length > 0 ||
       (!hasDismissedCsvUploadTooltip && shouldShowBulkFileUploadTooltipAction)
   );
   const shouldForceCsvUploadTooltipOpen = shouldRenderCsvUploadTooltip;
   const csvUploadTooltipTitle =
     csvUploadStatus?.title ??
-    (csvUploadNotifications.length > 0
+    (allCsvTooltipNotifications.length > 0
       ? resolveCsvUploadNotificationTitle(uploadNotificationsTone)
       : shouldShowBulkFileUploadTooltipAction
         ? 'Bulk file upload available'
@@ -231,22 +234,31 @@ export function resolveImportHeaderCsvUploadUiState(args: {
   };
 }
 
-export function splitCsvUploadNotifications(notifications: IImportHeaderNotification[]): {
+export type TBulkUploadTriggerSource = 'csv-flow' | 'folder-button' | null;
+
+export function splitCsvUploadNotifications(
+  notifications: IImportHeaderNotification[],
+  bulkUploadTriggerSource: TBulkUploadTriggerSource
+): {
   csvNotifications: IImportHeaderNotification[];
-  bulkUploadNotifications: IImportHeaderNotification[];
+  csvFlowBulkUploadNotifications: IImportHeaderNotification[];
+  folderBulkUploadNotifications: IImportHeaderNotification[];
 } {
-  return notifications.reduce(
-    (acc, notification) => {
-      if (notification.id.startsWith(CSV_BULK_UPLOAD_NOTIFICATION_ID_PREFIX)) {
-        acc.bulkUploadNotifications.push(notification);
-      } else {
-        acc.csvNotifications.push(notification);
-      }
-      return acc;
-    },
-    {
-      csvNotifications: [] as IImportHeaderNotification[],
-      bulkUploadNotifications: [] as IImportHeaderNotification[],
+  const csvNotifications: IImportHeaderNotification[] = [];
+  const bulkNotifications: IImportHeaderNotification[] = [];
+
+  for (const notification of notifications) {
+    if (notification.id.startsWith(CSV_BULK_UPLOAD_NOTIFICATION_ID_PREFIX)) {
+      bulkNotifications.push(notification);
+    } else {
+      csvNotifications.push(notification);
     }
-  );
+  }
+
+  return {
+    csvNotifications,
+    csvFlowBulkUploadNotifications: bulkUploadTriggerSource === 'csv-flow' ? bulkNotifications : [],
+    folderBulkUploadNotifications:
+      bulkUploadTriggerSource === 'folder-button' ? bulkNotifications : [],
+  };
 }

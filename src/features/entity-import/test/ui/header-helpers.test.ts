@@ -18,6 +18,7 @@ describe('resolveImportHeaderCsvUploadUiState', () => {
       csvUploadPhase: CsvUploadPhase.Idle,
       csvRowValidationProgress: idleValidationProgress,
       csvUploadNotifications: [],
+      csvFlowBulkUploadNotifications: [],
       bulkFileUploadAction: {
         visible: true,
         isProcessing: false,
@@ -40,6 +41,7 @@ describe('resolveImportHeaderCsvUploadUiState', () => {
       csvUploadPhase: CsvUploadPhase.Idle,
       csvRowValidationProgress: idleValidationProgress,
       csvUploadNotifications: [],
+      csvFlowBulkUploadNotifications: [],
       bulkFileUploadAction: {
         visible: true,
         isProcessing: false,
@@ -66,6 +68,7 @@ describe('resolveImportHeaderCsvUploadUiState', () => {
           message: 'CSV parsing reported 1 issue during upload.',
         },
       ],
+      csvFlowBulkUploadNotifications: [],
       bulkFileUploadAction: null,
       hasDismissedCsvUploadTooltip: false,
     });

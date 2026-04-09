@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { ImportHeaderActionButtons } from '@/features/entity-import/ui/elements/header/action-buttons';
 import { ImportHeaderCsvUploadControl } from '@/features/entity-import/ui/elements/header/csv-upload-control';
@@ -10,6 +10,7 @@ import {
   type IImportHeaderProps,
   resolveImportHeaderCsvUploadUiState,
   splitCsvUploadNotifications,
+  type TBulkUploadTriggerSource,
 } from '@/features/entity-import/ui/elements/helpers';
 
 export {
@@ -35,15 +36,17 @@ export function ImportHeader({
 }: IImportHeaderProps) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const bulkUploadInputRef = useRef<HTMLInputElement | null>(null);
+  const bulkUploadTriggerSourceRef = useRef<TBulkUploadTriggerSource>(null);
   const [isCsvUploadTooltipInteractiveOpen, setIsCsvUploadTooltipInteractiveOpen] = useState(false);
   const [hasDismissedCsvUploadTooltip, setHasDismissedCsvUploadTooltip] = useState(false);
-  const { csvNotifications, bulkUploadNotifications } =
-    splitCsvUploadNotifications(csvUploadNotifications);
+  const { csvNotifications, csvFlowBulkUploadNotifications, folderBulkUploadNotifications } =
+    splitCsvUploadNotifications(csvUploadNotifications, bulkUploadTriggerSourceRef.current);
 
   const csvUploadUiState = resolveImportHeaderCsvUploadUiState({
     csvUploadPhase,
     csvRowValidationProgress,
     csvUploadNotifications: csvNotifications,
+    csvFlowBulkUploadNotifications,
     bulkFileUploadAction,
     hasDismissedCsvUploadTooltip,
   });
@@ -60,9 +63,15 @@ export function ImportHeader({
     uploadInputRef.current?.click();
   };
 
-  const handleOpenBulkUploadDialog = () => {
+  const handleOpenBulkUploadDialogFromCsvFlow = useCallback(() => {
+    bulkUploadTriggerSourceRef.current = 'csv-flow';
     bulkUploadInputRef.current?.click();
-  };
+  }, []);
+
+  const handleOpenBulkUploadDialogFromFolderButton = useCallback(() => {
+    bulkUploadTriggerSourceRef.current = 'folder-button';
+    bulkUploadInputRef.current?.click();
+  }, []);
 
   const handleCsvUploadTooltipOpenChange = (nextOpen: boolean) => {
     if (csvUploadUiState.shouldForceCsvUploadTooltipOpen) {
@@ -79,19 +88,24 @@ export function ImportHeader({
     onDismissCsvUploadNotifications();
   };
 
+  const handleDismissBulkUploadNotifications = () => {
+    bulkUploadTriggerSourceRef.current = null;
+    onDismissCsvUploadNotifications();
+  };
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <ImportHeaderTitleSection title={title} onDownloadGuideTemplate={onDownloadGuideTemplate} />
       <div className="flex flex-wrap items-center gap-3">
         <ImportHeaderCsvUploadControl
           csvUploadPhase={csvUploadPhase}
-          csvUploadNotifications={csvNotifications}
+          csvUploadNotifications={[...csvNotifications, ...csvFlowBulkUploadNotifications]}
           bulkFileUploadAction={bulkFileUploadAction}
           uiState={csvUploadUiState}
           isCsvUploadTooltipOpen={isCsvUploadTooltipOpen}
           onCsvUploadTooltipOpenChange={handleCsvUploadTooltipOpenChange}
           onOpenCsvUploadDialog={handleOpenCsvUploadDialog}
-          onOpenBulkUploadDialog={handleOpenBulkUploadDialog}
+          onOpenBulkUploadDialog={handleOpenBulkUploadDialogFromCsvFlow}
           onCloseCsvUploadTooltip={handleCloseCsvUploadTooltip}
         />
         <ImportHeaderUploadInputs
@@ -104,9 +118,9 @@ export function ImportHeader({
         <ImportHeaderActionButtons
           shouldShowBulkFileUploadAction={csvUploadUiState.shouldShowBulkFileUploadAction}
           isBulkFileUploadProcessing={bulkFileUploadAction?.isProcessing ?? false}
-          bulkUploadNotifications={bulkUploadNotifications}
-          onOpenBulkUploadDialog={handleOpenBulkUploadDialog}
-          onDismissBulkUploadNotifications={onDismissCsvUploadNotifications}
+          bulkUploadNotifications={folderBulkUploadNotifications}
+          onOpenBulkUploadDialog={handleOpenBulkUploadDialogFromFolderButton}
+          onDismissBulkUploadNotifications={handleDismissBulkUploadNotifications}
           onDownloadCurrentCsv={onDownloadCurrentCsv}
           onClose={onClose}
         />
