@@ -1,4 +1,5 @@
 import z from 'zod';
+import { AssetLabel, AssetContentType } from '@/api/entitycore/types/shared/global';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import type { WorkspaceContext } from '@/types/common';
@@ -18,24 +19,6 @@ const AnalysisNotebookTemplateSchema = z.object({
 });
 
 export type TAnalysisNotebookTemplateCreate = z.infer<typeof AnalysisNotebookTemplateSchema>;
-
-export type TAssetLabel = 'jupyter_notebook' | 'requirements' | 'notebook_required_files';
-export type TContentType =
-  | 'application/x-ipynb+json'
-  | 'text/plain'
-  | 'application/zip';
-
-export const AssetLabel = {
-  jupyter_notebook: 'jupyter_notebook' as TAssetLabel,
-  requirements: 'requirements' as TAssetLabel,
-  notebook_required_files: 'notebook_required_files' as TAssetLabel,
-};
-
-export const ContentType = {
-  application_x_ipynb_json: 'application/x-ipynb+json' as TContentType,
-  text_plain: 'text/plain' as TContentType,
-  application_zip: 'application/zip' as TContentType,
-};
 
 /**
  * Creates a new Experimental Analysis Notebook Template entity
@@ -71,14 +54,14 @@ export async function uploadNotebookTemplateFile({
   context?: WorkspaceContext | null;
   entityId: string;
   file: File;
-  contentType: TContentType;
-  assetLabel: TAssetLabel;
+  contentType: AssetContentType;
+  assetLabel: AssetLabel;
 }) {
   const api = await entityCoreApi();
   const formData = new FormData();
   const typedFile = new File([file], file.name, { type: contentType });
   formData.append('file', typedFile, file.name);
-  formData.append('label', assetLabel);
+  formData.append('label', assetLabel as string);
 
   return await api.post<unknown>(`${baseUri}/${entityId}/assets`, {
     headers: {
