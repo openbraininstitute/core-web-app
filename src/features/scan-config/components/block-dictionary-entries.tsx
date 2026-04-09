@@ -8,7 +8,6 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { Input } from 'antd';
-import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import { atom, useAtom } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, memo, useMemo } from 'react';
@@ -209,10 +208,9 @@ export default function BlockDictionaryEntries({
     const isSelected = selectedRootElement === rootElement && entry === selectedEntry;
     const entryDiffClass = getEntryDiffClass(entry, isSelected);
 
-    // For deleted entries, preserve the original name exactly as it was
-    const displayName = isDeleted
-      ? entry // Use the original key name as-is for deleted entries
-      : upperFirst(lowerCase(entry)); // Format normally for non-deleted entries
+    // Always use the raw config key — formatting (upperFirst/lowerCase)
+    // would turn "my_node_name" into "My node name" which is wrong in diffs.
+    const displayName = entry;
 
     return (
       <EntryTab

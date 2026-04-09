@@ -95,32 +95,31 @@ export function RootElement({
               tab={rootElement}
               selectedTab={selectedRootElement}
               onClick={() => {
-                const isCollapseClick =
-                  selectedRootElement === rootElement &&
+                const isDictionary =
                   !isRootBlock(schema, rootElement) &&
                   rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
 
-                // for block_dictionary, clicking again collapses it
-                // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
-                if (isCollapseClick) {
-                  setEditing(false);
+                // BlockDictionary: always toggle expand/collapse on click,
+                // regardless of whether this root element is currently selected.
+                if (isDictionary) {
+                  setSelectedRootElement(rootElement);
                   setSelectedEntry('');
 
-                  // Toggle expansion
                   if (isExpanded) {
                     setExpandedRootElements((prev) => {
                       const newSet = new Set(prev);
                       newSet.delete(rootElement);
                       return newSet;
                     });
+                    setEditing(false);
                   } else {
                     setExpandedRootElements((prev) => {
                       const newSet = new Set(prev);
                       newSet.add(rootElement);
                       return newSet;
                     });
+                    setEditing(false);
                   }
-                  setEditing(false);
                   return;
                 }
 
