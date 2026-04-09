@@ -36,7 +36,6 @@ export function useRecordingPlotData(sessionId: string): Type {
       setRecordingPlotData(rawData);
       refIsFirstData.current = false;
     }
-    console.log('🐞 [hooks@39] rawData =', rawData); // @FIXME: Remove this line written on 2026-03-31 at 13:49
   }, [rawData]);
 
   // set up throttled update interval (only once)

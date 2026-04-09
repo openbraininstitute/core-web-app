@@ -478,7 +478,14 @@ function makeMessageParser(
   const appendStreamData = makeAppendStreadData(get, set, plotDataAtom);
   return (message) => {
     match(message)
-      .with({ message_type: MessageType.DATA }, ({ data }) => appendStreamData(data))
+      .with({ message_type: MessageType.DATA }, (msg) => {
+        const type = msg.data_type;
+        if (type === 'spikes') {
+          // @TODO: Deal with spikes in another PR
+        } else if (!type || type === 'trace') {
+          return appendStreamData(msg.data);
+        }
+      })
       .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, () => {
         notify.error({
           message: `Simulation ${overviewConfiguration.name}`,

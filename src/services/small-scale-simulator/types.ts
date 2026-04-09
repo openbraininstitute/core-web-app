@@ -26,6 +26,7 @@ type StatusMessage = {
 
 type DataMessage<T> = {
   message_type: MessageType.DATA;
+  data_type?: string;
   data: T;
   ctx?: MessageCtx;
 };
