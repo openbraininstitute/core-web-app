@@ -34,8 +34,13 @@ importers:
         specifier: ^13.0.1
         version: 13.0.1
       '@bbp/morphoviewer':
+<<<<<<< prod-build-emodel/131/spike-activity
         specifier: file:tarball/bbp-morphoviewer-0.24.9.tgz
         version: file:tarball/bbp-morphoviewer-0.24.9.tgz(react@19.2.4)
+=======
+        specifier: file:tarball/bbp-morphoviewer-0.24.10.tgz
+        version: file:tarball/bbp-morphoviewer-0.24.10.tgz(react@19.2.4)
+>>>>>>> main
       '@bprogress/next':
         specifier: ^3.2.12
         version: 3.2.12(next@16.2.1(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.98.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1086,8 +1091,13 @@ packages:
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
+<<<<<<< prod-build-emodel/131/spike-activity
   '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.24.9.tgz':
     resolution: {integrity: sha512-Kv0XxNSoe77spGHRWEnAovrpd6XwnweXcr5Gujvq/l3H+ZAGNe1ISrkBGA/0JdIIXjwJaw9parDGQ/lXz+KCCQ==, tarball: file:tarball/bbp-morphoviewer-0.24.9.tgz}
+=======
+  '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.24.10.tgz':
+    resolution: {integrity: sha512-XYaQegOA5QbfnAbPJbrO935wW7OQ6+c0Xv+/VqGj/Ovq5hCLVi5kiXZXPSHAv9203TJLvEkiyWvO0hNFeD+4nw==, tarball: file:tarball/bbp-morphoviewer-0.24.10.tgz}
+>>>>>>> main
     version: 0.24.9
     peerDependencies:
       react: ^19.2.4
@@ -3933,8 +3943,8 @@ packages:
   '@tanstack/virtual-core@3.13.23':
     resolution: {integrity: sha512-zSz2Z2HNyLjCplANTDyl3BcdQJc2k1+yyFoKhNRmCr7V7dY8o8q5m8uFTI1/Pg1kL+Hgrz6u3Xo6eFUB7l66cg==}
 
-  '@tolokoban/tgd@2.0.118':
-    resolution: {integrity: sha512-noM2YQN6ikGwmUiUdHP6K9aEesUUxvRdsnh9y4gx/U+NkBSw5QoXiLwlONyfVFxi1hF9He+CjQREwhynfFrA0g==}
+  '@tolokoban/tgd@2.0.120':
+    resolution: {integrity: sha512-k4g3KfKEIxTt5vs5+TH5sEvtEkL2zwp6MmO+GsjMK9IQmx7FHVhvo2xGitGtn038j6INiH3ppG9nlAgSkrMJQg==}
 
   '@tolokoban/tgd@2.0.78':
     resolution: {integrity: sha512-nEpIwkOO/bEEk0Fetpjc8iAaBYsRf9wZQgUMQLvrjCSv9VnG8bzOh4WKeRcSufkgUw7+Sqoe2kV3MVXB+lFL+w==}
@@ -10502,9 +10512,13 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+<<<<<<< prod-build-emodel/131/spike-activity
   '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.24.9.tgz(react@19.2.4)':
+=======
+  '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.24.10.tgz(react@19.2.4)':
+>>>>>>> main
     dependencies:
-      '@tolokoban/tgd': 2.0.118
+      '@tolokoban/tgd': 2.0.120
       fflate: 0.8.2
       react: 19.2.4
       tslib: 2.8.1
@@ -13590,7 +13604,7 @@ snapshots:
 
   '@tanstack/virtual-core@3.13.23': {}
 
-  '@tolokoban/tgd@2.0.118':
+  '@tolokoban/tgd@2.0.120':
     dependencies:
       '@loaders.gl/core': 4.3.4
       '@loaders.gl/draco': 4.3.4(@loaders.gl/core@4.3.4)
