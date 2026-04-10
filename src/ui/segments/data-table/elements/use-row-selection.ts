@@ -1,10 +1,10 @@
-import { ConfigProvider, Table, type TableProps } from 'antd';
 import { uniqBy } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 import { type Key, useMemo } from 'react';
 
 import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
 
+import type { TableProps } from 'antd';
 import type { RowSelectionType, TableRowSelection } from 'antd/es/table/interface';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
