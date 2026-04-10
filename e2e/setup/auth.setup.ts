@@ -12,42 +12,50 @@ setup('authenticate and provision virtual lab', async ({ page, context }) => {
   const env = validateEnv();
 
   // --- 1. Keycloak OAuth login ---
+  let accessToken: string;
+
   await setup.step('authenticate via Keycloak', async () => {
     await page.goto('/app/log-in');
 
-    // Wait for Keycloak login form to appear
-    try {
-      await page.waitForSelector('#username', { timeout: 30_000 });
-    } catch {
-      throw new Error(
-        `Keycloak login page did not load within 30s. ` +
-          `Verify KEYCLOAK_ISSUER is correct: ${env.KEYCLOAK_ISSUER}`
-      );
+    // Wait for the redirect chain to land on the Keycloak login page
+    await page.waitForURL('**/auth/realms/**', { timeout: 30_000 });
+
+    // The Keycloak theme hides the username/password form but the inputs exist in the DOM.
+    // Wait for them to be attached (not necessarily visible), then set values and submit.
+    await page.locator('#username').waitFor({ state: 'attached', timeout: 10_000 });
+
+    await page.evaluate(
+      ({ username, password }) => {
+        const usernameInput = document.querySelector<HTMLInputElement>('#username');
+        const passwordInput = document.querySelector<HTMLInputElement>('#password');
+        if (!usernameInput || !passwordInput) {
+          throw new Error('Keycloak #username or #password not found in DOM');
+        }
+        const form = usernameInput.closest('form');
+        if (!form) {
+          throw new Error('No parent <form> found for #username');
+        }
+        usernameInput.value = username;
+        passwordInput.value = password;
+        form.submit();
+      },
+      { username: env.E2E_TEST_USERNAME, password: env.E2E_TEST_PASSWORD }
+    );
+
+    // Wait for Keycloak to process the login — may land on T&C or redirect to the app
+    await page.waitForURL((url) => !url.pathname.includes('/openid-connect/'), {
+      timeout: 15_000,
+    });
+
+    // Handle Keycloak required actions (e.g. Terms and Conditions) before the app redirect
+    while (page.url().includes('/login-actions/')) {
+      const acceptButton = page.getByRole('button', { name: 'Accept' });
+      await acceptButton.waitFor({ state: 'visible', timeout: 10_000 });
+      await Promise.all([page.waitForNavigation({ timeout: 15_000 }), acceptButton.click()]);
     }
 
-    await page.fill('#username', env.E2E_TEST_USERNAME);
-    await page.fill('#password', env.E2E_TEST_PASSWORD);
-    await page.click('#kc-login');
-
-    // Check for Keycloak error message before waiting for redirect
-    const errorMessage = page.locator('#input-error, .kc-feedback-text');
-    const hasError = await errorMessage.isVisible({ timeout: 3_000 }).catch(() => false);
-    if (hasError) {
-      throw new Error(
-        `Authentication failed: invalid credentials for ${env.E2E_TEST_USERNAME} ` +
-          `against ${env.KEYCLOAK_ISSUER}`
-      );
-    }
-
-    // Wait for redirect back to the app
-    try {
-      await page.waitForURL('**/app/virtual-lab/sync**', { timeout: 30_000 });
-    } catch {
-      throw new Error(
-        `OAuth redirect did not complete. Expected URL containing /app/virtual-lab/sync ` +
-          `but got ${page.url()}. Keycloak issuer: ${env.KEYCLOAK_ISSUER}`
-      );
-    }
+    // Wait for redirect back to the app after Keycloak processes the login
+    await page.waitForURL('**/app/virtual-lab/sync**', { timeout: 30_000 });
   });
 
   // --- 2. Save browser storage state ---
@@ -60,21 +68,19 @@ setup('authenticate and provision virtual lab', async ({ page, context }) => {
   });
 
   // --- 3. Extract access token ---
-  let accessToken: string;
   await setup.step('extract access token', async () => {
-    const cookies = await context.cookies();
-    const sessionCookie = cookies.find(
-      (c) => c.name === 'next-auth.session-token' || c.name === '__Secure-next-auth.session-token'
-    );
+    // Get the Keycloak access token from the NextAuth session endpoint
+    const sessionResponse = await page.request.get('/api/auth/session');
+    const session = await sessionResponse.json();
 
-    if (!sessionCookie) {
+    if (!session?.accessToken) {
       throw new Error(
-        'Could not find session token cookie after authentication. ' +
-          `Cookies present: ${cookies.map((c) => c.name).join(', ')}`
+        'Could not extract accessToken from NextAuth session. ' +
+          `Session keys: ${Object.keys(session || {}).join(', ')}`
       );
     }
 
-    accessToken = sessionCookie.value;
+    accessToken = session.accessToken;
   });
 
   // --- 4. Create virtual lab ---
@@ -89,6 +95,7 @@ setup('authenticate and provision virtual lab', async ({ page, context }) => {
       data: {
         name: `e2e-test-lab-${timestamp}`,
         description: 'E2E test lab',
+        entity: 'E2E Test Organization',
       },
     });
 

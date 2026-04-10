@@ -372,6 +372,9 @@ importers:
       check-barrel-import-violation:
         specifier: ^0.3.0
         version: 0.3.0
+      dotenv:
+        specifier: ^17.4.1
+        version: 17.4.1
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1(@noble/hashes@2.2.0)
@@ -5661,6 +5664,10 @@ packages:
 
   dotenv@17.4.2:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
+    engines: {node: '>=12'}
+
+  dotenv@17.4.1:
+    resolution: {integrity: sha512-k8DaKGP6r1G30Lx8V4+pCsLzKr8vLmV2paqEj1Y55GdAgJuIqpRp5FfajGF8KtwMxCz9qJc6wUIJnm053d/WCw==}
     engines: {node: '>=12'}
 
   draco3d@1.5.7:
@@ -15460,6 +15467,8 @@ snapshots:
   dotenv@16.6.1: {}
 
   dotenv@17.4.2: {}
+
+  dotenv@17.4.1: {}
 
   draco3d@1.5.7: {}
 

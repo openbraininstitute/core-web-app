@@ -1,4 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.e2e' });
 
 const isCI = !!process.env.CI;
 const baseURL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -19,7 +22,6 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     trace: isCI ? 'on-first-retry' : 'off',
     ...devices['Desktop Chrome'],
-    ...devices['Desktop Firefox'],
   },
 
   globalTeardown: 'e2e/setup/global-teardown.ts',

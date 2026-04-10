@@ -244,3 +244,4 @@ CLAUDE.md
 # E2E test artifacts
 .auth/
 .e2e-state.json
+.env.e2e
