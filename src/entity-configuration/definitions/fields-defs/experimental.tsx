@@ -102,6 +102,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
           ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.Emodel,
+          ExtendedEntitiesTypeDict.Memodel,
         ],
         property: 'order_by',
         value: 'mtype__pref_label',
@@ -149,6 +150,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
           ExtendedEntitiesTypeDict.Emodel,
           ExtendedEntitiesTypeDict.IonChannelRecording,
           ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+          ExtendedEntitiesTypeDict.Memodel,
         ],
         property: 'order_by',
         value: 'etype__pref_label',
@@ -172,7 +174,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Values',
       singular: 'Value',
     },
-    isSortable: false,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity],
+        property: 'order_by',
+        value: 'measurement_sample_size__value',
+      },
+    ],
     isFilterable: false,
     isDisplayable: true,
   },
@@ -193,7 +202,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Value',
     },
     isFilterable: false,
-    isSortable: false,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity],
+        property: 'order_by',
+        value: 'measurement_mean__value',
+      },
+    ],
     isDisplayable: true,
   },
   [EntityCoreFields.Sem]: {
@@ -208,7 +224,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Values',
       singular: 'Value',
     },
-    isSortable: false,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity],
+        property: 'order_by',
+        value: 'measurement_standard_error__value',
+      },
+    ],
     isFilterable: false,
     isDisplayable: true,
   },
@@ -225,6 +248,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'pre_region__name__in',
     isFilterable: true,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection],
+        property: 'order_by',
+        value: 'pre_region__name',
+      },
+    ],
   },
   [EntityCoreFields.PostSynapticBrainRegion]: {
     title: 'Brain Region [To]',
@@ -239,6 +270,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'post_region__name_in',
     isFilterable: true,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection],
+        property: 'order_by',
+        value: 'post_region__name',
+      },
+    ],
   },
   [EntityCoreFields.PreSynapticCellType]: {
     title: 'Cell Type [From]',
@@ -253,6 +292,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'pre_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection],
+        property: 'order_by',
+        value: 'pre_mtype__pref_label',
+      },
+    ],
   },
   [EntityCoreFields.PostSynapticCellType]: {
     title: 'Cell Type [To]',
@@ -267,6 +314,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'post_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection],
+        property: 'order_by',
+        value: 'post_mtype__pref_label',
+      },
+    ],
   },
   [EntityCoreFields.NeuronDensity]: {
     title: 'Density',

@@ -338,7 +338,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Published in',
     filter: CoreFieldFilterTypeEnum.Text,
     isDisplayable: true,
-    isSortable: false,
+    isSortable: true,
     isFilterable: true,
     render: (r) => renderEmptyOrValue((r as ICircuit).published_in),
     vocabulary: {
@@ -359,7 +359,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Experiment date',
     filter: CoreFieldFilterTypeEnum.DateRange,
     isDisplayable: true,
-    isSortable: false,
+    isSortable: true,
     isFilterable: true,
     render: (r) => renderDate((r as ICircuit).experiment_date),
     vocabulary: {
