@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Checkbox } from '@/ui/molecules/checkbox';
 import { Modal } from '@/ui/molecules/modal';
+import { formatNumber } from '@/util/common';
 import { cn } from '@/utils/css-class';
 
 import { useTaskCostEstimates } from './use-task-cost-estimates';
@@ -137,7 +138,7 @@ export function CostConfirmationModal({
                     <span className="text-lg font-bold">{item.name}</span>
                   </label>
                   <span className="shrink-0 text-right text-lg">
-                    {item.cost !== null ? `${item.cost} credits` : '-- credits'}
+                    {item.cost !== null ? `${formatNumber(item.cost)} credits` : '-- credits'}
                   </span>
                 </div>
               ))}
@@ -153,7 +154,7 @@ export function CostConfirmationModal({
 
             <div className="flex items-center justify-between border-t border-neutral-3 pt-4">
               <span className="text-lg font-bold">Total</span>
-              <span className="text-lg font-bold">{totalCredits} credits</span>
+              <span className="text-lg font-bold">{formatNumber(totalCredits)} credits</span>
             </div>
           </>
         )}
