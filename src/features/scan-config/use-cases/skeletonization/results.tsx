@@ -11,6 +11,7 @@ import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { Loader } from '@/components/loader';
 import { WorkspaceSection } from '@/constants';
+import { CostConfirmationModal } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import {
   buildActivityStatusMap,
@@ -51,6 +52,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
     useState<ITaskConfig<TSkeletonizationTaskConfigMeta> | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
+  const [showCostModal, setShowCostModal] = useState(false);
 
   const { mutateAsync: runSkeletonization, isPending: runSkeletonizationPending } =
     useScanConfigLaunchMutation({
@@ -143,6 +145,19 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
     setSelectedConfigIds([]);
   };
 
+  const costModalItems = useMemo(
+    () =>
+      (configsResponse?.configList ?? [])
+        .filter((c) => selectedConfigIds.includes(c.id))
+        .map((c) => ({ id: c.id, name: c.name })),
+    [configsResponse?.configList, selectedConfigIds]
+  );
+
+  const onCostConfirm = (confirmedIds: string[]) => {
+    setShowCostModal(false);
+    onRun(confirmedIds);
+  };
+
   const onSelectedAll: CheckboxProps['onChange'] = (e) => {
     setSelectedConfigIds(e.target.checked ? selectableConfigIds : []);
   };
@@ -196,7 +211,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
               'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"
-            onClick={() => onRun(selectedConfigIds)}
+            onClick={() => setShowCostModal(true)}
             disabled={runSkeletonizationPending || selectedConfigIds.length === 0}
           >
             <div className="flex justify-center gap-4">
@@ -236,6 +251,16 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
           </div>
         )}
       </div>
+
+      <CostConfirmationModal
+        open={showCostModal}
+        onClose={() => setShowCostModal(false)}
+        onConfirm={onCostConfirm}
+        items={costModalItems}
+        taskType={ObiOneTaskTypeDict.Skeletonization}
+        workflowLabel="skeletonizations"
+        context={context}
+      />
     </div>
   );
 }
