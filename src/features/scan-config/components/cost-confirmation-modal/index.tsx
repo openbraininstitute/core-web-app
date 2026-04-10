@@ -107,7 +107,9 @@ export function CostConfirmationModal({
     >
       <div className="text-primary-9 flex flex-col gap-4">
         <h4 className="text-lg mb-4">
-          Estimated cost breakdown for the {checkedCount} selected {workflowLabel}.
+          Estimated cost breakdown for the {checkedCount} selected{' '}
+          {/* TODO: consider having singular and plural labels in workflow definitions */}
+          {checkedCount === 1 ? workflowLabel.replace(/s$/, '') : workflowLabel}.
         </h4>
 
         {isLoading && (
