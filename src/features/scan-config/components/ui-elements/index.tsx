@@ -28,6 +28,8 @@ import {
 } from '@/features/scan-config/types';
 import { isObject } from '@/util/type-guards';
 
+import { VoltageDuration } from './voltage-duration';
+
 import type { SetStateAction } from 'jotai';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -341,6 +343,14 @@ export function UIElementRender({
             }}
           />
         );
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.VoltageDuration },
+      },
+      ({ paramSchema }) => {
+        return <VoltageDuration paramSchema={paramSchema} />;
       }
     )
     .otherwise(() => null);
