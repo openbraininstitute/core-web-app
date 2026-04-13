@@ -4,7 +4,7 @@ import { Form } from 'antd';
 import { useRef, useState } from 'react';
 
 import { AssetUpload } from '@/ui/segments/contribute/shared/components/asset-upload';
-import { renderLabel, RequiredFieldMarker } from '@/ui/segments/contribute/shared/helpers';
+import { RequiredFieldMarker, renderLabel } from '@/ui/segments/contribute/shared/helpers';
 import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
 
 export interface INotebookFiles {
@@ -27,7 +27,7 @@ const FILE_CONFIGS = [
   {
     key: 'notebook' as const,
     label: 'Jupyter Notebook',
-    accept: ['.ipynb'],
+    accept: ['.ipynb', '.IPYNB'],
     acceptLabel: 'ipynb',
     optional: false,
     validate: (file: File): string | null => {
@@ -38,7 +38,7 @@ const FILE_CONFIGS = [
   {
     key: 'requirements' as const,
     label: 'Requirements File',
-    accept: ['.txt'],
+    accept: ['.txt', '.TXT'],
     acceptLabel: 'txt',
     optional: true,
     validate: (file: File): string | null => {
@@ -49,7 +49,7 @@ const FILE_CONFIGS = [
   {
     key: 'zip' as const,
     label: 'Supporting Files',
-    accept: ['.zip'],
+    accept: ['.zip', '.ZIP'],
     acceptLabel: 'zip',
     optional: true,
     validate: (file: File): string | null => {
@@ -57,7 +57,7 @@ const FILE_CONFIGS = [
       return null;
     },
   },
-] as const;
+];
 
 function HiddenSentinel({
   value,
@@ -67,12 +67,7 @@ function HiddenSentinel({
   onChange?: (val: unknown) => void;
 }) {
   return (
-    <input
-      type="hidden"
-      value={value === true ? 'true' : ''}
-      onChange={() => {}}
-      aria-hidden
-    />
+    <input type="hidden" value={value === true ? 'true' : ''} onChange={() => {}} aria-hidden />
   );
 }
 
@@ -113,9 +108,7 @@ export function Assets() {
               name={['assets', config.key]}
               noStyle
               rules={
-                config.optional
-                  ? []
-                  : [{ required: true, message: `${config.label} is required` }]
+                config.optional ? [] : [{ required: true, message: `${config.label} is required` }]
               }
             >
               <HiddenSentinel />
@@ -136,8 +129,7 @@ export function Assets() {
                 acceptLabel={config.acceptLabel}
                 onValidateFile={config.validate}
                 onFilesChange={(files) => {
-                  const file =
-                    files[0]?.file instanceof File ? (files[0].file as File) : undefined;
+                  const file = files[0]?.file instanceof File ? (files[0].file as File) : undefined;
                   handleFileChange(config.key, file);
                 }}
               />
@@ -148,4 +140,3 @@ export function Assets() {
     </div>
   );
 }
-

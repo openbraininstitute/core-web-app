@@ -1,13 +1,10 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
 import {
   AnalysisNotebookTemplateSchema,
   type TAnalysisNotebookTemplateForm,
 } from '@/ui/segments/contribute/analysis-notebook-template/schema';
-import {
-  type IContributionFormConfig,
-  type IContributionStep,
-} from '@/ui/segments/contribute/shared';
+
+import type { IContributionFormConfig, IContributionStep } from '@/ui/segments/contribute/shared';
 
 export const ANALYSIS_NOTEBOOK_TEMPLATE_PROGRESS_STEPS: Array<{
   key: string;
@@ -35,7 +32,7 @@ export function createAnalysisNotebookTemplateConfig(
   steps: Array<IContributionStep<TAnalysisNotebookTemplateForm>>
 ): IContributionFormConfig<TAnalysisNotebookTemplateForm, typeof AnalysisNotebookTemplateSchema> {
   return {
-    entityType: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
+    entityType: ExtendedEntitiesTypeDict.Notebook,
     title: 'Analysis Notebook Template',
     formId: 'contribute-analysis-notebook-template-modal',
     schema: AnalysisNotebookTemplateSchema,
@@ -49,7 +46,8 @@ export function createAnalysisNotebookTemplateConfig(
       } as unknown as TAnalysisNotebookTemplateForm['assets'],
       contribution: [{}] as unknown as TAnalysisNotebookTemplateForm['contribution'],
     }),
-    buildDetailsUrl: ({ virtualLabId, projectId }) =>
-      `/app/virtual-lab/${virtualLabId}/${projectId}/notebooks/private`,
+    buildDetailsUrl: () => '__NO_DETAILS_URL__',
+    /* ({ virtualLabId, projectId }) =>
+      `/app/virtual-lab/${virtualLabId}/${projectId}/notebooks/private`, */
   };
 }

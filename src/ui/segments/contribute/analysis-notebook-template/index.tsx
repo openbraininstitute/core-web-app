@@ -2,8 +2,8 @@
 
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
-  createAnalysisNotebookTemplateConfig,
   ANALYSIS_NOTEBOOK_TEMPLATE_PROGRESS_STEPS,
+  createAnalysisNotebookTemplateConfig,
 } from '@/ui/segments/contribute/analysis-notebook-template/config';
 import { useAnalysisNotebookTemplatePipeline } from '@/ui/segments/contribute/analysis-notebook-template/pipeline';
 import {
@@ -58,6 +58,7 @@ export function AnalysisNotebookTemplate({ sessionId }: IAnalysisNotebookTemplat
       progressSteps={ANALYSIS_NOTEBOOK_TEMPLATE_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
       projectId={projectId}
+      brainRegionId={null}
     />
   );
 }

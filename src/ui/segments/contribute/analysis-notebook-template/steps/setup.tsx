@@ -68,7 +68,12 @@ export function Setup() {
           },
         ]}
       >
-        <Select className="h-12" size="large" placeholder="Select scale" options={SCALE_OPTIONS} />
+        <Select
+          className="rounded-full! h-12 [&_.ant-select-selector]:rounded-full!"
+          size="large"
+          placeholder="Select scale"
+          options={SCALE_OPTIONS}
+        />
       </Form.Item>
     </div>
   );

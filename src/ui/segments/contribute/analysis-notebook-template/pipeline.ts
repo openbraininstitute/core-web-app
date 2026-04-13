@@ -45,13 +45,12 @@ export function useAnalysisNotebookTemplatePipeline({
       await Promise.all([
         queryClient.invalidateQueries({
           predicate: (query) =>
-            query.queryKey[0] ===
-            `data-entity-count-${ExtendedEntitiesTypeDict.AnalysisNotebookTemplate}`,
+            query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.Notebook}`,
         }),
         queryClient.invalidateQueries({
           predicate: (query) =>
             get((query.queryKey as ExtendedEntityTypeQueryKey)[0], 'context.extendedEntityType') ===
-            ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
+            ExtendedEntitiesTypeDict.Notebook,
         }),
         queryClient.invalidateQueries(),
       ]);
@@ -124,7 +123,6 @@ export function useAnalysisNotebookTemplatePipeline({
     createEntity: async ({ values }: { values: TAnalysisNotebookTemplateForm }) => {
       const notebook = await createNotebookAsync.mutateAsync(values);
       const entityId = notebook.id;
-      console.log('[pipeline] getNotebookFiles():', getNotebookFiles());
       await uploadAssetsAsync.mutateAsync({
         entityId,
         files: getNotebookFiles() as { notebook: File; requirements?: File; zip?: File },

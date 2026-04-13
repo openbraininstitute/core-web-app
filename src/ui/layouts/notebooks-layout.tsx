@@ -1,20 +1,22 @@
 'use client';
-import { PlusOutlined, LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import { type ReactNode, useState } from 'react';
-import { Button } from '@/ui/molecules/button';
+
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { startEmptyNotebook } from '@/services/notebooks';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { Button } from '@/ui/molecules/button';
+import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
+import { ContributionModal } from '@/ui/segments/contribute/modal';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+
 import { useWorkspace } from '../hooks/use-workspace';
-import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ContributionModal } from '@/ui/segments/contribute/modal';
 
 type Props = {
   children: ReactNode;
@@ -81,7 +83,6 @@ export function NotebooksLayout({ children, active }: Props) {
   return (
     <div>
       <div className="mb-5 ml-5 flex items-center justify-between">
-
         <div className="flex">
           <NextLink
             href="public"
@@ -134,7 +135,9 @@ export function NotebooksLayout({ children, active }: Props) {
             onClick={handleRunNotebook}
           >
             <div>Open JupyterHub</div>
-            {!loading && <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />}
+            {!loading && (
+              <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
+            )}
             {loading && <LoadingOutlined className="text-[#F37726]" />}
           </button>
         </div>

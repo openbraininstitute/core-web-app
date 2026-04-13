@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@bprogress/next';
 import { Form } from 'antd';
 
 import { Button } from '@/ui/molecules/button';
@@ -47,6 +47,9 @@ export function SubmitButton<
       })
     : null;
 
+  if (detailsUrl === '__NO_DETAILS_URL__') {
+    return null;
+  }
   if (detailsUrl) {
     return (
       <Form.Item className="mb-0!">
@@ -60,7 +63,11 @@ export function SubmitButton<
             'px-10 select-none hover:text-white disabled:cursor-not-allowed'
           )}
           onClick={() => {
-            makeSelectContributionEntityClickEvent({ display: false, entityType: null, sessionId: null });
+            makeSelectContributionEntityClickEvent({
+              display: false,
+              entityType: null,
+              sessionId: null,
+            });
             router.push(detailsUrl);
           }}
         >

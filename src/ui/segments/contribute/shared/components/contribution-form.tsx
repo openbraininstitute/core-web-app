@@ -29,7 +29,7 @@ interface IContributionFormProps<
 > extends WorkspaceContext {
   config: IContributionFormConfig<TFormValues, TSchema>;
   sessionId: string;
-  brainRegionId: string;
+  brainRegionId: string | null;
   pipeline: TPipelineHookFactory<TFormValues>;
   progressSteps: Array<{
     readonly key: string;
@@ -144,7 +144,7 @@ function FormContent<
           size="lg"
           type="button"
           onClick={goToPreviousStep}
-          disabled={isFirstStep}
+          disabled={isFirstStep || !!createdEntityId}
         >
           <LeftOutlined />
         </Button>
@@ -166,7 +166,7 @@ function FormContent<
             'shadow-bnb size-12 active:text-white'
           )}
           onClick={goToNextStep}
-          disabled={isLastStep}
+          disabled={isLastStep || !!createdEntityId}
         >
           <RightOutlined />
         </Button>
