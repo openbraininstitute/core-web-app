@@ -14,12 +14,12 @@ import { IonChannelRecording } from '@/entity-configuration/domain/experimental/
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
-import { ComputationallySynthesizedCellMorphology } from '@/entity-configuration/domain/model/computationally-synthesized-morphology';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
 import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
@@ -50,7 +50,7 @@ export const ModelEntitiesTileTypes = {
   MEmodel,
   Circuit,
   IonChannelModel,
-  ComputationallySynthesizedCellMorphology,
+  SynthesizedCellMorphology,
 } as const;
 
 export const SimulationEntitiesTileTypes = {
