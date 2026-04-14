@@ -58,15 +58,6 @@ async function upsertRefreshTokenInAuthManager({
         refresh_token: refreshToken,
       }),
     });
-    if (!response.ok) {
-      log(
-        'error',
-        'auth-manager refresh-token upsert failed',
-        response.status,
-        await response.text()
-      );
-      return;
-    }
     const result = await response.json();
     log('debug', 'update refresh token for auth manager succeed', result);
   } catch (error) {
@@ -101,10 +92,12 @@ export async function refreshAccessToken(token: TokenSet) {
     if (!response.ok) {
       throw refreshedTokens;
     }
-    await upsertRefreshTokenInAuthManager({
-      accessToken: refreshedTokens.access_token,
-      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
-    });
+    void (async () => {
+      await upsertRefreshTokenInAuthManager({
+        accessToken: refreshedTokens.access_token,
+        refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+      });
+    })();
 
     return {
       ...token,
@@ -168,12 +161,13 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, user, profile }) {
       // Initial sign in
       if (account && user) {
-        if (account?.access_token && account?.refresh_token) {
-          await upsertRefreshTokenInAuthManager({
-            accessToken: account.access_token,
-            refreshToken: account.refresh_token,
-          });
-        }
+        void (async () => {
+          if (account?.access_token && account?.refresh_token)
+            await upsertRefreshTokenInAuthManager({
+              accessToken: account.access_token,
+              refreshToken: account.refresh_token,
+            });
+        })();
 
         return {
           ...token,
