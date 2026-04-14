@@ -9,7 +9,14 @@ export function TransformedLink({
 }) {
   const id = useId();
   return (
-    <a key={id} href={url} target="_blank" rel="noopener noreferrer" className={className}>
+    <a
+      onClick={(e) => e.stopPropagation()}
+      key={id}
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+    >
       {url}
     </a>
   );

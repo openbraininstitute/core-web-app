@@ -1,16 +1,22 @@
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
+import type { ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export function buildContributionArtifactOptions(): Array<{
   label: string;
   value: TExtendedEntitiesTypeDict;
+  description?: string;
+  icon?: ReactNode;
+  enabled: boolean;
 }> {
   return Object.entries(EntityCoreConfiguration)
-    .filter(([, p]) => p.isContributable ?? false)
+    .filter(([, value]) => Boolean(value.isContributable))
     .map(([, value]) => ({
       label: value.title,
       value: value.extendedType,
+      enabled: Boolean(value.isMultipleContributeSupport || value.isSingleContributeSupport),
+      description: value.description,
     }));
 }
 

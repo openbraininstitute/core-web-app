@@ -32,7 +32,6 @@ export default function Page() {
   const notification = useAppNotification();
 
   const options = useMemo(() => buildContributionArtifactOptions(), []);
-
   const [{ mode, type, view }, onStateChange] = useQueryStates(
     {
       mode: parseAsString

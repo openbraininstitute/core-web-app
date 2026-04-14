@@ -1,4 +1,11 @@
-import { ComponentProps, ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
+import {
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -9,6 +16,7 @@ type ExpandableTextProps = {
   className?: ComponentProps<'div'>['className'];
   btnWrapperClassName?: ComponentProps<'div'>['className'];
   children?: ({ isExpanded, toggle }: { isExpanded: boolean; toggle: () => void }) => ReactNode;
+  formatter?: (content: ReactNode) => ReactNode;
 };
 
 const clampClassFor = (lines: number): string => {
@@ -41,6 +49,7 @@ export function ExpandableText({
   className,
   btnWrapperClassName,
   children,
+  formatter,
 }: ExpandableTextProps): ReactElement {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [isOverflowing, setIsOverflowing] = useState<boolean>(false);
@@ -74,22 +83,29 @@ export function ExpandableText({
       cancelAnimationFrame(rafId);
       if (resizeObserver) resizeObserver.disconnect();
     };
-  }, [text, collapsedLines, isExpanded]);
+  }, [collapsedLines]);
 
   const toggle = (): void => {
     setIsExpanded((prev: boolean) => !prev);
   };
 
+  const content = (
+    <p
+      id={id}
+      ref={contentRef}
+      className={cn(!isExpanded && clampClassFor(collapsedLines), className)}
+      data-expanded={isExpanded}
+    >
+      {text}
+    </p>
+  );
+
+  const formattedContent = formatter ? formatter(content) : content;
+
   return (
     <div className="relative">
-      <p
-        id={id}
-        ref={contentRef}
-        className={cn(!isExpanded && clampClassFor(collapsedLines), className)}
-        aria-expanded={isExpanded}
-      >
-        {text}
-      </p>
+      {formattedContent}
+
       {isOverflowing && (
         <div className={cn('mt-2', btnWrapperClassName)}>{children?.({ isExpanded, toggle })}</div>
       )}
