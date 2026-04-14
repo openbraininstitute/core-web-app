@@ -246,6 +246,32 @@ export enum AssetLabel {
   jupyter_notebook = 'jupyter_notebook',
   ion_channel_model_thumbnail = 'ion_channel_model_thumbnail',
   circuit_extraction_config = 'circuit_extraction_config',
+  task_config = 'task_config',
+  skeletonization_config = 'skeletonization_config',
+  lod_mesh_block = 'lod_mesh_block',
+}
+
+export enum AssetContentType {
+  abf = 'application/abf',
+  asc = 'application/asc',
+  directory = 'application/vnd.directory',
+  gltf_binary = 'model/gltf-binary',
+  gzip = 'application/gzip',
+  h5 = 'application/x-hdf5',
+  hoc = 'application/hoc',
+  ipynb = 'application/x-ipynb+json',
+  jpeg = 'image/jpeg',
+  json = 'application/json',
+  mod = 'application/mod',
+  nrrd = 'application/nrrd',
+  nwb = 'application/nwb',
+  obj = 'application/obj',
+  pdf = 'application/pdf',
+  png = 'image/png',
+  swc = 'application/swc',
+  text = 'text/plain',
+  webp = 'image/webp',
+  zip = 'application/zip',
 }
 
 type AssetBase = {
@@ -253,7 +279,7 @@ type AssetBase = {
   full_path: string;
   bucket_name: string;
   is_directory: boolean;
-  content_type: string;
+  content_type: AssetContentType;
   size: number;
   sha256_digest?: string | null;
   label: AssetLabel;

@@ -1,7 +1,8 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
+
+import type { ReactNode } from 'react';
 
 type Props = {
   children: ReactNode;

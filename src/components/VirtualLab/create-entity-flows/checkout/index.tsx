@@ -1,25 +1,44 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAtom } from 'jotai';
+import { useEffect } from 'react';
 
-import TiersList from '@/components/VirtualLab/create-entity-flows/checkout/tiers-list';
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import PaymentForm from '@/components/VirtualLab/create-entity-flows/checkout/payment-form';
 import { flowAtom } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
-import { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
+import TiersList from '@/components/VirtualLab/create-entity-flows/checkout/tiers-list';
+import {
+  EmailVerification,
+  EmailVerificationWithBack,
+} from '@/ui/segments/virtual-lab-settings/elements/email-verification';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
+
+import type { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   data: UserActiveSubscriptionResponse | null;
 };
 
 export function CheckoutFlow({ data }: Props) {
-  const [slideDirection, onSlideDirectionChange] = useState<'right' | 'left'>('right');
   const [flow, updateFlow] = useAtom(flowAtom);
+  const queryClient = useQueryClient();
 
   const onPreviousStep = () => {
-    onSlideDirectionChange('right');
     updateFlow((prev) => ({ ...prev, step: 'select', tier: null }));
+  };
+
+  const { data: virtualLabData } = useQuery({
+    queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
+    queryFn: async () => await listVirtualLabs({ include: [LabTypeEnum.MY_LAB] }),
+  });
+
+  const onVerificationComplete = async () => {
+    await queryClient.invalidateQueries({
+      queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
+    });
+    updateFlow((prev) => ({ ...prev, step: 'pay' }));
   };
 
   useEffect(() => {
@@ -34,33 +53,23 @@ export function CheckoutFlow({ data }: Props) {
   }, [updateFlow]);
 
   return (
-    <AnimatePresence initial={false} custom={slideDirection} mode="wait">
-      <motion.div
-        key={flow.step}
-        custom={slideDirection}
-        variants={{
-          initial: { opacity: 0 },
-          animate: { opacity: 1 },
-          exit: { opacity: 0 },
-        }}
-        initial="enter"
-        animate="center"
-        exit="exit"
-        transition={{
-          duration: 0.3,
-          type: 'tween',
-          ease: 'easeInOut',
-        }}
-        className="relative flex h-full grow flex-col"
-      >
-        <div className={flow.step !== 'select' ? 'hidden' : 'h-full'}>
-          <TiersList subscriptionData={data} currentTier={data?.subscription.tier} />
-        </div>
-        <div className={flow.step !== 'pay' ? 'hidden' : 'h-full'}>
-          <PaymentForm onPrevious={onPreviousStep} />
-        </div>
-      </motion.div>
-    </AnimatePresence>
+    <div className="relative flex h-full grow flex-col">
+      <div className={flow.step !== 'select' ? 'hidden' : 'h-full'}>
+        <TiersList subscriptionData={data} currentTier={data?.subscription.tier} />
+      </div>
+      <div className={flow.step !== 'email-verification' ? 'hidden' : 'h-full'}>
+        {virtualLabData?.data?.virtual_lab.id && (
+          <EmailVerificationWithBack
+            onBack={() => updateFlow({ ...flow, step: 'select', tier: null })}
+            virtualLabId={virtualLabData?.data?.virtual_lab.id}
+            onVerificationComplete={onVerificationComplete}
+          />
+        )}
+      </div>
+      <div className={flow.step !== 'pay' ? 'hidden' : 'h-full'}>
+        <PaymentForm onPrevious={onPreviousStep} />
+      </div>
+    </div>
   );
 }
 

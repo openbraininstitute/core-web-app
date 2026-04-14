@@ -7,10 +7,13 @@ import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
-import NWBTrace, { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
 import { convertCurrentSeries, convertVoltageSeries } from '@/util/explore-section/plotHelpers';
+import { cn } from '@/utils/css-class';
+
+import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -33,6 +36,7 @@ interface CellComponentProps {
   cellId: string;
   protocols: string[];
   singleRecMultiCellMode: boolean;
+  showCellLabel?: boolean;
   onRepetitionClick: (stimulusType: string, rep: string) => () => void;
 }
 
@@ -56,6 +60,7 @@ function TraceThumbnail({
   protocol,
   repetition,
   recordingType,
+  recordingIndex,
   plotRevision,
 }: {
   trace: NWBTrace;
@@ -63,18 +68,24 @@ function TraceThumbnail({
   protocol: string;
   repetition: string;
   recordingType: RecordingType;
+  recordingIndex: number;
   plotRevision: number;
 }) {
   const sweeps = trace.getSweeps(cellId, protocol, repetition);
-  const [rawData, dataUnit] = useDataWithUnit(
+  const [rawData, dataUnit, label] = useDataWithUnit(
     cellId,
     protocol,
     recordingType,
+    recordingIndex,
     repetition,
     sweeps,
     trace
   );
-  const yTitle = `${startCase(recordingType)} (${dataUnit === 'amperes' ? 'pA' : 'mV'})`;
+  const unitStr = dataUnit === 'amperes' ? 'pA' : 'mV';
+  const yTitle =
+    dataUnit === 'amperes'
+      ? `${label ?? 'Current'} (${unitStr})`
+      : `${startCase(recordingType)} (${unitStr})`;
   const { layout, config } = useOverviewPlotConfig({
     datarevision: plotRevision,
     yTitle,
@@ -90,12 +101,16 @@ function TraceThumbnailContainer({
   protocol,
   repetition,
   recordingType,
+  recordingIndex,
+  className,
 }: {
   trace: NWBTrace;
   cellId: string;
   protocol: string;
   repetition: string;
   recordingType: RecordingType;
+  recordingIndex: number;
+  className?: string;
 }) {
   const [plotRevision, setPlotRevision] = useState<number>(0);
 
@@ -115,7 +130,7 @@ function TraceThumbnailContainer({
   }, [ref, setInViewRef]);
 
   return (
-    <div ref={ref} className="relative aspect-4/3 overflow-hidden bg-gray-100 last:mt-7">
+    <div ref={ref} className={cn('relative aspect-4/3 overflow-hidden bg-gray-100', className)}>
       {inView ? (
         <TraceThumbnail
           plotRevision={plotRevision}
@@ -124,6 +139,7 @@ function TraceThumbnailContainer({
           protocol={protocol}
           repetition={repetition}
           recordingType={recordingType}
+          recordingIndex={recordingIndex}
         />
       ) : null}
     </div>
@@ -140,34 +156,71 @@ function ImageSetComponent({
 }: ImageSetComponentProps) {
   const repetitions = repetitionMap.get(protocol) ?? [];
 
-  const content = repetitions.map((repetition) => (
-    <div className="flex flex-col gap-2" key={repetition}>
-      <div className="flex items-center justify-between">
-        <span className="text-dark indent-3 text-lg font-light capitalize">
-          {singleRecMultiCellMode ? cellId : repetition}
-        </span>
-        <button
-          className="bg-neutral-1 hover:bg-neutral-2 flex items-center rounded p-3"
-          onClick={onRepetitionClick(protocol, repetition)}
-          type="button"
-          aria-label="Toggle selection"
-        >
-          <LineChartOutlined className="stroke-primary-8" />
-        </button>
-      </div>
+  const content = repetitions.map((repetition) => {
+    const thumbnails = trace.recordingTypes.flatMap((recordingType: RecordingType) => {
+      const recordings = trace.getSweepRecordingData(
+        cellId,
+        protocol,
+        repetition,
+        trace.getSweeps(cellId, protocol, repetition)[0],
+        recordingType
+      );
+      return recordings.map((_, i) => ({
+        recordingType,
+        recordingIndex: i,
+        key: `${recordingType}-${i}`,
+      }));
+    });
 
-      {trace.recordingTypes.map((recordingType: RecordingType) => (
-        <TraceThumbnailContainer
-          key={recordingType}
-          trace={trace}
-          cellId={cellId}
-          protocol={protocol}
-          repetition={repetition}
-          recordingType={recordingType}
-        />
-      ))}
-    </div>
-  ));
+    const hasMultipleRecordings = thumbnails.length > 2;
+
+    return (
+      <div
+        className={cn('flex flex-col gap-2', hasMultipleRecordings && 'col-span-full')}
+        key={repetition}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-dark indent-3 text-lg font-light capitalize">
+            {singleRecMultiCellMode ? cellId : repetition}
+          </span>
+          <button
+            className="bg-neutral-1 hover:bg-neutral-2 flex items-center rounded p-3"
+            onClick={onRepetitionClick(protocol, repetition)}
+            type="button"
+            aria-label="Toggle selection"
+          >
+            <LineChartOutlined className="stroke-primary-8" />
+          </button>
+        </div>
+
+        <div
+          className={
+            hasMultipleRecordings
+              ? 'grid grid-cols-1 gap-4 @lg:grid-cols-2 @3xl:grid-cols-4 @7xl:grid-cols-6'
+              : undefined
+          }
+        >
+          {thumbnails.map(({ recordingType, recordingIndex, key }) => (
+            <TraceThumbnailContainer
+              key={key}
+              trace={trace}
+              cellId={cellId}
+              protocol={protocol}
+              repetition={repetition}
+              recordingType={recordingType}
+              recordingIndex={recordingIndex}
+              className={cn(
+                !hasMultipleRecordings &&
+                  recordingIndex === 0 &&
+                  recordingType === RecordingType.RESPONSE &&
+                  'mt-7'
+              )}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  });
 
   if (singleRecMultiCellMode) return content;
 
@@ -191,6 +244,7 @@ function CellComponent({
   protocols,
   onRepetitionClick,
   singleRecMultiCellMode,
+  showCellLabel,
 }: CellComponentProps) {
   const repetitionMap = useMemo(
     () =>
@@ -217,7 +271,7 @@ function CellComponent({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="text-primary-9 text-xl font-bold">{cellId}</div>
+      {showCellLabel && <div className="text-primary-9 text-xl font-bold">{cellId}</div>}
       {content}
     </div>
   );
@@ -314,6 +368,7 @@ export default function TraceOverview({
             protocols={filteredProtocols}
             onRepetitionClick={onRepetitionClick}
             singleRecMultiCellMode={singleRecMultiCellMode}
+            showCellLabel={cellIds.length > 1}
           />
         ))}
       </div>
@@ -325,17 +380,20 @@ function useDataWithUnit(
   cellId: string,
   protocol: string,
   recordingType: RecordingType,
+  recordingIndex: number,
   repetition: string,
   sweeps: string[],
   trace: NWBTrace
 ): [
   data: { x: any[]; y: any[]; sweepName: string; name: string; line: { color: string } }[],
   unit: string | null,
+  label: string | undefined,
 ] {
   return useMemo(() => {
     let deltaTime = 1;
     let dataUnit: string | null = null;
     let conversionFactor = 1;
+    let dataLabel: string | undefined;
 
     const plotData = sweeps.map((sweep, idx) => {
       const recordingData = trace.getSweepRecordingData(
@@ -344,7 +402,11 @@ function useDataWithUnit(
         repetition,
         sweep,
         recordingType
-      );
+      )[recordingIndex];
+
+      if (!recordingData) {
+        throw new Error(`No recording data found for sweep ${sweep} at index ${recordingIndex}`);
+      }
 
       if (idx === 0) {
         const { timeUnit, timeRate } = recordingData;
@@ -355,6 +417,7 @@ function useDataWithUnit(
 
         dataUnit = recordingData.unit;
         conversionFactor = recordingData.conversionFactor;
+        dataLabel = recordingData.label;
       }
 
       const name = sweep;
@@ -386,6 +449,6 @@ function useDataWithUnit(
           : convertVoltageSeries(d.y, 'mV', conversionFactor);
     });
 
-    return [optimizedPlotData, dataUnit];
-  }, [cellId, protocol, recordingType, repetition, sweeps, trace]);
+    return [optimizedPlotData, dataUnit, dataLabel];
+  }, [cellId, protocol, recordingType, recordingIndex, repetition, sweeps, trace]);
 }

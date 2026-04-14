@@ -4,13 +4,14 @@ import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
 import { match } from 'ts-pattern';
 
-import { getMEModel } from '@/api/entitycore/queries';
+import { getEmCellMesh, getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { getCircuitSimulations } from '@/api/entitycore/queries/simulation/circuit-simulation';
-import { getCircuitSimulationExecutions } from '@/api/entitycore/queries/simulation/circuit-simulation-execution';
-import { getCircuitSimulationResult } from '@/api/entitycore/queries/simulation/circuit-simulation-result';
+import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-model';
+import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
+import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
+import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaign/simulation-result';
 import { EntityTypeDict, type IMEModel, type TEntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
@@ -20,17 +21,20 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { ICircuitSimulationResult } from '@/api/entitycore/types/entities/circuit-simulation-result';
+import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
+import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { SimExecStatusMap } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
+import type { Nullish } from '@/utils/type';
 
 const simExecBySimIdAtomFamily = readAtomFamilyWithExpiration(
   ({ simulationId, context }: { simulationId: string; context: WorkspaceContext }) =>
     atom<Promise<IExecutionActivity>>(async () => {
       const simulationExecutionFilters = { used__id: simulationId };
-      const res = await getCircuitSimulationExecutions({
+      const res = await getSimulationExecutions({
         filters: simulationExecutionFilters,
         context,
       });
@@ -148,7 +152,7 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
     context: WorkspaceContext;
     enabled?: boolean;
   }) =>
-    atom<Promise<ICircuitSimulationResult | null>>(async (get) => {
+    atom<Promise<ISimulationResult | null>>(async (get) => {
       if (!enabled) {
         return null;
       }
@@ -159,7 +163,7 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
         return null;
       }
 
-      return getCircuitSimulationResult({
+      return getSimulationResult({
         id: execution.generated[0].id,
         context,
       });
@@ -172,9 +176,9 @@ export const simResultBySimIdAtomFamily = readAtomFamilyWithExpiration(
 
 export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   ({ campaignId, context }: { campaignId: string; context: WorkspaceContext }) =>
-    atom<Promise<ICircuitSimulation[]>>(async () => {
+    atom<Promise<ISimulation[]>>(async () => {
       const filters = { simulation_campaign_id: campaignId };
-      const res = await getCircuitSimulations({ filters, context });
+      const res = await getSimulations({ filters, context });
 
       const simulations = res.data;
 
@@ -193,17 +197,22 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   }
 );
 
-export function useModelQuery({ id, context }: { id: string; context: WorkspaceContext }) {
-  if (!id) {
-    throw new Error(`No model ID provided`);
-  }
+export function useModelQuery({
+  id,
+  context,
+}: {
+  id: string | Nullish;
+  context: WorkspaceContext;
+}) {
   const params = { id, context };
   const {
     data: entityType,
     isLoading: entityLoading,
     error: entityError,
   } = useQuery({
+    // @ts-expect-error this query won't start without the id
     queryKey: keyBuilder.entity({ id, context }),
+    // @ts-expect-error this query won't start without the id
     queryFn: () => getEntity(params),
     select: (r) => r.type,
     enabled: !!id,
@@ -213,15 +222,30 @@ export function useModelQuery({ id, context }: { id: string; context: WorkspaceC
     data: entity,
     isLoading: modelLoading,
     error: modelError,
-  } = useQuery<ICircuit | IMEModel, Error, ICircuit | IMEModel>({
+  } = useQuery<
+    ICircuit | IMEModel | IonChannelModel | IEMCellMesh,
+    Error,
+    ICircuit | IMEModel | IonChannelModel | IEMCellMesh
+  >({
+    // @ts-expect-error this query won't start without the id
     queryKey: keyBuilder.entity({ id, context, type: entityType }),
     queryFn: () => {
-      return match(entityType)
-        .with(EntityTypeDict.Circuit, () => getCircuit(params))
-        .with(EntityTypeDict.Memodel, () => getMEModel(params))
-        .otherwise((entityType) => {
-          throw new Error(`Unsupported model entity type ${entityType}`);
-        });
+      return (
+        match(entityType)
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.Circuit, () => getCircuit(params))
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.Memodel, () => getMEModel(params))
+          .with(EntityTypeDict.IonChannelModel, () =>
+            // @ts-expect-error this query won't start without the id
+            getIonChannelModel(params)
+          )
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.EMCellMesh, () => getEmCellMesh(params))
+          .otherwise((entityType) => {
+            throw new Error(`Unsupported model entity type ${entityType}`);
+          })
+      );
     },
     enabled: !!entityType && !!id,
     refetchOnWindowFocus: false,

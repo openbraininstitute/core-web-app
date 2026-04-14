@@ -3,7 +3,7 @@ export const AUTO_INIT_WORKSPACE = 'automatic-init-workspace';
 export const AUTO_ONBOARDING_TOURS = 'automatic-app-onboarding-tours';
 export const LAST_REGISTERED_WORKFLOW = 'last-registered-workflow';
 
-export const DEFAULT_CHECKLIST_RENDER_LENGTH = 8;
+export const DEFAULT_CHECKLIST_RENDER_LENGTH = 5;
 export const DEFAULT_PAGE_SIZE = 30;
 export const DEFAULT_PAGE_MEDIUM_SIZE = 15;
 export const DEFAULT_PAGE_SMALL_SIZE = 10;
@@ -30,7 +30,7 @@ export const WorkflowActivityDictValue = {
   extract: 'extract',
   optimize: 'optimize',
   validate: 'validate',
-  process_data: 'process_data',
+  process: 'process',
 } as const;
 
 export const WorkspaceSection = {
@@ -39,6 +39,7 @@ export const WorkspaceSection = {
   BuildWorkflow: WorkflowActivityDictValue.build,
   SimulateWorkflow: WorkflowActivityDictValue.simulate,
   ExtractWorkflow: WorkflowActivityDictValue.extract,
+  ProcessWorkflow: WorkflowActivityDictValue.process,
 } as const;
 
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];

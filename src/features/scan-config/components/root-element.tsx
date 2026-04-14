@@ -1,9 +1,9 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { isEqual } from 'es-toolkit/compat';
+import { lowerCase, upperFirst } from 'es-toolkit/compat';
 
-import AIIcon from '@/components/icons/ai/ai_icon';
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
+import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
@@ -17,6 +17,8 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { cn } from '@/utils/css-class';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
@@ -64,7 +66,8 @@ export function RootElement({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
 }) {
-  const { aiConfig, isChatReady } = useAIConfig();
+  const { isChatReady } = useAIConfig();
+  const hasFieldErrors = useFieldErrorsForPath(rootElement);
   if (!schema || !schema?.properties) return;
 
   const handleEntryClick = (subkey: string) => {
@@ -75,91 +78,110 @@ export function RootElement({
   };
 
   return (
-    <>
-      <LeftMenuTab
-        tab={rootElement}
-        selectedTab={selectedRootElement}
-        onClick={() => {
-          // for block_dictionary, clicking again collapses it
-          // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
-          if (
-            selectedRootElement === rootElement &&
-            !isRootBlock(schema, rootElement) &&
-            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion
-          ) {
-            setEditing(false);
-            setSelectedEntry('');
-            setSelectedRootElement('');
-            return;
-          }
+    <div className="w-full flex flex-col gap-0.5">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span>
+            <LeftMenuTab
+              tab={rootElement}
+              selectedTab={selectedRootElement}
+              onClick={() => {
+                const isCollapseClick =
+                  selectedRootElement === rootElement &&
+                  !isRootBlock(schema, rootElement) &&
+                  rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
 
-          setSelectedRootElement(rootElement);
-          setSelectedEntry('');
+                // for block_dictionary, clicking again collapses it
+                // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
+                if (isCollapseClick) {
+                  setEditing(false);
+                  setSelectedEntry('');
+                  setSelectedRootElement('');
+                  return;
+                }
 
-          if (
-            rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
-            rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
-          )
-            setEditing(true);
-          else setEditing(false);
-        }}
-        extraClass="w-full flex justify-between h-[50px] min-h-[50px] items-center drop-shadow"
-      >
-        <span className="flex items-center gap-2 truncate">
-          <SelectedUnionVariantLabel
-            rootElementSchema={rootElementSchema}
-            config={config}
-            rootElement={rootElement}
-            fallbackTitle={schema.properties?.[rootElement]?.title}
-          />
-        </span>
-        <div className="flex gap-3">
-          {!!aiConfig && !isEqual(config[rootElement], aiConfig[rootElement]) && <AIIcon />}
+                setSelectedRootElement(rootElement);
+                setSelectedEntry('');
 
-          {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
-            <WarningFilled className="text-yellow-400!" />
-          ) : (
-            <CheckCircleFilled className="text-green-600!" />
+                if (
+                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
+                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
+                )
+                  setEditing(true);
+                else setEditing(false);
+              }}
+              extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
+            >
+              <span className="flex items-center gap-2 wrap-break-word min-w-0">
+                <SelectedUnionVariantLabel
+                  rootElementSchema={rootElementSchema}
+                  config={config}
+                  rootElement={rootElement}
+                  fallbackTitle={schema.properties?.[rootElement]?.title}
+                />
+              </span>
+              <div className="flex gap-3">
+                {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
+                hasFieldErrors ? (
+                  <WarningFilled className="text-yellow-400!" />
+                ) : (
+                  <CheckCircleFilled className="text-green-600!" />
+                )}
+
+                <Chevron
+                  rotate={
+                    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
+                      ? 90
+                      : 0
+                  }
+                />
+              </div>
+            </LeftMenuTab>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent
+          avoidCollisions
+          hideWhenDetached
+          align="center"
+          side="right"
+          className={cn(
+            'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
+            'bg-primary-8 px-4 py-2 text-base text-wrap ',
+            'overflow-y-auto max-h-50 primary-scrollbar'
           )}
+          arrowClassName="bg-primary-8"
+        >
+          {rootElementSchema.description}
+        </TooltipContent>
+      </Tooltip>
 
-          <Chevron
-            rotate={
-              rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary ? 90 : 0
-            }
-          />
-        </div>
-      </LeftMenuTab>
-
-      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
-        selectedRootElement === rootElement &&
-        config[rootElement] && (
-          <BlockDictionaryEntries
-            config={config}
-            aiConfig={aiConfig}
-            rootElement={rootElement}
-            selectedEntry={selectedEntry}
-            selectedRootElement={selectedRootElement}
-            handleEntryClick={handleEntryClick}
-            campaignId={campaignId}
-            loading={loading}
-            readOnly={!!readOnly}
-            isChatReady={isChatReady}
-            setEditing={setEditing}
-            setSelectedEntry={setSelectedEntry}
-            singularName={rootElementSchema.singular_name}
-            allEntries={allEntries}
-            newKey={newKey}
-            setNewKey={setNewKey}
-            isEditingKey={isEditingKey}
-            setIsEditingKey={setIsEditingKey}
-            atomsMap={atomsMap}
-            setAtomsMap={setAtomsMap}
-            errors={errors}
-          />
-        )}
-
-      {/* Block Union: show selected variant with change option */}
-    </>
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
+        <BlockDictionaryEntries
+          config={config}
+          rootElement={rootElement}
+          selectedEntry={selectedEntry}
+          selectedRootElement={selectedRootElement}
+          handleEntryClick={handleEntryClick}
+          campaignId={campaignId}
+          loading={loading}
+          readOnly={!!readOnly}
+          isChatReady={isChatReady}
+          setEditing={setEditing}
+          setSelectedEntry={setSelectedEntry}
+          singularName={rootElementSchema.singular_name}
+          allEntries={allEntries}
+          newKey={newKey}
+          setNewKey={setNewKey}
+          isEditingKey={isEditingKey}
+          setIsEditingKey={setIsEditingKey}
+          atomsMap={atomsMap}
+          setAtomsMap={setAtomsMap}
+          errors={errors}
+          visible={selectedRootElement === rootElement && !!config[rootElement]}
+          rootElementSchema={rootElementSchema}
+        />
+      )}
+    </div>
   );
 }
 
@@ -174,7 +196,8 @@ function SelectedUnionVariantLabel({
   rootElement: string;
   fallbackTitle?: string;
 }) {
-  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion) return fallbackTitle;
+  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion)
+    return upperFirst(lowerCase(fallbackTitle));
 
   const unionSchema = rootElementSchema as IRootBlockUnion;
   const discriminatorProp = unionSchema.discriminator
@@ -194,5 +217,5 @@ function SelectedUnionVariantLabel({
       })
     : undefined;
 
-  return selectedVariant?.title ?? fallbackTitle;
+  return upperFirst(lowerCase(selectedVariant?.title ?? fallbackTitle));
 }

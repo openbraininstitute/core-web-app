@@ -1,5 +1,3 @@
-/* eslint-disable no-nested-ternary */
-
 import pProps from 'p-props';
 
 import { getElectricalCellRecordings } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
@@ -18,10 +16,11 @@ import { SynapsesPerConnection } from '@/entity-configuration/domain/experimenta
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
-import { ComputationallySynthesizedCellMorphology } from '@/entity-configuration/domain/model/computationally-synthesized-morphology';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
+import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
@@ -51,7 +50,7 @@ export const ModelEntitiesTileTypes = {
   MEmodel,
   Circuit,
   IonChannelModel,
-  ComputationallySynthesizedCellMorphology,
+  SynthesizedCellMorphology,
 } as const;
 
 export const SimulationEntitiesTileTypes = {
@@ -62,6 +61,7 @@ export const SimulationEntitiesTileTypes = {
   PairedNeuronCircuitSimulation,
   SmallMicrocircuitSimulation,
   MicrocircuitSimulation,
+  IonChannelModelSimulation,
 } as const;
 
 export function getEntityTypeFromUrlOnEntityScope(url: string) {

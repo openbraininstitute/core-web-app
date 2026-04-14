@@ -1,14 +1,22 @@
 import { getServerSession, type NextAuthOptions, type Session, type TokenSet } from 'next-auth';
 
 import { serverConfig as config } from '@/config/server';
-
-import { log } from '../utils/logger';
+import { log } from '@/utils/logger';
 
 import type { GetServerSidePropsContext, NextApiRequest, NextApiResponse } from 'next';
 
 const issuer = config.KEYCLOAK_ISSUER;
 const clientId = config.KEYCLOAK_CLIENT_ID;
 const clientSecret = config.KEYCLOAK_CLIENT_SECRET;
+
+// TODO: Lower this back to minutes after all tasks
+// (circuit simulations, mesh skeletonization) support token renewal via auth-manager.
+const ACCESS_TOKEN_RENEWAL_THRESHOLD = 20 * 60 * 1000; // 20 minutes
+
+// On Amplify preview (Lambda), fire-and-forget fetches may be killed when the
+// execution context freezes after the response is sent. Await the auth-manager
+// upsert so the refresh token is stored before the JWT callback returns.
+const shouldAwaitAuthManagerSync = config.DEPLOYMENT_ENV === 'preview';
 
 function getParentDomain(hostname: string): string {
   const parts = hostname.split('.');
@@ -55,6 +63,15 @@ async function upsertRefreshTokenInAuthManager({
         refresh_token: refreshToken,
       }),
     });
+    if (!response.ok) {
+      log(
+        'error',
+        'auth-manager refresh-token upsert failed',
+        response.status,
+        await response.text()
+      );
+      return;
+    }
     const result = await response.json();
     log('debug', 'update refresh token for auth manager succeed', result);
   } catch (error) {
@@ -89,13 +106,14 @@ export async function refreshAccessToken(token: TokenSet) {
     if (!response.ok) {
       throw refreshedTokens;
     }
-    // eslint-disable-next-line no-void
-    void (async () => {
-      await upsertRefreshTokenInAuthManager({
-        accessToken: refreshedTokens.access_token,
-        refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
-      });
-    })();
+    const syncTokens = upsertRefreshTokenInAuthManager({
+      accessToken: refreshedTokens.access_token,
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+    });
+
+    if (shouldAwaitAuthManagerSync) {
+      await syncTokens;
+    }
 
     return {
       ...token,
@@ -105,7 +123,6 @@ export async function refreshAccessToken(token: TokenSet) {
     };
   } catch (error) {
     // TODO: log to Sentry once it's enabled
-    // eslint-disable-next-line no-console
     log('error', error);
 
     return {
@@ -160,14 +177,18 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, user, profile }) {
       // Initial sign in
       if (account && user) {
-        // eslint-disable-next-line no-void
-        void (async () => {
-          if (account && account.access_token && account.refresh_token)
-            await upsertRefreshTokenInAuthManager({
-              accessToken: account.access_token,
-              refreshToken: account.refresh_token,
-            });
-        })();
+        const syncTokens =
+          account?.access_token && account?.refresh_token
+            ? upsertRefreshTokenInAuthManager({
+                accessToken: account.access_token,
+                refreshToken: account.refresh_token,
+              })
+            : undefined;
+
+        if (shouldAwaitAuthManagerSync) {
+          await syncTokens;
+        }
+
         return {
           ...token,
           accessToken: account.access_token,
@@ -176,16 +197,17 @@ export const authOptions: NextAuthOptions = {
           user: {
             ...user,
             id: profile?.sub,
+            // @ts-expect-error identity_provider is a Keycloak-specific claim
+            identityProvider: profile?.identity_provider,
           },
 
           idToken: account.id_token,
         };
       }
-
       // Return previous token if the access token has not expired / is not close to expiration yet.
       if (
         typeof token.accessTokenExpires === 'number' &&
-        Date.now() < token.accessTokenExpires - 2 * 60 * 1000
+        Date.now() < token.accessTokenExpires - ACCESS_TOKEN_RENEWAL_THRESHOLD
       ) {
         return token;
       }

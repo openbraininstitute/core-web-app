@@ -229,5 +229,12 @@ playwright/.auth
 .env.sentry-build-plugin
 next-env.d.ts
 
+personal
 
+# AI coding agent and LLM related files
+AGENTS.md
+CLAUDE.md
+.claude
+.mcp.json
 .kiro
+.amazonq

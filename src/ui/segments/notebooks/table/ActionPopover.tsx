@@ -111,7 +111,10 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                   className="hover:text-primary-4 inline-flex items-center gap-2.5"
                   onClick={(e) => {
                     e.stopPropagation();
-                    downloadArchive(ExtendedEntitiesTypeDict.Notebook, [notebook.id]);
+                    downloadArchive(ExtendedEntitiesTypeDict.Notebook, [notebook.id], {
+                      virtualLabId,
+                      projectId,
+                    });
                   }}
                 >
                   <DownloadIconWhiteWithCorners

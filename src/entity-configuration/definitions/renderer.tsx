@@ -5,6 +5,12 @@ import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns';
 import { filter, find, isEmpty, isNil, isString, reject } from 'es-toolkit/compat';
 import { useParams } from 'next/navigation';
 import { isValidElement, type JSX, type ReactNode, useEffect, useState } from 'react';
+
+import { AgentType, MeasurementStatistic } from '@/api/entitycore/types/shared/global';
+import { tryCatch } from '@/api/utils';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
+
 import type { EntityCoreDensityObjectTypes, ICellMorphology } from '@/api/entitycore/types';
 import type { ICellMorphologyExpanded } from '@/api/entitycore/types/entities/cell-morphology';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -16,13 +22,11 @@ import type {
   ILicense,
   MeasurementBase,
 } from '@/api/entitycore/types/shared/global';
-import { AgentType, MeasurementStatistic } from '@/api/entitycore/types/shared/global';
-import { tryCatch } from '@/api/utils';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import type { WorkspaceContext } from '@/types/common';
 
-export const EmptyValue = '—';
+import { EmptyValue } from '@/entity-configuration/definitions/empty-value';
+
+export { EmptyValue };
 
 export const EmptyPreview = (
   <Empty
@@ -42,7 +46,7 @@ export const renderLicense = ({ license }: { license?: ILicense | null }) => {
       href={license.name}
       target="_blank"
       rel="noopener noreferrer"
-      className="line-clamp-1 truncate"
+      className="line-clamp-1 truncate text-inherit"
     >
       {license.label ?? 'View license'} 🔗
     </a>
@@ -298,7 +302,7 @@ export const renderMorphologyMeasurement = (
   const { unit } = measurement;
   let { value } = measurement;
 
-  const unitSuffix = showUnits ? `${unit}` : '';
+  const unitSuffix = showUnits ? ` ${unit}` : '';
 
   // TODO: This is a workaround to show soma diameter when a radius is provided.
   if (label === 'soma_radius') value = 2 * measurement.value;

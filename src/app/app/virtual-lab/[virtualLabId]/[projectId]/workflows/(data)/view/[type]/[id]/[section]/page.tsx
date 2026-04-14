@@ -6,8 +6,8 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { detailPageSectionRenderer } from '@/features/details-page';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
-import type { EntityCoreExtendedType } from '@/entity-configuration/domain/helpers';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default async function Page({
@@ -19,7 +19,9 @@ export default async function Page({
   const { virtualLabId, projectId, section, type, id } = await params;
   const context = { virtualLabId, projectId };
 
-  const entityType = getEntityByExtendedType({ type: snakeCase(type) as EntityCoreExtendedType });
+  const entityType = getEntityByExtendedType({
+    type: snakeCase(type) as TExtendedEntitiesTypeDict,
+  });
 
   if (!entityType || !entityType.detailViewSections?.includes(section)) {
     return notFound();
@@ -27,7 +29,7 @@ export default async function Page({
 
   const { data: entity, error } = await tryCatch(
     retrieveEntity({
-      type: snakeCase(type) as EntityCoreExtendedType,
+      type: snakeCase(type) as TExtendedEntitiesTypeDict,
       ctx: context,
       id,
     })

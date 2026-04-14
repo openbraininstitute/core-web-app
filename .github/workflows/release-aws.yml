@@ -1,12 +1,11 @@
 name: Make release
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
@@ -14,6 +13,12 @@ jobs:
     env:
       IMAGE_NAME: ${{ vars.PUBLICECR_URI }}
     steps:
+      - name: Fail if branch is not main
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        run: |
+          echo "This workflow should not be triggered with workflow_dispatch on a branch other than main"
+          exit 1
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -54,10 +59,9 @@ jobs:
           echo "Using app version: ${APP_VERSION}"
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.PUBLICECR_UPLOAD_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PUBLICECR_UPLOAD_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ vars.PUBLICECR_UPLOAD_ROLE_ARN }}
           aws-region: ${{ vars.PUBLICECR_REGION }}
 
       - name: Authenticate with AWS Public ECR
@@ -67,3 +71,23 @@ jobs:
 
       - name: Build and publish Docker image for AWS
         run: make publish
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]+$' | sed -n '2p')
+          DOCKER_URI="${IMAGE_NAME}:${APP_VERSION}"
+
+          ARGS=(
+            "$NEW_TAG"
+            --title "$NEW_TAG"
+            --generate-notes
+            --notes "**Docker image:** \`${DOCKER_URI}\`"
+          )
+
+          if [[ -n "$PREV_TAG" ]]; then
+            ARGS+=(--notes-start-tag "$PREV_TAG")
+          fi
+
+          gh release create "${ARGS[@]}"

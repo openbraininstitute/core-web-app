@@ -1,0 +1,44 @@
+.toolThumbnailGenerationMorphologyGetone {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  padding: 0.25em 0em;
+  object-fit: contain;
+  display: block;
+}
+
+.dialog {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: auto;
+  background: none;
+  transition-behavior: allow-discrete;
+
+  &::backdrop {
+    background: none;
+    backdrop-filter: blur(4px) brightness(50%);
+    transition: backdrop-filter 0.5s;
+  }
+
+  > button {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    display: grid;
+    place-items: center;
+
+    > img {
+      cursor: pointer;
+      max-width: none;
+      max-height: none;
+      box-shadow: 0 0.5em 1em #000;
+    }
+  }
+}

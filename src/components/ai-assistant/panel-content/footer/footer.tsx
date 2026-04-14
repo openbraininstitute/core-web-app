@@ -1,7 +1,9 @@
 import React from 'react';
+
 import { useAITools } from '@/services/ai-agent/tools/tools';
+
 import Prompt from '../../prompt';
-import { Spinner } from '../../spinner';
+import { WaveLoader } from '../../wave-loader';
 
 import styles from './footer.module.css';
 
@@ -15,7 +17,7 @@ interface FooterProps {
   isLoadingSuggestions?: boolean;
 }
 
-export default function Footer({ className, status, onPrompt, stop }: FooterProps) {
+export default function Footer({ className, status, onPrompt, stop, threadId }: FooterProps) {
   const tools = useAITools();
   const [prompt, setPrompt] = React.useState('');
   const handlePrompt = (value: string) => {
@@ -26,11 +28,17 @@ export default function Footer({ className, status, onPrompt, stop }: FooterProp
   return (
     <footer className={className}>
       {(status === 'ready' || status === 'error') && (
-        <Prompt value={prompt} tools={tools ?? []} onChange={setPrompt} onClick={handlePrompt} />
+        <Prompt
+          value={prompt}
+          tools={tools ?? []}
+          onChange={setPrompt}
+          onClick={handlePrompt}
+          disabled={!threadId}
+        />
       )}
       {status !== 'ready' && status !== 'error' && (
         <div className={styles.spinnerContainer}>
-          <Spinner />
+          <WaveLoader />
           {(status === 'streaming' || status === 'submitted') && (
             <div className={styles.cancelButton}>
               <button type="button" onClick={stop}>

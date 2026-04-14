@@ -2,47 +2,42 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { ErrorBoundary } from '@sentry/nextjs';
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { Spin } from 'antd';
 
-import SimulationDetail from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
-import { withErrorConfig } from '@/components/GenericErrorFallback';
 import { getSingleNeuronSimulations } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { tryCatch } from '@/api/utils';
+import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { SimulationDetail } from '@/features/entities/neuron-simulation/simulation-results/simulation-details';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ISingleNeuronSimulation } from '@/api/entitycore/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   modelId: string;
+  context: WorkspaceContext;
 };
 
-export default function Results({ modelId }: Props) {
-  const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const [simulations, setSimulations] = useState<Array<ISingleNeuronSimulation>>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    async function getSimulations() {
-      setLoading(true);
-      const { data: result, error: returnedError } = await tryCatch(
-        getSingleNeuronSimulations({
-          context: { virtualLabId, projectId },
-          filters: { me_model__id: modelId },
-          withFacets: false,
-        }),
-        () => setLoading(false)
-      );
-
-      if (result) setSimulations(result.data);
-      if (returnedError) setError(!!returnedError);
-    }
-
-    getSimulations();
-  }, [modelId, error, virtualLabId, projectId]);
+export default function Results({ modelId, context }: Props) {
+  const {
+    data: simulations,
+    isLoading: loading,
+    error,
+  } = useQuery({
+    queryKey: keyBuilder.entities({
+      context,
+      filters: { synaptome__id: modelId },
+      withFacets: false,
+    }),
+    queryFn: () =>
+      getSingleNeuronSimulations({
+        context,
+        filters: { me_model__id: modelId },
+        withFacets: false,
+      }),
+    refetchOnWindowFocus: false,
+  });
 
   if (loading) {
     return (
@@ -53,7 +48,7 @@ export default function Results({ modelId }: Props) {
     );
   }
 
-  if (!simulations || !simulations.length) {
+  if (!simulations || !simulations.data.length) {
     return (
       <div className="text-primary-9 flex h-full flex-col items-center justify-center text-2xl font-bold">
         <h2>No simulations available</h2>
@@ -81,7 +76,7 @@ export default function Results({ modelId }: Props) {
 
   return (
     <div className="flex w-full flex-col gap-2">
-      {simulations.map((sim, indx) => (
+      {simulations.data.map((sim, indx) => (
         <ErrorBoundary
           fallback={({ error: returnedError }) =>
             withErrorConfig({

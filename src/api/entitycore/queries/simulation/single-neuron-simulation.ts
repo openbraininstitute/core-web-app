@@ -1,17 +1,17 @@
-import startsWith from 'es-toolkit/compat/startsWith';
+import { startsWith } from 'es-toolkit/compat';
 import some from 'es-toolkit/compat/some';
 
-import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
-import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { compactRecord } from '@/utils/dictionary';
+import { entityCoreApi, getAssetElement, getEntityCoreContext } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
+import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation';
+import { compactRecord } from '@/utils/dictionary';
 
 import type {
   ISingleNeuronSimulation,
-  TCreateSingleNeuronSimulation,
   ISingleNeuronSimulationFilter,
+  TCreateSingleNeuronSimulation,
 } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
@@ -30,6 +30,9 @@ export async function getSingleNeuronSimulation({
 }: {
   id: string;
   context?: WorkspaceContext | null;
+  options?: {
+    next?: NextFetchRequestConfig;
+  };
 }) {
   const api = await entityCoreApi();
   return await api.get<ISingleNeuronSimulation>(`${baseUri}/${id}`, {
@@ -38,6 +41,7 @@ export async function getSingleNeuronSimulation({
       'content-type': 'application/json',
       ...getEntityCoreContext(context).headers,
     },
+    next: {},
   });
 }
 

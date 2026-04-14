@@ -1,15 +1,19 @@
 import { RightOutlined } from '@ant-design/icons';
 import { Checkbox, ConfigProvider } from 'antd';
 
-import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
+import {
+  ActivityStatus,
+  type TActivityStatus,
+} from '@/api/entitycore/types/entities/task-activity';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { StatusBadge } from '@/features/scan-config/status-badge';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
-import type { ICircuitExtractionConfig } from '@/api/entitycore/types/entities/circuit-extraction-config';
+import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
+import type { TTaskConfigMeta } from '@/features/scan-config/use-cases/extraction/types';
 
 type Props = {
-  config: ICircuitExtractionConfig;
+  config: ITaskConfig<TTaskConfigMeta>;
   execStatus?: TActivityStatus;
   onSelect: () => void;
   selected?: boolean;
@@ -76,7 +80,7 @@ export function ExtractionConfigsLeftMenu({
           </div>
         </button>
         <ScanParams
-          scanParams={config.scan_parameters as Record<string, string | number>}
+          scanParams={config.meta.scan_parameters as Record<string, string | number>}
           color={color}
         />
       </div>

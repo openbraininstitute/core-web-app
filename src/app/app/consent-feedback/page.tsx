@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -35,7 +34,7 @@ export default function Page() {
       emitOfflineTokenConsentGranted(sessionStateId ?? undefined);
 
       if (typeof window !== 'undefined') {
-        setTimeout(() => window.close(), 3000);
+        setTimeout(() => window.close(), 5000);
       }
       return;
     }
@@ -66,8 +65,8 @@ export default function Page() {
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row">
-          <Button asChild rounded variant="success" className="md:h-10 lg:h-12">
-            <Link href="/app/virtual-lab/sync">Back to Application</Link>
+          <Button rounded variant="success" className="h-12 w-sm" onClick={() => window.close()}>
+            Close window
           </Button>
         </div>
       </div>

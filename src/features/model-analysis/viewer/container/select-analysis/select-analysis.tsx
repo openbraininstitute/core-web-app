@@ -1,11 +1,16 @@
-/* eslint-disable react/no-unstable-nested-components */
-
-import { Select } from 'antd';
-import React, { type ReactNode } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/ui/molecules/select';
 import { isType } from '@/util/type-guards';
-
 import { classNames } from '@/util/utils';
-import type { FlatValidationResult } from '../hooks';
+import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
+import type { FlatValidationResult } from '@/features/model-analysis/viewer/container/hooks';
 
 import styles from './select-analysis.module.css';
 
@@ -35,18 +40,29 @@ export function SelectAnalysis({ className, value, onChange, results }: SelectAn
   return (
     <div className={classNames(className, styles.selectAnalysis)}>
       <div className="text-neutral-3 ml-3 inline-block">SELECT ANALYSIS</div>
-      <Select<string, { label: string | FlatValidationResult }>
-        options={options}
-        className="min-w-[200px]"
-        value={value}
-        onChange={onChange}
-        labelRender={(option) => (
-          <div className="text-primary-8 font-bold">
-            {isFlatValidationResult(option.label) ? option.label.name : option.label}
-          </div>
-        )}
-        optionRender={(option) => <ComboItemLabel label={option.label} />}
-      />
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger
+          size="default"
+          className="min-w-70 h-11! text-lg! rounded-full bg-white border-gray-300 focus-visible:ring-0"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent
+          style={{ width: "var('--radix-select-trigger-width')" }}
+          className="rounded-lg bg-white border-gray-300"
+        >
+          {options.map((option) => (
+            <SelectItem
+              checkClassName="text-primary-8"
+              key={option.value}
+              value={option.value}
+              className={cn('cursor-pointer text-lg w-full [&_span:nth-child(2)]:w-full group')}
+            >
+              <ComboItemLabel label={option.label} />
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
@@ -58,18 +74,21 @@ interface ComboItemLabelProps {
 function ComboItemLabel({ label }: ComboItemLabelProps) {
   if (!label) return null;
 
-  return (
-    <div className={styles.item}>
-      {isFlatValidationResult(label) ? (
-        <>
-          <div>{label.name}</div>
-          <div className={label.passed ? styles.pass : styles.fail} />
-        </>
-      ) : (
-        `${label}`
-      )}
-    </div>
-  );
+  if (isFlatValidationResult(label)) {
+    return (
+      <div className={`${styles.item} item`}>
+        <div>{label.name}</div>
+        <div
+          className={cn(
+            label.passed ? styles.pass : styles.fail,
+            'group-data-[state=checked]:shadow-xl'
+          )}
+        />
+      </div>
+    );
+  }
+
+  return <div className="text-primary-8 font-bold">{label}</div>;
 }
 
 function isFlatValidationResult(

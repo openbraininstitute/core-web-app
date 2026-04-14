@@ -111,11 +111,15 @@ export class Painter {
           const specularIntensity = uniforms.specularIntensity?.value ?? 0;
           const specularExponent = uniforms.specularExponent?.value ?? 10;
           const light = uniforms.light?.value ?? 1;
+          const minSizeInPixels = uniforms.minSizeInPixels?.value ?? 5;
+          const radiusMultiplier = uniforms.radiusMultiplier?.value ?? 1;
           pointCloudPainter.shadowIntensity = shadowIntensity;
           pointCloudPainter.shadowThickness = shadowThickness;
           pointCloudPainter.specularExponent = specularExponent;
           pointCloudPainter.specularIntensity = specularIntensity;
           pointCloudPainter.light = light;
+          pointCloudPainter.minSizeInPixels = minSizeInPixels;
+          pointCloudPainter.radiusMultiplier = radiusMultiplier;
         }
       });
       context.paint();
@@ -184,6 +188,9 @@ export class Painter {
       this.pointCloudId = annotationValue;
       if (annotationValue !== -1) {
         const dataPoint = await getPointCouldData(annotationValue, accessToken);
+        // Check if context was deleted while fetching data (e.g., user navigated away)
+        if (!this.context) return;
+
         const painter = new TgdPainterPointsCloud(context, {
           dataPoint,
           minSizeInPixels: 5,

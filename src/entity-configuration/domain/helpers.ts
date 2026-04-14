@@ -1,24 +1,25 @@
-import { filter, find, set } from 'es-toolkit/compat';
+import { filter, find, intersection, set } from 'es-toolkit/compat';
 
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
-import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type {
+  EntityCoreTypeConfig,
+  TEntityConfigDiscriminatorFilter,
+} from '@/entity-configuration/domain/types';
 
-export type EntityCoreExtendedType =
-  (typeof EntityCoreConfiguration)[keyof typeof EntityCoreConfiguration]['extendedType'];
-
-export const circuitTypes: EntityCoreExtendedType[] = [
+export const circuitTypes: TExtendedEntitiesTypeDict[] = [
   'circuit',
   'small_micro_circuit',
   'paired_neuron_circuit',
   'micro_circuit',
 ];
 
-export const getEntityByExtendedType = ({ type }: { type?: EntityCoreExtendedType }) =>
+export const getEntityByExtendedType = ({ type }: { type?: TExtendedEntitiesTypeDict }) =>
   find(EntityCoreConfiguration, { extendedType: type });
 
 export type TEntityByExtendedTypeConfig = ReturnType<typeof getEntityByExtendedType>;
@@ -61,3 +62,22 @@ export const applyEntityExpansions = async <
   }
   return data;
 };
+
+/**
+ * Returns the first entity config matching the given discriminator key/value.
+ *
+ * @param discriminator - The key and value to match
+ * @returns The entity config or undefined
+ */
+export function getEntityConfigByDiscriminator(
+  filter: TEntityConfigDiscriminatorFilter
+): EntityCoreTypeConfig<any, any, any> | undefined {
+  const entries = Object.values(EntityCoreConfiguration);
+
+  return entries.find((entity) => {
+    const { discriminator } = entity;
+    if (!discriminator) return false;
+    if (discriminator.key !== filter.key) return false;
+    return intersection(discriminator.value, filter.value).length > 0;
+  });
+}

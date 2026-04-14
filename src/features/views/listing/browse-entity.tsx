@@ -5,13 +5,24 @@ import { get, uniqBy } from 'es-toolkit/compat';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { RESET } from 'jotai/utils';
 import dynamic from 'next/dynamic';
-import { type ComponentProps, type ReactElement, type ReactNode, useEffect, useMemo } from 'react';
+import {
+  type ComponentProps,
+  type ReactElement,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
 
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
+import {
+  useQueryExtendedEntityType,
+  useQueryExtendedEntityTypeFacets,
+  useQueryParameters,
+} from '@/ui/hooks/use-query-extended-entity-type';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
@@ -52,7 +63,11 @@ const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
 type Props = {
   id?: string;
   section?: TWorkspaceSection;
+  /** whether to use the brain region filter in the query as some listing may not need it
+   * which means the query will fetch any brain region data
+   */
   requireBrainRegion?: boolean;
+  /** whether to display the mini detail view */
   requireMiniDetailView?: boolean;
   classNames?: {
     container?: ComponentProps<'div'>['className'];
@@ -60,14 +75,31 @@ type Props = {
     filterClassNames?: {
       container?: string;
     };
+    tableClassNames?: {
+      table?: ComponentProps<'div'>['className'];
+      container?: ComponentProps<'div'>['className'];
+    };
   };
   scope?: TWorkspaceScope;
   defaultBrainRegion?: string;
   dataType: TExtendedEntitiesTypeDict;
   mainTableProps?: Partial<ComponentProps<typeof MainTable>>;
   miniViewProps?: Partial<ComponentProps<typeof MiniDetailView>>;
+  /** whether to display the download button */
   allowDownload?: boolean;
+  /** whether to display the delete button */
   allowDelete?: boolean;
+  /** whether to display the filter controls */
+  allowFilter?: boolean;
+  /** whether to display the search input */
+  allowSearch?: boolean;
+  /**
+   * when false, disables the fetch query
+   * this is useful where the query is already filtered
+   * and we don't want to fetch the data again.
+   */
+  allowQuery?: boolean;
+  /** whether to display the brain region dropdown */
   requireBrainRegionDropdown?: boolean;
   extraQueryParams?: Record<string, unknown>;
   left?: ReactNode;
@@ -86,6 +118,9 @@ export function BrowseEntityScope({
   miniViewProps,
   allowDownload,
   allowDelete,
+  allowFilter = true,
+  allowSearch = true,
+  allowQuery = true,
   requireBrainRegionDropdown,
   extraQueryParams,
   left,
@@ -93,7 +128,10 @@ export function BrowseEntityScope({
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
-  const scopeFilter = getWorkspaceScopeFilters(scope, { virtualLabId, projectId });
+  const scopeFilter = getWorkspaceScopeFilters(scope, {
+    virtualLabId,
+    projectId,
+  });
   const { dataKey } = makeDataKey({
     virtualLabId,
     projectId,
@@ -113,11 +151,14 @@ export function BrowseEntityScope({
     section,
   });
 
-  const onSortChange = (newSortState: TSortState) => {
-    setPageNumber(DEFAULT_PAGE_NUMBER);
-    setSortState(newSortState);
-    runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
-  };
+  const onSortChange = useCallback(
+    (newSortState: TSortState) => {
+      setPageNumber(DEFAULT_PAGE_NUMBER);
+      setSortState(newSortState);
+      runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
+    },
+    [setPageNumber, setSortState, runStorageSync]
+  );
 
   const allColumns = useDataTableColumns<EntityCoreIdentifiableNamed>({
     dataType,
@@ -160,32 +201,63 @@ export function BrowseEntityScope({
     }
   }, [section, runStorageRestore]);
 
+  const queryParameters = useQueryParameters(
+    {
+      context: {
+        key: dataKey,
+        workspaceScope: scope,
+        extendedEntityType: dataType as TExtendedEntitiesTypeDict,
+      },
+      workspace: { virtualLabId, projectId },
+    },
+    { requireBrainRegion, defaultBrainRegion }
+  );
+
+  const queryFilters = {
+    ...queryParameters,
+    ...extraQueryParams,
+    ...scopeFilter,
+  };
+
   const { data, error, isFetching } = useQueryExtendedEntityType({
     context: {
       key: dataKey,
       workspaceScope: scope,
-      extendedEntityType: dataType as TExtendedEntitiesTypeDict,
+      extendedEntityType: dataType,
     },
     workspace: { virtualLabId, projectId },
-    queryFn: async ({ queryKey }) => {
-      const [{ workspace, queryParameters }] = queryKey;
-      const filters = {
-        ...queryParameters,
-        ...extraQueryParams,
-        ...scopeFilter,
-      };
+    queryFn: async () => {
       return entity?.api?.query.list?.({
-        filters,
-        withFacets: true,
-        context: workspace,
+        filters: queryFilters,
+        withFacets: false,
+        context: { virtualLabId, projectId },
       });
     },
     requireBrainRegion,
     defaultBrainRegion,
     useKeepPreviousData: true,
     extraQueryParams,
-    enabled: ({ queryKey }) => {
-      const [{ queryParameters }] = queryKey;
+    enabled: () => {
+      if (!allowQuery) return false;
+      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+        return false;
+      return true;
+    },
+  });
+
+  const {
+    data: facets,
+    error: facetsError,
+    isPending: facetsLoading,
+  } = useQueryExtendedEntityTypeFacets({
+    dataKey,
+    section,
+    scope,
+    dataType,
+    workspace: { virtualLabId, projectId },
+    queryFilters,
+    enabled: () => {
+      if (!allowQuery) return false;
       if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
         return false;
       return true;
@@ -193,7 +265,6 @@ export function BrowseEntityScope({
   });
 
   const dataSource = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.data;
-  const facets = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.facets;
   const pagination = (data as EntityCoreResponse<EntityCoreIdentifiableNamed>)?.pagination;
 
   const onCellClick = (_: string, record: EntityCoreIdentifiableNamed) => {
@@ -252,7 +323,7 @@ export function BrowseEntityScope({
   return (
     <>
       <div
-        id="data-table-container"
+        id={`data-table-container-${dataType}`}
         data-testid="data-table-container"
         className={cn(
           'h-full max-h-[calc(100vh-11.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
@@ -264,6 +335,8 @@ export function BrowseEntityScope({
             showLoadingState
             allowDownload={allowDownload}
             allowDelete={allowDelete}
+            allowFilter={allowFilter}
+            allowSearch={allowSearch}
             requireBrainRegionDropdown={requireBrainRegionDropdown}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
@@ -274,7 +347,6 @@ export function BrowseEntityScope({
             workspace={{ virtualLabId, projectId }}
             dataKey={dataKey}
             columns={columns}
-            facets={facets}
             onCellClick={onCellClick}
             resultPagination={{
               pagination,
@@ -283,13 +355,20 @@ export function BrowseEntityScope({
             cls={{
               table: cn(
                 '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
-                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!'
+                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
+                classNames?.tableClassNames?.table
               ),
+              container: classNames?.tableClassNames?.container,
             }}
             {...mainTableProps}
             filterClassNames={classNames?.filterClassNames}
             expandableOptions={expandableOptions}
             left={left}
+            facets={{
+              data: facets,
+              error: facetsError,
+              loading: facetsLoading,
+            }}
           />
         </div>
       </div>

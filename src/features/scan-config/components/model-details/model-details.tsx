@@ -1,18 +1,24 @@
 import { Input } from 'antd';
 
-import type { IMEModel } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import {
+  ScanConfigUIElementDict,
+  type TSupportedEntitiesForScanConfiguration,
+} from '@/features/scan-config/types';
+import { cn } from '@/utils/css-class';
 
 interface ModelDetailsProps {
   className?: string;
-  model: ICircuit | IMEModel;
+  entity: TSupportedEntitiesForScanConfiguration;
 }
 
-export default function ModelDetails({ className, model }: ModelDetailsProps) {
+export default function ModelDetails({ className, entity }: ModelDetailsProps) {
   return (
-    <div className={className}>
-      <Input value={model.id} disabled />
-      <Input value={model.name} disabled />
+    <div
+      className={cn('flex flex-col gap-1', className)}
+      data-scan-config-block-element={ScanConfigUIElementDict.ModelIdentifier}
+    >
+      <Input value={entity.id} disabled />
+      <Input value={entity.name} disabled />
     </div>
   );
 }

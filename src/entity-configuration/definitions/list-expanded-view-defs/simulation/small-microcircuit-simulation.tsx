@@ -7,8 +7,8 @@ import { ExecutionStatus } from '@/ui/segments/activity-execution/status';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { cn } from '@/utils/css-class';
 
-import type { ICircuitSimulation } from '@/api/entitycore/types/entities/circuit-simulation';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
+import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 
 const className = 'text-primary-7';
@@ -43,7 +43,7 @@ export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
 
       {
         title: 'Status',
-        render: (simulation: ICircuitSimulation) => (
+        render: (simulation: ISimulation) => (
           <ExecutionStatus status={getSimulationStatus(simulation)} />
         ),
         width: 120,

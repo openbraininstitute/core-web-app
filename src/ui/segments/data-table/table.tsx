@@ -30,7 +30,7 @@ import styles from '@/ui/segments/data-table/elements/table.module.css';
 
 export type OnCellClick<T> = (basePath: string, record: T, type: TExtendedEntitiesTypeDict) => void;
 
-function CustomTH({
+export function CustomTH({
   children,
   style,
   onClick,
@@ -92,7 +92,14 @@ function CustomTH({
   );
 }
 
-function CustomCell({ children, style, ...props }: { children: ReactNode; style: CSSProperties }) {
+export function CustomCell({
+  children,
+  style,
+  ...props
+}: {
+  children: ReactNode;
+  style: CSSProperties;
+}) {
   const modifiedStyle = {
     ...style,
     padding: '14px 6pX',
@@ -286,6 +293,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     dataKey,
     selectionType,
     onRowsSelected,
+    dataSource,
   });
 
   const { expandableConfig: generatedExpandableConfig } = useExpandableTable(expandableOptions);

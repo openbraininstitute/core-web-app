@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-import { compactRecord } from '@/utils/dictionary';
+import { AssetContentType as ContentType } from '@/api/entitycore/types/shared/global';
 import { getSession } from '@/auth-fetch';
+import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
 
 import type { WorkspaceContext } from '@/types/common';
 
-export const AllowedTypes = ['application/pdf', 'image/png', 'image/jpeg'] as const;
+export const AllowedTypes = [ContentType.pdf, ContentType.png, ContentType.jpeg] as const;
 export type TAllowedTypes = (typeof AllowedTypes)[number];
 
 const DEFAULT_CACHE_NAME = 'analysis-pdf-cache-v1';
@@ -42,6 +43,7 @@ export const useClientCachedUrl = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: cacheUrl is stable
   useEffect(() => {
     if (!url) {
       setLoading(false);
@@ -126,11 +128,10 @@ export const useClientCachedUrl = ({
 
     return () => {
       isMounted = false;
-      if (cachedUrl && cachedUrl.startsWith('blob:')) {
+      if (cachedUrl?.startsWith('blob:')) {
         URL.revokeObjectURL(cachedUrl);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, expireAfter, cacheKey, urlKey, virtualLabId, projectId]);
 
   return { cachedUrl, loading, error };

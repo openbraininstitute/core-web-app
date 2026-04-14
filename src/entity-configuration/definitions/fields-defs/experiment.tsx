@@ -1,11 +1,6 @@
 import get from 'es-toolkit/compat/get';
 
 import { hasAssets } from '@/api/entitycore/guards';
-import type {
-  EntityCoreObjectTypes,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/circuit-simulation-campaign';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   EmptyPreview,
@@ -13,10 +8,17 @@ import {
   renderDictionaryKeys,
   renderEmptyOrValue,
 } from '@/entity-configuration/definitions/renderer';
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import { getStatusCountMap } from '@/entity-configuration/domain/simulation/simulation-campaign';
+import { getSkeletonizationStatusCountMap } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import { getCircuitSimulationStatusCountMap } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
+
+import type {
+  EntityCoreObjectTypes,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
   [EntityCoreFields.SimulationSeed]: {
@@ -181,7 +183,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: null,
     style: { width: 160 },
     render: (r) => {
-      const statusCountMap = getStatusCountMap(r as ICircuitSimulationCampaign);
+      const statusCountMap = getCircuitSimulationStatusCountMap(r as ICircuitSimulationCampaign);
       return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
     },
     isDisplayable: true,
@@ -198,6 +200,17 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'ME-model',
     filter: null,
     render: (r) => renderEmptyOrValue(get(r, 'memodel.name', '')),
+    isDisplayable: true,
+    isFilterable: false,
+  },
+  [EntityCoreFields.SkeletonizationCampaignStatus]: {
+    title: 'Status',
+    filter: null,
+    style: { width: 160 },
+    render: (r) => {
+      const statusCountMap = getSkeletonizationStatusCountMap(r as unknown as any);
+      return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+    },
     isDisplayable: true,
     isFilterable: false,
   },

@@ -12,6 +12,7 @@ export const ExtendedEntitiesTypeDict = {
   PairedNeuronCircuitSimulation: 'paired_neuron_circuit_simulation',
   SmallMicrocircuitSimulation: 'small_microcircuit_simulation',
   MicrocircuitSimulation: 'microcircuit_simulation',
+  IonChannelModelSimulation: 'ion_channel_model_simulation',
   NGVCircuit: 'ngv_circuit', // this is temporary
   BrainRegion: 'brain_region', // this is temporary
   BrainSystems: 'brain_system', // this is temporary
@@ -19,8 +20,10 @@ export const ExtendedEntitiesTypeDict = {
   Metabolism: 'metabolism', // this is temporary
   NGVUnit: 'ngv_unit', // this is temporary
   MEModelWithSynapses: 'me_model_with_synapses',
-  ComputationallySynthesizedCellMorphology: 'computationally_synthesized_cell_morphology',
+  SynthesizedCellMorphology: 'synthesized_cell_morphology',
   UniversalCellMorphology: 'universal_cell_morphology',
+  CircuitExtractionCampaign: 'circuit_extraction_campaign',
+  SkeletonizationCampaign: 'skeletonization_campaign',
 } as const;
 
 export type TExtendedEntitiesTypeDict =

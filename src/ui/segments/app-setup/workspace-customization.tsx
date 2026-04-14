@@ -1,11 +1,5 @@
-/* eslint-disable no-nested-ternary */
-
 'use client';
 
-import { ComponentProps, ReactNode, useEffect, useState, useTransition } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { useRouter } from '@bprogress/next/app';
-import { Form } from 'antd';
 import {
   CheckCircleFilled,
   CloseCircleFilled,
@@ -13,20 +7,24 @@ import {
   LoadingOutlined,
   RightOutlined,
 } from '@ant-design/icons';
+import { useRouter } from '@bprogress/next/app';
+import { useMutation } from '@tanstack/react-query';
+import { Form } from 'antd';
+import { type ComponentProps, type ReactNode, useEffect, useState, useTransition } from 'react';
 import z from 'zod';
 
-import { updateVirtualLab, checkVirtualLabExists } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { updateProject, checkProjectExists } from '@/api/virtual-lab-svc/queries/project';
+import { checkProjectExists, updateProject } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { checkVirtualLabExists, updateVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
-import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
-import { Card, CardContent } from '@/ui/molecules/card';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
+import { Card, CardContent } from '@/ui/molecules/card';
 import { Input } from '@/ui/molecules/input';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 export type Props = {
   virtualLabId: string;
@@ -49,7 +47,7 @@ const virtualLabNameSchema = z
             'Another virtual lab with same name already exists, Please use a different name.',
         });
       }
-    } catch (error) {
+    } catch {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Failed to validate virtual lab name',
@@ -72,7 +70,7 @@ export const createProjectNameSchema = (virtualLabId: string) =>
           message: 'You already have a project with this name',
         });
       }
-    } catch (error) {
+    } catch {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Failed to validate project name',
@@ -113,7 +111,6 @@ function CustomInput({
           'placeholder:text-sm placeholder:font-light disabled:font-black disabled:opacity-70',
           'focus-visible:text-primary-9! font-black! focus-visible:font-bold!'
         )}
-        // eslint-disable-next-line react/jsx-props-no-spreading
         {...rest}
       />
       <span className="absolute top-1/2 right-5 -translate-y-1/2 transform">
@@ -161,7 +158,6 @@ export function WorkspaceCustomization({
   });
   const [form] = Form.useForm();
   const [submittable, setSubmittable] = useState<boolean>(true);
-  const values = Form.useWatch([], form);
 
   useEffect(() => {
     if (!editableField.project_name && !editableField.virtual_lab_name) {
@@ -175,7 +171,7 @@ export function WorkspaceCustomization({
         .then(() => setSubmittable(true))
         .catch(() => setSubmittable(false));
     }
-  }, [form, values, editableField]);
+  }, [form, editableField]);
 
   const handleEdit = (fieldName: keyof typeof editableField) => {
     setEditableField((prev) => ({
@@ -253,7 +249,7 @@ export function WorkspaceCustomization({
         </div>
         <Card className="flex w-full flex-col bg-transparent shadow-none backdrop-blur-sm">
           <div className="mx-auto mb-2 flex w-full max-w-sm items-start justify-center gap-3 px-1.5">
-            <CheckCircleFilled className="mt-1.5 flex-shrink-0 text-green-600" />
+            <CheckCircleFilled className="mt-1.5 shrink-0 text-green-600" />
             <p className="text-primary-9 text-left">
               Congratulations! Your virtual lab{' '}
               <strong className="font-bold">{virtualLabName}</strong> has been created. We have
@@ -293,7 +289,7 @@ export function WorkspaceCustomization({
                         } catch (error) {
                           return Promise.reject(
                             error instanceof z.ZodError
-                              ? error.errors.at(0)?.message
+                              ? error.issues.at(0)?.message
                               : 'Virtual lab name is required !'
                           );
                         }
@@ -334,7 +330,7 @@ export function WorkspaceCustomization({
                         } catch (error) {
                           return Promise.reject(
                             error instanceof z.ZodError
-                              ? error.errors.at(0)?.message
+                              ? error.issues.at(0)?.message
                               : 'Project name is required !'
                           );
                         }
@@ -376,43 +372,6 @@ export function WorkspaceCustomization({
             </Form>
           </CardContent>
         </Card>
-
-        {/* <div className="w-full">
-          <p className="mb-2 text-left text-sm text-[#8C8C8C]">Just before you go</p>
-          <div className="grid justify-items-stretch gap-4 md:grid-cols-2">
-            <Link href="/">
-              <Card
-                borderless
-                className="h-full cursor-pointer bg-white/95 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl"
-              >
-                <CardContent>
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="text-xs tracking-wide text-[#8C8C8C] uppercase">Video</span>
-                  </div>
-                  <h3 className="text-xl leading-tight font-bold text-blue-900">
-                    How to use the OBI platform?
-                  </h3>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/">
-              <Card
-                borderless
-                className="h-full cursor-pointer bg-white/95 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl"
-              >
-                <CardContent>
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="text-xs tracking-wide text-[#8C8C8C] uppercase">Guides</span>
-                  </div>
-                  <h3 className="text-xl leading-tight font-bold text-blue-900">
-                    How to launch workflows?
-                  </h3>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-        </div> */}
       </div>
     </HydrateWrapper>
   );

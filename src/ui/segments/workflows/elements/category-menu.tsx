@@ -18,6 +18,10 @@ type Props = {
 export function CategoryMenu({ current, onItemClick }: Props) {
   const featureFlags = useFlags();
 
+  const activityEntries = ActivityDict.filter(
+    (o) => !o.requiredFeatures || o.requiredFeatures.every((flag) => featureFlags[flag])
+  ).sort((a, b) => Number(!!a.disabled) - Number(!!b.disabled)); // Disabled appear last
+
   return (
     <Carousel
       id="workflow-category-menu"
@@ -31,9 +35,7 @@ export function CategoryMenu({ current, onItemClick }: Props) {
         <CarouselButtons />
       </div>
       <CarouselContent className="items-stretch">
-        {ActivityDict.filter(
-          (o) => !o.requiredFeatures || o.requiredFeatures.every((flag) => featureFlags[flag])
-        ).map((o) => (
+        {activityEntries.map((o) => (
           <CarouselItem
             key={`category-selector-${o.value}`}
             className="w-max basis-1/2 py-2 md:basis-1/3! lg:basis-1/5! 2xl:basis-1/6!"

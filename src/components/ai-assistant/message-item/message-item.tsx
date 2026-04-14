@@ -1,37 +1,71 @@
 'use client';
 
 import React from 'react';
-import { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
-import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
-import ToolsProgress from './tools-progress';
-import ToolsComponents from './tools-components';
-
-import { classNames } from '@/util/utils';
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
 import { isString } from '@/util/type-guards';
+import { classNames } from '@/util/utils';
+
+import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
+import { BackupPlotsWrapper, extractStorageIdsFromMessage } from './backup-plots';
+import { CollapsibleMessage } from './collapsible-message';
+import ToolsProgress from './tools-progress';
+
+import type { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
 import styles from './message-item.module.css';
 
 interface MessageItemProps {
   className?: string;
   value: UIMessage;
+  status?: 'submitted' | 'streaming' | 'ready' | 'error';
+  isLastMessage?: boolean;
 }
 
 export const MessageItem = React.memo(RawMessageItem);
 
-function RawMessageItem({ className, value }: MessageItemProps) {
+function RawMessageItem({
+  className,
+  value,
+  status = 'ready',
+  isLastMessage = false,
+}: MessageItemProps) {
   const debug = useDebug();
   return (
     <div className={classNames(className, styles.messageItem)}>
-      <MessageChild value={value} debug={debug} />
+      <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} />
     </div>
   );
 }
 
-function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): React.ReactNode {
+function useStableArray<T>(arr: T[]): T[] {
+  const ref = React.useRef<T[]>(arr);
+
+  if (ref.current.length !== arr.length || ref.current.some((val, idx) => val !== arr[idx])) {
+    ref.current = arr;
+  }
+
+  return ref.current;
+}
+
+function MessageChild({
+  value,
+  debug,
+  status,
+  isLastMessage,
+}: {
+  value: UIMessage;
+  debug: boolean;
+  status: 'submitted' | 'streaming' | 'ready' | 'error';
+  isLastMessage: boolean;
+}): React.ReactNode {
   const { setPanelWidth } = usePanelWidth();
   const deferredParts = React.useDeferredValue(value.parts);
+  const memoizedStorageIds = React.useMemo(
+    () => extractStorageIdsFromMessage(deferredParts),
+    [deferredParts]
+  );
+  const validStorageIds = useStableArray(memoizedStorageIds);
 
   switch (value.role) {
     case 'user':
@@ -46,38 +80,40 @@ function MessageChild({ value, debug }: { value: UIMessage; debug: boolean }): R
         </div>
       );
     case 'assistant': {
+      const children = deferredParts.map((part, index) => {
+        if (part.type === 'text' && part.text !== '') {
+          return (
+            <GithubFlavorMarkdown
+              // eslint-disable-next-line react/no-array-index-key
+              key={`text-${index}`}
+              className={styles.markdown}
+              onLinkClicked={(external) => {
+                if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
+              }}
+              validStorageIds={validStorageIds}
+              isStreaming={isLastMessage && status === 'streaming'}
+            >
+              {part.text}
+            </GithubFlavorMarkdown>
+          );
+        }
+        if (part.type === 'tool-invocation') {
+          const { toolCallId } = part.toolInvocation;
+          return (
+            <div key={`tool-${toolCallId}`}>
+              <ToolsProgress part={part} />
+            </div>
+          );
+        }
+        return null;
+      });
+
       return (
         <div className={styles.assistant}>
-          {deferredParts.map((part, index) => {
-            if (part.type === 'text' && part.text !== '') {
-              return (
-                <GithubFlavorMarkdown
-                  // eslint-disable-next-line react/no-array-index-key
-                  key={`text-${index}`}
-                  className={styles.markdown}
-                  onLinkClicked={(external) => {
-                    if (!external) setPanelWidth(MINIMAL_PANEL_SIZE);
-                  }}
-                >
-                  {part.text}
-                </GithubFlavorMarkdown>
-              );
-            }
-            if (part.type === 'tool-invocation') {
-              const { toolCallId } = part.toolInvocation;
-              return (
-                <div key={`tool-${toolCallId}`}>
-                  <ToolsProgress part={part} />
-                  <>
-                    <ToolsComponents part={part} />
-                    {/* This tool component has been disabled yet */}
-                    {/* <ToolArticles message={value} /> */}
-                  </>
-                </div>
-              );
-            }
-            return null;
-          })}
+          <CollapsibleMessage message={value} status={isLastMessage ? status : 'ready'}>
+            {children}
+          </CollapsibleMessage>
+          <BackupPlotsWrapper message={value} isLastMessage={isLastMessage} status={status} />
           {debug && (
             <button
               type="button"
@@ -110,7 +146,7 @@ function debugToConsole(value: UIMessage) {
     try {
       // eslint-disable-next-line no-console
       console.debug(JSON.parse(result));
-    } catch (ex) {
+    } catch (_ex) {
       // eslint-disable-next-line no-console
       console.error('Not a valid JSON:', result);
     }
@@ -131,7 +167,7 @@ function formatDate(d: Date | string): string {
     });
     const date = isString(d) ? new Date(d) : d;
     return formatter.format(date);
-  } catch (ex) {
+  } catch {
     return '';
   }
 }

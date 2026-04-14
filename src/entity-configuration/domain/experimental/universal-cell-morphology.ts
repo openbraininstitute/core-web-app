@@ -29,9 +29,7 @@ export const UniversalCellMorphology: EntityCoreTypeConfig<
           ...params,
           context: params[0].context,
           withFacets: params[0].withFacets,
-          filters: {
-            ...params[0].filters,
-          },
+          filters: params[0].filters,
         });
       },
       one: getCellMorphology,

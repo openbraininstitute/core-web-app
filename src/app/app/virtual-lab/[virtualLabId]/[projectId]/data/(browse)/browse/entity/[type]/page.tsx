@@ -32,8 +32,9 @@ const AllowedEntities = [
   ExtendedEntitiesTypeDict.SingleNeuronSimulation,
   ExtendedEntitiesTypeDict.IonChannelModel,
   ExtendedEntitiesTypeDict.MEModelWithSynapses,
-  ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
+  ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
   ExtendedEntitiesTypeDict.EMCellMesh,
+  ExtendedEntitiesTypeDict.IonChannelModelSimulation,
 ] as const;
 
 export default async function Page({

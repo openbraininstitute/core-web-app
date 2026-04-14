@@ -43,6 +43,7 @@ export type OfflineTokenConsentModalState = {
 };
 
 const PREFETCH_TTL_MS = 30_000;
+const INMEMORY_GRANT_TTL_MS = 10 * 60_000;
 
 async function waitForDecision({
   useCache,
@@ -136,6 +137,7 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
     value: OfflineTokenConsentRequest;
   } | null>(null);
   const inflightConsentRequestRef = useRef<Promise<OfflineTokenConsentRequest> | null>(null);
+  const lastGrantAtRef = useRef<number>(0);
 
   const cancel = useCallback(() => {
     abortRef.current?.abort('cancelled');
@@ -189,6 +191,10 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
       };
     }
 
+    if (Date.now() - lastGrantAtRef.current < INMEMORY_GRANT_TTL_MS) {
+      return { ok: true };
+    }
+
     // abort any in-flight consent waits.
     abortRef.current?.abort('superseded');
     abortRef.current = new AbortController();
@@ -205,6 +211,7 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
             at: Date.now(),
             source: OfflineTokenConsentEventSource.Server,
           });
+          lastGrantAtRef.current = Date.now();
           return { ok: true };
         }
       }
@@ -274,6 +281,7 @@ export function useEnsureOfflineTokenConsent(options?: EnsureOptions) {
         source: OfflineTokenConsentEventSource.Server,
         sessionStateId,
       });
+      lastGrantAtRef.current = now;
       return { ok: true };
     } catch (err: any) {
       setModal({ open: false, consentUrl: undefined });

@@ -5,9 +5,8 @@ import { type FieldProps, isObject } from '@rjsf/utils';
 import { compact, get, isEmpty, snakeCase } from 'es-toolkit/compat';
 import { useAtom, useSetAtom } from 'jotai';
 import { useCallback, useMemo, useState } from 'react';
-import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -26,6 +25,9 @@ import {
 } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
 import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
+
+import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 
 type RecordingFormData = {
   id_str: string;
@@ -128,8 +130,7 @@ function RecordingsArrayFieldContent({
       );
       setIsModalOpen(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChange, isSelectionValid]);
+  }, [onChange, isSelectionValid, recording, updateRecordingStorage]);
 
   const handleModalClose = () => setIsModalOpen(false);
 
@@ -137,19 +138,18 @@ function RecordingsArrayFieldContent({
     if (readonly || disabled) return;
     onChange(undefined, undefined);
     updateRecordingStorage(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readonly, disabled]);
+  }, [readonly, disabled, onChange, updateRecordingStorage]);
 
   const handleRowsSelected = useCallback(
     (selectedRows: Array<IIonChannelRecording>) => {
       updateRecordingStorage(selectedRows.at(0) ?? null);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [updateRecordingStorage]
   );
 
   return (
     <div className="w-full">
+      {/** biome-ignore lint/a11y/useSemanticElements: button can't have nested buttons */}
       <div
         className="w-full"
         role="button"
@@ -171,7 +171,7 @@ function RecordingsArrayFieldContent({
           )}
           disabled={disabled || readonly}
         >
-          <div className="flex min-h-[2rem] flex-1 flex-wrap items-center gap-1 select-none">
+          <div className="flex min-h-8 flex-1 flex-wrap items-center gap-1 select-none">
             {recording ? (
               <Badge
                 key={recording.id}

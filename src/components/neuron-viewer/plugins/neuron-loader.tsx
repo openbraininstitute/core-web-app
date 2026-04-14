@@ -6,15 +6,11 @@ const spinnerClassName =
 export function NeuronLoader({ text, w, h }: { text: string; w?: number; h?: number }) {
   return (
     <div className={classNames('relative z-30', !w && 'w-52', !h && 'h-52')}>
-      <div className="absolute top-1/2 left-1/2 flex -translate-x-[calc(50%-8px)] -translate-y-1/2 items-center justify-center text-center text-[1.5vw] font-bold text-white">
+      <div className="absolute top-1/2 left-1/2 flex -translate-x-[calc(50%-8px)] -translate-y-1/2 items-center justify-center text-center text-[1.5vw] font-bold">
         {text}
       </div>
       <div
-        className={classNames(
-          'relative box-border inline-block text-white',
-          !w && 'w-52',
-          !h && 'h-52'
-        )}
+        className={classNames('relative box-border inline-block', !w && 'w-52', !h && 'h-52')}
         style={{ width: w, height: h }}
       >
         <div

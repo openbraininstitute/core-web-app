@@ -1,5 +1,34 @@
 .aiPanel {
+  position: relative;
   overflow: visible;
-  border: 1px solid #ddd;
   border-radius: 1em;
+}
+
+.collapsed {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1em;
+  padding: 0.5em 0 0 0;
+  cursor: pointer;
+  font-size: var(--text-xl);
+  font-weight: bold;
+  margin: 0;
+
+  > * {
+    margin: 0;
+    padding: 0;
+  }
+
+  > div {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
 }

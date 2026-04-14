@@ -12,7 +12,7 @@ export interface IStrainFilter extends PaginationFilter, OwnershipFilter, IDFilt
 const StrainCreateSchema = z.object({
   name: z.string(),
   taxonomy_id: z.string(),
-  species_id: z.string().uuid(),
+  species_id: z.uuid(),
 });
 
 export type TStrainCreate = z.infer<typeof StrainCreateSchema>;

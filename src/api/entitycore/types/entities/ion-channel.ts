@@ -10,7 +10,6 @@ import type {
   IStrain,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
-
 import type {
   BrainRegionHierarchyFilter,
   ContributionFilter,

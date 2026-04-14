@@ -1,10 +1,11 @@
 import { entityCoreApi } from '@/api/entitycore/utils';
-import {
+import { config } from '@/config';
+
+import type {
   IBrainRegionHierarchy,
   ITemporaryBrainRegionHierarchy,
   TemporaryFlatBrainRegionHierarchy,
 } from '@/api/entitycore/types/entities/brain-region';
-import { config } from '@/config';
 
 /**
  * Retrieves the brain region hierarchy from the Entity Core API.
