@@ -3,7 +3,10 @@ import find from 'es-toolkit/compat/find';
 import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
-import { CellMorphologyGenerationType } from '@/api/entitycore/types/entities/cell-morphology-protocol';
+import {
+  CellMorphologyGenerationType,
+  CellMorphologyProtocolDesign,
+} from '@/api/entitycore/types/entities/cell-morphology-protocol';
 import {
   EMCellMeshGenerationMethodDict,
   EMCellMeshTypeDict,
@@ -130,6 +133,77 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     vocabulary: {
       plural: 'Generation types',
       singular: 'Generation type',
+    },
+    style: { width: 190 },
+  },
+  [EntityCoreFields.ProtocolDesign]: {
+    title: 'Protocol design',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    presentation: {
+      column: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: true,
+            },
+          ],
+        },
+      },
+      filter: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: true,
+            },
+          ],
+        },
+        constraint: {
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: 'cell_morphology_protocol__protocol_design__in',
+            },
+          ],
+        },
+        options: {
+          kind: 'static',
+          items: map(CellMorphologyProtocolDesign, (item) => ({
+            label: item.label,
+            value: item.key,
+          })),
+        },
+      },
+    },
+    render: (entity) => {
+      if (
+        'cell_morphology_protocol' in entity &&
+        'protocol_design' in entity.cell_morphology_protocol
+      ) {
+        return renderEmptyOrValue(
+          find(CellMorphologyProtocolDesign, {
+            key: entity.cell_morphology_protocol.protocol_design,
+          })?.label
+        );
+      }
+
+      return EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Protocol designs',
+      singular: 'Protocol design',
     },
     style: { width: 190 },
   },

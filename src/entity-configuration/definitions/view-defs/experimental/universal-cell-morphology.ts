@@ -10,6 +10,7 @@ export const viewDefForUniversalCellMorphology = {
     EntityCoreFields.Name,
     EntityCoreFields.SpeciesName,
     EntityCoreFields.GenerationType,
+    EntityCoreFields.ProtocolDesign,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,
   ],
