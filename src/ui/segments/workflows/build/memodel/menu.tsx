@@ -2,6 +2,7 @@
 
 import {
   CheckCircleFilled,
+  ExclamationCircleOutlined,
   LoadingOutlined,
   RightOutlined,
   SettingFilled,
@@ -324,8 +325,16 @@ export function Menu({ sessionId }: { sessionId: string }) {
             />
           </div>
         </Button>
+        {isCheckingCompatibility && (
+          <div className="p-4 pl-6 text-sm font-bold text-primary-9 flex items-center gap-3">
+            <LoadingOutlined />
+            {messages.CheckingCompatibility}
+          </div>
+        )}
         {isIncompatible && (
-          <div className="mx-1 rounded-md px-3 py-2 text-sm text-destructive">
+          <div className="p-4 pl-6 text-sm font-bold text-destructive flex items-center gap-3">
+            <ExclamationCircleOutlined />
+
             {messages.IncompatibleModels}
           </div>
         )}
@@ -342,33 +351,16 @@ export function Menu({ sessionId }: { sessionId: string }) {
                 onClick={() => mutate.mutateAsync()}
                 disabled={disabled}
               >
-                <div className="shrink-0 font-bold">
-                  {isCheckingCompatibility ? messages.CheckingCompatibility : 'Build model'}
-                </div>
-                {(mutate.isPending || isCheckingCompatibility) && (
-                  <LoadingOutlined
-                    className={cn(
-                      'ml-2',
-                      isCheckingCompatibility ? 'text-neutral-4' : 'text-white'
-                    )}
-                  />
-                )}
+                <div className="shrink-0 font-bold">Build model</div>
+                {mutate.isPending && <LoadingOutlined className="ml-2 text-white" />}
               </Button>
             </div>
           </TooltipTrigger>
           {disabled && (
             <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
               <p className={cn('text-justify text-base')}>
-                {isIncompatible ? (
-                  messages.IncompatibleModels
-                ) : isCheckingCompatibility ? (
-                  messages.CheckingCompatibility
-                ) : (
-                  <>
-                    Please fill all the required information <br /> along with selecting m-model and
-                    e-model
-                  </>
-                )}
+                Please fill all the required information along with <br /> selecting compatible
+                M-model and E-model
               </p>
             </TooltipContent>
           )}
