@@ -2,6 +2,7 @@
 
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { includes, uniq } from 'es-toolkit/compat';
+import { useCallback } from 'react';
 
 import { getTaskActivities, getTaskConfigs } from '@/api/entitycore/queries/task';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
@@ -51,7 +52,7 @@ export function invalidateScanConfigExecutionActivities({
   context: WorkspaceContext;
   executionActivityType: TTaskActivityType;
 }) {
-  queryClient.invalidateQueries({
+  return queryClient.invalidateQueries({
     predicate: (query) => {
       const key = query.queryKey;
       if (key[0] !== TASK_ACTIVITIES_QUERY_KEY_HEAD) return false;
@@ -98,25 +99,8 @@ export function useScanConfigLaunchMutation({
 
   const { runWithConsent } = useRunWithOfflineTokenConsent();
 
-  return useMutation({
-    throwOnError: false,
-    mutationKey: [TASK_RUNNER_QUERY_KEY_HEAD, { obiOneTaskType, context }],
-    mutationFn: (configId: string) =>
-      runWithConsent({
-        fn: () =>
-          runTask({
-            ctx: context,
-            task_type: obiOneTaskType,
-            config_id: configId,
-          }),
-      }),
-    onSuccess: (executionId, configId) => {
-      log('info', `${logTopic} for ${configId} launched successfully, execution ID`, {
-        executionId,
-      });
-      invalidateScanConfigExecutionActivities({ queryClient, context, executionActivityType });
-    },
-    onError: (error, configId) => {
+  const handleTaskError = useCallback(
+    (error: unknown, configId: string) => {
       log('error', `Failed to launch ${logTopicLower} for config ${configId}`, error);
       if (error instanceof ApiError) {
         const code = error.cause?.code;
@@ -125,9 +109,38 @@ export function useScanConfigLaunchMutation({
         notification.error({ message, duration: 5, key: notificationKey });
         return;
       }
-
       notification.error({ message: failureMessage, duration: 5, key: notificationKey });
     },
+    [failureMessage, logTopicLower, notification, notificationKey]
+  );
+
+  return useMutation({
+    throwOnError: false,
+    mutationKey: [TASK_RUNNER_QUERY_KEY_HEAD, { obiOneTaskType, context }],
+    mutationFn: (configIds: string[]) =>
+      runWithConsent({
+        fn: async () => {
+          for (const configId of configIds) {
+            try {
+              const executionId = await runTask({
+                ctx: context,
+                task_type: obiOneTaskType,
+                config_id: configId,
+              });
+              log('info', `${logTopic} for ${configId} launched successfully, execution ID`, {
+                executionId,
+              });
+            } catch (error) {
+              handleTaskError(error, configId);
+            }
+          }
+          await invalidateScanConfigExecutionActivities({
+            queryClient,
+            context,
+            executionActivityType,
+          });
+        },
+      }),
   });
 }
 

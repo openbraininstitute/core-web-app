@@ -139,9 +139,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
   }, [configsResponse?.configList, activeConfig, onActiveConfigChange]);
 
   const onRun = async (configIdsToRun: string[]) => {
-    for (const configId of configIdsToRun) {
-      await runSkeletonization(configId);
-    }
+    await runSkeletonization(configIdsToRun);
     setSelectedConfigIds([]);
   };
 
