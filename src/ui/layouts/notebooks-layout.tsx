@@ -153,9 +153,11 @@ export function NotebooksLayout({ children, active }: Props) {
     }
   }
 
-  const course = virtualLabsData?.data?.membership_labs.results.find(
+  const courseVlab = virtualLabsData?.data?.membership_labs.results.find(
     (lab) => lab?.course?.template_project_id === projectId
-  )?.course;
+  );
+
+  const course = courseVlab?.course;
 
   const onNotebookCreateSuccess = useCallback(
     async (notebook: EntityCoreObjectTypes) => {
@@ -265,47 +267,49 @@ export function NotebooksLayout({ children, active }: Props) {
       >
         {children}
       </div>
-      <Modal open={showCourseModal} footer={false} closable={false}>
-        <div>
-          {step === 0 && (
-            <div>
-              <div className="mb-4 text-xl text-primary-8">Initialize Course</div>
-              <div className="flex flex-col gap-2">
-                <div className="flex flex-col">
-                  <label htmlFor="quantity-input">Number of students</label>
-                  <InputNumber
-                    id="quantity-input"
-                    min={1}
-                    value={numberStudents}
-                    onChange={(n) => {
-                      setNumberStudents(n);
-                    }}
-                  />
-                  {!numberStudents && <div className="text-red-500">Required</div>}
-                </div>
-                <div className="flex flex-col">
-                  <div>Upload CSV with student information</div>
-                  <CsvUploadValidator
-                    maxStudents={numberStudents}
-                    vlabId={virtualLabId}
-                    onCancel={() => setShowCourseModal(false)}
-                    onSuccess={() => setStep(1)}
-                    studentEmails={studentEmails}
-                    setStudentEmails={setStudentEmails}
-                  />
+      {courseVlab && (
+        <Modal open={showCourseModal} footer={false} closable={false}>
+          <div>
+            {step === 0 && (
+              <div>
+                <div className="mb-4 text-xl text-primary-8">Initialize Course</div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col">
+                    <label htmlFor="quantity-input">Number of students</label>
+                    <InputNumber
+                      id="quantity-input"
+                      min={1}
+                      value={numberStudents}
+                      onChange={(n) => {
+                        setNumberStudents(n);
+                      }}
+                    />
+                    {!numberStudents && <div className="text-red-500">Required</div>}
+                  </div>
+                  <div className="flex flex-col">
+                    <div>Upload CSV with student information</div>
+                    <CsvUploadValidator
+                      maxStudents={numberStudents}
+                      vlabId={courseVlab.id}
+                      onCancel={() => setShowCourseModal(false)}
+                      onSuccess={() => setStep(1)}
+                      studentEmails={studentEmails}
+                      setStudentEmails={setStudentEmails}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          {step === 1 && (
-            <CourseSetup
-              onFinnish={onFinnish}
-              studentEmails={studentEmails}
-              virtualLab={virtualLabData.data.virtual_lab}
-            />
-          )}
-        </div>
-      </Modal>
+            )}
+            {step === 1 && (
+              <CourseSetup
+                onFinnish={onFinnish}
+                studentEmails={studentEmails}
+                virtualLab={courseVlab}
+              />
+            )}
+          </div>
+        </Modal>
+      )}
 
       <ContributionModal onCreateSuccess={onNotebookCreateSuccess} />
     </div>
@@ -376,7 +380,9 @@ const CsvUploadValidator = ({
       emails: [...emailSet],
     });
 
-    setStudentEmails([...missingEmails.emails]);
+    console.log('here', missingEmails);
+
+    setStudentEmails(missingEmails);
     return true;
   };
 
