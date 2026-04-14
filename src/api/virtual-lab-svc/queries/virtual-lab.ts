@@ -206,7 +206,6 @@ export async function getMissingStudentEmails({
   emails: string[];
 }) {
   const api = await virtualLabRootApi();
-  return { emails: [] };
   return await api.post<{ emails: string[] }>(
     `/virtual-labs/${virtualLabId}/missing-student-emails`,
     {

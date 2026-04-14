@@ -32,8 +32,10 @@ import { createProject, listAllProjectIds } from '@/api/virtual-lab-svc/queries/
 import {
   getMissingStudentEmails,
   getVirtualLab,
+  listVirtualLabs,
   updateVirtualLab,
 } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
@@ -90,6 +92,12 @@ export function NotebooksLayout({ children, active }: Props) {
   const [studentEmails, setStudentEmails] = useState<string[]>([]);
   const breakpoint = useDefaultBreakpoint();
 
+  const { data: virtualLabsData } = useQuery({
+    queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MEMBERSHIP_LABS] }),
+    queryFn: () => listVirtualLabs({ include: [LabTypeEnum.MEMBERSHIP_LABS] }),
+    enabled: Boolean(virtualLabId),
+  });
+
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
     queryFn: () => getVirtualLab(virtualLabId),
@@ -145,7 +153,9 @@ export function NotebooksLayout({ children, active }: Props) {
     }
   }
 
-  const course = virtualLabData?.data?.virtual_lab.course;
+  const course = virtualLabsData?.data?.membership_labs.results.find(
+    (lab) => lab?.course?.template_project_id === projectId
+  )?.course;
 
   const onNotebookCreateSuccess = useCallback(
     async (notebook: EntityCoreObjectTypes) => {
@@ -176,8 +186,6 @@ export function NotebooksLayout({ children, active }: Props) {
         <LoadingOutlined />
       </div>
     );
-
-  // const course = virtualLabData.data.virtual_lab.course;
 
   return (
     <div>
