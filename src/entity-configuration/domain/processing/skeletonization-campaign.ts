@@ -24,6 +24,7 @@ import {
   type TTaskCampaignExecutionRow,
   type TTaskCampaignRows,
 } from '@/entity-configuration/domain/task-helpers';
+import { fetchAllChunkedPaginatedData } from '@/utils/pagination';
 
 import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -75,37 +76,46 @@ async function resolveSkeletonizationCampaigns({
 
   // fetch all configs produced by those generations
   const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
-  const configs =
-    allConfigIds.length > 0
-      ? await getTaskConfigs<TSkeletonizationTaskConfigMeta>({
-          context,
-          withFacets: false,
-          filters: {
-            task_config_type: TaskConfigType.SkeletonizationConfig,
-            id__in: allConfigIds,
-          },
-        })
-      : { data: [] };
-  const configById = keyBy(configs.data, 'id');
+  const configsData = await fetchAllChunkedPaginatedData({
+    values: allConfigIds,
+    chunkSize: 30,
+    pageSize: 100,
+    fetchPage: async ({ chunkValues, page, pageSize }) => {
+      const res = await getTaskConfigs<TSkeletonizationTaskConfigMeta>({
+        context,
+        withFacets: false,
+        filters: {
+          task_config_type: TaskConfigType.SkeletonizationConfig,
+          id__in: chunkValues,
+          page,
+          page_size: pageSize,
+        },
+      });
+      return { data: res.data };
+    },
+  });
+  const configById = keyBy(configsData, 'id');
 
   // fetch all executions linked to those configs
-  const configIDs = configs.data.map((c) => c.id);
-  const executionsResponse =
-    configIDs.length > 0
-      ? await getTaskActivities({
-          context,
-          withFacets: false,
-          filters: {
-            task_activity_type: TaskActivityType.SkeletonizationExecution,
-            used__id__in: configIDs,
-          },
-        })
-      : {
-          data: [] as Awaited<ReturnType<typeof getTaskActivities>>['data'],
-        };
-
-  // map configId → executions that used it
-  const executions = executionsResponse.data;
+  const configIDs = configsData.map((c) => c.id);
+  const executions = await fetchAllChunkedPaginatedData({
+    values: configIDs,
+    chunkSize: 30,
+    pageSize: 100,
+    fetchPage: async ({ chunkValues, page, pageSize }) => {
+      const res = await getTaskActivities({
+        context,
+        withFacets: false,
+        filters: {
+          task_activity_type: TaskActivityType.SkeletonizationExecution,
+          used__id__in: chunkValues,
+          page,
+          page_size: pageSize,
+        },
+      });
+      return { data: res.data };
+    },
+  });
   const executionsByConfigId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
     for (const u of exec.used) {
       if (!acc[u.id]) acc[u.id] = [];
@@ -153,19 +163,26 @@ export async function resolveSkeletonizationByCampaignId({
 
   // config generations → configs
   const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
-  const configs =
-    allConfigIds.length > 0
-      ? await getTaskConfigs<TSkeletonizationTaskConfigMeta>({
-          context,
-          withFacets: false,
-          filters: {
-            task_config_type: TaskConfigType.SkeletonizationConfig,
-            id__in: allConfigIds,
-          },
-        })
-      : { data: [] };
+  const configsData = await fetchAllChunkedPaginatedData({
+    values: allConfigIds,
+    chunkSize: 30,
+    pageSize: 100,
+    fetchPage: async ({ chunkValues, page, pageSize }) => {
+      const res = await getTaskConfigs<TSkeletonizationTaskConfigMeta>({
+        context,
+        withFacets: false,
+        filters: {
+          task_config_type: TaskConfigType.SkeletonizationConfig,
+          id__in: chunkValues,
+          page,
+          page_size: pageSize,
+        },
+      });
+      return { data: res.data };
+    },
+  });
 
-  const firstConfig = configs.data.at(0);
+  const firstConfig = configsData.at(0);
   // get the generation config asset from the campaign
   const assets = campaign.assets ?? [];
 
