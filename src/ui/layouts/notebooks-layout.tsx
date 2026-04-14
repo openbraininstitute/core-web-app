@@ -781,7 +781,7 @@ function CourseSetup({
         const projectCreationResults = await Promise.allSettled(
           studentEmails.map((email) =>
             createProject(virtualLabId, {
-              name: `${virtualLab.name} ${email} 2`,
+              name: `${virtualLab.name} ${email}`,
               description: `Project for ${email}`,
               contact_email: email,
               include_members: [],
