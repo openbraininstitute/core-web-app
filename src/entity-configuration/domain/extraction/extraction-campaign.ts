@@ -249,4 +249,7 @@ export const CircuitExtractionCampaign: EntityCoreTypeConfig<
   isCopyable: true,
   isSimulatable: false,
   isDeletable: false,
+  isContributable: false,
+  isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;

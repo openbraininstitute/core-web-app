@@ -24,6 +24,8 @@ export const recordingOriginFilter = {
 export const ElectricalCellRecording: EntityCoreTypeConfig<IElectricalCellRecording> = {
   group: EntityTypeGroup.Experimental,
   title: 'Single cell electrophysiology',
+  description:
+    'These are experimental intracellular current- and voltage-clamp recordings, typically obtained from the neuronal soma in biological experiments. Each dataset includes both the input stimuli and the corresponding trace recordings. A single file may contain recordings from multiple experiments of various types, with several experiments repeated across multiple iterations. The data is stored in NWB format, which is compatible with Python libraries such as [PyNWB](https://github.com/NeurodataWithoutBorders/pynwb) and [h5py](https://github.com/h5py/h5py). This dataset can be used to extract meaningful electrical features, such as voltage and current characteristics, using tools like [eFEL](https://github.com/openbraininstitute/eFEL) and [BluePyEfe](https://github.com/openbraininstitute/BluePyEfe).',
   extendedType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
   type: EntityTypeDict.ElectricalCellRecording,
   slug: EntitySlug.ElectricalCellRecording,

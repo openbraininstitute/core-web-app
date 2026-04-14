@@ -37,6 +37,8 @@ function narrowFilters(filters?: ICircuitFilter) {
 export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
   title: 'Circuit',
+  description:
+    'A neuronal network of interconnected neurons that work together to process information and generate specific outputs or behaviors. Circuits in the data base are in [SONATA format](https://sonata-extension.readthedocs.io/en/latest/). This is a representation of a neuronal network as a directed multi-graph, where nodes correspond to brain cells (neurons or virtual input sources) and edges represent their connections (such as synapses or other forms of contact). Where multiple synapses exist between neurons, they are represented as multiple edges. Nodes and edges are organized into populations for convenience, and can be described with extensive, user-defined attributes. The entire circuit, including its structure, cell and synapse properties, is encoded using standardized, efficient file formats (CSV, HDF5, and JSON) to support large-scale, reproducible computational modeling and simulation of brain networks. We categorize circuits into different types:\\n**Whole brain (whole_brain)**: Circuit representing an entire brain.\\n**Brain region (region)**: Atlas-based continuous volume of an entire brain region or a set of continuous sub-regions.\\n**System (system)**: Non-continuous circuit consisting of at least two microcircuits or regions that are connected by inter-region connectivity.\\n**Microcircuit (microcircuit)**: Any circuit larger than 20 neurons but not being a region, system, or whole-brain circuit.\\n**Small microcircuit (small)**: Circuit with 3-20 neurons together with synapses coming from inside and outside its volume (usually called intrinsic and extrinsic synapses respectively).',
   extendedType: ExtendedEntitiesTypeDict.Circuit,
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.Circuit,
@@ -71,4 +73,7 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   isCopyable: true,
   isSimulatable: (scale: TCircuitScaleDictionary) =>
     includes([CircuitScaleDictionary.SmallMicrocircuit, CircuitScaleDictionary.PairNeuron], scale),
+  isContributable: true,
+  isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;

@@ -30,6 +30,7 @@ export type EntityCoreTypeConfig<
   type: TEntityTypeDict;
   slug: EntitySlugValue;
   title: string;
+  description?: string;
   alternateTitle?: string;
   requiredFeatures?: FlagKey[];
   api: {

@@ -14,6 +14,8 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
   group: EntityTypeGroup.Experimental,
   title: 'Bouton density',
+  description:
+    'Number of boutons per axonal length (usually per \u00b5m) for a given cell type. Buttons counts are determined by experimentalist by the number of varicosities observed on the reconstructed axonal branches of a reconstructed morphology. \u00a0This measurement could be used to model the probability of connectivity in a network.',
   extendedType: ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
   type: EntityTypeDict.ExperimentalBoutonDensity,
   slug: EntitySlug.ExperimentalBoutonDensity,
@@ -35,4 +37,6 @@ export const BoutonDensity: EntityCoreTypeConfig<IExperimentalBoutonDensity> = {
   isCopyable: true,
   isSimulatable: false,
   isContributable: true,
+  isSingleContributeSupport: true,
+  isMultipleContributeSupport: false,
 } as const;

@@ -14,6 +14,8 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const SynapsesPerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPerConnection> = {
   group: EntityTypeGroup.Experimental,
   title: 'Synapse per connection',
+  description:
+    'A measure indicating the average number of synaptic contacts formed between a pair of connected neurons. This metric reflects the strength of the connection between two neurons, as multiple synapses may exist at a single neuronal connection.',
   extendedType: ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
   type: EntityTypeDict.ExperimentalSynapsesPerConnection,
   slug: EntitySlug.ExperimentalSynapsesPerConnection,
@@ -36,4 +38,6 @@ export const SynapsesPerConnection: EntityCoreTypeConfig<IExperimentalSynapsesPe
   isSimulatable: false,
   isBookmarkable: true,
   isContributable: true,
+  isSingleContributeSupport: true,
+  isMultipleContributeSupport: false,
 } as const;

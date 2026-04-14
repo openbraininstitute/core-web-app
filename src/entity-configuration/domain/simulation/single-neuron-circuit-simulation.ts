@@ -168,6 +168,8 @@ export const SingeNeuronCircuitSimulation: EntityCoreTypeConfig<
 > = {
   group: EntityTypeGroup.Simulations,
   title: 'Synaptome (beta)',
+  description:
+    'These are similar to synaptome but are extracted from larger circuits or built reconstructed datasets such as [MICrONS](https://www.microns-explorer.org/) with all the intrinsic (from same parent circuit) and/or extrinsic (external to parent circuit) synaptic connections on the single neuron model (ME-Model). Such models help study the effect of the synaptic inputs at the single neuron level.',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.SingleNeuronCircuitSimulation,

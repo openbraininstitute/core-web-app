@@ -31,5 +31,7 @@ export const EmCellMesh: EntityCoreTypeConfig<IEMCellMesh> = {
   isCopyable: true,
   isSimulatable: false,
   isContributable: true,
+  isSingleContributeSupport: true,
+  isMultipleContributeSupport: false,
   isDeletable: false,
 } as const;

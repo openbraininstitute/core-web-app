@@ -299,4 +299,7 @@ export const IonChannelModelingCampaign: EntityCoreTypeConfig<
   isDownloadable: false,
   isCopyable: false,
   isSimulatable: false,
+  isContributable: false,
+  isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;

@@ -70,4 +70,5 @@ export const SynthesizedCellMorphology: EntityCoreTypeConfig<
   // link: src/entity-configuration/domain/experimental/universal-cell-morphology.ts
   isContributable: false,
   isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;

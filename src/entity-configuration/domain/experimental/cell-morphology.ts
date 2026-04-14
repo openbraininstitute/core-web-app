@@ -37,6 +37,8 @@ function narrowFilters(filters?: CellMorphologyFilter) {
 export const CellMorphology: EntityCoreTypeConfig<ICellMorphology | ICellMorphologyExpanded> = {
   group: EntityTypeGroup.Experimental,
   title: 'Morphology',
+  description:
+    'A neuronal morphology shows the structural characteristics and the shape of a neuron, including features such as the soma (cell body), dendritic tree (apical and basal), and axon. The file can be given in .h5, .ascii or .swc formats. Morphological analysis can be performed with [NeuroM](https://github.com/openbraininstitute/NeuroM) and [TMD](https://github.com/openbraininstitute/TMD).  Neuronal morphology is important for identifying cell types, mapping brain circuitry, and creating computational models of neuronal networks.',
   extendedType: ExtendedEntitiesTypeDict.CellMorphology,
   type: EntityTypeDict.CellMorphology,
   slug: EntitySlug.CellMorphology,

@@ -183,4 +183,7 @@ export const IonChannelModelSimulation: EntityCoreTypeConfig<
   isDownloadable: false,
   isCopyable: true,
   isSimulatable: false,
+  isContributable: false,
+  isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;

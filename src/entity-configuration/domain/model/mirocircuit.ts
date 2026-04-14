@@ -51,4 +51,7 @@ export const Microcircuit: EntityCoreTypeConfig<ICircuit> = {
   isDownloadable: true,
   isCopyable: true,
   isSimulatable: false,
+  isContributable: false,
+  isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;

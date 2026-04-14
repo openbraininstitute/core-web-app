@@ -5,13 +5,14 @@ import {
   getSingleNeuronSynaptomeConfiguration,
   getSingleNeuronSynaptomes,
 } from '@/api/entitycore/queries/model/single-neuron-synaptome';
-import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
+import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -25,6 +26,8 @@ export const apiQueryExpand = {
 export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome> = {
   group: EntityTypeGroup.Models,
   title: 'Synaptome',
+  description:
+    'A synaptome is combination of a neuronal morphology an electrical model and a set of incoming synaptic connections from other neurons. Each synaptome has different synapse sets each representing synaptic inputs distributions from intrinsic connections (from same circuit) and extrinsic connections (other circuits or brain regions). A synaptome can be simulated on the platform including combinations of different synapse sets available within the synaptome model.',
   extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
   type: EntityTypeDict.SingleNeuronSynaptome,
   slug: EntitySlug.SingleNeuronSynaptome,
@@ -53,4 +56,7 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
   isDownloadable: true,
   isCopyable: true,
   isSimulatable: true,
+  isContributable: true,
+  isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;

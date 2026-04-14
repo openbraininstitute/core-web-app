@@ -48,4 +48,7 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   isDownloadable: true,
   isCopyable: true,
   isSimulatable: true,
+  isContributable: false,
+  isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;

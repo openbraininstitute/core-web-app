@@ -38,4 +38,7 @@ export const MEModelCircuit: EntityCoreTypeConfig<IMEModel> = {
   isBookmarkable: true,
   isCopyable: true,
   isSimulatable: true,
+  isContributable: false,
+  isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;
