@@ -11,6 +11,8 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 export const EmCellMesh: EntityCoreTypeConfig<IEMCellMesh> = {
   group: EntityTypeGroup.Experimental,
   title: 'EM mesh',
+  description:
+    'An EM mesh is a neuroscientific artifact of a three-dimensional mesh reconstructed by electron microscopy, for example from scanning electron microscopy, where the data can be acquired down to ultrastructural detail.',
   extendedType: ExtendedEntitiesTypeDict.EMCellMesh,
   type: EntityTypeDict.EMCellMesh,
   slug: EntitySlug.EMCellMesh,

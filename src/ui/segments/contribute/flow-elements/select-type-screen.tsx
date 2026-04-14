@@ -27,6 +27,88 @@ export interface ISelectTypeScreenProps {
   onSelectType: (type: TExtendedEntitiesTypeDict) => void;
 }
 
+type ArtifactTypeCardProps = {
+  option: TArtifactOption;
+  selected?: boolean;
+  disabled?: boolean;
+  onSelect?: (type: TExtendedEntitiesTypeDict) => void;
+};
+
+function ArtifactTypeCard({
+  option,
+  selected = false,
+  disabled = false,
+  onSelect,
+}: ArtifactTypeCardProps) {
+  return (
+    <Card
+      aria-disabled={disabled}
+      className={cn(
+        'h-full w-full rounded-xl border p-4 text-left transition-colors shadow-none bg-white!',
+        {
+          'hover:bg-gray-100! border-gray-200 cursor-pointer hover:shadow-xs': !disabled,
+          'border-primary-8 bg-primary-0': selected && !disabled,
+          'border-gray-300 cursor-not-allowed opacity-60': disabled,
+        }
+      )}
+      onClick={
+        !disabled && onSelect
+          ? () => {
+              onSelect(option.value);
+            }
+          : undefined
+      }
+    >
+      <CardContent className="flex h-full items-stretch gap-3">
+        {option.icon ? <div className="text-primary-8 mt-0.5 shrink-0">{option.icon}</div> : null}
+        <div className="min-w-0 flex flex-1 flex-col">
+          <CardTitle className="text-primary-9 m-0 mb-1 text-lg">{option.label}</CardTitle>
+          {option.description ? (
+            <CardDescription
+              className={cn(
+                'text-primary-7 mt-1 flex flex-1 flex-col text-sm',
+                '[&>div]:flex [&>div]:flex-1 [&>div]:flex-col'
+              )}
+            >
+              <ExpandableText
+                text={option.description}
+                collapsedLines={3}
+                className="mt-4 flex-1"
+                formatter={(content) => (
+                  <TextPatternTransformer
+                    regex={urlRegex}
+                    component={(match) => (
+                      <TransformedLink url={match} className="text-primary-5 underline!" />
+                    )}
+                  >
+                    {content}
+                  </TextPatternTransformer>
+                )}
+              >
+                {({ isExpanded, toggle }) => (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggle();
+                    }}
+                    className={cn(
+                      'text-sm text-primary-8 underline! decoration-primary-8',
+                      ' underline-offset-4 transition-colors hover:text-primary-5 ml-auto mt-auto flex items-end justify-end'
+                    )}
+                  >
+                    {isExpanded ? 'Show less' : 'Show more'}
+                  </button>
+                )}
+              </ExpandableText>
+            </CardDescription>
+          ) : null}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelectTypeScreenProps) {
   const { enabledOptions, disabledOptions } = useMemo(() => {
     const enabled = options.filter((option) => option.enabled);
@@ -54,69 +136,17 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
             {enabledOptions.map((option) => {
               const isSelected = selectedType === option.value;
               return (
-                <Card
+                <ArtifactTypeCard
                   key={option.value}
-                  className={cn(
-                    'w-full rounded-xl border p-4 text-left transition-colors shadow-none bg-white!',
-                    'hover:bg-gray-100! border-gray-200 cursor-pointer hover:shadow-xs',
-                    {
-                      'border-primary-8 bg-primary-0': isSelected,
-                    }
-                  )}
-                  onClick={() => {
-                    onSelectType(option.value);
-                  }}
-                >
-                  <CardContent className="flex items-start gap-3">
-                    {option.icon ? (
-                      <div className="text-primary-8 mt-0.5 shrink-0">{option.icon}</div>
-                    ) : null}
-                    <div className="min-w-0">
-                      <CardTitle className="text-primary-9 m-0 mb-3 text-base">
-                        {option.label}
-                      </CardTitle>
-                      {option.description ? (
-                        <CardDescription className="text-primary-7 mt-1 text-sm">
-                          <ExpandableText
-                            text={option.description}
-                            collapsedLines={3}
-                            formatter={(content) => (
-                              <TextPatternTransformer
-                                regex={urlRegex}
-                                component={(match) => (
-                                  <TransformedLink
-                                    url={match}
-                                    className="text-primary-5 underline!"
-                                  />
-                                )}
-                              >
-                                {content}
-                              </TextPatternTransformer>
-                            )}
-                          >
-                            {({ isExpanded, toggle }) => (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggle();
-                                }}
-                                className="text-sm text-primary-8 underline decoration-white/40 underline-offset-4 transition-colors hover:text-primary-5"
-                              >
-                                {isExpanded ? 'Show less' : 'Show more'}
-                              </button>
-                            )}
-                          </ExpandableText>
-                        </CardDescription>
-                      ) : null}
-                    </div>
-                  </CardContent>
-                </Card>
+                  option={option}
+                  selected={isSelected}
+                  onSelect={onSelectType}
+                />
               );
             })}
           </div>
           {disabledOptions.length > 0 && (
-            <Collapsible>
+            <Collapsible defaultOpen>
               <CollapsibleTrigger
                 className={cn(
                   'w-full group',
@@ -137,56 +167,7 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
               </CollapsibleTrigger>
               <CollapsibleContent className="grid grid-cols-1 gap-3 md:grid-cols-3 2xl:grid-cols-4">
                 {disabledOptions.map((option) => (
-                  <Card
-                    key={option.value}
-                    aria-disabled
-                    className="bg-card border-gray-300 cursor-not-allowed rounded-xl border p-4 opacity-60"
-                  >
-                    <CardContent className="flex items-start gap-3">
-                      {option.icon ? (
-                        <div className="text-primary-8 mt-0.5 shrink-0">{option.icon}</div>
-                      ) : null}
-                      <div className="min-w-0">
-                        <CardTitle className="text-primary-9 m-0 mb-3 text-base">
-                          {option.label}
-                        </CardTitle>
-                        {option.description ? (
-                          <CardDescription className="text-primary-7 mt-1 text-sm">
-                            <ExpandableText
-                              text={option.description}
-                              collapsedLines={3}
-                              formatter={(content) => (
-                                <TextPatternTransformer
-                                  regex={urlRegex}
-                                  component={(match) => (
-                                    <TransformedLink
-                                      url={match}
-                                      className="text-primary-5 underline!"
-                                    />
-                                  )}
-                                >
-                                  {content}
-                                </TextPatternTransformer>
-                              )}
-                            >
-                              {({ isExpanded, toggle }) => (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggle();
-                                  }}
-                                  className="text-sm text-primary-8 underline decoration-white/40 underline-offset-4 transition-colors hover:text-primary-5"
-                                >
-                                  {isExpanded ? 'Show less' : 'Show more'}
-                                </button>
-                              )}
-                            </ExpandableText>
-                          </CardDescription>
-                        ) : null}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <ArtifactTypeCard key={option.value} option={option} disabled />
                 ))}
               </CollapsibleContent>
             </Collapsible>

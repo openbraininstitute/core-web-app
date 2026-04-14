@@ -107,7 +107,9 @@ export function ExpandableText({
       {formattedContent}
 
       {isOverflowing && (
-        <div className={cn('mt-2', btnWrapperClassName)}>{children?.({ isExpanded, toggle })}</div>
+        <div className={cn('mt-2 w-full', btnWrapperClassName)}>
+          {children?.({ isExpanded, toggle })}
+        </div>
       )}
     </div>
   );
