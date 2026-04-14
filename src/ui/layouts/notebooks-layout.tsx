@@ -783,6 +783,7 @@ function CourseSetup({
             createProject(virtualLabId, {
               name: `${virtualLab.name} ${email}`,
               description: `Project for ${email}`,
+              contact_email: email,
               include_members: [],
             })
           )
