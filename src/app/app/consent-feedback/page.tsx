@@ -65,13 +65,7 @@ export default function Page() {
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row">
-          <Button
-            asChild
-            rounded
-            variant="success"
-            className="md:h-10 lg:h-12"
-            onClick={() => window.close()}
-          >
+          <Button rounded variant="success" className="h-12 w-sm" onClick={() => window.close()}>
             Close window
           </Button>
         </div>
