@@ -44,7 +44,7 @@ export function Right({
           entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
           entityType === ExtendedEntitiesTypeDict.MEModelWithSynapses) &&
         entity && (
-          <div className="rounded-lg">
+          <div className="rounded-lg" id="scan-config-right-model-preview">
             <ModelPreview model={entity} />
           </div>
         )}

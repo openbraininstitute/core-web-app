@@ -12,7 +12,7 @@ import {
   useObioneJsonSchema,
   useSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
-import { ScanConfigSkeleton } from '@/features/scan-config/components/loading-skeleton';
+import { ScanConfigSkeleton } from '@/features/scan-config/components/skeletons/full-page';
 import { ScanConfigTemplate } from '@/features/scan-config/template';
 import {
   type Config,

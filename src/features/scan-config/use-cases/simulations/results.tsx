@@ -28,6 +28,12 @@ import {
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
+import {
+  ConfigListCardSkeleton,
+  InOutFilesColumnSkeleton,
+  LaunchActionSkeleton,
+  SelectAllSkeleton,
+} from '@/features/scan-config/components/skeletons/columns';
 import errorRegistry from '@/features/scan-config/error-registry';
 import { StatusBadge } from '@/features/scan-config/status-badge';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
@@ -72,7 +78,7 @@ export default function SimulationsTab({
 
   const { entity: model } = useModelQuery({
     context,
-    id: simulations[0].entity_id,
+    id: simulations[0]?.entity_id,
   });
 
   const simExecStatusMapAtom = simExecStatusMapAtomFamily({
@@ -380,26 +386,31 @@ export default function SimulationsTab({
     : '';
 
   const loading = !statusMap;
-  // TODO: Add loading skeleton animation
 
   return (
-    <div className={styles.threeColumns}>
-      <div className="border-r border-gray-200 pr-4">
+    <div className={styles.threeColumns} id="scan-config-results">
+      <div className="border-r border-gray-200 pr-4" id="scan-config-results-left-column">
         <div className="flex h-full flex-col gap-4 overflow-y-hidden">
-          <Checkbox
-            indeterminate={
-              selectedSimulationIds.length > 0 &&
-              selectedSimulationIds.length < selectableSimulationIds.length
-            }
-            onChange={onSelectedAll}
-            checked={allSelected}
-            disabled={simRequestInProgress || selectableSimulationIds.length === 0}
-          >
-            Select all
-          </Checkbox>
+          {loading ? (
+            <SelectAllSkeleton />
+          ) : (
+            <Checkbox
+              indeterminate={
+                selectedSimulationIds.length > 0 &&
+                selectedSimulationIds.length < selectableSimulationIds.length
+              }
+              onChange={onSelectedAll}
+              checked={allSelected}
+              disabled={simRequestInProgress || selectableSimulationIds.length === 0}
+            >
+              Select all
+            </Checkbox>
+          )}
           {/* List of simulations */}
-          <div className="flex grow flex-col justify-start gap-5 overflow-y-auto">
-            {!loading &&
+          <div className="flex grow flex-col justify-start gap-5 overflow-y-auto pr-2 secondary-scrollbar">
+            {loading ? (
+              <ConfigListCardSkeleton />
+            ) : (
               simulations.map((simulation) => (
                 <SimulationListItem
                   key={simulation.id}
@@ -412,39 +423,52 @@ export default function SimulationsTab({
                   selectionForSimDisabled={simRequestInProgress}
                   canBeSelectedForSim={hasSimConfigAsset(simulation)}
                 />
-              ))}
-          </div>
-          <button
-            className={classNames(
-              'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
-              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)] rounded-full',
-              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
+              ))
             )}
-            type="button"
-            onClick={() => run(selectedSimulationIds)}
-            onMouseEnter={primeOfflineTokenConsent}
-            onFocus={primeOfflineTokenConsent}
-            disabled={simRequestInProgress || selectedSimulationIds.length === 0}
-          >
-            <div className="flex justify-center gap-4">
-              <span className="pl-10">Launch simulations {launchSimBtnLabelPrefix}</span>
-              <div className="w-6">{simRequestInProgress && <LoadingOutlined />}</div>
-            </div>
-          </button>
+          </div>
+          {loading ? (
+            <LaunchActionSkeleton />
+          ) : (
+            <button
+              className={classNames(
+                'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
+                'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)] rounded-full',
+                'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
+              )}
+              type="button"
+              onClick={() => run(selectedSimulationIds)}
+              onMouseEnter={primeOfflineTokenConsent}
+              onFocus={primeOfflineTokenConsent}
+              disabled={simRequestInProgress || selectedSimulationIds.length === 0}
+            >
+              <div className="flex justify-center gap-4">
+                <span className="pl-10">Launch simulations {launchSimBtnLabelPrefix}</span>
+                <div className="w-6">{simRequestInProgress && <LoadingOutlined />}</div>
+              </div>
+            </button>
+          )}
         </div>
       </div>
 
       {/* List of input/output files for selected simulation */}
-      <div className="relative border-r border-gray-200 px-4">
-        {!!activeSimulation && activeSimulationExecStatus && (
-          <SimulationFiles
-            simulation={activeSimulation}
-            execStatus={activeSimulationExecStatus}
-            selectedFile={selectedFile}
-            context={context}
-            onSelect={setSelectedFile}
-            onLoadingChange={setFilesLoading}
-          />
+      <div
+        className="relative border-r border-gray-200 px-4 bg-background!"
+        id="scan-config-results-middle-column"
+      >
+        {loading ? (
+          <InOutFilesColumnSkeleton />
+        ) : (
+          !!activeSimulation &&
+          activeSimulationExecStatus && (
+            <SimulationFiles
+              simulation={activeSimulation}
+              execStatus={activeSimulationExecStatus}
+              selectedFile={selectedFile}
+              context={context}
+              onSelect={setSelectedFile}
+              onLoadingChange={setFilesLoading}
+            />
+          )
         )}
       </div>
 
@@ -500,20 +524,23 @@ function SimulationListItem({
     : 'There was a problem generating this simulation';
 
   return (
-    <div className="flex-none">
+    <button
+      className="flex-none cursor-pointer shadow-xs group"
+      type="button"
+      title={simulation.name}
+      onClick={() => onSelect(simulation.id)}
+    >
       <div
-        className="rounded-lg px-4 pb-4 transition-colors duration-300"
-        style={{
-          border: `2px solid ${selected ? color : 'transparent'}`,
-          backgroundColor: selected ? `${color}0f` : 'white', // 6% opacity for bg color
-        }}
+        className="rounded-xl px-4 pb-4 transition-colors duration-300 group group-hover:bg-gray-50!"
+        style={
+          {
+            '--card-color': color,
+            border: `2px solid ${selected ? color : 'transparent'}`,
+            backgroundColor: selected ? `${color}0f` : 'white', // 6% opacity for bg color
+          } as React.CSSProperties & { '--card-color': string }
+        }
       >
-        <button
-          type="button"
-          title={simulation.name}
-          className="mb-2 flex h-18 w-full cursor-pointer items-center justify-between"
-          onClick={() => onSelect(simulation.id)}
-        >
+        <div className="mb-2 flex h-18 w-full items-center justify-between">
           <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
             {!execStatus ||
             ([ActivityStatus.CREATED, ActivityStatus.ERROR].includes(execStatus) &&
@@ -546,10 +573,10 @@ function SimulationListItem({
             <StatusBadge status={execStatus} details={statusDetails} />
             <RightOutlined className="ml-2 text-sm" />
           </div>
-        </button>
+        </div>
 
         <ScanParams scanParams={simulation.scan_parameters} color={color} />
       </div>
-    </div>
+    </button>
   );
 }

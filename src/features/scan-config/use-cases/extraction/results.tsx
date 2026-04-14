@@ -9,9 +9,14 @@ import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entitie
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { Loader } from '@/components/loader';
 import { WorkspaceSection } from '@/constants';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
+import {
+  ConfigListCardSkeletonItem,
+  InOutFilesColumnSkeleton,
+  LaunchActionSkeleton,
+  SelectAllSkeleton,
+} from '@/features/scan-config/components/skeletons/columns';
 import {
   buildActivityStatusMap,
   findLatestExecutionForEntity,
@@ -148,23 +153,29 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     <div className={styles.threeColumns}>
       <div className="border-r border-gray-200 pr-4">
         <div className="flex h-full flex-col gap-4 overflow-y-hidden">
-          <Checkbox
-            indeterminate={
-              selectedConfigIds.length > 0 && selectedConfigIds.length < selectableConfigIds.length
-            }
-            onChange={onSelectedAll}
-            checked={allSelected}
-            disabled={runExtractionPending || selectableConfigIds.length === 0}
-          >
-            Select all
-          </Checkbox>
+          {loading ? (
+            <SelectAllSkeleton />
+          ) : (
+            <Checkbox
+              indeterminate={
+                selectedConfigIds.length > 0 &&
+                selectedConfigIds.length < selectableConfigIds.length
+              }
+              onChange={onSelectedAll}
+              checked={allSelected}
+              disabled={runExtractionPending || selectableConfigIds.length === 0}
+            >
+              Select all
+            </Checkbox>
+          )}
           <div className="flex grow flex-col justify-start gap-5 overflow-y-auto">
-            {loading && (
-              <div className="flex h-full items-center justify-center">
-                <Loader className="text-neutral-3" />
-              </div>
-            )}
-            {!loading &&
+            {loading ? (
+              <>
+                <ConfigListCardSkeletonItem />
+                <ConfigListCardSkeletonItem />
+                <ConfigListCardSkeletonItem />
+              </>
+            ) : (
               configsResponse?.configList?.map((config) => (
                 <ExtractionConfigsLeftMenu
                   key={config.id}
@@ -176,36 +187,45 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
                   selectedForExtraction={selectedConfigIds.includes(config.id)}
                   selectionDisabled={runExtractionPending}
                 />
-              ))}
-          </div>
-          <button
-            className={classNames(
-              'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
-              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
-              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none rounded-full'
+              ))
             )}
-            type="button"
-            onClick={() => onRun(selectedConfigIds)}
-            disabled={runExtractionPending || selectedConfigIds.length === 0}
-          >
-            <div className="flex justify-center gap-4">
-              <span className="pl-10">Launch extractions {launchBtnLabelPrefix}</span>
-              <div className="w-6">{runExtractionPending && <LoadingOutlined />}</div>
-            </div>
-          </button>
+          </div>
+          {loading ? (
+            <LaunchActionSkeleton />
+          ) : (
+            <button
+              className={classNames(
+                'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
+                'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
+                'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none rounded-full'
+              )}
+              type="button"
+              onClick={() => onRun(selectedConfigIds)}
+              disabled={runExtractionPending || selectedConfigIds.length === 0}
+            >
+              <div className="flex justify-center gap-4">
+                <span className="pl-10">Launch extractions {launchBtnLabelPrefix}</span>
+                <div className="w-6">{runExtractionPending && <LoadingOutlined />}</div>
+              </div>
+            </button>
+          )}
         </div>
       </div>
 
       <div className="relative border-r border-gray-200 px-4">
-        {!!activeConfig && (
-          <ExtractionInOutFiles
-            config={activeConfig}
-            execStatus={activeConfigExecStatus}
-            execution={activeConfigExecution}
-            selectedFile={selectedFile}
-            context={context}
-            onSelect={setSelectedFile}
-          />
+        {loading ? (
+          <InOutFilesColumnSkeleton />
+        ) : (
+          !!activeConfig && (
+            <ExtractionInOutFiles
+              config={activeConfig}
+              execStatus={activeConfigExecStatus}
+              execution={activeConfigExecution}
+              selectedFile={selectedFile}
+              context={context}
+              onSelect={setSelectedFile}
+            />
+          )
         )}
       </div>
 
