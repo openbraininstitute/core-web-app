@@ -10,6 +10,5 @@ export const messages = {
   ValidationError: 'Validation failed. Please check the data and try again.',
   CreationModelSucceed: 'The me-model has been successfully created.',
   CheckingCompatibility: 'Model compatibility check in progress...',
-  IncompatibleModels:
-    'The selected M-model and E-model are not compatible. Please select a different combination.',
+  IncompatibleModels: 'Incompatible M-model and E-model, please select a different combination.',
 };

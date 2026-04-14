@@ -326,15 +326,14 @@ export function Menu({ sessionId }: { sessionId: string }) {
           </div>
         </Button>
         {isCheckingCompatibility && (
-          <div className="p-4 pl-6 text-sm font-bold text-primary-9 flex items-center gap-3">
+          <div className="p-4 pl-6 font-semibold text-primary-9 flex items-center gap-3">
             <LoadingOutlined />
             {messages.CheckingCompatibility}
           </div>
         )}
         {isIncompatible && (
-          <div className="p-4 pl-6 text-sm font-bold text-destructive flex items-center gap-3">
+          <div className="p-4 pl-6 font-semibold text-destructive flex items-center gap-3">
             <ExclamationCircleOutlined />
-
             {messages.IncompatibleModels}
           </div>
         )}
