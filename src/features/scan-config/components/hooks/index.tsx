@@ -159,7 +159,23 @@ export function useValidateSchema({
         { initialConfig, config, schema },
         { errors: validate.errors }
       );
-      throw new Error('Invalid campaign configuration');
+      const legacyError = validate.errors.find((error) => {
+        if (error.instancePath === '/initialize/simulation_length' && error.keyword === 'maximum') {
+          return true;
+        }
+        return false;
+      });
+      if (legacyError) {
+        throw new Error('Configuration currently not viewable for historic simulations', {
+          cause: {
+            legacyError,
+            validationErrors: validate.errors,
+            configuration: config,
+            schema,
+          },
+        });
+      }
+      throw new Error('Invalid campaign configuration', { cause: validate.errors });
     }
   }
 
