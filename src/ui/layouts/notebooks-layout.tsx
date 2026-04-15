@@ -5,6 +5,7 @@ import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
 import { isNil } from 'es-toolkit';
+import Image from 'next/image';
 import NextLink from 'next/link';
 import { type ReactNode, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
@@ -94,8 +95,16 @@ export function NotebooksLayout({ children, active }: Props) {
 
   const onFinnish = useCallback(() => {
     setShowCourseModal(false);
+    setStep(0);
     refetch();
   }, [refetch]);
+
+  const onCancel = useCallback(() => {
+    setShowCourseModal(false);
+    setStep(0);
+    setStudentEmails([]);
+    setNumberStudents(10);
+  }, []);
 
   const handleUploadData = () => {
     makeSelectContributionEntityClickEvent({
@@ -280,7 +289,7 @@ export function NotebooksLayout({ children, active }: Props) {
                     <CsvUploadValidator
                       maxStudents={numberStudents}
                       vlabId={courseVlab.id}
-                      onCancel={() => setShowCourseModal(false)}
+                      onCancel={onCancel}
                       onSuccess={() => setStep(1)}
                       studentEmails={studentEmails}
                       setStudentEmails={setStudentEmails}
@@ -368,8 +377,6 @@ const CsvUploadValidator = ({
       virtualLabId: vlabId,
       emails: [...emailSet],
     });
-
-    console.log('here', missingEmails);
 
     setStudentEmails(missingEmails);
     return true;
@@ -910,5 +917,5 @@ function CourseSetup({
     setupCourse();
   }, [virtualLabId, projectId, notification, studentEmails, onFinnish, virtualLab]);
 
-  return 'Settup up course...';
+  return 'Setting up course...';
 }
