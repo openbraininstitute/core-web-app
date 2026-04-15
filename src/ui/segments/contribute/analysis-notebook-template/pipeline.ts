@@ -7,6 +7,7 @@ import {
   createAnalysisNotebookTemplate,
   uploadNotebookTemplateFile,
 } from '@/api/entitycore/queries/experimental/analysis-notebook-template';
+import { deleteNotebook } from '@/api/entitycore/queries/notebook';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -55,6 +56,14 @@ export function useAnalysisNotebookTemplatePipeline({
         queryClient.invalidateQueries(),
       ]);
     },
+  });
+
+  const deleteNotebookAsync = useMutation({
+    mutationFn: (entityId: string) =>
+      deleteNotebook({
+        id: entityId,
+        context: { projectId, virtualLabId },
+      }),
   });
 
   const uploadAssetsAsync = useMutation({
@@ -123,17 +132,21 @@ export function useAnalysisNotebookTemplatePipeline({
     createEntity: async ({ values }: { values: TAnalysisNotebookTemplateForm }) => {
       const notebook = await createNotebookAsync.mutateAsync(values);
       const entityId = notebook.id;
-      await uploadAssetsAsync.mutateAsync({
-        entityId,
-        files: getNotebookFiles() as { notebook: File; requirements?: File; zip?: File },
-      });
 
-      await Promise.allSettled([
-        createContributionAsync.mutateAsync({
+      try {
+        await uploadAssetsAsync.mutateAsync({
+          entityId,
+          files: getNotebookFiles() as { notebook: File; requirements?: File; zip?: File },
+        });
+
+        await createContributionAsync.mutateAsync({
           entityId,
           contribution: values.contribution,
-        }),
-      ]);
+        });
+      } catch (error) {
+        await deleteNotebookAsync.mutateAsync(entityId);
+        throw error;
+      }
 
       return entityId;
     },
@@ -141,7 +154,8 @@ export function useAnalysisNotebookTemplatePipeline({
     loading:
       createNotebookAsync.isPending ||
       uploadAssetsAsync.isPending ||
-      createContributionAsync.isPending,
+      createContributionAsync.isPending ||
+      deleteNotebookAsync.isPending,
 
     error: (createNotebookAsync.error ||
       uploadAssetsAsync.error ||
