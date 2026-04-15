@@ -9,4 +9,6 @@ export const messages = {
   RunAnalysisError: 'Something went wrong while launching model calibration and validation',
   ValidationError: 'Validation failed. Please check the data and try again.',
   CreationModelSucceed: 'The me-model has been successfully created.',
+  CheckingCompatibility: 'Model compatibility check in progress...',
+  IncompatibleModels: 'Incompatible M-model and E-model, please select a different combination.',
 };

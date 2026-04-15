@@ -108,6 +108,15 @@ export const keyBuilder = {
     `${prefix}-single-neuron-model`,
     { virtualLabId, projectId, entityId },
   ],
+  meModelCompatibility: ({
+    virtualLabId,
+    projectId,
+    morphologyId,
+    emodelId,
+  }: WorkspaceContext & { morphologyId: string; emodelId: string }) => [
+    `${prefix}-me-model-compatibility`,
+    { virtualLabId, projectId, morphologyId, emodelId },
+  ],
   synaptome: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
     `${prefix}-single-neuron-synaptome-model`,
     { virtualLabId, projectId, entityId },
