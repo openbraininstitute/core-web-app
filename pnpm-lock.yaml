@@ -237,6 +237,9 @@ importers:
       plotly.js-dist-min:
         specifier: ^3.4.0
         version: 3.4.0
+      plur:
+        specifier: ^6.0.0
+        version: 6.0.0
       rc-picker:
         specifier: ^4.11.3
         version: 4.11.3(date-fns@4.1.0)(dayjs@1.11.20)(moment@2.30.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -6238,6 +6241,10 @@ packages:
       '@types/node':
         optional: true
 
+  irregular-plurals@4.2.0:
+    resolution: {integrity: sha512-bW9UXHL7bnUcNtTo+9ccSngbxc+V40H32IgvdVin0Xs8gbo+AVYD5g/72ce/54Kjfhq66vcZr8H8TKEvsifeOw==}
+    engines: {node: '>=18.20'}
+
   is-alphabetical@1.0.4:
     resolution: {integrity: sha512-DwzsA04LQ10FHTZuL0/grVDk4rFoVH1pjAToYwBrHSxcrBIGQuXrQMtD5U1b0U2XVgKZCTLLP8u2Qxqhy3l2Vg==}
 
@@ -7729,6 +7736,10 @@ packages:
   plotly.js@3.0.1:
     resolution: {integrity: sha512-eWEUkqdv4sblmUQJ7xGlEA+LghzEVPJOlPBZMJuagG0CsQxlmBb+7rd0UFVig5jhRnN8PQqRQaLv6qXIjnvzgg==}
     engines: {node: '>=18.0.0'}
+
+  plur@6.0.0:
+    resolution: {integrity: sha512-Y9wXQivjRX0REtwpA9+n0bYYypWESn3cWtW2vazymw711qn+AQXxzZjRqhANYGBLIMC1UzVdpwe/1hHQwHfwng==}
+    engines: {node: '>=20'}
 
   pluralize-esm@9.0.5:
     resolution: {integrity: sha512-Kb2dcpMsIutFw2hYrN0EhsAXOUJTd6FVMIxvNAkZCMQLVt9NGZqQczvGpYDxNWCZeCWLHUPxQIBudWzt1h7VVA==}
@@ -16390,6 +16401,8 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.5.0
 
+  irregular-plurals@4.2.0: {}
+
   is-alphabetical@1.0.4: {}
 
   is-alphabetical@2.0.1: {}
@@ -18113,6 +18126,10 @@ snapshots:
       - mapbox-gl
       - supports-color
       - webpack
+
+  plur@6.0.0:
+    dependencies:
+      irregular-plurals: 4.2.0
 
   pluralize-esm@9.0.5: {}
 

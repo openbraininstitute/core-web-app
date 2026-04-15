@@ -2,6 +2,7 @@
 
 import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import Link from 'next/link';
+import plur from 'plur';
 
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import {
@@ -113,7 +114,7 @@ export function ImportOptionsScreen({
                     'font- text-2xl': multipleEnabled && multipleCardActive,
                   })}
                 >
-                  Multiple {selectedType?.title.toLocaleLowerCase()}
+                  Multiple {plur(selectedType?.title.toLocaleLowerCase() ?? '')}
                 </CardTitle>
                 <CardDescription>
                   Upload multiple entries at once using a structured table or by importing a CSV
