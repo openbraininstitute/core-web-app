@@ -373,14 +373,14 @@ const CsvUploadValidator = ({
       }
     }
 
-    console.log('CSV emails', [...emailSet]);
+    console.log('🚨🚨🚨 CSV emails', [...emailSet]);
 
     const missingEmails = await getMissingStudentEmails({
       virtualLabId: vlabId,
       emails: [...emailSet],
     });
 
-    console.log('Missing emails request', missingEmails);
+    console.log('🚨🚨🚨 Missing emails request', missingEmails);
 
     setStudentEmails(missingEmails);
     return true;
@@ -419,7 +419,7 @@ const CsvUploadValidator = ({
 
   const minCredits = Math.max(studentEmails.length, 5);
 
-  console.log('Emails state', studentEmails);
+  console.log('🚨🚨🚨 Emails state', studentEmails);
 
   return (
     <div className="flex flex-col gap-3">
