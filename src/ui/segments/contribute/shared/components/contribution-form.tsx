@@ -36,6 +36,7 @@ interface IContributionFormProps<
     readonly label: string;
     readonly mutationKey: string;
   }>;
+  onDone?: () => void;
 }
 
 interface IFormContentProps<
@@ -46,6 +47,7 @@ interface IFormContentProps<
   sessionId: string;
   pipeline: TPipelineHookFactory<TFormValues>;
   progressSteps: Array<{ key: string; label: string; mutationKey: string }>;
+  onDone?: () => void;
 }
 
 function FormContent<
@@ -58,6 +60,7 @@ function FormContent<
   progressSteps,
   virtualLabId,
   projectId,
+  onDone,
 }: IFormContentProps<TFormValues, TSchema>) {
   const {
     form,
@@ -79,99 +82,128 @@ function FormContent<
     status: status[step.mutationKey],
   }));
 
-  const onSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    const values = form.getFieldsValue(true) as TFormValues;
-    const id = await createEntity({ values });
-    setCreatedEntityId(id);
+  const onSubmit = async (e?: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e?.preventDefault();
+    try {
+      await form.validateFields();
+      setIsSubmitting(true);
+      const values = form.getFieldsValue(true) as TFormValues;
+      const id = await createEntity({ values });
+      setCreatedEntityId(id);
+    } catch (error) {
+      console.error('Final validation failed', error);
+    }
+  };
+
+  const handleNext = async () => {
+    const currentStepConfig = steps.find((step) => step.key === activeStep);
+    const fieldKey = currentStepConfig?.schemaFieldKey;
+
+    if (fieldKey) {
+      try {
+        const allFieldNames = form.getFieldsError().map((f) => f.name);
+        const stepFieldNames = allFieldNames.filter(
+          (name) => Array.isArray(name) && name[0] === fieldKey
+        );
+
+        const namesToValidate = stepFieldNames.length > 0 ? stepFieldNames : [[fieldKey]];
+
+        await form.validateFields(namesToValidate);
+
+        goToNextStep();
+      } catch (errorInfo) {
+        console.warn('Step validation failed:', errorInfo);
+      }
+    } else {
+      goToNextStep();
+    }
   };
 
   return (
-    <div className={cn('relative mx-auto h-full w-full px-6 py-2 flex flex-col')}>
-      <Form.Item noStyle>
-        <input type="hidden" />
-      </Form.Item>
-      <StepNavigation />
+    <Form
+      form={form}
+      layout="vertical"
+      component={false}
+      requiredMark={false}
+      scrollToFirstError
+    >
+      <div className={cn('relative mx-auto h-full w-full px-6 py-2 flex flex-col')}>
+        <Form.Item noStyle>
+          <input type="hidden" />
+        </Form.Item>
+        <StepNavigation />
 
-      <div className="border-neutral-2 h-full max-h-full min-h-0 flex-1 rounded-md border py-6 pr-1">
-        {isSubmitting ? (
-          <div className="flex h-full w-full items-center justify-center">
-            <SubmitEntityProgress steps={progressStepsWithStatus} />
-          </div>
-        ) : (
-          <div className="relative h-full w-full">
-            {steps.map((step) => {
-              const StepComponent = step.component;
-              const isActive = activeStep === step.key;
+        <div className="border-neutral-2 h-full max-h-full min-h-0 flex-1 rounded-md border py-6 pr-1">
+          {isSubmitting ? (
+            <div className="flex h-full w-full items-center justify-center">
+              <SubmitEntityProgress steps={progressStepsWithStatus} />
+            </div>
+          ) : (
+            <div className="relative h-full w-full">
+              {steps.map((step) => {
+                const StepComponent = step.component;
+                const isActive = activeStep === step.key;
 
-              return (
-                <motion.div
-                  key={step.key}
-                  id={`contribution-step-${step.key}`}
-                  aria-labelledby={step.key}
-                  aria-describedby={step.key}
-                  aria-hidden={!isActive}
-                  initial={false}
-                  animate={{
-                    opacity: isActive ? 1 : 0,
-                  }}
-                  transition={{ duration: 0.2 }}
-                  style={{
-                    pointerEvents: isActive ? 'auto' : 'none',
-                  }}
-                  className={cn(
-                    'secondary-scrollbar h-full flex-1 overflow-auto rounded-xl pr-4 pl-4',
-                    isActive ? 'relative' : 'absolute inset-0'
-                  )}
-                >
-                  <StepComponent />
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className="flex w-full shrink-0 items-center justify-between gap-2 py-3 mt-auto">
-        <Button
-          rounded
-          variant="outline"
-          className={cn(
-            'text-primary-9 border-primary-9 disabled:border-neutral-1',
-            'shadow-bnb size-12 active:text-white'
+                return (
+                  <motion.div
+                    key={step.key}
+                    initial={false}
+                    animate={{ opacity: isActive ? 1 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      pointerEvents: isActive ? 'auto' : 'none',
+                      display: isActive ? 'block' : 'none', 
+                    }}
+                    className={cn(
+                      'secondary-scrollbar h-full flex-1 overflow-auto rounded-xl pr-4 pl-4',
+                      isActive ? 'relative' : 'absolute inset-0'
+                    )}
+                  >
+                    <StepComponent />
+                  </motion.div>
+                );
+              })}
+            </div>
           )}
-          size="lg"
-          type="button"
-          onClick={goToPreviousStep}
-          disabled={isFirstStep || !!createdEntityId}
-        >
-          <LeftOutlined />
-        </Button>
-        <SubmitButton
-          loading={loading}
-          createdEntityId={createdEntityId}
-          config={config}
-          onSubmit={onSubmit}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
-        />
-        <Button
-          rounded
-          variant="outline"
-          type="button"
-          size="lg"
-          className={cn(
-            'text-primary-9 border-primary-9 disabled:border-neutral-1',
-            'shadow-bnb size-12 active:text-white'
-          )}
-          onClick={goToNextStep}
-          disabled={isLastStep || !!createdEntityId}
-        >
-          <RightOutlined />
-        </Button>
+        </div>
+
+        <div className="flex w-full shrink-0 items-center justify-between gap-2 py-3 mt-auto">
+          <Button
+            rounded
+            variant="outline"
+            className="text-primary-9 border-primary-9 disabled:border-neutral-1 shadow-bnb size-12"
+            size="lg"
+            type="button"
+            onClick={goToPreviousStep}
+            disabled={isFirstStep || !!createdEntityId}
+          >
+            <LeftOutlined />
+          </Button>
+
+          <SubmitButton
+            loading={loading}
+            createdEntityId={createdEntityId}
+            config={config}
+            onSubmit={onSubmit}
+            onDone={onDone}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          />
+
+          <Button
+            rounded
+            variant="outline"
+            type="button"
+            size="lg"
+            className="text-primary-9 border-primary-9 disabled:border-neutral-1 shadow-bnb size-12"
+            onClick={handleNext}
+            disabled={isLastStep || !!createdEntityId}
+          >
+            <RightOutlined />
+          </Button>
+        </div>
       </div>
-    </div>
+    </Form>
   );
 }
 
@@ -179,7 +211,7 @@ export function ContributionForm<
   TFormValues extends Record<string, unknown>,
   TSchema extends ZodObject<ZodRawShape>,
 >(props: IContributionFormProps<TFormValues, TSchema>) {
-  const { config, sessionId, brainRegionId, pipeline, progressSteps, virtualLabId, projectId } =
+  const { config, sessionId, brainRegionId, pipeline, progressSteps, virtualLabId, projectId, onDone } =
     props;
 
   return (
@@ -195,6 +227,7 @@ export function ContributionForm<
         progressSteps={progressSteps}
         virtualLabId={virtualLabId}
         projectId={projectId}
+        onDone={onDone}
       />
     </ContributionPipelineProvider>
   );

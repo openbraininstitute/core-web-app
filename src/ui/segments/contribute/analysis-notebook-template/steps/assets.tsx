@@ -106,34 +106,30 @@ export function Assets() {
           <div key={config.key}>
             <Form.Item
               name={['assets', config.key]}
-              noStyle
-              rules={
-                config.optional ? [] : [{ required: true, message: `${config.label} is required` }]
-              }
-            >
-              <HiddenSentinel />
-            </Form.Item>
-
-            <Form.Item
               label={renderLabel(
                 config.label,
                 'main',
                 config.optional ? undefined : RequiredFieldMarker
               )}
+              rules={
+                config.optional ? [] : [{ required: true, message: `${config.label} is required` }]
+              }
               className="mb-0"
             >
-              <AssetUpload
-                maxFiles={1}
-                multiple={false}
-                accept={config.accept}
-                acceptLabel={config.acceptLabel}
-                onValidateFile={config.validate}
-                onFilesChange={(files) => {
-                  const file = files[0]?.file instanceof File ? (files[0].file as File) : undefined;
-                  handleFileChange(config.key, file);
-                }}
-              />
+              <HiddenSentinel />
             </Form.Item>
+
+            <AssetUpload
+              maxFiles={1}
+              multiple={false}
+              accept={config.accept}
+              acceptLabel={config.acceptLabel}
+              onValidateFile={config.validate}
+              onFilesChange={(files) => {
+                const file = files[0]?.file instanceof File ? (files[0].file as File) : undefined;
+                handleFileChange(config.key, file);
+              }}
+            />
           </div>
         ))}
       </div>

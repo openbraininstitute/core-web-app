@@ -45,9 +45,13 @@ const AnalysisNotebookTemplateConfig = createAnalysisNotebookTemplateConfig(
 
 interface IAnalysisNotebookTemplateProps {
   sessionId: string;
+  onClose: () => void;
 }
 
-export function AnalysisNotebookTemplate({ sessionId }: IAnalysisNotebookTemplateProps) {
+export function AnalysisNotebookTemplate({ 
+  sessionId, 
+  onClose
+}: IAnalysisNotebookTemplateProps) {
   const { projectId, virtualLabId } = useWorkspace();
 
   return (
@@ -59,6 +63,7 @@ export function AnalysisNotebookTemplate({ sessionId }: IAnalysisNotebookTemplat
       virtualLabId={virtualLabId}
       projectId={projectId}
       brainRegionId={null}
+      onDone={onClose}
     />
   );
 }

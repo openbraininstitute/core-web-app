@@ -76,9 +76,10 @@ function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelec
 interface IRenderEntityTypeContentProps {
   type: TExtendedEntitiesTypeDict;
   sessionId: string;
+  onClose: () => void;
 }
 
-function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeContentProps) {
+function RenderEntityTypeContent({ type, sessionId: sId, onClose }: IRenderEntityTypeContentProps) {
   return match({ type })
     .with(
       {
@@ -99,7 +100,12 @@ function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeCont
       <ExperimentalSynapsesPerConnection sessionId={sId} />
     ))
     .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
-    .with({ type: ExtendedEntitiesTypeDict.Notebook }, () => <AnalysisNotebookTemplate sessionId={sId} />)
+    .with({ type: ExtendedEntitiesTypeDict.Notebook }, () => (
+      <AnalysisNotebookTemplate 
+        sessionId={sId} 
+        onClose={onClose}
+      />
+    ))
     .otherwise(() => null);
 }
 
@@ -137,12 +143,12 @@ export function ContributionModal() {
 
   const content = match({ entityType, sessionId, entity })
     .with({ entityType: P.union(P.nullish, P._), entity: P.nullish }, () => (
-      <ExtendedEntitiesSelector onSelectEntityType={onSelectEntityType} />
+    <ExtendedEntitiesSelector onSelectEntityType={onSelectEntityType} />
     ))
     .with(
       { sessionId: P.string.select('sId'), entityType: P.string.select('type') },
       ({ sId, type }) => {
-        return <RenderEntityTypeContent type={type} sessionId={sId} />;
+        return <RenderEntityTypeContent type={type} sessionId={sId} onClose={onClose} />;
       }
     )
     .otherwise(() => null);
