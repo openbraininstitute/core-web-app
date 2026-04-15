@@ -5,20 +5,8 @@ import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
 import { isNil } from 'es-toolkit';
-import { template } from 'es-toolkit/compat';
-import { Entity } from 'h5wasm';
-import { TemplateContext } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import Image from 'next/image';
 import NextLink from 'next/link';
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useTransition,
-} from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
@@ -92,7 +80,7 @@ export function NotebooksLayout({ children, active }: Props) {
   const [studentEmails, setStudentEmails] = useState<string[]>([]);
   const breakpoint = useDefaultBreakpoint();
 
-  const { data: virtualLabsData } = useQuery({
+  const { data: virtualLabsData, refetch } = useQuery({
     queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MEMBERSHIP_LABS] }),
     queryFn: () => listVirtualLabs({ include: [LabTypeEnum.MEMBERSHIP_LABS] }),
     enabled: Boolean(virtualLabId),
@@ -106,7 +94,8 @@ export function NotebooksLayout({ children, active }: Props) {
 
   const onFinnish = useCallback(() => {
     setShowCourseModal(false);
-  }, []);
+    refetch();
+  }, [refetch]);
 
   const handleUploadData = () => {
     makeSelectContributionEntityClickEvent({
