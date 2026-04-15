@@ -39,6 +39,11 @@ export function useRowSelection<T extends { id: string }>({
   }, [dataSource]);
 
   const onRowSelect = (_keys: Key[], rows: Array<T>) => {
+    if (selectionType === 'radio') {
+      setSelectedRows(rows);
+      onRowsSelected?.(rows);
+    }
+
     setSelectedRows((prevRows) => {
       const newRows = uniqBy(
         [...prevRows.filter((r) => !currentRowIds?.includes(r.id)), ...rows],
