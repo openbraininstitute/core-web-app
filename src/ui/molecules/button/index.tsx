@@ -96,6 +96,7 @@ function Button({
   const Comp = asChild ? Slot : 'button';
   return (
     <Comp
+      id={props.id}
       ref={ref}
       role="button"
       data-slot="button"

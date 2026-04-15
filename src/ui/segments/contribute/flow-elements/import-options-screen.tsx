@@ -70,7 +70,7 @@ export function ImportOptionsScreen({
           >
             <Card
               className={cn('w-full border-none bg-white text-primary-9 shadow-md', {
-                ' bg-primary-9 text-white': mode === ImportMode.Single,
+                ' bg-primary-8 text-white': mode === ImportMode.Single,
                 'hover:bg-gray-100': mode !== ImportMode.Single,
               })}
               onClick={() => {
@@ -96,7 +96,7 @@ export function ImportOptionsScreen({
             <Card
               aria-disabled={!multipleEnabled}
               className={cn('w-full border-none bg-white text-primary-9 shadow-md', {
-                ' bg-primary-9 text-white': multipleCardActive,
+                ' bg-primary-8 text-white': multipleCardActive,
                 'cursor-not-allowed opacity-45': !multipleEnabled,
                 'hover:bg-gray-200': multipleEnabled && !multipleCardActive,
               })}

@@ -64,9 +64,36 @@ export function ExpandableText({
     const checkOverflow = (): void => {
       const computed = window.getComputedStyle(el);
       const lineHeight = parseFloat(computed.lineHeight) || parseFloat(computed.fontSize) * 1.2;
-      const actualLines = Math.round(el.scrollHeight / lineHeight);
-      const hasOverflow = actualLines > collapsedLines;
+      const collapsedHeight = lineHeight * collapsedLines;
+
+      const clone = el.cloneNode(true) as HTMLParagraphElement;
+      clone.style.position = 'absolute';
+      clone.style.visibility = 'hidden';
+      clone.style.pointerEvents = 'none';
+      clone.style.height = 'auto';
+      clone.style.maxHeight = 'none';
+      clone.style.overflow = 'visible';
+      clone.style.display = 'block';
+      clone.style.webkitLineClamp = 'unset';
+      clone.style.width = `${el.clientWidth}px`;
+      clone.classList.remove(clampClassFor(collapsedLines));
+
+      document.body.appendChild(clone);
+      const fullHeight = clone.scrollHeight;
+      document.body.removeChild(clone);
+
+      const hasOverflow = fullHeight > collapsedHeight + 1;
+      const visibleHeight = el.getBoundingClientRect().height;
+      const fullyVisible = !hasOverflow || isExpanded || visibleHeight >= fullHeight - 1;
+
       setIsOverflowing(hasOverflow);
+
+      // keep internal state aligned with what users actually see
+      // if content is fully visible while overflowing, treat it as expanded
+      // so "Show less" is a real collapse action (not a stale label)
+      if (hasOverflow && fullyVisible && !isExpanded) {
+        setIsExpanded(true);
+      }
     };
 
     const rafId = requestAnimationFrame(checkOverflow);
@@ -77,23 +104,30 @@ export function ExpandableText({
         requestAnimationFrame(checkOverflow);
       });
       resizeObserver.observe(el);
+      if (el.parentElement) {
+        resizeObserver.observe(el.parentElement);
+      }
     }
 
     return () => {
       cancelAnimationFrame(rafId);
       if (resizeObserver) resizeObserver.disconnect();
     };
-  }, [collapsedLines]);
+  }, [collapsedLines, isExpanded]);
 
   const toggle = (): void => {
-    setIsExpanded((prev: boolean) => !prev);
+    setIsExpanded((prev) => !prev);
   };
 
   const content = (
     <p
       id={id}
       ref={contentRef}
-      className={cn(!isExpanded && clampClassFor(collapsedLines), className)}
+      className={cn(
+        !isExpanded && clampClassFor(collapsedLines),
+        className,
+        'flex-none self-start'
+      )}
       data-expanded={isExpanded}
     >
       {text}

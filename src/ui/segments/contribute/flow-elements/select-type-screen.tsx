@@ -44,10 +44,11 @@ function ArtifactTypeCard({
     <Card
       aria-disabled={disabled}
       className={cn(
-        'h-full w-full rounded-xl border p-4 text-left transition-colors shadow-none bg-white!',
+        'group h-full w-full text-primary-8 rounded-xl border p-4 text-left transition-colors shadow-none bg-white!',
         {
           'hover:bg-gray-100! border-gray-200 cursor-pointer hover:shadow-xs': !disabled,
-          'border-primary-8 bg-primary-0': selected && !disabled,
+          'border-primary-8 bg-primary-8! text-white! hover:bg-white! hover:text-primary-8!':
+            selected && !disabled,
           'border-gray-300 cursor-not-allowed opacity-60': disabled,
         }
       )}
@@ -60,20 +61,20 @@ function ArtifactTypeCard({
       }
     >
       <CardContent className="flex h-full items-stretch gap-3">
-        {option.icon ? <div className="text-primary-8 mt-0.5 shrink-0">{option.icon}</div> : null}
+        {option.icon ? <div className=" mt-0.5 shrink-0">{option.icon}</div> : null}
         <div className="min-w-0 flex flex-1 flex-col">
-          <CardTitle className="text-primary-9 m-0 mb-1 text-lg">{option.label}</CardTitle>
+          <CardTitle className=" m-0 mb-1 text-lg">{option.label}</CardTitle>
           {option.description ? (
             <CardDescription
               className={cn(
-                'text-primary-7 mt-1 flex flex-1 flex-col text-sm',
+                'mt-1 flex flex-1 flex-col text-sm',
                 '[&>div]:flex [&>div]:flex-1 [&>div]:flex-col'
               )}
             >
               <ExpandableText
                 text={option.description}
                 collapsedLines={3}
-                className="mt-4 flex-1"
+                className="mt-4 flex-1 max-w-full overflow-hidden"
                 formatter={(content) => (
                   <TextPatternTransformer
                     regex={urlRegex}
@@ -93,8 +94,9 @@ function ArtifactTypeCard({
                       toggle();
                     }}
                     className={cn(
-                      'text-sm text-primary-8 underline! decoration-primary-8',
-                      ' underline-offset-4 transition-colors hover:text-primary-5 ml-auto mt-auto flex items-end justify-end'
+                      'text-sm text-primary-8 underline! decoration-primary-8 hover:decoration-primary-5',
+                      ' underline-offset-4 transition-colors hover:text-primary-5 ml-auto mt-auto flex items-end justify-end',
+                      { 'text-white hover:text-primary-5 group-hover:text-primary-8': selected }
                     )}
                   >
                     {isExpanded ? 'Show less' : 'Show more'}
@@ -130,9 +132,9 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
           <CloseOutlined />
         </button>
       </div>
-      <Card borderless shadowless className=" flex min-h-0 flex-1 flex-col px-4 pb-4 pt-0">
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto secondary-scrollbar pr-2">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3 2xl:grid-cols-4">
+      <Card borderless shadowless className={cn('flex min-h-0 flex-1 flex-col px-4 pb-4 pt-0')}>
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto secondary-scrollbar pr-2  @container/cards">
+          <div className="grid gap-3 grid-cols-1 @2xl/cards:grid-cols-2  @2xl/cards:@6xl/cards:grid-cols-3 @6xl/cards:@8xl/cards:grid-cols-4">
             {enabledOptions.map((option) => {
               const isSelected = selectedType === option.value;
               return (
@@ -165,7 +167,7 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
                   <RiArrowDownSLine className="size-6 -rotate-90 transition-all ease-smooth group-data-[state=open]:rotate-0" />
                 </div>
               </CollapsibleTrigger>
-              <CollapsibleContent className="grid grid-cols-1 gap-3 md:grid-cols-3 2xl:grid-cols-4">
+              <CollapsibleContent className="grid gap-3 grid-cols-1 @2xl/cards:grid-cols-2  @2xl/cards:@6xl/cards:grid-cols-3 @6xl/cards:@8xl/cards:grid-cols-4">
                 {disabledOptions.map((option) => (
                   <ArtifactTypeCard key={option.value} option={option} disabled />
                 ))}

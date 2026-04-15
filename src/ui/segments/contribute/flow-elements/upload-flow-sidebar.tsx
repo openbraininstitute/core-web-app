@@ -35,7 +35,7 @@ export interface IUploadFlowSidebarProps {
 }
 
 function typeLabelClass(isActive: boolean) {
-  return cn('text-primary-9', 'group-hover:text-white!', 'group-active:text-white!', {
+  return cn('text-primary-9 group-hover:text-white! group-active:text-white!', {
     'font-bold text-white': isActive,
   });
 }
@@ -89,41 +89,34 @@ export function UploadFlowSidebar({
       </span>
     </span>
   ) : (
-    <span
+    <div
       className={cn(
-        'text-primary-9 flex-1 text-left',
-        'group-hover:text-white!',
-        'group-active:text-white!',
+        ' flex-1 flex flex-col gap-1 text-left group-hover:text-white! group-active:text-white!',
         {
           'font-bold text-white': isOptionsMenuActive,
         }
       )}
     >
-      Options
-    </span>
+      <div className="leading-none">Options</div>
+      {!hasTypeSelected && <small className="text-xs leading-none">Choose a type to proceed</small>}
+    </div>
   );
 
   const typeChevron = (
     <RightOutlined
-      className={cn('text-primary-9! shrink-0 group-hover:text-white! [&>svg]:size-2.5!', {
-        'rotate-90 text-white': isTypeMenuActive,
-      })}
-    />
-  );
-
-  const optionsChevron = (
-    <RightOutlined
-      className={cn('text-primary-9! shrink-0 group-hover:text-white! [&>svg]:size-2.5!', {
-        'rotate-90 text-white': isOptionsMenuActive,
+      className={cn('text-primary-9! shrink-0 group-hover:text-white!  [&>svg]:size-2.5!', {
+        'rotate-90 text-white!': isTypeMenuActive,
       })}
     />
   );
 
   const typeButtonClass = cn(
-    'md:h-10 lg:h-12',
+    'group',
+    'md:h-10 lg:h-12 gap-0',
     'w-full justify-between font-normal',
     'hover:bg-primary-9!',
-    'group'
+    'disabled:bg-neutral-1! disabled:text-gray-500!',
+    'disabled:cursor-not-allowed!'
   );
 
   const typeButton =
@@ -158,37 +151,37 @@ export function UploadFlowSidebar({
       <Button
         asChild
         rounded
+        id="options-button-type-selected"
         size="responsive"
         variant={isOptionsMenuActive ? 'shadow' : 'outline'}
         className={typeButtonClass}
       >
         <Link href={optionsHref} className="flex w-full items-center justify-between">
           {optionsRow}
-          {optionsChevron}
         </Link>
       </Button>
     ) : optionsHref != null && optionsHref !== '' && !hasTypeSelected ? (
       <Button
         rounded
+        id="options-button-no-type-selected"
         size="responsive"
         variant={isOptionsMenuActive ? 'shadow' : 'outline'}
         className={typeButtonClass}
         disabled
       >
         {optionsRow}
-        {optionsChevron}
       </Button>
     ) : (
       <Button
         rounded
         size="responsive"
+        id="options-button-no-type-selected-default"
         variant={isOptionsMenuActive ? 'shadow' : 'outline'}
         onClick={() => onTabChange?.(ImportLeftSideTab.Options)}
         className={typeButtonClass}
         disabled={!hasTypeSelected}
       >
         {optionsRow}
-        {optionsChevron}
       </Button>
     );
 
