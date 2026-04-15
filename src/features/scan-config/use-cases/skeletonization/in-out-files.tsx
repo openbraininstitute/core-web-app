@@ -98,7 +98,7 @@ export function SkeletonizationInOutFiles({
                     name: morphology.name,
                     renderer: ActivityCustomFileRenderer.MiniDetailView,
                   }}
-                  name={morphology.name}
+                  name="Skeletonized morphology"
                   onSelect={onSelect}
                 />
               );
