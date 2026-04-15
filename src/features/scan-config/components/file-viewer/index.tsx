@@ -5,6 +5,7 @@ import { match, P } from 'ts-pattern';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
+import { SonataViewer } from '@/features/sonata-viewer';
 import { SpikeViewer } from '@/features/spike-viewer';
 import { cn } from '@/utils/css-class';
 
@@ -50,6 +51,10 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
     .with(
       { asset: { content_type: AssetContentType.h5, label: AssetLabel.replay_spikes } },
       (f) => <H5SpikeFileViewer file={f} context={context} />
+    )
+    .with(
+      { asset: { content_type: AssetContentType.h5, label: AssetLabel.voltage_report } },
+      (f) => <H5SonataFileViewer file={f} context={context} />
     )
     .otherwise((f) => <PlaceholderFileViewer file={f} />);
 
@@ -170,6 +175,18 @@ function H5SpikeFileViewer({ file, context }: H5FileViewerProps) {
       entityId={entity.id}
       entityType={entity.type}
       asset={asset}
+      ctx={context}
+    />
+  );
+}
+
+function H5SonataFileViewer({ file, context }: H5FileViewerProps) {
+  const { entity, asset } = file;
+  return (
+    <SonataViewer
+      key={`${entity.id}-${asset.id}`}
+      entity={entity as ISimulationResult}
+      assetId={asset.id}
       ctx={context}
     />
   );
