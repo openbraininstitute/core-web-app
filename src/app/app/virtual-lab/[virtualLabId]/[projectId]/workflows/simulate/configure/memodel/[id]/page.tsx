@@ -8,6 +8,7 @@ import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
+import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import ScanConfig from '@/features/scan-config';
 import {
@@ -44,10 +45,6 @@ export default function Page({
   const queryParams = use(searchParams);
   const { initialCampaignId } = queryParams;
   const { virtualLabId, projectId, id: modelId } = use(pathParams);
-
-  const visualizerState =
-    (queryParams['3d'] as ThreeDVisualizerQueryParamKeys) ?? threeDVisualizerState.Expanded;
-
   let sessionId = queryParams?.sessionId;
   if (!sessionId) sessionId = crypto.randomUUID();
 
@@ -97,15 +94,7 @@ export default function Page({
           data-testid="memodel-simulation-panel"
           className="flex h-full max-h-full min-h-0 w-full flex-col [grid-area:content]"
         >
-          <div
-            id="simulation-panel-wrapper"
-            data-testid="simulation-panel-wrapper"
-            className={cn(
-              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto',
-              { 'grid-cols-[2fr_3fr]': visualizerState === threeDVisualizerState.Expanded },
-              { 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed }
-            )}
-          >
+          <ResponsiveSideViewer>
             <HydrateWrapper>
               <PanelSelector
                 sessionId={sessionId}
@@ -114,7 +103,7 @@ export default function Page({
               />
             </HydrateWrapper>
             <NeuronVisualizer sessionId={sessionId} memodelId={entity.id} disableSynapses />
-          </div>
+          </ResponsiveSideViewer>
         </div>
       </div>
     </>

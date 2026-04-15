@@ -293,6 +293,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     dataKey,
     selectionType,
     onRowsSelected,
+    dataSource,
   });
 
   const { expandableConfig: generatedExpandableConfig } = useExpandableTable(expandableOptions);

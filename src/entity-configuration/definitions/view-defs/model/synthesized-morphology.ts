@@ -4,8 +4,8 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
-export const ViewDefForComputationallySynthesizedCellMorphology: ViewDefinitionConfig = {
-  title: 'Computationally synthesized cell morphology',
+export const ViewDefForSynthesizedCellMorphology: ViewDefinitionConfig = {
+  title: 'Synthesized cell morphology',
   group: DataTypeGroup.ExperimentalData,
   name: EntitySlug.CellMorphology,
   columns: [

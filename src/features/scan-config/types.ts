@@ -124,6 +124,8 @@ export const ScanConfigUIElementDict = {
   SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
 } as const;
 
+export type TScanConfigUIElementDict =
+  (typeof ScanConfigUIElementDict)[keyof typeof ScanConfigUIElementDict];
 export interface StringInput extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringInput;
 }
