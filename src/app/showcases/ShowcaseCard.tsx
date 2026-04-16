@@ -1,5 +1,6 @@
 'use client';
 
+import { RiErrorWarningFill } from '@remixicon/react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -32,7 +33,7 @@ export default function ShowcaseCard({ project }: { project: OBIShowcaseProjectT
   return (
     <Link
       href={buildPlatformLoginUrl(slug, 'description')}
-      className="group relative w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 ease-in-out hover:scale-[0.98] hover:shadow-lg"
+      className="group relative flex h-full w-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 ease-in-out hover:scale-[0.98] hover:shadow-lg"
     >
       {/* Hero Image */}
       <div className="relative h-48 w-full overflow-hidden bg-gray-100">
@@ -53,7 +54,7 @@ export default function ShowcaseCard({ project }: { project: OBIShowcaseProjectT
         <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
       </div>
 
-      <div className="p-6">
+      <div className="flex flex-1 flex-col p-6">
         <div className="mb-3 flex items-start justify-between">
           <h3 className="text-primary-9 font-serif! line-clamp-2 text-4xl! group-hover:text-blue-600">
             {project.name}
@@ -69,6 +70,11 @@ export default function ShowcaseCard({ project }: { project: OBIShowcaseProjectT
         <div className="text-primary-9 flex items-center text-base">
           <span className="font-medium">Author(s):</span>
           <span className="ml-1">{authors}</span>
+        </div>
+
+        <div className="flex flex-row gap-2">
+          <RiErrorWarningFill className="w-5 h-auto text-gray-400 text-sm! font-light!" />
+          <p className="text-gray-400 text-sm! font-light!">Login required to see showcase</p>
         </div>
       </div>
     </Link>
