@@ -45,15 +45,13 @@ export const SPECIES_TAXONOMY_IDS = {
  */
 export const SPECIES_IMAGE_MAP: Record<string, string> = {
   [SPECIES_TAXONOMY_IDS.AQUARANA_CATESBEIANA]:
-    '/images/species/577954268-916b2f0b-0304-4ac0-b170-e226cb3f812a.png',
+    '/images/species/aquarana_catesbeiana__american_bullfrog.png',
   [SPECIES_TAXONOMY_IDS.CRICETULUS_GRISEUS]:
-    '/images/species/577954269-d639b6f1-f7f3-4a0f-9eb0-ca6573594595.png',
-  [SPECIES_TAXONOMY_IDS.FELIS_CATUS]:
-    '/images/species/577954498-5ee17174-8166-420d-a05a-135745a65ba7.png',
+    '/images/species/cricetulus_griseus__chinese_hamster.png',
+  [SPECIES_TAXONOMY_IDS.FELIS_CATUS]: '/images/species/felis_catus__domestic_cat.png',
   [SPECIES_TAXONOMY_IDS.LOLIGO_PEALEII]:
-    '/images/species/577954499-9071cece-f533-41dc-b527-c5c325b2f935.png',
-  [SPECIES_TAXONOMY_IDS.XENOPUS_LAEVIS]:
-    '/images/species/577954564-c36d6524-edf0-4dca-acba-40a373269075.png',
+    '/images/species/loligo_pealeii__longfin_inshore_squid.png',
+  [SPECIES_TAXONOMY_IDS.XENOPUS_LAEVIS]: '/images/species/xenopus_laevis__african_clawed_frog.png',
 } as const;
 
 /**

@@ -7,7 +7,11 @@ import {
   useRemoteUserPreferenceHierarchySpeciesQuery,
   useWorkspaceHierarchyRegistry,
 } from '@/features/brain-region-hierarchy/hooks';
-import { type IWorkspaceSpecies, SPECIES_SUBTITLES } from '@/features/brain-region-hierarchy/types';
+import {
+  type IWorkspaceSpecies,
+  SPECIES_DISPLAY_NAMES,
+  SPECIES_SUBTITLES,
+} from '@/features/brain-region-hierarchy/types';
 import {
   Select,
   SelectContent,
@@ -64,10 +68,18 @@ export function SpeciesSelector({
     return null;
   }
 
-  const options = remoteAvailableHierarchies?.map((h) => ({
-    ...h.species,
-    hierarchId: h.id,
-  }));
+  const speciesOrder = Object.keys(SPECIES_DISPLAY_NAMES);
+
+  const options = remoteAvailableHierarchies
+    ?.map((h) => ({
+      ...h.species,
+      hierarchId: h.id,
+    }))
+    .sort((a, b) => {
+      const indexA = speciesOrder.indexOf(a.name);
+      const indexB = speciesOrder.indexOf(b.name);
+      return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
+    });
 
   return (
     <span className={cn('flex items-center py-2', className)}>
