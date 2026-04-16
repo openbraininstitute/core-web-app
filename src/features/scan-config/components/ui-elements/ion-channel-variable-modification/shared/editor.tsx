@@ -10,12 +10,14 @@ import { cn } from '@/utils/css-class';
 import 'katex/dist/katex.min.css';
 
 import type { SectionListEntry } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import type { TScanConfigUIElementDict } from '@/features/scan-config/types';
 
 // TODO: re-enable array support when multi-value sweep when obi-one enabled it
 // export type SectionValue = number | number[];
 export type SectionValue = number;
 
 export interface SectionListEditorProps {
+  uiElement: TScanConfigUIElementDict;
   sectionLists: SectionListEntry[];
   values: Record<string, SectionValue>;
   onChange: (sectionList: string, value: SectionValue) => void;
@@ -24,6 +26,7 @@ export interface SectionListEditorProps {
 }
 
 export function SectionListConfigEditor({
+  uiElement,
   sectionLists,
   values,
   onChange,
@@ -31,9 +34,10 @@ export function SectionListConfigEditor({
   errorPathPrefix,
 }: SectionListEditorProps) {
   return (
-    <div className="mt-3 space-y-4 p-1">
+    <div className="mt-3 space-y-4 p-1" data-scan-config-block-element-item={`${uiElement}_editor`}>
       {sectionLists.map((entry) => (
         <SectionConfigRow
+          uiElement={uiElement}
           key={entry.section_list}
           entry={entry}
           value={values[entry.section_list] ?? null}
@@ -47,12 +51,14 @@ export function SectionListConfigEditor({
 }
 
 function SectionConfigRow({
+  uiElement,
   entry,
   value,
   onChange,
   disabled,
   errorPathPrefix,
 }: {
+  uiElement: TScanConfigUIElementDict;
   entry: SectionListEntry;
   value: SectionValue | null;
   onChange: (v: SectionValue) => void;
@@ -89,9 +95,11 @@ function SectionConfigRow({
   useFieldError(fieldPath, draftError);
 
   const commitValue = () => {
+    // allow the user to clear the field without snapping back
+    if (draft.trim() === '') return;
     const num = Number(draft);
-    if (draft.trim() === '' || Number.isNaN(num)) {
-      // reset to last valid value if empty or invalid
+    if (Number.isNaN(num)) {
+      // reset only for genuinely invalid (non-empty) input
       setDraft(value !== null ? String(value) : '');
       return;
     }
@@ -109,7 +117,7 @@ function SectionConfigRow({
   // const handlePlusClick = () => { ... };
 
   return (
-    <div>
+    <div data-scan-config-block-element-item={`${uiElement}_editor_item`}>
       <div className="mb-1.5 flex items-center gap-2">
         <span
           className={cn(
@@ -140,6 +148,7 @@ function SectionConfigRow({
         )}
       >
         <input
+          data-scan-config-block-element-item={`${uiElement}_editor_item_input`}
           type="number"
           value={draft}
           onChange={(e) => {

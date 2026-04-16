@@ -1,6 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ViewDefForCircuit } from '@/entity-configuration/definitions/view-defs/model/circuit';
-import { ViewDefForComputationallySynthesizedCellMorphology } from '@/entity-configuration/definitions/view-defs/model/computationally-synthesized-morphology';
 import { ViewDefForEmodel } from '@/entity-configuration/definitions/view-defs/model/emodel';
 import { ViewDefForIonChannelModel } from '@/entity-configuration/definitions/view-defs/model/ion-channel-model';
 import { ViewDefForMEModelWithSynapsesCircuit } from '@/entity-configuration/definitions/view-defs/model/me-model-with-synapses';
@@ -10,6 +9,7 @@ import { ViewDefForPairedNeuronCircuit } from '@/entity-configuration/definition
 import { ViewDefForSingleNeuronCircuit } from '@/entity-configuration/definitions/view-defs/model/single-neuron-circuit';
 import { ViewDefForSingleNeuronSynaptome } from '@/entity-configuration/definitions/view-defs/model/single-neuron-synaptome';
 import { ViewDefForSmallMicrocircuit } from '@/entity-configuration/definitions/view-defs/model/small-micro-circuit';
+import { ViewDefForSynthesizedCellMorphology } from '@/entity-configuration/definitions/view-defs/model/synthesized-morphology';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
@@ -25,6 +25,5 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.Circuit]: ViewDefForCircuit,
   [ExtendedEntitiesTypeDict.IonChannelModel]: ViewDefForIonChannelModel,
   [ExtendedEntitiesTypeDict.MEModelWithSynapses]: ViewDefForMEModelWithSynapsesCircuit,
-  [ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology]:
-    ViewDefForComputationallySynthesizedCellMorphology,
+  [ExtendedEntitiesTypeDict.SynthesizedCellMorphology]: ViewDefForSynthesizedCellMorphology,
 };

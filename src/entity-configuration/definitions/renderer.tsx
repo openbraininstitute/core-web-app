@@ -8,6 +8,7 @@ import { isValidElement, type JSX, type ReactNode, useEffect, useState } from 'r
 
 import { AgentType, MeasurementStatistic } from '@/api/entitycore/types/shared/global';
 import { tryCatch } from '@/api/utils';
+import { EmptyValue } from '@/entity-configuration/definitions/empty-value';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 
@@ -24,7 +25,7 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
-export const EmptyValue = '—';
+export { EmptyValue };
 
 export const EmptyPreview = (
   <Empty

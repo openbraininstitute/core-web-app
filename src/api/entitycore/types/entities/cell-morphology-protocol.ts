@@ -229,11 +229,18 @@ export type NestedCellMorphologyProtocolRead = Prettify<
 >;
 
 export type CellMorphologyProtocolNestedFilter = {
+  cell_morphology_protocol__name: string | null;
+  cell_morphology_protocol__name__in: Array<string> | null;
+  cell_morphology_protocol__name__ilike: string | null;
   cell_morphology_protocol__id: TCellMorphologyGenerationType | null;
-  cell_morphology_protocol__id__in:
-    | TCellMorphologyGenerationType
-    | Array<TCellMorphologyGenerationType>
-    | null;
+  cell_morphology_protocol__id__in: Array<TCellMorphologyGenerationType> | null;
   cell_morphology_protocol__generation_type: TCellMorphologyGenerationType | null;
   cell_morphology_protocol__generation_type__in: Array<TCellMorphologyGenerationType> | null;
+  cell_morphology_protocol__generation_type__not_in: Array<TCellMorphologyGenerationType> | null;
+  cell_morphology_protocol__protocol_design: TCellMorphologyProtocolDesign | null;
+  cell_morphology_protocol__protocol_design__in: Array<TCellMorphologyProtocolDesign> | null;
+  cell_morphology_protocol__protocol_design__not_in: Array<TCellMorphologyProtocolDesign> | null;
+  cell_morphology_protocol__protocol_document: string | null;
+  cell_morphology_protocol__protocol_document__in: Array<string> | null;
+  cell_morphology_protocol__protocol_document__ilike: string | null;
 };

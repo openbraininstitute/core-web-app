@@ -1,7 +1,7 @@
 'use client';
 
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { includes } from 'es-toolkit/compat';
+import { includes, uniq } from 'es-toolkit/compat';
 
 import { getTaskActivities, getTaskConfigs } from '@/api/entitycore/queries/task';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
@@ -12,17 +12,31 @@ import { errorRegistry } from '@/features/scan-config/error-registry';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
+import { fetchAllChunkedPaginatedData, fetchAllPaginatedData } from '@/utils/pagination';
 
 import type { TTaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig, TTaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TObiOneTaskType } from '@/api/one/types/task';
 import type { WorkspaceContext } from '@/types/common';
 
 /** default interval when execution activities are still pending or running. */
 export const SCAN_CONFIG_TASK_STATUS_POLL_INTERVAL_MS = 10_000;
+const SCAN_CONFIG_TASK_PAGE_SIZE = 50;
 
 const TASK_ACTIVITIES_QUERY_KEY_HEAD = 'data-task-activities' as const;
 const TASK_RUNNER_QUERY_KEY_HEAD = 'data-task-runner' as const;
+
+function toEntityCoreResponse<T>(data: T[], fallbackPageSize: number): EntityCoreResponse<T> {
+  return {
+    data,
+    pagination: {
+      page: 1,
+      page_size: data.length || fallbackPageSize,
+      total_items: data.length,
+    },
+  };
+}
 /**
  * invalidates all task-activity queries for the given execution activity type in the workspace
  * use after mutating executions when the exact `used__id__in` filter is inconvenient
@@ -146,15 +160,25 @@ export function useScanConfigTaskRunner<TMeta extends Record<string, unknown>>({
         used__id: campaignId,
       },
     }),
-    queryFn: () =>
-      getTaskActivities({
-        filters: {
-          task_activity_type: configGenerationActivityType,
-          used__id: campaignId,
+    queryFn: async () => {
+      const filters = {
+        task_activity_type: configGenerationActivityType,
+        used__id: campaignId,
+      };
+      const allActivities = await fetchAllPaginatedData({
+        fn: async (page, pageSize) => {
+          const res = await getTaskActivities({
+            filters: { ...filters, page, page_size: pageSize },
+            withFacets: false,
+            context,
+          });
+          return { data: res.data || [] };
         },
-        withFacets: false,
-        context,
-      }),
+        pageSize: SCAN_CONFIG_TASK_PAGE_SIZE,
+      });
+
+      return toEntityCoreResponse(allActivities, SCAN_CONFIG_TASK_PAGE_SIZE);
+    },
     enabled: Boolean(campaignId),
     select: (data) => data.data.at(0)?.generated?.map((g) => g.id) ?? [],
   });
@@ -167,22 +191,36 @@ export function useScanConfigTaskRunner<TMeta extends Record<string, unknown>>({
         id__in: configGenerationIds,
       },
     }),
-    queryFn: () =>
-      getTaskConfigs<TMeta>({
-        filters: {
-          task_config_type: taskConfigType,
-          id__in: configGenerationIds,
+    queryFn: async () => {
+      const allConfigs = await fetchAllChunkedPaginatedData({
+        values: configGenerationIds ?? [],
+        chunkSize: SCAN_CONFIG_TASK_PAGE_SIZE,
+        pageSize: SCAN_CONFIG_TASK_PAGE_SIZE,
+        prepareValues: uniq,
+        fetchPage: async ({ chunkValues, page, pageSize }) => {
+          const res = await getTaskConfigs<TMeta>({
+            filters: {
+              task_config_type: taskConfigType,
+              id__in: chunkValues,
+              page,
+              page_size: pageSize,
+            },
+            withFacets: false,
+            context,
+          });
+          return { data: res.data || [] };
         },
-        withFacets: false,
-        context,
-      }),
+      });
+
+      return toEntityCoreResponse(allConfigs, SCAN_CONFIG_TASK_PAGE_SIZE);
+    },
     enabled: Boolean(configGenerationIds && configGenerationIds.length > 0),
     select: (data) => {
       const configs = data.data;
       const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
       const configList = [...(configs ?? [])].sort((a, b) => collator.compare(a.name, b.name));
       const configIds = configList.map((c) => c.id);
-      return { configList, configIds } satisfies TScanConfigTaskRunnerConfigs<TMeta>;
+      return { configList, configIds } as TScanConfigTaskRunnerConfigs<TMeta>;
     },
   });
 
@@ -194,14 +232,28 @@ export function useScanConfigTaskRunner<TMeta extends Record<string, unknown>>({
         used__id__in: configsResponse?.configIds ?? [],
       },
     }),
-    queryFn: () =>
-      getTaskActivities({
-        filters: {
-          task_activity_type: executionActivityType,
-          used__id__in: configsResponse?.configIds ?? [],
+    queryFn: async () => {
+      const allExecutions = await fetchAllChunkedPaginatedData({
+        values: configsResponse?.configIds ?? [],
+        chunkSize: SCAN_CONFIG_TASK_PAGE_SIZE,
+        pageSize: SCAN_CONFIG_TASK_PAGE_SIZE,
+        prepareValues: uniq,
+        fetchPage: async ({ chunkValues, page, pageSize }) => {
+          const res = await getTaskActivities({
+            filters: {
+              task_activity_type: executionActivityType,
+              used__id__in: chunkValues,
+              page,
+              page_size: pageSize,
+            },
+            context,
+          });
+          return { data: res.data || [] };
         },
-        context,
-      }),
+      });
+
+      return toEntityCoreResponse(allExecutions, SCAN_CONFIG_TASK_PAGE_SIZE);
+    },
     enabled: Boolean(configsResponse?.configIds && configsResponse.configIds.length > 0),
     refetchInterval: (query) => {
       const executions = query.state.data?.data ?? [];

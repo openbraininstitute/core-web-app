@@ -40,7 +40,7 @@ export function TutorialCard({
       <Card
         className={cn(
           'w-full bg-white border-none px-4 cursor-pointer group',
-          'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
+          'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] gap-2.5',
           'hover:shadow-bnb hover:border-gray-200 hover:border hover:bg-gray-100',
           { 'bg-neutral-2': isSelected }
         )}
@@ -48,22 +48,24 @@ export function TutorialCard({
         <CardTitle className="text-primary-9 group-hover:text-primary-8 group-hover:font-black">
           {t}
         </CardTitle>
-        <CardDescription className="relative h-30.75 w-auto px-4 mt-auto">
-          <Image
-            fill
-            alt={t}
-            src={image}
-            className={cn('rounded-md transition-all ease-in-out', {
-              'grayscale brightness-90 contrast-60 opacity-80': isSelected,
-            })}
-          />
-          <div
-            className={cn('absolute inset-0 bg-black/30 rounded-md', {
-              'filter grayscale-50': isSelected,
-            })}
-          />
-          <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <RiPlayFill className="text-white size-10" />
+        <CardDescription className="relative aspect-video w-full mt-auto">
+          <div className="relative w-full h-full">
+            <Image
+              fill
+              alt={t}
+              src={image}
+              className={cn('rounded-md transition-all ease-in-out', {
+                'grayscale brightness-90 contrast-60 opacity-80': isSelected,
+              })}
+            />
+            <div
+              className={cn('absolute inset-0 bg-black/30 rounded-md', {
+                'filter grayscale-50': isSelected,
+              })}
+            />
+            <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+              <RiPlayFill className="text-white size-10" />
+            </div>
           </div>
         </CardDescription>
       </Card>

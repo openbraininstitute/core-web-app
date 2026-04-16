@@ -19,9 +19,9 @@ import {
   type IonChannelSelection,
   IonChannelVariableSelector,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/selector';
+import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 import type { SetStateAction } from 'jotai';
-import type { ConfigValue } from '@/features/scan-config/types';
 
 type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
@@ -139,7 +139,11 @@ export function Global({
   };
 
   return (
-    <div>
+    <div
+      data-scan-config-block-element={
+        ScanConfigUIElementDict.IonChannelVariableModificationByNeuron
+      }
+    >
       <IonChannelVariableSelector
         data={data}
         variableType={[MechanismVariableTypeDict.Global, MechanismVariableTypeDict.Range]}
@@ -150,6 +154,7 @@ export function Global({
 
       {resolvedVariable && editorSectionLists.length > 0 && (
         <SectionListConfigEditor
+          uiElement={ScanConfigUIElementDict.IonChannelVariableModificationByNeuron}
           sectionLists={editorSectionLists}
           values={editorValues}
           onChange={handleSectionChange}

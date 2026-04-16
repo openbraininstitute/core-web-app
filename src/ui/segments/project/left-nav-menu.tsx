@@ -75,7 +75,7 @@ const links = [
 export function LeftMenu({ className }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
-  const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({
+  const { isVirtualLabAdmin: isAdmin, isProjectAdmin } = useWorkspaceMembership({
     virtualLabId,
     projectId,
   });
@@ -88,7 +88,7 @@ export function LeftMenu({ className }: Props) {
       baseUrl: link.url,
       url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
     })),
-    (link) => !link.requireRole || (link.requireRole && isAdmin)
+    (link) => !link.requireRole || (link.requireRole && (isAdmin || isProjectAdmin))
   );
 
   const {

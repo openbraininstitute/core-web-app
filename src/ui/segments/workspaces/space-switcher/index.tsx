@@ -88,8 +88,8 @@ export function SpaceSwitcher({ className }: Props) {
         }),
         queryFn: async () =>
           await listVirtualLabs({ include: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
-        staleTime: Infinity,
-        gcTime: Infinity,
+        staleTime: Number.POSITIVE_INFINITY,
+        gcTime: Number.POSITIVE_INFINITY,
       },
       {
         queryKey: userKeyBuilder.subscription(),
@@ -98,8 +98,8 @@ export function SpaceSwitcher({ className }: Props) {
       {
         queryKey: userKeyBuilder.profile(),
         queryFn: getUserProfile,
-        staleTime: Infinity,
-        gcTime: Infinity,
+        staleTime: Number.POSITIVE_INFINITY,
+        gcTime: Number.POSITIVE_INFINITY,
       },
     ],
   });
@@ -131,6 +131,8 @@ export function SpaceSwitcher({ className }: Props) {
     queryKey: keyBuilder.listWorkspaceProjects(workspaceProjectList),
     queryFn: async () => await listProjects({ ...workspaceProjectList, page: 1, size: 40 }),
     enabled: !!virtualLabId,
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
   });
 
   const labs = useMemo(
@@ -207,6 +209,7 @@ export function SpaceSwitcher({ className }: Props) {
     queryKey: keyBuilder.getWorkspace(activeWorkspace),
     queryFn: () => getProject(activeWorkspace),
     enabled: !!virtualLabId && !!projectId && !listedProjectName,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 
   const currentProjectName = resolveCurrentProjectName({
@@ -273,39 +276,31 @@ export function SpaceSwitcher({ className }: Props) {
           aria-label={`${currentVirtualLabName}/${currentProjectLabel}`}
           disabled={labsLoading || isCurrentProjectLoading}
         >
-          {isCurrentProjectLoading ? (
+          <div
+            className={cn('flex items-center justify-center gap-2', {
+              hidden: isExpanded,
+            })}
+          >
+            {/** biome-ignore lint/a11y/noStaticElementInteractions: button can not have nested buttons */}
             <div
-              className={cn('flex items-center justify-center gap-2', {
-                hidden: isExpanded,
-              })}
+              className={cn(
+                'flex items-center gap-1.5 rounded-full',
+                'hover:bg-background border-none'
+              )}
+              onKeyDown={onProfileClick}
+              onClick={onProfileClick}
+              tabIndex={-1}
+              title={username}
+              data-label={username}
             >
-              <Skeleton className="h-5 w-5 rounded-full xl:h-6 xl:w-6" />
-              <Skeleton className="h-3 w-3 rounded-full" />
-              <Skeleton className="h-4 w-16 rounded-full" />
-              <Skeleton className="h-3 w-3 rounded-full" />
+              <UserFilled className="hover:text-primary-6 text-primary-9 shrink-0 text-lg xl:text-xl" />
             </div>
-          ) : (
-            <div
-              className={cn('flex items-center justify-center gap-2', {
-                hidden: isExpanded,
-              })}
-            >
-              {/** biome-ignore lint/a11y/noStaticElementInteractions: button can not have nested buttons */}
-              <div
-                className={cn(
-                  'flex items-center gap-1.5 rounded-full',
-                  'hover:bg-background border-none'
-                )}
-                onKeyDown={onProfileClick}
-                onClick={onProfileClick}
-                tabIndex={-1}
-                title={username}
-                data-label={username}
-              >
-                <UserFilled className="hover:text-primary-6 text-primary-9 shrink-0 text-lg xl:text-xl" />
-              </div>
-              <RightOutlined className="text-primary-8 font-bold" />
-              {currentVirtualLabName && !isExpanded && (
+            <RightOutlined className="text-primary-8 font-bold" />
+            {labsLoading && !isExpanded ? (
+              <Skeleton className="h-4 w-16 rounded-full" />
+            ) : (
+              currentVirtualLabName &&
+              !isExpanded && (
                 <div
                   className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden pl-2 select-none"
                   title={currentVirtualLabName}
@@ -315,10 +310,10 @@ export function SpaceSwitcher({ className }: Props) {
                     {currentVirtualLabName}
                   </h3>
                 </div>
-              )}
-              <RightOutlined className="text-primary-8 font-bold" />
-            </div>
-          )}
+              )
+            )}
+            <RightOutlined className="text-primary-8 font-bold" />
+          </div>
           <AnimatePresence mode="wait">
             {!isExpanded ? (
               <motion.div

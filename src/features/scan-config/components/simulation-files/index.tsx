@@ -151,6 +151,7 @@ function useInputFiles(
         entity,
         asset: sonataCircuitAsset,
         assetPath: 'circuit_config.json',
+        enforcedRenderType: AssetContentType.json,
         renderer: ActivityCustomFileRenderer.Default,
       });
     }

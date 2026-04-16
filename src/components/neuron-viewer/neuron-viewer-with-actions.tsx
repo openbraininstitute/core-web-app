@@ -12,13 +12,15 @@ import {
   simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import { useCleanMorphology } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
+import { cn } from '@/utils/css-class';
 import { logError } from '@/utils/logger';
 
 import ReloadIcon from '../icons/Reload';
+import { CollapsedViewer } from './collapsed-viewer';
 import { DebugPanel } from './debug-panel';
 import { useElectrodes } from './hooks/electrodes';
 import { useSynapses } from './hooks/synapses';
-import { NeuronLoader } from './plugins/neuron-loader';
+import { LoadingNeuronSpinner } from './loading-neuron-spinner';
 
 import styles from './neuron-viewer-with-actions.module.css';
 
@@ -35,6 +37,7 @@ export function NeuronViewerContainer({
   disableElectrodes,
   disableSynapses,
 }: Props) {
+  const [collapsed, setCollapsed] = React.useState(false);
   const simulationStatus = useAtomValue(simulationStatusAtomFamily(sessionId));
   const { loading, error, morphology } = useCleanMorphology(meModelId, sessionId);
   const tree = React.useMemo(
@@ -50,13 +53,12 @@ export function NeuronViewerContainer({
     logError('Unable to load morphology:', error);
     throw new Error('Unable to load morphology!');
   }
-  if (loading) {
+  if (loading)
     return (
-      <div className={styles.center}>
-        <NeuronLoader text="Loading Neuron" />
+      <div className={styles.viewerContainer}>
+        <LoadingNeuronSpinner />
       </div>
     );
-  }
 
   return (
     <ErrorBoundary
@@ -77,16 +79,27 @@ export function NeuronViewerContainer({
       })}
     >
       <DefaultLoadingSuspense>
-        <MorphoViewerSimul
-          morphology={tree}
-          synapses={synapses}
-          recordings={disableElectrodes ? [] : recordings}
-          onRecordingsChange={disableElectrodes ? undefined : setRecordings}
-          injection={disableElectrodes ? undefined : injection}
-          onInjectionChange={disableElectrodes ? undefined : setInjection}
-          disableClick={disableElectrodes || simulationStatus?.status === SimulationStatus.LAUNCHED}
-        />
-        <DebugPanel morphology={morphology} synapses={synapses} />
+        <div className={cn(styles.viewerContainer, collapsed && styles.collapsed)}>
+          {collapsed ? (
+            <CollapsedViewer onClick={() => setCollapsed(false)} />
+          ) : (
+            <>
+              <MorphoViewerSimul
+                morphology={tree}
+                synapses={synapses}
+                recordings={disableElectrodes ? [] : recordings}
+                onRecordingsChange={disableElectrodes ? undefined : setRecordings}
+                injection={disableElectrodes ? undefined : injection}
+                onInjectionChange={disableElectrodes ? undefined : setInjection}
+                disableClick={
+                  disableElectrodes || simulationStatus?.status === SimulationStatus.LAUNCHED
+                }
+                onMinimize={() => setCollapsed(true)}
+              />
+              <DebugPanel morphology={morphology} synapses={synapses} />
+            </>
+          )}
+        </div>
       </DefaultLoadingSuspense>
     </ErrorBoundary>
   );

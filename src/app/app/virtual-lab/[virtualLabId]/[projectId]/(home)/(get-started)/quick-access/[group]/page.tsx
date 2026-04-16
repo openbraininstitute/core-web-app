@@ -1,6 +1,7 @@
 import { InboxOutlined } from '@ant-design/icons';
 import { compact } from 'es-toolkit/array';
 import { findKey } from 'es-toolkit/object';
+import { ViewTransition } from 'react';
 
 import { tryCatch } from '@/api/utils';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -107,29 +108,31 @@ export default async function Page({
   }
 
   return (
-    <div
-      id={`quick-access-${group}`}
-      data-testid={`quick-access-${group}`}
-      className="grid grid-cols-3 gap-2 px-3 mb-10"
-    >
-      {results.map(({ title, thumbnail, entity, extendedType, artifactTitle, description }) => {
-        return (
-          <SingleCardItem
-            key={entity.id}
-            {...{
-              title,
-              thumbnail,
-              context,
-              virtualLab,
-              group,
-              entity,
-              extendedType,
-              artifactTitle,
-              description,
-            }}
-          />
-        );
-      })}
-    </div>
+    <ViewTransition enter="vt-slide-up-enter" exit="vt-fade-exit">
+      <div
+        id={`quick-access-${group}`}
+        data-testid={`quick-access-${group}`}
+        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 px-3 mb-10"
+      >
+        {results.map(({ title, thumbnail, entity, extendedType, artifactTitle, description }) => {
+          return (
+            <SingleCardItem
+              key={entity.id}
+              {...{
+                title,
+                thumbnail,
+                context,
+                virtualLab,
+                group,
+                entity,
+                extendedType,
+                artifactTitle,
+                description,
+              }}
+            />
+          );
+        })}
+      </div>
+    </ViewTransition>
   );
 }

@@ -38,7 +38,7 @@ export function Wallet() {
       ],
     });
 
-  const isAdmin = roles?.isVirtualLabAdmin;
+  const isAdmin = roles?.isVirtualLabAdmin || roles?.isProjectAdmin;
 
   const content = match({
     isError,
