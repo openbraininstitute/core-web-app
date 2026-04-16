@@ -440,7 +440,7 @@ const CsvUploadValidator = ({
   const minCredits = Math.max(studentEmails.length, 5);
   const balancePerStudent = vlabBalance && Math.floor(vlabBalance / studentEmails.length);
 
-  if (isNil(balancePerStudent))
+  if (isNil(balancePerStudent) || isNil(vlabBalance))
     return (
       <div className="flex items-center justtify-center">
         <LoadingOutlined />
