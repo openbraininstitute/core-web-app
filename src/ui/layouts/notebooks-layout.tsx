@@ -76,7 +76,6 @@ export function NotebooksLayout({ children, active }: Props) {
   const notification = useAppNotification();
   const [loading, setLoading] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
-  const [numberStudents, setNumberStudents] = useState<number | null>(10);
   const [step, setStep] = useState(0);
   const [studentEmails, setStudentEmails] = useState<string[]>([]);
   const breakpoint = useDefaultBreakpoint();
@@ -110,7 +109,6 @@ export function NotebooksLayout({ children, active }: Props) {
     setShowCourseModal(false);
     setStep(0);
     setStudentEmails([]);
-    setNumberStudents(10);
   }, []);
 
   const handleUploadData = () => {
@@ -284,21 +282,8 @@ export function NotebooksLayout({ children, active }: Props) {
                 <div className="mb-4 text-xl text-primary-8">Initialize Course</div>
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-col">
-                    <label htmlFor="quantity-input">Number of students</label>
-                    <InputNumber
-                      id="quantity-input"
-                      min={1}
-                      value={numberStudents}
-                      onChange={(n) => {
-                        setNumberStudents(n);
-                      }}
-                    />
-                    {!numberStudents && <div className="text-red-500">Required</div>}
-                  </div>
-                  <div className="flex flex-col">
-                    <div>Upload CSV with student information</div>
+                    <div>Upload CSV file with student information</div>
                     <CsvUploadValidator
-                      maxStudents={numberStudents}
                       vlabId={courseVlab.id}
                       onCancel={onCancel}
                       onSuccess={() => setStep(1)}
@@ -326,14 +311,12 @@ export function NotebooksLayout({ children, active }: Props) {
 }
 
 const CsvUploadValidator = ({
-  maxStudents,
   vlabId,
   onCancel,
   onSuccess,
   studentEmails,
   setStudentEmails,
 }: {
-  maxStudents: number | null;
   vlabId: string;
   onCancel: () => void;
   onSuccess: () => void;
@@ -387,10 +370,6 @@ const CsvUploadValidator = ({
       }
 
       emailSet.add(email);
-      if (maxStudents && emailSet.size > maxStudents) {
-        setError(`File should contain at most ${maxStudents} students.`);
-        return false;
-      }
     }
 
     console.log('🚨🚨🚨 CSV emails', [...emailSet]);
@@ -455,11 +434,8 @@ const CsvUploadValidator = ({
         beforeUpload={beforeUpload}
         onChange={handleChange}
         maxCount={1}
-        disabled={!maxStudents}
       >
-        <Button icon={<UploadOutlined />} disabled={!maxStudents}>
-          Select CSV
-        </Button>
+        <Button icon={<UploadOutlined />}>Select CSV</Button>
       </Upload>
 
       {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
@@ -480,7 +456,7 @@ const CsvUploadValidator = ({
 
       {studentEmails.length > 0 && balancePerStudent < 1 && (
         <div className="flex flex-col gap-2">
-          <div>Purchase credits to continue.</div>
+          <div className="text-lg">Purchase credits to continue.</div>
 
           <label htmlFor="quantity-input">Number of credits</label>
           <InputNumber
@@ -492,13 +468,13 @@ const CsvUploadValidator = ({
             }}
           />
           {credits < minCredits && (
-            <div className="text-red-500">{`Minimum of ${minCredits} required`}`</div>
+            <div className="text-red-500">{`Minimum of ${minCredits} required`}</div>
           )}
 
           {credits >= minCredits && (
             <div>
-              Each student will be allocated
-              {Math.floor((credits + vlabBalance) / studentEmails.length)} credits
+              {`Each student will be allocated
+              ${Math.floor((credits + vlabBalance) / studentEmails.length)} credits`}
             </div>
           )}
 
@@ -684,7 +660,7 @@ function PaymentForm({
   return (
     <div>
       <div className="bg-[#0a3a76] text-white text-lg p-4 rounded-md">
-        Pay {`${credits * CONVERSION_RATE} CHF`}
+        Pay {`${(credits * CONVERSION_RATE).toFixed(2)} CHF`}
       </div>
 
       <PaymentElement onReady={onReady} />
