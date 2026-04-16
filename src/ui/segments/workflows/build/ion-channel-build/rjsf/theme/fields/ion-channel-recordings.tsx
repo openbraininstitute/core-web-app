@@ -239,9 +239,10 @@ function RecordingsArrayFieldContent({
       >
         <div className="h-full w-full">
           <BrowseEntityScope
+            requireBrainRegion
             requireScopeSelector
+            requireSpeciesSelector
             section={WorkspaceSection.BuildWorkflow}
-            requireBrainRegion={false}
             requireMiniDetailView={false}
             dataType={ExtendedEntitiesTypeDict.IonChannelRecording}
             scope={WorkspaceScope.BuildIonChannelModel}
