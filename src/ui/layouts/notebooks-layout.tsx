@@ -87,6 +87,13 @@ export function NotebooksLayout({ children, active }: Props) {
     enabled: Boolean(virtualLabId),
   });
 
+  const { error: missingStudentsError } = useQuery({
+    queryKey: keyBuilder.missingEmails({ virtualLabId, emails: [] }),
+    queryFn: () => getMissingStudentEmails({ virtualLabId, emails: [] }),
+  });
+
+  const isVlabAdmin = !missingStudentsError;
+
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
     queryFn: () => getVirtualLab(virtualLabId),
@@ -212,15 +219,19 @@ export function NotebooksLayout({ children, active }: Props) {
           </NextLink>
         </div>
         <div className="flex gap-3">
-          {active === 'private' && course && course.template_project_id === projectId && (
-            <UiButton
-              type="button"
-              className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
-              onClick={() => setShowCourseModal(true)}
-            >
-              {course.is_initialized ? 'Add students to course' : 'Initialize course'}
-            </UiButton>
-          )}
+          {active === 'private' &&
+            course &&
+            course.template_project_id === projectId &&
+            isVlabAdmin &&
+            !course.is_initialized && (
+              <UiButton
+                type="button"
+                className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
+                onClick={() => setShowCourseModal(true)}
+              >
+                {course.is_initialized ? 'Add students to course' : 'Initialize course'}
+              </UiButton>
+            )}
 
           {active === 'private' && (
             <UiButton
@@ -266,7 +277,7 @@ export function NotebooksLayout({ children, active }: Props) {
         {children}
       </div>
       {courseVlab && (
-        <Modal open={showCourseModal} footer={false} closable={false}>
+        <Modal open={showCourseModal} footer={false} closable={step === 0} onCancel={onCancel}>
           <div>
             {step === 0 && (
               <div>
