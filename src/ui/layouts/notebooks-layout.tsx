@@ -820,9 +820,9 @@ function CourseSetup({
           includeProjects: false,
         });
         const balance = balanceRes?.data?.balance;
+        if (isNil(balance)) throw new Error('Could not fetch account balance for the virtual lab');
         const budgetPerStudent = Math.floor(parseInt(balance, 10) / studentEmails.length);
 
-        if (isNil(balance)) throw new Error('Could not fetch account balance for the virtual lab');
         if (budgetPerStudent < 1) {
           throw new Error('Not enough credits to initialize course');
         }
