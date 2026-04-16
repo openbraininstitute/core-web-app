@@ -2,6 +2,7 @@
 
 import { CloseOutlined } from '@ant-design/icons';
 import { RiArrowDownSLine } from '@remixicon/react';
+import { useRouter } from 'next/navigation';
 import { type ReactNode, useMemo } from 'react';
 
 import { Card, CardContent, CardDescription, CardTitle } from '@/ui/molecules/card';
@@ -63,11 +64,11 @@ function ArtifactTypeCard({
       <CardContent className="flex h-full items-stretch gap-3">
         {option.icon ? <div className=" mt-0.5 shrink-0">{option.icon}</div> : null}
         <div className="min-w-0 flex flex-1 flex-col">
-          <CardTitle className=" m-0 mb-1 text-lg">{option.label}</CardTitle>
+          <CardTitle className=" m-0 mb-1 text-xl">{option.label}</CardTitle>
           {option.description ? (
             <CardDescription
               className={cn(
-                'mt-1 flex flex-1 flex-col text-sm',
+                'mt-1 flex flex-1 flex-col text-base',
                 '[&>div]:flex [&>div]:flex-1 [&>div]:flex-col'
               )}
             >
@@ -117,7 +118,7 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
     const disabled = options.filter((option) => !option.enabled);
     return { enabledOptions: enabled, disabledOptions: disabled };
   }, [options]);
-
+  const { back } = useRouter();
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
       <div className="mb-5 flex w-full items-center justify-between pl-3.5">
@@ -128,6 +129,9 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
             'hover:bg-neutral-1 text-neutral-5 hover:text-primary-6 ',
             'flex items-center justify-center rounded-full p-2 hover:shadow-bnb'
           )}
+          onClick={() => {
+            back();
+          }}
         >
           <CloseOutlined />
         </button>

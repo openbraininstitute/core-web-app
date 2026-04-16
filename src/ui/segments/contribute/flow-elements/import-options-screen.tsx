@@ -79,13 +79,13 @@ export function ImportOptionsScreen({
             >
               <CardContent>
                 <CardTitle
-                  className={cn('mb-10 text-xl', {
+                  className={cn('mb-4 text-2xl', {
                     'font-black text-2xl': mode === ImportMode.Single,
                   })}
                 >
                   Single {selectedType?.title.toLocaleLowerCase()}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-base">
                   Upload a single entry and complete a guided, step-by-step workflow tailored to
                   this entity. You will be prompted to provide all required information, including
                   metadata, classification, and relevant attributes, ensuring accuracy and
@@ -135,15 +135,15 @@ export function ImportOptionsScreen({
             variant="success"
             type="button"
             className={cn(
-              'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+              'relative h-12 min-w-45 overflow-hidden border border-white/20 pl-10 pr-4 font-semibold',
               'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
               'transition-all duration-300 ease-out disabled:cursor-not-allowed disabled:opacity-70',
-              'hover:scale-[1.02] active:scale-[0.98]'
+              'group hover:text-white! hover:from-green-600! hover:via-green-800! hover:to-green-900!'
             )}
           >
             <Link href={continueHref} className="flex items-center justify-center gap-2">
               <div className="flex items-center justify-between gap-5">
-                <span> Continue to upload (CSV or table)</span>
+                <span className="text-lg!">Continue to upload (CSV or table)</span>
                 <PlusOutlined className="ml-auto text-sm" />
               </div>
             </Link>
@@ -157,13 +157,13 @@ export function ImportOptionsScreen({
             variant="success"
             type="button"
             className={cn(
-              'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+              'relative h-12 min-w-45 overflow-hidden border border-white/20 px-10 font-semibold',
               'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
               'transition-all duration-300 ease-out disabled:cursor-not-allowed disabled:opacity-70',
-              'hover:scale-[1.02] active:scale-[0.98]'
+              'group hover:text-white! hover:from-green-600! hover:via-green-800! hover:to-green-900!'
             )}
           >
-            <Link href={continueHref} className="flex items-center justify-center gap-2">
+            <Link href={continueHref} className="flex items-center justify-center gap-2 text-lg!">
               Continue to upload
             </Link>
           </Button>
