@@ -53,7 +53,7 @@ export async function checkProjectExists({
 
 export async function createProject(
   virtualLabId: string,
-  { name, description, include_members }: TProjectPayload
+  { name, description, include_members, contact_email }: TProjectPayload
 ): Promise<ProjectCreationResponse> {
   const session = await getSession();
   const response = await fetch(`${getBaseUrl()}/${virtualLabId}/projects`, {
@@ -66,6 +66,7 @@ export async function createProject(
       name,
       description,
       include_members,
+      contact_email,
     }),
   });
 
