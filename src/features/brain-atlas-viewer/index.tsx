@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -9,7 +10,7 @@ import { BrainAtlasViewerGltf } from '@/features/brain-atlas-viewer/brain-atlas-
 import { FullScreen } from '@/features/brain-atlas-viewer/full-screen';
 import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
 import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
-import { SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
+import { SPECIES_IMAGE_MAP, SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
 
 export function AtlasViewer({ children }: { children?: ReactNode }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -19,9 +20,12 @@ export function AtlasViewer({ children }: { children?: ReactNode }) {
     result: { workspaceHierarchyId },
   } = useBrainRegionRootHierarchyQuery();
   const { runtimeHierarchyById } = useHierarchyRuntimeMetadataQuery();
-  const isMouse =
-    runtimeHierarchyById.get(workspaceHierarchyId)?.species.taxonomyId ===
-    SPECIES_TAXONOMY_IDS.MUS_MUSCULUS;
+
+  const hierarchyMeta = runtimeHierarchyById.get(workspaceHierarchyId);
+  const taxonomyId = hierarchyMeta?.species.taxonomyId;
+  const hasAtlas = !!hierarchyMeta?.atlasId;
+  const isMouse = taxonomyId === SPECIES_TAXONOMY_IDS.MUS_MUSCULUS;
+  const speciesImage = taxonomyId ? SPECIES_IMAGE_MAP[taxonomyId] : undefined;
 
   const handleFullScreenToggle = useCallback(() => {
     setIsFullScreen((prev) => !prev);
@@ -41,6 +45,26 @@ export function AtlasViewer({ children }: { children?: ReactNode }) {
     ),
     []
   );
+
+  if (!hasAtlas) {
+    return (
+      <div className="@container relative flex h-full max-h-full w-full max-w-full flex-col items-center justify-center">
+        {speciesImage ? (
+          <Image
+            src={speciesImage}
+            alt={hierarchyMeta?.species.name ?? 'Species'}
+            fill
+            className="object-contain p-8"
+            priority
+          />
+        ) : (
+          <p className="text-white text-lg font-semibold">
+            No 3D atlas nor an image available for this species.
+          </p>
+        )}
+      </div>
+    );
+  }
 
   if (isFullScreen) {
     return (
