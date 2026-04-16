@@ -74,7 +74,7 @@ export default function ShowcaseCard({ project }: { project: OBIShowcaseProjectT
 
         <div className="flex flex-row gap-2">
           <RiErrorWarningFill className="w-5 h-auto text-gray-400 text-sm! font-light!" />
-          <p className="text-gray-400 text-sm! font-light!">Login required to see showcase</p>
+          <p className="text-gray-400 text-sm! font-light!">Log in to explore this showcase</p>
         </div>
       </div>
     </Link>
