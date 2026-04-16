@@ -345,6 +345,15 @@ const CsvUploadValidator = ({
   const [error, setError] = useState('');
   const [credits, setCredits] = useState(0);
 
+  const { data: balance } = useQuery({
+    queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
+    queryFn: () => getVirtualLabAccountBalance({ virtualLabId: vlabId, includeProjects: false }),
+  });
+
+  const vlabBalance = isNil(balance?.data?.balance)
+    ? undefined
+    : parseInt(balance?.data.balance, 10);
+
   const validateCsvContent = async (text: string) => {
     const rows = text.trim().split('\n');
     if (rows.length < 1) {
@@ -429,8 +438,14 @@ const CsvUploadValidator = ({
   };
 
   const minCredits = Math.max(studentEmails.length, 5);
+  const balancePerStudent = vlabBalance && Math.floor(vlabBalance / studentEmails.length);
 
-  console.log('🚨🚨🚨 Emails state', studentEmails);
+  if (isNil(balancePerStudent))
+    return (
+      <div className="flex items-center justtify-center">
+        <LoadingOutlined />
+      </div>
+    );
 
   return (
     <div className="flex flex-col gap-3">
@@ -448,7 +463,10 @@ const CsvUploadValidator = ({
       </Upload>
 
       {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
-      {studentEmails.length === 0 && fileList.length > 0 && 'No students without a project found'}
+      {studentEmails.length === 0 &&
+        fileList.length > 0 &&
+        !error &&
+        'No students without a project found'}
       {studentEmails.length > 0 && (
         <div style={{ marginTop: 20 }}>
           <h3>Student Email List:</h3>
@@ -460,8 +478,10 @@ const CsvUploadValidator = ({
         </div>
       )}
 
-      {studentEmails.length > 0 && (
+      {studentEmails.length > 0 && balancePerStudent < 1 && (
         <div className="flex flex-col gap-2">
+          <div>Purchase credits to continue.</div>
+
           <label htmlFor="quantity-input">Number of credits</label>
           <InputNumber
             id="quantity-input"
@@ -475,12 +495,28 @@ const CsvUploadValidator = ({
             <div className="text-red-500">{`Minimum of ${minCredits} required`}`</div>
           )}
 
+          {credits >= minCredits && (
+            <div>
+              Each student will be allocated
+              {Math.floor((credits + vlabBalance) / studentEmails.length)} credits
+            </div>
+          )}
+
           <PaymentFlow
             credits={credits}
             vlabId={vlabId}
             onCancel={onCancel}
             onSuccess={onSuccess}
           />
+        </div>
+      )}
+
+      {studentEmails.length > 0 && balancePerStudent >= 1 && (
+        <div className="flex flex-col gap-2">
+          <span>
+            {`Your current balance of ${vlabBalance} will be allocated to the students projects, each student will receive ${balancePerStudent}`}
+          </span>
+          <UiButton onClick={onSuccess}>Continue</UiButton>
         </div>
       )}
     </div>
