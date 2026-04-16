@@ -97,9 +97,11 @@ function SelectItem({
   className,
   children,
   checkIconClassName,
+  checkIcon,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item> & {
   checkIconClassName?: string;
+  checkIcon?: React.ReactNode;
 }) {
   return (
     <SelectPrimitive.Item
@@ -112,7 +114,7 @@ function SelectItem({
     >
       <span className="select-icon-wrapper absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <RiCheckFill className={cn('size-4', checkIconClassName)} />
+          {checkIcon ?? <RiCheckFill className={cn('size-4', checkIconClassName)} />}
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>

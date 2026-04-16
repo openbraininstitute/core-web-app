@@ -163,6 +163,12 @@ function buildQuery({
   scope: TWorkspaceScope;
   extendedType: TExtendedEntitiesTypeDict;
 }) {
+  const brainRegionQuery = brainRegionId
+    ? {
+        within_brain_region_brain_region_id: brainRegionId,
+        within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+      }
+    : {};
   const query = {
     withFacets: false,
     context: {
@@ -172,10 +178,7 @@ function buildQuery({
     filters: {
       page: 1,
       page_size: 1,
-      within_brain_region_hierarchy_id:
-        hierarchyId ?? config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID,
-      within_brain_region_brain_region_id: brainRegionId ?? null,
-      within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+      ...brainRegionQuery,
       ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
     },
   };

@@ -164,7 +164,8 @@ export function BrowseCircuit({
     ...extraQueryParams,
     ...scopeFilter,
   };
-
+  const shouldUseBrainRegion =
+    requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null);
   const {
     data,
     error,
@@ -190,11 +191,7 @@ export function BrowseCircuit({
     defaultBrainRegion,
     useKeepPreviousData: true,
     extraQueryParams,
-    enabled: () => {
-      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
-        return false;
-      return true;
-    },
+    enabled: () => (shouldUseBrainRegion ? false : true),
   });
 
   const {
@@ -209,11 +206,7 @@ export function BrowseCircuit({
     workspace: { virtualLabId, projectId },
     queryFilters,
     extraQueryKey: { view },
-    enabled: () => {
-      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
-        return false;
-      return true;
-    },
+    enabled: () => (shouldUseBrainRegion ? false : true),
   });
 
   let dataSource: Array<ICircuit> = [];

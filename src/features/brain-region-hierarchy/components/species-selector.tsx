@@ -1,5 +1,7 @@
 'use client';
 
+import { RiCheckboxCircleFill } from '@remixicon/react';
+
 import {
   useAvailableHierarchySpeciesQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
@@ -98,7 +100,7 @@ export function SpeciesSelector({
           </div>
         </SelectTrigger>
         <SelectContent
-          className="min-w-50 z-9999 bg-white border-background"
+          className="min-w-50 max-h-80 z-9999 bg-white border-background"
           position="popper"
           sideOffset={6}
           alignOffset={0}
@@ -111,6 +113,7 @@ export function SpeciesSelector({
               value={species.hierarchId}
               className={cn('cursor-pointer py-2.5 px-3', '[&_.select-icon-wrapper]:top-4')}
               checkIconClassName="text-primary-8 size-5 ite"
+              checkIcon={<RiCheckboxCircleFill className="text-primary-8" />}
             >
               <div className="flex flex-col">
                 <span
