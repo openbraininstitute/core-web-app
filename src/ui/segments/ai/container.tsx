@@ -1,7 +1,6 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
 import IconPlus from '@/components/icons/Plus';
@@ -15,24 +14,16 @@ import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container() {
   const { state, setState } = usePanelState();
-  const [isPending, startTransition] = useTransition();
-
-  const [contentState, setContentState] = useState(state);
-
-  useEffect(() => {
-    if (!isPending) setContentState(state);
-  }, [state, isPending]);
 
   useAgentState('smc_simulation_config');
 
-  const isCollapsed = contentState === PanelState.Collapsed;
-  const isFullscreen = contentState === PanelState.Fullscreen;
-  const targetWidth = contentState === PanelState.Collapsed ? '3rem' : '400px';
+  const isCollapsed = state === PanelState.Collapsed;
+  const isFullscreen = state === PanelState.Fullscreen;
+  const targetWidth = state === PanelState.Collapsed ? '3rem' : '400px';
 
   function updateState(next: PanelState) {
-    if (next === contentState) return;
-    setContentState(next);
-    startTransition(() => setState(next));
+    if (next === state) return;
+    setState(next);
   }
 
   return (
@@ -60,7 +51,6 @@ export function Container() {
             onClick={() => updateState(PanelState.Expanded)}
             className={styles.collapsed}
             aria-label="expand AI assistant"
-            disabled={isPending}
           >
             <IconPlus />
             <div>OBI Assistant</div>
