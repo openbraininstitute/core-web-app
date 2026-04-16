@@ -3,6 +3,7 @@ import { lowerCase, upperFirst } from 'es-toolkit/compat';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
+import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
@@ -16,6 +17,8 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { cn } from '@/utils/css-class';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
@@ -63,7 +66,8 @@ export function RootElement({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
 }) {
-  const { aiConfig, isChatReady } = useAIConfig();
+  const { isChatReady } = useAIConfig();
+  const hasFieldErrors = useFieldErrorsForPath(rootElement);
   if (!schema || !schema?.properties) return;
 
   const handleEntryClick = (subkey: string) => {
@@ -75,63 +79,85 @@ export function RootElement({
 
   return (
     <div className="w-full flex flex-col gap-0.5">
-      <LeftMenuTab
-        tab={rootElement}
-        selectedTab={selectedRootElement}
-        onClick={() => {
-          const isCollapseClick =
-            selectedRootElement === rootElement &&
-            !isRootBlock(schema, rootElement) &&
-            rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span>
+            <LeftMenuTab
+              tab={rootElement}
+              selectedTab={selectedRootElement}
+              onClick={() => {
+                const isCollapseClick =
+                  selectedRootElement === rootElement &&
+                  !isRootBlock(schema, rootElement) &&
+                  rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
 
-          // for block_dictionary, clicking again collapses it
-          // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
-          if (isCollapseClick) {
-            setEditing(false);
-            setSelectedEntry('');
-            setSelectedRootElement('');
-            return;
-          }
+                // for block_dictionary, clicking again collapses it
+                // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
+                if (isCollapseClick) {
+                  setEditing(false);
+                  setSelectedEntry('');
+                  setSelectedRootElement('');
+                  return;
+                }
 
-          setSelectedRootElement(rootElement);
-          setSelectedEntry('');
+                setSelectedRootElement(rootElement);
+                setSelectedEntry('');
 
-          if (
-            rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
-            rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
-          )
-            setEditing(true);
-          else setEditing(false);
-        }}
-        extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
-      >
-        <span className="flex items-center gap-2 wrap-break-word min-w-0">
-          <SelectedUnionVariantLabel
-            rootElementSchema={rootElementSchema}
-            config={config}
-            rootElement={rootElement}
-            fallbackTitle={schema.properties?.[rootElement]?.title}
-          />
-        </span>
-        <div className="flex gap-3">
-          {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ? (
-            <WarningFilled className="text-yellow-400!" />
-          ) : (
-            <CheckCircleFilled className="text-green-600!" />
+                if (
+                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockSingle ||
+                  rootElementSchema.ui_element === ScanConfigUIElementDict.BlockUnion
+                )
+                  setEditing(true);
+                else setEditing(false);
+              }}
+              extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
+            >
+              <span className="flex items-center gap-2 wrap-break-word min-w-0">
+                <SelectedUnionVariantLabel
+                  rootElementSchema={rootElementSchema}
+                  config={config}
+                  rootElement={rootElement}
+                  fallbackTitle={schema.properties?.[rootElement]?.title}
+                />
+              </span>
+              <div className="flex gap-3">
+                {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
+                hasFieldErrors ? (
+                  <WarningFilled className="text-yellow-400!" />
+                ) : (
+                  <CheckCircleFilled className="text-green-600!" />
+                )}
+
+                <Chevron
+                  rotate={
+                    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
+                      ? 90
+                      : 0
+                  }
+                />
+              </div>
+            </LeftMenuTab>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent
+          avoidCollisions
+          hideWhenDetached
+          align="center"
+          side="right"
+          className={cn(
+            'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
+            'bg-primary-8 px-4 py-2 text-base text-wrap ',
+            'overflow-y-auto max-h-50 primary-scrollbar'
           )}
-
-          <Chevron
-            rotate={
-              rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary ? 90 : 0
-            }
-          />
-        </div>
-      </LeftMenuTab>
+          arrowClassName="bg-primary-8"
+        >
+          {rootElementSchema.description}
+        </TooltipContent>
+      </Tooltip>
 
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionaryEntries
           config={config}
-          aiConfig={aiConfig}
           rootElement={rootElement}
           selectedEntry={selectedEntry}
           selectedRootElement={selectedRootElement}
@@ -152,6 +178,7 @@ export function RootElement({
           setAtomsMap={setAtomsMap}
           errors={errors}
           visible={selectedRootElement === rootElement && !!config[rootElement]}
+          rootElementSchema={rootElementSchema}
         />
       )}
     </div>

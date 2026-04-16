@@ -19,6 +19,7 @@ import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
+import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
 import { Notebook } from '@/entity-configuration/domain/notebook';
 import {
   SimulationCampaign,
@@ -61,8 +62,7 @@ export const EntityCoreModelConfiguration = {
   IonChannelModel,
   IonChannelModelingCampaign,
   MEModelWithSynapsesCircuit,
-  // TODO: Uncomment until entitycore support filtering by `not_in`
-  //ComputationallySynthesizedCellMorphology,
+  SynthesizedCellMorphology,
 } as const;
 
 const EntityCoreSimulationConfiguration = {

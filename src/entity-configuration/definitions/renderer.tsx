@@ -24,7 +24,9 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
-export const EmptyValue = '—';
+import { EmptyValue } from '@/entity-configuration/definitions/empty-value';
+
+export { EmptyValue };
 
 export const EmptyPreview = (
   <Empty
@@ -44,7 +46,7 @@ export const renderLicense = ({ license }: { license?: ILicense | null }) => {
       href={license.name}
       target="_blank"
       rel="noopener noreferrer"
-      className="line-clamp-1 truncate"
+      className="line-clamp-1 truncate text-inherit"
     >
       {license.label ?? 'View license'} 🔗
     </a>

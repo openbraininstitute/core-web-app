@@ -5,6 +5,8 @@ import type { IEMDenseReconstructionDatasetFilter } from '@/api/entitycore/types
 import type { IScientificArtifactPublicationLinkFilter } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
 import type { ISingleNeuronSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { ISingleNeuronSynaptomeSimulationFilter } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
+import type { ITaskActivityFilter } from '@/api/entitycore/types/entities/task-activity';
+import type { ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IProtocolFilter } from '@/api/entitycore/types/shared/protocol';
 import type { ISubjectFilter } from '@/api/entitycore/types/shared/subject';
@@ -105,6 +107,15 @@ export const keyBuilder = {
   meModel: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
     `${prefix}-single-neuron-model`,
     { virtualLabId, projectId, entityId },
+  ],
+  meModelCompatibility: ({
+    virtualLabId,
+    projectId,
+    morphologyId,
+    emodelId,
+  }: WorkspaceContext & { morphologyId: string; emodelId: string }) => [
+    `${prefix}-me-model-compatibility`,
+    { virtualLabId, projectId, morphologyId, emodelId },
   ],
   synaptome: ({ virtualLabId, projectId, entityId }: WorkspaceContext & { entityId: string }) => [
     `${prefix}-single-neuron-synaptome-model`,
@@ -318,4 +329,18 @@ export const keyBuilder = {
     id: string;
   } & Record<string, any>) => [`${prefix}-validation-results`, { context, id, ...props }],
   obiOneJsonSchema: (schemaName: string) => [`${prefix}-${schemaName}`, { schemaName }],
+  taskConfigs: ({
+    context,
+    filters,
+  }: {
+    context: WorkspaceContext;
+    filters?: Partial<ITaskConfigFilter>;
+  }) => [`${prefix}-task-configs`, { ...context, ...filters }],
+  taskActivities: ({
+    context,
+    filters,
+  }: {
+    context: WorkspaceContext;
+    filters?: Partial<ITaskActivityFilter>;
+  }) => [`${prefix}-task-activities`, { ...context, ...filters }],
 };

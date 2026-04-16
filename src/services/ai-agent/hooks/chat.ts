@@ -21,8 +21,6 @@ import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
 const agentStateAtom = atom<Record<string, Config>>({});
-const requestId = crypto.randomUUID().replace(/-/g, '');
-let returnId = '';
 
 export function useServiceAiAgentChat(threadId: string) {
   const [aiAgentState] = useAtom(agentStateAtom);
@@ -45,7 +43,6 @@ export function useServiceAiAgentChat(threadId: string) {
     initialMessages: assistantInitialMessages,
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      'x-request-id': requestId,
     },
     experimental_prepareRequestBody: ({ messages }) => {
       const lastMessage = messages.at(-1);
@@ -65,7 +62,6 @@ export function useServiceAiAgentChat(threadId: string) {
         reset_in: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
       };
       setRateLimit(newRateLimit);
-      returnId = resp.headers.get('x-request-id') ?? '';
       return resp;
     },
   });
@@ -100,7 +96,7 @@ export function useServiceAiAgentChat(threadId: string) {
         );
       }
     }
-  }, [chat.messages, setConfig]);
+  }, [chat.messages, setConfig, assistantInitialMessages.length]);
 
   useEffect(() => {
     setIsChatReady(chat.status === 'ready');

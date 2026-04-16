@@ -6,8 +6,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ApiError } from '@/api/error';
 import { runSimulation } from '@/api/one/circuit-simulation';
 import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
@@ -24,6 +27,7 @@ import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
 import errorRegistry from '@/features/scan-config/error-registry';
 import { StatusBadge } from '@/features/scan-config/status-badge';
+import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/simulation';
@@ -95,6 +99,30 @@ export default function SimulationsTab({
   const [filesLoading, setFilesLoading] = useState(false);
   const [consent, setConsent] = useState<Consent | null>(null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
+
+  const simConfigAsset = activeSimulation?.assets?.find(
+    (a) => a.label === AssetLabel.sonata_simulation_config
+  );
+
+  const { data: simConfig } = useQuery({
+    queryKey: [
+      'simulation-config',
+      { simulationId: activeSimulation?.id, assetId: simConfigAsset?.id },
+    ],
+    queryFn: async () => {
+      const req = await downloadAsset({
+        ctx: context,
+        entityType: EntityTypeDict.Simulation,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        entityId: activeSimulation!.id,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        id: simConfigAsset!.id,
+        asRawResponse: true,
+      });
+      return req.json();
+    },
+    enabled: !!activeSimulation && !!simConfigAsset,
+  });
 
   const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
   const { data: membersData } = useQuery({
@@ -439,12 +467,14 @@ export default function SimulationsTab({
 
       {/* Preview for selected file */}
       <div className="relative pl-4">
-        <FileViewer
-          file={selectedFile}
-          className="h-full"
-          context={context}
-          loading={filesLoading}
-        />
+        <SimulationReportsProvider reports={simConfig?.reports ?? null}>
+          <FileViewer
+            file={selectedFile}
+            className="h-full"
+            context={context}
+            loading={filesLoading}
+          />
+        </SimulationReportsProvider>
       </div>
 
       <Modal
@@ -462,6 +492,7 @@ export default function SimulationsTab({
           className="text-primary-9 mt-4 inline-block text-lg font-semibold"
           href={consent?.url}
           target="_blank"
+          rel="noopener"
         >
           Grant consent
         </a>

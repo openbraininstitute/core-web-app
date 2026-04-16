@@ -17,7 +17,7 @@ import {
 import type { atom } from 'jotai';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
 import type { Prettify } from '@/utils/type';
 
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
@@ -124,6 +124,8 @@ export const ScanConfigUIElementDict = {
   SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
 } as const;
 
+export type TScanConfigUIElementDict =
+  (typeof ScanConfigUIElementDict)[keyof typeof ScanConfigUIElementDict];
 export interface StringInput extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringInput;
 }
@@ -356,10 +358,12 @@ export type TActivityCustomFileRenderer =
   (typeof ActivityCustomFileRenderer)[keyof typeof ActivityCustomFileRenderer];
 
 export type TActivityCustomFile = {
+  id?: string;
   asset: IAsset;
   entity: IEntity;
   assetPath?: string;
   name?: string;
+  enforcedRenderType?: AssetContentType;
   renderer: TActivityCustomFileRenderer;
 };
 

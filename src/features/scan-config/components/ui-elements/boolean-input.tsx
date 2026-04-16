@@ -59,7 +59,8 @@ export default function BooleanInput({
       className={cn(
         '[&_.ant-checkbox-inner]:w-6 [&_.ant-checkbox-inner]:h-6 [&_.ant-checkbox-inner]:rounded',
         '[&_.ant-checkbox-inner]:border-gray-300 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8 ',
-        '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8'
+        '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8',
+        '[&_.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
       )}
     />
   );

@@ -1,11 +1,13 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
-import type { ExpandableConfig } from 'antd/es/table/interface';
 import { useAtomValue } from 'jotai';
 import { type ReactNode, useCallback, useEffect, useState } from 'react';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+
 import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 import { log } from '@/utils/logger';
+
+import type { ExpandableConfig } from 'antd/es/table/interface';
+import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
   expandedData: Record<string, Array<T> | null>;
@@ -27,6 +29,7 @@ export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable, P =
   isRowExpandable?: (record: T) => boolean;
   // index of the column to render the expand icon
   expandIconColumnIndex?: number;
+  showExpandColumn?: boolean;
   // render the expand icon
   expandIcon?: ExpandableConfig<T>['expandIcon'];
   // whether this is a top-level table that should sync with filter resets

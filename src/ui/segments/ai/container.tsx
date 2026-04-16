@@ -1,10 +1,10 @@
 'use client';
 
-import { PlusOutlined } from '@ant-design/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
+import IconPlus from '@/components/icons/Plus';
 import { useAgentState } from '@/services/ai-agent';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
@@ -58,45 +58,29 @@ export function Container() {
             key="collapsed"
             type="button"
             onClick={() => updateState(PanelState.Expanded)}
-            className="flex h-full w-full cursor-pointer flex-col items-center px-2 select-none"
+            className={styles.collapsed}
             aria-label="expand AI assistant"
             disabled={isPending}
           >
-            <div className="mt-3 flex h-8 w-8 items-center justify-center text-white">
-              <PlusOutlined className="h-4 w-4" />
-            </div>
-            <div
-              className="text-xl font-bold"
-              style={{
-                transform: 'rotate(-90deg)',
-                transformOrigin: 'center',
-                whiteSpace: 'nowrap',
-                position: 'relative',
-                top: '45px',
-                margin: 0,
-              }}
-            >
-              OBI Assistant
-            </div>
+            <IconPlus />
+            <div>OBI Assistant</div>
           </button>
         ) : (
           <div
             key="expanded"
             className="flex h-full w-full flex-col rounded-lg relative overflow-visible"
           >
-            {!isCollapsed && (
-              <HydrateWrapper key="ai-assistant">
-                <AiAssistant
-                  section="explore"
-                  fullscreen={isFullscreen}
-                  onFullscreenToggle={() =>
-                    updateState(isFullscreen ? PanelState.Expanded : PanelState.Fullscreen)
-                  }
-                  aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                  onCollapse={() => updateState(PanelState.Collapsed)}
-                />
-              </HydrateWrapper>
-            )}
+            <HydrateWrapper key="ai-assistant">
+              <AiAssistant
+                section="explore"
+                fullscreen={isFullscreen}
+                onFullscreenToggle={() =>
+                  updateState(isFullscreen ? PanelState.Expanded : PanelState.Fullscreen)
+                }
+                aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                onCollapse={() => updateState(PanelState.Collapsed)}
+              />
+            </HydrateWrapper>
           </div>
         )}
       </AnimatePresence>

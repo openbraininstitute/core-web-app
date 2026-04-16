@@ -1,14 +1,11 @@
 import { useAtomValue } from 'jotai';
 import { Suspense, useEffect, useState } from 'react';
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 
-import {
-  AssetContentType,
-  AssetLabel,
-  AssetContentType as ContentType,
-} from '@/api/entitycore/types/shared/global';
+import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
+import { SonataViewer } from '@/features/sonata-viewer';
 import { SpikeViewer } from '@/features/spike-viewer';
 import { cn } from '@/utils/css-class';
 
@@ -31,22 +28,34 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
 
   const isFilePreloading = file && file !== displayFile;
 
-  const isJson = displayFile?.asset.content_type === ContentType.json;
+  const isJson =
+    displayFile?.asset.content_type === AssetContentType.json ||
+    file?.enforcedRenderType === AssetContentType.json;
 
   const viewerContent = match(displayFile)
     .with(undefined, () => null)
-    .with({ asset: { content_type: ContentType.json } }, (f) => (
-      <JsonFileViewer file={f} context={context} />
-    ))
-    .with({ asset: { content_type: ContentType.nwb } }, (f) => (
+    .with(
+      P.when(
+        (f) =>
+          f.asset.content_type === AssetContentType.json ||
+          f.enforcedRenderType === AssetContentType.json
+      ),
+      (f) => <JsonFileViewer file={f} context={context} />
+    )
+    .with({ asset: { content_type: AssetContentType.nwb } }, (f) => (
       <NwbFileViewer file={f} context={context} />
     ))
-    .with({ asset: { content_type: ContentType.h5, label: AssetLabel.spike_report } }, (f) => (
+    .with({ asset: { content_type: AssetContentType.h5, label: AssetLabel.spike_report } }, (f) => (
       <H5SpikeFileViewer file={f} context={context} />
     ))
-    .with({ asset: { content_type: ContentType.h5, label: AssetLabel.replay_spikes } }, (f) => (
-      <H5SpikeFileViewer file={f} context={context} />
-    ))
+    .with(
+      { asset: { content_type: AssetContentType.h5, label: AssetLabel.replay_spikes } },
+      (f) => <H5SpikeFileViewer file={f} context={context} />
+    )
+    .with(
+      { asset: { content_type: AssetContentType.h5, label: AssetLabel.voltage_report } },
+      (f) => <H5SonataFileViewer file={f} context={context} />
+    )
     .otherwise((f) => <PlaceholderFileViewer file={f} />);
 
   return (
@@ -166,6 +175,18 @@ function H5SpikeFileViewer({ file, context }: H5FileViewerProps) {
       entityId={entity.id}
       entityType={entity.type}
       asset={asset}
+      ctx={context}
+    />
+  );
+}
+
+function H5SonataFileViewer({ file, context }: H5FileViewerProps) {
+  const { entity, asset } = file;
+  return (
+    <SonataViewer
+      key={`${entity.id}-${asset.id}`}
+      entity={entity as ISimulationResult}
+      assetId={asset.id}
       ctx={context}
     />
   );

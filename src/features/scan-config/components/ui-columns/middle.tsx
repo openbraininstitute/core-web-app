@@ -61,6 +61,12 @@ export default function Middle({
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
 
+  // for BlockDictionary the path includes the entry; for others just the root element
+  const errorPathPrefix =
+    selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
+      ? `${selectedRootElement}/${selectedEntry}`
+      : selectedRootElement;
+
   return (
     <div className={styles.animateFadeUp}>
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
@@ -80,6 +86,7 @@ export default function Middle({
           selectedRootElement={selectedRootElement}
           onNewBlockClick={onNewBlockClick}
           schemaMappingConfig={schemaMappingConfig}
+          errorPathPrefix={errorPathPrefix}
         />
       )}
 
@@ -94,6 +101,7 @@ export default function Middle({
             stateAtom={atomsMap[selectedRootElement]}
             entity={entity}
             schemaMappingConfig={schemaMappingConfig}
+            errorPathPrefix={errorPathPrefix}
           />
         )}
 
@@ -111,6 +119,7 @@ export default function Middle({
           entity={entity}
           entityType={entityType}
           schemaMappingConfig={schemaMappingConfig}
+          errorPathPrefix={errorPathPrefix}
         />
       )}
     </div>

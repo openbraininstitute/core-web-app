@@ -71,3 +71,23 @@ jobs:
 
       - name: Build and publish Docker image for AWS
         run: make publish
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^[0-9]{4}\.[0-9]{2}\.[0-9]{2}\.[0-9]+$' | sed -n '2p')
+          DOCKER_URI="${IMAGE_NAME}:${APP_VERSION}"
+
+          ARGS=(
+            "$NEW_TAG"
+            --title "$NEW_TAG"
+            --generate-notes
+            --notes "**Docker image:** \`${DOCKER_URI}\`"
+          )
+
+          if [[ -n "$PREV_TAG" ]]; then
+            ARGS+=(--notes-start-tag "$PREV_TAG")
+          fi
+
+          gh release create "${ARGS[@]}"

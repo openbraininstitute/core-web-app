@@ -8,7 +8,7 @@ import type {
   VlmAttachUsersToProjectResponse,
   VlmProjectsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
-import type { ProjectPayload, Role } from '@/api/virtual-lab-svc/types';
+import type { TProjectPayload, TUserRole } from '@/api/virtual-lab-svc/validation';
 import type { WorkspaceContext } from '@/types/common';
 import type { ProjectResponse } from '@/types/virtual-lab/projects';
 
@@ -53,7 +53,7 @@ export async function checkProjectExists({
 
 export async function createProject(
   virtualLabId: string,
-  { name, description, include_members }: ProjectPayload
+  { name, description, include_members }: TProjectPayload
 ): Promise<ProjectCreationResponse> {
   const session = await getSession();
   const response = await fetch(`${getBaseUrl()}/${virtualLabId}/projects`, {
@@ -186,7 +186,7 @@ export async function updateProject({
 
 type InvitePayload = {
   email: string;
-  role: Role;
+  role: TUserRole;
 };
 
 export async function inviteToProject({

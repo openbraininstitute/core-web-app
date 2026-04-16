@@ -28,6 +28,7 @@ export const EntityTypeDict = {
   EMCellMesh: 'em_cell_mesh',
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
   CircuitExtractionConfig: 'circuit_extraction_config',
+  TaskConfig: 'task_config',
 } as const;
 
 export const EntityTypeWithBrainRegionDict = {

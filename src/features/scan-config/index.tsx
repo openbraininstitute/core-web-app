@@ -72,7 +72,7 @@ export function ScanConfiguration({
     context: { virtualLabId, projectId },
   });
 
-  if (!loadingEntity) {
+  if (!loadingEntity && (entity || entityType)) {
     usedType = getSupportedEntityTypesForScanConfiguration({
       entity: entity ?? { type: entityType },
     });

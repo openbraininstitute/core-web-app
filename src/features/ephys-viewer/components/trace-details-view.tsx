@@ -260,7 +260,7 @@ function TraceDetailsView({
     <div className="flex flex-col gap-10">
       {cellIds.length > 1 && (
         <div className="flex flex-col gap-2">
-          <div className="text-sm font-medium">Select Cell ({cellIds.length} available)</div>
+          <div className="text-sm font-medium">Select cell ({cellIds.length} available)</div>
           <Select
             className="cell-select w-48"
             placeholder="Select a cell"

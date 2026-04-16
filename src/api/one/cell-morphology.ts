@@ -40,7 +40,7 @@ export async function createAndRegisterMorphometrics(
   formData.append('file', file, file.name);
   formData.append('metadata', JSON.stringify(payload));
 
-  const response = await api.post<any>(
+  const response = await api.post(
     '/declared/register-morphology-with-calculated-metrics',
     {
       headers: {
