@@ -18,7 +18,7 @@ import { tryCatch } from '@/api/utils';
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { createProject, listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
-import { getUserGroups, getUserProfile } from '@/api/virtual-lab-svc/queries/user';
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import {
   getMissingStudentEmails,
   getVirtualLab,
@@ -47,7 +47,7 @@ import { keyBuilder as userKeyBuilder } from '../use-query-keys/user';
 
 import type { UploadFile, UploadProps } from 'antd';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
-import type { ProjectCreationResponse, TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type { Course, ProjectCreationResponse } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export async function createNotebook({
@@ -82,12 +82,6 @@ export function NotebooksLayout({ children, active }: Props) {
   const [studentEmails, setStudentEmails] = useState<string[]>([]);
   const breakpoint = useDefaultBreakpoint();
 
-  const { data: virtualLabsData, refetch } = useQuery({
-    queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MEMBERSHIP_LABS] }),
-    queryFn: () => listVirtualLabs({ include: [LabTypeEnum.MEMBERSHIP_LABS] }),
-    enabled: Boolean(virtualLabId),
-  });
-
   const { data: userGroups } = useQuery({
     queryKey: userKeyBuilder.groups(),
     queryFn: () => getUserGroups(),
@@ -101,7 +95,7 @@ export function NotebooksLayout({ children, active }: Props) {
     (group) => group.role === 'admin' && group.virtual_lab_id === virtualLabId
   );
 
-  const { data: virtualLabData } = useQuery({
+  const { data: virtualLabData, refetch } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
     queryFn: () => getVirtualLab(virtualLabId),
     enabled: Boolean(virtualLabId),
@@ -164,11 +158,7 @@ export function NotebooksLayout({ children, active }: Props) {
     }
   }
 
-  const courseVlab = virtualLabsData?.data?.membership_labs.results.find(
-    (lab) => lab?.course?.template_project_id === projectId
-  );
-
-  const course = courseVlab?.course;
+  const course = virtualLabData?.data?.virtual_lab.course;
 
   const onNotebookCreateSuccess = useCallback(
     async (notebook: EntityCoreObjectTypes) => {
@@ -281,7 +271,7 @@ export function NotebooksLayout({ children, active }: Props) {
       >
         {children}
       </div>
-      {courseVlab && (
+      {course && virtualLabData.data.virtual_lab && (
         <Modal open={showCourseModal} footer={false} closable={step === 0} onCancel={onCancel}>
           <div>
             {step === 0 && (
@@ -291,7 +281,7 @@ export function NotebooksLayout({ children, active }: Props) {
                   <div className="flex flex-col">
                     <div>Upload CSV file with student information</div>
                     <CsvUploadValidator
-                      vlabId={courseVlab.id}
+                      vlabId={virtualLabId}
                       onCancel={onCancel}
                       onSuccess={() => setStep(1)}
                       studentEmails={studentEmails}
@@ -305,7 +295,8 @@ export function NotebooksLayout({ children, active }: Props) {
               <CourseSetup
                 onFinnish={onFinnish}
                 studentEmails={studentEmails}
-                virtualLab={courseVlab}
+                course={course}
+                name={virtualLabData.data.virtual_lab.name}
               />
             )}
           </div>
@@ -776,16 +767,20 @@ async function syncNotebook({
 function CourseSetup({
   onFinnish,
   studentEmails,
-  virtualLab,
+  course,
+  name,
 }: {
   onFinnish: () => void;
   studentEmails: string[];
-  virtualLab: TVirtualLab;
+  course: Course;
+  name: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
 
   const hasTriggered = useRef(false);
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (hasTriggered.current) return;
@@ -801,11 +796,7 @@ function CourseSetup({
 
         const balance = balanceRes.data.balance;
 
-        console.log(`⚠️⚠️⚠️ Balance ${balance}`);
-
         const budgetPerStudent = Math.floor(parseInt(balance, 10) / studentEmails.length);
-
-        console.log(`⚠️⚠️⚠️ Budgnet per student ${budgetPerStudent}`);
 
         if (budgetPerStudent < 1) {
           throw new Error('Not enough credits to initialize course');
@@ -814,13 +805,18 @@ function CourseSetup({
         const projectCreationResults = await Promise.allSettled(
           studentEmails.map((email) =>
             createProject(virtualLabId, {
-              name: `${virtualLab.name} ${email}`,
+              name: `${name} ${email}`,
               description: `Project for ${email}`,
               contact_email: email,
               include_members: [],
             })
           )
         );
+
+        // Update project list in side bar
+        queryClient.invalidateQueries({
+          queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
+        });
 
         const failedProjectCreations = projectCreationResults.filter(
           (r) => r.status === 'rejected'
@@ -871,8 +867,6 @@ function CourseSetup({
             })
           )
         );
-
-        console.log(budgetAssignmentResults);
 
         const failedBudgetAssignments = budgetAssignmentResults.filter(
           (r) => r.status === 'rejected'
@@ -938,12 +932,14 @@ function CourseSetup({
         await updateVirtualLab({
           virtualLabId,
           updatePayload: {
-            course: virtualLab.course && { ...virtualLab.course, is_initialized: true },
+            course: { ...course, is_initialized: true },
           },
         });
 
         notification.success({
-          message: `Course "${virtualLab.name}" initialized successfully`,
+          message: course.is_initialized
+            ? `Students added successfully`
+            : 'Course initialized successfully',
           key: 'course-setup-success',
           placement: 'topRight',
         });
@@ -960,7 +956,7 @@ function CourseSetup({
     };
 
     setupCourse();
-  }, [virtualLabId, projectId, notification, studentEmails, onFinnish, virtualLab]);
+  }, [virtualLabId, projectId, notification, studentEmails, onFinnish, course, name, queryClient]);
 
   return 'Setting up course...';
 }
