@@ -20,7 +20,9 @@ export async function getContributions({
   filters,
 }: {
   context: WorkspaceContext;
-  filters: Partial<IPersonFilter>;
+  filters: Partial<IPersonFilter> & {
+    entity__id: string;
+  };
 }) {
   const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<EntityCoreResponse<IContributor>>(baseUri, {

@@ -10,6 +10,10 @@ import NextLink from 'next/link';
 import { type ReactNode, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
+import {
+  createContribution,
+  getContributions,
+} from '@/api/entitycore/queries/general/contribution';
 import { getNotebooks } from '@/api/entitycore/queries/notebook';
 import { type EntityCoreObjectTypes, EntityTypeDict, isNotebook } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -712,6 +716,11 @@ async function _syncNotebook({
     context: { virtualLabId, projectId: targetProjectId },
   });
 
+  const contributions = await getContributions({
+    context: { virtualLabId, projectId },
+    filters: { entity__id: notebook.id },
+  });
+
   const sourceAssets = await Promise.all(
     notebook.assets.map(async (asset) => {
       const arrayBuffer = (await downloadAsset({
@@ -743,6 +752,21 @@ async function _syncNotebook({
     sourceAssets.map((asset) => {
       return createAsset(asset);
     })
+  );
+
+  // Upload contributions to new notebook
+
+  await Promise.all(
+    contributions.data.map((contributor) =>
+      createContribution({
+        context: { virtualLabId, projectId: targetProjectId },
+        contributor: {
+          agent_id: contributor.agent.id,
+          entity_id: createdNotebook.id,
+          role_id: contributor.role.id,
+        },
+      })
+    )
   );
 }
 
