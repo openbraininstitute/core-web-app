@@ -92,7 +92,6 @@ export function ScanConfigTemplate({
     model: entity,
   });
   const config = useConfigAtom(schema, atomsMap);
-
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
   const { aiConfig } = useAIConfig();
 
@@ -152,8 +151,7 @@ export function ScanConfigTemplate({
           tab={tab}
           setTab={setTab}
           disableResultsTab={!campaignId || loading}
-          initialConfig={initialConfig}
-          schema={schema}
+          disableConfigurationTab={Boolean(!initialConfig && readOnly)}
         />
         <div className="flex items-center justify-center gap-8">
           {!!campaignId && (

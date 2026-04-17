@@ -43,6 +43,7 @@ export function Tab({
     <button
       id={`tab-${tab}`}
       aria-label={tab}
+      disabled={disabled}
       aria-disabled={disabled}
       onClick={!disabled ? onClick : undefined}
       type="button"

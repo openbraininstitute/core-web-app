@@ -10,14 +10,11 @@ import {
   type Config,
   type ConfigSchema,
   ScanConfigActivity,
-  ScanConfigTabs,
   type SchemaName,
   type TScanConfigActivity,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { log } from '@/utils/logger';
-
-import { LEGACY_SIMULATION_ERROR_CODE, SCAN_CONFIG_ERRORS } from '../utils';
 
 import type { Nullish } from '@/utils/type';
 
@@ -133,50 +130,6 @@ export function getScanConfigSchemaName({
     .exhaustive();
 
   return schemaName as SchemaName;
-}
-
-/**
- * validates the initial config against the provided JSON schema and returns
- * a list of known errors, or `null` if none are found.
- *
- * currently detects configs where `simulation_length` exceeds the allowed maximum.
- */
-export function useInitialConfigErrors({
-  initialConfig,
-  schema,
-}: {
-  initialConfig?: Config;
-  schema: AnySchema | null;
-}) {
-  const validate = useMemo(() => {
-    const ajv = new Ajv({ strictSchema: false, allErrors: true });
-    if (!schema) return;
-    return ajv.compile(schema as AnySchema);
-  }, [schema]);
-
-  return useMemo(() => {
-    if (!validate || !initialConfig) return null;
-
-    validate(initialConfig);
-    const legacyError = validate.errors?.find((error) => {
-      if (error.instancePath === '/initialize/simulation_length' && error.keyword === 'maximum') {
-        return true;
-      }
-      return false;
-    });
-
-    if (!legacyError) return null;
-
-    return [
-      {
-        tab: ScanConfigTabs[ScanConfigActivity.Simulate].configuration,
-        code: LEGACY_SIMULATION_ERROR_CODE,
-        title: SCAN_CONFIG_ERRORS[LEGACY_SIMULATION_ERROR_CODE].title,
-        message: SCAN_CONFIG_ERRORS[LEGACY_SIMULATION_ERROR_CODE].message,
-        disable: true,
-      },
-    ];
-  }, [validate, initialConfig]);
 }
 
 export function useValidateSchema({

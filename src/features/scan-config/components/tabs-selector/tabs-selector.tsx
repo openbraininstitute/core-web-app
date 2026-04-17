@@ -1,11 +1,14 @@
 import { InfoCircleFilled } from '@ant-design/icons';
 
 import { getRoundedByIndex, Tab } from '@/features/scan-config/components/components';
-// biome-ignore lint/style/useImportType: biome hallucination
 import {
-  Config,
-  ConfigSchema,
+  LEGACY_SIMULATION_ERROR_CODE,
+  SCAN_CONFIG_ERRORS,
+} from '@/features/scan-config/components/utils';
+import {
+  BaseScanConfigTabs,
   ExtractScanConfigTabs,
+  ProcessScanConfigTabs,
   ScanConfigActivity,
   ScanConfigTabs,
   SimulateScanConfigTabs,
@@ -15,16 +18,13 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import { useInitialConfigErrors } from '../hooks';
-
 interface TabsSelectorProps {
   className?: string;
   tab: TScanConfigTabs;
   setTab(tab: TScanConfigTabs): void;
   disableResultsTab: boolean;
   activity: TScanConfigActivity;
-  initialConfig: Config | undefined;
-  schema: ConfigSchema | null;
+  disableConfigurationTab: boolean;
 }
 
 export default function TabsSelector({
@@ -33,23 +33,31 @@ export default function TabsSelector({
   setTab,
   disableResultsTab,
   activity,
-  initialConfig,
-  schema,
+  disableConfigurationTab,
 }: TabsSelectorProps) {
-  const errors = useInitialConfigErrors({ initialConfig, schema });
-
   const tabs = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => {
-    const disabled = !!(
-      ((id === 'simulations' || id === 'extractions' || id === 'skeletonizations') &&
-        disableResultsTab) ||
-      errors?.find((er) => er.tab === id)?.disable
+    const disableSimulations = !!(
+      (id === SimulateScanConfigTabs.simulations ||
+        id === ExtractScanConfigTabs.extractions ||
+        id === ProcessScanConfigTabs.skeletonizations) &&
+      disableResultsTab
     );
-    const tooltip = errors?.find((er) => er.tab === id);
+    const disableConfiguration = disableConfigurationTab && id === BaseScanConfigTabs.configuration;
+    const tooltip = disableConfiguration
+      ? {
+          tab: ScanConfigTabs[ScanConfigActivity.Simulate].configuration,
+          code: LEGACY_SIMULATION_ERROR_CODE,
+          title: SCAN_CONFIG_ERRORS[LEGACY_SIMULATION_ERROR_CODE].title,
+          message: SCAN_CONFIG_ERRORS[LEGACY_SIMULATION_ERROR_CODE].message,
+          disable: true,
+        }
+      : null;
+
     return {
       id,
       label,
-      disabled,
       tooltip,
+      disabled: disableSimulations || disableConfiguration,
       onClick: () => {
         if (disableResultsTab && id === 'simulations') return;
         if (activity === ScanConfigActivity.Simulate) {

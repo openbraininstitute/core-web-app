@@ -61,6 +61,7 @@ export function ScanConfiguration({
   let endpoint: string | undefined;
   let schemaName: SchemaName | undefined;
   let usedType: TSupportedEntityTypesForScanConfiguration | undefined;
+
   let entityConfig: EntityCoreTypeConfig<any, any, any> | undefined;
 
   const {
