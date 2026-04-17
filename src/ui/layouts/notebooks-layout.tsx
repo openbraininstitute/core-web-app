@@ -18,6 +18,7 @@ import { tryCatch } from '@/api/utils';
 import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { createProject, listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
+import { getUserGroups, getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import {
   getMissingStudentEmails,
   getVirtualLab,
@@ -42,6 +43,7 @@ import { cn } from '@/utils/css-class';
 import { useWorkspace } from '../hooks/use-workspace';
 import { CONVERSION_RATE } from '../segments/virtual-lab-settings/elements/helpers';
 import { buildStripeFormOptions } from '../segments/virtual-lab-settings/elements/stripe-payment';
+import { keyBuilder as userKeyBuilder } from '../use-query-keys/user';
 
 import type { UploadFile, UploadProps } from 'antd';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
@@ -86,12 +88,18 @@ export function NotebooksLayout({ children, active }: Props) {
     enabled: Boolean(virtualLabId),
   });
 
-  const { error: missingStudentsError } = useQuery({
-    queryKey: keyBuilder.missingEmails({ virtualLabId, emails: [] }),
-    queryFn: () => getMissingStudentEmails({ virtualLabId, emails: [] }),
+  const { data: userGroups } = useQuery({
+    queryKey: userKeyBuilder.groups(),
+    queryFn: () => getUserGroups(),
+    gcTime: 0,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
   });
 
-  const isVlabAdmin = !missingStudentsError;
+  const isVlabAdmin = !!userGroups?.data?.groups.find(
+    (group) => group.role === 'admin' && group.virtual_lab_id === virtualLabId
+  );
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
@@ -220,8 +228,7 @@ export function NotebooksLayout({ children, active }: Props) {
           {active === 'private' &&
             course &&
             course.template_project_id === projectId &&
-            isVlabAdmin &&
-            !course.is_initialized && (
+            isVlabAdmin && (
               <UiButton
                 type="button"
                 className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
@@ -372,14 +379,10 @@ const CsvUploadValidator = ({
       emailSet.add(email);
     }
 
-    console.log('🚨🚨🚨 CSV emails', [...emailSet]);
-
     const missingEmails = await getMissingStudentEmails({
       virtualLabId: vlabId,
       emails: [...emailSet],
     });
-
-    console.log('🚨🚨🚨 Missing emails request', missingEmails);
 
     setStudentEmails(missingEmails);
     return true;
@@ -795,9 +798,14 @@ function CourseSetup({
           virtualLabId,
           includeProjects: false,
         });
-        const balance = balanceRes?.data?.balance;
-        if (isNil(balance)) throw new Error('Could not fetch account balance for the virtual lab');
+
+        const balance = balanceRes.data.balance;
+
+        console.log(`⚠️⚠️⚠️ Balance ${balance}`);
+
         const budgetPerStudent = Math.floor(parseInt(balance, 10) / studentEmails.length);
+
+        console.log(`⚠️⚠️⚠️ Budgnet per student ${budgetPerStudent}`);
 
         if (budgetPerStudent < 1) {
           throw new Error('Not enough credits to initialize course');
@@ -863,6 +871,8 @@ function CourseSetup({
             })
           )
         );
+
+        console.log(budgetAssignmentResults);
 
         const failedBudgetAssignments = budgetAssignmentResults.filter(
           (r) => r.status === 'rejected'
@@ -930,6 +940,12 @@ function CourseSetup({
           updatePayload: {
             course: virtualLab.course && { ...virtualLab.course, is_initialized: true },
           },
+        });
+
+        notification.success({
+          message: `Course "${virtualLab.name}" initialized successfully`,
+          key: 'course-setup-success',
+          placement: 'topRight',
         });
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : 'Failed to initialize course';
