@@ -373,7 +373,9 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
   | typeof ExtendedEntitiesTypeDict.MemodelCircuit
   | typeof ExtendedEntitiesTypeDict.MEModelWithSynapses
-  | typeof ExtendedEntitiesTypeDict.IonChannelModel;
+  | typeof ExtendedEntitiesTypeDict.IonChannelModel
+  | typeof ExtendedEntitiesTypeDict.CellMorphology
+  | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit;
 
 export const getSupportedEntityTypesForScanConfiguration = ({
   entity,
@@ -398,6 +400,10 @@ export const getSupportedEntityTypesForScanConfiguration = ({
     .with(
       { entity: { type: EntityTypeDict.IonChannelModel } },
       () => ExtendedEntitiesTypeDict.IonChannelModel
+    )
+    .with(
+      { entity: { type: EntityTypeDict.CellMorphology } },
+      () => ExtendedEntitiesTypeDict.SingleNeuronCircuit
     )
     .otherwise(() => {
       throw new Error('Not supported entity for scan configuration');

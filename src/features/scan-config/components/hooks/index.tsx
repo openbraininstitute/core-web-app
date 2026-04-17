@@ -57,6 +57,10 @@ export function getGeneratedApiUrl({
           { entityType: EntityTypeDict.Circuit },
           () => 'circuit-simulation-scan-config-generate-grid'
         )
+        .with(
+          { entityType: EntityTypeDict.CellMorphology },
+          () => 'em-synapse-mapping-scan-config-generate-grid'
+        )
         .otherwise(() => {
           throw new Error(`Unsupported entity type ${entityType}`);
         });
@@ -103,6 +107,10 @@ export function getScanConfigSchemaName({
           () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
         )
         .with({ entityType: ExtendedEntitiesTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
+        .with(
+          { entityType: ExtendedEntitiesTypeDict.SingleNeuronCircuit },
+          () => 'CellMorphologyFromID'
+        )
         .otherwise(() => {
           throw new Error(`Unsupported entity type: ${entityType}`);
         });
