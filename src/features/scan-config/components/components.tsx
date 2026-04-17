@@ -1,4 +1,5 @@
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 import type { TScanConfigTabs } from '@/features/scan-config/types';
 
@@ -40,16 +41,21 @@ export function Tab({
 }) {
   return (
     <button
+      id={`tab-${tab}`}
+      aria-label={tab}
+      aria-disabled={disabled}
       onClick={!disabled ? onClick : undefined}
       type="button"
-      style={disabled ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' } : undefined}
-      className={classNames(
+      className={cn(
         'min-w-37.5 px-5 py-2',
         extraClass,
         rounded,
-        tab === selectedTab.id
-          ? 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white rounded-l-none'
-          : 'text-primary-8 bg-white'
+        { 'bg-gray-100 cursor-not-allowed text-gray-600': disabled },
+        {
+          'bg-linear-to-r from-[#003A8C] to-[#001026] text-white rounded-l-none':
+            tab === selectedTab.id,
+        },
+        { "'text-primary-8 bg-white'": tab !== selectedTab.id }
       )}
     >
       {children}

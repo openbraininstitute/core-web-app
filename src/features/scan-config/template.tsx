@@ -152,6 +152,8 @@ export function ScanConfigTemplate({
           tab={tab}
           setTab={setTab}
           disableResultsTab={!campaignId || loading}
+          initialConfig={initialConfig}
+          schema={schema}
         />
         <div className="flex items-center justify-center gap-8">
           {!!campaignId && (
