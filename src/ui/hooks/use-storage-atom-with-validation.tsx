@@ -1,6 +1,7 @@
 'use client';
 
-import { atomFamily, atomWithStorage } from 'jotai/utils';
+import { atomWithStorage } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 import superjson from 'superjson';
 import z from 'zod';
 
@@ -119,7 +120,7 @@ export function createSuperJsonStorage<T>(storage: Storage): {
       try {
         const parsed = superjson.parse(storedValue);
         return parsed as T;
-      } catch (error) {
+      } catch {
         throw new Error('storage error', {
           cause: 'setting storage error',
         });
@@ -135,7 +136,7 @@ export function createSuperJsonStorage<T>(storage: Storage): {
     setItem(key: string, value: T): void {
       try {
         storage.setItem(key, superjson.stringify(value));
-      } catch (error) {
+      } catch {
         throw new Error('storage error', {
           cause: 'setting storage error',
         });

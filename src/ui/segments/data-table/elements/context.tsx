@@ -2,7 +2,8 @@
 
 import { isNil, noop } from 'es-toolkit/compat';
 import { type Atom, atom, useSetAtom } from 'jotai';
-import { atomFamily, atomWithDefault, atomWithReset, atomWithStorage } from 'jotai/utils';
+import { atomWithDefault, atomWithReset, atomWithStorage } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 import { createContext, use, useCallback, useEffect, useMemo } from 'react';
 import superjson from 'superjson';
 import { match } from 'ts-pattern';
