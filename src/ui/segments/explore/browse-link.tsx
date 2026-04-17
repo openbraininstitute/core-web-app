@@ -3,6 +3,7 @@
 import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { kebabCase, snakeCase } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
@@ -12,6 +13,8 @@ import { userJourneyTracker } from '@/components/explore-section/Literature/user
 import { config } from '@/config';
 import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useTableQueryCount } from '@/ui/hooks/use-table-query-count';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -205,6 +208,8 @@ export function BrowseLink({
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { type } = useParams<{ type: TExtendedEntitiesTypeDict }>();
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const entity = getEntityByExtendedType({ type: extendedType });
   const href = buildDataUrl({ virtualLabId, projectId, extendedType });
@@ -256,8 +261,9 @@ export function BrowseLink({
       if (entity?.api.query.count) return entity.api.query.count(fallbackQuery.query);
       return entity?.api.query.list?.(fallbackQuery.query);
     },
-    // only fetch when this entity is NOT the active table entity
-    enabled: !!currentBrainRegionId && enabled && !isActiveEntity,
+    // only fetch when this entity is NOT the active table entity;
+    // in "all species" mode the brain-region id is intentionally empty and the query still runs.
+    enabled: enabled && !isActiveEntity && (isAllMode || !!currentBrainRegionId),
     staleTime: Infinity,
   });
 
@@ -271,7 +277,7 @@ export function BrowseLink({
       if (entity?.api.query.count) return entity.api.query.count(rootQuery.query);
       return entity?.api.query.list?.(rootQuery.query);
     },
-    enabled: !!defaultBrainRegionId && enabled,
+    enabled: enabled && (isAllMode || !!defaultBrainRegionId),
     staleTime: Infinity,
   });
 

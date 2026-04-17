@@ -2,6 +2,7 @@
 
 import { CloseOutlined } from '@ant-design/icons';
 import { capitalize } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 import { type ReactNode, Suspense, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -12,17 +13,24 @@ import { ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY } from '@/features/brain-atlas-viewer
 import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
 import { TreeSkeleton } from '@/features/brain-region-hierarchy/components/brain-region-skeleton';
 import { SpeciesSelector } from '@/features/brain-region-hierarchy/components/species-selector';
-import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
+import {
+  selectedBrainRegionAtom,
+  speciesSelectionModeAtom,
+  useBrainRegionRootHierarchyQuery,
+  workspaceHierarchySpeciesAtom,
+} from '@/features/brain-region-hierarchy/context';
 import {
   useAvailableHierarchySpeciesQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
   useWorkspaceHierarchyRegistry,
 } from '@/features/brain-region-hierarchy/hooks';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
+import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { TTreeNode } from '@/components/tree/types';
 
 export const ExploreLeftMenuContext = {
@@ -33,16 +41,18 @@ export const ExploreLeftMenuContext = {
 export type TExploreLeftMenuContext =
   (typeof ExploreLeftMenuContext)[keyof typeof ExploreLeftMenuContext];
 
+type TRegionBannerClassNames = {
+  container?: string;
+  selector?: string;
+};
+
 type RegionBannerProps = {
   view: TExploreLeftMenuContext;
   onSwitchView: (_view: TExploreLeftMenuContext) => void;
-  classNames?: {
-    container?: string;
-    selector?: string;
-  };
+  classNames?: TRegionBannerClassNames;
 };
 
-type PortalRegionBannerProps = {
+type TPortalRegionBannerProps = {
   dataKey?: string;
   initialOpen?: boolean;
   width?: number | string;
@@ -55,15 +65,22 @@ type PortalRegionBannerProps = {
 
 export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerProps) {
   const notifier = useAppNotification();
-  const { workspaceSpecies, selectedBrainRegion, changeBulkStoreHierarchySpecies } =
-    useWorkspaceHierarchyRegistry();
+  const { changeBulkStoreHierarchySpecies } = useWorkspaceHierarchyRegistry();
+  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const { loading: isLoadingRootHierarchy } = useBrainRegionRootHierarchyQuery();
   const { loading: isLoadingAvailableHierarchySpecies } = useAvailableHierarchySpeciesQuery();
   const { loading: isLoadingRemoteUserPreferenceHierarchySpecies } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
 
-  const onSpeciesChange = (hId: string) => {
-    changeBulkStoreHierarchySpecies(hId);
+  const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
+  const isRegionLoading =
+    isLoadingRootHierarchy ||
+    isLoadingAvailableHierarchySpecies ||
+    isLoadingRemoteUserPreferenceHierarchySpecies;
+
+  const handleSpeciesChange = (hIdOrMode: string) => {
+    changeBulkStoreHierarchySpecies(hIdOrMode);
     notifier.destroy(ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY);
   };
 
@@ -79,101 +96,126 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
       <div
         id="atlas-regions-selector"
         data-testid="atlas-regions-selector"
+        data-label="brain-region-banner"
         className={cn(
-          'border-neutral-1 flex h-auto min-h-12 w-full items-center justify-between gap-2 rounded-full',
-          'cursor-pointer relative',
-          { 'hover:bg-background': view === ExploreLeftMenuContext.DataGroup },
+          'border-neutral-1 relative flex h-auto min-h-12 w-full items-center justify-between gap-2 rounded-full',
+          !isAllMode && 'cursor-pointer',
+          !isAllMode && view === ExploreLeftMenuContext.DataGroup && 'hover:bg-background',
           classNames?.selector
         )}
-        data-label="brain-region-banner"
       >
         <div className="flex items-center flex-nowrap w-full min-w-0">
-          <div className="pr-3 pl-4 hover:bg-gray-100 rounded-l-full shrink-0">
-            <SpeciesSelector selectedSpecies={workspaceSpecies} onSpeciesChange={onSpeciesChange} />
+          <div
+            className={cn(
+              'pr-3 pl-4 hover:bg-gray-100',
+              isAllMode ? 'w-full rounded-full' : 'shrink-0 rounded-l-full'
+            )}
+          >
+            <SpeciesSelector
+              selectedSpecies={workspaceSpecies}
+              onSpeciesChange={handleSpeciesChange}
+            />
           </div>
-          <div className="h-6 w-px bg-gray-200 shrink-0" />
-          <div className="items-stretch h-12 w-full rounded-r-full pl-3 pr-10 hover:bg-gray-100 py-2 min-w-0 overflow-hidden">
-            {/** biome-ignore lint/a11y/useSemanticElements: tooltip is using button internally */}
-            <div
-              data-label="brain-region-switcher"
-              className="flex items-center gap-1 h-full select-none w-full min-w-0"
-              tabIndex={0}
-              role="button"
-              onKeyDown={(e) => {
-                // Only trigger on Enter or Space, not when interacting with dropdown
-                if (e.key === 'Enter' || e.key === ' ') {
-                  onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy);
-                }
-              }}
-              onClick={() => onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy)}
-            >
-              <span className="text-neutral-5 text-base shrink-0">Region</span>
-              {(isLoadingRootHierarchy ||
-                isLoadingAvailableHierarchySpecies ||
-                isLoadingRemoteUserPreferenceHierarchySpecies) && (
-                <div className="h-5 w-full animate-pulse rounded-full bg-gray-200 max-w-3/5" />
-              )}
-              {selectedBrainRegion && !isLoadingRootHierarchy && (
-                <div className="text-primary-9/90 flex items-center gap-1.5 flex-1 min-w-0">
-                  <div
-                    key={`color-${selectedBrainRegion.id}-${selectedBrainRegion.color_hex_triplet}`}
-                    className="block h-3 w-3 min-w-3 rounded-full shrink-0"
-                    style={{
-                      backgroundColor: `#${selectedBrainRegion.color_hex_triplet}`,
-                    }}
-                  />
-
-                  <Tooltip disableHoverableContent>
-                    <TooltipTrigger className="min-w-0 flex-1">
-                      <span className="block truncate text-left text-base font-bold leading-6">
-                        {capitalize(selectedBrainRegion.name)}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      avoidCollisions
-                      side="top"
-                      sideOffset={0}
-                      className="bg-white shadow-bnb text-primary-8 border-gray-200"
-                      arrowClassName="bg-white"
-                    >
-                      {selectedBrainRegion.name}
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="absolute top-1/2 -translate-y-1/2 right-1.5 rounded-full">
-          {view === ExploreLeftMenuContext.BrainRegionHierarchy ? (
-            <Button
-              rounded
-              variant="ghost"
-              className="h-8 w-8 shrink-0"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onSwitchView(ExploreLeftMenuContext.DataGroup);
-              }}
-            >
-              <CloseOutlined className="text-primary-9/90" />
-            </Button>
-          ) : (
-            <Button
-              rounded
-              variant="ghost"
-              className="h-8 w-8 shrink-0"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy);
-              }}
-            >
-              <HierarchySquare className="text-primary-9/90" />
-            </Button>
+          {!isAllMode && (
+            <FocusedModeContent
+              loading={isRegionLoading}
+              onOpenTree={() => onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy)}
+            />
           )}
         </div>
+        {!isAllMode && <HierarchyToggleButton view={view} onSwitchView={onSwitchView} />}
       </div>
+    </div>
+  );
+}
+
+function FocusedModeContent({ loading, onOpenTree }: { loading: boolean; onOpenTree: () => void }) {
+  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
+
+  return (
+    <>
+      <div className="h-6 w-px bg-gray-200 shrink-0" />
+      <div className="items-stretch h-12 w-full rounded-r-full pl-3 pr-10 hover:bg-gray-100 py-2 min-w-0 overflow-hidden">
+        {/** biome-ignore lint/a11y/useSemanticElements: tooltip is using button internally */}
+        <div
+          data-label="brain-region-switcher"
+          className="flex items-center gap-1 h-full select-none w-full min-w-0"
+          tabIndex={0}
+          role="button"
+          onClick={onOpenTree}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') onOpenTree();
+          }}
+        >
+          <span className="text-neutral-5 text-base shrink-0">Region</span>
+          {loading && (
+            <div className="h-5 w-full animate-pulse rounded-full bg-gray-200 max-w-3/5" />
+          )}
+          {selectedBrainRegion && !loading && <SelectedRegionPill region={selectedBrainRegion} />}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function SelectedRegionPill({ region }: { region: BrainRegionHierarchyBase }) {
+  return (
+    <div className="text-primary-9/90 flex items-center gap-1.5 flex-1 min-w-0">
+      <div
+        key={`color-${region.id}-${region.color_hex_triplet}`}
+        className="block h-3 w-3 min-w-3 rounded-full shrink-0"
+        style={{ backgroundColor: `#${region.color_hex_triplet}` }}
+      />
+      <Tooltip disableHoverableContent>
+        <TooltipTrigger className="min-w-0 flex-1">
+          <span className="block truncate text-left text-base font-bold leading-6">
+            {capitalize(region.name)}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent
+          avoidCollisions
+          side="top"
+          sideOffset={0}
+          className="bg-white shadow-bnb text-primary-8 border-gray-200"
+          arrowClassName="bg-white"
+        >
+          {region.name}
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  );
+}
+
+function HierarchyToggleButton({
+  view,
+  onSwitchView,
+}: {
+  view: TExploreLeftMenuContext;
+  onSwitchView: (_view: TExploreLeftMenuContext) => void;
+}) {
+  const isTreeOpen = view === ExploreLeftMenuContext.BrainRegionHierarchy;
+  const nextView = isTreeOpen
+    ? ExploreLeftMenuContext.DataGroup
+    : ExploreLeftMenuContext.BrainRegionHierarchy;
+
+  return (
+    <div className="absolute top-1/2 -translate-y-1/2 right-1.5 rounded-full">
+      <Button
+        rounded
+        variant="ghost"
+        className="h-8 w-8 shrink-0"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onSwitchView(nextView);
+        }}
+      >
+        {isTreeOpen ? (
+          <CloseOutlined className="text-primary-9/90" />
+        ) : (
+          <HierarchySquare className="text-primary-9/90" />
+        )}
+      </Button>
     </div>
   );
 }
@@ -187,7 +229,7 @@ export function PortalRegionBanner({
   modalClassName = 'rounded-2xl bg-white shadow-xl',
   portalContainer,
   onRegionSelect,
-}: PortalRegionBannerProps) {
+}: TPortalRegionBannerProps) {
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const portalContentRef = useRef<HTMLDivElement | null>(null);
   const autoDataKeyId = useId();
@@ -196,6 +238,9 @@ export function PortalRegionBanner({
   const [anchorPosition, setAnchorPosition] = useState({ left: 0, bottom: 0, width: 0 });
   const [isInsideModal, setIsInsideModal] = useState(false);
   const effectiveDataKey = dataKey ?? `portal-region-${autoDataKeyId.replaceAll(':', '')}`;
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
+  const isTreeOpen = isOpen && !isAllMode;
 
   useEffect(() => {
     setDefaultPortalContainer(document.body);
@@ -210,17 +255,14 @@ export function PortalRegionBanner({
         bottom: rect.bottom,
         width: rect.width,
       });
-      const insideModal = !!anchorRef.current?.closest('#modal-dialog');
-      setIsInsideModal(insideModal);
+      setIsInsideModal(!!anchorRef.current?.closest('#modal-dialog'));
     };
 
     updateAnchorPosition();
     window.addEventListener('resize', updateAnchorPosition);
     window.addEventListener('scroll', updateAnchorPosition, { passive: true });
 
-    const resizeObserver = new ResizeObserver(() => {
-      updateAnchorPosition();
-    });
+    const resizeObserver = new ResizeObserver(updateAnchorPosition);
     if (anchorRef.current) {
       resizeObserver.observe(anchorRef.current);
     }
@@ -233,51 +275,42 @@ export function PortalRegionBanner({
   }, []);
 
   const targetPortalContainer = portalContainer ?? defaultPortalContainer;
-
   const safeY = Math.max(0, anchorPosition.bottom);
   const remainingHeight = `calc(100dvh - ${safeY}px - 20px)`;
   const computedWidth = width ?? anchorPosition.width;
-  const view = isOpen
+
+  const view = isTreeOpen
     ? ExploreLeftMenuContext.BrainRegionHierarchy
     : ExploreLeftMenuContext.DataGroup;
+
   const onSwitchView = (nextView: TExploreLeftMenuContext) => {
-    if (nextView === ExploreLeftMenuContext.BrainRegionHierarchy) {
-      setIsOpen(true);
-      return;
-    }
-    setIsOpen(false);
+    if (isAllMode) return;
+    setIsOpen(nextView === ExploreLeftMenuContext.BrainRegionHierarchy);
   };
+
   const onClickBrainRegion = (node: TTreeNode) => {
     setIsOpen(false);
     onRegionSelect?.(node);
   };
 
-  useHotkeys(
-    'esc',
-    () => {
-      setIsOpen(false);
-    },
-    {
-      enabled: isOpen,
-      preventDefault: true,
-    },
-    [isOpen]
-  );
+  useHotkeys('esc', () => setIsOpen(false), { enabled: isTreeOpen, preventDefault: true }, [
+    isTreeOpen,
+  ]);
 
   useOnClickOutside(
     portalContentRef,
     () => {
-      if (!isOpen) return;
+      if (!isTreeOpen) return;
       setIsOpen(false);
     },
     undefined,
     (event) => {
-      if (!isOpen) return true;
+      if (!isTreeOpen) return true;
       const targetNode = event.target as Node | null;
       if (!targetNode) return false;
       const targetElement = targetNode instanceof Element ? targetNode : targetNode.parentElement;
-      // Ant Select renders search options in a body-level dropdown portal.
-      // Treat interactions inside that dropdown as internal clicks.
+      // Ant Select renders search options in a body-level dropdown portal;
+      // treat interactions inside it as internal clicks.
       if (targetElement?.closest('.ant-select-dropdown')) return true;
       return anchorRef.current?.contains(targetNode) ?? false;
     }
@@ -303,7 +336,7 @@ export function PortalRegionBanner({
           classNames={{ selector: 'shadow-md bg-white' }}
         />
       </div>
-      {isOpen && targetPortalContainer
+      {isTreeOpen && targetPortalContainer
         ? createPortal(
             <div
               data-testid="portal-region-banner"
@@ -313,10 +346,7 @@ export function PortalRegionBanner({
               <div
                 ref={portalContentRef}
                 className={cn('min-h-0 overflow-hidden', modalClassName)}
-                style={{
-                  height: remainingHeight,
-                  maxHeight: remainingHeight,
-                }}
+                style={{ height: remainingHeight, maxHeight: remainingHeight }}
               >
                 {content}
               </div>

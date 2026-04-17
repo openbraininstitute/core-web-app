@@ -3,7 +3,7 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { capitalize, isNil } from 'es-toolkit/compat';
 import { atom, useAtomValue, useSetAtom } from 'jotai';
-import { parseAsString, useQueryStates } from 'nuqs';
+import { parseAsString, parseAsStringLiteral, useQueryStates } from 'nuqs';
 import { createContext, useContext } from 'react';
 
 import { getBrainRegionHierarchy } from '@/api/entitycore/queries/general/brain-region';
@@ -25,6 +25,7 @@ import {
   useHierarchyRuntimeMetadataQuery,
   useRemoteUserPreferenceHierarchySpeciesQuery,
 } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 import { log } from '@/utils/logger';
@@ -40,6 +41,7 @@ import type {
   IWorkspaceSpecies,
   TBrainRegionHierarchyExtendedOption,
   TBrainRegionHierarchyOption,
+  TSpeciesSelectionMode,
 } from '@/features/brain-region-hierarchy/types';
 
 export const VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT =
@@ -51,6 +53,7 @@ export const VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT =
 export const URL_PARAMS = {
   BRAIN_REGION_ID: 'br_id',
   HIERARCHY_ID: 'h_id',
+  SPECIES: 's',
 } as const;
 
 export const { APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID, MOUSE_ATLAS__ID } = config;
@@ -58,10 +61,29 @@ export const { APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID, MOUSE_ATLAS__ID } = confi
 export const brainRegionSidebarAtom = atom(false);
 export const selectedBrainRegionAtom = atom<BrainRegionHierarchyBase | null>(null);
 
-export type BrainRegionUrlOverride = {
-  brainRegionId: string;
-  hierarchyId: string;
-};
+/**
+ * capability flag: indicates whether the "All" species option is allowed
+ * on the current route. Defaults to true; the 3D viewer page opts out by
+ * setting this to false while it is mounted.
+ */
+export const allowAllSpeciesAtom = atom<boolean>(true);
+export const AllSpeciesDisplayName = 'All';
+/**
+ * current species selection mode:
+ * - 'focused': a specific species is selected and brain-region filtering applies
+ * - 'all': no species filter (and therefore no brain-region filter)
+ */
+export const speciesSelectionModeAtom = atom<TSpeciesSelectionMode>(SpeciesSelectionMode.Focused);
+
+/**
+ * discriminated url override shape:
+ * - focused: hydrate from `?h_id=...&br_id=...`
+ * - all: hydrate from `?s=all`
+ */
+export type BrainRegionUrlOverride =
+  | { kind: typeof SpeciesSelectionMode.Focused; hierarchyId: string; brainRegionId: string }
+  | { kind: typeof SpeciesSelectionMode.All };
+
 export const BrainRegionUrlBoundaryContext = createContext<{
   mode: TBrainRegionUrlBoundaryMode;
   urlOverride: BrainRegionUrlOverride | null;
@@ -80,26 +102,35 @@ export function useBrainRegionUrlBoundaryContext() {
  */
 export const workspaceHierarchySpeciesAtom = atom<IWorkspaceSpecies | null>(null);
 
+const SPECIES_MODE_VALUES = [SpeciesSelectionMode.All, SpeciesSelectionMode.Focused] as const;
+
 /**
- * write brain-region and hierarchy identifiers from the URL query string.
+ * read/write brain-region, hierarchy and species-mode identifiers from the URL query string.
  *
- * uses `useQueryStates` to manage two query parameters:
+ * uses `useQueryStates` to manage three query parameters:
  * - `brainRegionId` (mapped to `URL_PARAMS.BRAIN_REGION_ID`)
  * - `hierarchyId` (mapped to `URL_PARAMS.HIERARCHY_ID`)
+ * - `speciesMode` (mapped to `URL_PARAMS.SPECIES`, values: 'all' | 'focused').
+ *   defaults to 'focused' with `clearOnDefault` so the URL stays clean unless
+ *   the user explicitly opts into 'all'.
  */
 export function useHierarchyBrainRegionUrlState() {
   const [urlState, setUrlState] = useQueryStates(
     {
       brainRegionId: parseAsString.withDefault(''),
       hierarchyId: parseAsString.withDefault(''),
+      speciesMode: parseAsStringLiteral(SPECIES_MODE_VALUES).withDefault(
+        SpeciesSelectionMode.Focused
+      ),
     },
     {
       urlKeys: {
         brainRegionId: URL_PARAMS.BRAIN_REGION_ID,
         hierarchyId: URL_PARAMS.HIERARCHY_ID,
+        speciesMode: URL_PARAMS.SPECIES,
       },
       shallow: false,
-      clearOnDefault: false,
+      clearOnDefault: true,
     }
   );
   return { urlState, setUrlState };
@@ -131,9 +162,11 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
     VERSIONED__SPECIES_BRAIN_REGION_SELECTION_SNAPSHOT,
     null
   );
+  const focusedUrlOverrideHierarchyId =
+    urlOverride?.kind === SpeciesSelectionMode.Focused ? urlOverride.hierarchyId : undefined;
   // Priority: URL override > Remote ID > browser storage selection > config default
   const hierarchyId =
-    urlOverride?.hierarchyId ||
+    focusedUrlOverrideHierarchyId ||
     remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
     browserStorageHierarchy?.hierarchyId ||
     APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;

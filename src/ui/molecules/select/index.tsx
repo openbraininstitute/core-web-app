@@ -25,10 +25,12 @@ function SelectTrigger({
   size = 'default',
   children,
   icoClassName,
+  icon,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: 'sm' | 'default';
   icoClassName?: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <SelectPrimitive.Trigger
@@ -42,7 +44,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild className={icoClassName}>
-        <RiArrowDownSLine className="size-4 opacity-50" />
+        {icon ?? <RiArrowDownSLine className="size-4 opacity-50" />}
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );

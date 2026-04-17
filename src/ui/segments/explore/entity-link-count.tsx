@@ -1,14 +1,17 @@
 import { map } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 import { useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
 
 import { useTabs } from '@/components/detail-view-tabs';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import {
+  speciesSelectionModeAtom,
   useGetSelectedBrainRegion,
   usePrimaryHierarchyOfCurrentSpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useFlags } from '@/features/feature-flags';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
@@ -49,11 +52,19 @@ export function EntityLinkCount() {
   const featureFlags = useFlags();
   const breakpoint = useDefaultBreakpoint();
   const { workspaceHierarchyId } = useWorkspaceHierarchyRegistry();
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
   const scope = (useSearchParams().get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
 
   const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
+
+  // in "all species" mode, drop the brain-region filters so every entity of each
+  // type is counted (no species, no region scoping).
+  const effectiveHierarchyId = isAllMode ? undefined : workspaceHierarchyId;
+  const effectiveCurrentBrainRegionId = isAllMode ? undefined : selectedBrainRegion?.id;
+  const effectiveDefaultBrainRegionId = isAllMode ? undefined : brainRegionHierarchy?.root.id;
 
   const { activeTab, onChangeTab } = useTabs<TExploreDataTypeTabs>({
     tabsConfig: tabsConfigItems,
@@ -82,9 +93,9 @@ export function EntityLinkCount() {
           key={`link-${value.title}/${value.type}`}
           scope={scope}
           extendedType={value.extendedType}
-          hierarchyId={workspaceHierarchyId}
-          currentBrainRegionId={selectedBrainRegion?.id}
-          defaultBrainRegionId={brainRegionHierarchy?.root.id}
+          hierarchyId={effectiveHierarchyId}
+          currentBrainRegionId={effectiveCurrentBrainRegionId}
+          defaultBrainRegionId={effectiveDefaultBrainRegionId}
         />
       ))
     )
@@ -96,9 +107,9 @@ export function EntityLinkCount() {
             key={`link-${value.title}/${value.type}`}
             extendedType={value.extendedType}
             scope={scope}
-            hierarchyId={workspaceHierarchyId}
-            currentBrainRegionId={selectedBrainRegion?.id}
-            defaultBrainRegionId={brainRegionHierarchy?.root.id}
+            hierarchyId={effectiveHierarchyId}
+            currentBrainRegionId={effectiveCurrentBrainRegionId}
+            defaultBrainRegionId={effectiveDefaultBrainRegionId}
           />
         );
       })
@@ -111,9 +122,9 @@ export function EntityLinkCount() {
             key={`link-${value.title}/${value.type}`}
             scope={scope}
             extendedType={value.extendedType}
-            hierarchyId={workspaceHierarchyId}
-            currentBrainRegionId={selectedBrainRegion?.id}
-            defaultBrainRegionId={brainRegionHierarchy?.root.id}
+            hierarchyId={effectiveHierarchyId}
+            currentBrainRegionId={effectiveCurrentBrainRegionId}
+            defaultBrainRegionId={effectiveDefaultBrainRegionId}
           />
         );
       })

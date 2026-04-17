@@ -1,5 +1,6 @@
 'use client';
 
+import { useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
 
 import {
@@ -8,11 +9,17 @@ import {
 } from '@/features/brain-region-hierarchy/constants';
 import {
   BrainRegionUrlBoundaryContext,
+  speciesSelectionModeAtom,
   useHierarchyBrainRegionUrlState,
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+import {
+  SpeciesSelectionMode,
+  type TSpeciesSelectionMode,
+} from '@/features/brain-region-hierarchy/types';
 
 import type { ReactNode } from 'react';
+import type { BrainRegionUrlOverride } from '@/features/brain-region-hierarchy/context';
 
 type Props = {
   mode: Exclude<TBrainRegionUrlBoundaryMode, 'none'>;
@@ -23,8 +30,10 @@ type NextBrainRegionUrlStateInput = {
   mode: Exclude<TBrainRegionUrlBoundaryMode, 'none'>;
   syncSettled: boolean;
   hasPendingUrlOverride: boolean;
+  speciesSelectionMode: TSpeciesSelectionMode;
   urlHierarchyId: string;
   urlBrainRegionId: string;
+  urlSpeciesMode: TSpeciesSelectionMode;
   selectedBrainRegionId?: string | null;
   selectedHierarchyId?: string | null;
   workspaceHierarchyId?: string | null;
@@ -33,40 +42,59 @@ type NextBrainRegionUrlStateInput = {
 type BrainRegionUrlState = {
   hierarchyId: string;
   brainRegionId: string;
+  speciesMode: TSpeciesSelectionMode;
 };
 
-/** when in Sync mode with settled state and no pending override,
- * returns URL params that match workspace selection; otherwise `null`
- * */
+/** compute the next url state in Sync mode.
+ *
+ * - when species mode is 'all', writes `?s=all` and clears hierarchy / brain-region params.
+ * - when species mode is 'focused', writes hierarchy + brain-region ids and clears `?s`
+ *   (clearOnDefault collapses `?s=focused` to an absent param).
+ * - returns `null` when nothing changes or when the sync isn't ready yet.
+ */
 export function getNextBrainRegionUrlState({
   mode,
   syncSettled,
   hasPendingUrlOverride,
+  speciesSelectionMode,
   urlHierarchyId,
   urlBrainRegionId,
+  urlSpeciesMode,
   selectedBrainRegionId,
   selectedHierarchyId,
   workspaceHierarchyId,
 }: NextBrainRegionUrlStateInput): BrainRegionUrlState | null {
-  const nextHierarchyId = selectedHierarchyId || workspaceHierarchyId;
-  if (
-    mode !== BrainRegionUrlBoundaryMode.Sync ||
-    !syncSettled ||
-    hasPendingUrlOverride ||
-    !nextHierarchyId ||
-    !selectedBrainRegionId
-  ) {
+  if (mode !== BrainRegionUrlBoundaryMode.Sync || !syncSettled || hasPendingUrlOverride) {
     return null;
   }
 
+  if (speciesSelectionMode === SpeciesSelectionMode.All) {
+    const isAlreadySynced =
+      urlSpeciesMode === SpeciesSelectionMode.All &&
+      urlHierarchyId === '' &&
+      urlBrainRegionId === '';
+    if (isAlreadySynced) return null;
+    return {
+      hierarchyId: '',
+      brainRegionId: '',
+      speciesMode: SpeciesSelectionMode.All,
+    };
+  }
+
+  const nextHierarchyId = selectedHierarchyId || workspaceHierarchyId;
+  if (!nextHierarchyId || !selectedBrainRegionId) return null;
+
   const isAlreadySynced =
-    urlHierarchyId === nextHierarchyId && urlBrainRegionId === selectedBrainRegionId;
+    urlSpeciesMode === SpeciesSelectionMode.Focused &&
+    urlHierarchyId === nextHierarchyId &&
+    urlBrainRegionId === selectedBrainRegionId;
 
   if (isAlreadySynced) return null;
 
   return {
     hierarchyId: nextHierarchyId,
     brainRegionId: selectedBrainRegionId,
+    speciesMode: SpeciesSelectionMode.Focused,
   };
 }
 
@@ -77,8 +105,12 @@ function BrainRegionUrlBoundaryEffects({ mode }: { mode: Props['mode'] }) {
   const { urlState, setUrlState } = useHierarchyBrainRegionUrlState();
   const { selectedBrainRegion, workspaceHierarchyId, syncSettled, hasPendingUrlOverride } =
     useWorkspaceHierarchyRegistry();
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
 
-  const hasBrainParams = !!urlState.hierarchyId || !!urlState.brainRegionId;
+  const hasBrainParams =
+    !!urlState.hierarchyId ||
+    !!urlState.brainRegionId ||
+    urlState.speciesMode !== SpeciesSelectionMode.Focused;
 
   useEffect(() => {
     if (mode !== BrainRegionUrlBoundaryMode.Strip || !hasBrainParams) return;
@@ -90,8 +122,10 @@ function BrainRegionUrlBoundaryEffects({ mode }: { mode: Props['mode'] }) {
       mode,
       syncSettled,
       hasPendingUrlOverride,
+      speciesSelectionMode,
       urlHierarchyId: urlState.hierarchyId,
       urlBrainRegionId: urlState.brainRegionId,
+      urlSpeciesMode: urlState.speciesMode,
       selectedBrainRegionId: selectedBrainRegion?.id,
       selectedHierarchyId: selectedBrainRegion?.hierarchy_id,
       workspaceHierarchyId,
@@ -104,11 +138,13 @@ function BrainRegionUrlBoundaryEffects({ mode }: { mode: Props['mode'] }) {
     mode,
     syncSettled,
     hasPendingUrlOverride,
+    speciesSelectionMode,
     workspaceHierarchyId,
     selectedBrainRegion?.id,
     selectedBrainRegion?.hierarchy_id,
     urlState.hierarchyId,
     urlState.brainRegionId,
+    urlState.speciesMode,
     setUrlState,
   ]);
 
@@ -121,19 +157,23 @@ function BrainRegionUrlBoundaryEffects({ mode }: { mode: Props['mode'] }) {
 export function BrainRegionUrlBoundary({ mode, children }: Props) {
   const { urlState } = useHierarchyBrainRegionUrlState();
 
-  const value = useMemo(
-    () => ({
-      mode,
-      urlOverride:
-        mode === BrainRegionUrlBoundaryMode.Sync && urlState.hierarchyId
-          ? {
-              hierarchyId: urlState.hierarchyId,
-              brainRegionId: urlState.brainRegionId,
-            }
-          : null,
-    }),
-    [mode, urlState.hierarchyId, urlState.brainRegionId]
-  );
+  const value = useMemo(() => {
+    let urlOverride: BrainRegionUrlOverride | null = null;
+
+    if (mode === BrainRegionUrlBoundaryMode.Sync) {
+      if (urlState.speciesMode === SpeciesSelectionMode.All) {
+        urlOverride = { kind: 'all' };
+      } else if (urlState.hierarchyId) {
+        urlOverride = {
+          kind: 'focused',
+          hierarchyId: urlState.hierarchyId,
+          brainRegionId: urlState.brainRegionId,
+        };
+      }
+    }
+
+    return { mode, urlOverride };
+  }, [mode, urlState.hierarchyId, urlState.brainRegionId, urlState.speciesMode]);
 
   return (
     <BrainRegionUrlBoundaryContext.Provider value={value}>

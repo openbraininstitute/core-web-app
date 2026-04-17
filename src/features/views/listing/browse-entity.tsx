@@ -18,6 +18,8 @@ import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import {
   useQueryExtendedEntityType,
   useQueryExtendedEntityTypeFacets,
@@ -212,6 +214,8 @@ export function BrowseEntityScope({
     },
     { requireBrainRegion, defaultBrainRegion }
   );
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const queryFilters = {
     ...queryParameters,
@@ -239,7 +243,12 @@ export function BrowseEntityScope({
     extraQueryParams,
     enabled: () => {
       if (!allowQuery) return false;
-      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+      // in "all species" mode we intentionally have no brain-region filter
+      if (
+        !isAllSpeciesMode &&
+        requireBrainRegion &&
+        !get(queryParameters, 'within_brain_region_brain_region_id', null)
+      )
         return false;
       return true;
     },
@@ -258,7 +267,11 @@ export function BrowseEntityScope({
     queryFilters,
     enabled: () => {
       if (!allowQuery) return false;
-      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+      if (
+        !isAllSpeciesMode &&
+        requireBrainRegion &&
+        !get(queryParameters, 'within_brain_region_brain_region_id', null)
+      )
         return false;
       return true;
     },

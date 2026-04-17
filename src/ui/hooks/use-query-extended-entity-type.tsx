@@ -13,7 +13,9 @@ import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { SortOrder } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import {
   coreFiltersAtom,
   corePageNumberAtom,
@@ -25,6 +27,7 @@ import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
+import type { TSpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export type QueryContext = {
@@ -38,17 +41,20 @@ export function buildQueryKey({
   workspace,
   queryParameters,
   requireBrainRegion,
+  speciesSelectionMode,
 }: {
   context: QueryContext;
   workspace: WorkspaceContext;
   queryParameters: Record<string, any>;
   requireBrainRegion: boolean | undefined;
+  speciesSelectionMode: TSpeciesSelectionMode;
 }): [
   {
     workspace: WorkspaceContext;
     context: QueryContext;
     queryParameters: Record<string, any>;
     requireBrainRegion: boolean | undefined;
+    speciesSelectionMode: TSpeciesSelectionMode;
   },
 ] {
   const entity = getEntityByExtendedType({ type: context.extendedEntityType });
@@ -61,6 +67,7 @@ export function buildQueryKey({
         ...queryParameters,
       },
       requireBrainRegion,
+      speciesSelectionMode,
     },
   ];
 }
@@ -75,6 +82,7 @@ export function useQueryParameters(
   }: { requireBrainRegion?: boolean; defaultBrainRegion?: string }
 ) {
   const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const sortState = useAtomValue(coreSortStateAtom({ key: context.key }));
   const searchString = useAtomValue(coreSearchStringAtom(context.key));
   const pageNumber = useAtomValue(corePageNumberAtom(context.key));
@@ -82,6 +90,7 @@ export function useQueryParameters(
     coreFiltersAtom({ dataType: context.extendedEntityType, key: context.key })
   );
   const entity = getEntityByExtendedType({ type: context.extendedEntityType });
+  const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   function search() {
     if (entity && !!entity.api.config.ilikeSearchEnabled && !isEmpty(searchString)) {
@@ -92,8 +101,9 @@ export function useQueryParameters(
     }
     return null;
   }
+  // in "all species" mode we intentionally drop brain-region filters
   const isBrainRegionRequiredAndPresent = Boolean(
-    requireBrainRegion && (!!defaultBrainRegion || !!selectedBrainRegion?.id)
+    !isAllMode && requireBrainRegion && (!!defaultBrainRegion || !!selectedBrainRegion?.id)
   );
   const requireBrainRegionQuery = isBrainRegionRequiredAndPresent
     ? {
@@ -167,11 +177,13 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
     { context, workspace },
     { requireBrainRegion, defaultBrainRegion }
   );
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const queryKey = buildQueryKey({
     workspace,
     context,
     queryParameters: { ...queryParameters, ...extraQueryParams },
     requireBrainRegion,
+    speciesSelectionMode,
   });
 
   const queryKeyHash = hashKey(queryKey);

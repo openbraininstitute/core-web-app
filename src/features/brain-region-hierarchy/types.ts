@@ -55,6 +55,19 @@ export const SPECIES_IMAGE_MAP: Record<string, string> = {
 } as const;
 
 /**
+ * species selection mode:
+ * - 'focused': a single species/hierarchy is selected and brain-region filters apply
+ * - 'all': no species filter and no brain-region filter
+ */
+export const SpeciesSelectionMode = {
+  All: 'all',
+  Focused: 'focused',
+} as const;
+
+export type TSpeciesSelectionMode =
+  (typeof SpeciesSelectionMode)[keyof typeof SpeciesSelectionMode];
+
+/**
  * species information with both scientific and display names
  */
 export interface IWorkspaceSpecies {
@@ -85,16 +98,20 @@ export interface BrainRegionHierarchySelection {
   brainRegionName: string;
   /** per-hierarchy brain region memory for restoring selections when switching species */
   perHierarchyMemory?: Record<string, { brainRegionId: string; brainRegionName: string }>;
+  /** selection mode; defaults to 'focused' when absent for backward compatibility */
+  speciesSelectionMode?: TSpeciesSelectionMode;
 }
 
 /**
  * api request/response shape for brain region preference
  */
 export interface IWorkspaceHierarchySpeciesPreference {
-  hierarchy_id: string;
-  species_name: string;
+  hierarchy_id: string | null;
+  species_name: string | null;
   brain_region_id: string | null;
   brain_region_name: string | null;
+  /** selection mode; defaults to 'focused' when absent for backward compatibility */
+  species_selection_mode?: TSpeciesSelectionMode;
 }
 
 export type TBrainRegionHierarchyOption = {
