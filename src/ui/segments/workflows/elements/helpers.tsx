@@ -179,7 +179,7 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
     label: 'Synaptome (beta)',
     properties: {
       build: {
-        disabled: true,
+        disabled: false,
         type: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
         order: 5,
       },

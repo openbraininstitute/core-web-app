@@ -8,7 +8,6 @@ import {
   type TEntityTypeDict,
 } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 // biome-ignore lint/style/useImportType: biome hallucination
 import {
   ExtendedEntitiesTypeDict,
@@ -16,6 +15,7 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 
 import type { atom } from 'jotai';
+import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
@@ -392,7 +392,9 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.MemodelCircuit
   | typeof ExtendedEntitiesTypeDict.MEModelWithSynapses
   | typeof ExtendedEntitiesTypeDict.IonChannelModel
-  | typeof ExtendedEntitiesTypeDict.EMCellMesh;
+  | typeof ExtendedEntitiesTypeDict.EMCellMesh
+  | typeof ExtendedEntitiesTypeDict.CellMorphology
+  | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit;
 
 export const getSupportedEntityTypesForScanConfiguration = ({
   entity,
@@ -421,6 +423,10 @@ export const getSupportedEntityTypesForScanConfiguration = ({
     .with(
       { entity: { type: EntityTypeDict.EMCellMesh } },
       () => ExtendedEntitiesTypeDict.EMCellMesh
+    )
+    .with(
+      { entity: { type: EntityTypeDict.CellMorphology } },
+      () => ExtendedEntitiesTypeDict.SingleNeuronCircuit
     )
     .otherwise(() => {
       throw new Error('Not supported entity for scan configuration');
