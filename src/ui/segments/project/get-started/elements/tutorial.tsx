@@ -3,6 +3,7 @@
 import { VideoCameraOutlined } from '@ant-design/icons';
 import { RiPlayFill } from '@remixicon/react';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -10,6 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
 import { cn } from '@/utils/css-class';
 
 import type { TTutorial } from '@/ui/segments/project/get-started/query';
@@ -126,6 +128,7 @@ export function TutorialCard({
 
 export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
   const { slug } = useParams<{ slug: string }>();
+  const preview = useAtomValue(dataPreviewAtom);
 
   return (
     <section id="tutorials-list" className="w-full flex flex-col">
@@ -138,7 +141,7 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
               image={p.poster}
               videoUrl={p.url}
               slug={p.slug}
-              isSelected={slug === p.slug}
+              isSelected={!preview && slug === p.slug}
             />
           </div>
         ))}

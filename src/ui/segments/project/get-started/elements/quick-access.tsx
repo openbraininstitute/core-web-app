@@ -179,6 +179,7 @@ export function SingleCardItem({
   description,
   compact = false,
   hideArtifact = false,
+  isSelected = false,
 }: {
   entity: IEntity;
   group: string;
@@ -191,6 +192,7 @@ export function SingleCardItem({
   description: string;
   compact?: boolean;
   hideArtifact?: boolean;
+  isSelected?: boolean;
 }) {
   const { push: navigate } = useRouter();
   const setDataPreview = useSetAtom(dataPreviewAtom);
@@ -271,7 +273,12 @@ export function SingleCardItem({
           </Badge>
         </CardTitle>
       )}
-      <div className="relative aspect-video w-full overflow-hidden rounded-xl">
+      <div
+        className={cn(
+          'relative aspect-video w-full overflow-hidden rounded-xl border-2 transition-colors',
+          isSelected ? 'border-primary-7' : 'border-transparent'
+        )}
+      >
         {thumbnail ? (
           <Image
             fill

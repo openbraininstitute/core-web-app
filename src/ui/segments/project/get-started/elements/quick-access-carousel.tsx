@@ -1,5 +1,8 @@
 'use client';
 
+import { useAtomValue } from 'jotai';
+
+import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
 import { SingleCardItem } from '@/ui/segments/project/get-started/elements/quick-access';
 import {
   QuickAccessGroupDict,
@@ -48,6 +51,7 @@ function GroupRow({
   context: WorkspaceContext;
   virtualLab: TVirtualLabResponse | null;
 }) {
+  const preview = useAtomValue(dataPreviewAtom);
   return (
     <section id={`quick-access-${group}`} className="flex w-full flex-col">
       <h2 className="text-primary-9 text-lg font-bold px-2 mb-2">{groupLabels[group]}</h2>
@@ -57,11 +61,13 @@ function GroupRow({
             const isData = group === QuickAccessGroupDict.Data;
             const hideArtifact = isData || group === QuickAccessGroupDict.Notebooks;
             const displayTitle = isData ? (item.artifactTitle ?? item.title) : item.title;
+            const isSelected = preview?.entityId === item.entity.id;
             return (
               <div key={item.entity.id} className="w-60 shrink-0">
                 <SingleCardItem
                   compact
                   hideArtifact={hideArtifact}
+                  isSelected={isSelected}
                   title={displayTitle}
                   description={item.description}
                   thumbnail={item.thumbnail}
