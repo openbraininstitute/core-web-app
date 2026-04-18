@@ -7,7 +7,6 @@ import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { ServiceSubtype } from '@/types/accounting';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Card, CardContent } from '@/ui/molecules/card';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
@@ -119,37 +118,35 @@ export function JobReportList() {
   return (
     <div className="mb-4 flex w-full flex-col items-start gap-2">
       <h3 className="text-primary-9 text-xl font-bold">History</h3>
-      <Card shadowless className={cn('w-full', { 'pb-0': !!total })}>
-        <CardContent>
-          <Table<JobReport>
-            sticky
-            size="middle"
-            className={cn(
-              '[&.ant-table]:bg-neutral-1! w-full!',
-              '[&_.ant-table-thead_th]:text-neutral-4! [&_.ant-table-thead_th]:font-light!',
-              '[&_.ant-table-thead_th]:bg-neutral-1! [&_.ant-table-tbody]:bg-neutral-1!',
-              '[&_.ant-table-tbody_td]:text-primary-9 [&_.ant-pagination]:gap-2',
-              '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-neutral-1! [&:has(.ant-table-empty)_tr]:hover:bg-neutral-1!',
-              '[&_th]:uppercase!'
-            )}
-            loading={isLoading}
-            dataSource={jobReports}
-            pagination={{
-              pageSize: pagination.pageSize,
-              total,
-              onChange: (page, pageSize) => setPagination((prev) => ({ ...prev, page, pageSize })),
-              hideOnSinglePage: true,
-            }}
-            rowKey="job_id"
-          >
-            <Column title="Activity" dataIndex="subtype" key="activity" render={activityRenderFn} />
-            <Column title="Scale" dataIndex="subtype" key="scale" render={scaleRenderFn} />
-            <Column title="Member" dataIndex="user_id" key="user" render={userRenderFn} />
-            <Column title="Date" dataIndex="started_at" key="date" render={renderDateAndHour} />
-            <Column title="Cost (Credits)" dataIndex="amount" key="cost" render={costRenderFn} />
-          </Table>
-        </CardContent>
-      </Card>
+      <Table<JobReport>
+        sticky
+        size="middle"
+        className={cn(
+          '[&.ant-table]:bg-primary-8! w-full!',
+          '[&_.ant-table-thead_th]:text-white/70! [&_.ant-table-thead_th]:font-light!',
+          '[&_.ant-table-thead_th]:bg-primary-8! [&_.ant-table-tbody]:bg-primary-8!',
+          '[&_.ant-table-tbody_td]:text-white! [&_.ant-table-tbody_td]:border-white/10!',
+          '[&_.ant-table-cell-row-hover]:bg-primary-7!',
+          '[&_.ant-pagination]:gap-2',
+          '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-primary-8! [&:has(.ant-table-empty)_tr]:hover:bg-primary-8!',
+          '[&_th]:uppercase!'
+        )}
+        loading={isLoading}
+        dataSource={jobReports}
+        pagination={{
+          pageSize: pagination.pageSize,
+          total,
+          onChange: (page, pageSize) => setPagination((prev) => ({ ...prev, page, pageSize })),
+          hideOnSinglePage: true,
+        }}
+        rowKey="job_id"
+      >
+        <Column title="Activity" dataIndex="subtype" key="activity" render={activityRenderFn} />
+        <Column title="Scale" dataIndex="subtype" key="scale" render={scaleRenderFn} />
+        <Column title="Member" dataIndex="user_id" key="user" render={userRenderFn} />
+        <Column title="Date" dataIndex="started_at" key="date" render={renderDateAndHour} />
+        <Column title="Cost (Credits)" dataIndex="amount" key="cost" render={costRenderFn} />
+      </Table>
     </div>
   );
 }
