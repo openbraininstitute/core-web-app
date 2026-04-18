@@ -1,8 +1,6 @@
 import { MenuOutlined } from '@ant-design/icons';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 
 import {
   ExploreIcon,
@@ -12,7 +10,6 @@ import {
   ReportsIcon,
   WorkflowIcon,
 } from '@/components/icons/buttons';
-import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import {
   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
@@ -35,11 +32,6 @@ import { cleanSearchParams } from '@/utils/search-params';
 
 import type React from 'react';
 import type { ReactNode } from 'react';
-
-// Dynamically import FeedbackModal with SSR disabled to prevent Suspense boundary issues
-const FeedbackModal = dynamic(() => import('@/ui/segments/feedbacks/feedback-modal'), {
-  ssr: false,
-});
 
 type LinkItem = {
   id: string;
@@ -126,16 +118,6 @@ const links: LinkItem[] = [
     className: '',
     hasAction: false,
   },
-  {
-    id: 'workspace-feedbacks',
-    key: 'feedbacks',
-    title: 'Feedback',
-    url: 'feedback',
-    icon: <FeedbackStarIcon className="group-hover:text-primary-3 h-6! w-6!" />,
-    allowText: false,
-    className: '',
-    hasAction: false,
-  },
 ];
 
 export function TopMenuNavigation() {
@@ -144,7 +126,6 @@ export function TopMenuNavigation() {
   const pathname = usePathname();
   const queryParams = useSearchParams();
   const activeSection = getActiveSection(pathname);
-  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const { state: aiPanelState, setState: setAiPanelState } = usePanelState();
   const isAiOpen = aiPanelState !== PanelState.Collapsed;
 
@@ -180,19 +161,6 @@ export function TopMenuNavigation() {
                   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
                 ],
               }).toString();
-
-              if (link.id === 'workspace-feedbacks') {
-                return (
-                  <DropdownMenuItem
-                    key={link.key}
-                    className="text-primary-9 hover:text-primary-7! flex cursor-pointer items-center gap-2 px-3 py-2"
-                    onClick={() => setIsFeedbackModalOpen(true)}
-                  >
-                    {link.icon}
-                    <span className="text-lg">{link.title}</span>
-                  </DropdownMenuItem>
-                );
-              }
 
               if (link.hasAction && link.action) {
                 return (
@@ -238,9 +206,6 @@ export function TopMenuNavigation() {
             })}
           </DropdownMenuContent>
         </DropdownMenu>
-        {isFeedbackModalOpen && (
-          <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
-        )}
       </div>
     );
   }
@@ -270,37 +235,6 @@ export function TopMenuNavigation() {
             'bg-transparent! hover:bg-transparent! hover:text-primary-9! hover:shadow-sm':
               !isActiveButton,
           };
-
-          if (id === 'workspace-feedbacks') {
-            return (
-              <div key={key} className="group flex w-max items-center justify-center gap-0">
-                <div className="relative flex items-center">
-                  <Button
-                    rounded
-                    id={id}
-                    variant="outline"
-                    size={breakpoint === 'xl' ? 'lg' : 'md'}
-                    className={cn(
-                      transparentWhenInactive,
-                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
-                      'group relative flex items-center justify-between',
-                      'transition-all duration-400 ease-out',
-                      clx
-                    )}
-                    active={activeSection === baseUrl || isActive?.(pathname)}
-                    onClick={() => setIsFeedbackModalOpen(true)}
-                  >
-                    {allowText && <span>{title}</span>}
-                    {icon}
-                  </Button>
-                  <span className="text-primary-9 absolute top-full right-0 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    Feedback
-                  </span>
-                </div>
-              </div>
-            );
-          }
 
           if (id === 'workspace-help') {
             return (
@@ -407,9 +341,6 @@ export function TopMenuNavigation() {
           </span>
         </div>
       </div>
-      {isFeedbackModalOpen && (
-        <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
-      )}
     </>
   );
 }

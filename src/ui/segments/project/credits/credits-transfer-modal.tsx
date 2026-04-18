@@ -6,6 +6,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
+import SectionPricing from '@/components/LandingPage/sections/SectionPricing';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
@@ -27,7 +28,7 @@ import { StripePaymentFlow } from '@/ui/segments/virtual-lab-settings/elements/s
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
-type CreditsTab = 'overview' | 'transfer' | 'buy' | 'subscription';
+type CreditsTab = 'overview' | 'transfer' | 'buy' | 'subscription' | 'pricing';
 
 type Props = {
   open: boolean;
@@ -172,7 +173,7 @@ export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }:
             className="w-full"
             activationMode="manual"
           >
-            <PillTabsList className="bg-primary-8 grid h-12 w-full grid-cols-4 p-0">
+            <PillTabsList className="bg-primary-8 grid h-12 w-full grid-cols-5 p-0">
               <PillTabsTrigger
                 value="overview"
                 className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
@@ -196,6 +197,12 @@ export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }:
                 className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
               >
                 Subscription
+              </PillTabsTrigger>
+              <PillTabsTrigger
+                value="pricing"
+                className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
+              >
+                Pricing
               </PillTabsTrigger>
             </PillTabsList>
           </PillTabs>
@@ -263,6 +270,11 @@ export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }:
         </PillTabsContent>
         <PillTabsContent value="subscription" className="mt-0 h-full overflow-y-auto">
           <Subscription />
+        </PillTabsContent>
+        <PillTabsContent value="pricing" className="mt-0 h-full overflow-y-auto">
+          <div className="text-primary-9 bg-white rounded-md p-4 [&_*]:text-primary-9">
+            <SectionPricing />
+          </div>
         </PillTabsContent>
       </PillTabs>
     </Modal>

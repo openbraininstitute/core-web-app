@@ -8,12 +8,9 @@ import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { cn } from '@/utils/css-class';
 
 const HelpSections = {
-  Overview: 'overview',
-  Tutorials: 'tutorials',
   Glossary: 'glossary',
   Features: 'features',
   Guides: 'guides',
-  PriceList: 'prices',
   AIChatTools: 'ai-tools',
   About: 'about',
 } as const;
@@ -25,14 +22,6 @@ const tabsConfigItems: Array<{
   title: string;
 }> = [
   {
-    key: HelpSections.Overview,
-    title: 'Overview',
-  },
-  {
-    key: HelpSections.Tutorials,
-    title: 'Tutorials',
-  },
-  {
     key: HelpSections.Glossary,
     title: 'Glossary',
   },
@@ -43,10 +32,6 @@ const tabsConfigItems: Array<{
   {
     key: HelpSections.Features,
     title: 'Features',
-  },
-  {
-    key: HelpSections.PriceList,
-    title: 'Pricing',
   },
   {
     key: HelpSections.AIChatTools,
@@ -62,24 +47,19 @@ function HelpTabs() {
   const breakpoint = useDefaultBreakpoint();
   const pathname = usePathname();
 
-  // Set default tab based on pathname
-  const defaultTab = pathname?.includes('/tutorials')
-    ? HelpSections.Tutorials
-    : HelpSections.Overview;
-
   const { activeTab } = useTabs<HelpSectionsKeys>({
     tabsConfig: tabsConfigItems,
     tabKey: 'section',
     shallow: true,
-    defaultKey: defaultTab,
+    defaultKey: HelpSections.Glossary,
   });
 
   const router = useRouter();
 
   return (
     <PillTabs
-      value={activeTab ?? 'overview'}
-      defaultValue={activeTab ?? 'overview'}
+      value={activeTab ?? HelpSections.Glossary}
+      defaultValue={activeTab ?? HelpSections.Glossary}
       className="w-full"
       activationMode="manual"
       onValueChange={(value: string) => {
@@ -88,7 +68,7 @@ function HelpTabs() {
       }}
     >
       <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-8 bg-white p-0 shadow-2xl', {
+        className={cn('grid h-10 w-full grid-cols-5 bg-white p-0 shadow-2xl', {
           'h-12': breakpoint === 'xl',
         })}
       >
