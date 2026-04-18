@@ -1,10 +1,8 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { use } from 'react';
 
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-
+import { SyncAllowAllSpeciesForDataBrowseRoute } from '@/features/brain-region-hierarchy/components/sync-allow-all-species';
 import { DataInnerLayout } from '@/ui/layouts/explore-inner-layout';
 import { DataLayout } from '@/ui/layouts/explore-layout';
 import { dataTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
@@ -12,6 +10,9 @@ import { ContributionModal } from '@/ui/segments/contribute/modal';
 import { DefaultContent as ExploreDefaultContent } from '@/ui/segments/explore/default-content';
 import { DataHeader } from '@/ui/segments/explore/header';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+
+import type { ReactNode } from 'react';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default function Page({
   children,
@@ -21,11 +22,11 @@ export default function Page({
 }) {
   const { projectId } = use(params);
   const dataKey = resolveDataKey({ projectId, section: AppUInterfaceSection.Data });
-
   useNextStepOnboarding({ condition: true, tour: dataTour });
 
   return (
     <DataLayout>
+      <SyncAllowAllSpeciesForDataBrowseRoute />
       <DataHeader />
       <DataInnerLayout>
         <ExploreDefaultContent dataKey={dataKey}>{children}</ExploreDefaultContent>
