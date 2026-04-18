@@ -30,11 +30,13 @@ export function BalanceCard({ onTransferCredits, className }: Props) {
         <div className="flex items-center justify-center gap-10">
           <div className="text-primary-9 flex flex-col gap-1.5">
             <div className="font-light">Virtual lab credits</div>
-            <div className="text-xl font-bold">{virtualLabBalance}</div>
+            <div className="text-xl font-bold">{Math.floor(Number(virtualLabBalance) || 0)}</div>
           </div>
           <div className="text-primary-9 flex flex-col gap-1.5">
             <div className="font-light">Project credits</div>
-            <div className="text-xl font-bold">{ProjectBalance?.balance}</div>
+            <div className="text-xl font-bold">
+              {Math.floor(Number(ProjectBalance?.balance) || 0)}
+            </div>
           </div>
         </div>
         {isAdmin && (

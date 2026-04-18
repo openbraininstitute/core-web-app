@@ -67,7 +67,9 @@ export function Wallet() {
         </TooltipContent>
       </Tooltip>
     ))
-    .with({ isSuccess: true, data: P.select() }, (balance) => <>{balance}</>)
+    .with({ isSuccess: true, data: P.select() }, (balance) => (
+      <>{Math.floor(Number(balance) || 0)}</>
+    ))
     .otherwise(() => null);
 
   return (

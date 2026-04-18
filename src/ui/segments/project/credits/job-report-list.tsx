@@ -80,7 +80,7 @@ function scaleRenderFn(subtype: ServiceSubtype) {
 
 function costRenderFn(amount: string) {
   const numericAmount = parseFloat(amount);
-  const formattedAmount = Number.isNaN(numericAmount) ? amount : numericAmount.toFixed(2);
+  const formattedAmount = Number.isNaN(numericAmount) ? amount : String(Math.floor(numericAmount));
   return <span>{formattedAmount}</span>;
 }
 
