@@ -6,7 +6,6 @@ import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { config } from '@/config';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
-import { BottomControlBar } from '@/ui/segments/project/bottom-control-bar';
 import {
   getQuickAccessQuery,
   type IQuickAccessList,
@@ -54,14 +53,13 @@ export default async function Layout({
   });
 
   return (
-    <div className="bg-background relative h-[calc(100vh-6rem)] w-full overflow-hidden">
+    <div className="bg-background h-[calc(100vh-6rem)] w-full overflow-hidden">
       <div
         id="project-main-content"
-        className="secondary-scrollbar h-full w-full overflow-y-auto px-3 pb-24"
+        className="secondary-scrollbar h-full w-full overflow-y-auto px-3"
       >
         {children}
       </div>
-      <BottomControlBar />
     </div>
   );
 }

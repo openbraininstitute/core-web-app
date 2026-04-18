@@ -15,10 +15,17 @@ import {
   QuickAccessGroupDict,
 } from '@/ui/segments/project/get-started/query';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { cn } from '@/utils/css-class';
 
 import type { WorkspaceContext } from '@/types/common';
 
-export async function MainCards({ context }: { context: WorkspaceContext }) {
+export async function MainCards({
+  context,
+  horizontal = false,
+}: {
+  context: WorkspaceContext;
+  horizontal?: boolean;
+}) {
   const client = getClient();
   const queryClient = getQueryClient();
 
@@ -89,7 +96,12 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
     <section
       id="main-data-category-cards"
       data-testid="main-data-category-cards"
-      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full mt-2"
+      className={cn(
+        'w-full mt-2',
+        horizontal
+          ? 'flex gap-2.5 overflow-x-auto secondary-scrollbar pb-2 items-stretch'
+          : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch'
+      )}
     >
       {results.map(
         ({
@@ -103,16 +115,19 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
           entity,
           artifactTitle,
         }) => {
+          const itemClassName = horizontal
+            ? 'flex flex-col gap-1.5 w-80 shrink-0'
+            : 'flex flex-col gap-1.5 w-full';
           if (!entity) {
             return (
-              <div key={group} className="flex flex-col gap-1.5 w-full">
+              <div key={group} className={itemClassName}>
                 <MainCardComingSoon groupTitle={groupTitle ?? group} description="Coming soon" />
                 <div className="h-10 xl:h-12" />
               </div>
             );
           }
           return (
-            <div key={entityId} className="flex flex-col gap-1.5 w-full">
+            <div key={entityId} className={itemClassName}>
               <MainCardItem
                 {...{
                   groupTitle,

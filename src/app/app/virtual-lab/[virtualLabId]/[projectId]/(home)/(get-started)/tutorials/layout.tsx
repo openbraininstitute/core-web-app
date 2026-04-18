@@ -1,15 +1,21 @@
+import { QuickAccessExamples } from '@/ui/segments/project/get-started/sections/quick-access-examples';
 import { TutorialList } from '@/ui/segments/project/get-started/sections/tutorials';
 
 import type { PropsWithChildren } from 'react';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-export default function Layout({ children }: PropsWithChildren) {
+export default async function Layout({
+  children,
+  params,
+}: ServerSideComponentProp<WorkspaceContext, null> & PropsWithChildren) {
+  const context = await params;
+
   return (
-    <section id="tutorials" data-testid="tutorials" className="pr-2">
-      <div className="flex w-full gap-4">
-        <div className="w-3/5 min-w-0">{children}</div>
-        <div className="w-2/5 min-w-0">
-          <TutorialList />
-        </div>
+    <section id="tutorials" data-testid="tutorials" className="flex w-full gap-4 pr-2">
+      <div className="w-3/5 min-w-0">{children}</div>
+      <div className="flex w-2/5 min-w-0 flex-col gap-6">
+        <TutorialList />
+        <QuickAccessExamples context={context} />
       </div>
     </section>
   );

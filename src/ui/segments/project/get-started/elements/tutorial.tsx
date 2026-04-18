@@ -1,23 +1,18 @@
 'use client';
 
 import { VideoCameraOutlined } from '@ant-design/icons';
-import { RiCloseLargeFill, RiPlayFill } from '@remixicon/react';
+import { RiPlayFill } from '@remixicon/react';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
-import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
 
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Button } from '@/ui/molecules/button';
 import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
 
 import type { TTutorial } from '@/ui/segments/project/get-started/query';
-
-const INITIAL_COUNT = 4;
 
 export function TutorialCard({
   title,
@@ -74,50 +69,23 @@ export function TutorialCard({
 }
 
 export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
-  const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? tutorials : tutorials.slice(0, INITIAL_COUNT);
-  const hasMore = tutorials.length > INITIAL_COUNT;
   const { slug } = useParams<{ slug: string }>();
 
   return (
-    <section id="tutorials-list" className="w-full flex flex-col my-6 @container">
-      <div className="flex items-center justify-between w-full px-2 mb-2">
-        <h2 className="font-medium text-primary-9">Tutorials</h2>
-        {hasMore && (
-          <Button
-            rounded
-            variant="ghost"
-            className={cn('text-primary-9 font-light', {
-              'h-9! w-9! p-2 rounded-full shadow-sm': expanded,
-            })}
-            onClick={() => setExpanded((prev) => !prev)}
-          >
-            {expanded ? <RiCloseLargeFill /> : `See all (${tutorials.length} videos)`}
-          </Button>
-        )}
+    <section id="tutorials-list" className="w-full flex flex-col">
+      <h2 className="font-medium text-primary-9 px-2 mb-2">Tutorials</h2>
+      <div className="secondary-scrollbar flex w-full gap-1.5 overflow-x-auto pb-2">
+        {tutorials.map((p) => (
+          <div key={p.url} className="w-60 shrink-0 flex">
+            <TutorialCard
+              title={p.title}
+              image={p.poster}
+              slug={p.slug}
+              isSelected={slug === p.slug}
+            />
+          </div>
+        ))}
       </div>
-      <motion.div layout className="grid grid-cols-2 @sm:grid-cols-3 gap-1.5 w-full">
-        <AnimatePresence initial={false}>
-          {visible.map((p) => (
-            <motion.div
-              key={p.url}
-              layout
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.25 }}
-              className="w-full flex"
-            >
-              <TutorialCard
-                title={p.title}
-                image={p.poster}
-                slug={p.slug}
-                isSelected={slug === p.slug}
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </motion.div>
     </section>
   );
 }

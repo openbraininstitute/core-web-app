@@ -175,6 +175,7 @@ export function SingleCardItem({
   extendedType,
   artifactTitle,
   description,
+  compact = false,
 }: {
   entity: IEntity;
   group: string;
@@ -185,6 +186,7 @@ export function SingleCardItem({
   extendedType: TExtendedEntitiesTypeDict;
   artifactTitle?: string | null;
   description: string;
+  compact?: boolean;
 }) {
   const { push: navigate } = useRouter();
   const { mutate: redirect, isPending } = useMutation({
@@ -251,24 +253,29 @@ export function SingleCardItem({
           </Skeleton>
         )}
       </div>
-      <CardContent className="mt-8 flex flex-col">
+      <CardContent className={cn('flex flex-col', compact ? 'mt-2' : 'mt-8')}>
         <div
           className={cn(
-            'font-black rounded-full text-primary-8 text-lg 2xl:text-xl mb-1.5',
-            'px-4 py-1.5 max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5'
+            'font-black rounded-full text-primary-8 mb-1.5',
+            'max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5',
+            compact ? 'px-2 py-0.5 text-sm' : 'px-4 py-1.5 text-lg 2xl:text-xl'
           )}
           title={title}
         >
           {group === QuickAccessGroupDict.Notebooks && isPending && (
             <LoadingOutlined className="text-label!" />
           )}
-          <span className="line-clamp-5 whitespace-normal break-all">
+          <span
+            className={cn('whitespace-normal break-all', compact ? 'line-clamp-1' : 'line-clamp-5')}
+          >
             {title ?? 'No title provided'}
           </span>
         </div>
-        <p className="text-neutral-4 line-clamp-4 pl-4" title={description}>
-          {description ?? 'No description provided'}
-        </p>
+        {!compact && (
+          <p className="text-neutral-4 line-clamp-4 pl-4" title={description}>
+            {description ?? 'No description provided'}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
