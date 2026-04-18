@@ -176,6 +176,7 @@ export function SingleCardItem({
   artifactTitle,
   description,
   compact = false,
+  hideArtifact = false,
 }: {
   entity: IEntity;
   group: string;
@@ -187,6 +188,7 @@ export function SingleCardItem({
   artifactTitle?: string | null;
   description: string;
   compact?: boolean;
+  hideArtifact?: boolean;
 }) {
   const { push: navigate } = useRouter();
   const { mutate: redirect, isPending } = useMutation({
@@ -226,7 +228,7 @@ export function SingleCardItem({
       onClick={() => redirect()}
       title={title}
     >
-      {artifactTitle && (
+      {artifactTitle && !hideArtifact && !compact && (
         <CardTitle className="self-end p-2 pt-1">
           <Badge
             variant="outline"
@@ -242,7 +244,13 @@ export function SingleCardItem({
       )}
       <div className="relative aspect-video w-full">
         {thumbnail ? (
-          <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-contain" />
+          <Image
+            fill
+            unoptimized
+            alt={title ?? 'preview'}
+            src={thumbnail}
+            className="object-contain"
+          />
         ) : (
           <Skeleton
             active={false}
@@ -251,6 +259,18 @@ export function SingleCardItem({
           >
             <ImageIcon className="size-10 text-gray-200" />
           </Skeleton>
+        )}
+        {artifactTitle && !hideArtifact && compact && (
+          <Badge
+            variant="outline"
+            rounded
+            className={cn(
+              'absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm py-1 px-3! text-primary-8 border-neutral-2 text-xs font-medium shadow-sm',
+              'group-hover:bg-primary-7 group-hover:text-white'
+            )}
+          >
+            {artifactTitle}
+          </Badge>
         )}
       </div>
       <CardContent className={cn('flex flex-col', compact ? 'mt-2' : 'mt-8')}>

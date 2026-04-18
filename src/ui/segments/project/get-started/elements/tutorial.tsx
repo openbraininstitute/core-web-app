@@ -74,7 +74,7 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
   return (
     <section id="tutorials-list" className="w-full flex flex-col">
       <h2 className="font-medium text-primary-9 px-2 mb-2">Tutorials</h2>
-      <div className="secondary-scrollbar flex w-full gap-1.5 overflow-x-auto pb-2">
+      <div className="flex w-full gap-1.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tutorials.map((p) => (
           <div key={p.url} className="w-60 shrink-0 flex">
             <TutorialCard

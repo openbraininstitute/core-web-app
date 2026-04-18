@@ -27,14 +27,13 @@ type Props = {
 };
 
 const groupLabels: Record<TQuickAccessGroup, string> = {
-  [QuickAccessGroupDict.Data]: 'Data examples',
-  [QuickAccessGroupDict.Workflows]: 'Workflow examples',
-  [QuickAccessGroupDict.Notebooks]: 'Notebook examples',
+  [QuickAccessGroupDict.Data]: 'Example Data',
+  [QuickAccessGroupDict.Workflows]: 'Example Workflows',
+  [QuickAccessGroupDict.Notebooks]: 'Example Notebooks',
 };
 
 const groupOrder: Array<TQuickAccessGroup> = [
   QuickAccessGroupDict.Data,
-  QuickAccessGroupDict.Workflows,
   QuickAccessGroupDict.Notebooks,
 ];
 
@@ -53,11 +52,12 @@ function GroupRow({
     <section id={`quick-access-${group}`} className="flex w-full flex-col">
       <h2 className="text-primary-9 px-2 mb-2 font-medium">{groupLabels[group]}</h2>
       {items.length > 0 ? (
-        <div className="secondary-scrollbar flex w-full gap-2.5 overflow-x-auto pb-2">
+        <div className="flex w-full gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {items.map((item) => (
             <div key={item.entity.id} className="w-60 shrink-0">
               <SingleCardItem
                 compact
+                hideArtifact={group === QuickAccessGroupDict.Notebooks}
                 title={item.title}
                 description={item.description}
                 thumbnail={item.thumbnail}
