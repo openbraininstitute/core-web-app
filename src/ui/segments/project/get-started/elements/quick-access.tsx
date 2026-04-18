@@ -275,7 +275,7 @@ export function SingleCardItem({
       )}
       <div
         className={cn(
-          'relative aspect-video w-full overflow-hidden rounded-xl border-2 transition-colors',
+          'relative aspect-video w-full overflow-hidden rounded-xl border-2 transition-colors bg-white',
           isSelected ? 'border-primary-7' : 'border-transparent'
         )}
       >
@@ -285,7 +285,7 @@ export function SingleCardItem({
             unoptimized
             alt={title ?? 'preview'}
             src={thumbnail}
-            className="object-cover"
+            className="object-contain"
           />
         ) : (
           <Skeleton

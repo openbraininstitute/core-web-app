@@ -17,17 +17,8 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { WorkspaceContext } from '@/types/common';
 
-// Abstract scientific scale illustrations used for the Data / Notebook example cards.
-const ABSTRACT_PREVIEW_IMAGES = [
-  '/images/scales/singleNeuron.jpg',
-  '/images/scales/ionChannel.jpg',
-  '/images/scales/synaptome.jpg',
-  '/images/scales/microcircuit.jpg',
-  '/images/scales/brainRegion.jpg',
-  '/images/scales/ngv.jpg',
-  '/images/scales/pairedNeuron.jpg',
-  '/images/scales/brainSystem.jpg',
-];
+// Abstract scientific illustrations used for the Data / Notebook example cards.
+const ABSTRACT_PREVIEW_IMAGES = ['/images/new/new_neuron.jpg', '/images/new/new_ion_channel.png'];
 
 function pickPreviewImage(indexInGroup: number): string {
   return ABSTRACT_PREVIEW_IMAGES[indexInGroup % ABSTRACT_PREVIEW_IMAGES.length];

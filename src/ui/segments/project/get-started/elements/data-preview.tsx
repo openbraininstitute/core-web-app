@@ -38,14 +38,14 @@ export function DataPreview() {
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-neutral-2">
+      <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-neutral-2 bg-white">
         {preview.thumbnail ? (
           <Image
             fill
             unoptimized
             alt={preview.title}
             src={preview.thumbnail}
-            className="object-cover"
+            className="object-contain"
           />
         ) : null}
       </div>
