@@ -145,6 +145,7 @@ export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }:
       id="model-credits-manager"
       closable={false}
       open={open}
+      onClose={onClose}
       title={
         <div className="flex w-full flex-col gap-4 select-none">
           <div className="flex w-full items-center justify-between gap-4">

@@ -25,6 +25,7 @@ export function Wallet() {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
   const [open, setOpen] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
 
   const [{ data, isLoading, isError, isSuccess, error }, { data: roles, isLoading: loadingRoles }] =
     useQueries({
@@ -74,8 +75,12 @@ export function Wallet() {
 
   return (
     <>
-      <Tooltip>
-        <TooltipTrigger asChild>
+      <Tooltip open={open ? false : tooltipOpen}>
+        <TooltipTrigger
+          asChild
+          onPointerEnter={() => setTooltipOpen(true)}
+          onPointerLeave={() => setTooltipOpen(false)}
+        >
           <Badge
             asChild
             rounded

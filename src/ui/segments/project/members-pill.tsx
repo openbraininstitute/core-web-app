@@ -18,6 +18,7 @@ import { cn } from '@/utils/css-class';
 export function MembersPill() {
   const breakpoint = useDefaultBreakpoint();
   const [open, setOpen] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
   const { virtualLabId, projectId } = useWorkspace();
   const { data: project } = useQuery({
     queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
@@ -27,8 +28,12 @@ export function MembersPill() {
 
   return (
     <>
-      <Tooltip>
-        <TooltipTrigger asChild>
+      <Tooltip open={open ? false : tooltipOpen}>
+        <TooltipTrigger
+          asChild
+          onPointerEnter={() => setTooltipOpen(true)}
+          onPointerLeave={() => setTooltipOpen(false)}
+        >
           <Badge
             asChild
             rounded
