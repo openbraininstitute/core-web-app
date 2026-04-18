@@ -2,7 +2,7 @@
 
 import { ArrowLeftOutlined, CloseOutlined, SwapOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
@@ -10,6 +10,8 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 import { PillTabs, PillTabsContent, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { BalanceCard } from '@/ui/segments/project/credits/balance-card';
+import { JobReportList } from '@/ui/segments/project/credits/job-report-list';
 import {
   ManageCreditsStep,
   type ManageCreditsStepHandle,
@@ -24,9 +26,12 @@ import { StripePaymentFlow } from '@/ui/segments/virtual-lab-settings/elements/s
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
+type CreditsTab = 'overview' | 'transfer' | 'buy';
+
 type Props = {
   open: boolean;
   onClose: () => void;
+  defaultTab?: CreditsTab;
 };
 
 function BuyCreditsTab({
@@ -107,9 +112,9 @@ function BuyCreditsTab({
   );
 }
 
-export function CreditsTransferModal({ open, onClose }: Props) {
+export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }: Props) {
   const creditsRef = useRef<ManageCreditsStepHandle>(null);
-  const [activeTab, setActiveTab] = useState('transfer');
+  const [activeTab, setActiveTab] = useState<CreditsTab>(defaultTab);
   const [buyMode, setBuyMode] = useState<TPurchaseModeDictionary>(PurchaseModeDictionary.Selection);
 
   const { virtualLabId, projectId } = useWorkspace();
@@ -120,7 +125,7 @@ export function CreditsTransferModal({ open, onClose }: Props) {
 
   // Reset buy mode when switching tabs or closing modal
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
+    setActiveTab(tab as CreditsTab);
     if (tab !== 'buy') {
       setBuyMode(PurchaseModeDictionary.Selection);
     }
@@ -130,9 +135,9 @@ export function CreditsTransferModal({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) {
       setBuyMode(PurchaseModeDictionary.Selection);
-      setActiveTab('transfer');
+      setActiveTab(defaultTab);
     }
-  }, [open]);
+  }, [open, defaultTab]);
 
   return (
     <Modal
@@ -165,7 +170,13 @@ export function CreditsTransferModal({ open, onClose }: Props) {
             className="w-full"
             activationMode="manual"
           >
-            <PillTabsList className="bg-primary-8 grid h-12 w-full grid-cols-2 p-0">
+            <PillTabsList className="bg-primary-8 grid h-12 w-full grid-cols-3 p-0">
+              <PillTabsTrigger
+                value="overview"
+                className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
+              >
+                Overview
+              </PillTabsTrigger>
               <PillTabsTrigger
                 value="transfer"
                 className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
@@ -200,6 +211,17 @@ export function CreditsTransferModal({ open, onClose }: Props) {
         activationMode="manual"
         className="h-full"
       >
+        <PillTabsContent value="overview" className="mt-0 h-full overflow-y-auto">
+          <Suspense>
+            <div className="flex flex-col gap-6 pb-2 [&_h3]:text-white">
+              <BalanceCard
+                onTransferCredits={() => handleTabChange('transfer')}
+                className="bg-white"
+              />
+              <JobReportList />
+            </div>
+          </Suspense>
+        </PillTabsContent>
         <PillTabsContent value="transfer" className="mt-0 h-full">
           <div className="flex flex-col h-full">
             <div className="mb-4 flex justify-end">

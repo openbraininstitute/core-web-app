@@ -1,0 +1,190 @@
+- generic [ref=e1]:
+  - alert [ref=e14]: "Project: Test - Get Started | Open Brain Institute"
+  - generic [ref=e15]:
+    - button "Jotai Mascot" [ref=e16] [cursor=pointer]:
+      - img "Jotai Mascot" [ref=e18]
+    - generic [ref=e22]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - menubar "James Isbister's virtual lab/Test" [ref=e297] [cursor=pointer]:
+            - generic [ref=e29]:
+              - generic "James Isbister" [ref=e298]:
+                - img [ref=e31]
+              - img "right" [ref=e35]:
+                - img [ref=e36]
+              - generic "James Isbister's virtual lab" [ref=e299]:
+                - heading "James Isbister's virtual lab" [level=3] [ref=e300]
+              - img "right" [ref=e39]:
+                - img [ref=e40]
+            - generic [ref=e42]:
+              - generic [ref=e301]: Test
+              - img "down" [ref=e302]:
+                - img [ref=e303]
+          - button "View project credits" [ref=e46] [cursor=pointer]:
+            - img
+            - generic [ref=e47]: "35.80"
+          - button "View project members" [ref=e49] [cursor=pointer]:
+            - img
+        - generic [ref=e50]:
+          - button [ref=e53] [cursor=pointer]:
+            - img
+          - button "Data" [ref=e56] [cursor=pointer]:
+            - generic [ref=e57]: Data
+            - img
+          - button "Workflows" [ref=e60] [cursor=pointer]:
+            - generic [ref=e61]: Workflows
+            - img
+          - button "Notebooks" [ref=e64] [cursor=pointer]:
+            - generic [ref=e65]: Notebooks
+            - img
+          - button "Reports" [ref=e68] [cursor=pointer]:
+            - generic [ref=e69]: Reports
+            - img
+          - generic [ref=e71]:
+            - button [ref=e72] [cursor=pointer]:
+              - img
+            - generic [ref=e73]: Help
+          - generic [ref=e75]:
+            - button "Feedback star" [ref=e76] [cursor=pointer]:
+              - img "Feedback star"
+            - generic [ref=e77]: Feedback
+      - generic [ref=e79]:
+        - generic [ref=e81]:
+          - generic [ref=e306]:
+            - generic [ref=e307]:
+              - link "Test" [ref=e308] [cursor=pointer]:
+                - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1
+              - button "edit project details" [ref=e309] [cursor=pointer]:
+                - img
+            - generic:
+              - paragraph
+          - generic [ref=e92]:
+            - generic [ref=e93]:
+              - button "active" [ref=e94] [cursor=pointer]:
+                - text: Get started
+                - img "down" [ref=e95]:
+                  - img
+              - generic [ref=e96]:
+                - button "Quick access 16" [ref=e310] [cursor=pointer]:
+                  - text: Quick access
+                  - generic [ref=e311]: "16"
+                - button "Tutorials 23" [ref=e312] [cursor=pointer]:
+                  - text: Tutorials
+                  - generic [ref=e313]: "23"
+            - button "Activities right" [ref=e100] [cursor=pointer]:
+              - text: Activities
+              - img "right" [ref=e101]:
+                - img
+        - generic [ref=e103]:
+          - generic [ref=e104]:
+            - generic [ref=e105]:
+              - generic "H01_v1" [ref=e106] [cursor=pointer]:
+                - generic [ref=e108]: Circuit
+                - img "H01_v1" [ref=e110]
+                - generic [ref=e111]:
+                  - heading "Data" [level=4] [ref=e112]
+                  - generic [ref=e113]: H01_v1
+                  - paragraph [ref=e114]: The H01 dataset is a computational reconstruction of one sample of human temporal cortex, representing 1 mm³ of brain tissue, surgically removed to gain access to an underlying epileptic focus. It was imaged at nanoscale resolution using serial section electron microscopy and provides a detailed map of human cortical circuitry at the synaptic level. It contains approximately 57,000 cells (out of which 104 have been fully proofread), ~230 mm of blood vessels, ~150 million synapses, and comprises 1.4 petabytes This version represents a smaller circuit in SONATA format. It includes 88 proofread cell morphologies together with their spines and the connectivity within a bounding box surrounding these cells, covering approximately 0.3 μm³. In addition, the circuit captures the extrinsic connectivity of the fully reconstructed cells—that is, their connections originating from outside the bounding volume. If you would like to use this dataset, please credit the original data aggregators, as well as the OBI platform and the OBI members responsible for curating this version.
+              - button "View Data examples (8)" [ref=e115] [cursor=pointer]:
+                - link "View Data examples (8)" [ref=e116]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/quick-access/data
+            - generic [ref=e117]:
+              - generic "Large-scale circuit connectivity analyses" [ref=e118] [cursor=pointer]:
+                - generic [ref=e120]: Notebook
+                - img "Large-scale circuit connectivity analyses" [ref=e122]
+                - generic [ref=e123]:
+                  - heading "Notebooks" [level=4] [ref=e124]
+                  - generic [ref=e125]: Large-scale circuit connectivity analyses
+                  - paragraph [ref=e126]: Connectivity datasets and models are becoming quite large, to an extent that analyzing them can be difficult. This notebook teaches efficient analysis techniques for connectivity graphs.
+              - button "View Notebooks examples (8)" [ref=e127] [cursor=pointer]:
+                - link "View Notebooks examples (8)" [ref=e128]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/quick-access/notebooks
+            - generic [ref=e129]:
+              - generic:
+                - generic:
+                  - heading "Workflows" [level=4]
+                  - paragraph: Coming soon
+          - link "How to explore data? 01:03 Data" [ref=e131] [cursor=pointer]:
+            - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/how-to-explore-data
+            - img [ref=e133]
+            - generic [ref=e135]:
+              - heading "How to explore data?" [level=1] [ref=e136]
+              - generic [ref=e137]:
+                - generic [ref=e138]:
+                  - img [ref=e139]
+                  - generic [ref=e141]: 01:03
+                - generic [ref=e142]: Data
+          - generic [ref=e144]:
+            - generic [ref=e145]:
+              - heading "Tutorials" [level=2] [ref=e146]
+              - button "See all (23 videos)" [ref=e147] [cursor=pointer]
+            - generic [ref=e148]:
+              - link "Getting started with single cell simulation Getting started with single cell simulation" [ref=e150] [cursor=pointer]:
+                - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/getting-started-with-single-cell-simulation
+                - generic [ref=e151]:
+                  - generic [ref=e152]: Getting started with single cell simulation
+                  - generic [ref=e154]:
+                    - img "Getting started with single cell simulation" [ref=e155]
+                    - img [ref=e158]
+              - link "Next steps after designing a campaign Next steps after designing a campaign" [ref=e161] [cursor=pointer]:
+                - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/next-steps-after-designing-a-campaign
+                - generic [ref=e162]:
+                  - generic [ref=e163]: Next steps after designing a campaign
+                  - generic [ref=e165]:
+                    - img "Next steps after designing a campaign" [ref=e166]
+                    - img [ref=e169]
+              - link "Setting up circuit simulations Setting up circuit simulations" [ref=e172] [cursor=pointer]:
+                - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/setting-up-circuit-simulations
+                - generic [ref=e173]:
+                  - generic [ref=e174]: Setting up circuit simulations
+                  - generic [ref=e176]:
+                    - img "Setting up circuit simulations" [ref=e177]
+                    - img [ref=e180]
+              - link "Setting up single cell simulation Setting up single cell simulation" [ref=e183] [cursor=pointer]:
+                - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/setting-up-single-cell-simulation
+                - generic [ref=e184]:
+                  - generic [ref=e185]: Setting up single cell simulation
+                  - generic [ref=e187]:
+                    - img "Setting up single cell simulation" [ref=e188]
+                    - img [ref=e191]
+      - button "expand AI assistant" [ref=e194] [cursor=pointer]:
+        - img [ref=e195]
+        - generic [ref=e197]: AI Assistant
+    - generic [ref=e198]:
+      - img [ref=e200]
+      - button "Open Tanstack query devtools" [ref=e248] [cursor=pointer]:
+        - img [ref=e249]
+  - dialog "Test Buy and transfer credits between your virtual lab and projects. close Overview Transfer Credits Buy Credits" [ref=e315]:
+    - generic [ref=e318]:
+      - generic [ref=e319]:
+        - generic [ref=e320]:
+          - heading "Test" [level=2] [ref=e321]
+          - paragraph [ref=e322]: Buy and transfer credits between your virtual lab and projects.
+        - button "close" [ref=e324] [cursor=pointer]:
+          - img "close" [ref=e325]:
+            - img
+      - tablist [ref=e327]:
+        - tab "Overview" [ref=e328] [cursor=pointer]
+        - tab "Transfer Credits" [ref=e329] [cursor=pointer]
+        - tab "Buy Credits" [active] [selected] [ref=e330] [cursor=pointer]
+    - tabpanel [ref=e525]:
+      - generic [ref=e528]:
+        - button "credit-card Purchase Credits Buy credits with your card and start using them immediately dollar Secure payment via Stripe" [ref=e529] [cursor=pointer]:
+          - generic [ref=e530]:
+            - img "credit-card" [ref=e532]:
+              - img [ref=e533]
+            - heading "Purchase Credits" [level=2] [ref=e535]
+            - paragraph [ref=e536]: Buy credits with your card and start using them immediately
+            - generic [ref=e537]:
+              - img "dollar" [ref=e538]:
+                - img [ref=e539]
+              - generic [ref=e541]: Secure payment via Stripe
+        - button "Promo Code Have a promotional code? Redeem it here for free credits tag Instant credit redemption" [ref=e543] [cursor=pointer]:
+          - generic [ref=e544]:
+            - img [ref=e546]
+            - heading "Promo Code" [level=2] [ref=e548]
+            - paragraph [ref=e549]: Have a promotional code? Redeem it here for free credits
+            - generic [ref=e550]:
+              - img "tag" [ref=e551]:
+                - img [ref=e552]
+              - generic [ref=e554]: Instant credit redemption

@@ -5,7 +5,6 @@ import { useQueries } from '@tanstack/react-query';
 import { filter, sumBy } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { type ComponentProps, Suspense } from 'react';
 
 import { config } from '@/config';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
@@ -24,8 +23,7 @@ import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-part
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 
-import { ProjectCard } from './banner/banner';
-import { ProjectCardSkeletonShimmer } from './banner/banner-skeleton';
+import type { ComponentProps } from 'react';
 
 type Props = {
   className?: ComponentProps<'div'>['className'];
@@ -51,24 +49,6 @@ const links = [
         requireRole: false,
       },
     ],
-  },
-  {
-    key: 'activities',
-    title: 'Activities',
-    url: 'activities',
-    requireRole: false,
-  },
-  {
-    key: 'team',
-    title: 'Members',
-    url: 'team',
-    requireRole: false,
-  },
-  {
-    key: 'credits',
-    title: 'Credits',
-    url: 'credits',
-    requireRole: true,
   },
 ];
 
@@ -117,9 +97,6 @@ export function LeftMenu({ className }: Props) {
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
-      <Suspense fallback={<ProjectCardSkeletonShimmer />}>
-        <ProjectCard />
-      </Suspense>
       <div className="flex w-full flex-col items-center justify-center gap-2">
         {hashedLinks.map(({ title, key, url, baseUrl, children }) => {
           const currentActiveSection = getActiveSection(pathname);

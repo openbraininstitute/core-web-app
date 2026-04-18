@@ -261,6 +261,11 @@ export function TopMenuNavigation() {
             searchParams,
             keepKeys: [DEFAULT_BRAIN_REGION_QUERY_ID, DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE],
           }).toString();
+          const isActiveButton = activeSection === baseUrl || !!isActive?.(pathname);
+          const transparentWhenInactive = {
+            'bg-transparent! hover:bg-transparent! hover:text-primary-9! hover:shadow-sm':
+              !isActiveButton,
+          };
 
           if (id === 'workspace-feedbacks') {
             return (
@@ -272,6 +277,7 @@ export function TopMenuNavigation() {
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
+                      transparentWhenInactive,
                       { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
                       { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
                       'group relative flex items-center justify-between',
@@ -303,6 +309,7 @@ export function TopMenuNavigation() {
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
+                      transparentWhenInactive,
                       { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
                       { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
                       'group relative flex items-center justify-between',
@@ -341,6 +348,7 @@ export function TopMenuNavigation() {
                   variant="outline"
                   size={breakpoint === 'xl' ? 'lg' : 'md'}
                   className={cn(
+                    transparentWhenInactive,
                     { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
                     { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
                     'group relative flex items-center justify-between',

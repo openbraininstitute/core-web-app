@@ -10,9 +10,10 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 type Props = {
   onTransferCredits?: () => void;
+  className?: string;
 };
 
-export function BalanceCard({ onTransferCredits }: Props) {
+export function BalanceCard({ onTransferCredits, className }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
   const { data } = useQuery({
@@ -24,7 +25,7 @@ export function BalanceCard({ onTransferCredits }: Props) {
   const virtualLabBalance = data?.data?.balance ?? 0;
 
   return (
-    <Card shadowless>
+    <Card shadowless className={className}>
       <CardContent className="flex items-center justify-between">
         <div className="flex items-center justify-center gap-10">
           <div className="text-primary-9 flex flex-col gap-1.5">
