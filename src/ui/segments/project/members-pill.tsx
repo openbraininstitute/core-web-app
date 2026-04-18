@@ -76,7 +76,7 @@ export function MembersPill() {
         bodyClassName="px-2 py-2"
       >
         <Suspense fallback={<ProjectTeamSkeleton />}>
-          <div className="flex h-[70vh] w-full flex-col">
+          <div className="flex h-[70vh] w-full flex-col [&_.ant-table-body]:max-h-[calc(70vh-100px)]!">
             <TeamManager />
           </div>
         </Suspense>
