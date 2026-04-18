@@ -53,11 +53,8 @@ export default async function Layout({
   });
 
   return (
-    <div className="bg-background h-[calc(100vh-6rem)] w-full overflow-hidden">
-      <div
-        id="project-main-content"
-        className="secondary-scrollbar h-full w-full overflow-y-auto px-3"
-      >
+    <div className="bg-background h-full w-full overflow-hidden">
+      <div id="project-main-content" className="h-full w-full overflow-hidden px-3">
         {children}
       </div>
     </div>
