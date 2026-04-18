@@ -242,14 +242,14 @@ export function SingleCardItem({
           </Badge>
         </CardTitle>
       )}
-      <div className="relative aspect-video w-full">
+      <div className="relative aspect-video w-full overflow-hidden rounded-xl">
         {thumbnail ? (
           <Image
             fill
             unoptimized
             alt={title ?? 'preview'}
             src={thumbnail}
-            className="object-contain"
+            className="object-cover"
           />
         ) : (
           <Skeleton

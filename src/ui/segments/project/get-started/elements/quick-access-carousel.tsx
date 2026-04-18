@@ -53,23 +53,28 @@ function GroupRow({
       <h2 className="text-primary-9 text-lg font-bold px-2 mb-2">{groupLabels[group]}</h2>
       {items.length > 0 ? (
         <div className="flex w-full gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {items.map((item) => (
-            <div key={item.entity.id} className="w-60 shrink-0">
-              <SingleCardItem
-                compact
-                hideArtifact={group === QuickAccessGroupDict.Notebooks}
-                title={item.title}
-                description={item.description}
-                thumbnail={item.thumbnail}
-                extendedType={item.extendedType}
-                artifactTitle={item.artifactTitle}
-                entity={item.entity}
-                context={context}
-                virtualLab={virtualLab}
-                group={group}
-              />
-            </div>
-          ))}
+          {items.map((item) => {
+            const isData = group === QuickAccessGroupDict.Data;
+            const hideArtifact = isData || group === QuickAccessGroupDict.Notebooks;
+            const displayTitle = isData ? (item.artifactTitle ?? item.title) : item.title;
+            return (
+              <div key={item.entity.id} className="w-60 shrink-0">
+                <SingleCardItem
+                  compact
+                  hideArtifact={hideArtifact}
+                  title={displayTitle}
+                  description={item.description}
+                  thumbnail={item.thumbnail}
+                  extendedType={item.extendedType}
+                  artifactTitle={item.artifactTitle}
+                  entity={item.entity}
+                  context={context}
+                  virtualLab={virtualLab}
+                  group={group}
+                />
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="text-neutral-4 border-neutral-2 rounded-xl border border-dashed px-4 py-6 text-sm">
