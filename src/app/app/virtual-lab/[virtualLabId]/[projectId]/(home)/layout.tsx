@@ -6,14 +6,13 @@ import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { config } from '@/config';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
-import { ProjectInnerLayout } from '@/ui/layouts/project-inner-layout';
+import { BottomControlBar } from '@/ui/segments/project/bottom-control-bar';
 import {
   getQuickAccessQuery,
   type IQuickAccessList,
   type TTutorial,
   TutorialQuery,
 } from '@/ui/segments/project/get-started/query';
-import { LeftMenu } from '@/ui/segments/project/left-nav-menu';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
@@ -55,16 +54,14 @@ export default async function Layout({
   });
 
   return (
-    <ProjectInnerLayout>
-      <div id="project-left-menu" className="w-full pl-3 [grid-area:aside]">
-        <LeftMenu className="w-full" />
-      </div>
+    <div className="bg-background relative h-[calc(100vh-6rem)] w-full overflow-hidden">
       <div
         id="project-main-content"
-        className="secondary-scrollbar w-full overflow-y-auto [grid-area:main]"
+        className="secondary-scrollbar h-full w-full overflow-y-auto px-3 pb-24"
       >
         {children}
       </div>
-    </ProjectInnerLayout>
+      <BottomControlBar />
+    </div>
   );
 }

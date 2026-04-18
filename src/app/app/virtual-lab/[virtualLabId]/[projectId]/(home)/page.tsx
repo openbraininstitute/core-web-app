@@ -1,54 +1,13 @@
-import { tryCatch } from '@/api/utils';
-import { getProject } from '@/api/virtual-lab-svc/queries/project';
-import { getQueryClient } from '@/query-provider/server';
-import { MainVideo } from '@/ui/segments/project/get-started/sections/main-video';
-import { MainCards } from '@/ui/segments/project/get-started/sections/quick-access';
-import { TutorialList } from '@/ui/segments/project/get-started/sections/tutorials';
-import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { RedirectType, redirect } from 'next/navigation';
 
-import type { Metadata } from 'next';
+import { config } from '@/config';
+
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-export const dynamic = 'force-dynamic';
-
-export async function generateMetadata({
-  params,
-}: ServerSideComponentProp<WorkspaceContext, null>): Promise<Metadata> {
-  const { virtualLabId, projectId } = await params;
-  const queryClient = getQueryClient();
-
-  const { data: res } = await tryCatch(
-    queryClient.fetchQuery({
-      queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
-      queryFn: () => getProject({ virtualLabId, projectId }),
-    })
-  );
-  const projectName = res?.data?.project?.name ?? 'Project';
-  const projectDescription = res?.data?.project?.description ?? '';
-
-  const title = `Project: ${projectName} - Get Started | Open Brain Institute`;
-  const description =
-    projectDescription ||
-    `Get started with ${projectName}. Access curated data, workflows, notebooks, and tutorials on the Open Brain Institute.`;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-    },
-  };
-}
-
 export default async function Page(props: ServerSideComponentProp<WorkspaceContext, null>) {
-  const context = await props.params;
-  return (
-    <div className="w-full flex flex-col pr-2">
-      <MainCards context={context} />
-      <MainVideo />
-      <TutorialList />
-    </div>
+  const { virtualLabId, projectId } = await props.params;
+  redirect(
+    `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/quick-access/data`,
+    RedirectType.replace
   );
 }

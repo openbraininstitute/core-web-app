@@ -96,10 +96,7 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
           </Button>
         )}
       </div>
-      <motion.div
-        layout
-        className="grid grid-cols-1 @md:grid-cols-2 @3xl:grid-cols-3  @5xl:grid-cols-4 gap-1.5 w-full"
-      >
+      <motion.div layout className="grid grid-cols-2 @sm:grid-cols-3 gap-1.5 w-full">
         <AnimatePresence initial={false}>
           {visible.map((p) => (
             <motion.div
