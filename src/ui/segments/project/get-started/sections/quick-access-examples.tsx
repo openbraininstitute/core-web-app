@@ -19,9 +19,45 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { WorkspaceContext } from '@/types/common';
 
+// Abstract scientific illustrations bundled in /public/images/scales.
+// Used to override Sanity thumbnails for the example cards.
+const abstractImageByExtendedType: Record<string, string> = {
+  cell_morphology: '/images/scales/singleNeuron.jpg',
+  electrical_cell_recording: '/images/scales/pairedNeuron.jpg',
+  ion_channel_recording: '/images/scales/ionChannel.jpg',
+  ion_channel_model: '/images/scales/ionChannel.jpg',
+  memodel: '/images/scales/singleNeuron.jpg',
+  emodel: '/images/scales/singleNeuron.jpg',
+  me_model_with_synapses: '/images/scales/synaptome.jpg',
+  circuit: '/images/scales/microcircuit.jpg',
+};
+
+const notebookAbstractPool = [
+  '/images/scales/brainRegion.jpg',
+  '/images/scales/microcircuit.jpg',
+  '/images/scales/ngv.jpg',
+  '/images/scales/synaptome.jpg',
+  '/images/scales/singleNeuron.jpg',
+  '/images/scales/pairedNeuron.jpg',
+  '/images/scales/brainSystem.jpg',
+  '/images/scales/ionChannel.jpg',
+];
+
+function pickAbstractImage(
+  extendedType: string,
+  group: TQuickAccessGroup,
+  indexInGroup: number
+): string {
+  if (group === QuickAccessGroupDict.Notebooks) {
+    return notebookAbstractPool[indexInGroup % notebookAbstractPool.length];
+  }
+  return abstractImageByExtendedType[extendedType] ?? '/images/scales/singleNeuron.jpg';
+}
+
 async function resolveGroupItems(
   list: IQuickAccessList | undefined,
-  context: WorkspaceContext
+  context: WorkspaceContext,
+  group: TQuickAccessGroup
 ): Promise<Array<QuickAccessItem>> {
   const previews = list?.list ?? [];
   const withEntity = compact(
@@ -44,13 +80,13 @@ async function resolveGroupItems(
   );
   return settled
     .filter((r) => r.status === 'fulfilled')
-    .map((r) => {
+    .map((r, index) => {
       const { preview, entity, artifactTitle } = r.value;
       return {
         entity,
         title: preview.title ?? entity.name,
         description: preview.description ?? entity.description ?? '',
-        thumbnail: preview.thumbnail,
+        thumbnail: pickAbstractImage(preview.extendedType, group, index),
         extendedType: preview.extendedType,
         artifactTitle,
       };
@@ -84,7 +120,8 @@ export async function QuickAccessExamples({ context }: { context: WorkspaceConte
     groupOrder.map((g) =>
       resolveGroupItems(
         quickAccessList.find((l) => l.group === g),
-        context
+        context,
+        g
       ).then((items) => [g, items] as const)
     )
   );
