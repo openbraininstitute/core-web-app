@@ -1,8 +1,8 @@
 'use client';
 
+import { RiTeamLine } from '@remixicon/react';
 import { Suspense, useState } from 'react';
 
-import { MembersGroupIcon } from '@/components/icons/MembersGroupIcon';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Badge } from '@/ui/molecules/badge';
 import { Modal } from '@/ui/molecules/modal';
@@ -24,14 +24,16 @@ export function MembersPill() {
             rounded
             id="workspace-project-members"
             className={cn(
-              'min-w-16 font-bold bg-background select-none cursor-pointer',
-              'hover:shadow-sm hover:bg-background'
+              'font-bold bg-background select-none cursor-pointer shrink-0',
+              'hover:shadow-sm hover:bg-background',
+              'p-0! flex items-center justify-center',
+              breakpoint === 'xl' ? 'size-12!' : 'size-10!'
             )}
             variant="outline"
             size={breakpoint === 'xl' ? 'lg' : 'md'}
           >
             <button type="button" onClick={() => setOpen(true)} aria-label="View project members">
-              <MembersGroupIcon style={{ width: 22, height: 22 }} />
+              <RiTeamLine className="text-primary-9 size-6! w-6! h-6!" />
             </button>
           </Badge>
         </TooltipTrigger>
