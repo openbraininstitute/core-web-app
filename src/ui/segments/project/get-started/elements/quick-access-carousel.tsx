@@ -27,9 +27,9 @@ type Props = {
 };
 
 const groupLabels: Record<TQuickAccessGroup, string> = {
-  [QuickAccessGroupDict.Data]: 'Example Data',
-  [QuickAccessGroupDict.Workflows]: 'Example Workflows',
-  [QuickAccessGroupDict.Notebooks]: 'Example Notebooks',
+  [QuickAccessGroupDict.Data]: 'Data',
+  [QuickAccessGroupDict.Workflows]: 'Workflows',
+  [QuickAccessGroupDict.Notebooks]: 'Notebook',
 };
 
 const groupOrder: Array<TQuickAccessGroup> = [

@@ -220,10 +220,11 @@ export function SingleCardItem({
   return (
     <Card
       className={cn(
-        'w-full bg-white border-none flex-1 pt-0',
+        'w-full bg-white border-none flex-1',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
         'hover:shadow-bnb hover:bg-gray-100/70 hover:border group',
-        'cursor-pointer select-none gap-2.5'
+        'cursor-pointer select-none',
+        compact ? 'py-0 gap-0' : 'pt-0 gap-2.5'
       )}
       onClick={() => redirect()}
       title={title}
@@ -272,31 +273,45 @@ export function SingleCardItem({
             {artifactTitle}
           </Badge>
         )}
-      </div>
-      <CardContent className={cn('flex flex-col', compact ? 'mt-2' : 'mt-8')}>
-        <div
-          className={cn(
-            'font-black rounded-full text-primary-8 mb-1.5',
-            'max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5',
-            compact ? 'px-2 py-0.5 text-sm' : 'px-4 py-1.5 text-lg 2xl:text-xl'
-          )}
-          title={title}
-        >
-          {group === QuickAccessGroupDict.Notebooks && isPending && (
-            <LoadingOutlined className="text-label!" />
-          )}
-          <span
-            className={cn('whitespace-normal break-all', compact ? 'line-clamp-1' : 'line-clamp-5')}
+        {compact && (
+          <div
+            className={cn(
+              'absolute bottom-2 left-2 max-w-[calc(100%-1rem)] rounded-full px-3 py-1',
+              'bg-white/90 backdrop-blur-sm shadow-sm',
+              'text-primary-8 text-xs font-bold',
+              'group-hover:bg-primary-8 group-hover:text-white flex items-center gap-1.5'
+            )}
+            title={title}
           >
-            {title ?? 'No title provided'}
-          </span>
-        </div>
-        {!compact && (
+            {group === QuickAccessGroupDict.Notebooks && isPending && (
+              <LoadingOutlined className="text-primary-8!" />
+            )}
+            <span className="line-clamp-1">{title ?? 'No title provided'}</span>
+          </div>
+        )}
+      </div>
+      {!compact && (
+        <CardContent className="mt-8 flex flex-col">
+          <div
+            className={cn(
+              'font-black rounded-full text-primary-8 mb-1.5',
+              'max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5',
+              'px-4 py-1.5 text-lg 2xl:text-xl'
+            )}
+            title={title}
+          >
+            {group === QuickAccessGroupDict.Notebooks && isPending && (
+              <LoadingOutlined className="text-label!" />
+            )}
+            <span className="whitespace-normal break-all line-clamp-5">
+              {title ?? 'No title provided'}
+            </span>
+          </div>
           <p className="text-neutral-4 line-clamp-4 pl-4" title={description}>
             {description ?? 'No description provided'}
           </p>
-        )}
-      </CardContent>
+        </CardContent>
+      )}
     </Card>
   );
 }
