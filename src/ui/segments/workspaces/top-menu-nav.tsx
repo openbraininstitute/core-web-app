@@ -27,6 +27,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/ui/molecules/dropdown-menu';
+import { usePanelState } from '@/ui/segments/ai/hooks';
+import { PanelState } from '@/ui/segments/ai/types';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 import { cleanSearchParams } from '@/utils/search-params';
@@ -143,6 +145,8 @@ export function TopMenuNavigation() {
   const queryParams = useSearchParams();
   const activeSection = getActiveSection(pathname);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const { state: aiPanelState, setState: setAiPanelState } = usePanelState();
+  const isAiOpen = aiPanelState !== PanelState.Collapsed;
 
   const hashedLinks = links.map((link) => ({
     ...link,
@@ -374,6 +378,35 @@ export function TopMenuNavigation() {
           );
         }
       )}
+      <div className="group flex w-max items-center justify-center gap-0">
+        <div className="relative flex items-center">
+          <Button
+            rounded
+            id="workspace-ai-trigger"
+            variant="outline"
+            size={breakpoint === 'xl' ? 'lg' : 'md'}
+            className={cn(
+              {
+                'bg-transparent! hover:bg-transparent! hover:text-primary-9! hover:shadow-sm':
+                  !isAiOpen,
+              },
+              'font-bold',
+              { 'w-12 justify-center!': breakpoint === 'xl' },
+              { 'w-10! justify-center!': breakpoint === 'l' },
+              'group relative flex items-center justify-center',
+              'transition-all duration-400 ease-out'
+            )}
+            active={isAiOpen}
+            aria-pressed={isAiOpen}
+            onClick={() => setAiPanelState(isAiOpen ? PanelState.Collapsed : PanelState.Expanded)}
+          >
+            AI
+          </Button>
+          <span className="text-primary-9 absolute top-full left-1/2 -translate-x-1/2 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            AI Assistant
+          </span>
+        </div>
+      </div>
       {isFeedbackModalOpen && (
         <FeedbackModal open={isFeedbackModalOpen} onClose={() => setIsFeedbackModalOpen(false)} />
       )}

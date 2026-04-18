@@ -12,6 +12,7 @@ import {
   type TTutorial,
   TutorialQuery,
 } from '@/ui/segments/project/get-started/query';
+import { NoScrollEffect } from '@/ui/segments/project/no-scroll-effect';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
@@ -54,6 +55,7 @@ export default async function Layout({
 
   return (
     <div className="bg-background h-full w-full overflow-hidden">
+      <NoScrollEffect />
       <div id="project-main-content" className="h-full w-full overflow-hidden px-3">
         {children}
       </div>

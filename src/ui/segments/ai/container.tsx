@@ -1,10 +1,9 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 
 import AiAssistant from '@/components/ai-assistant';
-import IconPlus from '@/components/icons/Plus';
 import { useAgentState } from '@/services/ai-agent';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
@@ -20,11 +19,17 @@ export function Container() {
   const [sizeState, setSizeState] = useState(state);
   const [contentState, setContentState] = useState(state);
 
+  // Sync local state when the flag changes externally (e.g. from the top-menu AI button).
+  useEffect(() => {
+    setSizeState(state);
+    if (state !== PanelState.Collapsed) setContentState(state);
+  }, [state]);
+
   useAgentState('smc_simulation_config');
 
   const isCollapsed = contentState === PanelState.Collapsed;
   const isFullscreen = contentState === PanelState.Fullscreen;
-  const targetWidth = sizeState === PanelState.Collapsed ? '3rem' : '400px';
+  const targetWidth = sizeState === PanelState.Collapsed ? '0px' : '400px';
 
   function updateState(next: PanelState) {
     setSizeState(next);
@@ -54,34 +59,7 @@ export function Container() {
       transition={{ duration: 0.3, ease: 'easeInOut' }}
       onAnimationComplete={handleAnimationComplete}
     >
-      {isCollapsed ? (
-        <button
-          type="button"
-          onClick={() => updateState(PanelState.Expanded)}
-          className={styles.collapsed}
-          // "relative flex h-full w-full cursor-pointer items-start justify-center px-2 select-none"
-          aria-label="expand AI assistant"
-          disabled={isPending}
-        >
-          <IconPlus />
-          {/* <div className ="absolute top-3 flex items-center justify-center text-white">
-            <PlusOutlined className="h-5 w-5" />
-          </div> */}
-          <div
-            className="text-xl font-bold"
-            // style={{
-            //   transform: 'rotate(-90deg)',
-            //   transformOrigin: 'center',
-            //   whiteSpace: 'nowrap',
-            //   position: 'relative',
-            //   top: '80px',
-            //   margin: 0,
-            // }}
-          >
-            AI Assistant
-          </div>
-        </button>
-      ) : (
+      {isCollapsed ? null : (
         <div className="flex h-full w-full flex-col rounded-lg relative overflow-visible">
           <AnimatePresence mode="wait">
             {sizeState !== PanelState.Collapsed && (
