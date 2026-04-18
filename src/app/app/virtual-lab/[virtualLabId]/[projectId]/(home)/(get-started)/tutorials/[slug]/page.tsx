@@ -63,8 +63,21 @@ export default async function Page({ params }: ServerSideComponentProp<{ slug: s
     <>
       <ScrollToTop />
       <ViewTransition enter="vt-slide-up-enter" exit="vt-slide-down-exit">
-        <div className="relative w-full aspect-video overflow-hidden rounded-2xl border border-neutral-2">
-          <VideoPlayer url={video?.url} />
+        <div className="flex w-full flex-col gap-3">
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-neutral-2">
+            <VideoPlayer url={video?.url} />
+          </div>
+          <div className="flex flex-col gap-2 px-1">
+            <h3 className="text-primary-9 text-xl font-bold line-clamp-2" title={video.title}>
+              {video.title}
+            </h3>
+            <p className="text-neutral-4 line-clamp-5 text-sm leading-relaxed">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+              incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+              exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+              dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+            </p>
+          </div>
         </div>
       </ViewTransition>
     </>

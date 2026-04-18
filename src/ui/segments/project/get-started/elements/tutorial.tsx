@@ -6,6 +6,7 @@ import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -13,16 +14,90 @@ import { cn } from '@/utils/css-class';
 
 import type { TTutorial } from '@/ui/segments/project/get-started/query';
 
+// Captures a screenshot of the tutorial video (frame at 0.5s) and renders it as
+// the card image. Falls back to the Sanity poster while loading / on failure.
+function VideoScreenshot({
+  videoUrl,
+  fallback,
+  alt,
+  className,
+}: {
+  videoUrl: string;
+  fallback: string;
+  alt: string;
+  className?: string;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [snapshot, setSnapshot] = useState<string | null>(null);
+
+  useEffect(() => {
+    const video = document.createElement('video');
+    video.crossOrigin = 'anonymous';
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'metadata';
+    video.src = videoUrl;
+    videoRef.current = video;
+
+    let cancelled = false;
+
+    const handleLoadedData = () => {
+      if (cancelled) return;
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 360;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        setSnapshot(canvas.toDataURL('image/jpeg', 0.85));
+      } catch {
+        // CORS / codec issue — stay on fallback.
+      }
+    };
+    const handleLoadedMetadata = () => {
+      try {
+        video.currentTime = Math.min(2, (video.duration || 4) / 2);
+      } catch {
+        /* ignore */
+      }
+    };
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('seeked', handleLoadedData);
+
+    return () => {
+      cancelled = true;
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('seeked', handleLoadedData);
+      video.src = '';
+    };
+  }, [videoUrl]);
+
+  const src = snapshot ?? fallback;
+  return (
+    <Image
+      fill
+      unoptimized
+      alt={alt}
+      src={src}
+      className={cn('object-cover transition-all ease-in-out', className)}
+    />
+  );
+}
+
 export function TutorialCard({
   title,
   slug,
   image,
+  videoUrl,
   isSelected,
 }: {
   isSelected: boolean;
   title: string;
   slug: string;
   image: string;
+  videoUrl: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const t = upperFirst(lowerCase(title));
@@ -34,35 +109,15 @@ export function TutorialCard({
       <div
         className={cn(
           'relative aspect-video w-full overflow-hidden rounded-xl cursor-pointer group select-none',
-          'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] hover:shadow-bnb'
+          'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] hover:shadow-bnb',
+          'border-2 transition-colors',
+          isSelected ? 'border-primary-7' : 'border-transparent'
         )}
         title={t}
       >
-        <Image
-          fill
-          alt={t}
-          src={image}
-          className={cn('object-cover transition-all ease-in-out', {
-            'grayscale brightness-90 contrast-60 opacity-80': isSelected,
-          })}
-        />
-        <div
-          className={cn('absolute inset-0 bg-black/30', {
-            'filter grayscale-50': isSelected,
-          })}
-        />
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <RiPlayFill className="text-white size-10" />
-        </div>
-        <div
-          className={cn(
-            'absolute bottom-2 left-2 max-w-[calc(100%-1rem)] rounded-full px-3 py-1',
-            'bg-white/90 backdrop-blur-sm shadow-sm',
-            'text-primary-8 text-xs font-bold',
-            'group-hover:bg-primary-8 group-hover:text-white'
-          )}
-        >
-          <span className="line-clamp-1">{t}</span>
+        <VideoScreenshot videoUrl={videoUrl} fallback={image} alt={t} />
+        <div className="absolute bottom-2 right-2">
+          <RiPlayFill className="text-white size-8 drop-shadow-md" />
         </div>
       </div>
     </Link>
@@ -81,6 +136,7 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
             <TutorialCard
               title={p.title}
               image={p.poster}
+              videoUrl={p.url}
               slug={p.slug}
               isSelected={slug === p.slug}
             />
