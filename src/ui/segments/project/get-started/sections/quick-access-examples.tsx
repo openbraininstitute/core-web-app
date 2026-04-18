@@ -1,5 +1,3 @@
-import { compact } from 'es-toolkit/compat';
-
 import { tryCatch } from '@/api/utils';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -19,78 +17,68 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { WorkspaceContext } from '@/types/common';
 
-// Abstract scientific illustrations bundled in /public/images/scales.
-// Used to override Sanity thumbnails for the example cards.
-const abstractImageByExtendedType: Record<string, string> = {
-  cell_morphology: '/images/scales/singleNeuron.jpg',
-  electrical_cell_recording: '/images/scales/pairedNeuron.jpg',
-  ion_channel_recording: '/images/scales/ionChannel.jpg',
-  ion_channel_model: '/images/scales/ionChannel.jpg',
-  memodel: '/images/scales/singleNeuron.jpg',
-  emodel: '/images/scales/singleNeuron.jpg',
-  me_model_with_synapses: '/images/scales/synaptome.jpg',
-  circuit: '/images/scales/microcircuit.jpg',
-};
-
-const notebookAbstractPool = [
-  '/images/scales/brainRegion.jpg',
-  '/images/scales/microcircuit.jpg',
-  '/images/scales/ngv.jpg',
-  '/images/scales/synaptome.jpg',
+// Abstract scientific scale illustrations used for the Data / Notebook example cards.
+const ABSTRACT_PREVIEW_IMAGES = [
   '/images/scales/singleNeuron.jpg',
+  '/images/scales/ionChannel.jpg',
+  '/images/scales/synaptome.jpg',
+  '/images/scales/microcircuit.jpg',
+  '/images/scales/brainRegion.jpg',
+  '/images/scales/ngv.jpg',
   '/images/scales/pairedNeuron.jpg',
   '/images/scales/brainSystem.jpg',
-  '/images/scales/ionChannel.jpg',
 ];
 
-function pickAbstractImage(
-  extendedType: string,
-  group: TQuickAccessGroup,
-  indexInGroup: number
-): string {
-  if (group === QuickAccessGroupDict.Notebooks) {
-    return notebookAbstractPool[indexInGroup % notebookAbstractPool.length];
-  }
-  return abstractImageByExtendedType[extendedType] ?? '/images/scales/singleNeuron.jpg';
+function pickPreviewImage(indexInGroup: number): string {
+  return ABSTRACT_PREVIEW_IMAGES[indexInGroup % ABSTRACT_PREVIEW_IMAGES.length];
 }
 
 async function resolveGroupItems(
   list: IQuickAccessList | undefined,
-  context: WorkspaceContext,
-  group: TQuickAccessGroup
+  context: WorkspaceContext
 ): Promise<Array<QuickAccessItem>> {
   const previews = list?.list ?? [];
-  const withEntity = compact(
-    previews.map((p) => {
-      const entityConfig = getEntityByExtendedType({ type: p.extendedType });
-      const call = entityConfig?.api.query.one;
-      return call
-        ? { preview: p, request: call, artifactTitle: entityConfig?.title ?? null }
-        : null;
+  const prepared = previews.map((p) => {
+    const entityConfig = getEntityByExtendedType({ type: p.extendedType });
+    return {
+      preview: p,
+      request: entityConfig?.api.query.one ?? null,
+      artifactTitle: entityConfig?.title ?? null,
+    };
+  });
+
+  const fetched = await Promise.all(
+    prepared.map(async ({ preview, request, artifactTitle }) => {
+      if (!request) return { preview, entity: null, artifactTitle };
+      try {
+        const entity = await request({ id: preview.entityId, context });
+        return { preview, entity, artifactTitle };
+      } catch {
+        return { preview, entity: null, artifactTitle };
+      }
     })
   );
-  const settled = await Promise.allSettled(
-    withEntity.map(({ preview, request, artifactTitle }) =>
-      request({ id: preview.entityId, context }).then((entity) => ({
-        preview,
-        entity,
-        artifactTitle,
-      }))
-    )
-  );
-  return settled
-    .filter((r) => r.status === 'fulfilled')
-    .map((r, index) => {
-      const { preview, entity, artifactTitle } = r.value;
-      return {
-        entity,
-        title: preview.title ?? entity.name,
-        description: preview.description ?? entity.description ?? '',
-        thumbnail: pickAbstractImage(preview.extendedType, group, index),
-        extendedType: preview.extendedType,
-        artifactTitle,
-      };
-    });
+
+  // Keep every item from Sanity, even when the entitycore fetch fails — card
+  // still shows with title + thumbnail; interactions that need the full entity
+  // will just no-op.
+  return fetched.map(({ preview, entity, artifactTitle }, index) => {
+    const stubEntity = {
+      id: preview.entityId,
+      type: preview.extendedType,
+      assets: [],
+      name: preview.title ?? '',
+      description: preview.description ?? '',
+    } as unknown as QuickAccessItem['entity'];
+    return {
+      entity: entity ?? stubEntity,
+      title: preview.title ?? (entity?.name as string | undefined) ?? 'Untitled',
+      description: preview.description ?? (entity?.description as string | undefined) ?? '',
+      thumbnail: pickPreviewImage(index),
+      extendedType: preview.extendedType,
+      artifactTitle,
+    };
+  });
 }
 
 export async function QuickAccessExamples({ context }: { context: WorkspaceContext }) {
@@ -120,8 +108,7 @@ export async function QuickAccessExamples({ context }: { context: WorkspaceConte
     groupOrder.map((g) =>
       resolveGroupItems(
         quickAccessList.find((l) => l.group === g),
-        context,
-        g
+        context
       ).then((items) => [g, items] as const)
     )
   );

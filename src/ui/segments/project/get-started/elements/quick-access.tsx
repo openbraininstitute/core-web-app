@@ -4,6 +4,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { useMutation } from '@tanstack/react-query';
 import { kebabCase } from 'es-toolkit/compat';
+import { useSetAtom } from 'jotai';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -24,6 +25,7 @@ import {
   SelectValue,
 } from '@/ui/molecules/select';
 import { Skeleton } from '@/ui/molecules/skeleton';
+import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
 import {
   QuickAccessGroupDict,
   type TQuickAccessGroup,
@@ -191,8 +193,34 @@ export function SingleCardItem({
   hideArtifact?: boolean;
 }) {
   const { push: navigate } = useRouter();
+  const setDataPreview = useSetAtom(dataPreviewAtom);
   const { mutate: redirect, isPending } = useMutation({
     mutationFn: async () => {
+      if (group === QuickAccessGroupDict.Data && compact) {
+        setDataPreview({
+          kind: 'data',
+          entityId: entity.id,
+          extendedType,
+          title: title ?? entity.name ?? 'Untitled',
+          thumbnail,
+        });
+        return;
+      }
+      if (group === QuickAccessGroupDict.Notebooks && compact) {
+        const asset = (entity as INotebook).assets.find(
+          (n) => n.label === AssetLabel.jupyter_notebook
+        );
+        setDataPreview({
+          kind: 'notebook',
+          entityId: entity.id,
+          extendedType,
+          title: title ?? entity.name ?? 'Untitled',
+          thumbnail,
+          assetPath: asset?.path,
+          computeCell: virtualLab?.data?.virtual_lab.compute_cell ?? 'aws',
+        });
+        return;
+      }
       if (group === QuickAccessGroupDict.Data || group === QuickAccessGroupDict.Workflows) {
         navigate(
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${group}/view/${kebabCase(extendedType)}/${entity.id}`
