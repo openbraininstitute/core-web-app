@@ -12,7 +12,7 @@ export default async function Layout({
   const context = await params;
 
   return (
-    <section id="tutorials" data-testid="tutorials" className="flex w-full gap-4 pr-2">
+    <section id="tutorials" data-testid="tutorials" className="flex w-full gap-4">
       <div className="w-[55%] min-w-0">
         <TutorialLeftPane>{children}</TutorialLeftPane>
       </div>

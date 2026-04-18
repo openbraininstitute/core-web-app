@@ -31,7 +31,7 @@ export function ProjectRootLayout({ children }: Props) {
       id="project-root-layout"
       className={cn(
         'bg-background grid h-screen w-full grid-cols-[1fr_minmax(0,auto)]',
-        "grid-rows-[5rem_1fr] gap-2 overflow-hidden [grid-template-areas:'header_header''main_ai']"
+        "grid-rows-[5rem_1fr] gap-y-2 overflow-hidden [grid-template-areas:'header_header''main_ai']"
       )}
     >
       {children}

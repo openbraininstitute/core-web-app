@@ -1,19 +1,29 @@
 'use client';
 
 import { RiTeamLine } from '@remixicon/react';
+import { useQuery } from '@tanstack/react-query';
 import { Suspense, useState } from 'react';
 
+import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
 import { Modal } from '@/ui/molecules/modal';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { TeamManager } from '@/ui/segments/project/team/team';
 import { ProjectTeamSkeleton } from '@/ui/segments/project/team/team-skeleton';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 export function MembersPill() {
   const breakpoint = useDefaultBreakpoint();
   const [open, setOpen] = useState(false);
+  const { virtualLabId, projectId } = useWorkspace();
+  const { data: project } = useQuery({
+    queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
+    queryFn: () => getProject({ virtualLabId, projectId }),
+  });
+  const projectName = project?.data.project.name;
 
   return (
     <>
@@ -53,7 +63,14 @@ export function MembersPill() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="Members"
+        title={
+          <div className="flex flex-col">
+            <span>Project members</span>
+            {projectName && (
+              <span className="text-neutral-4 text-sm font-normal">{projectName}</span>
+            )}
+          </div>
+        }
         size="xl"
         destroyOnClose
         bodyClassName="px-2 py-2"
