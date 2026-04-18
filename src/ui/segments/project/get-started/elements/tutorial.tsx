@@ -9,7 +9,7 @@ import { useParams } from 'next/navigation';
 
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
+import { Card, CardContent } from '@/ui/molecules/card';
 import { cn } from '@/utils/css-class';
 
 import type { TTutorial } from '@/ui/segments/project/get-started/query';
@@ -34,35 +34,43 @@ export function TutorialCard({
     >
       <Card
         className={cn(
-          'w-full bg-white border-none px-4 cursor-pointer group',
-          'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] gap-2.5',
-          'hover:shadow-bnb hover:border-gray-200 hover:border hover:bg-gray-100',
+          'w-full bg-white border-none flex-1 pt-0 cursor-pointer group select-none gap-2.5',
+          'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
+          'hover:shadow-bnb hover:bg-gray-100/70 hover:border',
           { 'bg-neutral-2': isSelected }
         )}
+        title={t}
       >
-        <CardTitle className="text-primary-9 group-hover:text-primary-8 group-hover:font-black">
-          {t}
-        </CardTitle>
-        <CardDescription className="relative aspect-video w-full mt-auto">
-          <div className="relative w-full h-full">
-            <Image
-              fill
-              alt={t}
-              src={image}
-              className={cn('rounded-md transition-all ease-in-out', {
-                'grayscale brightness-90 contrast-60 opacity-80': isSelected,
-              })}
-            />
-            <div
-              className={cn('absolute inset-0 bg-black/30 rounded-md', {
-                'filter grayscale-50': isSelected,
-              })}
-            />
-            <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
-              <RiPlayFill className="text-white size-10" />
-            </div>
+        <div className="relative aspect-video w-full overflow-hidden rounded-xl">
+          <Image
+            fill
+            alt={t}
+            src={image}
+            className={cn('object-cover transition-all ease-in-out', {
+              'grayscale brightness-90 contrast-60 opacity-80': isSelected,
+            })}
+          />
+          <div
+            className={cn('absolute inset-0 bg-black/30', {
+              'filter grayscale-50': isSelected,
+            })}
+          />
+          <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+            <RiPlayFill className="text-white size-10" />
           </div>
-        </CardDescription>
+        </div>
+        <CardContent className="mt-2 flex flex-col">
+          <div
+            className={cn(
+              'font-black rounded-full text-primary-8 mb-1.5',
+              'max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5',
+              'px-2 py-0.5 text-sm'
+            )}
+            title={t}
+          >
+            <span className="whitespace-normal break-all line-clamp-1">{t}</span>
+          </div>
+        </CardContent>
       </Card>
     </Link>
   );
