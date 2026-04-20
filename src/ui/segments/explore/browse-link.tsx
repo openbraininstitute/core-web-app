@@ -245,8 +245,8 @@ export function BrowseLink({
       if (entity?.api.query.count) return entity.api.query.count(fallbackQuery.query);
       return entity?.api.query.list?.(fallbackQuery.query);
     },
-    // only fetch when this entity is NOT the active table entity
-    enabled: !!currentBrainRegionId && enabled && !isActiveEntity,
+    // fetch for inactive entities and as bootstrap for active entities without cached table count yet
+    enabled: !!currentBrainRegionId && enabled,
     staleTime: Infinity,
   });
 
@@ -266,8 +266,8 @@ export function BrowseLink({
 
   // resolve current count: prioritize table query when active, fallback otherwise
   const count = isActiveEntity && hasCachedData ? tableCount : fallbackData?.pagination.total_items;
-  const loadingCurrent = isActiveEntity ? tableCountLoading : loadingFallback;
-  const isCurrentError = isActiveEntity ? isTableCountError : isFallbackError;
+  const loadingCurrent = isActiveEntity && hasCachedData ? tableCountLoading : loadingFallback;
+  const isCurrentError = isActiveEntity && hasCachedData ? isTableCountError : isFallbackError;
   const rootCount = root?.pagination.total_items;
   const isLoading = loadingCurrent || loadingRoot;
 
