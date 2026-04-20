@@ -164,7 +164,7 @@ export function useServiceAiAgentChat(threadId: string) {
         editstateResult.toolInvocation.result
       );
     }
-  }, [chat.messages, setConfig, isLoadingMessages, assistantInitialMessages.length]);
+  }, [chat.messages, setConfig, setLastConfigUpdate, isLoadingMessages, assistantInitialMessages.length]);
 
   useEffect(() => {
     setIsChatReady(chat.status === 'ready');
