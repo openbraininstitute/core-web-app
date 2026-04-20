@@ -95,9 +95,15 @@ export function NotebooksLayout({ children, active }: Props) {
     refetchOnWindowFocus: 'always',
   });
 
+  console.log(`\n\n UserGroups⚠️⚠️⚠️`, userGroups);
+
   const isVlabAdmin = !!userGroups?.data?.groups.find(
     (group) => group.role === 'admin' && group.virtual_lab_id === virtualLabId
   );
+
+  console.log(`\n\n Vlab⚠️⚠️⚠️`, virtualLabId);
+
+  console.log('\n\nIs virtual lab admin?', isVlabAdmin);
 
   const { data: virtualLabData, refetch } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
