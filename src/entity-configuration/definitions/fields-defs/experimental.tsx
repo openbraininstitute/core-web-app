@@ -107,6 +107,11 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         property: 'order_by',
         value: 'mtype__pref_label',
       },
+      {
+        types: [ExtendedEntitiesTypeDict.SingleNeuronSynaptome],
+        property: 'order_by',
+        value: 'me_model__mtype__pref_label',
+      },
     ],
     isSortable: true,
     isFilterable: true,
@@ -154,6 +159,11 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         ],
         property: 'order_by',
         value: 'etype__pref_label',
+      },
+      {
+        types: [ExtendedEntitiesTypeDict.SingleNeuronSynaptome],
+        property: 'order_by',
+        value: 'me_model__etype__pref_label',
       },
     ],
     isSortable: true,
