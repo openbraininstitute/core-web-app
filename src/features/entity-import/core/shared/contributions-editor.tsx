@@ -9,6 +9,7 @@ import {
   ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
   ENTITY_IMPORT_TOOLTIP_CARD_CLASSNAME,
 } from '@/features/entity-import/core/shared/ui';
+import { getTableCellUiStatus, TableCellUiStatus } from '@/features/entity-import/ui/status';
 import { AsyncSelect } from '@/ui/molecules/async-select';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -310,12 +311,14 @@ function ContributionPreviewText({
 export function ContributionSummaryCell({
   label,
   triggerLabel,
+  cell,
   entries,
   onClick,
   onPromoteContribution,
 }: {
   label: string;
   triggerLabel: string;
+  cell: IImportCellState;
   entries: unknown;
   onClick: () => void;
   onPromoteContribution: (contributionId: string) => void;
@@ -324,17 +327,49 @@ export function ContributionSummaryCell({
   const primary = contributions[0] ?? null;
   const overflowCount = Math.max(contributions.length - 1, 0);
   const [tooltipOpen, setTooltipOpen] = useState(false);
+  const cellUiStatus = getTableCellUiStatus(cell);
 
   return (
-    <div className="flex h-full min-h-[52px] w-full items-stretch gap-2 px-3 py-2">
+    <div
+      className={cn(
+        'flex h-full min-h-[52px] w-full items-stretch gap-2',
+        {
+          'bg-amber-50/70 text-amber-950': cellUiStatus === TableCellUiStatus.Warning,
+        },
+        {
+          'bg-sky-50/70 text-sky-950': cellUiStatus === TableCellUiStatus.NeedsSelection,
+        },
+        {
+          'bg-neutral-50 text-neutral-700': cellUiStatus === TableCellUiStatus.Validating,
+        }
+      )}
+    >
       <Button
         type="button"
         aria-label={triggerLabel}
         variant="ghost"
         size="md"
         className={cn(
-          'h-full min-h-[52px] min-w-0 flex-1 justify-start rounded-none border-0',
-          'bg-transparent px-0 py-0 text-left shadow-none hover:bg-neutral-50'
+          'h-full min-h-[52px] w-full min-w-0 flex-1 justify-start rounded-none border-0',
+          'px-3 py-2 text-left shadow-none',
+          {
+            'bg-transparent hover:bg-neutral-50':
+              cellUiStatus !== TableCellUiStatus.Warning &&
+              cellUiStatus !== TableCellUiStatus.NeedsSelection &&
+              cellUiStatus !== TableCellUiStatus.Validating,
+          },
+          {
+            'bg-amber-50/70 text-amber-950 hover:bg-amber-100/70':
+              cellUiStatus === TableCellUiStatus.Warning,
+          },
+          {
+            'bg-sky-50/70 text-sky-950 hover:bg-sky-100/70':
+              cellUiStatus === TableCellUiStatus.NeedsSelection,
+          },
+          {
+            'bg-neutral-50 text-neutral-700 hover:bg-neutral-100':
+              cellUiStatus === TableCellUiStatus.Validating,
+          }
         )}
         onClick={onClick}
       >
@@ -344,14 +379,31 @@ export function ContributionSummaryCell({
       {overflowCount > 0 ? (
         <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
           <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label={`Show ${overflowCount} more contribution${overflowCount === 1 ? '' : 's'}`}
-              className={cn(ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME, 'size-8!')}
-              onClick={(event) => event.stopPropagation()}
-            >
-              +{overflowCount}
-            </button>
+            <div className="flex shrink-0 items-center pr-3">
+              <button
+                type="button"
+                aria-label={`Show ${overflowCount} more contribution${overflowCount === 1 ? '' : 's'}`}
+                className={cn(
+                  ENTITY_IMPORT_TOOLTIP_BADGE_TRIGGER_CLASSNAME,
+                  'size-8!',
+                  {
+                    'border-amber-200 bg-amber-100/70 text-amber-950 hover:border-amber-300 hover:bg-amber-100':
+                      cellUiStatus === TableCellUiStatus.Warning,
+                  },
+                  {
+                    'border-sky-200 bg-sky-100/70 text-sky-950 hover:border-sky-300 hover:bg-sky-100':
+                      cellUiStatus === TableCellUiStatus.NeedsSelection,
+                  },
+                  {
+                    'border-neutral-200 bg-neutral-100 text-neutral-700 hover:bg-neutral-200':
+                      cellUiStatus === TableCellUiStatus.Validating,
+                  }
+                )}
+                onClick={(event) => event.stopPropagation()}
+              >
+                +{overflowCount}
+              </button>
+            </div>
           </TooltipTrigger>
           <TooltipContent
             side="top"

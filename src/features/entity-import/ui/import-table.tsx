@@ -33,6 +33,7 @@ import {
   fieldColumnWidth,
   ROW_ACTIONS_COLUMN_WIDTH,
   ROW_INDEX_COLUMN_WIDTH,
+  ROW_STATUS_COLUMN_WIDTH,
   useImportTableLayout,
 } from '@/features/entity-import/hooks/use-import-table-layout';
 import { useImportTableScroll } from '@/features/entity-import/hooks/use-import-table-scroll';
@@ -56,10 +57,15 @@ import type {
 } from '@/features/entity-import/core/adapter';
 import type { IImportRunState, IImportSessionState } from '@/features/entity-import/core/contracts';
 
-function getImportRowIndexCellAriaLabel(
+function getImportRowValidationState(
   row: IImportSessionState['rows'][number],
   importRun: IImportRunState
-): string {
+): {
+  importRowStatus: IImportRunState['rowResults'][string]['status'] | undefined;
+  isImportPhase: boolean;
+  hasAnyCellProblem: boolean;
+  isRowFullyValid: boolean;
+} {
   const importRowStatus = importRun.rowResults[row.id]?.status;
   const isImportPhase =
     importRun.phase === ImportRunPhase.Running || importRun.phase === ImportRunPhase.Completed;
@@ -72,6 +78,20 @@ function getImportRowIndexCellAriaLabel(
   );
   const isRowFullyValid = row.rowStatus === RowStatus.Valid && !hasAnyCellProblem;
 
+  return {
+    importRowStatus,
+    isImportPhase,
+    hasAnyCellProblem,
+    isRowFullyValid,
+  };
+}
+
+function getImportRowStatusCellAriaLabel(
+  row: IImportSessionState['rows'][number],
+  importRun: IImportRunState
+): string {
+  const { importRowStatus, isImportPhase, hasAnyCellProblem, isRowFullyValid } =
+    getImportRowValidationState(row, importRun);
   const n = row.rowIndex + 1;
   if (isImportPhase) {
     if (importRowStatus === ImportRowResultStatus.Pending) {
@@ -92,6 +112,64 @@ function getImportRowIndexCellAriaLabel(
     return `Row ${n} status: Needs attention`;
   }
   return `Row ${n} status: Needs attention`;
+}
+
+function renderImportRowStatusBadge(
+  row: IImportSessionState['rows'][number],
+  importRun: IImportRunState
+) {
+  const { importRowStatus, isImportPhase, hasAnyCellProblem, isRowFullyValid } =
+    getImportRowValidationState(row, importRun);
+
+  if (isImportPhase) {
+    if (importRowStatus === ImportRowResultStatus.Pending) {
+      return (
+        <span className="inline-flex items-center justify-center gap-1 rounded-full bg-primary-1 px-0.5 py-0.5 text-[10px] w-4.5! h-4.5! font-semibold text-primary-9">
+          <LoadingOutlined spin className="text-[10px]" />
+        </span>
+      );
+    }
+
+    if (importRowStatus === ImportRowResultStatus.Succeeded) {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+          <CheckCircleFilled className="text-[10px]" />
+          Imported
+        </span>
+      );
+    }
+
+    if (importRowStatus === ImportRowResultStatus.Failed) {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
+          <CloseCircleFilled className="text-[10px]" />
+          Failed
+        </span>
+      );
+    }
+
+    return null;
+  }
+
+  if (isRowFullyValid) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+        <CheckCircleFilled className="text-[10px]" />
+        Valid
+      </span>
+    );
+  }
+
+  if (row.rowStatus === RowStatus.Invalid || hasAnyCellProblem) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+        <ExclamationCircleFilled className="text-[10px]" />
+        Invalid
+      </span>
+    );
+  }
+
+  return null;
 }
 
 interface ImportTableProps<TPayload, TResult> {
@@ -212,63 +290,18 @@ export function ImportTable<TPayload, TResult>({
         width: ROW_INDEX_COLUMN_WIDTH,
         fixed: 'left',
         align: 'center',
-        render: (_, row) => {
-          const importRowStatus = importRun.rowResults[row.id]?.status;
-          const isImportPhase =
-            importRun.phase === ImportRunPhase.Running ||
-            importRun.phase === ImportRunPhase.Completed;
-
-          const hasAnyCellProblem = Object.values(row.cells).some(
-            (cell) =>
-              cell.status === CellStatus.Invalid ||
-              cell.remoteState.status === RemoteValidationStatus.Invalid ||
-              cell.remoteState.status === RemoteValidationStatus.Pending
-          );
-          const isRowFullyValid = row.rowStatus === RowStatus.Valid && !hasAnyCellProblem;
-
-          return (
-            <div className="flex min-h-[52px] flex-col items-center justify-center gap-1.5 py-2">
-              <span className="text-xs text-center font-semibold text-neutral-4">
-                {row.rowIndex + 1}
-              </span>
-              {isImportPhase ? (
-                importRowStatus === ImportRowResultStatus.Pending ? (
-                  <span className="inline-flex items-center justify-center gap-1 rounded-full bg-primary-1 px-0.5 py-0.5 text-[10px] w-4.5! h-4.5! font-semibold text-primary-9">
-                    <LoadingOutlined spin className="text-[10px]" />
-                  </span>
-                ) : importRowStatus === ImportRowResultStatus.Succeeded ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                    <CheckCircleFilled className="text-[10px]" />
-                    Imported
-                  </span>
-                ) : importRowStatus === ImportRowResultStatus.Failed ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700">
-                    <CloseCircleFilled className="text-[10px]" />
-                    Failed
-                  </span>
-                ) : null
-              ) : isRowFullyValid ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                  <CheckCircleFilled className="text-[10px]" />
-                  Valid
-                </span>
-              ) : row.rowStatus === RowStatus.Invalid || hasAnyCellProblem ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                  <ExclamationCircleFilled className="text-[10px]" />
-                  Invalid
-                </span>
-              ) : null}
-            </div>
-          );
-        },
-        onCell: (record) => ({
+        render: (_, row) => (
+          <div className="flex min-h-[52px] items-center justify-center py-2">
+            <span className="text-xs text-center font-semibold text-neutral-4">
+              {row.rowIndex + 1}
+            </span>
+          </div>
+        ),
+        onCell: () => ({
           className: 'align-center',
-          'aria-label': getImportRowIndexCellAriaLabel(record, importRun),
         }),
         shouldCellUpdate: (record, prevRecord) =>
-          record !== prevRecord ||
-          previousImportRowResultsRef.current[record.id]?.status !==
-            importRun.rowResults[record.id]?.status,
+          record.id !== prevRecord.id || record.rowIndex !== prevRecord.rowIndex,
       },
       ...adapter.fields.map((field) => {
         const width = fieldColumnWidth(field, resizeOverrides);
@@ -375,6 +408,32 @@ export function ImportTable<TPayload, TResult>({
                 didCellPreviewChange(record.id, field.path),
         };
       }),
+      {
+        title: (
+          <div className="flex min-h-9 items-center justify-center px-2">
+            <span className="text-sm font-semibold uppercase tracking-wide text-neutral-4">
+              Validation <br /> status
+            </span>
+          </div>
+        ),
+        key: 'validation-status',
+        width: ROW_STATUS_COLUMN_WIDTH,
+        fixed: 'right',
+        align: 'center',
+        render: (_: unknown, row: IImportSessionState['rows'][number]) => (
+          <div className="flex min-h-[52px] items-center justify-center px-2 py-2">
+            {renderImportRowStatusBadge(row, importRun)}
+          </div>
+        ),
+        onCell: (record) => ({
+          className: 'align-top !p-0 bg-white',
+          'aria-label': getImportRowStatusCellAriaLabel(record, importRun),
+        }),
+        shouldCellUpdate: (record, prevRecord) =>
+          record !== prevRecord ||
+          previousImportRowResultsRef.current[record.id]?.status !==
+            importRun.rowResults[record.id]?.status,
+      },
       {
         title: (
           <div className="flex min-h-9 items-center justify-center px-2">

@@ -197,20 +197,29 @@ export function createCommonEntityImportQueryServices(): IEntityImportSharedQuer
             context: workspaceContext,
           }),
       });
-      const hierarchies = await getBrainRegionHierarchies({
-        filters: {
-          page: 1,
-          page_size: 10,
-          species_id__in: species.map((item) => item.id),
-        },
-        context: workspaceContext,
-      });
-      const hierarchyBackedSpeciesIds = new Set<string>(
-        hierarchies.data.map((item) => item.species.id)
-      );
+      let hierarchyBackedSpeciesIds: Set<string> | null = null;
+
+      try {
+        const hierarchies = await getBrainRegionHierarchies({
+          filters: {
+            page: 1,
+            page_size: 100,
+            species_id__in: species.map((item) => item.id),
+          },
+          context: workspaceContext,
+        });
+        const validSpeciesIds = hierarchies.data
+          .map((item) => item.species?.id)
+          .filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+
+        hierarchyBackedSpeciesIds = validSpeciesIds.length > 0 ? new Set(validSpeciesIds) : null;
+      } catch {
+        hierarchyBackedSpeciesIds = null;
+      }
+
       const suggestions = species.map((item) =>
         makeSuggestion(item.id, item.name, undefined, {
-          disabled: !hierarchyBackedSpeciesIds.has(item.id),
+          disabled: hierarchyBackedSpeciesIds ? !hierarchyBackedSpeciesIds.has(item.id) : false,
         })
       );
       suggestions.sort((left, right) => {

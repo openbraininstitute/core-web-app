@@ -97,9 +97,12 @@ const tableHarnessAdapter: IEntityImportAdapter<Record<string, string>, { id: st
 };
 
 function getFieldCell(rowNumber: number, label: string): HTMLElement {
-  const control = screen.getByLabelText(`${label} row ${rowNumber}`);
-  const td = control.closest('td');
-  if (!(td instanceof HTMLElement)) {
+  const td = screen
+    .getAllByLabelText(`${label} row ${rowNumber}`)
+    .map((control) => control.closest('[role="gridcell"], td, .ant-table-cell'))
+    .find((cell): cell is HTMLElement => cell instanceof HTMLElement);
+
+  if (!td) {
     throw new Error('Expected table cell for import field');
   }
 
@@ -237,5 +240,28 @@ describe('ImportTable', () => {
       standardInputRenderHarness.renderedLabels(),
       'expected only the edited text cell to re-render while unrelated visible text cells keep their previous render output'
     ).toEqual(['Name row 1']);
+  });
+
+  it('renders validation status in a fixed column immediately before actions', async () => {
+    renderWithQueryClient(
+      <EntityImportFeature
+        title="Import Table Status Column"
+        onClose={() => {}}
+        adapter={tableHarnessAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+        initialRows={[{ name: 'Neuron A', notes: 'Alpha' }]}
+      />
+    );
+
+    await screen.findByLabelText('Actions row 1');
+
+    const columnHeaders = screen
+      .getAllByRole('columnheader')
+      .map((header) => header.textContent?.replace(/\s+/g, ' ').trim())
+      .filter((value): value is string => Boolean(value));
+
+    expect(columnHeaders.slice(-2)).toEqual(['Validation status', 'Actions']);
+
+    expect(screen.getByLabelText('Row 1 status: Ready')).toHaveClass('ant-table-cell-fix-right');
   });
 });

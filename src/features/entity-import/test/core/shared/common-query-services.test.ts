@@ -137,4 +137,34 @@ describe('createCommonEntityImportQueryServices', () => {
       },
     ]);
   });
+
+  it('keeps all species visible when hierarchy lookup fails', async () => {
+    mocks.getSpecies.mockResolvedValue({
+      data: [
+        { id: 'species-mouse', name: 'Mouse' },
+        { id: 'species-human', name: 'Human' },
+      ],
+      pagination: { page: 1, page_size: 100, total_items: 2 },
+    });
+    mocks.getBrainRegionHierarchies.mockRejectedValue(new Error('hierarchy lookup failed'));
+
+    const services = createCommonEntityImportQueryServices();
+
+    await expect(
+      services.querySpecies({ context: { projectId: 'project-1', virtualLabId: 'lab-1' } })
+    ).resolves.toEqual([
+      {
+        value: 'species-human',
+        label: 'Human',
+        description: undefined,
+        metadata: { disabled: false },
+      },
+      {
+        value: 'species-mouse',
+        label: 'Mouse',
+        description: undefined,
+        metadata: { disabled: false },
+      },
+    ]);
+  });
 });

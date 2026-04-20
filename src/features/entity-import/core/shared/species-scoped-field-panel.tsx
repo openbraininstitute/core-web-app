@@ -99,6 +99,10 @@ export function SpeciesScopedFieldPanel({
     : relatedFieldSpecies;
   const previousRequestSpeciesValueRef = useRef(requestSpecies?.value ?? ALL_SPECIES_VALUE);
   const displayValue = draftValue.displayValue ?? draftValue.rawValue;
+  const availableSpeciesOptions =
+    selectedSpecies && !speciesOptions.some((option) => option.value === selectedSpecies.value)
+      ? [selectedSpecies, ...speciesOptions]
+      : speciesOptions;
 
   useEffect(() => {
     const currentRequestSpeciesValue = requestSpecies?.value ?? ALL_SPECIES_VALUE;
@@ -126,7 +130,7 @@ export function SpeciesScopedFieldPanel({
             const suggestion =
               value === ALL_SPECIES_VALUE
                 ? null
-                : (speciesOptions.find((option) => option.value === value) ?? null);
+                : (availableSpeciesOptions.find((option) => option.value === value) ?? null);
             actions.onSetRowLookupSpecies({
               rowId: row.id,
               suggestion,
@@ -144,7 +148,7 @@ export function SpeciesScopedFieldPanel({
             <SelectValue placeholder={isLoading ? 'Loading species' : 'All species'} />
           </SelectTrigger>
           <SelectContent
-            viewportClassName="p-1.5"
+            viewportClassName="entity-import-species-select-viewport h-auto max-h-80 p-1.5"
             className={cn(ENTITY_IMPORT_SELECT_MENU_PANEL_CLASSNAME, 'max-h-80')}
           >
             <SelectItem
@@ -153,7 +157,7 @@ export function SpeciesScopedFieldPanel({
             >
               All species
             </SelectItem>
-            {speciesOptions.map((species) => (
+            {availableSpeciesOptions.map((species) => (
               <SelectItem
                 key={species.value}
                 value={species.value}

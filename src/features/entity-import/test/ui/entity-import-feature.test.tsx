@@ -2719,6 +2719,106 @@ describe('EntityImportFeature', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('shows the inferred species immediately for resolved brain regions before species options finish loading', async () => {
+    const user = userEvent.setup();
+    const speciesOptionsDeferred = createDeferred<Array<{ value: string; label: string }>>();
+    const querySpecies = vi.fn(async () => speciesOptionsDeferred.promise);
+    const queryBrainRegion = vi.fn(async ({ query }: { query: string }) => ({
+      suggestions:
+        query === 'Isocortex'
+          ? [
+              {
+                value: 'brain-region-mouse',
+                label: 'Isocortex',
+                metadata: {
+                  acronym: 'ISO',
+                  species: 'Mouse',
+                  speciesId: 'species-mouse',
+                },
+              },
+            ]
+          : [],
+      nextPageParam: null,
+    }));
+    const speciesAwareAdapter: IEntityImportAdapter<Record<string, string>, { id: string }> = {
+      id: 'species-aware-brain-region-import',
+      title: 'Species Aware Brain Region Import',
+      templateFileName: 'species-aware-brain-region.csv',
+      submitLabel: 'Import rows',
+      fields: [
+        {
+          label: 'Name',
+          path: 'name',
+          required: true,
+          inputType: ImportInputType.Text,
+        },
+        makeBrainRegionImportField({
+          path: 'brainRegion',
+          submissionPath: 'brainRegion',
+          validationPath: 'brainRegion',
+          services: {
+            querySpecies,
+            queryBrainRegion,
+          },
+        }),
+      ],
+      schema: z.object({
+        name: z.string().min(1, 'Name is required'),
+        brainRegion: z.string().min(1, 'Brain Region is required'),
+      }),
+      buildPayload({ values }) {
+        return values;
+      },
+      submitRow: vi.fn(async ({ row }) => ({ id: row.id })),
+    };
+
+    const { container } = renderWithQueryClient(
+      <EntityImportFeature
+        title="Species Aware Brain Region Import"
+        onClose={() => {}}
+        adapter={speciesAwareAdapter}
+        context={{ projectId: 'project-1', virtualLabId: 'lab-1' }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Name row 1')).toBeInTheDocument();
+    });
+
+    await user.upload(
+      getCsvUploadInput(container),
+      createCsvUploadFile('Name,Brain Region\nNeuron A,Isocortex\n')
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Brain Region row 1')).toHaveValue('Isocortex');
+    });
+
+    await user.click(screen.getByLabelText('Brain Region row 1'));
+
+    expect(screen.getByLabelText('Species')).toHaveTextContent('Mouse');
+
+    speciesOptionsDeferred.resolve([
+      { value: 'species-mouse', label: 'Mouse' },
+      { value: 'species-rat', label: 'Rat' },
+    ]);
+
+    await waitFor(() => {
+      expect(querySpecies).toHaveBeenCalledTimes(1);
+    });
+
+    await user.click(screen.getByLabelText('Species'));
+
+    const selectContent = getOpenSelectContent();
+    const mouseOption = within(selectContent)
+      .getByText('Mouse')
+      .closest('[data-slot="select-item"]');
+    const ratOption = within(selectContent).getByText('Rat').closest('[data-slot="select-item"]');
+
+    expect(mouseOption).toHaveAttribute('data-state', 'checked');
+    expect(ratOption).toHaveAttribute('data-state', 'unchecked');
+  });
+
   it('shares a species selector between brain region and subject lookups and keeps species cached forever', async () => {
     const user = userEvent.setup();
     const querySpecies = vi.fn(async () => [
@@ -3125,6 +3225,13 @@ describe('EntityImportFeature', () => {
       'border-neutral-200',
       'max-h-80',
       'overflow-y-auto'
+    );
+    expect(selectContent.querySelector('.entity-import-species-select-viewport')).toHaveClass(
+      'h-auto',
+      'max-h-80'
+    );
+    expect(selectContent.querySelector('.entity-import-species-select-viewport')).not.toHaveClass(
+      'h-(--radix-select-trigger-height)'
     );
 
     const mouseOption = within(selectContent)
@@ -3885,6 +3992,9 @@ describe('EntityImportFeature', () => {
     );
 
     const contributionButton = await screen.findByRole('button', { name: 'Contributions row 1' });
+    await waitFor(() => {
+      expect(getTableCellElement(contributionButton)).toHaveClass('bg-amber-50/70');
+    });
     await user.click(contributionButton);
 
     await waitFor(

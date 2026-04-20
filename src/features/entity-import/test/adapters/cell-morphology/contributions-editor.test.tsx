@@ -58,13 +58,21 @@ function createMockActions(): IEntityImportActions {
 function createContributionCell(
   parsedValue: IImportCellState['parsedValue'] = []
 ): IImportCellState {
+  const inferredIssues = Array.isArray(parsedValue)
+    ? parsedValue.flatMap((entry) =>
+        Array.isArray((entry as { issues?: unknown }).issues)
+          ? ((entry as { issues: Array<string> }).issues ?? [])
+          : []
+      )
+    : [];
+
   return {
     fieldPath: 'contributions',
     rawValue: '',
     displayValue: null,
     parsedValue,
     status: CellStatus.Idle,
-    issues: [],
+    issues: inferredIssues,
     dependencyState: DependencyState.Ready,
     remoteState: createIdleRemoteState(),
     correctionDraft: null,
@@ -485,6 +493,10 @@ describe('ContributionsEditor', () => {
     );
 
     const mainButton = screen.getByRole('button', { name: 'Contributions row 1' });
+    expect(mainButton.parentElement).toHaveClass('bg-amber-50/70');
+    expect(mainButton.parentElement).not.toHaveClass('px-3', 'py-2');
+    expect(mainButton).toHaveClass('w-full');
+    expect(mainButton).toHaveClass('bg-amber-50/70', 'text-amber-950');
     expect(within(mainButton).getByText('Jane Doe')).toBeInTheDocument();
     expect(within(mainButton).getByText('Author')).toBeInTheDocument();
   });

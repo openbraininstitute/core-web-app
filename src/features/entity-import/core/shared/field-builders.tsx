@@ -671,6 +671,7 @@ export function makeContributionsImportField({
       <ContributionSummaryCell
         label={field.label}
         triggerLabel={`${field.label} row ${row.rowIndex + 1}`}
+        cell={cell}
         entries={cell.parsedValue}
         onClick={() => actions.onSelectCell({ rowId: row.id, fieldPath: field.path })}
         onPromoteContribution={(contributionId) => {

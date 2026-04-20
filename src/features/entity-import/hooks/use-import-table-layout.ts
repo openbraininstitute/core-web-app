@@ -31,10 +31,13 @@ const DEFAULT_FIELD_COLUMN_WIDTH = 200;
 const DEFAULT_TABLE_BODY_SCROLL_HEIGHT = 1;
 
 /** width of the fixed row-index column on the left */
-export const ROW_INDEX_COLUMN_WIDTH = 88;
+export const ROW_INDEX_COLUMN_WIDTH = 50;
 
 /** width of the fixed row-actions column on the right. */
 export const ROW_ACTIONS_COLUMN_WIDTH = 72;
+
+/** width of the fixed row validation-status column on the right. */
+export const ROW_STATUS_COLUMN_WIDTH = 100;
 
 /**
  * resolve the rendered width of a single field column
@@ -200,7 +203,9 @@ export function useImportTableLayout({
       (acc, field) => acc + fieldColumnWidth(field, resizeOverrides),
       0
     );
-    return ROW_INDEX_COLUMN_WIDTH + fieldsWidth + ROW_ACTIONS_COLUMN_WIDTH;
+    return (
+      ROW_INDEX_COLUMN_WIDTH + fieldsWidth + ROW_STATUS_COLUMN_WIDTH + ROW_ACTIONS_COLUMN_WIDTH
+    );
   }, [fields, resizeOverrides]);
 
   const scrollHeight = Math.max(
