@@ -1,3 +1,5 @@
+'use client';
+
 import { CloseOutlined } from '@ant-design/icons';
 import { Image } from 'antd';
 import { AnimatePresence, motion } from 'motion/react';
