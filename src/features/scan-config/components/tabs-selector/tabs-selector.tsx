@@ -7,6 +7,7 @@ import {
 } from '@/features/scan-config/components/utils';
 import {
   BaseScanConfigTabs,
+  BuildScanConfigTabs,
   ExtractScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
@@ -39,7 +40,8 @@ export default function TabsSelector({
     const disableSimulations = !!(
       (id === SimulateScanConfigTabs.simulations ||
         id === ExtractScanConfigTabs.extractions ||
-        id === ProcessScanConfigTabs.skeletonizations) &&
+        id === ProcessScanConfigTabs.skeletonizations ||
+        id === BuildScanConfigTabs.results) &&
       disableResultsTab
     );
     const disableConfiguration = disableConfigurationTab && id === BaseScanConfigTabs.configuration;
@@ -59,16 +61,26 @@ export default function TabsSelector({
       tooltip,
       disabled: disableSimulations || disableConfiguration,
       onClick: () => {
-        if (disableResultsTab && id === 'simulations') return;
+        if (disableResultsTab) return;
         if (activity === ScanConfigActivity.Simulate) {
           setTab({
             __activity: ScanConfigActivity.Simulate,
             id: id as keyof typeof SimulateScanConfigTabs,
           });
-        } else {
+        } else if (activity === ScanConfigActivity.Extract) {
           setTab({
             __activity: ScanConfigActivity.Extract,
             id: id as keyof typeof ExtractScanConfigTabs,
+          });
+        } else if (activity === ScanConfigActivity.Process) {
+          setTab({
+            __activity: ScanConfigActivity.Process,
+            id: id as keyof typeof ProcessScanConfigTabs,
+          });
+        } else if (activity === ScanConfigActivity.Build) {
+          setTab({
+            __activity: ScanConfigActivity.Build,
+            id: id as keyof typeof BuildScanConfigTabs,
           });
         }
       },

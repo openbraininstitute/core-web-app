@@ -25,6 +25,7 @@ import {
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
@@ -109,6 +110,11 @@ export function ScanConfigTemplate({
           virtualLabId={virtualLabId}
           projectId={projectId}
         />
+      </Suspense>
+    ))
+    .with(ScanConfigActivity.Build, () => (
+      <Suspense>
+        <BuildTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
       </Suspense>
     ))
     .otherwise(() => {

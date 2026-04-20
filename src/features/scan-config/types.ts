@@ -58,26 +58,10 @@ export const BaseScanConfigTabs = {
   configuration: 'configuration',
 } as const;
 
-export const SimulateScanConfigTabs = {
-  ...BaseScanConfigTabs,
-  simulations: 'simulations',
-} as const;
-
 export type TSimulateScanConfigTabs = {
   id: keyof typeof SimulateScanConfigTabs;
   __activity: 'simulate';
 };
-
-export const ExtractScanConfigTabs = {
-  ...BaseScanConfigTabs,
-  extractions: 'extractions',
-} as const;
-
-export const BuildScanConfigTabs = {
-  ...BaseScanConfigTabs,
-  extractions: 'results',
-} as const;
-
 export type TExtractScanConfigTabs = {
   id: keyof typeof ExtractScanConfigTabs;
   __activity: 'extract';
@@ -100,7 +84,24 @@ export type TProcessScanConfigTabs = {
 export type TScanConfigTabs =
   | Prettify<TSimulateScanConfigTabs>
   | Prettify<TExtractScanConfigTabs>
-  | Prettify<TProcessScanConfigTabs>;
+  | Prettify<TProcessScanConfigTabs>
+  | Prettify<TBuildScanConfigTabs>;
+
+export const SimulateScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  simulations: 'simulations',
+} as const;
+
+export const ExtractScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  extractions: 'extractions',
+} as const;
+
+export const BuildScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  results: 'results',
+} as const;
+
 
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
