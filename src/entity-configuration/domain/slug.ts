@@ -21,6 +21,7 @@ export const ModelEntitySlug = {
   IonChannelModel: 'ion-channel-model',
   IonChannelModelingCampaign: 'ion-channel-modeling-campaign',
   MEModelWithSynapses: 'me-model-with-synapses',
+  EmSynapseMappingCampaign: 'em-synapse-mapping-campaign',
 } as const;
 
 const SimulationEntitySlug = {

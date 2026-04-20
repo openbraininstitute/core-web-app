@@ -142,6 +142,7 @@ export function BrowseEntityScope({
     id,
   });
   const entity = getEntityByExtendedType({ type: dataType });
+
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));

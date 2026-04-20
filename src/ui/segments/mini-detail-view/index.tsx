@@ -252,7 +252,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
       ({ section }) => <WorkflowActions record={record} dataType={dataType} section={section} />
     )
     .with({ section: WorkspaceSection.BuildWorkflow }, () => (
-      <WorkflowBuildActions record={record} />
+      <WorkflowBuildActions record={record} dataType={dataType} />
     ))
     .otherwise(() => null);
 
