@@ -26,10 +26,6 @@ export function getGeneratedApiUrl({
   activity?: TScanConfigActivity;
   entityType: TSupportedEntityTypesForScanConfiguration | Nullish;
 }) {
-  console.log('–– – index.tsx:29 – getGeneratedApiUrl – entityType:', entityType);
-
-  console.log('–– – index.tsx:29 – getGeneratedApiUrl – activity:', activity);
-
   const apiPath = match(activity)
     .with(ScanConfigActivity.Extract, () => {
       const path = match({ entityType })

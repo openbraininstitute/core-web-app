@@ -8,7 +8,7 @@ import { getCellMorphology } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { resolveEmSynapseMappingByCampaignId } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
-import { ScanConfigActivity } from '@/features/scan-config/types';
+import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
@@ -72,6 +72,10 @@ export default function Page({
           initialConfig={campaignData?.config.form}
           className="px-4 pt-2"
           activity={ScanConfigActivity.Build}
+          defaultTab={{
+            __activity: ScanConfigActivity.Build,
+            id: BuildScanConfigTabs.configuration,
+          }}
         />
         <DownloadPanel />
       </div>

@@ -14,6 +14,7 @@ import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
 import {
+  BuildScanConfigTabs,
   type ConfigSchema,
   ExtractScanConfigTabs,
   ScanConfigActivity,
@@ -32,6 +33,8 @@ import { messages } from '@/i18n/en/scan-config';
 import { useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
+
+import { BuildTab } from './use-cases/build/results';
 
 import type { Config } from '@/features/scan-config/components/components';
 import type { Nullish } from '@/utils/type';
@@ -120,6 +123,17 @@ export function ScanConfigTemplate({
             virtualLabId={virtualLabId}
             projectId={projectId}
           />
+        </Suspense>
+      )
+    )
+    .with(
+      {
+        activity: ScanConfigActivity.Build,
+        tab: { id: BuildScanConfigTabs.results },
+      },
+      () => (
+        <Suspense>
+          <BuildTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
         </Suspense>
       )
     )

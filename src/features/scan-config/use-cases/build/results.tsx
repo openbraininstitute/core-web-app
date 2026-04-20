@@ -38,7 +38,7 @@ type Props = {
   projectId: string;
 };
 
-export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
+export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);

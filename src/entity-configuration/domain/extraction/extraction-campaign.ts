@@ -29,7 +29,7 @@ import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/enti
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
-export type TTaskConfigMeta = {
+export type TExtractionTaskConfigMeta = {
   scan_parameters?: Record<string, unknown>;
 };
 
@@ -114,7 +114,7 @@ async function resolveExtractionCampaigns({
     return acc;
   }, {});
 
-  const enrichedData: TTaskCampaignRows<TTaskConfigMeta> = buildTaskCampaignRows({
+  const enrichedData: TTaskCampaignRows<TExtractionTaskConfigMeta> = buildTaskCampaignRows({
     campaigns: source.data,
     generationsByCampaignId,
     configById,
@@ -206,7 +206,7 @@ export type TExtendedExtractionCampaignsType = AwaitedType<
 type TEnrichedExtractionCampaign = TExtendedExtractionCampaignsType['data'][number];
 
 // FIXME: remove this after Pavlo changes, use only `getLatestExecutionStatusFromRows`
-export function getExtractionStatus(rows: TTaskCampaignExecutionRow<TTaskConfigMeta>[]) {
+export function getExtractionStatus(rows: TTaskCampaignExecutionRow<TExtractionTaskConfigMeta>[]) {
   return getLatestExecutionStatusFromRows(rows);
 }
 // FIXME: remove this after Pavlo changes, use only `getTaskCampaignStatusCountMap`
@@ -220,7 +220,7 @@ export type TResolvedExtractionByCampaign = Awaited<
 export type TResolvedExtractionByCampaigns = Awaited<ReturnType<typeof resolveExtractionCampaigns>>;
 
 export const CircuitExtractionCampaign: EntityCoreTypeConfig<
-  ITaskConfig<TTaskConfigMeta>,
+  ITaskConfig<TExtractionTaskConfigMeta>,
   TResolvedExtractionByCampaign,
   TResolvedExtractionByCampaigns
 > = {
