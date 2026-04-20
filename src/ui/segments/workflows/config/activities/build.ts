@@ -2,15 +2,6 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 
 import type { IWorkflowDescriptor } from '../types';
 
-/**
- * Workflows available under the Build activity. Each descriptor's `sourceType`
- * is the entity the user is building; `targetType` is what gets produced (for
- * most entities this is the same, except for Ion channel whose build produces
- * an IonChannelModelingCampaign).
- *
- * Build workflows usually don't require picking an existing entity at the
- * configuration step, so `configurationInputs` is left empty.
- */
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
     sourceType: ExtendedEntitiesTypeDict.Memodel,
