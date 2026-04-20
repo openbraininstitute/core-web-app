@@ -7,7 +7,6 @@
   background-position: center;
   width: 600px;
   max-width: 100%;
-  height: 400px;
 }
 
 a.error {
@@ -51,5 +50,27 @@ dialog.dialog {
       max-height: none;
       box-shadow: 0 0.5em 1em #000;
     }
+  }
+}
+
+.closeButton {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.8);
   }
 }

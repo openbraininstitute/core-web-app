@@ -8,7 +8,7 @@ import { isString } from '@/util/type-guards';
 import { usePlotFile } from './hooks';
 import ToolThumbnailGeneration from './renderers/image-renderer/tool-thumbnail-generation-morphology-getone';
 import ToolPlotGenerator from './renderers/plot-renderer/tool-plot-generator';
-import ToolSkeleton from './renderers/skeleton/tool-skeleton';
+import { ToolSkeletonStandalone } from './renderers/skeleton/tool-skeleton';
 
 export default function PlotInChat({
   storageId,
@@ -30,7 +30,7 @@ export default function PlotInChat({
     return <PlotErrorMessage isBackup={isBackup} />;
   }
 
-  if (isLoading || !data) return <ToolSkeleton />;
+  if (isLoading || !data) return <ToolSkeletonStandalone />;
 
   const { content, type } = data;
   if (!isString(content)) return null;

@@ -1,5 +1,5 @@
 import { atom, useAtom } from 'jotai';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   COOKIE_MAX_AGE,
@@ -8,7 +8,7 @@ import {
 } from '@/features/feature-flags/config';
 import { PanelState } from '@/ui/segments/ai/types';
 
-const panelStateAtom = atom<PanelState>(readPanelStateFromCookie());
+const panelStateAtom = atom<PanelState>(PanelState.Collapsed);
 
 function readPanelStateFromCookie(): PanelState {
   if (typeof document === 'undefined') return PanelState.Collapsed;
@@ -44,6 +44,17 @@ function persistPanelStateToCookie(newState: PanelState) {
 
 export function usePanelState() {
   const [state, setStateInternal] = useAtom(panelStateAtom);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    if (!hydrated) {
+      const cookieState = readPanelStateFromCookie();
+      if (cookieState !== state) {
+        setStateInternal(cookieState);
+      }
+      setHydrated(true);
+    }
+  }, [hydrated, state, setStateInternal]);
 
   const setState = useCallback(
     (next: PanelState) => {

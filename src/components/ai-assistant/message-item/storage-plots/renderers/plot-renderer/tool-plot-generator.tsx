@@ -1,6 +1,6 @@
 /* eslint-disable react/no-array-index-key */
 
-import { FullscreenOutlined } from '@ant-design/icons';
+import { CloseOutlined, FullscreenOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 import React from 'react';
 
@@ -76,15 +76,11 @@ function CustomPlot({
 
   const title = props.layout?.title?.text || props.layout?.title || '';
   const titleFont = props.layout?.title?.font || {};
-  const titleHeight = title ? 60 : 0;
-  const plotHeight = 400 - titleHeight;
-  const plotWidth = 600;
 
   const modifiedLayout = {
     ...props.layout,
     title: undefined,
     autosize: true,
-    height: plotHeight,
     margin: { ...props.layout?.margin, t: 10, l: 3, r: 3, b: 3 },
   };
 
@@ -109,15 +105,7 @@ function CustomPlot({
 
   return (
     <>
-      <div
-        className={classNames('h-full', styles.plotContainer)}
-        style={{
-          width: `${plotWidth}px`,
-          maxWidth: '100%',
-          border: '1px solid #d9d9d9',
-          borderRadius: '8px',
-        }}
-      >
+      <div className={classNames('h-full', styles.plotContainer)}>
         <button
           type="button"
           onClick={handleShow}
@@ -146,14 +134,22 @@ function CustomPlot({
           </div>
         )}
         {!plotReady && <ToolSkeleton />}
-        <div key={plotRenderKey} className="overflow-y-auto" onDoubleClick={handleShow}>
+        <div
+          key={plotRenderKey}
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            visibility: plotReady ? 'visible' : 'hidden',
+          }}
+          onDoubleClick={handleShow}
+        >
           <Plot
             className={classNames(className, styles.toolPlotGenerator)}
             style={{
               width: '100%',
               minWidth: '250px',
-              height: `${plotHeight}px`,
-              display: plotReady ? 'block' : 'none',
+              height: '100%',
             }}
             data={props.data}
             layout={modifiedLayout}
@@ -173,6 +169,14 @@ function CustomPlot({
       <dialog ref={refDialog} className={styles.dialog}>
         <div className={styles.dialogBackdrop} onClick={handleBackdropClick}>
           <div className={styles.dialogContent} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => refDialog.current?.close()}
+              className={styles.closeButton}
+              aria-label="Close fullscreen"
+            >
+              <CloseOutlined />
+            </button>
             {title && (
               <div
                 className="px-4 py-2 text-center font-bold"
@@ -195,7 +199,7 @@ function CustomPlot({
               style={{
                 width: '90vw',
                 height: title ? 'calc(90vh - 60px)' : '90vh',
-                display: fullscreenPlotReady ? 'block' : 'none',
+                visibility: fullscreenPlotReady ? 'visible' : 'hidden',
               }}
               data={props.data}
               layout={fullscreenLayout}

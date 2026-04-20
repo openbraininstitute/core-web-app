@@ -5,6 +5,7 @@
 import Link from 'next/link';
 import React from 'react';
 
+import ToolSkeleton from '@/components/ai-assistant/message-item/storage-plots/renderers/skeleton/tool-skeleton';
 import { logError } from '@/util/logger';
 import { classNames } from '@/util/utils';
 
@@ -64,7 +65,23 @@ export default function TruncableImage({ className, src, isStreaming }: Truncabl
     );
   }
 
-  if (!image) return null;
+  if (!image) {
+    if (!src || error) return null;
+    return (
+      <div
+        style={{
+          width: '600px',
+          maxWidth: '100%',
+          aspectRatio: '3/2',
+          border: '1px solid #d9d9d9',
+          borderRadius: '8px',
+          overflow: 'hidden',
+        }}
+      >
+        <ToolSkeleton />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -80,6 +97,14 @@ export default function TruncableImage({ className, src, isStreaming }: Truncabl
         }}
       />{' '}
       <dialog ref={refDialog} className={styles.dialog}>
+        <button
+          type="button"
+          onClick={handleHide}
+          className={styles.closeButton}
+          aria-label="Close fullscreen"
+        >
+          ✕
+        </button>
         <button type="button" onClick={handleHide}>
           <img
             src={image.src}

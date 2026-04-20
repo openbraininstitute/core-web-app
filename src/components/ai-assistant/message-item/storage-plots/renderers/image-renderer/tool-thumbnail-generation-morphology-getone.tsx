@@ -73,18 +73,7 @@ function CustomThumbnail({
 
   return (
     <>
-      <div
-        style={{
-          width: '600px',
-          maxWidth: '100%',
-          height: '400px',
-          display: 'flex',
-          alignItems: 'center',
-          border: '1px solid #d9d9d9',
-          borderRadius: '8px',
-          margin: '5px 0',
-        }}
-      >
+      <div className={styles.container}>
         {!imageLoaded && <ToolSkeleton />}
         <img
           className={className}
@@ -103,6 +92,14 @@ function CustomThumbnail({
         />
       </div>
       <dialog ref={refDialog} className={styles.dialog}>
+        <button
+          type="button"
+          onClick={handleHide}
+          className={styles.closeButton}
+          aria-label="Close fullscreen"
+        >
+          ✕
+        </button>
         <button type="button" onClick={handleHide}>
           <img src={content} alt="Morphology thumbnail fullscreen" />
         </button>
