@@ -37,7 +37,14 @@ export default function StopIcon({ className, style }: StopIconProps) {
         fill="color-mix(in srgb, var(--color-error) 8%, transparent)"
       />
 
-      <circle cx="18" cy="18" r="15.5" stroke="var(--color-error)" strokeWidth="2" fill="none" />
+      <circle
+        cx="18"
+        cy="18"
+        r="15.5"
+        stroke="color-mix(in srgb, var(--color-error) 70%, var(--color-neutral-4))"
+        strokeWidth="2"
+        fill="none"
+      />
 
       <circle
         className="spinner"

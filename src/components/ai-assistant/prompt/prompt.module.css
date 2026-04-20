@@ -10,9 +10,15 @@
   padding: 0.35em;
   padding-left: 0.6em;
   margin: 0;
-  border: 1px solid color-mix(in srgb, var(--color-primary-9) 30%, var(--color-neutral-9));
+  border: 1px solid color-mix(in srgb, var(--color-primary-9) 30%, var(--color-neutral-5));
   background-color: #fff;
   width: 100%;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.prompt:focus-within {
+  border-color: color-mix(in srgb, var(--color-primary-9) 45%, var(--color-neutral-5));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary-9) 10%, transparent);
 }
 
 .prompt > .input {
