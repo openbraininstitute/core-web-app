@@ -3,11 +3,14 @@
   background-color: var(--color-neutral-9);
   border: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
   border-left: none;
-  border-radius: 14px;
-  padding: 12px 16px;
+  border-radius: 4px 14px 14px 14px;
+  padding: 8px 15px;
   margin: 14px 0;
   overflow: hidden;
   isolation: isolate;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
   opacity: 0;
   animation: fadeIn 0.3s ease-out forwards;
   flex-shrink: 0;
@@ -19,7 +22,7 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 2px;
+  width: 1.5px;
   background-color: var(--color-primary-8);
   border-radius: 40px;
   z-index: 1;

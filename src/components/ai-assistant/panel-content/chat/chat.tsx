@@ -170,6 +170,12 @@ export default function Chat({
     }
   };
 
+  const lastMessage = messages[messages.length - 1];
+  const hasVisibleContent = lastMessage?.parts.some(
+    (p) => (p.type === 'text' && p.text !== '') || p.type === 'tool-invocation'
+  );
+  const showThinking = status === 'submitted' || (status === 'streaming' && !hasVisibleContent);
+
   return (
     <div className={classNames(styles.chatContainer, className)}>
       <div className={styles.articles} ref={refContainer} onWheel={handleWheel}>
@@ -187,7 +193,7 @@ export default function Chat({
               />
             ))}
 
-            {status === 'submitted' && <ThinkingIndicator />}
+            {showThinking && <ThinkingIndicator />}
             {status === 'ready' && messages.length > 0 && (
               <div className={styles.footerButtons}></div>
             )}

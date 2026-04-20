@@ -3,7 +3,6 @@
 import React from 'react';
 
 import IconPlus from '@/components/icons/Plus';
-import Tooltip from '@/components/tooltip';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
@@ -95,19 +94,17 @@ export default function History({ className, onBack }: HistoryProps) {
                                   key={thread.id}
                                   style={{ '--index': Math.min(idx, 20) } as React.CSSProperties}
                                 >
-                                  <Tooltip tooltip="Rename this thread" arrow="topLeft">
-                                    <button
-                                      type="button"
-                                      className={styles.edit}
-                                      onClick={() => {
-                                        setCurrentThreadId(thread.id);
-                                        setCurrentThreadTitle(thread.title);
-                                        setOpenEdit(true);
-                                      }}
-                                    >
-                                      <IconEdit />
-                                    </button>
-                                  </Tooltip>
+                                  <button
+                                    type="button"
+                                    className={styles.edit}
+                                    onClick={() => {
+                                      setCurrentThreadId(thread.id);
+                                      setCurrentThreadTitle(thread.title);
+                                      setOpenEdit(true);
+                                    }}
+                                  >
+                                    <IconEdit />
+                                  </button>
                                   <button
                                     key={thread.id}
                                     type="button"
@@ -118,26 +115,19 @@ export default function History({ className, onBack }: HistoryProps) {
                                       onBack();
                                     }}
                                   >
-                                    <Tooltip tooltip="Click to recover this thread">
-                                      {thread.title}
-                                    </Tooltip>
+                                    {thread.title}
                                   </button>
-                                  <Tooltip
-                                    tooltip="Delete this thread permanently"
-                                    arrow="topRight"
+                                  <button
+                                    type="button"
+                                    className={styles.delete}
+                                    onClick={() => {
+                                      setCurrentThreadId(thread.id);
+                                      setCurrentThreadTitle(thread.title);
+                                      setOpenDelete(true);
+                                    }}
                                   >
-                                    <button
-                                      type="button"
-                                      className={styles.delete}
-                                      onClick={() => {
-                                        setCurrentThreadId(thread.id);
-                                        setCurrentThreadTitle(thread.title);
-                                        setOpenDelete(true);
-                                      }}
-                                    >
-                                      <IconDelete />
-                                    </button>
-                                  </Tooltip>
+                                    <IconDelete />
+                                  </button>
                                 </div>
                               );
                             })}

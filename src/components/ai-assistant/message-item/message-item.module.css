@@ -43,15 +43,17 @@
 
 .userContent {
   position: relative;
-  max-width: 70%;
-  padding: 8px 15px;
-  border-radius: 14px 14px 1px 14px;
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 14px 14px 2px 14px;
   background-color: var(--color-primary-5);
+  color: var(--color-on-primary);
   display: flex;
   flex-wrap: nowrap;
   flex-direction: column;
   justify-content: space-around;
   align-items: stretch;
+  margin-left: auto;
 }
 
 .userContent > div {
@@ -65,10 +67,9 @@
   background-color: var(--color-neutral-9);
   border: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
   border-left: none;
-  border-radius: 16px;
+  border-radius: 4px 14px 14px 14px;
   padding: 0;
   margin: 14px 0;
-  border-radius: 14px;
   overflow: hidden;
   isolation: isolate;
   min-height: 44px;
@@ -80,7 +81,7 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 2px;
+  width: 1.5px;
   background-color: var(--color-primary-8);
   border-radius: 40px;
   z-index: 1;
