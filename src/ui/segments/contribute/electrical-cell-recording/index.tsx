@@ -114,7 +114,7 @@ export function ElectricalCellRecordingImport({ title }: IElectricalCellRecordin
   const adapter = useMemo(() => createElectricalCellRecordingImportAdapter(), []);
 
   const handleClose = useCallback(() => {
-    router.push(`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/contribute`);
+    router.push(`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`);
   }, [router, projectId, virtualLabId]);
 
   return (

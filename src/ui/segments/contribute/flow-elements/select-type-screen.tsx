@@ -5,6 +5,8 @@ import { RiArrowDownSLine } from '@remixicon/react';
 import { useRouter } from 'next/navigation';
 import { type ReactNode, useMemo } from 'react';
 
+import { config } from '@/config';
+import { WorkspaceScope } from '@/constants';
 import { Card, CardContent, CardDescription, CardTitle } from '@/ui/molecules/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/ui/molecules/collapsible';
 import { ExpandableText } from '@/ui/molecules/more-less-text';
@@ -13,6 +15,7 @@ import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-it
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { WorkspaceContext } from '@/types/common';
 
 export type TArtifactOption = {
   value: TExtendedEntitiesTypeDict;
@@ -22,7 +25,8 @@ export type TArtifactOption = {
   enabled: boolean;
 };
 
-export interface ISelectTypeScreenProps {
+export interface IProps {
+  workspace: WorkspaceContext;
   options: TArtifactOption[];
   selectedType: TExtendedEntitiesTypeDict | null;
   onSelectType: (type: TExtendedEntitiesTypeDict) => void;
@@ -112,13 +116,19 @@ function ArtifactTypeCard({
   );
 }
 
-export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelectTypeScreenProps) {
+export function SelectTypeScreen({ workspace, options, selectedType, onSelectType }: IProps) {
+  const { push: navigate } = useRouter();
   const { enabledOptions, disabledOptions } = useMemo(() => {
     const enabled = options.filter((option) => option.enabled);
     const disabled = options.filter((option) => !option.enabled);
     return { enabledOptions: enabled, disabledOptions: disabled };
   }, [options]);
-  const { back } = useRouter();
+
+  const onClose = () => {
+    return navigate(
+      `${config.ROOT_ROUTE}/${workspace.virtualLabId}/${workspace.projectId}/data?scope=${WorkspaceScope.Project}`
+    );
+  };
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
       <div className="mb-5 flex w-full items-center justify-between pl-3.5">
@@ -129,9 +139,7 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
             'hover:bg-neutral-1 text-neutral-5 hover:text-primary-6 ',
             'flex items-center justify-center rounded-full p-2 hover:shadow-bnb'
           )}
-          onClick={() => {
-            back();
-          }}
+          onClick={onClose}
         >
           <CloseOutlined />
         </button>

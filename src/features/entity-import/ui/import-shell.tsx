@@ -75,7 +75,7 @@ export function ImportShell<TPayload, TResult>({
   onDownloadGuideTemplate,
   onUploadCsvFile,
 }: IImportShellProps<TPayload, TResult>) {
-  const [validatorCollapsed, setValidatorCollapsed] = useState(false);
+  const [validatorCollapsed, setValidatorCollapsed] = useState<boolean>(false);
 
   const toggleValidatorCollapsed = useCallback(() => {
     setValidatorCollapsed((prev) => !prev);

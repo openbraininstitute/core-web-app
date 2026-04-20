@@ -2,8 +2,10 @@
 
 import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import plur from 'plur';
 
+import { config } from '@/config';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import {
   BreadcrumbItem,
@@ -12,13 +14,15 @@ import {
 } from '@/ui/molecules/breadcrumb/index';
 import { Button } from '@/ui/molecules/button';
 import { Card, CardContent, CardDescription, CardTitle } from '@/ui/molecules/card';
-import { ImportMode } from '@/ui/segments/contribute/flow-elements/constants';
+import { ImportLeftSideTab, ImportMode } from '@/ui/segments/contribute/flow-elements/constants';
 import { cn } from '@/utils/css-class';
 
 import type { TEntityByExtendedTypeConfig } from '@/entity-configuration/domain/helpers';
+import type { WorkspaceContext } from '@/types/common';
 import type { TImportMode } from '@/ui/segments/contribute/flow-elements/constants';
 
-export interface IImportOptionsScreenProps {
+export interface IProps {
+  workspace: WorkspaceContext;
   selectedType: TEntityByExtendedTypeConfig;
   mode: TImportMode | null;
   onModeChange: (mode: TImportMode) => void;
@@ -27,15 +31,21 @@ export interface IImportOptionsScreenProps {
 }
 
 export function ImportOptionsScreen({
+  workspace,
   selectedType,
   mode,
   onModeChange,
   onUploadBreadcrumbClick,
   continueHref,
-}: IImportOptionsScreenProps) {
+}: IProps) {
+  const { push: navigate } = useRouter();
   const multipleEnabled = selectedType?.isMultipleContributeSupport === true;
   const multipleCardActive = mode === ImportMode.Multiple && multipleEnabled;
-
+  const onClose = () => {
+    return navigate(
+      `${config.ROOT_ROUTE}/${workspace.virtualLabId}/${workspace.projectId}/data/contribute?step=${ImportLeftSideTab.Type}`
+    );
+  };
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-full flex-col">
@@ -56,6 +66,7 @@ export function ImportOptionsScreen({
           </Breadcrumb>
           <button
             type="button"
+            onClick={onClose}
             className={cn(
               'hover:bg-neutral-1 text-neutral-5 hover:text-primary-6 ',
               'flex items-center justify-center rounded-full p-2 hover:shadow-bnb'

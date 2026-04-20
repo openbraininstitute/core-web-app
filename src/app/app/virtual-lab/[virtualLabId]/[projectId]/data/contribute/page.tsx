@@ -2,7 +2,7 @@
 
 import { kebabCase } from 'es-toolkit/compat';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
@@ -28,11 +28,10 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 
 export default function Page() {
   const { virtualLabId, projectId } = useWorkspace();
-  const [currentTab, setCurrentTab] = useState<TImportLeftSideTab>(ImportLeftSideTab.Type);
   const notification = useAppNotification();
 
   const options = useMemo(() => buildContributionArtifactOptions(), []);
-  const [{ mode, type, view }, onStateChange] = useQueryStates(
+  const [{ mode, type, view, step }, onStateChange] = useQueryStates(
     {
       mode: parseAsString
         .withOptions({
@@ -48,14 +47,32 @@ export default function Page() {
         clearOnDefault: true,
         shallow: true,
       }),
+      step: parseAsString
+        .withOptions({
+          clearOnDefault: true,
+          shallow: true,
+        })
+        .withDefault(ImportLeftSideTab.Type) as SingleParserBuilder<TImportLeftSideTab>,
     },
     {
       urlKeys: {
         mode: 'm',
         type: 't',
-        view: 'view',
+        view: 'v',
+        step: 's',
       },
     }
+  );
+  const currentTab = step ?? ImportLeftSideTab.Type;
+
+  const setCurrentTab = useCallback(
+    (nextTab: TImportLeftSideTab) => {
+      if (nextTab === currentTab) {
+        return;
+      }
+      onStateChange({ step: nextTab });
+    },
+    [currentTab, onStateChange]
   );
 
   const isTypeMenuActive = currentTab === ImportLeftSideTab.Type;
@@ -93,17 +110,19 @@ export default function Page() {
     if (view !== 'options' || type == null) {
       return;
     }
-    setCurrentTab(ImportLeftSideTab.Options);
-    onStateChange({ view: null });
+    onStateChange({
+      step: ImportLeftSideTab.Options,
+      view: null,
+    });
   }, [view, type, onStateChange]);
 
   const onTypeSelect = (nextType: TExtendedEntitiesTypeDict) => {
     const selected = options.find((option) => option.value === nextType);
     onStateChange({
       mode: null,
+      step: ImportLeftSideTab.Options,
       type: selected?.value,
     });
-    setCurrentTab(ImportLeftSideTab.Options);
   };
 
   const continueHref = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/contribute/${effectiveImportMode}/${kebabCase(selectedType?.extendedType ?? '')}`;
@@ -151,10 +170,16 @@ export default function Page() {
           />
         </div>
         {isTypeMenuActive && (
-          <SelectTypeScreen options={options} selectedType={type} onSelectType={onTypeSelect} />
+          <SelectTypeScreen
+            workspace={{ virtualLabId, projectId }}
+            options={options}
+            selectedType={type}
+            onSelectType={onTypeSelect}
+          />
         )}
         {isOptionsMenuActive && selectedType ? (
           <ImportOptionsScreen
+            workspace={{ virtualLabId, projectId }}
             selectedType={selectedType}
             mode={effectiveImportMode}
             onModeChange={(nextMode) => {
@@ -164,9 +189,9 @@ export default function Page() {
               });
             }}
             onUploadBreadcrumbClick={() => {
-              setCurrentTab(ImportLeftSideTab.Type);
               onStateChange({
                 mode: null,
+                step: ImportLeftSideTab.Type,
                 type: null,
               });
             }}
