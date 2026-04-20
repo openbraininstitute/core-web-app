@@ -1,14 +1,14 @@
-import { cn } from '@/utils/css-class';
+import { cn } from '@/utils/css-class'
 
-import type { CSSProperties } from 'react';
+import type { CSSProperties } from 'react'
 
-import styles from './icon.module.css';
+import styles from './icon.module.css'
 
 type Props = {
-  className?: string;
-  size?: string;
-  style?: CSSProperties;
-};
+  className?: string
+  size?: string
+  style?: CSSProperties
+}
 
 export function IconSpinner({ className, style, size }: Props) {
   return (
@@ -25,5 +25,5 @@ export function IconSpinner({ className, style, size }: Props) {
       <title>spinner</title>
       <path d="M0,-8A8,8 0 0,0 -8,0" strokeWidth="1" strokeLinecap="round" fill="none" />
     </svg>
-  );
+  )
 }

@@ -1,5 +1,5 @@
-import { ApiError } from './common';
-import { PlotData } from '@/services/bluenaas-single-cell/types';
+import type { PlotData } from '@/services/bluenaas-single-cell/types';
+import type { ApiError } from './common';
 
 export enum SimulationTypeNames {
   SYNAPTOME_SIMULATION = 'synaptome-simulation',
@@ -114,6 +114,11 @@ export type SimulationStreamData = {
   varying_key: string;
   x: Array<number>;
   y: Array<number>;
+  /**
+   * The times when spikes are detected.
+   * Must be a subset of `x[]`.
+   */
+  spikes?: number[];
   variable_name?: string;
   unit?: string;
 };

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import SimulationResults from '@/components/simulate/SimulationDetails/recording-tab';
+import SimulationResults from '@/components/simulate/SimulationDetails/recording-tab/recording-tab';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   singleNeuronSimulationApiQueryExpand,
@@ -39,8 +39,12 @@ export default async function Results({
     } catch {
       notFound();
     }
-
-    return <SimulationResults recordings={config.simulation} />;
+    return (
+      <SimulationResults
+        recordings={config.simulation}
+        meModelId={(entity as ISingleNeuronSimulation).me_model.id}
+      />
+    );
   }
 
   if (extendedType === 'single_neuron_synaptome_simulation') {

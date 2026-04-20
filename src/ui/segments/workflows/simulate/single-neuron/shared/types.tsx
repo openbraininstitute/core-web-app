@@ -297,8 +297,9 @@ export const SimulationType = {
 export type TSimulationType = (typeof SimulationType)[keyof typeof SimulationType];
 
 export type PlotDataEntry = {
-  x: Array<number>;
-  y: Array<number>;
+  x: number[];
+  y: number[];
+  spikeTimes?: number[];
   type: 'scatter';
   name: string;
   recording?: string;
