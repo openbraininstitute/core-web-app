@@ -164,6 +164,7 @@ const ModelIdentifierSelector = {
   [ExtendedEntitiesTypeDict.Memodel]: 'MEModelFromID',
   [ExtendedEntitiesTypeDict.MEModelWithSynapses]: 'MEModelWithSynapsesCircuitFromID',
   [ExtendedEntitiesTypeDict.Circuit]: 'CircuitFromID',
+  [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'CellMorphologyFromID',
 };
 
 export function useAtomsMap({
@@ -193,8 +194,8 @@ export function useAtomsMap({
 
     const map: {
       [key: string]:
-        | ReturnType<typeof atom<Record<string, ConfigValue>>>
-        | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
+        | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
+        | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
     } = {};
 
     // Logic to build the atoms map based on initialConfig OR schema defaults
@@ -202,7 +203,7 @@ export function useAtomsMap({
       Object.entries(initialConfig)
         .filter(([k]) => isRootBlock(schema, k) || isRootBlockSingle(schema, k))
         .forEach(([k, v]) => {
-          if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue>>(v);
+          if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(v);
         });
 
       Object.entries(initialConfig)
@@ -211,14 +212,14 @@ export function useAtomsMap({
           map[k] = {};
           Object.entries(v).forEach(([subK, subV]) => {
             if (!isPlainObject(subV) || isAtom(map[k])) return;
-            map[k][subK] = atom<Record<string, ConfigValue>>(subV);
+            map[k][subK] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(subV);
           });
         });
     } else {
       Object.entries(schema.properties).forEach(([k, v]) => {
         if (isType(v)) return;
         if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
-          const initial: Record<string, ConfigValue> = {};
+          const initial: Record<string, ConfigValue | Array<ConfigValue>> = {};
 
           Object.entries(v.properties).forEach(([subkey, subValue]) => {
             initial[subkey] = subValue.default ?? null;
@@ -244,20 +245,45 @@ export function useAtomsMap({
                   { type: EntityTypeDict.Circuit },
                   () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Circuit]
                 )
+                .with(
+                  { type: EntityTypeDict.CellMorphology },
+                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
+                )
                 .otherwise(() => {
                   throw new Error(`Unsupported entity type: ${model.type}`);
                 });
+
               initial[subkey] = {
                 type: formModelType,
                 id_str: model.id,
               };
             }
+            if (
+              model &&
+              !isType(subValue) &&
+              subValue.ui_element === ScanConfigUIElementDict.ModelIdentifierMultiple
+            ) {
+              const formModelType = match(model)
+                .with(
+                  { type: EntityTypeDict.CellMorphology },
+                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
+                )
+                .otherwise(() => {
+                  throw new Error(`Unsupported entity type: ${model.type}`);
+                });
+              initial[subkey] = [
+                {
+                  type: formModelType,
+                  id_str: model.id,
+                },
+              ];
+            }
           });
 
-          map[k] = atom<Record<string, ConfigValue>>(initial);
+          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initial);
         } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
           // Initialize as empty - user must select a variant first (like block_dictionary)
-          map[k] = atom<Record<string, ConfigValue>>({});
+          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>({});
         } else {
           map[k] = {};
         }
@@ -277,15 +303,15 @@ export function resetConfig(
 ) {
   const map: {
     [key: string]:
-      | ReturnType<typeof atom<Record<string, ConfigValue>>>
-      | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
+      | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
+      | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
   } = {};
 
   // First, populate from newConfig
   Object.entries(newConfig)
     .filter(([k]) => isRootBlock(schema, k) || isRootBlockSingle(schema, k))
     .forEach(([k, v]) => {
-      if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue>>(v);
+      if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(v);
     });
 
   Object.entries(newConfig)
@@ -295,7 +321,7 @@ export function resetConfig(
       if (!v || !isPlainObject(v)) return;
       Object.entries(v).forEach(([subK, subV]) => {
         if (!isPlainObject(subV) || isAtom(map[k])) return;
-        map[k][subK] = atom<Record<string, ConfigValue>>(subV);
+        map[k][subK] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(subV);
       });
     });
 

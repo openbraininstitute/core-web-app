@@ -2,6 +2,7 @@ import { match } from 'ts-pattern';
 
 import {
   EntityTypeDict,
+  type ICellMorphology,
   type ICircuit,
   type IMEModel,
   type IonChannelModel,
@@ -33,8 +34,8 @@ export type Config = Record<string, Object | string>;
 
 export interface AtomsMap {
   [key: string]:
-    | ReturnType<typeof atom<Record<string, ConfigValue>>>
-    | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
+    | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
+    | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
 }
 
 export const SchemaMappingKeyDict = {
@@ -48,6 +49,7 @@ export const ScanConfigActivity = {
   Simulate: 'simulate',
   Extract: 'extract',
   Process: 'process',
+  Build: 'build',
 } as const;
 
 export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
@@ -71,9 +73,18 @@ export const ExtractScanConfigTabs = {
   extractions: 'extractions',
 } as const;
 
+export const BuildScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  extractions: 'results',
+} as const;
+
 export type TExtractScanConfigTabs = {
   id: keyof typeof ExtractScanConfigTabs;
   __activity: 'extract';
+};
+export type TBuildScanConfigTabs = {
+  id: keyof typeof BuildScanConfigTabs;
+  __activity: 'build';
 };
 
 export const ProcessScanConfigTabs = {
@@ -95,6 +106,7 @@ export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
   [ScanConfigActivity.Process]: ProcessScanConfigTabs,
+  [ScanConfigActivity.Build]: BuildScanConfigTabs,
 } as const;
 
 export const ScanConfigDefaultTab = {
@@ -105,15 +117,24 @@ export const ScanConfigDefaultTab = {
 export type SimExecStatusMap = Map<string, ActivityStatus>;
 export type TabType = 'configuration' | 'simulations';
 
-export type SchemaName =
+export const SchemaNameDict = {
   // simulation
-  | 'CircuitSimulationScanConfig'
-  | 'MEModelSimulationScanConfig'
-  | 'MEModelWithSynapsesCircuitSimulationScanConfig'
+  CircuitSimulationScanConfig: 'CircuitSimulationScanConfig',
+  MEModelSimulationScanConfig: 'MEModelSimulationScanConfig',
+  MEModelWithSynapsesCircuitSimulationScanConfig: 'MEModelWithSynapsesCircuitSimulationScanConfig',
+  IonChannelModelSimulationScanConfig: 'IonChannelModelSimulationScanConfig',
   // extraction
-  | 'CircuitExtractionScanConfig'
+  CircuitExtractionScanConfig: 'CircuitExtractionScanConfig',
+  // build
+  EMSynapseMappingScanConfig: 'EMSynapseMappingScanConfig',
   // processing
-  | 'SkeletonizationScanConfig';
+  SkeletonizationScanConfig: 'SkeletonizationScanConfig',
+} as const;
+
+
+export type SchemaName = (typeof SchemaNameDict)[keyof typeof SchemaNameDict];
+
+
 
 export type TRootElement = {
   description: string;
@@ -140,6 +161,7 @@ export const ScanConfigUIElementDict = {
   IonChannelVariableModificationByNeuron: 'ion_channel_variable_modification_by_neuron',
   ModelSelectorSingle: 'model_selector_single',
   SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
+  ModelIdentifierMultiple: 'model_identifier_multiple',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -152,6 +174,9 @@ export interface ModelIdentifier extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifier;
 }
 
+export interface ModelIdentifierMultiple extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.ModelIdentifierMultiple;
+}
 export interface FloatParameterSweep extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.FloatParameterSweep;
   anyOf: [
@@ -307,6 +332,7 @@ export type TBlockElement = {
 export type ParamSchema =
   | StringInput
   | ModelIdentifier
+  | ModelIdentifierMultiple
   | FloatParameterSweep
   | IntParameterSweep
   | Reference
@@ -385,7 +411,12 @@ export type TActivityCustomFile = {
   renderer: TActivityCustomFileRenderer;
 };
 
-export type TSupportedEntitiesForScanConfiguration = ICircuit | IMEModel | IonChannelModel | IEMCellMesh;
+export type TSupportedEntitiesForScanConfiguration =
+  | ICircuit
+  | IMEModel
+  | IonChannelModel
+  | ICellMorphology
+  | IEMCellMesh;
 
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
@@ -394,6 +425,7 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.IonChannelModel
   | typeof ExtendedEntitiesTypeDict.EMCellMesh
   | typeof ExtendedEntitiesTypeDict.CellMorphology
+  | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
   | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit;
 
 export const getSupportedEntityTypesForScanConfiguration = ({
@@ -426,7 +458,7 @@ export const getSupportedEntityTypesForScanConfiguration = ({
     )
     .with(
       { entity: { type: EntityTypeDict.CellMorphology } },
-      () => ExtendedEntitiesTypeDict.SingleNeuronCircuit
+      () => ExtendedEntitiesTypeDict.UniversalCellMorphology
     )
     .otherwise(() => {
       throw new Error('Not supported entity for scan configuration');
