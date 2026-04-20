@@ -88,7 +88,6 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
         disabled: false,
         sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
         type: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
-        requiredFeatures: [ExtendedEntitiesTypeDict.IonChannelModelSimulation],
         order: 3,
       },
     },
