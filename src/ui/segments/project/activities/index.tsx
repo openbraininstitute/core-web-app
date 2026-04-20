@@ -15,14 +15,14 @@ import { Card, CardContent, CardHeader } from '@/ui/molecules/card';
 import { Header } from '@/ui/segments/project/activities/elements/header';
 import { Scales, StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { ActivityValues } from '@/ui/segments/workflows/config';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
 import type { ColumnsType } from 'antd/es/table';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 export function ProjectActivities() {
   const { virtualLabId, projectId } = useWorkspace();

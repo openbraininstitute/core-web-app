@@ -3,7 +3,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { Pagination as AntPagination, Card, ConfigProvider, Empty } from 'antd';
-import { find, get, kebabCase } from 'es-toolkit/compat';
+import { get, kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
@@ -52,8 +52,8 @@ import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ORIGINAL_CAMPAIGN_ID_QUERY } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
+import { ActivityValues, getActivity } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
-import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
@@ -61,7 +61,7 @@ import type { ColumnsType } from 'antd/es/table/interface';
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [
   EntityTypeDict.SimulationCampaign,
@@ -158,7 +158,7 @@ export function WorkflowActivity() {
       render: () => {
         return (
           <span className={cn('text-primary-9 flex items-center capitalize')}>
-            {find(ActivityDict, { value: activityType ?? undefined })?.name}
+            {getActivity(activityType)?.name}
           </span>
         );
       },

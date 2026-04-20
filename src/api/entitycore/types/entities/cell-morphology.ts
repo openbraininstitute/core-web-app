@@ -70,7 +70,9 @@ export type CellMorphologyFilter = Partial<
     SharedFilter &
     CellMorphologyProtocolNestedFilter &
     IlikeSearchFilter
->;
+> & {
+  has_segmented_spines?: boolean;
+};
 
 interface ICellMorphologyBase extends EntityCoreIdentifiable {
   name: string;

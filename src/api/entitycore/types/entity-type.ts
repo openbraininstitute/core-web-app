@@ -28,6 +28,8 @@ export const EntityTypeDict = {
   EMCellMesh: 'em_cell_mesh',
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
   CircuitExtractionConfig: 'circuit_extraction_config',
+  EmSynapseMappingCampaign: 'em_synapse_mapping_campaign',
+  EmSynapseMappingConfig: 'em_synapse_mapping_config',
   TaskConfig: 'task_config',
 } as const;
 

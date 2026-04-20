@@ -9,7 +9,7 @@ import {
 } from '@/ui/segments/project/activities/elements/helpers';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 type Props = {
   onScaleChange: (s: TExtendedEntitiesTypeDict) => void;

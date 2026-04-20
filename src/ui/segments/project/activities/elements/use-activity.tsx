@@ -10,7 +10,7 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 type QueryKey = WorkspaceContext & {
   page: number;

@@ -1,18 +1,14 @@
 'use client';
 
-import { useParams, usePathname } from 'next/navigation';
 import { RightOutlined } from '@ant-design/icons';
 import snakeCase from 'es-toolkit/compat/snakeCase';
 import Link from 'next/link';
+import { useParams, usePathname } from 'next/navigation';
 
+import { config } from '@/config';
+import { WorkflowActivityDictValue } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { config } from '@/config';
-import {
-  getEntityTypeWorkflowConfigurationItem,
-  getCategoryDictItem,
-  getWorkflowSegment,
-} from '@/ui/segments/workflows/elements/helpers';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,6 +16,12 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '@/ui/molecules/breadcrumb/index';
+import {
+  getActivity,
+  getEntityMeta,
+  getPrimaryConfigurationInput,
+  getWorkflowSegment,
+} from '@/ui/segments/workflows/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { KebabCase } from '@/utils/type';
@@ -32,10 +34,19 @@ export function BuildWorkflowsBreadcrumb() {
   const { virtualLabId, projectId } = useWorkspace();
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
-  const category = getCategoryDictItem(segment)?.name;
+  const category = getActivity(segment)?.name;
 
-  const selectTitle = getEntityByExtendedType({ type: dataType })?.title;
-  const buildTitle = getEntityTypeWorkflowConfigurationItem(dataType)?.label;
+  // When the active workflow has configurationInputs (needsBrowse), the user
+  // is selecting the input entity — surface that in the breadcrumb instead of
+  // the target entity.
+  const primaryInput = getPrimaryConfigurationInput({
+    activity: WorkflowActivityDictValue.build,
+    targetType: dataType,
+  });
+  const browseType = (primaryInput?.type as TExtendedEntitiesTypeDict | undefined) ?? dataType;
+
+  const selectTitle = getEntityByExtendedType({ type: browseType })?.title;
+  const buildTitle = getEntityMeta(dataType)?.label;
   const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
 
   return (
