@@ -1,5 +1,5 @@
 import { LoadingOutlined } from '@ant-design/icons';
-import Spin, { SpinIndicator } from 'antd/es/spin';
+import Spin, { type SpinIndicator } from 'antd/es/spin';
 
 export function Loader({
   size = 'large',
