@@ -33,9 +33,15 @@ export type BrainRegionFilter = {
 };
 
 export type BrainRegionHierarchyFilter = {
-  within_brain_region_hierarchy_id: string;
+  /**
+   * this two parameters should go together
+   */
   within_brain_region_brain_region_id: string;
   within_brain_region_direction: TBrainRegionDirection;
+  /**
+   * @deprecated using the other two is enough
+   */
+  within_brain_region_hierarchy_id: string;
   /**
    * @deprecated Use `within_brain_region_direction` instead.
    */
@@ -134,8 +140,6 @@ export interface IMorphologyFilter {
   exemplar_morphology__species_id__in?: string | null;
   exemplar_morphology__order_by?: string | null;
 }
-
-export type CreatorFilter = {};
 
 export interface OwnershipFilter {
   // Created by
