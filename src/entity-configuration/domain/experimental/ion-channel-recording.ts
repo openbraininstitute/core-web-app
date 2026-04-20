@@ -48,4 +48,7 @@ export const IonChannelRecording: EntityCoreTypeConfig<IElectricalCellRecording>
   isBookmarkable: true,
   isCopyable: true,
   isSimulatable: false,
+  isContributable: true,
+  isSingleContributeSupport: false,
+  isMultipleContributeSupport: false,
 } as const;

@@ -15,6 +15,7 @@ import { FileDownloadLine } from '@/components/icons/File';
 import { messages } from '@/i18n/en/upload';
 import { type FileWithPreview, formatBytes, useFileUpload } from '@/ui/hooks/use-file-upload';
 import { Alert, AlertContent, AlertDescription, AlertIcon, AlertTitle } from '@/ui/molecules/alert';
+import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import { CELL_MORPHOLOGY_FILE_TYPES } from '@/ui/segments/contribute/cell-morphology/schema';
 import { getFileExtension, parseFileName } from '@/ui/segments/contribute/shared/helpers';
@@ -54,7 +55,7 @@ export function AssetUpload({
     'H5',
     'ASC',
   ],
-  multiple = true,
+  multiple = false,
   className,
   onFilesChange,
 }: IAssetUploadProps) {
@@ -64,6 +65,9 @@ export function AssetUpload({
   };
   const [resolveNeuronFileLoading, setResolveNeuronFileLoading] = useState(false);
   const [originalFileType, setOriginalFileType] = useState<string | null>(null);
+  const assetFiles = [assets?.swc, assets?.asc, assets?.h5].filter(
+    (file): file is File => file instanceof File
+  );
 
   const [
     { isDragging, errors },
@@ -85,6 +89,20 @@ export function AssetUpload({
     onFilesChange,
     async onFilesAdded(addedFiles, setState) {
       const file = addedFiles[0].file as File;
+      form.setFieldsValue({
+        assets: {
+          swc: undefined,
+          asc: undefined,
+          h5: undefined,
+        },
+      });
+      setOriginalFileType(null);
+      setState((prev) => ({
+        ...prev,
+        files: [],
+        errors: [],
+      }));
+
       setResolveNeuronFileLoading(true);
       const { data: resolution, error } = await tryCatch(resolveNeuronFile(file as File));
 
@@ -113,7 +131,7 @@ export function AssetUpload({
         const newFiles = fsAdded.map((f, index) => {
           const extractedName = `${originalFileName}.${Object.keys(unzippedData.files)[index].split('.').pop()}`;
           const builtFile = new File([f], extractedName, { type: f.type });
-          const finalType = getFileExtensionByTypeOrMimeType(builtFile);
+          const finalType = getFileExtensionByTypeOrMimeType(builtFile) ?? '';
           return {
             file: builtFile,
             id: crypto.randomUUID(),
@@ -121,7 +139,7 @@ export function AssetUpload({
           };
         });
 
-        const originalFileExt = file.name.split('.').pop()?.toLowerCase();
+        const originalFileExt = file.name.split('.').pop()?.toLowerCase() ?? '';
         const originalFile = {
           file: new File([addedFiles[0].file as File], (addedFiles[0].file as File).name, {
             type: (addedFiles[0].file as File).type,
@@ -145,7 +163,7 @@ export function AssetUpload({
 
         setState((prev) => ({
           ...prev,
-          files: [...prev.files, ...reject(allFiles, (o) => isNil(o.file))],
+          files: reject(allFiles, (o) => isNil(o.file)),
         }));
       }
       setResolveNeuronFileLoading(false);
@@ -167,14 +185,11 @@ export function AssetUpload({
 
   return (
     <Form.Item name="assets">
-      <div className={cn('w-full', className)}>
-        <div className="mb-3 flex flex-wrap items-center justify-between select-none">
-          <h2 className="text-primary-9 text-xl font-bold">Upload new morphology file</h2>
-        </div>
+      <div id="morphology-assets-upload" className={cn('w-full', className)}>
         <section
           aria-label="File upload dropzone"
           className={cn(
-            'border-neutral-1 shadow-bnb relative rounded-xl border p-8 text-center transition-colors',
+            'border-neutral-1 shadow-md px-2 relative rounded-xl border bg-white p-8 text-center transition-colors',
             isDragging ? 'border-primary-8 bg-primary/5' : 'border-neutral-1 hover:border-neutral-1'
           )}
           onDragEnter={handleDragEnter}
@@ -232,19 +247,12 @@ export function AssetUpload({
           </div>
         </section>
 
-        {!isNil(assets) && Object.values(assets).filter((file) => !isNil(file)).length > 0 && (
+        {assetFiles.length > 0 && (
           <div className="mt-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h4 className="text-sm font-medium">
-                Files ({Object.values(assets).filter((file) => !isNil(file)).length})
-              </h4>
+              <h4 className="text-sm font-medium">Files ({assetFiles.length})</h4>
               <div className="text-muted-foreground text-xs">
-                Total:{' '}
-                {formatBytes(
-                  Object.values(assets)
-                    .filter((file) => !isNil(file))
-                    .reduce((acc, file) => acc + (file as File).size, 0)
-                )}
+                Total: {formatBytes(assetFiles.reduce((acc, file) => acc + file.size, 0))}
               </div>
             </div>
             <Button
@@ -259,10 +267,9 @@ export function AssetUpload({
           </div>
         )}
 
-        {!isNil(assets) && Object.values(assets).filter((file) => !isNil(file)).length > 0 && (
+        {assetFiles.length > 0 && (
           <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-8 select-none sm:grid-cols-3 md:grid-cols-4">
-            {Object.values(assets)
-              .filter((file): file is File => !isNil(file))
+            {assetFiles
               .sort((a, b) => {
                 const aType = getFileExtensionByTypeOrMimeType(a);
                 const bType = getFileExtensionByTypeOrMimeType(b);
@@ -280,10 +287,18 @@ export function AssetUpload({
                   <div key={fileItem.name} className="group relative aspect-square">
                     <div
                       className={cn(
-                        'bg-background flex h-full w-full flex-col items-center justify-center rounded-t-lg border border-b-0',
+                        'bg-background flex relative h-full w-full flex-col items-center justify-center rounded-t-lg border border-b-0',
                         isGenerated ? 'border-primary-6 border-2' : 'border-neutral-1'
                       )}
                     >
+                      {isGenerated && (
+                        <Badge
+                          variant="outline"
+                          className="absolute top-2 right-2 rounded-full px-3 py-1 text-xs"
+                        >
+                          generated by MorphTool
+                        </Badge>
+                      )}
                       <FileDownloadLine className="text-primary-6 h-8 w-8" />
                       <p className="text-primary-8 text-sm font-light">{fileType}</p>
                     </div>

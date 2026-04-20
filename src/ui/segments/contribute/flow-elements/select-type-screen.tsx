@@ -136,7 +136,12 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
           <CloseOutlined />
         </button>
       </div>
-      <Card borderless shadowless className={cn('flex min-h-0 flex-1 flex-col px-4 pb-4 pt-0')}>
+      <Card
+        borderless
+        shadowless
+        id="select-type-screen"
+        className={cn('flex min-h-0 flex-1 flex-col px-4 pb-4 pt-0')}
+      >
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto secondary-scrollbar pr-2  @container/cards">
           <div className="grid gap-3 grid-cols-1 @2xl/cards:grid-cols-2  @2xl/cards:@6xl/cards:grid-cols-3 @6xl/cards:@8xl/cards:grid-cols-4">
             {enabledOptions.map((option) => {
@@ -162,7 +167,7 @@ export function SelectTypeScreen({ options, selectedType, onSelectType }: ISelec
               >
                 <div className="flex flex-col items-start normal-case">
                   <h2 className="text-primary-9 text-lg font-bold  tracking-wide">Coming soon</h2>
-                  <small className="text-gray-500 normal-case">
+                  <small className="text-gray-500 text-base normal-case">
                     These artifact types are planned and will be available in future releases.
                   </small>
                 </div>

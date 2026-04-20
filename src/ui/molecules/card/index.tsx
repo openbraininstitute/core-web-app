@@ -7,9 +7,10 @@ type CardProps = React.ComponentProps<'div'> & {
   shadowless?: boolean;
 };
 
-function Card({ className, borderless, shadowless, ...props }: CardProps) {
+function Card({ className, borderless, shadowless, id, ...props }: CardProps) {
   return (
     <div
+      id={id}
       data-slot="card"
       className={cn(
         'bg-card text-card-foreground border-neutral-2 flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
@@ -79,4 +80,4 @@ function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };
+export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };

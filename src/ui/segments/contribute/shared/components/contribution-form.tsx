@@ -113,7 +113,7 @@ function FormContent<
         <input type="hidden" />
       </Form.Item>
 
-      <div className="h-full max-h-full min-h-0 flex-1 bg-background py-6 pr-1 shadow-none">
+      <div className="h-full max-h-full min-h-0 flex-1 bg-background pr-1 shadow-none">
         {createdEntityId && detailsUrl ? (
           <div className="flex h-full w-full items-center justify-center">
             <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-6">
