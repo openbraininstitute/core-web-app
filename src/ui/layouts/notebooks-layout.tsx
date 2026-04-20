@@ -111,6 +111,8 @@ export function NotebooksLayout({ children, active }: Props) {
     enabled: Boolean(virtualLabId),
   });
 
+  console.log(`⚠️⚠️⚠️ Virtual lab data`, virtualLabData);
+
   const onFinnish = useCallback(() => {
     setShowCourseModal(false);
     setStep(0);
