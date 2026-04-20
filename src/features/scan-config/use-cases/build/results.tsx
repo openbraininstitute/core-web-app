@@ -48,15 +48,14 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
 
-  const { mutateAsync: runExtraction, isPending: runExtractionPending } =
-    useScanConfigLaunchMutation({
-      context,
-      obiOneTaskType: ObiOneTaskTypeDict.CircuitExtraction,
-      executionActivityType: TaskActivityType.CircuitExtractionExecution,
-      notificationKey: 'extraction-config-error',
-      failureMessage: 'We ran into a problem launching your extraction. Please try again later.',
-      logTopic: 'Extraction',
-    });
+  const { mutateAsync: runBuild, isPending: runBuildPending } = useScanConfigLaunchMutation({
+    context,
+    obiOneTaskType: ObiOneTaskTypeDict.EmSynapseMapping,
+    executionActivityType: TaskActivityType.EmSynapseMappingExecution,
+    notificationKey: 'build-config-error',
+    failureMessage: 'We ran into a problem launching your build. Please try again later.',
+    logTopic: 'Build',
+  });
 
   const {
     configGenerationLoading,
@@ -64,13 +63,13 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
     configsLoading,
     executionsResponse,
     executionsLoading,
-  } = useScanConfigTaskRunner<TExtractionTaskConfigMeta>({
+  } = useScanConfigTaskRunner<never>({
     context,
     campaignId,
-    configGenerationActivityType: TaskActivityType.CircuitExtractionConfigGeneration,
-    executionActivityType: TaskActivityType.CircuitExtractionExecution,
-    taskConfigType: TaskConfigType.CircuitExtractionConfig,
-    pauseExecutionPolling: runExtractionPending,
+    configGenerationActivityType: TaskActivityType.EmSynapseMappingConfigGeneration,
+    executionActivityType: TaskActivityType.EmSynapseMappingExecution,
+    taskConfigType: TaskConfigType.EmSynapseMappingConfig,
+    pauseExecutionPolling: runBuildPending,
   });
 
   const statusMap = useMemo(() => {
@@ -131,7 +130,7 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
 
   const onRun = async (configIdsToRun: string[]) => {
     for (const configId of configIdsToRun) {
-      await runExtraction(configId);
+      await runBuild(configId);
     }
     setSelectedConfigIds([]);
   };
@@ -158,7 +157,7 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
             }
             onChange={onSelectedAll}
             checked={allSelected}
-            disabled={runExtractionPending || selectableConfigIds.length === 0}
+            disabled={runBuildPending || selectableConfigIds.length === 0}
           >
             Select all
           </Checkbox>
@@ -178,7 +177,7 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
                   onSelect={() => onActiveConfigChange(config)}
                   onSelectedForExtractionChange={onSelectedForExtractionChange}
                   selectedForExtraction={selectedConfigIds.includes(config.id)}
-                  selectionDisabled={runExtractionPending}
+                  selectionDisabled={runBuildPending}
                 />
               ))}
           </div>
@@ -190,11 +189,11 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
             )}
             type="button"
             onClick={() => onRun(selectedConfigIds)}
-            disabled={runExtractionPending || selectedConfigIds.length === 0}
+            disabled={runBuildPending || selectedConfigIds.length === 0}
           >
             <div className="flex justify-center gap-4">
               <span className="pl-10">Launch extractions {launchBtnLabelPrefix}</span>
-              <div className="w-6">{runExtractionPending && <LoadingOutlined />}</div>
+              <div className="w-6">{runBuildPending && <LoadingOutlined />}</div>
             </div>
           </button>
         </div>
