@@ -72,6 +72,8 @@ export function ScanConfiguration({
     context: { virtualLabId, projectId },
   });
 
+  console.log('–– – index.tsx:75 – ScanConfiguration – entity:', entity);
+
   if (!loadingEntity && (entity || entityType)) {
     usedType = getSupportedEntityTypesForScanConfiguration({
       entity: entity ?? { type: entityType },
@@ -92,6 +94,8 @@ export function ScanConfiguration({
   const { schema, isLoading: loadingSchema } = useObioneJsonSchema({
     schemaName,
   });
+
+  console.log('–– – index.tsx:98 – ScanConfiguration – schema:', schema);
 
   const property_endpoints = schemaMappingKey
     ? get(schema?.property_endpoints, schemaMappingKey, '')

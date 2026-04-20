@@ -17,7 +17,7 @@ import { useCreditsAccessGuard } from '@/hooks/use-credits-access-guard';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { getTypeByActivityAndSourceType } from '@/ui/segments/workflows/elements/helpers';
+import { getTargetType } from '@/ui/segments/workflows/config';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
@@ -190,7 +190,7 @@ export default function GenerateConfigButton({
                     virtualLabId,
                     projectId,
                     activity,
-                    entityType: getTypeByActivityAndSourceType(activity, entityType),
+                    entityType: getTargetType({ activity, sourceType: entityType }),
                   }
                 )
               ) {

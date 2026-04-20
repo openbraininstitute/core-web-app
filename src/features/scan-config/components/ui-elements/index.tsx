@@ -2,7 +2,6 @@ import { Input } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
 
-import ModelDetails from '@/features/scan-config/components/model-details';
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/global';
@@ -11,6 +10,7 @@ import {
   type MechanismVariablesRoot,
   RootSelector,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import ModelIdentifier from '@/features/scan-config/components/ui-elements/model-identifier';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
@@ -27,6 +27,8 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { isObject } from '@/util/type-guards';
+
+import ModelIdentifierMultiple from './model-identifier_multiple';
 
 import type { SetStateAction } from 'jotai';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
@@ -83,7 +85,14 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.ModelIdentifier },
         entity: P.nonNullable,
       },
-      ({ entity }) => <ModelDetails entity={entity} />
+      ({ entity }) => <ModelIdentifier entity={entity} />
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.ModelIdentifierMultiple },
+        entity: P.nonNullable,
+      },
+      ({ entity }) => <ModelIdentifierMultiple entities={entity} />
     )
     .with(
       {

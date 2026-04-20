@@ -6,12 +6,12 @@ import {
 } from '@/features/scan-config/types';
 import { cn } from '@/utils/css-class';
 
-interface ModelDetailsProps {
+interface ModelIdentifierProps {
   className?: string;
   entity: TSupportedEntitiesForScanConfiguration;
 }
 
-export default function ModelDetails({ className, entity }: ModelDetailsProps) {
+export default function ModelIdentifier({ className, entity }: ModelIdentifierProps) {
   return (
     <div
       className={cn('flex flex-col gap-1', className)}

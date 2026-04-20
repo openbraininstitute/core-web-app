@@ -11,6 +11,7 @@ import {
   type ConfigSchema,
   ScanConfigActivity,
   type SchemaName,
+  SchemaNameDict,
   type TScanConfigActivity,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
@@ -25,6 +26,10 @@ export function getGeneratedApiUrl({
   activity?: TScanConfigActivity;
   entityType: TSupportedEntityTypesForScanConfiguration | Nullish;
 }) {
+  console.log('–– – index.tsx:29 – getGeneratedApiUrl – entityType:', entityType);
+
+  console.log('–– – index.tsx:29 – getGeneratedApiUrl – activity:', activity);
+
   const apiPath = match(activity)
     .with(ScanConfigActivity.Extract, () => {
       const path = match({ entityType })
@@ -57,8 +62,15 @@ export function getGeneratedApiUrl({
           { entityType: EntityTypeDict.Circuit },
           () => 'circuit-simulation-scan-config-generate-grid'
         )
+        .otherwise(() => {
+          throw new Error(`Unsupported entity type ${entityType}`);
+        });
+      return path;
+    })
+    .with(ScanConfigActivity.Build, () => {
+      const path = match({ entityType })
         .with(
-          { entityType: EntityTypeDict.CellMorphology },
+          { entityType: ExtendedEntitiesTypeDict.UniversalCellMorphology },
           () => 'em-synapse-mapping-scan-config-generate-grid'
         )
         .otherwise(() => {
@@ -86,7 +98,10 @@ export function getScanConfigSchemaName({
     })
     .with({ activity: ScanConfigActivity.Extract }, () => {
       const name = match({ entityType })
-        .with({ entityType: ExtendedEntitiesTypeDict.Circuit }, () => 'CircuitExtractionScanConfig')
+        .with(
+          { entityType: ExtendedEntitiesTypeDict.Circuit },
+          () => SchemaNameDict.CircuitExtractionScanConfig
+        )
         .otherwise(() => {
           throw new Error(`Unsupported entity type: ${entityType}`);
         });
@@ -96,15 +111,15 @@ export function getScanConfigSchemaName({
       const name = match({ entityType })
         .with(
           { entityType: ExtendedEntitiesTypeDict.MemodelCircuit },
-          () => 'MEModelSimulationScanConfig'
+          () => SchemaNameDict.MEModelSimulationScanConfig
         )
         .with(
           { entityType: ExtendedEntitiesTypeDict.IonChannelModel },
-          () => 'IonChannelModelSimulationScanConfig'
+          () => SchemaNameDict.IonChannelModelSimulationScanConfig
         )
         .with(
           { entityType: ExtendedEntitiesTypeDict.MEModelWithSynapses },
-          () => 'MEModelWithSynapsesCircuitSimulationScanConfig'
+          () => SchemaNameDict.MEModelWithSynapsesCircuitSimulationScanConfig
         )
         .with({ entityType: ExtendedEntitiesTypeDict.Circuit }, () => 'CircuitSimulationScanConfig')
         .with(
@@ -115,6 +130,17 @@ export function getScanConfigSchemaName({
           throw new Error(`Unsupported entity type: ${entityType}`);
         });
       return name as SchemaName;
+    })
+    .with({ activity: ScanConfigActivity.Build }, () => {
+      const name = match({ entityType })
+        .with(
+          { entityType: ExtendedEntitiesTypeDict.UniversalCellMorphology },
+          () => SchemaNameDict.EMSynapseMappingScanConfig
+        )
+        .otherwise(() => {
+          throw new Error(`Unsupported entity type: ${entityType}`);
+        });
+      return name;
     })
     .exhaustive();
 
