@@ -40,16 +40,14 @@ export function CollapsibleMessage({
   const isChatReady = useAtomValue(isChatReadyAtom);
   const restorePreviewMessageId = useAtomValue(restorePreviewMessageIdAtom);
   const prevCounterRef = React.useRef(submittedCounter);
-  const onCancelRestoreRef = React.useRef(onCancelRestore);
-  onCancelRestoreRef.current = onCancelRestore;
 
   React.useEffect(() => {
     if (submittedCounter > prevCounterRef.current) {
       setIsConfirmingRestore(false);
-      onCancelRestoreRef.current?.();
+      onCancelRestore?.();
     }
     prevCounterRef.current = submittedCounter;
-  }, [submittedCounter]);
+  }, [submittedCounter, onCancelRestore]);
 
   // Cancel this message's restore confirmation if another message took over
   React.useEffect(() => {
