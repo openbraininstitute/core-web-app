@@ -6,6 +6,7 @@ import { authFetch } from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
 import {
+  BuildScanConfigTabs,
   ExtractScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
@@ -80,6 +81,11 @@ export default function GenerateConfigButton({
       setTab({
         id: ProcessScanConfigTabs.skeletonizations,
         __activity: ScanConfigActivity.Process,
+      });
+    if (activity === ScanConfigActivity.Build)
+      setTab({
+        id: BuildScanConfigTabs.results,
+        __activity: ScanConfigActivity.Build,
       });
   };
 

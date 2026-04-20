@@ -1,5 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ionChannelSimulationActivityFlag, microcircuitFlag } from '@/features/feature-flags/flags';
+import { microcircuitFlag } from '@/features/feature-flags/flags';
 
 import type { IWorkflowDescriptor } from '../types';
 
@@ -25,7 +25,6 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     label: 'Ion channel (beta)',
     order: 3,
     disabled: false,
-    requiredFeatures: [ionChannelSimulationActivityFlag.key],
   },
   {
     sourceType: ExtendedEntitiesTypeDict.MemodelCircuit,
