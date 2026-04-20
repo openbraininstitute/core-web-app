@@ -2,7 +2,7 @@
 
 import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { atom, useAtom, useSetAtom } from 'jotai';
+import { atom, useAtom, useSetAtom, useStore } from 'jotai';
 import { useEffect, useRef } from 'react';
 
 import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
@@ -24,7 +24,7 @@ import type { AiAgentRateLimitEndpoint } from './rate-limit';
 export const agentStateAtom = atom<Record<string, Config>>({});
 
 export function useServiceAiAgentChat(threadId: string) {
-  const [aiAgentState] = useAtom(agentStateAtom);
+  const jotaiStore = useStore();
   const assistant = useAiAssistant();
   const assistantInitialMessages = assistant.initialMessages.useValue();
   const isLoadingMessages = assistant.isLoadingMessages.useValue();
@@ -39,14 +39,6 @@ export function useServiceAiAgentChat(threadId: string) {
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
   const setLastConfigUpdate = useSetAtom(lastConfigUpdateAtom);
   const configUpdateCounterRef = useRef(0);
-
-  // Keep a ref to aiAgentState so the React Compiler doesn't add it
-  // to the effect dependency array below (which would cause re-runs
-  // every time the live config changes, creating a stale-data loop).
-  const aiAgentStateRef = useRef(aiAgentState);
-  useEffect(() => {
-    aiAgentStateRef.current = aiAgentState;
-  }, [aiAgentState]);
 
   // Track the last config we applied via setConfig so flash diffs are
   // computed incrementally. agentStateAtom updates asynchronously through
@@ -84,7 +76,7 @@ export function useServiceAiAgentChat(threadId: string) {
         content: (lastMessage?.content ?? '').trim(),
         tool_selection: activeTools,
         frontend_url: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
-        shared_state: aiAgentState,
+        shared_state: jotaiStore.get(agentStateAtom),
       };
     },
     fetch: async (url, options) => {
@@ -148,7 +140,7 @@ export function useServiceAiAgentChat(threadId: string) {
       // to the live agentStateAtom for the very first editstate call.
       const oldConfig =
         lastAppliedConfigRef.current ??
-        (aiAgentStateRef.current as Record<string, unknown>)?.smc_simulation_config ??
+        (jotaiStore.get(agentStateAtom) as Record<string, unknown>)?.smc_simulation_config ??
         null;
       setConfig(newConfig);
       // Update the ref so the next editstate call diffs against this config.
