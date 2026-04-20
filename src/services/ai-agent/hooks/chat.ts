@@ -129,11 +129,11 @@ export function useServiceAiAgentChat(threadId: string) {
     // Mark as processed before doing work to avoid double-firing.
     lastProcessedInvocationIdRef.current = invocationId;
 
-    // @ts-expect-error - toolInvocation result type is not properly typed
+    // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
     if (!editstateResult?.toolInvocation?.result) return;
 
     try {
-      // @ts-expect-error - result needs to be parsed as JSON
+      // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
       const result = JSON.parse(editstateResult.toolInvocation.result);
       const newConfig = result.state.smc_simulation_config ?? null;
       // Use lastAppliedConfigRef for incremental flash diffs. Falls back
@@ -160,7 +160,7 @@ export function useServiceAiAgentChat(threadId: string) {
     } catch {
       logError(
         'Failed to parse tool invocation result as JSON:',
-        // @ts-expect-error - result type is not properly typed
+        // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
         editstateResult.toolInvocation.result
       );
     }
