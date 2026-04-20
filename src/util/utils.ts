@@ -1,8 +1,9 @@
-import { ReactNode } from 'react';
 import { format } from 'date-fns';
 import capitalize from 'es-toolkit/compat/capitalize';
 import isString from 'es-toolkit/compat/isString';
 import _memoize from 'es-toolkit/compat/memoize';
+
+import type { ReactNode } from 'react';
 
 export function createHeaders(
   token: string,
@@ -166,7 +167,8 @@ export function memoize<Param, T>(
   resolver?: (a: Param) => string,
   maxSize?: number
 ) {
-  if (maxSize === undefined) maxSize = 100; // eslint-disable-line
+  // biome-ignore lint/style/noParameterAssign: should be fine
+  if (maxSize === undefined) maxSize = 100;
   const newFamily = _memoize(initialize, resolver);
   newFamily.cache = new (makeLRUMap(maxSize))();
 
@@ -237,7 +239,7 @@ export function isJSON(str: any) {
   try {
     JSON.parse(str);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
