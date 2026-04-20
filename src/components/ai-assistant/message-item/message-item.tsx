@@ -73,7 +73,7 @@ function MessageChild({
   const validStorageIds = useStableArray(memoizedStorageIds);
 
   const { hasEditStateCalls, handlePreviewRestore, handleConfirmRestore, handleCancelRestore } =
-    useMessageDiffs({ message: value, allMessages, status, isLastMessage });
+    useMessageDiffs({ message: value });
 
   switch (value.role) {
     case 'user':

@@ -26,6 +26,7 @@ import DiffBar from '../diff-bar';
 import Footer from '../footer';
 import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
 import Welcome from '../welcome';
+import { useLastMessageDiffBar } from './use-last-message-diff-bar';
 
 import styles from './chat.module.css';
 
@@ -54,6 +55,9 @@ export default function Chat({ className, threadId }: ChatProps) {
   const [diffBarData, setDiffBarData] = useAtom(diffBarDataAtom);
   const setMessageSubmittedCounter = useSetAtom(messageSubmittedCounterAtom);
   const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
+
+  // Panel-level diff bar & highlight management for the last message
+  useLastMessageDiffBar(messages, status);
   const prevRemainingRef = React.useRef<number | null>(null);
   const hasInitializedRef = React.useRef(false);
 

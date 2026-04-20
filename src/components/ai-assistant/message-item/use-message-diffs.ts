@@ -13,8 +13,6 @@ import type { Config } from '@/features/scan-config/components/components';
 import {
   diffStateAtom,
   clearDiffStateAtom,
-  activeDiffMessageIdAtom,
-  diffBarDataAtom,
   pendingRestoreConfigAtom,
   restorePreviewActiveAtom,
   restorePreviewMessageIdAtom,
@@ -22,10 +20,10 @@ import {
 
 import type { UIMessage, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers (exported for reuse by panel-level hook) ─────────────────────────
 
 /** Filter parts down to completed editstate tool invocations. */
-function completedEditStateParts(parts: UIMessage['parts']): ToolInvocationUIPart[] {
+export function completedEditStateParts(parts: UIMessage['parts']): ToolInvocationUIPart[] {
   return parts.filter(
     (p) =>
       p.type === 'tool-invocation' &&
@@ -35,12 +33,12 @@ function completedEditStateParts(parts: UIMessage['parts']): ToolInvocationUIPar
 }
 
 /** Strip the leading `smc_simulation_config` segment when present. */
-function stripConfigPrefix(path: string[]): string[] {
+export function stripConfigPrefix(path: string[]): string[] {
   return path[0] === 'smc_simulation_config' && path.length > 1 ? path.slice(1) : path;
 }
 
 /** Strip config prefix from diffs and derive highlights in a single pass. */
-function processAccumulatedDiffs(diffs: DiffResult[]): {
+export function processAccumulatedDiffs(diffs: DiffResult[]): {
   highlights: { path: string[]; type: DiffResult['type'] }[];
   strippedDiffs: DiffResult[];
 } {
@@ -55,7 +53,7 @@ function processAccumulatedDiffs(diffs: DiffResult[]): {
 }
 
 /** Collect the set of top-level block names touched by highlights. */
-function modifiedBlockSet(highlights: { path: string[] }[]): Set<string> {
+export function modifiedBlockSet(highlights: { path: string[] }[]): Set<string> {
   return new Set(highlights.map((h) => h.path[0]).filter((b): b is string => b !== undefined));
 }
 
@@ -65,13 +63,72 @@ function useClearDiffState() {
   return React.useCallback(() => clearDiff(), [clearDiff]);
 }
 
-// ── Main hook ────────────────────────────────────────────────────────────────
+/**
+ * Compute the old config (before this message's editstate calls) by walking
+ * backwards through all messages. Exported for reuse by panel-level hook.
+ */
+export function findOldConfig(
+  messageParts: UIMessage['parts'],
+  allMessages: UIMessage[],
+): Record<string, unknown> | null {
+  const calls = completedEditStateParts(messageParts);
+  if (calls.length === 0) return null;
+
+  const thisMessageEditStates = new Set(calls.map((c) => c.toolInvocation));
+
+  for (let i = allMessages.length - 1; i >= 0; i--) {
+    const msg = allMessages[i];
+    if (!msg.parts) continue;
+
+    for (let j = msg.parts.length - 1; j >= 0; j--) {
+      const part = msg.parts[j];
+      if (part.type !== 'tool-invocation') continue;
+
+      const inv = part.toolInvocation;
+      if (thisMessageEditStates.has(inv)) continue;
+
+      if (
+        (inv.toolName === 'editstate' || inv.toolName === 'getstate') &&
+        inv.state === 'result'
+      ) {
+        try {
+          const result = JSON.parse(inv.result as string);
+          return result?.state?.smc_simulation_config || null;
+        } catch {
+          continue;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Extract the config from the last completed editstate call in a message.
+ * Exported for reuse by panel-level hook.
+ */
+export function findLastNewConfig(
+  messageParts: UIMessage['parts'],
+): Record<string, unknown> | null {
+  const calls = completedEditStateParts(messageParts).reverse();
+  if (calls.length === 0) return null;
+
+  try {
+    const last = calls[0];
+    if (last.toolInvocation.state === 'result') {
+      const result = JSON.parse(last.toolInvocation.result as string);
+      return result?.state?.smc_simulation_config || null;
+    }
+  } catch (error) {
+    console.error('Failed to get latest state:', error);
+  }
+  return null;
+}
+
+// ── Main hook (message-level concerns only) ──────────────────────────────────
 
 interface UseMessageDiffsArgs {
   message: UIMessage;
-  allMessages: UIMessage[];
-  status: 'submitted' | 'streaming' | 'ready' | 'error';
-  isLastMessage: boolean;
 }
 
 export interface MessageDiffActions {
@@ -83,22 +140,15 @@ export interface MessageDiffActions {
 
 export function useMessageDiffs({
   message,
-  allMessages,
-  status,
-  isLastMessage,
 }: UseMessageDiffsArgs): MessageDiffActions {
   const [, setConfig] = useAtom(configStateAtom);
   const [agentState] = useAtom(agentStateAtom);
   const setDiffState = useSetAtom(diffStateAtom);
-  const [activeDiffMessageId] = useAtom(activeDiffMessageIdAtom);
-  const [, setDiffBarData] = useAtom(diffBarDataAtom);
   const [, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
   const [, setRestorePreviewActive] = useAtom(restorePreviewActiveAtom);
   const [, setRestorePreviewMessageId] = useAtom(restorePreviewMessageIdAtom);
 
   const clearDiffState = useClearDiffState();
-
-  const showDiff = activeDiffMessageId === message.id;
 
   // ── Derived data ─────────────────────────────────────────────────────────
 
@@ -107,136 +157,18 @@ export function useMessageDiffs({
     [message.parts]
   );
 
-  const hasCompletedEditStateCalls = React.useMemo(
-    () => completedEditStateParts(message.parts).length > 0,
+  /** The config from the *last* completed editstate call in this message. */
+  const lastNewConfig = React.useMemo(
+    () => findLastNewConfig(message.parts),
     [message.parts]
   );
-
-  /** The config state captured *before* the first editstate call in this message. */
-  const firstOldConfig = React.useMemo(() => {
-    if (!isLastMessage) return null;
-
-    const calls = completedEditStateParts(message.parts);
-    if (calls.length === 0) return null;
-
-    // Collect all editstate invocations from this message so we can skip them
-    const thisMessageEditStates = new Set(calls.map((c) => c.toolInvocation));
-
-    for (let i = allMessages.length - 1; i >= 0; i--) {
-      const msg = allMessages[i];
-      if (!msg.parts) continue;
-
-      for (let j = msg.parts.length - 1; j >= 0; j--) {
-        const part = msg.parts[j];
-        if (part.type !== 'tool-invocation') continue;
-
-        const inv = part.toolInvocation;
-        // Skip all editstate calls from the current message
-        if (thisMessageEditStates.has(inv)) continue;
-
-        if (
-          (inv.toolName === 'editstate' || inv.toolName === 'getstate') &&
-          inv.state === 'result'
-        ) {
-          try {
-            const result = JSON.parse(inv.result as string);
-            return result?.state?.smc_simulation_config || null;
-          } catch {
-            continue;
-          }
-        }
-      }
-    }
-    return null;
-  }, [isLastMessage, message.parts, allMessages]);
-
-  /** The config from the *last* completed editstate call in this message. */
-  const lastNewConfig = React.useMemo((): Record<string, unknown> | null => {
-    const calls = completedEditStateParts(message.parts).reverse();
-    if (calls.length === 0) return null;
-
-    try {
-      const last = calls[0];
-      if (last.toolInvocation.state === 'result') {
-        const result = JSON.parse(last.toolInvocation.result as string);
-        return result?.state?.smc_simulation_config || null;
-      }
-    } catch (error) {
-      console.error('Failed to get latest state:', error);
-    }
-    return null;
-  }, [message.parts]);
-
-  /** True diff between old and new config via fast-json-patch compare. */
-  const accumulatedDiffs = React.useMemo(() => {
-    if (!isLastMessage || !firstOldConfig || !lastNewConfig) return [];
-    return computeLiveDiffs(
-      firstOldConfig as Record<string, unknown>,
-      lastNewConfig as Record<string, unknown>
-    );
-  }, [isLastMessage, firstOldConfig, lastNewConfig]);
 
   /** Extract the config from the *last* completed editstate call (for restore). */
   const getLatestState = React.useCallback((): Config | null => {
     return (lastNewConfig as Config) ?? null;
   }, [lastNewConfig]);
 
-  // ── Diff bar population (streaming → ready transition) ───────────────────
-
-  const prevStatusRef = React.useRef(status);
-  React.useEffect(() => {
-    const wasStreaming =
-      prevStatusRef.current === 'streaming' || prevStatusRef.current === 'submitted';
-    prevStatusRef.current = status;
-
-    if (!isLastMessage || !hasCompletedEditStateCalls) return;
-    if (status !== 'ready' || !wasStreaming) return;
-
-    setDiffBarData({
-      messageId: message.id,
-      accumulatedDiffs,
-      oldConfig: firstOldConfig,
-    });
-  }, [
-    isLastMessage,
-    hasCompletedEditStateCalls,
-    status,
-    message.id,
-    accumulatedDiffs,
-    firstOldConfig,
-    setDiffBarData,
-  ]);
-
-  // ── Show / hide diff highlights ──────────────────────────────────────────
-
-  React.useEffect(() => {
-    if (!showDiff || accumulatedDiffs.length === 0) return;
-
-    const { highlights, strippedDiffs } = processAccumulatedDiffs(accumulatedDiffs);
-    setDiffState({
-      highlights,
-      diffs: strippedDiffs,
-      oldConfig: firstOldConfig,
-      expandedRootElements: modifiedBlockSet(highlights),
-    });
-  }, [
-    showDiff,
-    accumulatedDiffs,
-    firstOldConfig,
-    setDiffState,
-  ]);
-
-  const prevShowDiffRef = React.useRef(showDiff);
-  React.useEffect(() => {
-    if (prevShowDiffRef.current && !showDiff) {
-      clearDiffState();
-    }
-    prevShowDiffRef.current = showDiff;
-  }, [showDiff, message.id, clearDiffState]);
-
   // ── Restore actions ──────────────────────────────────────────────────────
-
-  const preRestoreConfigRef = React.useRef<Config | null>(null);
 
   const handlePreviewRestore = React.useCallback(() => {
     const latestState = getLatestState();
@@ -257,10 +189,6 @@ export function useMessageDiffs({
 
     const adjustedDiffs = adjustParentTypes(liveDiffs);
 
-    preRestoreConfigRef.current = currentLiveConfig as Config | null;
-
-    // Set the preview guard BEFORE setting configStateAtom so the aiConfig
-    // auto-apply effect in left.tsx skips this update.
     setRestorePreviewActive(true);
     setRestorePreviewMessageId(message.id);
     setConfig(latestState as Config);
@@ -290,12 +218,10 @@ export function useMessageDiffs({
       setRestorePreviewMessageId(null);
       setPendingRestoreConfig(latestState as Record<string, any>);
     }
-    preRestoreConfigRef.current = null;
     clearDiffState();
   }, [getLatestState, setConfig, setRestorePreviewActive, setRestorePreviewMessageId, setPendingRestoreConfig, clearDiffState]);
 
   const handleCancelRestore = React.useCallback(() => {
-    preRestoreConfigRef.current = null;
     setConfig(null);
     setRestorePreviewActive(false);
     setRestorePreviewMessageId(null);
