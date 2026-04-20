@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import type { DiffResult } from '@/utils/diff';
+import { computeLiveDiffs, type DiffResult } from '@/utils/diff';
 
 /**
  * Highlight descriptor for a single config path change.
@@ -79,7 +79,6 @@ export const selectedEntryAtom = atom<string>('');
  * Map of rootElement -> { rootFlashType, entries }
  * Both parent and child components read from this atom.
  * Presence in the map = should flash. Removal = stop flashing.
- * No TTL checks — the event handler sets a timeout to remove the entry.
  */
 export interface FlashEntry {
   type: 'add' | 'remove' | 'replace';
@@ -92,7 +91,87 @@ export interface ActiveFlash {
   fields: Map<string, FlashEntry>;
 }
 
-export const activeFlashesAtom = atom<Map<string, ActiveFlash>>(new Map());
+/**
+ * When true, flash animations are visible. Set to true when a config update
+ * arrives, set to false after FLASH_DURATION_MS. The flash map itself is
+ * derived from lastConfigUpdateAtom — no need to store it separately.
+ */
+export const flashingAtom = atom(false);
+
+const EMPTY_FLASHES = new Map<string, ActiveFlash>();
+
+/** Merge a flash entry into a map, upgrading to 'replace' on type conflict. */
+function mergeFlash(
+  map: Map<string, FlashEntry>,
+  key: string,
+  type: 'add' | 'remove' | 'replace',
+) {
+  const existing = map.get(key);
+  if (existing && existing.type !== type) {
+    map.set(key, { type: 'replace' });
+  } else if (!existing) {
+    map.set(key, { type });
+  }
+}
+
+/**
+ * Derived atom: computes the flash map from lastConfigUpdateAtom when
+ * flashingAtom is true. Returns an empty map when flashing is off.
+ * Consumers read this exactly as before — the interface is unchanged.
+ */
+export const activeFlashesAtom = atom<Map<string, ActiveFlash>>((get) => {
+  const isFlashing = get(flashingAtom);
+  if (!isFlashing) return EMPTY_FLASHES;
+
+  const configUpdate = get(lastConfigUpdateAtom);
+  if (!configUpdate) return EMPTY_FLASHES;
+
+  const { oldConfig, newConfig } = configUpdate;
+  const diffs = oldConfig ? computeLiveDiffs(oldConfig, newConfig) : [];
+  if (diffs.length === 0) return EMPTY_FLASHES;
+
+  // Group diffs by root element (first path segment)
+  const byRoot = new Map<string, typeof diffs>();
+  for (const d of diffs) {
+    const root = d.path[0];
+    if (!root) continue;
+    const list = byRoot.get(root);
+    if (list) list.push(d);
+    else byRoot.set(root, [d]);
+  }
+
+  // Build flash map for all affected roots
+  const flashes = new Map<string, ActiveFlash>();
+
+  for (const [rootElement, blockDiffs] of byRoot) {
+    const diffTypes = new Set(blockDiffs.map((d) => d.type));
+    const rootFlashType: 'add' | 'remove' | 'replace' =
+      diffTypes.size > 1 || diffTypes.has('replace')
+        ? 'replace'
+        : diffTypes.has('add')
+          ? 'add'
+          : 'remove';
+
+    const entries = new Map<string, FlashEntry>();
+    const fields = new Map<string, FlashEntry>();
+
+    for (const diff of blockDiffs) {
+      if (diff.path.length >= 2) {
+        mergeFlash(entries, diff.path[1], diff.type);
+      }
+      if (diff.path.length >= 3) {
+        mergeFlash(fields, diff.path[1] + '/' + diff.path[2], diff.type);
+      }
+      if (diff.path.length === 2) {
+        mergeFlash(fields, diff.path[1], diff.type);
+      }
+    }
+
+    flashes.set(rootElement, { rootFlashType, entries, fields });
+  }
+
+  return flashes;
+});
 
 /**
  * Atom to track which message has the diff view active
