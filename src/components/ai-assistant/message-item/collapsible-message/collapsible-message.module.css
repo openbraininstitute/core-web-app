@@ -4,6 +4,11 @@
   animation: expandRow 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+.thinkingContainerWrapper[data-instant="true"] {
+  animation: none;
+  grid-template-rows: 1fr;
+}
+
 .thinkingContainerWrapper > * {
   overflow: hidden;
 }
@@ -19,6 +24,11 @@
   will-change: border-color, background-color;
   opacity: 0;
   animation: slideInFromTop 300ms cubic-bezier(0.4, 0, 0.2, 1) 50ms forwards;
+}
+
+.thinkingContainer[data-instant="true"] {
+  animation: none;
+  opacity: 1;
 }
 
 .thinkingContainer[data-receiving="true"] {

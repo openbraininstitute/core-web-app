@@ -13,7 +13,31 @@ interface CollapsibleMessageProps {
 }
 
 export function CollapsibleMessage({ message, status, children }: CollapsibleMessageProps) {
-  const [collapsedIndices, setCollapsedIndices] = React.useState<Set<number>>(new Set());
+  // True when mounted with a loaded conversation — suppresses entry animations
+  // and eagerly computes collapsed indices to avoid a layout jump.
+  const mountedAsReady = React.useRef(status === 'ready');
+
+  const [collapsedIndices, setCollapsedIndices] = React.useState<Set<number>>(() => {
+    if (status !== 'ready') return new Set();
+
+    const parts = message.parts;
+    let lastTextIndex = -1;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const part = parts[i];
+      if (part.type === 'text' && 'text' in part && part.text !== '') {
+        lastTextIndex = i;
+        break;
+      }
+    }
+
+    if (lastTextIndex <= 0) return new Set();
+
+    const initial = new Set<number>();
+    for (let i = 0; i < lastTextIndex; i++) {
+      initial.add(i);
+    }
+    return initial;
+  });
   const [animatingIndices, setAnimatingIndices] = React.useState<Set<number>>(new Set());
   const previousPartsLength = React.useRef(0);
 
@@ -140,11 +164,12 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
   return (
     <>
       {(collapsedChildren.length > 0 || animatingIndices.size > 0) && (
-        <div className={styles.thinkingContainerWrapper}>
+        <div className={styles.thinkingContainerWrapper} data-instant={mountedAsReady.current}>
           <div
             className={styles.thinkingContainer}
             data-receiving={animatingIndices.size > 0}
             data-collapsible="true"
+            data-instant={mountedAsReady.current}
           >
             <button
               type="button"
