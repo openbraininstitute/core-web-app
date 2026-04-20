@@ -15,7 +15,7 @@ import { logError } from '@/utils/logger';
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
 
-import { lastConfigUpdateAtom } from '@/state/config-highlights';
+import { lastConfigUpdateAtom, preMessageConfigAtom } from '@/state/config-highlights';
 
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { Config } from '@/features/scan-config/components/components';
@@ -38,7 +38,12 @@ export function useServiceAiAgentChat(threadId: string) {
   const [, setConfig] = useAtom(configStateAtom);
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
   const setLastConfigUpdate = useSetAtom(lastConfigUpdateAtom);
+  const setPreMessageConfig = useSetAtom(preMessageConfigAtom);
   const configUpdateCounterRef = useRef(0);
+  // Whether we've already captured the pre-message config snapshot for the
+  // current streaming response. Reset when a new editstate message starts.
+  const capturedPreMessageConfigRef = useRef(false);
+  const preMessageCaptureMessageIdRef = useRef<string | null>(null);
 
   // Track the last config we applied via setConfig so flash diffs are
   // computed incrementally. agentStateAtom updates asynchronously through
@@ -58,6 +63,7 @@ export function useServiceAiAgentChat(threadId: string) {
     if (prevThreadIdRef.current !== threadId) {
       lastProcessedInvocationIdRef.current = null;
       lastAppliedConfigRef.current = null;
+      capturedPreMessageConfigRef.current = false;
       prevThreadIdRef.current = threadId;
     }
   }, [threadId]);
@@ -142,6 +148,18 @@ export function useServiceAiAgentChat(threadId: string) {
         lastAppliedConfigRef.current ??
         (jotaiStore.get(agentStateAtom) as Record<string, unknown>)?.smc_simulation_config ??
         null;
+
+      // Snapshot the config before the first editstate call in this message
+      // so the diff bar can compute accumulated diffs without walking history.
+      if (preMessageCaptureMessageIdRef.current !== lastMessage.id) {
+        capturedPreMessageConfigRef.current = false;
+        preMessageCaptureMessageIdRef.current = lastMessage.id;
+      }
+      if (!capturedPreMessageConfigRef.current) {
+        setPreMessageConfig(oldConfig as Record<string, unknown> | null);
+        capturedPreMessageConfigRef.current = true;
+      }
+
       setConfig(newConfig);
       // Update the ref so the next editstate call diffs against this config.
       if (newConfig) lastAppliedConfigRef.current = newConfig;
@@ -164,7 +182,7 @@ export function useServiceAiAgentChat(threadId: string) {
         editstateResult.toolInvocation.result
       );
     }
-  }, [chat.messages, setConfig, setLastConfigUpdate, isLoadingMessages, assistantInitialMessages.length]);
+  }, [chat.messages, setConfig, setPreMessageConfig, setLastConfigUpdate, isLoadingMessages, assistantInitialMessages.length]);
 
   useEffect(() => {
     setIsChatReady(chat.status === 'ready');

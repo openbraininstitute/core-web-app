@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { computeLiveDiffs } from '@/utils/diff';
 import {
@@ -9,10 +9,10 @@ import {
   clearDiffStateAtom,
   activeDiffMessageIdAtom,
   diffBarDataAtom,
+  preMessageConfigAtom,
 } from '@/state/config-highlights';
 import {
   completedEditStateParts,
-  findOldConfig,
   findLastNewConfig,
   processAccumulatedDiffs,
   modifiedBlockSet,
@@ -37,6 +37,9 @@ export function useLastMessageDiffBar(
   const clearDiff = useSetAtom(clearDiffStateAtom);
   const clearDiffState = React.useCallback(() => clearDiff(), [clearDiff]);
 
+  // Config snapshot captured by chat.ts before the first editstate call
+  const preMessageConfig = useAtomValue(preMessageConfigAtom);
+
   const lastMessage = messages[messages.length - 1] as UIMessage | undefined;
 
   // ── Derived data for the last message ──────────────────────────────────
@@ -46,23 +49,18 @@ export function useLastMessageDiffBar(
     [lastMessage?.parts],
   );
 
-  const firstOldConfig = React.useMemo(
-    () => (lastMessage ? findOldConfig(lastMessage.parts, messages) : null),
-    [lastMessage?.parts, messages],
-  );
-
   const lastNewConfig = React.useMemo(
     () => (lastMessage ? findLastNewConfig(lastMessage.parts) : null),
     [lastMessage?.parts],
   );
 
   const accumulatedDiffs = React.useMemo(() => {
-    if (!firstOldConfig || !lastNewConfig) return [];
+    if (!preMessageConfig || !lastNewConfig) return [];
     return computeLiveDiffs(
-      firstOldConfig as Record<string, unknown>,
+      preMessageConfig as Record<string, unknown>,
       lastNewConfig as Record<string, unknown>,
     );
-  }, [firstOldConfig, lastNewConfig]);
+  }, [preMessageConfig, lastNewConfig]);
 
   // ── Diff bar population (streaming → ready transition) ─────────────────
 
@@ -78,14 +76,14 @@ export function useLastMessageDiffBar(
     setDiffBarData({
       messageId: lastMessage.id,
       accumulatedDiffs,
-      oldConfig: firstOldConfig,
+      oldConfig: preMessageConfig,
     });
   }, [
     hasCompletedEditStateCalls,
     status,
     lastMessage?.id,
     accumulatedDiffs,
-    firstOldConfig,
+    preMessageConfig,
     setDiffBarData,
   ]);
 
@@ -100,10 +98,10 @@ export function useLastMessageDiffBar(
     setDiffState({
       highlights,
       diffs: strippedDiffs,
-      oldConfig: firstOldConfig,
+      oldConfig: preMessageConfig,
       expandedRootElements: modifiedBlockSet(highlights),
     });
-  }, [showDiff, accumulatedDiffs, firstOldConfig, setDiffState]);
+  }, [showDiff, accumulatedDiffs, preMessageConfig, setDiffState]);
 
   const prevShowDiffRef = React.useRef(showDiff);
   React.useEffect(() => {

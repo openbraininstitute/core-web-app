@@ -64,46 +64,6 @@ function useClearDiffState() {
 }
 
 /**
- * Compute the old config (before this message's editstate calls) by walking
- * backwards through all messages. Exported for reuse by panel-level hook.
- */
-export function findOldConfig(
-  messageParts: UIMessage['parts'],
-  allMessages: UIMessage[],
-): Record<string, unknown> | null {
-  const calls = completedEditStateParts(messageParts);
-  if (calls.length === 0) return null;
-
-  const thisMessageEditStates = new Set(calls.map((c) => c.toolInvocation));
-
-  for (let i = allMessages.length - 1; i >= 0; i--) {
-    const msg = allMessages[i];
-    if (!msg.parts) continue;
-
-    for (let j = msg.parts.length - 1; j >= 0; j--) {
-      const part = msg.parts[j];
-      if (part.type !== 'tool-invocation') continue;
-
-      const inv = part.toolInvocation;
-      if (thisMessageEditStates.has(inv)) continue;
-
-      if (
-        (inv.toolName === 'editstate' || inv.toolName === 'getstate') &&
-        inv.state === 'result'
-      ) {
-        try {
-          const result = JSON.parse(inv.result as string);
-          return result?.state?.smc_simulation_config || null;
-        } catch {
-          continue;
-        }
-      }
-    }
-  }
-  return null;
-}
-
-/**
  * Extract the config from the last completed editstate call in a message.
  * Exported for reuse by panel-level hook.
  */

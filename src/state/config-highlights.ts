@@ -242,3 +242,11 @@ export interface ConfigUpdate {
 }
 
 export const lastConfigUpdateAtom = atom<ConfigUpdate | null>(null);
+
+/**
+ * Snapshot of the live config captured just before the first editstate call
+ * in the current streaming message. Written by chat.ts, consumed by the
+ * diff bar hook to compute accumulated diffs without walking message history.
+ * Cleared on thread switch and new message submission.
+ */
+export const preMessageConfigAtom = atom<Record<string, unknown> | null>(null);
