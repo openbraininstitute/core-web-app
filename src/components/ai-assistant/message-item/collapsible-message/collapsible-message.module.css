@@ -38,7 +38,7 @@
 
 .thinkingButton {
   width: 100%;
-  padding: 8px 15px;
+  padding: 6px 12px;
   border: none;
   cursor: pointer;
   display: flex;
@@ -77,6 +77,8 @@
 .chevron {
   flex-shrink: 0;
   color: #003f88;
+  position: relative;
+  top: 1px;
   transition: transform 0.2s ease;
 }
 
@@ -85,7 +87,7 @@
 }
 
 .thinkingLabel {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   color: #003f88;
   letter-spacing: 0.01em;
@@ -182,7 +184,7 @@
 }
 
 .thinkingContentInner {
-  padding: 4px 15px;
+  padding: 4px 12px;
 }
 
 .slideToCollapsible {
@@ -264,5 +266,5 @@
 }
 
 .contentWrapper {
-  padding: 12px 15px 8px;
+  padding: 6px 12px;
 }
