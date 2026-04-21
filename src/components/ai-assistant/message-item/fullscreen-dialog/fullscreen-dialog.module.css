@@ -1,0 +1,68 @@
+dialog.dialog {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: auto;
+  background: none;
+  border: none;
+  padding: 0;
+
+  &::backdrop {
+    background: none;
+    backdrop-filter: blur(4px) brightness(50%);
+    transition: backdrop-filter 0.5s;
+  }
+}
+
+.backdrop {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.content {
+  background-color: white;
+  box-shadow: 0 0.5em 1em rgba(0, 0, 0, 0.5);
+  cursor: default;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 14px;
+  color: white;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.65);
+  }
+}
+
+.fullscreenImage {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  display: block;
+}
