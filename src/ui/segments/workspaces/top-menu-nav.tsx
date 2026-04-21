@@ -57,8 +57,9 @@ const links: LinkItem[] = [
     className: 'gap-2 flex items-center justify-center',
     isActive: (pathname: string) => {
       const section = getActiveSection(pathname);
-      if (section) return ['overview', 'team', 'credits'].includes(section);
-      return false;
+      if (section)
+        return ['tutorials', 'quick-access', 'team', 'activities', 'credits'].includes(section);
+      return true;
     },
     hasAction: false,
   },
