@@ -141,8 +141,6 @@ export interface IMorphologyFilter {
   exemplar_morphology__order_by?: string | null;
 }
 
-export type CreatorFilter = {};
-
 export interface OwnershipFilter {
   // Created by
   created_by__pref_label?: string | null;

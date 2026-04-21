@@ -8,7 +8,7 @@ import sumBy from 'es-toolkit/compat/sumBy';
 import toPairs from 'es-toolkit/compat/toPairs';
 import values from 'es-toolkit/compat/values';
 import { atom } from 'jotai';
-import { atomFamily } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';

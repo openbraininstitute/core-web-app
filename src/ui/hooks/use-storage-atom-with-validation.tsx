@@ -120,7 +120,7 @@ export function createSuperJsonStorage<T>(storage: Storage): {
       try {
         const parsed = superjson.parse(storedValue);
         return parsed as T;
-      } catch (_error) {
+      } catch {
         throw new Error('storage error', {
           cause: 'setting storage error',
         });
@@ -136,7 +136,7 @@ export function createSuperJsonStorage<T>(storage: Storage): {
     setItem(key: string, value: T): void {
       try {
         storage.setItem(key, superjson.stringify(value));
-      } catch (_error) {
+      } catch {
         throw new Error('storage error', {
           cause: 'setting storage error',
         });

@@ -1,11 +1,3 @@
-import pProps from 'p-props';
-
-import { getElectricalCellRecordings } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
-import { getEntitiesCount } from '@/api/entitycore/queries/general/entity';
-import { ElectricalRecordingOriginDictionary } from '@/api/entitycore/types/entities/electrical-cell-recording';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import { config } from '@/config';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
@@ -28,10 +20,6 @@ import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simu
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
-
-import type { TWorkspaceScope } from '@/constants';
-import type { WorkspaceContext } from '@/types/common';
 
 export const ExperimentalEntitiesTileTypes = {
   ReconstructionMorphology: CellMorphology,
