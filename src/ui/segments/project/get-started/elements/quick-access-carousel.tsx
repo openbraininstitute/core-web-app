@@ -65,7 +65,7 @@ function GroupRow({
   };
   return (
     <section id={`quick-access-${group}`} className="flex w-full flex-col">
-      <div className="flex items-center justify-between px-2 mb-2">
+      <div className="flex items-center justify-between mb-2">
         <h2 className="text-primary-9 text-xl font-bold">{groupLabels[group]}</h2>
         {items.length > 0 && <ScrollArrows onScroll={scrollBy} />}
       </div>

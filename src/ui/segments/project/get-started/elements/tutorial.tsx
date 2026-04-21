@@ -141,7 +141,7 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
 
   return (
     <section id="tutorials-list" className="w-full flex flex-col">
-      <div className="flex items-center justify-between px-2 mb-2">
+      <div className="flex items-center justify-between mb-2">
         <h2 className="text-primary-9 text-xl font-bold">Tutorials</h2>
         <ScrollArrows onScroll={scrollBy} />
       </div>

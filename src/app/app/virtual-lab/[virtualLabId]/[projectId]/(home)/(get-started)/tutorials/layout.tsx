@@ -16,7 +16,7 @@ export default async function Layout({
       <div className="w-[60%] min-w-0">
         <TutorialLeftPane>{children}</TutorialLeftPane>
       </div>
-      <div className="flex w-[40%] min-w-0 flex-col gap-6">
+      <div className="flex w-[40%] min-w-0 flex-col gap-6 rounded-xl bg-[#e9e9e9] p-3">
         <TutorialList />
         <QuickAccessExamples context={context} />
       </div>
