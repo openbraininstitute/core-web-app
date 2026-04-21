@@ -1,0 +1,223 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - button "Jotai Mascot" [ref=e3] [cursor=pointer]:
+      - img "Jotai Mascot" [ref=e5]
+    - generic [ref=e9]:
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - menubar "James Isbister's virtual lab/Test" [ref=e15] [cursor=pointer]:
+            - generic [ref=e16]:
+              - generic "James Isbister" [ref=e17]:
+                - img [ref=e18]
+              - img "right" [ref=e22]:
+                - img [ref=e23]
+              - generic "James Isbister's virtual lab" [ref=e25]:
+                - heading "James Isbister's virtual lab" [level=3] [ref=e26]
+              - img "right" [ref=e27]:
+                - img [ref=e28]
+            - generic [ref=e30]:
+              - generic [ref=e31]: Test
+              - img "down" [ref=e33]:
+                - img [ref=e34]
+          - button "View project credits" [ref=e36] [cursor=pointer]:
+            - img
+            - generic [ref=e37]: "35"
+          - button "View project members" [ref=e38] [cursor=pointer]:
+            - img
+          - button "Submit feedback" [ref=e39] [cursor=pointer]:
+            - img "Feedback star"
+        - generic [ref=e40]:
+          - button [ref=e43] [cursor=pointer]:
+            - img
+          - button "Data" [ref=e46] [cursor=pointer]:
+            - generic [ref=e47]: Data
+            - img
+          - button "Workflows" [ref=e50] [cursor=pointer]:
+            - generic [ref=e51]: Workflows
+            - img
+          - button "Notebooks" [ref=e54] [cursor=pointer]:
+            - generic [ref=e55]: Notebooks
+            - img
+          - button "Reports" [ref=e58] [cursor=pointer]:
+            - generic [ref=e59]: Reports
+            - img
+          - generic [ref=e61]:
+            - button [ref=e62] [cursor=pointer]:
+              - img
+            - generic [ref=e63]: Help
+          - generic [ref=e65]:
+            - button "AI" [ref=e66] [cursor=pointer]
+            - generic [ref=e67]: AI Assistant
+      - generic [ref=e70]:
+        - generic [ref=e72]:
+          - tablist [ref=e75]:
+            - tab "Public" [ref=e76] [cursor=pointer]
+            - tab "Project" [selected] [ref=e77] [cursor=pointer]
+          - button "Upload data plus" [ref=e79] [cursor=pointer]:
+            - generic [ref=e80]:
+              - generic [ref=e81]: Upload data
+              - img "plus" [ref=e82]:
+                - img
+        - generic [ref=e84]:
+          - generic [ref=e87]:
+            - button "brain-region-banner" [ref=e89] [cursor=pointer]:
+              - generic [ref=e91]:
+                - generic [ref=e92]: "Region:"
+                - generic [ref=e95]: Cerebrum
+              - img [ref=e96]
+            - generic [ref=e100]:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img:
+                          - img
+                    - generic:
+                      - generic:
+                        - img:
+                          - img
+                    - generic:
+                      - generic:
+                        - img:
+                          - img
+                    - generic:
+                      - generic:
+                        - img:
+                          - img
+                    - generic:
+                      - generic:
+                        - img:
+                          - img
+                    - generic:
+                      - generic:
+                        - img:
+                          - img
+                    - generic:
+                      - generic:
+                        - img:
+                          - img
+                    - generic:
+                      - generic:
+                        - img:
+                          - img
+              - generic [ref=e102]:
+                - tablist [ref=e105]:
+                  - tab "Experimental" [selected] [ref=e106] [cursor=pointer]
+                  - tab "Model" [ref=e107] [cursor=pointer]
+                  - tab "Simulations" [ref=e108] [cursor=pointer]
+                - generic [ref=e109]:
+                  - generic [ref=e111]:
+                    - button "Morphology 0 of 0" [ref=e112] [cursor=pointer]:
+                      - generic [ref=e113]: Morphology
+                      - generic [ref=e115]:
+                        - generic [ref=e116]: "0"
+                        - generic [ref=e117]: of
+                        - generic [ref=e118]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+                  - generic [ref=e120]:
+                    - button "Single cell electrophysiology 0 of 0" [ref=e121] [cursor=pointer]:
+                      - generic [ref=e122]: Single cell electrophysiology
+                      - generic [ref=e124]:
+                        - generic [ref=e125]: "0"
+                        - generic [ref=e126]: of
+                        - generic [ref=e127]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+                  - button "Ion channel electrophysiology 0 of 0" [ref=e130] [cursor=pointer]:
+                    - generic [ref=e131]: Ion channel electrophysiology
+                    - generic [ref=e133]:
+                      - generic [ref=e134]: "0"
+                      - generic [ref=e135]: of
+                      - generic [ref=e136]: "0"
+                  - generic [ref=e138]:
+                    - button "Neuron density 0 of 0" [ref=e139] [cursor=pointer]:
+                      - generic [ref=e140]: Neuron density
+                      - generic [ref=e142]:
+                        - generic [ref=e143]: "0"
+                        - generic [ref=e144]: of
+                        - generic [ref=e145]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+                  - generic [ref=e147]:
+                    - button "Bouton density 0 of 0" [ref=e148] [cursor=pointer]:
+                      - generic [ref=e149]: Bouton density
+                      - generic [ref=e151]:
+                        - generic [ref=e152]: "0"
+                        - generic [ref=e153]: of
+                        - generic [ref=e154]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+                  - generic [ref=e156]:
+                    - button "Synapse per connection 0 of 0" [ref=e157] [cursor=pointer]:
+                      - generic [ref=e158]: Synapse per connection
+                      - generic [ref=e160]:
+                        - generic [ref=e161]: "0"
+                        - generic [ref=e162]: of
+                        - generic [ref=e163]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+                  - generic [ref=e165]:
+                    - button "EM mesh 0 of 0" [ref=e166] [cursor=pointer]:
+                      - generic [ref=e167]: EM mesh
+                      - generic [ref=e169]:
+                        - generic [ref=e170]: "0"
+                        - generic [ref=e171]: of
+                        - generic [ref=e172]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+          - generic [ref=e174]:
+            - img "fullscreen" [ref=e176] [cursor=pointer]:
+              - img [ref=e177]
+            - generic [ref=e179]:
+              - generic:
+                - generic:
+                  - img "loading":
+                    - img
+              - generic [ref=e180]:
+                - banner:
+                  - button "camera Reset camera" [ref=e182] [cursor=pointer]:
+                    - img "camera" [ref=e183]:
+                      - img [ref=e184]
+                    - generic [ref=e186]: Reset camera
+            - generic [ref=e199]:
+              - img "caret-right" [ref=e204]:
+                - img [ref=e205]
+              - img "caret-right" [ref=e211]:
+                - img [ref=e212]
+              - img "caret-right" [ref=e218]:
+                - img [ref=e219]
+              - img "caret-right" [ref=e225]:
+                - img [ref=e226]
+              - img "caret-right" [ref=e232]:
+                - img [ref=e233]
+              - img "caret-right" [ref=e239]:
+                - img [ref=e240]
+              - img "caret-right" [ref=e246]:
+                - img [ref=e247]
+              - img "caret-right" [ref=e253]:
+                - img [ref=e254]
+              - img "caret-right" [ref=e260]:
+                - img [ref=e261]
+              - img "caret-right" [ref=e267]:
+                - img [ref=e268]
+              - img "caret-right" [ref=e274]:
+                - img [ref=e275]
+              - img "caret-right" [ref=e281]:
+                - img [ref=e282]
+              - img "caret-right" [ref=e288]:
+                - img [ref=e289]
+              - img "caret-right" [ref=e295]:
+                - img [ref=e296]
+    - generic [ref=e298]:
+      - img [ref=e300]
+      - button "Open Tanstack query devtools" [ref=e348] [cursor=pointer]:
+        - img [ref=e349]
+  - alert [ref=e397]

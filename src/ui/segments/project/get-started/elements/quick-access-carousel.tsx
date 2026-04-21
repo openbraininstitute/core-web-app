@@ -1,9 +1,11 @@
 'use client';
 
 import { useAtomValue } from 'jotai';
+import { useRef } from 'react';
 
 import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
 import { SingleCardItem } from '@/ui/segments/project/get-started/elements/quick-access';
+import { ScrollArrows } from '@/ui/segments/project/get-started/elements/tutorial';
 import {
   QuickAccessGroupDict,
   type TQuickAccessGroup,
@@ -52,11 +54,26 @@ function GroupRow({
   virtualLab: TVirtualLabResponse | null;
 }) {
   const preview = useAtomValue(dataPreviewAtom);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollBy = (direction: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({
+      left: el.clientWidth * 0.8 * (direction === 'left' ? -1 : 1),
+      behavior: 'smooth',
+    });
+  };
   return (
     <section id={`quick-access-${group}`} className="flex w-full flex-col">
-      <h2 className="text-primary-9 text-lg font-bold px-2 mb-2">{groupLabels[group]}</h2>
+      <div className="flex items-center justify-between px-2 mb-2">
+        <h2 className="text-primary-9 text-xl font-bold">{groupLabels[group]}</h2>
+        {items.length > 0 && <ScrollArrows onScroll={scrollBy} />}
+      </div>
       {items.length > 0 ? (
-        <div className="flex w-full gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          ref={scrollRef}
+          className="flex w-full gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {items.map((item) => {
             const isData = group === QuickAccessGroupDict.Data;
             const hideArtifact = isData || group === QuickAccessGroupDict.Notebooks;

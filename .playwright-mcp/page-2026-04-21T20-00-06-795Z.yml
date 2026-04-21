@@ -1,0 +1,861 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - button "Jotai Mascot" [ref=e3] [cursor=pointer]:
+      - img "Jotai Mascot" [ref=e5]
+    - generic [ref=e9]:
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - menubar "James Isbister's virtual lab/Test" [ref=e15] [cursor=pointer]:
+            - generic [ref=e16]:
+              - generic "James Isbister" [ref=e17]:
+                - img [ref=e18]
+              - img "right" [ref=e22]:
+                - img [ref=e23]
+              - generic "James Isbister's virtual lab" [ref=e25]:
+                - heading "James Isbister's virtual lab" [level=3] [ref=e26]
+              - img "right" [ref=e27]:
+                - img [ref=e28]
+            - generic [ref=e30]:
+              - generic [ref=e31]: Test
+              - img "down" [ref=e33]:
+                - img [ref=e34]
+          - button "View project credits" [ref=e36] [cursor=pointer]:
+            - img
+            - generic [ref=e37]: "35"
+          - button "View project members" [ref=e38] [cursor=pointer]:
+            - img
+          - button "Submit feedback" [ref=e39] [cursor=pointer]:
+            - img "Feedback star"
+        - generic [ref=e40]:
+          - button [ref=e43] [cursor=pointer]:
+            - img
+          - button "Data" [ref=e46] [cursor=pointer]:
+            - generic [ref=e47]: Data
+            - img
+          - button "Workflows" [ref=e50] [cursor=pointer]:
+            - generic [ref=e51]: Workflows
+            - img
+          - button "Notebooks" [ref=e54] [cursor=pointer]:
+            - generic [ref=e55]: Notebooks
+            - img
+          - button "Reports" [ref=e58] [cursor=pointer]:
+            - generic [ref=e59]: Reports
+            - img
+          - generic [ref=e61]:
+            - button [ref=e62] [cursor=pointer]:
+              - img
+            - generic [ref=e63]: Help
+          - generic [ref=e65]:
+            - button "AI" [ref=e66] [cursor=pointer]
+            - generic [ref=e67]: AI Assistant
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - tablist [ref=e73]:
+            - tab "Public" [ref=e74] [cursor=pointer]
+            - tab "Project" [selected] [ref=e75] [cursor=pointer]
+          - button "Upload data plus" [ref=e77] [cursor=pointer]:
+            - generic [ref=e78]:
+              - generic [ref=e79]: Upload data
+              - img "plus" [ref=e80]:
+                - img
+        - generic [ref=e81]:
+          - generic [ref=e84]:
+            - button "brain-region-banner" [ref=e86] [cursor=pointer]:
+              - generic [ref=e88]:
+                - generic [ref=e89]: "Region:"
+                - generic [ref=e92]: Cerebrum
+              - img [ref=e93]
+            - generic [ref=e97]:
+              - generic:
+                - generic:
+                  - generic: Brain region
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - combobox
+                                    - generic: Search region...
+                                - generic:
+                                  - img:
+                                    - img
+                            - generic:
+                              - treeitem [expanded] [level=1]:
+                                - generic:
+                                  - generic:
+                                    - button:
+                                      - generic:
+                                        - generic:
+                                          - generic: Root
+                                      - button:
+                                        - img:
+                                          - img
+                                - generic:
+                                  - treeitem [expanded] [level=2]:
+                                    - generic:
+                                      - generic:
+                                        - button:
+                                          - generic:
+                                            - generic:
+                                              - generic: Basic cell groups and regions
+                                          - button:
+                                            - img:
+                                              - img
+                                    - generic:
+                                      - treeitem [level=3]:
+                                        - generic:
+                                          - generic:
+                                            - button:
+                                              - generic:
+                                                - generic:
+                                                  - generic: Brain stem
+                                              - button:
+                                                - img:
+                                                  - img
+                                      - treeitem [level=3]:
+                                        - generic:
+                                          - generic:
+                                            - button:
+                                              - generic:
+                                                - generic:
+                                                  - generic: Cerebellum
+                                              - button:
+                                                - img:
+                                                  - img
+                                      - treeitem [expanded] [level=3] [selected]:
+                                        - generic:
+                                          - generic:
+                                            - button:
+                                              - generic:
+                                                - generic:
+                                                  - generic: Cerebrum
+                                              - button:
+                                                - img:
+                                                  - img
+                                        - generic:
+                                          - treeitem [level=4]:
+                                            - generic:
+                                              - generic:
+                                                - button:
+                                                  - generic:
+                                                    - generic:
+                                                      - generic: Cerebral cortex
+                                                  - button:
+                                                    - img:
+                                                      - img
+                                          - treeitem [level=4]:
+                                            - generic:
+                                              - generic:
+                                                - button:
+                                                  - generic:
+                                                    - generic:
+                                                      - generic: Cerebral nuclei
+                                                  - button:
+                                                    - img:
+                                                      - img
+                                  - treeitem [level=2]:
+                                    - generic:
+                                      - generic:
+                                        - button:
+                                          - generic:
+                                            - generic:
+                                              - generic: Fiber tracts
+                                          - button:
+                                            - img:
+                                              - img
+                                  - treeitem [level=2]:
+                                    - generic:
+                                      - generic:
+                                        - button:
+                                          - generic:
+                                            - generic:
+                                              - generic: Grooves
+                                          - button:
+                                            - img:
+                                              - img
+                                  - treeitem [level=2]:
+                                    - generic:
+                                      - generic:
+                                        - button:
+                                          - generic:
+                                            - generic:
+                                              - generic: Retina
+                                  - treeitem [level=2]:
+                                    - generic:
+                                      - generic:
+                                        - button:
+                                          - generic:
+                                            - generic:
+                                              - generic: "Root: Other"
+                                  - treeitem [level=2]:
+                                    - generic:
+                                      - generic:
+                                        - button:
+                                          - generic:
+                                            - generic:
+                                              - generic: Ventricular systems
+                                          - button:
+                                            - img:
+                                              - img
+              - generic [ref=e99]:
+                - tablist [ref=e102]:
+                  - tab "Experimental" [selected] [ref=e103] [cursor=pointer]
+                  - tab "Model" [ref=e104] [cursor=pointer]
+                  - tab "Simulations" [ref=e105] [cursor=pointer]
+                - generic [ref=e106]:
+                  - generic [ref=e108]:
+                    - button "Morphology 0 of 0" [ref=e109] [cursor=pointer]:
+                      - generic [ref=e110]: Morphology
+                      - generic [ref=e112]:
+                        - generic [ref=e113]: "0"
+                        - generic [ref=e114]: of
+                        - generic [ref=e115]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+                  - generic [ref=e117]:
+                    - button "Single cell electrophysiology 0 of 0" [ref=e118] [cursor=pointer]:
+                      - generic [ref=e119]: Single cell electrophysiology
+                      - generic [ref=e121]:
+                        - generic [ref=e122]: "0"
+                        - generic [ref=e123]: of
+                        - generic [ref=e124]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+                  - button "Ion channel electrophysiology 0 of 0" [ref=e127] [cursor=pointer]:
+                    - generic [ref=e128]: Ion channel electrophysiology
+                    - generic [ref=e130]:
+                      - generic [ref=e131]: "0"
+                      - generic [ref=e132]: of
+                      - generic [ref=e133]: "0"
+                  - generic [ref=e135]:
+                    - button "Neuron density 0 of 0" [ref=e136] [cursor=pointer]:
+                      - generic [ref=e137]: Neuron density
+                      - generic [ref=e139]:
+                        - generic [ref=e140]: "0"
+                        - generic [ref=e141]: of
+                        - generic [ref=e142]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+                  - generic [ref=e144]:
+                    - button "Bouton density 0 of 0" [ref=e145] [cursor=pointer]:
+                      - generic [ref=e146]: Bouton density
+                      - generic [ref=e148]:
+                        - generic [ref=e149]: "0"
+                        - generic [ref=e150]: of
+                        - generic [ref=e151]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+                  - generic [ref=e153]:
+                    - button "Synapse per connection 0 of 0" [ref=e154] [cursor=pointer]:
+                      - generic [ref=e155]: Synapse per connection
+                      - generic [ref=e157]:
+                        - generic [ref=e158]: "0"
+                        - generic [ref=e159]: of
+                        - generic [ref=e160]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+                  - generic [ref=e162]:
+                    - button "EM mesh 0 of 0" [ref=e163] [cursor=pointer]:
+                      - generic [ref=e164]: EM mesh
+                      - generic [ref=e166]:
+                        - generic [ref=e167]: "0"
+                        - generic [ref=e168]: of
+                        - generic [ref=e169]: "0"
+                    - generic:
+                      - button "plus":
+                        - img "plus"
+          - generic [ref=e171]:
+            - img "fullscreen" [ref=e173] [cursor=pointer]:
+              - img [ref=e174]
+            - generic [ref=e177]:
+              - banner:
+                - button "camera Reset camera" [ref=e179] [cursor=pointer]:
+                  - img "camera" [ref=e180]:
+                    - img [ref=e181]
+                  - generic [ref=e183]: Reset camera
+            - generic [ref=e186]:
+              - heading "Neurons [N] ~ 24,030,000" [level=2] [ref=e187]:
+                - generic [ref=e188]: Neurons [N]
+                - generic [ref=e189]: ~ 24,030,000
+              - generic [ref=e190]:
+                - generic [ref=e191]: "Display:"
+                - generic [ref=e192]:
+                  - generic [ref=e193]: Count
+                  - switch "density or count" [ref=e194] [cursor=pointer]
+                  - generic [ref=e196]: Density
+              - generic [ref=e197]:
+                - heading "M-TYPES" [level=6] [ref=e198]
+                - generic [ref=e199]:
+                  - treeitem "GEN_mtype" [level=1] [ref=e200]:
+                    - button "GEN_mtype" [ref=e203]:
+                      - generic [ref=e205]:
+                        - generic [ref=e206]: GEN_mtype
+                        - generic [ref=e207]:
+                          - generic [ref=e208]: 6,392,000
+                          - button "caret-right" [ref=e209] [cursor=pointer]:
+                            - img "caret-right" [ref=e210]:
+                              - img [ref=e211]
+                  - treeitem "GIN_mtype" [level=1] [ref=e213]:
+                    - button "GIN_mtype" [ref=e216]:
+                      - generic [ref=e218]:
+                        - generic [ref=e219]: GIN_mtype
+                        - generic [ref=e220]:
+                          - generic [ref=e221]: 6,899,000
+                          - button "caret-right" [ref=e222] [cursor=pointer]:
+                            - img "caret-right" [ref=e223]:
+                              - img [ref=e224]
+                  - treeitem "L1_DAC" [level=1] [ref=e226]:
+                    - button "L1_DAC" [ref=e229]:
+                      - generic [ref=e231]:
+                        - generic [ref=e232]: L1_DAC
+                        - generic [ref=e233]:
+                          - generic [ref=e234]: 179,200
+                          - button "caret-right" [ref=e235] [cursor=pointer]:
+                            - img "caret-right" [ref=e236]:
+                              - img [ref=e237]
+                  - treeitem "L1_HAC" [level=1] [ref=e239]:
+                    - button "L1_HAC" [ref=e242]:
+                      - generic [ref=e244]:
+                        - generic [ref=e245]: L1_HAC
+                        - generic [ref=e246]:
+                          - generic [ref=e247]: 458,600
+                          - button "caret-right" [ref=e248] [cursor=pointer]:
+                            - img "caret-right" [ref=e249]:
+                              - img [ref=e250]
+                  - treeitem "L1_LAC" [level=1] [ref=e252]:
+                    - button "L1_LAC" [ref=e255]:
+                      - generic [ref=e257]:
+                        - generic [ref=e258]: L1_LAC
+                        - generic [ref=e259]:
+                          - generic [ref=e260]: 31,910
+                          - button "caret-right" [ref=e261] [cursor=pointer]:
+                            - img "caret-right" [ref=e262]:
+                              - img [ref=e263]
+                  - treeitem "L1_NGC-DA" [level=1] [ref=e265]:
+                    - button "L1_NGC-DA" [ref=e268]:
+                      - generic [ref=e270]:
+                        - generic [ref=e271]: L1_NGC-DA
+                        - generic [ref=e272]:
+                          - generic [ref=e273]: 302,400
+                          - button "caret-right" [ref=e274] [cursor=pointer]:
+                            - img "caret-right" [ref=e275]:
+                              - img [ref=e276]
+                  - treeitem "L1_NGC-SA" [level=1] [ref=e278]:
+                    - button "L1_NGC-SA" [ref=e281]:
+                      - generic [ref=e283]:
+                        - generic [ref=e284]: L1_NGC-SA
+                        - generic [ref=e285]:
+                          - generic [ref=e286]: 81,850
+                          - button "caret-right" [ref=e287] [cursor=pointer]:
+                            - img "caret-right" [ref=e288]:
+                              - img [ref=e289]
+                  - treeitem "L1_SAC" [level=1] [ref=e291]:
+                    - button "L1_SAC" [ref=e294]:
+                      - generic [ref=e296]:
+                        - generic [ref=e297]: L1_SAC
+                        - generic [ref=e298]:
+                          - generic [ref=e299]: 267,100
+                          - button "caret-right" [ref=e300] [cursor=pointer]:
+                            - img "caret-right" [ref=e301]:
+                              - img [ref=e302]
+                  - treeitem "L23_BP" [level=1] [ref=e304]:
+                    - button "L23_BP" [ref=e307]:
+                      - generic [ref=e309]:
+                        - generic [ref=e310]: L23_BP
+                        - generic [ref=e311]:
+                          - generic [ref=e312]: 50,720
+                          - button "caret-right" [ref=e313] [cursor=pointer]:
+                            - img "caret-right" [ref=e314]:
+                              - img [ref=e315]
+                  - treeitem "L23_BTC" [level=1] [ref=e317]:
+                    - button "L23_BTC" [ref=e320]:
+                      - generic [ref=e322]:
+                        - generic [ref=e323]: L23_BTC
+                        - generic [ref=e324]:
+                          - generic [ref=e325]: 178,800
+                          - button "caret-right" [ref=e326] [cursor=pointer]:
+                            - img "caret-right" [ref=e327]:
+                              - img [ref=e328]
+                  - treeitem "L23_ChC" [level=1] [ref=e330]:
+                    - button "L23_ChC" [ref=e333]:
+                      - generic [ref=e335]:
+                        - generic [ref=e336]: L23_ChC
+                        - generic [ref=e337]:
+                          - generic [ref=e338]: 34,650
+                          - button "caret-right" [ref=e339] [cursor=pointer]:
+                            - img "caret-right" [ref=e340]:
+                              - img [ref=e341]
+                  - treeitem "L23_DBC" [level=1] [ref=e343]:
+                    - button "L23_DBC" [ref=e346]:
+                      - generic [ref=e348]:
+                        - generic [ref=e349]: L23_DBC
+                        - generic [ref=e350]:
+                          - generic [ref=e351]: 559,300
+                          - button "caret-right" [ref=e352] [cursor=pointer]:
+                            - img "caret-right" [ref=e353]:
+                              - img [ref=e354]
+                  - treeitem "L23_LBC" [level=1] [ref=e356]:
+                    - button "L23_LBC" [ref=e359]:
+                      - generic [ref=e361]:
+                        - generic [ref=e362]: L23_LBC
+                        - generic [ref=e363]:
+                          - generic [ref=e364]: 420,000
+                          - button "caret-right" [ref=e365] [cursor=pointer]:
+                            - img "caret-right" [ref=e366]:
+                              - img [ref=e367]
+                  - treeitem "L23_MC" [level=1] [ref=e369]:
+                    - button "L23_MC" [ref=e372]:
+                      - generic [ref=e374]:
+                        - generic [ref=e375]: L23_MC
+                        - generic [ref=e376]:
+                          - generic [ref=e377]: 692,900
+                          - button "caret-right" [ref=e378] [cursor=pointer]:
+                            - img "caret-right" [ref=e379]:
+                              - img [ref=e380]
+                  - treeitem "L23_NBC" [level=1] [ref=e382]:
+                    - button "L23_NBC" [ref=e385]:
+                      - generic [ref=e387]:
+                        - generic [ref=e388]: L23_NBC
+                        - generic [ref=e389]:
+                          - generic [ref=e390]: 586,700
+                          - button "caret-right" [ref=e391] [cursor=pointer]:
+                            - img "caret-right" [ref=e392]:
+                              - img [ref=e393]
+                  - treeitem "L23_NGC" [level=1] [ref=e395]:
+                    - button "L23_NGC" [ref=e398]:
+                      - generic [ref=e400]:
+                        - generic [ref=e401]: L23_NGC
+                        - generic [ref=e402]:
+                          - generic [ref=e403]: "74.86"
+                          - button "caret-right" [ref=e404] [cursor=pointer]:
+                            - img "caret-right" [ref=e405]:
+                              - img [ref=e406]
+                  - treeitem "L23_SBC" [level=1] [ref=e408]:
+                    - button "L23_SBC" [ref=e411]:
+                      - generic [ref=e413]:
+                        - generic [ref=e414]: L23_SBC
+                        - generic [ref=e415]:
+                          - generic [ref=e416]: 220,400
+                          - button "caret-right" [ref=e417] [cursor=pointer]:
+                            - img "caret-right" [ref=e418]:
+                              - img [ref=e419]
+                  - treeitem "L2_IPC" [level=1] [ref=e421]:
+                    - button "L2_IPC" [ref=e424]:
+                      - generic [ref=e426]:
+                        - generic [ref=e427]: L2_IPC
+                        - generic [ref=e428]:
+                          - generic [ref=e429]: 16,950
+                          - button "caret-right" [ref=e430] [cursor=pointer]:
+                            - img "caret-right" [ref=e431]:
+                              - img [ref=e432]
+                  - treeitem "L2_TPC:A" [level=1] [ref=e434]:
+                    - button "L2_TPC:A" [ref=e437]:
+                      - generic [ref=e439]:
+                        - generic [ref=e440]: L2_TPC:A
+                        - generic [ref=e441]:
+                          - generic [ref=e442]: 26,570
+                          - button "caret-right" [ref=e443] [cursor=pointer]:
+                            - img "caret-right" [ref=e444]:
+                              - img [ref=e445]
+                  - treeitem "L2_TPC:B" [level=1] [ref=e447]:
+                    - button "L2_TPC:B" [ref=e450]:
+                      - generic [ref=e452]:
+                        - generic [ref=e453]: L2_TPC:B
+                        - generic [ref=e454]:
+                          - generic [ref=e455]: 161,600
+                          - button "caret-right" [ref=e456] [cursor=pointer]:
+                            - img "caret-right" [ref=e457]:
+                              - img [ref=e458]
+                  - treeitem "L5_BP" [level=1] [ref=e460]:
+                    - button "L5_BP" [ref=e463]:
+                      - generic [ref=e465]:
+                        - generic [ref=e466]: L5_BP
+                        - generic [ref=e467]:
+                          - generic [ref=e468]: "787.8"
+                          - button "caret-right" [ref=e469] [cursor=pointer]:
+                            - img "caret-right" [ref=e470]:
+                              - img [ref=e471]
+                  - treeitem "L5_BTC" [level=1] [ref=e473]:
+                    - button "L5_BTC" [ref=e476]:
+                      - generic [ref=e478]:
+                        - generic [ref=e479]: L5_BTC
+                        - generic [ref=e480]:
+                          - generic [ref=e481]: 53,130
+                          - button "caret-right" [ref=e482] [cursor=pointer]:
+                            - img "caret-right" [ref=e483]:
+                              - img [ref=e484]
+                  - treeitem "L5_ChC" [level=1] [ref=e486]:
+                    - button "L5_ChC" [ref=e489]:
+                      - generic [ref=e491]:
+                        - generic [ref=e492]: L5_ChC
+                        - generic [ref=e493]:
+                          - generic [ref=e494]: 35,100
+                          - button "caret-right" [ref=e495] [cursor=pointer]:
+                            - img "caret-right" [ref=e496]:
+                              - img [ref=e497]
+                  - treeitem "L5_DBC" [level=1] [ref=e499]:
+                    - button "L5_DBC" [ref=e502]:
+                      - generic [ref=e504]:
+                        - generic [ref=e505]: L5_DBC
+                        - generic [ref=e506]:
+                          - generic [ref=e507]: 61,330
+                          - button "caret-right" [ref=e508] [cursor=pointer]:
+                            - img "caret-right" [ref=e509]:
+                              - img [ref=e510]
+                  - treeitem "L5_LBC" [level=1] [ref=e512]:
+                    - button "L5_LBC" [ref=e515]:
+                      - generic [ref=e517]:
+                        - generic [ref=e518]: L5_LBC
+                        - generic [ref=e519]:
+                          - generic [ref=e520]: 951,200
+                          - button "caret-right" [ref=e521] [cursor=pointer]:
+                            - img "caret-right" [ref=e522]:
+                              - img [ref=e523]
+                  - treeitem "L5_MC" [level=1] [ref=e525]:
+                    - button "L5_MC" [ref=e528]:
+                      - generic [ref=e530]:
+                        - generic [ref=e531]: L5_MC
+                        - generic [ref=e532]:
+                          - generic [ref=e533]: 594,300
+                          - button "caret-right" [ref=e534] [cursor=pointer]:
+                            - img "caret-right" [ref=e535]:
+                              - img [ref=e536]
+                  - treeitem "L5_NBC" [level=1] [ref=e538]:
+                    - button "L5_NBC" [ref=e541]:
+                      - generic [ref=e543]:
+                        - generic [ref=e544]: L5_NBC
+                        - generic [ref=e545]:
+                          - generic [ref=e546]: 913,000
+                          - button "caret-right" [ref=e547] [cursor=pointer]:
+                            - img "caret-right" [ref=e548]:
+                              - img [ref=e549]
+                  - treeitem "L5_NGC" [level=1] [ref=e551]:
+                    - button "L5_NGC" [ref=e554]:
+                      - generic [ref=e556]:
+                        - generic [ref=e557]: L5_NGC
+                        - generic [ref=e558]:
+                          - generic [ref=e559]: 37,980
+                          - button "caret-right" [ref=e560] [cursor=pointer]:
+                            - img "caret-right" [ref=e561]:
+                              - img [ref=e562]
+                  - treeitem "L5_SBC" [level=1] [ref=e564]:
+                    - button "L5_SBC" [ref=e567]:
+                      - generic [ref=e569]:
+                        - generic [ref=e570]: L5_SBC
+                        - generic [ref=e571]:
+                          - generic [ref=e572]: 136,900
+                          - button "caret-right" [ref=e573] [cursor=pointer]:
+                            - img "caret-right" [ref=e574]:
+                              - img [ref=e575]
+                  - treeitem "L6_BP" [level=1] [ref=e577]:
+                    - button "L6_BP" [ref=e580]:
+                      - generic [ref=e582]:
+                        - generic [ref=e583]: L6_BP
+                        - generic [ref=e584]:
+                          - generic [ref=e585]: "439"
+                          - button "caret-right" [ref=e586] [cursor=pointer]:
+                            - img "caret-right" [ref=e587]:
+                              - img [ref=e588]
+                  - treeitem "L6_BTC" [level=1] [ref=e590]:
+                    - button "L6_BTC" [ref=e593]:
+                      - generic [ref=e595]:
+                        - generic [ref=e596]: L6_BTC
+                        - generic [ref=e597]:
+                          - generic [ref=e598]: 32,820
+                          - button "caret-right" [ref=e599] [cursor=pointer]:
+                            - img "caret-right" [ref=e600]:
+                              - img [ref=e601]
+                  - treeitem "L6_ChC" [level=1] [ref=e603]:
+                    - button "L6_ChC" [ref=e606]:
+                      - generic [ref=e608]:
+                        - generic [ref=e609]: L6_ChC
+                        - generic [ref=e610]:
+                          - generic [ref=e611]: 22,580
+                          - button "caret-right" [ref=e612] [cursor=pointer]:
+                            - img "caret-right" [ref=e613]:
+                              - img [ref=e614]
+                  - treeitem "L6_DBC" [level=1] [ref=e616]:
+                    - button "L6_DBC" [ref=e619]:
+                      - generic [ref=e621]:
+                        - generic [ref=e622]: L6_DBC
+                        - generic [ref=e623]:
+                          - generic [ref=e624]: 30,150
+                          - button "caret-right" [ref=e625] [cursor=pointer]:
+                            - img "caret-right" [ref=e626]:
+                              - img [ref=e627]
+                  - treeitem "L6_LBC" [level=1] [ref=e629]:
+                    - button "L6_LBC" [ref=e632]:
+                      - generic [ref=e634]:
+                        - generic [ref=e635]: L6_LBC
+                        - generic [ref=e636]:
+                          - generic [ref=e637]: 618,200
+                          - button "caret-right" [ref=e638] [cursor=pointer]:
+                            - img "caret-right" [ref=e639]:
+                              - img [ref=e640]
+                  - treeitem "L6_MC" [level=1] [ref=e642]:
+                    - button "L6_MC" [ref=e645]:
+                      - generic [ref=e647]:
+                        - generic [ref=e648]: L6_MC
+                        - generic [ref=e649]:
+                          - generic [ref=e650]: 355,300
+                          - button "caret-right" [ref=e651] [cursor=pointer]:
+                            - img "caret-right" [ref=e652]:
+                              - img [ref=e653]
+                  - treeitem "L6_NBC" [level=1] [ref=e655]:
+                    - button "L6_NBC" [ref=e658]:
+                      - generic [ref=e660]:
+                        - generic [ref=e661]: L6_NBC
+                        - generic [ref=e662]:
+                          - generic [ref=e663]: 588,400
+                          - button "caret-right" [ref=e664] [cursor=pointer]:
+                            - img "caret-right" [ref=e665]:
+                              - img [ref=e666]
+                  - treeitem "L6_NGC" [level=1] [ref=e668]:
+                    - button "L6_NGC" [ref=e671]:
+                      - generic [ref=e673]:
+                        - generic [ref=e674]: L6_NGC
+                        - generic [ref=e675]:
+                          - generic [ref=e676]: 23,620
+                          - button "caret-right" [ref=e677] [cursor=pointer]:
+                            - img "caret-right" [ref=e678]:
+                              - img [ref=e679]
+                  - treeitem "L6_SBC" [level=1] [ref=e681]:
+                    - button "L6_SBC" [ref=e684]:
+                      - generic [ref=e686]:
+                        - generic [ref=e687]: L6_SBC
+                        - generic [ref=e688]:
+                          - generic [ref=e689]: 88,330
+                          - button "caret-right" [ref=e690] [cursor=pointer]:
+                            - img "caret-right" [ref=e691]:
+                              - img [ref=e692]
+                  - treeitem "L3_TPC:A" [level=1] [ref=e694]:
+                    - button "L3_TPC:A" [ref=e697]:
+                      - generic [ref=e699]:
+                        - generic [ref=e700]: L3_TPC:A
+                        - generic [ref=e701]:
+                          - generic [ref=e702]: 309,400
+                          - button "caret-right" [ref=e703] [cursor=pointer]:
+                            - img "caret-right" [ref=e704]:
+                              - img [ref=e705]
+                  - treeitem "L3_TPC:C" [level=1] [ref=e707]:
+                    - button "L3_TPC:C" [ref=e710]:
+                      - generic [ref=e712]:
+                        - generic [ref=e713]: L3_TPC:C
+                        - generic [ref=e714]:
+                          - generic [ref=e715]: 89,050
+                          - button "caret-right" [ref=e716] [cursor=pointer]:
+                            - img "caret-right" [ref=e717]:
+                              - img [ref=e718]
+                  - treeitem "L5_TPC:A" [level=1] [ref=e720]:
+                    - button "L5_TPC:A" [ref=e723]:
+                      - generic [ref=e725]:
+                        - generic [ref=e726]: L5_TPC:A
+                        - generic [ref=e727]:
+                          - generic [ref=e728]: 127,700
+                          - button "caret-right" [ref=e729] [cursor=pointer]:
+                            - img "caret-right" [ref=e730]:
+                              - img [ref=e731]
+                  - treeitem "L5_TPC:B" [level=1] [ref=e733]:
+                    - button "L5_TPC:B" [ref=e736]:
+                      - generic [ref=e738]:
+                        - generic [ref=e739]: L5_TPC:B
+                        - generic [ref=e740]:
+                          - generic [ref=e741]: 99,690
+                          - button "caret-right" [ref=e742] [cursor=pointer]:
+                            - img "caret-right" [ref=e743]:
+                              - img [ref=e744]
+                  - treeitem "L5_TPC:C" [level=1] [ref=e746]:
+                    - button "L5_TPC:C" [ref=e749]:
+                      - generic [ref=e751]:
+                        - generic [ref=e752]: L5_TPC:C
+                        - generic [ref=e753]:
+                          - generic [ref=e754]: 18,600
+                          - button "caret-right" [ref=e755] [cursor=pointer]:
+                            - img "caret-right" [ref=e756]:
+                              - img [ref=e757]
+                  - treeitem "L5_UPC" [level=1] [ref=e759]:
+                    - button "L5_UPC" [ref=e762]:
+                      - generic [ref=e764]:
+                        - generic [ref=e765]: L5_UPC
+                        - generic [ref=e766]:
+                          - generic [ref=e767]: 20,750
+                          - button "caret-right" [ref=e768] [cursor=pointer]:
+                            - img "caret-right" [ref=e769]:
+                              - img [ref=e770]
+                  - treeitem "L4_BP" [level=1] [ref=e772]:
+                    - button "L4_BP" [ref=e775]:
+                      - generic [ref=e777]:
+                        - generic [ref=e778]: L4_BP
+                        - generic [ref=e779]:
+                          - generic [ref=e780]: 13,870
+                          - button "caret-right" [ref=e781] [cursor=pointer]:
+                            - img "caret-right" [ref=e782]:
+                              - img [ref=e783]
+                  - treeitem "L4_BTC" [level=1] [ref=e785]:
+                    - button "L4_BTC" [ref=e788]:
+                      - generic [ref=e790]:
+                        - generic [ref=e791]: L4_BTC
+                        - generic [ref=e792]:
+                          - generic [ref=e793]: 19,630
+                          - button "caret-right" [ref=e794] [cursor=pointer]:
+                            - img "caret-right" [ref=e795]:
+                              - img [ref=e796]
+                  - treeitem "L4_ChC" [level=1] [ref=e798]:
+                    - button "L4_ChC" [ref=e801]:
+                      - generic [ref=e803]:
+                        - generic [ref=e804]: L4_ChC
+                        - generic [ref=e805]:
+                          - generic [ref=e806]: 21,040
+                          - button "caret-right" [ref=e807] [cursor=pointer]:
+                            - img "caret-right" [ref=e808]:
+                              - img [ref=e809]
+                  - treeitem "L4_DBC" [level=1] [ref=e811]:
+                    - button "L4_DBC" [ref=e814]:
+                      - generic [ref=e816]:
+                        - generic [ref=e817]: L4_DBC
+                        - generic [ref=e818]:
+                          - generic [ref=e819]: 163,800
+                          - button "caret-right" [ref=e820] [cursor=pointer]:
+                            - img "caret-right" [ref=e821]:
+                              - img [ref=e822]
+                  - treeitem "L4_LBC" [level=1] [ref=e824]:
+                    - button "L4_LBC" [ref=e827]:
+                      - generic [ref=e829]:
+                        - generic [ref=e830]: L4_LBC
+                        - generic [ref=e831]:
+                          - generic [ref=e832]: 161,900
+                          - button "caret-right" [ref=e833] [cursor=pointer]:
+                            - img "caret-right" [ref=e834]:
+                              - img [ref=e835]
+                  - treeitem "L4_MC" [level=1] [ref=e837]:
+                    - button "L4_MC" [ref=e840]:
+                      - generic [ref=e842]:
+                        - generic [ref=e843]: L4_MC
+                        - generic [ref=e844]:
+                          - generic [ref=e845]: 78,950
+                          - button "caret-right" [ref=e846] [cursor=pointer]:
+                            - img "caret-right" [ref=e847]:
+                              - img [ref=e848]
+                  - treeitem "L4_NBC" [level=1] [ref=e850]:
+                    - button "L4_NBC" [ref=e853]:
+                      - generic [ref=e855]:
+                        - generic [ref=e856]: L4_NBC
+                        - generic [ref=e857]:
+                          - generic [ref=e858]: 219,800
+                          - button "caret-right" [ref=e859] [cursor=pointer]:
+                            - img "caret-right" [ref=e860]:
+                              - img [ref=e861]
+                  - treeitem "L4_NGC" [level=1] [ref=e863]:
+                    - button "L4_NGC" [ref=e866]:
+                      - generic [ref=e868]:
+                        - generic [ref=e869]: L4_NGC
+                        - generic [ref=e870]:
+                          - generic [ref=e871]: "429.6"
+                          - button "caret-right" [ref=e872] [cursor=pointer]:
+                            - img "caret-right" [ref=e873]:
+                              - img [ref=e874]
+                  - treeitem "L4_SBC" [level=1] [ref=e876]:
+                    - button "L4_SBC" [ref=e879]:
+                      - generic [ref=e881]:
+                        - generic [ref=e882]: L4_SBC
+                        - generic [ref=e883]:
+                          - generic [ref=e884]: 21,730
+                          - button "caret-right" [ref=e885] [cursor=pointer]:
+                            - img "caret-right" [ref=e886]:
+                              - img [ref=e887]
+                  - treeitem "L4_SSC" [level=1] [ref=e889]:
+                    - button "L4_SSC" [ref=e892]:
+                      - generic [ref=e894]:
+                        - generic [ref=e895]: L4_SSC
+                        - generic [ref=e896]:
+                          - generic [ref=e897]: 22,870
+                          - button "caret-right" [ref=e898] [cursor=pointer]:
+                            - img "caret-right" [ref=e899]:
+                              - img [ref=e900]
+                  - treeitem "L4_TPC" [level=1] [ref=e902]:
+                    - button "L4_TPC" [ref=e905]:
+                      - generic [ref=e907]:
+                        - generic [ref=e908]: L4_TPC
+                        - generic [ref=e909]:
+                          - generic [ref=e910]: 161,600
+                          - button "caret-right" [ref=e911] [cursor=pointer]:
+                            - img "caret-right" [ref=e912]:
+                              - img [ref=e913]
+                  - treeitem "L4_UPC" [level=1] [ref=e915]:
+                    - button "L4_UPC" [ref=e918]:
+                      - generic [ref=e920]:
+                        - generic [ref=e921]: L4_UPC
+                        - generic [ref=e922]:
+                          - generic [ref=e923]: 67,540
+                          - button "caret-right" [ref=e924] [cursor=pointer]:
+                            - img "caret-right" [ref=e925]:
+                              - img [ref=e926]
+                  - treeitem "L6_BPC" [level=1] [ref=e928]:
+                    - button "L6_BPC" [ref=e931]:
+                      - generic [ref=e933]:
+                        - generic [ref=e934]: L6_BPC
+                        - generic [ref=e935]:
+                          - generic [ref=e936]: 54,680
+                          - button "caret-right" [ref=e937] [cursor=pointer]:
+                            - img "caret-right" [ref=e938]:
+                              - img [ref=e939]
+                  - treeitem "L6_HPC" [level=1] [ref=e941]:
+                    - button "L6_HPC" [ref=e944]:
+                      - generic [ref=e946]:
+                        - generic [ref=e947]: L6_HPC
+                        - generic [ref=e948]:
+                          - generic [ref=e949]: 49,910
+                          - button "caret-right" [ref=e950] [cursor=pointer]:
+                            - img "caret-right" [ref=e951]:
+                              - img [ref=e952]
+                  - treeitem "L6_IPC" [level=1] [ref=e954]:
+                    - button "L6_IPC" [ref=e957]:
+                      - generic [ref=e959]:
+                        - generic [ref=e960]: L6_IPC
+                        - generic [ref=e961]:
+                          - generic [ref=e962]: 68,400
+                          - button "caret-right" [ref=e963] [cursor=pointer]:
+                            - img "caret-right" [ref=e964]:
+                              - img [ref=e965]
+                  - treeitem "L6_TPC:A" [level=1] [ref=e967]:
+                    - button "L6_TPC:A" [ref=e970]:
+                      - generic [ref=e972]:
+                        - generic [ref=e973]: L6_TPC:A
+                        - generic [ref=e974]:
+                          - generic [ref=e975]: 58,880
+                          - button "caret-right" [ref=e976] [cursor=pointer]:
+                            - img "caret-right" [ref=e977]:
+                              - img [ref=e978]
+                  - treeitem "L6_TPC:C" [level=1] [ref=e980]:
+                    - button "L6_TPC:C" [ref=e983]:
+                      - generic [ref=e985]:
+                        - generic [ref=e986]: L6_TPC:C
+                        - generic [ref=e987]:
+                          - generic [ref=e988]: 39,070
+                          - button "caret-right" [ref=e989] [cursor=pointer]:
+                            - img "caret-right" [ref=e990]:
+                              - img [ref=e991]
+                  - treeitem "L6_UPC" [level=1] [ref=e993]:
+                    - button "L6_UPC" [ref=e996]:
+                      - generic [ref=e998]:
+                        - generic [ref=e999]: L6_UPC
+                        - generic [ref=e1000]:
+                          - generic [ref=e1001]: 31,060
+                          - button "caret-right" [ref=e1002] [cursor=pointer]:
+                            - img "caret-right" [ref=e1003]:
+                              - img [ref=e1004]
+    - generic [ref=e1006]:
+      - img [ref=e1008]
+      - button "Open Tanstack query devtools" [ref=e1056] [cursor=pointer]:
+        - img [ref=e1057]
+  - alert [ref=e1105]
