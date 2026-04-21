@@ -14,7 +14,7 @@ import {
   RiFolderUploadFill,
   RiInfoI,
   RiSearchLine,
-  RiUpload2Line,
+  RiSendPlaneLine,
 } from '@remixicon/react';
 import { DatePicker } from 'antd';
 import {
@@ -1265,7 +1265,7 @@ export function ValidatorPanel<TPayload, TResult>({
               onClick={() => void actions.onSubmitRows()}
               aria-label="Import rows"
             >
-              <RiUpload2Line className="size-4" />
+              <RiSendPlaneLine className="size-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left" className="text-xs">
