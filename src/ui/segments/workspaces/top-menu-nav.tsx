@@ -264,6 +264,9 @@ export function TopMenuNavigation() {
                         pathname: url,
                         query: linkSearchParams,
                       }}
+                      onClick={(e) => {
+                        if (isActiveButton) e.preventDefault();
+                      }}
                     >
                       {allowText && <span>{title}</span>}
                       {icon}
@@ -302,6 +305,9 @@ export function TopMenuNavigation() {
                     href={{
                       pathname: url,
                       query: linkSearchParams,
+                    }}
+                    onClick={(e) => {
+                      if (isActiveButton) e.preventDefault();
                     }}
                   >
                     {allowText && <span>{title}</span>}
