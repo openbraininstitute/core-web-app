@@ -1,7 +1,8 @@
 import $RefParser, { type JSONSchema } from '@apidevtools/json-schema-ref-parser';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
-import { atomFamily, atomWithStorage } from 'jotai/utils';
+import { atomWithStorage } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 
 import { config } from '@/config';
 import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';

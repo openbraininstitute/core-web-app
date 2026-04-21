@@ -111,7 +111,7 @@ export function EntityLinkCount() {
       map(simulations, (value) => {
         return (
           <BrowseLink
-            enabled={scope === WorkspaceScope.Project}
+            enabled
             key={`link-${value.title}/${value.type}`}
             scope={scope}
             extendedType={value.extendedType}

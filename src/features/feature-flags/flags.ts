@@ -1,4 +1,3 @@
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { PanelState } from '@/ui/segments/ai/types';
 
@@ -28,20 +27,7 @@ export const extractionActivityFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const ionChannelSimulationActivityFlag = defineFlag<boolean>({
-  key: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
-  defaultValue: false,
-  values: [true, false],
-  description: 'Enable ion channel simulation',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
-});
-
-export const flags = [
-  aiPanelStateFlag,
-  microcircuitFlag,
-  extractionActivityFlag,
-  ionChannelSimulationActivityFlag,
-] as const;
+export const flags = [aiPanelStateFlag, microcircuitFlag, extractionActivityFlag] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 
