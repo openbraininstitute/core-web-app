@@ -1,12 +1,16 @@
+/* eslint-disable @next/next/no-img-element */
+
+import { FullscreenOutlined } from '@ant-design/icons';
 import React from 'react';
 
+import FullscreenDialog from '@/components/ai-assistant/message-item/fullscreen-dialog/fullscreen-dialog';
 import { isString } from '@/util/type-guards';
-import { classNames } from '@/util/utils';
 
 import ToolSkeleton from '../skeleton/tool-skeleton';
 
 import type { ToolResult } from '../../types';
 
+import dialogStyles from '@/components/ai-assistant/message-item/fullscreen-dialog/fullscreen-dialog.module.css';
 import styles from './tool-thumbnail-generation-morphology-getone.module.css';
 
 export interface ToolThumbnailGenerationProps {
@@ -25,22 +29,13 @@ export default function ToolThumbnailGeneration({
   return (
     <>
       {typeof result.storage_id === 'string' && providedData && (
-        <CustomThumbnail
-          className={classNames(className, styles.toolThumbnailGenerationMorphologyGetone)}
-          providedData={providedData}
-        />
+        <CustomThumbnail providedData={providedData} />
       )}
     </>
   );
 }
 
-function CustomThumbnail({
-  className,
-  providedData,
-}: {
-  className?: string;
-  providedData: { content: string; type: string };
-}) {
+function CustomThumbnail({ providedData }: { providedData: { content: string; type: string } }) {
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
@@ -50,10 +45,6 @@ function CustomThumbnail({
 
   const handleShow = () => {
     refDialog.current?.showModal();
-  };
-
-  const handleHide = () => {
-    refDialog.current?.close();
   };
 
   if (imageError) {
@@ -74,9 +65,19 @@ function CustomThumbnail({
   return (
     <>
       <div className={styles.container}>
+        {imageLoaded && (
+          <button
+            type="button"
+            onClick={handleShow}
+            className={styles.fullscreenButton}
+            aria-label="View fullscreen"
+          >
+            <FullscreenOutlined />
+          </button>
+        )}
         {!imageLoaded && <ToolSkeleton />}
         <img
-          className={className}
+          className={styles.image}
           src={content}
           alt="Morphology thumbnail"
           style={{
@@ -88,19 +89,9 @@ function CustomThumbnail({
           onClick={handleShow}
         />
       </div>
-      <dialog ref={refDialog} className={styles.dialog}>
-        <button
-          type="button"
-          onClick={handleHide}
-          className={styles.closeButton}
-          aria-label="Close fullscreen"
-        >
-          ✕
-        </button>
-        <button type="button" onClick={handleHide} className={styles.imageBackdrop}>
-          <img src={content} alt="Morphology thumbnail fullscreen" />
-        </button>
-      </dialog>
+      <FullscreenDialog dialogRef={refDialog}>
+        <img src={content} alt="Morphology thumbnail" className={dialogStyles.fullscreenImage} />
+      </FullscreenDialog>
     </>
   );
 }

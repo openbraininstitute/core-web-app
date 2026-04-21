@@ -1,12 +1,13 @@
-/* eslint-disable jsx-a11y/control-has-associated-label */
-/* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
 
+import { FullscreenOutlined } from '@ant-design/icons';
 import React from 'react';
 
+import FullscreenDialog from '@/components/ai-assistant/message-item/fullscreen-dialog/fullscreen-dialog';
 import ToolSkeleton from '@/components/ai-assistant/message-item/storage-plots/renderers/skeleton/tool-skeleton';
 import { logError } from '@/util/logger';
 
+import dialogStyles from '@/components/ai-assistant/message-item/fullscreen-dialog/fullscreen-dialog.module.css';
 import styles from './truncable-image.module.css';
 
 export interface TruncableImageProps {
@@ -27,10 +28,6 @@ export default function TruncableImage({ className, src, isStreaming }: Truncabl
 
   const handleShow = () => {
     refDialog.current?.showModal();
-  };
-
-  const handleHide = () => {
-    refDialog.current?.close();
   };
 
   if (imageError && src) {
@@ -55,6 +52,16 @@ export default function TruncableImage({ className, src, isStreaming }: Truncabl
   return (
     <>
       <div className={styles.container}>
+        {imageLoaded && (
+          <button
+            type="button"
+            onClick={handleShow}
+            className={styles.fullscreenButton}
+            aria-label="View fullscreen"
+          >
+            <FullscreenOutlined />
+          </button>
+        )}
         {!imageLoaded && <ToolSkeleton />}
         <img
           className={styles.image}
@@ -72,19 +79,9 @@ export default function TruncableImage({ className, src, isStreaming }: Truncabl
           onClick={handleShow}
         />
       </div>
-      <dialog ref={refDialog} className={styles.dialog}>
-        <button
-          type="button"
-          onClick={handleHide}
-          className={styles.closeButton}
-          aria-label="Close fullscreen"
-        >
-          ✕
-        </button>
-        <button type="button" onClick={handleHide} className={styles.imageBackdrop}>
-          <img src={src} />
-        </button>
-      </dialog>
+      <FullscreenDialog dialogRef={refDialog}>
+        <img src={src} alt="" className={dialogStyles.fullscreenImage} />
+      </FullscreenDialog>
     </>
   );
 }
