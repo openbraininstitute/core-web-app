@@ -77,7 +77,6 @@ export default function Page({
             id: BuildScanConfigTabs.configuration,
           }}
         />
-        <DownloadPanel />
       </div>
     );
   }
