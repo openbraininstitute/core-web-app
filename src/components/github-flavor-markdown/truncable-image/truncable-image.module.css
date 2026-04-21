@@ -32,24 +32,24 @@ dialog.dialog {
     backdrop-filter: blur(4px) brightness(50%);
     transition: backdrop-filter 0.5s;
   }
+}
 
-  > button {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
+.imageBackdrop {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  display: grid;
+  place-items: center;
+
+  > img {
+    cursor: pointer;
     max-width: none;
     max-height: none;
-    display: grid;
-    place-items: center;
-
-    > img {
-      cursor: pointer;
-      max-width: none;
-      max-height: none;
-      box-shadow: 0 0.5em 1em #000;
-    }
+    box-shadow: 0 0.5em 1em #000;
   }
 }
 

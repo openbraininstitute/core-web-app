@@ -100,7 +100,7 @@ function CustomThumbnail({
         >
           ✕
         </button>
-        <button type="button" onClick={handleHide}>
+        <button type="button" onClick={handleHide} className={styles.imageBackdrop}>
           <img src={content} alt="Morphology thumbnail fullscreen" />
         </button>
       </dialog>

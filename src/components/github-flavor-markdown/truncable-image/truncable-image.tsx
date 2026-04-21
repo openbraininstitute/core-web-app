@@ -105,7 +105,7 @@ export default function TruncableImage({ className, src, isStreaming }: Truncabl
         >
           ✕
         </button>
-        <button type="button" onClick={handleHide}>
+        <button type="button" onClick={handleHide} className={styles.imageBackdrop}>
           <img
             src={image.src}
             width={image.width}
