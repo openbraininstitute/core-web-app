@@ -272,7 +272,6 @@ export function createCellMorphologyImportAdapter({
           },
         },
         getValidationIssues: ({ cell }) => parseLocationCsvValue(cell.rawValue).issues,
-        writeStrategy: ValidatorWriteStrategy.Stage,
         tableRenderer: ({ cell, row, field, actions, validatorPreview }) => (
           <LocationEditor
             cell={cell}
