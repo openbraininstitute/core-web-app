@@ -12,7 +12,6 @@ import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 import { PillTabs, PillTabsContent, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { Subscription } from '@/ui/segments/profile/sections/subscription';
-import { BalanceCard } from '@/ui/segments/project/credits/balance-card';
 import { JobReportList } from '@/ui/segments/project/credits/job-report-list';
 import {
   ManageCreditsStep,
@@ -175,16 +174,16 @@ export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }:
           >
             <PillTabsList className="bg-primary-8 grid h-12 w-full grid-cols-5 p-0">
               <PillTabsTrigger
-                value="overview"
-                className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
-              >
-                Project credits
-              </PillTabsTrigger>
-              <PillTabsTrigger
                 value="transfer"
                 className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
               >
                 Transfer Credits
+              </PillTabsTrigger>
+              <PillTabsTrigger
+                value="overview"
+                className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
+              >
+                Credits usage
               </PillTabsTrigger>
               <PillTabsTrigger
                 value="buy"
@@ -226,13 +225,9 @@ export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }:
         activationMode="manual"
         className="h-full"
       >
-        <PillTabsContent value="overview" className="mt-0 h-full overflow-y-auto">
+        <PillTabsContent value="overview" className="mt-0 flex h-full flex-col overflow-hidden">
           <Suspense>
-            <div className="flex flex-col gap-6 pb-2 [&_h3]:text-white">
-              <BalanceCard
-                onTransferCredits={() => handleTabChange('transfer')}
-                className="bg-primary-8"
-              />
+            <div className="flex min-h-0 flex-1 flex-col gap-6 pb-2 [&_h3]:text-white">
               <JobReportList />
             </div>
           </Suspense>
@@ -273,7 +268,7 @@ export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }:
         </PillTabsContent>
         <PillTabsContent value="pricing" className="mt-0 h-full overflow-y-auto">
           <div className="text-primary-9 bg-white rounded-md p-4 [&_*]:text-primary-9">
-            <SectionPricing />
+            <SectionPricing compact />
           </div>
         </PillTabsContent>
       </PillTabs>

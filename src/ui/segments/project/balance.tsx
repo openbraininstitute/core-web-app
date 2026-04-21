@@ -120,7 +120,7 @@ export function Wallet() {
         </TooltipContent>
       </Tooltip>
 
-      <CreditsTransferModal open={open} onClose={() => setOpen(false)} defaultTab="overview" />
+      <CreditsTransferModal open={open} onClose={() => setOpen(false)} defaultTab="transfer" />
     </>
   );
 }

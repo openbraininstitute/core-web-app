@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import type { PlanV2 } from '@/types/virtual-lab/pricing';
+
 import {
   Carousel,
   type CarouselApi,
@@ -13,7 +13,9 @@ import {
 } from '@/ui/molecules/carousel';
 import PlanCard from '@/ui/segments/plans/card';
 
-export default function Plans({ plans }: { plans: PlanV2[] }) {
+import type { PlanV2 } from '@/types/virtual-lab/pricing';
+
+export default function Plans({ plans, compact = false }: { plans: PlanV2[]; compact?: boolean }) {
   const fallbackOrder = ['Free', 'Pro', 'Enterprise', 'Education'];
 
   const sortedPlans = [...plans].sort((a, b) => {
@@ -72,6 +74,16 @@ export default function Plans({ plans }: { plans: PlanV2[] }) {
 
   if (sortedPlans.length === 0) {
     return null;
+  }
+
+  if (compact) {
+    return (
+      <div className="flex w-full flex-col gap-3">
+        {sortedPlans.map((plan) => (
+          <PlanCard key={plan.name} plan={plan} compact />
+        ))}
+      </div>
+    );
   }
 
   return (

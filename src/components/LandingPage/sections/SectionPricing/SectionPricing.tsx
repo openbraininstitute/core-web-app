@@ -6,9 +6,10 @@ import { usePrices } from '@/hooks/use-prices';
 import PriceTable from '@/ui/segments/help/priceList/price-table';
 import Plans from '@/ui/segments/plans';
 import { classNames } from '@/util/utils';
+
 import { styleBlockFullWidth } from '../../styles';
 
-export default function SectionPricing() {
+export default function SectionPricing({ compact = false }: { compact?: boolean } = {}) {
   const { prices, loading: pricesLoading, error: pricesError } = usePrices();
   const { creditsPacks, loading: creditsLoading, error: creditsError } = useCredits();
   const { plans, loading: plansLoading, error: plansError } = usePlanV2();
@@ -18,11 +19,11 @@ export default function SectionPricing() {
 
   return (
     <>
-      <Plans plans={plans} />
+      <Plans plans={plans} compact={compact} />
       <div
-        className={classNames('flex w-full flex-col', styleBlockFullWidth)}
+        className={classNames('flex w-full flex-col', !compact && styleBlockFullWidth)}
         style={{
-          marginTop: '3rem',
+          marginTop: compact ? '1.5rem' : '3rem',
           minHeight: '200px',
         }}
       >
@@ -39,7 +40,7 @@ export default function SectionPricing() {
               No pricing data available. Prices: {prices.length}, Credits: {creditsPacks.length}
             </div>
           ) : (
-            <div className="px-8 lg:px-[8.7vw]">
+            <div className={compact ? '' : 'px-8 lg:px-[8.7vw]'}>
               <PriceTable
                 prices={prices}
                 creditsPacks={creditsPacks}

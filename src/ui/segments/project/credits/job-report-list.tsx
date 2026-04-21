@@ -116,18 +116,31 @@ export function JobReportList() {
   );
 
   return (
-    <div className="mb-4 flex w-full flex-col items-start gap-2">
-      <h3 className="text-primary-9 text-xl font-bold">History</h3>
+    <div className="flex min-h-0 w-full flex-1 flex-col items-start gap-2">
+      <h3 className="text-primary-9 text-xl font-bold">Usage</h3>
       <Table<JobReport>
-        sticky
         size="middle"
+        scroll={{ y: 1 }}
         className={cn(
-          '[&.ant-table]:bg-primary-8! w-full!',
+          'min-h-0! w-full! flex-1!',
+          '[&]:flex [&]:min-h-0 [&]:flex-col',
+          '[&_.ant-spin-nested-loading]:flex [&_.ant-spin-nested-loading]:min-h-0 [&_.ant-spin-nested-loading]:flex-1 [&_.ant-spin-nested-loading]:flex-col',
+          '[&_.ant-spin-container]:flex [&_.ant-spin-container]:min-h-0 [&_.ant-spin-container]:flex-1 [&_.ant-spin-container]:flex-col',
+          '[&_.ant-table]:flex [&_.ant-table]:min-h-0 [&_.ant-table]:flex-1 [&_.ant-table]:flex-col [&_.ant-table]:bg-primary-8!',
+          '[&_.ant-table]:overflow-hidden! [&_.ant-table]:rounded-xl!',
+          '[&_.ant-table-container]:flex [&_.ant-table-container]:min-h-0 [&_.ant-table-container]:flex-1 [&_.ant-table-container]:flex-col [&_.ant-table-container]:bg-primary-8',
+          '[&_.ant-table-header]:bg-primary-8!',
+          '[&_.ant-table-body]:min-h-0! [&_.ant-table-body]:flex-1! [&_.ant-table-body]:max-h-none! [&_.ant-table-body]:bg-primary-8!',
           '[&_.ant-table-thead_th]:text-white/70! [&_.ant-table-thead_th]:font-light!',
           '[&_.ant-table-thead_th]:bg-primary-8! [&_.ant-table-tbody]:bg-primary-8!',
           '[&_.ant-table-tbody_td]:text-white! [&_.ant-table-tbody_td]:border-white/10!',
           '[&_.ant-table-cell-row-hover]:bg-primary-7!',
-          '[&_.ant-pagination]:gap-2',
+          '[&_.ant-pagination]:gap-2 [&_.ant-pagination]:mt-3! [&_.ant-pagination]:mb-0! [&_.ant-pagination]:shrink-0',
+          '[&_.ant-pagination_a]:text-white! [&_.ant-pagination_button]:text-white!',
+          '[&_.ant-pagination_.anticon]:text-white!',
+          '[&_.ant-pagination-item]:bg-transparent! [&_.ant-pagination-item]:border-white/30!',
+          '[&_.ant-pagination-item-active]:bg-white! [&_.ant-pagination-item-active]:border-white!',
+          '[&_.ant-pagination-item-active_a]:text-primary-9!',
           '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-primary-8! [&:has(.ant-table-empty)_tr]:hover:bg-primary-8!',
           '[&_th]:uppercase!'
         )}
