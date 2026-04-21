@@ -8,7 +8,7 @@ import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity';
-import { SingleCardItem } from '@/ui/segments/project/get-started/elements/quick-access';
+import { MainCardItem } from '@/ui/segments/project/get-started/elements/quick-access';
 import {
   getQuickAccessQuery,
   type IQuickAccessList,
@@ -107,25 +107,27 @@ export default async function Page({
     );
   }
 
+  if (!virtualLab) return null;
+
   return (
     <ViewTransition enter="vt-slide-up-enter" exit="vt-fade-exit">
       <div
         id={`quick-access-${group}`}
         data-testid={`quick-access-${group}`}
-        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 px-3 mb-10"
+        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full mt-2 mb-10"
       >
-        {results.map(({ title, thumbnail, entity, extendedType, artifactTitle, description }) => {
+        {results.map(({ title, thumbnail, entity, artifactTitle, description }) => {
           return (
-            <SingleCardItem
+            <MainCardItem
               key={entity.id}
               {...{
+                groupTitle: findKey(QuickAccessGroupDict, (p) => p === group),
                 title,
                 thumbnail,
                 context,
                 virtualLab,
-                group,
+                group: group as (typeof QuickAccessGroupDict)[keyof typeof QuickAccessGroupDict],
                 entity,
-                extendedType,
                 artifactTitle,
                 description,
               }}
