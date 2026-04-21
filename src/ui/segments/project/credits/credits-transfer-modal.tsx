@@ -178,7 +178,7 @@ export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }:
                 value="overview"
                 className="hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:text-primary-9 h-12 px-6 py-5 text-lg text-white select-none data-[state=active]:bg-white data-[state=active]:font-bold"
               >
-                Overview
+                Project credits
               </PillTabsTrigger>
               <PillTabsTrigger
                 value="transfer"
@@ -231,7 +231,7 @@ export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }:
             <div className="flex flex-col gap-6 pb-2 [&_h3]:text-white">
               <BalanceCard
                 onTransferCredits={() => handleTabChange('transfer')}
-                className="bg-white"
+                className="bg-primary-8"
               />
               <JobReportList />
             </div>

@@ -28,11 +28,11 @@ export function BalanceCard({ onTransferCredits, className }: Props) {
     <Card shadowless className={className}>
       <CardContent className="flex items-center justify-between">
         <div className="flex items-center justify-center gap-10">
-          <div className="text-primary-9 flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 text-white">
             <div className="font-light">Virtual lab credits</div>
             <div className="text-xl font-bold">{Math.floor(Number(virtualLabBalance) || 0)}</div>
           </div>
-          <div className="text-primary-9 flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 text-white">
             <div className="font-light">Project credits</div>
             <div className="text-xl font-bold">
               {Math.floor(Number(ProjectBalance?.balance) || 0)}
