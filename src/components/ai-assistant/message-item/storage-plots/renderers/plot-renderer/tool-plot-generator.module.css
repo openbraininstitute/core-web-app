@@ -5,7 +5,7 @@
 .plotContainer {
   width: 600px;
   max-width: 100%;
-  aspect-ratio: 3/2;
+  aspect-ratio: 4/3;
   background-color: white;
   display: flex;
   flex-direction: column;

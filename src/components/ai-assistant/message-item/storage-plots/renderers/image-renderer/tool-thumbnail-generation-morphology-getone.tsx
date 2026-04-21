@@ -82,9 +82,6 @@ function CustomThumbnail({
           style={{
             display: imageLoaded ? 'block' : 'none',
             cursor: 'pointer',
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
           }}
           onLoad={() => setImageLoaded(true)}
           onError={() => setImageError(true)}
