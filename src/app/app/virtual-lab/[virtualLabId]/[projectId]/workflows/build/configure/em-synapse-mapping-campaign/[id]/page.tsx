@@ -9,7 +9,6 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { resolveEmSynapseMappingByCampaignId } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
 import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
-import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';

@@ -20,6 +20,7 @@ import {
 } from '@/entity-configuration/definitions/view-defs';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { circuitTypes } from '@/entity-configuration/domain/helpers';
+import { resolveEmSynapseMappingByCampaignId } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
@@ -39,6 +40,7 @@ import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
 import { ScanConfiguration } from '@/features/scan-config';
 import {
+  BuildScanConfigTabs,
   ExtractScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
@@ -57,6 +59,15 @@ import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-c
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
+
+const LegacySimulationCampaigns = [
+  ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+  ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+] as const;
 
 export default async function Overview({
   entity,
@@ -147,16 +158,42 @@ export default async function Overview({
         </>
       );
     }
+
+    if (
+      'task_config_type' in entity &&
+      entity.task_config_type === TaskConfigType.EmSynapseMappingCampaign
+    ) {
+      const { data: config, error } = await tryCatch(
+        resolveEmSynapseMappingByCampaignId({ id: entity.id, context: context })
+      );
+
+      if (error || !config.sourceEntityId) {
+        notFound();
+      }
+
+      return (
+        <>
+          <ScanConfiguration
+            entityId={config.sourceEntityId}
+            entityType={ExtendedEntitiesTypeDict.CellMorphology}
+            virtualLabId={context.virtualLabId}
+            projectId={context.projectId}
+            initialCampaignId={config.campaign.id}
+            initialConfig={config.config?.form}
+            readOnly={!isWorkflow}
+            defaultTab={{
+              __activity: ScanConfigActivity.Build,
+              id: BuildScanConfigTabs.configuration,
+            }}
+            activity={ScanConfigActivity.Build}
+          />
+          <DownloadPanel />
+        </>
+      );
+    }
   }
 
-  if (
-    extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.RegionCircuitSimulation
-  ) {
+  if (includes(LegacySimulationCampaigns, extendedType)) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
     try {
