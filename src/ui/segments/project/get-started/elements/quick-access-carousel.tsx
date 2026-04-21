@@ -74,11 +74,22 @@ function GroupRow({
           ref={scrollRef}
           className="flex w-full gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {items.map((item) => {
+          {items.map((item, index) => {
             const isData = group === QuickAccessGroupDict.Data;
             const hideArtifact = isData || group === QuickAccessGroupDict.Notebooks;
             const displayTitle = isData ? (item.artifactTitle ?? item.title) : item.title;
             const isSelected = preview?.entityId === item.entity.id;
+            const isNotebooks = group === QuickAccessGroupDict.Notebooks;
+            const overrideThumbnail =
+              isData && index === 0
+                ? '/images/quick-access/morphology.png'
+                : isData && index === 1
+                  ? '/images/quick-access/em-reconstruction.png'
+                  : isData && index === 2
+                    ? '/images/quick-access/hippocampus.png'
+                    : isNotebooks && index === 0
+                      ? '/images/quick-access/hippocampus.png'
+                      : null;
             return (
               <div key={item.entity.id} className="w-60 shrink-0">
                 <SingleCardItem
@@ -87,7 +98,7 @@ function GroupRow({
                   isSelected={isSelected}
                   title={displayTitle}
                   description={item.description}
-                  thumbnail={item.thumbnail}
+                  thumbnail={overrideThumbnail ?? item.thumbnail}
                   extendedType={item.extendedType}
                   artifactTitle={item.artifactTitle}
                   entity={item.entity}
