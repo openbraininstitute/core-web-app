@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
+import * as Comlink from 'comlink';
+import { useEffect, useState } from 'react';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import SpikeTrace from '@/features/spike-viewer/spike-trace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { SpikeData } from '@/features/spike-viewer/spike-trace';
+import type { SpikeTraceWorkerApi } from '@/features/spike-viewer/spike-trace.worker';
 import type { WorkspaceContext } from '@/types/common';
 
 type UseSpikeTraceArgs = {
@@ -21,11 +23,9 @@ export default function useSpikeTrace({
   entityType,
   asset,
   ctx,
-}: UseSpikeTraceArgs): [SpikeTrace | null, Error | null] {
-  const [trace, setTrace] = useState<SpikeTrace | null>(null);
+}: UseSpikeTraceArgs): [SpikeData | null, Error | null] {
+  const [data, setData] = useState<SpikeData | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const initialized = useRef<boolean>(false);
-  const traceRef = useRef<SpikeTrace | null>(null);
 
   const {
     data: spikeArrayBuffer,
@@ -56,24 +56,32 @@ export default function useSpikeTrace({
   }, [fetchError, isError]);
 
   useEffect(() => {
-    if (initialized.current || !spikeArrayBuffer) {
-      return;
-    }
+    if (!spikeArrayBuffer) return;
 
-    initialized.current = true;
+    setData(null);
+    setError(null);
 
-    SpikeTrace.create(asset.id, spikeArrayBuffer)
-      .then((t) => {
-        traceRef.current = t;
-        setTrace(t);
+    let cancelled = false;
+    const worker = new Worker(new URL('../spike-trace.worker.ts', import.meta.url));
+    const proxy = Comlink.wrap<SpikeTraceWorkerApi>(worker);
+
+    proxy
+      .parseSpikeFile(asset.id, spikeArrayBuffer)
+      .then((result) => {
+        if (!cancelled) setData(result);
       })
-      .catch((e) => setError(e));
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)));
+      })
+      .finally(() => {
+        proxy[Comlink.releaseProxy]();
+      });
 
     return () => {
-      traceRef.current?.destroy();
-      initialized.current = false;
+      cancelled = true;
+      worker.terminate();
     };
   }, [spikeArrayBuffer, asset.id]);
 
-  return [trace, error];
+  return [data, error];
 }
