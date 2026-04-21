@@ -76,12 +76,7 @@ export function ExtractionInOutFiles({
     enabled: !!extractedCircuitId,
     // the refetch is required as the extraction upload to s3 will not be ready immediately
     refetchInterval(query) {
-      console.log('–– – in-out-files.tsx:80 – ExtractionInOutFiles – query:', query);
-
       const data = query.state.data;
-
-      console.log('–– – in-out-files.tsx:83 – ExtractionInOutFiles – data:', data);
-
       const hasVisAsset = data?.assets?.some(
         (asset) => asset.label === AssetLabel.circuit_visualization
       );
