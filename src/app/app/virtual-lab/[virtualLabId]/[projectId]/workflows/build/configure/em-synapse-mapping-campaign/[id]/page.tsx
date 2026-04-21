@@ -1,21 +1,16 @@
-'use client';
-
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { notFound } from 'next/navigation';
-import { use } from 'react';
 
 import { getCellMorphology } from '@/api/entitycore/queries';
-import { EntityTypeDict } from '@/api/entitycore/types';
+import { tryCatch } from '@/api/utils';
 import { resolveEmSynapseMappingByCampaignId } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
 import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
 
-export default function Page({
+export default async function Page({
   searchParams,
   params: pathParams,
 }: ServerSideComponentProp<
@@ -27,40 +22,37 @@ export default function Page({
     initialCampaignId: string;
   }
 >) {
-  const queryParams = use(searchParams);
+  const queryParams = await searchParams;
   const { initialCampaignId } = queryParams;
-  const { virtualLabId, projectId, id: modelId } = use(pathParams);
+  const { virtualLabId, projectId, id: modelId } = await pathParams;
 
-  const { data: entity } = useSuspenseQuery({
-    queryKey: keyBuilder.entity({
-      id: modelId,
-      type: EntityTypeDict.CellMorphology,
-      context: { virtualLabId, projectId },
-    }),
-    queryFn: () => getCellMorphology({ id: modelId, context: { virtualLabId, projectId } }),
-  });
-
-  const {
-    data: campaignData,
-    error,
-    isLoading,
-  } = useQuery({
-    queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
-    queryFn: async () => {
-      if (!initialCampaignId) return null;
-      return await resolveEmSynapseMappingByCampaignId({
-        id: initialCampaignId,
-        context: { virtualLabId, projectId },
-      });
-    },
-    enabled: !!initialCampaignId,
-  });
-
-  if (error || !entity) {
+  const { data: entity, error } = await tryCatch(
+    getCellMorphology({ id: modelId, context: { virtualLabId, projectId } })
+  );
+  if (!entity || error) {
     return notFound();
   }
 
-  if (!initialCampaignId || (initialCampaignId && !isLoading && campaignData?.config.form)) {
+  let campaignData = null;
+  let campaignError = null;
+
+  if (initialCampaignId) {
+    const { data, error } = await tryCatch(
+      resolveEmSynapseMappingByCampaignId({
+        id: initialCampaignId,
+        context: { virtualLabId, projectId },
+      })
+    );
+
+    campaignData = data;
+    campaignError = error;
+
+    if (campaignError || !campaignData) {
+      return notFound();
+    }
+  }
+
+  if (!initialCampaignId || (initialCampaignId && campaignData?.config.form)) {
     return (
       <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
         <ScanConfiguration
