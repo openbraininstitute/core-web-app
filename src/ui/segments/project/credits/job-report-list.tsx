@@ -16,7 +16,7 @@ import type { JobReport } from '@/types/accounting';
 
 const { Column } = Table;
 
-const activityLabel: Record<ServiceSubtype, string> = {
+const categoryLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
   [ServiceSubtype.NeuronMeshSkeletonization]: 'Process data',
   [ServiceSubtype.IonChannelBuild]: 'Build',
@@ -41,11 +41,11 @@ const activityLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.WholeBrainSimulation]: 'Simulate',
 };
 
-function activityRenderFn(subtype: ServiceSubtype) {
-  return activityLabel[subtype] ?? subtype;
+function categoryRenderFn(subtype: ServiceSubtype) {
+  return categoryLabel[subtype] ?? subtype;
 }
 
-const scaleLabel: Record<ServiceSubtype, string> = {
+const typeLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
   [ServiceSubtype.NeuronMeshSkeletonization]: 'EM mesh skeletonization',
   [ServiceSubtype.IonChannelBuild]: 'Ion channel',
@@ -75,8 +75,8 @@ const scaleLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.WholeBrainSimulation]: 'Circuit representing an entire brain',
 };
 
-function scaleRenderFn(subtype: ServiceSubtype) {
-  return scaleLabel[subtype] ?? subtype;
+function TypeRenderFn(subtype: ServiceSubtype) {
+  return typeLabel[subtype] ?? subtype;
 }
 
 function costRenderFn(amount: string) {
@@ -142,8 +142,8 @@ export function JobReportList() {
             }}
             rowKey="job_id"
           >
-            <Column title="Activity" dataIndex="subtype" key="activity" render={activityRenderFn} />
-            <Column title="Scale" dataIndex="subtype" key="scale" render={scaleRenderFn} />
+            <Column title="Category" dataIndex="subtype" key="category" render={categoryRenderFn} />
+            <Column title="Type" dataIndex="subtype" key="type" render={TypeRenderFn} />
             <Column title="Member" dataIndex="user_id" key="user" render={userRenderFn} />
             <Column title="Date" dataIndex="started_at" key="date" render={renderDateAndHour} />
             <Column title="Cost (Credits)" dataIndex="amount" key="cost" render={costRenderFn} />
