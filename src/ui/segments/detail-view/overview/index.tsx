@@ -1,5 +1,6 @@
 import { includes } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
+import { match } from 'ts-pattern';
 
 import { getMEModel } from '@/api/entitycore/queries';
 import {
@@ -20,6 +21,7 @@ import {
 } from '@/entity-configuration/definitions/view-defs';
 import { resolveExtractionByCampaignId } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { circuitTypes } from '@/entity-configuration/domain/helpers';
+import { resolveEmSynapseMappingByCampaignId } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import {
   resolveSimulationByCampaignId,
@@ -55,6 +57,14 @@ import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-c
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
+
+const LegacySimulationCampaigns = [
+  ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+] as const;
 
 export default async function Overview({
   entity,
@@ -109,49 +119,71 @@ export default async function Overview({
 
     (entity as ISingleNeuronSynaptome).me_model = meModel;
   }
-  // TODO: new simulation and extraction campaigns should be handled here
-  if (entity.type === EntityTypeDict.TaskConfig) {
-    if (
-      'task_config_type' in entity &&
-      entity.task_config_type === TaskConfigType.CircuitExtractionCampaign
-    ) {
-      const { data: extractionConfig, error } = await tryCatch(
-        resolveExtractionByCampaignId({ id: entity.id, context: context })
-      );
+  // NOTE: new simulation and extraction campaigns should be handled here
+  if (entity.type === EntityTypeDict.TaskConfig && 'task_config_type' in entity) {
+    return match(entity)
+      .with({ task_config_type: TaskConfigType.CircuitExtractionCampaign }, async () => {
+        const { data: extractionConfig, error } = await tryCatch(
+          resolveExtractionByCampaignId({ id: entity.id, context: context })
+        );
 
-      if (error || !extractionConfig.circuitId) {
-        notFound();
-      }
+        if (error || !extractionConfig.circuitId) {
+          notFound();
+        }
 
-      return (
-        <>
-          <ScanConfiguration
-            entityId={extractionConfig.circuitId}
-            entityType={extendedType}
-            virtualLabId={context.virtualLabId}
-            projectId={context.projectId}
-            initialCampaignId={extractionConfig.campaign.id}
-            initialConfig={extractionConfig.config?.form}
-            readOnly={!isWorkflow}
-            defaultTab={{
-              __activity: ScanConfigActivity.Extract,
-              id: ExtractScanConfigTabs.configuration,
-            }}
-            activity={ScanConfigActivity.Extract}
-          />
-          <DownloadPanel />
-        </>
-      );
-    }
+        return (
+          <>
+            <ScanConfiguration
+              entityId={extractionConfig.circuitId}
+              entityType={extendedType}
+              virtualLabId={context.virtualLabId}
+              projectId={context.projectId}
+              initialCampaignId={extractionConfig.campaign.id}
+              initialConfig={extractionConfig.config?.form}
+              readOnly={!isWorkflow}
+              defaultTab={{
+                __activity: ScanConfigActivity.Extract,
+                id: ExtractScanConfigTabs.configuration,
+              }}
+              activity={ScanConfigActivity.Extract}
+            />
+            <DownloadPanel />
+          </>
+        );
+      })
+      .with({ task_config_type: TaskConfigType.EmSynapseMappingCampaign }, async () => {
+        const { data: config, error } = await tryCatch(
+          resolveEmSynapseMappingByCampaignId({ id: entity.id, context: context })
+        );
+
+        if (error || !config.sourceEntityId) {
+          notFound();
+        }
+
+        return (
+          <>
+            <ScanConfiguration
+              entityId={config.sourceEntityId}
+              entityType={ExtendedEntitiesTypeDict.CellMorphology}
+              virtualLabId={context.virtualLabId}
+              projectId={context.projectId}
+              initialCampaignId={config.campaign.id}
+              initialConfig={config.config?.form}
+              readOnly={!isWorkflow}
+              defaultTab={{
+                __activity: ScanConfigActivity.Build,
+                id: ExtractScanConfigTabs.configuration,
+              }}
+              activity={ScanConfigActivity.Build}
+            />
+            <DownloadPanel />
+          </>
+        );
+      })
+      .otherwise(() => notFound());
   }
 
-  if (
-    extendedType === ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
-  ) {
+  if (includes(LegacySimulationCampaigns, extendedType)) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
     try {

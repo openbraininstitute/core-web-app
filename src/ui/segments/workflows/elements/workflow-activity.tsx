@@ -3,7 +3,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { Pagination as AntPagination, Card, ConfigProvider, Empty } from 'antd';
-import { get, kebabCase } from 'es-toolkit/compat';
+import { get, includes, kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
@@ -67,8 +67,24 @@ const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [
   EntityTypeDict.SimulationCampaign,
   EntityTypeDict.CircuitExtractionCampaign,
   EntityTypeDict.IonChannelModelingCampaign,
+  EntityTypeDict.EmSynapseMappingCampaign,
   EntityTypeDict.TaskConfig,
 ];
+
+const AllowedDuplicateBuildEntityTypes: TEntityTypeDict[] = [
+  ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+  ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
+];
+
+const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
+  ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+  ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+  ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+];
+
 export interface WorkflowActivityRef {
   dataCount: number;
   totalItems: number;
@@ -298,6 +314,13 @@ export function WorkflowActivity() {
       ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
       : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
+  const isIonChannelModelingCampaign =
+    entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign;
+  const isBuildActivity = activityType === ActivityValues.Build;
+  const canShowResultsAction = Boolean(
+    resultsLink && entityType && !NotAllowedResultsActionEntityTypes.includes(entityType)
+  );
+  const resultsActionLink = resultsLink ?? undefined;
 
   const onDuplicate = () => {
     if (selectedRow?.type === ExtendedEntitiesTypeDict.TaskConfig) {
@@ -310,6 +333,15 @@ export function WorkflowActivity() {
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
             circuitId
           }?initialCampaignId=${selectedRow.id}`
+        );
+      }
+      if (
+        (selectedRow as ITaskConfig<any>).task_config_type ===
+        TaskConfigType.EmSynapseMappingCampaign
+      ) {
+        const morphologyId = (selectedRow as ITaskConfig<any>).inputs.at(0)?.id;
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/em-synapse-mapping-campaign/${morphologyId}?initialCampaignId=${selectedRow?.id}`
         );
       }
     }
@@ -402,7 +434,6 @@ export function WorkflowActivity() {
   const { expandableConfig } = useExpandableTable(
     expandableOptions as UseExpandableTableOptions<EntityCoreObjectTypes> | undefined
   );
-
   return (
     <section
       id="activity-table-with-filters"
@@ -551,14 +582,9 @@ export function WorkflowActivity() {
                         View configuration
                       </Link>
                     </Button>
-                    {resultsLink &&
-                      entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.CircuitExtractionCampaign &&
-                      entityType !== ExtendedEntitiesTypeDict.IonChannelModelSimulation &&
-                      (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ? (
+                    {canShowResultsAction &&
+                      resultsActionLink &&
+                      (isIonChannelModelingCampaign ? (
                         <Button
                           rounded
                           variant="outline"
@@ -573,15 +599,15 @@ export function WorkflowActivity() {
                       ) : (
                         <Button
                           rounded
-                          asChild={activityType !== ActivityValues.Build}
+                          asChild={!isBuildActivity}
                           variant="outline"
                           size={breakpoint === 'l' ? 'md' : 'lg'}
-                          disabled={activityType === ActivityValues.Build}
+                          disabled={isBuildActivity}
                           className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed group"
                         >
                           <Link
-                            href={resultsLink}
-                            aria-disabled={activityType === ActivityValues.Build}
+                            href={resultsActionLink}
+                            aria-disabled={isBuildActivity}
                             className="text-primary-9!"
                           >
                             View results
@@ -596,8 +622,8 @@ export function WorkflowActivity() {
                       className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed text-primary-9!"
                       disabled={
                         (activityType === ActivityValues.Build &&
-                          entityType !== ExtendedEntitiesTypeDict.IonChannelModelingCampaign) ||
-                        !AllowedDuplicateEntityTypes.includes(selectedRow.type)
+                          !includes(AllowedDuplicateBuildEntityTypes, entityType)) ||
+                        !includes(AllowedDuplicateEntityTypes, selectedRow.type)
                       }
                     >
                       Duplicate

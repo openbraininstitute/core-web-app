@@ -4,7 +4,7 @@ import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
 import { match } from 'ts-pattern';
 
-import { getMEModel } from '@/api/entitycore/queries';
+import { getCellMorphology, getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
@@ -235,6 +235,10 @@ export function useModelQuery({
             .with(EntityTypeDict.IonChannelModel, () =>
               // @ts-expect-error this query won't start without the id
               getIonChannelModel(params)
+            )
+            .with(EntityTypeDict.CellMorphology, () =>
+              // @ts-expect-error this query won't start without the id
+              getCellMorphology(params)
             )
             .otherwise((entityType) => {
               throw new Error(`Unsupported model entity type ${entityType}`);
