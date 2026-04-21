@@ -72,10 +72,11 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
     }));
 
   const groupOrder = Object.values(QuickAccessGroupDict);
+  type FulfilledWithEntity = Extract<(typeof settled)[number], { status: 'fulfilled' }>;
 
   const results = [
     ...settled
-      .filter((r) => r.status === 'fulfilled')
+      .filter((r): r is FulfilledWithEntity => r.status === 'fulfilled')
       .map((r) => r.value)
       .map((a) => ({
         ...a,
@@ -89,7 +90,7 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
     <section
       id="main-data-category-cards"
       data-testid="main-data-category-cards"
-      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full mt-2"
+      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full"
     >
       {results.map(
         ({
@@ -112,7 +113,7 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
             );
           }
           return (
-            <div key={entityId} className="flex flex-col gap-1.5 w-full">
+            <div key={entityId} className="flex flex-col gap-6 w-full">
               <MainCardItem
                 {...{
                   groupTitle,

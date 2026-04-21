@@ -64,12 +64,6 @@ const links = [
     url: 'team',
     requireRole: false,
   },
-  {
-    key: 'credits',
-    title: 'Credits',
-    url: 'credits',
-    requireRole: true,
-  },
 ];
 
 export function LeftMenu({ className }: Props) {

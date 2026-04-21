@@ -87,7 +87,7 @@ export function MainCardItem({
   return (
     <Card
       className={cn(
-        'w-full bg-white border-none flex-1 pt-0',
+        'w-full h-[340px] bg-white border-none pt-0 relative overflow-hidden',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
         'hover:shadow-bnb hover:bg-gray-100/70 hover:border group',
         'cursor-pointer select-none'
@@ -95,13 +95,27 @@ export function MainCardItem({
       onClick={() => redirect()}
       title={title}
     >
+      <div className="absolute top-0 left-0 z-0 h-[170px] w-full p-3">
+        <div className="relative h-full w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
+          {thumbnail ? (
+            <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-cover" />
+          ) : (
+            <Skeleton
+              active={false}
+              className="flex items-center justify-center w-full h-full bg-background rounded-md"
+            >
+              <ImageIcon className="w-20 h-20 text-gray-300" />
+            </Skeleton>
+          )}
+        </div>
+      </div>
       {artifactTitle && (
-        <div className="flex justify-end px-3 pt-3">
+        <div className="relative z-10 flex justify-end px-3 pt-3 -translate-x-3 translate-y-3">
           <Badge
             variant="outline"
             rounded
             className={cn(
-              'bg-white/90 backdrop-blur-sm py-1.5 px-5! text-primary-8 border-neutral-2 text-xs font-medium shadow-sm',
+              'bg-white/90 backdrop-blur-sm py-1.5 px-5! text-primary-8 border-neutral-2 text-sm 2xl:text-base font-medium shadow-sm',
               'group-hover:bg-primary-7 group-hover:text-white'
             )}
           >
@@ -109,24 +123,15 @@ export function MainCardItem({
           </Badge>
         </div>
       )}
-      <div className="relative aspect-video w-full">
-        {thumbnail ? (
-          <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-contain" />
-        ) : (
-          <Skeleton
-            active={false}
-            className="flex items-center justify-center w-full h-full bg-background rounded-none"
-          >
-            <ImageIcon className="w-20 h-20 text-gray-300" />
-          </Skeleton>
-        )}
-      </div>
-      <CardContent className="mt-8">
-        <h4 className="text-neutral-400 pl-4">{groupTitle}</h4>
+      <div className="relative z-10 h-[170px] w-full p-3" />
+      <CardContent className="relative z-10 mt-2 pb-3">
+        <h4 className="text-neutral-500 pl-4 uppercase text-xs tracking-[0.6px] line-clamp-1">
+          {groupTitle}
+        </h4>
         <div
           className={cn(
-            'font-black rounded-full text-primary-8 text-lg 2xl:text-xl mb-1.5',
-            'px-4 py-1.5 max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5'
+            'font-bold rounded-full text-primary-8 text-xl leading-tight mb-1',
+            'px-4 max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5'
           )}
         >
           {group === QuickAccessGroupDict.Notebooks && isPending && (
@@ -134,7 +139,7 @@ export function MainCardItem({
           )}
           {title ?? 'No title provided'}
         </div>
-        <p className="text-neutral-4 line-clamp-2 pl-4" title={description}>
+        <p className="text-neutral-4 text-sm line-clamp-1 pl-4" title={description}>
           {description ?? 'No description provided'}
         </p>
       </CardContent>
@@ -152,7 +157,7 @@ export function MainCardComingSoon({
   return (
     <Card
       className={cn(
-        'w-full bg-white border-none flex-1',
+        'w-full h-[340px] bg-white border-none',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] select-none pointer-events-none',
         'hover:shadow-bnb hover:border-gray-200 hover:border'
       )}
@@ -216,16 +221,31 @@ export function SingleCardItem({
   return (
     <Card
       className={cn(
-        'w-full bg-white border-none flex-1 pt-0',
+        'w-full h-[340px] bg-white border-none pt-0 relative overflow-hidden',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
         'hover:shadow-bnb hover:bg-gray-100/70 hover:border group',
-        'cursor-pointer select-none gap-2.5'
+        'cursor-pointer select-none'
       )}
       onClick={() => redirect()}
       title={title}
     >
+      <div className="absolute top-0 left-0 z-0 h-[170px] w-full p-3">
+        <div className="relative h-full w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
+          {thumbnail ? (
+            <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-cover" />
+          ) : (
+            <Skeleton
+              active={false}
+              className="flex items-center justify-center w-full h-full bg-background rounded-md"
+              title="No image available"
+            >
+              <ImageIcon className="size-10 text-gray-200" />
+            </Skeleton>
+          )}
+        </div>
+      </div>
       {artifactTitle && (
-        <CardTitle className="self-end p-2 pt-1">
+        <CardTitle className="relative z-10 self-end p-2 pt-1 -translate-x-3 translate-y-3">
           <Badge
             variant="outline"
             rounded
@@ -238,35 +258,23 @@ export function SingleCardItem({
           </Badge>
         </CardTitle>
       )}
-      <div className="relative aspect-video w-full">
-        {thumbnail ? (
-          <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-contain" />
-        ) : (
-          <Skeleton
-            active={false}
-            className="flex items-center justify-center w-full h-full bg-background rounded-none"
-            title="No image available"
-          >
-            <ImageIcon className="size-10 text-gray-200" />
-          </Skeleton>
-        )}
-      </div>
-      <CardContent className="mt-8 flex flex-col">
+      <div className="relative z-10 h-[170px] w-full p-3" />
+      <CardContent className="relative z-10 mt-0.5 pb-2.5 flex flex-col">
         <div
           className={cn(
-            'font-black rounded-full text-primary-8 text-lg 2xl:text-xl mb-1.5',
-            'px-4 py-1.5 max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5'
+            'font-black rounded-full text-primary-8 text-sm 2xl:text-base mb-0.5',
+            'px-4 py-0.5 max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1'
           )}
           title={title}
         >
           {group === QuickAccessGroupDict.Notebooks && isPending && (
             <LoadingOutlined className="text-label!" />
           )}
-          <span className="line-clamp-5 whitespace-normal break-all">
+          <span className="line-clamp-2 whitespace-normal break-all">
             {title ?? 'No title provided'}
           </span>
         </div>
-        <p className="text-neutral-4 line-clamp-4 pl-4" title={description}>
+        <p className="text-neutral-4 text-sm line-clamp-1 pl-4" title={description}>
           {description ?? 'No description provided'}
         </p>
       </CardContent>
@@ -290,7 +298,7 @@ export function ViewExamples({
       rounded
       size="responsive"
       variant="outline"
-      className="w-full bg-background shadow-none hover:font-bold hover:bg-white hover:shadow-md"
+      className="w-fit mx-auto px-4 py-4 bg-background shadow-none hover:font-bold hover:bg-white hover:shadow-md"
     >
       <Link
         className="text-primary-8 hover:text-primary-9"
