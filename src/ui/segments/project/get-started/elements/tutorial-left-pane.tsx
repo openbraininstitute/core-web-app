@@ -4,22 +4,28 @@ import { useAtom } from 'jotai';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
+import AiChatToolsSection from '@/ui/segments/help/ai-chat-tools';
+import FeaturesSection from '@/ui/segments/help/features';
 import GlossarySection from '@/ui/segments/help/glossary';
 import { AboutView } from '@/ui/segments/project/get-started/elements/about-view';
 import { DataPreview } from '@/ui/segments/project/get-started/elements/data-preview';
 import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
+import { GuidesView } from '@/ui/segments/project/get-started/elements/guides-view';
 import { leftPaneViewAtom } from '@/ui/segments/project/get-started/elements/left-pane-view-atom';
 
 import type { PortableTextBlock } from 'next-sanity';
 import type { ReactNode } from 'react';
 import type { AboutContentProps } from '@/services/sanity/api/get-about-content';
+import type { GuidesContentsProps } from '@/services/sanity/api/get-guides-content';
 
 export function TutorialLeftPane({
   children,
   aboutContent,
+  guidesContent,
 }: {
   children: ReactNode;
   aboutContent: AboutContentProps;
+  guidesContent: GuidesContentsProps;
 }) {
   const [preview, setPreview] = useAtom(dataPreviewAtom);
   const [view, setView] = useAtom(leftPaneViewAtom);
@@ -43,6 +49,9 @@ export function TutorialLeftPane({
       />
     );
   if (view === 'glossary') return <GlossarySection />;
+  if (view === 'guides') return <GuidesView guides={guidesContent} />;
+  if (view === 'features') return <FeaturesSection />;
+  if (view === 'ai-tools') return <AiChatToolsSection />;
   if (preview) return <DataPreview />;
   return <>{children}</>;
 }

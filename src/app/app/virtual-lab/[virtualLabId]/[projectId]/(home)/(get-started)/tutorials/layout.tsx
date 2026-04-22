@@ -1,4 +1,5 @@
 import { getAboutContent } from '@/services/sanity/api/get-about-content';
+import { getGuidesContent } from '@/services/sanity/api/get-guides-content';
 import { HelpButtonsRow } from '@/ui/segments/project/get-started/elements/help-buttons-row';
 import { TutorialLeftPane } from '@/ui/segments/project/get-started/elements/tutorial-left-pane';
 import { QuickAccessExamples } from '@/ui/segments/project/get-started/sections/quick-access-examples';
@@ -12,12 +13,14 @@ export default async function Layout({
   params,
 }: ServerSideComponentProp<WorkspaceContext, null> & PropsWithChildren) {
   const context = await params;
-  const aboutContent = await getAboutContent();
+  const [aboutContent, guidesContent] = await Promise.all([getAboutContent(), getGuidesContent()]);
 
   return (
     <section id="tutorials" data-testid="tutorials" className="flex w-full gap-8">
       <div className="w-[60%] min-w-0">
-        <TutorialLeftPane aboutContent={aboutContent}>{children}</TutorialLeftPane>
+        <TutorialLeftPane aboutContent={aboutContent} guidesContent={guidesContent}>
+          {children}
+        </TutorialLeftPane>
       </div>
       <div className="flex w-[40%] min-w-0 flex-col gap-3 rounded-xl bg-[#e9e9e9] p-3">
         <HelpButtonsRow />

@@ -1,6 +1,13 @@
 'use client';
 
-import { RiBookOpenLine, RiFileTextLine, RiInformationLine } from '@remixicon/react';
+import {
+  RiBookOpenLine,
+  RiChatAiLine,
+  RiCompass3Line,
+  RiFileTextLine,
+  RiInformationLine,
+  RiSparklingLine,
+} from '@remixicon/react';
 import { useAtom, useSetAtom } from 'jotai';
 
 import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
@@ -20,6 +27,9 @@ const ITEMS: Array<Item> = [
   { id: 'about', label: 'About', Icon: RiInformationLine },
   { id: 'glossary', label: 'Glossary', Icon: RiBookOpenLine },
   { id: 'terms', label: 'Terms', Icon: RiFileTextLine },
+  { id: 'guides', label: 'Guides', Icon: RiCompass3Line },
+  { id: 'features', label: 'Features', Icon: RiSparklingLine },
+  { id: 'ai-tools', label: 'AI Tools', Icon: RiChatAiLine },
 ];
 
 export function HelpButtonsRow() {
@@ -28,7 +38,7 @@ export function HelpButtonsRow() {
 
   return (
     <section id="help-quick-links" className="flex w-full flex-col">
-      <div className="flex gap-1.5">
+      <div className="flex flex-wrap gap-1.5">
         {ITEMS.map(({ id, label, Icon }) => {
           const isSelected = view === id;
           return (
