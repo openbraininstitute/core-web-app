@@ -11,22 +11,22 @@ export enum MessageType {
   DATA = 'data',
 }
 
-export type Message<T> = StatusMessage | DataMessage<T>
+export type Message<T> = StatusMessage | DataMessage<T>;
 
 type MessageCtx = {
-  [key: string]: any
-}
+  [key: string]: any;
+};
 
 type StatusMessage = {
-  message_type: MessageType.STATUS
-  status: JobStatus
-  extra?: string
-  ctx?: MessageCtx
-}
+  message_type: MessageType.STATUS;
+  status: JobStatus;
+  extra?: string;
+  ctx?: MessageCtx;
+};
 
 type DataMessage<T> = {
-  message_type: MessageType.DATA
-  data_type?: string
-  data: T
-  ctx?: MessageCtx
-}
+  message_type: MessageType.DATA;
+  data_type?: string;
+  data: T;
+  ctx?: MessageCtx;
+};
