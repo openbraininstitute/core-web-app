@@ -519,6 +519,7 @@ function SingleColumnValidatorCard({
   const rowPosition = session.rows.findIndex((candidate) => candidate.id === row.id);
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const applyActionsRef = useRef<HTMLDivElement | null>(null);
   const activeValidatorPreview =
     validatorPreview.rowId === row.id && validatorPreview.fieldPath === field.path
       ? validatorPreview
@@ -695,6 +696,9 @@ function SingleColumnValidatorCard({
       field.writeStrategy === ValidatorWriteStrategy.Stage &&
       cell.correctionDraft
     );
+  const scrollToApplyActions = useCallback(() => {
+    applyActionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   const goNeighborRow = (delta: number) => {
     const nextIndex = rowPosition + delta;
@@ -1038,6 +1042,7 @@ function SingleColumnValidatorCard({
                         displayValue: null,
                         parsedValue: suggestion.value,
                       });
+                      scrollToApplyActions();
                       return;
                     }
 
@@ -1046,6 +1051,7 @@ function SingleColumnValidatorCard({
                       fieldPath: field.path,
                       suggestion,
                     });
+                    scrollToApplyActions();
                   }}
                 >
                   <div
@@ -1146,7 +1152,10 @@ function SingleColumnValidatorCard({
             </div>
           )}
 
-        <div className="flex flex-col gap-2 border-t border-neutral-100 pt-4 px-4">
+        <div
+          ref={applyActionsRef}
+          className="flex flex-col gap-2 border-t border-neutral-100 pt-4 px-4"
+        >
           <div className="flex items-center gap-3">
             <Button
               rounded
