@@ -61,7 +61,7 @@ export default async function Layout({
       </div>
       <div
         aria-hidden
-        className="text-primary-9 pointer-events-none absolute bottom-10 left-12 font-serif text-4xl leading-none text-right select-none"
+        className="text-primary-9 pointer-events-none absolute right-12 bottom-16 font-serif text-5xl leading-none text-right select-none"
       >
         Open Brain
         <br />

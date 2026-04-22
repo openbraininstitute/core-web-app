@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import { HelpIcon } from '@/components/icons/buttons';
 import { config } from '@/config';
@@ -12,6 +13,7 @@ import { Wallet } from '@/ui/segments/project/balance';
 import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';
 import { TopMenuNavigation } from '@/ui/segments/workspaces/top-menu-nav';
 import { cn } from '@/utils/css-class';
+import { getActiveSection } from '@/utils/get-section';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import type { ComponentProps } from 'react';
@@ -23,6 +25,8 @@ type Props = {
 function HelpPill() {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
+  const pathname = usePathname();
+  const isActive = getActiveSection(pathname) === 'help';
 
   return (
     <Tooltip>
@@ -32,10 +36,13 @@ function HelpPill() {
           rounded
           id="workspace-help-pill"
           className={cn(
-            'font-bold bg-background select-none cursor-pointer shrink-0',
-            'hover:shadow-sm hover:bg-background',
+            'font-bold select-none cursor-pointer shrink-0',
+            'hover:shadow-sm',
             'p-0! flex items-center justify-center',
-            breakpoint === 'xl' ? 'size-12!' : 'size-10!'
+            breakpoint === 'xl' ? 'size-12!' : 'size-10!',
+            isActive
+              ? 'bg-primary-9 text-white hover:bg-primary-9'
+              : 'bg-background text-primary-9 hover:bg-background'
           )}
           variant="outline"
           size={breakpoint === 'xl' ? 'lg' : 'md'}
@@ -45,7 +52,7 @@ function HelpPill() {
             href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/help`}
             aria-label="Open help"
           >
-            <HelpIcon className="text-primary-9 h-5! w-5!" />
+            <HelpIcon className="h-5! w-5!" />
           </Link>
         </Badge>
       </TooltipTrigger>
