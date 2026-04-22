@@ -52,14 +52,14 @@ export function HelpButtonsRow() {
               title={label}
               aria-pressed={isSelected}
               className={cn(
-                'group relative flex aspect-square w-20 shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-1 overflow-hidden rounded-lg bg-white',
+                'group relative flex aspect-square w-[68px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[3px] overflow-hidden rounded-lg bg-white',
                 'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] hover:shadow-bnb',
                 'border-2 transition-colors',
                 isSelected ? 'border-primary-7' : 'border-transparent'
               )}
             >
-              <Icon className="text-primary-9 size-5" />
-              <span className="text-primary-9 text-xs font-semibold">{label}</span>
+              <Icon className="text-primary-9 size-[18px]" />
+              <span className="text-primary-9 text-[11px] font-semibold">{label}</span>
             </button>
           );
         })}
