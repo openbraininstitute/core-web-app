@@ -38,7 +38,7 @@ export function HelpButtonsRow() {
 
   return (
     <section id="help-quick-links" className="flex w-full flex-col">
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {ITEMS.map(({ id, label, Icon }) => {
           const isSelected = view === id;
           return (
