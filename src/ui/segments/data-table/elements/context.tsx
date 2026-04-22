@@ -27,7 +27,11 @@ import {
 import { circuitRepresentationViewAtom } from '@/ui/segments/explore/circuit/helpers';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TCoreFilter, TSortState } from '@/entity-configuration/definitions/types';
+import type {
+  TCoreFilter,
+  TSortState,
+  TSortStateList,
+} from '@/entity-configuration/definitions/types';
 
 type DataAtomBinding = {
   key: string;
@@ -74,12 +78,14 @@ export const coreSearchStringAtom = atomFamily((key: string) => {
 
 export const coreSortStateAtom = atomFamily(
   (_ctx: { key: string }) => {
-    const initialState: TSortState = {
-      field: EntityCoreFields.RegistrationDate,
-      backendField: EntityCoreFields.RegistrationDate,
-      order: SortOrder.DESC,
-    };
-    return atom<TSortState>(initialState);
+    const initialState: TSortStateList = [
+      {
+        field: EntityCoreFields.RegistrationDate,
+        backendField: EntityCoreFields.RegistrationDate,
+        order: SortOrder.DESC,
+      } satisfies TSortState,
+    ];
+    return atom<TSortStateList>(initialState);
   },
   (a, b) => a.key === b.key
 );

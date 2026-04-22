@@ -95,11 +95,11 @@ type Style = {
 };
 
 export type OrderShape =
-  | { property: string; value: string }
+  | { property: string; value: string | Array<string> }
   | Array<{
       types: Array<Partial<TExtendedEntitiesTypeDict>>;
       property: string;
-      value: string;
+      value: string | string[];
     }>;
 
 /**
@@ -154,6 +154,7 @@ export type TContextualValue<T> = {
 export interface IFilterOptionItem {
   label: string;
   value: string;
+  description?: ReactNode;
 }
 
 export const FilterOptionsSourceKind = {
@@ -270,6 +271,57 @@ export const SortOrder = {
 export type TSortOrder = (typeof SortOrder)[keyof typeof SortOrder];
 export interface TSortState {
   field: EntityCoreFields;
-  backendField: EntityCoreFields;
+  backendField: string | Array<string>;
   order: TSortOrder | null;
+}
+export type TSortStateList = Array<TSortState>;
+
+export function normalizeOrderBy(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string' && item.length > 0);
+  }
+  if (typeof value === 'string' && value.length > 0) {
+    return [value];
+  }
+  return [];
+}
+
+export function getOrderByField(value: string): string {
+  return value.replace(/^[+-]/, '');
+}
+
+/**
+ * merge base/default ordering with user-selected ordering.
+ *
+ * rules:
+ * - base ordering is kept first (acts as primary ordering).
+ * - if user ordering targets the same field (ignoring +/- direction),
+ *   the user entry replaces the base one.
+ * - user ordering for new fields is appended.
+ * - conflicts like `field` and `-field` are collapsed to one entry.
+ */
+export function mergeOrderByWithOverride(baseOrderBy: unknown, userOrderBy: unknown): string[] {
+  const base = normalizeOrderBy(baseOrderBy);
+  const user = normalizeOrderBy(userOrderBy);
+  const baseFields = new Set(base.map(getOrderByField));
+  const userByField = new Map(user.map((item) => [getOrderByField(item), item] as const));
+  const consumedUserFields = new Set<string>();
+
+  const mergedBase = base.map((item) => {
+    const field = getOrderByField(item);
+    const replacement = userByField.get(field);
+    if (replacement) {
+      consumedUserFields.add(field);
+      return replacement;
+    }
+    return item;
+  });
+
+  const appendedUser = user.filter((item) => {
+    const field = getOrderByField(item);
+    if (consumedUserFields.has(field)) return false;
+    return !baseFields.has(field);
+  });
+
+  return [...mergedBase, ...appendedUser];
 }

@@ -115,6 +115,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
           items: map(CellMorphologyGenerationType, (item) => ({
             label: item.label,
             value: item.key,
+            description: item.description,
           })),
         },
       },
@@ -133,6 +134,11 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     vocabulary: {
       plural: 'Generation types',
       singular: 'Generation type',
+    },
+    isSortable: true,
+    order: {
+      property: 'order_by',
+      value: ['cell_morphology_protocol__generation_type'],
     },
     style: { width: 190 },
   },
@@ -183,6 +189,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
           items: map(CellMorphologyProtocolDesign, (item) => ({
             label: item.label,
             value: item.key,
+            description: item.description,
           })),
         },
       },

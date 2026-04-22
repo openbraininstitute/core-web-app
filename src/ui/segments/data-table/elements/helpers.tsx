@@ -16,6 +16,7 @@ import {
   type TFieldApiContext,
   type TSortOrder,
   type TSortState,
+  type TSortStateList,
 } from '@/entity-configuration/definitions/types';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { columnKeyToFilter } from '@/ui/segments/data-table/elements/column-key-to-filter';
@@ -52,7 +53,7 @@ export const makeTypeDefaultActiveColumns = ({
 };
 
 type TDataListStateSnapshot = {
-  Sort: TSortState;
+  Sort: TSortStateList;
   Search: string;
   Page: number;
   Filters: Array<TCoreFilter>;
@@ -68,11 +69,13 @@ export const makeDataListStateSnapshotAtomsInitialValue = ({
   section?: TWorkspaceSection;
   scope?: TWorkspaceScope;
 }): TDataListStateSnapshot => ({
-  Sort: {
-    field: EntityCoreFields.RegistrationDate,
-    backendField: EntityCoreFields.RegistrationDate,
-    order: SortOrder.DESC as TSortOrder,
-  },
+  Sort: [
+    {
+      field: EntityCoreFields.RegistrationDate,
+      backendField: EntityCoreFields.RegistrationDate,
+      order: SortOrder.DESC as TSortOrder,
+    } satisfies TSortState,
+  ],
   Search: '',
   Page: DEFAULT_PAGE_NUMBER,
   Filters: makeTypeDefaultFilters({ dataType, section, scope }),
