@@ -16,13 +16,13 @@ export default async function Layout({
   const [aboutContent, guidesContent] = await Promise.all([getAboutContent(), getGuidesContent()]);
 
   return (
-    <section id="tutorials" data-testid="tutorials" className="flex w-full gap-8">
+    <section id="tutorials" data-testid="tutorials" className="flex h-full w-full gap-8 pb-4">
       <div className="w-[60%] min-w-0">
         <TutorialLeftPane aboutContent={aboutContent} guidesContent={guidesContent}>
           {children}
         </TutorialLeftPane>
       </div>
-      <div className="flex w-[40%] min-w-0 flex-col gap-3 rounded-xl bg-[#e9e9e9] p-3">
+      <div className="flex h-full w-[40%] min-h-0 min-w-0 flex-col gap-3 overflow-y-auto rounded-xl bg-[#e9e9e9] p-3">
         <HelpButtonsRow />
         <TutorialList />
         <QuickAccessExamples context={context} />
