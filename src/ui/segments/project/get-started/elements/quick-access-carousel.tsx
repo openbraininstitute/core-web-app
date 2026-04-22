@@ -1,7 +1,7 @@
 'use client';
 
-import { RiArrowRightLine } from '@remixicon/react';
 import { useAtomValue } from 'jotai';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRef } from 'react';
 
@@ -122,6 +122,24 @@ function GroupRow({
   );
 }
 
+const WORKFLOW_EXAMPLES: Array<{ title: string; slug: string; thumbnail: string }> = [
+  {
+    title: 'Build a single neuron',
+    slug: 'build',
+    thumbnail: '/images/quick-access/morphology.png',
+  },
+  {
+    title: 'Simulate a circuit',
+    slug: 'simulate',
+    thumbnail: '/images/quick-access/em-reconstruction.png',
+  },
+  {
+    title: 'Extract features',
+    slug: 'extract',
+    thumbnail: '/images/quick-access/hippocampus.png',
+  },
+];
+
 function WorkflowsRow({ context }: { context: WorkspaceContext }) {
   const { virtualLabId, projectId } = context;
   return (
@@ -130,15 +148,26 @@ function WorkflowsRow({ context }: { context: WorkspaceContext }) {
         <h2 className="text-primary-9 text-xl font-bold">Workflows</h2>
       </div>
       <div className="flex w-full gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="w-48 shrink-0">
-          <Link
-            href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`}
-            className="bg-primary-9 group relative flex aspect-video w-full cursor-pointer select-none items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-transparent text-white shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] transition-all hover:shadow-bnb"
-          >
-            <span className="text-lg font-semibold">Go to Workflows</span>
-            <RiArrowRightLine className="size-5" />
-          </Link>
-        </div>
+        {WORKFLOW_EXAMPLES.map((example) => (
+          <div key={example.slug} className="w-48 shrink-0">
+            <Link
+              href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`}
+              title={example.title}
+              className="group relative flex aspect-video w-full cursor-pointer select-none overflow-hidden rounded-xl border-2 border-transparent bg-white shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] transition-all hover:shadow-bnb"
+            >
+              <Image
+                fill
+                unoptimized
+                alt={example.title}
+                src={example.thumbnail}
+                className="object-contain"
+              />
+              <div className="text-primary-8 group-hover:bg-primary-8 absolute bottom-2 left-2 flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold shadow-sm backdrop-blur-sm group-hover:text-white">
+                <span className="line-clamp-1">{example.title}</span>
+              </div>
+            </Link>
+          </div>
+        ))}
       </div>
     </section>
   );
