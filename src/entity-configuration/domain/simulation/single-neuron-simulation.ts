@@ -5,6 +5,7 @@ import {
   getSingleNeuronSimulationIOResult,
   getSingleNeuronSimulations,
 } from '@/api/entitycore/queries/simulation/single-neuron-simulation';
+import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -46,6 +47,19 @@ export const SingleNeuronSimulation: EntityCoreTypeConfig<ISingleNeuronSimulatio
       ilikeSearchEnabled: true,
     },
     query: {
+      count: (...params) => {
+        const filters = discardBrainRegionQueryParams(params[0].filters);
+        return getSingleNeuronSimulations({
+          ...params,
+          context: params[0].context,
+          withFacets: params[0].withFacets,
+          filters: {
+            ...filters,
+            page: 1,
+            page_size: 1,
+          },
+        }).then((response) => response.pagination.total_items);
+      },
       list: getSingleNeuronSimulations,
       one: getSingleNeuronSimulation,
       create: createSingleNeuronSimulation,
