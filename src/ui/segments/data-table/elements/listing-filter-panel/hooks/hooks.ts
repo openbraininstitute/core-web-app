@@ -40,6 +40,11 @@ export function useFilterItems(
         const { optionsSource } = resolveFieldListing(item, context);
         return resolveFilterOptions(optionsSource, context, workspace);
       },
+      enabled: () => {
+        const item = getFieldDefinition(filter.field);
+        const { optionsSource } = resolveFieldListing(item, context);
+        return !!optionsSource;
+      },
     })),
     combine: (results) =>
       Object.fromEntries(filters.map((filter, i) => [filter.field, results[i].data])),

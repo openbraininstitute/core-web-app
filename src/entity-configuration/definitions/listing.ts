@@ -251,14 +251,14 @@ export async function resolveFilterOptions(
   optionsSource: TFilterOptionsSource | undefined,
   context: TFieldApiContext,
   workspace?: WorkspaceContext
-): Promise<IFilterOptionItem[] | undefined> {
-  if (!optionsSource) return undefined;
+): Promise<IFilterOptionItem[]> {
+  if (!optionsSource) return [];
 
   if (optionsSource.kind === FilterOptionsSourceKind.Static) {
     return optionsSource.items;
   }
 
-  return optionsSource.resolve({ context, workspace });
+  return (await optionsSource.resolve({ context, workspace })) ?? [];
 }
 
 /**
