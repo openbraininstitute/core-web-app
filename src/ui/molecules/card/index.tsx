@@ -12,7 +12,7 @@ function Card({ className, borderless, shadowless, ...props }: CardProps) {
     <div
       data-slot="card"
       className={cn(
-        'bg-card text-sm border-neutral-2 flex flex-col rounded-xl border py-6 shadow-sm',
+        'bg-card text-sm border-neutral-2 flex flex-col rounded-xl border p-6 shadow-sm',
         { 'border-none': borderless },
         { 'shadow-none': shadowless },
         className

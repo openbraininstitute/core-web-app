@@ -4,11 +4,9 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { useMutation } from '@tanstack/react-query';
 import { kebabCase } from 'es-toolkit/compat';
-import { motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
 
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ImageIcon } from '@/components/icons/image-states';
@@ -60,7 +58,6 @@ export function MainCardItem({
   artifactTitle?: string | null;
 }) {
   const { push: navigate } = useRouter();
-  const [isHovered, setIsHovered] = useState(false);
 
   const { mutate: redirect, isPending } = useMutation({
     mutationFn: async () => {
@@ -96,21 +93,14 @@ export function MainCardItem({
         'cursor-pointer select-none'
       )}
       onClick={() => redirect()}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       title={title}
     >
       <div className="absolute top-0 left-0 z-0 h-[200px] w-full p-3">
         <div className="relative h-full w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
           {thumbnail ? (
-            <motion.div
-              className="absolute inset-0"
-              initial={false}
-              animate={{ scale: isHovered ? 1.25 : 1, rotate: isHovered ? 4 : 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-            >
+            <div className="absolute inset-0">
               <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-cover" />
-            </motion.div>
+            </div>
           ) : (
             <Skeleton
               active={false}
@@ -135,7 +125,7 @@ export function MainCardItem({
           </Badge>
         </div>
       )}
-      <CardContent className="relative z-10 mt-[170px] p-5">
+      <CardContent className="relative z-10 mt-[170px]">
         <h4 className="text-neutral-500 uppercase text-xs tracking-[0.6px] line-clamp-1">
           {groupTitle}
         </h4>
@@ -203,7 +193,6 @@ export function SingleCardItem({
   description: string;
 }) {
   const { push: navigate } = useRouter();
-  const [isHovered, setIsHovered] = useState(false);
   const { mutate: redirect, isPending } = useMutation({
     mutationFn: async () => {
       if (group === QuickAccessGroupDict.Data || group === QuickAccessGroupDict.Workflows) {
@@ -239,21 +228,14 @@ export function SingleCardItem({
         'cursor-pointer select-none'
       )}
       onClick={() => redirect()}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       title={title}
     >
       <div className="absolute top-0 left-0 z-0 h-[170px] w-full p-3">
         <div className="relative h-full w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
           {thumbnail ? (
-            <motion.div
-              className="absolute inset-0"
-              initial={false}
-              animate={{ scale: isHovered ? 1.25 : 1, rotate: isHovered ? 0.5 : 0 }}
-              transition={{ duration: 0.6, ease: 'easeInOut' }}
-            >
+            <div className="absolute inset-0">
               <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-cover" />
-            </motion.div>
+            </div>
           ) : (
             <Skeleton
               active={false}

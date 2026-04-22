@@ -9,26 +9,50 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
+import { ImageIcon } from '@/components/icons/image-states';
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Card, CardDescription, CardTitle } from '@/ui/molecules/card';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/ui/molecules/dropdown-menu';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
 import type { TTutorial } from '@/ui/segments/project/get-started/query';
 
 const INITIAL_COUNT = 4;
+const TUTORIAL_CATEGORIES = [
+  'Data',
+  'Build',
+  'Simulate',
+  'Analysis',
+  'Notebook',
+  'Virtual Lab',
+  'Project',
+  'Extraction',
+  'Validation',
+  'Generation',
+  'Workflows',
+] as const;
 
 export function TutorialCard({
   title,
   slug,
   image,
+  category,
   isSelected,
 }: {
   isSelected: boolean;
   title: string;
   slug: string;
-  image: string;
+  image: string | null;
+  category: string | null;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const t = upperFirst(lowerCase(title));
@@ -39,33 +63,46 @@ export function TutorialCard({
     >
       <Card
         className={cn(
-          'w-full bg-white border-none px-4 cursor-pointer group',
-          'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] gap-2.5',
+          'w-full bg-white border-none px-4 cursor-pointer group items-start',
+          'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] gap-1',
           'hover:shadow-bnb hover:border-gray-200 hover:border hover:bg-gray-100',
           { 'bg-neutral-2': isSelected }
         )}
       >
-        <CardTitle className="text-primary-9 group-hover:text-primary-8 group-hover:font-black">
+        {category && (
+          <div className="py-1 px-4 border border-neutral-300 rounded-full text-xs uppercase tracking-wide text-neutral-500 font-normal">
+            {category}
+          </div>
+        )}
+        <CardTitle className="text-xl font-bold text-primary-9 group-hover:text-primary-8 mb-3">
           {t}
         </CardTitle>
         <CardDescription className="relative aspect-video w-full mt-auto">
-          <div className="relative w-full h-full">
-            <Image
-              fill
-              alt={t}
-              src={image}
-              className={cn('rounded-md transition-all ease-in-out', {
-                'grayscale brightness-90 contrast-60 opacity-80': isSelected,
-              })}
-            />
-            <div
-              className={cn('absolute inset-0 bg-black/30 rounded-md', {
-                'filter grayscale-50': isSelected,
-              })}
-            />
-            <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
-              <RiPlayFill className="text-white size-10" />
-            </div>
+          <div className="relative w-full h-full overflow-hidden rounded-md">
+            {image ? (
+              <>
+                <Image
+                  fill
+                  alt={t}
+                  src={image}
+                  className={cn('rounded-md transition-all ease-in-out object-cover', {
+                    'grayscale brightness-90 contrast-60 opacity-80': isSelected,
+                  })}
+                />
+                <div
+                  className={cn('absolute inset-0 bg-black/30 rounded-md', {
+                    'filter grayscale-50': isSelected,
+                  })}
+                />
+                <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+                  <RiPlayFill className="text-white size-10" />
+                </div>
+              </>
+            ) : (
+              <Skeleton active={false} className="flex items-center justify-center w-full h-full">
+                <ImageIcon className="size-10 text-gray-300" />
+              </Skeleton>
+            )}
           </div>
         </CardDescription>
       </Card>
@@ -75,26 +112,84 @@ export function TutorialCard({
 
 export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
   const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? tutorials : tutorials.slice(0, INITIAL_COUNT);
-  const hasMore = tutorials.length > INITIAL_COUNT;
+  const [selectedCategories, setSelectedCategories] = useState<Array<string>>([]);
   const { slug } = useParams<{ slug: string }>();
+
+  const filteredTutorials =
+    selectedCategories.length === 0
+      ? tutorials
+      : tutorials.filter((tutorial) =>
+          tutorial.category ? selectedCategories.includes(tutorial.category) : false
+        );
+  const visible = expanded ? filteredTutorials : filteredTutorials.slice(0, INITIAL_COUNT);
+  const hasMore = filteredTutorials.length > INITIAL_COUNT;
+
+  const toggleCategory = (category: string) => {
+    setExpanded(false);
+    setSelectedCategories((prev) =>
+      prev.includes(category) ? prev.filter((item) => item !== category) : [...prev, category]
+    );
+  };
 
   return (
     <section id="tutorials-list" className="w-full flex flex-col my-6 @container">
       <div className="flex items-center justify-between w-full px-2 mb-2">
-        <h2 className="font-medium text-primary-9">Tutorials</h2>
-        {hasMore && (
+        <div className="flex items-center gap-1.5">
+          <h2 className="font-bold text-xl! text-primary-9">Tutorials</h2>
+          {hasMore && (
+            <Button
+              rounded
+              variant="ghost"
+              className={cn('text-primary-9 font-light', {
+                'h-9! w-9! p-2 rounded-full shadow-base': expanded,
+              })}
+              onClick={() => setExpanded((prev) => !prev)}
+            >
+              {expanded ? <RiCloseLargeFill /> : `See all (${filteredTutorials.length} videos)`}
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-primary-9 font-light">Filter by:</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                rounded
+                variant="ghost"
+                className="py-1 px-4 border border-neutral-300 text-primary-9 font-medium text-base data-[state=open]:bg-white"
+              >
+                {selectedCategories.length > 0
+                  ? `Categories (${selectedCategories.length})`
+                  : 'Categories'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52 bg-white z-120 border-neutral-3">
+              <DropdownMenuSeparator />
+              {TUTORIAL_CATEGORIES.map((category) => (
+                <DropdownMenuCheckboxItem
+                  key={category}
+                  checked={selectedCategories.includes(category)}
+                  onCheckedChange={() => toggleCategory(category)}
+                  className="text-primary-9"
+                >
+                  {category}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             rounded
             variant="ghost"
-            className={cn('text-primary-9 font-light', {
-              'h-9! w-9! p-2 rounded-full shadow-sm': expanded,
-            })}
-            onClick={() => setExpanded((prev) => !prev)}
+            className="text-primary-9 font-light"
+            onClick={() => {
+              setSelectedCategories([]);
+              setExpanded(false);
+            }}
+            disabled={selectedCategories.length === 0}
           >
-            {expanded ? <RiCloseLargeFill /> : `See all (${tutorials.length} videos)`}
+            Reset filter
           </Button>
-        )}
+        </div>
       </div>
       <motion.div
         layout
@@ -113,8 +208,9 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
             >
               <TutorialCard
                 title={p.title}
-                image={p.poster}
+                image={p.posterImage}
                 slug={p.slug}
+                category={p.category}
                 isSelected={slug === p.slug}
               />
             </motion.div>
