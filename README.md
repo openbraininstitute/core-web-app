@@ -191,6 +191,16 @@ Ignored local override files are the right place for developer-specific secrets:
 Docker Compose reads `.env`, `.env.development`, and optional `.env.development.local`.
 Next.js also loads the standard Next env file cascade for local development.
 
+Playwright E2E tests use the shared `.env` app defaults, then this test-specific
+env cascade:
+
+- `.env.test` for shared, non-secret test overrides.
+- `.env.test.secrets` for local-only E2E secrets. This file is ignored by git.
+
+CI must not rely on `.env.test.secrets`. Add the secret values in GitHub Actions
+repository or environment secrets and expose them as environment variables when
+running `pnpm run test:e2e`.
+
 ### Required core variables
 
 | Variable | Purpose |
@@ -216,6 +226,17 @@ Next.js also loads the standard Next env file cascade for local development.
 | `EXCLUDED_HIERARCHY_IDS` | Comma-separated hierarchy IDs excluded from the app. |
 | `LEGACY_DEFAULT_CIRCUIT_ID` | Default legacy circuit URL. |
 | `NOTEBOOK_REPO_URL` | Notebook repository URL. |
+
+### E2E test variables
+
+| Variable | Source |
+| --- | --- |
+| `VIRTUAL_LAB_API_URL` | `.env.test`; GitHub Actions variable or secret in CI. |
+| `KEYCLOAK_ISSUER` | `.env.test`; GitHub Actions variable or secret in CI. |
+| `KEYCLOAK_CLIENT_ID` | `.env.test`; GitHub Actions variable or secret in CI. |
+| `KEYCLOAK_CLIENT_SECRET` | `.env.test.secrets`; GitHub Actions secret in CI. |
+| `E2E_TEST_USERNAME` | `.env.test.secrets`; GitHub Actions secret in CI. |
+| `E2E_TEST_PASSWORD` | `.env.test.secrets`; GitHub Actions secret in CI. |
 
 ### Platform API variables
 

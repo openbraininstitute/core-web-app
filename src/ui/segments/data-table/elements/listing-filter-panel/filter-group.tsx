@@ -16,7 +16,7 @@ type ContentProps = {
 
 type FilterGroupProps = {
   items: {
-    content?: (contentProps: ContentProps) => null | ReactElement<any>;
+    content?: (contentProps: ContentProps) => null | ReactElement;
     display?: boolean;
     label: string;
     toggleFunc?: () => void;
@@ -57,7 +57,12 @@ export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
         );
 
         return content ? (
-          <Accordion.Item className="pt-5" value={label} key={label}>
+          <Accordion.Item
+            className="pt-5"
+            value={label}
+            key={label}
+            data-testid="filter-panel-item"
+          >
             <div className="flex items-center gap-3">
               {toggleFunc && displayTrigger}
               <Accordion.Trigger
@@ -66,7 +71,12 @@ export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
                   'flex w-full items-center justify-between'
                 )}
               >
-                <span className="text-lg font-bold text-white">{label}</span>
+                <span
+                  data-testid="filter-panel-item-label"
+                  className="text-lg font-bold text-white"
+                >
+                  {label}
+                </span>
                 <ChevronIcon className={styles.chevron} />
               </Accordion.Trigger>
             </div>
@@ -75,9 +85,15 @@ export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
             </Accordion.Content>
           </Accordion.Item>
         ) : (
-          <div className="flex items-center gap-3 pt-5 text-lg text-white" key={label}>
+          <div
+            className="flex items-center gap-3 pt-5 text-lg text-white"
+            key={label}
+            data-testid="filter-panel-item"
+          >
             {toggleFunc && displayTrigger}
-            <span className="font-bold">{label}</span>
+            <span data-testid="filter-panel-item-label" className="font-bold">
+              {label}
+            </span>
           </div>
         );
       })}

@@ -5,19 +5,22 @@ on:
     branches:
       - "*"
       - "!main"
-      - "!develop"
   pull_request:
     branches:
       - main
-      - develop
   workflow_dispatch:
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   test:
+    name: Unit tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -39,5 +42,308 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: Run tests
-        run: pnpm run test
+      - name: Run unit tests with coverage
+        run: pnpm run test:coverage
+
+      - name: Prepare unit coverage artifact
+        if: always()
+        run: |
+          mkdir -p test-artifacts
+          cp coverage/coverage-summary.json test-artifacts/unit-coverage-summary.json || true
+
+      - name: Upload unit coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-coverage
+          path: test-artifacts/unit-coverage-summary.json
+          if-no-files-found: warn
+
+  # removes leftover virtual labs from previous runs before the e2e matrix
+  # starts, so the test accounts begin from a known-clean state
+  e2e-precleanup:
+    name: E2E pre-cleanup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # skip on pull requests from forks: forked PRs don't get access to the repository secrets below
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    env:
+      CI: true
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
+      KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+      E2E_TEST_USERNAME: ${{ secrets.E2E_TEST_USERNAME }}
+      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      PLAYWRIGHT_BROWSER: chromium
+      PLAYWRIGHT_BROWSER_CHANNEL: chrome
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - name: Set-up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      # only chrome is needed here; the auth-setup project drives a single
+      # browser to sign in and clean up state.
+      - name: Install Chrome for auth setup
+        run: pnpm exec playwright install --with-deps chrome
+
+      # the auth-setup project both authenticates and tears down stale labs
+      - name: Delete pre-existing virtual labs
+        run: pnpm exec playwright test --project=auth-setup --reporter=list
+
+  # runs the public/private e2e suites across the browser/os matrix once the
+  # shared test state has been cleaned up
+  e2e-tests:
+    name: E2E tests (${{ matrix.os }} / ${{ matrix.browser-label }})
+    needs:
+      - e2e-precleanup
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    strategy:
+      # let every matrix combination finish even if one fails
+      fail-fast: false
+      matrix:
+        # each entry pairs a runner OS with a playwright engine. `playwright-browser`
+        # is the engine name, `playwright-channel` selects a branded channel (e.g.
+        # real Chrome) and is empty for bundled engines, and `install-target` is
+        # what `playwright install` downloads.
+        include:
+          - os: ubuntu-latest
+            browser: chrome
+            browser-label: Chrome
+            playwright-browser: chromium
+            playwright-channel: chrome
+            install-target: chrome
+          - os: ubuntu-latest
+            browser: firefox
+            browser-label: Firefox
+            playwright-browser: firefox
+            playwright-channel: ""
+            install-target: firefox
+          - os: ubuntu-latest
+            browser: safari
+            browser-label: Safari (WebKit)
+            playwright-browser: webkit
+            playwright-channel: ""
+            install-target: webkit
+          - os: macos-latest
+            browser: chrome
+            browser-label: Chrome
+            playwright-browser: chromium
+            playwright-channel: chrome
+            install-target: chrome
+    env:
+      CI: true
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      KEYCLOAK_CLIENT_ID: ${{ secrets.KEYCLOAK_CLIENT_ID }}
+      KEYCLOAK_CLIENT_SECRET: ${{ secrets.KEYCLOAK_CLIENT_SECRET }}
+      E2E_TEST_USERNAME: ${{ secrets.E2E_TEST_USERNAME }}
+      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      # Unique per matrix leg so parallel jobs don't clobber each other's artifacts.
+      E2E_ARTIFACT_SLUG: ${{ matrix.os }}-${{ matrix.browser }}
+      # Cleanup already happened in e2e-precleanup; skip it here so concurrent
+      # matrix jobs don't delete labs out from under one another.
+      E2E_SKIP_PRE_EXISTING_VIRTUAL_LAB_CLEANUP: "true"
+      PLAYWRIGHT_BROWSER: ${{ matrix.playwright-browser }}
+      PLAYWRIGHT_BROWSER_CHANNEL: ${{ matrix.playwright-channel }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - name: Set-up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      # on Linux, --with-deps also installs the OS libraries the browser needs;
+      # macOS runners already ship those, so we install the browser only
+      - name: Install Playwright browsers
+        env:
+          PLAYWRIGHT_INSTALL_TARGET: ${{ matrix.install-target }}
+        run: |
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            pnpm exec playwright install --with-deps "$PLAYWRIGHT_INSTALL_TARGET"
+          else
+            pnpm exec playwright install "$PLAYWRIGHT_INSTALL_TARGET"
+          fi
+
+      # match the worker count to the runner's available CPUs and expose it as a
+      # step output for the test command below
+      - name: Resolve Playwright workers
+        id: playwright-workers
+        run: |
+          echo "count=$(node -e "console.log(require('node:os').availableParallelism())")" >> "$GITHUB_OUTPUT"
+
+      - name: Run E2E tests headlessly
+        env:
+          PLAYWRIGHT_WORKERS: ${{ steps.playwright-workers.outputs.count }}
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-artifacts/e2e-results-${{ matrix.os }}-${{ matrix.browser }}.json
+        run: |
+          mkdir -p test-artifacts
+          pnpm exec playwright test --project=public --project=private --reporter=list,json
+
+      # record the matrix context alongside the results so the report job can label each leg correctly.
+      # runs even on failure to keep reports complete
+      - name: Prepare E2E metadata
+        if: always()
+        env:
+          PLAYWRIGHT_WORKERS: ${{ steps.playwright-workers.outputs.count }}
+          E2E_OS: ${{ matrix.os }}
+          E2E_BROWSER: ${{ matrix.browser }}
+          E2E_BROWSER_LABEL: ${{ matrix.browser-label }}
+          E2E_PLAYWRIGHT_BROWSER: ${{ matrix.playwright-browser }}
+          E2E_PLAYWRIGHT_CHANNEL: ${{ matrix.playwright-channel }}
+        run: |
+          mkdir -p test-artifacts
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          fs.writeFileSync(
+            `test-artifacts/e2e-metadata-${process.env.E2E_ARTIFACT_SLUG}.json`,
+            JSON.stringify(
+              {
+                os: process.env.E2E_OS,
+                browser: process.env.E2E_BROWSER,
+                browserLabel: process.env.E2E_BROWSER_LABEL,
+                playwrightBrowser: process.env.E2E_PLAYWRIGHT_BROWSER,
+                playwrightChannel: process.env.E2E_PLAYWRIGHT_CHANNEL || null,
+                workers: process.env.PLAYWRIGHT_WORKERS,
+              },
+              null,
+              2
+            )
+          );
+          NODE
+
+      - name: Upload E2E report artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-report-${{ matrix.os }}-${{ matrix.browser }}
+          path: |
+            test-artifacts/e2e-results-${{ matrix.os }}-${{ matrix.browser }}.json
+            test-artifacts/e2e-metadata-${{ matrix.os }}-${{ matrix.browser }}.json
+            test-results/
+            playwright-report/
+          if-no-files-found: warn
+
+  # aggregates unit + e2e results into a single report, posts it to the run
+  # summary, and (for same-repo PRs) keeps a sticky PR comment up to date
+  test-coverage-report:
+    name: PR test coverage
+    runs-on: ubuntu-latest
+    # needs write access to post/update the PR comment; the rest of the workflow
+    # stays read-only.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    needs:
+      - test
+      - e2e-tests
+    # always() so the report is produced even when upstream test jobs fail or are skipped (e.g. E2E skipped on fork PRs)
+    if: always()
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      # continue-on-error: a missing artifact (e.g. the job failed before upload)
+      # shouldn't block the report; the render script handles absent inputs
+      - name: Download unit coverage artifact
+        uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          name: unit-coverage
+          path: test-artifacts
+
+      # Pull every per-matrix E2E artifact and flatten them into one folder.
+      - name: Download E2E report artifact
+        uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          pattern: e2e-report-*
+          path: test-artifacts
+          merge-multiple: true
+
+      - name: Render test coverage report
+        env:
+          UNIT_JOB_STATUS: ${{ needs.test.result }}
+          E2E_JOB_STATUS: ${{ needs.e2e-tests.result }}
+          UNIT_COVERAGE_SUMMARY_PATH: test-artifacts/unit-coverage-summary.json
+          E2E_RESULTS_PATH: test-artifacts/e2e-results.json
+          E2E_METADATA_PATH: test-artifacts/e2e-metadata.json
+          REPORT_PATH: test-coverage-report.md
+        run: node scripts/ci/render-test-coverage-report.mjs
+
+      - name: Add report to workflow summary
+        run: cat test-coverage-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      # only on same-repo PRs: fork PRs lack the pull-requests:write token, and
+      # there's no PR to comment on for branch pushes or manual runs
+      - name: Update PR test coverage comment
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('node:fs');
+            // Hidden marker used to locate and update our existing comment
+            // instead of posting a new one on every run.
+            const marker = '<!-- obi-test-coverage-report -->';
+            const body = fs.readFileSync('test-coverage-report.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => comment.body?.includes(marker));
+
+            // Upsert: edit the marked comment if present, otherwise create one.
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
