@@ -1,7 +1,6 @@
 'use client';
 
 import { LeftOutlined, RightOutlined, VideoCameraOutlined } from '@ant-design/icons';
-import { RiPlayFill } from '@remixicon/react';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 import Link from 'next/link';
@@ -36,9 +35,6 @@ export function TutorialCard({
       title={t}
     >
       <span className="line-clamp-3 px-3 text-center text-sm font-semibold">{t}</span>
-      <div className="absolute right-2 bottom-2">
-        <RiPlayFill className="size-6 text-white" />
-      </div>
     </Link>
   );
 }
