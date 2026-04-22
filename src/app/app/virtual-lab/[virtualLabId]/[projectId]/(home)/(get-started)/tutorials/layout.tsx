@@ -20,9 +20,9 @@ export default async function Layout({
         <TutorialLeftPane aboutContent={aboutContent}>{children}</TutorialLeftPane>
       </div>
       <div className="flex w-[40%] min-w-0 flex-col gap-6 rounded-xl bg-[#e9e9e9] p-3">
+        <HelpButtonsRow />
         <TutorialList />
         <QuickAccessExamples context={context} />
-        <HelpButtonsRow />
       </div>
     </section>
   );

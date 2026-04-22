@@ -10,6 +10,7 @@ import { DataPreview } from '@/ui/segments/project/get-started/elements/data-pre
 import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
 import { leftPaneViewAtom } from '@/ui/segments/project/get-started/elements/left-pane-view-atom';
 
+import type { PortableTextBlock } from 'next-sanity';
 import type { ReactNode } from 'react';
 import type { AboutContentProps } from '@/services/sanity/api/get-about-content';
 
@@ -33,7 +34,14 @@ export function TutorialLeftPane({
     }
   }, [slug, setPreview, setView]);
 
-  if (view === 'about') return <AboutView content={aboutContent} />;
+  if (view === 'about')
+    return <AboutView blocks={aboutContent.aboutContent as PortableTextBlock[] | undefined} />;
+  if (view === 'terms')
+    return (
+      <AboutView
+        blocks={aboutContent.termsAndConditionContent as PortableTextBlock[] | undefined}
+      />
+    );
   if (view === 'glossary') return <GlossarySection />;
   if (preview) return <DataPreview />;
   return <>{children}</>;
