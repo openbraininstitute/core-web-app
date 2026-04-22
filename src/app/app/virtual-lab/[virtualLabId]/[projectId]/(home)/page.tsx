@@ -43,8 +43,8 @@ export default async function Page({
 
   if (canViewCredits) {
     queryClient.prefetchQuery({
-      queryKey: keyBuilder.credits({ virtualLabId, projectId, page: 1, pageSize: 10 }),
-      queryFn: () => getProjectJobReports({ virtualLabId, projectId, page: 1 }),
+      queryKey: keyBuilder.credits({ virtualLabId, projectId, page: 1, pageSize: 20 }),
+      queryFn: () => getProjectJobReports({ virtualLabId, projectId, page: 1, pageSize: 20 }),
     });
   }
 

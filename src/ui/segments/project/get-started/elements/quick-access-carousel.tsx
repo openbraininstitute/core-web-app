@@ -99,7 +99,7 @@ function GroupRow({
                             ? '/images/quick-access/hippocampus.png'
                             : null;
             return (
-              <div key={item.entity.id} className="w-[117px] shrink-0">
+              <div key={item.entity.id} className="w-52 shrink-0">
                 <SingleCardItem
                   compact
                   hideArtifact={hideArtifact}

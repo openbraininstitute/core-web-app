@@ -87,7 +87,7 @@ function costRenderFn(amount: string) {
 
 export function JobReportList({ variant = 'dark' }: { variant?: CreditsVariant }) {
   const { virtualLabId, projectId } = useWorkspace();
-  const [pagination, setPagination] = useState({ page: 1, pageSize: 8 });
+  const [pagination, setPagination] = useState({ page: 1, pageSize: 20 });
   const [, startTransition] = useTransition();
   const isLight = variant === 'light';
 
@@ -152,8 +152,7 @@ export function JobReportList({ variant = 'dark' }: { variant?: CreditsVariant }
   );
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col items-start gap-2">
-      <h3 className="text-primary-9 text-xl font-bold">Usage</h3>
+    <div className="flex min-h-0 w-full flex-1 flex-col">
       <Table<JobReport>
         size="middle"
         scroll={{ y: 1 }}
@@ -163,7 +162,7 @@ export function JobReportList({ variant = 'dark' }: { variant?: CreditsVariant }
           '[&_.ant-spin-nested-loading]:flex [&_.ant-spin-nested-loading]:min-h-0 [&_.ant-spin-nested-loading]:flex-1 [&_.ant-spin-nested-loading]:flex-col',
           '[&_.ant-spin-container]:flex [&_.ant-spin-container]:min-h-0 [&_.ant-spin-container]:flex-1 [&_.ant-spin-container]:flex-col',
           '[&_.ant-table]:flex [&_.ant-table]:min-h-0 [&_.ant-table]:flex-1 [&_.ant-table]:flex-col',
-          '[&_.ant-table]:overflow-hidden! [&_.ant-table]:rounded-xl!',
+          '[&_.ant-table]:overflow-hidden! [&_.ant-table]:rounded-xl! [&_.ant-table]:border [&_.ant-table]:border-[#e9e9e9]',
           '[&_.ant-table-container]:flex [&_.ant-table-container]:min-h-0 [&_.ant-table-container]:flex-1 [&_.ant-table-container]:flex-col',
           '[&_.ant-table-body]:min-h-0! [&_.ant-table-body]:flex-1! [&_.ant-table-body]:max-h-none!',
           '[&_.ant-pagination]:gap-2 [&_.ant-pagination]:mt-3! [&_.ant-pagination]:mb-0! [&_.ant-pagination]:shrink-0',
@@ -180,6 +179,7 @@ export function JobReportList({ variant = 'dark' }: { variant?: CreditsVariant }
               setPagination((prev) => ({ ...prev, page, pageSize }));
             }),
           hideOnSinglePage: true,
+          showSizeChanger: false,
         }}
         rowKey="job_id"
       >
