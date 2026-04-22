@@ -5,6 +5,7 @@ import { tryCatch } from '@/api/utils';
 import { resolveEmSynapseMappingByCampaignId } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
 import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
+import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { WorkflowSimulatePanelKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
@@ -68,6 +69,7 @@ export default async function Page({
             id: BuildScanConfigTabs.configuration,
           }}
         />
+        <DownloadPanel />
       </div>
     );
   }

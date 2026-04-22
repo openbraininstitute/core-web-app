@@ -23,7 +23,8 @@ import {
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { ExtractionInOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
 import { ExtractionConfigsLeftMenu } from '@/features/scan-config/use-cases/extraction/left-menu';
-import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
+import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
+import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 import { classNames } from '@/util/utils';
 
 import type { CheckboxProps } from 'antd';

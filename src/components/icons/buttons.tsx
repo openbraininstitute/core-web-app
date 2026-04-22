@@ -184,7 +184,7 @@ export function DownloadIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" {...props}>
       <path
-        fill="#fff"
+        fill="currentColor"
         d="M12.53 8.315a.744.744 0 0 0 0-1.056.753.753 0 0 0-1.06 0l-3.22 3.205V.747A.749.749 0 0 0 7.5 0a.749.749 0 0 0-.75.747v9.717L3.53 7.259a.753.753 0 0 0-1.06 0 .744.744 0 0 0 0 1.056l4.5 4.48a.75.75 0 0 0 1.06 0l4.5-4.48ZM14.25 14.506c.414 0 .75.335.75.747a.749.749 0 0 1-.75.747H.75a.749.749 0 0 1-.75-.747c0-.412.336-.747.75-.747h13.5Z"
       />
     </svg>
