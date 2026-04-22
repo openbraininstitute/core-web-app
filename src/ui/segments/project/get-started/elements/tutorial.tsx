@@ -74,8 +74,8 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
 
 export function ScrollArrows({ onScroll }: { onScroll: (direction: 'left' | 'right') => void }) {
   const baseClass = cn(
-    'grid size-7 place-items-center rounded-full border border-neutral-2 text-neutral-4 transition-colors',
-    'hover:border-primary-9 hover:text-primary-9 cursor-pointer'
+    'grid size-7 place-items-center text-neutral-4 transition-colors',
+    'hover:text-primary-9 cursor-pointer'
   );
   return (
     <div className="flex items-center gap-1">

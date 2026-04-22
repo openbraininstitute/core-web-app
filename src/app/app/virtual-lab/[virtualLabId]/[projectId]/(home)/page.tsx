@@ -54,7 +54,7 @@ export default async function Page({
         <ProjectHomeHeader />
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           {canViewCredits && (
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+            <div className="flex min-h-0 flex-1 flex-col">
               <Suspense>
                 <Credits variant="light" />
               </Suspense>
