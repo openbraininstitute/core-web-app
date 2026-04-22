@@ -9,8 +9,7 @@ import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { Credits } from '@/ui/segments/project/credits';
 import { ProjectHomeHeader } from '@/ui/segments/project/project-home-header';
-import { TeamManager } from '@/ui/segments/project/team/team';
-import { ProjectTeamSkeleton } from '@/ui/segments/project/team/team-skeleton';
+import { MemberCircleRow } from '@/ui/segments/project/team/member-circle-row';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -53,19 +52,17 @@ export default async function Page({
     <HydrateClient>
       <div className="flex h-full w-full flex-col gap-4 overflow-hidden p-3 pb-10 text-sm">
         <ProjectHomeHeader />
-        <div className="flex w-full min-h-0 flex-1 gap-4">
-          <div className="bg-[#e9e9e9] flex w-1/2 min-h-0 min-w-0 flex-col overflow-y-auto rounded-xl p-3">
-            <Suspense fallback={<ProjectTeamSkeleton />}>
-              <TeamManager />
-            </Suspense>
-          </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {canViewCredits && (
-            <div className="bg-[#e9e9e9] flex w-1/2 min-h-0 min-w-0 flex-col overflow-y-auto rounded-xl p-3">
+            <div className="bg-[#e9e9e9] flex min-h-0 flex-1 flex-col overflow-y-auto rounded-xl p-3">
               <Suspense>
                 <Credits variant="light" />
               </Suspense>
             </div>
           )}
+          <div className="bg-[#e9e9e9] rounded-xl p-3">
+            <MemberCircleRow />
+          </div>
         </div>
       </div>
     </HydrateClient>

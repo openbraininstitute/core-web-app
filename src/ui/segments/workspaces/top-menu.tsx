@@ -41,7 +41,7 @@ function HelpPill() {
             'p-0! flex items-center justify-center',
             breakpoint === 'xl' ? 'size-12!' : 'size-10!',
             isActive
-              ? 'bg-primary-9 text-white hover:bg-primary-9'
+              ? 'bg-primary-9! text-white! hover:bg-primary-9! hover:text-white!'
               : 'bg-background text-primary-9 hover:bg-background'
           )}
           variant="outline"
