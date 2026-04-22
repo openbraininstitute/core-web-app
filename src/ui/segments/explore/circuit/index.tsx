@@ -118,10 +118,14 @@ export function BrowseCircuit({
     runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
   };
 
+  // Disable column sorting in hierarchy view: row order is determined by the derivation tree
+  // structure, not by a sortable field. Omitting sortState/setSortState hides sort arrows and
+  // prevents sort clicks from triggering unnecessary API refetches.
+  const isHierarchyView = view === CircuitRepresentationView.Hierarchy;
   const allColumns = useDataTableColumns<ICircuit>({
     dataType,
-    sortState,
-    setSortState: onSortChange,
+    sortState: isHierarchyView ? undefined : sortState,
+    setSortState: isHierarchyView ? undefined : onSortChange,
   });
   const columns = allColumns.filter(({ key }) => (activeColumns || []).includes(key as string));
 

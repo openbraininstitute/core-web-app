@@ -130,33 +130,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     style: { width: 80 },
     isDisplayable: true,
   },
-  [EntityCoreFields.CircuitNumberNeurons]: {
-    title: 'Number of neurons',
-    filter: null,
-    render: (r) => {
-      return 'number_neurons' in r ? r.number_neurons : '-';
-    },
-    isDisplayable: true,
-    style: { width: 70 },
-  },
-  [EntityCoreFields.CircuitNumberSynapses]: {
-    title: 'Number of synapses',
-    filter: null,
-    render: (r) => {
-      return 'number_synapses' in r ? r.number_synapses : '-';
-    },
-    isDisplayable: true,
-    style: { width: 70 },
-  },
-  [EntityCoreFields.CircuitNumberConnections]: {
-    title: 'Number of connections',
-    filter: null,
-    render: (r) => {
-      return 'number_connections' in r ? r.number_connections : '-';
-    },
-    isDisplayable: true,
-    style: { width: 70 },
-  },
   // TODO: this is not need for the mmt
   [EntityCoreFields.ScanParameters]: {
     title: 'Scan parameters',

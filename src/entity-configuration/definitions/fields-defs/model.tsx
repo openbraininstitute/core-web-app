@@ -1,15 +1,10 @@
 import { LoadingOutlined, WarningFilled } from '@ant-design/icons';
 import { find, isNil, map, omit } from 'es-toolkit/compat';
+
 import { hasAssets } from '@/api/entitycore/guards';
-import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { CircuitBuildCategory, CircuitScale } from '@/api/entitycore/types/entities/circuit';
-import type { IEModel } from '@/api/entitycore/types/entities/e-model';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import { ValidationStatus } from '@/api/entitycore/types/entities/me-model';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -25,10 +20,17 @@ import {
   renderLocalizedNumber,
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
-import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 import { countDeepSubCircuits } from '@/ui/segments/explore/circuit/helpers';
 import { isNumber } from '@/util/type-guards';
+
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
+import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
+import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
+import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
+import type { ICircuitEnriched } from '@/ui/segments/explore/circuit/helpers';
 
 function iCMBooleanField(title: string, field: keyof IonChannelModel) {
   return {
@@ -173,6 +175,21 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isDisplayable: true,
     isFilterable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [
+          ExtendedEntitiesTypeDict.Circuit,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+          ExtendedEntitiesTypeDict.SmallMicrocircuit,
+          ExtendedEntitiesTypeDict.Microcircuit,
+          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+        ],
+        property: 'order_by',
+        value: 'number_neurons',
+      },
+    ],
     defaultConstraint: {
       lte: 'number_neurons__lte',
       gte: 'number_neurons__gte',
@@ -187,6 +204,21 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isDisplayable: true,
     isFilterable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [
+          ExtendedEntitiesTypeDict.Circuit,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+          ExtendedEntitiesTypeDict.SmallMicrocircuit,
+          ExtendedEntitiesTypeDict.Microcircuit,
+          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+        ],
+        property: 'order_by',
+        value: 'number_synapses',
+      },
+    ],
     defaultConstraint: {
       lte: 'number_synapses__lte',
       gte: 'number_synapses__gte',
@@ -201,6 +233,21 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     },
     isDisplayable: true,
     isFilterable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [
+          ExtendedEntitiesTypeDict.Circuit,
+          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          ExtendedEntitiesTypeDict.Microcircuit,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+          ExtendedEntitiesTypeDict.SmallMicrocircuit,
+        ],
+        property: 'order_by',
+        value: 'number_connections',
+      },
+    ],
     defaultConstraint: {
       lte: 'number_connections__lte',
       gte: 'number_connections__gte',
@@ -217,6 +264,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     })),
     isFilterable: true,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.MEModelWithSynapses],
+        property: 'order_by',
+        value: 'build_category',
+      },
+    ],
     render: (r) =>
       renderEmptyOrValue(
         find(CircuitBuildCategory, { key: (r as ICircuit).build_category })?.label
@@ -239,6 +294,21 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'scale__in',
     isFilterable: true,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [
+          ExtendedEntitiesTypeDict.Circuit,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+          ExtendedEntitiesTypeDict.SmallMicrocircuit,
+          ExtendedEntitiesTypeDict.Microcircuit,
+          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+        ],
+        property: 'order_by',
+        value: 'scale',
+      },
+    ],
     render: (r) => renderEmptyOrValue(find(CircuitScale, { key: (r as ICircuit).scale })?.label),
     vocabulary: {
       plural: 'Scales',
@@ -268,7 +338,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Published in',
     filter: CoreFieldFilterTypeEnum.Text,
     isDisplayable: true,
-    isSortable: false,
+    isSortable: true,
     isFilterable: true,
     render: (r) => renderEmptyOrValue((r as ICircuit).published_in),
     vocabulary: {
@@ -289,7 +359,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Experiment date',
     filter: CoreFieldFilterTypeEnum.DateRange,
     isDisplayable: true,
-    isSortable: false,
+    isSortable: true,
     isFilterable: true,
     render: (r) => renderDate((r as ICircuit).experiment_date),
     vocabulary: {
@@ -346,12 +416,39 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Registration Date',
     },
   },
-  [EntityCoreFields.IsLjpCorrected]: iCMBooleanField('LJP corrected', 'is_ljp_corrected'),
-  [EntityCoreFields.IsStochastic]: iCMBooleanField('Stochastic', 'is_stochastic'),
-  [EntityCoreFields.IsTemperatureDependent]: iCMBooleanField(
-    'Temperature dependent',
-    'is_temperature_dependent'
-  ),
+  [EntityCoreFields.IsLjpCorrected]: {
+    ...iCMBooleanField('LJP corrected', 'is_ljp_corrected'),
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.IonChannelModel],
+        property: 'order_by',
+        value: 'is_ljp_corrected',
+      },
+    ],
+  },
+  [EntityCoreFields.IsStochastic]: {
+    ...iCMBooleanField('Stochastic', 'is_stochastic'),
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.IonChannelModel],
+        property: 'order_by',
+        value: 'is_stochastic',
+      },
+    ],
+  },
+  [EntityCoreFields.IsTemperatureDependent]: {
+    ...iCMBooleanField('Temperature dependent', 'is_temperature_dependent'),
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.IonChannelModel],
+        property: 'order_by',
+        value: 'is_temperature_dependent',
+      },
+    ],
+  },
   [EntityCoreFields.TemperatureCelsius]: {
     className: 'text-left',
     title: 'Temperature (°C)',
@@ -360,6 +457,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     isSortable: true,
     defaultConstraint: 'temperature_celsius',
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.IonChannelModel],
+        property: 'order_by',
+        value: 'temperature_celsius',
+      },
+    ],
     render: (r) => {
       if (
         EntityCoreFields.TemperatureCelsius in r &&
