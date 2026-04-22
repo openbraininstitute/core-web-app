@@ -54,15 +54,13 @@ export default async function Page({
         <ProjectHomeHeader />
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           {canViewCredits && (
-            <div className="bg-[#e9e9e9] flex min-h-0 flex-1 flex-col overflow-y-auto rounded-xl p-3">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               <Suspense>
                 <Credits variant="light" />
               </Suspense>
             </div>
           )}
-          <div className="bg-[#e9e9e9] rounded-xl p-3">
-            <MemberCircleRow />
-          </div>
+          <MemberCircleRow />
         </div>
       </div>
     </HydrateClient>

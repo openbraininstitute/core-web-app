@@ -206,8 +206,7 @@ export function MemberCircleRow() {
 
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-primary-9 text-xl font-bold">Members</h3>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-center gap-2">
         {users.map((member, index) => {
           const isSelf = member.id === session?.user?.id;
           const isProjectOwner = member.id === ownerId;
