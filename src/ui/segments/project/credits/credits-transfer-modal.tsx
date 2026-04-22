@@ -88,7 +88,7 @@ function BuyCreditsTab({
     .otherwise(() => null);
 
   return (
-    <div className="flex h-full w-full flex-col" data-widget="buy-credits-form">
+    <div className="flex w-full flex-col" data-widget="buy-credits-form">
       {showBackButton && (
         <div className="mb-4 flex items-center">
           <Button
@@ -104,7 +104,7 @@ function BuyCreditsTab({
           </Button>
         </div>
       )}
-      <div className="w-full h-full" data-widget={mode}>
+      <div className="w-full" data-widget={mode}>
         {content}
       </div>
     </div>

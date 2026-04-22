@@ -41,7 +41,7 @@ export function PaymentModeSelection({
   return (
     <div
       id="payment-mode-selection"
-      className={cn('grid gap-4 py-5 select-none md:grid-cols-2', { 'md:grid-cols-1': !isOwner })}
+      className={cn('grid gap-4 py-5 select-none grid-cols-2', { 'grid-cols-1': !isOwner })}
     >
       <button
         type="button"
