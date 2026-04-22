@@ -27,6 +27,7 @@ import { cn } from '@/utils/css-class';
 import type { TTutorial } from '@/ui/segments/project/get-started/query';
 
 const INITIAL_COUNT = 4;
+const UNCATEGORIZED_LABEL = 'Other';
 const TUTORIAL_CATEGORIES = [
   'Data',
   'Build',
@@ -123,6 +124,39 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
         );
   const visible = expanded ? filteredTutorials : filteredTutorials.slice(0, INITIAL_COUNT);
   const hasMore = filteredTutorials.length > INITIAL_COUNT;
+  const normalizedCategorySet = new Set(TUTORIAL_CATEGORIES);
+
+  const knownCategoryGroups = TUTORIAL_CATEGORIES.map((category) => ({
+    category,
+    items: filteredTutorials.filter((tutorial) => tutorial.category === category),
+  })).filter((group) => group.items.length > 0);
+
+  const extraCategories = Array.from(
+    new Set(
+      filteredTutorials
+        .map((tutorial) => tutorial.category)
+        .filter(
+          (category): category is string =>
+            !!category && !normalizedCategorySet.has(category as never)
+        )
+    )
+  );
+
+  const extraCategoryGroups = extraCategories.map((category) => ({
+    category,
+    items: filteredTutorials.filter((tutorial) => tutorial.category === category),
+  }));
+
+  const uncategorizedGroup = {
+    category: UNCATEGORIZED_LABEL,
+    items: filteredTutorials.filter((tutorial) => !tutorial.category),
+  };
+
+  const groupedTutorials = [
+    ...knownCategoryGroups,
+    ...extraCategoryGroups,
+    ...(uncategorizedGroup.items.length > 0 ? [uncategorizedGroup] : []),
+  ];
 
   const toggleCategory = (category: string) => {
     setExpanded(false);
@@ -191,32 +225,73 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
           </Button>
         </div>
       </div>
-      <motion.div
-        layout
-        className="grid grid-cols-1 @md:grid-cols-2 @3xl:grid-cols-3  @5xl:grid-cols-4 gap-1.5 w-full"
-      >
-        <AnimatePresence initial={false}>
-          {visible.map((p) => (
-            <motion.div
-              key={p.url}
-              layout
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.25 }}
-              className="w-full flex"
-            >
-              <TutorialCard
-                title={p.title}
-                image={p.posterImage}
-                slug={p.slug}
-                category={p.category}
-                isSelected={slug === p.slug}
-              />
-            </motion.div>
+      {expanded ? (
+        <div className="flex flex-col gap-5">
+          {groupedTutorials.map((group) => (
+            <section key={group.category} className="w-full">
+              <div className="mb-2 px-2">
+                <h3 className="text-lg font-normal uppercase tracking-wide text-neutral-500 mb-3">
+                  {group.category}
+                </h3>
+                <div className="mt-1 border-b border-neutral-3" />
+              </div>
+              <motion.div
+                layout
+                className="grid grid-cols-1 @md:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4 gap-1.5 w-full"
+              >
+                <AnimatePresence initial={false}>
+                  {group.items.map((p) => (
+                    <motion.div
+                      key={p.url}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.25 }}
+                      className="w-full flex"
+                    >
+                      <TutorialCard
+                        title={p.title}
+                        image={p.posterImage}
+                        slug={p.slug}
+                        category={p.category}
+                        isSelected={slug === p.slug}
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            </section>
           ))}
-        </AnimatePresence>
-      </motion.div>
+        </div>
+      ) : (
+        <motion.div
+          layout
+          className="grid grid-cols-1 @md:grid-cols-2 @3xl:grid-cols-3 @5xl:grid-cols-4 gap-1.5 w-full"
+        >
+          <AnimatePresence initial={false}>
+            {visible.map((p) => (
+              <motion.div
+                key={p.url}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.25 }}
+                className="w-full flex"
+              >
+                <TutorialCard
+                  title={p.title}
+                  image={p.posterImage}
+                  slug={p.slug}
+                  category={p.category}
+                  isSelected={slug === p.slug}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      )}
     </section>
   );
 }
