@@ -1,7 +1,7 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { Table } from 'antd';
 import find from 'es-toolkit/compat/find';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useTransition } from 'react';
 
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
@@ -88,6 +88,7 @@ function costRenderFn(amount: string) {
 export function JobReportList({ variant = 'dark' }: { variant?: CreditsVariant }) {
   const { virtualLabId, projectId } = useWorkspace();
   const [pagination, setPagination] = useState({ page: 1, pageSize: 8 });
+  const [, startTransition] = useTransition();
   const isLight = variant === 'light';
 
   const { data: users, isLoading } = useQuery({
@@ -174,7 +175,10 @@ export function JobReportList({ variant = 'dark' }: { variant?: CreditsVariant }
         pagination={{
           pageSize: pagination.pageSize,
           total,
-          onChange: (page, pageSize) => setPagination((prev) => ({ ...prev, page, pageSize })),
+          onChange: (page, pageSize) =>
+            startTransition(() => {
+              setPagination((prev) => ({ ...prev, page, pageSize }));
+            }),
           hideOnSinglePage: true,
         }}
         rowKey="job_id"
