@@ -1,10 +1,11 @@
 'use client';
 
-import { DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
+import { DeleteOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar, Popconfirm, Select } from 'antd';
 import { compact, get } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
+import { useState } from 'react';
 
 import {
   cancelProjectInvite,
@@ -14,6 +15,8 @@ import {
 } from '@/api/virtual-lab-svc/queries/member';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Modal } from '@/ui/molecules/modal';
+import { InviteMembers } from '@/ui/segments/project/team/team-invitation';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { COLOR_DICTIONARY } from '@/util/color';
 import { extractInitials } from '@/util/slugify';
@@ -85,7 +88,7 @@ function MemberCircle({
     <div className="group/circle relative">
       <Avatar
         size={40}
-        shape={member.role === 'admin' ? 'square' : 'circle'}
+        shape="circle"
         style={{ backgroundColor: color.background, color: color.color }}
         className={cn(
           'flex items-center justify-center text-sm font-bold shadow-sm cursor-default transition-transform',
@@ -199,6 +202,7 @@ export function MemberCircleRow() {
   const users = listing?.data?.users ?? [];
   const ownerId = listing?.data?.owner_id;
   const canManage = isVirtualLabAdmin || isProjectAdmin;
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-2">
@@ -223,8 +227,37 @@ export function MemberCircleRow() {
             />
           );
         })}
-        {users.length === 0 && <span className="text-neutral-4 text-xs">No members yet.</span>}
+        {canManage && (
+          <button
+            type="button"
+            aria-label="Add member"
+            onClick={() => setInviteOpen(true)}
+            className={cn(
+              'bg-background text-primary-9 border-neutral-2 hover:bg-primary-9 hover:text-white',
+              'grid size-10 shrink-0 place-items-center rounded-full border border-dashed shadow-sm transition-colors'
+            )}
+          >
+            <PlusOutlined className="text-base" />
+          </button>
+        )}
+        {users.length === 0 && !canManage && (
+          <span className="text-neutral-4 text-xs">No members yet.</span>
+        )}
       </div>
+      {canManage && (
+        <Modal
+          open={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+          title="Invite members"
+          size="md"
+          destroyOnClose
+          bodyClassName="px-2 py-2"
+        >
+          <div className="h-[55vh] w-full">
+            <InviteMembers onBack={() => setInviteOpen(false)} />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
