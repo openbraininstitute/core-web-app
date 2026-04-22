@@ -29,7 +29,8 @@
         "noStaticElementInteractions": "info"
       },
       "correctness": {
-        "noUnusedVariables": "error"
+        "noUnusedVariables": "error",
+        "noPrivateImports": "error"
       },
       "style": {
         "noParameterAssign": "error",
