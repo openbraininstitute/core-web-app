@@ -1,15 +1,9 @@
 import { MenuOutlined } from '@ant-design/icons';
+import { RiTeamLine } from '@remixicon/react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
-import {
-  ExploreIcon,
-  HelpIcon,
-  Home,
-  NotebookIcon,
-  ReportsIcon,
-  WorkflowIcon,
-} from '@/components/icons/buttons';
+import { ExploreIcon, NotebookIcon, ReportsIcon, WorkflowIcon } from '@/components/icons/buttons';
 import { config } from '@/config';
 import {
   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
@@ -26,6 +20,7 @@ import {
 } from '@/ui/molecules/dropdown-menu';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
+import { FeedbackPill } from '@/ui/segments/project/feedback-pill';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 import { cleanSearchParams } from '@/utils/search-params';
@@ -52,7 +47,7 @@ const links: LinkItem[] = [
     key: 'home',
     title: 'Home',
     url: '',
-    icon: <Home className="group-hover:text-primary-3 text-lg" />,
+    icon: <RiTeamLine className="group-hover:text-primary-3 size-5" />,
     allowText: false,
     className: 'gap-2 flex items-center justify-center',
     isActive: (pathname: string) => {
@@ -107,16 +102,6 @@ const links: LinkItem[] = [
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
       `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
-  },
-  {
-    id: 'workspace-help',
-    key: 'help',
-    title: 'Help',
-    url: 'help',
-    icon: <HelpIcon className="group-hover:text-primary-3 h-5! w-5!" />,
-    allowText: false,
-    className: '',
-    hasAction: false,
   },
 ];
 
@@ -236,49 +221,6 @@ export function TopMenuNavigation() {
               !isActiveButton,
           };
 
-          if (id === 'workspace-help') {
-            return (
-              <div key={key} className="group flex w-max items-center justify-center gap-0">
-                <div className="relative flex items-center">
-                  <Button
-                    asChild
-                    rounded
-                    id={id}
-                    variant="outline"
-                    size={breakpoint === 'xl' ? 'lg' : 'md'}
-                    className={cn(
-                      transparentWhenInactive,
-                      { 'w-12 justify-center!': !allowText && breakpoint === 'xl' },
-                      { 'w-10! justify-center!': breakpoint === 'l' && !allowText },
-                      'group relative flex items-center justify-between',
-                      { 'group-hover:rounded-r-none group-hover:border-r-0': hasAction },
-                      'transition-all duration-400 ease-out',
-                      clx
-                    )}
-                    active={activeSection === baseUrl || isActive?.(pathname)}
-                  >
-                    <Link
-                      prefetch
-                      href={{
-                        pathname: url,
-                        query: linkSearchParams,
-                      }}
-                      onClick={(e) => {
-                        if (isActiveButton) e.preventDefault();
-                      }}
-                    >
-                      {allowText && <span>{title}</span>}
-                      {icon}
-                    </Link>
-                  </Button>
-                  <span className="text-primary-9 absolute top-full left-1/2 -translate-x-1/2 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    Help
-                  </span>
-                </div>
-              </div>
-            );
-          }
-
           return (
             <div key={key} className="group flex w-max items-center justify-center gap-0">
               <div className="relative flex items-center">
@@ -318,6 +260,7 @@ export function TopMenuNavigation() {
           );
         }
       )}
+      <FeedbackPill />
       <div className="group flex w-max items-center justify-center gap-0">
         <div className="relative flex items-center">
           <Button
