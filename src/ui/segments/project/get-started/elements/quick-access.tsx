@@ -289,7 +289,8 @@ export function SingleCardItem({
       )}
       <div
         className={cn(
-          'relative aspect-video w-full overflow-hidden rounded-xl border-2 transition-colors bg-white',
+          'relative w-full overflow-hidden rounded-xl border-2 transition-colors bg-white',
+          compact ? 'aspect-square' : 'aspect-video',
           isSelected ? 'border-primary-7' : 'border-transparent'
         )}
       >
