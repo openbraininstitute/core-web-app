@@ -1,8 +1,11 @@
 'use client';
 
+import { RiArrowRightLine } from '@remixicon/react';
 import { useAtomValue } from 'jotai';
+import Link from 'next/link';
 import { useRef } from 'react';
 
+import { config } from '@/config';
 import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
 import { SingleCardItem } from '@/ui/segments/project/get-started/elements/quick-access';
 import { ScrollArrows } from '@/ui/segments/project/get-started/elements/tutorial';
@@ -119,6 +122,28 @@ function GroupRow({
   );
 }
 
+function WorkflowsRow({ context }: { context: WorkspaceContext }) {
+  const { virtualLabId, projectId } = context;
+  return (
+    <section id="quick-access-workflows" className="flex w-full flex-col">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-primary-9 text-xl font-bold">Workflows</h2>
+      </div>
+      <div className="flex w-full gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="w-60 shrink-0">
+          <Link
+            href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`}
+            className="bg-primary-9 group relative flex aspect-video w-full cursor-pointer select-none items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-transparent text-white shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] transition-all hover:shadow-bnb"
+          >
+            <span className="text-lg font-semibold">Go to Workflows</span>
+            <RiArrowRightLine className="size-5" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function QuickAccessCarousel({ context, virtualLab, groups }: Props) {
   return (
     <div className="flex w-full flex-col gap-4">
@@ -131,6 +156,7 @@ export function QuickAccessCarousel({ context, virtualLab, groups }: Props) {
           virtualLab={virtualLab}
         />
       ))}
+      <WorkflowsRow context={context} />
     </div>
   );
 }
