@@ -51,16 +51,16 @@ export default async function Page({
 
   return (
     <HydrateClient>
-      <div className="flex h-full w-full flex-col gap-4 overflow-y-auto p-3 pb-10 text-sm">
+      <div className="flex h-full w-full flex-col gap-4 overflow-hidden p-3 pb-10 text-sm">
         <ProjectHomeHeader />
-        <div className="flex w-full flex-1 gap-4">
-          <div className="bg-[#e9e9e9] flex w-1/2 min-w-0 flex-col rounded-xl p-3">
+        <div className="flex w-full min-h-0 flex-1 gap-4">
+          <div className="bg-[#e9e9e9] flex w-1/2 min-h-0 min-w-0 flex-col overflow-y-auto rounded-xl p-3">
             <Suspense fallback={<ProjectTeamSkeleton />}>
               <TeamManager />
             </Suspense>
           </div>
           {canViewCredits && (
-            <div className="bg-[#e9e9e9] flex w-1/2 min-w-0 flex-col rounded-xl p-3">
+            <div className="bg-[#e9e9e9] flex w-1/2 min-h-0 min-w-0 flex-col overflow-y-auto rounded-xl p-3">
               <Suspense>
                 <Credits variant="light" />
               </Suspense>

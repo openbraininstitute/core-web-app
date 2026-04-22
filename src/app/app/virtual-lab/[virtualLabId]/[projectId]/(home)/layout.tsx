@@ -59,14 +59,6 @@ export default async function Layout({
       <div id="project-main-content" className="h-full w-full overflow-hidden px-3">
         {children}
       </div>
-      <div
-        aria-hidden
-        className="text-primary-9 pointer-events-none absolute bottom-10 left-12 font-serif text-4xl leading-none text-right select-none"
-      >
-        Open Brain
-        <br />
-        Institute
-      </div>
     </div>
   );
 }
