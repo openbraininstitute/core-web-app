@@ -105,6 +105,7 @@ export async function QuickAccessExamples({ context }: { context: WorkspaceConte
   );
 
   const groups = Object.fromEntries(results) as Record<TQuickAccessGroup, Array<QuickAccessItem>>;
+  groups[QuickAccessGroupDict.Workflows] = groups[QuickAccessGroupDict.Data];
 
   return <QuickAccessCarousel context={context} virtualLab={virtualLab ?? null} groups={groups} />;
 }

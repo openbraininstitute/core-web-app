@@ -11,6 +11,7 @@ import { useParams } from 'next/navigation';
 
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ImageIcon } from '@/components/icons/image-states';
+import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -198,8 +199,17 @@ export function SingleCardItem({
   const { push: navigate } = useRouter();
   const setDataPreview = useSetAtom(dataPreviewAtom);
   const setLeftPaneView = useSetAtom(leftPaneViewAtom);
+  const notification = useAppNotification();
   const { mutate: redirect, isPending } = useMutation({
     mutationFn: async () => {
+      if (group === QuickAccessGroupDict.Workflows && compact) {
+        notification.info({
+          message: 'Example workflows coming soon',
+          key: 'workflows-coming-soon',
+          placement: 'topRight',
+        });
+        return;
+      }
       if (group === QuickAccessGroupDict.Data && compact) {
         setLeftPaneView(null);
         setDataPreview({
