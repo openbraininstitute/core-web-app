@@ -10,6 +10,7 @@ import {
   RightOutlined,
 } from '@ant-design/icons';
 import {
+  RiCheckboxCircleFill,
   RiCloseLine,
   RiFolderUploadFill,
   RiInfoI,
@@ -939,7 +940,9 @@ function SingleColumnValidatorCard({
                       data-import-input-type-value={`${field.inputType}-select-value`}
                       placeholder={field.placeholder ?? `Select ${field.label}`}
                       className="placeholder:text-sm placeholder:font-light placeholder:text-gray-400"
-                    />
+                    >
+                      {getEntityImportSelectLabel(field, cell.rawValue) || undefined}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent
                     viewportClassName="p-1.5"
@@ -950,9 +953,20 @@ function SingleColumnValidatorCard({
                         data-import-input-type-item={`${field.inputType}-option`}
                         key={option.value}
                         value={option.value}
-                        className={ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME}
+                        className={cn(
+                          ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME,
+                          option.description && 'option-with-description'
+                        )}
+                        icon={<RiCheckboxCircleFill className="size-4.5 text-primary-7" />}
                       >
-                        {option.label}
+                        <div className="content">
+                          <span className="w-full">{option.label}</span>
+                          {option.description && (
+                            <p className="w-full text-sm font-light text-gray-600 whitespace-normal wrap-break-word">
+                              {option.description}
+                            </p>
+                          )}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>

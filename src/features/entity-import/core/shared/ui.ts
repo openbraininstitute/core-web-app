@@ -24,8 +24,14 @@ export const ENTITY_IMPORT_SELECT_MENU_PANEL_CLASSNAME = cn(
 /** option row: full width inside viewport, rounded highlight aligned with panel */
 export const ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME = cn(
   'relative flex w-full min-w-0 max-w-full items-center rounded-lg',
-  'min-h-11 h-11 px-3 pr-10 text-left text-base font-semibold text-primary-9',
+  'min-h-11 h-11 px-3 pr-10 text-left text-base font-semibold text-primary-9 my-1.5',
   'cursor-pointer outline-none select-none',
+  '[&.option-with-description]:h-auto',
+  '[&.option-with-description]:min-h-11',
+  '[&.option-with-description]:items-start',
+  '[&.option-with-description_.content]:flex-col',
+  '[&.option-with-description_.content]:gap-0.5',
+  '[&.option-with-description_.content]:py-2',
   'focus:bg-sky-50 focus:text-primary-9',
   'data-[highlighted]:bg-sky-50 data-[highlighted]:text-primary-9',
   'data-[state=checked]:bg-sky-100/80 data-[state=checked]:text-primary-9',

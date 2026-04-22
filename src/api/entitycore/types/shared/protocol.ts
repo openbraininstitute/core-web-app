@@ -22,18 +22,26 @@ export const RepairPipelineState = {
   Raw: {
     key: 'raw',
     label: 'Raw',
+    description:
+      'These are the "as-is" digital tracings of neurons captured directly from experimental microscopy. They serve as the primary evidence but often contain biological damage, technical noise, and physical distortions introduced during tissue preparation.',
   },
   Curated: {
     key: 'curated',
     label: 'Curated',
+    description:
+      'These are high-quality, "vetted" digital models that have passed through a rigorous pipeline of structural cleaning and biological validation. Curation ensures the files are technically sound, standardized for software compatibility, and follow the fundamental rules of neurobiology.',
   },
   Unraveled: {
     key: 'unraveled',
     label: 'Unraveled',
+    description:
+      'These are reconstructions that have been mathematically "stretched" to reverse the physical shrinkage caused by chemical staining and fixation. Unravelling restores the neuron to its native biological dimensions, ensuring that the lengths and diameters of the branches are accurate for electrical simulation.',
   },
   Repaired: {
     key: 'repaired',
     label: 'Repaired',
+    description:
+      'These are neurons that have undergone algorithmic restoration to fix structural defects caused by the experimental process. This includes "regrowing" branches that were physically severed when the brain was sliced into sections and reconstructing the cell body (soma) into a biologically accurate 3D volume.',
   },
 } as const;
 

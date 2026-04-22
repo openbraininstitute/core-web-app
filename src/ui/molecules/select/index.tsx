@@ -8,6 +8,7 @@ import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { cn } from '@/utils/css-class';
 
 import type * as React from 'react';
+import type { ReactNode } from 'react';
 
 function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
@@ -103,10 +104,12 @@ function SelectItem({
   children,
   checkClassName,
   withIndicator = true,
+  icon,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item> & {
   checkClassName?: string;
   withIndicator?: boolean;
+  icon?: ReactNode;
 }) {
   return (
     <SelectPrimitive.Item
@@ -118,9 +121,9 @@ function SelectItem({
       {...props}
     >
       {withIndicator && (
-        <span className="absolute right-2 flex size-3.5 items-center justify-center indicator">
+        <span className="absolute right-1! top-1! flex items-center justify-center indicator">
           <SelectPrimitive.ItemIndicator>
-            <CheckIcon className={cn('size-4', checkClassName)} />
+            {icon ?? <CheckIcon className={cn('size-4', checkClassName)} />}
           </SelectPrimitive.ItemIndicator>
         </span>
       )}

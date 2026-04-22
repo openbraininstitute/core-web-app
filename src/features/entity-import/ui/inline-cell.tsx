@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { RiCheckboxCircleFill } from '@remixicon/react';
 import { DatePicker } from 'antd';
 import dayjs from 'dayjs';
 import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
@@ -91,6 +92,10 @@ function InlineCellComponent({
   selected,
   validatorPreview,
 }: IInlineCellProps) {
+  if (field.path === 'repairPipelineState') {
+    console.log('–– – inline-cell.tsx:95 – InlineCellComponent – field:', field);
+  }
+
   const fileInputId = useId();
   const correctionDetailsPopoverId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -439,9 +444,20 @@ function InlineCellComponent({
                 data-import-input-type-item={`${field.inputType}-option`}
                 key={option.value}
                 value={option.value}
-                className={ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME}
+                className={cn(
+                  ENTITY_IMPORT_SELECT_MENU_ITEM_CLASSNAME,
+                  option.description && 'option-with-description'
+                )}
+                icon={<RiCheckboxCircleFill className="size-4.5 text-primary-7" />}
               >
-                {option.label}
+                <div className="content">
+                  <span className="w-full">{option.label}</span>
+                  {option.description && (
+                    <p className="w-full text-sm font-light text-gray-600 whitespace-normal wrap-break-word">
+                      {option.description}
+                    </p>
+                  )}
+                </div>
               </SelectItem>
             ))}
           </SelectContent>

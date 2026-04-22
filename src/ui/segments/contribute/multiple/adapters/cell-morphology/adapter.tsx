@@ -12,11 +12,6 @@ import {
 } from '@/api/entitycore/types/shared/protocol';
 import { config } from '@/config';
 import {
-  type IEntityImportAdapter,
-  type IValidatorSuggestionDetailsArgs,
-  ValidatorWriteStrategy,
-} from '@/features/entity-import/core/adapter';
-import {
   type IImportRowState,
   ImportInputType,
   RemoteValidationStatus,
@@ -59,9 +54,15 @@ import {
 } from '@/ui/segments/contribute/multiple/adapters/cell-morphology/services';
 import { AgentType } from '@/ui/segments/contribute/shared/types';
 
+import type {
+  IEntityImportAdapter,
+  IValidatorSuggestionDetailsArgs,
+} from '@/features/entity-import/core/adapter';
+
 const REPAIR_PIPELINE_STATE_OPTIONS = Object.values(RepairPipelineState).map((option) => ({
   value: option.key,
   label: option.label,
+  description: option.description,
 }));
 
 const contributionAgentKeys = [
