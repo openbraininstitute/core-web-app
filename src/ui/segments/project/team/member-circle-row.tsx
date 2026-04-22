@@ -37,15 +37,15 @@ function memberDisplayName(member: Member) {
 function MemberCircle({
   member,
   index,
-  canManage,
   isSelf,
-  isOwner,
+  canModify,
+  isProjectOwner,
 }: {
   member: Member;
   index: number;
-  canManage: boolean;
   isSelf: boolean;
-  isOwner: boolean;
+  canModify: boolean;
+  isProjectOwner: boolean;
 }) {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
@@ -76,8 +76,10 @@ function MemberCircle({
     onSettled: invalidate,
   });
 
-  const canDelete = canManage && !isSelf && !isOwner;
-  const canChangeRole = canManage && !isSelf && !isOwner && !pending;
+  const canChangeRole = canModify && !pending;
+  const canDelete = canModify;
+
+  const roleLabel = member.role === 'admin' ? 'Admin' : 'Member';
 
   return (
     <div className="group/circle relative">
@@ -93,10 +95,13 @@ function MemberCircle({
         {initials}
       </Avatar>
 
+      {/* Popover wrapper: uses pb-2 (not mb-2) so the transparent padding area
+          bridges the gap between the circle and the card, keeping group-hover active. */}
       <div
         className={cn(
-          'pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-64 -translate-x-1/2',
-          'opacity-0 transition-opacity duration-150 group-hover/circle:pointer-events-auto group-hover/circle:opacity-100'
+          'pointer-events-none absolute bottom-full left-1/2 z-20 w-64 -translate-x-1/2 pb-2',
+          'opacity-0 transition-opacity duration-150',
+          'group-hover/circle:pointer-events-auto group-hover/circle:opacity-100'
         )}
       >
         <div className="border-neutral-2 text-primary-9 flex flex-col gap-2 rounded-xl border bg-white p-3 shadow-lg">
@@ -108,6 +113,8 @@ function MemberCircle({
               {member.email}
             </div>
             {pending && <div className="text-xs text-orange-500">Invite pending</div>}
+            {isProjectOwner && <div className="text-neutral-4 text-xs">Project owner</div>}
+            {isSelf && <div className="text-neutral-4 text-xs">You</div>}
           </div>
 
           <div className="flex items-center gap-2">
@@ -122,14 +129,10 @@ function MemberCircle({
                 onChange={(value) => updateRoleMutation.mutate(value)}
               />
             ) : (
-              <span className="text-primary-9 flex-1 text-xs font-semibold capitalize">
-                {member.role}
-                {isOwner && ' · owner'}
-                {isSelf && ' · you'}
-              </span>
+              <span className="text-primary-9 flex-1 text-xs font-semibold">{roleLabel}</span>
             )}
 
-            {pending ? (
+            {pending && canDelete ? (
               <Popconfirm
                 placement="top"
                 title="Cancel invitation"
@@ -152,7 +155,7 @@ function MemberCircle({
                   )}
                 </button>
               </Popconfirm>
-            ) : canDelete ? (
+            ) : canDelete && !pending ? (
               <Popconfirm
                 placement="top"
                 title="Remove member"
@@ -203,18 +206,20 @@ export function MemberCircleRow() {
       <div className="flex flex-wrap items-center gap-2">
         {users.map((member, index) => {
           const isSelf = member.id === session?.user?.id;
-          const isOwner =
-            member.id === ownerId ||
-            !!virtualLabAdmins?.includes(member.id) ||
-            !!projectAdmins?.includes(member.id);
+          const isProjectOwner = member.id === ownerId;
+          const isTargetAdmin =
+            !!virtualLabAdmins?.includes(member.id) || !!projectAdmins?.includes(member.id);
+          // Cannot modify self. VL admins can modify anyone else; project admins can
+          // only modify regular members (not other admins / owner).
+          const canModify = canManage && !isSelf && (isVirtualLabAdmin || !isTargetAdmin);
           return (
             <MemberCircle
               key={member.id ?? member.email}
               member={member}
               index={index}
-              canManage={canManage}
               isSelf={isSelf}
-              isOwner={isOwner && member.id !== session?.user?.id}
+              isProjectOwner={isProjectOwner}
+              canModify={canModify}
             />
           );
         })}
