@@ -21,7 +21,7 @@ export default async function Layout({
       data-testid="tutorials"
       className="flex h-full w-full items-start gap-8 pb-4"
     >
-      <div className="flex max-h-full w-[40%] min-w-0 flex-col gap-3 overflow-y-auto rounded-xl bg-[#e9e9e9] p-3">
+      <div className="flex max-h-full w-[40%] min-w-0 flex-col gap-3 overflow-y-auto rounded-xl border-2 border-[#e9e9e9] bg-transparent p-3">
         <HelpButtonsRow />
         <TutorialList />
         <QuickAccessExamples context={context} />

@@ -153,7 +153,7 @@ function WorkflowsRow({ context }: { context: WorkspaceContext }) {
             <Link
               href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`}
               title={example.title}
-              className="group relative flex aspect-video w-full cursor-pointer select-none overflow-hidden rounded-xl border-2 border-transparent bg-white shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] transition-all hover:shadow-bnb"
+              className="group relative flex aspect-video w-full cursor-pointer select-none overflow-hidden rounded-xl border-2 border-transparent bg-white transition-all"
             >
               <Image
                 fill
@@ -162,7 +162,7 @@ function WorkflowsRow({ context }: { context: WorkspaceContext }) {
                 src={example.thumbnail}
                 className="object-contain"
               />
-              <div className="text-primary-8 group-hover:bg-primary-8 absolute bottom-2 left-2 flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold shadow-sm backdrop-blur-sm group-hover:text-white">
+              <div className="text-primary-8 group-hover:bg-primary-8 absolute bottom-2 left-2 flex max-w-[calc(100%-1rem)] items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold backdrop-blur-sm group-hover:text-white">
                 <span className="line-clamp-1">{example.title}</span>
               </div>
             </Link>

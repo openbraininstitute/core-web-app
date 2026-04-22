@@ -53,7 +53,6 @@ export function HelpButtonsRow() {
               aria-pressed={isSelected}
               className={cn(
                 'group relative flex aspect-square w-[68px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[3px] overflow-hidden rounded-lg bg-white',
-                'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] hover:shadow-bnb',
                 'border-2 transition-colors',
                 isSelected ? 'border-primary-7' : 'border-transparent'
               )}

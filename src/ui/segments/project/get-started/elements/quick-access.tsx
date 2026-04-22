@@ -255,8 +255,8 @@ export function SingleCardItem({
     <Card
       className={cn(
         'w-full bg-white border-none flex-1',
-        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
-        'hover:shadow-bnb hover:bg-gray-100/70 hover:border group',
+        !compact && 'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] hover:shadow-bnb',
+        'hover:bg-gray-100/70 hover:border group',
         'cursor-pointer select-none',
         compact ? 'py-0 gap-0' : 'pt-0 gap-2.5'
       )}
@@ -305,7 +305,7 @@ export function SingleCardItem({
             variant="outline"
             rounded
             className={cn(
-              'absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm py-1 px-3! text-primary-8 border-neutral-2 text-xs font-medium shadow-sm',
+              'absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm py-1 px-3! text-primary-8 border-neutral-2 text-xs font-medium',
               'group-hover:bg-primary-7 group-hover:text-white'
             )}
           >
@@ -316,7 +316,7 @@ export function SingleCardItem({
           <div
             className={cn(
               'absolute bottom-2 left-2 max-w-[calc(100%-1rem)] rounded-full px-3 py-1',
-              'bg-white/90 backdrop-blur-sm shadow-sm',
+              'bg-white/90 backdrop-blur-sm',
               'text-primary-8 text-xs font-bold',
               'group-hover:bg-primary-8 group-hover:text-white flex items-center gap-1.5'
             )}

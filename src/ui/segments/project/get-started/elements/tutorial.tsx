@@ -31,14 +31,13 @@ export function TutorialCard({
       href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/help/tutorials/${slug}`}
       className={cn(
         'bg-primary-9 group relative flex aspect-video w-full cursor-pointer select-none items-center justify-center overflow-hidden rounded-xl border-2 text-white transition-colors',
-        'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] hover:shadow-bnb',
         isSelected ? 'border-primary-7' : 'border-transparent'
       )}
       title={t}
     >
       <span className="line-clamp-3 px-3 text-center text-sm font-semibold">{t}</span>
       <div className="absolute right-2 bottom-2">
-        <RiPlayFill className="size-6 text-white drop-shadow-md" />
+        <RiPlayFill className="size-6 text-white" />
       </div>
     </Link>
   );
@@ -108,7 +107,7 @@ export function EmptyTutorials() {
   return (
     <section id="discover-tutorials" className="w-full flex flex-col my-6">
       <h2 className="font-medium text-primary-9 px-2 mb-4">Discover</h2>
-      <div className="flex flex-col items-center justify-center py-16 px-6 text-center rounded-xl bg-white shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center rounded-xl bg-white">
         <div className="flex items-center justify-center size-16 rounded-full bg-primary-8 mb-5">
           <VideoCameraOutlined className="text-white! text-2xl" />
         </div>
