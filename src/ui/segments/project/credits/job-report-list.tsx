@@ -12,6 +12,7 @@ import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
 import type { JobReport } from '@/types/accounting';
+import type { CreditsVariant } from '@/ui/segments/project/credits';
 
 const { Column } = Table;
 
@@ -84,9 +85,10 @@ function costRenderFn(amount: string) {
   return <span>{formattedAmount}</span>;
 }
 
-export function JobReportList() {
+export function JobReportList({ variant = 'dark' }: { variant?: CreditsVariant }) {
   const { virtualLabId, projectId } = useWorkspace();
   const [pagination, setPagination] = useState({ page: 1, pageSize: 8 });
+  const isLight = variant === 'light';
 
   const { data: users, isLoading } = useQuery({
     queryKey: keyBuilder.listProjectTeam({ virtualLabId, projectId }),
@@ -115,6 +117,39 @@ export function JobReportList() {
     [users]
   );
 
+  const darkTableClasses = cn(
+    '[&_.ant-table]:bg-primary-8!',
+    '[&_.ant-table-container]:bg-primary-8',
+    '[&_.ant-table-header]:bg-primary-8!',
+    '[&_.ant-table-body]:bg-primary-8!',
+    '[&_.ant-table-thead_th]:text-white/70! [&_.ant-table-thead_th]:font-light!',
+    '[&_.ant-table-thead_th]:bg-primary-8! [&_.ant-table-tbody]:bg-primary-8!',
+    '[&_.ant-table-tbody_td]:text-white! [&_.ant-table-tbody_td]:border-white/10!',
+    '[&_.ant-table-cell-row-hover]:bg-primary-7!',
+    '[&_.ant-pagination_a]:text-white! [&_.ant-pagination_button]:text-white!',
+    '[&_.ant-pagination_.anticon]:text-white!',
+    '[&_.ant-pagination-item]:bg-transparent! [&_.ant-pagination-item]:border-white/30!',
+    '[&_.ant-pagination-item-active]:bg-white! [&_.ant-pagination-item-active]:border-white!',
+    '[&_.ant-pagination-item-active_a]:text-primary-9!',
+    '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-primary-8! [&:has(.ant-table-empty)_tr]:hover:bg-primary-8!'
+  );
+  const lightTableClasses = cn(
+    '[&_.ant-table]:bg-white!',
+    '[&_.ant-table-container]:bg-white',
+    '[&_.ant-table-header]:bg-[#f5f5f5]!',
+    '[&_.ant-table-body]:bg-white!',
+    '[&_.ant-table-thead_th]:text-primary-9! [&_.ant-table-thead_th]:font-light!',
+    '[&_.ant-table-thead_th]:bg-[#f5f5f5]! [&_.ant-table-tbody]:bg-white!',
+    '[&_.ant-table-tbody_td]:text-primary-9! [&_.ant-table-tbody_td]:border-neutral-2!',
+    '[&_.ant-table-cell-row-hover]:bg-[#f5f5f5]!',
+    '[&_.ant-pagination_a]:text-primary-9! [&_.ant-pagination_button]:text-primary-9!',
+    '[&_.ant-pagination_.anticon]:text-primary-9!',
+    '[&_.ant-pagination-item]:bg-white! [&_.ant-pagination-item]:border-neutral-2!',
+    '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active]:border-primary-9!',
+    '[&_.ant-pagination-item-active_a]:text-white!',
+    '[&:has(.ant-table-empty)_tr]:bg-white! [&:has(.ant-table-empty)_tr]:hover:bg-white!'
+  );
+
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col items-start gap-2">
       <h3 className="text-primary-9 text-xl font-bold">Usage</h3>
@@ -126,23 +161,13 @@ export function JobReportList() {
           '[&]:flex [&]:min-h-0 [&]:flex-col',
           '[&_.ant-spin-nested-loading]:flex [&_.ant-spin-nested-loading]:min-h-0 [&_.ant-spin-nested-loading]:flex-1 [&_.ant-spin-nested-loading]:flex-col',
           '[&_.ant-spin-container]:flex [&_.ant-spin-container]:min-h-0 [&_.ant-spin-container]:flex-1 [&_.ant-spin-container]:flex-col',
-          '[&_.ant-table]:flex [&_.ant-table]:min-h-0 [&_.ant-table]:flex-1 [&_.ant-table]:flex-col [&_.ant-table]:bg-primary-8!',
+          '[&_.ant-table]:flex [&_.ant-table]:min-h-0 [&_.ant-table]:flex-1 [&_.ant-table]:flex-col',
           '[&_.ant-table]:overflow-hidden! [&_.ant-table]:rounded-xl!',
-          '[&_.ant-table-container]:flex [&_.ant-table-container]:min-h-0 [&_.ant-table-container]:flex-1 [&_.ant-table-container]:flex-col [&_.ant-table-container]:bg-primary-8',
-          '[&_.ant-table-header]:bg-primary-8!',
-          '[&_.ant-table-body]:min-h-0! [&_.ant-table-body]:flex-1! [&_.ant-table-body]:max-h-none! [&_.ant-table-body]:bg-primary-8!',
-          '[&_.ant-table-thead_th]:text-white/70! [&_.ant-table-thead_th]:font-light!',
-          '[&_.ant-table-thead_th]:bg-primary-8! [&_.ant-table-tbody]:bg-primary-8!',
-          '[&_.ant-table-tbody_td]:text-white! [&_.ant-table-tbody_td]:border-white/10!',
-          '[&_.ant-table-cell-row-hover]:bg-primary-7!',
+          '[&_.ant-table-container]:flex [&_.ant-table-container]:min-h-0 [&_.ant-table-container]:flex-1 [&_.ant-table-container]:flex-col',
+          '[&_.ant-table-body]:min-h-0! [&_.ant-table-body]:flex-1! [&_.ant-table-body]:max-h-none!',
           '[&_.ant-pagination]:gap-2 [&_.ant-pagination]:mt-3! [&_.ant-pagination]:mb-0! [&_.ant-pagination]:shrink-0',
-          '[&_.ant-pagination_a]:text-white! [&_.ant-pagination_button]:text-white!',
-          '[&_.ant-pagination_.anticon]:text-white!',
-          '[&_.ant-pagination-item]:bg-transparent! [&_.ant-pagination-item]:border-white/30!',
-          '[&_.ant-pagination-item-active]:bg-white! [&_.ant-pagination-item-active]:border-white!',
-          '[&_.ant-pagination-item-active_a]:text-primary-9!',
-          '[&:has(.ant-table-empty)_td:last]:border-b-none! [&:has(.ant-table-empty)_tr]:bg-primary-8! [&:has(.ant-table-empty)_tr]:hover:bg-primary-8!',
-          '[&_th]:uppercase!'
+          '[&_th]:uppercase!',
+          isLight ? lightTableClasses : darkTableClasses
         )}
         loading={isLoading}
         dataSource={jobReports}
