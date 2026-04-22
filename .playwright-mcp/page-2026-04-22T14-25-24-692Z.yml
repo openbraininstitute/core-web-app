@@ -1,0 +1,280 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - button "Jotai Mascot" [ref=e3] [cursor=pointer]:
+      - img "Jotai Mascot" [ref=e5]
+    - generic [ref=e9]:
+      - generic [ref=e12]:
+        - menubar "undefined/Project" [disabled] [ref=e15]:
+          - generic [ref=e16]:
+            - img [ref=e18]
+            - img "right" [ref=e22]:
+              - img [ref=e23]
+            - img "right" [ref=e26]:
+              - img [ref=e27]
+        - button "View project credits" [disabled] [ref=e33]:
+          - img
+        - button "View project members" [ref=e36] [cursor=pointer]:
+          - img
+        - button "Submit feedback" [ref=e37] [cursor=pointer]:
+          - img "Feedback star"
+      - generic [ref=e39]:
+        - generic [ref=e41]:
+          - generic [ref=e47]:
+            - heading "How to explore data" [level=3] [ref=e48]
+            - paragraph [ref=e49]: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+          - generic [ref=e50]:
+            - generic [ref=e52]:
+              - button "About" [ref=e53] [cursor=pointer]:
+                - img [ref=e54]
+                - generic [ref=e56]: About
+              - button "Glossary" [ref=e57] [cursor=pointer]:
+                - img [ref=e58]
+                - generic [ref=e60]: Glossary
+              - button "Terms" [ref=e61] [cursor=pointer]:
+                - img [ref=e62]
+                - generic [ref=e64]: Terms
+              - button "Guides" [ref=e65] [cursor=pointer]:
+                - img [ref=e66]
+                - generic [ref=e68]: Guides
+              - button "Features" [ref=e69] [cursor=pointer]:
+                - img [ref=e70]
+                - generic [ref=e72]: Features
+              - button "AI Tools" [ref=e73] [cursor=pointer]:
+                - img [ref=e74]
+                - generic [ref=e76]: AI Tools
+            - generic [ref=e77]:
+              - generic [ref=e78]:
+                - heading "Tutorials" [level=2] [ref=e79]
+                - generic [ref=e80]:
+                  - button "Scroll left" [ref=e81] [cursor=pointer]:
+                    - img "left" [ref=e82]:
+                      - img [ref=e83]
+                  - button "Scroll right" [ref=e85] [cursor=pointer]:
+                    - img "right" [ref=e86]:
+                      - img [ref=e87]
+              - generic [ref=e89]:
+                - link "Getting started with single cell simulation" [ref=e91] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/getting-started-with-single-cell-simulation
+                  - generic [ref=e92]: Getting started with single cell simulation
+                  - img [ref=e94]
+                - link "Next steps after designing a campaign" [ref=e97] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/next-steps-after-designing-a-campaign
+                  - generic [ref=e98]: Next steps after designing a campaign
+                  - img [ref=e100]
+                - link "Setting up circuit simulations" [ref=e103] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/setting-up-circuit-simulations
+                  - generic [ref=e104]: Setting up circuit simulations
+                  - img [ref=e106]
+                - link "Setting up single cell simulation" [ref=e109] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/setting-up-single-cell-simulation
+                  - generic [ref=e110]: Setting up single cell simulation
+                  - img [ref=e112]
+                - link "Explore e models" [ref=e115] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/explore-e-models
+                  - generic [ref=e116]: Explore e models
+                  - img [ref=e118]
+                - link "Using time stamps in campaigns" [ref=e121] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/using-time-stamps-in-campaigns
+                  - generic [ref=e122]: Using time stamps in campaigns
+                  - img [ref=e124]
+                - link "When campaign design doesnt fit your case" [ref=e127] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/when-campaign-design-doesn-t-fit-your-case
+                  - generic [ref=e128]: When campaign design doesnt fit your case
+                  - img [ref=e130]
+                - link "Generating morphologies from em datasets" [ref=e133] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/generating-morphologies-from-em-datasets
+                  - generic [ref=e134]: Generating morphologies from em datasets
+                  - img [ref=e136]
+                - link "Seing what workflows execute behind the scene" [ref=e139] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/seing-what-workflows-execute-behind-the-scene
+                  - generic [ref=e140]: Seing what workflows execute behind the scene
+                  - img [ref=e142]
+                - link "How to build a single cell model" [ref=e145] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/how-to-build-a-single-cell-model
+                  - generic [ref=e146]: How to build a single cell model
+                  - img [ref=e148]
+                - link "How data is organized" [ref=e151] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/how-data-is-organized
+                  - generic [ref=e152]: How data is organized
+                  - img [ref=e154]
+                - link "Understanding data workflows" [ref=e157] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/understanding-data-and-workflows
+                  - generic [ref=e158]: Understanding data workflows
+                  - img [ref=e160]
+                - link "Simulating reconstructed neuron morphologies" [ref=e163] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/simulating-reconstructed-neuron-morphologies
+                  - generic [ref=e164]: Simulating reconstructed neuron morphologies
+                  - img [ref=e166]
+                - link "How workflows are organized" [ref=e169] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/how-workflows-are-organized
+                  - generic [ref=e170]: How workflows are organized
+                  - img [ref=e172]
+                - link "Getting started with circuits simulation" [ref=e175] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/getting-started-with-circuits-simulation
+                  - generic [ref=e176]: Getting started with circuits simulation
+                  - img [ref=e178]
+                - link "Explore me models and synaptome" [ref=e181] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/explore-me-models-and-synaptome
+                  - generic [ref=e182]: Explore me models and synaptome
+                  - img [ref=e184]
+                - link "Single cell campaigns examples" [ref=e187] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/single-cell-campaigns-examples
+                  - generic [ref=e188]: Single cell campaigns examples
+                  - img [ref=e190]
+                - link "Gettings started with notebooks" [ref=e193] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/gettings-started-with-notebooks
+                  - generic [ref=e194]: Gettings started with notebooks
+                  - img [ref=e196]
+                - link "Using neuron sets in campaigns" [ref=e199] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/using-neuron-sets-in-campaigns
+                  - generic [ref=e200]: Using neuron sets in campaigns
+                  - img [ref=e202]
+                - link "How to explore data" [ref=e205] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/how-to-explore-data
+                  - generic [ref=e206]: How to explore data
+                  - img [ref=e208]
+                - link "Sharing your data on the platform" [ref=e211] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/sharing-your-data-on-the-platform
+                  - generic [ref=e212]: Sharing your data on the platform
+                  - img [ref=e214]
+                - link "Analyzing circuit simulation campaign" [ref=e217] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/analyzing-circuit-simulation-campaign
+                  - generic [ref=e218]: Analyzing circuit simulation campaign
+                  - img [ref=e220]
+                - link "Analyzing single cell campaigns" [ref=e223] [cursor=pointer]:
+                  - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/tutorials/analyzing-single-cell-campaigns
+                  - generic [ref=e224]: Analyzing single cell campaigns
+                  - img [ref=e226]
+            - generic [ref=e228]:
+              - generic [ref=e229]:
+                - generic [ref=e230]:
+                  - heading "Data" [level=2] [ref=e231]
+                  - generic [ref=e232]:
+                    - button "Scroll left" [ref=e233] [cursor=pointer]:
+                      - img "left" [ref=e234]:
+                        - img [ref=e235]
+                    - button "Scroll right" [ref=e237] [cursor=pointer]:
+                      - img "right" [ref=e238]:
+                        - img [ref=e239]
+                - generic [ref=e241]:
+                  - generic "Morphology" [ref=e243] [cursor=pointer]:
+                    - generic [ref=e244]:
+                      - img "Morphology" [ref=e245]
+                      - generic "Morphology" [ref=e246]:
+                        - generic [ref=e247]: Morphology
+                  - generic "Single cell electrophysiology" [ref=e249] [cursor=pointer]:
+                    - generic [ref=e250]:
+                      - img "Single cell electrophysiology" [ref=e251]
+                      - generic "Single cell electrophysiology" [ref=e252]:
+                        - generic [ref=e253]: Single cell electrophysiology
+                  - generic "Ion channel electrophysiology" [ref=e255] [cursor=pointer]:
+                    - generic [ref=e256]:
+                      - img "Ion channel electrophysiology" [ref=e257]
+                      - generic "Ion channel electrophysiology" [ref=e258]:
+                        - generic [ref=e259]: Ion channel electrophysiology
+                  - generic "ME-model" [ref=e261] [cursor=pointer]:
+                    - generic [ref=e262]:
+                      - img "ME-model" [ref=e263]
+                      - generic "ME-model" [ref=e264]:
+                        - generic [ref=e265]: ME-model
+                  - generic "Circuit" [ref=e267] [cursor=pointer]:
+                    - generic [ref=e268]:
+                      - img "Circuit" [ref=e269]
+                      - generic "Circuit" [ref=e270]:
+                        - generic [ref=e271]: Circuit
+                  - generic "Ion channel model" [ref=e273] [cursor=pointer]:
+                    - generic [ref=e274]:
+                      - img "Ion channel model" [ref=e275]
+                      - generic "Ion channel model" [ref=e276]:
+                        - generic [ref=e277]: Ion channel model
+                  - generic "E-model" [ref=e279] [cursor=pointer]:
+                    - generic [ref=e280]:
+                      - img "E-model" [ref=e281]
+                      - generic "E-model" [ref=e282]:
+                        - generic [ref=e283]: E-model
+                  - generic "Synaptome (beta)" [ref=e285] [cursor=pointer]:
+                    - generic [ref=e286]:
+                      - img "Synaptome (beta)" [ref=e287]
+                      - generic "Synaptome (beta)" [ref=e288]:
+                        - generic [ref=e289]: Synaptome (beta)
+              - generic [ref=e290]:
+                - generic [ref=e291]:
+                  - heading "Notebooks" [level=2] [ref=e292]
+                  - generic [ref=e293]:
+                    - button "Scroll left" [ref=e294] [cursor=pointer]:
+                      - img "left" [ref=e295]:
+                        - img [ref=e296]
+                    - button "Scroll right" [ref=e298] [cursor=pointer]:
+                      - img "right" [ref=e299]:
+                        - img [ref=e300]
+                - generic [ref=e302]:
+                  - generic "Display single cell simulation results" [ref=e304] [cursor=pointer]:
+                    - generic [ref=e305]:
+                      - img "Display single cell simulation results" [ref=e306]
+                      - generic "Display single cell simulation results" [ref=e307]:
+                        - generic [ref=e308]: Display single cell simulation results
+                  - generic "Load circuit simulation campaign results" [ref=e310] [cursor=pointer]:
+                    - generic [ref=e311]:
+                      - img "Load circuit simulation campaign results" [ref=e312]
+                      - generic "Load circuit simulation campaign results" [ref=e313]:
+                        - generic [ref=e314]: Load circuit simulation campaign results
+                  - generic "Synapse property matrix extraction" [ref=e316] [cursor=pointer]:
+                    - generic [ref=e317]:
+                      - img "Synapse property matrix extraction" [ref=e318]
+                      - generic "Synapse property matrix extraction" [ref=e319]:
+                        - generic [ref=e320]: Synapse property matrix extraction
+                  - generic "Adjacency matrix extraction" [ref=e322] [cursor=pointer]:
+                    - generic [ref=e323]:
+                      - img "Adjacency matrix extraction" [ref=e324]
+                      - generic "Adjacency matrix extraction" [ref=e325]:
+                        - generic [ref=e326]: Adjacency matrix extraction
+                  - generic "Large-scale circuit connectivity analyses" [ref=e328] [cursor=pointer]:
+                    - generic [ref=e329]:
+                      - img "Large-scale circuit connectivity analyses" [ref=e330]
+                      - generic "Large-scale circuit connectivity analyses" [ref=e331]:
+                        - generic [ref=e332]: Large-scale circuit connectivity analyses
+                  - generic "Conduct morphology quality checks" [ref=e334] [cursor=pointer]:
+                    - generic [ref=e335]:
+                      - img "Conduct morphology quality checks" [ref=e336]
+                      - generic "Conduct morphology quality checks" [ref=e337]:
+                        - generic [ref=e338]: Conduct morphology quality checks
+                  - generic "MICrONS morphology connectivity effect" [ref=e340] [cursor=pointer]:
+                    - generic [ref=e341]:
+                      - img "MICrONS morphology connectivity effect" [ref=e342]
+                      - generic "MICrONS morphology connectivity effect" [ref=e343]:
+                        - generic [ref=e344]: MICrONS morphology connectivity effect
+                  - generic "MICrONS morphology connectivity effect - part 2" [ref=e346] [cursor=pointer]:
+                    - generic [ref=e347]:
+                      - img "MICrONS morphology connectivity effect - part 2" [ref=e348]
+                      - generic "MICrONS morphology connectivity effect - part 2" [ref=e349]:
+                        - generic [ref=e350]: MICrONS morphology connectivity effect - part 2
+              - generic [ref=e351]:
+                - heading "Workflows" [level=2] [ref=e353]
+                - generic [ref=e354]:
+                  - link "Build a single neuron Build a single neuron" [ref=e356] [cursor=pointer]:
+                    - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/workflows
+                    - img "Build a single neuron" [ref=e357]
+                    - generic [ref=e359]: Build a single neuron
+                  - link "Simulate a circuit Simulate a circuit" [ref=e361] [cursor=pointer]:
+                    - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/workflows
+                    - img "Simulate a circuit" [ref=e362]
+                    - generic [ref=e364]: Simulate a circuit
+                  - link "Extract features Extract features" [ref=e366] [cursor=pointer]:
+                    - /url: /app/virtual-lab/d6182f2e-ca09-4293-91d4-592b9e764ef7/b5484454-1c42-49e6-89fb-36e89109a2e1/workflows
+                    - img "Extract features" [ref=e367]
+                    - generic [ref=e369]: Extract features
+        - generic: Open Brain Institute
+    - generic [ref=e370]:
+      - img [ref=e372]
+      - button "Open Tanstack query devtools" [ref=e420] [cursor=pointer]:
+        - img [ref=e421]
+  - generic [ref=e474] [cursor=pointer]:
+    - button "Open issues overlay" [ref=e475]:
+      - img [ref=e477]
+      - generic [ref=e479]:
+        - generic [ref=e480]: "0"
+        - generic [ref=e481]: "1"
+      - generic [ref=e482]: Issue
+    - button "Collapse issues badge" [ref=e483]:
+      - img [ref=e484]
+  - alert [ref=e486]

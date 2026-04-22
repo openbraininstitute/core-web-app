@@ -94,7 +94,7 @@ function GroupRow({
                       ? '/images/quick-access/hippocampus.png'
                       : null;
             return (
-              <div key={item.entity.id} className="w-48 shrink-0">
+              <div key={item.entity.id} className="w-52 shrink-0">
                 <SingleCardItem
                   compact
                   hideArtifact={hideArtifact}
@@ -149,7 +149,7 @@ function WorkflowsRow({ context }: { context: WorkspaceContext }) {
       </div>
       <div className="flex w-full gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {WORKFLOW_EXAMPLES.map((example) => (
-          <div key={example.slug} className="w-48 shrink-0">
+          <div key={example.slug} className="w-52 shrink-0">
             <Link
               href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`}
               title={example.title}

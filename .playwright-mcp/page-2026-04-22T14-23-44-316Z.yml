@@ -1,0 +1,9 @@
+- generic [active]:
+  - generic:
+    - button "Jotai Mascot" [ref=e1] [cursor=pointer]:
+      - img "Jotai Mascot" [ref=e3]
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - button "Open Tanstack query devtools" [ref=e54] [cursor=pointer]:
+        - img [ref=e55]
+  - alert [ref=e103]

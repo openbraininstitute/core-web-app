@@ -68,7 +68,7 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
         className="flex w-full gap-1.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {tutorials.map((p) => (
-          <div key={p.url} className="w-48 shrink-0 flex">
+          <div key={p.url} className="w-52 shrink-0 flex">
             <TutorialCard title={p.title} slug={p.slug} isSelected={!preview && slug === p.slug} />
           </div>
         ))}
