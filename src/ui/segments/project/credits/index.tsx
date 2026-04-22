@@ -16,12 +16,12 @@ export function Credits({ variant = 'dark' }: { variant?: CreditsVariant }) {
     <div
       id="project-credits"
       data-testid="project-credits"
-      className="flex min-h-0 flex-1 flex-col gap-6 px-0 pr-1"
+      className="flex min-h-0 flex-1 items-start gap-6 px-0 pr-1"
     >
-      <div className="ml-auto w-1/2 min-w-0 shrink-0">
+      <div className="w-1/2 min-w-0">
         <BalanceCard onTransferCredits={handleTransferCredits} variant={variant} />
       </div>
-      <div className="ml-auto flex min-h-0 w-1/2 min-w-0 flex-1 flex-col">
+      <div className="flex h-full min-h-0 w-1/2 min-w-0 flex-col">
         <JobReportList variant={variant} />
       </div>
       <CreditsTransferModal open={showCreditsManagement} onClose={handleTransferCredits} />
