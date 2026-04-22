@@ -11,7 +11,7 @@ import { DEFAULT_GET_STARTED_VIDEO_SLUG } from '@/ui/segments/project/get-starte
 export function TutorialNotFound() {
   const { virtualLabId, projectId } = useWorkspace();
   const getStartedHref = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
-  const defaultTutorialHref = `${getStartedHref}/tutorials/${DEFAULT_GET_STARTED_VIDEO_SLUG}`;
+  const defaultTutorialHref = `${getStartedHref}/help/tutorials/${DEFAULT_GET_STARTED_VIDEO_SLUG}`;
 
   return (
     <motion.div

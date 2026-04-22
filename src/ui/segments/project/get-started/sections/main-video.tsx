@@ -20,7 +20,7 @@ export function MainVideo() {
         'bg-primary-8 bg-[linear-gradient(143.15deg,rgba(0,39,102,0.7)_35.12%,rgba(0,39,102,0)_72.91%)]',
         'p-4 py-40 rounded-xl mt-8 pb-18 relative flex items-start flex-col gap-3 shadow-sm overflow-hidden'
       )}
-      href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/tutorials/${DEFAULT_GET_STARTED_VIDEO_SLUG}`}
+      href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/help/tutorials/${DEFAULT_GET_STARTED_VIDEO_SLUG}`}
     >
       <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10">
         <RiPlayFill className="text-white size-12 transition-all ease-in-expo" />

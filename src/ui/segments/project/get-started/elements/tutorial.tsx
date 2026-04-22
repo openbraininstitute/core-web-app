@@ -28,7 +28,7 @@ export function TutorialCard({
   const t = upperFirst(lowerCase(title));
   return (
     <Link
-      href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/tutorials/${slug}`}
+      href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/help/tutorials/${slug}`}
       className={cn(
         'bg-primary-9 group relative flex aspect-video w-full cursor-pointer select-none items-center justify-center overflow-hidden rounded-xl border-2 text-white transition-colors',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] hover:shadow-bnb',
