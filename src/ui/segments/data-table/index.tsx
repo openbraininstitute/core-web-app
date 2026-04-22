@@ -63,6 +63,7 @@ export type Props<T extends EntityCoreIdentifiable> = {
   allowDelete?: boolean;
   allowFilter?: boolean;
   allowSearch?: boolean;
+  searchOpenOnMount?: boolean;
   requireSpeciesSelector?: boolean;
   requireScopeSelector?: boolean;
   requireSearch?: boolean;
@@ -107,6 +108,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   allowDelete,
   allowFilter = true,
   allowSearch = true,
+  searchOpenOnMount = false,
   requireSpeciesSelector = false,
   requireScopeSelector = false,
   requireSearch = true,
@@ -151,7 +153,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
       }
       if (requireSearch) {
         leftAreas.push('search');
-        if (requireSpeciesSelector) leftColumns.push('max-content');
+        if (requireSpeciesSelector) leftColumns.push('minmax(0, 1fr)');
         else leftColumns.push('2fr');
       }
     }
@@ -180,28 +182,29 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
         )}
       >
         {allowTopMenu && (
-          <div className="mb-5 grid w-full items-center  gap-2" style={grid.parent}>
+          <div className="mb-5 grid w-full items-start gap-2" style={grid.parent}>
             {requireScopeSelector && <WorkflowScopeTabs className="max-w-max" />}
-            <div className="grid items-center gap-2 [grid-area:brain-and-search]" style={grid.left}>
+            <div className="flex min-w-0 flex-wrap items-start gap-2 [grid-area:brain-and-search]">
               {requireSpeciesSelector && (
-                <div className="[grid-area:brain-region-dropdown]">
-                  <PortalRegionBanner dataKey={dataKey} className="w-87.5" />
+                <div className="shrink-0">
+                  <PortalRegionBanner dataKey={dataKey} className="w-110" />
                 </div>
               )}
-              {!!left && <div className="w-full [grid-area:left]">{left}</div>}
+              {!!left && <div className="min-w-0 grow basis-80">{left}</div>}
               {allowSearch && requireSearch && (
-                <div className="w-full [grid-area:search]">
+                <div className="min-w-0 grow basis-80">
                   <Search
                     {...{
                       dataType,
                       dataKey,
+                      openOnMount: searchOpenOnMount,
                     }}
                   />
                 </div>
               )}
             </div>
             {allowFilter && (
-              <div className="[grid-area:filter]">
+              <div className="self-start [grid-area:filter]">
                 <div className="ml-auto flex h-12 items-stretch justify-end gap-3">
                   <FilterControls
                     filters={filters}

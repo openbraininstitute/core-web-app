@@ -13,13 +13,14 @@ import { cn } from '@/utils/css-class';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type SearchProps = {
+  openOnMount?: boolean;
   dataKey: string;
   dataType: TExtendedEntitiesTypeDict;
   className?: ComponentProps<'div'>['className'];
 };
 
-export function Search({ dataKey, dataType, className }: SearchProps) {
-  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+export function Search({ dataKey, dataType, className, openOnMount = false }: SearchProps) {
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(openOnMount ?? false);
   const [searchInput, setSearchInput] = useState<string>('');
   const deferredSearchInput = useDeferredValue(searchInput);
   const { sync: runStorageSync } = useDataListStateSnapshotActions({
@@ -72,7 +73,7 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
 
   return (
     <div
-      className={cn('flex items-center justify-start min-w-0 max-w-112.5 ml-0.5', className, {
+      className={cn('flex items-center justify-start min-w-0 w-full max-w-90 ml-0.5', className, {
         'border border-gray-100 rounded-full shadow-sm': isSearchOpen,
       })}
     >

@@ -20,7 +20,6 @@ import { Modal } from '@/ui/molecules/modal';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
@@ -231,6 +230,7 @@ export function EntitySelectorSingle({
         <div className="h-full w-full">
           <BrowseEntityScope
             id={instanceId}
+            requireScopeSelector
             requireBrainRegion={false}
             requireMiniDetailView={false}
             section={WorkspaceSection.SimulateWorkflow}
@@ -240,6 +240,7 @@ export function EntitySelectorSingle({
             mainTableProps={{
               selectionType: 'radio',
               onRowsSelected,
+              searchOpenOnMount: true,
             }}
             classNames={{
               container: 'h-full',
@@ -247,13 +248,6 @@ export function EntitySelectorSingle({
                 container: 'w-2/5 min-h-full',
               },
             }}
-            left={
-              <WorkflowScopeTabs
-                className="max-w-max"
-                defaultScope={WorkspaceScope.Public}
-                ref={scopeRef}
-              />
-            }
           />
         </div>
       </Modal>
