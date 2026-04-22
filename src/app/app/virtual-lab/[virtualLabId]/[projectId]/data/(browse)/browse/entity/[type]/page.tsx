@@ -66,6 +66,7 @@ export default async function Page({
             dataType={dataType}
             mainTableProps={{
               selectionType: 'checkbox',
+              searchOpenOnMount: true,
             }}
             allowDownload
             allowDelete

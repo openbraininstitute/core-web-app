@@ -3,6 +3,7 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { capitalize } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
+import { AnimatePresence, domAnimation, LazyMotion, m } from 'motion/react';
 import { type ReactNode, Suspense, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -104,11 +105,11 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
           classNames?.selector
         )}
       >
-        <div className="flex items-center flex-nowrap w-full min-w-0">
+        <div className="flex w-full min-w-0 items-center flex-nowrap">
           <div
             className={cn(
-              'pr-3 pl-4 hover:bg-gray-100',
-              isAllMode ? 'w-full rounded-full' : 'shrink-0 rounded-l-full'
+              'pr-3 pl-4 hover:bg-gray-100 min-w-0',
+              isAllMode ? 'w-full rounded-full' : 'flex-1 rounded-l-full'
             )}
           >
             <SpeciesSelector
@@ -135,7 +136,7 @@ function FocusedModeContent({ loading, onOpenTree }: { loading: boolean; onOpenT
   return (
     <>
       <div className="h-6 w-px bg-gray-200 shrink-0" />
-      <div className="items-stretch h-12 w-full rounded-r-full pl-3 pr-10 hover:bg-gray-100 py-2 min-w-0 overflow-hidden">
+      <div className="items-stretch h-12 w-full flex-1 rounded-r-full pl-3 pr-10 hover:bg-gray-100 py-2 min-w-0 overflow-hidden">
         {/** biome-ignore lint/a11y/useSemanticElements: tooltip is using button internally */}
         <div
           data-label="brain-region-switcher"
@@ -168,8 +169,21 @@ function SelectedRegionPill({ region }: { region: BrainRegionHierarchyBase }) {
       />
       <Tooltip disableHoverableContent>
         <TooltipTrigger className="min-w-0 flex-1">
-          <span className="block truncate text-left text-base font-bold leading-6">
-            {capitalize(region.name)}
+          <span className="relative block h-6 min-w-0 overflow-hidden text-left">
+            <LazyMotion features={domAnimation}>
+              <AnimatePresence initial={false}>
+                <m.span
+                  key={`${region.id}-${region.name}`}
+                  initial={{ opacity: 0, y: 18, filter: 'blur(1.5px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, y: -18, filter: 'blur(1.5px)' }}
+                  transition={{ duration: 0.2, ease: [0.2, 0.65, 0.3, 1] }}
+                  className="absolute inset-0 block truncate text-base font-bold leading-6 will-change-transform"
+                >
+                  {capitalize(region.name)}
+                </m.span>
+              </AnimatePresence>
+            </LazyMotion>
           </span>
         </TooltipTrigger>
         <TooltipContent

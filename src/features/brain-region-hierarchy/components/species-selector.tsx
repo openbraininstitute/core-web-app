@@ -2,6 +2,7 @@
 
 import { RiArrowDownSLine, RiCheckboxCircleFill } from '@remixicon/react';
 import { useAtomValue } from 'jotai';
+import { AnimatePresence, domAnimation, LazyMotion, m } from 'motion/react';
 
 import {
   AllSpeciesDisplayName,
@@ -18,13 +19,8 @@ import {
   SPECIES_SUBTITLES,
   SpeciesSelectionMode,
 } from '@/features/brain-region-hierarchy/types';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/ui/molecules/select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/ui/molecules/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 /**
@@ -100,10 +96,7 @@ export function SpeciesSelector({
   const triggerLabel = isAllMode ? AllSpeciesDisplayName : selectedSpecies?.displayName;
 
   return (
-    <span
-      id="species-selector"
-      className={cn('flex items-center py-2', isAllMode && 'w-full', className)}
-    >
+    <span id="species-selector" className={cn('flex w-full min-w-0 items-center py-2', className)}>
       <Select value={currentValue} onValueChange={onSpeciesChange} disabled={disabled}>
         <SelectTrigger
           size="sm"
@@ -111,23 +104,47 @@ export function SpeciesSelector({
             'h-auto min-h-8 gap-1 rounded-full border-none bg-transparent px-0 py-1 shadow-none',
             'focus:ring-0 focus-visible:ring-0',
             'transition-colors duration-150',
-            isAllMode ? 'w-full cursor-pointer justify-between' : 'w-auto min-w-25'
+            isAllMode ? 'w-full cursor-pointer justify-between' : 'w-full min-w-0 cursor-pointer'
           )}
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
           icon={<RiArrowDownSLine className="size-5.5 text-primary-8" />}
         >
-          <div className="flex items-center gap-1.5">
-            <span className="text-neutral-5 text-base font-normal">Species</span>
-            <SelectValue
-              placeholder={<div className="h-5 w-16 animate-pulse rounded-full bg-gray-100" />}
-            >
-              <span className="text-primary-9 text-base font-bold">
-                {triggerLabel || (
-                  <div className="h-5 w-16 animate-pulse rounded-full bg-gray-200" />
-                )}
-              </span>
-            </SelectValue>
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+            <span className="text-neutral-5 shrink-0 text-base font-normal">Species</span>
+            {triggerLabel ? (
+              <Tooltip disableHoverableContent>
+                <TooltipTrigger asChild>
+                  <span className="relative block h-6 w-full min-w-0 flex-1 overflow-hidden">
+                    <LazyMotion features={domAnimation}>
+                      <AnimatePresence initial={false}>
+                        <m.span
+                          key={triggerLabel}
+                          initial={{ opacity: 0, y: 18, filter: 'blur(1.5px)' }}
+                          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                          exit={{ opacity: 0, y: -18, filter: 'blur(1.5px)' }}
+                          transition={{ duration: 0.2, ease: [0.2, 0.65, 0.3, 1] }}
+                          className="text-primary-9 absolute inset-0 block truncate text-base leading-6 font-bold will-change-transform"
+                        >
+                          {triggerLabel}
+                        </m.span>
+                      </AnimatePresence>
+                    </LazyMotion>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent
+                  avoidCollisions
+                  side="top"
+                  sideOffset={0}
+                  className="bg-white shadow-bnb text-primary-8 border-gray-200"
+                  arrowClassName="bg-white"
+                >
+                  {triggerLabel}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <div className="h-5 w-16 animate-pulse rounded-full bg-gray-200" />
+            )}
           </div>
         </SelectTrigger>
         <SelectContent

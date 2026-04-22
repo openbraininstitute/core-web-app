@@ -65,6 +65,7 @@ export type Props<T> = {
   view: TCircuitRepresentationView | null;
   queryKeyHash?: string;
   expandableConfig?: ExpandableConfig<T>;
+  searchOpenOnMount?: boolean;
 };
 
 export function MainTable({
@@ -90,6 +91,7 @@ export function MainTable({
   view,
   queryKeyHash,
   expandableConfig,
+  searchOpenOnMount = false,
 }: Props<ICircuit>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -123,7 +125,7 @@ export function MainTable({
           )}
         >
           <div className="w-full [grid-area:search]">
-            <Search {...{ dataType, dataKey, className: 'pl-2' }} />
+            <Search {...{ dataType, dataKey, className: 'pl-2', openOnMount: searchOpenOnMount }} />
           </div>
           <div className="[grid-area:filter]">
             <div className="ml-auto flex h-12 items-stretch justify-center gap-3">
