@@ -94,7 +94,7 @@ function GroupRow({
                       ? '/images/quick-access/hippocampus.png'
                       : null;
             return (
-              <div key={item.entity.id} className="w-60 shrink-0">
+              <div key={item.entity.id} className="w-48 shrink-0">
                 <SingleCardItem
                   compact
                   hideArtifact={hideArtifact}
@@ -130,7 +130,7 @@ function WorkflowsRow({ context }: { context: WorkspaceContext }) {
         <h2 className="text-primary-9 text-xl font-bold">Workflows</h2>
       </div>
       <div className="flex w-full gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="w-60 shrink-0">
+        <div className="w-48 shrink-0">
           <Link
             href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`}
             className="bg-primary-9 group relative flex aspect-video w-full cursor-pointer select-none items-center justify-center gap-2 overflow-hidden rounded-xl border-2 border-transparent text-white shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] transition-all hover:shadow-bnb"
@@ -146,7 +146,7 @@ function WorkflowsRow({ context }: { context: WorkspaceContext }) {
 
 export function QuickAccessCarousel({ context, virtualLab, groups }: Props) {
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="flex w-full flex-col gap-3">
       {groupOrder.map((g) => (
         <GroupRow
           key={g}
