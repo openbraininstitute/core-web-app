@@ -172,7 +172,7 @@ export function ListingFilterPanel({
       ...fil,
       value: filterValues[fil.field],
     }));
-    setFilters(appliedFilters);
+    setFilters(appliedFilters as TCoreFilter[]);
     runStorageSync({
       Filters: appliedFilters as Array<TCoreFilter>,
       Page: DEFAULT_PAGE_NUMBER,
