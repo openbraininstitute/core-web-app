@@ -120,7 +120,7 @@ export function MainTable({
       >
         <div
           className={cn(
-            'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
+            'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5',
             '[grid-template-areas:"search_pagination_filter"]'
           )}
         >

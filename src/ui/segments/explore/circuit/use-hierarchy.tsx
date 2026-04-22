@@ -4,6 +4,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { chunk, flatMap, get, isArray, keyBy, mergeWith, uniqBy } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 import pMap from 'p-map';
 
 import {
@@ -14,6 +15,8 @@ import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/deriva
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
 import { circuitScaleFilter } from '@/entity-configuration/domain/model/circuit';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
@@ -166,6 +169,8 @@ export function useHierarchy({
 }) {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const { hierarchyByDerivation, loadingDerivation } = useHierarchyDerivationTree({
     view,
@@ -254,12 +259,11 @@ export function useHierarchy({
     useKeepPreviousData: false,
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
-      if (
-        get(queryParameters, 'within_brain_region_brain_region_id', null) &&
-        view === CircuitRepresentationView.Hierarchy
-      )
-        return true;
-      return false;
+      if (view !== CircuitRepresentationView.Hierarchy) return false;
+
+      if (isAllSpeciesMode) return true;
+
+      return Boolean(get(queryParameters, 'within_brain_region_brain_region_id', null));
     },
   });
 

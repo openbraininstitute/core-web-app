@@ -73,8 +73,8 @@ export function Search({ dataKey, dataType, className, openOnMount = false }: Se
 
   return (
     <div
-      className={cn('flex items-center justify-start min-w-0 w-full max-w-90 ml-0.5', className, {
-        'border border-gray-100 rounded-full shadow-sm': isSearchOpen,
+      className={cn('flex items-center justify-start min-w-0 w-full max-w-90 ml-0.5 ', className, {
+        'border border-gray-100 rounded-full shadow-sm bg-white': isSearchOpen,
       })}
     >
       <div className="flex w-full items-center">
