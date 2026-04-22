@@ -10,6 +10,8 @@ import ToolThumbnailGeneration from './renderers/image-renderer/tool-thumbnail-g
 import ToolPlotGenerator from './renderers/plot-renderer/tool-plot-generator';
 import { ToolSkeletonStandalone } from './renderers/skeleton/tool-skeleton';
 
+const ANIMATION_DURATION = 500;
+
 export default function PlotInChat({
   storageId,
   isBackup,
@@ -21,8 +23,19 @@ export default function PlotInChat({
   const isDragging = useIsDragging();
   const { isFullscreen } = usePanelState();
   const plotRenderKeyRef = React.useRef(panelWidth);
-  if (!isDragging) plotRenderKeyRef.current = panelWidth;
-  const plotRenderKey = isFullscreen ? 'fullscreen' : plotRenderKeyRef.current;
+  const [deferredFullscreen, setDeferredFullscreen] = React.useState(isFullscreen);
+  const isAnimating = isFullscreen !== deferredFullscreen;
+
+  // Defer the fullscreen key change until after the panel animation completes.
+  // During the animation the plot stays frozen (old key, resize disabled),
+  // then remounts once at the final size.
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDeferredFullscreen(isFullscreen), ANIMATION_DURATION);
+    return () => clearTimeout(timer);
+  }, [isFullscreen]);
+
+  if (!isDragging && !isAnimating) plotRenderKeyRef.current = panelWidth;
+  const plotRenderKey = deferredFullscreen ? 'fullscreen' : plotRenderKeyRef.current;
 
   const { data, isError, isLoading } = usePlotFile(storageId);
 
@@ -43,8 +56,8 @@ export default function PlotInChat({
     <ToolPlotGenerator
       result={{ storage_id: storageId }}
       data={data}
-      isSmall={plotRenderKeyRef.current < 420}
       plotRenderKey={plotRenderKey}
+      isAnimating={isAnimating}
     />
   );
 }

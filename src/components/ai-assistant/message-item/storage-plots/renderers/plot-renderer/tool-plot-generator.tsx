@@ -21,16 +21,16 @@ export interface ToolPlotGeneratorProps {
   className?: string;
   result: ToolResult | null;
   data?: { content: string; type: string };
-  isSmall?: boolean;
   plotRenderKey?: number | string;
+  isAnimating?: boolean;
 }
 
 export default function ToolPlotGenerator({
   className,
   result,
   data: providedData,
-  isSmall,
   plotRenderKey,
+  isAnimating,
 }: ToolPlotGeneratorProps) {
   if (!result) return null;
 
@@ -42,8 +42,8 @@ export default function ToolPlotGenerator({
         className={className}
         key={storageKey}
         providedData={providedData}
-        isSmall={isSmall}
         plotRenderKey={plotRenderKey}
+        isAnimating={isAnimating}
       />
     )
   );
@@ -52,13 +52,13 @@ export default function ToolPlotGenerator({
 function CustomPlot({
   className,
   providedData,
-  isSmall,
   plotRenderKey,
+  isAnimating,
 }: {
   className?: string;
   providedData: { content: string; type: string };
-  isSmall?: boolean;
   plotRenderKey?: number | string;
+  isAnimating?: boolean;
 }) {
   const { content, type } = providedData;
   const [plotReady, setPlotReady] = React.useState(false);
@@ -93,6 +93,45 @@ function CustomPlot({
     width: undefined,
     height: undefined,
     margin: props.layout?.margin,
+    font: {
+      ...props.layout?.font,
+      size: Math.max(props.layout?.font?.size || 12, 16),
+    },
+    xaxis: {
+      ...props.layout?.xaxis,
+      title: {
+        ...props.layout?.xaxis?.title,
+        font: {
+          ...props.layout?.xaxis?.title?.font,
+          size: Math.max(props.layout?.xaxis?.title?.font?.size || 14, 18),
+        },
+      },
+      tickfont: {
+        ...props.layout?.xaxis?.tickfont,
+        size: Math.max(props.layout?.xaxis?.tickfont?.size || 12, 14),
+      },
+    },
+    yaxis: {
+      ...props.layout?.yaxis,
+      title: {
+        ...props.layout?.yaxis?.title,
+        font: {
+          ...props.layout?.yaxis?.title?.font,
+          size: Math.max(props.layout?.yaxis?.title?.font?.size || 14, 18),
+        },
+      },
+      tickfont: {
+        ...props.layout?.yaxis?.tickfont,
+        size: Math.max(props.layout?.yaxis?.tickfont?.size || 12, 14),
+      },
+    },
+    legend: {
+      ...props.layout?.legend,
+      font: {
+        ...props.layout?.legend?.font,
+        size: Math.max(props.layout?.legend?.font?.size || 12, 14),
+      },
+    },
   };
 
   const handleShow = () => {
@@ -101,7 +140,10 @@ function CustomPlot({
 
   return (
     <>
-      <div className={classNames('h-full', styles.plotContainer)}>
+      <div
+        className={classNames('h-full', styles.plotContainer)}
+        style={isAnimating ? { contain: 'strict' } : undefined}
+      >
         <button
           type="button"
           onClick={handleShow}
@@ -135,7 +177,7 @@ function CustomPlot({
             config={{
               displaylogo: false,
               responsive: true,
-              modeBarButtons: isSmall ? [['pan2d', 'zoom2d', 'resetScale2d']] : undefined,
+              modeBarButtons: [['pan2d', 'zoom2d', 'resetScale2d', 'toImage']],
             }}
             useResizeHandler
             onInitialized={() => setPlotReady(true)}
@@ -145,7 +187,7 @@ function CustomPlot({
         </div>
       </div>
       <FullscreenDialog dialogRef={refDialog}>
-        {title && <PlotTitle title={title} titleFont={titleFont} />}
+        {title && <PlotTitle title={title} titleFont={titleFont} isFullscreen />}
         <Plot
           style={{
             width: '90vw',
@@ -169,21 +211,27 @@ function PlotTitle({
   title,
   titleFont,
   paddingRight,
+  isFullscreen,
 }: {
   title: string;
   titleFont: { size?: number; family?: string; weight?: string; color?: string };
   paddingRight?: string;
+  isFullscreen?: boolean;
 }) {
+  const baseFontSize = titleFont.size || 16;
+  const fontSize = isFullscreen ? Math.max(baseFontSize, 24) : Math.min(baseFontSize, 24);
+
   return (
     <div
       className="px-4 py-2 text-center font-bold"
       title={title}
       style={{
-        fontSize: Math.min(titleFont.size || 16, 24),
+        fontSize,
         fontFamily: titleFont.family || 'Arial, sans-serif',
         fontWeight: titleFont.weight || 'bold',
         color: titleFont.color || '#333',
         lineHeight: 1.3,
+        paddingLeft: paddingRight,
         paddingRight,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
