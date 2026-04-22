@@ -1,34 +1,30 @@
 import { RightOutlined } from '@ant-design/icons';
 import { Checkbox, ConfigProvider } from 'antd';
 
-import {
-  ActivityStatus,
-  type TActivityStatus,
-} from '@/api/entitycore/types/entities/task-activity';
-import { ScanParams } from '@/features/scan-config/components/scan-params';
+import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
 import { StatusBadge } from '@/features/scan-config/status-badge';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
+import type { TActivityStatus } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TExtractionTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 
 type Props = {
-  config: ITaskConfig<TExtractionTaskConfigMeta>;
+  config: ITaskConfig<never>;
   execStatus?: TActivityStatus;
   onSelect: () => void;
   selected?: boolean;
-  onSelectedForExtractionChange: (configId: string, selected: boolean) => void;
-  selectedForExtraction: boolean;
+  onSelectedForChange: (configId: string, selected: boolean) => void;
+  selectedFor: boolean;
   selectionDisabled?: boolean;
 };
 
-export function ExtractionConfigsLeftMenu({
+export function ConfigsLeftMenu({
   config,
   execStatus,
   onSelect,
   selected,
-  onSelectedForExtractionChange,
-  selectedForExtraction,
+  onSelectedForChange,
+  selectedFor,
   selectionDisabled,
 }: Props) {
   const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED] ?? '#004793';
@@ -57,8 +53,8 @@ export function ExtractionConfigsLeftMenu({
                   <Checkbox
                     className="mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap"
                     disabled={selectionDisabled}
-                    onChange={(e) => onSelectedForExtractionChange(config.id, e.target.checked)}
-                    checked={selectedForExtraction}
+                    onChange={(e) => onSelectedForChange(config.id, e.target.checked)}
+                    checked={selectedFor}
                     style={{ color, maxWidth: '100%', display: 'flex' }}
                   >
                     <span className="text-lg transition-colors duration-300">{config.name}</span>
@@ -79,10 +75,10 @@ export function ExtractionConfigsLeftMenu({
             <RightOutlined className="ml-2 text-sm" />
           </div>
         </button>
-        <ScanParams
+        {/* <ScanParams
           scanParams={config.meta.scan_parameters as Record<string, string | number>}
           color={color}
-        />
+        /> */}
       </div>
     </div>
   );

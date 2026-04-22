@@ -5,7 +5,7 @@ import { Checkbox } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
-import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
@@ -21,14 +21,15 @@ import {
   useScanConfigTaskRunner,
 } from '@/features/scan-config/task-runner';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
-import { ExtractionInOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
-import { ExtractionConfigsLeftMenu } from '@/features/scan-config/use-cases/extraction/left-menu';
-import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
+import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files';
+import { ConfigsLeftMenu } from '@/features/scan-config/use-cases/build/left-menu';
+import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
+import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 import { classNames } from '@/util/utils';
 
 import type { CheckboxProps } from 'antd';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TExtractionTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
+import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
@@ -42,9 +43,7 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);
-  const [activeConfig, setActiveConfig] = useState<ITaskConfig<TExtractionTaskConfigMeta> | null>(
-    null
-  );
+  const [activeConfig, setActiveConfig] = useState<ITaskConfig<never> | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
 
@@ -87,11 +86,11 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
 
   const activeConfigExecStatus = activeConfigExecution?.status;
 
-  const onActiveConfigChange = useCallback((config: ITaskConfig<TExtractionTaskConfigMeta>) => {
+  const onActiveConfigChange = useCallback((config: ITaskConfig<never>) => {
     setActiveConfig(config);
   }, []);
 
-  const onSelectedForExtractionChange = useCallback((configId: string, selected: boolean) => {
+  const onSelectedForChange = useCallback((configId: string, selected: boolean) => {
     if (selected) {
       setSelectedConfigIds((prev) => [...prev, configId]);
     } else {
@@ -169,14 +168,14 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
             )}
             {!loading &&
               configsResponse?.configList?.map((config) => (
-                <ExtractionConfigsLeftMenu
+                <ConfigsLeftMenu
                   key={config.id}
                   selected={activeConfig?.id === config.id}
                   config={config}
                   execStatus={statusMap.get(config.id)}
                   onSelect={() => onActiveConfigChange(config)}
-                  onSelectedForExtractionChange={onSelectedForExtractionChange}
-                  selectedForExtraction={selectedConfigIds.includes(config.id)}
+                  onSelectedForChange={onSelectedForChange}
+                  selectedFor={selectedConfigIds.includes(config.id)}
                   selectionDisabled={runBuildPending}
                 />
               ))}
@@ -192,7 +191,7 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
             disabled={runBuildPending || selectedConfigIds.length === 0}
           >
             <div className="flex justify-center gap-4">
-              <span className="pl-10">Launch extractions {launchBtnLabelPrefix}</span>
+              <span className="pl-10">Launch builds {launchBtnLabelPrefix}</span>
               <div className="w-6">{runBuildPending && <LoadingOutlined />}</div>
             </div>
           </button>
@@ -201,7 +200,7 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
 
       <div className="relative border-r border-gray-200 px-4">
         {!!activeConfig && (
-          <ExtractionInOutFiles
+          <InOutFiles
             config={activeConfig}
             execStatus={activeConfigExecStatus}
             execution={activeConfigExecution}

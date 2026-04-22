@@ -38,13 +38,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { TWorkspaceSection } from '@/constants';
-
-export const MiniDetailViewTheme = {
-  Light: 'light',
-  Default: 'default',
-} as const;
-
-export type TMiniDetailViewTheme = (typeof MiniDetailViewTheme)[keyof typeof MiniDetailViewTheme];
+import type { TMiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 type Props = {
   section?: TWorkspaceSection;
@@ -241,7 +235,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
 
   const actions = match({ section })
     .with({ section: WorkspaceSection.Data }, () => (
-      <DataActions record={record} dataType={dataType} />
+      <DataActions record={record} dataType={dataType} theme={theme} />
     ))
     .with(
       {
