@@ -8,6 +8,7 @@ import { isNil } from 'es-toolkit';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import { type ReactNode, useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { da } from 'zod/v4/locales';
 
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import {
@@ -85,6 +86,7 @@ export function NotebooksLayout({ children, active }: Props) {
   const [step, setStep] = useState(0);
   const [studentEmails, setStudentEmails] = useState<string[]>([]);
   const breakpoint = useDefaultBreakpoint();
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   const { data: userGroups } = useQuery({
     queryKey: userKeyBuilder.groups(),
@@ -123,6 +125,7 @@ export function NotebooksLayout({ children, active }: Props) {
     setShowCourseModal(false);
     setStep(0);
     setStudentEmails([]);
+    setFileList([]);
   }, []);
 
   const handleUploadData = () => {
@@ -298,6 +301,8 @@ export function NotebooksLayout({ children, active }: Props) {
                       onSuccess={() => setStep(1)}
                       studentEmails={studentEmails}
                       setStudentEmails={setStudentEmails}
+                      fileList={fileList}
+                      setFileList={setFileList}
                     />
                   </div>
                 </div>
@@ -326,15 +331,17 @@ const CsvUploadValidator = ({
   onSuccess,
   studentEmails,
   setStudentEmails,
+  fileList,
+  setFileList,
 }: {
   vlabId: string;
   onCancel: () => void;
   onSuccess: () => void;
   studentEmails: string[];
   setStudentEmails: (emails: string[]) => void;
+  fileList: UploadFile[];
+  setFileList: (fileList: UploadFile[]) => void;
 }) => {
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
-
   const [error, setError] = useState('');
   const [credits, setCredits] = useState(0);
 
@@ -460,7 +467,7 @@ const CsvUploadValidator = ({
         </div>
       )}
 
-      {studentEmails.length > 0 && balancePerStudent < 1 && (
+      {studentEmails.length > 0 && balancePerStudent < 100000000 && (
         <div className="flex flex-col gap-2">
           <div className="text-lg">Purchase credits to continue.</div>
 
@@ -484,12 +491,7 @@ const CsvUploadValidator = ({
             </div>
           )}
 
-          <PaymentFlow
-            credits={credits}
-            vlabId={vlabId}
-            onCancel={onCancel}
-            onSuccess={onSuccess}
-          />
+          <PaymentFlow credits={credits} vlabId={vlabId} onCancel={onCancel} />
         </div>
       )}
 
@@ -509,12 +511,10 @@ function PaymentFlow({
   credits,
   vlabId,
   onCancel,
-  onSuccess,
 }: {
   credits: number;
   vlabId: string;
   onCancel: () => void;
-  onSuccess: () => void;
 }) {
   const [
     { data: setupIntent, isPending: loadingIntent },
@@ -549,7 +549,7 @@ function PaymentFlow({
 
   return (
     <Elements stripe={stripeData} options={buildStripeFormOptions(setupIntent.data?.client_secret)}>
-      <PaymentForm credits={credits} vlabId={vlabId} onCancel={onCancel} onSuccess={onSuccess} />
+      <PaymentForm credits={credits} vlabId={vlabId} onCancel={onCancel} />
     </Elements>
   );
 }
@@ -558,12 +558,10 @@ function PaymentForm({
   credits,
   vlabId,
   onCancel,
-  onSuccess,
 }: {
   credits: number;
   vlabId: string;
   onCancel: () => void;
-  onSuccess: () => void;
 }) {
   const [stripeElementsReady, setElementsReady] = useState(false);
   const onReady = () => setElementsReady(true);
@@ -626,6 +624,8 @@ function PaymentForm({
         elements.getElement('payment')?.clear();
       });
 
+      console.log('\n\nPayment data', data);
+
       if (data) {
         successNotify({
           message: `Successfully purchased ${credits} credits for ${data.amount / 100} ${data.currency.toUpperCase()}`,
@@ -635,7 +635,6 @@ function PaymentForm({
         await queryClient.invalidateQueries({
           queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
         });
-        onSuccess();
       }
 
       if (error) {
@@ -828,11 +827,17 @@ function CourseSetup({
 
         const balance = balanceRes.data.balance;
 
+        console.log('\n\n BALANCE', balance);
+
         const budgetPerStudent = Math.floor(parseInt(balance, 10) / studentEmails.length);
+
+        console.log('\n\nBUDGET PER STUDENT', budgetPerStudent);
 
         if (budgetPerStudent < 1) {
           throw new Error('Not enough credits to initialize course');
         }
+
+        return;
 
         const projectCreationResults = await Promise.allSettled(
           studentEmails.map((email) =>
