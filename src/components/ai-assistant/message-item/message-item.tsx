@@ -1,5 +1,6 @@
 'use client';
 
+import { getToolName, isToolUIPart } from 'ai';
 import React from 'react';
 
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
@@ -11,7 +12,7 @@ import { BackupPlotsWrapper, extractStorageIdsFromMessage } from './backup-plots
 import { CollapsibleMessage } from './collapsible-message';
 import ToolsProgress from './tools-progress';
 
-import type { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/react';
 
 import styles from './message-item.module.css';
 
@@ -75,7 +76,12 @@ function MessageChild({
             <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
           </div>
           <div className={styles.info}>
-            <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
+            <div className={styles.timestamp}>
+              {(() => {
+                const createdAt = getCreatedAt(value);
+                return createdAt ? formatDate(createdAt) : null;
+              })()}
+            </div>
           </div>
         </div>
       );
@@ -97,10 +103,9 @@ function MessageChild({
             </GithubFlavorMarkdown>
           );
         }
-        if (part.type === 'tool-invocation') {
-          const { toolCallId } = part.toolInvocation;
+        if (isToolUIPart(part)) {
           return (
-            <div key={`tool-${toolCallId}`}>
+            <div key={`tool-${part.toolCallId}`}>
               <ToolsProgress part={part} />
             </div>
           );
@@ -137,19 +142,12 @@ function debugToConsole(value: UIMessage) {
   // eslint-disable-next-line no-console
   console.log(value);
   for (const part of value.parts) {
-    if (part.type !== 'tool-invocation') continue;
+    if (!isToolUIPart(part)) continue;
 
-    const toolInvocation = part.toolInvocation as ToolInvocation & { result: string };
     // eslint-disable-next-line no-console
-    console.debug(`%c${toolInvocation.toolName}`, 'font-weight: bolder; font-size: 110%');
-    const { result } = toolInvocation;
-    try {
-      // eslint-disable-next-line no-console
-      console.debug(JSON.parse(result));
-    } catch (_ex) {
-      // eslint-disable-next-line no-console
-      console.error('Not a valid JSON:', result);
-    }
+    console.debug(`%c${getToolName(part)}`, 'font-weight: bolder; font-size: 110%');
+    // eslint-disable-next-line no-console
+    console.debug(part.output);
   }
 }
 
@@ -157,6 +155,14 @@ function useDebug(): boolean {
   const [debug, setDebug] = React.useState(false);
   React.useEffect(() => setDebug(window.localStorage.getItem('DEBUG') === '1'), []);
   return debug;
+}
+
+/**
+ * Extract createdAt from a message. In v6 UIMessage no longer has createdAt,
+ * but persisted v4 messages may still carry it as an extra property.
+ */
+function getCreatedAt(msg: UIMessage): Date | string | undefined {
+  return (msg as UIMessage & { createdAt?: Date | string }).createdAt;
 }
 
 function formatDate(d: Date | string): string {

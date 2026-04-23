@@ -1,8 +1,9 @@
 'use client';
 
+import { isToolUIPart } from 'ai';
 import React from 'react';
 
-import type { UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/react';
 
 import styles from './collapsible-message.module.css';
 
@@ -27,15 +28,15 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
       if (collapsedIndices.has(i)) {
         const part = parts[i];
 
-        if (part.type === 'tool-invocation') {
+        if (isToolUIPart(part)) {
           // If we're not already in a tool sequence, this is a new step
           if (!inToolSequence) {
             count++;
             inToolSequence = true;
           }
           // Otherwise, it's part of the same parallel tool call step
-        } else if (part.type === 'text' && 'text' in part && part.text !== '') {
-          // Text part ends the tool sequence
+        } else {
+          // Any non-tool part (text, reasoning, step-start, etc.) ends the tool sequence
           inToolSequence = false;
         }
       }
@@ -123,7 +124,7 @@ export function CollapsibleMessage({ message, status, children }: CollapsibleMes
 
   return (
     <>
-      {collapsedChildren.length > 0 && (
+      {collapsedChildren.length > 0 && stepCount > 0 && (
         <div className={styles.thinkingContainer} data-receiving={animatingIndex !== null}>
           <button
             type="button"

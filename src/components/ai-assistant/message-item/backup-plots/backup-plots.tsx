@@ -1,10 +1,12 @@
+import { isToolUIPart } from 'ai';
 import React from 'react';
 
+import { parseToolOutput } from '@/services/ai-agent/utils/parse-tool-output';
 import { classNames } from '@/util/utils';
 
 import { PlotInChat } from '../storage-plots';
 
-import type { UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/react';
 
 import styles from './backup-plots.module.css';
 
@@ -31,10 +33,10 @@ export function extractStorageIdsFromMessage(parts: UIMessage['parts']): string[
   const ids: string[] = [];
 
   parts.forEach((part) => {
-    if (part.type !== 'tool-invocation' || part.toolInvocation.state !== 'result') return;
+    if (!isToolUIPart(part) || part.state !== 'output-available') return;
 
     try {
-      const result = JSON.parse(part.toolInvocation.result);
+      const result = parseToolOutput(part.output);
       ids.push(...extractStorageIdsFromToolResult(result));
     } catch {}
   });
@@ -56,7 +58,7 @@ export interface BackupPlotsWrapperProps {
 export function BackupPlotsWrapper({ message, isLastMessage, status }: BackupPlotsWrapperProps) {
   const deferredParts = React.useDeferredValue(message.parts);
 
-  const backupPlotsData = deferredParts.filter((part) => part.type === 'tool-invocation');
+  const backupPlotsData = deferredParts.filter((part) => isToolUIPart(part));
 
   const textParts = deferredParts.filter((p) => p.type === 'text');
   const lastTextPart = textParts.length > 0 ? textParts[textParts.length - 1].text : undefined;

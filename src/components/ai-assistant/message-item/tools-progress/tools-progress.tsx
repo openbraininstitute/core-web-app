@@ -1,4 +1,5 @@
 import { RiResetLeftLine } from '@remixicon/react';
+import { type DynamicToolUIPart, getToolName, type ToolUIPart } from 'ai';
 import { useAtom } from 'jotai';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -8,13 +9,13 @@ import Chevron from '@/components/icons/Chevron';
 import HelpIconI from '@/components/icons/HelpIcon';
 import { configStateAtom } from '@/services/ai-agent/hooks/chat';
 import { useAITools } from '@/services/ai-agent/tools/tools';
+import { parseToolOutput } from '@/services/ai-agent/utils/parse-tool-output';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
 import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
 
-import type { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { Config } from '@/features/scan-config/components/components';
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
@@ -22,7 +23,7 @@ import styles from './tools-progress.module.css';
 
 interface ToolsProgressProps {
   className?: string;
-  part: ToolInvocationUIPart;
+  part: ToolUIPart | DynamicToolUIPart;
 }
 
 export default function ToolsProgress({ className, part }: ToolsProgressProps) {
@@ -46,12 +47,12 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const handleRestore = (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // Extract state directly from the tool invocation result
-    if (part.toolInvocation.state !== 'result') return;
+    // Extract state directly from the tool part output
+    if (part.state !== 'output-available') return;
 
     try {
-      const result = JSON.parse(part.toolInvocation.result as string);
-      const state = result?.state?.smc_simulation_config;
+      const result = parseToolOutput(part.output) as Record<string, unknown>;
+      const state = (result?.state as Record<string, unknown>)?.smc_simulation_config;
 
       if (state) {
         setConfig(state as Config);
@@ -66,11 +67,11 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const toolsState = getToolsState(part, tools);
   if (toolsState === null) return null;
 
-  const { tool, state, invocation, key } = toolsState;
+  const { tool, state, key } = toolsState;
   const Icon = tool.icon;
   const isExpanded = expandedToolKeys.has(key);
-  const isRunning = state !== 'result';
-  const isStateToolCall = invocation.toolName === 'editstate' || invocation.toolName === 'getstate';
+  const isRunning = state !== 'output-available';
+  const isStateToolCall = getToolName(part) === 'editstate' || getToolName(part) === 'getstate';
   const showRestore = isStateToolCall && !isRunning;
 
   return (
@@ -148,30 +149,30 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
         </button>
 
         {/* Expandable Details */}
-        {invocation && (
-          <div
-            className={cn(styles.details, isExpanded ? styles.detailsOpen : styles.detailsClosed)}
-            aria-hidden={!isExpanded}
-            role="region"
-            aria-label={`${tool.name} details`}
-          >
-            <div className={styles.detailsInner}>
-              {invocation.args && Object.keys(invocation.args).length > 0 && (
-                <div className={styles.section}>
-                  <div className={styles.sectionTitle}>Arguments</div>
-                  <pre className={styles.codeBlock}>{formatInputOutputs(invocation.args)}</pre>
-                </div>
-              )}
+        <div
+          className={cn(styles.details, isExpanded ? styles.detailsOpen : styles.detailsClosed)}
+          aria-hidden={!isExpanded}
+          role="region"
+          aria-label={`${tool.name} details`}
+        >
+          <div className={styles.detailsInner}>
+            {part.input != null &&
+            typeof part.input === 'object' &&
+            Object.keys(part.input as Record<string, unknown>).length > 0 ? (
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>Arguments</div>
+                <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
+              </div>
+            ) : null}
 
-              {invocation.state === 'result' && invocation.result && (
-                <div className={styles.section}>
-                  <div className={styles.sectionTitle}>Result</div>
-                  <pre className={styles.codeBlock}>{formatInputOutputs(invocation.result)}</pre>
-                </div>
-              )}
-            </div>
+            {part.state === 'output-available' && part.output != null ? (
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>Result</div>
+                <pre className={styles.codeBlock}>{formatInputOutputs(part.output)}</pre>
+              </div>
+            ) : null}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -179,23 +180,23 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
 
 type ToolsStates = {
   tool: AIAssistantTool;
-  state: 'partial-call' | 'call' | 'result';
-  invocation: ToolInvocation;
+  state: (ToolUIPart | DynamicToolUIPart)['state'];
   key: string;
 };
 
-function getToolsState(part: ToolInvocationUIPart, tools: AIAssistantTool[]): ToolsStates | null {
-  const invocation = part.toolInvocation;
-  if (!invocation || !invocation.toolName) return null;
-  const tool = tools.find((t) => t.id === invocation.toolName);
+function getToolsState(
+  part: ToolUIPart | DynamicToolUIPart,
+  tools: AIAssistantTool[]
+): ToolsStates | null {
+  const toolName = getToolName(part);
+  if (!toolName) return null;
+  const tool = tools.find((t) => t.id === toolName);
   if (!tool) return null;
-  const keyBase = (invocation.toolName ?? 'tool') as string;
-  const key = `${keyBase}-${tool.id}`;
+  const key = `${toolName}-${tool.id}`;
 
   return {
     tool,
-    state: invocation.state,
-    invocation,
+    state: part.state,
     key,
   };
 }

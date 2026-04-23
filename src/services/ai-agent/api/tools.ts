@@ -1,5 +1,6 @@
-import { fetchJSON, asyncCreateSquash } from './util';
 import { isType } from '@/util/type-guards';
+
+import { asyncCreateSquash, fetchJSON } from './util';
 
 export const serviceAiAgentListTools = asyncCreateSquash(
   async (accessToken: string): Promise<AiAgentListToolsResponse> => {
@@ -13,10 +14,10 @@ export const serviceAiAgentListTools = asyncCreateSquash(
   }
 );
 
-type AiAgentListToolsResponse = Array<{ name: string; name_frontend: string }>;
+type AiAgentListToolsResponse = Array<{ name: string; nameFrontend: string }>;
 
 function isAiAgentListToolsResponse(data: unknown): data is AiAgentListToolsResponse {
-  return isType(data, ['array', { name: 'string', name_frontend: 'string' }]);
+  return isType(data, ['array', { name: 'string', nameFrontend: 'string' }]);
 }
 
 export const serviceAiAgentGetTool = asyncCreateSquash(
@@ -33,22 +34,20 @@ export const serviceAiAgentGetTool = asyncCreateSquash(
 
 export type AiAgentGetToolResponse = {
   name: string;
-  name_frontend: string;
+  nameFrontend: string;
   description: string;
-  description_frontend: string;
-  is_online: boolean;
-  hil: boolean;
-  input_schema: string;
+  descriptionFrontend: string;
+  isOnline: boolean;
+  inputSchema: string;
 };
 
 function isAiAgentGetToolResponse(data: unknown): data is AiAgentGetToolResponse {
   return isType(data, {
     name: 'string',
-    name_frontend: 'string',
+    nameFrontend: 'string',
     description: 'string',
-    description_frontend: 'string',
-    is_online: 'boolean',
-    hil: 'boolean',
-    input_schema: 'string',
+    descriptionFrontend: 'string',
+    isOnline: 'boolean',
+    inputSchema: 'string',
   });
 }

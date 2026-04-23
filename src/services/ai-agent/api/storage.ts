@@ -1,5 +1,6 @@
-import { fetchJSON } from './util';
 import { assertString, isString } from '@/util/type-guards';
+
+import { fetchJSON } from './util';
 
 export async function serviceAiAgentStorageGetFileContent({
   accessToken,
@@ -12,7 +13,6 @@ export async function serviceAiAgentStorageGetFileContent({
     accessToken,
     method: 'GET',
     path: `storage/${fileIdentifier}/presigned-url`,
-    params: { file_identifier: fileIdentifier },
     typeGuard: isString,
   });
   assertString(url, 'presigned-url');

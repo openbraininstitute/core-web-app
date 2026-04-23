@@ -1,12 +1,13 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
-import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React from 'react';
 
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
+
+import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
+import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
 
 /**
  *
@@ -53,7 +54,7 @@ async function loadTools(accessToken: string | undefined): Promise<AIAssistantTo
 
   const list = await serviceAiAgentListTools(accessToken);
   const tools: AIAssistantTool[] = list.map(
-    (summary) => new AIAssistantTool(summary.name, summary.name_frontend, '')
+    (summary) => new AIAssistantTool(summary.name, summary.nameFrontend, '')
   );
   return tools.sort(sortToolsByName);
 }
@@ -71,5 +72,5 @@ async function loadTool(accessToken: string | undefined, toolId: string): Promis
     return new AIAssistantTool(toolId, '', '');
   }
   const tool = await serviceAiAgentGetTool(accessToken, toolId);
-  return new AIAssistantTool(tool.name, tool.name_frontend, tool.description_frontend);
+  return new AIAssistantTool(tool.name, tool.nameFrontend, tool.descriptionFrontend);
 }

@@ -33,7 +33,7 @@ export default function Chat({ className, threadId }: ChatProps) {
   const healthError = assistant.healthError.useValue();
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
 
-  const { messages, status, append, error, stop, isLoadingMessages } = useServiceAiAgentChat(
+  const { messages, status, sendMessage, error, stop, isLoadingMessages } = useServiceAiAgentChat(
     threadId ?? ''
   );
   const [suggestions, clearSuggestions, isLoadingSuggestions] =
@@ -133,10 +133,7 @@ export default function Chat({ className, threadId }: ChatProps) {
 
   const handlePrompt = (content: string) => {
     setIsAutoScrollEnabled(true);
-    append({
-      role: 'user',
-      content,
-    });
+    sendMessage(content);
   };
 
   const handleWheel = (event: React.WheelEvent) => {

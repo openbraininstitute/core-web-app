@@ -1,7 +1,8 @@
 'use client';
 
-import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
+import { useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
+import { DefaultChatTransport, getToolName, isToolUIPart } from 'ai';
 import { atom, useAtom, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 
@@ -14,8 +15,8 @@ import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
+import { parseToolOutput } from '../utils/parse-tool-output';
 
-import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
@@ -37,33 +38,45 @@ export function useServiceAiAgentChat(threadId: string) {
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
 
   const chat = useChat({
-    api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
-    initialMessages: assistantInitialMessages,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    experimental_prepareRequestBody: ({ messages }) => {
-      const lastMessage = messages.at(-1);
+    transport: new DefaultChatTransport({
+      api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
+      headers: () => ({
+        Authorization: `Bearer ${accessToken}`,
+      }),
+      prepareSendMessagesRequest: ({ messages }) => {
+        const lastMessage = messages.at(-1);
 
-      return {
-        content: (lastMessage?.content ?? '').trim(),
-        tool_selection: activeTools,
-        frontend_url: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
-        shared_state: aiAgentState,
-      };
-    },
-    fetch: async (url, options) => {
-      const resp = await fetch(url, options);
-      const newRateLimit: AiAgentRateLimitEndpoint = {
-        limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
-        remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
-        reset_in: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
-      };
-      setRateLimit(newRateLimit);
-      return resp;
-    },
+        return {
+          body: {
+            parts: lastMessage?.parts ?? [],
+            toolSelection: activeTools,
+            frontendUrl: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
+            sharedState: aiAgentState,
+          },
+        };
+      },
+      fetch: async (url, options) => {
+        const resp = await fetch(url, options);
+        const newRateLimit: AiAgentRateLimitEndpoint = {
+          limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
+          remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
+          reset_in: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
+        };
+        setRateLimit(newRateLimit);
+        return resp;
+      },
+    }),
+    messages: assistantInitialMessages,
   });
+
+  // Sync loaded messages into the chat hook when they change
+  // (useChat's `messages` prop is only read on mount; subsequent updates need setMessages)
+  useEffect(() => {
+    if (assistantInitialMessages.length > 0) {
+      chat.setMessages(assistantInitialMessages);
+    }
+  }, [assistantInitialMessages]);
 
   useEffect(() => {
     if (assistantInitialMessages.length === chat.messages.length) {
@@ -72,27 +85,19 @@ export function useServiceAiAgentChat(threadId: string) {
     const lastMessage = chat.messages[chat.messages.length - 1];
 
     // Find the most recent editstate tool result
-    const toolInvocation = lastMessage?.parts
+    const toolPart = lastMessage?.parts
       .toReversed()
       .find(
-        (p) =>
-          p.type === 'tool-invocation' &&
-          p.toolInvocation.toolName === 'editstate' &&
-          p.toolInvocation.state === 'result'
-      ) as ToolInvocationUIPart | undefined;
+        (p) => isToolUIPart(p) && getToolName(p) === 'editstate' && p.state === 'output-available'
+      );
 
-    // @ts-expect-error
-    if (toolInvocation?.toolInvocation?.result) {
+    if (toolPart && 'output' in toolPart && toolPart.output) {
       try {
-        // @ts-expect-error
-        const result = JSON.parse(toolInvocation.toolInvocation.result ?? {});
-        setConfig(result.state.smc_simulation_config ?? null);
+        const result = parseToolOutput(toolPart.output) as Record<string, unknown>;
+        const state = result.state as Record<string, Config> | undefined;
+        setConfig(state?.smc_simulation_config ?? null);
       } catch {
-        logError(
-          'Failed to parse tool invocation result as JSON:',
-          // @ts-expect-error
-          toolInvocation.toolInvocation.result
-        );
+        logError('Failed to parse tool output:', toolPart.output);
       }
     }
   }, [chat.messages, setConfig, assistantInitialMessages.length]);
@@ -104,16 +109,16 @@ export function useServiceAiAgentChat(threadId: string) {
   return {
     messages: chat.messages,
     isLoadingMessages,
-    append: (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
+    sendMessage: (text: string) => {
       assistant.isEmptyThread.set(false);
-      chat.append(message, chatRequestOptions);
+      chat.sendMessage({ text });
       if (chat.messages.length === 0) {
         // We suggest a title for the thread based on the first message
         try {
           serviceAiAgentThreadSuggestTitle({
             accessToken: accessToken ?? 'NO-TOKEN',
             threadId,
-            title: message.content,
+            title: text,
           }).then(() => {
             queryClient.invalidateQueries({
               queryKey: keyBuilderAI.history(virtualLabId, projectId),
