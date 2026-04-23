@@ -1,4 +1,4 @@
-import { handleTaskLogsStreamRoute } from '@/features/task-logs-stream/endpoint';
+import { handleTaskLogsStreamRoute } from '@/features/task-logs-stream/steam';
 
 import type { NextRequest } from 'next/server';
 

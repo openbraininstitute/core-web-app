@@ -1,20 +1,34 @@
 'use client';
 
+import {
+  RiArrowDownSLine,
+  RiArrowUpSLine,
+  RiDownload2Line,
+  RiFileCopyLine,
+} from '@remixicon/react';
 import { useMemo, useState } from 'react';
 
+import { Input } from '@/ui/molecules/input';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/ui/molecules/dropdown-menu';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/ui/molecules/select';
+import { cn } from '@/utils/css-class';
 
-import type { ILogEntry } from '@/features/task-logs-stream/logs-viewer';
+import type { ILogEntry } from '@/features/task-logs-stream/types';
 
 interface IProps {
   entries: ILogEntry[];
   query: string;
   onQueryChange: (params: { query: string }) => void;
+  searchDisabled?: boolean;
+  totalMatches: number;
+  activeMatchIndex: number;
+  onGoToPreviousMatch: () => void;
+  onGoToNextMatch: () => void;
 }
 
 function toTxt({ entries }: { entries: ILogEntry[] }) {
@@ -52,7 +66,16 @@ function downloadAsFile({
   URL.revokeObjectURL(url);
 }
 
-export function LogsActions({ entries, query, onQueryChange }: IProps) {
+export function LogsActions({
+  entries,
+  query,
+  onQueryChange,
+  searchDisabled = false,
+  totalMatches,
+  activeMatchIndex,
+  onGoToPreviousMatch,
+  onGoToNextMatch,
+}: IProps) {
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
   const hasEntries = entries.length > 0;
@@ -78,54 +101,109 @@ export function LogsActions({ entries, query, onQueryChange }: IProps) {
   };
 
   return (
-    <div className="mb-4 rounded-xl border border-neutral-200 bg-white p-3">
-      <div className="mb-3 flex items-center gap-2">
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => onQueryChange({ query: event.target.value })}
-          className="h-9 w-full rounded-lg border border-neutral-300 px-3 text-sm outline-none focus:border-primary-7"
-          placeholder="Search logs (token search)"
-          aria-label="Search logs"
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+    <div className="mb-4 rounded-2xl border border-neutral-200 bg-white p-3 shadow-md">
+      <div className="flex items-center gap-2">
+        <div className="relative min-w-0 flex-1">
+          <Input
+            type="text"
+            value={query}
+            onChange={(event) => onQueryChange({ query: event.target.value })}
+            disabled={searchDisabled}
+            className="h-12 min-w-0 w-full rounded-full border border-neutral-300 pr-34 pl-5 text-base outline-none focus:border-primary-7"
+            placeholder="Search logs"
+            aria-label="Search logs"
+          />
+          <div className="absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-1">
+            <span className="text-xs text-neutral-600 tabular-nums">
+              {totalMatches === 0 ? '0/0' : `${activeMatchIndex + 1}/${totalMatches}`}
+            </span>
             <button
               type="button"
-              disabled={!hasEntries}
-              className="h-9 rounded-lg border border-neutral-300 px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={onGoToPreviousMatch}
+              disabled={searchDisabled || totalMatches === 0}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-neutral-300 text-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Previous highlighted match"
             >
-              Copy logs
+              <RiArrowUpSLine className="size-4" />
             </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onSelect={() => void onCopy({ format: 'txt' })}>TXT</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => void onCopy({ format: 'json' })}>
-              JSON
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
             <button
               type="button"
-              disabled={!hasEntries}
-              className="h-9 rounded-lg border border-neutral-300 px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={onGoToNextMatch}
+              disabled={searchDisabled || totalMatches === 0}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-neutral-300 text-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Next highlighted match"
             >
-              Download logs
+              <RiArrowDownSLine className="size-4" />
             </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onSelect={() => onDownload({ format: 'txt' })}>TXT</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onDownload({ format: 'json' })}>
+          </div>
+        </div>
+        <Select
+          onValueChange={(value: 'txt' | 'json') => {
+            void onCopy({ format: value });
+          }}
+          disabled={!hasEntries}
+        >
+          <SelectTrigger
+            className={cn(
+              'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
+              'h-12 w-fit rounded-full border border-neutral-300 px-5 text-base cursor-pointer',
+              'data-[size=default]:h-12 data-[size=sm]:h-12',
+              "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold",
+              !hasEntries && 'cursor-not-allowed opacity-50'
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <RiFileCopyLine className="size-4" />
+              <SelectValue placeholder="Copy" />
+            </div>
+          </SelectTrigger>
+          <SelectContent
+            className="rounded-lg border border-neutral-300 bg-white shadow-xl"
+            side="bottom"
+            sideOffset={3}
+          >
+            <SelectItem value="txt" className="text-primary-9 text-base font-bold cursor-pointer">
+              TXT
+            </SelectItem>
+            <SelectItem value="json" className="text-primary-9 text-base font-bold cursor-pointer">
               JSON
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          onValueChange={(value: 'txt' | 'json') => {
+            onDownload({ format: value });
+          }}
+          disabled={!hasEntries}
+        >
+          <SelectTrigger
+            className={cn(
+              'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
+              'h-12 w-fit rounded-full border border-neutral-300 px-5 text-base cursor-pointer',
+              'data-[size=default]:h-12 data-[size=sm]:h-12',
+              "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold",
+              !hasEntries && 'cursor-not-allowed opacity-50'
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <RiDownload2Line className="size-4" />
+              <SelectValue placeholder="Download" />
+            </div>
+          </SelectTrigger>
+          <SelectContent
+            className="rounded-lg border border-neutral-300 bg-white shadow-xl"
+            side="bottom"
+            sideOffset={3}
+          >
+            <SelectItem value="txt" className="text-primary-9 text-base font-bold cursor-pointer">
+              TXT
+            </SelectItem>
+            <SelectItem value="json" className="text-primary-9 text-base font-bold cursor-pointer">
+              JSON
+            </SelectItem>
+          </SelectContent>
+        </Select>
         {copyStatus && <span className="text-xs text-emerald-700">{copyStatus}</span>}
       </div>
     </div>

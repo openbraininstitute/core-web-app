@@ -1,6 +1,8 @@
 import 'server-only';
 
 import { auth } from '@/auth';
+import { redactSensitive } from '@/features/task-logs-stream/helpers';
+import { LogLevelDict, type TLogLevel } from '@/features/task-logs-stream/types';
 import { log } from '@/utils/logger';
 
 import type { NextRequest } from 'next/server';
@@ -10,7 +12,6 @@ import https from 'node:https';
 import { Readable } from 'node:stream';
 
 const DEFAULT_LAUNCH_SYSTEM_BASE_URL = 'https://127.0.0.1:4444/api/launch-system';
-
 interface IStreamRequestParams {
   jobId: string;
   virtualLabId: string;
@@ -22,20 +23,6 @@ interface IUpstreamStreamResponse {
   statusCode: number;
   headers: http.IncomingHttpHeaders;
   body: ReadableStream<Uint8Array>;
-}
-
-function redactSensitive({ value }: { value: string }): string {
-  return value
-    .replace(/(Bearer\s+)[A-Za-z0-9\-._~+/]+=*/gi, '$1[REDACTED]')
-    .replace(
-      /([?&](?:AWSAccessKeyId|Signature|X-Amz-Signature|x-amz-security-token|X-Amz-Security-Token|token|access_token|refresh_token|id_token|api_key|apikey|secret|password)=)[^&\s"]+/gi,
-      '$1[REDACTED]'
-    )
-    .replace(
-      /("?(?:token|accessToken|refreshToken|idToken|apiKey|api_key|secret|password|client_secret)"?\s*:\s*")([^"]+)(")/gi,
-      '$1[REDACTED]$3'
-    )
-    .replace(/\b(?:AKIA|ASIA)[A-Z0-9]{16}\b/g, '[REDACTED_AWS_KEY]');
 }
 
 function createRedactedStream({
@@ -166,7 +153,7 @@ function debugLog({
   payload,
 }: {
   enabled: boolean;
-  level: 'info' | 'error';
+  level: TLogLevel;
   message: string;
   payload?: unknown;
 }) {
@@ -196,7 +183,7 @@ export async function handleTaskLogsStreamRoute({ request }: { request: NextRequ
 
   debugLog({
     enabled: shouldDebugLog,
-    level: 'info',
+    level: LogLevelDict.Info,
     message: '[task-manager/job/stream] proxy request',
     payload: {
       jobId,
@@ -218,7 +205,7 @@ export async function handleTaskLogsStreamRoute({ request }: { request: NextRequ
 
     debugLog({
       enabled: shouldDebugLog,
-      level: 'info',
+      level: LogLevelDict.Info,
       message: '[task-manager/job/stream] upstream connected',
       payload: {
         jobId,
@@ -240,7 +227,7 @@ export async function handleTaskLogsStreamRoute({ request }: { request: NextRequ
   } catch (error) {
     debugLog({
       enabled: shouldDebugLog,
-      level: 'error',
+      level: LogLevelDict.Error,
       message: '[task-manager/job/stream] upstream stream failed',
       payload: {
         jobId,
