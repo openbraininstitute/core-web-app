@@ -6,6 +6,7 @@ import {
   buildUpstreamJobUrl,
   debugLog,
   parseCommonQueryParams,
+  requestJsonWithHeaders,
 } from '@/features/task-logs-stream/endpoints/shared';
 import { redactSensitive } from '@/features/task-logs-stream/helpers';
 import { type IJobRead, LogLevelDict } from '@/features/task-logs-stream/types';
@@ -37,29 +38,25 @@ async function requestExecutionById({
   executionId: string;
   headers: Record<string, string>;
 }) {
-  const response = await fetch(buildUpstreamJobUrl({ jobId: executionId }), {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-      ...headers,
-    },
+  const upstreamResponse = await requestJsonWithHeaders({
+    urlString: buildUpstreamJobUrl({ jobId: executionId }),
+    headers,
   });
 
-  const rawBody = await response.text();
-  const hasBody = rawBody.trim().length > 0;
+  const hasBody = upstreamResponse.rawBody.trim().length > 0;
   if (!hasBody) {
     return {
-      statusCode: response.status,
-      headers: Object.fromEntries(response.headers.entries()),
+      statusCode: upstreamResponse.statusCode,
+      headers: upstreamResponse.headers,
       data: null,
     };
   }
 
   try {
-    const parsedData = JSON.parse(rawBody) as unknown;
+    const parsedData = JSON.parse(upstreamResponse.rawBody) as unknown;
     return {
-      statusCode: response.status,
-      headers: Object.fromEntries(response.headers.entries()),
+      statusCode: upstreamResponse.statusCode,
+      headers: upstreamResponse.headers,
       data: redactUnknownPayload({ payload: parsedData }),
     };
   } catch (error) {
