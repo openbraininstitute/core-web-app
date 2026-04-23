@@ -53,7 +53,7 @@ export function renderLabel(
     <span
       className={cn(
         'text-base font-light',
-        type === 'main' && 'text-primary-8  font-bold!',
+        type === 'main' && 'text-primary-8 !font-bold',
         type === 'secondary' && 'text-label',
         cls
       )}
@@ -61,21 +61,6 @@ export function renderLabel(
       {text} {extra}
     </span>
   );
-}
-
-/**
- * Returns true when a Zod issue targets this field exactly, or a parent segment
- * (e.g. contribution.0 when the field is contribution.0.agent_type). Root issues
- * with an empty path are not mapped onto nested fields.
- */
-function zodIssueAppliesToFieldPath(
-  issuePath: ReadonlyArray<PropertyKey>,
-  fieldPath: string
-): boolean {
-  if (issuePath.length === 0) return false;
-  const joined = issuePath.map(String).join('.');
-  if (joined === fieldPath) return true;
-  return fieldPath.startsWith(`${joined}.`);
 }
 
 /**
@@ -101,9 +86,7 @@ export function createZodFieldValidator<TSchema extends ZodType, TFormValues>(
         return Promise.reject(error.message);
       }
       if (error instanceof z.ZodError) {
-        const matchingIssue = error.issues.find((issue) =>
-          zodIssueAppliesToFieldPath(issue.path, fieldPath)
-        );
+        const matchingIssue = error.issues.find((issue) => issue.path.join('.') === fieldPath);
         if (matchingIssue) {
           return Promise.reject(matchingIssue.message);
         }
@@ -130,39 +113,12 @@ export function getValidationStatus<T>(
 }
 
 /**
- * gets dirty fields from an Ant Design form.
- * checks nested fields (e.g. ['setup', 'name']) and returns the top-level key
- * ('setup') as dirty if any of its children have been touched.
+ * gets dirty fields from an Ant Design form
  */
-export function getDirtyFields(form: FormInstance<any>): Array<string> {
+export function getDirtyFields<TFormValues>(form: FormInstance<TFormValues>): Array<string> {
   const allFields = form.getFieldsValue(true) as Record<string, unknown>;
-  const antForm = form;
-
-  return Object.keys(allFields).filter((topLevelKey) => {
-    if (antForm.isFieldTouched(topLevelKey)) return true;
-
-    const value = allFields[topLevelKey];
-
-    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      return Object.keys(value as Record<string, unknown>).some((nestedKey) =>
-        antForm.isFieldTouched([topLevelKey, nestedKey])
-      );
-    }
-
-    if (Array.isArray(value)) {
-      return value.some((item, index) => {
-        if (antForm.isFieldTouched([topLevelKey, index])) return true;
-        if (item !== null && typeof item === 'object') {
-          return Object.keys(item as Record<string, unknown>).some((nestedKey) =>
-            antForm.isFieldTouched([topLevelKey, index, nestedKey])
-          );
-        }
-        return false;
-      });
-    }
-
-    return false;
-  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return Object.keys(allFields).filter((field) => (form as any).isFieldTouched(field));
 }
 
 export interface IFileTypeConfig {

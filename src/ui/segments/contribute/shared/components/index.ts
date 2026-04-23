@@ -5,4 +5,3 @@ export { SubjectSelector } from './subject-selector';
 export { LicenseSelector } from './license-selector';
 export { StepNavigation } from './step-navigation';
 export { SubmitButton } from './submit-button';
-export { AssetUpload } from './asset-upload';

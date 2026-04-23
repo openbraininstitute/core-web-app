@@ -8,7 +8,7 @@ import {
 } from '@/ui/segments/contribute/em-cell-mesh/config';
 import { useEMCellMeshPipeline } from '@/ui/segments/contribute/em-cell-mesh/pipeline';
 import {
-  EMAssetUpload,
+  AssetUpload,
   Contribution,
   License,
   MTypeClassification,
@@ -26,7 +26,7 @@ const EM_CELL_MESH_STEP_CONFIG: IContributionStep<TEMCellMeshForm>[] = [
     key: 'assets',
     label: 'Asset Upload',
     schemaFieldKey: 'assets',
-    component: EMAssetUpload,
+    component: AssetUpload,
   },
   {
     key: 'setup',
