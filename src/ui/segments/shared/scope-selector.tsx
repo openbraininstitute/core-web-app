@@ -5,11 +5,14 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
+
 interface Props {
+  id?: string;
   activeTab: string;
   className?: string;
   onValueChange: (value: string) => void;
-  items?: Array<{ key: string; title: string }>;
+  items?: Array<{ key: string; title: string; icon?: ReactNode }>;
 }
 
 export const UiDeterminedScopes = {
@@ -22,6 +25,7 @@ export type UiDeterminedScopesKeys = (typeof UiDeterminedScopes)[keyof typeof Ui
 const tabsConfigItems: Array<{
   key: Partial<UiDeterminedScopesKeys>;
   title: string;
+  icon?: ReactNode;
 }> = [
   {
     key: WorkspaceScope.Public,
@@ -33,7 +37,8 @@ const tabsConfigItems: Array<{
   },
 ];
 
-export function WorkspaceScopeSelector({
+export function TabsSelector({
+  id = 'scope-selector',
   activeTab,
   onValueChange,
   className,
@@ -42,8 +47,8 @@ export function WorkspaceScopeSelector({
   const breakpoint = useDefaultBreakpoint();
   return (
     <PillTabs
-      id="scope-selector"
-      data-testid="scope-selector"
+      id={id}
+      data-testid={id}
       value={activeTab}
       className={cn('w-full', className)}
       activationMode="manual"
@@ -64,7 +69,10 @@ export function WorkspaceScopeSelector({
               { 'h-12': breakpoint === 'xl' }
             )}
           >
-            {tab.title}
+            <span className="inline-flex items-center gap-2">
+              {tab.icon}
+              {tab.title}
+            </span>
           </PillTabsTrigger>
         ))}
       </PillTabsList>

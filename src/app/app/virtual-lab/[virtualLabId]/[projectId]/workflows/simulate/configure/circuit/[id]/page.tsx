@@ -7,6 +7,7 @@ import { use } from 'react';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { ScanConfiguration } from '@/features/scan-config';
+import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity, SchemaMappingKeyDict } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
@@ -66,6 +67,7 @@ export default function Page({
           className="px-4 pt-2"
           activity={ScanConfigActivity.Simulate}
           schemaMappingKey={SchemaMappingKeyDict.Circuit}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.Task}
         />
       </div>
     );

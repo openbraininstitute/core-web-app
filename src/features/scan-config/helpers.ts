@@ -13,6 +13,7 @@ export const ACTIVITY_AI_CONFIG_MAP: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Simulate]: 'smc_simulation_config',
   [ScanConfigActivity.Extract]: 'smc_extraction_config',
   [ScanConfigActivity.Process]: 'smc_skeletonization_config',
+  [ScanConfigActivity.Build]: 'smc_build_config',
 };
 
 export const ScanConfigCampaignOriginActionDict = {

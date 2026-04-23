@@ -7,6 +7,7 @@ import { use } from 'react';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
+import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ExtractScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -72,6 +73,7 @@ export default function Page({
             __activity: ScanConfigActivity.Extract,
             id: ExtractScanConfigTabs.configuration,
           }}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.Task}
         />
         <DownloadPanel />
       </div>

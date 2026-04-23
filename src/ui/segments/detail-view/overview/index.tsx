@@ -39,6 +39,7 @@ import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/syn
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
 import { ScanConfiguration } from '@/features/scan-config';
+import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   BuildScanConfigTabs,
   ExtractScanConfigTabs,
@@ -153,6 +154,7 @@ export default async function Overview({
               id: ExtractScanConfigTabs.configuration,
             }}
             activity={ScanConfigActivity.Extract}
+            campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
           />
           <DownloadPanel />
         </>
@@ -186,6 +188,7 @@ export default async function Overview({
               id: BuildScanConfigTabs.configuration,
             }}
             activity={ScanConfigActivity.Build}
+            campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
           />
           <DownloadPanel />
         </>
@@ -223,6 +226,7 @@ export default async function Overview({
               : ExtractScanConfigTabs.configuration,
         }}
         activity={ScanConfigActivity.Simulate}
+        campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
       />
     );
   }
@@ -256,6 +260,7 @@ export default async function Overview({
           id: ExtractScanConfigTabs.configuration,
         }}
         activity={ScanConfigActivity.Simulate}
+        campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
       />
     );
   }
@@ -287,6 +292,7 @@ export default async function Overview({
             id: ExtractScanConfigTabs.configuration,
           }}
           activity={ScanConfigActivity.Extract}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
         />
         <DownloadPanel />
       </>
