@@ -99,7 +99,13 @@ export function MainCardItem({
         <div className="relative h-full w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
           {thumbnail ? (
             <div className="absolute inset-0">
-              <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-cover" />
+              <Image
+                fill
+                alt={title ?? 'preview'}
+                src={thumbnail}
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                className="object-cover"
+              />
             </div>
           ) : (
             <Skeleton
@@ -234,7 +240,13 @@ export function SingleCardItem({
         <div className="relative h-full w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
           {thumbnail ? (
             <div className="absolute inset-0">
-              <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-cover" />
+              <Image
+                fill
+                alt={title ?? 'preview'}
+                src={thumbnail}
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                className="object-cover"
+              />
             </div>
           ) : (
             <Skeleton

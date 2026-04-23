@@ -82,6 +82,7 @@ export function TutorialCard({
                   fill
                   alt={t}
                   src={image}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, (max-width: 1536px) 33vw, 25vw"
                   className={cn('rounded-md transition-all ease-in-out object-cover', {
                     'grayscale brightness-90 contrast-60 opacity-80': isSelected,
                   })}
@@ -202,7 +203,7 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
               rounded
               variant="ghost"
               className={cn('text-primary-9 font-light', {
-                'h-9! w-9! p-2 rounded-full shadow-base': expanded,
+                'h-9! w-9! p-0 rounded-full shadow-base': expanded,
               })}
               onClick={() => setExpanded((prev) => !prev)}
             >
