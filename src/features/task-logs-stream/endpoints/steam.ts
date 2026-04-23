@@ -1,28 +1,24 @@
 import 'server-only';
 
 import { auth } from '@/auth';
+import {
+  buildUpstreamHeaders,
+  buildUpstreamJobUrl,
+  debugLog,
+  getResponseContentType,
+  parseCommonQueryParams,
+  requestStreamWithHeaders,
+} from '@/features/task-logs-stream/endpoints/shared';
 import { redactSensitive } from '@/features/task-logs-stream/helpers';
-import { LogLevelDict, type TLogLevel } from '@/features/task-logs-stream/types';
-import { log } from '@/utils/logger';
+import { LogLevelDict } from '@/features/task-logs-stream/types';
 
 import type { NextRequest } from 'next/server';
 
-import http from 'node:http';
-import https from 'node:https';
-import { Readable } from 'node:stream';
-
-const DEFAULT_LAUNCH_SYSTEM_BASE_URL = 'https://127.0.0.1:4444/api/launch-system';
 interface IStreamRequestParams {
   jobId: string;
   virtualLabId: string;
   projectId: string;
   debugLogs: boolean;
-}
-
-interface IUpstreamStreamResponse {
-  statusCode: number;
-  headers: http.IncomingHttpHeaders;
-  body: ReadableStream<Uint8Array>;
 }
 
 function createRedactedStream({
@@ -67,98 +63,23 @@ function createRedactedStream({
   });
 }
 
-function buildUpstreamStreamUrl({ jobId }: { jobId: string }) {
-  const baseUrl = process.env.LAUNCH_SYSTEM_URL ?? DEFAULT_LAUNCH_SYSTEM_BASE_URL;
-  const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
-  return `${normalizedBaseUrl}/job/${encodeURIComponent(jobId)}/stream`;
-}
-
 function parseAndValidateParams({
   request,
 }: {
   request: NextRequest;
 }): IStreamRequestParams | Response {
   const jobId = request.nextUrl.searchParams.get('jobId');
-  const virtualLabId = request.nextUrl.searchParams.get('virtualLabId');
-  const projectId = request.nextUrl.searchParams.get('projectId');
-  const debugLogsParam = request.nextUrl.searchParams.get('debugLogs');
-  const debugLogs = debugLogsParam === '1' || debugLogsParam === 'true';
+  const commonParams = parseCommonQueryParams({ request });
 
   if (!jobId) {
     return Response.json({ error: 'Missing required query parameter: jobId' }, { status: 400 });
   }
 
-  if (!virtualLabId || !projectId) {
-    return Response.json(
-      { error: 'Missing required query parameters: virtualLabId and projectId' },
-      { status: 400 }
-    );
+  if (commonParams instanceof Response) {
+    return commonParams;
   }
 
-  return { jobId, virtualLabId, projectId, debugLogs };
-}
-
-function getResponseContentType({ headers }: { headers: http.IncomingHttpHeaders }) {
-  const contentType = headers['content-type'];
-  if (Array.isArray(contentType)) {
-    return contentType[0] ?? 'text/plain; charset=utf-8';
-  }
-  return contentType ?? 'text/plain; charset=utf-8';
-}
-
-function requestStreamWithHeaders({
-  urlString,
-  headers,
-}: {
-  urlString: string;
-  headers: Record<string, string>;
-}): Promise<IUpstreamStreamResponse> {
-  return new Promise((resolve, reject) => {
-    const url = new URL(urlString);
-    const client = url.protocol === 'https:' ? https : http;
-
-    const request = client.request(
-      url,
-      {
-        method: 'GET',
-        headers: {
-          accept: 'application/json, text/plain;q=0.9, text/event-stream;q=0.8, */*;q=0.7',
-          ...headers,
-        },
-        ...(url.protocol === 'https:' ? { rejectUnauthorized: false } : {}),
-      },
-      (response) => {
-        if (!response) {
-          reject(new Error('No response received from upstream'));
-          return;
-        }
-
-        resolve({
-          statusCode: response.statusCode ?? 500,
-          headers: response.headers,
-          body: Readable.toWeb(response) as ReadableStream<Uint8Array>,
-        });
-      }
-    );
-
-    request.on('error', reject);
-    request.end();
-  });
-}
-
-function debugLog({
-  enabled,
-  level,
-  message,
-  payload,
-}: {
-  enabled: boolean;
-  level: TLogLevel;
-  message: string;
-  payload?: unknown;
-}) {
-  if (!enabled) return;
-  log(level, message, payload);
+  return { jobId, ...commonParams };
 }
 
 export async function handleTaskLogsStreamRoute({ request }: { request: NextRequest }) {
@@ -179,7 +100,7 @@ export async function handleTaskLogsStreamRoute({ request }: { request: NextRequ
 
   const { jobId, projectId, virtualLabId, debugLogs } = params;
   const shouldDebugLog = serverDebugEnabled || debugLogs;
-  const upstreamUrl = buildUpstreamStreamUrl({ jobId });
+  const upstreamUrl = buildUpstreamJobUrl({ jobId, stream: true });
 
   debugLog({
     enabled: shouldDebugLog,
@@ -196,11 +117,11 @@ export async function handleTaskLogsStreamRoute({ request }: { request: NextRequ
   try {
     const upstreamResponse = await requestStreamWithHeaders({
       urlString: upstreamUrl,
-      headers: {
-        ...(session.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
-        'virtual-lab-id': virtualLabId,
-        'project-id': projectId,
-      },
+      headers: buildUpstreamHeaders({
+        accessToken: session.accessToken,
+        virtualLabId,
+        projectId,
+      }),
     });
 
     debugLog({
