@@ -13,7 +13,6 @@ const HelpSections = {
   Glossary: 'glossary',
   Features: 'features',
   Guides: 'guides',
-  PriceList: 'prices',
   AIChatTools: 'ai-tools',
   About: 'about',
 } as const;
@@ -43,10 +42,6 @@ const tabsConfigItems: Array<{
   {
     key: HelpSections.Features,
     title: 'Features',
-  },
-  {
-    key: HelpSections.PriceList,
-    title: 'Pricing',
   },
   {
     key: HelpSections.AIChatTools,
@@ -88,7 +83,7 @@ function HelpTabs() {
       }}
     >
       <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-8 bg-white p-0 shadow-2xl', {
+        className={cn('grid h-10 w-full grid-cols-7 bg-white p-0 shadow-2xl', {
           'h-12': breakpoint === 'xl',
         })}
       >
