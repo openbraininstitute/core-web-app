@@ -1,4 +1,3 @@
-import { useIsFetching } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
@@ -60,7 +59,6 @@ export default function Chat({
   const prevRemainingRef = React.useRef<number | null>(null);
   const hasInitializedRef = React.useRef(false);
 
-  const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
   // Fetch rate limit on mount and store in atom (only once)
@@ -80,7 +78,6 @@ export default function Chat({
       const prev = prevRemainingRef.current;
       const current = rateLimit.remaining;
 
-      // Only show if we had credits before and now we don't
       if (prev !== null && prev > 0 && current === 0) {
         setShowExhaustedNotification(true);
       }
@@ -89,84 +86,91 @@ export default function Chat({
     }
   }, [rateLimit]);
 
-  const isStorageQueryFetching = useIsFetching({
-    predicate: (query) => {
-      const fullQueryKey = query.queryKey.at(0);
-      return fullQueryKey === 'storage';
-    },
-    fetchStatus: 'fetching',
-  });
+  // --- Auto-scroll ---
+  // Driven by data (messages changing), NOT by DOM observation.
+  // This means plot re-renders, image resizes, and panel resizes
+  // never trigger a scroll — only actual new message content does.
 
-  const [scrollHeight, setScrollHeight] = React.useState(0);
+  const isAutoScrollRef = React.useRef(isAutoScrollEnabled);
+  isAutoScrollRef.current = isAutoScrollEnabled;
 
-  // Monitor scroll height changes for auto-scroll
-  React.useEffect(() => {
-    if (!refContainer.current) return;
+  // Helper that updates both state and ref immediately so there's no
+  // stale window between event handlers and the next render.
+  const setAutoScroll = React.useCallback((value: boolean) => {
+    isAutoScrollRef.current = value;
+    setIsAutoScrollEnabled(value);
+  }, []);
 
+  const scrollToBottom = React.useCallback(() => {
     const container = refContainer.current;
-    let previousScrollHeight = container.scrollHeight;
-
-    const updateScrollHeight = () => {
-      const newScrollHeight = container.scrollHeight;
-
-      if (isAutoScrollEnabled && newScrollHeight > previousScrollHeight) {
-        requestAnimationFrame(() => {
-          const maxScroll = container.scrollHeight - container.clientHeight;
-          if (maxScroll > 0) {
-            container.scrollTop = maxScroll;
-          }
-        });
-      }
-
-      setScrollHeight(newScrollHeight);
-      previousScrollHeight = newScrollHeight;
-    };
-
-    const observer = new MutationObserver(updateScrollHeight);
-    observer.observe(container, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      characterData: true,
-    });
-
-    updateScrollHeight();
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [isAutoScrollEnabled]);
-
-  React.useEffect(() => {
-    if (isAutoScrollEnabled && refContainer.current) {
-      setTimeout(() => {
-        refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 200);
+    if (container) {
+      container.scrollTop = container.scrollHeight - container.clientHeight;
     }
-  }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
+  }, []);
 
-  // Reset scroll position when switching threads
+  // Track loading→loaded transition so we can scroll before paint.
+  const wasLoadingRef = React.useRef(isLoadingMessages);
+
+  // useLayoutEffect: runs after React commits DOM changes but BEFORE the
+  // browser paints. This eliminates the 1-frame flash when messages first
+  // appear after loading — we scroll to bottom before the user sees anything.
+  React.useLayoutEffect(() => {
+    const justFinishedLoading = wasLoadingRef.current && !isLoadingMessages;
+    wasLoadingRef.current = isLoadingMessages;
+
+    if (justFinishedLoading && messages.length > 0) {
+      setAutoScroll(true);
+      scrollToBottom();
+      return;
+    }
+
+    if (isAutoScrollRef.current) {
+      scrollToBottom();
+    }
+  }, [messages, isLoadingMessages, scrollToBottom, setAutoScroll]);
+
+  // When streaming starts from anywhere and auto-scroll is still on, snap to
+  // bottom. We do NOT force auto-scroll on here — if the user already scrolled
+  // up between sending and the first token, we respect that.
+  const prevStatusRef = React.useRef(status);
   React.useEffect(() => {
-    setIsAutoScrollEnabled(true);
-  }, [threadId]);
+    if (status === 'streaming' && prevStatusRef.current !== 'streaming') {
+      if (isAutoScrollRef.current) {
+        requestAnimationFrame(scrollToBottom);
+      }
+    }
+    prevStatusRef.current = status;
+  }, [status, scrollToBottom]);
+
+  // When switching threads, go to bottom.
+  React.useEffect(() => {
+    setAutoScroll(true);
+    scrollToBottom();
+  }, [threadId, scrollToBottom, setAutoScroll]);
 
   const handlePrompt = (content: string) => {
-    setIsAutoScrollEnabled(true);
+    setAutoScroll(true);
     append({
       role: 'user',
       content,
     });
+    // Scroll now and after React renders the new user message.
+    scrollToBottom();
+    requestAnimationFrame(scrollToBottom);
   };
 
   const handleWheel = (event: React.WheelEvent) => {
     if (event.deltaY < 0) {
-      setIsAutoScrollEnabled(false);
+      // Scrolling up — user wants to read earlier content.
+      setAutoScroll(false);
     } else {
       const container = refContainer.current;
       if (!container) return;
       const isAtBottom =
-        container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
-      setIsAutoScrollEnabled(isAtBottom);
+        container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+      if (isAtBottom) {
+        setAutoScroll(true);
+      }
     }
   };
 
@@ -223,7 +227,7 @@ export default function Chat({
             {healthError && <ErrorPanel value={healthError} />}
           </>
         )}
-        <div ref={refChatBottom} className={styles.bottom} />
+        <div className={styles.bottom} />
       </div>
       {showExhaustedNotification && status === 'ready' && (
         <div className={styles.notificationOverlay}>
