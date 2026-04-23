@@ -70,6 +70,7 @@
     "fast-csv": "^5.0.5",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.35.0",
+    "fuse.js": "^7.3.0",
     "h5wasm": "^0.7.9",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",
