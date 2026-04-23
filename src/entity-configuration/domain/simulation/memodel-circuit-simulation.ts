@@ -205,9 +205,11 @@ export const MEModelCircuitSimulation: EntityCoreTypeConfig<
           withFacets: params[0].withFacets,
           filters: {
             ...filters,
+            page: 1,
+            page_size: 1,
             entity__type: ENTITY_TYPE,
           },
-        });
+        }).then((response) => response.pagination.total_items);
       },
       list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
         resolveSimulationCampaigns(params),
