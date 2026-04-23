@@ -91,7 +91,7 @@ export function Protocol() {
             placeholder="Select a repair pipeline type..."
             options={REPAIR_PIPELINE_OPTIONS}
             allowClear
-            classNames={{ popup: { root: 'z-[99999]' } }}
+            popupClassName="z-[99999]"
           />
         </Form.Item>
       )}

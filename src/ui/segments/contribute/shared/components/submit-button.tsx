@@ -4,7 +4,6 @@ import { useRouter } from '@bprogress/next';
 import { Form } from 'antd';
 
 import { Button } from '@/ui/molecules/button';
-import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { useContributionPipeline } from '@/ui/segments/contribute/shared/pipeline/context';
 import { cn } from '@/utils/css-class';
 
@@ -21,7 +20,6 @@ interface ISubmitButtonProps<
   virtualLabId: string;
   projectId: string;
   onSubmit: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => Promise<void>;
-  onDone?: () => void;
 }
 
 export function SubmitButton<
@@ -34,9 +32,8 @@ export function SubmitButton<
   virtualLabId,
   projectId,
   onSubmit,
-  onDone,
 }: ISubmitButtonProps<TFormValues, TSchema>) {
-  const router = useRouter();
+  const { replace: navigate } = useRouter();
   const { form } = useContributionPipeline<TFormValues>();
   const values = Form.useWatch([], form);
 
@@ -48,25 +45,6 @@ export function SubmitButton<
         projectId,
       })
     : null;
-
-  if (detailsUrl === '__NO_DETAILS_URL__') {
-    return createdEntityId ? (
-      <Form.Item className="mb-0!">
-        <Button
-          rounded
-          type="button"
-          variant="default"
-          size="lg"
-          className={cn(
-            'px-10 select-none hover:text-white'
-          )}
-          onClick={onDone}
-        >
-          Done
-        </Button>
-      </Form.Item>
-    ) : null;
-  }
 
   if (detailsUrl) {
     return (
@@ -80,14 +58,7 @@ export function SubmitButton<
             'disabled:bg-neutral-1 disabled:text-neutral-3!',
             'px-10 select-none hover:text-white disabled:cursor-not-allowed'
           )}
-          onClick={() => {
-            makeSelectContributionEntityClickEvent({
-              display: false,
-              entityType: null,
-              sessionId: null,
-            });
-            router.push(detailsUrl);
-          }}
+          onClick={() => navigate(detailsUrl)}
         >
           View Details
         </Button>

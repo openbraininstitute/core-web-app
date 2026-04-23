@@ -1,7 +1,8 @@
 import type { MutationStatus } from '@tanstack/react-query';
-import type { FormInstance } from 'antd';
-import type { ComponentType, ReactNode } from 'react';
+import type { ReactNode, ComponentType } from 'react';
 import type { ZodObject, ZodRawShape, z } from 'zod';
+import type { FormInstance } from 'antd';
+
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export type TStepValidationStatus = 'valid' | 'invalid' | 'non-touched';
@@ -32,7 +33,7 @@ export interface IContributionFormConfig<
     entityId: string;
     virtualLabId: string;
     projectId: string;
-  }) => string | '__NO_DETAILS_URL__';
+  }) => string;
 }
 
 export interface IMutationKeyConfig {
