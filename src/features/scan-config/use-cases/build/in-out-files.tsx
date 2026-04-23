@@ -6,6 +6,10 @@ import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
+import {
+  ScanConfigCampaignOriginActionDict,
+  type TScanConfigCampaignOriginActionDict,
+} from '@/features/scan-config/helpers';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { classNames } from '@/util/utils';
@@ -20,7 +24,10 @@ type Props = {
   execution?: ITaskActivity;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
+  logsActive: boolean;
+  onSelectLogs: () => void;
   context: { virtualLabId: string; projectId: string };
+  campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
 
 export function InOutFiles({
@@ -29,7 +36,10 @@ export function InOutFiles({
   execution,
   selectedFile,
   onSelect,
+  logsActive,
+  onSelectLogs,
   context,
+  campaignOrigin,
 }: Props) {
   const { entity: circuit } = useModelQuery({ id: execution?.generated.at(0)?.id, context });
   const configAsset = config.assets.find((o) => o.label === AssetLabel.task_config);
@@ -76,6 +86,9 @@ export function InOutFiles({
     enabled: !!builtCircuitId,
     // the refetch is required as the built circuit upload to s3 will not be ready immediately
     refetchInterval(query) {
+      if (campaignOrigin === ScanConfigCampaignOriginActionDict.View) {
+        return false;
+      }
       const data = query.state.data;
       const hasVisAsset = data?.assets?.some(
         (asset) => asset.label === AssetLabel.circuit_visualization
@@ -86,10 +99,11 @@ export function InOutFiles({
   });
 
   useEffect(() => {
+    if (logsActive) return;
     if (inputFiles.length > 0 && !selectedFile) {
       onSelect(inputFiles[0]);
     }
-  }, [inputFiles, selectedFile, onSelect]);
+  }, [inputFiles, logsActive, selectedFile, onSelect]);
 
   return (
     <div className="h-full overflow-y-auto">
@@ -100,7 +114,7 @@ export function InOutFiles({
           return (
             <ResultItem
               id={file.asset.id}
-              selected={file.asset.id === selectedFile?.id}
+              selected={!logsActive && file.asset.id === selectedFile?.id}
               key={file.asset?.id}
               file={file}
               onSelect={onSelect}
@@ -110,33 +124,59 @@ export function InOutFiles({
         })}
       </div>
 
-      {outputAvailable && (
-        <>
-          <h4 className="uppercase">Outputs</h4>
-          <div className="mt-4 flex flex-col gap-4">
-            {!builtCircuit && !isLoading && (
-              <div className="text-gray-400">No output files generated</div>
+      <h4 className="uppercase">Outputs</h4>
+      <div className="mt-4 flex flex-col gap-4">
+        <button
+          id={`logs-${config.id}`}
+          type="button"
+          title="Logs"
+          className={classNames(
+            'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
+            logsActive
+              ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]'
+              : 'bg-white'
+          )}
+          onClick={onSelectLogs}
+        >
+          <div
+            className={classNames(
+              'truncate overflow-hidden font-semibold whitespace-nowrap text-left',
+              logsActive ? 'text-white' : 'text-primary-9'
             )}
-            {builtCircuit && (
-              <ResultItem
-                id={builtCircuit.id}
-                label={<small className="uppercase">Circuit</small>}
-                selected={builtCircuit?.id === selectedFile?.id}
-                key={builtCircuit.id}
-                file={{
-                  id: builtCircuit.id,
-                  entity: builtCircuit,
-                  asset: builtCircuit.assets[0],
-                  name: builtCircuit.name,
-                  renderer: ActivityCustomFileRenderer.MiniDetailView,
-                }}
-                name={builtCircuit.name}
-                onSelect={onSelect}
-              />
-            )}
+          >
+            <div>Task logs</div>
           </div>
-        </>
-      )}
+          <span
+            className={classNames(
+              'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
+              logsActive ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
+            )}
+          >
+            log
+          </span>
+        </button>
+
+        {outputAvailable && !builtCircuit && !isLoading && (
+          <div className="text-gray-400">No output files generated</div>
+        )}
+        {outputAvailable && builtCircuit && (
+          <ResultItem
+            id={builtCircuit.id}
+            label={<small className="uppercase">Circuit</small>}
+            selected={!logsActive && builtCircuit?.id === selectedFile?.id}
+            key={builtCircuit.id}
+            file={{
+              id: builtCircuit.id,
+              entity: builtCircuit,
+              asset: builtCircuit.assets[0],
+              name: builtCircuit.name,
+              renderer: ActivityCustomFileRenderer.MiniDetailView,
+            }}
+            name={builtCircuit.name}
+            onSelect={onSelect}
+          />
+        )}
+      </div>
     </div>
   );
 }

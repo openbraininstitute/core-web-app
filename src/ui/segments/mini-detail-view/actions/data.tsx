@@ -1,5 +1,5 @@
-import { CopyOutlined, LoadingOutlined } from '@ant-design/icons';
-import { RiCheckFill } from '@remixicon/react';
+import { LoadingOutlined } from '@ant-design/icons';
+import { RiCheckFill, RiFileCopyLine } from '@remixicon/react';
 import { useMutation } from '@tanstack/react-query';
 import { includes, kebabCase } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
@@ -88,7 +88,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
               </motion.div>
             ) : (
               <div key="copy">
-                <CopyOutlined
+                <RiFileCopyLine
                   className={cn({
                     'group:hover:text-primary-8!': theme === MiniDetailViewTheme.Light,
                   })}

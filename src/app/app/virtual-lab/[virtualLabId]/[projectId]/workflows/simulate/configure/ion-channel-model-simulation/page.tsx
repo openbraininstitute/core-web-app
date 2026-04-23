@@ -7,6 +7,7 @@ import { use } from 'react';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { ScanConfiguration } from '@/features/scan-config';
+import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity, SchemaMappingKeyDict } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
@@ -63,6 +64,7 @@ export default function Page({
           className="px-4 pt-2"
           activity={ScanConfigActivity.Simulate}
           schemaMappingKey={SchemaMappingKeyDict.IonChannelModel}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.Task}
         />
       </div>
     );

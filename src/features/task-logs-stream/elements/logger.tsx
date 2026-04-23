@@ -101,7 +101,7 @@ function LogsGroups({
                     {getLogTypeConfig({ type: entry.type }).label}
                   </Badge>
                 </div>
-                <pre className="whitespace-pre-wrap wrap-break-word text-xs text-neutral-800">
+                <pre className="min-w-0 flex-1 whitespace-pre-wrap wrap-break-word text-xs text-neutral-800">
                   {highlightText({
                     value: entry.message,
                     ranges: highlightById.get(entry.id) ?? [],
@@ -110,6 +110,7 @@ function LogsGroups({
                   })}
                 </pre>
                 <Button
+                  rounded
                   type="button"
                   variant="icon"
                   size="sm"
@@ -279,7 +280,7 @@ export function LogsViewer({
       <div
         ref={scrollContainerRef}
         onScroll={updateIsAtBottom}
-        className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto rounded-2xl"
+        className="secondary-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl"
       >
         {!hasLogs && !streamError && isLoading && (
           <div className="w-full py-2">

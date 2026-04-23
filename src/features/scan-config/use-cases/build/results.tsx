@@ -2,7 +2,7 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 import { Checkbox } from 'antd';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Activity, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
@@ -15,6 +15,8 @@ import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import {
   buildActivityStatusMap,
   findLatestExecutionForEntity,
+  ScanConfigCampaignOriginActionDict,
+  type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import {
   useScanConfigLaunchMutation,
@@ -23,6 +25,7 @@ import {
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files';
 import { ConfigsLeftMenu } from '@/features/scan-config/use-cases/build/left-menu';
+import { Viewer as LogsViewer } from '@/features/task-logs-stream';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 import { classNames } from '@/util/utils';
@@ -37,15 +40,33 @@ type Props = {
   campaignId: string;
   virtualLabId: string;
   projectId: string;
+  campaignOriginAction: TScanConfigCampaignOriginActionDict;
+  isCampaignIdChanged: boolean;
 };
 
-export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
+const RightPanelModeDict = {
+  Result: 'result',
+  Logs: 'logs',
+} as const;
+
+type TRightPanelMode = (typeof RightPanelModeDict)[keyof typeof RightPanelModeDict];
+
+export function BuildTab({
+  campaignOriginAction,
+  campaignId,
+  virtualLabId,
+  projectId,
+  isCampaignIdChanged,
+}: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
+  const isTaskLogsDebugEnabled = process.env.NEXT_PUBLIC_TASK_LOGS_STREAM_DEBUG === 'true';
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);
   const [activeConfig, setActiveConfig] = useState<ITaskConfig<never> | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
+  const [jobIdsByConfigId, setJobIdsByConfigId] = useState<Record<string, string>>({});
+  const [rightPanelMode, setRightPanelMode] = useState<TRightPanelMode>(RightPanelModeDict.Logs);
 
   const { mutateAsync: runBuild, isPending: runBuildPending } = useScanConfigLaunchMutation({
     context,
@@ -85,9 +106,35 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
   }, [activeConfig, executionsResponse?.data]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
+  const activeLogsJobId = useMemo(() => {
+    if (!activeConfig) return undefined;
+    if (campaignOriginAction === ScanConfigCampaignOriginActionDict.View) {
+      return activeConfigExecution?.execution_id ?? undefined;
+    }
+    return jobIdsByConfigId[activeConfig.id] ?? activeConfigExecution?.execution_id ?? undefined;
+  }, [activeConfig, activeConfigExecution?.execution_id, campaignOriginAction, jobIdsByConfigId]);
+
+  console.log('–– – results.tsx:108 – BuildTab:', {
+    activeConfigExecution,
+    activeLogsJobId,
+  });
+
+  const shouldEnableLogsViewer = useMemo(() => {
+    if (!activeConfig) return false;
+    return !executionsLoading || Boolean(activeLogsJobId);
+  }, [activeConfig, activeLogsJobId, executionsLoading]);
+
+  console.log('–– – results.tsx:127 – BuildTab – shouldEnableLogsViewer:', shouldEnableLogsViewer);
 
   const onActiveConfigChange = useCallback((config: ITaskConfig<never>) => {
     setActiveConfig(config);
+    setSelectedFile(undefined);
+    setRightPanelMode(RightPanelModeDict.Logs);
+  }, []);
+
+  const onSelectedFileChange = useCallback((file: TActivityCustomFile) => {
+    setSelectedFile(file);
+    setRightPanelMode(RightPanelModeDict.Result);
   }, []);
 
   const onSelectedForChange = useCallback((configId: string, selected: boolean) => {
@@ -129,7 +176,11 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
 
   const onRun = async (configIdsToRun: string[]) => {
     for (const configId of configIdsToRun) {
-      await runBuild(configId);
+      const launchData = await runBuild(configId);
+      setJobIdsByConfigId((prev) => ({
+        ...prev,
+        [configId]: launchData.job_id,
+      }));
     }
     setSelectedConfigIds([]);
   };
@@ -205,27 +256,45 @@ export function BuildTab({ campaignId, virtualLabId, projectId }: Props) {
             execStatus={activeConfigExecStatus}
             execution={activeConfigExecution}
             selectedFile={selectedFile}
+            logsActive={rightPanelMode === RightPanelModeDict.Logs}
+            onSelectLogs={() => setRightPanelMode(RightPanelModeDict.Logs)}
             context={context}
-            onSelect={setSelectedFile}
+            onSelect={onSelectedFileChange}
+            campaignOrigin={campaignOriginAction}
           />
         )}
       </div>
 
       <div className="relative pl-4">
-        {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
-          <FileViewer file={selectedFile} className="h-full" context={context} />
-        )}
-        {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
-          <div className="h-full">
-            <MiniDetailViewRenderer
-              section={WorkspaceSection.Data}
-              record={selectedFile.entity as ICircuit}
-              dataType={ExtendedEntitiesTypeDict.Circuit}
-              theme={MiniDetailViewTheme.Light}
-              enableAnimation={false}
-            />
-          </div>
-        )}
+        <div className={rightPanelMode === RightPanelModeDict.Logs ? 'h-full' : 'hidden'}>
+          <LogsViewer
+            enabled={shouldEnableLogsViewer}
+            configId={activeConfig?.id}
+            jobId={activeLogsJobId}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+            enableDebugLogs={isTaskLogsDebugEnabled}
+            campaignOriginAction={campaignOriginAction}
+            isCampaignIdChanged={isCampaignIdChanged}
+          />
+        </div>
+
+        <Activity mode={rightPanelMode === RightPanelModeDict.Result ? 'visible' : 'hidden'}>
+          {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
+            <FileViewer file={selectedFile} className="h-full" context={context} />
+          )}
+          {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
+            <div className="h-full">
+              <MiniDetailViewRenderer
+                section={WorkspaceSection.Data}
+                record={selectedFile.entity as ICircuit}
+                dataType={ExtendedEntitiesTypeDict.Circuit}
+                theme={MiniDetailViewTheme.Light}
+                enableAnimation={false}
+              />
+            </div>
+          )}
+        </Activity>
       </div>
     </div>
   );

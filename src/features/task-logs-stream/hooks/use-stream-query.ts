@@ -58,6 +58,7 @@ export function useStreamQuery({
       }),
       enabled: enabled && Boolean(jobId) && !isViewCampaign,
       staleTime: Infinity,
+      refetchOnMount: 'always',
       refetchOnWindowFocus: false,
     })
   );

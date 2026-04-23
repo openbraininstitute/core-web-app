@@ -7,7 +7,17 @@ import { ScanConfigActivity, type TScanConfigActivity } from '@/features/scan-co
 export const ACTIVITY_AI_CONFIG_MAP: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Simulate]: 'smc_simulation_config',
   [ScanConfigActivity.Extract]: 'smc_extraction_config',
+  [ScanConfigActivity.Build]: 'smc_build_config',
 };
+
+export const ScanConfigCampaignOriginActionDict = {
+  View: 'view',
+  Duplicate: 'duplicate',
+  Task: 'task',
+} as const;
+
+export type TScanConfigCampaignOriginActionDict =
+  (typeof ScanConfigCampaignOriginActionDict)[keyof typeof ScanConfigCampaignOriginActionDict];
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { TActivityStatus } from '@/api/entitycore/types/shared/activity';

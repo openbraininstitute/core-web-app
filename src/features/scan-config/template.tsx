@@ -12,7 +12,10 @@ import {
 } from '@/features/scan-config/components/hooks/schema';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
-import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
+import {
+  ACTIVITY_AI_CONFIG_MAP,
+  type TScanConfigCampaignOriginActionDict,
+} from '@/features/scan-config/helpers';
 import {
   BuildScanConfigTabs,
   type ConfigSchema,
@@ -29,6 +32,7 @@ import {
 } from '@/features/scan-config/types';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
+import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
@@ -51,6 +55,7 @@ type Props = {
   readOnly?: boolean;
   className?: string;
   activity: TScanConfigActivity;
+  campaignOriginAction: TScanConfigCampaignOriginActionDict;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   schema: ConfigSchema;
   schemaName: SchemaName;
@@ -75,6 +80,7 @@ export function ScanConfigTemplate({
   aiEnabled,
   generatedEndpoint,
   entityType,
+  campaignOriginAction,
 }: Props) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
@@ -91,8 +97,10 @@ export function ScanConfigTemplate({
     model: entity,
   });
   const config = useConfigAtom(schema, atomsMap);
-
+  const previousCampaignId = usePrevious(campaignId);
+  console.log('–– – template.tsx:101 – previousCampaignId:', { previousCampaignId, campaignId });
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
+  const isCampaignIdChanged = previousCampaignId !== campaignId;
 
   const results = match({ activity, tab })
     .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)
@@ -133,7 +141,13 @@ export function ScanConfigTemplate({
       },
       () => (
         <Suspense>
-          <BuildTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
+          <BuildTab
+            isCampaignIdChanged={isCampaignIdChanged}
+            campaignOriginAction={campaignOriginAction}
+            campaignId={campaignId}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          />
         </Suspense>
       )
     )
