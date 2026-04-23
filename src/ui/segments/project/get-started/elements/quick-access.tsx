@@ -4,6 +4,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { useMutation } from '@tanstack/react-query';
 import { kebabCase } from 'es-toolkit/compat';
+import { motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -35,6 +36,16 @@ import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TVirtualLabResponse } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
+
+const IMAGE_SHINE_ANIMATION = {
+  x: ['-160%', '220%', '-160%'],
+};
+
+const IMAGE_SHINE_TRANSITION = {
+  duration: 6,
+  repeat: Infinity,
+  ease: 'easeInOut' as const,
+};
 
 export function MainCardItem({
   thumbnail,
@@ -98,15 +109,27 @@ export function MainCardItem({
       <div className="absolute top-0 left-0 z-0 h-[200px] w-full p-3">
         <div className="relative h-full w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
           {thumbnail ? (
-            <div className="absolute inset-0">
-              <Image
-                fill
-                alt={title ?? 'preview'}
-                src={thumbnail}
-                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                className="object-cover"
+            <>
+              <motion.div className="absolute inset-0">
+                <Image
+                  fill
+                  alt={title ?? 'preview'}
+                  src={thumbnail}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                  className="object-cover"
+                />
+              </motion.div>
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute -inset-y-1/2 left-0 z-10 w-2/5 rotate-4 blur-3xl"
+                style={{
+                  background:
+                    'linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0))',
+                }}
+                animate={IMAGE_SHINE_ANIMATION}
+                transition={IMAGE_SHINE_TRANSITION}
               />
-            </div>
+            </>
           ) : (
             <Skeleton
               active={false}
@@ -157,10 +180,54 @@ export function MainCardItem({
 export function MainCardComingSoon({
   groupTitle,
   description,
+  group,
 }: {
   groupTitle: string;
   description: string;
+  group?: TQuickAccessGroup;
 }) {
+  if (group === QuickAccessGroupDict.Workflows) {
+    return (
+      <Card
+        className={cn(
+          'w-full min-h-[320px] bg-white border-none p-3',
+          'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] select-none'
+        )}
+      >
+        <CardTitle className="mb-3">
+          <h4 className="text-neutral-500 uppercase text-xs tracking-[0.6px]">Workflow</h4>
+          <p className="text-primary-8 text-xl font-semibold leading-tight">
+            Workflow examples coming soon
+          </p>
+        </CardTitle>
+        <div className="relative h-[200px] w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
+          <Image
+            fill
+            alt="Workflow examples coming soon"
+            src="/images/home/workflow_coming-soon-image.webp"
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+          />
+        </div>
+        <div className="mt-3">
+          <Button
+            asChild
+            rounded
+            variant="outline"
+            className="w-full bg-background shadow-none hover:bg-white hover:shadow-md"
+          >
+            <Link
+              href="https://www.openbraininstitute.org/app/virtual-lab/52164bfb-b3e1-4952-8319-46582f56d661/79737d9a-2f9a-4d50-8cac-28510999aae4/workflows/simulate/new/small-microcircuit-simulation"
+              className="text-primary-8 hover:text-primary-9 text-base!"
+            >
+              New small circuit simulation
+            </Link>
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card
       className={cn(
@@ -239,15 +306,27 @@ export function SingleCardItem({
       <div className="absolute top-0 left-0 z-0 h-[170px] w-full p-3">
         <div className="relative h-full w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
           {thumbnail ? (
-            <div className="absolute inset-0">
-              <Image
-                fill
-                alt={title ?? 'preview'}
-                src={thumbnail}
-                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                className="object-cover"
+            <>
+              <motion.div className="absolute inset-0">
+                <Image
+                  fill
+                  alt={title ?? 'preview'}
+                  src={thumbnail}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                  className="object-cover"
+                />
+              </motion.div>
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute -inset-y-1/2 left-0 z-10 w-2/5 rotate-40"
+                style={{
+                  background:
+                    'linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0))',
+                }}
+                animate={IMAGE_SHINE_ANIMATION}
+                transition={IMAGE_SHINE_TRANSITION}
               />
-            </div>
+            </>
           ) : (
             <Skeleton
               active={false}
@@ -302,24 +381,32 @@ export function ViewExamples({
   context,
   group,
 }: {
-  groupTitle: string;
+  groupTitle: string | null | undefined;
   listLength: number;
   context: WorkspaceContext;
   group: TQuickAccessGroup;
 }) {
+  const safeGroupTitle = (groupTitle ?? group).trim();
+  const normalizedGroupTitle = safeGroupTitle.toLowerCase();
+  const { push: navigate } = useRouter();
+  const isWorkflowGroup =
+    group === QuickAccessGroupDict.Workflows || normalizedGroupTitle.includes('workflow');
+  const href = isWorkflowGroup
+    ? `${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}/workflows`
+    : `${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}/quick-access/${group}`;
+  const label = isWorkflowGroup
+    ? 'View all Workflows'
+    : `View ${safeGroupTitle} examples (${listLength})`;
+
   return (
     <Button
       rounded
       size="responsive"
       variant="outline"
-      className="w-fit mx-auto px-4 py-4 bg-background shadow-none hover:font-bold hover:bg-white hover:shadow-md"
+      className="w-fit mx-auto px-4 py-4 bg-background shadow-none hover:font-bold hover:bg-white hover:shadow-md text-primary-8 hover:text-primary-9 text-base!"
+      onClick={() => navigate(href)}
     >
-      <Link
-        className="text-primary-8 hover:text-primary-9 text-base!"
-        href={`${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}/quick-access/${group}`}
-      >
-        View {groupTitle} examples ({listLength}){' '}
-      </Link>
+      <span suppressHydrationWarning>{label}</span>
     </Button>
   );
 }

@@ -134,9 +134,20 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
         }) => {
           if (!entity) {
             return (
-              <div key={group} className="flex flex-col gap-1.5 w-full">
-                <MainCardComingSoon groupTitle={groupTitle ?? group} description="Coming soon" />
-                <div className="h-10 xl:h-12" />
+              <div key={group} className="flex flex-col gap-6 w-full">
+                <MainCardComingSoon
+                  group={group}
+                  groupTitle={groupTitle ?? group}
+                  description="Coming soon"
+                />
+                <ViewExamples
+                  {...{
+                    context,
+                    group,
+                    groupTitle: groupTitle ?? group,
+                    listLength,
+                  }}
+                />
               </div>
             );
           }
@@ -159,7 +170,7 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
                 {...{
                   context,
                   group,
-                  groupTitle,
+                  groupTitle: groupTitle ?? group,
                   listLength,
                 }}
               />
