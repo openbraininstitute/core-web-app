@@ -1,22 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
+
 import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
 import { logError } from '@/util/logger';
 import { classNames } from '@/util/utils';
+
 import PaddedBlock from './components/PaddedBlock';
 import VerticalSpace from './components/VerticalSpace';
-import styles from './LandingPage.module.css';
 import FooterPanel from './layout/FooterPanel';
 import Hero from './layout/Hero';
 import Menu from './layout/Menu';
 import SectionContact from './sections/SectionContact';
+import SectionFeatures from './sections/SectionFeatures';
 import SectionGeneric from './sections/SectionGeneric';
 import SectionNews from './sections/SectionNews';
 import SectionPricing from './sections/SectionPricing';
+import SectionShowcases from './sections/SectionShowcases';
 import { EnumSection } from './sections/sections';
 import { getSection } from './utils';
+
+import styles from './LandingPage.module.css';
 import './global.css';
+
 import useScrollHasStarted from '@/hooks/use-scroll-has-started';
 
 export type LandingPageProps = {
@@ -30,18 +36,28 @@ export type LandingPageProps = {
 };
 
 export default function LandingPage({ className, section, error }: LandingPageProps) {
-  const scrollHasStarted = useScrollHasStarted();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isFeatures = section === EnumSection.Features;
+  const scrollHasStarted = useScrollHasStarted(isFeatures ? containerRef : undefined);
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'instant',
-    });
-  }, []);
+    if (isFeatures && containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    }
+  }, [isFeatures]);
 
   return (
-    <div className={classNames(className, styles.landingPage)}>
-      <Menu scrollHasStarted={scrollHasStarted} section={section} />
+    <div
+      ref={containerRef}
+      className={classNames(className, styles.landingPage, isFeatures && styles.featuresSnap)}
+    >
+      <Menu
+        scrollHasStarted={scrollHasStarted}
+        section={section}
+        scrollContainerRef={isFeatures ? containerRef : undefined}
+      />
       <Hero section={section} />
       <PaddedBlock>{renderSection(section)}</PaddedBlock>
       <VerticalSpace height="30px" />
@@ -71,6 +87,10 @@ function renderSection(section: EnumSection): React.ReactNode {
       return <SectionContact />;
     case EnumSection.News:
       return <SectionNews />;
+    case EnumSection.Features:
+      return <SectionFeatures />;
+    case EnumSection.Showcases:
+      return <SectionShowcases />;
     default:
       logError('This slug has NOT been implemented yet!', getSection(section));
       return null;

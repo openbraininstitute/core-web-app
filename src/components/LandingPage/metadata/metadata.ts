@@ -1,10 +1,11 @@
-import { Metadata } from 'next';
-
-import { tryType, typeStringOrNull } from '../content';
-import queryTemplate from './metadata.groq';
-import { DEFAULT_METADATA } from './default';
 import { fetchSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
+
+import { tryType, typeStringOrNull } from '../content';
+import { DEFAULT_METADATA } from './default';
+import queryTemplate from './metadata.groq';
+
+import type { Metadata } from 'next';
 
 export async function generateMetadataFromSanity(slug: string): Promise<Metadata> {
   const query = queryTemplate.replace('{{SLUG}}', slug);
@@ -21,13 +22,15 @@ export async function generateMetadataFromSanity(slug: string): Promise<Metadata
       openGraph: {
         title: content.title,
         description: content.seoDescription ?? '',
-        images: [
-          {
-            url: content.imageURL,
-            width: content.imageWidth,
-            height: content.imageHeight,
-          },
-        ],
+        ...(content.imageURL && {
+          images: [
+            {
+              url: content.imageURL,
+              width: content.imageWidth ?? undefined,
+              height: content.imageHeight ?? undefined,
+            },
+          ],
+        }),
         type: 'website',
       },
     };
@@ -42,9 +45,9 @@ interface ContentForSeo {
   seoTitle: null | string;
   seoDescription: null | string;
   seoKeywords: null | string[];
-  imageURL: string;
-  imageWidth: number;
-  imageHeight: number;
+  imageURL: string | null;
+  imageWidth: number | null;
+  imageHeight: number | null;
 }
 
 function isContentForSeo(data: unknown): data is ContentForSeo {
@@ -54,8 +57,8 @@ function isContentForSeo(data: unknown): data is ContentForSeo {
     seoTitle: typeStringOrNull,
     seoDescription: typeStringOrNull,
     seoKeywords: ['|', 'null', ['array', 'string']],
-    imageURL: 'string',
-    imageWidth: 'number',
-    imageHeight: 'number',
+    imageURL: typeStringOrNull,
+    imageWidth: ['|', 'number', 'null', 'undefined'],
+    imageHeight: ['|', 'number', 'null', 'undefined'],
   });
 }

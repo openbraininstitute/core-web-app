@@ -9,6 +9,12 @@
   padding: 32px;
 }
 
+@media (min-width: 768px) {
+  .footerPanel {
+    scroll-snap-align: start;
+  }
+}
+
 .footerPanel > * {
   flex: 1 1 auto;
   min-height: 240px;
