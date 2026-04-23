@@ -43,7 +43,7 @@ interface IContributionPipelineProviderProps<
 > {
   config: IContributionFormConfig<TFormValues, TSchema>;
   sessionId: string;
-  brainRegionId: string;
+  brainRegionId: string | null;
   children: ReactNode;
 }
 
@@ -161,7 +161,7 @@ export function ContributionPipelineProvider<
     ]
   );
   const initialValues = useMemo(
-    () => config.getInitialValues(brainRegionId) as TFormValues,
+    () => config.getInitialValues(brainRegionId as string) as TFormValues,
     [config, brainRegionId]
   );
 
