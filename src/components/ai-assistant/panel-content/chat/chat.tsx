@@ -19,6 +19,7 @@ import SuggestedQuestions from '../../suggested-questions';
 import Footer from '../footer';
 import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
 import Welcome from '../welcome';
+import { useAutoScroll } from './use-auto-scroll';
 
 import styles from './chat.module.css';
 
@@ -38,7 +39,6 @@ export default function Chat({
   const assistant = useAiAssistant();
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const healthError = assistant.healthError.useValue();
-  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
 
   const { messages, status, append, error, stop, isLoadingMessages } = useServiceAiAgentChat(
     threadId ?? ''
@@ -61,7 +61,6 @@ export default function Chat({
 
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
-  // Fetch rate limit on mount and store in atom (only once)
   const { data: fetchedRateLimit } = useAiAgentRateLimit(accessToken ?? null);
 
   React.useEffect(() => {
@@ -72,7 +71,6 @@ export default function Chat({
     }
   }, [fetchedRateLimit, setRateLimit]);
 
-  // Show notification only when crossing boundary (1 -> 0)
   React.useEffect(() => {
     if (rateLimit && hasInitializedRef.current) {
       const prev = prevRemainingRef.current;
@@ -86,67 +84,13 @@ export default function Chat({
     }
   }, [rateLimit]);
 
-  // --- Auto-scroll ---
-  // Driven by data (messages changing), NOT by DOM observation.
-  // This means plot re-renders, image resizes, and panel resizes
-  // never trigger a scroll — only actual new message content does.
-
-  const isAutoScrollRef = React.useRef(isAutoScrollEnabled);
-  isAutoScrollRef.current = isAutoScrollEnabled;
-
-  // Helper that updates both state and ref immediately so there's no
-  // stale window between event handlers and the next render.
-  const setAutoScroll = React.useCallback((value: boolean) => {
-    isAutoScrollRef.current = value;
-    setIsAutoScrollEnabled(value);
-  }, []);
-
-  const scrollToBottom = React.useCallback(() => {
-    const container = refContainer.current;
-    if (container) {
-      container.scrollTop = container.scrollHeight - container.clientHeight;
-    }
-  }, []);
-
-  // Track loading→loaded transition so we can scroll before paint.
-  const wasLoadingRef = React.useRef(isLoadingMessages);
-
-  // useLayoutEffect: runs after React commits DOM changes but BEFORE the
-  // browser paints. This eliminates the 1-frame flash when messages first
-  // appear after loading — we scroll to bottom before the user sees anything.
-  React.useLayoutEffect(() => {
-    const justFinishedLoading = wasLoadingRef.current && !isLoadingMessages;
-    wasLoadingRef.current = isLoadingMessages;
-
-    if (justFinishedLoading && messages.length > 0) {
-      setAutoScroll(true);
-      scrollToBottom();
-      return;
-    }
-
-    if (isAutoScrollRef.current) {
-      scrollToBottom();
-    }
-  }, [messages, isLoadingMessages, scrollToBottom, setAutoScroll]);
-
-  // When streaming starts from anywhere and auto-scroll is still on, snap to
-  // bottom. We do NOT force auto-scroll on here — if the user already scrolled
-  // up between sending and the first token, we respect that.
-  const prevStatusRef = React.useRef(status);
-  React.useEffect(() => {
-    if (status === 'streaming' && prevStatusRef.current !== 'streaming') {
-      if (isAutoScrollRef.current) {
-        requestAnimationFrame(scrollToBottom);
-      }
-    }
-    prevStatusRef.current = status;
-  }, [status, scrollToBottom]);
-
-  // When switching threads, go to bottom.
-  React.useEffect(() => {
-    setAutoScroll(true);
-    scrollToBottom();
-  }, [threadId, scrollToBottom, setAutoScroll]);
+  const { setAutoScroll, scrollToBottom, handleWheel } = useAutoScroll({
+    messages,
+    status,
+    isLoadingMessages,
+    threadId,
+    containerRef: refContainer,
+  });
 
   const handlePrompt = (content: string) => {
     setAutoScroll(true);
@@ -154,24 +98,8 @@ export default function Chat({
       role: 'user',
       content,
     });
-    // Scroll now and after React renders the new user message.
     scrollToBottom();
     requestAnimationFrame(scrollToBottom);
-  };
-
-  const handleWheel = (event: React.WheelEvent) => {
-    if (event.deltaY < 0) {
-      // Scrolling up — user wants to read earlier content.
-      setAutoScroll(false);
-    } else {
-      const container = refContainer.current;
-      if (!container) return;
-      const isAtBottom =
-        container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
-      if (isAtBottom) {
-        setAutoScroll(true);
-      }
-    }
   };
 
   const lastMessage = messages[messages.length - 1];
