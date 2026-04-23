@@ -4,11 +4,18 @@ import { obioneApi } from '@/api/one/utils';
 import type { TObiOneTaskType } from '@/api/one/types/task';
 import type { WorkspaceContext } from '@/types/common';
 
-type RunTaskParams = {
+type TRunTaskParams = {
   ctx: WorkspaceContext;
   task_type: TObiOneTaskType;
   config_id: string;
   signal?: AbortSignal;
+};
+
+export type TRunTaskResponse = {
+  task_type: TObiOneTaskType;
+  config_id: string;
+  activity_id: string;
+  job_id: string;
 };
 
 /**
@@ -27,10 +34,10 @@ export async function runTask({
   task_type,
   config_id,
   signal,
-}: RunTaskParams): Promise<string> {
+}: TRunTaskParams): Promise<TRunTaskResponse> {
   const api = await obioneApi();
 
-  const response = await api.post<string>(`/declared/task/launch`, {
+  const response = await api.post<TRunTaskResponse>(`/declared/task/launch`, {
     headers: {
       ...getEntityCoreContext(ctx).headers,
       accept: 'application/json',

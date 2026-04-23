@@ -5,10 +5,16 @@ import {
   experimental_streamedQuery as streamedQuery,
   useQuery,
 } from '@tanstack/react-query';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import Fuse from 'fuse.js';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { LogsActions } from '@/features/task-logs-stream/logs-actions';
 import { Badge } from '@/ui/molecules/badge';
 import { log } from '@/utils/logger';
+import { emptyStream } from '@/utils/streamutils';
+
+import type { IFuseOptions } from 'fuse.js';
+import type { ReactNode } from 'react';
 
 interface IRawStreamLog {
   message_type?: string;
@@ -19,7 +25,7 @@ interface IRawStreamLog {
   stderr?: string;
 }
 
-interface ILogEntry {
+export interface ILogEntry {
   id: string;
   type: TLogTypeKey;
   timestamp?: string;
@@ -40,6 +46,16 @@ interface ITaskLogsStreamState {
   entries: ILogEntry[];
   streamError: string | null;
   isLoading: boolean;
+}
+
+interface IHighlightRange {
+  start: number;
+  end: number;
+}
+
+interface ISearchResult {
+  entries: ILogEntry[];
+  highlightById: Record<string, IHighlightRange[]>;
 }
 
 const LogTypeDict = {
@@ -158,6 +174,80 @@ function getLogTypeConfig({ type }: { type: TLogTypeKey }) {
   return TLogTypeConfigMap[type] ?? TLogTypeConfigMap.raw;
 }
 
+function dedupeRanges({ ranges }: { ranges: IHighlightRange[] }) {
+  const sorted = [...ranges].sort((a, b) => a.start - b.start);
+  const merged: IHighlightRange[] = [];
+  for (const range of sorted) {
+    const last = merged.at(-1);
+    if (!last || range.start > last.end + 1) {
+      merged.push(range);
+      continue;
+    }
+    last.end = Math.max(last.end, range.end);
+  }
+  return merged;
+}
+
+function highlightText({ value, ranges }: { value: string; ranges: IHighlightRange[] }) {
+  if (ranges.length === 0) return value;
+  const nodes: ReactNode[] = [];
+  let cursor = 0;
+  ranges.forEach((range) => {
+    if (range.start > cursor) {
+      nodes.push(value.slice(cursor, range.start));
+    }
+    nodes.push(
+      <mark
+        key={`${range.start}-${range.end}-${value.length}-${cursor}`}
+        className="rounded bg-yellow-200 px-0.5"
+      >
+        {value.slice(range.start, range.end + 1)}
+      </mark>
+    );
+    cursor = range.end + 1;
+  });
+  if (cursor < value.length) {
+    nodes.push(value.slice(cursor));
+  }
+  return nodes;
+}
+
+function useLogSearch({ entries, query }: { entries: ILogEntry[]; query: string }): ISearchResult {
+  return useMemo(() => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      return { entries, highlightById: {} };
+    }
+
+    const fuse = new Fuse(entries, {
+      keys: ['message', 'type', 'timestampGroupLabel'],
+      includeMatches: true,
+      includeScore: true,
+      shouldSort: true,
+      threshold: 0.4,
+      useExtendedSearch: false,
+      ignoreLocation: true,
+      // Token search behavior requested for multi-word queries.
+      useTokenSearch: true,
+    } as IFuseOptions<ILogEntry> & { useTokenSearch: boolean });
+
+    const results = fuse.search(trimmed);
+    const highlightById: Record<string, IHighlightRange[]> = {};
+    for (const result of results) {
+      const rawRanges: IHighlightRange[] = [];
+      for (const match of result.matches ?? []) {
+        if (match.key !== 'message') continue;
+        for (const [start, end] of match.indices ?? []) {
+          rawRanges.push({ start, end });
+        }
+      }
+      highlightById[result.item.id] = dedupeRanges({ ranges: rawRanges });
+    }
+
+    return { entries: results.map((result) => result.item), highlightById };
+  }, [entries, query]);
+}
+
 async function* parseLogStreamToEntries({
   stream,
 }: {
@@ -257,9 +347,7 @@ function useTaskLogsStream({
       ],
       queryFn: streamedQuery({
         streamFn: async (context) => {
-          if (!jobId) {
-            return (async function* empty() {})();
-          }
+          if (!jobId) return emptyStream();
           debugLog({
             level: 'info',
             message: '[build-logs] opening stream',
@@ -321,7 +409,13 @@ function LogsHeader({ jobId }: { jobId?: string }) {
   );
 }
 
-function LogsGroups({ groupedEntries }: { groupedEntries: Array<[string, ILogEntry[]]> }) {
+function LogsGroups({
+  groupedEntries,
+  highlightById,
+}: {
+  groupedEntries: Array<[string, ILogEntry[]]>;
+  highlightById: Record<string, IHighlightRange[]>;
+}) {
   return (
     <div className="flex flex-col gap-4">
       {groupedEntries.map(([timestampLabel, logsForTimestamp]) => (
@@ -336,7 +430,10 @@ function LogsGroups({ groupedEntries }: { groupedEntries: Array<[string, ILogEnt
                   </Badge>
                 </div>
                 <pre className="whitespace-pre-wrap wrap-break-word text-xs text-neutral-800">
-                  {entry.message}
+                  {highlightText({
+                    value: entry.message,
+                    ranges: highlightById[entry.id] ?? [],
+                  })}
                 </pre>
               </div>
             ))}
@@ -356,6 +453,7 @@ export function LogsViewer({
   enableDebugLogs = false,
 }: IProps) {
   const bottomAnchorRef = useRef<HTMLDivElement | null>(null);
+  const [query, setQuery] = useState('');
   const debugLog = useCallback(
     ({
       level,
@@ -382,17 +480,21 @@ export function LogsViewer({
     debugLog,
   });
 
-  const hasLogs = useMemo(() => entries.length > 0, [entries.length]);
+  const { entries: searchedEntries, highlightById } = useLogSearch({
+    entries,
+    query,
+  });
+  const hasLogs = searchedEntries.length > 0;
   const groupedEntries = useMemo(() => {
     const groups = new Map<string, ILogEntry[]>();
-    for (const entry of entries) {
+    for (const entry of searchedEntries) {
       const existing = groups.get(entry.timestampGroupLabel) ?? [];
       existing.push(entry);
       groups.set(entry.timestampGroupLabel, existing);
     }
     return Array.from(groups.entries());
-  }, [entries]);
-  const latestEntryId = entries.at(-1)?.id;
+  }, [searchedEntries]);
+  const latestEntryId = searchedEntries.at(-1)?.id;
 
   useEffect(() => {
     if (!latestEntryId) return;
@@ -406,9 +508,17 @@ export function LogsViewer({
   return (
     <div className="h-full overflow-y-auto rounded-2xl bg-neutral-50 p-4">
       <LogsHeader jobId={jobId} />
+      <LogsActions
+        entries={searchedEntries}
+        query={query}
+        onQueryChange={({ query: nextQuery }) => setQuery(nextQuery)}
+      />
 
       {!hasLogs && !streamError && isLoading && (
         <div className="text-sm text-neutral-500">Waiting for logs...</div>
+      )}
+      {!hasLogs && !streamError && !isLoading && (
+        <div className="text-sm text-neutral-500">No logs match your search.</div>
       )}
 
       {streamError && (
@@ -418,7 +528,7 @@ export function LogsViewer({
       )}
 
       <div className="flex flex-col gap-4">
-        <LogsGroups groupedEntries={groupedEntries} />
+        <LogsGroups groupedEntries={groupedEntries} highlightById={highlightById} />
         <div ref={bottomAnchorRef} />
       </div>
     </div>

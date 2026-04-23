@@ -86,12 +86,9 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
 
   const activeConfigExecStatus = activeConfigExecution?.status;
 
-  const onActiveConfigChange = useCallback(
-    (config: ITaskConfig<{ scan_parameters: Record<string, unknown> }>) => {
-      setActiveConfig(config);
-    },
-    []
-  );
+  const onActiveConfigChange = useCallback((config: ITaskConfig<TTaskConfigMeta>) => {
+    setActiveConfig(config);
+  }, []);
 
   const onSelectedForExtractionChange = useCallback((configId: string, selected: boolean) => {
     if (selected) {
