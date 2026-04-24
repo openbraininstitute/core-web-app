@@ -49,6 +49,233 @@ export default function ToolPlotGenerator({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Subplot detection & layout helpers
+// ---------------------------------------------------------------------------
+
+/** Count how many distinct axes exist (xaxis, xaxis2, xaxis3 …). */
+function countAxes(layout: Record<string, unknown>): number {
+  if (!layout) return 1;
+  const axisKeys = Object.keys(layout).filter((k) => /^xaxis\d*$/.test(k));
+  return Math.max(axisKeys.length, 1);
+}
+
+/**
+ * Apply compact font / margin overrides to *every* axis in the layout.
+ * The current code only touches `xaxis` and `yaxis`, which leaves
+ * `xaxis2 … xaxisN` and `yaxis2 … yaxisN` untouched — the root cause
+ * of the overlapping text in subplot grids.
+ */
+function compactAllAxes(
+  layout: Record<string, unknown>,
+  opts: {
+    maxTitleFont: number;
+    maxTickFont: number;
+    standoff: number;
+    hideAxisTitles: boolean;
+    nticks?: number;
+  }
+): Record<string, unknown> {
+  const patched: Record<string, unknown> = {};
+
+  for (const key of Object.keys(layout)) {
+    if (!/^[xy]axis\d*$/.test(key)) continue;
+
+    const axis = (layout[key] ?? {}) as Record<string, unknown>;
+    const titleObj = (axis.title ?? {}) as Record<string, unknown>;
+    const titleFontObj = (titleObj.font ?? {}) as Record<string, unknown>;
+    const tickFontObj = (axis.tickfont ?? {}) as Record<string, unknown>;
+
+    patched[key] = {
+      ...axis,
+      title: opts.hideAxisTitles
+        ? { ...titleObj, text: '' }
+        : {
+            ...titleObj,
+            font: {
+              ...titleFontObj,
+              size: Math.min((titleFontObj.size as number) || 12, opts.maxTitleFont),
+            },
+            standoff: opts.standoff,
+          },
+      tickfont: {
+        ...tickFontObj,
+        size: Math.min((tickFontObj.size as number) || 12, opts.maxTickFont),
+      },
+      automargin: true,
+      ...(opts.nticks !== undefined ? { nticks: opts.nticks } : {}),
+    };
+  }
+
+  return patched;
+}
+
+/** Shrink annotation font sizes (Plotly uses annotations for subplot titles). */
+function compactAnnotations(
+  annotations: Array<Record<string, unknown>> | undefined,
+  maxSize: number
+): Array<Record<string, unknown>> | undefined {
+  if (!Array.isArray(annotations)) return annotations;
+  return annotations.map((a) => {
+    const font = (a.font ?? {}) as Record<string, unknown>;
+    return {
+      ...a,
+      font: {
+        ...font,
+        size: Math.min((font.size as number) || 16, maxSize),
+      },
+    };
+  });
+}
+
+/**
+ * Shrink colorbar labels so they don't overflow in compact views.
+ * Plotly stores colorbar config on each trace (`data[i].colorbar`).
+ */
+function compactTraceColorbars(
+  data: Array<Record<string, unknown>>,
+  opts: { maxTickFont: number; thickness: number; len: number }
+): Array<Record<string, unknown>> {
+  return data.map((trace) => {
+    if (!trace.colorbar) return trace;
+    const cb = trace.colorbar as Record<string, unknown>;
+    const tickfont = (cb.tickfont ?? {}) as Record<string, unknown>;
+    const titleObj = (cb.title ?? {}) as Record<string, unknown>;
+    const titleFont = (titleObj.font ?? {}) as Record<string, unknown>;
+    return {
+      ...trace,
+      colorbar: {
+        ...cb,
+        tickfont: {
+          ...tickfont,
+          size: Math.min((tickfont.size as number) || 12, opts.maxTickFont),
+        },
+        title: {
+          ...titleObj,
+          font: {
+            ...titleFont,
+            size: Math.min((titleFont.size as number) || 12, opts.maxTickFont),
+          },
+        },
+        thickness: Math.min((cb.thickness as number) || opts.thickness, opts.thickness),
+        len: Math.min((cb.len as number) || opts.len, opts.len),
+      },
+    };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Inline layout builder
+// ---------------------------------------------------------------------------
+
+function buildInlineLayout(layout: Record<string, unknown>, subplotCount: number) {
+  const isGrid = subplotCount >= 4;
+  const isDenseGrid = subplotCount >= 9;
+
+  // Font sizes scale down with subplot density
+  const baseFontSize = isDenseGrid ? 6 : isGrid ? 8 : 10;
+  const axisTitleFont = isDenseGrid ? 0 : isGrid ? 7 : 10; // 0 → will hide
+  const axisTickFont = isDenseGrid ? 6 : isGrid ? 7 : 9;
+  const annotationFont = isDenseGrid ? 7 : isGrid ? 8 : 10;
+  const legendFont = isDenseGrid ? 6 : isGrid ? 7 : 9;
+
+  const axisOverrides = compactAllAxes(layout, {
+    maxTitleFont: axisTitleFont,
+    maxTickFont: axisTickFont,
+    standoff: isGrid ? 2 : 4,
+    hideAxisTitles: isDenseGrid,
+    nticks: isDenseGrid ? 4 : isGrid ? 5 : undefined,
+  });
+
+  const annotations = compactAnnotations(
+    layout.annotations as Array<Record<string, unknown>> | undefined,
+    annotationFont
+  );
+
+  return {
+    ...layout,
+    ...axisOverrides,
+    title: undefined,
+    autosize: true,
+    width: undefined,
+    height: undefined,
+    margin: isGrid ? { t: 2, l: 2, r: 2, b: 2, pad: 0 } : { t: 0, l: 3, r: 3, b: 3, pad: 0 },
+    font: {
+      ...(layout.font as Record<string, unknown>),
+      size: baseFontSize,
+    },
+    annotations,
+    legend: {
+      ...(layout.legend as Record<string, unknown>),
+      font: {
+        ...((layout.legend as Record<string, unknown>)?.font as Record<string, unknown>),
+        size: legendFont,
+      },
+      ...(isDenseGrid ? { visible: false } : { tracegroupgap: 2, itemwidth: 20, xpad: 2, ypad: 2 }),
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Fullscreen layout builder
+// ---------------------------------------------------------------------------
+
+function buildFullscreenLayout(layout: Record<string, unknown>) {
+  // Apply generous font sizes to ALL axes, not just the first pair.
+  const axisOverrides: Record<string, unknown> = {};
+  for (const key of Object.keys(layout)) {
+    if (!/^[xy]axis\d*$/.test(key)) continue;
+    const axis = (layout[key] ?? {}) as Record<string, unknown>;
+    const titleObj = (axis.title ?? {}) as Record<string, unknown>;
+    const titleFontObj = (titleObj.font ?? {}) as Record<string, unknown>;
+    const tickFontObj = (axis.tickfont ?? {}) as Record<string, unknown>;
+
+    axisOverrides[key] = {
+      ...axis,
+      title: {
+        ...titleObj,
+        font: {
+          ...titleFontObj,
+          size: Math.max((titleFontObj.size as number) || 14, 18),
+        },
+      },
+      tickfont: {
+        ...tickFontObj,
+        size: Math.max((tickFontObj.size as number) || 12, 14),
+      },
+    };
+  }
+
+  return {
+    ...layout,
+    ...axisOverrides,
+    title: undefined,
+    autosize: true,
+    width: undefined,
+    height: undefined,
+    margin: layout.margin as Record<string, unknown>,
+    font: {
+      ...(layout.font as Record<string, unknown>),
+      size: Math.max(((layout.font as Record<string, unknown>)?.size as number) || 12, 16),
+    },
+    legend: {
+      ...(layout.legend as Record<string, unknown>),
+      font: {
+        ...((layout.legend as Record<string, unknown>)?.font as Record<string, unknown>),
+        size: Math.max(
+          (((layout.legend as Record<string, unknown>)?.font as Record<string, unknown>)
+            ?.size as number) || 12,
+          14
+        ),
+      },
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// CustomPlot component
+// ---------------------------------------------------------------------------
+
 function CustomPlot({
   className,
   providedData,
@@ -76,63 +303,33 @@ function CustomPlot({
     return null;
   }
 
-  const title = props.layout?.title?.text || props.layout?.title || '';
-  const titleFont = props.layout?.title?.font || {};
+  const layout = (props.layout ?? {}) as Record<string, unknown>;
+  const title = (layout.title as Record<string, unknown>)?.text ?? (layout.title as string) ?? '';
+  const titleFont = ((layout.title as Record<string, unknown>)?.font ?? {}) as Record<
+    string,
+    unknown
+  >;
 
-  const modifiedLayout = {
-    ...props.layout,
-    title: undefined,
-    autosize: true,
-    margin: { ...props.layout?.margin, t: 10, l: 3, r: 3, b: 3 },
-  };
+  const subplotCount = countAxes(layout);
+  const isGrid = subplotCount >= 4;
+  const isDenseGrid = subplotCount >= 9;
 
-  const fullscreenLayout = {
-    ...props.layout,
-    title: undefined,
-    autosize: true,
-    width: undefined,
-    height: undefined,
-    margin: props.layout?.margin,
-    font: {
-      ...props.layout?.font,
-      size: Math.max(props.layout?.font?.size || 12, 16),
-    },
-    xaxis: {
-      ...props.layout?.xaxis,
-      title: {
-        ...props.layout?.xaxis?.title,
-        font: {
-          ...props.layout?.xaxis?.title?.font,
-          size: Math.max(props.layout?.xaxis?.title?.font?.size || 14, 18),
-        },
-      },
-      tickfont: {
-        ...props.layout?.xaxis?.tickfont,
-        size: Math.max(props.layout?.xaxis?.tickfont?.size || 12, 14),
-      },
-    },
-    yaxis: {
-      ...props.layout?.yaxis,
-      title: {
-        ...props.layout?.yaxis?.title,
-        font: {
-          ...props.layout?.yaxis?.title?.font,
-          size: Math.max(props.layout?.yaxis?.title?.font?.size || 14, 18),
-        },
-      },
-      tickfont: {
-        ...props.layout?.yaxis?.tickfont,
-        size: Math.max(props.layout?.yaxis?.tickfont?.size || 12, 14),
-      },
-    },
-    legend: {
-      ...props.layout?.legend,
-      font: {
-        ...props.layout?.legend?.font,
-        size: Math.max(props.layout?.legend?.font?.size || 12, 14),
-      },
-    },
-  };
+  const modifiedLayout = buildInlineLayout(layout, subplotCount);
+
+  // Compact colorbars for inline view on dense grids
+  const inlineData =
+    isGrid && Array.isArray(props.data)
+      ? compactTraceColorbars(props.data, {
+          maxTickFont: isDenseGrid ? 7 : 9,
+          thickness: isDenseGrid ? 10 : 15,
+          len: isDenseGrid ? 0.6 : 0.8,
+        })
+      : props.data;
+
+  const fullscreenLayout = buildFullscreenLayout(layout);
+
+  // Use a taller aspect ratio for dense subplot grids so each cell gets more room
+  const aspectRatio = isDenseGrid ? '1 / 1' : isGrid ? '4 / 3.5' : undefined;
 
   const handleShow = () => {
     refDialog.current?.showModal();
@@ -142,7 +339,10 @@ function CustomPlot({
     <>
       <div
         className={classNames('h-full', styles.plotContainer)}
-        style={isAnimating ? { contain: 'strict' } : undefined}
+        style={{
+          ...(isAnimating ? { contain: 'strict' } : undefined),
+          ...(aspectRatio ? { aspectRatio } : {}),
+        }}
       >
         <button
           type="button"
@@ -152,14 +352,16 @@ function CustomPlot({
         >
           <FullscreenOutlined />
         </button>
-        {title && <PlotTitle title={title} titleFont={titleFont} paddingRight="40px" />}
+        {title && (
+          <PlotTitle title={title as string} titleFont={titleFont} paddingRight="28px" compact />
+        )}
         {!plotReady && <ToolSkeleton />}
         <div
           key={plotRenderKey}
           style={{
             flex: 1,
             minHeight: 0,
-            overflowY: 'auto',
+            overflow: 'hidden',
             visibility: plotReady ? 'visible' : 'hidden',
           }}
           onDoubleClick={handleShow}
@@ -171,13 +373,13 @@ function CustomPlot({
               minWidth: '250px',
               height: '100%',
             }}
-            data={props.data}
+            data={inlineData}
             layout={modifiedLayout}
             frames={props?.frames}
             config={{
               displaylogo: false,
               responsive: true,
-              modeBarButtons: [['pan2d', 'zoom2d', 'resetScale2d', 'toImage']],
+              modeBarButtons: [['resetScale2d', 'zoom2d', 'pan2d', 'toImage']],
             }}
             useResizeHandler
             onInitialized={() => setPlotReady(true)}
@@ -187,7 +389,7 @@ function CustomPlot({
         </div>
       </div>
       <FullscreenDialog dialogRef={refDialog}>
-        {title && <PlotTitle title={title} titleFont={titleFont} isFullscreen />}
+        {title && <PlotTitle title={title as string} titleFont={titleFont} isFullscreen />}
         <Plot
           style={{
             width: '90vw',
@@ -212,25 +414,34 @@ function PlotTitle({
   titleFont,
   paddingRight,
   isFullscreen,
+  compact,
 }: {
   title: string;
   titleFont: { size?: number; family?: string; weight?: string; color?: string };
   paddingRight?: string;
   isFullscreen?: boolean;
+  compact?: boolean;
 }) {
   const baseFontSize = titleFont.size || 16;
-  const fontSize = isFullscreen ? Math.max(baseFontSize, 24) : Math.min(baseFontSize, 24);
+  let fontSize: number;
+  if (isFullscreen) {
+    fontSize = Math.max(baseFontSize, 24);
+  } else if (compact) {
+    fontSize = Math.min(baseFontSize, 12);
+  } else {
+    fontSize = Math.min(baseFontSize, 24);
+  }
 
   return (
     <div
-      className="px-4 py-2 text-center font-bold"
+      className={compact ? 'px-2 py-0.5 text-center font-bold' : 'px-4 py-2 text-center font-bold'}
       title={title}
       style={{
         fontSize,
         fontFamily: titleFont.family || 'Arial, sans-serif',
         fontWeight: titleFont.weight || 'bold',
         color: titleFont.color || '#333',
-        lineHeight: 1.3,
+        lineHeight: 1.2,
         paddingLeft: paddingRight,
         paddingRight,
         overflow: 'hidden',

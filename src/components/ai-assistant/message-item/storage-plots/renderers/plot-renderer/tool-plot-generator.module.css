@@ -2,6 +2,13 @@
   width: 100%;
 }
 
+/* Force Plotly internals to fill the available height */
+.toolPlotGenerator :global(.plot-container),
+.toolPlotGenerator :global(.svg-container) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .plotContainer {
   width: 600px;
   max-width: 100%;
@@ -18,31 +25,48 @@
 
 .fullscreenButton {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  background: rgba(0, 0, 0, 0.3);
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   border: none;
   border-radius: 50%;
   width: 22px;
   height: 22px;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 11px;
   color: white;
   z-index: 10;
   display: grid;
   place-items: center;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition:
+    opacity 0.2s,
+    background 0.2s;
 
   .plotContainer:hover & {
     opacity: 1;
   }
 
   &:hover {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.7);
   }
 }
 
+/* Plotly modebar buttons */
 .plotContainer :global(.modebar-container) {
-  margin-right: 8px !important;
+  margin-right: 4px !important;
+}
+
+.plotContainer :global(.modebar-group) {
+  padding: 0 !important;
+}
+
+.plotContainer :global(.modebar-btn) {
+  padding: 3px 4px !important;
+}
+
+.plotContainer :global(.modebar-btn svg) {
+  width: 14px !important;
+  height: 14px !important;
 }

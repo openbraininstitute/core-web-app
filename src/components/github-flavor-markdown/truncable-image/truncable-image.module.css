@@ -23,28 +23,30 @@
 
 .fullscreenButton {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  background: rgba(0, 0, 0, 0.3);
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.5);
   border: none;
   border-radius: 50%;
   width: 22px;
   height: 22px;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 11px;
   color: white;
   z-index: 10;
   display: grid;
   place-items: center;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition:
+    opacity 0.2s,
+    background 0.2s;
 
   .container:hover & {
     opacity: 1;
   }
 
   &:hover {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.7);
   }
 }
 
