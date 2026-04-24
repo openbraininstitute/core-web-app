@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { config } from '@/config';
 import { LogLevelDict, type TLogLevel } from '@/features/task-logs-stream/types';
 import { log } from '@/utils/logger';
 
@@ -8,8 +9,6 @@ import type { NextRequest } from 'next/server';
 import http from 'node:http';
 import https from 'node:https';
 import { Readable } from 'node:stream';
-
-const DEFAULT_LAUNCH_SYSTEM_BASE_URL = 'https://127.0.0.1:4444/api/launch-system';
 
 export interface ICommonQueryParams {
   virtualLabId: string;
@@ -50,7 +49,7 @@ export function parseCommonQueryParams({
 }
 
 export function buildUpstreamJobUrl({ jobId, stream }: { jobId: string; stream?: boolean }) {
-  const baseUrl = process.env.LAUNCH_SYSTEM_URL ?? DEFAULT_LAUNCH_SYSTEM_BASE_URL;
+  const baseUrl = config.LAUNCH_SYSTEM_URL;
   const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
   const suffix = stream ? '/stream' : '';
   return `${normalizedBaseUrl}/job/${encodeURIComponent(jobId)}${suffix}`;
