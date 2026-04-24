@@ -181,10 +181,12 @@ export function MainCardComingSoon({
   groupTitle,
   description,
   group,
+  context: { virtualLabId, projectId },
 }: {
   groupTitle: string;
   description: string;
   group?: TQuickAccessGroup;
+  context: WorkspaceContext;
 }) {
   if (group === QuickAccessGroupDict.Workflows) {
     return (
@@ -217,7 +219,7 @@ export function MainCardComingSoon({
             className="w-full bg-background shadow-none hover:bg-white hover:shadow-md"
           >
             <Link
-              href="https://www.openbraininstitute.org/app/virtual-lab/52164bfb-b3e1-4952-8319-46582f56d661/79737d9a-2f9a-4d50-8cac-28510999aae4/workflows/simulate/new/small-microcircuit-simulation"
+              href={`/app/virtual-lab/${virtualLabId}/${projectId}/workflows/simulate/new/small-microcircuit-simulation`}
               className="text-primary-8 hover:text-primary-9 text-base!"
             >
               New small circuit simulation

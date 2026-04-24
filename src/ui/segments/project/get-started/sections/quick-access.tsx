@@ -139,6 +139,7 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
                   group={group}
                   groupTitle={groupTitle ?? group}
                   description="Coming soon"
+                  context={context}
                 />
                 <ViewExamples
                   {...{
