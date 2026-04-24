@@ -37,10 +37,24 @@ export async function fetchTaskLogsStreamEndpoint({
   });
 
   if (!response.ok || !response.body) {
-    throw new StreamHttpError({ status: response.status });
+    const errorCode = await readStreamErrorCode({ response });
+    throw new StreamHttpError({ status: response.status, errorCode });
   }
 
   return parseLogStreamToEntries({ stream: response.body });
+}
+
+async function readStreamErrorCode({
+  response,
+}: {
+  response: Response;
+}): Promise<string | undefined> {
+  try {
+    const body = (await response.clone().json()) as { error_code?: unknown };
+    return typeof body?.error_code === 'string' ? body.error_code : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export async function* streamTaskLogsWithReconnect({

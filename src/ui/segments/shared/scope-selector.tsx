@@ -12,7 +12,7 @@ interface Props {
   activeTab: string;
   className?: string;
   onValueChange: (value: string) => void;
-  items?: Array<{ key: string; title: string; icon?: ReactNode }>;
+  items?: Array<{ key: string; title: string; icon?: ReactNode; disabled?: boolean }>;
 }
 
 export const UiDeterminedScopes = {
@@ -26,6 +26,7 @@ const tabsConfigItems: Array<{
   key: Partial<UiDeterminedScopesKeys>;
   title: string;
   icon?: ReactNode;
+  disabled?: boolean;
 }> = [
   {
     key: WorkspaceScope.Public,
@@ -63,6 +64,7 @@ export function TabsSelector({
           <PillTabsTrigger
             key={tab.key}
             value={tab.key}
+            disabled={tab.disabled}
             className={cn(
               'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3',
               'text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',

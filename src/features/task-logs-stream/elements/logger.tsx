@@ -294,7 +294,7 @@ export function LogsViewer({
         )}
 
         {streamError && (
-          <div className="w-full py-2">
+          <div className="w-full py-2 px-2">
             <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-base text-red-700">
               {streamError}
             </div>

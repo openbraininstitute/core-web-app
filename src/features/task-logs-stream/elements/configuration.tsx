@@ -29,7 +29,7 @@ function formatDateTime({ value }: { value: string | null | undefined }): string
   }).format(date);
 }
 
-function formatDurationMinutes({
+function formatDuration({
   startTime,
   endTime,
 }: {
@@ -41,8 +41,17 @@ function formatDurationMinutes({
   const endDate = new Date(endTime);
   if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return '—';
   const durationMs = Math.max(0, endDate.getTime() - startDate.getTime());
-  const minutes = durationMs / 60_000;
-  return `${minutes.toFixed(2)} min`;
+  const totalSeconds = Math.floor(durationMs / 1_000);
+  const hours = Math.floor(totalSeconds / 3_600);
+  const minutes = Math.floor((totalSeconds % 3_600) / 60);
+  const seconds = totalSeconds % 60;
+  const parts: string[] = [];
+
+  if (hours > 0) parts.push(`${hours} h`);
+  if (minutes > 0) parts.push(`${minutes} min`);
+  if (seconds > 0 || parts.length === 0) parts.push(`${seconds} s`);
+
+  return parts.join(', ');
 }
 
 function formatJson({ value }: { value: unknown }): string {
@@ -71,7 +80,7 @@ export function Configuration({ configuration }: IProps) {
     ActivityStatusColorMap[statusKey as keyof typeof ActivityStatusColorMap] ?? '#6b7280';
   const startTime = (configuration.start_time as string | null | undefined) ?? null;
   const endTime = (configuration.end_time as string | null | undefined) ?? null;
-  const duration = formatDurationMinutes({ startTime, endTime });
+  const duration = formatDuration({ startTime, endTime });
 
   const codeCell = ({ value }: { value: unknown }) => (
     <CodeBlock
