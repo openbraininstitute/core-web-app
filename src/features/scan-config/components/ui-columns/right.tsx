@@ -43,7 +43,7 @@ export function Right({
   config,
 }: Props) {
   return (
-    <>
+    <div id="scan-config-controls-right-preview" className="rounded-lg mr-2">
       {activity === ScanConfigActivity.Simulate &&
         entityType === ExtendedEntitiesTypeDict.IonChannelModel && (
           <IonChannelModelRecordingRender
@@ -61,6 +61,6 @@ export function Right({
             <ModelPreview model={entity} />
           </div>
         )}
-    </>
+    </div>
   );
 }

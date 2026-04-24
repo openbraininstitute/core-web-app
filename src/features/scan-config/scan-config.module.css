@@ -2,7 +2,7 @@ div.threeColumns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
   gap: 5px;
-  height: calc(100% - 80px);
+  height: 100%;
 }
 
 div.threeColumns > div {
@@ -13,14 +13,15 @@ div.threeColumns > div {
 div.threeColumns > div.scrollable {
   overflow-y: auto;
   overflow-x: hidden;
+  height: 100%;
 }
 
-div.threeColumns > div:first-child {
+/* div.threeColumns > div:first-child {
   display: grid;
   grid-template-rows: 1fr auto;
   gap: 1em;
   overflow: hidden;
-}
+} */
 
 header.header {
   display: flex;

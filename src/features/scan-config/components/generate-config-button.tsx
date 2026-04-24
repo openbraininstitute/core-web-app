@@ -87,10 +87,10 @@ export default function GenerateConfigButton({
     <button
       type="button"
       className={classNames(
-        'flex min-h-12.5 w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
+        'flex mt-auto h-12.5 w-full items-center justify-center rounded-full text-lg font-medium transition-all duration-300 ease-out',
         (errors && errors.length > 0) || loading
           ? 'bg-gray-300 text-gray-500'
-          : 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
+          : 'bg-linear-to-r from-[#0B4FB3] via-[#003A8C] to-[#001026] bg-size-[200%_100%] text-white hover:bg-position-[100%_0] hover:shadow-[0_10px_24px_rgba(0,58,140,0.35)] active:translate-y-0 active:shadow-md'
       )}
       onClick={async () => {
         if (loading) return;

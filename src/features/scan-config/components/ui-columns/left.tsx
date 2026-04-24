@@ -17,8 +17,6 @@ import { resetConfig } from '../hooks/schema';
 
 import type { Config } from '@/features/scan-config/components/components';
 
-import styles from '@/features/scan-config/scan-config.module.css';
-
 export default function Left({
   schema,
   atomsMap,
@@ -82,8 +80,8 @@ export default function Left({
   }, [aiConfig, campaignId, schema, setAtomsMap, setAiConfig]);
 
   return (
-    <div className={styles.scrollable}>
-      <div className="flex grow flex-col items-center gap-5 overflow-y-auto overflow-x-hidden secondary-scrollbar px-2 pb-5">
+    <div id="scan-config-controls-left" className="flex h-full min-h-0 flex-col">
+      <div className="secondary-scrollbar flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto overflow-x-hidden px-2 pb-5">
         {schema.group_order.map((group) => {
           return (
             <div key={group} className="w-full flex flex-col gap-1.5">
@@ -132,18 +130,20 @@ export default function Left({
       </div>
 
       {!readOnly && (
-        <GenerateConfigButton
-          loading={loading}
-          campaignId={campaignId}
-          setCampaignId={setCampaignId}
-          errors={errors}
-          config={config}
-          setTab={setTab}
-          setLoading={setLoading}
-          activity={activity}
-          entityType={entityType}
-          generatedApiUrl={generatedEndpoint}
-        />
+        <div className="mt-auto w-full pt-2 px-2">
+          <GenerateConfigButton
+            loading={loading}
+            campaignId={campaignId}
+            setCampaignId={setCampaignId}
+            errors={errors}
+            config={config}
+            setTab={setTab}
+            setLoading={setLoading}
+            activity={activity}
+            entityType={entityType}
+            generatedApiUrl={generatedEndpoint}
+          />
+        </div>
       )}
     </div>
   );

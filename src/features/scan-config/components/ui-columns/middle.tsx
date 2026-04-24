@@ -68,7 +68,7 @@ export default function Middle({
       : selectedRootElement;
 
   return (
-    <div className={styles.animateFadeUp}>
+    <div id="scan-config-controls-in-out-files" className={styles.animateFadeUp}>
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionary
           campaignId={campaignId}
