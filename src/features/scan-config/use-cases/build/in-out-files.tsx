@@ -107,7 +107,7 @@ export function InOutFiles({
 
   return (
     <div className="h-full overflow-y-auto">
-      <h4 className="uppercase">Inputs</h4>
+      <h4 className="uppercase">Input files</h4>
       <div className="mt-4 mb-8 flex flex-col gap-4">
         {inputFiles.length === 0 && <div className="text-gray-400">No input files available</div>}
         {inputFiles.map((file) => {
@@ -124,7 +124,7 @@ export function InOutFiles({
         })}
       </div>
 
-      <h4 className="uppercase">Outputs</h4>
+      <h4 className="uppercase">Output files</h4>
       <div className="mt-4 flex flex-col gap-4">
         <button
           id={`logs-${config.id}`}
