@@ -23,6 +23,12 @@ export interface IUpstreamStreamResponse {
   body: ReadableStream<Uint8Array>;
 }
 
+export interface IUpstreamJsonResponse {
+  statusCode: number;
+  headers: http.IncomingHttpHeaders;
+  rawBody: string;
+}
+
 export function parseCommonQueryParams({
   request,
 }: {
@@ -120,6 +126,53 @@ export function requestStreamWithHeaders({
           statusCode: response.statusCode ?? 500,
           headers: response.headers,
           body: Readable.toWeb(response) as ReadableStream<Uint8Array>,
+        });
+      }
+    );
+
+    request.on('error', reject);
+    request.end();
+  });
+}
+
+export function requestJsonWithHeaders({
+  urlString,
+  headers,
+}: {
+  urlString: string;
+  headers: Record<string, string>;
+}): Promise<IUpstreamJsonResponse> {
+  return new Promise((resolve, reject) => {
+    const url = new URL(urlString);
+    const client = url.protocol === 'https:' ? https : http;
+
+    const request = client.request(
+      url,
+      {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          ...headers,
+        },
+        ...(url.protocol === 'https:' ? { rejectUnauthorized: false } : {}),
+      },
+      (response) => {
+        if (!response) {
+          reject(new Error('No response received from upstream'));
+          return;
+        }
+
+        let rawBody = '';
+        response.setEncoding('utf8');
+        response.on('data', (chunk) => {
+          rawBody += chunk;
+        });
+        response.on('end', () => {
+          resolve({
+            statusCode: response.statusCode ?? 500,
+            headers: response.headers,
+            rawBody,
+          });
         });
       }
     );

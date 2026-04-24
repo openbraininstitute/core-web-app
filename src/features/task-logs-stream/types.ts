@@ -62,7 +62,7 @@ export interface ILogEntry {
   type: TLogTypeKey;
   timestamp?: string;
   message: string;
-  timestampGroupLabel: string;
+  timestampGroupLabel: string | null;
 }
 
 export interface IHighlightRange {
@@ -156,3 +156,16 @@ export interface IJobRead {
   meta: Record<string, unknown> | null;
   [key: string]: unknown;
 }
+
+export const ViewerTabDict = {
+  Configuration: 'configuration',
+  Logs: 'logs',
+} as const;
+
+export type TViewerTab = (typeof ViewerTabDict)[keyof typeof ViewerTabDict];
+
+export interface ITaskLogsDataState extends ITaskLogsStreamState {
+  configuration: Omit<IJobRead, 'logs'> | null;
+}
+
+export type TLogsExportFormat = 'txt' | 'json';
