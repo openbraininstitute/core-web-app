@@ -17,7 +17,6 @@ export interface IStreamQueryParams {
   projectId: string;
   configId?: string;
   enabled: boolean;
-  enableDebugLogs: boolean;
   debugLog: (params: { level: TLogLevel; message: string; payload?: unknown }) => void;
 }
 
@@ -33,14 +32,10 @@ export function buildTaskLogsStreamQueryOptions({
   projectId,
   configId,
   enabled,
-  enableDebugLogs,
   debugLog,
 }: IStreamQueryParams) {
   return queryOptions({
-    queryKey: [
-      'task-logs-stream',
-      { jobId, virtualLabId, projectId, configId, enableDebugLogs, enabled },
-    ],
+    queryKey: ['task-logs-stream', { jobId, virtualLabId, projectId, configId, enabled }],
     queryFn: streamedQuery({
       streamFn: async ({ signal }) => {
         if (!jobId) return emptyStream();
@@ -53,7 +48,6 @@ export function buildTaskLogsStreamQueryOptions({
           jobId,
           virtualLabId,
           projectId,
-          enableDebugLogs,
           signal,
           debugLog: ({ level, message, payload }) => debugLog({ level, message, payload }),
           configId,

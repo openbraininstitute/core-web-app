@@ -1,11 +1,10 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { pick } from 'es-toolkit/compat';
+import { useEffect } from 'react';
 
-import {
-  isStreamNotFoundError,
-  parseJobReadLogsToEntries,
-} from '@/features/task-logs-stream/helpers';
+import { parseJobReadLogsToEntries } from '@/features/task-logs-stream/helpers';
 import { useReadQuery } from '@/features/task-logs-stream/hooks/use-read-query';
 import {
   getStreamEntries,
@@ -20,7 +19,6 @@ export function useTaskLogsData({
   projectId,
   configId,
   enabled,
-  enableDebugLogs,
   debugLog,
 }: {
   jobId?: string;
@@ -28,33 +26,43 @@ export function useTaskLogsData({
   projectId: string;
   configId?: string;
   enabled: boolean;
-  enableDebugLogs: boolean;
   debugLog: (params: { level: TLogLevel; message: string; payload?: unknown }) => void;
 }): ITaskLogsDataState {
+  const queryClient = useQueryClient();
+
   const streamQuery = useStreamQuery({
     jobId,
     virtualLabId,
     projectId,
     configId,
     enabled,
-    enableDebugLogs,
     debugLog,
   });
 
-  // the stream is "terminated" once it is no longer actively fetching and has
-  // reached a success (ended gracefully) or error (404 STREAM_NOT_FOUND)
-  // terminal state. that's our cue to pull the authoritative read payload.
-  const hasStreamTerminated =
-    streamQuery.fetchStatus === 'idle' && streamQuery.status !== 'pending';
-
+  // read the job eagerly as soon as we have a jobId
+  // this gives us configuration data while the stream is still running
   const readQuery = useReadQuery({
     jobId,
     virtualLabId,
     projectId,
     configId,
-    enabled: enabled && hasStreamTerminated,
-    enableDebugLogs,
+    enabled: enabled && Boolean(jobId),
   });
+
+  // the stream is "terminated" once it is no longer actively fetching and has
+  // reached a success (ended gracefully) or error terminal state.
+  const hasStreamTerminated =
+    streamQuery.fetchStatus === 'idle' && streamQuery.status !== 'pending';
+
+  // once the stream terminates, invalidate the read query to get the final
+  // authoritative state (final logs, end_time, status, etc.)
+  useEffect(() => {
+    if (hasStreamTerminated && jobId) {
+      queryClient.invalidateQueries({
+        queryKey: ['task-job-read', { jobId, virtualLabId, projectId, configId }],
+      });
+    }
+  }, [hasStreamTerminated, jobId, virtualLabId, projectId, configId, queryClient]);
 
   if (!enabled) {
     return {
@@ -75,31 +83,33 @@ export function useTaskLogsData({
     };
   }
 
-  // once the read payload is available, prefer it
-  // it is the final state and also unlocks the configuration tab.
-  if (readQuery.data) {
+  // configuration is available from the read endpoint as soon as the job exists
+  const configuration = readQuery.data ? extractConfiguration({ data: readQuery.data }) : null;
+
+  // once the stream has terminated and read data is available, prefer read logs
+  // as the authoritative final state
+  if (hasStreamTerminated && readQuery.data) {
     return {
       entries: parseJobReadLogsToEntries({ logs: readQuery.data.logs ?? null }),
       streamError: null,
       isLoading: false,
-      configuration: extractConfiguration({ data: readQuery.data }),
+      configuration,
     };
   }
 
   const streamEntries = getStreamEntries({ data: streamQuery.data });
 
-  // a 404 STREAM_NOT_FOUND is expected when there is no active stream
-  // it is the signal to fall back to read, not something to surface to the user.
-  const streamNotFound = isStreamNotFoundError({ error: streamQuery.error });
-  const streamErrorMessage =
-    !streamNotFound && streamQuery.error instanceof Error ? streamQuery.error.message : null;
+  // surface stream errors to the user.
+  // 404 NOT_FOUND means the backend already retried internally — the stream genuinely doesn't exist.
+  // 502 GENERIC_ERROR means the upstream returned an unexpected error.
+  const streamErrorMessage = streamQuery.error instanceof Error ? streamQuery.error.message : null;
   const readErrorMessage = readQuery.error instanceof Error ? readQuery.error.message : null;
 
   return {
     entries: streamEntries,
     streamError: readErrorMessage ?? streamErrorMessage,
     isLoading: streamQuery.isLoading || readQuery.isLoading,
-    configuration: null,
+    configuration,
   };
 }
 

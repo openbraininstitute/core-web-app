@@ -24,8 +24,9 @@ type Props = {
   execution?: ITaskActivity;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
-  logsActive: boolean;
-  onSelectLogs: () => void;
+  // temporarily disabled logs mode in Build UI.
+  // logsActive: boolean;
+  // onSelectLogs: () => void;
   context: { virtualLabId: string; projectId: string };
   campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
@@ -36,8 +37,8 @@ export function InOutFiles({
   execution,
   selectedFile,
   onSelect,
-  logsActive,
-  onSelectLogs,
+  // logsActive,
+  // onSelectLogs,
   context,
   campaignOrigin,
 }: Props) {
@@ -99,11 +100,10 @@ export function InOutFiles({
   });
 
   useEffect(() => {
-    if (logsActive) return;
     if (inputFiles.length > 0 && !selectedFile) {
       onSelect(inputFiles[0]);
     }
-  }, [inputFiles, logsActive, selectedFile, onSelect]);
+  }, [inputFiles, selectedFile, onSelect]);
 
   return (
     <div className="h-full overflow-y-auto">
@@ -114,7 +114,7 @@ export function InOutFiles({
           return (
             <ResultItem
               id={file.asset.id}
-              selected={!logsActive && file.asset.id === selectedFile?.id}
+              selected={file.asset.id === selectedFile?.id}
               key={file.asset?.id}
               file={file}
               onSelect={onSelect}
@@ -126,6 +126,7 @@ export function InOutFiles({
 
       <h4 className="uppercase">Output files</h4>
       <div className="mt-4 flex flex-col gap-4">
+        {/* temporarily disabled logs entry point in Build output files list
         <button
           id={`logs-${config.id}`}
           type="button"
@@ -155,6 +156,7 @@ export function InOutFiles({
             log
           </span>
         </button>
+        */}
 
         {outputAvailable && !builtCircuit && !isLoading && (
           <div className="text-gray-400">No output files generated</div>
@@ -163,7 +165,8 @@ export function InOutFiles({
           <ResultItem
             id={builtCircuit.id}
             label={<small className="uppercase">Circuit</small>}
-            selected={!logsActive && builtCircuit?.id === selectedFile?.id}
+            // selected={!logsActive && builtCircuit?.id === selectedFile?.id}
+            selected={builtCircuit?.id === selectedFile?.id}
             key={builtCircuit.id}
             file={{
               id: builtCircuit.id,
