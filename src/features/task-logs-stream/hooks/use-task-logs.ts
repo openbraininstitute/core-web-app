@@ -19,6 +19,7 @@ export function useTaskLogsData({
   projectId,
   configId,
   enabled,
+  skipStream = false,
   debugLog,
 }: {
   jobId?: string;
@@ -26,6 +27,8 @@ export function useTaskLogsData({
   projectId: string;
   configId?: string;
   enabled: boolean;
+  /** skip the stream entirely and read the job directly (e.g. terminal execution status) */
+  skipStream?: boolean;
   debugLog: (params: { level: TLogLevel; message: string; payload?: unknown }) => void;
 }): ITaskLogsDataState {
   const queryClient = useQueryClient();
@@ -35,7 +38,7 @@ export function useTaskLogsData({
     virtualLabId,
     projectId,
     configId,
-    enabled,
+    enabled: enabled && !skipStream,
     debugLog,
   });
 
@@ -50,9 +53,10 @@ export function useTaskLogsData({
   });
 
   // the stream is "terminated" once it is no longer actively fetching and has
-  // reached a success (ended gracefully) or error terminal state.
+  // reached a success (ended gracefully) or error terminal state,
+  // or when we skipped it entirely because the execution is already terminal.
   const hasStreamTerminated =
-    streamQuery.fetchStatus === 'idle' && streamQuery.status !== 'pending';
+    skipStream || (streamQuery.fetchStatus === 'idle' && streamQuery.status !== 'pending');
 
   // once the stream terminates, invalidate the read query to get the final
   // authoritative state (final logs, end_time, status, etc.)

@@ -1,7 +1,7 @@
 'use client';
 
 import { RiFileList3Line, RiTerminalBoxLine } from '@remixicon/react';
-import { Activity, useCallback, useState } from 'react';
+import { Activity, useCallback, useEffect, useState } from 'react';
 
 import {
   ScanConfigCampaignOriginActionDict,
@@ -23,6 +23,8 @@ interface IProps {
   configId?: string;
   enabled: boolean;
   enableDebugLogs?: boolean;
+  /** when true, skip the stream and read the job directly (e.g. terminal execution status) */
+  skipStream?: boolean;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
 }
@@ -34,6 +36,7 @@ export function Viewer({
   configId,
   enabled,
   enableDebugLogs = false,
+  skipStream = false,
   campaignOriginAction,
   isCampaignIdChanged,
 }: IProps) {
@@ -41,6 +44,13 @@ export function Viewer({
     campaignOriginAction === ScanConfigCampaignOriginActionDict.View && !isCampaignIdChanged;
 
   const [activeTab, setActiveTab] = useState<TViewerTab>(ViewerTabDict.Logs);
+
+  // reset to Logs tab when the underlying job or config changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: jobId and configId are intentional trigger dependencies
+  useEffect(() => {
+    setActiveTab(ViewerTabDict.Logs);
+  }, [jobId, configId]);
+
   const debugLog = useCallback(
     ({ level, message, payload }: { level: TLogLevel; message: string; payload?: unknown }) => {
       if (!enableDebugLogs) return;
@@ -55,6 +65,7 @@ export function Viewer({
     projectId,
     configId,
     enabled,
+    skipStream,
     debugLog,
   });
 
