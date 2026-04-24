@@ -96,19 +96,21 @@ function LogsGroups({
                   'border-gray-200 bg-white p-3 shadow-sm mx-1 hover:bg-gray-50'
                 )}
               >
-                <div className="mb-1 flex items-center gap-2">
-                  <Badge rounded className={getLogTypeConfig({ type: entry.type }).badgeClass}>
-                    {getLogTypeConfig({ type: entry.type }).label}
-                  </Badge>
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 items-start gap-2">
+                    <Badge rounded className={getLogTypeConfig({ type: entry.type }).badgeClass}>
+                      {getLogTypeConfig({ type: entry.type }).label}
+                    </Badge>
+                    <pre className="min-w-0 flex-1 whitespace-pre-wrap wrap-break-word text-xs text-neutral-800">
+                      {highlightText({
+                        value: entry.message,
+                        ranges: highlightById.get(entry.id) ?? [],
+                        entryId: entry.id,
+                        activeMatchId,
+                      })}
+                    </pre>
+                  </div>
                 </div>
-                <pre className="min-w-0 flex-1 whitespace-pre-wrap wrap-break-word text-xs text-neutral-800">
-                  {highlightText({
-                    value: entry.message,
-                    ranges: highlightById.get(entry.id) ?? [],
-                    entryId: entry.id,
-                    activeMatchId,
-                  })}
-                </pre>
                 <Button
                   rounded
                   type="button"

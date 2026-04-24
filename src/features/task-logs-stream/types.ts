@@ -149,7 +149,7 @@ export interface IJobRead {
   error_reason: TJobErrorReason | string | null;
   start_time: string | null;
   end_time: string | null;
-  logs: Record<string, unknown> | null;
+  logs: { stream: Record<string, unknown> | null } | null;
   inputs: string[];
   code: IJobCode;
   resources: IJobResources;

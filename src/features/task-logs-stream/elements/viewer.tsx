@@ -1,7 +1,7 @@
 'use client';
 
 import { RiFileList3Line, RiTerminalBoxLine } from '@remixicon/react';
-import { Activity, useCallback, useEffect, useState } from 'react';
+import { Activity, useCallback, useState } from 'react';
 
 import {
   ScanConfigCampaignOriginActionDict,
@@ -55,16 +55,8 @@ export function Viewer({
     projectId,
     configId,
     enabled,
-    enableDebugLogs,
     debugLog,
   });
-  const isConfigurationDisabled = isLoading || !configuration;
-
-  useEffect(() => {
-    if (isConfigurationDisabled && activeTab === ViewerTabDict.Configuration) {
-      setActiveTab(ViewerTabDict.Logs);
-    }
-  }, [activeTab, isConfigurationDisabled]);
 
   if (!enabled) return null;
 
@@ -88,7 +80,6 @@ export function Viewer({
             key: ViewerTabDict.Configuration,
             title: 'Configuration',
             icon: <RiFileList3Line size={16} />,
-            disabled: isConfigurationDisabled,
           },
         ]}
       />

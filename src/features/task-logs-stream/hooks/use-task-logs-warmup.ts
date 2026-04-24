@@ -35,14 +35,12 @@ export function useTaskLogsStreamsWarmup({
   virtualLabId,
   projectId,
   enabled,
-  enableDebugLogs,
   debugLog,
 }: {
   jobs: ITaskLogsStreamWarmupJob[];
   virtualLabId: string;
   projectId: string;
   enabled: boolean;
-  enableDebugLogs: boolean;
   debugLog: (params: { level: TLogLevel; message: string; payload?: unknown }) => void;
 }) {
   useQueries({
@@ -53,7 +51,6 @@ export function useTaskLogsStreamsWarmup({
         projectId,
         configId,
         enabled,
-        enableDebugLogs,
         debugLog,
       })
     ),
