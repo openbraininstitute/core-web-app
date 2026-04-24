@@ -5,8 +5,10 @@ import {
   buildUpstreamHeaders,
   buildUpstreamJobUrl,
   debugLog,
+  isJsonContentType,
   parseCommonQueryParams,
   requestJsonWithHeaders,
+  truncateForLog,
 } from '@/features/task-logs-stream/endpoints/shared';
 import { redactSensitive } from '@/features/task-logs-stream/helpers';
 import { type IJobRead, LogLevelDict } from '@/features/task-logs-stream/types';
@@ -21,6 +23,24 @@ interface IReadRequestParams {
   debugLogs: boolean;
 }
 
+interface IUpstreamReadSuccess {
+  kind: 'success';
+  statusCode: number;
+  contentType: string | undefined;
+  data: unknown;
+}
+
+interface IUpstreamReadFailure {
+  kind: 'failure';
+  statusCode: number;
+  contentType: string | undefined;
+  reason: 'upstream-error-status' | 'non-json-content-type' | 'invalid-json';
+  bodySnippet: string;
+  parseError?: string;
+}
+
+type TUpstreamReadResult = IUpstreamReadSuccess | IUpstreamReadFailure;
+
 function redactUnknownPayload({ payload }: { payload: unknown }): unknown {
   try {
     const serializedPayload = JSON.stringify(payload);
@@ -31,40 +51,80 @@ function redactUnknownPayload({ payload }: { payload: unknown }): unknown {
   }
 }
 
+function resolveContentType({
+  contentTypeHeader,
+}: {
+  contentTypeHeader: string | string[] | undefined;
+}): string | undefined {
+  return Array.isArray(contentTypeHeader) ? contentTypeHeader[0] : contentTypeHeader;
+}
+
 async function requestExecutionById({
   executionId,
   headers,
 }: {
   executionId: string;
   headers: Record<string, string>;
-}) {
+}): Promise<TUpstreamReadResult> {
   const upstreamResponse = await requestJsonWithHeaders({
     urlString: buildUpstreamJobUrl({ jobId: executionId }),
     headers,
   });
 
-  const hasBody = upstreamResponse.rawBody.trim().length > 0;
+  const contentType = resolveContentType({
+    contentTypeHeader: upstreamResponse.headers['content-type'],
+  });
+  const trimmedBody = upstreamResponse.rawBody.trim();
+  const hasBody = trimmedBody.length > 0;
+
+  if (upstreamResponse.statusCode >= 400) {
+    return {
+      kind: 'failure',
+      statusCode: upstreamResponse.statusCode,
+      contentType,
+      reason: 'upstream-error-status',
+      bodySnippet: hasBody
+        ? truncateForLog({ value: redactSensitive({ value: trimmedBody }) })
+        : '',
+    };
+  }
+
   if (!hasBody) {
     return {
+      kind: 'success',
       statusCode: upstreamResponse.statusCode,
-      headers: upstreamResponse.headers,
+      contentType,
       data: null,
+    };
+  }
+
+  if (!isJsonContentType({ headers: upstreamResponse.headers })) {
+    return {
+      kind: 'failure',
+      statusCode: upstreamResponse.statusCode,
+      contentType,
+      reason: 'non-json-content-type',
+      bodySnippet: truncateForLog({ value: redactSensitive({ value: trimmedBody }) }),
     };
   }
 
   try {
     const parsedData = JSON.parse(upstreamResponse.rawBody) as unknown;
     return {
+      kind: 'success',
       statusCode: upstreamResponse.statusCode,
-      headers: upstreamResponse.headers,
+      contentType,
       data: redactUnknownPayload({ payload: parsedData }),
     };
   } catch (error) {
-    throw new Error(
-      `Invalid JSON from upstream execution endpoint: ${
-        error instanceof Error ? error.message : 'Unknown parse error'
-      }`
-    );
+    return {
+      kind: 'failure',
+      statusCode: upstreamResponse.statusCode,
+      contentType,
+      reason: 'invalid-json',
+      bodySnippet: truncateForLog({ value: redactSensitive({ value: trimmedBody }) }),
+      parseError: error instanceof Error ? error.message : 'Unknown parse error',
+    };
   }
 }
 
@@ -90,6 +150,31 @@ function parseAndValidateParams({
     executionId: trimmedExecutionId,
     ...commonParams,
   };
+}
+
+function buildFailureResponse({ failure }: { failure: IUpstreamReadFailure }): Response {
+  const detailsByReason: Record<IUpstreamReadFailure['reason'], string> = {
+    'upstream-error-status': 'Upstream responded with an error status',
+    'non-json-content-type': 'Upstream responded with a non-JSON content type',
+    'invalid-json': 'Upstream response body was not valid JSON',
+  };
+
+  const clientStatus = failure.reason === 'upstream-error-status' ? failure.statusCode : 502;
+
+  return Response.json(
+    {
+      error: 'Unable to fetch job details',
+      details: detailsByReason[failure.reason],
+      upstream: {
+        status: failure.statusCode,
+        contentType: failure.contentType,
+        reason: failure.reason,
+        ...(failure.parseError ? { parseError: failure.parseError } : {}),
+        ...(failure.bodySnippet ? { bodySnippet: failure.bodySnippet } : {}),
+      },
+    },
+    { status: clientStatus, headers: { 'Cache-Control': 'no-store' } }
+  );
 }
 
 export async function handleTaskJobReadRoute({
@@ -123,7 +208,7 @@ export async function handleTaskJobReadRoute({
       payload: { executionId, virtualLabId, projectId },
     });
 
-    const upstreamResponse = await requestExecutionById({
+    const upstreamResult = await requestExecutionById({
       executionId,
       headers: buildUpstreamHeaders({
         accessToken: session.accessToken,
@@ -138,13 +223,26 @@ export async function handleTaskJobReadRoute({
       message: '[task-manager/job/read] upstream response',
       payload: {
         executionId,
-        status: upstreamResponse.statusCode,
-        contentType: upstreamResponse.headers['content-type'],
+        status: upstreamResult.statusCode,
+        contentType: upstreamResult.contentType,
+        ...(upstreamResult.kind === 'failure' ? { reason: upstreamResult.reason } : {}),
       },
     });
 
-    return Response.json((upstreamResponse.data ?? null) as IJobRead | null, {
-      status: upstreamResponse.statusCode,
+    if (upstreamResult.kind === 'failure') {
+      log(LogLevelDict.Error, '[task-manager/job/read] upstream returned unexpected response', {
+        executionId,
+        status: upstreamResult.statusCode,
+        contentType: upstreamResult.contentType,
+        reason: upstreamResult.reason,
+        parseError: upstreamResult.parseError,
+        bodySnippet: upstreamResult.bodySnippet,
+      });
+      return buildFailureResponse({ failure: upstreamResult });
+    }
+
+    return Response.json((upstreamResult.data ?? null) as IJobRead | null, {
+      status: upstreamResult.statusCode,
       headers: { 'Cache-Control': 'no-store' },
     });
   } catch (error) {
@@ -158,7 +256,7 @@ export async function handleTaskJobReadRoute({
         error: 'Unable to fetch job details',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 502 }
     );
   }
 }

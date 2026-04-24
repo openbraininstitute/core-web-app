@@ -8,9 +8,11 @@ import {
   getResponseContentType,
   parseCommonQueryParams,
   requestStreamWithHeaders,
+  truncateForLog,
 } from '@/features/task-logs-stream/endpoints/shared';
 import { redactSensitive } from '@/features/task-logs-stream/helpers';
 import { LogLevelDict } from '@/features/task-logs-stream/types';
+import { log } from '@/utils/logger';
 
 import type { NextRequest } from 'next/server';
 
@@ -61,6 +63,39 @@ function createRedactedStream({
       }
     },
   });
+}
+
+async function readBoundedBodySnippet({
+  body,
+  maxBytes = 1024,
+}: {
+  body: ReadableStream<Uint8Array>;
+  maxBytes?: number;
+}): Promise<string> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let collected = '';
+  let collectedBytes = 0;
+
+  try {
+    while (collectedBytes < maxBytes) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+      collectedBytes += value.byteLength;
+      collected += decoder.decode(value, { stream: true });
+    }
+    collected += decoder.decode();
+  } finally {
+    try {
+      await reader.cancel();
+    } catch {
+      /* ignore */
+    }
+    reader.releaseLock();
+  }
+
+  return collected;
 }
 
 function parseAndValidateParams({
@@ -135,6 +170,35 @@ export async function handleTaskLogsStreamRoute({ request }: { request: NextRequ
       },
     });
 
+    if (upstreamResponse.statusCode >= 400) {
+      const rawSnippet = await readBoundedBodySnippet({ body: upstreamResponse.body });
+      const bodySnippet = truncateForLog({ value: redactSensitive({ value: rawSnippet }) });
+      const contentTypeHeader = upstreamResponse.headers['content-type'];
+      const contentType = Array.isArray(contentTypeHeader)
+        ? contentTypeHeader[0]
+        : contentTypeHeader;
+
+      log(LogLevelDict.Error, '[task-manager/job/stream] upstream returned error status', {
+        jobId,
+        status: upstreamResponse.statusCode,
+        contentType,
+        bodySnippet,
+      });
+
+      return Response.json(
+        {
+          error: 'Unable to establish stream connection',
+          details: 'Upstream responded with an error status',
+          upstream: {
+            status: upstreamResponse.statusCode,
+            contentType,
+            ...(bodySnippet ? { bodySnippet } : {}),
+          },
+        },
+        { status: upstreamResponse.statusCode, headers: { 'Cache-Control': 'no-store' } }
+      );
+    }
+
     const redactedBody = createRedactedStream({ source: upstreamResponse.body });
 
     return new Response(redactedBody, {
@@ -161,7 +225,7 @@ export async function handleTaskLogsStreamRoute({ request }: { request: NextRequ
         error: 'Unable to establish stream connection',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 502 }
     );
   }
 }
