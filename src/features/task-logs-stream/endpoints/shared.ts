@@ -16,15 +16,21 @@ export interface ICommonQueryParams {
   debugLogs: boolean;
 }
 
+/**
+ * shape compatible with both Node's `http.IncomingHttpHeaders` and a plain
+ * object derived from `fetch`'s `Headers`. Keys are expected to be lowercase
+ */
+export type TUpstreamHeaders = Record<string, string | string[] | undefined>;
+
 export interface IUpstreamStreamResponse {
   statusCode: number;
-  headers: http.IncomingHttpHeaders;
+  headers: TUpstreamHeaders;
   body: ReadableStream<Uint8Array>;
 }
 
 export interface IUpstreamJsonResponse {
   statusCode: number;
-  headers: http.IncomingHttpHeaders;
+  headers: TUpstreamHeaders;
   rawBody: string;
 }
 
@@ -50,7 +56,7 @@ export function parseCommonQueryParams({
 
 export function buildUpstreamJobUrl({ jobId, stream }: { jobId: string; stream?: boolean }) {
   const baseUrl = config.LAUNCH_SYSTEM_URL;
-  const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
+  const normalizedBaseUrl = baseUrl?.replace(/\/+$/, '') ?? '';
   const suffix = stream ? '/stream' : '';
   return `${normalizedBaseUrl}/job/${encodeURIComponent(jobId)}${suffix}`;
 }
@@ -71,12 +77,23 @@ export function buildUpstreamHeaders({
   };
 }
 
-export function getResponseContentType({ headers }: { headers: http.IncomingHttpHeaders }) {
+export function getResponseContentType({ headers }: { headers: TUpstreamHeaders }) {
   const contentType = headers['content-type'];
   if (Array.isArray(contentType)) {
     return contentType[0] ?? 'text/plain; charset=utf-8';
   }
   return contentType ?? 'text/plain; charset=utf-8';
+}
+
+export function isJsonContentType({ headers }: { headers: TUpstreamHeaders }): boolean {
+  const contentType = getResponseContentType({ headers }).toLowerCase();
+  return contentType.includes('application/json') || contentType.includes('+json');
+}
+
+export function truncateForLog({ value, max = 200 }: { value: string; max?: number }): string {
+  const compact = value.replace(/\s+/g, ' ').trim();
+  if (compact.length <= max) return compact;
+  return `${compact.slice(0, max)}…`;
 }
 
 export function debugLog({
@@ -94,7 +111,31 @@ export function debugLog({
   log(level ?? LogLevelDict.Info, message, payload);
 }
 
-export function requestStreamWithHeaders({
+const STREAM_ACCEPT_HEADER =
+  'application/json, text/plain;q=0.9, text/event-stream;q=0.8, */*;q=0.7';
+const JSON_ACCEPT_HEADER = 'application/json';
+
+/**
+ * only loopback targets are expected to use a self-signed TLS cert (AWS SSM
+ * port-forward in local dev).
+ * every other upstream (preview, staging, production)
+ * is a real CDN/ALB that handles TLS properly and often issues legitimate
+ * redirects (trailing-slash canonicalization, auth edge, etc.) that `fetch`
+ * follows transparently — something `node:https.request` does not do
+ */
+function isLoopbackHost(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+}
+
+function fetchHeadersToPlainObject(headers: Headers): TUpstreamHeaders {
+  const result: TUpstreamHeaders = {};
+  headers.forEach((value, key) => {
+    result[key.toLowerCase()] = value;
+  });
+  return result;
+}
+
+function requestStreamViaNodeHttps({
   urlString,
   headers,
 }: {
@@ -110,7 +151,7 @@ export function requestStreamWithHeaders({
       {
         method: 'GET',
         headers: {
-          accept: 'application/json, text/plain;q=0.9, text/event-stream;q=0.8, */*;q=0.7',
+          accept: STREAM_ACCEPT_HEADER,
           ...headers,
         },
         ...(url.protocol === 'https:' ? { rejectUnauthorized: false } : {}),
@@ -134,7 +175,35 @@ export function requestStreamWithHeaders({
   });
 }
 
-export function requestJsonWithHeaders({
+async function requestStreamViaFetch({
+  urlString,
+  headers,
+}: {
+  urlString: string;
+  headers: Record<string, string>;
+}): Promise<IUpstreamStreamResponse> {
+  const response = await fetch(urlString, {
+    method: 'GET',
+    headers: {
+      accept: STREAM_ACCEPT_HEADER,
+      ...headers,
+    },
+    redirect: 'follow',
+    cache: 'no-store',
+  });
+
+  if (!response.body) {
+    throw new Error('No response body received from upstream');
+  }
+
+  return {
+    statusCode: response.status,
+    headers: fetchHeadersToPlainObject(response.headers),
+    body: response.body,
+  };
+}
+
+function requestJsonViaNodeHttps({
   urlString,
   headers,
 }: {
@@ -150,7 +219,7 @@ export function requestJsonWithHeaders({
       {
         method: 'GET',
         headers: {
-          accept: 'application/json',
+          accept: JSON_ACCEPT_HEADER,
           ...headers,
         },
         ...(url.protocol === 'https:' ? { rejectUnauthorized: false } : {}),
@@ -179,4 +248,56 @@ export function requestJsonWithHeaders({
     request.on('error', reject);
     request.end();
   });
+}
+
+async function requestJsonViaFetch({
+  urlString,
+  headers,
+}: {
+  urlString: string;
+  headers: Record<string, string>;
+}): Promise<IUpstreamJsonResponse> {
+  const response = await fetch(urlString, {
+    method: 'GET',
+    headers: {
+      accept: JSON_ACCEPT_HEADER,
+      ...headers,
+    },
+    redirect: 'follow',
+    cache: 'no-store',
+  });
+
+  return {
+    statusCode: response.status,
+    headers: fetchHeadersToPlainObject(response.headers),
+    rawBody: await response.text(),
+  };
+}
+
+export function requestStreamWithHeaders({
+  urlString,
+  headers,
+}: {
+  urlString: string;
+  headers: Record<string, string>;
+}): Promise<IUpstreamStreamResponse> {
+  const url = new URL(urlString);
+  if (isLoopbackHost(url.hostname)) {
+    return requestStreamViaNodeHttps({ urlString, headers });
+  }
+  return requestStreamViaFetch({ urlString, headers });
+}
+
+export function requestJsonWithHeaders({
+  urlString,
+  headers,
+}: {
+  urlString: string;
+  headers: Record<string, string>;
+}): Promise<IUpstreamJsonResponse> {
+  const url = new URL(urlString);
+  if (isLoopbackHost(url.hostname)) {
+    return requestJsonViaNodeHttps({ urlString, headers });
+  }
+  return requestJsonViaFetch({ urlString, headers });
 }
