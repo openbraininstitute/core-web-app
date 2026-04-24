@@ -2,7 +2,7 @@ import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { Checkbox, ConfigProvider, Modal } from 'antd';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { requestOfflineTokenConsent } from '@/api/auth-manager';
@@ -99,6 +99,7 @@ export default function SimulationsTab({
   const [filesLoading, setFilesLoading] = useState(false);
   const [consent, setConsent] = useState<Consent | null>(null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const previousCampaignIdRef = useRef(campaignId);
 
   const simConfigAsset = activeSimulation?.assets?.find(
     (a) => a.label === AssetLabel.sonata_simulation_config
@@ -156,6 +157,17 @@ export default function SimulationsTab({
   }, [simulations, statusMap]);
 
   useEffect(() => {
+    if (previousCampaignIdRef.current === campaignId) return;
+
+    previousCampaignIdRef.current = campaignId;
+
+    // reset launch-selection state whenever campaign changes
+    // so initial auto-selection can run for the newly loaded simulations
+    setSelectedSimulationIds([]);
+    setInitialSelectionDone(false);
+  }, [campaignId]);
+
+  useEffect(() => {
     // Auto select all valid simulations with status "created" on page load.
     // Previously failed simulations with a valid simulation config have to be explicitly
     // re-selected by the user.
@@ -164,7 +176,7 @@ export default function SimulationsTab({
       .filter((simulation) => hasSimConfigAsset(simulation))
       .map((s) => s.id);
 
-    if (statusMap && simulations && !initialSelectionDone) {
+    if (simulations.length > 0 && !initialSelectionDone) {
       setSelectedSimulationIds(simIds);
       setInitialSelectionDone(true);
     }
