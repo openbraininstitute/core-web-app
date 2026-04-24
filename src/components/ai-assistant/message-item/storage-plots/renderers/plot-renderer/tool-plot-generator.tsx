@@ -53,6 +53,100 @@ export default function ToolPlotGenerator({
 // Subplot detection & layout helpers
 // ---------------------------------------------------------------------------
 
+const TICK_TRUNCATE_THRESHOLD = 8;
+
+/** Truncate a string to `max` characters, appending `…` if it exceeds. */
+function truncateLabel(label: string, max: number = TICK_TRUNCATE_THRESHOLD): string {
+  if (label.length <= max) return label;
+  return `${label.slice(0, max)}...`;
+}
+
+/** Detect whether a string looks like a date / datetime value. */
+const DATE_PATTERNS = [
+  /^\d{4}-\d{2}-\d{2}/, // ISO 2026-01-11, 2026-01-11T00:00:00
+  /^\d{2}\/\d{2}\/\d{4}/, // US 01/11/2026
+  /^\d{2}-\d{2}-\d{4}/, // EU 11-01-2026
+  /^\w{3}\s+\d{1,2}/, // "Jan 11", "Feb 8"
+  /^\d{1,2}\s+\w{3}/, // "11 Jan", "8 Feb"
+];
+
+function looksLikeDate(value: string): boolean {
+  return DATE_PATTERNS.some((re) => re.test(value));
+}
+
+/**
+ * For every axis that carries categorical (string) tick values, set
+ * `tickvals` / `ticktext` so the displayed labels are truncated while
+ * the underlying data stays intact.
+ *
+ * Also handles numeric values whose string representation exceeds the
+ * threshold (e.g. `15.236489737037068`).
+ *
+ * Skips axes whose values look like dates — Plotly handles those natively.
+ * Only applied when the container is narrow (< 500px).
+ */
+function truncateLongTicks(
+  data: Array<Record<string, unknown>>,
+  layout: Record<string, unknown>
+): Record<string, unknown> {
+  const axisOverrides: Record<string, unknown> = {};
+
+  // Build a map: axis key → set of unique values (strings and long-decimal numbers)
+  const axisCategoryValues: Record<string, Set<string>> = {};
+  // Track which axes have any string values (truly categorical)
+  const axisHasStrings: Record<string, boolean> = {};
+
+  for (const trace of data) {
+    for (const dim of ['x', 'y'] as const) {
+      const values = trace[dim];
+      if (!Array.isArray(values)) continue;
+
+      // Determine which axis this trace dimension maps to
+      const axisRef = (trace[`${dim}axis`] as string) || dim;
+      const axisKey = axisRef === dim ? `${dim}axis` : `${dim}axis${axisRef.slice(1)}`;
+
+      if (!axisCategoryValues[axisKey]) {
+        axisCategoryValues[axisKey] = new Set();
+      }
+
+      for (const v of values) {
+        if (typeof v === 'string') {
+          axisCategoryValues[axisKey].add(v);
+          axisHasStrings[axisKey] = true;
+        } else if (typeof v === 'number' && String(v).length > TICK_TRUNCATE_THRESHOLD) {
+          // Numeric value with a long string representation (many decimals)
+          axisCategoryValues[axisKey].add(String(v));
+        }
+      }
+    }
+  }
+
+  // Only truncate axes that have string values (categorical axes).
+  // Pure numeric axes should be left to Plotly's native formatting.
+  for (const [axisKey, categories] of Object.entries(axisCategoryValues)) {
+    if (!axisHasStrings[axisKey]) continue;
+
+    const vals = [...categories];
+
+    // Skip axes where values look like dates — let Plotly handle them
+    if (vals.some((v) => looksLikeDate(v))) continue;
+
+    const hasLong = vals.some((c) => c.length > TICK_TRUNCATE_THRESHOLD);
+    if (!hasLong) continue;
+
+    const ticktext = vals.map((v) => truncateLabel(v));
+    const existing = (layout[axisKey] ?? {}) as Record<string, unknown>;
+
+    axisOverrides[axisKey] = {
+      ...existing,
+      tickvals: vals,
+      ticktext,
+    };
+  }
+
+  return axisOverrides;
+}
+
 /** Count how many distinct axes exist (xaxis, xaxis2, xaxis3 …). */
 function countAxes(layout: Record<string, unknown>): number {
   if (!layout) return 1;
@@ -182,7 +276,7 @@ function buildInlineLayout(layout: Record<string, unknown>, subplotCount: number
   const axisOverrides = compactAllAxes(layout, {
     maxTitleFont: axisTitleFont,
     maxTickFont: axisTickFont,
-    standoff: isGrid ? 2 : 4,
+    standoff: isGrid ? 4 : 6,
     hideAxisTitles: isDenseGrid,
     nticks: isDenseGrid ? 4 : isGrid ? 5 : undefined,
   });
@@ -238,6 +332,7 @@ function buildFullscreenLayout(layout: Record<string, unknown>) {
           ...titleFontObj,
           size: Math.max((titleFontObj.size as number) || 14, 18),
         },
+        standoff: 8,
       },
       tickfont: {
         ...tickFontObj,
@@ -291,6 +386,21 @@ function CustomPlot({
   const [plotReady, setPlotReady] = React.useState(false);
   const [fullscreenPlotReady, setFullscreenPlotReady] = React.useState(false);
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const [isNarrow, setIsNarrow] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setIsNarrow(entry.contentRect.width < 500);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   if (!isString(content)) return null;
   if (type !== 'json') return <b>{type}</b>;
@@ -316,6 +426,11 @@ function CustomPlot({
 
   const modifiedLayout = buildInlineLayout(layout, subplotCount);
 
+  // Truncate long tick labels (> 8 chars) only when the panel is narrow (< 500px)
+  const traceData = Array.isArray(props.data) ? props.data : [];
+  const tickOverrides = isNarrow ? truncateLongTicks(traceData, modifiedLayout) : {};
+  const finalInlineLayout = { ...modifiedLayout, ...tickOverrides };
+
   // Compact colorbars for inline view on dense grids
   const inlineData =
     isGrid && Array.isArray(props.data)
@@ -338,6 +453,7 @@ function CustomPlot({
   return (
     <>
       <div
+        ref={containerRef}
         className={classNames('h-full', styles.plotContainer)}
         style={{
           ...(isAnimating ? { contain: 'strict' } : undefined),
@@ -374,7 +490,7 @@ function CustomPlot({
               height: '100%',
             }}
             data={inlineData}
-            layout={modifiedLayout}
+            layout={finalInlineLayout}
             frames={props?.frames}
             config={{
               displaylogo: false,
