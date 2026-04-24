@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -99,6 +99,7 @@ export default function SimulationsTab({
     cancel: cancelOfflineTokenConsent,
     openConsentLink,
   } = useEnsureOfflineTokenConsent({ useCache: true });
+  const previousCampaignIdRef = useRef(campaignId);
 
   const simConfigAsset = activeSimulation?.assets?.find(
     (a) => a.label === AssetLabel.sonata_simulation_config
@@ -179,6 +180,17 @@ export default function SimulationsTab({
 
   const allSimulationStatusesLoaded =
     simulations.length > 0 && simulations.every((simulation) => localStatusMap.has(simulation.id));
+
+  useEffect(() => {
+    if (previousCampaignIdRef.current === campaignId) return;
+
+    previousCampaignIdRef.current = campaignId;
+
+    // reset launch-selection state whenever campaign changes
+    // so initial auto-selection can run for the newly loaded simulations
+    setSelectedSimulationIds([]);
+    setInitialSelectionDone(false);
+  }, [campaignId]);
 
   useEffect(() => {
     // Auto select all valid simulations with status "created" on page load.
