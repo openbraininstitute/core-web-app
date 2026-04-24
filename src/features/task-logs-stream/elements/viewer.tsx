@@ -1,7 +1,7 @@
 'use client';
 
 import { RiFileList3Line, RiTerminalBoxLine } from '@remixicon/react';
-import { useCallback, useState } from 'react';
+import { Activity, useCallback, useEffect, useState } from 'react';
 
 import {
   ScanConfigCampaignOriginActionDict,
@@ -9,9 +9,8 @@ import {
 } from '@/features/scan-config/helpers';
 import { Configuration } from '@/features/task-logs-stream/elements/configuration';
 import { LogsViewer } from '@/features/task-logs-stream/elements/logger';
-import { useTaskLogsData } from '@/features/task-logs-stream/hooks/use-task-logs-data';
+import { useTaskLogsData } from '@/features/task-logs-stream/hooks/use-task-logs';
 import { ViewerTabDict } from '@/features/task-logs-stream/types';
-import { usePrevious } from '@/hooks/hooks';
 import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 import { log } from '@/utils/logger';
 
@@ -38,10 +37,6 @@ export function Viewer({
   campaignOriginAction,
   isCampaignIdChanged,
 }: IProps) {
-  console.log('–– – viewer.tsx:42 – Viewer – configId:', configId);
-
-  console.log('–– – viewer.tsx:42 – Viewer – jobId:', jobId);
-
   const isViewCampaign =
     campaignOriginAction === ScanConfigCampaignOriginActionDict.View && !isCampaignIdChanged;
 
@@ -61,9 +56,15 @@ export function Viewer({
     configId,
     enabled,
     enableDebugLogs,
-    isViewCampaign,
     debugLog,
   });
+  const isConfigurationDisabled = isLoading || !configuration;
+
+  useEffect(() => {
+    if (isConfigurationDisabled && activeTab === ViewerTabDict.Configuration) {
+      setActiveTab(ViewerTabDict.Logs);
+    }
+  }, [activeTab, isConfigurationDisabled]);
 
   if (!enabled) return null;
 
@@ -72,27 +73,26 @@ export function Viewer({
       id="job-viewer"
       className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-neutral-50 px-4"
     >
-      {isViewCampaign && (
-        <TabsSelector
-          id="job-viewer-tabs"
-          className="mb-3 w-max"
-          activeTab={activeTab}
-          onValueChange={(value) => setActiveTab(value as TViewerTab)}
-          items={[
-            {
-              key: ViewerTabDict.Logs,
-              title: 'Logs',
-              icon: <RiTerminalBoxLine size={16} />,
-            },
-            {
-              key: ViewerTabDict.Configuration,
-              title: 'Configuration',
-              icon: <RiFileList3Line size={16} />,
-            },
-          ]}
-        />
-      )}
-      {activeTab === ViewerTabDict.Logs && (
+      <TabsSelector
+        id="job-viewer-tabs"
+        className="mb-3 w-max"
+        activeTab={activeTab}
+        onValueChange={(value) => setActiveTab(value as TViewerTab)}
+        items={[
+          {
+            key: ViewerTabDict.Logs,
+            title: 'Logs',
+            icon: <RiTerminalBoxLine size={16} />,
+          },
+          {
+            key: ViewerTabDict.Configuration,
+            title: 'Configuration',
+            icon: <RiFileList3Line size={16} />,
+            disabled: isConfigurationDisabled,
+          },
+        ]}
+      />
+      <Activity mode={activeTab === ViewerTabDict.Logs ? 'visible' : 'hidden'}>
         <LogsViewer
           entries={entries}
           streamError={streamError}
@@ -101,15 +101,15 @@ export function Viewer({
           searchDisabled={!jobId}
           isStreamingMode={!isViewCampaign}
         />
-      )}
-      {activeTab === ViewerTabDict.Configuration && (
+      </Activity>
+      <Activity mode={activeTab === ViewerTabDict.Configuration ? 'visible' : 'hidden'}>
         <div
           id="job-configuration-panel"
           className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto pr-2"
         >
           <Configuration configuration={configuration} />
         </div>
-      )}
+      </Activity>
     </div>
   );
 }

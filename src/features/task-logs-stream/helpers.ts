@@ -104,14 +104,26 @@ export function dedupeLogEntries({ entries }: { entries: ILogEntry[] }) {
   return deduped;
 }
 
+export const STREAM_NOT_FOUND_ERROR_CODE = 'STREAM_NOT_FOUND';
+
 export class StreamHttpError extends Error {
   status: number;
+  errorCode?: string;
 
-  constructor({ status }: { status: number }) {
+  constructor({ status, errorCode }: { status: number; errorCode?: string }) {
     super(`We couldn't load live logs right now (HTTP ${status}). Please try again in a moment.`);
     this.name = 'StreamHttpError';
     this.status = status;
+    this.errorCode = errorCode;
   }
+}
+
+export function isStreamNotFoundError({ error }: { error: unknown }): boolean {
+  return (
+    error instanceof StreamHttpError &&
+    error.status === 404 &&
+    error.errorCode === STREAM_NOT_FOUND_ERROR_CODE
+  );
 }
 
 export function formatConfigurationValue({ value }: { value: unknown }) {
