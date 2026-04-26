@@ -214,9 +214,11 @@ export const SmallMicrocircuitSimulation: EntityCoreTypeConfig<
           withFacets: params[0].withFacets,
           filters: {
             ...filters,
+            page: 1,
+            page_size: 1,
             circuit__scale: SCALE,
           },
-        });
+        }).then((response) => response.pagination.total_items);
       },
       list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
         resolveSimulationCampaigns({

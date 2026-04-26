@@ -532,11 +532,11 @@ dialog {
 }
 
 /* Card crossfade: gentle fade for card grids */
-::view-transition-old(card-*) {
+::view-transition-old(card-grid) {
   animation: vt-exit-fade 250ms cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
-::view-transition-new(card-*) {
+::view-transition-new(card-grid) {
   animation: vt-enter-slide-up 300ms cubic-bezier(0.16, 1, 0.3, 1) 80ms forwards;
 }
 

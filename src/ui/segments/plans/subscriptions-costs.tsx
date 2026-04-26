@@ -1,14 +1,20 @@
+import { cn } from '@/utils/css-class';
+
 import type { PlanV2 } from '@/types/virtual-lab/pricing';
 
 export default function SubscriptionsCosts({
   billingInterval,
   plan,
+  dark,
 }: {
   billingInterval: 'month' | 'year';
   plan: PlanV2;
+  dark?: boolean;
 }) {
+  const borderColor = dark ? 'border-primary-7' : 'border-neutral-2';
+
   return (
-    <div className="border-neutral-2 relative my-2 w-full border-y py-2">
+    <div className={cn('relative my-2 w-full border-y py-2', borderColor)}>
       {billingInterval === 'month' ? (
         <div>
           <span className="text-2xl font-bold">

@@ -1,8 +1,8 @@
-import { LinkAndDownloadArtifactProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
+import type { LinkAndDownloadArtifactProps } from '@/ui/segments/reports/obi-showcases/showcase-type';
 
 export default function SingleArtifact({ content }: { content: LinkAndDownloadArtifactProps }) {
   return content._type === 'artifactDownload' ? (
-    <div className="relative flex w-1/2 flex-col items-start">
+    <div className="relative flex w-full flex-col items-start">
       <header className="text-primary-9 relative flex w-full flex-row items-center justify-between">
         <div className="text-[24px] font-bold">{content.title}</div>
         {content.file && (
@@ -11,6 +11,7 @@ export default function SingleArtifact({ content }: { content: LinkAndDownloadAr
             className="border-primary-9 hover:bg-primary-9 border border-solid bg-white px-6 py-3 text-lg transition-colors duration-300 hover:text-white"
             download
             target="_blank"
+            rel="noopener noreferrer"
           >
             Download
           </a>
@@ -22,7 +23,7 @@ export default function SingleArtifact({ content }: { content: LinkAndDownloadAr
       <p className="w-full text-xl leading-normal">{content.description}</p>
     </div>
   ) : (
-    <div className="relative flex w-1/2 flex-col items-start">
+    <div className="relative flex w-full flex-col items-start">
       <header className="text-primary-9 relative flex w-full flex-row items-center justify-between">
         <div className="text-[24px] font-bold">{content.title}</div>
 
@@ -30,6 +31,7 @@ export default function SingleArtifact({ content }: { content: LinkAndDownloadAr
           href={content.url}
           className="border-primary-9 hover:bg-primary-9 border border-solid bg-white px-6 py-3 text-lg transition-colors duration-300 hover:text-white"
           target="_blank"
+          rel="noopener noreferrer"
         >
           View Artifact
         </a>

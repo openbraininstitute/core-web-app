@@ -1,12 +1,11 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import Link from 'next/link';
 
+import { EnumSection } from '@/components/LandingPage/sections/sections';
+import { classNames } from '@/util/utils';
+
 import { DEFAULT_SECTION } from '../../../constants';
 import { IconClose } from '../../../icons/IconClose';
-
-import { EnumSection } from '@/components/LandingPage/sections/sections';
-
-import { classNames } from '@/util/utils';
 
 interface MenuItem {
   caption: string;
@@ -25,15 +24,6 @@ const MENU_ITEMS: MenuItem[] = [
       { caption: 'Our story', slug: '/the-real-digital-brain-story', index: EnumSection.Story },
       { caption: 'Mission', slug: '/mission', index: EnumSection.Mission },
       { caption: 'Team', slug: '/team', index: EnumSection.Team },
-    ],
-  },
-  {
-    caption: 'Resources',
-    slug: '/resources',
-    index: EnumSection.Resources,
-    submenu: [
-      { caption: 'Notebooks', slug: '/notebooks' },
-      { caption: 'Gallery', slug: '/gallery', index: EnumSection.Gallery },
     ],
   },
   {

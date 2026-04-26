@@ -151,3 +151,12 @@
   font-weight: bold;
   font-size: 110%;
 }
+
+@media (min-width: 768px) {
+  .featuresSnap {
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory;
+  }
+}

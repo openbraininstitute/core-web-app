@@ -89,7 +89,7 @@ export default function Plans({ plans, compact = false }: { plans: PlanV2[]; com
   return (
     <>
       {/* Desktop */}
-      <div className="relative hidden w-screen grid-cols-4 gap-3 px-16 xl:grid">
+      <div className="relative hidden w-screen grid-cols-4 gap-3 px-16 xl:grid pt-12">
         {sortedPlans.map((plan) => (
           <PlanCard key={plan.name} plan={plan} />
         ))}

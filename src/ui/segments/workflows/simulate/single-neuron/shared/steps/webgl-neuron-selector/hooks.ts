@@ -1,5 +1,6 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { atomFamily, atomWithReset } from 'jotai/utils';
+import { atomWithReset } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
 
 import {
   RECORDING_LOCATION_CONFIGURATION_SESSION_KEY,
