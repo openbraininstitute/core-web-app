@@ -11,20 +11,22 @@ export default function EntityPropertyDropdown({
   property,
   disabled = false,
   schemaMappingConfig,
+  multiple = true,
 }: {
-  value: string[];
-  onChange: (v: string[]) => void;
+  value: string | Array<string>;
+  onChange: (v: string | Array<string>) => void;
   property: string;
   disabled?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  multiple?: boolean;
 }) {
-  const options = get(schemaMappingConfig?.properties, property, []) as string[];
+  const options = get(schemaMappingConfig?.properties, property, []) as Array<string>;
 
   return (
     <Select
-      data-scan-config-block-element={ScanConfigUIElementDict.EntityPropertyDropdown}
+      data-scan-config-block-element={`${ScanConfigUIElementDict.EntityPropertyDropdown}__${multiple ? 'multiple' : 'singular'}`}
       showSearch
-      mode="multiple"
+      mode={multiple ? 'multiple' : undefined}
       disabled={disabled}
       className="w-full"
       value={value}

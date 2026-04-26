@@ -223,7 +223,16 @@ export interface IntParameterSweep extends TBlockElement {
 
 export interface Reference extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.Reference;
-  reference_type: string;
+  reference_types: Array<string>;
+  anyOf?: Array<
+    | {
+        title?: string;
+        allowed_block_types?: Array<string>;
+        properties?: { type?: { const?: string } };
+        [key: string]: unknown;
+      }
+    | { type: 'null' }
+  >;
 }
 
 export interface EntityPropertyDropdown extends TBlockElement {
@@ -374,10 +383,10 @@ export interface IBlockSingle extends TRootElement, TBlock {
 
 export interface IBlockDictionary extends TRootElement {
   ui_element: typeof ScanConfigUIElementDict.BlockDictionary;
-  reference_type: string;
+  reference_types: Array<string>;
   singular_name: string;
   additionalProperties: {
-    oneOf: TBlock[];
+    oneOf: Array<TBlock>;
   };
 }
 

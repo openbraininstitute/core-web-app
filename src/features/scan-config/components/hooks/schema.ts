@@ -353,13 +353,34 @@ export function resetConfig(
   setAtomsMap(map);
 }
 
+/**
+ * builds a lookup map from reference type names to the block dictionaries that hold them
+ *
+ * a block dictionary declares which reference types it supports via `reference_types` (a list)
+ * for example, the `neuron_sets` dictionary might declare:
+ *   reference_types: ["BiophysicalNeuronSetReference", "VirtualNeuronSetReference", "PointNeuronSetReference"]
+ *
+ * this produces a map like:
+ *   {
+ *     "BiophysicalNeuronSetReference": [{ configKey: "neuron_sets", singularName: "Neuron Set" }],
+ *     "VirtualNeuronSetReference":     [{ configKey: "neuron_sets", singularName: "Neuron Set" }],
+ *     "PointNeuronSetReference":       [{ configKey: "neuron_sets", singularName: "Neuron Set" }],
+ *     "TimestampsReference":           [{ configKey: "timestamps",  singularName: "Timestamps" }],
+ *     ...
+ *   }
+ *
+ * the value is an array because multiple dictionaries could support the same reference type
+ *
+ * this map is consumed by the Reference dropdown component to find which dictionaries
+ * to pull options from, given a field's accepted `reference_types`
+ */
 export function useReferenceTypeDict(schema: ConfigSchema) {
   const referenceTypeDict: Record<
     string,
-    {
+    Array<{
       configKey: string;
       singularName: string;
-    }
+    }>
   > = {};
 
   if (!schema) return referenceTypeDict;
@@ -368,11 +389,16 @@ export function useReferenceTypeDict(schema: ConfigSchema) {
     const v = schema.properties[k];
 
     if (v.ui_element === ScanConfigUIElementDict.BlockDictionary) {
-      const refType = v.reference_type;
-      referenceTypeDict[refType] = {
-        configKey: k,
-        singularName: v.singular_name,
-      };
+      const refTypes = v.reference_types;
+      for (const refType of refTypes) {
+        if (!referenceTypeDict[refType]) {
+          referenceTypeDict[refType] = [];
+        }
+        referenceTypeDict[refType].push({
+          configKey: k,
+          singularName: v.singular_name,
+        });
+      }
     }
   });
 
