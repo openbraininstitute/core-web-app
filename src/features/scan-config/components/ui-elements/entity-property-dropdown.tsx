@@ -12,19 +12,21 @@ export default function EntityPropertyDropdown({
   property,
   disabled = false,
   schemaMappingConfig,
+  multiple = true,
 }: {
-  value: string[];
-  onChange: (v: string[]) => void;
+  value: string | Array<string>;
+  onChange: (v: string | Array<string>) => void;
   property: string;
   disabled?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  multiple?: boolean;
 }) {
   const options = useMemo(
-    () => get(schemaMappingConfig?.properties, property, []) as string[],
+    () => get(schemaMappingConfig?.properties, property, []) as Array<string>,
     [schemaMappingConfig?.properties, property]
   );
 
-  const previousOptions = useRef<string[]>(null);
+  const previousOptions = useRef<Array<string>>(null);
 
   useEffect(() => {
     if (options.length > 0 && options !== previousOptions.current) {
@@ -35,9 +37,9 @@ export default function EntityPropertyDropdown({
 
   return (
     <Select
-      data-scan-config-block-element={ScanConfigUIElementDict.EntityPropertyDropdown}
+      data-scan-config-block-element={`${ScanConfigUIElementDict.EntityPropertyDropdown}__${multiple ? 'multiple' : 'singular'}`}
       showSearch
-      mode="multiple"
+      mode={multiple ? 'multiple' : undefined}
       disabled={disabled}
       className="w-full"
       value={value}

@@ -92,7 +92,9 @@ export default function Block({
                 !isType(paramSchema) &&
                 !paramSchema.ui_hidden &&
                 (paramSchema.ui_element !== ScanConfigUIElementDict.Reference ||
-                  Boolean(schema.default_block_reference_labels?.[paramSchema.reference_type]))
+                  paramSchema.reference_types.some(
+                    (refType) => !!schema.default_block_reference_labels?.[refType]
+                  ))
             )
             .map(([k, blockElementSchema]) => {
               if (isType(blockElementSchema)) return null;

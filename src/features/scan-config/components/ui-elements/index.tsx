@@ -14,6 +14,9 @@ import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/m
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
+import NeuronPropertyFilter, {
+  type INeuronPropertyFilter,
+} from '@/features/scan-config/components/ui-elements/neuron-property-filter';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
@@ -29,8 +32,6 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { isObject } from '@/util/type-guards';
-
-import NeuronPropertyFilter from './neuron-property-filter';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -191,33 +192,46 @@ export function UIElementRender({
         entity: P.nonNullable,
       },
       ({ paramSchema }) => {
-        const getValue = (): string[] => {
-          if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
-            //@ts-expect-error: TS can't infer the type, this is guaranteed to be a string[]
-            return value;
-          }
-          if (typeof value === 'string') return [value];
-          return [];
-        };
+        // detect if the field supports multiple values by checking for anyOf with an array type
+        const isMultiple = 'anyOf' in paramSchema;
+
+        if (isMultiple) {
+          const getValue = (): Array<string> => {
+            if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
+              return value as string[];
+            }
+            if (typeof value === 'string') return [value];
+            return [];
+          };
+
+          return (
+            <EntityPropertyDropdown
+              multiple
+              disabled={disabled}
+              schemaMappingConfig={schemaMappingConfig}
+              value={getValue()}
+              onChange={(newV: string | Array<string>) => setState({ ...state, [k]: newV })}
+              property={paramSchema.property}
+            />
+          );
+        }
+
+        // single-value mode (e.g. population field with type: "string")
+        const singleValue = typeof value === 'string' ? value : undefined;
 
         return (
           <EntityPropertyDropdown
-            schemaMappingConfig={schemaMappingConfig}
+            multiple={false}
             disabled={disabled}
-            value={getValue()}
-            onChange={(newV: string[]) => {
-              const nextState = {
+            schemaMappingConfig={schemaMappingConfig}
+            value={singleValue ?? ''}
+            onChange={(newV: string | string[]) =>
+              setState({
                 ...state,
                 // NOTE: this is requested by James for IT'IS collaboration
                 [k]: Array.isArray(newV) && newV.length === 1 ? newV[0] : newV,
-              };
-
-              if (paramSchema.property_filter_key) {
-                nextState[paramSchema.property_filter_key] = null;
-              }
-
-              setState(nextState);
-            }}
+              })
+            }
             property={paramSchema.property}
           />
         );
