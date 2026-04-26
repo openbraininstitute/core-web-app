@@ -10,8 +10,13 @@ import {
   getStreamEntries,
   useStreamQuery,
 } from '@/features/task-logs-stream/hooks/use-stream-query';
-
-import type { IJobRead, ITaskLogsDataState, TLogLevel } from '@/features/task-logs-stream/types';
+import { resolveTaskLogsDataState } from '@/features/task-logs-stream/hooks/use-task-logs-state';
+import {
+  type IJobRead,
+  type ITaskLogsDataState,
+  JobStatusDict,
+  type TLogLevel,
+} from '@/features/task-logs-stream/types';
 
 export function useTaskLogsData({
   jobId,
@@ -68,53 +73,70 @@ export function useTaskLogsData({
     }
   }, [hasStreamTerminated, jobId, virtualLabId, projectId, configId, queryClient]);
 
-  if (!enabled) {
-    return {
-      entries: [],
-      streamError: null,
-      isLoading: false,
-      configuration: null,
-    };
-  }
-
-  if (!jobId) {
-    return {
-      entries: [],
-      streamError:
-        'No logs are available yet because this task has not been launched. Start the task first, then reopen Logs to stream live output, status updates, and execution details as they are produced.',
-      isLoading: false,
-      configuration: null,
-    };
-  }
-
   // configuration is available from the read endpoint as soon as the job exists
   const configuration = readQuery.data ? extractConfiguration({ data: readQuery.data }) : null;
 
-  // once the stream has terminated and read data is available, prefer read logs
-  // as the authoritative final state
-  if (hasStreamTerminated && readQuery.data) {
-    return {
-      entries: parseJobReadLogsToEntries({ logs: readQuery.data.logs ?? null }),
-      streamError: null,
-      isLoading: false,
-      configuration,
-    };
-  }
-
+  // Read directly from the stream cache as well as the current observer.
+  // This preserves live entries across page/tab remounts while the warmup
+  // observer keeps the underlying streamed query alive.
+  const cachedStreamData = jobId
+    ? queryClient.getQueryData<unknown>([
+        'task-logs-stream',
+        { jobId, virtualLabId, projectId, configId },
+      ])
+    : undefined;
   const streamEntries = getStreamEntries({ data: streamQuery.data });
-
-  // surface stream errors to the user.
-  // 404 NOT_FOUND means the backend already retried internally — the stream genuinely doesn't exist.
-  // 502 GENERIC_ERROR means the upstream returned an unexpected error.
+  const cachedStreamEntries = getStreamEntries({ data: cachedStreamData });
+  const readHasTerminalStatus = isTerminalJobStatus({ status: readQuery.data?.status });
+  const readEntries = readQuery.data
+    ? parseJobReadLogsToEntries({
+        logs: readQuery.data.logs ?? null,
+      })
+    : undefined;
   const streamErrorMessage = streamQuery.error instanceof Error ? streamQuery.error.message : null;
   const readErrorMessage = readQuery.error instanceof Error ? readQuery.error.message : null;
 
-  return {
-    entries: streamEntries,
-    streamError: readErrorMessage ?? streamErrorMessage,
-    isLoading: streamQuery.isLoading || readQuery.isLoading,
+  useEffect(() => {
+    if (!enabled || !jobId || skipStream) return;
+    if (!hasStreamTerminated || readHasTerminalStatus) return;
+    queryClient.invalidateQueries({
+      queryKey: ['task-logs-stream', { jobId, virtualLabId, projectId, configId }],
+    });
+  }, [
+    enabled,
+    jobId,
+    skipStream,
+    hasStreamTerminated,
+    readHasTerminalStatus,
+    virtualLabId,
+    projectId,
+    configId,
+    queryClient,
+  ]);
+
+  return resolveTaskLogsDataState({
+    enabled,
+    jobId,
+    hasStreamTerminated,
+    streamEntries,
+    cachedStreamEntries,
+    streamIsActive: streamQuery.fetchStatus === 'fetching',
+    streamIsLoading: streamQuery.isLoading,
+    readIsLoading: readQuery.isLoading,
+    readEntries,
+    readHasTerminalStatus,
+    streamErrorMessage,
+    readErrorMessage,
     configuration,
-  };
+  });
+}
+
+function isTerminalJobStatus({ status }: { status?: string }) {
+  return (
+    status === JobStatusDict.Done ||
+    status === JobStatusDict.Error ||
+    status === JobStatusDict.Cancelled
+  );
 }
 
 function extractConfiguration({ data }: { data: IJobRead }): Omit<IJobRead, 'logs'> {

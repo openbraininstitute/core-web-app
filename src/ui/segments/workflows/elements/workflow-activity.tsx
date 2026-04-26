@@ -187,9 +187,13 @@ export function WorkflowActivity() {
         id: 'activity-table-type-cell-selector',
       }),
       render: (_, record) => {
+        const resolvedTypeTitle =
+          getEntityByExtendedType({ type: record.type })?.title ??
+          getEntityByExtendedType({ type: entityType ?? undefined })?.title ??
+          '—';
         return (
           <span className={cn('text-primary-9 flex items-center capitalize')}>
-            {getEntityByExtendedType({ type: record.type })?.title}
+            {resolvedTypeTitle}
           </span>
         );
       },

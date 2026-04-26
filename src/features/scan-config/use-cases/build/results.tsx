@@ -27,7 +27,8 @@ import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files'
 import { ConfigsLeftMenu } from '@/features/scan-config/use-cases/build/left-menu';
 import {
   type ITaskLogsStreamWarmupJob,
-  Viewer as LogsViewer,
+  TaskConfigurationViewer,
+  TaskLogsViewer,
   useTaskLogsStreamsWarmup,
 } from '@/features/task-logs-stream';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
@@ -53,6 +54,7 @@ type Props = {
 const RightPanelModeDict = {
   Result: 'result',
   Logs: 'logs',
+  TaskConfiguration: 'task-configuration',
 } as const;
 
 type TRightPanelMode = (typeof RightPanelModeDict)[keyof typeof RightPanelModeDict];
@@ -237,6 +239,16 @@ export function BuildTab({
 
   const launchBtnLabelPrefix = selectedConfigIds.length ? `(${selectedConfigIds.length})` : '';
   const loading = configsLoading || configGenerationLoading || executionsLoading;
+  const taskViewerProps = {
+    enabled: shouldEnableLogsViewer,
+    configId: activeConfig?.id,
+    jobId: activeLogsJobId,
+    virtualLabId,
+    projectId,
+    skipStream: isExecutionTerminal,
+    campaignOriginAction,
+    isCampaignIdChanged,
+  };
 
   return (
     <div id="build-results" className={styles.threeColumns}>
@@ -252,7 +264,10 @@ export function BuildTab({
           >
             Select all
           </Checkbox>
-          <div className="flex grow flex-col justify-start gap-5 overflow-y-auto">
+          <div
+            id="build-results-left-configs-list"
+            className="flex grow flex-col justify-start gap-5 overflow-y-auto"
+          >
             {loading && (
               <div className="flex h-full items-center justify-center">
                 <Loader className="text-neutral-3" />
@@ -273,6 +288,7 @@ export function BuildTab({
               ))}
           </div>
           <button
+            id="build-results-left-configs-launch-btn"
             className={classNames(
               'h-12.5 mt-auto w-full cursor-pointer rounded-3xl p-2 text-white',
               'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
@@ -301,7 +317,12 @@ export function BuildTab({
             execution={activeConfigExecution}
             selectedFile={selectedFile}
             logsActive={rightPanelMode === RightPanelModeDict.Logs}
+            taskConfigurationActive={rightPanelMode === RightPanelModeDict.TaskConfiguration}
             onSelectLogs={() => setRightPanelMode(RightPanelModeDict.Logs)}
+            onSelectTaskConfiguration={() => {
+              setSelectedFile(undefined);
+              setRightPanelMode(RightPanelModeDict.TaskConfiguration);
+            }}
             context={context}
             onSelect={onSelectedFileChange}
             campaignOrigin={campaignOriginAction}
@@ -310,18 +331,10 @@ export function BuildTab({
       </div>
 
       <div id="build-results-right-preview" className="relative pl-4">
-        <div className={rightPanelMode === RightPanelModeDict.Logs ? 'h-full' : 'hidden'}>
-          <LogsViewer
-            enabled={shouldEnableLogsViewer}
-            configId={activeConfig?.id}
-            jobId={activeLogsJobId}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
-            skipStream={isExecutionTerminal}
-            campaignOriginAction={campaignOriginAction}
-            isCampaignIdChanged={isCampaignIdChanged}
-          />
-        </div>
+        {rightPanelMode === RightPanelModeDict.Logs && <TaskLogsViewer {...taskViewerProps} />}
+        {rightPanelMode === RightPanelModeDict.TaskConfiguration && (
+          <TaskConfigurationViewer {...taskViewerProps} />
+        )}
 
         <Activity mode={rightPanelMode === RightPanelModeDict.Result ? 'visible' : 'hidden'}>
           {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (

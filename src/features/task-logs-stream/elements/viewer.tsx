@@ -1,22 +1,17 @@
 'use client';
 
-import { RiFileList3Line, RiTerminalBoxLine } from '@remixicon/react';
-import { Activity, useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
-import {
-  ScanConfigCampaignOriginActionDict,
-  type TScanConfigCampaignOriginActionDict,
-} from '@/features/scan-config/helpers';
 import { Configuration } from '@/features/task-logs-stream/elements/configuration';
-import { LogsViewer } from '@/features/task-logs-stream/elements/logger';
+import { LogsViewer as LogEntriesViewer } from '@/features/task-logs-stream/elements/logger';
 import { useTaskLogsData } from '@/features/task-logs-stream/hooks/use-task-logs';
-import { ViewerTabDict } from '@/features/task-logs-stream/types';
-import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 import { log } from '@/utils/logger';
 
-import type { TLogLevel, TViewerTab } from '@/features/task-logs-stream/types';
+import type { ReactNode } from 'react';
+import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
+import type { TLogLevel } from '@/features/task-logs-stream/types';
 
-interface IProps {
+interface ITaskLogsViewerProps {
   jobId?: string;
   virtualLabId: string;
   projectId: string;
@@ -29,7 +24,18 @@ interface IProps {
   isCampaignIdChanged: boolean;
 }
 
-export function Viewer({
+function TaskViewerFrame({ children }: { children: ReactNode }) {
+  return (
+    <div
+      id="job-viewer"
+      className="flex h-full min-h-0 flex-col overflow-hidden bg-neutral-50 px-4"
+    >
+      {children}
+    </div>
+  );
+}
+
+function useTaskViewerData({
   jobId,
   virtualLabId,
   projectId,
@@ -37,20 +43,7 @@ export function Viewer({
   enabled,
   enableDebugLogs = false,
   skipStream = false,
-  campaignOriginAction,
-  isCampaignIdChanged,
-}: IProps) {
-  const isViewCampaign =
-    campaignOriginAction === ScanConfigCampaignOriginActionDict.View && !isCampaignIdChanged;
-
-  const [activeTab, setActiveTab] = useState<TViewerTab>(ViewerTabDict.Logs);
-
-  // reset to Logs tab when the underlying job or config changes
-  // biome-ignore lint/correctness/useExhaustiveDependencies: jobId and configId are intentional trigger dependencies
-  useEffect(() => {
-    setActiveTab(ViewerTabDict.Logs);
-  }, [jobId, configId]);
-
+}: ITaskLogsViewerProps) {
   const debugLog = useCallback(
     ({ level, message, payload }: { level: TLogLevel; message: string; payload?: unknown }) => {
       if (!enableDebugLogs) return;
@@ -59,7 +52,7 @@ export function Viewer({
     [enableDebugLogs]
   );
 
-  const { entries, streamError, isLoading, configuration } = useTaskLogsData({
+  const taskLogsData = useTaskLogsData({
     jobId,
     virtualLabId,
     projectId,
@@ -69,49 +62,43 @@ export function Viewer({
     debugLog,
   });
 
+  return taskLogsData;
+}
+
+export function TaskLogsViewer(props: ITaskLogsViewerProps) {
+  const { entries, streamError, isLoading, isStreaming } = useTaskViewerData(props);
+  const { enabled, jobId } = props;
+
   if (!enabled) return null;
 
   return (
-    <div
-      id="job-viewer"
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-neutral-50 px-4"
-    >
-      <TabsSelector
-        id="job-viewer-tabs"
-        className="mb-3 w-max"
-        activeTab={activeTab}
-        onValueChange={(value) => setActiveTab(value as TViewerTab)}
-        items={[
-          {
-            key: ViewerTabDict.Logs,
-            title: 'Logs',
-            icon: <RiTerminalBoxLine size={16} />,
-          },
-          {
-            key: ViewerTabDict.Configuration,
-            title: 'Configuration',
-            icon: <RiFileList3Line size={16} />,
-          },
-        ]}
+    <TaskViewerFrame>
+      <LogEntriesViewer
+        entries={entries}
+        streamError={streamError}
+        isLoading={isLoading}
+        enabled={enabled}
+        searchDisabled={!jobId}
+        isStreamingMode={isStreaming}
       />
-      <Activity mode={activeTab === ViewerTabDict.Logs ? 'visible' : 'hidden'}>
-        <LogsViewer
-          entries={entries}
-          streamError={streamError}
-          isLoading={isLoading}
-          enabled={enabled}
-          searchDisabled={!jobId}
-          isStreamingMode={!isViewCampaign}
-        />
-      </Activity>
-      <Activity mode={activeTab === ViewerTabDict.Configuration ? 'visible' : 'hidden'}>
-        <div
-          id="job-configuration-panel"
-          className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto pr-2"
-        >
-          <Configuration configuration={configuration} />
-        </div>
-      </Activity>
-    </div>
+    </TaskViewerFrame>
+  );
+}
+
+export function TaskConfigurationViewer(props: ITaskLogsViewerProps) {
+  const { configuration } = useTaskViewerData(props);
+  const { enabled } = props;
+
+  if (!enabled) return null;
+
+  return (
+    <TaskViewerFrame>
+      <div
+        id="job-configuration-panel"
+        className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto pr-2"
+      >
+        <Configuration configuration={configuration} />
+      </div>
+    </TaskViewerFrame>
   );
 }

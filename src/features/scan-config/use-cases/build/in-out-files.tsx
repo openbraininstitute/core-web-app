@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-import { includes } from 'es-toolkit/compat';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { get, includes } from 'es-toolkit/compat';
 import { useEffect, useMemo } from 'react';
 
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
@@ -25,7 +26,9 @@ type Props = {
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
   logsActive: boolean;
+  taskConfigurationActive: boolean;
   onSelectLogs: () => void;
+  onSelectTaskConfiguration: () => void;
   context: { virtualLabId: string; projectId: string };
   campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
@@ -39,10 +42,13 @@ export function InOutFiles({
   selectedFile,
   onSelect,
   logsActive,
+  taskConfigurationActive,
   onSelectLogs,
+  onSelectTaskConfiguration,
   context,
   campaignOrigin,
 }: Props) {
+  const queryClient = useQueryClient();
   const { entity: circuit } = useModelQuery({ id: execution?.generated.at(0)?.id, context });
   const configAsset = config.assets.find((o) => o.label === AssetLabel.task_config);
   const circuitAssets = circuit && 'assets' in circuit ? circuit.assets : [];
@@ -71,7 +77,7 @@ export function InOutFiles({
       });
     }
     return files;
-  }, [config, circuit, circuitConfigAsset, configAsset]);
+  }, [config, circuit, configAsset, circuitConfigAsset]);
 
   const outputAvailable =
     !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
@@ -102,16 +108,36 @@ export function InOutFiles({
   });
 
   useEffect(() => {
-    if (inputFiles.length > 0 && !selectedFile && !logsActive) {
+    if (!outputAvailable || !builtCircuit) return;
+
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.MEModelWithSynapses}`,
+    });
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        get(query.queryKey[0], 'context.extendedEntityType') ===
+        ExtendedEntitiesTypeDict.MEModelWithSynapses,
+    });
+  }, [outputAvailable, builtCircuit, queryClient]);
+
+  useEffect(() => {
+    if (inputFiles.length > 0 && !selectedFile && !logsActive && !taskConfigurationActive) {
       onSelect(inputFiles[0]);
     }
-  }, [inputFiles, selectedFile, logsActive, onSelect]);
+  }, [inputFiles, selectedFile, logsActive, taskConfigurationActive, onSelect]);
 
   return (
     <div className="h-full overflow-y-auto">
       <h4 className="uppercase">Input files</h4>
       <div className="mt-4 mb-8 flex flex-col gap-4">
-        {inputFiles.length === 0 && <div className="text-gray-400">No input files available</div>}
+        <TaskPanelButton
+          id={`task-configuration-${config.id}`}
+          title="Task configuration"
+          label="config"
+          selected={taskConfigurationActive}
+          onClick={onSelectTaskConfiguration}
+        />
         {inputFiles.map((file) => {
           return (
             <ResultItem
@@ -128,35 +154,13 @@ export function InOutFiles({
 
       <h4 className="uppercase">Output files</h4>
       <div className="mt-4 flex flex-col gap-4">
-        <button
+        <TaskPanelButton
           id={`logs-${config.id}`}
-          type="button"
-          title="Logs"
-          className={classNames(
-            'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-            logsActive
-              ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]'
-              : 'bg-white'
-          )}
+          title="Task logs"
+          label="log"
+          selected={logsActive}
           onClick={onSelectLogs}
-        >
-          <div
-            className={classNames(
-              'truncate overflow-hidden font-semibold whitespace-nowrap text-left',
-              logsActive ? 'text-white' : 'text-primary-9'
-            )}
-          >
-            <div>Task logs</div>
-          </div>
-          <span
-            className={classNames(
-              'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
-              logsActive ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
-            )}
-          >
-            log
-          </span>
-        </button>
+        />
 
         {outputAvailable && !builtCircuit && !isLoading && (
           <div className="text-gray-400">No output files generated</div>
@@ -180,6 +184,50 @@ export function InOutFiles({
         )}
       </div>
     </div>
+  );
+}
+
+function TaskPanelButton({
+  id,
+  title,
+  label,
+  selected,
+  onClick,
+}: {
+  id: string;
+  title: string;
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      id={id}
+      type="button"
+      title={title}
+      className={classNames(
+        'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
+        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white'
+      )}
+      onClick={onClick}
+    >
+      <div
+        className={classNames(
+          'truncate overflow-hidden font-semibold whitespace-nowrap text-left',
+          selected ? 'text-white' : 'text-primary-9'
+        )}
+      >
+        <div>{title}</div>
+      </div>
+      <span
+        className={classNames(
+          'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
+          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
+        )}
+      >
+        {label}
+      </span>
+    </button>
   );
 }
 

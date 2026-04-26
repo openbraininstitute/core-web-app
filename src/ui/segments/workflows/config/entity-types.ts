@@ -126,8 +126,8 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: {
     value: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     group: EntityGroupDict.Cellular,
-    label: 'Electron Microscopy Synaptome',
-    title: 'Electron Microscopy Synaptome',
+    label: 'Electron microscopy synaptome',
+    title: 'Electron microscopy synaptome',
     description:
       'Build a synaptome campaign from an electron-microscopy cell morphology with segmented spines.',
   },

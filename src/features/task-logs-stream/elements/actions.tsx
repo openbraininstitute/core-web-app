@@ -77,7 +77,7 @@ export function LogsActions({
 
   return (
     <div className="flex items-center gap-2 mb-2">
-      <div className="relative min-w-0 flex-1 py-1 px-1">
+      <div className="relative min-w-0 flex-1 py-1 px-1 rounded-full">
         <Input
           type="text"
           value={query}
@@ -136,7 +136,8 @@ export function LogsActions({
             'h-12 w-fit rounded-full border border-neutral-300 px-5 text-base cursor-pointer bg-white shadow-bnb',
             'data-[size=default]:h-12 data-[size=sm]:h-12',
             "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold",
-            !hasEntries && 'cursor-not-allowed opacity-50'
+            { 'cursor-not-allowed opacity-50': !hasEntries },
+            'hover:bg-gray-50'
           )}
         >
           <div className="flex items-center gap-2">
@@ -155,13 +156,13 @@ export function LogsActions({
         >
           <SelectItem
             value="txt"
-            className="text-primary-9 text-base font-bold cursor-pointer hover:rounded-2xl"
+            className="text-primary-9 text-base font-bold cursor-pointer hover:rounded-3xl"
           >
             TXT
           </SelectItem>
           <SelectItem
             value="json"
-            className="text-primary-9 text-base font-bold cursor-pointer hover:rounded-2xl"
+            className="text-primary-9 text-base font-bold cursor-pointer hover:rounded-3xl"
           >
             JSON
           </SelectItem>
@@ -182,7 +183,8 @@ export function LogsActions({
             'h-12 w-fit rounded-full border border-neutral-300 px-5 text-base cursor-pointer bg-white shadow-bnb',
             'data-[size=default]:h-12 data-[size=sm]:h-12',
             "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold",
-            !hasEntries && 'cursor-not-allowed opacity-50'
+            { 'cursor-not-allowed opacity-50': !hasEntries },
+            'hover:bg-gray-50'
           )}
         >
           <div className="flex items-center gap-2">
@@ -197,13 +199,13 @@ export function LogsActions({
         >
           <SelectItem
             value="txt"
-            className="text-primary-9 text-base font-bold cursor-pointer hover:rounded-2xl"
+            className={cn('text-primary-9 text-base font-bold cursor-pointer hover:rounded-3xl')}
           >
             TXT
           </SelectItem>
           <SelectItem
             value="json"
-            className="text-primary-9 text-base font-bold cursor-pointer hover:rounded-2xl"
+            className="text-primary-9 text-base font-bold cursor-pointer hover:rounded-3xl"
           >
             JSON
           </SelectItem>
