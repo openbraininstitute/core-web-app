@@ -1,6 +1,6 @@
 'use client';
 
-import { RiArrowDownLine, RiCheckLine, RiFileCopyLine } from '@remixicon/react';
+import { RiArrowDownLine, RiArrowUpLine, RiCheckLine, RiFileCopyLine } from '@remixicon/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LogsActions } from '@/features/task-logs-stream/elements/actions';
@@ -153,7 +153,9 @@ export function LogsViewer({
   const [query, setQuery] = useState('');
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [isAtTop, setIsAtTop] = useState(true);
   const [copiedEntryId, setCopiedEntryId] = useState<string | null>(null);
+  const userHasChangedScrollRef = useRef(false);
 
   const { entries: searchedEntries, highlightById } = useLogSearch({
     entries,
@@ -193,31 +195,55 @@ export function LogsViewer({
   const activeMatch = totalMatches === 0 ? null : matches[normalizedActiveMatchIndex];
   const latestEntryId = searchedEntries.at(-1)?.id;
 
-  const updateIsAtBottom = useCallback(() => {
+  const updateScrollState = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
     const remaining = container.scrollHeight - container.scrollTop - container.clientHeight;
-    setIsAtBottom(remaining <= 16);
+    const nextIsAtBottom = remaining <= 16;
+    setIsAtBottom(nextIsAtBottom);
+    setIsAtTop(container.scrollTop <= 16);
   }, []);
 
+  const forceScrollToBottom = useCallback(
+    ({ behavior }: { behavior: ScrollBehavior }) => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+      setIsAtBottom(true);
+      container.scrollTo({ top: container.scrollHeight, behavior });
+      requestAnimationFrame(updateScrollState);
+    },
+    [updateScrollState]
+  );
+
+  const handleScroll = useCallback(() => {
+    updateScrollState();
+  }, [updateScrollState]);
+
+  const markUserChangedScroll = useCallback(() => {
+    if (!isStreamingMode) return;
+    userHasChangedScrollRef.current = true;
+  }, [isStreamingMode]);
+
+  // Streaming mode follows new logs until the user explicitly changes scroll.
   useEffect(() => {
     if (!isStreamingMode) return;
     if (!latestEntryId) return;
     if (query.trim()) return;
-    requestAnimationFrame(() => {
-      bottomAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      updateIsAtBottom();
-    });
-  }, [isStreamingMode, latestEntryId, query, updateIsAtBottom]);
+    if (userHasChangedScrollRef.current) return;
 
+    requestAnimationFrame(() => {
+      forceScrollToBottom({ behavior: 'auto' });
+    });
+  }, [isStreamingMode, latestEntryId, query, forceScrollToBottom]);
+
+  // non-streaming logs open at the beginning of the final/read messages
   useEffect(() => {
     if (isStreamingMode) return;
-    if (!latestEntryId) return;
     const container = scrollContainerRef.current;
     if (!container) return;
     container.scrollTo({ top: 0, behavior: 'auto' });
-    updateIsAtBottom();
-  }, [isStreamingMode, latestEntryId, updateIsAtBottom]);
+    updateScrollState();
+  }, [isStreamingMode, updateScrollState]);
 
   useEffect(() => {
     if (!activeMatch) return;
@@ -241,7 +267,13 @@ export function LogsViewer({
   }, [totalMatches]);
 
   const scrollToBottom = useCallback(() => {
-    bottomAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    userHasChangedScrollRef.current = false;
+    forceScrollToBottom({ behavior: 'smooth' });
+  }, [forceScrollToBottom]);
+
+  const scrollToTop = useCallback(() => {
+    userHasChangedScrollRef.current = true;
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const copyEntry = useCallback(async (entry: ILogEntry) => {
@@ -253,16 +285,13 @@ export function LogsViewer({
   }, []);
 
   useEffect(() => {
-    updateIsAtBottom();
-  }, [updateIsAtBottom]);
+    updateScrollState();
+  }, [updateScrollState]);
 
   if (!enabled) return null;
 
   return (
-    <div
-      id="job-logs"
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-neutral-50 pb-4"
-    >
+    <div id="job-logs" className="flex h-full min-h-0 flex-col overflow-hidden bg-neutral-50 pb-4">
       <div className="sticky top-0 z-10 bg-neutral-50">
         <LogsActions
           entries={entries}
@@ -279,61 +308,85 @@ export function LogsViewer({
         />
       </div>
 
-      <div
-        ref={scrollContainerRef}
-        onScroll={updateIsAtBottom}
-        className="secondary-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl"
-      >
-        {!hasLogs && !streamError && isLoading && (
-          <div className="w-full py-2">
-            <LogsLoadingSkeleton />
-          </div>
-        )}
-        {!hasLogs && !streamError && !isLoading && (
-          <div className="w-full py-2">
-            <LogsLoadingSkeleton />
-          </div>
-        )}
-
-        {streamError && (
-          <div className="w-full py-2 px-2">
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-base text-red-700">
-              {streamError}
+      <div className="relative min-h-0 flex-1">
+        <div
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          onWheel={(event) => {
+            if (event.deltaY !== 0) markUserChangedScroll();
+          }}
+          onTouchMove={markUserChangedScroll}
+          className="secondary-scrollbar absolute inset-0 overflow-x-hidden overflow-y-auto"
+        >
+          {!hasLogs && !streamError && isLoading && (
+            <div className="w-full py-2">
+              <LogsLoadingSkeleton />
             </div>
-          </div>
-        )}
+          )}
+          {!hasLogs && !streamError && !isLoading && (
+            <div className="w-full py-2">
+              <LogsLoadingSkeleton />
+            </div>
+          )}
 
-        {groupedEntries.length > 0 && (
-          <div className="flex flex-col gap-4 mr-1 pt-4 h-full rounded-xl">
-            <LogsGroups
-              groupedEntries={groupedEntries}
-              highlightById={highlightById}
-              activeMatchId={activeMatch?.matchId}
-              onCopyEntry={copyEntry}
-              copiedEntryId={copiedEntryId}
-            />
-            <div ref={bottomAnchorRef} />
-          </div>
+          {streamError && (
+            <div className="w-full py-2 px-2">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-base text-destructive">
+                {streamError}
+              </div>
+            </div>
+          )}
+
+          {groupedEntries.length > 0 && (
+            <div className="flex flex-col gap-4 mr-1 h-full">
+              <LogsGroups
+                groupedEntries={groupedEntries}
+                highlightById={highlightById}
+                activeMatchId={activeMatch?.matchId}
+                onCopyEntry={copyEntry}
+                copiedEntryId={copiedEntryId}
+              />
+              <div ref={bottomAnchorRef} />
+            </div>
+          )}
+        </div>
+        {hasLogs && !isAtTop && (
+          <Button
+            type="button"
+            variant="icon"
+            size="sm"
+            rounded
+            onClick={scrollToTop}
+            className={cn(
+              'absolute top-2 right-4 z-10 backdrop-blur-md',
+              'text-gray-500 opacity-60 transition-all hover:border bg-black/20',
+              'hover:border-gray-400 hover:bg-primary-8 hover:text-white hover:opacity-100 hover:shadow-sm'
+            )}
+            aria-label="Scroll to top"
+            title="Scroll to top"
+          >
+            <RiArrowUpLine className="size-4" />
+          </Button>
+        )}
+        {hasLogs && !isAtBottom && (
+          <Button
+            type="button"
+            variant="icon"
+            size="sm"
+            rounded
+            onClick={scrollToBottom}
+            className={cn(
+              'absolute bottom-2 right-4 z-10 backdrop-blur-md',
+              'text-gray-500 opacity-60 transition-all hover:border bg-black/20',
+              'hover:border-gray-400 hover:bg-primary-8 hover:text-white hover:opacity-100 hover:shadow-sm'
+            )}
+            aria-label="Scroll to bottom"
+            title="Scroll to bottom"
+          >
+            <RiArrowDownLine className="size-4" />
+          </Button>
         )}
       </div>
-      {hasLogs && !isAtBottom && (
-        <Button
-          type="button"
-          variant="icon"
-          size="sm"
-          rounded
-          onClick={scrollToBottom}
-          className={cn(
-            'absolute bottom-0 right-2.5 backdrop-blur-md',
-            'mr-4 self-end text-gray-500 opacity-60 transition-all hover:border bg-black/20',
-            'hover:border-gray-400 hover:bg-primary-8 hover:text-white hover:opacity-100 hover:shadow-sm'
-          )}
-          aria-label="Scroll to bottom"
-          title="Scroll to bottom"
-        >
-          <RiArrowDownLine className="size-4" />
-        </Button>
-      )}
     </div>
   );
 }

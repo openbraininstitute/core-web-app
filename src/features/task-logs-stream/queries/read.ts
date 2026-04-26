@@ -19,7 +19,7 @@ export async function fetchTaskJobRead({
 }): Promise<IJobRead> {
   const session = await getSession();
 
-  const response = await fetch(`${config.OBI_ONE_URL}/job/${encodeURIComponent(jobId)}`, {
+  const response = await fetch(`${config.OBI_ONE_URL}/declared/task/${encodeURIComponent(jobId)}`, {
     method: 'GET',
     cache: 'no-store',
     signal,

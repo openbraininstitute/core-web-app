@@ -26,16 +26,19 @@ export async function fetchTaskLogsStreamEndpoint({
 }): Promise<AsyncIterable<ILogEntry>> {
   const session = await getSession();
 
-  const response = await fetch(`${config.OBI_ONE_URL}/job/${encodeURIComponent(jobId)}/stream`, {
-    method: 'GET',
-    cache: 'no-store',
-    signal,
-    headers: {
-      ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
-      'virtual-lab-id': virtualLabId,
-      'project-id': projectId,
-    },
-  });
+  const response = await fetch(
+    `${config.OBI_ONE_URL}/declared/task/${encodeURIComponent(jobId)}/stream`,
+    {
+      method: 'GET',
+      cache: 'no-store',
+      signal,
+      headers: {
+        ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
+        'virtual-lab-id': virtualLabId,
+        'project-id': projectId,
+      },
+    }
+  );
 
   if (!response.ok || !response.body) {
     const errorBody = await readStreamErrorBody({ response });

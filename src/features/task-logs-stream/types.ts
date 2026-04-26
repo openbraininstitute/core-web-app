@@ -86,6 +86,7 @@ export interface ITaskLogsStreamState {
   entries: ILogEntry[];
   streamError: string | null;
   isLoading: boolean;
+  isStreaming: boolean;
 }
 
 export const LogLevelDict = {

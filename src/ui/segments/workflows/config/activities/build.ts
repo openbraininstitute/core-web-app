@@ -22,11 +22,17 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     disabled: false,
   },
   {
+    sourceType: ExtendedEntitiesTypeDict.MemodelCircuit,
+    targetType: ExtendedEntitiesTypeDict.MemodelCircuit,
+    order: 4,
+    disabled: true,
+  },
+  {
     sourceType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
     targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
-    label: 'Electron Microscopy Synaptome',
+    label: 'Electron microscopy synaptome',
     needsBrowse: true,
-    order: 4,
+    order: 5,
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.UniversalCellMorphology,
@@ -38,12 +44,6 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
       },
     ],
     disabled: false,
-  },
-  {
-    sourceType: ExtendedEntitiesTypeDict.MemodelCircuit,
-    targetType: ExtendedEntitiesTypeDict.MemodelCircuit,
-    order: 5,
-    disabled: true,
   },
   {
     sourceType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,

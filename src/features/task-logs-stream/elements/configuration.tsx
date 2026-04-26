@@ -68,8 +68,11 @@ export function Configuration({ configuration }: IProps) {
 
   if (!configuration) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-500">
-        Configuration details are not available for this task yet.
+      <div className="w-full py-2 px-2">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-base text-destructive">
+          Configuration details are not available yet. Start the task first, then check back to view
+          its settings and setup information.
+        </div>
       </div>
     );
   }

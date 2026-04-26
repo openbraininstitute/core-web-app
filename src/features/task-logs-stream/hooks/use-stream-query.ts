@@ -35,7 +35,7 @@ export function buildTaskLogsStreamQueryOptions({
   debugLog,
 }: IStreamQueryParams) {
   return queryOptions({
-    queryKey: ['task-logs-stream', { jobId, virtualLabId, projectId, configId, enabled }],
+    queryKey: ['task-logs-stream', { jobId, virtualLabId, projectId, configId }],
     queryFn: streamedQuery({
       streamFn: async ({ signal }) => {
         if (!jobId) return emptyStream();
@@ -57,7 +57,7 @@ export function buildTaskLogsStreamQueryOptions({
     }),
     enabled: enabled && Boolean(jobId),
     staleTime: Infinity,
-    refetchOnMount: true,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: false,
   });
 }

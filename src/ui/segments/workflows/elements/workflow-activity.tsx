@@ -216,7 +216,8 @@ export function WorkflowActivity() {
           getEntityByExtendedType({
             type: record.type as unknown as TExtendedEntitiesTypeDict,
           })?.title ??
-          (entityType ? getEntityByExtendedType({ type: entityType })?.title : undefined);
+          getEntityByExtendedType({ type: entityType ?? undefined })?.title ??
+          '-';
 
         return <span className={cn('text-primary-9 flex items-center capitalize')}>{title}</span>;
       },
