@@ -43,12 +43,12 @@ export default async function Page({
       // then forward it first
       if (workspace.recentWorkspace) {
         redirect(
-          `${config.ROOT_ROUTE}/${workspace.recentWorkspace.virtual_lab_id}/${workspace.recentWorkspace.project_id}`,
+          `${config.ROOT_ROUTE}/${workspace.recentWorkspace.virtual_lab_id}/${workspace.recentWorkspace.project_id}/help`,
           RedirectType.replace
         );
       }
       // if there is no stored recent workspace, redirect to first fetched workspace
-      redirect(`${config.ROOT_ROUTE}/${virtualLab.id}/${project.id}`, RedirectType.replace);
+      redirect(`${config.ROOT_ROUTE}/${virtualLab.id}/${project.id}/help`, RedirectType.replace);
     }
   }
 

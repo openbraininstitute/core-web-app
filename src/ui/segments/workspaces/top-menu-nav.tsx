@@ -215,7 +215,8 @@ export function TopMenuNavigation() {
             searchParams,
             keepKeys: [DEFAULT_BRAIN_REGION_QUERY_ID, DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE],
           }).toString();
-          const isActiveButton = activeSection === baseUrl || !!isActive?.(pathname);
+          const isActiveButton =
+            (baseUrl !== '' && activeSection === baseUrl) || !!isActive?.(pathname);
           const transparentWhenInactive = {
             'bg-transparent! hover:bg-transparent! hover:text-primary-9! hover:shadow-sm':
               !isActiveButton,
@@ -239,7 +240,7 @@ export function TopMenuNavigation() {
                     'transition-all duration-400 ease-out',
                     clx
                   )}
-                  active={activeSection === baseUrl || isActive?.(pathname)}
+                  active={isActiveButton}
                 >
                   <Link
                     prefetch

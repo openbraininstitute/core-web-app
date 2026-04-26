@@ -81,7 +81,11 @@ function GroupRow({
             const isWorkflows = group === QuickAccessGroupDict.Workflows;
             const hideArtifact = isData || isNotebooks || isWorkflows;
             const displayTitle = isData ? (item.artifactTitle ?? item.title) : item.title;
-            const isSelected = preview?.entityId === item.entity.id;
+            const previewKindForGroup = isData ? 'data' : isNotebooks ? 'notebook' : null;
+            const isSelected =
+              previewKindForGroup !== null &&
+              preview?.kind === previewKindForGroup &&
+              preview?.entityId === item.entity.id;
             const overrideThumbnail =
               isData && index === 0
                 ? '/images/quick-access/morphology.png'
