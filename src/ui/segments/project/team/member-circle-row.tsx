@@ -1,6 +1,7 @@
 'use client';
 
 import { DeleteOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { RiVipCrownFill } from '@remixicon/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar, Popconfirm, Select } from 'antd';
 import { compact, get } from 'es-toolkit/compat';
@@ -43,12 +44,14 @@ function MemberCircle({
   isSelf,
   canModify,
   isProjectOwner,
+  isAdmin,
 }: {
   member: Member;
   index: number;
   isSelf: boolean;
   canModify: boolean;
   isProjectOwner: boolean;
+  isAdmin: boolean;
 }) {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
@@ -86,6 +89,12 @@ function MemberCircle({
 
   return (
     <div className="group/circle relative">
+      {isAdmin && (
+        <RiVipCrownFill
+          aria-label="Admin"
+          className="pointer-events-none absolute -top-2.5 left-1/2 z-10 size-4 -translate-x-1/2 -rotate-12 text-amber-400 drop-shadow-sm"
+        />
+      )}
       <Avatar
         size={40}
         shape="circle"
@@ -206,7 +215,7 @@ export function MemberCircleRow() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center justify-center gap-2">
+      <div className="flex flex-wrap items-center justify-start gap-2">
         {users.map((member, index) => {
           const isSelf = member.id === session?.user?.id;
           const isProjectOwner = member.id === ownerId;
@@ -223,6 +232,7 @@ export function MemberCircleRow() {
               isSelf={isSelf}
               isProjectOwner={isProjectOwner}
               canModify={canModify}
+              isAdmin={isTargetAdmin}
             />
           );
         })}

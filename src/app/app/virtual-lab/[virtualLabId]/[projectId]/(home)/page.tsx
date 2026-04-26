@@ -8,8 +8,6 @@ import { makeRoles } from '@/hooks/use-user-membership';
 import { getQueryClient, HydrateClient } from '@/query-provider/server';
 import { getProjectJobReports } from '@/services/virtual-lab/projects';
 import { Credits } from '@/ui/segments/project/credits';
-import { ProjectHomeHeader } from '@/ui/segments/project/project-home-header';
-import { MemberCircleRow } from '@/ui/segments/project/team/member-circle-row';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -51,7 +49,6 @@ export default async function Page({
   return (
     <HydrateClient>
       <div className="flex h-full w-full flex-col gap-4 overflow-hidden p-3 pb-10 text-sm">
-        <ProjectHomeHeader />
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           {canViewCredits && (
             <div className="flex min-h-0 flex-1 flex-col">
@@ -60,7 +57,6 @@ export default async function Page({
               </Suspense>
             </div>
           )}
-          <MemberCircleRow />
         </div>
       </div>
     </HydrateClient>

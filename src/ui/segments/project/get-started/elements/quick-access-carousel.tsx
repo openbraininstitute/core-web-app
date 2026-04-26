@@ -39,8 +39,8 @@ const groupLabels: Record<TQuickAccessGroup, string> = {
 
 const groupOrder: Array<TQuickAccessGroup> = [
   QuickAccessGroupDict.Data,
-  QuickAccessGroupDict.Notebooks,
   QuickAccessGroupDict.Workflows,
+  QuickAccessGroupDict.Notebooks,
 ];
 
 function GroupRow({
