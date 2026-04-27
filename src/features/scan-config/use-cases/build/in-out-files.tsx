@@ -25,10 +25,10 @@ type Props = {
   execution?: ITaskActivity;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
-  logsActive: boolean;
-  taskConfigurationActive: boolean;
-  onSelectLogs: () => void;
-  onSelectTaskConfiguration: () => void;
+  // logsActive: boolean;
+  // taskConfigurationActive: boolean;
+  // onSelectLogs: () => void;
+  // onSelectTaskConfiguration: () => void;
   context: { virtualLabId: string; projectId: string };
   campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
@@ -41,10 +41,10 @@ export function InOutFiles({
   execution,
   selectedFile,
   onSelect,
-  logsActive,
-  taskConfigurationActive,
-  onSelectLogs,
-  onSelectTaskConfiguration,
+  // logsActive,
+  // taskConfigurationActive,
+  // onSelectLogs,
+  // onSelectTaskConfiguration,
   context,
   campaignOrigin,
 }: Props) {
@@ -122,27 +122,27 @@ export function InOutFiles({
   }, [outputAvailable, builtCircuit, queryClient]);
 
   useEffect(() => {
-    if (inputFiles.length > 0 && !selectedFile && !logsActive && !taskConfigurationActive) {
+    if (inputFiles.length > 0 && !selectedFile) {
       onSelect(inputFiles[0]);
     }
-  }, [inputFiles, selectedFile, logsActive, taskConfigurationActive, onSelect]);
+  }, [inputFiles, selectedFile, onSelect]);
 
   return (
     <div className="h-full overflow-y-auto">
       <h4 className="uppercase">Input files</h4>
       <div className="mt-4 mb-8 flex flex-col gap-4">
-        <TaskPanelButton
+        {/* <TaskPanelButton
           id={`task-configuration-${config.id}`}
           title="Task configuration"
           label="config"
           selected={taskConfigurationActive}
           onClick={onSelectTaskConfiguration}
-        />
+        /> */}
         {inputFiles.map((file) => {
           return (
             <ResultItem
               id={file.asset.id}
-              selected={!logsActive && file.asset.id === selectedFile?.id}
+              selected={file.asset.id === selectedFile?.id}
               key={file.asset?.id}
               file={file}
               onSelect={onSelect}
@@ -154,14 +154,18 @@ export function InOutFiles({
 
       <h4 className="uppercase">Output files</h4>
       <div className="mt-4 flex flex-col gap-4">
-        <TaskPanelButton
+        {/* <TaskPanelButton
           id={`logs-${config.id}`}
           title="Task logs"
           label="log"
           selected={logsActive}
           onClick={onSelectLogs}
-        />
+        /> */}
 
+        {!outputAvailable && <div className="text-gray-400">No output files yet</div>}
+        {outputAvailable && isLoading && !builtCircuit && (
+          <div className="text-gray-400">Loading output files...</div>
+        )}
         {outputAvailable && !builtCircuit && !isLoading && (
           <div className="text-gray-400">No output files generated</div>
         )}
@@ -169,7 +173,7 @@ export function InOutFiles({
           <ResultItem
             id={builtCircuit.id}
             label={<small className="uppercase">Circuit</small>}
-            selected={!logsActive && builtCircuit?.id === selectedFile?.id}
+            selected={builtCircuit?.id === selectedFile?.id}
             key={builtCircuit.id}
             file={{
               id: builtCircuit.id,
@@ -187,49 +191,49 @@ export function InOutFiles({
   );
 }
 
-function TaskPanelButton({
-  id,
-  title,
-  label,
-  selected,
-  onClick,
-}: {
-  id: string;
-  title: string;
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      id={id}
-      type="button"
-      title={title}
-      className={classNames(
-        'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white'
-      )}
-      onClick={onClick}
-    >
-      <div
-        className={classNames(
-          'truncate overflow-hidden font-semibold whitespace-nowrap text-left',
-          selected ? 'text-white' : 'text-primary-9'
-        )}
-      >
-        <div>{title}</div>
-      </div>
-      <span
-        className={classNames(
-          'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
-          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
-        )}
-      >
-        {label}
-      </span>
-    </button>
-  );
-}
+// function TaskPanelButton({
+//   id,
+//   title,
+//   label,
+//   selected,
+//   onClick,
+// }: {
+//   id: string;
+//   title: string;
+//   label: string;
+//   selected: boolean;
+//   onClick: () => void;
+// }) {
+//   return (
+//     <button
+//       id={id}
+//       type="button"
+//       title={title}
+//       className={classNames(
+//         'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
+//         selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white'
+//       )}
+//       onClick={onClick}
+//     >
+//       <div
+//         className={classNames(
+//           'truncate overflow-hidden font-semibold whitespace-nowrap text-left',
+//           selected ? 'text-white' : 'text-primary-9'
+//         )}
+//       >
+//         <div>{title}</div>
+//       </div>
+//       <span
+//         className={classNames(
+//           'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
+//           selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
+//         )}
+//       >
+//         {label}
+//       </span>
+//     </button>
+//   );
+// }
 
 type TResultItemProps = {
   id: string;

@@ -15,9 +15,9 @@ import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import {
   buildActivityStatusMap,
   findLatestExecutionForEntity,
-  ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
+// import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   useScanConfigLaunchMutation,
   useScanConfigTaskRunner,
@@ -25,21 +25,23 @@ import {
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files';
 import { ConfigsLeftMenu } from '@/features/scan-config/use-cases/build/left-menu';
-import {
-  type ITaskLogsStreamWarmupJob,
-  TaskConfigurationViewer,
-  TaskLogsViewer,
-  useTaskLogsStreamsWarmup,
-} from '@/features/task-logs-stream';
+// import {
+//   type ITaskLogsStreamWarmupJob,
+//   TaskConfigurationViewer,
+//   TaskLogsViewer,
+//   useTaskLogsStreamsWarmup,
+// } from '@/features/task-logs-stream';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 import { classNames } from '@/util/utils';
-import { log } from '@/utils/logger';
+
+// import { log } from '@/utils/logger';
 
 import type { CheckboxProps } from 'antd';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TLogLevel } from '@/features/task-logs-stream/types';
+
+// import type { TLogLevel } from '@/features/task-logs-stream/types';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
@@ -53,8 +55,8 @@ type Props = {
 
 const RightPanelModeDict = {
   Result: 'result',
-  Logs: 'logs',
-  TaskConfiguration: 'task-configuration',
+  // Logs: 'logs',
+  // TaskConfiguration: 'task-configuration',
 } as const;
 
 type TRightPanelMode = (typeof RightPanelModeDict)[keyof typeof RightPanelModeDict];
@@ -64,7 +66,7 @@ export function BuildTab({
   campaignId,
   virtualLabId,
   projectId,
-  isCampaignIdChanged,
+  // isCampaignIdChanged,
 }: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
@@ -72,8 +74,8 @@ export function BuildTab({
   const [activeConfig, setActiveConfig] = useState<ITaskConfig<never> | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
-  const [jobIdsByConfigId, setJobIdsByConfigId] = useState<Record<string, string>>({});
-  const [rightPanelMode, setRightPanelMode] = useState<TRightPanelMode>(RightPanelModeDict.Logs);
+  // const [jobIdsByConfigId, setJobIdsByConfigId] = useState<Record<string, string>>({});
+  const [rightPanelMode, setRightPanelMode] = useState<TRightPanelMode>(RightPanelModeDict.Result);
 
   // reset all local state when the campaign changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: campaignId is intentionally a trigger dependency
@@ -82,8 +84,8 @@ export function BuildTab({
     setActiveConfig(null);
     setInitialSelectionDone(false);
     setSelectedFile(undefined);
-    setJobIdsByConfigId({});
-    setRightPanelMode(RightPanelModeDict.Logs);
+    // setJobIdsByConfigId({});
+    setRightPanelMode(RightPanelModeDict.Result);
   }, [campaignId]);
 
   const { mutateAsync: runBuild, isPending: runBuildPending } = useScanConfigLaunchMutation({
@@ -125,54 +127,55 @@ export function BuildTab({
 
   const activeConfigExecStatus = activeConfigExecution?.status;
 
-  const isExecutionTerminal =
-    activeConfigExecStatus === ActivityStatus.DONE ||
-    activeConfigExecStatus === ActivityStatus.ERROR ||
-    activeConfigExecStatus === ActivityStatus.CANCELLED;
+  // Task logs/configuration viewers are temporarily hidden from the build UI.
+  // const isExecutionTerminal =
+  //   activeConfigExecStatus === ActivityStatus.DONE ||
+  //   activeConfigExecStatus === ActivityStatus.ERROR ||
+  //   activeConfigExecStatus === ActivityStatus.CANCELLED;
 
-  const activeLogsJobId = useMemo(() => {
-    if (!activeConfig) return undefined;
-    if (campaignOriginAction === ScanConfigCampaignOriginActionDict.View) {
-      return activeConfigExecution?.execution_id ?? undefined;
-    }
-    return jobIdsByConfigId[activeConfig.id] ?? activeConfigExecution?.execution_id ?? undefined;
-  }, [activeConfig, activeConfigExecution?.execution_id, campaignOriginAction, jobIdsByConfigId]);
+  // const activeLogsJobId = useMemo(() => {
+  //   if (!activeConfig) return undefined;
+  //   if (campaignOriginAction === ScanConfigCampaignOriginActionDict.View) {
+  //     return activeConfigExecution?.execution_id ?? undefined;
+  //   }
+  //   return jobIdsByConfigId[activeConfig.id] ?? activeConfigExecution?.execution_id ?? undefined;
+  // }, [activeConfig, activeConfigExecution?.execution_id, campaignOriginAction, jobIdsByConfigId]);
 
-  const shouldEnableLogsViewer = useMemo(() => {
-    if (!activeConfig) return false;
-    return !executionsLoading || Boolean(activeLogsJobId);
-  }, [activeConfig, activeLogsJobId, executionsLoading]);
+  // const shouldEnableLogsViewer = useMemo(() => {
+  //   if (!activeConfig) return false;
+  //   return !executionsLoading || Boolean(activeLogsJobId);
+  // }, [activeConfig, activeLogsJobId, executionsLoading]);
 
-  const warmupJobs = useMemo<ITaskLogsStreamWarmupJob[]>(() => {
-    const seen = new Set<string>();
-    const jobs: ITaskLogsStreamWarmupJob[] = [];
-    for (const [configId, jobId] of Object.entries(jobIdsByConfigId)) {
-      if (!jobId || seen.has(jobId)) continue;
-      seen.add(jobId);
-      jobs.push({ jobId, configId });
-    }
-    return jobs;
-  }, [jobIdsByConfigId]);
+  // const warmupJobs = useMemo<ITaskLogsStreamWarmupJob[]>(() => {
+  //   const seen = new Set<string>();
+  //   const jobs: ITaskLogsStreamWarmupJob[] = [];
+  //   for (const [configId, jobId] of Object.entries(jobIdsByConfigId)) {
+  //     if (!jobId || seen.has(jobId)) continue;
+  //     seen.add(jobId);
+  //     jobs.push({ jobId, configId });
+  //   }
+  //   return jobs;
+  // }, [jobIdsByConfigId]);
 
-  const warmupDebugLog = useCallback(
-    ({ level, message, payload }: { level: TLogLevel; message: string; payload?: unknown }) => {
-      log(level, message, payload);
-    },
-    []
-  );
+  // const warmupDebugLog = useCallback(
+  //   ({ level, message, payload }: { level: TLogLevel; message: string; payload?: unknown }) => {
+  //     log(level, message, payload);
+  //   },
+  //   []
+  // );
 
-  useTaskLogsStreamsWarmup({
-    jobs: warmupJobs,
-    virtualLabId,
-    projectId,
-    enabled: true,
-    debugLog: warmupDebugLog,
-  });
+  // useTaskLogsStreamsWarmup({
+  //   jobs: warmupJobs,
+  //   virtualLabId,
+  //   projectId,
+  //   enabled: true,
+  //   debugLog: warmupDebugLog,
+  // });
 
   const onActiveConfigChange = useCallback((config: ITaskConfig<never>) => {
     setActiveConfig(config);
     setSelectedFile(undefined);
-    setRightPanelMode(RightPanelModeDict.Logs);
+    setRightPanelMode(RightPanelModeDict.Result);
   }, []);
 
   const onSelectedFileChange = useCallback((file: TActivityCustomFile) => {
@@ -219,11 +222,12 @@ export function BuildTab({
 
   const onRun = async (configIdsToRun: string[]) => {
     for (const configId of configIdsToRun) {
-      const launchData = await runBuild(configId);
-      setJobIdsByConfigId((prev) => ({
-        ...prev,
-        [configId]: launchData.job_id,
-      }));
+      // const launchData = await runBuild(configId);
+      await runBuild(configId);
+      // setJobIdsByConfigId((prev) => ({
+      //   ...prev,
+      //   [configId]: launchData.job_id,
+      // }));
     }
     setSelectedConfigIds([]);
   };
@@ -239,16 +243,16 @@ export function BuildTab({
 
   const launchBtnLabelPrefix = selectedConfigIds.length ? `(${selectedConfigIds.length})` : '';
   const loading = configsLoading || configGenerationLoading || executionsLoading;
-  const taskViewerProps = {
-    enabled: shouldEnableLogsViewer,
-    configId: activeConfig?.id,
-    jobId: activeLogsJobId,
-    virtualLabId,
-    projectId,
-    skipStream: isExecutionTerminal,
-    campaignOriginAction,
-    isCampaignIdChanged,
-  };
+  // const taskViewerProps = {
+  //   enabled: shouldEnableLogsViewer,
+  //   configId: activeConfig?.id,
+  //   jobId: activeLogsJobId,
+  //   virtualLabId,
+  //   projectId,
+  //   skipStream: isExecutionTerminal,
+  //   campaignOriginAction,
+  //   isCampaignIdChanged,
+  // };
 
   return (
     <div id="build-results" className={styles.threeColumns}>
@@ -316,13 +320,13 @@ export function BuildTab({
             execStatus={activeConfigExecStatus}
             execution={activeConfigExecution}
             selectedFile={selectedFile}
-            logsActive={rightPanelMode === RightPanelModeDict.Logs}
-            taskConfigurationActive={rightPanelMode === RightPanelModeDict.TaskConfiguration}
-            onSelectLogs={() => setRightPanelMode(RightPanelModeDict.Logs)}
-            onSelectTaskConfiguration={() => {
-              setSelectedFile(undefined);
-              setRightPanelMode(RightPanelModeDict.TaskConfiguration);
-            }}
+            // logsActive={rightPanelMode === RightPanelModeDict.Logs}
+            // taskConfigurationActive={rightPanelMode === RightPanelModeDict.TaskConfiguration}
+            // onSelectLogs={() => setRightPanelMode(RightPanelModeDict.Logs)}
+            // onSelectTaskConfiguration={() => {
+            //   setSelectedFile(undefined);
+            //   setRightPanelMode(RightPanelModeDict.TaskConfiguration);
+            // }}
             context={context}
             onSelect={onSelectedFileChange}
             campaignOrigin={campaignOriginAction}
@@ -331,10 +335,10 @@ export function BuildTab({
       </div>
 
       <div id="build-results-right-preview" className="relative pl-4">
-        {rightPanelMode === RightPanelModeDict.Logs && <TaskLogsViewer {...taskViewerProps} />}
-        {rightPanelMode === RightPanelModeDict.TaskConfiguration && (
+        {/* {rightPanelMode === RightPanelModeDict.Logs && <TaskLogsViewer {...taskViewerProps} />} */}
+        {/* {rightPanelMode === RightPanelModeDict.TaskConfiguration && (
           <TaskConfigurationViewer {...taskViewerProps} />
-        )}
+        )} */}
 
         <Activity mode={rightPanelMode === RightPanelModeDict.Result ? 'visible' : 'hidden'}>
           {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
