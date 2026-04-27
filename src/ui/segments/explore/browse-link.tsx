@@ -26,6 +26,7 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import type { ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -191,6 +192,19 @@ function buildQuery({
   return { query, queryKey };
 }
 
+async function resolveEntityCount({
+  query,
+  entity,
+}: {
+  query: ReturnType<typeof buildQuery>['query'];
+  entity: ReturnType<typeof getEntityByExtendedType>;
+}) {
+  if (!entity) return undefined;
+  if (entity.api.query.count) return entity.api.query.count(query);
+  const response = await entity.api.query.list?.(query);
+  return (response as EntityCoreResponse<unknown> | undefined)?.pagination?.total_items;
+}
+
 export function BrowseLink({
   scope,
   enabled,
@@ -243,12 +257,9 @@ export function BrowseLink({
     isLoading: loadingFallback,
     data: fallbackData,
     isError: isFallbackError,
-  } = useQuery<{ pagination: { total_items: number } } | undefined>({
+  } = useQuery<number | undefined>({
     queryKey: fallbackQuery.queryKey,
-    queryFn: async () => {
-      if (entity?.api.query.count) return entity.api.query.count(fallbackQuery.query);
-      return entity?.api.query.list?.(fallbackQuery.query);
-    },
+    queryFn: () => resolveEntityCount({ query: fallbackQuery.query, entity }),
     // fetch for inactive entities and as bootstrap for active entities without cached table count yet
     enabled: !!currentBrainRegionId && enabled,
     staleTime: Infinity,
@@ -258,27 +269,23 @@ export function BrowseLink({
     isLoading: loadingRoot,
     data: root,
     isError: isRootError,
-  } = useQuery<{ pagination: { total_items: number } } | undefined>({
+  } = useQuery<number | undefined>({
     queryKey: rootQuery.queryKey,
-    queryFn: async () => {
-      if (entity?.api.query.count) return entity.api.query.count(rootQuery.query);
-      return entity?.api.query.list?.(rootQuery.query);
-    },
+    queryFn: () => resolveEntityCount({ query: rootQuery.query, entity }),
     enabled: !!defaultBrainRegionId && enabled,
     staleTime: Infinity,
   });
 
   // resolve current count: prioritize table query when active, fallback otherwise
-  const count = isActiveEntity && hasCachedData ? tableCount : fallbackData?.pagination.total_items;
+  const count = isActiveEntity && hasCachedData ? tableCount : fallbackData;
   const loadingCurrent = isActiveEntity && hasCachedData ? tableCountLoading : loadingFallback;
   const isCurrentError = isActiveEntity && hasCachedData ? isTableCountError : isFallbackError;
-  const rootCount = root?.pagination.total_items;
   const isLoading = loadingCurrent || loadingRoot;
 
   const countRenderer = match({
     isCurrentError,
     count,
-    rootCount,
+    rootCount: root,
     isRootError,
     enabled,
     isLoading,
@@ -287,7 +294,7 @@ export function BrowseLink({
       <span className="flex items-center justify-center gap-1">
         <span className="font-bold">{count}</span>
         <span className="font-light">of</span>
-        <span className="font-bold">{rootCount}</span>
+        <span className="font-bold">{root}</span>
       </span>
     ))
     .with(P.union({ isCurrentError: true }, { isRootError: true }), () => {

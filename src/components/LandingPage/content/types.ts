@@ -1,6 +1,6 @@
-import { RichText, tryType } from './_common';
+import { type RichText, tryType } from './_common';
 
-import { TypeDef } from '@/util/type-guards';
+import type { TypeDef } from '@/util/type-guards';
 
 export const typeStringOrNull: TypeDef = ['|', 'string', 'null', 'undefined'];
 export const typeNumberOrNull: TypeDef = ['|', 'number', 'null', 'undefined'];
@@ -221,6 +221,34 @@ const typeContentForRichTextParagraph: TypeDef = () => ({
   content: typeRichTextParagraph,
 });
 
+export interface ContentForSingleFeature {
+  _type: 'singleFeature';
+  titleH1?: string;
+  titleH2?: string;
+  headline?: string;
+  headLine?: string;
+  description?: string;
+  useCases?: unknown;
+  data?: unknown;
+  backgroundColor?: string;
+  backgroundImage?: string;
+  theme?: string;
+}
+
+const typeContentForSingleFeature: TypeDef = {
+  _type: ['literal', 'singleFeature'],
+  titleH1: ['?', 'string'],
+  titleH2: ['?', 'string'],
+  headline: ['?', 'string'],
+  headLine: ['?', 'string'],
+  description: ['?', 'string'],
+  useCases: ['?', ['array', 'string']],
+  data: ['?', ['array', ['partial', {}]]],
+  backgroundColor: ['?', 'string'],
+  backgroundImage: ['?', 'string'],
+  theme: ['?', 'string'],
+};
+
 export type ContentForRichText = Array<
   | ContentForRichTextItems
   | ContentForRichTextTitle
@@ -231,6 +259,7 @@ export type ContentForRichText = Array<
   | ContentForRichTextImage
   | ContentForRichTextVideo
   | ContentForRichTextMultipleButton
+  | ContentForSingleFeature
 >;
 
 const typeContentForRichText: TypeDef = [
@@ -246,6 +275,7 @@ const typeContentForRichText: TypeDef = [
     typeContentForRichTextImage,
     typeContentForRichTextVideo,
     typeContentForRichTextMultipleButton,
+    typeContentForSingleFeature,
   ],
 ];
 

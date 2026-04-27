@@ -1,8 +1,9 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { atom } from 'jotai';
 
-import { Block } from '@/features/scan-config/components/ui-blocks/block';
+import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import { isType } from '@/features/scan-config/types';
 
 import type { Config, ConfigValue } from '@/features/scan-config/components/components';
@@ -55,6 +56,7 @@ export default function BlockUnion({
   errorPathPrefix,
 }: Props) {
   const discriminatorProp = getDiscriminatorProperty(blockUnionSchema);
+  const showingDiffs = useShowingDiffs();
 
   // Get current selected type from config
   const currentConfig = config[selectedRootElement];
@@ -96,7 +98,7 @@ export default function BlockUnion({
           schema={schema}
           schemaName={schemaName}
           key={`${selectedRootElement}_${selectedType}`}
-          disabled={!!campaignId || loading}
+          disabled={!!campaignId || loading || showingDiffs}
           config={config}
           blockSchema={selectedBlockSchema}
           stateAtom={atomsMap[selectedRootElement]}
@@ -106,6 +108,11 @@ export default function BlockUnion({
         />
       </div>
     );
+  }
+
+  // Hide variant picker during diff mode
+  if (showingDiffs) {
+    return null;
   }
 
   return (

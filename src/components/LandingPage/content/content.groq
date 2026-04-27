@@ -1,6 +1,17 @@
 *[_type=="pages"][slug.current=="<SLUG>"][0]{
+  "backgroundImage": backgroundImage.asset->url,
+  data,
+  description,
+  headline,
+  theme,
+  titleH1,
+  titleH2,
+  useCases,
   content[] {
     ...,
+    backgroundColor,
+    theme,
+    "backgroundImage": backgroundImage.asset->url,
     buttonsList[] {
       title,
       "href": file.asset->url,
@@ -34,4 +45,4 @@
       'imageHeight': image.asset->metadata.dimensions.height,
     }
   }
-}.content
+}

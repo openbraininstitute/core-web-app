@@ -10,7 +10,7 @@ import { StatusBadge } from '@/features/scan-config/status-badge';
 import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TTaskConfigMeta } from '@/features/scan-config/use-cases/extraction/types';
+import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 
 type Props = {
   config: ITaskConfig<TTaskConfigMeta>;

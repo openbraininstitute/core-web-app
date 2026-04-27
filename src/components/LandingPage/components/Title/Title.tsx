@@ -1,11 +1,13 @@
-import React, { CSSProperties } from 'react';
+import { classNames } from '@/util/utils';
 
 import {
-  styleBlockSmallMarginLeft,
   styleBlockSmall,
   styleBlockSmallExpandRight,
+  styleBlockSmallMarginLeft,
 } from '../../styles';
-import { classNames } from '@/util/utils';
+
+import type React from 'react';
+import type { CSSProperties } from 'react';
 
 import styles from './Title.module.css';
 
@@ -24,7 +26,7 @@ export default function Title({ className, value, children, margin }: TitleProps
   }
   if (children) {
     return (
-      <>
+      <div className="relative">
         <div className={classNames(styles.title, styleBlockSmallMarginLeft)}>
           <div />
         </div>
@@ -32,13 +34,15 @@ export default function Title({ className, value, children, margin }: TitleProps
           <h1 style={style}>{value}</h1>
           <div>{children}</div>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
     <>
-      <div className={classNames(className, styles.title, styleBlockSmallMarginLeft)}>
+      <div
+        className={classNames(className, styles.title, styleBlockSmallMarginLeft, 'relative top-9')}
+      >
         <div />
       </div>
       <h1 style={style} className={styleBlockSmall}>

@@ -17,20 +17,20 @@ type SpikeViewerProps = {
 };
 
 export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeViewerProps) {
-  const [trace, error] = useSpikeTrace({ entityId, entityType, asset, ctx });
+  const [data, error] = useSpikeTrace({ entityId, entityType, asset, ctx });
 
   if (error) {
     return <Empty className="p-2em" description="There was a problem loading the spike data" />;
   }
 
-  if (!trace || !trace.data) {
+  if (!data) {
     return <Spin />;
   }
 
   return (
     <div className="flex h-full flex-col">
-      <ErrorBoundary FallbackComponent={SimpleErrorComponent} resetKeys={[trace]}>
-        <RasterPlot data={trace.data} />
+      <ErrorBoundary FallbackComponent={SimpleErrorComponent} resetKeys={[data]}>
+        <RasterPlot data={data} />
       </ErrorBoundary>
     </div>
   );

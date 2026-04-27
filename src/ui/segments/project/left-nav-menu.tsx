@@ -64,12 +64,6 @@ const links = [
     url: 'team',
     requireRole: false,
   },
-  {
-    key: 'credits',
-    title: 'Credits',
-    url: 'credits',
-    requireRole: true,
-  },
 ];
 
 export function LeftMenu({ className }: Props) {
@@ -147,7 +141,7 @@ export function LeftMenu({ className }: Props) {
                 </Link>
               </Button>
               {children && isExpanded && (
-                <div className="pl-2 pr-4 py-4 flex flex-col gap-1.5">
+                <div className="pl-6 pr-7 py-4 flex flex-col gap-1.5">
                   {children.map((child) => {
                     const activeSubSection = !!getActiveSection(pathname, child.key);
                     let count = 0,

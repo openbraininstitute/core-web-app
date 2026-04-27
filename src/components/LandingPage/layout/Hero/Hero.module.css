@@ -1,13 +1,19 @@
 .hero {
   position: relative;
   margin: 0;
-  width: 100vw;
+  width: 100%;
   height: max(100vh, 600px);
   color: #fffe;
   background-color: var(--color-primary);
 
   --color-bg: var(--color-primary);
   --gradient-angle: 150deg;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    scroll-snap-align: start;
+  }
 }
 
 .hero .background {
