@@ -73,6 +73,13 @@ export type TExtractWorkflowConfig = {
   requiredFeatures?: Array<FlagKey>;
 };
 
+export type TProcessWorkflowConfig = {
+  group: TEntityGroupValue;
+  value: TExtendedEntitiesTypeDict;
+  label: string;
+  disabled: boolean;
+};
+
 export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig> = {
   [ExtendedEntitiesTypeDict.IonChannelModel]: {
     group: EntityGroupDict.Subcellular,
@@ -309,12 +316,31 @@ export const extractActivitiesConfiguration: Array<TExtractWorkflowConfig> = [
   },
 ] as const;
 
+export const processNewConfiguration: Array<TProcessWorkflowConfig> = [
+  {
+    group: EntityGroupDict.Cellular,
+    disabled: false,
+    label: 'EM mesh skeletonization',
+    value: ExtendedEntitiesTypeDict.EMCellMesh,
+  },
+] as const;
+
+export const processActivitiesConfiguration: Array<TProcessWorkflowConfig> = [
+  {
+    group: EntityGroupDict.Cellular,
+    disabled: false,
+    label: 'EM mesh skeletonization',
+    value: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+  },
+] as const;
+
 type ActivityConfigType =
   | {
       configType: 'buildSimulate';
       config: Partial<TBuildSimulateWorkflowConfig>;
     }
   | { configType: 'extract'; config: Array<TExtractWorkflowConfig> }
+  | { configType: 'process'; config: Array<TProcessWorkflowConfig> }
   | { configType: 'none'; config: null };
 
 type ActivityDictEntry = {
@@ -330,7 +356,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     label: 'Build',
     value: WorkflowActivityDictValue.build,
     disabled: false,
-    name: 'Build',
+    name: 'build',
     configType: 'buildSimulate',
     config: buildAndSimulateConfiguration,
   },
@@ -338,7 +364,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     label: 'Simulate',
     value: WorkflowActivityDictValue.simulate,
     disabled: false,
-    name: 'Simulation',
+    name: 'simulation',
     configType: 'buildSimulate',
     config: buildAndSimulateConfiguration,
   },
@@ -346,7 +372,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     label: 'Extract',
     value: WorkflowActivityDictValue.extract,
     disabled: false,
-    name: 'Extraction',
+    name: 'extraction',
     configType: 'extract',
     config: extractNewConfiguration,
     requiredFeatures: [extractionActivityFlag.key],
@@ -355,7 +381,7 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     label: 'Optimize',
     value: WorkflowActivityDictValue.optimize,
     disabled: true,
-    name: 'Optimization',
+    name: 'optimization',
     configType: 'none',
     config: null,
   },
@@ -363,17 +389,17 @@ export const ActivityDict: readonly ActivityDictEntry[] = [
     label: 'Validate',
     value: WorkflowActivityDictValue.validate,
     disabled: true,
-    name: 'Validation',
+    name: 'validation',
     configType: 'none',
     config: null,
   },
   {
-    label: 'Process Data',
-    value: WorkflowActivityDictValue.process_data,
-    disabled: true,
-    name: 'Processing Data',
-    configType: 'none',
-    config: null,
+    label: 'Process data',
+    value: WorkflowActivityDictValue.process,
+    disabled: false,
+    name: 'data processing',
+    configType: 'process',
+    config: processNewConfiguration,
   },
 ] as const;
 
@@ -417,6 +443,19 @@ export function getDropdownOptionsByCategory(
       };
     });
     const grouped = groupBy(flaggedConfigs, 'group');
+    const options = Object.entries(grouped).map(([k, v]) => {
+      return {
+        group: k,
+        options: v,
+      };
+    });
+
+    const enabledOptions = options.filter((o) => o.options.some((a) => !a.disabled));
+
+    return { allOptions: options, enabledOptions };
+  }
+  if (category === WorkflowActivityDictValue.process) {
+    const grouped = groupBy(processActivitiesConfiguration, 'group');
     const options = Object.entries(grouped).map(([k, v]) => {
       return {
         group: k,
@@ -499,6 +538,7 @@ export function getAllOptionsOrdered(
   ) {
     return [];
   }
+
   if (category === WorkflowActivityDictValue.extract) {
     return extractNewConfiguration.map((config) => {
       const satisfiesFeatureRequirements =
@@ -508,6 +548,10 @@ export function getAllOptionsOrdered(
         disabled: config.disabled || !satisfiesFeatureRequirements,
       };
     });
+  }
+
+  if (category === WorkflowActivityDictValue.process) {
+    return processNewConfiguration;
   }
 
   if (includes([WorkflowActivityDictValue.build, WorkflowActivityDictValue.simulate], category)) {
@@ -564,6 +608,9 @@ export function getEntityTypeWorkflowConfigurationItem({
     .with({ section: WorkspaceSection.ExtractWorkflow, value: P.nonNullable }, () =>
       extractNewConfiguration.find((o) => o.value === value)
     )
+    .with({ section: WorkspaceSection.ProcessWorkflow, value: P.nonNullable }, () =>
+      processNewConfiguration.find((o) => o.value === value)
+    )
     .with(
       {
         section: P.union(WorkspaceSection.BuildWorkflow, WorkspaceSection.SimulateWorkflow),
@@ -587,6 +634,10 @@ export function getBaseModelTypeFromActivityType({
     .with(
       { section: WorkspaceSection.ExtractWorkflow, type: P.nonNullable },
       () => extractNewConfiguration.find((p) => p.value === type)?.value
+    )
+    .with(
+      { section: WorkspaceSection.ProcessWorkflow, type: P.nonNullable },
+      () => processNewConfiguration.find((p) => p.value === type)?.value
     )
     .with(
       {

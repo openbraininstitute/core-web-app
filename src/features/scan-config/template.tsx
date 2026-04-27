@@ -17,6 +17,7 @@ import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
   ExtractScanConfigTabs,
+  ProcessScanConfigTabs,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   ScanConfigTabs,
@@ -29,6 +30,7 @@ import {
 } from '@/features/scan-config/types';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
+import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { editingAtom, selectedEntryAtom, selectedRootElementAtom } from '@/state/config-highlights';
@@ -126,8 +128,20 @@ export function ScanConfigTemplate({
         </Suspense>
       )
     )
+    .with(
+      { activity: ScanConfigActivity.Process, tab: { id: ProcessScanConfigTabs.skeletonizations } },
+      () => (
+        <Suspense>
+          <SkeletonizationTab
+            campaignId={campaignId}
+            virtualLabId={virtualLabId}
+            projectId={projectId}
+          />
+        </Suspense>
+      )
+    )
     .otherwise(() => {
-      throw new Error(`${activity} is not supported yet,`);
+      throw new Error(`${activity} is not supported yet`);
     });
 
   return (

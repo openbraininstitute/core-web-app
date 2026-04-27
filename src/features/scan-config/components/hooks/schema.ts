@@ -228,6 +228,7 @@ export function useAtomsMap({
               subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
             ) {
               const formModelType = match(model)
+                .with({ type: EntityTypeDict.EMCellMesh }, () => 'EMCellMeshFromID')
                 .with(
                   { type: EntityTypeDict.Memodel },
                   () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]

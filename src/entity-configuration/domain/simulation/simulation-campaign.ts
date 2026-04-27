@@ -193,7 +193,7 @@ export function getSimulationStatus(simulation: ISimulation) {
   return status;
 }
 
-export function getStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
+export function getCircuitSimulationStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
   const simulations = get(simCampaign, 'simulations', []) as ISimulation[];
 
   const statusCountMap = simulations.reduce((map, simulation) => {

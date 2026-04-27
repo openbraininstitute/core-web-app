@@ -21,6 +21,7 @@ import {
 import { resolveExtractionByCampaignId } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { circuitTypes } from '@/entity-configuration/domain/helpers';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { resolveSkeletonizationByCampaignId } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   resolveSimulationByCampaignId,
   resolveSingleNeuronSimulation,
@@ -39,6 +40,7 @@ import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-view
 import { ScanConfiguration } from '@/features/scan-config';
 import {
   ExtractScanConfigTabs,
+  ProcessScanConfigTabs,
   ScanConfigActivity,
   SimulateScanConfigTabs,
 } from '@/features/scan-config/types';
@@ -265,6 +267,36 @@ export default async function Overview({
         originalConfig={initialConfig}
         originalCampaignId={entity.id}
       />
+    );
+  }
+
+  if (extendedType === ExtendedEntitiesTypeDict.SkeletonizationCampaign) {
+    const { data: extractionConfig, error } = await tryCatch(
+      resolveSkeletonizationByCampaignId({ id: entity.id, context })
+    );
+
+    if (error || !extractionConfig.emCellMeshId) {
+      notFound();
+    }
+
+    return (
+      <>
+        <ScanConfiguration
+          entityId={extractionConfig.emCellMeshId}
+          entityType={extendedType}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          initialCampaignId={extractionConfig.campaign.id}
+          initialConfig={extractionConfig.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Process,
+            id: ProcessScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Process}
+        />
+        <DownloadPanel />
+      </>
     );
   }
 

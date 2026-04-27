@@ -4,13 +4,14 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Checkbox } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { EntityTypeDict } from '@/api/entitycore/types';
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { Loader } from '@/components/loader';
 import { WorkspaceSection } from '@/constants';
+import { CostConfirmationModal } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import {
   buildActivityStatusMap,
@@ -20,15 +21,20 @@ import {
   useScanConfigLaunchMutation,
   useScanConfigTaskRunner,
 } from '@/features/scan-config/task-runner';
-import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
-import { ExtractionInOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
-import { ExtractionConfigsLeftMenu } from '@/features/scan-config/use-cases/extraction/left-menu';
+import {
+  ActivityCustomFileRenderer,
+  ScanConfigActivity,
+  type TActivityCustomFile,
+} from '@/features/scan-config/types';
+import { SkeletonizationInOutFiles } from '@/features/scan-config/use-cases/skeletonization/in-out-files';
+import { SkeletonizationConfigsLeftMenu } from '@/features/scan-config/use-cases/skeletonization/left-menu';
+import { messages as textMessages } from '@/i18n/en/scan-config';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
 import { classNames } from '@/util/utils';
 
 import type { CheckboxProps } from 'antd';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 
 import styles from '@/features/scan-config/scan-config.module.css';
 
@@ -38,22 +44,24 @@ type Props = {
   projectId: string;
 };
 
-export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
+export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);
-  const [activeConfig, setActiveConfig] = useState<ITaskConfig<TTaskConfigMeta> | null>(null);
+  const [activeConfig, setActiveConfig] =
+    useState<ITaskConfig<TSkeletonizationTaskConfigMeta> | null>(null);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
+  const [showCostModal, setShowCostModal] = useState(false);
 
-  const { mutateAsync: runExtraction, isPending: runExtractionPending } =
+  const { mutateAsync: runSkeletonization, isPending: runSkeletonizationPending } =
     useScanConfigLaunchMutation({
       context,
-      obiOneTaskType: ObiOneTaskTypeDict.CircuitExtraction,
-      executionActivityType: TaskActivityType.CircuitExtractionExecution,
-      notificationKey: 'extraction-config-error',
-      failureMessage: 'We ran into a problem launching your extraction. Please try again later.',
-      logTopic: 'Extraction',
+      obiOneTaskType: ObiOneTaskTypeDict.Skeletonization,
+      executionActivityType: TaskActivityType.SkeletonizationExecution,
+      notificationKey: 'skeletonization-config-error',
+      failureMessage: textMessages[ScanConfigActivity.Process].GenericFailed,
+      logTopic: 'Skeletonization',
     });
 
   const {
@@ -62,13 +70,13 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     configsLoading,
     executionsResponse,
     executionsLoading,
-  } = useScanConfigTaskRunner<TTaskConfigMeta>({
+  } = useScanConfigTaskRunner<TSkeletonizationTaskConfigMeta>({
     context,
     campaignId,
-    configGenerationActivityType: TaskActivityType.CircuitExtractionConfigGeneration,
-    executionActivityType: TaskActivityType.CircuitExtractionExecution,
-    taskConfigType: TaskConfigType.CircuitExtractionConfig,
-    pauseExecutionPolling: runExtractionPending,
+    configGenerationActivityType: TaskActivityType.SkeletonizationConfigGeneration,
+    executionActivityType: TaskActivityType.SkeletonizationExecution,
+    taskConfigType: TaskConfigType.SkeletonizationConfig,
+    pauseExecutionPolling: runSkeletonizationPending,
   });
 
   const statusMap = useMemo(() => {
@@ -86,11 +94,14 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
 
   const activeConfigExecStatus = activeConfigExecution?.status;
 
-  const onActiveConfigChange = useCallback((config: ITaskConfig<TTaskConfigMeta>) => {
-    setActiveConfig(config);
-  }, []);
+  const onActiveConfigChange = useCallback(
+    (config: ITaskConfig<TSkeletonizationTaskConfigMeta>) => {
+      setActiveConfig(config);
+    },
+    []
+  );
 
-  const onSelectedForExtractionChange = useCallback((configId: string, selected: boolean) => {
+  const onSelectedForSkeletonizationChange = useCallback((configId: string, selected: boolean) => {
     if (selected) {
       setSelectedConfigIds((prev) => [...prev, configId]);
     } else {
@@ -128,8 +139,21 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   }, [configsResponse?.configList, activeConfig, onActiveConfigChange]);
 
   const onRun = async (configIdsToRun: string[]) => {
-    await runExtraction(configIdsToRun);
+    await runSkeletonization(configIdsToRun);
     setSelectedConfigIds([]);
+  };
+
+  const costModalItems = useMemo(
+    () =>
+      (configsResponse?.configList ?? [])
+        .filter((c) => selectedConfigIds.includes(c.id))
+        .map((c) => ({ id: c.id, name: c.name })),
+    [configsResponse?.configList, selectedConfigIds]
+  );
+
+  const onCostConfirm = (confirmedIds: string[]) => {
+    setShowCostModal(false);
+    onRun(confirmedIds);
   };
 
   const onSelectedAll: CheckboxProps['onChange'] = (e) => {
@@ -154,7 +178,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
             }
             onChange={onSelectedAll}
             checked={allSelected}
-            disabled={runExtractionPending || selectableConfigIds.length === 0}
+            disabled={runSkeletonizationPending || selectableConfigIds.length === 0}
           >
             Select all
           </Checkbox>
@@ -166,15 +190,15 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
             )}
             {!loading &&
               configsResponse?.configList?.map((config) => (
-                <ExtractionConfigsLeftMenu
+                <SkeletonizationConfigsLeftMenu
                   key={config.id}
                   selected={activeConfig?.id === config.id}
                   config={config}
                   execStatus={statusMap.get(config.id)}
                   onSelect={() => onActiveConfigChange(config)}
-                  onSelectedForExtractionChange={onSelectedForExtractionChange}
-                  selectedForExtraction={selectedConfigIds.includes(config.id)}
-                  selectionDisabled={runExtractionPending}
+                  onSelectedForSkeletonizationChange={onSelectedForSkeletonizationChange}
+                  selectedForSkeletonization={selectedConfigIds.includes(config.id)}
+                  selectionDisabled={runSkeletonizationPending}
                 />
               ))}
           </div>
@@ -182,15 +206,15 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
             className={classNames(
               'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
               'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
-              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none rounded-full'
+              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
             )}
             type="button"
-            onClick={() => onRun(selectedConfigIds)}
-            disabled={runExtractionPending || selectedConfigIds.length === 0}
+            onClick={() => setShowCostModal(true)}
+            disabled={runSkeletonizationPending || selectedConfigIds.length === 0}
           >
             <div className="flex justify-center gap-4">
-              <span className="pl-10">Launch extractions {launchBtnLabelPrefix}</span>
-              <div className="w-6">{runExtractionPending && <LoadingOutlined />}</div>
+              <span className="pl-10">Launch skeletonizations {launchBtnLabelPrefix}</span>
+              <div className="w-6">{runSkeletonizationPending && <LoadingOutlined />}</div>
             </div>
           </button>
         </div>
@@ -198,7 +222,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
 
       <div className="relative border-r border-gray-200 px-4">
         {!!activeConfig && (
-          <ExtractionInOutFiles
+          <SkeletonizationInOutFiles
             config={activeConfig}
             execStatus={activeConfigExecStatus}
             execution={activeConfigExecution}
@@ -217,14 +241,24 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
           <div className="h-full">
             <MiniDetailViewRenderer
               section={WorkspaceSection.Data}
-              record={selectedFile.entity as ICircuit}
-              dataType={ExtendedEntitiesTypeDict.Circuit}
+              record={selectedFile.entity as ICellMorphology}
+              dataType={EntityTypeDict.CellMorphology}
               theme={MiniDetailViewTheme.Light}
               enableAnimation={false}
             />
           </div>
         )}
       </div>
+
+      <CostConfirmationModal
+        open={showCostModal}
+        onClose={() => setShowCostModal(false)}
+        onConfirm={onCostConfirm}
+        items={costModalItems}
+        taskType={ObiOneTaskTypeDict.Skeletonization}
+        workflowLabel="skeletonizations"
+        context={context}
+      />
     </div>
   );
 }
