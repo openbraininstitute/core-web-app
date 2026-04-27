@@ -5,7 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { orderBy } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
@@ -79,8 +79,6 @@ export function Item({
       setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
   });
 
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const onProjectHover = ({
     virtualLabId,
     project,
@@ -88,10 +86,6 @@ export function Item({
     virtualLabId: string;
     project: Project;
   }) => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
     makeTriggerWorkspaceConfigurationClickEvent({
       on: true,
       type: WorkspaceActions.ProjectPreview,
@@ -104,19 +98,12 @@ export function Item({
   };
 
   const onProjectLeave = () => {
-    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-    closeTimeoutRef.current = setTimeout(() => {
-      makeTriggerWorkspaceConfigurationClickEvent({ on: false, type: null, data: null });
-      closeTimeoutRef.current = null;
-    }, 80);
+    makeTriggerWorkspaceConfigurationClickEvent({
+      on: false,
+      type: WorkspaceActions.ProjectPreview,
+      data: null,
+    });
   };
-
-  useEffect(
-    () => () => {
-      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-    },
-    []
-  );
 
   const onProjectClick = ({
     virtualLabId,
@@ -144,6 +131,25 @@ export function Item({
     });
   };
 
+  const onVlabHover = () => {
+    makeTriggerWorkspaceConfigurationClickEvent({
+      on: true,
+      type: WorkspaceActions.VirtualLabConfiguration,
+      data: {
+        virtualLabId: lab.id,
+        data: lab,
+      },
+    });
+  };
+
+  const onVlabLeave = () => {
+    makeTriggerWorkspaceConfigurationClickEvent({
+      on: false,
+      type: WorkspaceActions.VirtualLabConfiguration,
+      data: null,
+    });
+  };
+
   return (
     <div className={cn('border-neutral-2 text-primary-9 bg-background mx-3 rounded-2xl border')}>
       {/** biome-ignore lint/a11y/useSemanticElements: button can't have nested buttons */}
@@ -161,6 +167,8 @@ export function Item({
         )}
         onKeyDown={onVlabClick}
         onClick={onVlabClick}
+        onMouseEnter={onVlabHover}
+        onMouseLeave={onVlabLeave}
       >
         <div className="flex min-w-0 flex-1 items-center gap-2 select-none">
           {isActive && (
