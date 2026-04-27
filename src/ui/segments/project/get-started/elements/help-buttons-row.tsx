@@ -26,10 +26,10 @@ type Item = {
 const ITEMS: Array<Item> = [
   { id: 'about', label: 'About', Icon: RiInformationLine },
   { id: 'glossary', label: 'Glossary', Icon: RiBookOpenLine },
-  { id: 'terms', label: 'Terms', Icon: RiFileTextLine },
   { id: 'guides', label: 'Guides', Icon: RiCompass3Line },
   { id: 'features', label: 'Features', Icon: RiSparklingLine },
   { id: 'ai-tools', label: 'AI Tools', Icon: RiChatAiLine },
+  { id: 'terms', label: 'T&Cs', Icon: RiFileTextLine },
 ];
 
 export function HelpButtonsRow() {
