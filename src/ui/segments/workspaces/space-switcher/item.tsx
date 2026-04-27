@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
-import { LabCompany } from '@/components/icons/buttons';
+import { LabCompany, UserFilled } from '@/components/icons/buttons';
 import { config } from '@/config';
 import { Button } from '@/ui/molecules/button';
 import {
@@ -169,9 +169,9 @@ export function Item({
         className={cn(
           'group flex cursor-pointer items-center justify-between px-2 py-3 transition-colors duration-150',
           'rounded-2xl',
-          { 'hover:bg-neutral-1': !lab.isMine },
+          { 'hover:bg-neutral-1': !isActive },
           { 'rounded-b-none': expandedLabs.has(lab.id) },
-          { 'bg-primary-9 hover:bg-primary-9 text-white': lab.isMine }
+          { 'bg-primary-9 hover:bg-primary-9 text-white': isActive }
         )}
         onKeyDown={onVlabClick}
         onClick={onVlabClick}
@@ -189,16 +189,22 @@ export function Item({
             />
           )}
           <LabCompany
-            className={cn('text-label size-4! min-h-4 min-w-4', { 'text-primary-3': lab.isMine })}
+            className={cn('text-label size-4! min-h-4 min-w-4', { 'text-primary-3': isActive })}
           />
           <h4
             className={cn('text-primary-9 text-md line-clamp-1 truncate font-bold', {
-              'text-white! group-hover:text-white!': lab.isMine,
+              'text-white! group-hover:text-white!': isActive,
             })}
             title={lab.name}
           >
             {lab.name}
           </h4>
+          {lab.isMine && (
+            <UserFilled
+              className={cn('size-4 shrink-0', isActive ? 'text-primary-3' : 'text-primary-9')}
+              aria-label="Your lab"
+            />
+          )}
         </div>
         <div className="ml-auto flex items-center">
           <motion.div
@@ -218,7 +224,7 @@ export function Item({
                 <RightOutlined
                   className={cn(
                     'h-4 w-4',
-                    lab.isMine
+                    isActive
                       ? 'text-primary-3 group-hover:text-primary-3 hover:text-primary-3'
                       : 'text-primary-7 group-hover:text-primary-8 hover:text-white'
                   )}
