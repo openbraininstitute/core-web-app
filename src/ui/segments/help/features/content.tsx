@@ -7,8 +7,12 @@ import {
   type ContentForFeatureItem,
   useSanityContentForFeatureItems,
 } from '@/components/documentation/hooks/use-sanity-content-for-features';
+import { useAITools } from '@/services/ai-agent/tools/tools';
+import AIToolCard from '@/ui/segments/help/ai-chat-tools/ai-tool-card';
 import FeaturesCard from '@/ui/segments/help/features/features-card';
 import Slugify from '@/util/slugify';
+
+import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
 
 const SCALE_ORDER = ['subcellular', 'cellular', 'circuit'];
 const SCALE_LABEL: Record<string, string> = {
@@ -19,6 +23,7 @@ const SCALE_LABEL: Record<string, string> = {
 
 export default function FeaturesContent() {
   const items = useSanityContentForFeatureItems() as ContentForFeatureItem[];
+  const aiTools: AIChatToolsSectionProps[] = useAITools() ?? [];
   const searchParams = useSearchParams();
   const activeScale = searchParams.get('scale');
 
@@ -28,15 +33,15 @@ export default function FeaturesContent() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [activeScale]);
 
-  if (!items.length) {
-    return <p className="text-primary-9/80">No features found.</p>;
-  }
-
   const grouped = SCALE_ORDER.map((id) => ({
     id,
     name: SCALE_LABEL[id],
     items: items.filter((item) => Slugify(item.Scale) === id),
   })).filter((g) => g.items.length > 0);
+
+  if (!grouped.length && !aiTools.length) {
+    return <p className="text-primary-9/80">No features found.</p>;
+  }
 
   return (
     <div className="flex w-full flex-col gap-10">
@@ -51,6 +56,14 @@ export default function FeaturesContent() {
           ))}
         </section>
       ))}
+      {aiTools.length > 0 && (
+        <section id="scale-ai-tools" className="flex flex-col gap-4">
+          <h2 className="text-primary-9 text-2xl font-bold">AI Tools</h2>
+          {aiTools.map((tool) => (
+            <AIToolCard key={tool.id} content={tool} />
+          ))}
+        </section>
+      )}
     </div>
   );
 }

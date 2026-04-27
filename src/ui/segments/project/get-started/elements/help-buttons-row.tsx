@@ -30,7 +30,7 @@ const ITEMS: Array<Item> = [
     id: 'glossary',
     label: 'Glossary and Features',
     Icon: RiBookOpenLine,
-    represents: ['glossary', 'guides', 'features', 'ai-tools'],
+    represents: ['glossary', 'features'],
     wide: true,
   },
   { id: 'news', label: 'News', Icon: RiNewspaperLine },

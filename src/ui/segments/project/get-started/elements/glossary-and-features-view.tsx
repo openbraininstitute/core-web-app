@@ -16,9 +16,7 @@ import type { GuidesContentsProps } from '@/services/sanity/api/get-guides-conte
 
 const TABS: ReadonlyArray<{ id: Exclude<LeftPaneView, null>; label: string }> = [
   { id: 'glossary', label: 'Glossary' },
-  { id: 'guides', label: 'Guides' },
   { id: 'features', label: 'Features' },
-  { id: 'ai-tools', label: 'AI Tools' },
 ];
 
 const TAB_IDS = TABS.map((t) => t.id);

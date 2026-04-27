@@ -8,6 +8,7 @@ const SCALES = [
   { name: 'Subcellular', id: 'subcellular' },
   { name: 'Cellular', id: 'cellular' },
   { name: 'Circuit', id: 'circuit' },
+  { name: 'AI Tools', id: 'ai-tools' },
 ];
 
 export default function FeaturesNavigation() {
