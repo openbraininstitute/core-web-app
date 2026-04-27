@@ -197,13 +197,6 @@ export interface DiffBarData {
 }
 
 /**
- * Atom to store precomputed diff data for the sticky diff bar.
- * When non-null, the diff bar is visible above the chat input.
- * Cleared when the user dismisses the bar or sends a new message.
- */
-export const diffBarDataAtom = atom<DiffBarData | null>(null);
-
-/**
  * Atom to hold a config that should be applied to the live atoms.
  * Set by handleConfirmRestore, consumed by left.tsx to call resetConfig.
  * Cleared after consumption.

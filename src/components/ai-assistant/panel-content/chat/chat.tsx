@@ -12,7 +12,6 @@ import { useAiAssistant } from '@/services/ai-agent/assistant';
 import {
   activeDiffMessageIdAtom,
   clearDiffStateAtom,
-  diffBarDataAtom,
   messageSubmittedCounterAtom,
 } from '@/state/config-highlights';
 import { classNames } from '@/util/utils';
@@ -52,12 +51,11 @@ export default function Chat({ className, threadId }: ChatProps) {
   const setRateLimit = useSetAtom(atomRateLimit);
   const [activeDiffMessageId, setActiveDiffMessageId] = useAtom(activeDiffMessageIdAtom);
   const clearDiffState = useSetAtom(clearDiffStateAtom);
-  const [diffBarData, setDiffBarData] = useAtom(diffBarDataAtom);
   const setMessageSubmittedCounter = useSetAtom(messageSubmittedCounterAtom);
   const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
 
   // Panel-level diff bar & highlight management for the last message
-  useLastMessageDiffBar(messages, status);
+  const { diffBarData, clearDiffBarData } = useLastMessageDiffBar(messages, status);
   const prevRemainingRef = React.useRef<number | null>(null);
   const hasInitializedRef = React.useRef(false);
 
@@ -104,18 +102,18 @@ export default function Chat({ className, threadId }: ChatProps) {
   React.useEffect(() => {
     if (status === 'submitted') {
       setActiveDiffMessageId(null);
-      setDiffBarData(null);
+      clearDiffBarData();
       clearDiffState();
       setMessageSubmittedCounter((c) => c + 1);
     }
-  }, [status, setActiveDiffMessageId, setDiffBarData, clearDiffState, setMessageSubmittedCounter]);
+  }, [status, setActiveDiffMessageId, clearDiffBarData, clearDiffState, setMessageSubmittedCounter]);
 
   // Clear active diff view when switching conversations
   React.useEffect(() => {
     setActiveDiffMessageId(null);
-    setDiffBarData(null);
+    clearDiffBarData();
     clearDiffState();
-  }, [threadId, setActiveDiffMessageId, setDiffBarData, clearDiffState]);
+  }, [threadId, setActiveDiffMessageId, clearDiffBarData, clearDiffState]);
 
   // Monitor scroll height changes for auto-scroll
   React.useEffect(() => {
@@ -186,10 +184,10 @@ export default function Chat({ className, threadId }: ChatProps) {
 
   // Dismiss the diff bar entirely (also clears any active diff view)
   const handleCloseDiffBar = React.useCallback(() => {
-    setDiffBarData(null);
+    clearDiffBarData();
     setActiveDiffMessageId(null);
     clearDiffState();
-  }, [setDiffBarData, setActiveDiffMessageId, clearDiffState]);
+  }, [clearDiffBarData, setActiveDiffMessageId, clearDiffState]);
 
   const handleWheel = (event: React.WheelEvent) => {
     if (event.deltaY < 0) {

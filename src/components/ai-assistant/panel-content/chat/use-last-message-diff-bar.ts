@@ -8,8 +8,8 @@ import {
   diffStateAtom,
   clearDiffStateAtom,
   activeDiffMessageIdAtom,
-  diffBarDataAtom,
   preMessageConfigAtom,
+  type DiffBarData,
 } from '@/state/config-highlights';
 import {
   completedEditStateParts,
@@ -19,6 +19,11 @@ import {
 } from '../../message-item/use-message-diffs';
 
 import type { UIMessage } from '@ai-sdk/ui-utils';
+
+export interface LastMessageDiffBarState {
+  diffBarData: DiffBarData | null;
+  clearDiffBarData: () => void;
+}
 
 /**
  * Panel-level hook that manages diff bar population and diff highlight
@@ -30,12 +35,15 @@ import type { UIMessage } from '@ai-sdk/ui-utils';
 export function useLastMessageDiffBar(
   messages: UIMessage[],
   status: 'submitted' | 'streaming' | 'ready' | 'error',
-) {
+): LastMessageDiffBarState {
   const [activeDiffMessageId] = useAtom(activeDiffMessageIdAtom);
-  const [, setDiffBarData] = useAtom(diffBarDataAtom);
   const setDiffState = useSetAtom(diffStateAtom);
   const clearDiff = useSetAtom(clearDiffStateAtom);
   const clearDiffState = React.useCallback(() => clearDiff(), [clearDiff]);
+
+  // Local state instead of a global atom — only this hook and chat.tsx use it
+  const [diffBarData, setDiffBarData] = React.useState<DiffBarData | null>(null);
+  const clearDiffBarData = React.useCallback(() => setDiffBarData(null), []);
 
   // Config snapshot captured by chat.ts before the first editstate call
   const preMessageConfig = useAtomValue(preMessageConfigAtom);
@@ -84,7 +92,6 @@ export function useLastMessageDiffBar(
     lastMessage?.id,
     accumulatedDiffs,
     preMessageConfig,
-    setDiffBarData,
   ]);
 
   // ── Show / hide diff highlights ────────────────────────────────────────
@@ -110,4 +117,6 @@ export function useLastMessageDiffBar(
     }
     prevShowDiffRef.current = showDiff;
   }, [showDiff, clearDiffState]);
+
+  return { diffBarData, clearDiffBarData };
 }
