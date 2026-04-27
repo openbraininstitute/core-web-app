@@ -2,7 +2,6 @@
 
 import {
   RiBookOpenLine,
-  RiExpandLeftRightLine,
   RiFileTextLine,
   RiInformationLine,
   RiNewspaperLine,
@@ -34,28 +33,10 @@ const ITEMS: Array<Item> = [
 
 export function HelpButtonsRow() {
   const [view, setView] = useAtom(leftPaneViewAtom);
-  const isCollapsed = view !== null;
 
   return (
     <section id="help-quick-links" className="flex w-full flex-col">
       <div className="flex w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {isCollapsed && (
-          <button
-            type="button"
-            onClick={() => setView(null)}
-            title="Expand"
-            aria-label="Expand left pane"
-            className={cn(
-              'group relative flex aspect-square h-[56px] w-[56px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[3px] overflow-hidden rounded-lg bg-white',
-              'border-primary-9 border-2 transition-colors'
-            )}
-          >
-            <RiExpandLeftRightLine className="text-primary-9 size-[18px]" />
-            <span className="text-primary-9 text-center text-[11px] leading-tight font-semibold">
-              Expand
-            </span>
-          </button>
-        )}
         {ITEMS.map(({ id, label, Icon }) => {
           const isSelected = view === id;
           return (

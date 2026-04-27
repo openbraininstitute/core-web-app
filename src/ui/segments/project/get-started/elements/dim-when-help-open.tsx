@@ -8,9 +8,15 @@ import type { MouseEvent, ReactNode } from 'react';
 
 const CLICKABLE_SELECTOR = 'button, a, [role="button"], [data-slot="card"]';
 
+const DIM_ENABLED = true;
+
 export function DimWhenHelpOpen({ children }: { children: ReactNode }) {
   const [view, setView] = useAtom(leftPaneViewAtom);
   const isDimmed = view !== null;
+
+  if (!DIM_ENABLED) {
+    return <>{children}</>;
+  }
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     const { clientX, clientY } = event;
