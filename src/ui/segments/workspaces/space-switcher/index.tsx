@@ -316,7 +316,7 @@ export function SpaceSwitcher({ className }: Props) {
             'relative flex h-10 w-full items-center justify-between gap-1 pl-3 text-sm transition-all duration-150 ease-out',
             'hover:bg-background',
             {
-              'border-neutral-2 h-16! rounded-md rounded-b-none border border-b-0 bg-white pr-4':
+              'border-neutral-2 h-16! rounded-[2rem] rounded-b-none border border-b-0 bg-white pr-4':
                 isExpanded,
             },
             {
@@ -378,7 +378,7 @@ export function SpaceSwitcher({ className }: Props) {
                 className={cn(
                   'flex w-full flex-1 items-center space-x-2 overflow-hidden rounded-full py-2 pr-4',
                   {
-                    'border-neutral-2 h-16! rounded-md rounded-b-none border border-b-0 bg-white':
+                    'border-neutral-2 h-16! rounded-[2rem] rounded-b-none border border-b-0 bg-white':
                       isExpanded,
                   }
                 )}
@@ -437,7 +437,7 @@ export function SpaceSwitcher({ className }: Props) {
               exit={{ opacity: 0, scaleY: 0.95 }}
               transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
               className={cn(
-                'border-neutral-2 absolute top-full left-0 z-50 w-full overflow-hidden rounded-tr-lg rounded-b-lg border border-t-0 bg-white',
+                'border-neutral-2 absolute top-full left-0 z-50 w-full overflow-hidden rounded-tr-[2rem] rounded-b-[2rem] border border-t-0 bg-white',
                 'relative flex flex-col pt-1 pb-2 shadow-2xl',
                 'h-full max-h-[calc((100vh-4.5rem)*0.9)] min-h-[calc((100vh-5rem)*0.9)] lg:max-h-[calc((100vh-4.5rem)*0.9)]',
                 { 'rounded-t-none': isExpanded },
