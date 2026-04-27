@@ -303,7 +303,7 @@ export function SingleCardItem({
         !compact && 'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)] hover:shadow-bnb',
         'hover:bg-gray-100/70 hover:border group',
         'cursor-pointer select-none',
-        compact ? 'py-0 gap-0' : 'pt-0 gap-2.5'
+        compact ? 'p-0 gap-0' : 'pt-0 gap-2.5'
       )}
       onClick={() => redirect()}
       title={title}
