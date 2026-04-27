@@ -6,6 +6,7 @@ import {
   RiInformationLine,
   RiNewspaperLine,
   RiPriceTag3Line,
+  RiSparklingLine,
 } from '@remixicon/react';
 import { useAtom, useSetAtom } from 'jotai';
 
@@ -20,19 +21,12 @@ type Item = {
   id: Exclude<LeftPaneView, null>;
   label: string;
   Icon: typeof RiInformationLine;
-  represents?: ReadonlyArray<Exclude<LeftPaneView, null>>;
-  wide?: boolean;
 };
 
 const ITEMS: Array<Item> = [
   { id: 'about', label: 'About', Icon: RiInformationLine },
-  {
-    id: 'glossary',
-    label: 'Glossary and Features',
-    Icon: RiBookOpenLine,
-    represents: ['glossary', 'features'],
-    wide: true,
-  },
+  { id: 'glossary', label: 'Glossary', Icon: RiBookOpenLine },
+  { id: 'features', label: 'Features', Icon: RiSparklingLine },
   { id: 'news', label: 'News', Icon: RiNewspaperLine },
   { id: 'pricing', label: 'Pricing', Icon: RiPriceTag3Line },
   { id: 'terms', label: 'T&Cs', Icon: RiFileTextLine },
@@ -45,8 +39,8 @@ export function HelpButtonsRow() {
   return (
     <section id="help-quick-links" className="flex w-full flex-col">
       <div className="flex w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {ITEMS.map(({ id, label, Icon, represents, wide }) => {
-          const isSelected = represents ? view !== null && represents.includes(view) : view === id;
+        {ITEMS.map(({ id, label, Icon }) => {
+          const isSelected = view === id;
           return (
             <button
               key={id}
@@ -58,8 +52,7 @@ export function HelpButtonsRow() {
               title={label}
               aria-pressed={isSelected}
               className={cn(
-                'group relative flex h-[56px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[3px] overflow-hidden rounded-lg bg-white',
-                wide ? 'w-[100px] px-1' : 'aspect-square w-[56px]',
+                'group relative flex aspect-square h-[56px] w-[56px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[3px] overflow-hidden rounded-lg bg-white',
                 'border-2 transition-colors',
                 isSelected ? 'border-primary-7' : 'border-transparent'
               )}
