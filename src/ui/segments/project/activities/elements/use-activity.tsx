@@ -66,6 +66,7 @@ export function useQueryActivity({
       }
       return Promise.resolve(null);
     },
+    refetchOnWindowFocus: false,
     placeholderData: useKeepPreviousData ? keepPreviousData : undefined,
     enabled: Boolean(entityType && activity),
   });
