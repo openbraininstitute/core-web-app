@@ -5,7 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { orderBy } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
@@ -79,6 +79,8 @@ export function Item({
       setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
   });
 
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const onProjectHover = ({
     virtualLabId,
     project,
@@ -86,6 +88,10 @@ export function Item({
     virtualLabId: string;
     project: Project;
   }) => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
     makeTriggerWorkspaceConfigurationClickEvent({
       on: true,
       type: WorkspaceActions.ProjectPreview,
@@ -96,6 +102,21 @@ export function Item({
       },
     });
   };
+
+  const onProjectLeave = () => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    closeTimeoutRef.current = setTimeout(() => {
+      makeTriggerWorkspaceConfigurationClickEvent({ on: false, type: null, data: null });
+      closeTimeoutRef.current = null;
+    }, 80);
+  };
+
+  useEffect(
+    () => () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    },
+    []
+  );
 
   const onProjectClick = ({
     virtualLabId,
@@ -227,6 +248,7 @@ export function Item({
                     )}
                     title={project.name}
                     onMouseEnter={() => onProjectHover({ virtualLabId: lab.id, project })}
+                    onMouseLeave={onProjectLeave}
                     onClick={() => onProjectClick({ virtualLabId: lab.id, project })}
                     id={`project-item-${project.id}`}
                     data-testid="project-item-selector"

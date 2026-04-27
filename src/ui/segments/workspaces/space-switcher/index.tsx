@@ -226,8 +226,6 @@ export function SpaceSwitcher({ className }: Props) {
     if (isExpanded && event.detail.on) setBoardModalOpen(event.detail.on);
     else if (isExpanded && !event.detail.on) {
       setBoardModalOpen(event.detail.on);
-      // TODO: ask for right behavior needed either to close the space switcher or to keep it open
-      setIsExpanded(false);
     }
   });
 
