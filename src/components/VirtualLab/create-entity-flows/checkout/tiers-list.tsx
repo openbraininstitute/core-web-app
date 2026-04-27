@@ -118,7 +118,7 @@ function TiersCards({
   };
 
   return (
-    <div className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid h-full min-h-0 gap-4 p-4 sm:grid-cols-2 xl:grid-cols-4">
       {sortedPlans.map((plan) => {
         const cta = getCta(plan);
         const isCurrentTier =
@@ -126,15 +126,18 @@ function TiersCards({
           (plan.name.toLowerCase() === 'free' && !currentTier);
 
         return (
-          <div key={plan.name} className="flex flex-col overflow-hidden rounded-xl gap-y-4">
-            <PlanCard
-              plan={plan}
-              dark
-              hideContactButton
-              className={isCurrentTier ? 'bg-primary-7 border-primary-5' : undefined}
-            />
+          <div
+            key={plan.name}
+            className={cn(
+              'flex h-full min-h-0 flex-col overflow-hidden rounded-xl border',
+              isCurrentTier ? 'bg-primary-7 border-primary-5' : 'border-primary-7 bg-primary-9'
+            )}
+          >
+            <div className="primary-scrollbar min-h-0 flex-1 overflow-y-auto">
+              <PlanCard plan={plan} dark hideContactButton className="border-0 bg-transparent" />
+            </div>
             {cta && (
-              <div className="px-6 pb-6">
+              <div className="shrink-0 px-6 pb-6">
                 <Button
                   rounded
                   type="button"
