@@ -34,9 +34,7 @@ export default function PlanHeader({
   const iconColor = dark ? 'text-primary-4' : 'text-primary-9';
 
   return (
-    <header
-      className={`relative flex w-full flex-col justify-between ${compact ? 'gap-3' : 'h-[260px]'}`}
-    >
+    <header className={`relative flex w-full flex-col ${compact ? 'gap-3' : 'gap-4'}`}>
       <div>
         <div>
           <div className="flex flex-row items-center" style={{ justifyContent: 'space-between' }}>
