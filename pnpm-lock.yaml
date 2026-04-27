@@ -34,8 +34,8 @@ importers:
         specifier: ^13.0.1
         version: 13.0.5
       '@bbp/morphoviewer':
-        specifier: file:tarball/bbp-morphoviewer-0.24.13.tgz
-        version: file:tarball/bbp-morphoviewer-0.24.13.tgz(react@19.2.4)
+        specifier: file:tarball/bbp-morphoviewer-0.24.16.tgz
+        version: file:tarball/bbp-morphoviewer-0.24.16.tgz(react@19.2.4)
       '@bprogress/next':
         specifier: ^3.2.12
         version: 3.2.12(next@16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1125,9 +1125,9 @@ packages:
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
-  '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.24.13.tgz':
-    resolution: {integrity: sha512-llsX1cPjbgaSCzIbjJKs3BHpFraKcKH1UQW0c1elfiBN4iEvzYv9bUYUsLfBi5l1qh3BnS5dMXi66IsG7mMIdQ==, tarball: file:tarball/bbp-morphoviewer-0.24.13.tgz}
-    version: 0.24.13
+  '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.24.16.tgz':
+    resolution: {integrity: sha512-sKVbHKUX3No+TrJPil/WMgBycjGKiQqZdX14BLoScN5WuX/OvAg8ZxAKBy4xRQ4JsXIEnib/QGf35BlJqmOYBw==, tarball: file:tarball/bbp-morphoviewer-0.24.16.tgz}
+    version: 0.24.16
     peerDependencies:
       react: ^19.2.4
 
@@ -10173,7 +10173,7 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.24.13.tgz(react@19.2.4)':
+  '@bbp/morphoviewer@file:tarball/bbp-morphoviewer-0.24.16.tgz(react@19.2.4)':
     dependencies:
       '@tolokoban/tgd': 2.0.122
       fflate: 0.8.2
