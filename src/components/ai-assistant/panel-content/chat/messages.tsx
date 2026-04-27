@@ -1,5 +1,4 @@
 import { MessageItem } from '../../message-item';
-import { configStateAtom } from '@/services/ai-agent/hooks/chat';
 
 import type { UIMessage } from '@ai-sdk/ui-utils';
 

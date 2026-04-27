@@ -5,7 +5,6 @@ import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
 import HelpIconI from '@/components/icons/HelpIcon';
 import { useAITools } from '@/services/ai-agent/tools/tools';
-
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 

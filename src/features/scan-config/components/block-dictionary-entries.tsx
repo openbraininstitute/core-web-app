@@ -57,8 +57,7 @@ function EntryTab({
         'rounded-full bg-gray-100 px-5 py-2 text-sm drop-shadow ',
         'hover:bg-linear-to-r hover:from-[#003A8C] hover:to-[#001026] hover:text-white gap-1',
         {
-          'bg-linear-to-r from-[#003A8C] to-[#001026] text-white shadow-bnb':
-            isSelected,
+          'bg-linear-to-r from-[#003A8C] to-[#001026] text-white shadow-bnb': isSelected,
         },
         styles.entryButton,
         diffClass
@@ -134,9 +133,15 @@ export default function BlockDictionaryEntries({
   const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
   const [fieldErrors] = useAtom(fieldErrorsAtom);
 
-  const configKeys = useMemo(() => new Set(Object.keys(config[rootElement] ?? {})), [config, rootElement]);
-  const { getEntryDiffClass, deletedEntries: deletedEntriesFromHighlights, addedEntries: addedEntriesFromHighlights } =
-    useEntryDiff(rootElement, highlights, configKeys);
+  const configKeys = useMemo(
+    () => new Set(Object.keys(config[rootElement] ?? {})),
+    [config, rootElement]
+  );
+  const {
+    getEntryDiffClass,
+    deletedEntries: deletedEntriesFromHighlights,
+    addedEntries: addedEntriesFromHighlights,
+  } = useEntryDiff(rootElement, highlights, configKeys);
 
   const onNameChangeConfirm = (
     e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>
@@ -257,8 +262,7 @@ export default function BlockDictionaryEntries({
                 return true;
               })
               .map(([subkey, subValue]) => {
-                const isSelected =
-                  selectedRootElement === rootElement && subkey === selectedEntry;
+                const isSelected = selectedRootElement === rootElement && subkey === selectedEntry;
                 const entryDiffClass = getEntryDiffClass(subkey, isSelected);
 
                 return (
@@ -317,17 +321,20 @@ export default function BlockDictionaryEntries({
                             {(!isSelected || (isSelected && !isEditingKey)) && (
                               <div className="flex items-center">
                                 <div className="inline-block truncate max-w-[24ch]">{subkey}</div>
-                                {!readOnly && !campaignId && isChatReady && highlights.length === 0 && (
-                                  <EditOutlined
-                                    className="ml-3"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedEntry(subkey);
-                                      setIsEditingKey(true);
-                                      setNewKey(subkey);
-                                    }}
-                                  />
-                                )}
+                                {!readOnly &&
+                                  !campaignId &&
+                                  isChatReady &&
+                                  highlights.length === 0 && (
+                                    <EditOutlined
+                                      className="ml-3"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedEntry(subkey);
+                                        setIsEditingKey(true);
+                                        setNewKey(subkey);
+                                      }}
+                                    />
+                                  )}
                               </div>
                             )}
                           </div>
@@ -344,78 +351,82 @@ export default function BlockDictionaryEntries({
                               <CheckCircleFilled className="text-green-600!" />
                             )}
 
-                            {!campaignId && !loading && !readOnly && isChatReady && highlights.length === 0 && (
-                              <DeleteOutlined
-                                className="cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
+                            {!campaignId &&
+                              !loading &&
+                              !readOnly &&
+                              isChatReady &&
+                              highlights.length === 0 && (
+                                <DeleteOutlined
+                                  className="cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
 
-                                  setEditing(false);
+                                    setEditing(false);
 
-                                  const selectedTabAtoms = atomsMap[selectedRootElement];
+                                    const selectedTabAtoms = atomsMap[selectedRootElement];
 
-                                  if (!isAtom(selectedTabAtoms)) {
-                                    delete selectedTabAtoms[subkey];
+                                    if (!isAtom(selectedTabAtoms)) {
+                                      delete selectedTabAtoms[subkey];
 
-                                    // Initialize case
-                                    const configInitialize = config.initialize;
-                                    if (
-                                      isPlainObject(configInitialize) &&
-                                      isPlainObject(configInitialize.node_set) &&
-                                      typeof configInitialize.node_set.block_name === 'string' &&
-                                      configInitialize.node_set.block_name === subkey
-                                    ) {
-                                      atomsMap.initialize = atom<Record<string, ConfigValue>>({
-                                        ...configInitialize,
-                                        node_set: null,
+                                      // Initialize case
+                                      const configInitialize = config.initialize;
+                                      if (
+                                        isPlainObject(configInitialize) &&
+                                        isPlainObject(configInitialize.node_set) &&
+                                        typeof configInitialize.node_set.block_name === 'string' &&
+                                        configInitialize.node_set.block_name === subkey
+                                      ) {
+                                        atomsMap.initialize = atom<Record<string, ConfigValue>>({
+                                          ...configInitialize,
+                                          node_set: null,
+                                        });
+                                      }
+
+                                      // Check all keys in the config
+                                      Object.entries(config)
+                                        .filter(([configK]) => configK !== 'initialize')
+                                        .forEach(([configK, configV]) => {
+                                          if (typeof configV !== 'object') return;
+
+                                          // Check all keys in a section (e.g stimuli, recordings)
+                                          Object.entries(configV).forEach(([entryKey, entryV]) => {
+                                            if (!isPlainObject(entryV)) return;
+
+                                            // Check all values in a particular object (a single stimuli, a single timestamp, etc)
+                                            Object.entries(entryV).forEach(([fieldK, field]) => {
+                                              if (
+                                                !isPlainObject(entryV) ||
+                                                !isPlainObject(field) ||
+                                                typeof field.block_name !== 'string' ||
+                                                isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
+                                                field.block_name !== subkey
+                                              )
+                                                return;
+
+                                              // Deleting the reference to current object
+
+                                              delete entryV[fieldK]; //eslint-disable-line
+
+                                              // The atom that has a reference to current object
+                                              atomsMap[configK][entryKey] =
+                                                atom<Record<string, ConfigValue>>(entryV);
+                                            });
+                                          });
+                                        });
+
+                                      setAtomsMap({
+                                        ...atomsMap,
+                                        [selectedRootElement]: {
+                                          ...selectedTabAtoms,
+                                        },
                                       });
                                     }
 
-                                    // Check all keys in the config
-                                    Object.entries(config)
-                                      .filter(([configK]) => configK !== 'initialize')
-                                      .forEach(([configK, configV]) => {
-                                        if (typeof configV !== 'object') return;
-
-                                        // Check all keys in a section (e.g stimuli, recordings)
-                                        Object.entries(configV).forEach(([entryKey, entryV]) => {
-                                          if (!isPlainObject(entryV)) return;
-
-                                          // Check all values in a particular object (a single stimuli, a single timestamp, etc)
-                                          Object.entries(entryV).forEach(([fieldK, field]) => {
-                                            if (
-                                              !isPlainObject(entryV) ||
-                                              !isPlainObject(field) ||
-                                              typeof field.block_name !== 'string' ||
-                                              isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
-                                              field.block_name !== subkey
-                                            )
-                                              return;
-
-                                            // Deleting the reference to current object
-
-                                            delete entryV[fieldK]; //eslint-disable-line
-
-                                            // The atom that has a reference to current object
-                                            atomsMap[configK][entryKey] =
-                                              atom<Record<string, ConfigValue>>(entryV);
-                                          });
-                                        });
-                                      });
-
-                                    setAtomsMap({
-                                      ...atomsMap,
-                                      [selectedRootElement]: {
-                                        ...selectedTabAtoms,
-                                      },
-                                    });
-                                  }
-
-                                  setSelectedEntry('');
-                                  allEntries.delete(subkey);
-                                }}
-                              />
-                            )}
+                                    setSelectedEntry('');
+                                    allEntries.delete(subkey);
+                                  }}
+                                />
+                              )}
                           </div>
                         </EntryTab>
                       </TooltipTrigger>

@@ -4,6 +4,7 @@
  */
 
 import { useAtomValue } from 'jotai';
+
 import { configHighlightsAtom } from '@/state/config-highlights';
 
 export function useShowingDiffs(): boolean {

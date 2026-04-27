@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { useEffect, useRef } from 'react';
 
 import {
   expandedRootElementsAtom,

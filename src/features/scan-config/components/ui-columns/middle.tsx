@@ -2,6 +2,8 @@ import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
 import { isAtom } from '@/features/scan-config/components/utils';
+import { useDiffPreviewAtom } from '@/features/scan-config/hooks/use-diff-preview-atom';
+import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import {
   type AtomsMap,
   type Config,
@@ -15,8 +17,6 @@ import {
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
-import { useDiffPreviewAtom } from '@/features/scan-config/hooks/use-diff-preview-atom';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';

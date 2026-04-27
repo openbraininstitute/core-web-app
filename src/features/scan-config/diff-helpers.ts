@@ -5,8 +5,8 @@
  * original UI components stay free of diff-specific logic.
  */
 
+import type { ActiveFlash, ConfigHighlight } from '@/state/config-highlights';
 import type { DiffType } from '@/utils/diff';
-import type { ConfigHighlight, ActiveFlash } from '@/state/config-highlights';
 
 // ── Dominant type resolution ─────────────────────────────────────────────────
 
@@ -31,7 +31,7 @@ export function hasHighlightsForRoot(highlights: ConfigHighlight[], rootElement:
 /** Resolve the dominant highlight type for a root element. */
 export function resolveRootHighlightType(
   highlights: ConfigHighlight[],
-  rootElement: string,
+  rootElement: string
 ): DiffType | null {
   const types = new Set<DiffType>();
   for (const h of highlights) {
@@ -46,7 +46,7 @@ export function resolveRootHighlightType(
 export function resolveEntryHighlightType(
   highlights: ConfigHighlight[],
   rootElement: string,
-  entry: string,
+  entry: string
 ): DiffType | null {
   const types = new Set<DiffType>();
   for (const h of highlights) {
@@ -62,7 +62,7 @@ export function highlightedEntries(
   highlights: ConfigHighlight[],
   rootElement: string,
   type: DiffType,
-  exclude?: Set<string>,
+  exclude?: Set<string>
 ): string[] {
   const set = new Set<string>();
   for (const h of highlights) {
@@ -85,7 +85,7 @@ export function lookupFieldType(
   rootElement: string | undefined,
   selectedEntry: string | undefined,
   entryLookup: (entry: string) => { type: DiffType } | undefined,
-  fieldLookup: (key: string) => { type: DiffType } | undefined,
+  fieldLookup: (key: string) => { type: DiffType } | undefined
 ): DiffType | null {
   if (!rootElement) return null;
 

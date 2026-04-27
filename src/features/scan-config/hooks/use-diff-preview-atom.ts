@@ -5,10 +5,12 @@
  * block-dictionary.tsx so those components stay focused on layout.
  */
 
-import { useMemo } from 'react';
 import { atom, useAtomValue } from 'jotai';
-import { configHighlightsAtom } from '@/state/config-highlights';
+import { useMemo } from 'react';
+
 import { useAIConfig } from '@/services/ai-agent';
+import { configHighlightsAtom } from '@/state/config-highlights';
+
 import { isPlainObject } from '../components/utils';
 
 import type { ConfigValue } from '../types';
@@ -20,7 +22,7 @@ import type { ConfigValue } from '../types';
  */
 export function useDiffPreviewAtom(
   selectedRootElement: string,
-  selectedEntry?: string,
+  selectedEntry?: string
 ): ReturnType<typeof atom<Record<string, ConfigValue>>> | null {
   const { aiConfig } = useAIConfig();
   const highlights = useAtomValue(configHighlightsAtom);
@@ -42,6 +44,6 @@ export function useDiffPreviewAtom(
 
   return useMemo(
     () => (previewData ? atom<Record<string, ConfigValue>>(previewData) : null),
-    [previewData],
+    [previewData]
   );
 }

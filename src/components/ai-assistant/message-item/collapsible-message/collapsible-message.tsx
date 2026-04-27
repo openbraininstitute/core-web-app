@@ -1,13 +1,17 @@
 'use client';
 
-import React from 'react';
+import { RiArrowDownSLine, RiCheckLine, RiCloseLine, RiResetLeftLine } from '@remixicon/react';
 import { useAtomValue } from 'jotai';
-import { RiResetLeftLine, RiCheckLine, RiCloseLine, RiArrowDownSLine } from '@remixicon/react';
+import React from 'react';
+
+import { isChatReadyAtom } from '@/services/ai-agent/hooks/chat';
+import {
+  messageSubmittedCounterAtom,
+  restorePreviewMessageIdAtom,
+} from '@/state/config-highlights';
+import { cn } from '@/utils/css-class';
 
 import type { UIMessage } from '@ai-sdk/ui-utils';
-import { cn } from '@/utils/css-class';
-import { messageSubmittedCounterAtom, restorePreviewMessageIdAtom } from '@/state/config-highlights';
-import { isChatReadyAtom } from '@/services/ai-agent/hooks/chat';
 
 import styles from './collapsible-message.module.css';
 
@@ -21,9 +25,9 @@ interface CollapsibleMessageProps {
   hasEditStateCalls?: boolean;
 }
 
-export function CollapsibleMessage({ 
-  message, 
-  status, 
+export function CollapsibleMessage({
+  message,
+  status,
   children,
   onPreviewRestore,
   onConfirmRestore,

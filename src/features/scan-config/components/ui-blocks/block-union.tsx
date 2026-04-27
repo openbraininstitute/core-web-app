@@ -3,8 +3,8 @@ import { atom } from 'jotai';
 
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
-import { isType } from '@/features/scan-config/types';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
+import { isType } from '@/features/scan-config/types';
 
 import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';

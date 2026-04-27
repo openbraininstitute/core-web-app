@@ -2,6 +2,7 @@ import { isNil } from 'es-toolkit/compat';
 import { atom, useAtom } from 'jotai';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
+import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
   type Config,
   type ConfigSchema,
@@ -12,7 +13,6 @@ import {
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
-import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -129,7 +129,7 @@ export default function Block({
                     <TooltipTrigger asChild>
                       <div>
                         <div className="mb-1 flex items-center gap-1">
-                          <div 
+                          <div
                             className={cn(
                               'border rounded-lg flex-1 mr-1',
                               fieldBorderClass,

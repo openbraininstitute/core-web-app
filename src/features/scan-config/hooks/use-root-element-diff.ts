@@ -6,12 +6,14 @@
  */
 
 import { useAtomValue } from 'jotai';
+
 import {
   activeFlashesAtom,
   configHighlightsAtom,
   expandedRootElementsAtom,
 } from '@/state/config-highlights';
 import { getDiffClassName } from '@/utils/diff-class';
+
 import { hasHighlightsForRoot, resolveRootHighlightType } from '../diff-helpers';
 
 import type { ConfigHighlight } from '@/state/config-highlights';

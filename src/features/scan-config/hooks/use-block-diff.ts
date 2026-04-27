@@ -6,8 +6,10 @@
  */
 
 import { useAtomValue } from 'jotai';
+
 import { activeFlashesAtom, configDiffsAtom } from '@/state/config-highlights';
 import { getDiffClassName } from '@/utils/diff-class';
+
 import { lookupFieldType } from '../diff-helpers';
 
 import type { DiffType } from '@/utils/diff';
@@ -20,10 +22,7 @@ export interface BlockDiffHelpers {
   getFieldDiffClass: (fieldName: string) => string | undefined;
 }
 
-export function useBlockDiff(
-  rootElement?: string,
-  selectedEntry?: string,
-): BlockDiffHelpers {
+export function useBlockDiff(rootElement?: string, selectedEntry?: string): BlockDiffHelpers {
   const diffs = useAtomValue(configDiffsAtom);
   const activeFlashes = useAtomValue(activeFlashesAtom);
 
@@ -36,7 +35,7 @@ export function useBlockDiff(
           rootElement,
           selectedEntry,
           (entry) => flash.entries.get(entry),
-          (key) => flash.fields.get(key),
+          (key) => flash.fields.get(key)
         )
       : null;
 
@@ -50,7 +49,7 @@ export function useBlockDiff(
             selectedEntry,
             (entry) =>
               diffs.find(
-                (d) => d.path.length === 2 && d.path[0] === rootElement && d.path[1] === entry,
+                (d) => d.path.length === 2 && d.path[0] === rootElement && d.path[1] === entry
               ),
             selectedEntry
               ? (key) => {
@@ -60,13 +59,13 @@ export function useBlockDiff(
                       d.path.length >= 3 &&
                       d.path[0] === rootElement &&
                       d.path[1] === selectedEntry &&
-                      d.path[2] === field,
+                      d.path[2] === field
                   );
                 }
               : (key) =>
                   diffs.find(
-                    (d) => d.path.length >= 2 && d.path[0] === rootElement && d.path[1] === key,
-                  ),
+                    (d) => d.path.length >= 2 && d.path[0] === rootElement && d.path[1] === key
+                  )
           );
 
     // Flash takes priority over persistent diff

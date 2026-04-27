@@ -6,14 +6,14 @@
  */
 
 import { useAtomValue } from 'jotai';
+
 import { activeFlashesAtom, type ConfigHighlight } from '@/state/config-highlights';
 import { getDiffClassName } from '@/utils/diff-class';
-import {
-  resolveEntryHighlightType,
-  highlightedEntries as collectHighlightedEntries,
-} from '../diff-helpers';
 
-import type { DiffType } from '@/utils/diff';
+import {
+  highlightedEntries as collectHighlightedEntries,
+  resolveEntryHighlightType,
+} from '../diff-helpers';
 
 export interface EntryDiffHelpers {
   /** Get the CSS class for an entry's diff styling (flash takes priority). */
@@ -27,7 +27,7 @@ export interface EntryDiffHelpers {
 export function useEntryDiff(
   rootElement: string,
   highlights: ConfigHighlight[],
-  configKeys: Set<string>,
+  configKeys: Set<string>
 ): EntryDiffHelpers {
   const activeFlashes = useAtomValue(activeFlashesAtom);
   const activeFlash = activeFlashes.get(rootElement);

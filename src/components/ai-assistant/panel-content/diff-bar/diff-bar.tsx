@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { RiFileCodeLine, RiCloseLine } from '@remixicon/react';
+import { RiCloseLine, RiFileCodeLine } from '@remixicon/react';
 
 import { cn } from '@/utils/css-class';
 

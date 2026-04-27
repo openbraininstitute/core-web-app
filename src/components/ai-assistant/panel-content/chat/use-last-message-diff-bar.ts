@@ -1,21 +1,22 @@
 'use client';
 
-import React from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import React from 'react';
 
-import { computeLiveDiffs } from '@/utils/diff';
 import {
-  diffStateAtom,
-  clearDiffStateAtom,
   activeDiffMessageIdAtom,
-  preMessageConfigAtom,
+  clearDiffStateAtom,
   type DiffBarData,
+  diffStateAtom,
+  preMessageConfigAtom,
 } from '@/state/config-highlights';
+import { computeLiveDiffs } from '@/utils/diff';
+
 import {
   completedEditStateParts,
   findLastNewConfig,
-  processAccumulatedDiffs,
   modifiedBlockSet,
+  processAccumulatedDiffs,
 } from '../../message-item/use-message-diffs';
 
 import type { UIMessage } from '@ai-sdk/ui-utils';
@@ -34,7 +35,7 @@ export interface LastMessageDiffBarState {
  */
 export function useLastMessageDiffBar(
   messages: UIMessage[],
-  status: 'submitted' | 'streaming' | 'ready' | 'error',
+  status: 'submitted' | 'streaming' | 'ready' | 'error'
 ): LastMessageDiffBarState {
   const [activeDiffMessageId] = useAtom(activeDiffMessageIdAtom);
   const setDiffState = useSetAtom(diffStateAtom);
@@ -54,19 +55,19 @@ export function useLastMessageDiffBar(
 
   const hasCompletedEditStateCalls = React.useMemo(
     () => (lastMessage ? completedEditStateParts(lastMessage.parts).length > 0 : false),
-    [lastMessage?.parts],
+    [lastMessage]
   );
 
   const lastNewConfig = React.useMemo(
     () => (lastMessage ? findLastNewConfig(lastMessage.parts) : null),
-    [lastMessage?.parts],
+    [lastMessage]
   );
 
   const accumulatedDiffs = React.useMemo(() => {
     if (!preMessageConfig || !lastNewConfig) return [];
     return computeLiveDiffs(
       preMessageConfig as Record<string, unknown>,
-      lastNewConfig as Record<string, unknown>,
+      lastNewConfig as Record<string, unknown>
     );
   }, [preMessageConfig, lastNewConfig]);
 
@@ -86,13 +87,7 @@ export function useLastMessageDiffBar(
       accumulatedDiffs,
       oldConfig: preMessageConfig,
     });
-  }, [
-    hasCompletedEditStateCalls,
-    status,
-    lastMessage?.id,
-    accumulatedDiffs,
-    preMessageConfig,
-  ]);
+  }, [hasCompletedEditStateCalls, status, lastMessage, accumulatedDiffs, preMessageConfig]);
 
   // ── Show / hide diff highlights ────────────────────────────────────────
 

@@ -106,7 +106,13 @@ export default function Chat({ className, threadId }: ChatProps) {
       clearDiffState();
       setMessageSubmittedCounter((c) => c + 1);
     }
-  }, [status, setActiveDiffMessageId, clearDiffBarData, clearDiffState, setMessageSubmittedCounter]);
+  }, [
+    status,
+    setActiveDiffMessageId,
+    clearDiffBarData,
+    clearDiffState,
+    setMessageSubmittedCounter,
+  ]);
 
   // Clear active diff view when switching conversations
   React.useEffect(() => {
@@ -219,7 +225,6 @@ export default function Chat({ className, threadId }: ChatProps) {
             value={item}
             status={status}
             isLastMessage={index === messages.length - 1}
-            allMessages={messages}
           />
         ))}
 

@@ -8,14 +8,13 @@ import { useEffect, useRef } from 'react';
 import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { useAccessToken } from '@/hooks/useAccessToken';
+import { lastConfigUpdateAtom, preMessageConfigAtom } from '@/state/config-highlights';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
-
-import { lastConfigUpdateAtom, preMessageConfigAtom } from '@/state/config-highlights';
 
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { Config } from '@/features/scan-config/components/components';
@@ -173,7 +172,11 @@ export function useServiceAiAgentChat(threadId: string) {
 
       if (isLastPartEditState && newConfig && editstateResult.toolInvocation.args) {
         configUpdateCounterRef.current += 1;
-        setLastConfigUpdate({ oldConfig: oldConfig as Record<string, unknown> | null, newConfig, counter: configUpdateCounterRef.current });
+        setLastConfigUpdate({
+          oldConfig: oldConfig as Record<string, unknown> | null,
+          newConfig,
+          counter: configUpdateCounterRef.current,
+        });
       }
     } catch {
       logError(
@@ -182,7 +185,15 @@ export function useServiceAiAgentChat(threadId: string) {
         editstateResult.toolInvocation.result
       );
     }
-  }, [chat.messages, setConfig, setPreMessageConfig, setLastConfigUpdate, isLoadingMessages, assistantInitialMessages.length]);
+  }, [
+    chat.messages,
+    setConfig,
+    setPreMessageConfig,
+    setLastConfigUpdate,
+    isLoadingMessages,
+    assistantInitialMessages.length,
+    jotaiStore,
+  ]);
 
   useEffect(() => {
     setIsChatReady(chat.status === 'ready');

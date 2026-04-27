@@ -1,3 +1,4 @@
+import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 
 import { RootElement } from '@/features/scan-config/components/root-element';
@@ -12,7 +13,6 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/config-highlights';
-import { useAtom } from 'jotai';
 
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';

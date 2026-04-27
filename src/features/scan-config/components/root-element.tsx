@@ -1,12 +1,13 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { useSetAtom } from 'jotai';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
+import { useSetAtom } from 'jotai';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
 import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-element-diff';
 import {
   type AtomsMap,
   type ConfigSchema,
@@ -19,7 +20,6 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { expandedRootElementsAtom } from '@/state/config-highlights';
-import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-element-diff';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -193,31 +193,31 @@ export function RootElement({
       {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
         (config[rootElement] || hasHighlights) && (
           <BlockDictionaryEntries
-          config={config}
-          rootElement={rootElement}
-          selectedEntry={selectedEntry}
-          selectedRootElement={selectedRootElement}
-          handleEntryClick={handleEntryClick}
-          campaignId={campaignId}
-          loading={loading}
-          readOnly={!!readOnly}
-          isChatReady={isChatReady}
-          setEditing={setEditing}
-          setSelectedEntry={setSelectedEntry}
-          singularName={rootElementSchema.singular_name}
-          allEntries={allEntries}
-          newKey={newKey}
-          setNewKey={setNewKey}
-          isEditingKey={isEditingKey}
-          setIsEditingKey={setIsEditingKey}
-          atomsMap={atomsMap}
-          setAtomsMap={setAtomsMap}
-          errors={errors}
-          highlights={highlights}
-          visible={isExpanded}
-          rootElementSchema={rootElementSchema}
-        />
-      )}
+            config={config}
+            rootElement={rootElement}
+            selectedEntry={selectedEntry}
+            selectedRootElement={selectedRootElement}
+            handleEntryClick={handleEntryClick}
+            campaignId={campaignId}
+            loading={loading}
+            readOnly={!!readOnly}
+            isChatReady={isChatReady}
+            setEditing={setEditing}
+            setSelectedEntry={setSelectedEntry}
+            singularName={rootElementSchema.singular_name}
+            allEntries={allEntries}
+            newKey={newKey}
+            setNewKey={setNewKey}
+            isEditingKey={isEditingKey}
+            setIsEditingKey={setIsEditingKey}
+            atomsMap={atomsMap}
+            setAtomsMap={setAtomsMap}
+            errors={errors}
+            highlights={highlights}
+            visible={isExpanded}
+            rootElementSchema={rootElementSchema}
+          />
+        )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { get } from 'es-toolkit/compat';
-import { atom } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 
 import {
   getBlockUsabilityConfig,
@@ -8,6 +8,8 @@ import {
 } from '@/features/scan-config/components/hooks/schema';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { useDiffPreviewAtom } from '@/features/scan-config/hooks/use-diff-preview-atom';
+import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import {
   type AtomsMap,
   type Config,
@@ -20,14 +22,11 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
-import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
-import { useDiffPreviewAtom } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { configDiffsAtom } from '@/state/config-highlights';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
-import { useAtomValue } from 'jotai';
 
 import type { Nullish } from '@/utils/type';
 
@@ -89,13 +88,13 @@ export default function BlockDictionary({
     blockDictionarySchema.additionalProperties.oneOf.find(
       (o: TBlock) => o.properties?.type.const === selectedBlock
     );
-  
+
   // Check if this entry was deleted
   const isDeleted = diffs.some(
-    (d) => 
-      d.type === 'remove' && 
-      d.path.length === 2 && 
-      d.path[0] === selectedRootElement && 
+    (d) =>
+      d.type === 'remove' &&
+      d.path.length === 2 &&
+      d.path[0] === selectedRootElement &&
       d.path[1] === selectedEntry
   );
 
@@ -122,7 +121,7 @@ export default function BlockDictionary({
       />
     );
   }
-  
+
   // Show deleted message if entry was deleted
   if (isDeleted && selectedEntry) {
     return (

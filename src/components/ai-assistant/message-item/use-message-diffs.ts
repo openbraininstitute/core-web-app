@@ -1,24 +1,20 @@
 'use client';
 
-import React from 'react';
 import { useAtom, useSetAtom } from 'jotai';
+import React from 'react';
 
+import { agentStateAtom, configStateAtom } from '@/services/ai-agent/hooks/chat';
 import {
-  adjustParentTypes,
-  computeLiveDiffs,
-  type DiffResult,
-} from '@/utils/diff';
-import { configStateAtom, agentStateAtom } from '@/services/ai-agent/hooks/chat';
-import type { Config } from '@/features/scan-config/components/components';
-import {
-  diffStateAtom,
   clearDiffStateAtom,
+  diffStateAtom,
   pendingRestoreConfigAtom,
   restorePreviewActiveAtom,
   restorePreviewMessageIdAtom,
 } from '@/state/config-highlights';
+import { adjustParentTypes, computeLiveDiffs, type DiffResult } from '@/utils/diff';
 
-import type { UIMessage, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
+import type { ToolInvocationUIPart, UIMessage } from '@ai-sdk/ui-utils';
+import type { Config } from '@/features/scan-config/components/components';
 
 // ── Helpers (exported for reuse by panel-level hook) ─────────────────────────
 
@@ -68,7 +64,7 @@ function useClearDiffState() {
  * Exported for reuse by panel-level hook.
  */
 export function findLastNewConfig(
-  messageParts: UIMessage['parts'],
+  messageParts: UIMessage['parts']
 ): Record<string, unknown> | null {
   const calls = completedEditStateParts(messageParts).reverse();
   if (calls.length === 0) return null;
@@ -98,9 +94,7 @@ export interface MessageDiffActions {
   handleCancelRestore: () => void;
 }
 
-export function useMessageDiffs({
-  message,
-}: UseMessageDiffsArgs): MessageDiffActions {
+export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffActions {
   const [, setConfig] = useAtom(configStateAtom);
   const [agentState] = useAtom(agentStateAtom);
   const setDiffState = useSetAtom(diffStateAtom);
@@ -113,15 +107,15 @@ export function useMessageDiffs({
   // ── Derived data ─────────────────────────────────────────────────────────
 
   const hasEditStateCalls = React.useMemo(
-    () => message.parts.some((p) => p.type === 'tool-invocation' && p.toolInvocation.toolName === 'editstate'),
+    () =>
+      message.parts.some(
+        (p) => p.type === 'tool-invocation' && p.toolInvocation.toolName === 'editstate'
+      ),
     [message.parts]
   );
 
   /** The config from the *last* completed editstate call in this message. */
-  const lastNewConfig = React.useMemo(
-    () => findLastNewConfig(message.parts),
-    [message.parts]
-  );
+  const lastNewConfig = React.useMemo(() => findLastNewConfig(message.parts), [message.parts]);
 
   /** Extract the config from the *last* completed editstate call (for restore). */
   const getLatestState = React.useCallback((): Config | null => {
@@ -179,7 +173,14 @@ export function useMessageDiffs({
       setPendingRestoreConfig(latestState as Record<string, any>);
     }
     clearDiffState();
-  }, [getLatestState, setConfig, setRestorePreviewActive, setRestorePreviewMessageId, setPendingRestoreConfig, clearDiffState]);
+  }, [
+    getLatestState,
+    setConfig,
+    setRestorePreviewActive,
+    setRestorePreviewMessageId,
+    setPendingRestoreConfig,
+    clearDiffState,
+  ]);
 
   const handleCancelRestore = React.useCallback(() => {
     setConfig(null);

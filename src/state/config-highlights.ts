@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+
 import { computeLiveDiffs, type DiffResult } from '@/utils/diff';
 
 /**
@@ -49,9 +50,10 @@ export const expandedRootElementsAtom = atom(
   (_get, set, update: Set<string> | ((prev: Set<string>) => Set<string>)) => {
     set(diffStateAtom, (prev) => ({
       ...prev,
-      expandedRootElements: typeof update === 'function' ? update(prev.expandedRootElements) : update,
+      expandedRootElements:
+        typeof update === 'function' ? update(prev.expandedRootElements) : update,
     }));
-  },
+  }
 );
 
 // ── Independent UI atoms (not part of the diff group) ────────────────────────
@@ -101,11 +103,7 @@ export const flashingAtom = atom(false);
 const EMPTY_FLASHES = new Map<string, ActiveFlash>();
 
 /** Merge a flash entry into a map, upgrading to 'replace' on type conflict. */
-function mergeFlash(
-  map: Map<string, FlashEntry>,
-  key: string,
-  type: 'add' | 'remove' | 'replace',
-) {
+function mergeFlash(map: Map<string, FlashEntry>, key: string, type: 'add' | 'remove' | 'replace') {
   const existing = map.get(key);
   if (existing && existing.type !== type) {
     map.set(key, { type: 'replace' });
@@ -160,7 +158,7 @@ export const activeFlashesAtom = atom<Map<string, ActiveFlash>>((get) => {
         mergeFlash(entries, diff.path[1], diff.type);
       }
       if (diff.path.length >= 3) {
-        mergeFlash(fields, diff.path[1] + '/' + diff.path[2], diff.type);
+        mergeFlash(fields, `${diff.path[1]}/${diff.path[2]}`, diff.type);
       }
       if (diff.path.length === 2) {
         mergeFlash(fields, diff.path[1], diff.type);
@@ -217,7 +215,6 @@ export const restorePreviewActiveAtom = atom(false);
  * confirmation (equivalent of the user clicking "No").
  */
 export const restorePreviewMessageIdAtom = atom<string | null>(null);
-
 
 /**
  * Atom written by chat.ts when an editstate tool call produces a new config.
