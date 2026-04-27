@@ -8,9 +8,8 @@ import {
   RiPriceTag3Line,
   RiSparklingLine,
 } from '@remixicon/react';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom } from 'jotai';
 
-import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
 import {
   type LeftPaneView,
   leftPaneViewAtom,
@@ -34,7 +33,6 @@ const ITEMS: Array<Item> = [
 
 export function HelpButtonsRow() {
   const [view, setView] = useAtom(leftPaneViewAtom);
-  const setPreview = useSetAtom(dataPreviewAtom);
 
   return (
     <section id="help-quick-links" className="flex w-full flex-col">
@@ -45,10 +43,7 @@ export function HelpButtonsRow() {
             <button
               key={id}
               type="button"
-              onClick={() => {
-                setPreview(null);
-                setView(id);
-              }}
+              onClick={() => setView(id)}
               title={label}
               aria-pressed={isSelected}
               className={cn(

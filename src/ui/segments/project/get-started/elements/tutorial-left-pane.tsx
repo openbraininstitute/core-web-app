@@ -39,20 +39,26 @@ export function TutorialLeftPane({
     }
   }, [slug, setPreview, setView]);
 
-  if (view === 'about')
-    return <AboutView blocks={aboutContent.aboutContent as PortableTextBlock[] | undefined} />;
-  if (view === 'terms')
-    return (
-      <AboutView
-        blocks={aboutContent.termsAndConditionContent as PortableTextBlock[] | undefined}
-      />
-    );
-  if (view === 'glossary') return <GlossarySection />;
-  if (view === 'features') return <FeaturesSection />;
-  if (view === 'pricing') return <PricingView />;
-  if (view === 'news') return <NewsView />;
-  if (preview) return <DataPreview />;
-  return <>{children}</>;
+  const helpHidden = view === null;
+
+  return (
+    <>
+      <div className={view !== null || preview ? 'hidden' : 'h-full'}>{children}</div>
+      {helpHidden && preview && <DataPreview />}
+      {view === 'about' && (
+        <AboutView blocks={aboutContent.aboutContent as PortableTextBlock[] | undefined} />
+      )}
+      {view === 'terms' && (
+        <AboutView
+          blocks={aboutContent.termsAndConditionContent as PortableTextBlock[] | undefined}
+        />
+      )}
+      {view === 'glossary' && <GlossarySection />}
+      {view === 'features' && <FeaturesSection />}
+      {view === 'pricing' && <PricingView />}
+      {view === 'news' && <NewsView />}
+    </>
+  );
 }
 
 export default TutorialLeftPane;

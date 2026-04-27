@@ -1,11 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useAtomValue } from 'jotai';
+import { useEffect, useRef, useState } from 'react';
 
 import { Skeleton } from '@/ui/molecules/skeleton';
+import { leftPaneViewAtom } from '@/ui/segments/project/get-started/elements/left-pane-view-atom';
 
 export function VideoPlayer({ url }: { url?: string }) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const view = useAtomValue(leftPaneViewAtom);
+
+  useEffect(() => {
+    if (view !== null) {
+      videoRef.current?.pause();
+    }
+  }, [view]);
 
   if (!url) {
     return (
@@ -19,6 +29,7 @@ export function VideoPlayer({ url }: { url?: string }) {
     <>
       {!isLoaded && <Skeleton className="absolute inset-0 rounded-xl bg-primary-9" />}
       <video
+        ref={videoRef}
         playsInline
         autoPlay
         controls
