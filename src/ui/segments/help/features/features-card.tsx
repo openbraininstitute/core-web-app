@@ -1,11 +1,12 @@
-import { ContentForFeatureItem } from '@/components/documentation/type';
 import Slugify from '@/util/slugify';
+
+import type { ContentForFeatureItem } from '@/components/documentation/type';
 
 export default function FeaturesCard({ item }: { item: ContentForFeatureItem }) {
   return (
     <article
       key={item.Feature_title ?? item.Topic ?? `feature-${Math.random()}`}
-      className="border-neutral-2 text-primary-9 flex w-2/3 flex-col border border-solid p-6"
+      className="border-neutral-2 text-primary-9 flex w-full flex-col rounded-xl border border-solid bg-white p-6"
       id={Slugify(item.Feature_title)}
     >
       <h2 className="text-primary-9 text-2xl font-bold">{item.Feature_title}</h2>

@@ -1,61 +1,49 @@
 'use client';
 
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-import { RightOutlined } from '@ant-design/icons';
-
-import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
-import { buildLink } from '@/utils/searchparams-to-link';
+
+const SCALES = [
+  { name: 'Subcellular', id: 'subcellular' },
+  { name: 'Cellular', id: 'cellular' },
+  { name: 'Circuit', id: 'circuit' },
+];
 
 export default function FeaturesNavigation() {
-  const scalesList = [
-    {
-      name: 'Subcellular',
-      id: 'subcellular',
-    },
-    {
-      name: 'Cellular',
-      id: 'cellular',
-    },
-    {
-      name: 'Circuit',
-      id: 'circuit',
-    },
-  ];
-
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const searchParamsObj = Object.fromEntries(searchParams.entries());
-
-  const activeScale = searchParams.get('scale') ?? 'subcellular'; // Default to 'subcellular'
+  const activeScale = searchParams.get('scale');
 
   return (
-    <div className="col-span-1 flex flex-col gap-y-3">
-      {scalesList.map((scale) => {
-        const link = buildLink(searchParamsObj, { scale: scale.id });
-        const isActive = activeScale === scale.id;
-
-        return (
-          <Button
-            rounded
-            borderless
-            asChild
-            key={`view-${scale.id}-features`}
-            variant="outline"
-            className={cn(
-              'shadow-base h-15 w-full justify-start px-6 text-lg font-semibold',
-              isActive ? 'bg-primary-9 text-white' : ''
-            )}
-            aria-label={`View ${scale.name} features`}
-          >
-            <Link href={link.href} scroll={false}>
-              {scale.name}
-              <RightOutlined className="ml-auto text-current" />
-            </Link>
-          </Button>
-        );
-      })}
+    <div className="flex w-full flex-col gap-y-6">
+      <div className="flex flex-col gap-y-2">
+        <h3 className="text-primary-9 text-xs font-bold tracking-wide uppercase">Scale</h3>
+        <div className="flex flex-col gap-y-1.5">
+          {SCALES.map((scale) => {
+            const isActive = activeScale === scale.id;
+            return (
+              <button
+                type="button"
+                key={scale.id}
+                aria-label={`View ${scale.name} features`}
+                onClick={() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('scale', scale.id);
+                  router.replace(`${url.pathname}${url.search}`, { scroll: false });
+                }}
+                className={cn(
+                  'text-primary-9 flex w-full items-center justify-between text-left text-sm',
+                  isActive && 'font-bold'
+                )}
+              >
+                {scale.name}
+                {isActive && <span className="bg-primary-9 h-2 w-2 rounded-full" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
