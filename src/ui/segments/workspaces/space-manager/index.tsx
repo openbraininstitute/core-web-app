@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { usePrevious } from '@/hooks/hooks';
@@ -125,42 +125,13 @@ export function SpaceManagerContainer() {
       : null;
 
   if (sidePanelType) {
-    const sidePanelContent =
-      sidePanelType === WorkspaceActions.ProjectPreview ? (
-        <ProjectPreview onClose={onClose} payload={contextConfig.payload} />
-      ) : (
-        <VirtualLabConfiguration onClose={onClose} payload={contextConfig.payload} />
-      );
-
     return (
-      <div
-        id="workspace-manager-modal"
-        role="dialog"
-        aria-modal="false"
-        className="bg-primary-9 fixed top-3 right-3 z-50 flex flex-col overflow-hidden rounded-md shadow-2xl transition-opacity duration-150"
-        style={{
-          width: 'calc(100vw - 24.9rem)',
-          maxHeight: 'calc(100vh - 1rem)',
-          minHeight: 400,
-          opacity: contextConfig.open ? 1 : 0,
-          pointerEvents: contextConfig.open ? 'auto' : 'none',
-        }}
-        onMouseEnter={cancelPendingPreviewClose}
-        onMouseLeave={() =>
-          makeTriggerWorkspaceConfigurationClickEvent({
-            on: false,
-            type: sidePanelType,
-            data: null,
-          })
-        }
-      >
-        <div
-          id="workspace-manager-modal-content"
-          className="flex h-full min-h-0 flex-1 flex-col overflow-hidden px-6 py-4"
-        >
-          {sidePanelContent}
-        </div>
-      </div>
+      <SidePanel
+        sidePanelType={sidePanelType}
+        contextConfig={contextConfig}
+        onClose={onClose}
+        cancelPendingPreviewClose={cancelPendingPreviewClose}
+      />
     );
   }
 
@@ -190,5 +161,87 @@ export function SpaceManagerContainer() {
         {content}
       </div>
     </Modal>
+  );
+}
+
+type SidePanelProps = {
+  sidePanelType: typeof WorkspaceActions.ProjectPreview | typeof WorkspaceActions.VirtualLabConfiguration;
+  contextConfig: { open: boolean; type: WorkspaceActionType; payload: any };
+  onClose: () => void;
+  cancelPendingPreviewClose: () => void;
+};
+
+function SidePanel({
+  sidePanelType,
+  contextConfig,
+  onClose,
+  cancelPendingPreviewClose,
+}: SidePanelProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [top, setTop] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (!contextConfig.open) return;
+    const payload = contextConfig.payload;
+    let triggerEl: HTMLElement | null = null;
+    if (sidePanelType === WorkspaceActions.ProjectPreview && payload?.projectId) {
+      triggerEl = document.getElementById(`project-item-${payload.projectId}`);
+    } else if (
+      sidePanelType === WorkspaceActions.VirtualLabConfiguration &&
+      payload?.virtualLabId
+    ) {
+      triggerEl = document.getElementById(`virtual-lab-item-${payload.virtualLabId}`);
+    }
+    if (!triggerEl) return;
+    const triggerRect = triggerEl.getBoundingClientRect();
+    const triggerCenter = triggerRect.top + triggerRect.height / 2;
+    const panelHeight = panelRef.current?.offsetHeight ?? 400;
+    const margin = 12;
+    const desired = triggerCenter - panelHeight / 2;
+    const clamped = Math.max(
+      margin,
+      Math.min(desired, window.innerHeight - panelHeight - margin)
+    );
+    setTop(clamped);
+  }, [contextConfig.open, contextConfig.payload, sidePanelType]);
+
+  const sidePanelContent =
+    sidePanelType === WorkspaceActions.ProjectPreview ? (
+      <ProjectPreview onClose={onClose} payload={contextConfig.payload} />
+    ) : (
+      <VirtualLabConfiguration onClose={onClose} payload={contextConfig.payload} />
+    );
+
+  return (
+    <div
+      ref={panelRef}
+      id="workspace-manager-modal"
+      role="dialog"
+      aria-modal="false"
+      className="bg-primary-9 fixed right-3 z-50 flex flex-col overflow-hidden rounded-md shadow-2xl transition-opacity duration-150"
+      style={{
+        width: 'calc(100vw - 24.9rem)',
+        maxHeight: 'calc(100vh - 1rem)',
+        minHeight: 400,
+        top: top ?? 12,
+        opacity: contextConfig.open && top !== null ? 1 : 0,
+        pointerEvents: contextConfig.open ? 'auto' : 'none',
+      }}
+      onMouseEnter={cancelPendingPreviewClose}
+      onMouseLeave={() =>
+        makeTriggerWorkspaceConfigurationClickEvent({
+          on: false,
+          type: sidePanelType,
+          data: null,
+        })
+      }
+    >
+      <div
+        id="workspace-manager-modal-content"
+        className="flex h-full min-h-0 flex-1 flex-col overflow-hidden px-6 py-4"
+      >
+        {sidePanelContent}
+      </div>
+    </div>
   );
 }

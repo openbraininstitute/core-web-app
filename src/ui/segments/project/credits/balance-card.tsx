@@ -1,4 +1,4 @@
-import { SwapOutlined } from '@ant-design/icons';
+import { PlusOutlined, SwapOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
@@ -50,22 +50,40 @@ export function BalanceCard({ onTransferCredits, className, variant = 'dark' }: 
           </div>
         </div>
         {isAdmin && (
-          <Button
-            rounded
-            borderless
-            className={cn(
-              'group px-4 shadow-2xl select-none',
-              isLight
-                ? 'bg-primary-9 text-white hover:bg-primary-8 hover:text-white'
-                : 'text-primary-9 hover:bg-primary-8 bg-white hover:border-white hover:text-white'
-            )}
-            size="md"
-            variant="outline"
-            onClick={onTransferCredits}
-          >
-            Transfer credits
-            <SwapOutlined />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              rounded
+              borderless
+              className={cn(
+                'group px-4 shadow-2xl select-none',
+                isLight
+                  ? 'bg-primary-9 text-white hover:bg-primary-8 hover:text-white'
+                  : 'text-primary-9 hover:bg-primary-8 bg-white hover:border-white hover:text-white'
+              )}
+              size="md"
+              variant="outline"
+              onClick={onTransferCredits}
+            >
+              Transfer credits
+              <SwapOutlined />
+            </Button>
+            <Button
+              rounded
+              borderless
+              className={cn(
+                'group px-4 shadow-2xl select-none',
+                isLight
+                  ? 'bg-primary-9 text-white hover:bg-primary-8 hover:text-white'
+                  : 'text-primary-9 hover:bg-primary-8 bg-white hover:border-white hover:text-white'
+              )}
+              size="md"
+              variant="outline"
+              onClick={() => window.open('/pricing', '_blank', 'noopener,noreferrer')}
+            >
+              Buy credits
+              <PlusOutlined />
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>

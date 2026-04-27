@@ -31,6 +31,7 @@ type Props = {
   tryingToExpand: Set<string>;
   toggleLabExpansion: (id: string, action?: 'trying' | 'opened') => void;
   onCreateProject: () => void;
+  onProjectSelect: (projectId: string) => void;
 };
 
 export function Item({
@@ -43,6 +44,7 @@ export function Item({
   tryingToExpand,
   toggleLabExpansion,
   onCreateProject,
+  onProjectSelect,
 }: Props) {
   const {
     isLoading: projectsLoading,
@@ -116,6 +118,7 @@ export function Item({
     virtualLabId: string;
     project: Project;
   }) => {
+    onProjectSelect(project.id);
     recentWorkspaceMutation.mutate({ vlabId: virtualLabId, prjId: project.id });
     makeTriggerWorkspaceConfigurationClickEvent({ on: false, type: null, data: null });
     router.push(`${config.ROOT_ROUTE}/${virtualLabId}/${project.id}`);
@@ -160,6 +163,7 @@ export function Item({
       <div
         role="button"
         tabIndex={-1}
+        id={`virtual-lab-item-${lab.id}`}
         aria-label="virtual-lab-item"
         data-testid="virtual-lab-item"
         className={cn(

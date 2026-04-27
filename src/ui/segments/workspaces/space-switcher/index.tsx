@@ -62,6 +62,15 @@ export function SpaceSwitcher({ className }: Props) {
   const [expandedLabs, setExpandedLabs] = useState<Set<string>>(new Set([]));
   const [currentVirtualLabId, setCurrentVirtualLabId] = useState<string | null>(null);
   const [boardModalOpen, setBoardModalOpen] = useState(false);
+  const [pendingProjectId, setPendingProjectId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pendingProjectId && projectId === pendingProjectId) {
+      setPendingProjectId(null);
+    }
+  }, [projectId, pendingProjectId]);
+
+  const effectiveActiveProjectId = pendingProjectId ?? projectId;
   const pathname = usePathname();
   const { replace: navigateWithReplace } = useRouter();
 
@@ -465,7 +474,7 @@ export function SpaceSwitcher({ className }: Props) {
                     <Item
                       key={lab.id}
                       lab={lab}
-                      activeProjectId={projectId}
+                      activeProjectId={effectiveActiveProjectId}
                       isActive={virtualLabId === lab.id}
                       isOpen={currentVirtualLabId === lab.id}
                       expandedLabs={expandedLabs}
@@ -473,6 +482,7 @@ export function SpaceSwitcher({ className }: Props) {
                       toggleLabExpansion={toggleLabExpansion}
                       isAdmin={adminLabIds.has(lab.id) || lab.isMine}
                       onCreateProject={onCreateProject}
+                      onProjectSelect={setPendingProjectId}
                     />
                   </motion.div>
                 ))}
