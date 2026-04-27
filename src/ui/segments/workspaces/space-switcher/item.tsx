@@ -216,15 +216,14 @@ export function Item({
                   )}
                 >
                   <Button
-                    borderless
                     rounded
                     size="md"
                     variant="outline"
                     className={cn(
-                      'w-full justify-start shadow-sm',
-                      'hover:bg-primary-9 hover:text-white',
-                      isProjectActive &&
-                        'text-primary-8 bg-white font-bold shadow-[16px_16px_30px_0px_#0000000F,-12px_-8px_32px_0px_#FFFFFF52]'
+                      'w-full justify-start border-2 border-transparent shadow-sm',
+                      isProjectActive
+                        ? 'bg-primary-9 text-white font-bold border-primary-9 hover:bg-primary-9 hover:text-white'
+                        : 'bg-white text-primary-9 hover:border-primary-9 hover:bg-white'
                     )}
                     title={project.name}
                     onMouseEnter={() => onProjectHover({ virtualLabId: lab.id, project })}
