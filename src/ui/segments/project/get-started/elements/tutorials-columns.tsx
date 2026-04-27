@@ -32,8 +32,8 @@ export function TutorialsColumns({ left, right }: { left: ReactNode; right: Reac
           aria-label="Expand left pane"
           onClick={() => setView(null)}
           className={cn(
-            'border-neutral-2 bg-background hover:border-primary-9 hover:text-primary-9 text-primary-9 absolute top-1/2 -translate-y-1/2 z-10 flex size-9 items-center justify-center rounded-full border shadow-md transition-colors',
-            'left-[186px]'
+            'border-neutral-2 bg-background hover:border-primary-9 hover:text-primary-9 text-primary-9 absolute -translate-y-1/2 z-10 flex size-9 items-center justify-center rounded-full border shadow-md transition-colors',
+            'top-[46px] left-[186px]'
           )}
         >
           <RightOutlined className="text-sm" />

@@ -41,11 +41,16 @@ export function HelpButtonsRow() {
 
   useEffect(() => {
     if (!view) return;
-    const scroller = scrollerRef.current;
-    const button = buttonRefs.current[view];
-    if (!scroller || !button) return;
-    const targetLeft = button.offsetLeft - (scroller.clientWidth - button.offsetWidth) / 2;
-    scroller.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+    const scrollToCenter = () => {
+      const scroller = scrollerRef.current;
+      const button = buttonRefs.current[view];
+      if (!scroller || !button) return;
+      const targetLeft = button.offsetLeft - (scroller.clientWidth - button.offsetWidth) / 2;
+      scroller.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+    };
+    // run after the LHS collapse width transition (~200ms) so clientWidth reflects collapsed state
+    const t = window.setTimeout(scrollToCenter, 230);
+    return () => window.clearTimeout(t);
   }, [view]);
 
   return (
