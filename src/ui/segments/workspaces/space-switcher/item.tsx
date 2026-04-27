@@ -228,7 +228,6 @@ export function Item({
                     )}
                     title={project.name}
                     onMouseEnter={() => onProjectHover({ virtualLabId: lab.id, project })}
-                    onFocus={() => onProjectHover({ virtualLabId: lab.id, project })}
                     onClick={() => onProjectClick({ virtualLabId: lab.id, project })}
                     id={`project-item-${project.id}`}
                     data-testid="project-item-selector"
