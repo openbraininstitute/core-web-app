@@ -40,7 +40,7 @@ export function ProjectActivities() {
     throw new Error(`No entity found for type: ${entityType}`);
   }
 
-  const { data, isLoading, isQueryEnabled } = useQueryActivity({
+  const { data, isFetching, isQueryEnabled } = useQueryActivity({
     activity,
     selectionType: entityType,
     entityType: entity?.extendedType,
@@ -62,11 +62,10 @@ export function ProjectActivities() {
       render: (_, record) => {
         const status = get(record, 'status', 'default');
         const mapper = get(StatusMap, status, null);
-        const className = mapper?.class;
         const icon = mapper?.icon;
         const title = mapper?.title;
         return (
-          <span className={cn('flex items-center capitalize', className)}>
+          <span className="flex items-center capitalize" style={{ color: mapper?.color }}>
             {icon}
             {title}
           </span>
@@ -92,13 +91,13 @@ export function ProjectActivities() {
       align: 'center',
       render: (_, record) => {
         const status = get(record, 'status', 'default');
-        const className = get(StatusMap, status, null)?.class;
+        const color = get(StatusMap, status, null)?.color;
         const scaleType = get(record, 'type', null);
 
         if (scaleType) {
           const linkUrl = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(entity?.extendedType)}/${record.id}`;
           return (
-            <Link href={linkUrl} aria-label={record.name} className={className}>
+            <Link href={linkUrl} aria-label={record.name} style={{ color }}>
               <RightSquareOutlined />
             </Link>
           );
@@ -133,7 +132,7 @@ export function ProjectActivities() {
                     '[&_.ant-table-body]:secondary-scrollbar!'
                   )}
                   scroll={{ y: 'calc(100vh - 20rem)' }}
-                  loading={isLoading}
+                  loading={isFetching}
                   dataSource={data?.data}
                   columns={columns}
                   rowKey={(o) => o.id}
@@ -166,8 +165,8 @@ export function ProjectActivities() {
                   size="default"
                   onChange={(_page) => setPage(_page)}
                   className={cn(
-                    '[&_.ant-pagination-item-active]:bg-primary-9 [&_.ant-pagination-item-active_a]:text-white!',
-                    '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9'
+                    '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active_a]:text-white!',
+                    '[&_.ant-pagination-disabled_button]:text-neutral-2! [&_button.ant-pagination-item-link]:text-primary-9!'
                   )}
                 />
               </div>

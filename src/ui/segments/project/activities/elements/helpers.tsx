@@ -2,106 +2,139 @@
 
 import { isNil } from 'es-toolkit/compat';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import EmptyCircleIcon from '@/components/icons/EmptyCircle';
 import FullCircleIcon from '@/components/icons/FullCircle';
 import PartialCircleIcon from '@/components/icons/PartialCircle';
 import TriangleIcon from '@/components/icons/Triangle';
-import { getActivity } from '@/ui/segments/workflows/config';
+import { ActivityStatusColorMap } from '@/features/scan-config/constants';
+import {
+  ActivityValues,
+  getActivity,
+  getEntityMeta,
+  listWorkflows,
+} from '@/ui/segments/workflows/config';
 
 import type { ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
-export const StatusMap: Record<string, { class: string; icon: ReactNode; title: string }> = {
+export const StatusMap: Record<
+  string,
+  { class: string; color: string; icon: ReactNode; title: string }
+> = {
   started: {
-    class: 'text-primary-2',
+    class: 'text-[#1890ff]',
+    color: ActivityStatusColorMap[ActivityStatus.CREATED],
     icon: <EmptyCircleIcon className="mr-2" />,
     title: 'Started',
   },
   failure: {
-    class: 'text-error',
+    class: 'text-[#f5222d]',
+    color: ActivityStatusColorMap[ActivityStatus.ERROR],
     icon: <TriangleIcon className="mr-2 text-current" />,
-    title: 'failure',
+    title: 'Failure',
   },
   success: {
-    class: 'text-secondary-5',
+    class: 'text-[#002766]',
+    color: ActivityStatusColorMap[ActivityStatus.DONE],
     icon: <FullCircleIcon className="mr-2 text-current" />,
     title: 'Success',
   },
   initialized: {
-    class: 'text-white',
+    class: 'text-[#1890ff]',
+    color: ActivityStatusColorMap[ActivityStatus.CREATED],
     icon: <EmptyCircleIcon className="mr-2 text-current" />,
     title: 'Initialized',
   },
+  pending: {
+    class: 'text-[#fa8c16]',
+    color: ActivityStatusColorMap[ActivityStatus.PENDING],
+    icon: <PartialCircleIcon className="mr-2 text-current" />,
+    title: 'Pending',
+  },
   processing: {
-    class: 'text-primary-2',
+    class: 'text-[#fa8c16]',
+    color: ActivityStatusColorMap[ActivityStatus.PENDING],
     icon: <PartialCircleIcon className="mr-2 text-current" />,
     title: 'Processing',
   },
   running: {
-    class: 'text-primary-2',
+    class: 'text-[#389e0d]',
+    color: ActivityStatusColorMap[ActivityStatus.RUNNING],
     icon: <PartialCircleIcon className="mr-2 text-current" />,
     title: 'Running',
   },
   error: {
-    class: 'text-error',
+    class: 'text-[#f5222d]',
+    color: ActivityStatusColorMap[ActivityStatus.ERROR],
     icon: <TriangleIcon className="mr-2 text-current" />,
     title: 'Error',
   },
+  cancelled: {
+    class: 'text-[#f5222d]',
+    color: ActivityStatusColorMap[ActivityStatus.CANCELLED],
+    icon: <TriangleIcon className="mr-2 text-current" />,
+    title: 'Cancelled',
+  },
   done: {
-    class: 'text-secondary-5',
+    class: 'text-[#002766]',
+    color: ActivityStatusColorMap[ActivityStatus.DONE],
     icon: <FullCircleIcon className="mr-2 text-current" />,
     title: 'Done',
   },
   created: {
-    class: 'text-secondary-5',
+    class: 'text-[#1890ff]',
+    color: ActivityStatusColorMap[ActivityStatus.CREATED],
     icon: <FullCircleIcon className="mr-2 text-current" />,
     title: 'Created',
   },
   default: {
-    class: 'text-primary-8',
+    class: 'text-[#002766]',
+    color: ActivityStatusColorMap[ActivityStatus.DONE],
     icon: <FullCircleIcon className="mr-2 text-current" />,
     title: 'Done',
   },
 };
 
-export const Scales: Partial<
-  Record<
-    TExtendedEntitiesTypeDict,
-    {
-      title: string;
-      build: TExtendedEntitiesTypeDict | null;
-      simulate: TExtendedEntitiesTypeDict | null;
-      link: 'explore' | 'workflows';
-    }
-  >
-> = {
-  [ExtendedEntitiesTypeDict.Memodel]: {
-    title: 'Single neuron',
-    build: ExtendedEntitiesTypeDict.Memodel,
-    simulate: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
-    link: 'explore',
-  },
-  [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: {
-    title: 'Synaptome',
-    build: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-    simulate: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
-    link: 'explore',
-  },
-  [ExtendedEntitiesTypeDict.SmallMicrocircuit]: {
-    title: 'Small microcircuits',
-    build: null,
-    simulate: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
-    link: 'workflows',
-  },
-  [ExtendedEntitiesTypeDict.PairedNeuronCircuit]: {
-    title: 'Paired neuron circuits',
-    build: null,
-    simulate: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
-    link: 'workflows',
-  },
+type TScaleActivityMap = {
+  title: string;
+  build: TExtendedEntitiesTypeDict | null;
+  simulate: TExtendedEntitiesTypeDict | null;
+  link: 'explore' | 'workflows';
 };
+
+function buildScales(): Partial<Record<TExtendedEntitiesTypeDict, TScaleActivityMap>> {
+  const scales: Partial<Record<TExtendedEntitiesTypeDict, TScaleActivityMap>> = {};
+  const activities = [ActivityValues.Build, ActivityValues.Simulate] as const;
+
+  for (const activity of activities) {
+    const workflows = listWorkflows({ activity, sort: 'order' }).filter(
+      (workflow) => !workflow.disabled
+    );
+
+    for (const workflow of workflows) {
+      const scaleType =
+        activity === ActivityValues.Build && workflow.needsBrowse
+          ? workflow.targetType
+          : workflow.sourceType;
+      const entity = getEntityMeta(scaleType);
+      const existing = scales[scaleType];
+
+      scales[scaleType] = {
+        title: existing?.title ?? workflow.label ?? entity?.title ?? entity?.label ?? scaleType,
+        build: activity === ActivityValues.Build ? workflow.targetType : (existing?.build ?? null),
+        simulate:
+          activity === ActivityValues.Simulate ? workflow.targetType : (existing?.simulate ?? null),
+        link: existing?.link ?? (workflow.needsBrowse ? 'workflows' : 'explore'),
+      };
+    }
+  }
+
+  return scales;
+}
+
+export const Scales = buildScales();
 
 // here the function should return the available activities for the scale as build , simulate
 export const getScaleArray = (): Array<{ label: string; value: TExtendedEntitiesTypeDict }> => {

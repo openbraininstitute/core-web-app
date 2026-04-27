@@ -18,23 +18,26 @@ type Props = {
 };
 
 export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
-  const defaultScale = getScaleArray().at(0)?.value!;
-  const defaultActivities = getScaleAvailableActivities(defaultScale);
+  const scaleOptions = getScaleArray();
+  const defaultScale = scaleOptions.at(0)?.value;
+  const defaultActivities = defaultScale ? getScaleAvailableActivities(defaultScale) : [];
 
   const [activities, setActivities] =
     useState<Array<{ label: string; value: string }>>(defaultActivities);
-  const [selectedActivityType, setSelectedActivityType] = useState<TActivityValue>(
-    defaultActivities.at(0)?.value as TActivityValue
+  const [selectedActivityType, setSelectedActivityType] = useState<TActivityValue | undefined>(
+    defaultActivities.at(0)?.value
   );
 
   const onScale = (s: TExtendedEntitiesTypeDict) => {
     const availableActivities = getScaleAvailableActivities(s);
-    const firstActivityType = availableActivities?.at(0)?.value!;
+    const firstActivityType = availableActivities.at(0)?.value;
 
     onScaleChange(s);
     setActivities(availableActivities);
     setSelectedActivityType(firstActivityType);
-    onTypeChange(firstActivityType);
+    if (firstActivityType) {
+      onTypeChange(firstActivityType);
+    }
     onPageChange(1);
   };
 
@@ -53,10 +56,10 @@ export function Header({ onScaleChange, onTypeChange, onPageChange }: Props) {
           <Select<TExtendedEntitiesTypeDict>
             className="[&_.ant-select-selector]:rounded-none!"
             classNames={{ popup: { root: 'rounded-none!' } }}
-            defaultValue={getScaleArray().at(0)?.value}
+            defaultValue={defaultScale}
             style={{ width: 200 }}
             onChange={onScale}
-            options={getScaleArray()}
+            options={scaleOptions}
           />
         </div>
         <div className="flex flex-col items-start justify-start gap-0.5 xl:flex-row xl:items-center xl:justify-center xl:gap-3">
