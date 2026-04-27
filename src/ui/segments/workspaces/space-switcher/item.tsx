@@ -1,6 +1,6 @@
 'use client';
 
-import { DownOutlined, LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { orderBy } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -164,7 +164,7 @@ export function Item({
         </div>
         <div className="ml-auto flex items-center">
           <motion.div
-            animate={{ rotate: expandedLabs.has(lab.id) ? 180 : 0 }}
+            animate={{ rotate: expandedLabs.has(lab.id) ? 90 : 0 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
           >
             {tryingToExpand.has(lab.id) && projectsLoading ? (
@@ -177,7 +177,7 @@ export function Item({
                 className="flex h-7 w-7 items-center justify-center rounded-full border-none bg-transparent p-0"
                 onClick={onDownClick}
               >
-                <DownOutlined
+                <RightOutlined
                   className={cn(
                     'text-primary-7 group-hover:text-primary-8 h-4 w-4 hover:text-white',
                     { 'hover:text-primary-4 text-primary-3': lab.isMine }
