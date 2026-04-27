@@ -12,6 +12,8 @@ import { DataPreview } from '@/ui/segments/project/get-started/elements/data-pre
 import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
 import { GuidesView } from '@/ui/segments/project/get-started/elements/guides-view';
 import { leftPaneViewAtom } from '@/ui/segments/project/get-started/elements/left-pane-view-atom';
+import { NewsView } from '@/ui/segments/project/get-started/elements/news-view';
+import { PricingView } from '@/ui/segments/project/get-started/elements/pricing-view';
 
 import type { PortableTextBlock } from 'next-sanity';
 import type { ReactNode } from 'react';
@@ -52,6 +54,8 @@ export function TutorialLeftPane({
   if (view === 'guides') return <GuidesView guides={guidesContent} />;
   if (view === 'features') return <FeaturesSection />;
   if (view === 'ai-tools') return <AiChatToolsSection />;
+  if (view === 'pricing') return <PricingView />;
+  if (view === 'news') return <NewsView />;
   if (preview) return <DataPreview />;
   return <>{children}</>;
 }

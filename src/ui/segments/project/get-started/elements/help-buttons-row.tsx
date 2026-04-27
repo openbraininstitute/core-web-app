@@ -6,6 +6,8 @@ import {
   RiCompass3Line,
   RiFileTextLine,
   RiInformationLine,
+  RiNewspaperLine,
+  RiPriceTag3Line,
   RiSparklingLine,
 } from '@remixicon/react';
 import { useAtom, useSetAtom } from 'jotai';
@@ -29,6 +31,8 @@ const ITEMS: Array<Item> = [
   { id: 'guides', label: 'Guides', Icon: RiCompass3Line },
   { id: 'features', label: 'Features', Icon: RiSparklingLine },
   { id: 'ai-tools', label: 'AI Tools', Icon: RiChatAiLine },
+  { id: 'news', label: 'News', Icon: RiNewspaperLine },
+  { id: 'pricing', label: 'Pricing', Icon: RiPriceTag3Line },
   { id: 'terms', label: 'T&Cs', Icon: RiFileTextLine },
 ];
 
