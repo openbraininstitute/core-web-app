@@ -1,49 +1,46 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-import { RightOutlined } from '@ant-design/icons';
-
-import Link from 'next/link';
+import Slugify from '@/util/slugify';
+import { cn } from '@/utils/css-class';
 
 import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
 
-import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
-import { buildLink } from '@/utils/searchparams-to-link';
-
 export default function AIChatToolsNavigation({ content }: { content: AIChatToolsSectionProps[] }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const searchParamsObj = Object.fromEntries(searchParams.entries());
-
   const activeTool = searchParams.get('tool');
 
   return (
-    <div className="col-span-1 flex max-h-[82vh] w-full flex-col gap-y-4 overflow-y-scroll">
-      {content?.map((tool: AIChatToolsSectionProps) => {
-        const link = buildLink(searchParamsObj, { tool: tool.id });
-        const isActive = activeTool === tool.id;
-
-        return (
-          <Button
-            rounded
-            borderless
-            asChild
-            key={`view-${tool.id}-features`}
-            variant="outline"
-            className={cn(
-              'shadow-base h-15 w-full justify-start px-6 text-lg font-semibold',
-              isActive ? 'bg-primary-9 text-white' : ''
-            )}
-            aria-label={`View ${tool.name} features`}
-          >
-            <Link href={link.href} scroll={false}>
+    <div className="flex w-full flex-col gap-y-2">
+      <h3 className="text-primary-9 text-xs font-bold tracking-wide uppercase">Tools</h3>
+      <div className="flex flex-col gap-y-1.5">
+        {content?.map((tool) => {
+          const isActive = activeTool === tool.id;
+          return (
+            <button
+              type="button"
+              key={tool.id}
+              aria-label={`View ${tool.name} tool`}
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('tool', tool.id);
+                router.replace(`${url.pathname}${url.search}`, { scroll: false });
+                const el = document.getElementById(Slugify(tool.name));
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className={cn(
+                'text-primary-9 flex w-full items-center justify-between text-left text-sm',
+                isActive && 'font-bold'
+              )}
+            >
               {tool.name}
-              <RightOutlined className="ml-auto text-current" />
-            </Link>
-          </Button>
-        );
-      })}
+              {isActive && <span className="bg-primary-9 h-2 w-2 rounded-full" />}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

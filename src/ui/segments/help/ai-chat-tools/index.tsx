@@ -16,9 +16,13 @@ export default function AiChatToolsSection() {
   const allTools: AIChatToolsSectionProps[] = useAITools() ?? [];
 
   return (
-    <div className="grid h-full w-full grid-cols-4 gap-x-6">
-      <AIChatToolsNavigation content={allTools} />
-      <AIChatToolsContent content={allTools} />
+    <div className="border-neutral-2 bg-background mb-32 flex h-full max-h-[calc(100vh-18rem)] w-full overflow-hidden rounded-2xl border p-4">
+      <div className="border-neutral-2 w-1/4 shrink-0 overflow-y-auto border-r pr-4">
+        <AIChatToolsNavigation content={allTools} />
+      </div>
+      <div className="w-3/4 overflow-y-auto pl-4">
+        <AIChatToolsContent content={allTools} />
+      </div>
     </div>
   );
 }

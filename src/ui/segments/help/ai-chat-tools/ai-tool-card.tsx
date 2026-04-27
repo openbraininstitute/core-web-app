@@ -1,16 +1,16 @@
 'use client';
 
 import { InfoCircleOutlined } from '@ant-design/icons';
-import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 
-import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
-
 import { useAITool } from '@/services/ai-agent/tools/tools';
 import slugiy from '@/util/slugify';
+
+import type React from 'react';
+import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
 
 function MarkdownCodeBlock({ children }: { children?: React.ReactNode }) {
   return (
@@ -29,21 +29,22 @@ export default function AIToolCard({ content }: { content: AIChatToolsSectionPro
   return (
     <article
       key={content.name ?? content.id ?? `feature-${Math.random()}`}
-      className="border-neutral-2 text-primary-9 flex w-2/3 flex-col border border-solid p-6"
+      className="border-neutral-2 text-primary-9 flex w-full flex-col rounded-xl border border-solid bg-white p-6"
       id={slugiy(content.name)}
     >
       <h2 className="text-primary-9 text-2xl font-bold">{content.name}</h2>
 
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks]}
-        className="text-[1.2em] leading-normal"
-        rehypePlugins={[rehypeRaw]}
-        components={{
-          code: MarkdownCodeBlock,
-        }}
-      >
-        {description}
-      </ReactMarkdown>
+      <div className="text-[1.2em] leading-normal">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkBreaks]}
+          rehypePlugins={[rehypeRaw]}
+          components={{
+            code: MarkdownCodeBlock,
+          }}
+        >
+          {description}
+        </ReactMarkdown>
+      </div>
     </article>
   );
 }
