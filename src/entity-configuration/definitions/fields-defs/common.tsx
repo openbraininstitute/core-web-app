@@ -278,7 +278,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         types: [
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.Circuit,
-          ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
           ExtendedEntitiesTypeDict.EMCellMesh,
           ExtendedEntitiesTypeDict.Emodel,
@@ -336,7 +335,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         types: [
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.Circuit,
-          ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
           ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
           ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,

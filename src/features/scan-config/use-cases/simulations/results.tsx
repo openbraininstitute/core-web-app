@@ -1,7 +1,7 @@
 import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Checkbox, ConfigProvider } from 'antd';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -13,7 +13,12 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ApiError } from '@/api/error';
 import { runSimulation } from '@/api/one/circuit-simulation';
 import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
+import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
+import {
+  statusByIds as getSimulationStatusByIds,
+  children as listSimulationChildren,
+} from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import {
   OfflineTokenConsentModal,
@@ -34,15 +39,17 @@ import {
   LaunchActionSkeleton,
   SelectAllSkeleton,
 } from '@/features/scan-config/components/skeletons/columns';
+import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
 import errorRegistry from '@/features/scan-config/error-registry';
-import { StatusBadge } from '@/features/scan-config/status-badge';
+import { StatusBadge, StatusBadgeSkeleton } from '@/features/scan-config/status-badge';
+import { useLoadMoreOnInView } from '@/features/scan-config/use-load-more-on-in-view';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
+import { executionStatusColorMap } from '@/features/task/activity-execution/color-map';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
-import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { classNames } from '@/util/utils';
@@ -56,6 +63,7 @@ import type { TActivityCustomFile } from '@/features/scan-config/types';
 import styles from '@/features/scan-config/scan-config.module.css';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
+const SIMULATION_LIST_PAGE_SIZE = 30;
 
 type SimulationTabProps = {
   campaignId: string;
@@ -74,11 +82,48 @@ export default function SimulationsTab({
     campaignId,
     context,
   });
-  const simulations = useAtomValue(simulationsAtom);
+  const allSimulations = useLastTruthyValue(simulationsAtom);
+
+  const {
+    data: simulationsPages,
+    isLoading: simulationsLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['scan-config-simulations', context, campaignId],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
+      listSimulationChildren({
+        id: campaignId,
+        context,
+        filters: {
+          page: pageParam,
+          page_size: SIMULATION_LIST_PAGE_SIZE,
+        },
+      }),
+    getNextPageParam: (lastPage) =>
+      lastPage.data.length < SIMULATION_LIST_PAGE_SIZE ? undefined : lastPage.pagination.page + 1,
+    enabled: Boolean(campaignId),
+  });
+
+  const simulations = useMemo(
+    () => simulationsPages?.pages.flatMap((page) => page.data) ?? [],
+    [simulationsPages]
+  );
+  const visibleSimulationIds = useMemo(
+    () => simulations.map((simulation) => simulation.id),
+    [simulations]
+  );
+  const loadMoreRef = useLoadMoreOnInView({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
 
   const { entity: model } = useModelQuery({
     context,
-    id: simulations[0]?.entity_id,
+    id: simulations[0]?.entity_id ?? allSimulations?.[0]?.entity_id,
   });
 
   const simExecStatusMapAtom = simExecStatusMapAtomFamily({
@@ -89,8 +134,39 @@ export default function SimulationsTab({
     simExecRemoteStatusMapAtomFamily({ campaignId, context })
   );
 
-  const statusMap = useLastTruthyValue(simExecStatusMapAtom);
+  const fullStatusMap = useLastTruthyValue(simExecStatusMapAtom);
   const setSimStatus = useSetAtom(simExecStatusMapAtom);
+  const [localStatusMap, setLocalStatusMap] = useState<Map<string, ActivityStatus>>(new Map());
+
+  const {
+    data: remoteVisibleStatusMap,
+    isLoading: visibleStatusLoading,
+    refetch: refetchVisibleStatusMap,
+  } = useQuery({
+    queryKey: ['scan-config-visible-simulation-statuses', context, visibleSimulationIds],
+    queryFn: () => getSimulationStatusByIds({ simulations, context }),
+    enabled: simulations.length > 0,
+    refetchInterval: (query) => {
+      const statuses = Array.from(query.state.data?.values() ?? []);
+      return statuses.some((status) =>
+        [ActivityStatus.PENDING, ActivityStatus.RUNNING].includes(status)
+      )
+        ? 20_000
+        : false;
+    },
+  });
+
+  const visibleStatusMap = useMemo(() => {
+    const merged = new Map(remoteVisibleStatusMap);
+    localStatusMap.forEach((localStatus, simId) => {
+      const remoteStatus = merged.get(simId);
+      merged.set(
+        simId,
+        remoteStatus ? getLatestSimExecStatus(remoteStatus, localStatus) : localStatus
+      );
+    });
+    return merged;
+  }, [localStatusMap, remoteVisibleStatusMap]);
 
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
   const [selectedSimulationIds, setSelectedSimulationIds] = useState<string[]>([]);
@@ -139,7 +215,9 @@ export default function SimulationsTab({
   });
   const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
 
-  const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
+  const activeSimulationExecStatus =
+    activeSimulation &&
+    (visibleStatusMap.get(activeSimulation.id) ?? fullStatusMap?.get(activeSimulation.id));
 
   const onActiveSimulationChange = useCallback((simulation: ISimulation) => {
     setActiveSimulation(simulation);
@@ -153,29 +231,38 @@ export default function SimulationsTab({
     }
   }, []);
 
+  const setSimulationStatus = useCallback(
+    (simulationId: string, status: ActivityStatus) => {
+      setSimStatus(simulationId, status);
+      setLocalStatusMap((prev) => new Map(prev).set(simulationId, status));
+    },
+    [setSimStatus]
+  );
+
   const selectableSimulationIds = useMemo(() => {
-    return simulations
+    return (allSimulations ?? simulations)
       .filter((simulation) =>
-        [undefined, 'created', 'error'].includes(statusMap?.get(simulation.id))
+        [undefined, 'created', 'error'].includes(fullStatusMap?.get(simulation.id))
       )
       .filter((simulation) => hasSimConfigAsset(simulation))
       .map((s) => s.id);
-  }, [simulations, statusMap]);
+  }, [allSimulations, simulations, fullStatusMap]);
 
   useEffect(() => {
     // Auto select all valid simulations with status "created" on page load.
     // Previously failed simulations with a valid simulation config have to be explicitly
     // re-selected by the user.
-    const simIds = simulations
-      .filter((simulation) => [undefined, 'created'].includes(statusMap?.get(simulation.id)))
+    const source = allSimulations ?? simulations;
+    const simIds = source
+      .filter((simulation) => [undefined, 'created'].includes(fullStatusMap?.get(simulation.id)))
       .filter((simulation) => hasSimConfigAsset(simulation))
       .map((s) => s.id);
 
-    if (statusMap && simulations && !initialSelectionDone) {
+    if (fullStatusMap && source.length > 0 && !initialSelectionDone) {
       setSelectedSimulationIds(simIds);
       setInitialSelectionDone(true);
     }
-  }, [simulations, statusMap, initialSelectionDone]);
+  }, [allSimulations, simulations, fullStatusMap, initialSelectionDone]);
 
   useEffect(() => {
     // Select first simulation from the list
@@ -191,18 +278,21 @@ export default function SimulationsTab({
 
     // TODO Optimize the polling when there are multiple simulation requests
 
-    const hasActiveSimulations = statusMap
-      ? Array.from(statusMap.values()).some((status) =>
+    const hasActiveSimulations = fullStatusMap
+      ? Array.from(fullStatusMap.values()).some((status) =>
           [ActivityStatus.PENDING, ActivityStatus.RUNNING].includes(status)
         )
       : false;
 
     if (!hasActiveSimulations) return;
 
-    const intervalId = setInterval(fetchRemoteSimExecStatuseMap, 20_000);
+    const intervalId = setInterval(() => {
+      fetchRemoteSimExecStatuseMap();
+      refetchVisibleStatusMap();
+    }, 20_000);
 
     return () => clearInterval(intervalId);
-  }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
+  }, [fetchRemoteSimExecStatuseMap, refetchVisibleStatusMap, simRequestInProgress, fullStatusMap]);
 
   const runViaLaunchSystem = async (simIds: string[]) => {
     const consentResult = await ensureOfflineTokenConsent();
@@ -226,7 +316,7 @@ export default function SimulationsTab({
           simulationId: simId,
         });
         log('info', res);
-        setSimStatus(simId, ActivityStatus.PENDING);
+        setSimulationStatus(simId, ActivityStatus.PENDING);
         nSubmissions += 1;
       } catch (error) {
         log('error', 'Failed to submit a simulation');
@@ -297,7 +387,7 @@ export default function SimulationsTab({
         simulationIds: simIds,
         onInit: () => {
           simIds.forEach((simId) => {
-            setSimStatus(simId, ActivityStatus.PENDING);
+            setSimulationStatus(simId, ActivityStatus.PENDING);
           });
           setSelectedSimulationIds([]);
           setSimRequestInProgress(false);
@@ -307,7 +397,7 @@ export default function SimulationsTab({
             .with({ message_type: MessageType.STATUS }, (msg) => {
               const simId = msg.ctx?.simulation_id;
               if (simId) {
-                setSimStatus(simId, msg.status as unknown as ActivityStatus);
+                setSimulationStatus(simId, msg.status as unknown as ActivityStatus);
               }
               if (msg.status !== 'done') return;
               const simulation = simulations.find((s) => s.id === simId);
@@ -385,7 +475,7 @@ export default function SimulationsTab({
     ? `(${selectedSimulationIds.length})`
     : '';
 
-  const loading = !statusMap;
+  const loading = simulationsLoading;
 
   return (
     <div className={styles.threeColumns} id="scan-config-results">
@@ -411,19 +501,31 @@ export default function SimulationsTab({
             {loading ? (
               <ConfigListCardSkeleton />
             ) : (
-              simulations.map((simulation) => (
-                <SimulationListItem
-                  key={simulation.id}
-                  selected={activeSimulation?.id === simulation.id}
-                  simulation={simulation}
-                  execStatus={statusMap?.get(simulation.id)}
-                  onSelect={() => onActiveSimulationChange(simulation)}
-                  onSelectedForSimChange={onSelectedForSimChange}
-                  selectedForSim={selectedSimulationIds.includes(simulation.id)}
-                  selectionForSimDisabled={simRequestInProgress}
-                  canBeSelectedForSim={hasSimConfigAsset(simulation)}
-                />
-              ))
+              <>
+                {simulations.map((simulation) => (
+                  <SimulationListItem
+                    key={simulation.id}
+                    selected={activeSimulation?.id === simulation.id}
+                    simulation={simulation}
+                    execStatus={
+                      visibleStatusMap.get(simulation.id) ?? fullStatusMap?.get(simulation.id)
+                    }
+                    statusLoading={
+                      visibleStatusLoading &&
+                      !visibleStatusMap.has(simulation.id) &&
+                      !fullStatusMap?.has(simulation.id)
+                    }
+                    onSelect={() => onActiveSimulationChange(simulation)}
+                    onSelectedForSimChange={onSelectedForSimChange}
+                    selectedForSim={selectedSimulationIds.includes(simulation.id)}
+                    selectionForSimDisabled={simRequestInProgress}
+                    canBeSelectedForSim={hasSimConfigAsset(simulation)}
+                  />
+                ))}
+                <div ref={loadMoreRef} className="flex min-h-8 items-center justify-center">
+                  {isFetchingNextPage && <Loader className="text-neutral-3" />}
+                </div>
+              </>
             )}
           </div>
           {loading ? (
@@ -499,6 +601,7 @@ export default function SimulationsTab({
 type SimulationBlockProps = {
   simulation: ISimulation;
   execStatus?: ActivityStatus;
+  statusLoading?: boolean;
   onSelect: (simulationId: string) => void;
   selected?: boolean;
   onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
@@ -510,6 +613,7 @@ type SimulationBlockProps = {
 function SimulationListItem({
   simulation,
   execStatus,
+  statusLoading,
   onSelect,
   selected,
   onSelectedForSimChange,
@@ -570,7 +674,11 @@ function SimulationListItem({
             )}
           </div>
           <div className="ml-4 flex shrink-0">
-            <StatusBadge status={execStatus} details={statusDetails} />
+            {statusLoading ? (
+              <StatusBadgeSkeleton />
+            ) : (
+              <StatusBadge status={execStatus} details={statusDetails} />
+            )}
             <RightOutlined className="ml-2 text-sm" />
           </div>
         </div>

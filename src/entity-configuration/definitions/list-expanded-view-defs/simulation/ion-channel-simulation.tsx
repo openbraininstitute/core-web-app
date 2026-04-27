@@ -14,7 +14,7 @@ const className = 'text-primary-9! whitespace-nowrap';
 type SimulationRow = ISimulation & { status?: TActivityStatus };
 
 export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
-  expandIconColumnIndex: 6,
+  expandIconColumnIndex: 5,
   expandIcon:
     TaskViewConfig.expandIcon as ListExpandedViewConfig<ICircuitSimulationCampaign>['expandIcon'],
   render: (simulationCampaign, records) => {
@@ -57,6 +57,7 @@ export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
         align: 'center',
         className,
         key: 'status',
+        fixed: 'right' as const,
       },
     ];
 

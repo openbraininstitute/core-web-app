@@ -23,6 +23,8 @@ import type { WorkspaceContext } from '@/types/common';
 export type TTaskCampaignExecutionRow<
   TMeta extends Record<string, unknown> = Record<string, unknown>,
 > = {
+  id: string;
+  legacy_id: null;
   execution: ITaskActivity | null;
   provenance: {
     config: ITaskConfig<TMeta>;
@@ -62,6 +64,8 @@ export function buildTaskCampaignRows<
         const executionsForConfig = executionsByConfigId[ref.id] ?? [];
         if (executionsForConfig.length === 0) {
           rows.push({
+            id: `${config.id}:${generation.id}:created`,
+            legacy_id: null,
             execution: null,
             provenance: { config, generation },
           });
@@ -70,6 +74,8 @@ export function buildTaskCampaignRows<
 
         for (const execution of executionsForConfig) {
           rows.push({
+            id: `${config.id}:${execution.id}`,
+            legacy_id: null,
             execution,
             provenance: { config, generation },
           });

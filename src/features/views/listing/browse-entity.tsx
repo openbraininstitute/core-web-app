@@ -362,6 +362,7 @@ export function BrowseEntityScope({
             }}
             {...mainTableProps}
             filterClassNames={classNames?.filterClassNames}
+            // @ts-expect-error
             expandableOptions={expandableOptions}
             left={left}
             facets={{

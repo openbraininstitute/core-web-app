@@ -6,8 +6,8 @@ import {
   type TActivityStatus,
 } from '@/api/entitycore/types/entities/task-activity';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
-import { StatusBadge } from '@/features/scan-config/status-badge';
-import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
+import { StatusBadge, StatusBadgeSkeleton } from '@/features/scan-config/status-badge';
+import { executionStatusColorMap } from '@/features/task/activity-execution/color-map';
 
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
@@ -15,6 +15,7 @@ import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/e
 type Props = {
   config: ITaskConfig<TTaskConfigMeta>;
   execStatus?: TActivityStatus;
+  statusLoading?: boolean;
   onSelect: () => void;
   selected?: boolean;
   onSelectedForExtractionChange: (configId: string, selected: boolean) => void;
@@ -25,6 +26,7 @@ type Props = {
 export function ExtractionConfigsLeftMenu({
   config,
   execStatus,
+  statusLoading,
   onSelect,
   selected,
   onSelectedForExtractionChange,
@@ -78,7 +80,7 @@ export function ExtractionConfigsLeftMenu({
             )}
           </div>
           <div className="ml-4 flex shrink-0">
-            <StatusBadge status={execStatus} />
+            {statusLoading ? <StatusBadgeSkeleton /> : <StatusBadge status={execStatus} />}
             <RightOutlined className="ml-2 text-sm" />
           </div>
         </div>

@@ -1,3 +1,4 @@
+export { viewConfig as ionChannelSimulationExpandedViewConfig } from './ion-channel-simulation';
 export { viewConfig as memodelCircuitSimulationExpandedViewConfig } from './memodel-circuit-simulation';
 export { viewConfig as microcircuitSimulationExpandedViewConfig } from './microcircuit-simulation';
 export { viewConfig as pairedNeuronsCircuitSimulationExpandedViewConfig } from './paired-neurons-simulation';

@@ -1,11 +1,11 @@
-import { RiAddCircleLine, RiIndeterminateCircleLine } from '@remixicon/react';
 import { ConfigProvider, Table } from 'antd';
 import { get, lowerCase, upperFirst } from 'es-toolkit/compat';
 
 import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
-import { ExecutionStatus } from '@/ui/segments/activity-execution/status';
+import { ExecutionStatus } from '@/features/task/activity-execution/status';
 
 import type { ColumnsType } from 'antd/es/table';
+import type { SVGProps } from 'react';
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 import type {
   TTaskCampaignExecutionRow,
@@ -15,6 +15,7 @@ import type {
 export function getParamLabel(param: string) {
   return upperFirst(lowerCase(param.split('.').at(-1))); // e.g. "initialize.random_seed" -> "Random seed"
 }
+
 export function getParamTitle(param: string) {
   const parts = param.split('.');
   return (
@@ -29,7 +30,6 @@ export function getParamTitle(param: string) {
       ))}
     </div>
   );
-  /* return upperFirst(lowerCase(param.split('.').at(-1))); // e.g. "initialize.random_seed" -> "Random seed" */
 }
 
 /** API may return scan params as a string[], object map, or omit them. */
@@ -43,7 +43,9 @@ export function scanParameterKeys(scanParameters: unknown): string[] {
   }
   return [];
 }
+
 const className = 'text-primary-9! whitespace-nowrap';
+
 type Row = {
   id: string;
   name: string;
@@ -57,15 +59,47 @@ function getExecutionStatus(
   return record.execution?.status ?? ActivityStatus.CREATED;
 }
 
+export function AddCircleLineDuotone(props: SVGProps<SVGSVGElement>) {
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      {/* Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ */}
+      <g fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="12" cy="12" r="10" opacity=".5" />
+        <path strokeLinecap="round" d="M15 12h-3m0 0H9m3 0V9m0 3v3" />
+      </g>
+    </svg>
+  );
+}
+
+export function MinusCircleLineDuotone(props: SVGProps<SVGSVGElement>) {
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      {/* Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ */}
+      <g fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="12" cy="12" r="10" opacity=".5" />
+        <path strokeLinecap="round" d="M15 12H9" />
+      </g>
+    </svg>
+  );
+}
+
 export const TaskViewConfig: ListExpandedViewConfig<
   TTaskCampaignRow<{ scan_parameters: Record<string, unknown> }>
 > = {
   expandIconColumnIndex: 5,
-  render: (taskCampaignRow) => {
+  render: (taskCampaignRow, records) => {
+    const taskRows =
+      records.length > 0
+        ? (records as unknown as TTaskCampaignExecutionRow<{
+            scan_parameters: Record<string, unknown>;
+          }>[])
+        : taskCampaignRow.rows;
     const campaignMeta = taskCampaignRow.meta as Record<string, unknown>;
     const paramKeySet = new Set<string>([
       ...scanParameterKeys(campaignMeta.scan_parameters),
-      ...taskCampaignRow.rows.flatMap((r) =>
+      ...taskRows.flatMap((r) =>
         scanParameterKeys(
           get(r.provenance.config.meta as Record<string, unknown>, 'scan_parameters')
         )
@@ -80,7 +114,7 @@ export const TaskViewConfig: ListExpandedViewConfig<
       key: param,
     }));
 
-    const rows: Row[] = taskCampaignRow.rows.map((r) => ({
+    const rows: Row[] = taskRows.map((r) => ({
       id: `${r.provenance.config.id}:${r.execution?.id ?? 'pending'}`,
       name: r.provenance.config.name,
       scan_parameters:
@@ -111,7 +145,6 @@ export const TaskViewConfig: ListExpandedViewConfig<
         align: 'center',
         className,
         key: 'status',
-        fixed: 'right',
       },
     ];
 
@@ -135,17 +168,24 @@ export const TaskViewConfig: ListExpandedViewConfig<
     if (!props.expandable) return null;
     if (props.expanded) {
       return (
-        <button type="button" onClick={(e) => props.onExpand(props.record, e)}>
-          <RiIndeterminateCircleLine className="text-primary-8 size-6" />
-        </button>
-      );
-    } else {
-      return (
-        <button type="button" onClick={(e) => props.onExpand(props.record, e)}>
-          <RiAddCircleLine className="text-primary-7 size-6" />
+        <button
+          id={`task-view-collapse-icon-${props.record.id}`}
+          type="button"
+          onClick={(e) => props.onExpand(props.record, e)}
+        >
+          <MinusCircleLineDuotone className="text-primary-8 size-6" />
         </button>
       );
     }
+    return (
+      <button
+        id={`task-view-expand-icon-${props.record.id}`}
+        type="button"
+        onClick={(e) => props.onExpand(props.record, e)}
+      >
+        <AddCircleLineDuotone className="text-primary-7 size-6" />
+      </button>
+    );
   },
-  isExpandable: (taskCampaignRow) => get(taskCampaignRow, 'rows', []).length > 0,
+  isExpandable: () => true,
 };

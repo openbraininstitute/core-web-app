@@ -1,11 +1,13 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import {
+  ionChannelSimulationExpandedViewConfig,
   memodelCircuitSimulationExpandedViewConfig,
   microcircuitSimulationExpandedViewConfig,
   pairedNeuronsCircuitSimulationExpandedViewConfig,
   singleNeuronCircuitSimulationExpandedViewConfig,
   smallMicrocircuitSimulationExpandedViewConfig,
 } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
+import { TaskViewConfig } from '@/features/task/expanded-view';
 
 import { skeletonizationCampaignExpandedViewConfig } from './processing';
 
@@ -15,6 +17,7 @@ export * from '@/entity-configuration/definitions/list-expanded-view-defs/simula
 export * from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 
 export const listExpandedViewRegistry: ListExpandedViewRegistry = {
+  [ExtendedEntitiesTypeDict.CircuitExtractionCampaign]: TaskViewConfig,
   [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: memodelCircuitSimulationExpandedViewConfig,
   [ExtendedEntitiesTypeDict.MicrocircuitSimulation]: microcircuitSimulationExpandedViewConfig,
   [ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation]:
@@ -24,4 +27,5 @@ export const listExpandedViewRegistry: ListExpandedViewRegistry = {
   [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]:
     smallMicrocircuitSimulationExpandedViewConfig,
   [ExtendedEntitiesTypeDict.SkeletonizationCampaign]: skeletonizationCampaignExpandedViewConfig,
+  [ExtendedEntitiesTypeDict.IonChannelModelSimulation]: ionChannelSimulationExpandedViewConfig,
 };

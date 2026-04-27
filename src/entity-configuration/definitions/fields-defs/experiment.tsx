@@ -9,15 +9,13 @@ import {
   renderEmptyOrValue,
 } from '@/entity-configuration/definitions/renderer';
 import { getSkeletonizationStatusCountMap } from '@/entity-configuration/domain/processing/skeletonization-campaign';
-import { getCircuitSimulationStatusCountMap } from '@/entity-configuration/domain/simulation/simulation-campaign';
+import { LegacyCampaignStatusCell } from '@/features/task/activity-execution/legacy-campaign-status-cell';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
-import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
 
 import type {
   EntityCoreObjectTypes,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
@@ -156,8 +154,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: null,
     style: { width: 160 },
     render: (r) => {
-      const statusCountMap = getCircuitSimulationStatusCountMap(r as ICircuitSimulationCampaign);
-      return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+      return <LegacyCampaignStatusCell campaignId={r.id} />;
     },
     isDisplayable: true,
     isFilterable: false,

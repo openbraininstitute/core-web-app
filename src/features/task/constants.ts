@@ -1,0 +1,3 @@
+export const TASK_ID_FILTER_CHUNK_SIZE = 30;
+export const TASK_PAGE_SIZE = 30;
+export const TASK_STATUS_POLL_INTERVAL_MS = 10_000;

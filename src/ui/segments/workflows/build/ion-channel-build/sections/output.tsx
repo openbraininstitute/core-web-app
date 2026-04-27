@@ -18,6 +18,7 @@ import {
 } from '@/api/small-scale-simulator/ion-channel/build';
 import { useAppNotification } from '@/components/notification';
 import { resolveIonChannelModelingCampaignBuilds } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { getStatusColor } from '@/features/task/activity-execution/color-map';
 import { message } from '@/i18n/en/ion-channel-build';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -26,7 +27,6 @@ import { Button } from '@/ui/molecules/button';
 import { Card, CardTitle } from '@/ui/molecules/card';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
 import {
   CONFIGURATION_FORM_STATE_KEY,
   GenerativeFromAtomFamily,

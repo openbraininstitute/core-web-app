@@ -1,9 +1,12 @@
 import { Fragment } from 'react';
 
-import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
+import {
+  ActivityStatus,
+  type TActivityStatus,
+} from '@/api/entitycore/types/entities/task-activity';
 import { executionStatusIconMap } from '@/components/icons/activity-execution';
+import { getStatusColor } from '@/features/task/activity-execution/color-map';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { getStatusColor } from '@/ui/segments/activity-execution/color-map';
 
 const StatusConfig = {
   [ActivityStatus.CREATED]: {
@@ -42,12 +45,26 @@ type ExecutionStatusProps = {
   status: TActivityStatus;
 };
 
+export function ExecutionAggregatedStatusSkeleton() {
+  return (
+    <div className="flex">
+      <div className="divide-neutral-2 border-neutral-2 flex divide-x rounded-full px-0.5 border">
+        <div className="flex items-center gap-1 px-0.5 py-0.5">
+          <span className="h-4.5 w-6 animate-pulse rounded-full bg-neutral-200" />
+          <span className="h-4.5 w-4.5 animate-pulse rounded-full bg-neutral-200" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ExecutionStatus({ status }: ExecutionStatusProps) {
   const color = getStatusColor(status);
   const statusConfig = StatusConfig[status];
 
   return (
     <div
+      id={`execution-status-${status}`}
       className="flex  min-w-20 w-full max-w-30  items-center justify-between gap-2 rounded-full border px-4 py-0.5"
       style={{
         color,

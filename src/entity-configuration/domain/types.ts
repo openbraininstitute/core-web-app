@@ -1,11 +1,7 @@
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type {
-  AssetLabel,
-  EntityCoreIdentifiable,
-  EntityCoreIdentifiableNamed,
-} from '@/api/entitycore/types/shared/global';
+import type { AssetLabel, EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
@@ -79,7 +75,7 @@ export type EntityCoreTypeConfig<
     expandRow?: (
       record: T,
       ctx?: WorkspaceContext
-    ) => Promise<EntityCoreIdentifiableNamed | Array<EntityCoreIdentifiableNamed>>;
+    ) => Promise<EntityCoreIdentifiable | Array<EntityCoreIdentifiable>>;
   };
   asset: {
     extension?: string;
