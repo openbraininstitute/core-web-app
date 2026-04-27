@@ -1,5 +1,6 @@
 import { getAboutContent } from '@/services/sanity/api/get-about-content';
 import { getGuidesContent } from '@/services/sanity/api/get-guides-content';
+import { DimWhenHelpOpen } from '@/ui/segments/project/get-started/elements/dim-when-help-open';
 import { HelpButtonsRow } from '@/ui/segments/project/get-started/elements/help-buttons-row';
 import { TutorialLeftPane } from '@/ui/segments/project/get-started/elements/tutorial-left-pane';
 import { QuickAccessExamples } from '@/ui/segments/project/get-started/sections/quick-access-examples';
@@ -23,8 +24,12 @@ export default async function Layout({
     >
       <div className="flex max-h-full w-[40%] min-w-0 flex-col gap-3 overflow-y-auto rounded-xl bg-[#ededed] p-3">
         <HelpButtonsRow />
-        <TutorialList />
-        <QuickAccessExamples context={context} />
+        <DimWhenHelpOpen>
+          <div className="flex flex-col gap-3">
+            <TutorialList />
+            <QuickAccessExamples context={context} />
+          </div>
+        </DimWhenHelpOpen>
       </div>
       <div className="h-full w-[60%] min-w-0">
         <TutorialLeftPane aboutContent={aboutContent} guidesContent={guidesContent}>
