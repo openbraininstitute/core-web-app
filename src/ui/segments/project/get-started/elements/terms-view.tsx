@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import SanityContentRTF from '@/components/LandingPage/components/SanityContentRTF';
 import { useSanityContentRTF } from '@/components/LandingPage/content/content';
@@ -62,10 +62,8 @@ function splitIntoCards(content: ContentForRichText): TermsCard[] {
 export function TermsView() {
   const content = useSanityContentRTF(EnumSection.TermsAndConditions);
   const sections = splitIntoSections(content);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const currentSlug = searchParams.get('section');
-  const active = sections.find((s) => s.slug === currentSlug) ?? sections[0];
 
   if (!sections.length) {
     return (
@@ -75,6 +73,15 @@ export function TermsView() {
     );
   }
 
+  const handleNavClick = (slug: string) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('section', slug);
+    window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+    document
+      .getElementById(`terms-section-${slug}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className="border-neutral-2 bg-background mb-32 flex h-full max-h-[calc(100vh-18rem)] w-full overflow-hidden rounded-2xl border p-4">
       <div className="border-neutral-2 w-1/4 shrink-0 overflow-y-auto border-r pr-4">
@@ -83,17 +90,13 @@ export function TermsView() {
             <h3 className="text-primary-9 text-sm font-bold tracking-wide uppercase">Sections</h3>
             <div className="flex flex-col gap-y-1.5">
               {sections.map((section) => {
-                const isActive = active?.slug === section.slug;
+                const isActive = currentSlug === section.slug;
                 return (
                   <button
                     type="button"
                     aria-label={`View terms section ${section.title}`}
                     key={section.slug}
-                    onClick={() => {
-                      const url = new URL(window.location.href);
-                      url.searchParams.set('section', section.slug);
-                      router.replace(`${url.pathname}${url.search}`, { scroll: false });
-                    }}
+                    onClick={() => handleNavClick(section.slug)}
                     className={cn(
                       'text-primary-9 flex w-full items-center justify-between text-left text-base',
                       isActive && 'font-bold'
@@ -115,24 +118,30 @@ export function TermsView() {
           styles.content
         )}
       >
-        {active && (
-          <div className="flex flex-col items-start gap-y-4">
-            <h2 className="text-primary-9 text-2xl font-bold">{active.title}</h2>
-            <div className="flex w-full flex-col gap-4">
-              {splitIntoCards(active.content).map((card, index) => (
-                <div
-                  key={card.title ?? `card-${index}`}
-                  className="border-neutral-2 text-primary-9 flex w-full flex-col rounded-xl border border-solid bg-white p-6"
-                >
-                  {card.title && (
-                    <h3 className="text-primary-9 mb-2 text-2xl font-bold">{card.title}</h3>
-                  )}
-                  <SanityContentRTF value={card.content} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="flex flex-col items-start gap-y-8">
+          {sections.map((section) => (
+            <section
+              id={`terms-section-${section.slug}`}
+              key={section.slug}
+              className="flex w-full scroll-mt-4 flex-col items-start gap-y-4"
+            >
+              <h2 className="text-primary-9 text-2xl font-bold">{section.title}</h2>
+              <div className="flex w-full flex-col gap-4">
+                {splitIntoCards(section.content).map((card, index) => (
+                  <div
+                    key={card.title ?? `card-${index}`}
+                    className="border-neutral-2 text-primary-9 flex w-full flex-col rounded-xl border border-solid bg-white p-6"
+                  >
+                    {card.title && (
+                      <h3 className="text-primary-9 mb-2 text-2xl font-bold">{card.title}</h3>
+                    )}
+                    <SanityContentRTF value={card.content} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
     </div>
   );
