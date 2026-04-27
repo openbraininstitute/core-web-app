@@ -13,6 +13,7 @@ import type { ContentForRichText } from '@/components/LandingPage/content/types'
 import styles from '@/ui/segments/help/about/about-content.module.css';
 
 type TermsSection = { title: string; slug: string; content: ContentForRichText };
+type TermsCard = { title: string | null; content: ContentForRichText };
 
 function splitIntoSections(content: ContentForRichText): TermsSection[] {
   const sections: TermsSection[] = [];
@@ -34,6 +35,28 @@ function splitIntoSections(content: ContentForRichText): TermsSection[] {
   }
 
   return sections;
+}
+
+function splitIntoCards(content: ContentForRichText): TermsCard[] {
+  const cards: TermsCard[] = [];
+  let current: TermsCard | null = null;
+
+  for (const block of content) {
+    if (block._type === 'verticalDivider') continue;
+    const isH3 = block._type === 'titleHeadline' && block.levelType === 'h3';
+    if (isH3) {
+      current = { title: (block as { title: string }).title, content: [] };
+      cards.push(current);
+      continue;
+    }
+    if (!current) {
+      current = { title: null, content: [] };
+      cards.push(current);
+    }
+    current.content.push(block);
+  }
+
+  return cards.filter((c) => c.title || c.content.length > 0);
 }
 
 export function TermsView() {
@@ -85,11 +108,29 @@ export function TermsView() {
           </div>
         </div>
       </div>
-      <div className={cn('text-primary-9 w-3/4 overflow-y-auto pl-4', styles.content)}>
+      <div
+        className={cn(
+          'text-primary-9 w-3/4 overflow-y-auto pl-4',
+          '[&_ul.sanityContentItems>li]:!list-none',
+          styles.content
+        )}
+      >
         {active && (
           <div className="flex flex-col items-start gap-y-4">
             <h2 className="text-primary-9 text-2xl font-bold">{active.title}</h2>
-            <SanityContentRTF value={active.content} />
+            <div className="flex w-full flex-col gap-4">
+              {splitIntoCards(active.content).map((card, index) => (
+                <div
+                  key={card.title ?? `card-${index}`}
+                  className="border-neutral-2 text-primary-9 flex w-full flex-col rounded-xl border border-solid bg-white p-6"
+                >
+                  {card.title && (
+                    <h3 className="text-primary-9 mb-2 text-2xl font-bold">{card.title}</h3>
+                  )}
+                  <SanityContentRTF value={card.content} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
