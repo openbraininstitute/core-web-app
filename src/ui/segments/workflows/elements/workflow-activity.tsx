@@ -29,8 +29,8 @@ import {
   resolveIonChannelModelingByCampaignId,
   type TExtendedIonChannelModelingCampaignsType,
 } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
-import { type ExtendedCampaignsType } from '@/entity-configuration/domain/simulation';
 import {
+  type ExtendedCampaignsType,
   rows as listSimulationRows,
   type SimulationRow,
 } from '@/entity-configuration/domain/simulation/simulation-campaign';
@@ -63,7 +63,6 @@ import { cn } from '@/utils/css-class';
 
 import type { ColumnsType } from 'antd/es/table/interface';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ExtendedCampaignsType } from '@/entity-configuration/domain/simulation';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [
@@ -184,11 +183,22 @@ export function WorkflowActivity() {
         id: 'activity-table-type-cell-selector',
       }),
       render: (_, record) => {
-        return (
-          <span className={cn('text-primary-9 flex items-center capitalize')}>
-            {getEntityByExtendedType({ type: record.type })?.title}
-          </span>
-        );
+        const extractionTitle =
+          record.type === EntityTypeDict.TaskConfig &&
+          (record as unknown as ITaskConfig<Record<string, unknown>>).task_config_type ===
+            TaskConfigType.CircuitExtractionCampaign
+            ? getEntityByExtendedType({
+                type: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+              })?.title
+            : undefined;
+        const title =
+          extractionTitle ??
+          getEntityByExtendedType({
+            type: record.type as unknown as TExtendedEntitiesTypeDict,
+          })?.title ??
+          (entityType ? getEntityByExtendedType({ type: entityType })?.title : undefined);
+
+        return <span className={cn('text-primary-9 flex items-center capitalize')}>{title}</span>;
       },
     },
     {

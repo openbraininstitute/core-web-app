@@ -7,7 +7,7 @@ import {
 } from '@/api/entitycore/types/entities/task-activity';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { StatusBadge } from '@/features/scan-config/status-badge';
-import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
+import { executionStatusColorMap } from '@/features/task/activity-execution/color-map';
 
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
