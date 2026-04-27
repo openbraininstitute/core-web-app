@@ -19,7 +19,7 @@ export default function FeaturesNavigation() {
   return (
     <div className="flex w-full flex-col gap-y-6">
       <div className="flex flex-col gap-y-2">
-        <h3 className="text-primary-9 text-xs font-bold tracking-wide uppercase">Scale</h3>
+        <h3 className="text-primary-9 text-sm font-bold tracking-wide uppercase">Scale</h3>
         <div className="flex flex-col gap-y-1.5">
           {SCALES.map((scale) => {
             const isActive = activeScale === scale.id;
@@ -34,7 +34,7 @@ export default function FeaturesNavigation() {
                   router.replace(`${url.pathname}${url.search}`, { scroll: false });
                 }}
                 className={cn(
-                  'text-primary-9 flex w-full items-center justify-between text-left text-sm',
+                  'text-primary-9 flex w-full items-center justify-between text-left text-base',
                   isActive && 'font-bold'
                 )}
               >

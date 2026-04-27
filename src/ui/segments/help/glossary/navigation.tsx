@@ -26,7 +26,7 @@ export default function GlossaryNavigation({
     <div className="flex w-full flex-col gap-y-6">
       {glossarySectionsTypes.map((section: GlossarySectionType) => (
         <div key={section.name} className="flex flex-col gap-y-2">
-          <h3 className="text-primary-9 text-xs font-bold tracking-wide uppercase">
+          <h3 className="text-primary-9 text-sm font-bold tracking-wide uppercase">
             {section.name}
           </h3>
           <div className="flex flex-col gap-y-1.5">
@@ -50,7 +50,7 @@ export default function GlossaryNavigation({
                   }}
                   key={displayName}
                   className={cn(
-                    'text-primary-9 flex w-full items-center justify-between text-left text-sm',
+                    'text-primary-9 flex w-full items-center justify-between text-left text-base',
                     isChildActive && 'font-bold'
                   )}
                 >
