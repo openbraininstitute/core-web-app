@@ -153,10 +153,11 @@ export function Item({
         aria-label="virtual-lab-item"
         data-testid="virtual-lab-item"
         className={cn(
-          'group flex cursor-pointer items-center justify-between px-2 py-3 transition-colors duration-150 hover:bg-gray-50',
-          'hover:bg-neutral-1 rounded-2xl',
+          'group flex cursor-pointer items-center justify-between px-2 py-3 transition-colors duration-150',
+          'rounded-2xl',
+          { 'hover:bg-neutral-1': !lab.isMine },
           { 'rounded-b-none': expandedLabs.has(lab.id) },
-          { 'bg-primary-9 text-white': lab.isMine }
+          { 'bg-primary-9 hover:bg-primary-9 text-white': lab.isMine }
         )}
         onKeyDown={onVlabClick}
         onClick={onVlabClick}
@@ -176,7 +177,7 @@ export function Item({
           />
           <h4
             className={cn('text-primary-9 text-md line-clamp-1 truncate font-bold', {
-              'group-hover:text-primary-8! text-white!': lab.isMine,
+              'text-white! group-hover:text-white!': lab.isMine,
             })}
             title={lab.name}
           >
@@ -200,8 +201,10 @@ export function Item({
               >
                 <RightOutlined
                   className={cn(
-                    'text-primary-7 group-hover:text-primary-8 h-4 w-4 hover:text-white',
-                    { 'hover:text-primary-4 text-primary-3': lab.isMine }
+                    'h-4 w-4',
+                    lab.isMine
+                      ? 'text-primary-3 group-hover:text-primary-3 hover:text-primary-3'
+                      : 'text-primary-7 group-hover:text-primary-8 hover:text-white'
                   )}
                 />
               </Button>
