@@ -20,7 +20,7 @@ export function TutorialsColumns({ left, right }: { left: ReactNode; right: Reac
       <div
         className={cn(
           'flex max-h-full min-w-0 flex-col gap-3 overflow-y-auto rounded-xl bg-[#ededed] p-3 transition-[width] duration-200 ease-out',
-          collapsed ? 'w-[260px]' : 'w-[40%]'
+          collapsed ? 'w-[204px]' : 'w-[40%]'
         )}
       >
         {left}
