@@ -1,6 +1,6 @@
 'use client';
 
-import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import { LoadingOutlined, PlusOutlined, RightOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { orderBy } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -25,10 +25,12 @@ type Props = {
   lab: TVirtualLab & { isMine: boolean };
   isActive: boolean;
   isOpen: boolean;
+  isAdmin: boolean;
   activeProjectId: string | null;
   expandedLabs: Set<string>;
   tryingToExpand: Set<string>;
   toggleLabExpansion: (id: string, action?: 'trying' | 'opened') => void;
+  onCreateProject: () => void;
 };
 
 export function Item({
@@ -36,9 +38,11 @@ export function Item({
   activeProjectId,
   isActive,
   isOpen,
+  isAdmin,
   expandedLabs,
   tryingToExpand,
   toggleLabExpansion,
+  onCreateProject,
 }: Props) {
   const {
     isLoading: projectsLoading,
@@ -274,6 +278,21 @@ export function Item({
                 </motion.div>
               );
             })}
+            {isAdmin && (
+              <Button
+                rounded
+                size="md"
+                variant="outline"
+                className="mt-2 mr-auto w-max border-0 bg-green-600 px-4 font-semibold text-white shadow-sm hover:bg-green-700 hover:text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCreateProject();
+                }}
+              >
+                Add project
+                <PlusOutlined className="ml-auto text-sm" />
+              </Button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

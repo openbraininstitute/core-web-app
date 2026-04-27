@@ -10,7 +10,7 @@ import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState 
 
 import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscription';
-import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
+import { getUserGroups, getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { UserFilled } from '@/components/icons/buttons';
@@ -139,6 +139,21 @@ export function SpaceSwitcher({ className }: Props) {
     () => compact([myVirtualLab, ...membershipLabs]),
     [myVirtualLab, membershipLabs]
   );
+
+  const { data: userGroups } = useQuery({
+    queryKey: keyBuilder.membership(),
+    queryFn: getUserGroups,
+  });
+
+  const adminLabIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const g of userGroups?.data?.groups ?? []) {
+      if (g.group_type === 'vlab' && g.role === 'admin' && g.virtual_lab_id) {
+        ids.add(g.virtual_lab_id);
+      }
+    }
+    return ids;
+  }, [userGroups]);
 
   const onProfileClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
@@ -415,7 +430,7 @@ export function SpaceSwitcher({ className }: Props) {
               className={cn(
                 'border-neutral-2 absolute top-full left-0 z-50 w-full overflow-hidden rounded-tr-lg rounded-b-lg border border-t-0 bg-white',
                 'relative flex flex-col pt-1 pb-2 shadow-2xl',
-                'h-full max-h-[calc(100vh-4.5rem)] min-h-[calc(100vh-5rem)] lg:max-h-[calc(100vh-4.5rem)]',
+                'h-full max-h-[calc((100vh-4.5rem)*0.9)] min-h-[calc((100vh-5rem)*0.9)] lg:max-h-[calc((100vh-4.5rem)*0.9)]',
                 { 'rounded-t-none': isExpanded },
                 { 'z-1001': boardModalOpen }
               )}
@@ -436,7 +451,7 @@ export function SpaceSwitcher({ className }: Props) {
                 </button>
               )}
               {/* list of user labs */}
-              <div className="secondary-scrollbar flex max-h-[calc(100vh-7rem)] flex-col gap-1.5 overflow-y-auto rounded-md bg-white py-2">
+              <div className="secondary-scrollbar flex max-h-[calc((100vh-7rem)*0.9)] flex-col gap-1.5 overflow-y-auto rounded-md bg-white py-2">
                 {labs.map((lab, index) => (
                   <motion.div
                     key={lab.id}
@@ -456,28 +471,13 @@ export function SpaceSwitcher({ className }: Props) {
                       expandedLabs={expandedLabs}
                       tryingToExpand={tryingToExpand}
                       toggleLabExpansion={toggleLabExpansion}
+                      isAdmin={adminLabIds.has(lab.id) || lab.isMine}
+                      onCreateProject={onCreateProject}
                     />
                   </motion.div>
                 ))}
               </div>
 
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.05, duration: 0.1 }}
-                className="mt-auto p-4"
-              >
-                <Button
-                  rounded
-                  size="md"
-                  variant="default"
-                  className="w-full"
-                  onClick={onCreateProject}
-                >
-                  Add project
-                  <PlusOutlined className="ml-auto text-sm" />
-                </Button>
-              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
