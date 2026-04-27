@@ -28,6 +28,11 @@
   background-color: #eff6ff;
 }
 
+.cardError {
+  border-color: rgba(252, 165, 165, 0.5);
+  background-color: #fef2f2;
+}
+
 .cardExpanded {
   box-shadow:
     0 1px 3px 0 rgba(0, 0, 0, 0.1),
@@ -104,6 +109,10 @@
 }
 .statusComplete {
   color: #047857;
+}
+
+.statusError {
+  color: #dc2626;
 }
 
 .statusText {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { CheckIcon } from '@/components/icons';
+import CrossIcon from '@/components/icons/Cross';
 import Chevron from '@/components/icons/Chevron';
 import HelpIconI from '@/components/icons/HelpIcon';
 import { configStateAtom } from '@/services/ai-agent/hooks/chat';
@@ -70,9 +71,10 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const { tool, state, key } = toolsState;
   const Icon = tool.icon;
   const isExpanded = expandedToolKeys.has(key);
-  const isRunning = state !== 'output-available';
+  const isRunning = state !== 'output-available' && state !== 'output-error';
+  const isError = state === 'output-error';
   const isStateToolCall = getToolName(part) === 'editstate' || getToolName(part) === 'getstate';
-  const showRestore = isStateToolCall && !isRunning;
+  const showRestore = isStateToolCall && !isRunning && !isError;
 
   return (
     <div className={cn(styles.container, className)}>
@@ -80,6 +82,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
         className={cn(
           styles.card,
           isRunning && styles.cardRunning,
+          isError && styles.cardError,
           isExpanded && styles.cardExpanded
         )}
         key={key}
@@ -102,13 +105,20 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
             <div
               className={cn(
                 styles.status,
-                isRunning ? styles.statusRunning : styles.statusComplete
+                isRunning && styles.statusRunning,
+                isError && styles.statusError,
+                !isRunning && !isError && styles.statusComplete
               )}
             >
               {isRunning ? (
                 <>
                   <LoadingDots />
                   <span className={styles.statusText}>Running</span>
+                </>
+              ) : isError ? (
+                <>
+                  <CrossIcon className={styles.checkIcon} />
+                  <span>Error</span>
                 </>
               ) : (
                 <>

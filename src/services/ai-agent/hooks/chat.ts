@@ -44,15 +44,18 @@ export function useServiceAiAgentChat(threadId: string) {
       headers: () => ({
         Authorization: `Bearer ${accessToken}`,
       }),
-      prepareSendMessagesRequest: ({ messages }) => {
+      body: () => ({
+        toolSelection: activeTools,
+        frontendUrl: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
+        sharedState: aiAgentState,
+      }),
+      prepareSendMessagesRequest: ({ messages, body }) => {
         const lastMessage = messages.at(-1);
 
         return {
           body: {
+            ...body,
             parts: lastMessage?.parts ?? [],
-            toolSelection: activeTools,
-            frontendUrl: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
-            sharedState: aiAgentState,
           },
         };
       },
@@ -90,7 +93,6 @@ export function useServiceAiAgentChat(threadId: string) {
       .find(
         (p) => isToolUIPart(p) && getToolName(p) === 'editstate' && p.state === 'output-available'
       );
-
     if (toolPart && 'output' in toolPart && toolPart.output) {
       try {
         const result = parseToolOutput(toolPart.output) as Record<string, unknown>;
