@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 
-import GlossaryContent from '@/ui/segments/help/glossary/content';
-import GlossaryNavigation from '@/ui/segments/help/glossary/navigation';
-
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { useSanityContentForArtifactTypes } from '@/components/documentation/hooks/use-sanity-content-for-artifact-types';
 import { useSanityContentForExperimentsModels } from '@/components/documentation/hooks/use-sanity-content-for-data-type';
-import { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
+import GlossaryContent from '@/ui/segments/help/glossary/content';
+import GlossaryNavigation from '@/ui/segments/help/glossary/navigation';
+
+import type { CellTypeContentForGlossaryItem, ContentForGlossaryItem } from '@/types/help/type';
 
 export type CellTypeContentProps = {
   name: string;
@@ -78,11 +78,13 @@ export default function GlossarySection() {
   }
 
   return (
-    <div className="grid h-full w-full grid-cols-4 gap-x-6">
-      <div className="col-span-1">
+    <div className="border-neutral-2 bg-background flex h-full max-h-[82vh] w-full overflow-hidden rounded-2xl border p-4">
+      <div className="border-neutral-2 w-1/4 shrink-0 overflow-y-auto border-r pr-4">
         <GlossaryNavigation glossarySectionsTypes={glossarySectionsTypes} />
       </div>
-      <GlossaryContent glossarySections={glossarySectionsTypes} />
+      <div className="w-3/4 overflow-y-auto pl-4">
+        <GlossaryContent glossarySections={glossarySectionsTypes} />
+      </div>
     </div>
   );
 }

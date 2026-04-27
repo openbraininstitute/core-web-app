@@ -1,8 +1,8 @@
 import { PortableText } from 'next-sanity';
 
-import type { ContentForGlossaryItem } from '@/components/documentation/type';
-
 import Slugify from '@/util/slugify';
+
+import type { ContentForGlossaryItem } from '@/components/documentation/type';
 
 import styles from '@/ui/segments/help/glossary/term-card.module.css';
 
@@ -15,7 +15,7 @@ export default function TermCard({
 }) {
   return (
     <div
-      className="border-neutral-2 text-primary-9 flex w-2/3 flex-col border border-solid p-6"
+      className="border-neutral-2 text-primary-9 flex w-full flex-col rounded-xl border border-solid bg-white p-6"
       id={Slugify(content.Name)}
     >
       <h2 className="text-primary-9 text-2xl font-bold">{content.Name}</h2>
