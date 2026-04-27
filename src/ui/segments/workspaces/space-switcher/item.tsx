@@ -1,13 +1,16 @@
 'use client';
 
 import { DownOutlined, LoadingOutlined, RightOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { orderBy } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
 import { LabCompany } from '@/components/icons/buttons';
+import { config } from '@/config';
 import { Button } from '@/ui/molecules/button';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
@@ -70,7 +73,13 @@ export function Item({
     }
   };
 
-  const onProjectClick = ({
+  const router = useRouter();
+  const recentWorkspaceMutation = useMutation({
+    mutationFn: ({ vlabId, prjId }: { vlabId: string; prjId: string }) =>
+      setUserRecentWorkspace({ workspace: { virtualLabId: vlabId, projectId: prjId } }),
+  });
+
+  const onProjectHover = ({
     virtualLabId,
     project,
   }: {
@@ -86,6 +95,18 @@ export function Item({
         data: project,
       },
     });
+  };
+
+  const onProjectClick = ({
+    virtualLabId,
+    project,
+  }: {
+    virtualLabId: string;
+    project: Project;
+  }) => {
+    recentWorkspaceMutation.mutate({ vlabId: virtualLabId, prjId: project.id });
+    makeTriggerWorkspaceConfigurationClickEvent({ on: false, type: null, data: null });
+    router.push(`${config.ROOT_ROUTE}/${virtualLabId}/${project.id}`);
   };
 
   const onVlabClick = (
@@ -204,12 +225,9 @@ export function Item({
                         isProjectActive,
                     })}
                     title={project.name}
-                    onClick={() =>
-                      onProjectClick({
-                        virtualLabId: lab.id,
-                        project,
-                      })
-                    }
+                    onMouseEnter={() => onProjectHover({ virtualLabId: lab.id, project })}
+                    onFocus={() => onProjectHover({ virtualLabId: lab.id, project })}
+                    onClick={() => onProjectClick({ virtualLabId: lab.id, project })}
                     id={`project-item-${project.id}`}
                     data-testid="project-item-selector"
                   >
