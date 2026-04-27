@@ -4,7 +4,7 @@ import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
 import { match } from 'ts-pattern';
 
-import { getMEModel } from '@/api/entitycore/queries';
+import { getEmCellMesh, getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
@@ -21,6 +21,7 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
@@ -221,30 +222,34 @@ export function useModelQuery({
     data: entity,
     isLoading: modelLoading,
     error: modelError,
-  } = useQuery<ICircuit | IMEModel | IonChannelModel, Error, ICircuit | IMEModel | IonChannelModel>(
-    {
-      // @ts-expect-error this query won't start without the id
-      queryKey: keyBuilder.entity({ id, context, type: entityType }),
-      queryFn: () => {
-        return (
-          match(entityType)
+  } = useQuery<
+    ICircuit | IMEModel | IonChannelModel | IEMCellMesh,
+    Error,
+    ICircuit | IMEModel | IonChannelModel | IEMCellMesh
+  >({
+    // @ts-expect-error this query won't start without the id
+    queryKey: keyBuilder.entity({ id, context, type: entityType }),
+    queryFn: () => {
+      return (
+        match(entityType)
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.Circuit, () => getCircuit(params))
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.Memodel, () => getMEModel(params))
+          .with(EntityTypeDict.IonChannelModel, () =>
             // @ts-expect-error this query won't start without the id
-            .with(EntityTypeDict.Circuit, () => getCircuit(params))
-            // @ts-expect-error this query won't start without the id
-            .with(EntityTypeDict.Memodel, () => getMEModel(params))
-            .with(EntityTypeDict.IonChannelModel, () =>
-              // @ts-expect-error this query won't start without the id
-              getIonChannelModel(params)
-            )
-            .otherwise((entityType) => {
-              throw new Error(`Unsupported model entity type ${entityType}`);
-            })
-        );
-      },
-      enabled: !!entityType && !!id,
-      refetchOnWindowFocus: false,
-    }
-  );
+            getIonChannelModel(params)
+          )
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.EMCellMesh, () => getEmCellMesh(params))
+          .otherwise((entityType) => {
+            throw new Error(`Unsupported model entity type ${entityType}`);
+          })
+      );
+    },
+    enabled: !!entityType && !!id,
+    refetchOnWindowFocus: false,
+  });
 
   const isLoading = entityLoading || modelLoading;
   const error = entityError || modelError;

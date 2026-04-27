@@ -9,14 +9,26 @@ export const TutorialQuery = defineQuery(
   `*[_type == "tutorial"][]{
       _type,
       title, 
-      "poster": thumbnail.asset->url,
+      "category": coalesce(
+        category,
+        category->title,
+        category.title,
+        categories[0],
+        categories[0]->title,
+        categories[0].title,
+        tutorialCategory,
+        tutorialCategory->title,
+        tutorialCategory.title
+      ),
+      "posterImage": coalesce(posterImage.asset->url, thumbnail.asset->url),
       "slug": slug.current,
       "url": videoUrl
     }`
 );
 
 export type TTutorial = {
-  poster: string;
+  category: string | null;
+  posterImage: string | null;
   slug: string;
   title: string;
   url: string;

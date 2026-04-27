@@ -128,9 +128,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   }, [configsResponse?.configList, activeConfig, onActiveConfigChange]);
 
   const onRun = async (configIdsToRun: string[]) => {
-    for (const configId of configIdsToRun) {
-      await runExtraction(configId);
-    }
+    await runExtraction(configIdsToRun);
     setSelectedConfigIds([]);
   };
 

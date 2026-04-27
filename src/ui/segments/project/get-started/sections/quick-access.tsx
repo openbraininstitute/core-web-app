@@ -35,6 +35,30 @@ export async function MainCards({
     { next: { revalidate: 0 } }
   );
 
+  const listCountRequests = (quickAccessList ?? []).flatMap((groupItem) =>
+    (groupItem.list ?? []).map((listItem) => {
+      const call = getEntityByExtendedType({ type: listItem.extendedType })?.api.query.one;
+      return call ? { group: groupItem.group, entityId: listItem.entityId, call } : null;
+    })
+  );
+
+  const settledListCounts = await Promise.allSettled(
+    compact(listCountRequests).map(({ group, entityId, call }) =>
+      call({ id: entityId, context }).then(() => group)
+    )
+  );
+
+  const validCountByGroup = settledListCounts
+    .filter(
+      (result): result is PromiseFulfilledResult<IQuickAccessList['group']> =>
+        result.status === 'fulfilled'
+    )
+    .reduce<Record<string, number>>((acc, result) => {
+      const group = result.value;
+      acc[group] = (acc[group] ?? 0) + 1;
+      return acc;
+    }, {});
+
   const virtualLab = await queryClient.fetchQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId: context.virtualLabId }),
     queryFn: () => getVirtualLab(context.virtualLabId),
@@ -46,23 +70,27 @@ export async function MainCards({
       groupTitle: o.title,
       group: o.group,
       ...previewItem,
-      listLength: (o.list ?? []).length,
+      listLength: validCountByGroup[o.group] ?? 0,
     };
   });
 
   const withEntity = compact(
-    previews
-      .filter((p) => p.entityId != null)
-      .map((p) => {
-        const entityConfig = getEntityByExtendedType({ type: p.extendedType });
-        const call = entityConfig?.api.query.one;
-        return call ? { preview: p, call, artifactTitle: entityConfig?.title ?? null } : null;
-      })
+    previews.map((p) => {
+      const entityConfig = getEntityByExtendedType({ type: p.extendedType });
+      const call = entityConfig?.api.query.one;
+      if (!call || !p.entityId) return null;
+      return {
+        preview: p,
+        call,
+        artifactTitle: entityConfig?.title ?? null,
+        entityId: p.entityId,
+      };
+    })
   );
 
   const settled = await Promise.allSettled(
-    withEntity.map(({ preview, call, artifactTitle }) =>
-      call({ id: preview.entityId!, context }).then((entity) => ({
+    withEntity.map(({ preview, call, artifactTitle, entityId }) =>
+      call({ id: entityId, context }).then((entity) => ({
         ...preview,
         entity,
         artifactTitle,
@@ -79,10 +107,11 @@ export async function MainCards({
     }));
 
   const groupOrder = Object.values(QuickAccessGroupDict);
+  type FulfilledWithEntity = Extract<(typeof settled)[number], { status: 'fulfilled' }>;
 
   const results = [
     ...settled
-      .filter((r) => r.status === 'fulfilled')
+      .filter((r): r is FulfilledWithEntity => r.status === 'fulfilled')
       .map((r) => r.value)
       .map((a) => ({
         ...a,
@@ -145,7 +174,7 @@ export async function MainCards({
                 {...{
                   context,
                   group,
-                  groupTitle,
+                  groupTitle: groupTitle ?? group,
                   listLength,
                 }}
               />

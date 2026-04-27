@@ -1,5 +1,5 @@
 import { get } from 'es-toolkit/compat';
-import { atom } from 'jotai';
+import { atom, useAtomValue } from 'jotai';
 
 import {
   getBlockUsabilityConfig,
@@ -8,6 +8,8 @@ import {
 } from '@/features/scan-config/components/hooks/schema';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { useDiffPreviewAtom } from '@/features/scan-config/hooks/use-diff-preview-atom';
+import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import {
   type AtomsMap,
   type Config,
@@ -20,6 +22,7 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { configDiffsAtom } from '@/state/config-highlights';
 import { TextPatternTransformer, urlRegex } from '@/ui/molecules/text-pattern-transformer';
 import { TransformedLink } from '@/ui/molecules/text-pattern-transformer/link-item';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -66,6 +69,9 @@ export default function BlockDictionary({
   errorPathPrefix,
 }: Props) {
   const { aiConfig, isChatReady } = useAIConfig();
+  const diffs = useAtomValue(configDiffsAtom);
+  const showingDiffs = useShowingDiffs();
+  const previewAtom = useDiffPreviewAtom(selectedRootElement, selectedEntry);
 
   const selectedBlockLocal = isPlainObject(config[selectedRootElement])
     ? config[selectedRootElement][selectedEntry]?.type
@@ -83,21 +89,55 @@ export default function BlockDictionary({
       (o: TBlock) => o.properties?.type.const === selectedBlock
     );
 
+  // Check if this entry was deleted
+  const isDeleted = diffs.some(
+    (d) =>
+      d.type === 'remove' &&
+      d.path.length === 2 &&
+      d.path[0] === selectedRootElement &&
+      d.path[1] === selectedEntry
+  );
+
   if (selectedBlockSchema && !isAtom(atomsMap[selectedRootElement])) {
+    const liveAtom = atomsMap[selectedRootElement]?.[selectedEntry];
+    // Preview atom takes priority when showing diffs so the Block displays
+    // the new/restored values instead of the current live values.
+    const stateAtom = previewAtom ?? liveAtom ?? null;
+
     return (
       <Block
         schemaName={schemaName}
         schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
-        disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
+        disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
         config={config}
         blockSchema={selectedBlockSchema}
-        stateAtom={atomsMap[selectedRootElement]?.[selectedEntry]}
+        stateAtom={stateAtom}
         entity={entity}
         schemaMappingConfig={schemaMappingConfig}
+        rootElement={selectedRootElement}
+        selectedEntry={selectedEntry}
         errorPathPrefix={errorPathPrefix}
       />
     );
+  }
+
+  // Show deleted message if entry was deleted
+  if (isDeleted && selectedEntry) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh] p-8">
+        <div className="text-center max-w-md">
+          <p className="text-gray-500 text-xl">
+            <span className="font-semibold">{selectedEntry}</span> has been deleted
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Hide block type picker during diff mode
+  if (showingDiffs) {
+    return null;
   }
 
   return (

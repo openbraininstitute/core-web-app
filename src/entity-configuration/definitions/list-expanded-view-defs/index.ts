@@ -7,6 +7,8 @@ import {
   smallMicrocircuitSimulationExpandedViewConfig,
 } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
 
+import { skeletonizationCampaignExpandedViewConfig } from './processing';
+
 import type { ListExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 
 export * from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
@@ -21,4 +23,5 @@ export const listExpandedViewRegistry: ListExpandedViewRegistry = {
     singleNeuronCircuitSimulationExpandedViewConfig,
   [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]:
     smallMicrocircuitSimulationExpandedViewConfig,
+  [ExtendedEntitiesTypeDict.SkeletonizationCampaign]: skeletonizationCampaignExpandedViewConfig,
 };

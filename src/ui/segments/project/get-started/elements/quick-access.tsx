@@ -5,6 +5,7 @@ import { useRouter } from '@bprogress/next';
 import { useMutation } from '@tanstack/react-query';
 import { kebabCase } from 'es-toolkit/compat';
 import { useSetAtom } from 'jotai';
+import { motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -39,6 +40,16 @@ import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TVirtualLabResponse } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
+
+const IMAGE_SHINE_ANIMATION = {
+  x: ['-160%', '220%', '-160%'],
+};
+
+const IMAGE_SHINE_TRANSITION = {
+  duration: 6,
+  repeat: Infinity,
+  ease: 'easeInOut' as const,
+};
 
 export function MainCardItem({
   thumbnail,
@@ -91,7 +102,7 @@ export function MainCardItem({
   return (
     <Card
       className={cn(
-        'w-full bg-white border-none flex-1 pt-0',
+        'w-full min-h-[320px] bg-white border-none pt-0 relative overflow-hidden',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
         'hover:shadow-bnb hover:bg-gray-100/70 hover:border group',
         'cursor-pointer select-none'
@@ -99,13 +110,47 @@ export function MainCardItem({
       onClick={() => redirect()}
       title={title}
     >
+      <div className="absolute top-0 left-0 z-0 h-[200px] w-full p-3">
+        <div className="relative h-full w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
+          {thumbnail ? (
+            <>
+              <motion.div className="absolute inset-0">
+                <Image
+                  fill
+                  alt={title ?? 'preview'}
+                  src={thumbnail}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                  className="object-cover"
+                />
+              </motion.div>
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute -inset-y-1/2 left-0 z-10 w-2/5 rotate-4 blur-3xl"
+                style={{
+                  background:
+                    'linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0))',
+                }}
+                animate={IMAGE_SHINE_ANIMATION}
+                transition={IMAGE_SHINE_TRANSITION}
+              />
+            </>
+          ) : (
+            <Skeleton
+              active={false}
+              className="flex items-center justify-center w-full h-full bg-background rounded-md"
+            >
+              <ImageIcon className="w-20 h-20 text-gray-300" />
+            </Skeleton>
+          )}
+        </div>
+      </div>
       {artifactTitle && (
-        <div className="flex justify-end px-3 pt-3">
+        <div className="relative z-10 flex justify-end px-3 pt-3 -translate-x-3 translate-y-3">
           <Badge
             variant="outline"
             rounded
             className={cn(
-              'bg-white/90 backdrop-blur-sm py-1.5 px-5! text-primary-8 border-neutral-2 text-xs font-medium shadow-sm',
+              'bg-white/90 backdrop-blur-sm py-1.5 px-5! text-primary-8 border-neutral-2 text-sm 2xl:text-base font-medium shadow-sm',
               'group-hover:bg-primary-7 group-hover:text-white'
             )}
           >
@@ -113,24 +158,14 @@ export function MainCardItem({
           </Badge>
         </div>
       )}
-      <div className="relative aspect-video w-full">
-        {thumbnail ? (
-          <Image fill alt={title ?? 'preview'} src={thumbnail} className="object-contain" />
-        ) : (
-          <Skeleton
-            active={false}
-            className="flex items-center justify-center w-full h-full bg-background rounded-none"
-          >
-            <ImageIcon className="w-20 h-20 text-gray-300" />
-          </Skeleton>
-        )}
-      </div>
-      <CardContent className="mt-8">
-        <h4 className="text-neutral-400 pl-4">{groupTitle}</h4>
+      <CardContent className="relative z-10 mt-[170px]">
+        <h4 className="text-neutral-500 uppercase text-xs tracking-[0.6px] line-clamp-1">
+          {groupTitle}
+        </h4>
         <div
           className={cn(
-            'font-black rounded-full text-primary-8 text-lg 2xl:text-xl mb-1.5',
-            'px-4 py-1.5 max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5'
+            'font-bold rounded-full text-primary-8 text-xl leading-tight mb-1',
+            'max-w-max group-hover:text-primary-7 flex items-center justify-center gap-1.5'
           )}
         >
           {group === QuickAccessGroupDict.Notebooks && isPending && (
@@ -138,7 +173,7 @@ export function MainCardItem({
           )}
           {title ?? 'No title provided'}
         </div>
-        <p className="text-neutral-4 line-clamp-2 pl-4" title={description}>
+        <p className="text-neutral-4 text-sm line-clamp-2" title={description}>
           {description ?? 'No description provided'}
         </p>
       </CardContent>
@@ -216,7 +251,7 @@ export function SingleCardItem({
           kind: 'data',
           entityId: entity.id,
           extendedType,
-          title: title ?? entity.name ?? 'Untitled',
+          title: title ?? (entity as { name?: string }).name ?? 'Untitled',
           thumbnail,
         });
         return;
@@ -230,7 +265,7 @@ export function SingleCardItem({
           kind: 'notebook',
           entityId: entity.id,
           extendedType,
-          title: title ?? entity.name ?? 'Untitled',
+          title: title ?? (entity as { name?: string }).name ?? 'Untitled',
           thumbnail,
           assetPath: asset?.path,
           computeCell: virtualLab?.data?.virtual_lab.compute_cell ?? 'aws',
@@ -279,7 +314,7 @@ export function SingleCardItem({
             variant="outline"
             rounded
             className={cn(
-              'bg-white/90 backdrop-blur-sm py-1.5 px-5! text-primary-8 border-neutral-2 text-xs font-medium shadow-sm shrink-0 mt-1',
+              'bg-white/90 backdrop-blur-sm py-1.5 px-5! text-primary-8 border-neutral-2 text-xl font-medium shadow-sm shrink-0 mt-1',
               'group-hover:bg-primary-7 group-hover:text-white'
             )}
           >
@@ -371,24 +406,32 @@ export function ViewExamples({
   context,
   group,
 }: {
-  groupTitle: string;
+  groupTitle: string | null | undefined;
   listLength: number;
   context: WorkspaceContext;
   group: TQuickAccessGroup;
 }) {
+  const safeGroupTitle = (groupTitle ?? group).trim();
+  const normalizedGroupTitle = safeGroupTitle.toLowerCase();
+  const { push: navigate } = useRouter();
+  const isWorkflowGroup =
+    group === QuickAccessGroupDict.Workflows || normalizedGroupTitle.includes('workflow');
+  const href = isWorkflowGroup
+    ? `${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}/workflows`
+    : `${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}/quick-access/${group}`;
+  const label = isWorkflowGroup
+    ? 'View all Workflows'
+    : `View ${safeGroupTitle} examples (${listLength})`;
+
   return (
     <Button
       rounded
       size="responsive"
       variant="outline"
-      className="w-full bg-background shadow-none hover:font-bold hover:bg-white hover:shadow-md"
+      className="w-fit mx-auto px-4 py-4 bg-background shadow-none hover:font-bold hover:bg-white hover:shadow-md text-primary-8 hover:text-primary-9 text-base!"
+      onClick={() => navigate(href)}
     >
-      <Link
-        className="text-primary-8 hover:text-primary-9"
-        href={`${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}/quick-access/${group}`}
-      >
-        View {groupTitle} examples ({listLength}){' '}
-      </Link>
+      <span suppressHydrationWarning>{label}</span>
     </Button>
   );
 }

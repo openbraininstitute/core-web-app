@@ -1,14 +1,17 @@
 import { InboxOutlined } from '@ant-design/icons';
 import { compact } from 'es-toolkit/array';
 import { findKey } from 'es-toolkit/object';
+import Link from 'next/link';
 import { ViewTransition } from 'react';
 
 import { tryCatch } from '@/api/utils';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { config } from '@/config';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity';
-import { SingleCardItem } from '@/ui/segments/project/get-started/elements/quick-access';
+import { Button } from '@/ui/molecules/button';
+import { MainCardItem } from '@/ui/segments/project/get-started/elements/quick-access';
 import {
   getQuickAccessQuery,
   type IQuickAccessList,
@@ -78,8 +81,10 @@ export default async function Page({
     )
   );
 
+  type FulfilledResult = Extract<(typeof settled)[number], { status: 'fulfilled' }>;
+
   const results = settled
-    .filter((r) => r.status === 'fulfilled')
+    .filter((r): r is FulfilledResult => r.status === 'fulfilled')
     .map((r) => r.value)
     .map((a) => ({
       ...a,
@@ -103,29 +108,47 @@ export default async function Page({
           Curated {group} examples for quick access will appear here once they become available.
           Check back soon or explore other categories.
         </p>
+        {group === QuickAccessGroupDict.Workflows && (
+          <Button
+            asChild
+            rounded
+            size="responsive"
+            variant="outline"
+            className="mt-6 px-4 py-4 bg-background shadow-none hover:font-bold hover:bg-white hover:shadow-md"
+          >
+            <Link
+              href={`${config.ROOT_ROUTE}/${context.virtualLabId}/${context.projectId}/workflows`}
+              className="text-primary-8 hover:text-primary-9 text-base!"
+            >
+              View all Workflows
+            </Link>
+          </Button>
+        )}
       </div>
     );
   }
+
+  if (!virtualLab) return null;
 
   return (
     <ViewTransition enter="vt-slide-up-enter" exit="vt-fade-exit">
       <div
         id={`quick-access-${group}`}
         data-testid={`quick-access-${group}`}
-        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 px-3 mb-10"
+        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 items-stretch w-full mt-2 mb-10"
       >
-        {results.map(({ title, thumbnail, entity, extendedType, artifactTitle, description }) => {
+        {results.map(({ title, thumbnail, entity, artifactTitle, description }) => {
           return (
-            <SingleCardItem
+            <MainCardItem
               key={entity.id}
               {...{
+                groupTitle: findKey(QuickAccessGroupDict, (p) => p === group),
                 title,
                 thumbnail,
                 context,
                 virtualLab,
-                group,
+                group: group as (typeof QuickAccessGroupDict)[keyof typeof QuickAccessGroupDict],
                 entity,
-                extendedType,
                 artifactTitle,
                 description,
               }}

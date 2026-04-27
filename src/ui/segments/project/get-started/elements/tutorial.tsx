@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useRef } from 'react';
 
+import { ImageIcon } from '@/components/icons/image-states';
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';

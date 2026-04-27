@@ -2,6 +2,7 @@ import { isNil } from 'es-toolkit/compat';
 import { atom, useAtom } from 'jotai';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
+import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
   type Config,
   type ConfigSchema,
@@ -30,6 +31,8 @@ export default function Block({
   entity,
   hideTitle,
   schemaMappingConfig,
+  rootElement,
+  selectedEntry,
   errorPathPrefix,
 }: {
   schemaName: SchemaName;
@@ -41,9 +44,12 @@ export default function Block({
   stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
   hideTitle?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  rootElement?: string;
+  selectedEntry?: string;
   errorPathPrefix?: string;
 }) {
   const [state, setState] = useAtom(stateAtom ?? atom<Record<string, ConfigValue>>({}));
+  const { getFieldDiffClass } = useBlockDiff(rootElement, selectedEntry);
 
   if (!blockSchema) return null;
 
@@ -96,6 +102,7 @@ export default function Block({
                 blockElementSchema.ui_element === ScanConfigUIElementDict.BooleanInput;
 
               const value = state[k];
+              const fieldBorderClass = getFieldDiffClass(k);
 
               return (
                 <div
@@ -122,7 +129,13 @@ export default function Block({
                     <TooltipTrigger asChild>
                       <div>
                         <div className="mb-1 flex items-center gap-1">
-                          <div className="border rounded-lg border-transparent flex-1 mr-1">
+                          <div
+                            className={cn(
+                              'border rounded-lg flex-1 mr-1',
+                              fieldBorderClass,
+                              !fieldBorderClass && 'border-transparent'
+                            )}
+                          >
                             <UIElementRender
                               k={k}
                               disabled={disabled}

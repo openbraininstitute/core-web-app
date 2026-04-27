@@ -28,7 +28,9 @@ export default function TabsSelector({
   const tabs = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => ({
     id,
     label,
-    disabled: (id === 'simulations' || id === 'extractions') && disableResultsTab,
+    disabled:
+      (id === 'simulations' || id === 'extractions' || id === 'skeletonizations') &&
+      disableResultsTab,
     onClick: () => {
       if (disableResultsTab && id === 'simulations') return;
       if (activity === ScanConfigActivity.Simulate) {

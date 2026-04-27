@@ -39,11 +39,16 @@ const ExtractionEntitySlug = {
   CircuitExtraction: 'circuit-extraction',
 } as const;
 
+const ProcessingEntitySlug = {
+  Skeletonization: 'skeletonization',
+} as const;
+
 export const EntitySlug = {
   ...ExperimentalEntitySlug,
   ...ModelEntitySlug,
   ...SimulationEntitySlug,
   ...ExtractionEntitySlug,
+  ...ProcessingEntitySlug,
   Notebook: 'notebook',
 } as const;
 
@@ -55,3 +60,5 @@ export type ExperimentalEntitySlugValue =
   (typeof ExperimentalEntitySlug)[keyof typeof ExperimentalEntitySlug];
 export type ExtractionEntitySlugValue =
   (typeof ExtractionEntitySlug)[keyof typeof ExtractionEntitySlug];
+export type ProcessingEntitySlugValue =
+  (typeof ProcessingEntitySlug)[keyof typeof ProcessingEntitySlug];

@@ -15,6 +15,7 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 
 import type { atom } from 'jotai';
+import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
@@ -46,6 +47,7 @@ export type TSchemaMappingKey = (typeof SchemaMappingKeyDict)[keyof typeof Schem
 export const ScanConfigActivity = {
   Simulate: 'simulate',
   Extract: 'extract',
+  Process: 'process',
 } as const;
 
 export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
@@ -74,11 +76,25 @@ export type TExtractScanConfigTabs = {
   __activity: 'extract';
 };
 
-export type TScanConfigTabs = Prettify<TSimulateScanConfigTabs> | Prettify<TExtractScanConfigTabs>;
+export const ProcessScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  skeletonizations: 'skeletonizations',
+} as const;
+
+export type TProcessScanConfigTabs = {
+  id: keyof typeof ProcessScanConfigTabs;
+  __activity: 'process';
+};
+
+export type TScanConfigTabs =
+  | Prettify<TSimulateScanConfigTabs>
+  | Prettify<TExtractScanConfigTabs>
+  | Prettify<TProcessScanConfigTabs>;
 
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
+  [ScanConfigActivity.Process]: ProcessScanConfigTabs,
 } as const;
 
 export const ScanConfigDefaultTab = {
@@ -95,7 +111,9 @@ export type SchemaName =
   | 'MEModelSimulationScanConfig'
   | 'MEModelWithSynapsesCircuitSimulationScanConfig'
   // extraction
-  | 'CircuitExtractionScanConfig';
+  | 'CircuitExtractionScanConfig'
+  // processing
+  | 'SkeletonizationScanConfig';
 
 export type TRootElement = {
   description: string;
@@ -367,13 +385,18 @@ export type TActivityCustomFile = {
   renderer: TActivityCustomFileRenderer;
 };
 
-export type TSupportedEntitiesForScanConfiguration = ICircuit | IMEModel | IonChannelModel;
+export type TSupportedEntitiesForScanConfiguration =
+  | ICircuit
+  | IMEModel
+  | IonChannelModel
+  | IEMCellMesh;
 
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
   | typeof ExtendedEntitiesTypeDict.MemodelCircuit
   | typeof ExtendedEntitiesTypeDict.MEModelWithSynapses
-  | typeof ExtendedEntitiesTypeDict.IonChannelModel;
+  | typeof ExtendedEntitiesTypeDict.IonChannelModel
+  | typeof ExtendedEntitiesTypeDict.EMCellMesh;
 
 export const getSupportedEntityTypesForScanConfiguration = ({
   entity,
@@ -398,6 +421,10 @@ export const getSupportedEntityTypesForScanConfiguration = ({
     .with(
       { entity: { type: EntityTypeDict.IonChannelModel } },
       () => ExtendedEntitiesTypeDict.IonChannelModel
+    )
+    .with(
+      { entity: { type: EntityTypeDict.EMCellMesh } },
+      () => ExtendedEntitiesTypeDict.EMCellMesh
     )
     .otherwise(() => {
       throw new Error('Not supported entity for scan configuration');
