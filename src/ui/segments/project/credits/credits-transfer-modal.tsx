@@ -129,9 +129,11 @@ export function CreditsTransferModal({ open, onClose, defaultTab = 'transfer' }:
     }
   };
 
-  // Reset buy mode when modal closes
+  // Sync active tab with defaultTab when modal opens; reset buy mode on close
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setActiveTab(defaultTab);
+    } else {
       setBuyMode(PurchaseModeDictionary.Selection);
       setActiveTab(defaultTab);
     }

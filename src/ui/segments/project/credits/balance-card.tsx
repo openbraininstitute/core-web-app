@@ -13,11 +13,17 @@ import type { CreditsVariant } from '@/ui/segments/project/credits';
 
 type Props = {
   onTransferCredits?: () => void;
+  onBuyCredits?: () => void;
   className?: string;
   variant?: CreditsVariant;
 };
 
-export function BalanceCard({ onTransferCredits, className, variant = 'dark' }: Props) {
+export function BalanceCard({
+  onTransferCredits,
+  onBuyCredits,
+  className,
+  variant = 'dark',
+}: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
   const { data } = useQuery({
@@ -78,7 +84,7 @@ export function BalanceCard({ onTransferCredits, className, variant = 'dark' }: 
               )}
               size="md"
               variant="outline"
-              onClick={() => window.open('/pricing', '_blank', 'noopener,noreferrer')}
+              onClick={onBuyCredits}
             >
               Buy credits
               <PlusOutlined />

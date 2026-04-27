@@ -12,8 +12,13 @@ import { DiscussionThread } from '@/ui/segments/project/discussion-thread';
 export type CreditsVariant = 'dark' | 'light';
 
 export function Credits({ variant = 'dark' }: { variant?: CreditsVariant }) {
-  const [showCreditsManagement, setShowCreditsManagement] = useState(false);
-  const handleTransferCredits = () => setShowCreditsManagement((prev) => !prev);
+  const [creditsModal, setCreditsModal] = useState<{
+    open: boolean;
+    tab: 'transfer' | 'buy';
+  }>({ open: false, tab: 'transfer' });
+  const handleTransferCredits = () => setCreditsModal({ open: true, tab: 'transfer' });
+  const handleBuyCredits = () => setCreditsModal({ open: true, tab: 'buy' });
+  const handleCloseModal = () => setCreditsModal((prev) => ({ ...prev, open: false }));
 
   return (
     <div
@@ -28,12 +33,20 @@ export function Credits({ variant = 'dark' }: { variant?: CreditsVariant }) {
         <DiscussionThread />
       </div>
       <div className="flex h-full min-h-0 w-1/2 min-w-0 flex-col gap-4">
-        <BalanceCard onTransferCredits={handleTransferCredits} variant={variant} />
+        <BalanceCard
+          onTransferCredits={handleTransferCredits}
+          onBuyCredits={handleBuyCredits}
+          variant={variant}
+        />
         <div className="flex min-h-0 flex-1 flex-col">
           <JobReportList variant={variant} />
         </div>
       </div>
-      <CreditsTransferModal open={showCreditsManagement} onClose={handleTransferCredits} />
+      <CreditsTransferModal
+        open={creditsModal.open}
+        onClose={handleCloseModal}
+        defaultTab={creditsModal.tab}
+      />
     </div>
   );
 }
