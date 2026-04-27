@@ -11,6 +11,7 @@ export type LeftPaneView =
   | 'ai-tools'
   | 'pricing'
   | 'news'
+  | 'publications'
   | null;
 
 export const leftPaneViewAtom = atom<LeftPaneView>(null);

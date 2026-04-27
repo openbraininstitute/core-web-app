@@ -14,6 +14,13 @@ function formatDate(d: string) {
   return new Intl.DateTimeFormat('en', { dateStyle: 'long' }).format(date);
 }
 
+function formatTimelineLabel(d: string) {
+  if (!d) return '';
+  const date = new Date(d);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric' }).format(date);
+}
+
 function NewsCard({ news }: { news: ContentForNewsItem }) {
   const href = news.isExternalLink ? news.link : news.slug ? `/news/${news.slug}` : null;
   return (
@@ -62,11 +69,22 @@ export function NewsView() {
   );
 
   return (
-    <div className="flex h-full max-h-full w-full flex-col overflow-hidden">
+    <div className="flex h-full max-h-full w-full flex-col gap-4 overflow-hidden">
+      <h1 className="text-primary-9 text-3xl font-bold">News</h1>
       {items.length ? (
-        <div className="flex w-full flex-col gap-4 overflow-y-auto pr-2">
+        <div className="relative flex w-full max-w-6xl flex-col gap-4 overflow-y-auto pr-2 pl-32">
+          <span className="bg-neutral-2 absolute top-3 bottom-3 left-24 w-px" aria-hidden />
           {items.map((item) => (
-            <NewsCard key={item.id} news={item} />
+            <div key={item.id} className="relative">
+              <span className="text-primary-9 absolute top-5 -left-32 w-20 text-right text-xs font-semibold tracking-wide uppercase">
+                {formatTimelineLabel(item.date)}
+              </span>
+              <span
+                className="bg-primary-9 ring-background absolute top-6 -left-[1.875rem] size-3 rounded-full ring-4"
+                aria-hidden
+              />
+              <NewsCard news={item} />
+            </div>
           ))}
         </div>
       ) : (

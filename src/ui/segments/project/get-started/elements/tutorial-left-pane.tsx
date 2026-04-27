@@ -12,6 +12,7 @@ import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data
 import { leftPaneViewAtom } from '@/ui/segments/project/get-started/elements/left-pane-view-atom';
 import { NewsView } from '@/ui/segments/project/get-started/elements/news-view';
 import { PricingView } from '@/ui/segments/project/get-started/elements/pricing-view';
+import { PublicationsView } from '@/ui/segments/project/get-started/elements/publications-view';
 import { TermsView } from '@/ui/segments/project/get-started/elements/terms-view';
 
 import type { PortableTextBlock } from 'next-sanity';
@@ -54,6 +55,7 @@ export function TutorialLeftPane({
       {view === 'features' && <FeaturesSection />}
       {view === 'pricing' && <PricingView />}
       {view === 'news' && <NewsView />}
+      {view === 'publications' && <PublicationsView />}
     </>
   );
 }

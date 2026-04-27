@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  RiArticleLine,
   RiBookOpenLine,
   RiFileTextLine,
   RiInformationLine,
@@ -25,6 +26,7 @@ type Item = {
 const ITEMS: Array<Item> = [
   { id: 'about', label: 'About', Icon: RiInformationLine },
   { id: 'news', label: 'News', Icon: RiNewspaperLine },
+  { id: 'publications', label: 'Publications', Icon: RiArticleLine },
   { id: 'glossary', label: 'Glossary', Icon: RiBookOpenLine },
   { id: 'features', label: 'Features', Icon: RiSparklingLine },
   { id: 'pricing', label: 'Pricing', Icon: RiPriceTag3Line },
@@ -47,7 +49,7 @@ export function HelpButtonsRow() {
               title={label}
               aria-pressed={isSelected}
               className={cn(
-                'group relative flex aspect-square h-[56px] w-[56px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[3px] overflow-hidden rounded-lg bg-white',
+                'group relative flex aspect-square h-[68px] w-[68px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[3px] overflow-hidden rounded-lg bg-white',
                 'border-2 transition-colors',
                 isSelected ? 'border-primary-7' : 'border-transparent'
               )}

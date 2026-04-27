@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai';
 
 import { leftPaneViewAtom } from '@/ui/segments/project/get-started/elements/left-pane-view-atom';
 
-const HIDE_FOR: ReadonlyArray<string> = ['pricing', 'news'];
+const HIDE_FOR: ReadonlyArray<string> = ['pricing', 'news', 'publications'];
 
 export function OpenBrainWatermark() {
   const view = useAtomValue(leftPaneViewAtom);
