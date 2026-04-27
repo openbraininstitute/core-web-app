@@ -355,11 +355,11 @@ export function SpaceSwitcher({ className }: Props) {
               currentVirtualLabName &&
               !isExpanded && (
                 <div
-                  className="group flex h-full min-w-0 flex-1 items-center justify-center gap-1 overflow-hidden pl-1 select-none"
+                  className="group flex h-full w-36 shrink-0 items-center justify-start gap-1 overflow-hidden pl-1 select-none"
                   title={currentVirtualLabName}
                   data-label={currentVirtualLabName}
                 >
-                  <h3 className="text-primary-9 min-w-0 flex-1 truncate group-hover:font-bold">
+                  <h3 className="text-primary-9 w-full truncate group-hover:font-bold">
                     {currentVirtualLabName}
                   </h3>
                 </div>
@@ -388,7 +388,7 @@ export function SpaceSwitcher({ className }: Props) {
                     {isCurrentProjectLoading ? (
                       <Skeleton className="h-5 w-24 flex-1 rounded-full" />
                     ) : (
-                      <span className="text-primary-9 min-w-0 flex-1 truncate pl-2 text-left font-bold">
+                      <span className="text-primary-9 w-36 shrink-0 truncate pl-1.5 pr-3 text-left font-bold">
                         {currentProjectLabel}
                       </span>
                     )}

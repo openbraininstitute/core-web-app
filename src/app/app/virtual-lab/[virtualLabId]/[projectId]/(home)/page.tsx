@@ -50,13 +50,11 @@ export default async function Page({
     <HydrateClient>
       <div className="flex h-full w-full flex-col gap-4 overflow-hidden p-3 pb-10 text-sm">
         <div className="flex min-h-0 flex-1 flex-col gap-4">
-          {canViewCredits && (
-            <div className="flex min-h-0 flex-1 flex-col">
-              <Suspense>
-                <Credits variant="light" />
-              </Suspense>
-            </div>
-          )}
+          <div className="flex min-h-0 flex-1 flex-col">
+            <Suspense>
+              <Credits variant="light" canViewCredits={canViewCredits} />
+            </Suspense>
+          </div>
         </div>
       </div>
     </HydrateClient>

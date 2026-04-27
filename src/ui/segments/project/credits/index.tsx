@@ -11,7 +11,13 @@ import { DiscussionThread } from '@/ui/segments/project/discussion-thread';
 
 export type CreditsVariant = 'dark' | 'light';
 
-export function Credits({ variant = 'dark' }: { variant?: CreditsVariant }) {
+export function Credits({
+  variant = 'dark',
+  canViewCredits = true,
+}: {
+  variant?: CreditsVariant;
+  canViewCredits?: boolean;
+}) {
   const [creditsModal, setCreditsModal] = useState<{
     open: boolean;
     tab: 'transfer' | 'buy';
@@ -42,11 +48,13 @@ export function Credits({ variant = 'dark' }: { variant?: CreditsVariant }) {
           <JobReportList variant={variant} />
         </div>
       </div>
-      <CreditsTransferModal
-        open={creditsModal.open}
-        onClose={handleCloseModal}
-        defaultTab={creditsModal.tab}
-      />
+      {canViewCredits && (
+        <CreditsTransferModal
+          open={creditsModal.open}
+          onClose={handleCloseModal}
+          defaultTab={creditsModal.tab}
+        />
+      )}
     </div>
   );
 }
