@@ -289,14 +289,14 @@ export function SpaceSwitcher({ className }: Props) {
           role="menubar"
           onClick={onClick}
           className={cn(
-            'relative flex h-10 w-full items-center justify-between gap-1.5 pl-4 text-sm transition-all duration-150 ease-out',
+            'relative flex h-10 w-full items-center justify-between gap-1 pl-3 text-sm transition-all duration-150 ease-out',
             'hover:bg-background',
             {
               'border-neutral-2 h-16! rounded-md rounded-b-none border border-b-0 bg-white pr-4':
                 isExpanded,
             },
             {
-              'bg-background hover:shadow-sm border-neutral-2 gap-2 rounded-full border text-gray-700 hover:bg-gray-50':
+              'bg-background hover:shadow-sm border-neutral-2 gap-1 rounded-full border text-gray-700 hover:bg-gray-50':
                 !isExpanded,
             },
             { 'z-1001': boardModalOpen },
@@ -306,7 +306,7 @@ export function SpaceSwitcher({ className }: Props) {
           disabled={labsLoading || isCurrentProjectLoading}
         >
           <div
-            className={cn('flex items-center justify-center gap-2', {
+            className={cn('flex items-center justify-center gap-1', {
               hidden: isExpanded,
             })}
           >
@@ -331,7 +331,7 @@ export function SpaceSwitcher({ className }: Props) {
               currentVirtualLabName &&
               !isExpanded && (
                 <div
-                  className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden pl-2 select-none"
+                  className="group flex h-full min-w-0 flex-1 items-center justify-center gap-1 overflow-hidden pl-1 select-none"
                   title={currentVirtualLabName}
                   data-label={currentVirtualLabName}
                 >
@@ -368,23 +368,6 @@ export function SpaceSwitcher({ className }: Props) {
                         {currentProjectLabel}
                       </span>
                     )}
-                    <motion.div
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.15, ease: 'easeOut' }}
-                    >
-                      {isCurrentProjectLoading ? (
-                        <Skeleton className="h-4 w-4 rounded-full" />
-                      ) : (
-                        <DownOutlined
-                          className="text-gray-400"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (boardModalOpen) return;
-                            setIsExpanded((prev) => !prev);
-                          }}
-                        />
-                      )}
-                    </motion.div>
                   </>
                 )}
                 {!virtualLabId && <span className="text-gray-500">Select virtual lab</span>}
