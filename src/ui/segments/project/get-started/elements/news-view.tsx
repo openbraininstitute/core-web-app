@@ -62,7 +62,7 @@ export function NewsView() {
   );
 
   return (
-    <div className="border-neutral-2 bg-background flex h-full max-h-full w-full flex-col overflow-hidden rounded-2xl border p-4">
+    <div className="flex h-full max-h-full w-full flex-col overflow-hidden">
       {items.length ? (
         <div className="flex w-full flex-col gap-4 overflow-y-auto pr-2">
           {items.map((item) => (
