@@ -27,9 +27,9 @@ const ITEMS: Array<Item> = [
   { id: 'about', label: 'About', Icon: RiInformationLine },
   { id: 'news', label: 'News', Icon: RiNewspaperLine },
   { id: 'publications', label: 'Publications', Icon: RiArticleLine },
+  { id: 'pricing', label: 'Pricing', Icon: RiPriceTag3Line },
   { id: 'glossary', label: 'Glossary', Icon: RiBookOpenLine },
   { id: 'features', label: 'Features', Icon: RiSparklingLine },
-  { id: 'pricing', label: 'Pricing', Icon: RiPriceTag3Line },
   { id: 'terms', label: 'T&Cs', Icon: RiFileTextLine },
 ];
 

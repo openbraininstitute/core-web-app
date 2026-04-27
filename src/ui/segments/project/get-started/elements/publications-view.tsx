@@ -8,7 +8,7 @@ const PUBLICATIONS: Array<Publication> = publicationsData as Array<Publication>;
 
 export function PublicationsView() {
   return (
-    <div className="flex h-full max-h-full w-full flex-col gap-4 overflow-hidden">
+    <div className="border-neutral-2 flex h-full max-h-[calc(100vh-18rem)] w-full flex-col gap-4 overflow-hidden rounded-2xl border bg-transparent p-6">
       <h1 className="text-primary-9 text-3xl font-bold">Publications</h1>
       <div className="relative flex w-full max-w-6xl flex-col gap-4 overflow-y-auto pr-2 pl-32">
         <span className="bg-neutral-2 absolute top-3 bottom-3 left-24 w-px" aria-hidden />
