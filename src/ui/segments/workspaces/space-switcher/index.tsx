@@ -231,6 +231,20 @@ export function SpaceSwitcher({ className }: Props) {
     }
   });
 
+  useEffect(() => {
+    if (!isExpanded) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (dropdownRef.current?.contains(target)) return;
+      const modal = document.getElementById('workspace-manager-modal');
+      if (modal?.contains(target)) return;
+      setIsExpanded(false);
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isExpanded]);
+
   const onClick = () => setIsExpanded(true);
   const onProClick = () => {
     makeTriggerWorkspaceConfigurationClickEvent({

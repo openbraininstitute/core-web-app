@@ -1,6 +1,6 @@
 'use client';
 
-import { DownOutlined, LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import { DownOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { orderBy } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -220,10 +220,12 @@ export function Item({
                     rounded
                     size="md"
                     variant="outline"
-                    className={cn('w-full justify-start shadow-sm', {
-                      'text-primary-8 hover:text-primary-9 bg-white font-bold shadow-[16px_16px_30px_0px_#0000000F,-12px_-8px_32px_0px_#FFFFFF52]':
-                        isProjectActive,
-                    })}
+                    className={cn(
+                      'w-full justify-start shadow-sm',
+                      'hover:bg-primary-9 hover:text-white',
+                      isProjectActive &&
+                        'text-primary-8 bg-white font-bold shadow-[16px_16px_30px_0px_#0000000F,-12px_-8px_32px_0px_#FFFFFF52]'
+                    )}
                     title={project.name}
                     onMouseEnter={() => onProjectHover({ virtualLabId: lab.id, project })}
                     onFocus={() => onProjectHover({ virtualLabId: lab.id, project })}
@@ -237,9 +239,6 @@ export function Item({
                     <span className="line-clamp-1 truncate" title={project.name}>
                       {project.name}
                     </span>
-                    <RightOutlined
-                      className={`ml-auto ${isProjectActive ? 'text-neutral-2' : 'text-neutral-3'}`}
-                    />
                   </Button>
                 </motion.div>
               );
