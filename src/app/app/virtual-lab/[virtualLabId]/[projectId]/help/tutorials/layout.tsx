@@ -26,7 +26,7 @@ export default async function Layout({
         <TutorialList />
         <QuickAccessExamples context={context} />
       </div>
-      <div className="w-[60%] min-w-0">
+      <div className="h-full w-[60%] min-w-0">
         <TutorialLeftPane aboutContent={aboutContent} guidesContent={guidesContent}>
           {children}
         </TutorialLeftPane>

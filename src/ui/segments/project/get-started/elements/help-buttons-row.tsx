@@ -51,7 +51,7 @@ export function HelpButtonsRow() {
               type="button"
               onClick={() => {
                 setPreview(null);
-                setView(isSelected ? null : id);
+                setView(id);
               }}
               title={label}
               aria-pressed={isSelected}
