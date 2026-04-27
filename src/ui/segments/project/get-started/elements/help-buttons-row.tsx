@@ -10,6 +10,7 @@ import {
   RiSparklingLine,
 } from '@remixicon/react';
 import { useAtom } from 'jotai';
+import { useEffect, useRef } from 'react';
 
 import {
   type LeftPaneView,
@@ -35,15 +36,32 @@ const ITEMS: Array<Item> = [
 
 export function HelpButtonsRow() {
   const [view, setView] = useAtom(leftPaneViewAtom);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  useEffect(() => {
+    if (!view) return;
+    const scroller = scrollerRef.current;
+    const button = buttonRefs.current[view];
+    if (!scroller || !button) return;
+    const targetLeft = button.offsetLeft - (scroller.clientWidth - button.offsetWidth) / 2;
+    scroller.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+  }, [view]);
 
   return (
     <section id="help-quick-links" className="flex w-full flex-col">
-      <div className="flex w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        ref={scrollerRef}
+        className="flex w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {ITEMS.map(({ id, label, Icon }) => {
           const isSelected = view === id;
           return (
             <button
               key={id}
+              ref={(el) => {
+                buttonRefs.current[id] = el;
+              }}
               type="button"
               onClick={() => setView(isSelected ? null : id)}
               title={label}
