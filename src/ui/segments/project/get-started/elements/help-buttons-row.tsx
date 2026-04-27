@@ -52,7 +52,7 @@ export function HelpButtonsRow() {
               title={label}
               aria-pressed={isSelected}
               className={cn(
-                'group relative flex aspect-square w-[68px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[3px] overflow-hidden rounded-lg bg-white',
+                'group relative flex aspect-square w-[42px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[2px] overflow-hidden rounded-lg bg-white',
                 'border-2 transition-colors',
                 isSelected ? 'border-primary-7' : 'border-transparent'
               )}
