@@ -10,6 +10,7 @@ import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import { BackupPlotsWrapper, extractStorageIdsFromMessage } from './backup-plots';
 import { CollapsibleMessage } from './collapsible-message';
 import ToolsProgress from './tools-progress';
+import { useMessageDiffs } from './use-message-diffs';
 
 import type { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
 
@@ -67,6 +68,9 @@ function MessageChild({
   );
   const validStorageIds = useStableArray(memoizedStorageIds);
 
+  const { hasEditStateCalls, handlePreviewRestore, handleConfirmRestore, handleCancelRestore } =
+    useMessageDiffs({ message: value });
+
   switch (value.role) {
     case 'user':
       return (
@@ -110,7 +114,14 @@ function MessageChild({
 
       return (
         <div className={styles.assistant}>
-          <CollapsibleMessage message={value} status={isLastMessage ? status : 'ready'}>
+          <CollapsibleMessage
+            message={value}
+            status={isLastMessage ? status : 'ready'}
+            onPreviewRestore={handlePreviewRestore}
+            onConfirmRestore={handleConfirmRestore}
+            onCancelRestore={handleCancelRestore}
+            hasEditStateCalls={hasEditStateCalls}
+          >
             {children}
           </CollapsibleMessage>
           <BackupPlotsWrapper message={value} isLastMessage={isLastMessage} status={status} />
