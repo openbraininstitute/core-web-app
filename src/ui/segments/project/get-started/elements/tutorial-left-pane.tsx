@@ -12,6 +12,7 @@ import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data
 import { leftPaneViewAtom } from '@/ui/segments/project/get-started/elements/left-pane-view-atom';
 import { NewsView } from '@/ui/segments/project/get-started/elements/news-view';
 import { PricingView } from '@/ui/segments/project/get-started/elements/pricing-view';
+import { TermsView } from '@/ui/segments/project/get-started/elements/terms-view';
 
 import type { PortableTextBlock } from 'next-sanity';
 import type { ReactNode } from 'react';
@@ -48,11 +49,7 @@ export function TutorialLeftPane({
       {view === 'about' && (
         <AboutView blocks={aboutContent.aboutContent as PortableTextBlock[] | undefined} />
       )}
-      {view === 'terms' && (
-        <AboutView
-          blocks={aboutContent.termsAndConditionContent as PortableTextBlock[] | undefined}
-        />
-      )}
+      {view === 'terms' && <TermsView />}
       {view === 'glossary' && <GlossarySection />}
       {view === 'features' && <FeaturesSection />}
       {view === 'pricing' && <PricingView />}
