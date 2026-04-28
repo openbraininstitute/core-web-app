@@ -3,7 +3,7 @@
 import { LoadingOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, InputNumber, Modal, message, Spin, Upload } from 'antd';
+import { Button, InputNumber, Modal, Spin, Upload } from 'antd';
 import { isNil } from 'es-toolkit';
 import Image from 'next/image';
 import NextLink from 'next/link';
@@ -97,23 +97,15 @@ export function NotebooksLayout({ children, active }: Props) {
     refetchOnWindowFocus: 'always',
   });
 
-  console.log(`\n\n UserGroups⚠️⚠️⚠️`, userGroups);
-
   const isVlabAdmin = !!userGroups?.data?.groups.find(
     (group) => group.role === 'admin' && group.virtual_lab_id === virtualLabId
   );
-
-  console.log(`\n\n Vlab⚠️⚠️⚠️`, virtualLabId);
-
-  console.log('\n\nIs virtual lab admin?', isVlabAdmin);
 
   const { data: virtualLabData, refetch } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
     queryFn: () => getVirtualLab(virtualLabId),
     enabled: Boolean(virtualLabId),
   });
-
-  console.log(`⚠️⚠️⚠️ Virtual lab data`, virtualLabData);
 
   const onFinnish = useCallback(() => {
     setShowCourseModal(false);
@@ -402,7 +394,6 @@ const CsvUploadValidator = ({
     setError('');
     const isCsv = file.type === 'text/csv' || file.name.endsWith('.csv');
     if (!isCsv) {
-      message.error('Invalid file format. Only CSV files are permitted.');
       return Upload.LIST_IGNORE;
     }
 
@@ -412,7 +403,6 @@ const CsvUploadValidator = ({
         const text = e.target?.result as string;
         const isValid = await validateCsvContent(text);
         if (isValid) {
-          message.success('File validation successful.');
           resolve(false);
         } else {
           reject(Upload.LIST_IGNORE);
@@ -467,7 +457,7 @@ const CsvUploadValidator = ({
         </div>
       )}
 
-      {studentEmails.length > 0 && balancePerStudent < 100000000 && (
+      {studentEmails.length > 0 && balancePerStudent < 1000000000 && (
         <div className="flex flex-col gap-2">
           <div className="text-lg">Purchase credits to continue.</div>
 
@@ -481,7 +471,7 @@ const CsvUploadValidator = ({
             }}
           />
           {credits < minCredits && (
-            <div className="text-red-500">{`Minimum of ${minCredits} required`}</div>
+            <div className="text-red-500">{`Minimum of ${minCredits} credits required`}</div>
           )}
 
           {credits >= minCredits && (
@@ -491,7 +481,12 @@ const CsvUploadValidator = ({
             </div>
           )}
 
-          <PaymentFlow credits={credits} vlabId={vlabId} onCancel={onCancel} />
+          <PaymentFlow
+            credits={credits}
+            vlabId={vlabId}
+            onCancel={onCancel}
+            onSuccess={onSuccess}
+          />
         </div>
       )}
 
@@ -511,10 +506,12 @@ function PaymentFlow({
   credits,
   vlabId,
   onCancel,
+  onSuccess,
 }: {
   credits: number;
   vlabId: string;
   onCancel: () => void;
+  onSuccess: () => void;
 }) {
   const [
     { data: setupIntent, isPending: loadingIntent },
@@ -549,7 +546,7 @@ function PaymentFlow({
 
   return (
     <Elements stripe={stripeData} options={buildStripeFormOptions(setupIntent.data?.client_secret)}>
-      <PaymentForm credits={credits} vlabId={vlabId} onCancel={onCancel} />
+      <PaymentForm credits={credits} vlabId={vlabId} onCancel={onCancel} onSuccess={onSuccess} />
     </Elements>
   );
 }
@@ -558,10 +555,12 @@ function PaymentForm({
   credits,
   vlabId,
   onCancel,
+  onSuccess,
 }: {
   credits: number;
   vlabId: string;
   onCancel: () => void;
+  onSuccess: () => void;
 }) {
   const [stripeElementsReady, setElementsReady] = useState(false);
   const onReady = () => setElementsReady(true);
@@ -624,9 +623,10 @@ function PaymentForm({
         elements.getElement('payment')?.clear();
       });
 
-      console.log('\n\nPayment data', data);
-
       if (data) {
+        // Mitigates race condition where payment intent has returned but accounting serviced hasn't updated the balance
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
         successNotify({
           message: `Successfully purchased ${credits} credits for ${data.amount / 100} ${data.currency.toUpperCase()}`,
           placement: 'topRight',
@@ -635,6 +635,8 @@ function PaymentForm({
         await queryClient.invalidateQueries({
           queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
         });
+
+        onSuccess();
       }
 
       if (error) {
