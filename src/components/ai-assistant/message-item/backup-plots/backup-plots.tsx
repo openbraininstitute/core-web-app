@@ -1,7 +1,6 @@
 import { isToolUIPart } from 'ai';
 import React from 'react';
 
-import { parseToolOutput } from '@/services/ai-agent/utils/parse-tool-output';
 import { classNames } from '@/util/utils';
 
 import { PlotInChat } from '../storage-plots';
@@ -36,7 +35,7 @@ export function extractStorageIdsFromMessage(parts: UIMessage['parts']): string[
     if (!isToolUIPart(part) || part.state !== 'output-available') return;
 
     try {
-      const result = parseToolOutput(part.output);
+      const result = part.output as Record<string, any>;
       ids.push(...extractStorageIdsFromToolResult(result));
     } catch {}
   });

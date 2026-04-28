@@ -12,7 +12,6 @@ import {
   restorePreviewMessageIdAtom,
 } from '@/state/config-highlights';
 import { adjustParentTypes, computeLiveDiffs, type DiffResult } from '@/utils/diff';
-import { parseToolOutput } from '@/services/ai-agent/utils/parse-tool-output';
 
 import type { UIMessage } from '@ai-sdk/react';
 import { isToolUIPart, getToolName, type ToolUIPart, type DynamicToolUIPart } from 'ai';
@@ -74,7 +73,7 @@ export function findLastNewConfig(
   try {
     const last = calls[0];
     if (last.state === 'output-available') {
-      const result = parseToolOutput(last.output);
+      const result = last.output as Record<string, any>;
       return result?.state?.smc_simulation_config || null;
     }
   } catch (error) {

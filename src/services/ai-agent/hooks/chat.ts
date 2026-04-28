@@ -16,7 +16,6 @@ import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { useAiAssistant } from '../assistant';
-import { parseToolOutput } from '../utils/parse-tool-output';
 
 import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
@@ -153,7 +152,7 @@ export function useServiceAiAgentChat(threadId: string) {
     if (!editstateResult?.output) return;
 
     try {
-      const result = parseToolOutput(editstateResult.output) as Record<string, any>;
+      const result = editstateResult.output as Record<string, any>;
       const newConfig = result.state?.smc_simulation_config ?? null;
       // Use lastAppliedConfigRef for incremental flash diffs. Falls back
       // to the live agentStateAtom for the very first editstate call.

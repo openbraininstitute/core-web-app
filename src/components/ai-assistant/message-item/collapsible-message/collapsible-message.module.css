@@ -20,22 +20,13 @@
 }
 
 .thinkingButton {
-  width: 100%;
+  flex: 1;
   padding: 0.625rem 0.875rem;
   background: transparent;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: background 0.15s ease;
-}
-
-.thinkingButton:hover {
-  background: var(--thinking-button-hover, rgba(0, 0, 0, 0.04));
-}
-
-.thinkingButton:active {
-  background: var(--thinking-button-active, rgba(0, 0, 0, 0.06));
 }
 
 .thinkingHeader {
@@ -44,6 +35,17 @@
   gap: 0.5rem;
   width: 100%;
   justify-content: space-between;
+  border-radius: inherit;
+  transition: background 0.15s ease;
+  cursor: pointer;
+}
+
+.thinkingHeader:hover {
+  background: var(--thinking-button-hover, rgba(0, 0, 0, 0.04));
+}
+
+.thinkingHeader:active {
+  background: var(--thinking-button-active, rgba(0, 0, 0, 0.06));
 }
 
 .thinkingLabelContainer {

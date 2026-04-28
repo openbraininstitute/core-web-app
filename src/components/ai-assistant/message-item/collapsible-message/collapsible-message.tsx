@@ -186,14 +186,14 @@ export function CollapsibleMessage({
     <>
       {collapsedChildren.length > 0 && stepCount > 0 && (
         <div className={styles.thinkingContainer} data-receiving={animatingIndex !== null}>
-          <button
-            type="button"
-            className={styles.thinkingButton}
-            onClick={toggleExpanded}
-            aria-expanded={isExpanded}
-            data-collapsed={!isExpanded}
-          >
-            <div className={styles.thinkingHeader}>
+          <div className={styles.thinkingHeader}>
+            <button
+              type="button"
+              className={styles.thinkingButton}
+              onClick={toggleExpanded}
+              aria-expanded={isExpanded}
+              data-collapsed={!isExpanded}
+            >
               <div className={styles.thinkingLabelContainer}>
                 <RiArrowDownSLine
                   size={16}
@@ -208,57 +208,54 @@ export function CollapsibleMessage({
                       : `Show Steps (${stepCount})`}
                 </span>
               </div>
-              {hasCompletedEditState && isChatReady && (
-                <div className={styles.actionButtons}>
-                  {isConfirmingRestore ? (
-                    <>
-                      <button
-                        type="button"
-                        className={cn(styles.actionButton, styles.confirmYes)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsConfirmingRestore(false);
-                          onConfirmRestore?.();
-                        }}
-                        aria-label="Confirm restore"
-                      >
-                        <RiCheckLine size={16} />
-                        <span>Yes</span>
-                      </button>
-                      <button
-                        type="button"
-                        className={cn(styles.actionButton, styles.confirmNo)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsConfirmingRestore(false);
-                          onCancelRestore?.();
-                        }}
-                        aria-label="Cancel restore"
-                      >
-                        <RiCloseLine size={16} />
-                        <span>No</span>
-                      </button>
-                    </>
-                  ) : (
+            </button>
+            {hasCompletedEditState && isChatReady && (
+              <div className={styles.actionButtons}>
+                {isConfirmingRestore ? (
+                  <>
                     <button
                       type="button"
-                      className={styles.actionButton}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsConfirmingRestore(true);
-                        onPreviewRestore?.();
+                      className={cn(styles.actionButton, styles.confirmYes)}
+                      onClick={() => {
+                        setIsConfirmingRestore(false);
+                        onConfirmRestore?.();
                       }}
-                      aria-label="Restore state"
-                      title="Restore state"
+                      aria-label="Confirm restore"
                     >
-                      <RiResetLeftLine size={16} />
-                      <span>Restore State</span>
+                      <RiCheckLine size={16} />
+                      <span>Yes</span>
                     </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </button>
+                    <button
+                      type="button"
+                      className={cn(styles.actionButton, styles.confirmNo)}
+                      onClick={() => {
+                        setIsConfirmingRestore(false);
+                        onCancelRestore?.();
+                      }}
+                      aria-label="Cancel restore"
+                    >
+                      <RiCloseLine size={16} />
+                      <span>No</span>
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.actionButton}
+                    onClick={() => {
+                      setIsConfirmingRestore(true);
+                      onPreviewRestore?.();
+                    }}
+                    aria-label="Restore state"
+                    title="Restore state"
+                  >
+                    <RiResetLeftLine size={16} />
+                    <span>Restore State</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           {isExpanded && <div className={styles.thinkingContent}>{collapsedChildren}</div>}
         </div>
       )}
