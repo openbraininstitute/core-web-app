@@ -12,20 +12,22 @@ import {
   restorePreviewMessageIdAtom,
 } from '@/state/config-highlights';
 import { adjustParentTypes, computeLiveDiffs, type DiffResult } from '@/utils/diff';
+import { parseToolOutput } from '@/services/ai-agent/utils/parse-tool-output';
 
-import type { ToolInvocationUIPart, UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/react';
+import { isToolUIPart, getToolName, type ToolUIPart, type DynamicToolUIPart } from 'ai';
 import type { Config } from '@/features/scan-config/components/components';
 
 // ── Helpers (exported for reuse by panel-level hook) ─────────────────────────
 
 /** Filter parts down to completed editstate tool invocations. */
-export function completedEditStateParts(parts: UIMessage['parts']): ToolInvocationUIPart[] {
+export function completedEditStateParts(parts: UIMessage['parts']): (ToolUIPart | DynamicToolUIPart)[] {
   return parts.filter(
     (p) =>
-      p.type === 'tool-invocation' &&
-      p.toolInvocation.toolName === 'editstate' &&
-      p.toolInvocation.state === 'result'
-  ) as ToolInvocationUIPart[];
+      isToolUIPart(p) &&
+      getToolName(p) === 'editstate' &&
+      p.state === 'output-available'
+  ) as (ToolUIPart | DynamicToolUIPart)[];
 }
 
 /** Strip the leading `smc_simulation_config` segment when present. */
@@ -71,8 +73,8 @@ export function findLastNewConfig(
 
   try {
     const last = calls[0];
-    if (last.toolInvocation.state === 'result') {
-      const result = JSON.parse(last.toolInvocation.result as string);
+    if (last.state === 'output-available') {
+      const result = parseToolOutput(last.output);
       return result?.state?.smc_simulation_config || null;
     }
   } catch (error) {
@@ -109,7 +111,7 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
   const hasEditStateCalls = React.useMemo(
     () =>
       message.parts.some(
-        (p) => p.type === 'tool-invocation' && p.toolInvocation.toolName === 'editstate'
+        (p) => isToolUIPart(p) && getToolName(p) === 'editstate'
       ),
     [message.parts]
   );

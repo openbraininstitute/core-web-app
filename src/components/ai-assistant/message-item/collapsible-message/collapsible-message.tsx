@@ -1,6 +1,6 @@
 'use client';
 
-import { isToolUIPart } from 'ai';
+import { isToolUIPart, getToolName } from 'ai';
 import type { UIMessage } from '@ai-sdk/react';
 import { RiArrowDownSLine, RiCheckLine, RiCloseLine, RiResetLeftLine } from '@remixicon/react';
 import { useAtomValue } from 'jotai';
@@ -95,9 +95,9 @@ export function CollapsibleMessage({
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
       if (
-        part.type === 'tool-invocation' &&
-        part.toolInvocation.toolName === 'editstate' &&
-        part.toolInvocation.state === 'result'
+        isToolUIPart(part) &&
+        getToolName(part) === 'editstate' &&
+        part.state === 'output-available'
       ) {
         return true;
       }

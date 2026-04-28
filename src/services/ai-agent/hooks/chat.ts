@@ -124,15 +124,15 @@ export function useServiceAiAgentChat(threadId: string) {
     // Find the most recent editstate tool result in the last message.
     const editstateResult = lastMessage.parts
       .toReversed()
+      .filter(isToolUIPart)
       .find(
         (p) =>
-          p.type === 'tool-invocation' &&
-          p.toolInvocation.toolName === 'editstate' &&
-          p.toolInvocation.state === 'result'
-      ) as ToolInvocationUIPart | undefined;
+          getToolName(p) === 'editstate' &&
+          p.state === 'output-available'
+      );
 
     // Derive a stable ID for the invocation we found (if any).
-    const invocationId = editstateResult?.toolInvocation?.toolCallId ?? null;
+    const invocationId = editstateResult?.toolCallId ?? null;
 
     // If the messages array matches the initial load exactly, mark the
     // latest invocation as processed so we don't re-handle it, but don't
@@ -150,13 +150,11 @@ export function useServiceAiAgentChat(threadId: string) {
     // Mark as processed before doing work to avoid double-firing.
     lastProcessedInvocationIdRef.current = invocationId;
 
-    // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
-    if (!editstateResult?.toolInvocation?.result) return;
+    if (!editstateResult?.output) return;
 
     try {
-      // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
-      const result = JSON.parse(editstateResult.toolInvocation.result);
-      const newConfig = result.state.smc_simulation_config ?? null;
+      const result = parseToolOutput(editstateResult.output) as Record<string, any>;
+      const newConfig = result.state?.smc_simulation_config ?? null;
       // Use lastAppliedConfigRef for incremental flash diffs. Falls back
       // to the live agentStateAtom for the very first editstate call.
       const oldConfig =
@@ -182,11 +180,11 @@ export function useServiceAiAgentChat(threadId: string) {
       // Only flash when the very last part is the editstate result itself
       const lastPart = lastMessage.parts[lastMessage.parts.length - 1];
       const isLastPartEditState =
-        lastPart?.type === 'tool-invocation' &&
-        lastPart.toolInvocation.toolName === 'editstate' &&
-        lastPart.toolInvocation.state === 'result';
+        isToolUIPart(lastPart) &&
+        getToolName(lastPart) === 'editstate' &&
+        lastPart.state === 'output-available';
 
-      if (isLastPartEditState && newConfig && editstateResult.toolInvocation.args) {
+      if (isLastPartEditState && newConfig && editstateResult.input) {
         configUpdateCounterRef.current += 1;
         setLastConfigUpdate({
           oldConfig: oldConfig as Record<string, unknown> | null,
@@ -197,8 +195,7 @@ export function useServiceAiAgentChat(threadId: string) {
     } catch {
       logError(
         'Failed to parse tool invocation result as JSON:',
-        // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
-        editstateResult.toolInvocation.result
+        editstateResult.output
       );
     }
   }, [
