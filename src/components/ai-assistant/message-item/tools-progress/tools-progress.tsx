@@ -1,10 +1,10 @@
+import { RiCloseLine } from '@remixicon/react';
 import { type DynamicToolUIPart, getToolName, type ToolUIPart } from 'ai';
 import Link from 'next/link';
 import { useState } from 'react';
 
 import { CheckIcon } from '@/components/icons';
 import Chevron from '@/components/icons/Chevron';
-import CrossIcon from '@/components/icons/Cross';
 import HelpIconI from '@/components/icons/HelpIcon';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -91,7 +91,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
                 </>
               ) : isError ? (
                 <>
-                  <CrossIcon className={styles.checkIcon} />
+                  <RiCloseLine className={styles.checkIcon} />
                   <span>Error</span>
                 </>
               ) : (
