@@ -1,5 +1,4 @@
 import {
-  Enabled,
   hashKey,
   keepPreviousData,
   type QueryFunction,
@@ -11,13 +10,9 @@ import { useAtomValue } from 'jotai';
 
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
-import { TFacets } from '@/api/entitycore/types/shared/response';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import {
-  DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-  selectedBrainRegionAtom,
-} from '@/features/brain-region-hierarchy/context';
+import { selectedBrainRegionAtom } from '@/features/brain-region-hierarchy/context';
 import {
   coreFiltersAtom,
   corePageNumberAtom,
@@ -78,7 +73,7 @@ export function useQueryParameters(
     defaultBrainRegion,
   }: { requireBrainRegion?: boolean; defaultBrainRegion?: string }
 ) {
-  const selectedBrainRegin = useAtomValue(selectedBrainRegionAtom);
+  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
   const sortState = useAtomValue(coreSortStateAtom({ key: context.key }));
   const searchString = useAtomValue(coreSearchStringAtom(context.key));
   const pageNumber = useAtomValue(corePageNumberAtom(context.key));
@@ -96,20 +91,23 @@ export function useQueryParameters(
     }
     return null;
   }
-
+  // in "all species" mode we intentionally drop brain-region filters
+  const isBrainRegionRequiredAndPresent = Boolean(
+    requireBrainRegion && (!!defaultBrainRegion || !!selectedBrainRegion?.id)
+  );
+  const requireBrainRegionQuery = isBrainRegionRequiredAndPresent
+    ? {
+        within_brain_region_brain_region_id: defaultBrainRegion ?? selectedBrainRegion?.id,
+        within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+      }
+    : {};
   const queryParameters = compactRecord({
     page_size: DEFAULT_PAGE_SIZE,
     page: pageNumber,
     with_facets: true,
     ...search(),
     order_by: `${sortState.order === 'asc' ? '+' : '-'}${sortState.backendField}`,
-    ...(requireBrainRegion
-      ? {
-          within_brain_region_hierarchy_id: DEFAULT_BRAIN_REGION_HIERARCHY_ID,
-          within_brain_region_brain_region_id: defaultBrainRegion ?? selectedBrainRegin?.id,
-          within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
-        }
-      : {}),
+    ...requireBrainRegionQuery,
     ...getWorkspaceScopeFilters(context.workspaceScope, workspace),
     ...transformFiltersToQuery(filters),
   });
@@ -212,7 +210,6 @@ export function useQueryExtendedEntityTypeFacets({
   enabled?: boolean | (() => boolean);
 }) {
   const entity = getEntityByExtendedType({ type: dataType });
-  // @ts-expect-error
   return useQuery({
     queryKey: [
       'facets',

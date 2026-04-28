@@ -159,9 +159,5 @@ function resolveAgentName(agent: Agent) {
 }
 
 export function discardBrainRegionQueryParams(filters?: Record<string, any>) {
-  return omit(filters, [
-    'within_brain_region_hierarchy_id',
-    'within_brain_region_brain_region_id',
-    'within_brain_region_direction',
-  ]);
+  return omit(filters, ['within_brain_region_brain_region_id', 'within_brain_region_direction']);
 }

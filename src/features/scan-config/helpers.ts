@@ -7,6 +7,7 @@ import { ScanConfigActivity, type TScanConfigActivity } from '@/features/scan-co
 export const ACTIVITY_AI_CONFIG_MAP: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Simulate]: 'smc_simulation_config',
   [ScanConfigActivity.Extract]: 'smc_extraction_config',
+  [ScanConfigActivity.Process]: 'smc_skeletonization_config',
 };
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';

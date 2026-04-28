@@ -37,6 +37,17 @@ export function getGeneratedApiUrl({
         });
       return path;
     })
+    .with(ScanConfigActivity.Process, () => {
+      const path = match({ entityType })
+        .with(
+          { entityType: EntityTypeDict.EMCellMesh },
+          () => 'skeletonization-scan-config-generate-grid'
+        )
+        .otherwise(() => {
+          throw new Error(`Unsupported entity type ${entityType}`);
+        });
+      return path;
+    })
     .with(ScanConfigActivity.Simulate, () => {
       const path = match({ entityType })
         .with(
@@ -83,6 +94,14 @@ export function getScanConfigSchemaName({
     .with({ activity: ScanConfigActivity.Extract }, () => {
       const name = match({ entityType })
         .with({ entityType: ExtendedEntitiesTypeDict.Circuit }, () => 'CircuitExtractionScanConfig')
+        .otherwise(() => {
+          throw new Error(`Unsupported entity type: ${entityType}`);
+        });
+      return name as SchemaName;
+    })
+    .with({ activity: ScanConfigActivity.Process }, () => {
+      const name = match({ entityType })
+        .with({ entityType: EntityTypeDict.EMCellMesh }, () => 'SkeletonizationScanConfig')
         .otherwise(() => {
           throw new Error(`Unsupported entity type: ${entityType}`);
         });

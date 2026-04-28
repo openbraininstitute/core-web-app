@@ -60,7 +60,7 @@ export interface IMEModel
   etypes: Array<IEType> | null;
   morphology: ICellMorphology;
   emodel: IEModel;
-  calibration_result: {
+  calibration_result?: {
     rin: number;
   };
 }

@@ -14,6 +14,7 @@ export function SharedLayout({ children }: PropsWithChildren) {
           src="/images/brain-visualization.png"
           alt=""
           fill
+          sizes="503px"
           className="object-cover object-bottom-right"
           priority
         />

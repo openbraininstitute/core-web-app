@@ -1,6 +1,8 @@
+import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 
 import { RootElement } from '@/features/scan-config/components/root-element';
+import { useConfigUpdateFlashes } from '@/features/scan-config/hooks/use-config-update-flashes';
 import {
   type AtomsMap,
   type ConfigSchema,
@@ -10,6 +12,7 @@ import {
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/config-highlights';
 
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
@@ -72,14 +75,29 @@ export default function Left({
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig, setAiConfig } = useAIConfig();
+  const [pendingRestoreConfig, setPendingRestoreConfig] = useAtom(pendingRestoreConfigAtom);
+  const [restorePreviewActive] = useAtom(restorePreviewActiveAtom);
+
+  // Compute flash animations from config updates (replaces per-RootElement CustomEvent listeners)
+  useConfigUpdateFlashes();
 
   // Auto-apply AI-generated configuration changes when available
+  // Skip when a restore preview is active — the config overlay is for display only.
   useEffect(() => {
+    if (restorePreviewActive) return;
     if (aiConfig && !campaignId) {
       resetConfig(schema, aiConfig, setAtomsMap);
       setAiConfig(null);
     }
-  }, [aiConfig, campaignId, schema, setAtomsMap, setAiConfig]);
+  }, [aiConfig, campaignId, schema, setAtomsMap, setAiConfig, restorePreviewActive]);
+
+  // Apply confirmed restore config to live atoms
+  useEffect(() => {
+    if (pendingRestoreConfig) {
+      resetConfig(schema, pendingRestoreConfig as Config, setAtomsMap);
+      setPendingRestoreConfig(null);
+    }
+  }, [pendingRestoreConfig, schema, setAtomsMap, setPendingRestoreConfig]);
 
   return (
     <div className={styles.scrollable}>

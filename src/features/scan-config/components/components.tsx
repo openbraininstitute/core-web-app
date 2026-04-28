@@ -65,6 +65,7 @@ export function LeftMenuTab({
   rounded = 'rounded-full',
   extraClass,
   disabled,
+  style,
 }: {
   tab: string;
   selectedTab: string;
@@ -73,6 +74,7 @@ export function LeftMenuTab({
   children?: React.ReactNode;
   extraClass?: string;
   disabled?: boolean;
+  style?: React.CSSProperties;
 }) {
   const isSelected = tab === selectedTab;
   return (
@@ -81,7 +83,7 @@ export function LeftMenuTab({
       data-active={isSelected}
       onClick={!disabled ? onClick : undefined}
       type="button"
-      style={disabled ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' } : undefined}
+      style={disabled ? { background: '#d1d5db', cursor: 'default', color: '#9ca3af' } : style}
       className={classNames(
         'min-w-37.5 px-5',
         extraClass,

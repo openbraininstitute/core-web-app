@@ -228,6 +228,7 @@ export function useAtomsMap({
               subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
             ) {
               const formModelType = match(model)
+                .with({ type: EntityTypeDict.EMCellMesh }, () => 'EMCellMeshFromID')
                 .with(
                   { type: EntityTypeDict.Memodel },
                   () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
@@ -280,14 +281,15 @@ export function resetConfig(
       | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
   } = {};
 
+  // First, populate from newConfig
   Object.entries(newConfig)
-    .filter(([k]) => isRootBlock(schema, k))
+    .filter(([k]) => isRootBlock(schema, k) || isRootBlockSingle(schema, k))
     .forEach(([k, v]) => {
       if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue>>(v);
     });
 
   Object.entries(newConfig)
-    .filter(([k]) => !isRootBlock(schema, k))
+    .filter(([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k))
     .forEach(([k, v]) => {
       map[k] = {};
       if (!v || !isPlainObject(v)) return;
@@ -296,6 +298,31 @@ export function resetConfig(
         map[k][subK] = atom<Record<string, ConfigValue>>(subV);
       });
     });
+
+  // Ensure ALL schema-defined root keys exist in the map, even if absent from newConfig.
+  // Without this, useAtomsMap's hasInitializedMapForSchema guard fails and re-initializes
+  // the entire map from defaults, wiping the restored data.
+  if (schema?.properties) {
+    for (const [k, v] of Object.entries(schema.properties)) {
+      if (isType(v) || k in map) continue;
+      if (
+        v.ui_element === ScanConfigUIElementDict.BlockSingle ||
+        v.ui_element === ScanConfigUIElementDict.BlockUnion
+      ) {
+        // Create atom with empty defaults for missing single/union blocks
+        const initial: Record<string, ConfigValue> = {};
+        if ('properties' in v && v.properties) {
+          Object.entries(v.properties).forEach(([subkey, subValue]) => {
+            initial[subkey] = isType(subValue) ? null : (subValue.default ?? null);
+          });
+        }
+        map[k] = atom<Record<string, ConfigValue>>(initial);
+      } else {
+        // Dictionary or other block types — empty map
+        map[k] = {};
+      }
+    }
+  }
 
   setAtomsMap(map);
 }

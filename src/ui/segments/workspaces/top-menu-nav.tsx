@@ -129,7 +129,7 @@ const links: LinkItem[] = [
     key: 'feedbacks',
     title: 'Feedback',
     url: 'feedback',
-    icon: <FeedbackStarIcon className="group-hover:text-primary-3 relative left-0.5 h-6! w-6!" />,
+    icon: <FeedbackStarIcon className="group-hover:text-primary-3 h-6! w-6!" />,
     allowText: false,
     className: '',
     hasAction: false,

@@ -1,4 +1,3 @@
-import { LineChartOutlined } from '@ant-design/icons';
 import { Select } from 'antd';
 import startCase from 'es-toolkit/compat/startCase';
 import Plotly from 'plotly.js-dist-min';
@@ -6,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
+import { CHART_LINE_COLOR } from '@/features/ephys-viewer/constants';
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
 import { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
@@ -51,7 +51,7 @@ interface TraceOverviewComponentProps {
 
 const colorMap = {
   stimulus: '#ff0000',
-  response: '#000000',
+  response: CHART_LINE_COLOR,
 };
 
 function TraceThumbnail({
@@ -175,23 +175,16 @@ function ImageSetComponent({
     const hasMultipleRecordings = thumbnails.length > 2;
 
     return (
-      <div
-        className={cn('flex flex-col gap-2', hasMultipleRecordings && 'col-span-full')}
+      <button
+        className={cn(
+          'flex cursor-pointer flex-col gap-3 text-left',
+          hasMultipleRecordings && 'col-span-full'
+        )}
         key={repetition}
+        onClick={onRepetitionClick(protocol, repetition)}
+        type="button"
       >
-        <div className="flex items-center justify-between">
-          <span className="text-dark indent-3 text-lg font-light capitalize">
-            {singleRecMultiCellMode ? cellId : repetition}
-          </span>
-          <button
-            className="bg-neutral-1 hover:bg-neutral-2 flex items-center rounded p-3"
-            onClick={onRepetitionClick(protocol, repetition)}
-            type="button"
-            aria-label="Toggle selection"
-          >
-            <LineChartOutlined className="stroke-primary-8" />
-          </button>
-        </div>
+        <span className="text-lg">{singleRecMultiCellMode ? cellId : repetition}</span>
 
         <div
           className={
@@ -218,7 +211,7 @@ function ImageSetComponent({
             />
           ))}
         </div>
-      </div>
+      </button>
     );
   });
 
@@ -323,7 +316,7 @@ export default function TraceOverview({
     <div className="flex flex-col gap-10">
       {cellIds.length > 1 && (
         <div className="flex flex-col gap-2">
-          Select Cell ({cellIds.length} available)
+          Select cell ({cellIds.length} available)
           <Select
             className="cell-select"
             placeholder="Select a cell"

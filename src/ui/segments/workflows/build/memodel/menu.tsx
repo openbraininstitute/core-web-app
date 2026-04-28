@@ -2,13 +2,14 @@
 
 import {
   CheckCircleFilled,
+  ExclamationCircleOutlined,
   LoadingOutlined,
   RightOutlined,
   SettingFilled,
   WarningFilled,
 } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import delay from 'es-toolkit/compat/delay';
 import get from 'es-toolkit/compat/get';
 import kebabCase from 'es-toolkit/compat/kebabCase';
@@ -17,6 +18,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { checkSingleNeuronCompatibility } from '@/api/small-scale-simulator';
 import { createModel } from '@/api/small-scale-simulator/single-neuron/single-neuron';
 import { CreateSingleNeuronSchema } from '@/api/small-scale-simulator/types';
 import { useAppNotification } from '@/components/notification';
@@ -35,6 +37,7 @@ import {
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
 import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { browserHistoryReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
@@ -61,6 +64,38 @@ export function Menu({ sessionId }: { sessionId: string }) {
     virtualLabId,
     projectId,
   });
+
+  const morphologyId = sessionValue.mmodel?.id;
+  const emodelId = sessionValue.emodel?.id;
+  const selectionComplete = !!morphologyId && !!emodelId;
+
+  const compatibilityCheck = useQuery({
+    queryKey: keyBuilder.meModelCompatibility({
+      virtualLabId,
+      projectId,
+      morphologyId: morphologyId ?? '',
+      emodelId: emodelId ?? '',
+    }),
+    queryFn: ({ signal }) =>
+      checkSingleNeuronCompatibility({
+        ctx: { virtualLabId, projectId },
+        // biome-ignore lint/style/noNonNullAssertion: Guaranteed by selectionComplete
+        morphologyId: morphologyId!,
+        // biome-ignore lint/style/noNonNullAssertion: Guaranteed by selectionComplete
+        emodelId: emodelId!,
+        signal,
+      }),
+    enabled: selectionComplete,
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
+  });
+
+  const isCheckingCompatibility = selectionComplete && compatibilityCheck.isFetching;
+  const isIncompatible =
+    selectionComplete &&
+    compatibilityCheck.isSuccess &&
+    compatibilityCheck.data?.data.compatible === false;
 
   const onStepChange = (s: BuildStepKeys) => {
     const query = new URLSearchParams(searchParams);
@@ -147,7 +182,7 @@ export function Menu({ sessionId }: { sessionId: string }) {
   });
 
   const result = CreateSingleNeuronContextSchema.safeParse(payload);
-  const disabled = mutate.isPending || !!result.error;
+  const disabled = mutate.isPending || !!result.error || isCheckingCompatibility || isIncompatible;
 
   return (
     <>
@@ -290,6 +325,18 @@ export function Menu({ sessionId }: { sessionId: string }) {
             />
           </div>
         </Button>
+        {isCheckingCompatibility && (
+          <div className="p-4 pl-6 font-semibold text-primary-9 flex items-center gap-3">
+            <LoadingOutlined />
+            {messages.CheckingCompatibility}
+          </div>
+        )}
+        {isIncompatible && (
+          <div className="p-4 pl-6 font-semibold text-destructive flex items-center gap-3">
+            <ExclamationCircleOutlined />
+            {messages.IncompatibleModels}
+          </div>
+        )}
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="mt-auto w-full">
@@ -311,8 +358,8 @@ export function Menu({ sessionId }: { sessionId: string }) {
           {disabled && (
             <TooltipContent sideOffset={10} arrowClassName="bg-primary-9">
               <p className={cn('text-justify text-base')}>
-                Please fill all the required information <br /> along with selecting m-model and
-                e-model
+                Please fill all the required information along with <br /> selecting compatible
+                M-model and E-model
               </p>
             </TooltipContent>
           )}

@@ -1,8 +1,7 @@
 'use client';
 
-import { ReactNode, useEffect, useId, useRef, useState } from 'react';
-
 import { RightOutlined } from '@ant-design/icons';
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 

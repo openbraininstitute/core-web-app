@@ -41,6 +41,7 @@ export function MainVideo() {
           src="/images/brain-visualization.png"
           alt=""
           fill
+          sizes="(max-width: 1200px) 50vw, 600px"
           className="object-contain object-bottom-right"
         />
       </div>

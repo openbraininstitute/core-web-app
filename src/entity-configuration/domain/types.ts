@@ -42,7 +42,7 @@ export type EntityCoreTypeConfig<
     };
     query: {
       list?: (query: any) => Promise<EntityCoreResponse<T> | L>;
-      count?: (query: any) => Promise<EntityCoreResponse<T> | L>;
+      count?: (query: any) => Promise<number>;
       one: (
         query: {
           id: string;
