@@ -14,9 +14,9 @@ export const viewDefForRegionCircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.CircuitName,
-    EntityCoreFields.SimulationCampaignStatus,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.SimulationCampaignStatus,
   ],
   filterableFields: [
     EntityCoreFields.Name,

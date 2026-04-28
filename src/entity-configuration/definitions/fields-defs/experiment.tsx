@@ -9,6 +9,7 @@ import {
   renderEmptyOrValue,
 } from '@/entity-configuration/definitions/renderer';
 import { getSkeletonizationStatusCountMap } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import { CampaignActivityStatusCell } from '@/features/task/activity-execution/campaign-status-cell';
 import { LegacyCampaignStatusCell } from '@/features/task/activity-execution/legacy-campaign-status-cell';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 
@@ -152,7 +153,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.SimulationCampaignStatus]: {
     title: 'Status',
     filter: null,
-    style: { width: 160 },
+    style: { width: 100 },
     render: (r) => {
       return <LegacyCampaignStatusCell campaignId={r.id} />;
     },
@@ -165,6 +166,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     render: (r) => renderEmptyOrValue(get(r, 'circuit.name', '')),
     isDisplayable: true,
     isFilterable: false,
+    style: { width: 200 },
   },
   [EntityCoreFields.MEModelName]: {
     title: 'ME-model',
@@ -178,8 +180,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: null,
     style: { width: 160 },
     render: (r) => {
-      const statusCountMap = getSkeletonizationStatusCountMap(r as unknown as any);
-      return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+      return <CampaignActivityStatusCell campaignId={r.id} />;
     },
     isDisplayable: true,
     isFilterable: false,

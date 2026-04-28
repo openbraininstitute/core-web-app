@@ -4,6 +4,7 @@ import {
   memodelCircuitSimulationExpandedViewConfig,
   microcircuitSimulationExpandedViewConfig,
   pairedNeuronsCircuitSimulationExpandedViewConfig,
+  regionCircuitSimulationExpandedViewConfig,
   singleNeuronCircuitSimulationExpandedViewConfig,
   smallMicrocircuitSimulationExpandedViewConfig,
 } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
@@ -28,4 +29,5 @@ export const listExpandedViewRegistry: ListExpandedViewRegistry = {
     smallMicrocircuitSimulationExpandedViewConfig,
   [ExtendedEntitiesTypeDict.SkeletonizationCampaign]: skeletonizationCampaignExpandedViewConfig,
   [ExtendedEntitiesTypeDict.IonChannelModelSimulation]: ionChannelSimulationExpandedViewConfig,
+  [ExtendedEntitiesTypeDict.RegionCircuitSimulation]: regionCircuitSimulationExpandedViewConfig,
 };

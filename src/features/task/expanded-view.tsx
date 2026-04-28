@@ -5,7 +5,7 @@ import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
 import { ExecutionStatus } from '@/features/task/activity-execution/status';
 
 import type { ColumnsType } from 'antd/es/table';
-import type { SVGProps } from 'react';
+import type { ReactNode, SVGProps } from 'react';
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 import type {
   TTaskCampaignExecutionRow,
@@ -44,7 +44,86 @@ export function scanParameterKeys(scanParameters: unknown): string[] {
   return [];
 }
 
-const className = 'text-primary-9! whitespace-nowrap';
+const cellClassName = 'text-primary-9! whitespace-nowrap';
+const headerWrapClassName = 'text-primary-9! whitespace-normal break-words';
+const expandedTableWrapperClassName = 'pr-36 pl-12';
+const expandedTableClassName =
+  '[&_.ant-table-cell]:bg-background! [&_.ant-table-thead>th]:text-primary-9! [&_.ant-table-row:hover>td]:bg-gray-100!';
+
+type ScanParamsRow = {
+  id: string;
+  name: string;
+  scan_parameters: Record<string, unknown>;
+};
+
+export function createScanParameterColumns<R extends ScanParamsRow>(
+  paramKeys: Iterable<string>
+): ColumnsType<R> {
+  return Array.from(paramKeys).map((param) => ({
+    title: (
+      <div title={param} className={headerWrapClassName}>
+        {getParamTitle(param)}
+      </div>
+    ),
+    className: cellClassName,
+    onHeaderCell: () => ({
+      className: headerWrapClassName,
+      style: { whiteSpace: 'normal' },
+    }),
+    dataIndex: ['scan_parameters', param],
+    ellipsis: true,
+    key: param,
+  }));
+}
+
+export function createNameColumn<R extends ScanParamsRow>(): ColumnsType<R>[number] {
+  return {
+    title: <span className={cellClassName}>Name</span>,
+    className: cellClassName,
+    dataIndex: 'name',
+    key: 'name',
+    ellipsis: true,
+    width: 200,
+    fixed: 'left',
+  };
+}
+
+export function createStatusColumn<R>(
+  renderStatus: (_: unknown, record: R) => ReactNode,
+  opts?: { width?: number }
+): ColumnsType<R>[number] {
+  return {
+    title: <span className={cellClassName}>Status</span>,
+    render: renderStatus,
+    width: opts?.width ?? 120,
+    align: 'center',
+    className: cellClassName,
+    key: 'status',
+    fixed: 'right' as const,
+  };
+}
+
+export function renderExpandedTable<R extends { id: string }>(props: {
+  columns: ColumnsType<R>;
+  dataSource: R[];
+  rowKey?: string | ((record: R) => string);
+}) {
+  return (
+    <div className={expandedTableWrapperClassName}>
+      <ConfigProvider theme={{ hashed: false }}>
+        <Table
+          size="middle"
+          bordered
+          columns={props.columns}
+          dataSource={props.dataSource}
+          rowKey={props.rowKey ?? 'id'}
+          pagination={false}
+          className={expandedTableClassName}
+        />
+      </ConfigProvider>
+    </div>
+  );
+}
 
 type Row = {
   id: string;
@@ -61,7 +140,7 @@ function getExecutionStatus(
 
 export function AddCircleLineDuotone(props: SVGProps<SVGSVGElement>) {
   return (
-    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative icon
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       {/* Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ */}
       <g fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -74,7 +153,7 @@ export function AddCircleLineDuotone(props: SVGProps<SVGSVGElement>) {
 
 export function MinusCircleLineDuotone(props: SVGProps<SVGSVGElement>) {
   return (
-    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative icon
     <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       {/* Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ */}
       <g fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -106,13 +185,7 @@ export const TaskViewConfig: ListExpandedViewConfig<
       ),
     ]);
 
-    const extraColumns: ColumnsType<Row> = [...paramKeySet].map((param) => ({
-      title: <span title={param}>{getParamTitle(param)}</span>,
-      className,
-      dataIndex: ['scan_parameters', param],
-      ellipsis: true,
-      key: param,
-    }));
+    const extraColumns = createScanParameterColumns<Row>(paramKeySet);
 
     const rows: Row[] = taskRows.map((r) => ({
       id: `${r.provenance.config.id}:${r.execution?.id ?? 'pending'}`,
@@ -125,44 +198,16 @@ export const TaskViewConfig: ListExpandedViewConfig<
     }));
 
     const columns: ColumnsType<Row> = [
-      {
-        title: <span className={className}>Name</span>,
-        className,
-        dataIndex: 'name',
-        key: 'name',
-        ellipsis: true,
-        fixed: 'left' as const,
-      },
+      createNameColumn<Row>(),
       ...extraColumns,
-      {
-        title: <span className={className}>Status</span>,
-        render: (r: Row) => (
-          <div className="flex items-center justify-center">
-            <ExecutionStatus status={r.status} />
-          </div>
-        ),
-        width: 200,
-        align: 'center',
-        className,
-        key: 'status',
-      },
+      createStatusColumn<Row>((_: unknown, r: Row) => (
+        <div className="flex items-center justify-center">
+          <ExecutionStatus status={r.status} />
+        </div>
+      )),
     ];
 
-    return (
-      <div className="pr-36 pl-12">
-        <ConfigProvider theme={{ hashed: false }}>
-          <Table
-            size="middle"
-            bordered
-            columns={columns}
-            dataSource={rows}
-            rowKey="id"
-            pagination={false}
-            className="[&_.ant-table-cell]:bg-background! [&_.ant-table-thead>th]:text-primary-9! [&_.ant-table-row:hover>td]:bg-gray-100!"
-          />
-        </ConfigProvider>
-      </div>
-    );
+    return renderExpandedTable<Row>({ columns, dataSource: rows });
   },
   expandIcon: (props) => {
     if (!props.expandable) return null;
@@ -172,8 +217,9 @@ export const TaskViewConfig: ListExpandedViewConfig<
           id={`task-view-collapse-icon-${props.record.id}`}
           type="button"
           onClick={(e) => props.onExpand(props.record, e)}
+          className="mt-2"
         >
-          <MinusCircleLineDuotone className="text-primary-8 size-6" />
+          <MinusCircleLineDuotone className="text-primary-8 size-5" />
         </button>
       );
     }
@@ -181,9 +227,10 @@ export const TaskViewConfig: ListExpandedViewConfig<
       <button
         id={`task-view-expand-icon-${props.record.id}`}
         type="button"
+        className="mt-2"
         onClick={(e) => props.onExpand(props.record, e)}
       >
-        <AddCircleLineDuotone className="text-primary-7 size-6" />
+        <AddCircleLineDuotone className="text-primary-7 size-5" />
       </button>
     );
   },

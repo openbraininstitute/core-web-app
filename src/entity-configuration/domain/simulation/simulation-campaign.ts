@@ -333,18 +333,6 @@ export function getSimulationStatus(simulation: ISimulation) {
   }) as ActivityStatus;
 }
 
-export function getCircuitSimulationStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
-  const simulations = get(simCampaign, 'simulations', []) as ISimulation[];
-
-  const statusCountMap = simulations.reduce((map, simulation) => {
-    const status = getSimulationStatus(simulation);
-
-    return map.set(status, (map.get(status) ?? 0) + 1);
-  }, new Map());
-
-  return statusCountMap;
-}
-
 export type ExtendedCampaignsType = AwaitedType<ReturnType<typeof list>>;
 
 type TResolvedSimulationByCampaign = Awaited<ReturnType<typeof resolveSimulationByCampaignId>>;

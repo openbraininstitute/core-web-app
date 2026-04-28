@@ -65,7 +65,7 @@ export function ExecutionStatus({ status }: ExecutionStatusProps) {
   return (
     <div
       id={`execution-status-${status}`}
-      className="flex  min-w-20 w-full max-w-30  items-center justify-between gap-2 rounded-full border px-4 py-0.5"
+      className="flex min-w-max w-full max-w-20  items-center justify-between gap-2 rounded-full border px-4 py-0.5"
       style={{
         color,
         borderColor: color,
