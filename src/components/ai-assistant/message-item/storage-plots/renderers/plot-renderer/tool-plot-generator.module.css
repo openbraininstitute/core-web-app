@@ -53,9 +53,20 @@
   }
 }
 
-/* Plotly modebar buttons */
+/*
+ * Fix Tailwind preflight breaking Plotly modebar layout.
+ * Tailwind sets `svg { display: block }` which causes modebar icons
+ * to stack vertically instead of flowing inline within each group.
+ * See: https://github.com/plotly/plotly.js/issues/5828
+ */
+.plotContainer :global(.modebar-btn svg) {
+  display: inline !important;
+}
+
+/* Position the modebar below the fullscreen button, right-aligned */
 .plotContainer :global(.modebar-container) {
-  margin-right: 4px !important;
+  top: 8px !important;
+  right: 2px !important;
 }
 
 .plotContainer :global(.modebar-group) {
@@ -63,10 +74,5 @@
 }
 
 .plotContainer :global(.modebar-btn) {
-  padding: 3px 4px !important;
-}
-
-.plotContainer :global(.modebar-btn svg) {
-  width: 14px !important;
-  height: 14px !important;
+  padding: 16px 3px !important;
 }

@@ -60,6 +60,29 @@ dialog.dialog {
   }
 }
 
+/*
+ * Fix Tailwind preflight breaking Plotly modebar layout in fullscreen.
+ * See: https://github.com/plotly/plotly.js/issues/5828
+ */
+.content :global(.modebar-btn svg) {
+  display: inline !important;
+}
+
+/* Position the modebar below the close button with larger icons for fullscreen */
+.content :global(.modebar-container) {
+  top: 40px !important;
+  right: 11px !important;
+}
+
+.content :global(.modebar-btn) {
+  margin-bottom: 40px !important;
+}
+
+.content :global(.modebar-btn svg) {
+  width: 28px !important;
+  height: 28px !important;
+}
+
 .fullscreenImage {
   max-width: 90vw;
   max-height: 90vh;

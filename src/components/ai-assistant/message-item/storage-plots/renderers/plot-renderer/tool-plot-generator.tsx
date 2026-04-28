@@ -294,6 +294,7 @@ function buildInlineLayout(layout: Record<string, unknown>, subplotCount: number
     width: undefined,
     height: undefined,
     margin: isGrid ? { t: 2, l: 2, r: 2, b: 2, pad: 0 } : { t: 0, l: 3, r: 3, b: 3, pad: 0 },
+    modebar: { orientation: 'v' as const },
     font: {
       ...(layout.font as Record<string, unknown>),
       size: baseFontSize,
@@ -349,6 +350,7 @@ function buildFullscreenLayout(layout: Record<string, unknown>) {
     width: undefined,
     height: undefined,
     margin: layout.margin as Record<string, unknown>,
+    modebar: { orientation: 'v' as const },
     font: {
       ...(layout.font as Record<string, unknown>),
       size: Math.max(((layout.font as Record<string, unknown>)?.size as number) || 12, 16),
