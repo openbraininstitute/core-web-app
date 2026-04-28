@@ -68,6 +68,15 @@
   background: color-mix(in srgb, var(--color-primary-6) 12%, var(--color-neutral-5));
 }
 
+/* Suppress parent hover when hovering the restore/confirm buttons */
+.thinkingButton[data-collapsed="true"]:has(.restoreBtn:hover, .confirmBtn:hover) {
+  background: transparent;
+}
+
+.thinkingButton[data-collapsed="false"]:has(.restoreBtn:hover, .confirmBtn:hover) {
+  background: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
+}
+
 .thinkingButton:active {
   background: rgba(0, 0, 0, 0.04);
 }
