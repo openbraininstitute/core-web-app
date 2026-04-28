@@ -1,8 +1,7 @@
 'use client';
 
-import { isToolUIPart, getToolName } from 'ai';
-import type { UIMessage } from '@ai-sdk/react';
 import { RiArrowDownSLine, RiCheckLine, RiCloseLine, RiResetLeftLine } from '@remixicon/react';
+import { getToolName, isToolUIPart } from 'ai';
 import { useAtomValue } from 'jotai';
 import React from 'react';
 
@@ -12,6 +11,8 @@ import {
   restorePreviewMessageIdAtom,
 } from '@/state/config-highlights';
 import { cn } from '@/utils/css-class';
+
+import type { UIMessage } from '@ai-sdk/react';
 
 import styles from './collapsible-message.module.css';
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { type DynamicToolUIPart, getToolName, isToolUIPart, type ToolUIPart } from 'ai';
 import { useAtom, useSetAtom } from 'jotai';
 import React from 'react';
 
@@ -14,18 +15,16 @@ import {
 import { adjustParentTypes, computeLiveDiffs, type DiffResult } from '@/utils/diff';
 
 import type { UIMessage } from '@ai-sdk/react';
-import { isToolUIPart, getToolName, type ToolUIPart, type DynamicToolUIPart } from 'ai';
 import type { Config } from '@/features/scan-config/components/components';
 
 // ── Helpers (exported for reuse by panel-level hook) ─────────────────────────
 
 /** Filter parts down to completed editstate tool invocations. */
-export function completedEditStateParts(parts: UIMessage['parts']): (ToolUIPart | DynamicToolUIPart)[] {
+export function completedEditStateParts(
+  parts: UIMessage['parts']
+): (ToolUIPart | DynamicToolUIPart)[] {
   return parts.filter(
-    (p) =>
-      isToolUIPart(p) &&
-      getToolName(p) === 'editstate' &&
-      p.state === 'output-available'
+    (p) => isToolUIPart(p) && getToolName(p) === 'editstate' && p.state === 'output-available'
   ) as (ToolUIPart | DynamicToolUIPart)[];
 }
 
@@ -108,10 +107,7 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
   // ── Derived data ─────────────────────────────────────────────────────────
 
   const hasEditStateCalls = React.useMemo(
-    () =>
-      message.parts.some(
-        (p) => isToolUIPart(p) && getToolName(p) === 'editstate'
-      ),
+    () => message.parts.some((p) => isToolUIPart(p) && getToolName(p) === 'editstate'),
     [message.parts]
   );
 

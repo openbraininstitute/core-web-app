@@ -124,11 +124,7 @@ export function useServiceAiAgentChat(threadId: string) {
     const editstateResult = lastMessage.parts
       .toReversed()
       .filter(isToolUIPart)
-      .find(
-        (p) =>
-          getToolName(p) === 'editstate' &&
-          p.state === 'output-available'
-      );
+      .find((p) => getToolName(p) === 'editstate' && p.state === 'output-available');
 
     // Derive a stable ID for the invocation we found (if any).
     const invocationId = editstateResult?.toolCallId ?? null;
@@ -192,10 +188,7 @@ export function useServiceAiAgentChat(threadId: string) {
         });
       }
     } catch {
-      logError(
-        'Failed to parse tool invocation result as JSON:',
-        editstateResult.output
-      );
+      logError('Failed to parse tool invocation result as JSON:', editstateResult.output);
     }
   }, [
     chat.messages,

@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { CheckIcon } from '@/components/icons';
-import CrossIcon from '@/components/icons/Cross';
 import Chevron from '@/components/icons/Chevron';
+import CrossIcon from '@/components/icons/Cross';
 import HelpIconI from '@/components/icons/HelpIcon';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -49,8 +49,6 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const isExpanded = expandedToolKeys.has(key);
   const isRunning = state !== 'output-available' && state !== 'output-error';
   const isError = state === 'output-error';
-  const isStateToolCall = getToolName(part) === 'editstate' || getToolName(part) === 'getstate';
-  const showRestore = isStateToolCall && !isRunning && !isError;
 
   return (
     <div className={cn(styles.container, className)}>

@@ -20,12 +20,7 @@ export const serviceAiAgentSuggestionFromUserJourney = async (
     return pendingRequests.get(key)!;
   }
 
-  const {
-    threadId = null,
-    virtualLabId = null,
-    projectId = null,
-    frontendUrl = null,
-  } = options ?? {};
+  const { threadId = null, frontendUrl = null } = options ?? {};
 
   const journey = userJourneyTracker.value;
 
