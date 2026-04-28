@@ -16,10 +16,7 @@ import type {
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { WorkspaceContext } from '@/types/common';
 
-export function toEntityCoreResponse<T>(
-  data: T[],
-  fallbackPageSize = TASK_PAGE_SIZE
-): EntityCoreResponse<T> {
+export function paginate<T>(data: T[], fallbackPageSize = TASK_PAGE_SIZE): EntityCoreResponse<T> {
   return {
     data,
     pagination: {
@@ -54,7 +51,7 @@ export async function listAllTaskActivities({
     page += 1;
   }
 
-  return toEntityCoreResponse(activities, pageSize);
+  return paginate(activities, pageSize);
 }
 
 export async function listTaskActivitiesByUsedIds({
@@ -90,7 +87,7 @@ export async function listTaskActivitiesByUsedIds({
     },
   });
 
-  return toEntityCoreResponse(data, pageSize);
+  return paginate(data, pageSize);
 }
 
 export async function listTaskConfigsByIds<TMeta extends Record<string, unknown>>({
@@ -126,7 +123,7 @@ export async function listTaskConfigsByIds<TMeta extends Record<string, unknown>
     },
   });
 
-  return toEntityCoreResponse(data, pageSize);
+  return paginate(data, pageSize);
 }
 
 export async function listTaskConfigsPageByIds<TMeta extends Record<string, unknown>>({
@@ -147,7 +144,7 @@ export async function listTaskConfigsPageByIds<TMeta extends Record<string, unkn
 
   if (pageIds.length === 0) {
     return {
-      ...toEntityCoreResponse<ITaskConfig<TMeta>>([], pageSize),
+      ...paginate<ITaskConfig<TMeta>>([], pageSize),
       pagination: { page, page_size: pageSize, total_items: uniqueIds.length },
     };
   }

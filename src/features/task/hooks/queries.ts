@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  type QueryClient,
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { includes } from 'es-toolkit/compat';
 import { useMemo } from 'react';
 
@@ -14,102 +8,20 @@ import {
   ActivityStatus,
   type TTaskActivityType,
 } from '@/api/entitycore/types/entities/task-activity';
-import { ApiError } from '@/api/error';
-import { runTask } from '@/api/one/runner';
-import { useAppNotification } from '@/components/notification';
-import { errorRegistry } from '@/features/scan-config/error-registry';
 import { TASK_PAGE_SIZE, TASK_STATUS_POLL_INTERVAL_MS } from '@/features/task/constants';
 import {
   listAllTaskActivities,
   listTaskActivitiesByUsedIds,
   listTaskConfigsByIds,
   listTaskConfigsPageByIds,
-} from '@/features/task/queries';
+} from '@/features/task/functions';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { getErrorMessage } from '@/utils/error';
-import { log } from '@/utils/logger';
 
 import type { ITaskConfig, TTaskConfigType } from '@/api/entitycore/types/entities/task-config';
-import type { TObiOneTaskType } from '@/api/one/types/task';
 import type { WorkspaceContext } from '@/types/common';
 
 const TASK_ACTIVITIES_QUERY_KEY_HEAD = 'data-task-activities' as const;
 const TASK_RUNNER_QUERY_KEY_HEAD = 'data-task-runner' as const;
-
-export function invalidateTaskExecutionActivities({
-  queryClient,
-  context,
-  executionActivityType,
-}: {
-  queryClient: QueryClient;
-  context: WorkspaceContext;
-  executionActivityType: TTaskActivityType;
-}) {
-  queryClient.invalidateQueries({
-    predicate: (query) => {
-      const key = query.queryKey;
-      if (key[0] !== TASK_ACTIVITIES_QUERY_KEY_HEAD) return false;
-      const params = key[1] as Record<string, unknown> | undefined;
-      if (!params) return false;
-      return (
-        params.virtualLabId === context.virtualLabId &&
-        params.projectId === context.projectId &&
-        params.task_activity_type === executionActivityType
-      );
-    },
-  });
-}
-
-export type TTaskLaunchMutationOptions = {
-  context: WorkspaceContext;
-  obiOneTaskType: TObiOneTaskType;
-  executionActivityType: TTaskActivityType;
-  notificationKey: string;
-  failureMessage: string;
-  logTopic: string;
-};
-
-export function useTaskLaunchMutation({
-  context,
-  obiOneTaskType,
-  executionActivityType,
-  notificationKey,
-  failureMessage,
-  logTopic,
-}: TTaskLaunchMutationOptions) {
-  const queryClient = useQueryClient();
-  const notification = useAppNotification();
-  const logTopicLower = logTopic.toLowerCase();
-
-  return useMutation({
-    throwOnError: false,
-    mutationKey: [TASK_RUNNER_QUERY_KEY_HEAD, { obiOneTaskType, context }],
-    mutationFn: (configId: string) =>
-      runTask({
-        ctx: context,
-        task_type: obiOneTaskType,
-        config_id: configId,
-      }),
-    onSuccess: (executionId, configId) => {
-      log('info', `${logTopic} for ${configId} launched successfully, execution ID`, {
-        executionId,
-      });
-      invalidateTaskExecutionActivities({ queryClient, context, executionActivityType });
-    },
-    onError: (error, configId) => {
-      log('error', `Failed to launch ${logTopicLower} for config ${configId}`, error);
-      if (error instanceof ApiError) {
-        const code = error.cause?.code;
-        const apiMessage = error.cause?.message ?? failureMessage;
-        const message = code ? getErrorMessage(code, errorRegistry, apiMessage) : apiMessage;
-        notification.error({ message, duration: 5, key: notificationKey });
-        return;
-      }
-
-      notification.error({ message: failureMessage, duration: 5, key: notificationKey });
-    },
-  });
-}
 
 export type TTaskRunnerConfigs<TMeta extends Record<string, unknown>> = {
   configList: ITaskConfig<TMeta>[];

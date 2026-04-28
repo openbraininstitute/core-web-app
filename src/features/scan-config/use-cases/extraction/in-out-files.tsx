@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { includes } from 'es-toolkit/compat';
-import { type ReactNode, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
+import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
+import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
+import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { classNames } from '@/util/utils';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
@@ -23,7 +25,7 @@ type Props = {
   context: { virtualLabId: string; projectId: string };
 };
 
-export function ExtractionInOutFiles({
+export function InOutFiles({
   config,
   execStatus,
   execution,
@@ -85,111 +87,55 @@ export function ExtractionInOutFiles({
     },
   });
 
-  useEffect(() => {
-    if (inputFiles.length > 0 && !selectedFile) {
-      onSelect(inputFiles[0]);
-    }
-  }, [inputFiles, selectedFile, onSelect]);
+  const outputFiles: TActivityCustomFile[] = useMemo(() => {
+    if (!extractedCircuit) return [];
+    return [
+      {
+        id: extractedCircuit.id,
+        entity: extractedCircuit,
+        asset: extractedCircuit.assets[0],
+        name: extractedCircuit.name,
+        renderer: ActivityCustomFileRenderer.MiniDetailView,
+      },
+    ];
+  }, [extractedCircuit]);
+
+  useAutoSelectFileOnConfigChange({
+    configId: config.id,
+    selectedFile,
+    inputFiles,
+    outputFiles,
+    onSelect,
+  });
 
   return (
-    <div className="h-full overflow-y-auto">
-      <h4 className="uppercase">Inputs</h4>
-      <div className="mt-4 mb-8 flex flex-col gap-4">
-        {inputFiles.length === 0 && <div className="text-gray-400">No input files available</div>}
-        {inputFiles.map((file) => {
-          return (
-            <ExtractionResultItem
-              id={file.asset.id}
-              selected={file.asset.id === selectedFile?.id}
-              key={file.asset?.id}
-              file={file}
-              onSelect={onSelect}
-              name={file.name}
-            />
-          );
-        })}
-      </div>
-
-      {outputAvailable && (
-        <>
-          <h4 className="uppercase">Outputs</h4>
-          <div className="mt-4 flex flex-col gap-4">
-            {!extractedCircuit && !isLoading && (
-              <div className="text-gray-400">No output files generated</div>
-            )}
-            {extractedCircuit && (
-              <ExtractionResultItem
-                id={extractedCircuit.id}
-                label={<small className="uppercase">Circuit</small>}
-                selected={extractedCircuit?.id === selectedFile?.id}
-                key={extractedCircuit.id}
-                file={{
-                  id: extractedCircuit.id,
-                  entity: extractedCircuit,
-                  asset: extractedCircuit.assets[0],
-                  name: extractedCircuit.name,
-                  renderer: ActivityCustomFileRenderer.MiniDetailView,
-                }}
-                name={extractedCircuit.name}
-                onSelect={onSelect}
-              />
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-type TExtractionResultItemProps = {
-  id: string;
-  label?: ReactNode;
-  name?: string;
-  file: TActivityCustomFile;
-  selected?: boolean;
-  onSelect: (file: TActivityCustomFile) => void;
-};
-
-function ExtractionResultItem({
-  id,
-  label,
-  name,
-  file,
-  selected,
-  onSelect,
-}: TExtractionResultItemProps) {
-  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
-  const fileExt = label ?? fileName?.split('.').at(-1);
-  const displayName = name ?? fileName;
-  return (
-    <button
-      id={id}
-      type="button"
-      title={displayName}
-      className={classNames(
-        'group flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white',
-        'hover:bg-gray-100'
-      )}
-      onClick={() => onSelect(file)}
-    >
-      <div
-        className={classNames(
-          'truncate overflow-hidden font-semibold whitespace-nowrap text-left',
-          selected ? 'text-white' : 'text-primary-9'
-        )}
-      >
-        <div>{displayName}</div>
-      </div>
-      <span
-        className={classNames(
-          'group-hover:bg-gray-200 group-hover:border-gray-100',
-          'ml-4 shrink-0 rounded-full border px-4 uppercase text-xs py-1',
-          selected ? 'border-white text-primary-9 bg-white' : 'text-neutral-5 border-neutral-5'
-        )}
-      >
-        {fileExt}
-      </span>
-    </button>
+    <IoLayout
+      showOutput={outputAvailable}
+      inputIsEmpty={inputFiles.length === 0}
+      outputIsEmpty={!extractedCircuit && !isLoading}
+      inputItems={inputFiles.map((file) => (
+        <TaskIOFileItem
+          id={file.asset.id}
+          selected={file.asset.id === selectedFile?.id}
+          key={file.asset?.id}
+          file={file}
+          onSelect={onSelect}
+          name={file.name}
+        />
+      ))}
+      outputItems={
+        outputFiles[0] ? (
+          <TaskIOFileItem
+            id={outputFiles[0].id}
+            label={<small className="uppercase">Circuit</small>}
+            selected={outputFiles[0].id === selectedFile?.id}
+            key={outputFiles[0].id}
+            file={outputFiles[0]}
+            name={outputFiles[0].name}
+            onSelect={onSelect}
+          />
+        ) : null
+      }
+    />
   );
 }

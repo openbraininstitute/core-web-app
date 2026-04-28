@@ -8,50 +8,62 @@ import {
 import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { StatusBadge, StatusBadgeSkeleton } from '@/features/scan-config/status-badge';
 import { executionStatusColorMap } from '@/features/task/activity-execution/color-map';
+import { cn } from '@/utils/css-class';
 
-import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
+import type { CSSProperties } from 'react';
 
 type Props = {
-  config: ITaskConfig<TTaskConfigMeta>;
+  configId: string;
+  configName: string;
+  scanParams: Record<string, string | number>;
   execStatus?: TActivityStatus;
   statusLoading?: boolean;
-  onSelect: () => void;
   selected?: boolean;
-  onSelectedForExtractionChange: (configId: string, selected: boolean) => void;
-  selectedForExtraction: boolean;
+  isChecked: boolean;
   selectionDisabled?: boolean;
+  fallbackColor: string;
+  onSelect: () => void;
+  onCheckedChange: (configId: string, selected: boolean) => void;
 };
 
-export function ExtractionConfigsLeftMenu({
-  config,
+export function TaskConfigSelectionCard({
+  configId,
+  configName,
+  scanParams,
   execStatus,
   statusLoading,
-  onSelect,
   selected,
-  onSelectedForExtractionChange,
-  selectedForExtraction,
+  isChecked,
   selectionDisabled,
+  fallbackColor,
+  onSelect,
+  onCheckedChange,
 }: Props) {
-  const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED] ?? '#004793';
+  const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED] ?? fallbackColor;
   const isSelectable =
     !execStatus || execStatus === ActivityStatus.CREATED || execStatus === ActivityStatus.ERROR;
 
   return (
     <button
-      className="flex-none cursor-pointer "
+      className={cn(
+        'flex-none cursor-pointer group rounded-2xl border border-gray-200',
+        'hover:border-gray-300 hover:border-1.5 transition-all duration-300',
+        'shadow-[0_1px_1px_rgba(16,24,40,0.08)]'
+      )}
       type="button"
-      title={config.name}
+      title={configName}
       onClick={onSelect}
     >
       <div
-        className="rounded-lg px-4 pb-4 transition-colors duration-300 group"
+        className={cn(
+          'rounded-2xl cursor-pointer px-4 pb-4 transition-colors duration-300 group group-hover:bg-gray-50!'
+        )}
         style={
           {
             '--card-color': color,
             border: `2px solid ${selected ? color : 'transparent'}`,
-            backgroundColor: selected ? `${color}0f` : 'white', // 6% opacity for bg color
-          } as React.CSSProperties & { '--card-color': string }
+            backgroundColor: selected ? `${color}0f` : 'white',
+          } as CSSProperties & { '--card-color': string }
         }
       >
         <div className="mb-2 flex h-18 w-full items-center justify-between">
@@ -60,13 +72,16 @@ export function ExtractionConfigsLeftMenu({
               <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
                 <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
                   <Checkbox
-                    className="mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap"
+                    className={cn(
+                      'mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap',
+                      '[&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6! [&_.ant-checkbox-checked_.ant-checkbox]:border-primary-6!'
+                    )}
                     disabled={selectionDisabled}
-                    onChange={(e) => onSelectedForExtractionChange(config.id, e.target.checked)}
-                    checked={selectedForExtraction}
+                    onChange={(e) => onCheckedChange(configId, e.target.checked)}
+                    checked={isChecked}
                     style={{ color, maxWidth: '100%', display: 'flex' }}
                   >
-                    <span className="text-lg transition-colors duration-300">{config.name}</span>
+                    <span className="text-lg transition-colors duration-300">{configName}</span>
                   </Checkbox>
                 </div>
               </ConfigProvider>
@@ -75,7 +90,7 @@ export function ExtractionConfigsLeftMenu({
                 style={{ color }}
                 className="block truncate text-lg transition-colors duration-300"
               >
-                {config.name}
+                {configName}
               </span>
             )}
           </div>
@@ -84,10 +99,7 @@ export function ExtractionConfigsLeftMenu({
             <RightOutlined className="ml-2 text-sm" />
           </div>
         </div>
-        <ScanParams
-          scanParams={config.meta.scan_parameters as Record<string, string | number>}
-          color={color}
-        />
+        <ScanParams scanParams={scanParams} color={color} />
       </div>
     </button>
   );
