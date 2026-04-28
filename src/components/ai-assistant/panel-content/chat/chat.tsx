@@ -230,21 +230,33 @@ export default function Chat({
           Using Credit Balance
         </div>
       )}
-      {diffBarData && (
-        <DiffBar
-          isViewingDiffs={activeDiffMessageId === diffBarData.messageId}
-          onToggleDiffs={handleToggleDiffs}
-          onClose={handleCloseDiffBar}
+      <div className={styles.bottomBar}>
+        <div
+          className={classNames(
+            styles.diffBarSlider,
+            diffBarData ? styles.diffBarSliderVisible : undefined
+          )}
+          aria-hidden={!diffBarData}
+        >
+          <div className={styles.diffBarInner}>
+            {diffBarData && (
+              <DiffBar
+                isViewingDiffs={activeDiffMessageId === diffBarData.messageId}
+                onToggleDiffs={handleToggleDiffs}
+                onClose={handleCloseDiffBar}
+              />
+            )}
+          </div>
+        </div>
+        <Footer
+          className={styles.footer}
+          status={status}
+          threadId={threadId}
+          onPrompt={handlePrompt}
+          messagesCount={messages.length}
+          stop={stop}
         />
-      )}
-      <Footer
-        className={styles.footer}
-        status={status}
-        threadId={threadId}
-        onPrompt={handlePrompt}
-        messagesCount={messages.length}
-        stop={stop}
-      />
+      </div>
     </div>
   );
 }
