@@ -54,6 +54,12 @@ export type EntityCoreTypeConfig<
           context?: WorkspaceContext | null;
         } & Record<string, any>
       ) => Promise<S>;
+      status?: (
+        query: {
+          id: string;
+          context?: WorkspaceContext | null;
+        } & Record<string, any>
+      ) => Promise<Map<string, number> | Record<string, unknown>>;
       create?: (body: any) => Promise<T>;
       delete?: (query: { id: string; context: WorkspaceContext | null }) => Promise<void>;
     };

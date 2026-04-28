@@ -7,7 +7,6 @@ import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { Loader } from '@/components/loader';
 import { WorkspaceSection } from '@/constants';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
@@ -15,20 +14,14 @@ import { TaskConfigSelectionList } from '@/features/scan-config/components/share
 import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-launch-button';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
-import { useLoadMoreOnInView } from '@/features/scan-config/use-load-more-on-in-view';
-import { buildActivityStatusMap, findLatestExecutionForEntity } from '@/features/task-runner';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
-import {
-  usePaginatedTaskConfigsWithVisibleExecutions,
-  useTaskRunner,
-} from '@/features/task-runner/hooks/queries';
+import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
-
-const EXTRACTION_LIST_PAGE_SIZE = 30;
 
 type Props = {
   campaignId: string;
@@ -42,6 +35,9 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
   const [activeConfig, setActiveConfig] = useState<ITaskConfig<TTaskConfigMeta> | null>(null);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
+  const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
+    new Map()
+  );
 
   const { mutateAsync: runExtraction, isPending: runExtractionPending } = useTaskLaunchMutation({
     context,
@@ -52,68 +48,25 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     logTopic: 'Extraction',
   });
 
-  const {
-    configGenerationLoading,
-    configGenerationIds,
-    configsResponse,
-    executionsResponse,
-    executionsLoading,
-  } = useTaskRunner<TTaskConfigMeta>({
-    context,
-    campaignId,
-    configGenerationActivityType: TaskActivityType.CircuitExtractionConfigGeneration,
-    executionActivityType: TaskActivityType.CircuitExtractionExecution,
-    taskConfigType: TaskConfigType.CircuitExtractionConfig,
-    pauseExecutionPolling: runExtractionPending,
-  });
-
-  const {
-    configPageLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    visibleConfigs,
-    visibleConfigIds,
-    visibleExecutionsResponse,
-    visibleExecutionsLoading,
-  } = usePaginatedTaskConfigsWithVisibleExecutions<TTaskConfigMeta>({
-    context,
-    taskConfigType: TaskConfigType.CircuitExtractionConfig,
-    executionActivityType: TaskActivityType.CircuitExtractionExecution,
-    ids: configGenerationIds,
-    pageSize: EXTRACTION_LIST_PAGE_SIZE,
-  });
-
-  const loadMoreRef = useLoadMoreOnInView({
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  });
-
-  const statusMap = useMemo(() => {
-    return buildActivityStatusMap({
-      entityIds: configsResponse?.configIds ?? [],
-      executions: executionsResponse?.data ?? [],
+  const { configGenerationLoading, configsResponse, configsLoading } =
+    useTaskRunner<TTaskConfigMeta>({
+      context,
+      campaignId,
+      configGenerationActivityType: TaskActivityType.CircuitExtractionConfigGeneration,
+      executionActivityType: TaskActivityType.CircuitExtractionExecution,
+      taskConfigType: TaskConfigType.CircuitExtractionConfig,
+      pauseExecutionPolling: runExtractionPending,
+      loadExecutions: false,
     });
-  }, [configsResponse?.configIds, executionsResponse?.data]);
 
-  const visibleStatusMap = useMemo(() => {
-    return buildActivityStatusMap({
-      entityIds: visibleConfigIds,
-      executions: visibleExecutionsResponse?.data ?? [],
-    });
-  }, [visibleConfigIds, visibleExecutionsResponse?.data]);
+  const configs = configsResponse?.configList ?? [];
 
-  const resolvedActiveConfig = activeConfig ?? visibleConfigs[0] ?? null;
+  const resolvedActiveConfig = activeConfig ?? configs[0] ?? null;
 
   const activeConfigExecution = useMemo(() => {
     if (!resolvedActiveConfig) return undefined;
-    const executions = [
-      ...(visibleExecutionsResponse?.data ?? []),
-      ...(executionsResponse?.data ?? []),
-    ];
-    return findLatestExecutionForEntity(executions, resolvedActiveConfig.id);
-  }, [resolvedActiveConfig, executionsResponse?.data, visibleExecutionsResponse?.data]);
+    return executionByConfigId.get(resolvedActiveConfig.id) ?? undefined;
+  }, [executionByConfigId, resolvedActiveConfig]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
 
@@ -129,20 +82,30 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     }
   }, []);
 
+  const onExecutionLoad = useCallback((configId: string, execution: ITaskActivity | null) => {
+    setExecutionByConfigId((prev) => {
+      if (prev.get(configId) === execution) return prev;
+      return new Map(prev).set(configId, execution);
+    });
+  }, []);
+
   const selectableConfigIds = useMemo(() => {
     return (
       (configsResponse?.configList ?? [])
         .filter((config) => {
-          const status = statusMap.get(config.id);
+          if (!executionByConfigId.has(config.id)) return false;
+          const status = executionByConfigId.get(config.id)?.status;
           return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
         })
         .map((c) => c.id) ?? []
     );
-  }, [configsResponse?.configList, statusMap]);
+  }, [configsResponse?.configList, executionByConfigId]);
+
+  const allConfigStatusesLoaded =
+    configs.length > 0 && configs.every((config) => executionByConfigId.has(config.id));
 
   const resolvedSelectedConfigIds =
-    selectedConfigIds ??
-    (configsResponse?.configList && !executionsLoading ? selectableConfigIds : []);
+    selectedConfigIds ?? (allConfigStatusesLoaded ? selectableConfigIds : []);
 
   const onRun = async (configIdsToRun: string[]) => {
     await runExtraction(configIdsToRun);
@@ -152,7 +115,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   const launchBtnLabelPrefix = resolvedSelectedConfigIds.length
     ? `(${resolvedSelectedConfigIds.length})`
     : '';
-  const loading = configGenerationLoading || configPageLoading;
+  const loading = configGenerationLoading || configsLoading;
 
   return (
     <ResultsLayout
@@ -160,31 +123,24 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
       left={
         <div className="flex h-full flex-col gap-4 overflow-y-hidden">
           <TaskConfigSelectionList
-            configs={visibleConfigs}
+            campaignId={campaignId}
+            configs={configs}
             selectableConfigIds={selectableConfigIds}
             selectedConfigIds={resolvedSelectedConfigIds}
             activeConfigId={resolvedActiveConfig?.id}
             loading={loading}
             selectionDisabled={runExtractionPending}
-            statusLoading={visibleExecutionsLoading}
             fallbackColor="#004793"
-            visibleStatusMap={visibleStatusMap}
-            statusMap={statusMap}
+            context={context}
+            executionActivityType={TaskActivityType.CircuitExtractionExecution}
+            pauseStatusPolling={runExtractionPending}
+            executionByConfigId={executionByConfigId}
             onSelectConfig={onActiveConfigChange}
             onCheckedChange={onSelectedForExtractionChange}
             onToggleSelectAll={(checked) =>
               setSelectedConfigIds(checked ? selectableConfigIds : [])
             }
-            loadingSlot={
-              <div className="flex h-full items-center justify-center">
-                <Loader className="text-neutral-3" />
-              </div>
-            }
-            loadMoreSlot={
-              <div ref={loadMoreRef} className="flex min-h-8 items-center justify-center">
-                {isFetchingNextPage && <Loader size="small" className="text-neutral-3" />}
-              </div>
-            }
+            onExecutionLoad={onExecutionLoad}
           />
           <TaskLaunchButton
             label="Launch extractions"

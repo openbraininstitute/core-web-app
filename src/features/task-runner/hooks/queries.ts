@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 
 import {
   ActivityStatus,
+  type ITaskActivity,
   type TTaskActivityType,
 } from '@/api/entitycore/types/entities/task-activity';
 import {
@@ -20,6 +21,7 @@ import {
   listTaskConfigsByIds,
   listTaskConfigsPageByIds,
 } from '@/features/task-runner/functions';
+import { findLatestExecutionForEntity } from '@/features/task-runner/status';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ITaskConfig, TTaskConfigType } from '@/api/entitycore/types/entities/task-config';
@@ -37,6 +39,7 @@ export type TUseTaskRunnerParams = {
   executionActivityType: TTaskActivityType;
   taskConfigType: TTaskConfigType;
   pauseExecutionPolling?: boolean;
+  loadExecutions?: boolean;
 };
 
 // campaign-level orchestrator:
@@ -48,6 +51,7 @@ export function useTaskRunner<TMeta extends Record<string, unknown>>({
   executionActivityType,
   taskConfigType,
   pauseExecutionPolling = false,
+  loadExecutions = true,
 }: TUseTaskRunnerParams) {
   const { data: configGenerationIds, isPending: configGenerationLoading } = useQuery({
     queryKey: keyBuilder.taskActivities({
@@ -115,7 +119,9 @@ export function useTaskRunner<TMeta extends Record<string, unknown>>({
         taskActivityType: executionActivityType,
         context,
       }),
-    enabled: Boolean(configsResponse?.configIds && configsResponse.configIds.length > 0),
+    enabled: Boolean(
+      loadExecutions && configsResponse?.configIds && configsResponse.configIds.length > 0
+    ),
     refetchInterval: (query) => {
       const executions = query.state.data?.data ?? [];
       const hasActive = executions.some((exec) =>
@@ -133,6 +139,51 @@ export function useTaskRunner<TMeta extends Record<string, unknown>>({
     executionsResponse,
     executionsLoading,
   };
+}
+
+export type TUseTaskConfigExecutionParams = {
+  context: WorkspaceContext;
+  configId: string;
+  executionActivityType: TTaskActivityType;
+  pausePolling?: boolean;
+  fallbackExecution?: ITaskActivity | null;
+};
+
+export function useTaskConfigExecution({
+  context,
+  configId,
+  executionActivityType,
+  pausePolling = false,
+  fallbackExecution,
+}: TUseTaskConfigExecutionParams) {
+  return useQuery({
+    queryKey: [
+      TASK_ACTIVITIES_QUERY_KEY_HEAD,
+      {
+        ...context,
+        task_activity_type: executionActivityType,
+        used_id: configId,
+      },
+    ],
+    queryFn: () =>
+      listTaskActivitiesByUsedIds({
+        usedIds: [configId],
+        taskActivityType: executionActivityType,
+        context,
+      }),
+    enabled: Boolean(configId),
+    select: (response) => findLatestExecutionForEntity(response.data, configId) ?? null,
+    refetchInterval: (query) => {
+      const execution = query.state.data
+        ? findLatestExecutionForEntity(query.state.data.data, configId)
+        : fallbackExecution;
+      const status = execution?.status;
+      const hasActive = status
+        ? includes([ActivityStatus.PENDING, ActivityStatus.RUNNING], status)
+        : false;
+      return hasActive && !pausePolling ? TASK_STATUS_POLL_INTERVAL_MS : false;
+    },
+  });
 }
 
 export type TUseVisibleTaskConfigsParams = {

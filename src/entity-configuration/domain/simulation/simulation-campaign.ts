@@ -25,7 +25,7 @@ import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { TASK_ID_FILTER_CHUNK_SIZE, TASK_PAGE_SIZE } from '@/features/task-runner/constants';
+import { TASK_PAGE_SIZE } from '@/features/task-runner/constants';
 import { fetchChunkedPages } from '@/features/task-runner/query-utils';
 
 import { getSimulationStatusFromExecutions, getSimulationStatusMap } from './status-utils';
@@ -169,14 +169,38 @@ export async function statusByIds({
   }) as Map<string, ActivityStatus>;
 }
 
+export async function statusById({
+  id,
+  simulation,
+  context,
+}: {
+  id: string;
+  simulation?: ISimulation;
+  context?: WorkspaceContext | null;
+}) {
+  const source =
+    simulation ?? Array.from((await getExtendedSimMap([id], context ?? undefined)).values()).at(0);
+  const executions = await listExecutionsBySimulationId({ simulationId: id, context });
+
+  return getSimulationStatusFromExecutions({
+    simulation: source ?? { id },
+    executions,
+    createdStatus: ActivityStatus.CREATED,
+    errorStatus: ActivityStatus.ERROR,
+  }) as ActivityStatus;
+}
+
 export async function status({ id, context }: { id: string; context?: WorkspaceContext | null }) {
   const simulations = await listAllChildren({ id, context });
   const statusMap = await statusByIds({ simulations, context });
 
-  return Array.from(statusMap.values()).reduce<Map<ActivityStatus, number>>((map, value) => {
-    map.set(value, (map.get(value) ?? 0) + 1);
-    return map;
-  }, new Map());
+  return Array.from(statusMap.values()).reduce<Map<ActivityStatus, number>>(
+    (map: Map<ActivityStatus, number>, value: ActivityStatus) => {
+      map.set(value, (map.get(value) ?? 0) + 1);
+      return map;
+    },
+    new Map<ActivityStatus, number>()
+  );
 }
 
 export async function rows({
@@ -195,7 +219,7 @@ export async function rows({
   }));
 }
 
-async function listAllChildren({
+export async function listAllChildren({
   id,
   context,
   pageSize = 100,
@@ -231,7 +255,7 @@ export async function listExecutions({
 }) {
   return fetchChunkedPages({
     values: simulationIds,
-    chunkSize: TASK_ID_FILTER_CHUNK_SIZE,
+    chunkSize: TASK_PAGE_SIZE,
     pageSize: TASK_PAGE_SIZE,
     prepareValues: (values) => Array.from(new Set(values)),
     fetchPage: ({ chunkValues, page, pageSize }) =>
@@ -241,6 +265,33 @@ export async function listExecutions({
         filters: { used__id__in: chunkValues, page, page_size: pageSize },
       }),
   });
+}
+
+export async function listExecutionsBySimulationId({
+  simulationId,
+  context,
+  pageSize = TASK_PAGE_SIZE,
+}: {
+  simulationId: string;
+  context?: WorkspaceContext | null;
+  pageSize?: number;
+}) {
+  const executions: IExecutionActivity[] = [];
+  let page = 1;
+
+  while (true) {
+    const response = await getSimulationExecutions({
+      context,
+      withFacets: false,
+      filters: { used__id: simulationId, page, page_size: pageSize },
+    });
+    executions.push(...response.data);
+
+    if (response.data.length < pageSize) break;
+    page += 1;
+  }
+
+  return executions;
 }
 
 export async function resolveSimulationByCampaignId({

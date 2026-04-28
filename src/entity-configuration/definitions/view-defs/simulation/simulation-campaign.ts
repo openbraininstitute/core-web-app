@@ -15,7 +15,7 @@ export const viewDefForSimulationCampaign: ViewDefinitionConfig = {
     EntityCoreFields.Description,
     EntityCoreFields.CircuitName,
     EntityCoreFields.RegistrationDate,
-    EntityCoreFields.ActivityStatus,
+    EntityCoreFields.LegacyActivityStatus,
   ],
   filterableFields: [
     EntityCoreFields.Name,
@@ -31,7 +31,7 @@ export const viewDefForSimulationCampaign: ViewDefinitionConfig = {
   ],
   miniDetailView: [
     { field: EntityCoreFields.CircuitName },
-    { field: EntityCoreFields.ActivityStatus },
+    { field: EntityCoreFields.LegacyActivityStatus },
     { field: EntityCoreFields.RegistrationDate },
   ],
 };

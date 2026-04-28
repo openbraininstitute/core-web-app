@@ -20,6 +20,8 @@ export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Pr
   return (
     <button
       id={id}
+      data-testid={`task-io-file-item-${id}`}
+      data-file-name={displayName}
       type="button"
       title={displayName}
       className={classNames(

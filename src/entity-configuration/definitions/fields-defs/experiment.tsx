@@ -8,9 +8,8 @@ import {
   renderDictionaryKeys,
   renderEmptyOrValue,
 } from '@/entity-configuration/definitions/renderer';
-import { getSkeletonizationStatusCountMap } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import { LegacyCampaignStatusCell } from '@/features/task-runner/activity-execution/legacy-status-cell';
-import { CampaignActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
+import { ActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 
 import type {
@@ -150,16 +149,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     isFilterable: false,
   },
-  [EntityCoreFields.ActivityStatus]: {
-    title: 'Status',
-    filter: null,
-    style: { width: 100 },
-    render: (r) => {
-      return <LegacyCampaignStatusCell campaignId={r.id} />;
-    },
-    isDisplayable: true,
-    isFilterable: false,
-  },
   [EntityCoreFields.CircuitName]: {
     title: 'Circuit',
     filter: null,
@@ -175,12 +164,23 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     isFilterable: false,
   },
-  [EntityCoreFields.SkeletonizationCampaignStatus]: {
+  // TODO: remove this after full migration to task-runner
+  [EntityCoreFields.LegacyActivityStatus]: {
     title: 'Status',
     filter: null,
-    style: { width: 160 },
+    style: { width: 100 },
     render: (r) => {
-      return <CampaignActivityStatusCell campaignId={r.id} />;
+      return <LegacyCampaignStatusCell campaignId={r.id} />;
+    },
+    isDisplayable: true,
+    isFilterable: false,
+  },
+  [EntityCoreFields.TaskActivityStatus]: {
+    title: 'Status',
+    filter: null,
+    style: { width: 100 },
+    render: (r) => {
+      return <ActivityStatusCell campaignId={r.id} />;
     },
     isDisplayable: true,
     isFilterable: false,

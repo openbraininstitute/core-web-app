@@ -20,7 +20,7 @@ export function StatusBadge({ status, details }: { status?: TActivityStatus; det
         className={cn(
           'flex items-center rounded-full border px-4 py-1 text-sm capitalize transition-colors duration-300',
           'bg-(--card-color) border-(--card-color)! text-white',
-          'group-hover:bg-(--card-color)/70 group-hover:border-(--card-color)/70! group-hover:text-white'
+          'group-hover:border-(--card-color)/70! group-hover:text-white'
         )}
       >
         {status ?? 'created'}
@@ -47,8 +47,8 @@ export function StatusBadge({ status, details }: { status?: TActivityStatus; det
 export function StatusBadgeSkeleton() {
   return (
     <div className="flex items-center">
-      <span className="flex items-center rounded-xl border border-neutral-200 px-4 capitalize">
-        <span className="my-1 h-4 w-12 animate-pulse rounded bg-neutral-200" />
+      <span className="flex items-center rounded-full border border-neutral-200 px-4 capitalize">
+        <span className="my-1 h-4 w-12 animate-pulse rounded-full bg-neutral-200" />
       </span>
     </div>
   );

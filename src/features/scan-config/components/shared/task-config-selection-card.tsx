@@ -1,12 +1,15 @@
 import { RightOutlined } from '@ant-design/icons';
-import { Checkbox, ConfigProvider } from 'antd';
+import { Checkbox } from 'antd';
 
 import {
   ActivityStatus,
   type TActivityStatus,
 } from '@/api/entitycore/types/entities/task-activity';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
-import { StatusBadge, StatusBadgeSkeleton } from '@/features/scan-config/status-badge';
+import {
+  StatusBadge,
+  StatusBadgeSkeleton,
+} from '@/features/scan-config/components/shared/status-badge';
 import { executionStatusColorMap } from '@/features/task-runner/activity-execution/color-map';
 import { cn } from '@/utils/css-class';
 
@@ -56,7 +59,8 @@ export function TaskConfigSelectionCard({
     >
       <div
         className={cn(
-          'rounded-2xl cursor-pointer px-4 pb-4 transition-colors duration-300 group group-hover:bg-gray-50!'
+          'rounded-2xl cursor-pointer px-4 pb-4 transition-colors duration-300 group group-hover:bg-gray-50!',
+          statusLoading && 'animate-pulse'
         )}
         style={
           {
@@ -69,22 +73,24 @@ export function TaskConfigSelectionCard({
         <div className="mb-2 flex h-18 w-full items-center justify-between">
           <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
             {isSelectable ? (
-              <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
-                <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
-                  <Checkbox
-                    className={cn(
-                      'mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap',
-                      '[&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6! [&_.ant-checkbox-checked_.ant-checkbox]:border-primary-6!'
-                    )}
-                    disabled={selectionDisabled}
-                    onChange={(e) => onCheckedChange(configId, e.target.checked)}
-                    checked={isChecked}
-                    style={{ color, maxWidth: '100%', display: 'flex' }}
-                  >
-                    <span className="text-lg transition-colors duration-300">{configName}</span>
-                  </Checkbox>
-                </div>
-              </ConfigProvider>
+              <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
+                <Checkbox
+                  className={cn(
+                    'mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap',
+                    '[&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6! [&_.ant-checkbox-checked_.ant-checkbox]:border-primary-6!',
+                    '[&_.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!',
+                    '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-6!',
+                    '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-6!',
+                    '[&_.ant-checkbox-disabled.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
+                  )}
+                  disabled={selectionDisabled}
+                  onChange={(e) => onCheckedChange(configId, e.target.checked)}
+                  checked={isChecked}
+                  style={{ color, maxWidth: '100%', display: 'flex' }}
+                >
+                  <span className="text-lg transition-colors duration-300">{configName}</span>
+                </Checkbox>
+              </div>
             ) : (
               <span
                 style={{ color }}
@@ -96,7 +102,7 @@ export function TaskConfigSelectionCard({
           </div>
           <div className="ml-4 flex shrink-0">
             {statusLoading ? <StatusBadgeSkeleton /> : <StatusBadge status={execStatus} />}
-            <RightOutlined className="ml-2 text-sm" />
+            <RightOutlined className="ml-2 text-sm text-gray-500" />
           </div>
         </div>
         <ScanParams scanParams={scanParams} color={color} />

@@ -90,6 +90,39 @@ export async function listTaskActivitiesByUsedIds({
   return paginate(data, pageSize);
 }
 
+export async function listTaskActivitiesByUsedIdsAnyType({
+  context,
+  usedIds,
+  pageSize = TASK_PAGE_SIZE,
+  chunkSize = TASK_ID_FILTER_CHUNK_SIZE,
+}: {
+  context?: WorkspaceContext | null;
+  usedIds: string[];
+  pageSize?: number;
+  chunkSize?: number;
+}) {
+  const data = await fetchChunkedPages({
+    values: usedIds,
+    chunkSize,
+    pageSize,
+    prepareValues: uniq,
+    fetchPage: async ({ chunkValues, page, pageSize }) => {
+      const response = await getTaskActivities({
+        context,
+        withFacets: false,
+        filters: {
+          used__id__in: chunkValues,
+          page,
+          page_size: pageSize,
+        },
+      });
+      return { data: response.data };
+    },
+  });
+
+  return paginate(data, pageSize);
+}
+
 export async function listTaskConfigsByIds<TMeta extends Record<string, unknown>>({
   context,
   taskConfigType,
@@ -115,6 +148,69 @@ export async function listTaskConfigsByIds<TMeta extends Record<string, unknown>
         filters: {
           task_config_type: taskConfigType,
           id__in: chunkValues,
+          page,
+          page_size: pageSize,
+        },
+      });
+      return { data: response.data };
+    },
+  });
+
+  return paginate(data, pageSize);
+}
+
+export async function listTaskConfigsByGeneratorIdsAnyType<TMeta extends Record<string, unknown>>({
+  context,
+  generatorIds,
+  pageSize = TASK_PAGE_SIZE,
+  chunkSize = TASK_PAGE_SIZE,
+}: {
+  context?: WorkspaceContext | null;
+  generatorIds: string[];
+  pageSize?: number;
+  chunkSize?: number;
+}) {
+  const data = await fetchChunkedPages({
+    values: generatorIds,
+    chunkSize,
+    pageSize,
+    prepareValues: uniq,
+    fetchPage: async ({ chunkValues, page, pageSize }) => {
+      const response = await getTaskConfigs<TMeta>({
+        context,
+        withFacets: false,
+        filters: {
+          task_config_generator_id__in: chunkValues,
+          page,
+          page_size: pageSize,
+        },
+      });
+      return { data: response.data };
+    },
+  });
+
+  return paginate(data, pageSize);
+}
+
+export async function listTaskConfigsByGeneratorIdAnyType<TMeta extends Record<string, unknown>>({
+  context,
+  generatorId,
+  pageSize = TASK_PAGE_SIZE,
+}: {
+  context?: WorkspaceContext | null;
+  generatorId: string;
+  pageSize?: number;
+}) {
+  const data = await fetchChunkedPages({
+    values: [generatorId],
+    chunkSize: 1,
+    pageSize,
+    fetchPage: async ({ chunkValues, page, pageSize }) => {
+      const response = await getTaskConfigs<TMeta>({
+        context,
+        withFacets: false,
+        filters: {
+          task_config_generator_id: chunkValues[0],
           page,
           page_size: pageSize,
         },

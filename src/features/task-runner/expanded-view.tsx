@@ -11,7 +11,7 @@ import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/
 import type {
   TTaskCampaignExecutionRow,
   TTaskCampaignRow,
-} from '@/entity-configuration/domain/task-helpers';
+} from '@/entity-configuration/domain/task-functions';
 
 export function getParamLabel(param: string) {
   // e.g. "initialize.random_seed" -> "Random seed"

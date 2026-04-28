@@ -1,13 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { Loader } from '@/components/loader';
 import { WorkspaceSection } from '@/constants';
 import { CostConfirmationModal } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
@@ -15,29 +14,20 @@ import { ResultsLayout } from '@/features/scan-config/components/shared/results-
 import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
 import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-launch-button';
 import {
-  buildActivityStatusMap,
-  findLatestExecutionForEntity,
-} from '@/features/scan-config/helpers';
-import {
   ActivityCustomFileRenderer,
   ScanConfigActivity,
   type TActivityCustomFile,
 } from '@/features/scan-config/types';
-import { useLoadMoreOnInView } from '@/features/scan-config/use-load-more-on-in-view';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
-import {
-  usePaginatedTaskConfigsWithVisibleExecutions,
-  useTaskRunner,
-} from '@/features/task-runner/hooks/queries';
+import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { messages as textMessages } from '@/i18n/en/scan-config';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
 
 import { InOutFiles } from './in-out-files';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
-
-const SKELETONIZATION_LIST_PAGE_SIZE = 30;
 
 type Props = {
   campaignId: string;
@@ -48,12 +38,14 @@ type Props = {
 export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);
+  const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
   const [activeConfig, setActiveConfig] =
     useState<ITaskConfig<TSkeletonizationTaskConfigMeta> | null>(null);
-  const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
   const [showCostModal, setShowCostModal] = useState(false);
+  const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
+    new Map()
+  );
 
   const { mutateAsync: runSkeletonization, isPending: runSkeletonizationPending } =
     useTaskLaunchMutation({
@@ -66,68 +58,25 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
       requiresConsent: true,
     });
 
-  const {
-    configGenerationLoading,
-    configGenerationIds,
-    configsResponse,
-    executionsResponse,
-    executionsLoading,
-  } = useTaskRunner<TSkeletonizationTaskConfigMeta>({
-    context,
-    campaignId,
-    configGenerationActivityType: TaskActivityType.SkeletonizationConfigGeneration,
-    executionActivityType: TaskActivityType.SkeletonizationExecution,
-    taskConfigType: TaskConfigType.SkeletonizationConfig,
-    pauseExecutionPolling: runSkeletonizationPending,
-  });
-
-  const {
-    configPageLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    visibleConfigs,
-    visibleConfigIds,
-    visibleExecutionsResponse,
-    visibleExecutionsLoading,
-  } = usePaginatedTaskConfigsWithVisibleExecutions<TSkeletonizationTaskConfigMeta>({
-    context,
-    taskConfigType: TaskConfigType.SkeletonizationConfig,
-    executionActivityType: TaskActivityType.SkeletonizationExecution,
-    ids: configGenerationIds,
-    pageSize: SKELETONIZATION_LIST_PAGE_SIZE,
-  });
-
-  const loadMoreRef = useLoadMoreOnInView({
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  });
-
-  const statusMap = useMemo(() => {
-    return buildActivityStatusMap({
-      entityIds: configsResponse?.configIds ?? [],
-      executions: executionsResponse?.data ?? [],
+  const { configGenerationLoading, configsResponse, configsLoading } =
+    useTaskRunner<TSkeletonizationTaskConfigMeta>({
+      context,
+      campaignId,
+      configGenerationActivityType: TaskActivityType.SkeletonizationConfigGeneration,
+      executionActivityType: TaskActivityType.SkeletonizationExecution,
+      taskConfigType: TaskConfigType.SkeletonizationConfig,
+      pauseExecutionPolling: runSkeletonizationPending,
+      loadExecutions: false,
     });
-  }, [configsResponse?.configIds, executionsResponse?.data]);
 
-  const visibleStatusMap = useMemo(() => {
-    return buildActivityStatusMap({
-      entityIds: visibleConfigIds,
-      executions: visibleExecutionsResponse?.data ?? [],
-    });
-  }, [visibleConfigIds, visibleExecutionsResponse?.data]);
+  const configs = configsResponse?.configList ?? [];
 
-  const resolvedActiveConfig = activeConfig ?? visibleConfigs[0] ?? null;
+  const resolvedActiveConfig = activeConfig ?? configs[0] ?? null;
 
   const activeConfigExecution = useMemo(() => {
     if (!resolvedActiveConfig) return undefined;
-    const executions = [
-      ...(visibleExecutionsResponse?.data ?? []),
-      ...(executionsResponse?.data ?? []),
-    ];
-    return findLatestExecutionForEntity(executions, resolvedActiveConfig.id);
-  }, [resolvedActiveConfig, executionsResponse?.data, visibleExecutionsResponse?.data]);
+    return executionByConfigId.get(resolvedActiveConfig.id) ?? undefined;
+  }, [executionByConfigId, resolvedActiveConfig]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
 
@@ -140,40 +89,36 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
 
   const onSelectedForSkeletonizationChange = useCallback((configId: string, selected: boolean) => {
     if (selected) {
-      setSelectedConfigIds((prev) => [...prev, configId]);
+      setSelectedConfigIds((prev) => [...(prev ?? []), configId]);
     } else {
-      setSelectedConfigIds((prev) => prev.filter((id) => id !== configId));
+      setSelectedConfigIds((prev) => (prev ?? []).filter((id) => id !== configId));
     }
+  }, []);
+
+  const onExecutionLoad = useCallback((configId: string, execution: ITaskActivity | null) => {
+    setExecutionByConfigId((prev) => {
+      if (prev.get(configId) === execution) return prev;
+      return new Map(prev).set(configId, execution);
+    });
   }, []);
 
   const selectableConfigIds = useMemo(() => {
     return (
       (configsResponse?.configList ?? [])
         .filter((config) => {
-          const status = statusMap.get(config.id);
+          if (!executionByConfigId.has(config.id)) return false;
+          const status = executionByConfigId.get(config.id)?.status;
           return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
         })
         .map((c) => c.id) ?? []
     );
-  }, [configsResponse?.configList, statusMap]);
+  }, [configsResponse?.configList, executionByConfigId]);
 
-  useEffect(() => {
-    if (
-      configsResponse?.configList &&
-      configsResponse.configList.length > 0 &&
-      !initialSelectionDone &&
-      !executionsLoading
-    ) {
-      setSelectedConfigIds(selectableConfigIds);
-      setInitialSelectionDone(true);
-    }
-  }, [configsResponse?.configList, executionsLoading, initialSelectionDone, selectableConfigIds]);
+  const allConfigStatusesLoaded =
+    configs.length > 0 && configs.every((config) => executionByConfigId.has(config.id));
 
-  useEffect(() => {
-    if (visibleConfigs.length > 0 && !activeConfig) {
-      onActiveConfigChange(visibleConfigs[0]);
-    }
-  }, [visibleConfigs, activeConfig, onActiveConfigChange]);
+  const resolvedSelectedConfigIds =
+    selectedConfigIds ?? (allConfigStatusesLoaded ? selectableConfigIds : []);
 
   const onRun = async (configIdsToRun: string[]) => {
     await runSkeletonization(configIdsToRun);
@@ -183,9 +128,9 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
   const costModalItems = useMemo(
     () =>
       (configsResponse?.configList ?? [])
-        .filter((c) => selectedConfigIds.includes(c.id))
+        .filter((c) => resolvedSelectedConfigIds.includes(c.id))
         .map((c) => ({ id: c.id, name: c.name })),
-    [configsResponse?.configList, selectedConfigIds]
+    [configsResponse?.configList, resolvedSelectedConfigIds]
   );
 
   const onCostConfirm = (confirmedIds: string[]) => {
@@ -193,8 +138,10 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
     onRun(confirmedIds);
   };
 
-  const launchBtnLabelPrefix = selectedConfigIds.length ? `(${selectedConfigIds.length})` : '';
-  const loading = configGenerationLoading || configPageLoading;
+  const launchBtnLabelPrefix = resolvedSelectedConfigIds.length
+    ? `(${resolvedSelectedConfigIds.length})`
+    : '';
+  const loading = configGenerationLoading || configsLoading;
 
   return (
     <>
@@ -203,37 +150,30 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
         left={
           <div className="flex h-full flex-col gap-4 overflow-y-hidden">
             <TaskConfigSelectionList
-              configs={visibleConfigs}
+              campaignId={campaignId}
+              configs={configs}
               selectableConfigIds={selectableConfigIds}
-              selectedConfigIds={selectedConfigIds}
+              selectedConfigIds={resolvedSelectedConfigIds}
               activeConfigId={resolvedActiveConfig?.id}
               loading={loading}
               selectionDisabled={runSkeletonizationPending}
-              statusLoading={visibleExecutionsLoading}
               fallbackColor="#8c8c8c"
-              visibleStatusMap={visibleStatusMap}
-              statusMap={statusMap}
+              context={context}
+              executionActivityType={TaskActivityType.SkeletonizationExecution}
+              pauseStatusPolling={runSkeletonizationPending}
+              executionByConfigId={executionByConfigId}
               onSelectConfig={onActiveConfigChange}
               onCheckedChange={onSelectedForSkeletonizationChange}
               onToggleSelectAll={(checked) =>
                 setSelectedConfigIds(checked ? selectableConfigIds : [])
               }
-              loadingSlot={
-                <div className="flex h-full items-center justify-center">
-                  <Loader className="text-neutral-3" />
-                </div>
-              }
-              loadMoreSlot={
-                <div ref={loadMoreRef} className="flex min-h-8 items-center justify-center">
-                  {isFetchingNextPage && <Loader size="small" className="text-neutral-3" />}
-                </div>
-              }
+              onExecutionLoad={onExecutionLoad}
             />
             <TaskLaunchButton
               label="Launch skeletonizations"
               countLabel={launchBtnLabelPrefix}
               pending={runSkeletonizationPending}
-              disabled={runSkeletonizationPending || selectedConfigIds.length === 0}
+              disabled={runSkeletonizationPending || resolvedSelectedConfigIds.length === 0}
               onClick={() => setShowCostModal(true)}
             />
           </div>

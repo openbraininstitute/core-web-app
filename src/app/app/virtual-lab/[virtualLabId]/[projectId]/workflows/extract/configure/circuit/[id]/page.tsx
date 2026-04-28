@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { use } from 'react';
 
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
-import { resolveExtractionByCampaignId } from '@/entity-configuration/domain/extraction/extraction-campaign';
+import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -44,7 +44,9 @@ export default function Page({
     queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
     queryFn: async () => {
       if (!initialCampaignId) return null;
-      return await resolveExtractionByCampaignId({
+      const resolveExtractionCampaign = CircuitExtractionCampaign.api.query.resolve;
+      if (!resolveExtractionCampaign) return null;
+      return await resolveExtractionCampaign({
         id: initialCampaignId,
         context: { virtualLabId, projectId },
       });

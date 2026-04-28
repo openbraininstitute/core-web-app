@@ -22,13 +22,14 @@ import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
-import { rows as listExtractionRows } from '@/entity-configuration/domain/extraction/extraction-campaign';
+import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   getStatusCountMap as getIonChannelModelingStatusCountMap,
   resolveIonChannelModelingByCampaignId,
   type TExtendedIonChannelModelingCampaignsType,
 } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   type ExtendedCampaignsType,
   rows as listSimulationRows,
@@ -37,10 +38,10 @@ import {
 import {
   getTaskCampaignStatusCountMap,
   type TTaskCampaignRow,
-} from '@/entity-configuration/domain/task-helpers';
+} from '@/entity-configuration/domain/task-functions';
 import { LegacyCampaignStatusCell } from '@/features/task-runner/activity-execution/legacy-status-cell';
 import { ActivityAggregatedStatus } from '@/features/task-runner/activity-execution/status';
-import { CampaignActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
+import { ActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
 import { TaskViewConfig } from '@/features/task-runner/expanded-view';
 import { usePrevious } from '@/hooks/hooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -224,15 +225,16 @@ export function WorkflowActivity() {
             );
           })
           .with({ type: EntityTypeDict.TaskConfig }, () => {
-            if (
-              (record as unknown as ITaskConfig<Record<string, unknown>>).task_config_type ===
-              TaskConfigType.CircuitExtractionCampaign
-            ) {
+            const taskConfigType = (record as unknown as ITaskConfig<Record<string, unknown>>)
+              .task_config_type;
+            if (taskConfigType === TaskConfigType.CircuitExtractionCampaign) {
               return (
-                <CampaignActivityStatusCell
-                  campaignId={record.id}
-                  context={{ virtualLabId, projectId }}
-                />
+                <ActivityStatusCell campaignId={record.id} context={{ virtualLabId, projectId }} />
+              );
+            }
+            if (taskConfigType === TaskConfigType.SkeletonizationCampaign) {
+              return (
+                <ActivityStatusCell campaignId={record.id} context={{ virtualLabId, projectId }} />
               );
             }
 
@@ -413,11 +415,22 @@ export function WorkflowActivity() {
         getRowKey: (record: WorkflowTaskCampaignRow) => record.id,
         getFetchId: (record: WorkflowTaskCampaignRow) => record.id,
         fetcher: async (record: WorkflowTaskCampaignRow) => {
-          return listExtractionRows({
-            campaign: record,
-            id: record.id,
-            context: { virtualLabId, projectId },
-          });
+          const taskConfigType = (record as unknown as ITaskConfig<Record<string, unknown>>)
+            .task_config_type;
+          if (taskConfigType === TaskConfigType.SkeletonizationCampaign) {
+            const expandRow = SkeletonizationCampaign.api.expandRow;
+            if (!expandRow) return [];
+            return expandRow(record as unknown as ITaskConfig<Record<string, unknown>>, {
+              virtualLabId,
+              projectId,
+            }) as Promise<WorkflowTaskCampaignRow['rows']>;
+          }
+          const expandRow = CircuitExtractionCampaign.api.expandRow;
+          if (!expandRow) return [];
+          return expandRow(record as unknown as ITaskConfig<Record<string, unknown>>, {
+            virtualLabId,
+            projectId,
+          }) as Promise<WorkflowTaskCampaignRow['rows']>;
         },
         renderExpanded: (
           records: WorkflowTaskCampaignRow['rows'],

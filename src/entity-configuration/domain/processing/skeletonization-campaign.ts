@@ -1,15 +1,7 @@
-import { flatMap, keyBy } from 'es-toolkit/compat';
-
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import {
-  createTaskConfig,
-  getTaskActivities,
-  getTaskConfig,
-  getTaskConfigs,
-} from '@/api/entitycore/queries/task';
+import { createTaskConfig, getTaskConfig } from '@/api/entitycore/queries/task';
 import { getAsset } from '@/api/entitycore/selectors/assets';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -17,14 +9,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import {
-  buildTaskCampaignRows,
-  getLatestExecutionStatusFromRows,
-  getTaskCampaignStatusCountMap,
-  type TTaskCampaignExecutionRow,
-  type TTaskCampaignRows,
-} from '@/entity-configuration/domain/task-helpers';
-import { fetchAllChunkedPaginatedData } from '@/utils/pagination';
+import { Task, type TTaskFlowTypes } from '@/entity-configuration/domain/task-functions';
 
 import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -34,7 +19,11 @@ export type TSkeletonizationTaskConfigMeta = {
   scan_parameters?: Record<string, unknown>;
 };
 
-async function resolveSkeletonizationCampaigns({
+const TaskFlow: TTaskFlowTypes = {
+  campaignConfigType: TaskConfigType.SkeletonizationCampaign,
+};
+
+async function list({
   withFacets,
   context,
   filters,
@@ -43,146 +32,50 @@ async function resolveSkeletonizationCampaigns({
   context: WorkspaceContext | undefined;
   filters?: Partial<ITaskConfigFilter>;
 }) {
-  filters = discardBrainRegionQueryParams(filters);
-
-  const source = await getTaskConfigs<TSkeletonizationTaskConfigMeta>({
+  return Task.many<TSkeletonizationTaskConfigMeta>({
     context,
     withFacets,
+    ...TaskFlow,
     filters: {
-      task_config_type: TaskConfigType.SkeletonizationCampaign,
-      ...filters,
+      ...discardBrainRegionQueryParams(filters),
     },
   });
-
-  const campaignIDs = source.data.map((o) => o.id);
-  const generations = await getTaskActivities({
-    context,
-    filters: {
-      task_activity_type: TaskActivityType.SkeletonizationConfigGeneration,
-      used__id__in: campaignIDs,
-    },
-  });
-
-  // map campaignId → generations that used it
-  const generationsByCampaignId = generations.data.reduce<
-    Record<string, (typeof generations.data)[number][]>
-  >((acc, gen) => {
-    gen.used.forEach((u) => {
-      if (!acc[u.id]) acc[u.id] = [];
-      acc[u.id].push(gen);
-    });
-    return acc;
-  }, {});
-
-  // fetch all configs produced by those generations
-  const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
-  const configsData = await fetchAllChunkedPaginatedData({
-    values: allConfigIds,
-    chunkSize: 30,
-    pageSize: 100,
-    fetchPage: async ({ chunkValues, page, pageSize }) => {
-      const res = await getTaskConfigs<TSkeletonizationTaskConfigMeta>({
-        context,
-        withFacets: false,
-        filters: {
-          task_config_type: TaskConfigType.SkeletonizationConfig,
-          id__in: chunkValues,
-          page,
-          page_size: pageSize,
-        },
-      });
-      return { data: res.data };
-    },
-  });
-  const configById = keyBy(configsData, 'id');
-
-  // fetch all executions linked to those configs
-  const configIDs = configsData.map((c) => c.id);
-  const executions = await fetchAllChunkedPaginatedData({
-    values: configIDs,
-    chunkSize: 30,
-    pageSize: 100,
-    fetchPage: async ({ chunkValues, page, pageSize }) => {
-      const res = await getTaskActivities({
-        context,
-        withFacets: false,
-        filters: {
-          task_activity_type: TaskActivityType.SkeletonizationExecution,
-          used__id__in: chunkValues,
-          page,
-          page_size: pageSize,
-        },
-      });
-      return { data: res.data };
-    },
-  });
-  const executionsByConfigId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
-    for (const u of exec.used) {
-      if (!acc[u.id]) acc[u.id] = [];
-      acc[u.id].push(exec);
-    }
-    return acc;
-  }, {});
-
-  const enrichedData: TTaskCampaignRows<TSkeletonizationTaskConfigMeta> = buildTaskCampaignRows({
-    campaigns: source.data,
-    generationsByCampaignId,
-    configById,
-    executionsByConfigId,
-  });
-
-  return {
-    data: enrichedData,
-    pagination: source.pagination,
-    facets: source.facets,
-  };
 }
 
-export async function resolveSkeletonizationByCampaignId({
+async function rows({
+  campaign,
   id,
   context,
 }: {
+  campaign?: ITaskConfig<TSkeletonizationTaskConfigMeta>;
   id: string;
   context: WorkspaceContext | undefined;
 }) {
-  const campaign = await getTaskConfig<TSkeletonizationTaskConfigMeta>({ id, context });
+  return Task.one<TSkeletonizationTaskConfigMeta>({
+    campaign,
+    id,
+    context,
+    ...TaskFlow,
+  });
+}
+
+async function resolve({ id, context }: { id: string; context?: WorkspaceContext | null }) {
+  const resolvedContext = context ?? undefined;
+  const campaign = await getTaskConfig<TSkeletonizationTaskConfigMeta>({
+    id,
+    context: resolvedContext,
+  });
 
   if (!campaign) {
     throw new Error(`No skeletonization campaign with id ${id} found`);
   }
 
-  // campaign → config generations
-  const generations = await getTaskActivities({
-    context,
-    withFacets: false,
-    filters: {
-      task_activity_type: TaskActivityType.SkeletonizationConfigGeneration,
-      used__id: id,
-    },
+  const taskRows = await Task.one<TSkeletonizationTaskConfigMeta>({
+    id,
+    context: resolvedContext,
+    ...TaskFlow,
   });
-
-  // config generations → configs
-  const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
-  const configsData = await fetchAllChunkedPaginatedData({
-    values: allConfigIds,
-    chunkSize: 30,
-    pageSize: 100,
-    fetchPage: async ({ chunkValues, page, pageSize }) => {
-      const res = await getTaskConfigs<TSkeletonizationTaskConfigMeta>({
-        context,
-        withFacets: false,
-        filters: {
-          task_config_type: TaskConfigType.SkeletonizationConfig,
-          id__in: chunkValues,
-          page,
-          page_size: pageSize,
-        },
-      });
-      return { data: res.data };
-    },
-  });
-
-  const firstConfig = configsData.at(0);
+  const firstConfig = taskRows.at(0)?.provenance.config;
   // get the generation config asset from the campaign
   const assets = campaign.assets ?? [];
 
@@ -204,7 +97,7 @@ export async function resolveSkeletonizationByCampaignId({
     entityId: campaign.id,
     entityType: EntityTypeDict.TaskConfig,
     id: configAsset.id,
-    ctx: context,
+    ctx: resolvedContext,
     asRawResponse: true,
   });
   const config = await rawConfig.json();
@@ -216,28 +109,17 @@ export async function resolveSkeletonizationByCampaignId({
   };
 }
 
-export type TExtendedSkeletonizationCampaignsType = AwaitedType<
-  ReturnType<typeof resolveSkeletonizationCampaigns>
->;
-
-type TEnrichedSkeletonizationCampaign = TExtendedSkeletonizationCampaignsType['data'][number];
-
-export function getSkeletonizationStatus(
-  rows: TTaskCampaignExecutionRow<TSkeletonizationTaskConfigMeta>[]
-) {
-  return getLatestExecutionStatusFromRows(rows);
+async function status({ id, context }: { id: string; context?: WorkspaceContext | null }) {
+  return Task.status({
+    campaignId: id,
+    context: context ?? undefined,
+  });
 }
 
-export function getSkeletonizationStatusCountMap(campaign: TEnrichedSkeletonizationCampaign) {
-  return getTaskCampaignStatusCountMap(campaign);
-}
+export type TExtendedSkeletonizationCampaignsType = AwaitedType<ReturnType<typeof list>>;
 
-export type TResolvedSkeletonizationByCampaign = Awaited<
-  ReturnType<typeof resolveSkeletonizationByCampaignId>
->;
-export type TResolvedSkeletonizationByCampaigns = Awaited<
-  ReturnType<typeof resolveSkeletonizationCampaigns>
->;
+export type TResolvedSkeletonizationByCampaign = Awaited<ReturnType<typeof resolve>>;
+export type TResolvedSkeletonizationByCampaigns = Awaited<ReturnType<typeof list>>;
 
 export const SkeletonizationCampaign: EntityCoreTypeConfig<
   ITaskConfig<TSkeletonizationTaskConfigMeta>,
@@ -255,10 +137,19 @@ export const SkeletonizationCampaign: EntityCoreTypeConfig<
       ilikeSearchEnabled: true,
     },
     query: {
-      list: resolveSkeletonizationCampaigns,
+      list,
+      status,
+      resolve,
+      count: (params) => Task.count({ ...params, ...TaskFlow }),
       one: (params) => getTaskConfig({ id: params.id, context: params.context }),
       create: (data) => createTaskConfig({ data, context: data.context }),
     },
+    expandRow: async (record, context) =>
+      rows({
+        campaign: record as ITaskConfig<TSkeletonizationTaskConfigMeta>,
+        id: record.id,
+        context,
+      }),
   },
   asset: {
     extension: 'application/json',

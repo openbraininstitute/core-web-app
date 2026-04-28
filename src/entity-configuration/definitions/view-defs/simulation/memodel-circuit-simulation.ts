@@ -16,7 +16,7 @@ export const viewDefForMEModelCircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.CircuitName,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
-    EntityCoreFields.ActivityStatus,
+    EntityCoreFields.LegacyActivityStatus,
   ],
   filterableFields: [
     EntityCoreFields.Name,
@@ -32,7 +32,7 @@ export const viewDefForMEModelCircuitSimulation: ViewDefinitionConfig = {
   ],
   miniDetailView: [
     { field: EntityCoreFields.CircuitName },
-    { field: EntityCoreFields.ActivityStatus },
+    { field: EntityCoreFields.LegacyActivityStatus },
     { field: EntityCoreFields.RegistrationDate },
   ],
 };
