@@ -389,19 +389,16 @@ function CustomPlot({
   const [fullscreenPlotReady, setFullscreenPlotReady] = React.useState(false);
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
-  const [isNarrow, setIsNarrow] = React.useState(false);
+
+  // Ref, not state — using state caused an infinite resize loop at the 500px boundary
+  // (layout change ↔ width oscillation ↔ ResizeObserver ↔ re-render).
+  const isNarrowRef = React.useRef(false);
 
   React.useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setIsNarrow(entry.contentRect.width < 500);
-      }
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
+    if (el) {
+      isNarrowRef.current = el.getBoundingClientRect().width < 500;
+    }
   }, []);
 
   if (!isString(content)) return null;
@@ -430,7 +427,7 @@ function CustomPlot({
 
   // Truncate long tick labels (> 8 chars) only when the panel is narrow (< 500px)
   const traceData = Array.isArray(props.data) ? props.data : [];
-  const tickOverrides = isNarrow ? truncateLongTicks(traceData, modifiedLayout) : {};
+  const tickOverrides = isNarrowRef.current ? truncateLongTicks(traceData, modifiedLayout) : {};
   const finalInlineLayout = { ...modifiedLayout, ...tickOverrides };
 
   // Compact colorbars for inline view on dense grids
