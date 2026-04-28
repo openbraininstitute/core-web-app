@@ -80,6 +80,7 @@ export type TActivityEntry = {
   value: TActivityValue;
   label: string;
   name: string;
+  order?: number;
   disabled?: boolean;
   requiredFeatures?: readonly FlagKey[];
   /** workflows available when configuring a new run (the /workflows page). */

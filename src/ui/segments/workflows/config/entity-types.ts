@@ -131,6 +131,16 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     description:
       'Build a synaptome campaign from an electron-microscopy cell morphology with segmented spines.',
   },
+  [ExtendedEntitiesTypeDict.EMCellMesh]: {
+    value: ExtendedEntitiesTypeDict.EMCellMesh,
+    group: EntityGroupDict.Cellular,
+    label: 'EM mesh',
+  },
+  [ExtendedEntitiesTypeDict.SkeletonizationCampaign]: {
+    value: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+    group: EntityGroupDict.Cellular,
+    label: 'Skeletonization campaign',
+  },
   [ExtendedEntitiesTypeDict.BrainRegion]: {
     value: ExtendedEntitiesTypeDict.BrainRegion,
     group: EntityGroupDict.System,

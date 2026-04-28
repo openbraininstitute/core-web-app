@@ -49,7 +49,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
     order: 6,
-    disabled: false,
+    disabled: true,
   },
   {
     sourceType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,

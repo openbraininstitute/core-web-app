@@ -4,6 +4,7 @@ import { RightOutlined } from '@ant-design/icons';
 import snakeCase from 'es-toolkit/compat/snakeCase';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
+import { upperFirst } from 'node_modules/es-toolkit/dist/string/upperFirst.mjs';
 
 import { config } from '@/config';
 import { WorkflowActivityDictValue } from '@/constants';
@@ -36,9 +37,9 @@ export function BuildWorkflowsBreadcrumb() {
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
   const category = getActivity(segment)?.name;
 
-  // When the active workflow has configurationInputs (needsBrowse), the user
-  // is selecting the input entity — surface that in the breadcrumb instead of
-  // the target entity.
+  // when the active workflow has configurationInputs (needsBrowse), the user
+  // is selecting the input entity, surface that in the breadcrumb instead of
+  // the target entity
   const primaryInput = getPrimaryConfigurationInput({
     activity: WorkflowActivityDictValue.build,
     targetType: dataType,
@@ -48,6 +49,8 @@ export function BuildWorkflowsBreadcrumb() {
   const selectTitle = getEntityByExtendedType({ type: browseType })?.title;
   const buildTitle = getEntityMeta(dataType)?.label;
   const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
+  const leftTitle = [buildTitle, category].filter(Boolean).join(' ');
+  const upperLeftTitle = upperFirst(leftTitle.toLocaleLowerCase());
 
   return (
     <div className="px-3 pt-4 pb-2">
@@ -58,9 +61,7 @@ export function BuildWorkflowsBreadcrumb() {
               asChild
               className="text-primary-9 hover:text-primary-7 text-lg font-light select-none"
             >
-              <Link href={homeLink}>
-                {buildTitle} {category}
-              </Link>
+              <Link href={homeLink}>{upperLeftTitle}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator className="text-primary-9 text-lg font-bold">

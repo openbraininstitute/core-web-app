@@ -108,10 +108,11 @@ export function CategorySelectScrollable({
         side="bottom"
         sideOffset={3}
       >
-        {listActivities(featureFlags).map(({ label, value: _value }) => (
+        {listActivities(featureFlags).map(({ label, value: _value, disabled }) => (
           <SelectItem
             key={`category-${_value}`}
             value={_value}
+            disabled={Boolean(disabled)}
             className={cn(
               'text-primary-9 text-lg font-bold cursor-pointer',
               'data-highlighted:text-primary-7!'

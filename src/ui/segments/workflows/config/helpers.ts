@@ -35,9 +35,11 @@ const featuresSatisfied = (
 };
 
 export function listActivities(flags?: FeatureFlags): TActivityEntry[] {
-  return Object.values(ActivityRegistry).filter(
-    (activity) => !activity.disabled && featuresSatisfied(activity.requiredFeatures, flags)
+  const visibleActivities = Object.values(ActivityRegistry).filter((activity) =>
+    featuresSatisfied(activity.requiredFeatures, flags)
   );
+
+  return sortBy(visibleActivities, (activity) => activity.order ?? Number.MAX_SAFE_INTEGER);
 }
 
 export function getActivity(
@@ -201,6 +203,7 @@ const sectionToActivity: Partial<Record<TWorkspaceSection, TActivityValue>> = {
   [WorkspaceSection.BuildWorkflow]: WorkspaceSection.BuildWorkflow,
   [WorkspaceSection.SimulateWorkflow]: WorkspaceSection.SimulateWorkflow,
   [WorkspaceSection.ExtractWorkflow]: WorkspaceSection.ExtractWorkflow,
+  [WorkspaceSection.ProcessWorkflow]: WorkspaceSection.ProcessWorkflow,
 };
 
 /**
