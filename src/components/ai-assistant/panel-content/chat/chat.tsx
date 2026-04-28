@@ -23,6 +23,7 @@ import { atomRateLimit } from '../../state';
 import SuggestedQuestions from '../../suggested-questions';
 import DiffBar from '../diff-bar';
 import Footer from '../footer';
+import { OverlayScrollbar } from '../overlay-scrollbar';
 import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
 import Welcome from '../welcome';
 import { useAutoScroll } from './use-auto-scroll';
@@ -167,52 +168,55 @@ export default function Chat({
 
   return (
     <div className={classNames(styles.chatContainer, className)}>
-      <div className={styles.articles} ref={refContainer} onWheel={handleWheel}>
-        {threadId && isLoadingMessages && !isEmptyThread ? (
-          <TabTransitionLoader message="Loading conversation..." />
-        ) : (
-          <>
-            {(!threadId || isEmptyThread) && <Welcome />}
-            {messages.map((item, index) => (
-              <MessageItem
-                key={item.id}
-                value={item}
-                status={status}
-                isLastMessage={index === messages.length - 1}
-              />
-            ))}
+      <div className={styles.articlesWrapper}>
+        <div className={styles.articles} ref={refContainer} onWheel={handleWheel}>
+          {threadId && isLoadingMessages && !isEmptyThread ? (
+            <TabTransitionLoader message="Loading conversation..." />
+          ) : (
+            <>
+              {(!threadId || isEmptyThread) && <Welcome />}
+              {messages.map((item, index) => (
+                <MessageItem
+                  key={item.id}
+                  value={item}
+                  status={status}
+                  isLastMessage={index === messages.length - 1}
+                />
+              ))}
 
-            {showThinking && <ThinkingIndicator />}
-            {status === 'ready' && messages.length > 0 && (
-              <div className={styles.footerButtons}></div>
-            )}
-            {(!threadId || isEmptyThread) && (
-              <div className={styles.suggestedQuestionsContainer}>
-                <SuggestedQuestions
-                  threadId={threadId}
-                  onClick={handlePrompt}
-                  suggestions={suggestions}
-                  clearSuggestions={clearSuggestions}
-                  isLoading={isLoadingSuggestions || status !== 'ready'}
-                />
-              </div>
-            )}
-            {threadId && !isEmptyThread && status === 'ready' && (
-              <div className={styles.suggestedQuestionsContainerInChat}>
-                <SuggestedQuestions
-                  threadId={threadId}
-                  onClick={handlePrompt}
-                  suggestions={suggestions}
-                  clearSuggestions={clearSuggestions}
-                  isLoading={isLoadingSuggestions || status !== 'ready'}
-                />
-              </div>
-            )}
-            {error && <ErrorPanel value={error} />}
-            {healthError && <ErrorPanel value={healthError} />}
-          </>
-        )}
-        <div className={styles.bottom} />
+              {showThinking && <ThinkingIndicator />}
+              {status === 'ready' && messages.length > 0 && (
+                <div className={styles.footerButtons}></div>
+              )}
+              {(!threadId || isEmptyThread) && (
+                <div className={styles.suggestedQuestionsContainer}>
+                  <SuggestedQuestions
+                    threadId={threadId}
+                    onClick={handlePrompt}
+                    suggestions={suggestions}
+                    clearSuggestions={clearSuggestions}
+                    isLoading={isLoadingSuggestions || status !== 'ready'}
+                  />
+                </div>
+              )}
+              {threadId && !isEmptyThread && status === 'ready' && (
+                <div className={styles.suggestedQuestionsContainerInChat}>
+                  <SuggestedQuestions
+                    threadId={threadId}
+                    onClick={handlePrompt}
+                    suggestions={suggestions}
+                    clearSuggestions={clearSuggestions}
+                    isLoading={isLoadingSuggestions || status !== 'ready'}
+                  />
+                </div>
+              )}
+              {error && <ErrorPanel value={error} />}
+              {healthError && <ErrorPanel value={healthError} />}
+            </>
+          )}
+          <div className={styles.bottom} />
+        </div>
+        <OverlayScrollbar containerRef={refContainer} />
       </div>
       {showExhaustedNotification && status === 'ready' && (
         <div className={styles.notificationOverlay}>

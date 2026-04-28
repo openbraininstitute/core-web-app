@@ -1,0 +1,41 @@
+/*
+ * Overlay scrollbar — floats over content, never takes layout space.
+ * Mimics macOS / ChatGPT overlay scrollbar behavior.
+ */
+
+.track {
+  position: absolute;
+  top: 0;
+  right: 2px;
+  bottom: 0;
+  width: 8px;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.track.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.thumb {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  min-height: 24px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  transition: background 0.15s ease, width 0.15s ease;
+  cursor: pointer;
+  will-change: transform;
+}
+
+/* Widen and darken on hover for easier grabbing */
+.track:hover .thumb,
+.track:active .thumb {
+  width: 7px;
+  background: rgba(0, 0, 0, 0.2);
+}

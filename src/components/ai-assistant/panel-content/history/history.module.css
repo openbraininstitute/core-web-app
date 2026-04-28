@@ -12,27 +12,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-  scrollbar-gutter: stable both-edges;
+  padding: 10px 16px;
+
+  /* Force "floating" scrollbar — see chat.module.css for rationale */
+  scrollbar-width: none; /* Firefox */
 }
 
 .content::-webkit-scrollbar {
-  width: 6px;
+  display: none; /* Chrome, Safari, Edge */
 }
 
-.content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.content::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.content::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+.contentWrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .content > div {

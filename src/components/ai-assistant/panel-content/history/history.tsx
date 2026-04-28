@@ -8,6 +8,7 @@ import { classNames } from '@/util/utils';
 
 import { IconDelete } from '../../icons/delete';
 import { IconEdit } from '../../icons/edit';
+import { OverlayScrollbar } from '../overlay-scrollbar';
 import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
 import DialogDelete from './dialog-delete';
 import DialogEdit from './dialog-edit';
@@ -30,6 +31,7 @@ export default function History({ className, onBack }: HistoryProps) {
   const [openDelete, setOpenDelete] = React.useState(false);
   const [currentThreadId, setCurrentThreadId] = React.useState<string | undefined>(undefined);
   const [currentThreadTitle, setCurrentThreadTitle] = React.useState<string | undefined>(undefined);
+  const contentRef = React.useRef<HTMLDivElement>(null);
 
   const handleRename = (newThreadId: string, newTitle: string) => {
     setOpenEdit(false);
@@ -65,91 +67,96 @@ export default function History({ className, onBack }: HistoryProps) {
           </button>
         </div>
 
-        <div className={styles.content}>
-          {isLoading ? (
-            <TabTransitionLoader message="Loading conversation history..." />
-          ) : (
-            <>
-              {history && (
-                <div>
-                  {
-                    sections.reduce<{ nodes: React.ReactNode[]; count: number }>(
-                      (acc, { title, list }) => {
-                        if (list.length === 0) return acc;
-                        acc.nodes.push(
-                          <div key={title}>
-                            <h1
-                              style={{ '--index': Math.min(acc.count, 20) } as React.CSSProperties}
-                            >
-                              {title}
-                            </h1>
-                            {list.map((thread) => {
-                              const idx = acc.count++;
-                              return (
-                                <div
-                                  className={classNames(
-                                    styles.card,
-                                    threadId === thread.id && styles.currentThread
-                                  )}
-                                  key={thread.id}
-                                  style={{ '--index': Math.min(idx, 20) } as React.CSSProperties}
-                                >
-                                  <button
-                                    type="button"
-                                    className={styles.edit}
-                                    onClick={() => {
-                                      setCurrentThreadId(thread.id);
-                                      setCurrentThreadTitle(thread.title);
-                                      setOpenEdit(true);
-                                    }}
-                                  >
-                                    <IconEdit />
-                                  </button>
-                                  <button
+        <div className={styles.contentWrapper}>
+          <div className={styles.content} ref={contentRef}>
+            {isLoading ? (
+              <TabTransitionLoader message="Loading conversation history..." />
+            ) : (
+              <>
+                {history && (
+                  <div>
+                    {
+                      sections.reduce<{ nodes: React.ReactNode[]; count: number }>(
+                        (acc, { title, list }) => {
+                          if (list.length === 0) return acc;
+                          acc.nodes.push(
+                            <div key={title}>
+                              <h1
+                                style={
+                                  { '--index': Math.min(acc.count, 20) } as React.CSSProperties
+                                }
+                              >
+                                {title}
+                              </h1>
+                              {list.map((thread) => {
+                                const idx = acc.count++;
+                                return (
+                                  <div
+                                    className={classNames(
+                                      styles.card,
+                                      threadId === thread.id && styles.currentThread
+                                    )}
                                     key={thread.id}
-                                    type="button"
-                                    className={styles.mainButton}
-                                    onClick={() => {
-                                      assistant.isEmptyThread.set(false);
-                                      setThreadId(thread.id);
-                                      onBack();
-                                    }}
+                                    style={{ '--index': Math.min(idx, 20) } as React.CSSProperties}
                                   >
-                                    {thread.title}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className={styles.delete}
-                                    onClick={() => {
-                                      setCurrentThreadId(thread.id);
-                                      setCurrentThreadTitle(thread.title);
-                                      setOpenDelete(true);
-                                    }}
-                                  >
-                                    <IconDelete />
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                        return acc;
-                      },
-                      { nodes: [], count: 0 }
-                    ).nodes
-                  }
-                </div>
-              )}
-              {hasMore && (
-                <div className={styles.loadMore}>
-                  <button type="button" onClick={handleNext}>
-                    <IconPlus />
-                    <div>Load more</div>
-                  </button>
-                </div>
-              )}
-            </>
-          )}
+                                    <button
+                                      type="button"
+                                      className={styles.edit}
+                                      onClick={() => {
+                                        setCurrentThreadId(thread.id);
+                                        setCurrentThreadTitle(thread.title);
+                                        setOpenEdit(true);
+                                      }}
+                                    >
+                                      <IconEdit />
+                                    </button>
+                                    <button
+                                      key={thread.id}
+                                      type="button"
+                                      className={styles.mainButton}
+                                      onClick={() => {
+                                        assistant.isEmptyThread.set(false);
+                                        setThreadId(thread.id);
+                                        onBack();
+                                      }}
+                                    >
+                                      {thread.title}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={styles.delete}
+                                      onClick={() => {
+                                        setCurrentThreadId(thread.id);
+                                        setCurrentThreadTitle(thread.title);
+                                        setOpenDelete(true);
+                                      }}
+                                    >
+                                      <IconDelete />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                          return acc;
+                        },
+                        { nodes: [], count: 0 }
+                      ).nodes
+                    }
+                  </div>
+                )}
+                {hasMore && (
+                  <div className={styles.loadMore}>
+                    <button type="button" onClick={handleNext}>
+                      <IconPlus />
+                      <div>Load more</div>
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <OverlayScrollbar containerRef={contentRef} />
         </div>
       </div>
       <DialogEdit

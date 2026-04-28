@@ -15,26 +15,29 @@
   display: flex;
   flex-direction: column;
   padding: 4px 14px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
-  scrollbar-gutter: stable both-edges;
+
+  /*
+   * Force the scrollbar to behave as "floating" (overlay) on all platforms:
+   * - Firefox: scrollbar-width: none hides the native scrollbar entirely.
+   * - Chrome/Safari: ::-webkit-scrollbar { display: none } does the same.
+   * The element remains fully scrollable (wheel, trackpad, keyboard, touch).
+   * A custom OverlayScrollbar component renders a floating thumb on top.
+   * This eliminates the random padding caused by scrollbar-gutter: stable
+   * being ignored when the OS switches between overlay and classic scrollbars.
+   */
+  scrollbar-width: none; /* Firefox */
 }
 
 .articles::-webkit-scrollbar {
-  width: 6px;
+  display: none; /* Chrome, Safari, Edge */
 }
 
-.articles::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.articles::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-}
-
-.articles::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.15);
+.articlesWrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .bottomBar {
