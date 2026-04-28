@@ -1,4 +1,5 @@
 import { SwapOutlined } from '@ant-design/icons';
+import { RiErrorWarningFill } from '@remixicon/react';
 import { useQueries } from '@tanstack/react-query';
 import { List } from 'antd';
 import { useMemo, useState } from 'react';
@@ -79,6 +80,18 @@ export function CreditsManagement({
           <span className="font-bold text-white">{virtualLabBalance}</span>
         </div>
         <div className="ml-auto flex items-center justify-center gap-4">
+          <Button
+            rounded
+            size="md"
+            variant="outline"
+            className="border-primary-4 group bg-primary-9 hover:text-primary-4 px-4 text-white select-none hover:border-white"
+            onClick={() => window.open('/pricing', '_blank', 'noopener,noreferrer')}
+          >
+            <div className="flex items-center justify-between gap-5">
+              Pricing
+              <RiErrorWarningFill className="text-primary-4 group-hover:text-white" />
+            </div>
+          </Button>
           <Button
             rounded
             className="border-primary-4 group bg-primary-9 hover:text-primary-4 px-4 text-white select-none hover:border-white"

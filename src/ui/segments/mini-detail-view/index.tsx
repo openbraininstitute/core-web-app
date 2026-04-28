@@ -23,7 +23,7 @@ import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/pr
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { cn } from '@/utils/css-class';
 
-import { DataActions, WorkflowBuildActions, WorkflowSimulationOrExtractActions } from './actions';
+import { DataActions, WorkflowActions, WorkflowBuildActions } from './actions';
 
 import type {
   EntityCoreObjectTypes,
@@ -242,10 +242,14 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
       <DataActions record={record} dataType={dataType} />
     ))
     .with(
-      { section: P.union(WorkspaceSection.SimulateWorkflow, WorkspaceSection.ExtractWorkflow) },
-      ({ section }) => (
-        <WorkflowSimulationOrExtractActions record={record} dataType={dataType} section={section} />
-      )
+      {
+        section: P.union(
+          WorkspaceSection.SimulateWorkflow,
+          WorkspaceSection.ExtractWorkflow,
+          WorkspaceSection.ProcessWorkflow
+        ),
+      },
+      ({ section }) => <WorkflowActions record={record} dataType={dataType} section={section} />
     )
     .with({ section: WorkspaceSection.BuildWorkflow }, () => (
       <WorkflowBuildActions record={record} />

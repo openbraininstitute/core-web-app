@@ -161,6 +161,45 @@
   width: 1rem;
 }
 
+.diffButton {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  transition: all 150ms;
+  border: none;
+  cursor: pointer;
+  background: none;
+  color: #6b7280;
+}
+
+.diffButton:hover {
+  transform: scale(1.1);
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.diffButton:active {
+  transform: scale(0.95);
+}
+
+.diffButtonActive {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.diffIcon {
+  height: 1rem;
+  width: 1rem;
+}
+
+.blockCount {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
 .expandButton,
 .helpButton {
   display: flex;

@@ -21,6 +21,7 @@ import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/singl
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
 import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
 import { Notebook } from '@/entity-configuration/domain/notebook';
+import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   SimulationCampaign,
   SingleNeuronSimulation,
@@ -81,12 +82,17 @@ const EntityCoreExtractionConfiguration = {
   CircuitExtractionCampaign,
 };
 
+const EntityCoreProcessingConfiguration = {
+  SkeletonizationCampaign,
+};
+
 export const EntityCoreConfiguration = {
   ...UniversalTypesCoreConfiguration,
   ...EntityCoreExperimentalConfiguration,
   ...EntityCoreModelConfiguration,
   ...EntityCoreSimulationConfiguration,
   ...EntityCoreExtractionConfiguration,
+  ...EntityCoreProcessingConfiguration,
   Notebook,
 } as const;
 

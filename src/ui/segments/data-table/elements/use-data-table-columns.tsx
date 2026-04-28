@@ -231,7 +231,8 @@ export function useDataTableColumns<T>({
     () =>
       keys.reduce((acc, key) => {
         const term = getFieldDefinition(key as EntityCoreFields);
-        const isSortable = term?.isSortable && !!getOrderValue(term?.order, dataType);
+        const isSortable =
+          !!setSortState && term?.isSortable && !!getOrderValue(term?.order, dataType);
 
         acc.push({
           key,
@@ -276,7 +277,16 @@ export function useDataTableColumns<T>({
         });
         return acc;
       }, initialColumns),
-    [columnWidths, initialColumns, keys, onMouseDown, columnOrderBy, getOrderDirection, dataType]
+    [
+      columnWidths,
+      initialColumns,
+      keys,
+      onMouseDown,
+      columnOrderBy,
+      getOrderDirection,
+      dataType,
+      setSortState,
+    ]
   );
 
   if (dataType) {

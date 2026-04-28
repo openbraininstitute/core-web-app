@@ -18,6 +18,8 @@ export type {
 export type SanityShowcaseType = {
   name: string;
   slug: string;
+  virtualLabId?: string;
+  projectId?: string;
   authorsList: {
     firstName: string;
     lastName: string;

@@ -1,6 +1,4 @@
-import { RiResetLeftLine } from '@remixicon/react';
 import { type DynamicToolUIPart, getToolName, type ToolUIPart } from 'ai';
-import { useAtom } from 'jotai';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -8,16 +6,13 @@ import { CheckIcon } from '@/components/icons';
 import CrossIcon from '@/components/icons/Cross';
 import Chevron from '@/components/icons/Chevron';
 import HelpIconI from '@/components/icons/HelpIcon';
-import { configStateAtom } from '@/services/ai-agent/hooks/chat';
 import { useAITools } from '@/services/ai-agent/tools/tools';
-import { parseToolOutput } from '@/services/ai-agent/utils/parse-tool-output';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
 import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
 
-import type { Config } from '@/features/scan-config/components/components';
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './tools-progress.module.css';
@@ -31,7 +26,6 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const tools = useAITools();
   const { virtualLabId, projectId } = useWorkspace();
   const [expandedToolKeys, setExpandedToolKeys] = useState<Set<string>>(new Set());
-  const [, setConfig] = useAtom(configStateAtom);
 
   const toggleExpanded = (key: string) => {
     setExpandedToolKeys((prev) => {
@@ -43,24 +37,6 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
       }
       return newSet;
     });
-  };
-
-  const handleRestore = (e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    // Extract state directly from the tool part output
-    if (part.state !== 'output-available') return;
-
-    try {
-      const result = parseToolOutput(part.output) as Record<string, unknown>;
-      const state = (result?.state as Record<string, unknown>)?.smc_simulation_config;
-
-      if (state) {
-        setConfig(state as Config);
-      }
-    } catch (error) {
-      console.error('Failed to restore state:', error);
-    }
   };
 
   if (!tools) return null;
@@ -130,18 +106,6 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
           </div>
 
           <div className={styles.actions}>
-            {showRestore && (
-              <button
-                type="button"
-                className={styles.restoreButton}
-                onClick={handleRestore}
-                title="Restore this state"
-                aria-label="Restore state"
-              >
-                <RiResetLeftLine className={styles.restoreIcon} size={16} />
-              </button>
-            )}
-
             <div className={styles.expandButton}>
               <Chevron className={cn(styles.chevron, isExpanded && styles.chevronExpanded)} />
             </div>

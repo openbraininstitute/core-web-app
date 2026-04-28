@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+
 import Logo from '@/components/logo/as-svg';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -11,6 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           src="/images/brain-visualization-v3.webp"
           alt=""
           fill
+          sizes="50vw"
           className="sc object-cover object-bottom-right"
           priority
         />

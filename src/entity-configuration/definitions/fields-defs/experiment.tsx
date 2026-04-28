@@ -8,7 +8,8 @@ import {
   renderDictionaryKeys,
   renderEmptyOrValue,
 } from '@/entity-configuration/definitions/renderer';
-import { getStatusCountMap } from '@/entity-configuration/domain/simulation/simulation-campaign';
+import { getSkeletonizationStatusCountMap } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import { getCircuitSimulationStatusCountMap } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
 
@@ -130,33 +131,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     style: { width: 80 },
     isDisplayable: true,
   },
-  [EntityCoreFields.CircuitNumberNeurons]: {
-    title: 'Number of neurons',
-    filter: null,
-    render: (r) => {
-      return 'number_neurons' in r ? r.number_neurons : '-';
-    },
-    isDisplayable: true,
-    style: { width: 70 },
-  },
-  [EntityCoreFields.CircuitNumberSynapses]: {
-    title: 'Number of synapses',
-    filter: null,
-    render: (r) => {
-      return 'number_synapses' in r ? r.number_synapses : '-';
-    },
-    isDisplayable: true,
-    style: { width: 70 },
-  },
-  [EntityCoreFields.CircuitNumberConnections]: {
-    title: 'Number of connections',
-    filter: null,
-    render: (r) => {
-      return 'number_connections' in r ? r.number_connections : '-';
-    },
-    isDisplayable: true,
-    style: { width: 70 },
-  },
   // TODO: this is not need for the mmt
   [EntityCoreFields.ScanParameters]: {
     title: 'Scan parameters',
@@ -182,7 +156,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     filter: null,
     style: { width: 160 },
     render: (r) => {
-      const statusCountMap = getStatusCountMap(r as ICircuitSimulationCampaign);
+      const statusCountMap = getCircuitSimulationStatusCountMap(r as ICircuitSimulationCampaign);
       return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
     },
     isDisplayable: true,
@@ -199,6 +173,17 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'ME-model',
     filter: null,
     render: (r) => renderEmptyOrValue(get(r, 'memodel.name', '')),
+    isDisplayable: true,
+    isFilterable: false,
+  },
+  [EntityCoreFields.SkeletonizationCampaignStatus]: {
+    title: 'Status',
+    filter: null,
+    style: { width: 160 },
+    render: (r) => {
+      const statusCountMap = getSkeletonizationStatusCountMap(r as unknown as any);
+      return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+    },
     isDisplayable: true,
     isFilterable: false,
   },

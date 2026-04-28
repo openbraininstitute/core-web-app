@@ -3,12 +3,13 @@
 import { useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { DefaultChatTransport, getToolName, isToolUIPart } from 'ai';
-import { atom, useAtom, useSetAtom } from 'jotai';
-import { useEffect } from 'react';
+import { atom, useAtom, useSetAtom, useStore } from 'jotai';
+import { useEffect, useRef } from 'react';
 
 import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { useAccessToken } from '@/hooks/useAccessToken';
+import { lastConfigUpdateAtom, preMessageConfigAtom } from '@/state/config-highlights';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { logError } from '@/utils/logger';
@@ -20,10 +21,10 @@ import { parseToolOutput } from '../utils/parse-tool-output';
 import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
-const agentStateAtom = atom<Record<string, Config>>({});
+export const agentStateAtom = atom<Record<string, Config>>({});
 
 export function useServiceAiAgentChat(threadId: string) {
-  const [aiAgentState] = useAtom(agentStateAtom);
+  const jotaiStore = useStore();
   const assistant = useAiAssistant();
   const assistantInitialMessages = assistant.initialMessages.useValue();
   const isLoadingMessages = assistant.isLoadingMessages.useValue();
@@ -34,8 +35,38 @@ export function useServiceAiAgentChat(threadId: string) {
   const projectId = useParamProjectId();
   const setRateLimit = useSetAtom(atomRateLimit);
 
-  const [_, setConfig] = useAtom(configStateAtom);
+  const [, setConfig] = useAtom(configStateAtom);
   const [__, setIsChatReady] = useAtom(isChatReadyAtom);
+  const setLastConfigUpdate = useSetAtom(lastConfigUpdateAtom);
+  const setPreMessageConfig = useSetAtom(preMessageConfigAtom);
+  const configUpdateCounterRef = useRef(0);
+  // Whether we've already captured the pre-message config snapshot for the
+  // current streaming response. Reset when a new editstate message starts.
+  const capturedPreMessageConfigRef = useRef(false);
+  const preMessageCaptureMessageIdRef = useRef<string | null>(null);
+
+  // Track the last config we applied via setConfig so flash diffs are
+  // computed incrementally. agentStateAtom updates asynchronously through
+  // the Jotai chain, so reading it directly would produce stale oldConfig
+  // when multiple editstate calls arrive in rapid succession.
+  const lastAppliedConfigRef = useRef<Record<string, unknown> | null>(null);
+
+  // Track the last editstate tool invocation ID we processed to avoid
+  // re-processing cached messages on conversation switch while still
+  // detecting new editstate results during streaming (where the message
+  // ID stays the same but new tool invocations appear).
+  const lastProcessedInvocationIdRef = useRef<string | null>(null);
+
+  // Reset the tracker when the thread changes.
+  const prevThreadIdRef = useRef(threadId);
+  useEffect(() => {
+    if (prevThreadIdRef.current !== threadId) {
+      lastProcessedInvocationIdRef.current = null;
+      lastAppliedConfigRef.current = null;
+      capturedPreMessageConfigRef.current = false;
+      prevThreadIdRef.current = threadId;
+    }
+  }, [threadId]);
 
   const chat = useChat({
     id: threadId,
@@ -47,7 +78,7 @@ export function useServiceAiAgentChat(threadId: string) {
       body: () => ({
         toolSelection: activeTools,
         frontendUrl: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
-        sharedState: aiAgentState,
+        sharedState: jotaiStore.get(agentStateAtom),
       }),
       prepareSendMessagesRequest: ({ messages, body }) => {
         const lastMessage = messages.at(-1);
@@ -82,27 +113,103 @@ export function useServiceAiAgentChat(threadId: string) {
   }, [assistantInitialMessages]);
 
   useEffect(() => {
-    if (assistantInitialMessages.length === chat.messages.length) {
-      return;
-    }
     const lastMessage = chat.messages[chat.messages.length - 1];
+    if (!lastMessage) return;
 
-    // Find the most recent editstate tool result
-    const toolPart = lastMessage?.parts
+    // While initial messages are still loading, don't process anything.
+    // This prevents the useChat cache from triggering setConfig before
+    // the assistant has finished hydrating the thread.
+    if (isLoadingMessages) return;
+
+    // Find the most recent editstate tool result in the last message.
+    const editstateResult = lastMessage.parts
       .toReversed()
       .find(
-        (p) => isToolUIPart(p) && getToolName(p) === 'editstate' && p.state === 'output-available'
-      );
-    if (toolPart && 'output' in toolPart && toolPart.output) {
-      try {
-        const result = parseToolOutput(toolPart.output) as Record<string, unknown>;
-        const state = result.state as Record<string, Config> | undefined;
-        setConfig(state?.smc_simulation_config ?? null);
-      } catch {
-        logError('Failed to parse tool output:', toolPart.output);
-      }
+        (p) =>
+          p.type === 'tool-invocation' &&
+          p.toolInvocation.toolName === 'editstate' &&
+          p.toolInvocation.state === 'result'
+      ) as ToolInvocationUIPart | undefined;
+
+    // Derive a stable ID for the invocation we found (if any).
+    const invocationId = editstateResult?.toolInvocation?.toolCallId ?? null;
+
+    // If the messages array matches the initial load exactly, mark the
+    // latest invocation as processed so we don't re-handle it, but don't
+    // actually run the editstate logic (these are historical messages).
+    if (assistantInitialMessages.length === chat.messages.length) {
+      if (invocationId) lastProcessedInvocationIdRef.current = invocationId;
+      return;
     }
-  }, [chat.messages, setConfig, assistantInitialMessages.length]);
+
+    // Skip if we already processed this exact invocation.
+    if (!invocationId || invocationId === lastProcessedInvocationIdRef.current) {
+      return;
+    }
+
+    // Mark as processed before doing work to avoid double-firing.
+    lastProcessedInvocationIdRef.current = invocationId;
+
+    // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
+    if (!editstateResult?.toolInvocation?.result) return;
+
+    try {
+      // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
+      const result = JSON.parse(editstateResult.toolInvocation.result);
+      const newConfig = result.state.smc_simulation_config ?? null;
+      // Use lastAppliedConfigRef for incremental flash diffs. Falls back
+      // to the live agentStateAtom for the very first editstate call.
+      const oldConfig =
+        lastAppliedConfigRef.current ??
+        (jotaiStore.get(agentStateAtom) as Record<string, unknown>)?.smc_simulation_config ??
+        null;
+
+      // Snapshot the config before the first editstate call in this message
+      // so the diff bar can compute accumulated diffs without walking history.
+      if (preMessageCaptureMessageIdRef.current !== lastMessage.id) {
+        capturedPreMessageConfigRef.current = false;
+        preMessageCaptureMessageIdRef.current = lastMessage.id;
+      }
+      if (!capturedPreMessageConfigRef.current) {
+        setPreMessageConfig(oldConfig as Record<string, unknown> | null);
+        capturedPreMessageConfigRef.current = true;
+      }
+
+      setConfig(newConfig);
+      // Update the ref so the next editstate call diffs against this config.
+      if (newConfig) lastAppliedConfigRef.current = newConfig;
+
+      // Only flash when the very last part is the editstate result itself
+      const lastPart = lastMessage.parts[lastMessage.parts.length - 1];
+      const isLastPartEditState =
+        lastPart?.type === 'tool-invocation' &&
+        lastPart.toolInvocation.toolName === 'editstate' &&
+        lastPart.toolInvocation.state === 'result';
+
+      if (isLastPartEditState && newConfig && editstateResult.toolInvocation.args) {
+        configUpdateCounterRef.current += 1;
+        setLastConfigUpdate({
+          oldConfig: oldConfig as Record<string, unknown> | null,
+          newConfig,
+          counter: configUpdateCounterRef.current,
+        });
+      }
+    } catch {
+      logError(
+        'Failed to parse tool invocation result as JSON:',
+        // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
+        editstateResult.toolInvocation.result
+      );
+    }
+  }, [
+    chat.messages,
+    setConfig,
+    setPreMessageConfig,
+    setLastConfigUpdate,
+    isLoadingMessages,
+    assistantInitialMessages.length,
+    jotaiStore,
+  ]);
 
   useEffect(() => {
     setIsChatReady(chat.status === 'ready');
@@ -140,7 +247,7 @@ export function useServiceAiAgentChat(threadId: string) {
 }
 
 export const configStateAtom = atom<Config | null>(null);
-const isChatReadyAtom = atom(true);
+export const isChatReadyAtom = atom(true);
 
 export function useAgentState(key: string, config?: Config) {
   const [, setAIAgentState] = useAtom(agentStateAtom);
@@ -172,14 +279,12 @@ export function useAIConfig() {
   const [aiAgentState] = useAtom(agentStateAtom);
   const [isChatReady] = useAtom(isChatReadyAtom);
 
+  const aiCircuitId = (aiConfig as any)?.initialize?.circuit?.id_str;
+  const agentCircuitId = (aiAgentState as any)?.smc_simulation_config?.initialize?.circuit?.id_str;
+  const guardPassed = aiCircuitId === agentCircuitId;
+
   return {
-    aiConfig:
-      // @ts-expect-error
-      aiConfig?.initialize?.circuit?.id_str ===
-      // @ts-expect-error
-      aiAgentState?.smc_simulation_config?.initialize?.circuit?.id_str
-        ? aiConfig
-        : null,
+    aiConfig: guardPassed ? aiConfig : null,
     setAiConfig,
     isChatReady,
   };

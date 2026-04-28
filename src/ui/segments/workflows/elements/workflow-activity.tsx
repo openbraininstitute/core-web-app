@@ -31,7 +31,7 @@ import {
 } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import {
   type ExtendedCampaignsType,
-  getStatusCountMap,
+  getCircuitSimulationStatusCountMap,
 } from '@/entity-configuration/domain/simulation';
 import {
   getTaskCampaignStatusCountMap,
@@ -193,7 +193,9 @@ export function WorkflowActivity() {
       render: (_, record) => {
         return match({ type: record.type })
           .with({ type: EntityTypeDict.SimulationCampaign }, () => {
-            const statusCountMap = getStatusCountMap(record as ICircuitSimulationCampaign);
+            const statusCountMap = getCircuitSimulationStatusCountMap(
+              record as ICircuitSimulationCampaign
+            );
             return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
           })
           .with({ type: EntityTypeDict.TaskConfig }, () => {
@@ -301,14 +303,20 @@ export function WorkflowActivity() {
 
   const onDuplicate = () => {
     if (selectedRow?.type === ExtendedEntitiesTypeDict.TaskConfig) {
-      if (
-        (selectedRow as ITaskConfig<any>).task_config_type ===
-        TaskConfigType.CircuitExtractionCampaign
-      ) {
-        const circuitId = (selectedRow as ITaskConfig<any>).inputs.at(0)?.id;
+      const taskConfig = selectedRow as ITaskConfig<any>;
+      if (taskConfig.task_config_type === TaskConfigType.CircuitExtractionCampaign) {
+        const circuitId = taskConfig.inputs.at(0)?.id;
         navigate(
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
             circuitId
+          }?initialCampaignId=${selectedRow.id}`
+        );
+      }
+      if (taskConfig.task_config_type === TaskConfigType.SkeletonizationCampaign) {
+        const emCellMeshId = taskConfig.inputs.at(0)?.id;
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/process/configure/em-cell-mesh/${
+            emCellMeshId
           }?initialCampaignId=${selectedRow.id}`
         );
       }
@@ -347,8 +355,6 @@ export function WorkflowActivity() {
 
   const shouldShowEmptyState = !activityResult?.pagination.total_items && !isFetching;
 
-  // TODO If there are other entity types that need to have expandable rows - refactor this
-  // to registry-based solution (as it is done for browse-entity)
   const expandableOptions = useMemo(() => {
     const expandableTypes: TExtendedEntitiesTypeDict[] = [
       ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
@@ -357,10 +363,14 @@ export function WorkflowActivity() {
       ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
       ExtendedEntitiesTypeDict.MicrocircuitSimulation,
       ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+      ExtendedEntitiesTypeDict.SkeletonizationCampaign,
     ];
 
     if (!entityType || !expandableTypes.includes(entityType)) return undefined;
-    if (entityType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
+    if (
+      entityType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign ||
+      entityType === ExtendedEntitiesTypeDict.SkeletonizationCampaign
+    ) {
       return {
         getRowKey: (record: TTaskCampaignRow<any>) => record.id,
         getFetchId: (record: TTaskCampaignRow<any>) => record.id,
@@ -384,20 +394,19 @@ export function WorkflowActivity() {
     return {
       getRowKey: (record: any) => record.id,
       getFetchId: (record: any) => record.id,
-      fetcher: async (record: any) => {
-        return record.simulations ?? [];
-      },
+      fetcher: async (record: any) =>
+        entity?.api.expandRow?.(record, {
+          virtualLabId,
+          projectId,
+        }),
       renderExpanded: (records: any[], originalRecord: any) =>
         simulationCampaignExpandedViewConfig.render(originalRecord, records),
       expandIconColumnIndex: 6,
       expandIcon: simulationCampaignExpandedViewConfig.expandIcon,
-      isRowExpandable: (record: any) => {
-        const simulations = record.simulations ?? [];
-        return simulations.length > 1;
-      },
+      isRowExpandable: simulationCampaignExpandedViewConfig.isExpandable,
       isTopLevel: true,
     };
-  }, [entityType]);
+  }, [entityType, entity?.api.expandRow, projectId, virtualLabId]);
 
   const { expandableConfig } = useExpandableTable(
     expandableOptions as UseExpandableTableOptions<EntityCoreObjectTypes> | undefined
@@ -557,6 +566,7 @@ export function WorkflowActivity() {
                       entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation &&
                       entityType !== ExtendedEntitiesTypeDict.CircuitExtractionCampaign &&
+                      entityType !== ExtendedEntitiesTypeDict.SkeletonizationCampaign &&
                       entityType !== ExtendedEntitiesTypeDict.IonChannelModelSimulation &&
                       (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ? (
                         <Button
