@@ -38,10 +38,10 @@ import {
   getTaskCampaignStatusCountMap,
   type TTaskCampaignRow,
 } from '@/entity-configuration/domain/task-helpers';
-import { CampaignActivityStatusCell } from '@/features/task/activity-execution/campaign-status-cell';
-import { LegacyCampaignStatusCell } from '@/features/task/activity-execution/legacy-campaign-status-cell';
-import { ExecutionAggregatedStatus } from '@/features/task/activity-execution/status';
-import { TaskViewConfig } from '@/features/task/expanded-view';
+import { LegacyCampaignStatusCell } from '@/features/task-runner/activity-execution/legacy-status-cell';
+import { ActivityAggregatedStatus } from '@/features/task-runner/activity-execution/status';
+import { CampaignActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
+import { TaskViewConfig } from '@/features/task-runner/expanded-view';
 import { usePrevious } from '@/hooks/hooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -239,13 +239,13 @@ export function WorkflowActivity() {
             const statusCountMap = getTaskCampaignStatusCountMap(
               record as unknown as WorkflowTaskCampaignRow
             );
-            return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+            return <ActivityAggregatedStatus statusCountMap={statusCountMap} />;
           })
           .with({ type: EntityTypeDict.IonChannelModelingCampaign }, () => {
             const statusCountMap = getIonChannelModelingStatusCountMap(
               record as unknown as TExtendedIonChannelModelingCampaignsType['data'][number]
             );
-            return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+            return <ActivityAggregatedStatus statusCountMap={statusCountMap} />;
           })
           .otherwise(() => {
             const status = get(record, 'status', 'default');

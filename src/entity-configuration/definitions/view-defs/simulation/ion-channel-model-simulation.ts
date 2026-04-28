@@ -15,7 +15,7 @@ export const viewDefForIonChannelModelSimulation: ViewDefinitionConfig = {
     EntityCoreFields.Description,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
-    EntityCoreFields.SimulationCampaignStatus,
+    EntityCoreFields.ActivityStatus,
   ],
   filterableFields: [
     EntityCoreFields.Name,
@@ -31,6 +31,6 @@ export const viewDefForIonChannelModelSimulation: ViewDefinitionConfig = {
   ],
   miniDetailView: [
     { field: EntityCoreFields.RegistrationDate },
-    { field: EntityCoreFields.SimulationCampaignStatus },
+    { field: EntityCoreFields.ActivityStatus },
   ],
 };

@@ -25,8 +25,8 @@ import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { TASK_ID_FILTER_CHUNK_SIZE, TASK_PAGE_SIZE } from '@/features/task/constants';
-import { fetchChunkedPages } from '@/features/task/query-utils';
+import { TASK_ID_FILTER_CHUNK_SIZE, TASK_PAGE_SIZE } from '@/features/task-runner/constants';
+import { fetchChunkedPages } from '@/features/task-runner/query-utils';
 
 import { getSimulationStatusFromExecutions, getSimulationStatusMap } from './status-utils';
 import { getExtendedSimMap, migrateConfig } from './utils';

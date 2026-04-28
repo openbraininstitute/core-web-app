@@ -16,12 +16,12 @@ import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
 import { useLoadMoreOnInView } from '@/features/scan-config/use-load-more-on-in-view';
-import { buildActivityStatusMap, findLatestExecutionForEntity } from '@/features/task';
-import { useTaskLaunchMutation } from '@/features/task/hooks/mutations';
+import { buildActivityStatusMap, findLatestExecutionForEntity } from '@/features/task-runner';
+import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import {
   usePaginatedTaskConfigsWithVisibleExecutions,
   useTaskRunner,
-} from '@/features/task/hooks/queries';
+} from '@/features/task-runner/hooks/queries';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';

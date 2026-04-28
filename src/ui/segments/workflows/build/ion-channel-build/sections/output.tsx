@@ -18,7 +18,7 @@ import {
 } from '@/api/small-scale-simulator/ion-channel/build';
 import { useAppNotification } from '@/components/notification';
 import { resolveIonChannelModelingCampaignBuilds } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
-import { getStatusColor } from '@/features/task/activity-execution/color-map';
+import { getStatusColor } from '@/features/task-runner/activity-execution/color-map';
 import { message } from '@/i18n/en/ion-channel-build';
 import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
 import { useWorkspace } from '@/ui/hooks/use-workspace';

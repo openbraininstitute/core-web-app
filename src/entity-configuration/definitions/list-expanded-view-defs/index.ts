@@ -8,7 +8,7 @@ import {
   singleNeuronCircuitSimulationExpandedViewConfig,
   smallMicrocircuitSimulationExpandedViewConfig,
 } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation';
-import { TaskViewConfig } from '@/features/task/expanded-view';
+import { TaskViewConfig } from '@/features/task-runner/expanded-view';
 
 import { skeletonizationCampaignExpandedViewConfig } from './processing';
 

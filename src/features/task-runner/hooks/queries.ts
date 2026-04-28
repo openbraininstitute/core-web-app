@@ -8,20 +8,22 @@ import {
   ActivityStatus,
   type TTaskActivityType,
 } from '@/api/entitycore/types/entities/task-activity';
-import { TASK_PAGE_SIZE, TASK_STATUS_POLL_INTERVAL_MS } from '@/features/task/constants';
+import {
+  TASK_ACTIVITIES_QUERY_KEY_HEAD,
+  TASK_PAGE_SIZE,
+  TASK_RUNNER_QUERY_KEY_HEAD,
+  TASK_STATUS_POLL_INTERVAL_MS,
+} from '@/features/task-runner/constants';
 import {
   listAllTaskActivities,
   listTaskActivitiesByUsedIds,
   listTaskConfigsByIds,
   listTaskConfigsPageByIds,
-} from '@/features/task/functions';
+} from '@/features/task-runner/functions';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ITaskConfig, TTaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import type { WorkspaceContext } from '@/types/common';
-
-const TASK_ACTIVITIES_QUERY_KEY_HEAD = 'data-task-activities' as const;
-const TASK_RUNNER_QUERY_KEY_HEAD = 'data-task-runner' as const;
 
 export type TTaskRunnerConfigs<TMeta extends Record<string, unknown>> = {
   configList: ITaskConfig<TMeta>[];

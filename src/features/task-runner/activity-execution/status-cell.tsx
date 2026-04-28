@@ -5,9 +5,9 @@ import { useQuery } from '@tanstack/react-query';
 import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
 import { status } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import {
-  ExecutionAggregatedStatus,
-  ExecutionAggregatedStatusSkeleton,
-} from '@/features/task/activity-execution/status';
+  ActivityAggregatedStatus,
+  ActivityAggregatedStatusSkeleton,
+} from '@/features/task-runner/activity-execution/status';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { WorkspaceContext } from '@/types/common';
@@ -34,8 +34,8 @@ export function CampaignActivityStatusCell({ campaignId, context }: Props) {
   });
 
   if (isLoading || !statusCountMap) {
-    return <ExecutionAggregatedStatusSkeleton />;
+    return <ActivityAggregatedStatusSkeleton />;
   }
 
-  return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+  return <ActivityAggregatedStatus statusCountMap={statusCountMap} />;
 }

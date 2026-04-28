@@ -2,7 +2,8 @@ import { ConfigProvider, Table } from 'antd';
 import { get, lowerCase, upperFirst } from 'es-toolkit/compat';
 
 import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
-import { ExecutionStatus } from '@/features/task/activity-execution/status';
+import { ActivityStatusRenderer } from '@/features/task-runner/activity-execution/status';
+import { cn } from '@/utils/css-class';
 
 import type { ColumnsType } from 'antd/es/table';
 import type { ReactNode, SVGProps } from 'react';
@@ -13,7 +14,8 @@ import type {
 } from '@/entity-configuration/domain/task-helpers';
 
 export function getParamLabel(param: string) {
-  return upperFirst(lowerCase(param.split('.').at(-1))); // e.g. "initialize.random_seed" -> "Random seed"
+  // e.g. "initialize.random_seed" -> "Random seed"
+  return upperFirst(lowerCase(param.split('.').at(-1)));
 }
 
 export function getParamTitle(param: string) {
@@ -47,8 +49,11 @@ export function scanParameterKeys(scanParameters: unknown): string[] {
 const cellClassName = 'text-primary-9! whitespace-nowrap';
 const headerWrapClassName = 'text-primary-9! whitespace-normal break-words';
 const expandedTableWrapperClassName = 'pr-36 pl-12';
-const expandedTableClassName =
-  '[&_.ant-table-cell]:bg-background! [&_.ant-table-thead>th]:text-primary-9! [&_.ant-table-row:hover>td]:bg-gray-100!';
+const expandedTableClassName = cn(
+  '[&_.ant-table-cell]:bg-background!',
+  '[&_.ant-table-thead>th]:text-primary-9!',
+  '[&_.ant-table-row:hover>td]:bg-gray-100!'
+);
 
 type ScanParamsRow = {
   id: string;
@@ -202,7 +207,7 @@ export const TaskViewConfig: ListExpandedViewConfig<
       ...extraColumns,
       createStatusColumn<Row>((_: unknown, r: Row) => (
         <div className="flex items-center justify-center">
-          <ExecutionStatus status={r.status} />
+          <ActivityStatusRenderer status={r.status} />
         </div>
       )),
     ];

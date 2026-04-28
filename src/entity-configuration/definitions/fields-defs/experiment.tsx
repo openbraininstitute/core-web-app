@@ -9,8 +9,8 @@ import {
   renderEmptyOrValue,
 } from '@/entity-configuration/definitions/renderer';
 import { getSkeletonizationStatusCountMap } from '@/entity-configuration/domain/processing/skeletonization-campaign';
-import { CampaignActivityStatusCell } from '@/features/task/activity-execution/campaign-status-cell';
-import { LegacyCampaignStatusCell } from '@/features/task/activity-execution/legacy-campaign-status-cell';
+import { LegacyCampaignStatusCell } from '@/features/task-runner/activity-execution/legacy-status-cell';
+import { CampaignActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
 
 import type {
@@ -150,7 +150,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     isFilterable: false,
   },
-  [EntityCoreFields.SimulationCampaignStatus]: {
+  [EntityCoreFields.ActivityStatus]: {
     title: 'Status',
     filter: null,
     style: { width: 100 },

@@ -1,7 +1,7 @@
 import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { executionStatusColorMap } from '@/features/task/activity-execution/color-map';
+import { executionStatusColorMap } from '@/features/task-runner/activity-execution/color-map';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 

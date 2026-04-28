@@ -11,13 +11,12 @@ import { errorRegistry } from '@/features/scan-config/error-registry';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
+import { TASK_ACTIVITIES_QUERY_KEY_HEAD, TASK_RUNNER_QUERY_KEY_HEAD } from '../constants';
+
 import type { QueryClient } from '@tanstack/react-query';
 import type { TTaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import type { TObiOneTaskType } from '@/api/one/types/task';
 import type { WorkspaceContext } from '@/types/common';
-
-const TASK_ACTIVITIES_QUERY_KEY_HEAD = 'data-task-activities' as const;
-const TASK_RUNNER_QUERY_KEY_HEAD = 'data-task-runner' as const;
 
 export function invalidateTaskExecutionActivities({
   queryClient,

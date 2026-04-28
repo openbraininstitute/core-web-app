@@ -23,7 +23,7 @@ import {
   listAllTaskActivities,
   listTaskActivitiesByUsedIds,
   listTaskConfigsByIds,
-} from '@/features/task';
+} from '@/features/task-runner';
 
 import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';

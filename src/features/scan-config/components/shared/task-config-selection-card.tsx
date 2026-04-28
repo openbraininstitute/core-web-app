@@ -7,7 +7,7 @@ import {
 } from '@/api/entitycore/types/entities/task-activity';
 import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { StatusBadge, StatusBadgeSkeleton } from '@/features/scan-config/status-badge';
-import { executionStatusColorMap } from '@/features/task/activity-execution/color-map';
+import { executionStatusColorMap } from '@/features/task-runner/activity-execution/color-map';
 import { cn } from '@/utils/css-class';
 
 import type { CSSProperties } from 'react';

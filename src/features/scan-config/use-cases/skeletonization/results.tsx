@@ -24,11 +24,11 @@ import {
   type TActivityCustomFile,
 } from '@/features/scan-config/types';
 import { useLoadMoreOnInView } from '@/features/scan-config/use-load-more-on-in-view';
-import { useTaskLaunchMutation } from '@/features/task/hooks/mutations';
+import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import {
   usePaginatedTaskConfigsWithVisibleExecutions,
   useTaskRunner,
-} from '@/features/task/hooks/queries';
+} from '@/features/task-runner/hooks/queries';
 import { messages as textMessages } from '@/i18n/en/scan-config';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
 

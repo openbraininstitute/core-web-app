@@ -44,7 +44,7 @@ import errorRegistry from '@/features/scan-config/error-registry';
 import { StatusBadge, StatusBadgeSkeleton } from '@/features/scan-config/status-badge';
 import { useLoadMoreOnInView } from '@/features/scan-config/use-load-more-on-in-view';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
-import { executionStatusColorMap } from '@/features/task/activity-execution/color-map';
+import { executionStatusColorMap } from '@/features/task-runner/activity-execution/color-map';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/simulation';

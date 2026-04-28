@@ -78,7 +78,7 @@ export enum EntityCoreFields {
   CircuitNumberSynapses = 'number_synapses',
   CircuitNumberConnections = 'number_connections',
   ScanParameters = 'scan_parameters',
-  SimulationCampaignStatus = 'simulation_campaign_status',
+  ActivityStatus = 'activity_status',
   SkeletonizationCampaignStatus = 'skeletonization_campaign_status',
   CircuitName = 'circuit_name',
   CircuitBuildCategory = 'build_category',

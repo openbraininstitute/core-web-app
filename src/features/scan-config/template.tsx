@@ -93,7 +93,6 @@ export function ScanConfigTemplate({
   });
   const config = useConfigAtom(schema, atomsMap);
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
-  const { aiConfig } = useAIConfig();
 
   const results = match({ activity, tab })
     .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)

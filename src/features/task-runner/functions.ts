@@ -1,8 +1,8 @@
 import { uniq } from 'es-toolkit/compat';
 
 import { getTaskActivities, getTaskConfigs } from '@/api/entitycore/queries/task';
-import { TASK_ID_FILTER_CHUNK_SIZE, TASK_PAGE_SIZE } from '@/features/task/constants';
-import { fetchChunkedPages } from '@/features/task/query-utils';
+import { TASK_ID_FILTER_CHUNK_SIZE, TASK_PAGE_SIZE } from '@/features/task-runner/constants';
+import { fetchChunkedPages } from '@/features/task-runner/query-utils';
 
 import type {
   ITaskActivity,

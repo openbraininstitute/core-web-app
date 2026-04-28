@@ -1,6 +1,9 @@
 import { ScanConfigActivity, type TScanConfigActivity } from '@/features/scan-config/types';
 
-export { buildActivityStatusMap, findLatestExecutionForEntity } from '@/features/task/status';
+export {
+  buildActivityStatusMap,
+  findLatestExecutionForEntity,
+} from '@/features/task-runner/status';
 
 /**
  * Maps scan config activities to their AI agent state configuration names.

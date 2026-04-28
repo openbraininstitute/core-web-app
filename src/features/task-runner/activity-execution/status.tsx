@@ -5,7 +5,7 @@ import {
   type TActivityStatus,
 } from '@/api/entitycore/types/entities/task-activity';
 import { executionStatusIconMap } from '@/components/icons/activity-execution';
-import { getStatusColor } from '@/features/task/activity-execution/color-map';
+import { getStatusColor } from '@/features/task-runner/activity-execution/color-map';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 
 const StatusConfig = {
@@ -41,11 +41,7 @@ const StatusConfig = {
   },
 };
 
-type ExecutionStatusProps = {
-  status: TActivityStatus;
-};
-
-export function ExecutionAggregatedStatusSkeleton() {
+export function ActivityAggregatedStatusSkeleton() {
   return (
     <div className="flex">
       <div className="divide-neutral-2 border-neutral-2 flex divide-x rounded-full px-0.5 border">
@@ -58,7 +54,11 @@ export function ExecutionAggregatedStatusSkeleton() {
   );
 }
 
-export function ExecutionStatus({ status }: ExecutionStatusProps) {
+type Props = {
+  status: TActivityStatus;
+};
+
+export function ActivityStatusRenderer({ status }: Props) {
   const color = getStatusColor(status);
   const statusConfig = StatusConfig[status];
 
@@ -82,7 +82,7 @@ type ExecutionSetAggregatedStatusProps = {
   statusCountMap: Map<ActivityStatus, number>;
 };
 
-export default function ExecutionAggregatedStatus({
+export default function ActivityAggregatedStatus({
   statusCountMap,
 }: ExecutionSetAggregatedStatusProps) {
   const getColor = (status: ActivityStatus) =>
@@ -145,4 +145,4 @@ export default function ExecutionAggregatedStatus({
   );
 }
 
-export { ExecutionAggregatedStatus };
+export { ActivityAggregatedStatus };
