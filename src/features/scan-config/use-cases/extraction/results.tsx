@@ -1,7 +1,6 @@
 'use client';
 
 import { LoadingOutlined } from '@ant-design/icons';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Checkbox } from 'antd';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -17,15 +16,13 @@ import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features
 import { ExtractionInOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
 import { ExtractionConfigsLeftMenu } from '@/features/scan-config/use-cases/extraction/left-menu';
 import { useLoadMoreOnInView } from '@/features/scan-config/use-load-more-on-in-view';
+import { buildActivityStatusMap, findLatestExecutionForEntity } from '@/features/task';
 import {
-  buildActivityStatusMap,
-  findLatestExecutionForEntity,
-  listTaskActivitiesByUsedIds,
-  listTaskConfigsPageByIds,
-} from '@/features/task';
-import { useTaskLaunchMutation, useTaskRunner } from '@/features/task/hooks';
+  usePaginatedTaskConfigsWithVisibleExecutions,
+  useTaskLaunchMutation,
+  useTaskRunner,
+} from '@/features/task/hooks';
 import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
-import { keyBuilder } from '@/ui/use-query-keys/data';
 import { classNames } from '@/util/utils';
 
 import type { CheckboxProps } from 'antd';
@@ -74,72 +71,26 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
   });
 
   const {
-    data: configPages,
-    isLoading: configPageLoading,
+    configPageLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: [
-      'task-configs-page-by-ids',
-      context,
-      TaskConfigType.CircuitExtractionConfig,
-      configGenerationIds,
-      EXTRACTION_LIST_PAGE_SIZE,
-    ],
-    initialPageParam: 1,
-    queryFn: async ({ pageParam }) =>
-      listTaskConfigsPageByIds<TTaskConfigMeta>({
-        ids: configGenerationIds ?? [],
-        taskConfigType: TaskConfigType.CircuitExtractionConfig,
-        page: pageParam,
-        pageSize: EXTRACTION_LIST_PAGE_SIZE,
-        context,
-      }),
-    enabled: Boolean(configGenerationIds && configGenerationIds.length > 0),
-    select: (data) => {
-      const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
-      return {
-        ...data,
-        pages: data.pages.map((page) => ({
-          ...page,
-          data: [...page.data].sort((a, b) => collator.compare(a.name, b.name)),
-        })),
-      };
-    },
-    getNextPageParam: (lastPage) =>
-      lastPage.data.length < EXTRACTION_LIST_PAGE_SIZE ? undefined : lastPage.pagination.page + 1,
+    visibleConfigs,
+    visibleConfigIds,
+    visibleExecutionsResponse,
+    visibleExecutionsLoading,
+  } = usePaginatedTaskConfigsWithVisibleExecutions<TTaskConfigMeta>({
+    context,
+    taskConfigType: TaskConfigType.CircuitExtractionConfig,
+    executionActivityType: TaskActivityType.CircuitExtractionExecution,
+    ids: configGenerationIds,
+    pageSize: EXTRACTION_LIST_PAGE_SIZE,
   });
 
-  const visibleConfigs = useMemo(
-    () => configPages?.pages.flatMap((page) => page.data) ?? [],
-    [configPages]
-  );
-  const visibleConfigIds = useMemo(
-    () => visibleConfigs.map((config) => config.id),
-    [visibleConfigs]
-  );
   const loadMoreRef = useLoadMoreOnInView({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  });
-
-  const { data: visibleExecutionsResponse, isLoading: visibleExecutionsLoading } = useQuery({
-    queryKey: keyBuilder.taskActivities({
-      context,
-      filters: {
-        task_activity_type: TaskActivityType.CircuitExtractionExecution,
-        used__id__in: visibleConfigIds,
-      },
-    }),
-    queryFn: () =>
-      listTaskActivitiesByUsedIds({
-        taskActivityType: TaskActivityType.CircuitExtractionExecution,
-        usedIds: visibleConfigIds,
-        context,
-      }),
-    enabled: visibleConfigIds.length > 0,
   });
 
   const statusMap = useMemo(() => {
@@ -197,7 +148,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
     (configsResponse?.configList && !executionsLoading ? selectableConfigIds : []);
 
   const onRun = async (configIdsToRun: string[]) => {
-    await runExtraction(configIdsToRun);
+    await Promise.all(configIdsToRun.map((configId) => runExtraction(configId)));
     setSelectedConfigIds([]);
   };
 
@@ -258,7 +209,7 @@ export function ExtractionTab({ campaignId, virtualLabId, projectId }: Props) {
                   />
                 ))}
                 <div ref={loadMoreRef} className="flex min-h-8 items-center justify-center">
-                  {isFetchingNextPage && <Loader className="text-neutral-3" />}
+                  {isFetchingNextPage && <Loader size="small" className="text-neutral-3" />}
                 </div>
               </>
             )}

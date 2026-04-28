@@ -1,7 +1,14 @@
 'use client';
 
-import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  type QueryClient,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { includes } from 'es-toolkit/compat';
+import { useMemo } from 'react';
 
 import {
   ActivityStatus,
@@ -16,6 +23,7 @@ import {
   listAllTaskActivities,
   listTaskActivitiesByUsedIds,
   listTaskConfigsByIds,
+  listTaskConfigsPageByIds,
 } from '@/features/task/queries';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { getErrorMessage } from '@/utils/error';
@@ -117,6 +125,8 @@ export type TUseTaskRunnerParams = {
   pauseExecutionPolling?: boolean;
 };
 
+// campaign-level orchestrator:
+// resolves generated config ids, loads the full config set, and keeps full execution state fresh.
 export function useTaskRunner<TMeta extends Record<string, unknown>>({
   context,
   campaignId,
@@ -208,5 +218,94 @@ export function useTaskRunner<TMeta extends Record<string, unknown>>({
     configsLoading,
     executionsResponse,
     executionsLoading,
+  };
+}
+
+export type TUseVisibleTaskConfigsParams = {
+  context: WorkspaceContext;
+  taskConfigType: TTaskConfigType;
+  executionActivityType: TTaskActivityType;
+  ids?: string[] | null;
+  pageSize?: number;
+};
+
+// viewport-level helper:
+// loads configs incrementally for infinite scrolling and fetches executions only for visible configs.
+export function usePaginatedTaskConfigsWithVisibleExecutions<
+  TMeta extends Record<string, unknown>,
+>({
+  context,
+  taskConfigType,
+  executionActivityType,
+  ids,
+  pageSize = TASK_PAGE_SIZE,
+}: TUseVisibleTaskConfigsParams) {
+  const {
+    data: configPages,
+    isLoading: configPageLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['task-configs-page-by-ids', context, taskConfigType, ids, pageSize],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
+      listTaskConfigsPageByIds<TMeta>({
+        ids: ids ?? [],
+        taskConfigType,
+        page: pageParam,
+        pageSize,
+        context,
+      }),
+    enabled: Boolean(ids && ids.length > 0),
+    select: (data) => {
+      const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+      return {
+        ...data,
+        pages: data.pages.map((page) => ({
+          ...page,
+          data: [...page.data].sort((a, b) => collator.compare(a.name, b.name)),
+        })),
+      };
+    },
+    getNextPageParam: (lastPage) =>
+      lastPage.data.length < pageSize ? undefined : lastPage.pagination.page + 1,
+  });
+
+  const visibleConfigs = useMemo(
+    () => configPages?.pages.flatMap((page) => page.data) ?? [],
+    [configPages]
+  );
+  const visibleConfigIds = useMemo(
+    () => visibleConfigs.map((config) => config.id),
+    [visibleConfigs]
+  );
+
+  const { data: visibleExecutionsResponse, isLoading: visibleExecutionsLoading } = useQuery({
+    queryKey: keyBuilder.taskActivities({
+      context,
+      filters: {
+        task_activity_type: executionActivityType,
+        used__id__in: visibleConfigIds,
+      },
+    }),
+    queryFn: () =>
+      listTaskActivitiesByUsedIds({
+        taskActivityType: executionActivityType,
+        usedIds: visibleConfigIds,
+        context,
+      }),
+    enabled: visibleConfigIds.length > 0,
+  });
+
+  return {
+    configPageLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    visibleConfigs,
+    visibleConfigIds,
+    visibleExecutionsResponse,
+    visibleExecutionsLoading,
   };
 }
