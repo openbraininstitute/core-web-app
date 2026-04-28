@@ -172,7 +172,7 @@ export function InOutFiles({
         {outputAvailable && builtCircuit && (
           <ResultItem
             id={builtCircuit.id}
-            label={<small className="uppercase">Circuit</small>}
+            label={<small className="uppercase">Synaptome (beta)</small>}
             selected={builtCircuit?.id === selectedFile?.id}
             key={builtCircuit.id}
             file={{
