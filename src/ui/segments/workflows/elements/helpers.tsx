@@ -224,7 +224,7 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
   },
   [ExtendedEntitiesTypeDict.Microcircuit]: {
     group: EntityGroupDict.Circuit,
-    label: 'Microcircuit',
+    label: 'Microcircuit (beta)',
     properties: {
       build: {
         disabled: true,
