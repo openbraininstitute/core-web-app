@@ -22,7 +22,7 @@ export function TaskLaunchButton({
   return (
     <button
       className={classNames(
-        'min-h-[50] w-full cursor-pointer rounded-full p-2 text-white',
+        'min-h-12.5 w-full cursor-pointer rounded-full p-2 text-white',
         'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
         'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none',
         className

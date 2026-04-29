@@ -51,7 +51,7 @@ export function TaskConfigSelectionCard({
       className={cn(
         'flex-none cursor-pointer group rounded-2xl border border-gray-200',
         'hover:border-gray-300 hover:border-1.5 transition-all duration-300',
-        'shadow-[0_1px_1px_rgba(16,24,40,0.08)]'
+        'shadow-[0_1px_1px_rgba(16,24,40,0.08)] mr-1'
       )}
       type="button"
       title={configName}

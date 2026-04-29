@@ -80,7 +80,7 @@ export function SimulationsResultsUiAdapter({
     <ResultsLayout
       campaignId={campaignId}
       left={
-        <div className="flex h-full flex-col gap-4 overflow-y-hidden">
+        <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">
           {loading ? (
             <SelectAllSkeleton />
           ) : (
@@ -91,7 +91,7 @@ export function SimulationsResultsUiAdapter({
               onToggleSelectAll={onToggleSelectAll}
             />
           )}
-          <div className="flex grow flex-col justify-start gap-2 overflow-y-auto">
+          <div className="flex grow w-full flex-col justify-start gap-2 overflow-y-auto secondary-scrollbar">
             {loading ? (
               <ConfigListCardSkeleton />
             ) : (
@@ -200,7 +200,7 @@ function SimulationListItem({
       className={cn(
         'flex-none cursor-pointer group rounded-2xl border border-gray-200',
         'hover:border-gray-300 hover:border-1.5 transition-all duration-300',
-        'shadow-[0_1px_1px_rgba(16,24,40,0.08)]'
+        'shadow-[0_1px_1px_rgba(16,24,40,0.08)] mr-1'
       )}
       type="button"
       title={simulation.name}

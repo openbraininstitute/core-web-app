@@ -95,7 +95,7 @@ export function TaskConfigSelectionList<TMeta extends Record<string, unknown>>({
         disabled={selectionDisabled}
         onToggleSelectAll={onToggleSelectAll}
       />
-      <div className="flex grow flex-col justify-start gap-2 overflow-y-auto">
+      <div className="flex grow flex-col justify-start gap-2 overflow-y-auto secondary-scrollbar">
         {loading && <div className="flex h-full items-center justify-center" />}
         {!loading &&
           configs.map((config) => (

@@ -148,7 +148,7 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
       <ResultsLayout
         campaignId={campaignId}
         left={
-          <div className="flex h-full flex-col gap-4 overflow-y-hidden">
+          <div className="flex h-full flex-col gap-4 overflow-y-hidden w-full">
             <TaskConfigSelectionList
               campaignId={campaignId}
               configs={configs}
@@ -180,14 +180,16 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
         }
         middle={
           !!resolvedActiveConfig && (
-            <InOutFiles
-              config={resolvedActiveConfig}
-              execStatus={activeConfigExecStatus}
-              execution={activeConfigExecution}
-              selectedFile={selectedFile}
-              context={context}
-              onSelect={setSelectedFile}
-            />
+            <div className="h-full bg-background! w-full">
+              <InOutFiles
+                config={resolvedActiveConfig}
+                execStatus={activeConfigExecStatus}
+                execution={activeConfigExecution}
+                selectedFile={selectedFile}
+                context={context}
+                onSelect={setSelectedFile}
+              />
+            </div>
           )
         }
         right={

@@ -16,13 +16,10 @@ import { Left, Middle, Right } from '@/features/scan-config/components/ui-column
 import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
-  ExtractScanConfigTabs,
-  ProcessScanConfigTabs,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   ScanConfigTabs,
   type SchemaName,
-  SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
   type TSupportedEntitiesForScanConfiguration,
@@ -32,7 +29,7 @@ import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/resul
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { messages } from '@/i18n/en/scan-config';
-import { useAgentState, useAIConfig } from '@/services/ai-agent';
+import { useAgentState } from '@/services/ai-agent';
 import { editingAtom, selectedEntryAtom, selectedRootElementAtom } from '@/state/config-highlights';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
@@ -94,56 +91,36 @@ export function ScanConfigTemplate({
   const config = useConfigAtom(schema, atomsMap);
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
 
-  const results = match({ activity, tab })
-    .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)
-    .with(
-      {
-        activity: ScanConfigActivity.Simulate,
-        tab: { id: SimulateScanConfigTabs.simulations },
-      },
-      () => (
-        <Suspense>
-          <SimulationsTab
-            campaignId={campaignId}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
-          />
-        </Suspense>
-      )
-    )
-    .with(
-      {
-        activity: ScanConfigActivity.Extract,
-        tab: { id: ExtractScanConfigTabs.extractions },
-      },
-      () => (
-        <Suspense>
-          <ExtractionTab
-            campaignId={campaignId}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
-          />
-        </Suspense>
-      )
-    )
-    .with(
-      { activity: ScanConfigActivity.Process, tab: { id: ProcessScanConfigTabs.skeletonizations } },
-      () => (
-        <Suspense>
-          <SkeletonizationTab
-            campaignId={campaignId}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
-          />
-        </Suspense>
-      )
-    )
+  const results = match(activity)
+    .with(ScanConfigActivity.Simulate, () => (
+      <Suspense>
+        <SimulationsTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
+      </Suspense>
+    ))
+    .with(ScanConfigActivity.Extract, () => (
+      <Suspense>
+        <ExtractionTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
+      </Suspense>
+    ))
+    .with(ScanConfigActivity.Process, () => (
+      <Suspense>
+        <SkeletonizationTab
+          campaignId={campaignId}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+        />
+      </Suspense>
+    ))
     .otherwise(() => {
       throw new Error(`${activity} is not supported yet`);
     });
 
+  const configurationTabId = ScanConfigTabs[activity].configuration;
+
+  const isConfigurationTab = tab.id === configurationTabId;
+
   return (
-    <div className={cn('flex h-full flex-col space-y-5', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       <header className={styles.header}>
         <TabsSelector
           activity={activity}
@@ -158,12 +135,19 @@ export function ScanConfigTemplate({
           )}
         </div>
       </header>
-      <div className="relative mb-5">
-        <div className="w-full border-t border-gray-200" />
-      </div>
 
-      {tab.id === ScanConfigTabs[activity].configuration && (
-        <div className={styles.threeColumns}>
+      <div className="w-full border-t border-gray-200 my-5" />
+      <div className="flex-1 min-h-0">
+        <div
+          id="scan-config-content-columns"
+          className={cn(
+            {
+              'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-[calc(100%-10px)] overflow-hidden *:min-w-0':
+                isConfigurationTab,
+            },
+            { hidden: !isConfigurationTab }
+          )}
+        >
           <Left
             schema={schema}
             atomsMap={atomsMap}
@@ -191,9 +175,10 @@ export function ScanConfigTemplate({
             entityType={entityType}
           />
           <div
+            id="scan-config-controls-middle"
             className={cn(
               styles.scrollable,
-              'h-full overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
+              'h-full min-w-0 overflow-x-hidden overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
             )}
           >
             {editing && (
@@ -222,19 +207,28 @@ export function ScanConfigTemplate({
               />
             )}
           </div>
-
-          <Right
-            activity={activity}
-            entityType={entityType}
-            entity={entity}
-            selectedEntry={selectedEntry}
-            selectedRootElement={selectedRootElement}
-            config={config}
-          />
+          <div className="h-full min-w-0 overflow-auto secondary-scrollbar">
+            <Right
+              activity={activity}
+              entityType={entityType}
+              entity={entity}
+              selectedEntry={selectedEntry}
+              selectedRootElement={selectedRootElement}
+              config={config}
+            />
+          </div>
         </div>
-      )}
-
-      {results}
+        <div
+          id="scan-config-results"
+          className={cn(
+            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-[calc(100%-10px)] overflow-hidden',
+            { hidden: isConfigurationTab },
+            { 'h-[calc(100%-10px)]': !isConfigurationTab }
+          )}
+        >
+          {results}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { Collapse } from 'antd';
 
+import { cn } from '@/utils/css-class';
+
 import type { ReactNode } from 'react';
 
 type Props = {
@@ -57,14 +59,17 @@ export function IoLayout({
   ];
 
   return (
-    <div className="h-full overflow-y-auto">
-      <Collapse
-        ghost
-        bordered={false}
-        defaultActiveKey={['input', 'output']}
-        items={items}
-        className="bg-background [&_.ant-collapse-item]:border-0 [&_.ant-collapse-header]:bg-background [&_.ant-collapse-item-disabled_.ant-collapse-header]:cursor-default! [&_.ant-collapse-content]:border-t-0 [&_.ant-collapse-content]:bg-background [&_.ant-collapse-content-box]:bg-background"
-      />
-    </div>
+    <Collapse
+      ghost
+      bordered={false}
+      defaultActiveKey={['input', 'output']}
+      items={items}
+      className={cn(
+        'bg-background [&_.ant-collapse-item]:border-0 [&_.ant-collapse-header]:bg-background ',
+        '[&_.ant-collapse-item-disabled_.ant-collapse-header]:cursor-default! ',
+        '[&_.ant-collapse-content]:border-t-0 [&_.ant-collapse-content]:bg-background',
+        ' [&_.ant-collapse-content-box]:bg-background [&_.ant-collapse-content-box]:py-0!'
+      )}
+    />
   );
 }
