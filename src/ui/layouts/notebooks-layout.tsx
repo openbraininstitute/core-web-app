@@ -340,6 +340,8 @@ const CsvUploadValidator = ({
   const { data: balance } = useQuery({
     queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
     queryFn: () => getVirtualLabAccountBalance({ virtualLabId: vlabId, includeProjects: false }),
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const vlabBalance = isNil(balance?.data?.balance)
@@ -486,6 +488,7 @@ const CsvUploadValidator = ({
             vlabId={vlabId}
             onCancel={onCancel}
             onSuccess={onSuccess}
+            balance={vlabBalance}
           />
         </div>
       )}
@@ -507,11 +510,13 @@ function PaymentFlow({
   vlabId,
   onCancel,
   onSuccess,
+  balance,
 }: {
   credits: number;
   vlabId: string;
   onCancel: () => void;
   onSuccess: () => void;
+  balance: number;
 }) {
   const [
     { data: setupIntent, isPending: loadingIntent },
@@ -546,7 +551,13 @@ function PaymentFlow({
 
   return (
     <Elements stripe={stripeData} options={buildStripeFormOptions(setupIntent.data?.client_secret)}>
-      <PaymentForm credits={credits} vlabId={vlabId} onCancel={onCancel} onSuccess={onSuccess} />
+      <PaymentForm
+        credits={credits}
+        vlabId={vlabId}
+        onCancel={onCancel}
+        onSuccess={onSuccess}
+        balance={balance}
+      />
     </Elements>
   );
 }
@@ -556,11 +567,13 @@ function PaymentForm({
   vlabId,
   onCancel,
   onSuccess,
+  balance: previousBalance,
 }: {
   credits: number;
   vlabId: string;
   onCancel: () => void;
   onSuccess: () => void;
+  balance: number;
 }) {
   const [stripeElementsReady, setElementsReady] = useState(false);
   const onReady = () => setElementsReady(true);
@@ -623,23 +636,7 @@ function PaymentForm({
         elements.getElement('payment')?.clear();
       });
 
-      if (data) {
-        // Mitigates race condition where payment intent has returned but accounting serviced hasn't updated the balance
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-
-        successNotify({
-          message: `Successfully purchased ${credits} credits for ${data.amount / 100} ${data.currency.toUpperCase()}`,
-          placement: 'topRight',
-          key: 'credits-purchase-success',
-        });
-        await queryClient.invalidateQueries({
-          queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
-        });
-
-        onSuccess();
-      }
-
-      if (error) {
+      if (error || !data) {
         let message =
           'There was a problem processing your payment. Please try again or contact support if the issue persists.';
         if (isObject(error.cause) && 'error_code' in error.cause) {
@@ -660,7 +657,55 @@ function PaymentForm({
           placement: 'topRight',
           key: 'subscription-payment-error',
         });
+        return;
       }
+
+      const maxAttempts = 10;
+      const intervalMs = 1000; // 1 second
+      let attempt = 0;
+      let balanceUpdated = false;
+
+      // Poll the backend accounting endpoint
+      while (attempt < maxAttempts) {
+        // Execute direct API call using your configured HTTP client (e.g., Axios, fetch)
+        const updatedAccountingData = await getVirtualLabAccountBalance({
+          virtualLabId: vlabId,
+          includeProjects: false,
+        });
+
+        const balance = updatedAccountingData?.data?.balance;
+
+        const newBalance = isNil(balance) ? 0 : parseInt(balance, 10);
+
+        if (newBalance > previousBalance) {
+          balanceUpdated = true;
+          break;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, intervalMs));
+        attempt++;
+      }
+
+      if (balanceUpdated) {
+        successNotify({
+          message: `Successfully purchased ${credits} credits for ${data.amount / 100} ${data.currency.toUpperCase()}`,
+          placement: 'topRight',
+          key: 'credits-purchase-success',
+        });
+
+        await queryClient.invalidateQueries({
+          queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
+        });
+
+        onSuccess();
+        return;
+      }
+
+      errorNotify({
+        message: 'There was an error crediting your balance. Please contact support.',
+        placement: 'topRight',
+        key: 'credits-purchase-error',
+      });
     });
   };
 
