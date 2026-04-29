@@ -14,16 +14,12 @@ export default async function Page({
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   null
 >) {
-  const { type, virtualLabId, projectId } = await params;
+  const { type } = await params;
 
   const dataType = convertEntitySlugToExtendedType({ type });
   if (!dataType) return notFound();
 
   return (
-    <WorkflowBrowseEntity
-      workspace={{ virtualLabId, projectId }}
-      baseModelType={dataType}
-      section={WorkspaceSection.ProcessWorkflow}
-    />
+    <WorkflowBrowseEntity baseModelType={dataType} section={WorkspaceSection.ProcessWorkflow} />
   );
 }

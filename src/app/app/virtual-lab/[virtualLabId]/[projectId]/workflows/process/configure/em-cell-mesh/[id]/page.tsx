@@ -9,7 +9,6 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigActivity } from '@/features/scan-config/types';
-import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -49,8 +48,8 @@ export default function Page({
     queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
     queryFn: async () => {
       if (!initialCampaignId) return null;
-      const resolveSkeletonizationCampaign = SkeletonizationCampaign.api.query.resolve;
-      if (!resolveSkeletonizationCampaign) return null;
+      // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+      const resolveSkeletonizationCampaign = SkeletonizationCampaign.api.query.resolve!;
       return await resolveSkeletonizationCampaign({
         id: initialCampaignId,
         context: { virtualLabId, projectId },
@@ -74,7 +73,6 @@ export default function Page({
           className="px-4 pt-2"
           activity={ScanConfigActivity.Process}
         />
-        <DownloadPanel />
       </div>
     );
   }
