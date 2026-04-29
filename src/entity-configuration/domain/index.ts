@@ -62,13 +62,13 @@ export const EntityCoreModelConfiguration = {
   PairedNeuronCircuit,
   SmallMicrocircuit,
   Microcircuit,
+  BrainRegion,
   Circuit,
   IonChannelModel,
   IonChannelModelingCampaign,
   EmSynapseMappingCampaign,
   MEModelWithSynapsesCircuit,
   SynthesizedCellMorphology,
-  BrainRegion,
 } as const;
 
 const EntityCoreSimulationConfiguration = {

@@ -26,14 +26,10 @@ export default function Page({
     targetType,
   });
 
-  console.log('–– – page.tsx:29 – Page – workflow:', workflow);
-
   const primaryInput = getPrimaryConfigurationInput({
     activity: WorkflowActivityDictValue.simulate,
     targetType,
   });
-
-  console.log('–– – page.tsx:36 – Page – primaryInput:', primaryInput);
 
   const browseType = primaryInput?.type ?? workflow?.sourceType;
   if (!workflow || !browseType) return notFound();
