@@ -8,7 +8,6 @@ import { isNil } from 'es-toolkit';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import { type ReactNode, useCallback, useEffect, useRef, useState, useTransition } from 'react';
-import { da } from 'zod/v4/locales';
 
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
 import {
@@ -24,13 +23,7 @@ import { inviteToProject } from '@/api/virtual-lab-svc/queries/invite';
 import { createStandalonePayment, getSetupIntent } from '@/api/virtual-lab-svc/queries/payment';
 import { createProject, listAllProjectIds } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
-import {
-  getMissingStudentEmails,
-  getVirtualLab,
-  listVirtualLabs,
-  updateVirtualLab,
-} from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { getMissingStudentEmails, getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { getStripe } from '@/components/VirtualLab/Billing/utils';
 import { startEmptyNotebook } from '@/services/notebooks';
@@ -54,6 +47,11 @@ import type { UploadFile, UploadProps } from 'antd';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 import type { Course, ProjectCreationResponse } from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
+
+type Student = {
+  id: string;
+  email: string;
+};
 
 export async function createNotebook({
   payload,
@@ -84,7 +82,7 @@ export function NotebooksLayout({ children, active }: Props) {
   const [loading, setLoading] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [step, setStep] = useState(0);
-  const [studentEmails, setStudentEmails] = useState<string[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const breakpoint = useDefaultBreakpoint();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
@@ -118,18 +116,20 @@ export function NotebooksLayout({ children, active }: Props) {
     ? undefined
     : parseInt(balance?.data.balance, 10);
 
-  const budgetPerStudent = vlabBalance && Math.floor(vlabBalance / studentEmails.length);
+  const budgetPerStudent = vlabBalance && Math.floor(vlabBalance / students.length);
 
   const onFinnish = useCallback(() => {
     setShowCourseModal(false);
     setStep(0);
     refetch();
+    setStudents([]);
+    setFileList([]);
   }, [refetch]);
 
   const onCancel = useCallback(() => {
     setShowCourseModal(false);
     setStep(0);
-    setStudentEmails([]);
+    setStudents([]);
     setFileList([]);
   }, []);
 
@@ -300,8 +300,8 @@ export function NotebooksLayout({ children, active }: Props) {
                       vlabId={virtualLabId}
                       onCancel={onCancel}
                       onSuccess={() => setStep(1)}
-                      studentEmails={studentEmails}
-                      setStudentEmails={setStudentEmails}
+                      students={students}
+                      setStudents={setStudents}
                       fileList={fileList}
                       setFileList={setFileList}
                       vlabBalance={vlabBalance}
@@ -314,9 +314,8 @@ export function NotebooksLayout({ children, active }: Props) {
             {step === 1 && (
               <CourseSetup
                 onFinnish={onFinnish}
-                studentEmails={studentEmails}
+                students={students}
                 course={course}
-                name={virtualLabData.data.virtual_lab.name}
                 budgetPerStudent={budgetPerStudent}
               />
             )}
@@ -333,8 +332,8 @@ const CsvUploadValidator = ({
   vlabId,
   onCancel,
   onSuccess,
-  studentEmails,
-  setStudentEmails,
+  students,
+  setStudents,
   fileList,
   setFileList,
   vlabBalance,
@@ -343,8 +342,8 @@ const CsvUploadValidator = ({
   vlabId: string;
   onCancel: () => void;
   onSuccess: () => void;
-  studentEmails: string[];
-  setStudentEmails: (emails: string[]) => void;
+  students: Student[];
+  setStudents: (students: Student[]) => void;
   fileList: UploadFile[];
   setFileList: (fileList: UploadFile[]) => void;
   vlabBalance: number;
@@ -352,6 +351,7 @@ const CsvUploadValidator = ({
 }) => {
   const [error, setError] = useState('');
   const [credits, setCredits] = useState(0);
+  const [warning, setWarning] = useState('');
 
   const validateCsvContent = async (text: string) => {
     const rows = text.trim().split('\n');
@@ -360,7 +360,7 @@ const CsvUploadValidator = ({
       return false;
     }
 
-    const emailSet = new Set<string>();
+    const csvStudents: Student[] = [];
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     for (let i = 0; i < rows.length; i++) {
@@ -380,25 +380,38 @@ const CsvUploadValidator = ({
         return false;
       }
 
-      if (emailSet.has(email)) {
+      if (csvStudents.find((s) => s.email === email)) {
         setError(`Row ${i + 1}: Duplicate email detected (${email}).`);
         return false;
       }
 
-      emailSet.add(email);
+      csvStudents.push({
+        id: columns[0].trim(),
+        email,
+      });
     }
 
     const missingEmails = await getMissingStudentEmails({
       virtualLabId: vlabId,
-      emails: [...emailSet],
+      emails: csvStudents.map((s) => s.email),
     });
 
-    setStudentEmails(missingEmails);
+    setStudents(csvStudents.filter((s) => missingEmails.includes(s.email)));
+
+    const areEqual =
+      csvStudents.length === missingEmails.length &&
+      missingEmails.every((email) => csvStudents.find((s) => s.email === email));
+
+    if (!areEqual)
+      setWarning(
+        'Duplicate emails were skipped. To add more, upload a CSV with new email addresses'
+      );
     return true;
   };
 
   const beforeUpload: UploadProps['beforeUpload'] = (file: File) => {
     setError('');
+    setWarning('');
     const isCsv = file.type === 'text/csv' || file.name.endsWith('.csv');
     if (!isCsv) {
       return Upload.LIST_IGNORE;
@@ -420,13 +433,13 @@ const CsvUploadValidator = ({
   };
 
   const handleChange: UploadProps['onChange'] = (info) => {
-    if (!error) setFileList(info.fileList);
+    setFileList(info.fileList);
     if (info.fileList.length === 0) {
-      setStudentEmails([]);
+      setStudents([]);
     }
   };
 
-  const minCredits = Math.max(studentEmails.length, 5);
+  const minCredits = Math.max(students.length, 5);
 
   return (
     <div className="flex flex-col gap-3">
@@ -437,33 +450,48 @@ const CsvUploadValidator = ({
         onChange={handleChange}
         maxCount={1}
       >
-        <Button icon={<UploadOutlined />}>Select CSV</Button>
+        <Button className="mt-2" icon={<UploadOutlined />}>
+          Select CSV
+        </Button>
       </Upload>
 
-      {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
-      {studentEmails.length === 0 &&
-        fileList.length > 0 &&
-        !error &&
-        'No students without a project found'}
-      {studentEmails.length > 0 && (
-        <div style={{ marginTop: 20 }}>
-          <h3>Student Email List:</h3>
+      {error && <div className="text-red-500">{error}</div>}
+      {students.length === 0 && fileList.length > 0 && !error && (
+        <div className="flex flex-col">
+          <p>No new students found — all emails in this file have already been uploaded.</p>
+          <p>Upload a CSV with new email addresses to add more students.</p>
+        </div>
+      )}
+      {students.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div>The following students will be added to the course:</div>
           <ul>
-            {studentEmails.map((email) => (
-              <li key={email}>{email}</li>
+            {students.map((s) => (
+              <li key={s.email}>
+                <div className="flex gap-2">
+                  <span>{s.id}: </span>
+                  <span>{s.email}</span>
+                </div>
+              </li>
             ))}
           </ul>
+
+          {warning && (
+            <div className="italic">
+              Duplicate emails were skipped. To add more, upload a CSV with new email addresses.
+            </div>
+          )}
         </div>
       )}
 
-      {studentEmails.length > 0 && budgetPerStudent < 1 && (
+      {students.length > 0 && (
         <div className="flex flex-col gap-2">
           <div className="text-lg">Purchase credits to continue.</div>
 
           <label htmlFor="quantity-input">Number of credits</label>
           <InputNumber
             id="quantity-input"
-            min={Math.max(studentEmails.length, 5)}
+            min={Math.max(students.length, 5)}
             value={credits}
             onChange={(n) => {
               setCredits(n ?? 0);
@@ -476,7 +504,7 @@ const CsvUploadValidator = ({
           {credits >= minCredits && (
             <div>
               {`Each student will be allocated
-              ${Math.floor((credits + vlabBalance) / studentEmails.length)} credits`}
+              ${Math.floor((credits + vlabBalance) / students.length)} credits`}
             </div>
           )}
 
@@ -487,15 +515,6 @@ const CsvUploadValidator = ({
             onSuccess={onSuccess}
             balance={vlabBalance}
           />
-        </div>
-      )}
-
-      {studentEmails.length > 0 && budgetPerStudent >= 1 && (
-        <div className="flex flex-col gap-2">
-          <span>
-            {`Your current balance of ${vlabBalance} will be allocated to the students projects, each student will receive ${budgetPerStudent}`}
-          </span>
-          <UiButton onClick={onSuccess}>Continue</UiButton>
         </div>
       )}
     </div>
@@ -840,15 +859,12 @@ async function syncNotebook({
 
 function CourseSetup({
   onFinnish,
-  studentEmails,
-  course,
-  name,
+  students,
   budgetPerStudent,
 }: {
   onFinnish: () => void;
-  studentEmails: string[];
+  students: Student[];
   course: Course;
-  name: string;
   budgetPerStudent: number;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
@@ -866,11 +882,10 @@ function CourseSetup({
     const setupCourse = async () => {
       try {
         const projectCreationResults = await Promise.allSettled(
-          studentEmails.map((email) =>
+          students.map((s) =>
             createProject(virtualLabId, {
-              name: `${name} ${email}`,
-              description: `Project for ${email}`,
-              contact_email: email,
+              name: `${s.id}`,
+              contact_email: s.email,
               include_members: [],
             })
           )
@@ -887,14 +902,14 @@ function CourseSetup({
 
         if (failedProjectCreations.length > 0) {
           notification.warning({
-            message: `Warning: ${failedProjectCreations.length} out of ${studentEmails.length} student projects failed to create`,
+            message: `Warning: ${failedProjectCreations.length} out of ${students.length} student projects failed to create`,
             key: 'project-creation-warning',
             placement: 'topRight',
           });
         }
 
         const successfulProjects = projectCreationResults
-          .map((result, index) => ({ result, email: studentEmails[index] }))
+          .map((result, index) => ({ result, email: students[index].email }))
           .filter((item) => item.result.status === 'fulfilled' && !!item.result.value.data);
 
         const inviteResults = await Promise.allSettled(
@@ -1010,16 +1025,7 @@ function CourseSetup({
     };
 
     setupCourse();
-  }, [
-    virtualLabId,
-    projectId,
-    notification,
-    studentEmails,
-    onFinnish,
-    name,
-    queryClient,
-    budgetPerStudent,
-  ]);
+  }, [virtualLabId, projectId, notification, students, onFinnish, queryClient, budgetPerStudent]);
 
   return 'Setting up course...';
 }
