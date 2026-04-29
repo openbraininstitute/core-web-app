@@ -7,7 +7,10 @@ import { resetFilterSignalAtom } from '@/ui/segments/explore/circuit/helpers';
 import { log } from '@/utils/logger';
 
 import type { ExpandableConfig } from 'antd/es/table/interface';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
+import type {
+  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
+} from '@/api/entitycore/types/shared/global';
 
 export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
   expandedData: Record<string, Array<T> | null>;
@@ -15,7 +18,10 @@ export interface ExpandableTableState<T extends EntityCoreIdentifiable> {
   expandedRowKeys: Array<string>;
 }
 
-export interface UseExpandableTableOptions<T extends EntityCoreIdentifiable, P = unknown> {
+export interface UseExpandableTableOptions<
+  T extends EntityCoreIdentifiable | EntityCoreIdentifiableNamed,
+  P = unknown,
+> {
   // fetch data for expanded row
   fetcher?: (record: T, params?: P) => Promise<T | Array<T>> | undefined;
   // optional parameters to pass to fetcher

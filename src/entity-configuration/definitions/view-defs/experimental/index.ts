@@ -6,13 +6,13 @@ import { viewDefForExperimentalBoutonDensity } from '@/entity-configuration/defi
 import { viewDefForExperimentalNeuronDensity } from '@/entity-configuration/definitions/view-defs/experimental/experimental-neuron-density';
 import { viewDefForExperimentalSynapsesPerConnection } from '@/entity-configuration/definitions/view-defs/experimental/experimental-synapses-per-connection';
 import { viewDefForIonChannelRecording } from '@/entity-configuration/definitions/view-defs/experimental/ion-channel-recording';
-import { viewDefForCellMorphology as universalViewDefForCellMorphology } from '@/entity-configuration/definitions/view-defs/experimental/universal-cell-morphology';
+import { viewDefForUniversalCellMorphology } from '@/entity-configuration/definitions/view-defs/experimental/universal-cell-morphology';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.CellMorphology]: viewDefForCellMorphology,
-  [ExtendedEntitiesTypeDict.UniversalCellMorphology]: universalViewDefForCellMorphology,
+  [ExtendedEntitiesTypeDict.UniversalCellMorphology]: viewDefForUniversalCellMorphology,
   [ExtendedEntitiesTypeDict.ElectricalCellRecording]: viewDefForElectricalCellRecording,
   [ExtendedEntitiesTypeDict.IonChannelRecording]: viewDefForIonChannelRecording,
   [ExtendedEntitiesTypeDict.ExperimentalNeuronDensity]: viewDefForExperimentalNeuronDensity,

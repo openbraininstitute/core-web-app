@@ -1,16 +1,11 @@
-import { flatMap } from 'es-toolkit/compat';
-
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import {
   createSimulationCampaign,
   getSimulationCampaign,
-  getSimulationCampaigns,
 } from '@/api/entitycore/queries/simulation/campaign';
 import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
-import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import {
   type ICircuitSimulationCampaign,
-  type ISimulationCampaignFilter,
   SimulationCampaignEntityTypeDict,
 } from '@/api/entitycore/types/entities/simulation-campaign';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -21,70 +16,15 @@ import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import { resolveExecutions } from './small-microcircuit-simulation';
-import { getExtendedSimMap, migrateConfig } from './utils';
+import { count, listByEntityType, rows as listSimulationRows } from './simulation-campaign';
+import { migrateConfig } from './utils';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
 const ENTITY_TYPE = SimulationCampaignEntityTypeDict.IonChannelModel;
 
-async function resolveSimulationCampaigns({
-  withFacets,
-  context,
-  filters,
-}: {
-  withFacets?: boolean;
-  context: WorkspaceContext | undefined;
-  filters?: Partial<ISimulationCampaignFilter>;
-}) {
-  filters = discardBrainRegionQueryParams(filters);
-
-  const source = await getSimulationCampaigns({
-    context,
-    withFacets,
-    filters: { ...filters, entity__type: ENTITY_TYPE },
-  });
-  // extract all simulation IDs
-  const allSimIds = flatMap(
-    source.data,
-    (campaign) => campaign.simulations?.map((sim) => sim.id) ?? []
-  );
-
-  const [executions, simulationMap] = await Promise.all([
-    resolveExecutions({ context, allSimIds }),
-    // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
-    getExtendedSimMap(allSimIds, context),
-  ]);
-
-  // map simulationId -> array of executions that use it
-  const executionsBySimId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
-    exec.used.forEach((usedSim) => {
-      if (!acc[usedSim.id]) acc[usedSim.id] = [];
-      acc[usedSim.id].push(exec);
-    });
-    return acc;
-  }, {});
-
-  // attach executions to each simulation (choose to add all executions as array)
-  const enrichedData = source.data.map((campaign) => ({
-    ...campaign,
-    simulations: campaign.simulations?.map((sim) => ({
-      ...simulationMap.get(sim.id),
-      executions: executionsBySimId[sim.id] ?? [],
-    })),
-  }));
-
-  const result = enrichedData.map((entity) => ({
-    ...entity,
-  }));
-
-  return {
-    data: result,
-    pagination: source.pagination,
-    facets: source.facets,
-  };
-}
+const list = listByEntityType(ENTITY_TYPE);
 
 export async function resolveSimulationByCampaignId({
   id,
@@ -134,7 +74,7 @@ export async function resolveSimulationByCampaignId({
 export type TResolvedSimulationByCampaign = Awaited<
   ReturnType<typeof resolveSimulationByCampaignId>
 >;
-export type TResolvedSimulationByCampaigns = Awaited<ReturnType<typeof resolveSimulationCampaigns>>;
+export type TResolvedSimulationByCampaigns = Awaited<ReturnType<typeof list>>;
 
 export const IonChannelModelSimulation: EntityCoreTypeConfig<
   ICircuitSimulationCampaign,
@@ -142,7 +82,7 @@ export const IonChannelModelSimulation: EntityCoreTypeConfig<
   TResolvedSimulationByCampaigns
 > = {
   group: EntityTypeGroup.Simulations,
-  title: 'Ion channel simulation (beta)',
+  title: 'Ion channel (beta)',
   extendedType: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   type: EntityTypeDict.SimulationCampaign,
   slug: EntitySlug.IonChannelModelSimulation,
@@ -152,33 +92,17 @@ export const IonChannelModelSimulation: EntityCoreTypeConfig<
       ilikeSearchEnabled: true,
     },
     query: {
-      count: (...params) => {
-        const filters = discardBrainRegionQueryParams(params[0].filters);
-        return getSimulationCampaigns({
-          ...params,
-          context: params[0].context,
-          withFacets: params[0].withFacets,
-          filters: {
-            ...filters,
-            entity__type: ENTITY_TYPE,
-          },
-        });
-      },
-      list: (params: Parameters<typeof resolveSimulationCampaigns>[0]) =>
-        resolveSimulationCampaigns({
-          ...params,
-          filters: { entity__type: ENTITY_TYPE },
-        }),
+      count: count({ entity__type: ENTITY_TYPE }),
+      list,
       one: getSimulationCampaign,
       create: createSimulationCampaign,
       resolve: resolveSimulationByCampaignId,
     },
-    expandRow: async (record, _context) => record,
+    expandRow: (record, context) => listSimulationRows({ id: record.id, context }),
   },
   asset: {
     extension: 'application/json',
   },
-  requiredFeatures: [ExtendedEntitiesTypeDict.IonChannelModelSimulation],
   detailViewSections: [DetailViewSectionsDict.Overview],
   isBookmarkable: false,
   isDownloadable: false,

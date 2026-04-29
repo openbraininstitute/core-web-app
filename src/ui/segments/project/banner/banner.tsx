@@ -123,7 +123,7 @@ export function ProjectCard(): ReactElement {
         '[&_.ant-form-item-explain-error]:text-sm! hover:shadow-bnb'
       )}
     >
-      <div className="h-full w-full p-4 flex flex-col gap-1.5">
+      <div className="min-h-44 w-full p-4 flex flex-col gap-1.5">
         {isEditing ? (
           <Form.Item
             name="name"

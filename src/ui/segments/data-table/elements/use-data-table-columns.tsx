@@ -10,6 +10,7 @@ import {
   SortOrder,
   type TSortOrder,
   type TSortState,
+  type TSortStateList,
 } from '@/entity-configuration/definitions/types';
 import { ViewsDefinitionRegistry } from '@/entity-configuration/definitions/view-defs';
 import { classNames, fieldTitleSentenceCase } from '@/util/utils';
@@ -19,7 +20,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 
-import styles from '@/ui/segments/data-table/elements/table.module.css';
+import styles from './table.module.css';
 
 type ResizeInit = {
   key: string | null;
@@ -66,7 +67,7 @@ function isOrderObject(order: OrderShape): order is { property: string; value: s
 export function getOrderValue(
   order: OrderShape | undefined,
   dataType?: TExtendedEntitiesTypeDict
-): string | undefined {
+): string | string[] | undefined {
   if (!order) return undefined;
 
   if (isOrderObject(order)) {
@@ -92,8 +93,8 @@ export function useDataTableColumns<T>({
   initialColumns = [],
 }: {
   dataType: TExtendedEntitiesTypeDict;
-  setSortState?: (sortState: TSortState) => void;
-  sortState?: TSortState;
+  setSortState?: (sortState: TSortStateList) => void;
+  sortState?: TSortStateList;
   initialColumns?: ColumnProps<T>[];
 }): ColumnProps<T>[] {
   const keys = useMemo(() => Object.keys(fieldsDefinitionRegistry), []);
@@ -127,19 +128,25 @@ export function useDataTableColumns<T>({
   sortStateRef.current = sortState;
 
   const columnOrderBy = useCallback(
-    (field: EntityCoreFields, backendField: EntityCoreFields) => {
-      const current = sortStateRef.current;
-      let order: TSortOrder | null = SortOrder.ASC;
+    (field: EntityCoreFields, backendField: string | string[]) => {
+      const currentSorts = sortStateRef.current ?? [];
+      const activeSort = currentSorts.find((sort) => sort.field === field);
+      const remainingSorts = currentSorts.filter((sort) => sort.field !== field);
 
-      if (current?.order && field === current.field) {
-        order = current.order === SortOrder.DESC ? SortOrder.ASC : SortOrder.DESC;
+      let nextOrder: TSortOrder | null = SortOrder.DESC;
+      if (activeSort?.order === SortOrder.DESC) {
+        nextOrder = SortOrder.ASC;
+      } else if (activeSort?.order === SortOrder.ASC) {
+        nextOrder = null;
       }
 
-      setSortState?.({
-        backendField,
-        field,
-        order,
-      });
+      if (nextOrder === null) {
+        setSortState?.(remainingSorts);
+        return;
+      }
+
+      const nextSort: TSortState = { backendField, field, order: nextOrder };
+      setSortState?.([nextSort, ...remainingSorts]);
     },
     [setSortState]
   );
@@ -215,29 +222,31 @@ export function useDataTableColumns<T>({
 
   const getOrderDirection = useCallback(
     (key: string) => {
-      switch (sortState?.order) {
+      const activeSort = sortState?.find((sort) => sort.field === key);
+      switch (activeSort?.order) {
         case SortOrder.ASC:
-          return sortState?.field === key ? 'ascend' : undefined;
+          return 'ascend';
         case SortOrder.DESC:
-          return sortState?.field === key ? 'descend' : undefined;
+          return 'descend';
         default:
           return undefined;
       }
     },
-    [sortState?.field, sortState?.order]
+    [sortState]
   );
 
   const columns: ColumnProps<T>[] = useMemo(
     () =>
       keys.reduce((acc, key) => {
         const term = getFieldDefinition(key as EntityCoreFields);
-        const isSortable = term?.isSortable && !!getOrderValue(term?.order, dataType);
+        const isSortable =
+          !!setSortState && term?.isSortable && !!getOrderValue(term?.order, dataType);
 
         acc.push({
           key,
           title: (
             <div className="flex flex-col text-left" style={{ marginTop: '-2px' }}>
-              <div className={styles.columnTitle}>{fieldTitleSentenceCase(term?.title!)}</div>
+              <div className={styles.columnTitle}>{fieldTitleSentenceCase(term?.title ?? '')}</div>
               {term?.unit &&
                 dataType !== ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection && (
                   <span className={styles.tableHeaderUnits}>[{term?.unit}]</span>
@@ -248,7 +257,7 @@ export function useDataTableColumns<T>({
             'text-primary-7 cursor-pointer before:!content-none',
             term?.className
           ),
-          sorter: isSortable,
+          sorter: isSortable ? { multiple: 1 } : false,
           ellipsis: true,
           width: columnWidths.find(({ key: colKey }) => colKey === key)?.width,
           render: (_, r, i) => term?.render?.(r as EntityCoreIdentifiable, i),
@@ -262,7 +271,7 @@ export function useDataTableColumns<T>({
                 if (!isSortable || !term.order) return;
                 const field = getOrderValue(term.order, dataType);
                 if (field) {
-                  columnOrderBy(key as EntityCoreFields, field as EntityCoreFields);
+                  columnOrderBy(key as EntityCoreFields, field);
                 }
               },
               showsortertooltip: {
@@ -276,7 +285,16 @@ export function useDataTableColumns<T>({
         });
         return acc;
       }, initialColumns),
-    [columnWidths, initialColumns, keys, onMouseDown, columnOrderBy, getOrderDirection, dataType]
+    [
+      columnWidths,
+      initialColumns,
+      keys,
+      onMouseDown,
+      columnOrderBy,
+      getOrderDirection,
+      dataType,
+      setSortState,
+    ]
   );
 
   if (dataType) {

@@ -1,11 +1,13 @@
 'use client';
 
 import { motion } from 'motion/react';
-import type { ReactNode } from 'react';
+
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { BuildWorkflowsBreadcrumb } from '@/ui/segments/workflows/elements/build-breadcrumb';
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { mdv, setMdv } = useMiniDetailView();

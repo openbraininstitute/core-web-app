@@ -1,6 +1,7 @@
 import { get, set } from 'es-toolkit/compat';
 
 import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
+import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
@@ -39,4 +40,32 @@ export async function getExtendedSimMap(simIds: string[], context: WorkspaceCont
   const simulations = simulationResponses.flatMap((r) => r.data);
 
   return new Map(simulations.map((sim) => [sim.id, sim]));
+}
+
+export async function resolveExecutions({
+  context,
+  allSimIds,
+}: {
+  context: WorkspaceContext | undefined;
+  allSimIds: string[];
+}) {
+  const chunkSize = 30;
+
+  const promises: ReturnType<typeof getSimulationExecutions>[] = [];
+
+  for (let i = 0; i < allSimIds.length; i += chunkSize) {
+    const chunk = allSimIds.slice(i, i + chunkSize);
+
+    promises.push(
+      getSimulationExecutions({
+        context,
+        withFacets: false,
+        filters: { used__id__in: [...chunk] },
+      })
+    );
+  }
+
+  const executionsResponses = await Promise.all(promises);
+
+  return executionsResponses.flatMap((r) => r.data);
 }

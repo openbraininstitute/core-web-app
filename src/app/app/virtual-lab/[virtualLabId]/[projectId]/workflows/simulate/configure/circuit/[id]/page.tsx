@@ -54,10 +54,7 @@ export default function Page({
     return notFound();
   }
 
-  if (
-    !initialCampaignId ||
-    (initialCampaignId && !isLoading && campaignData && campaignData.config.form)
-  ) {
+  if (!initialCampaignId || (initialCampaignId && !isLoading && campaignData?.config.form)) {
     return (
       <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
         <ScanConfiguration

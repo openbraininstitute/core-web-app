@@ -1,33 +1,30 @@
 'use client';
 
-import { CheckCircleFilled, InfoCircleOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Tooltip } from 'antd';
-import { kebabCase, noop, toUpper } from 'es-toolkit/compat';
+import { noop } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { tryCatch } from '@/api/utils';
-import { getVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import ContactUs from '@/components/VirtualLab/create-entity-flows/checkout/contact-us';
 import DowngradeFree from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
 import {
   flowAtom,
   getAllTiers,
-  Switch,
   type TExtendedTier,
-  type TSingleTier,
-  type TTierFeature,
 } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
 import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/checkout/skeleton';
+import { getPricingContent } from '@/services/sanity';
 import { Button } from '@/ui/molecules/button';
+import PlanCard from '@/ui/segments/plans/card';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
 import type { UserActiveSubscriptionResponse } from '@/api/virtual-lab-svc/queries/types';
+import type { PlanV2 } from '@/types/virtual-lab/pricing';
 
 type Props = {
   currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
@@ -42,23 +39,22 @@ const TiersStep = {
 
 type TTiersStep = (typeof TiersStep)[keyof typeof TiersStep];
 
-type TiersComparisonPros = {
-  currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
-  tiers: Array<TExtendedTier>;
-  onSelectPremiumTier: () => void;
-  onSelectFree: () => void;
-  subscriptionData: UserActiveSubscriptionResponse;
-};
-
-function TiersComparison({
+function TiersCards({
   currentTier,
   tiers,
+  plans,
   onSelectPremiumTier,
   onSelectFree,
   subscriptionData,
-}: TiersComparisonPros) {
-  const [{ interval, currency }, updateFlowState] = useAtom(flowAtom);
-  const [hoveredTier, setHoveredTier] = useState<string | null>(null);
+}: {
+  currentTier?: 'FREE' | 'PRO' | 'PREMIUM';
+  tiers: TExtendedTier[];
+  plans: PlanV2[];
+  onSelectPremiumTier: () => void;
+  onSelectFree: () => void;
+  subscriptionData: UserActiveSubscriptionResponse;
+}) {
+  const [, updateFlowState] = useAtom(flowAtom);
 
   const { data: virtualLabData, isPending } = useQuery({
     queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
@@ -75,332 +71,100 @@ function TiersComparison({
     }
   };
 
-  const getCurrencySymbol = (c: string) => {
-    switch (c) {
-      case 'USD':
-        return '$';
-      case 'EUR':
-        return '€';
-      case 'CHF':
-        return 'CHF';
-      default:
-        return c;
-    }
-  };
-
-  const onChangeInterval = (value: boolean) =>
-    updateFlowState((prev) => ({
-      ...prev,
-      interval: value ? 'year' : 'month',
-    }));
-
-  const getPriceDisplay = (t: TSingleTier) => {
-    if (!t.price) return { mainPrice: '0', discountPrice: null };
-
-    const priceArray = interval === 'month' ? t.price.month : t.price.yearNormal;
-    const discountArray = interval === 'month' ? t.price.discount : t.price.yearDiscount;
-
-    if (!priceArray || !priceArray.find((o) => o.currency === toUpper(currency))) {
-      return { mainPrice: '0', discountPrice: null };
-    }
-
-    const price = priceArray.find((o) => o.currency === toUpper(currency));
-    const discount = discountArray.find((o) => o.currency === toUpper(currency));
-
-    const currencySymbol = getCurrencySymbol(price?.currency || '');
-    const mainPrice = `${currencySymbol} ${price?.value || 0}`;
-    const discountPrice =
-      discount && discount.value > 0 ? `${currencySymbol} ${discount.value}` : null;
-
-    return { mainPrice, discountPrice };
-  };
-
-  const renderFeatureAvailability = (available: boolean, feature?: TTierFeature) => {
-    if (!available && !feature?.title) return <span className="text-primary-4">—</span>;
-    if (!available && feature?.title)
-      return (
-        <span className="text-gray-400">
-          <CheckCircleFilled className="text-primary-4 text-lg" />
-        </span>
-      );
-
-    if (feature?.specialLabel) {
-      return (
-        <div className="flex items-center">
-          <span className="text-green-500">{feature?.specialLabel}</span>
-          {feature.tooltip && (
-            <Tooltip
-              title={feature.tooltip[0]}
-              rootClassName="[&_.ant-tooltip-inner]:bg-primary-8 [&_.ant-tooltip-inner]:text-white [&_.ant-tooltip-inner]:rounded-none [&_.ant-tooltip-arrow]:before:bg-primary-8"
-            >
-              <InfoCircleOutlined className="ml-1 text-green-500" />
-            </Tooltip>
-          )}
-        </div>
-      );
-    }
-
-    return <CheckCircleFilled className="text-lg text-green-500" />;
-  };
-
-  const isFeatureAvailable = (t: TSingleTier, categoryTitle: string, featureTitle: string) => {
-    const category = t.features.find((cat) => cat.title === categoryTitle);
-    if (!category || !category.available) return false;
-
-    const feature = category.featuresList.find((f) => f.title === featureTitle);
-    return !!feature;
-  };
-
-  const getFeatureDetails = (
-    t: TSingleTier,
-    categoryTitle: string,
-    featureTitle: string
-  ): TTierFeature | undefined => {
-    const category = t.features.find((cat) => cat.title === categoryTitle);
-    if (!category) return undefined;
-
-    return category.featuresList.find((f) => f.title === featureTitle);
-  };
-
-  const allCategories: { title: string; available?: boolean; features: string[] }[] = [];
-
-  (tiers ?? [])?.forEach((t) => {
-    t.features?.forEach((category) => {
-      let existingCategory = allCategories.find((c) => c.title === category.title);
-
-      if (!existingCategory) {
-        existingCategory = { title: category.title, available: category.available, features: [] };
-        allCategories.push(existingCategory);
-      }
-
-      category.featuresList.forEach((feature) => {
-        if (!existingCategory.features.includes(feature.title)) {
-          existingCategory.features.push(feature.title);
-        }
-      });
-    });
+  const fallbackOrder = ['Free', 'Pro', 'Enterprise', 'Education'];
+  const sortedPlans = [...plans].sort((a, b) => {
+    if (a.planOrder != null && b.planOrder != null) return a.planOrder - b.planOrder;
+    if (a.planOrder != null) return -1;
+    if (b.planOrder != null) return 1;
+    const aIdx = fallbackOrder.indexOf(a.name);
+    const bIdx = fallbackOrder.indexOf(b.name);
+    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+    if (aIdx !== -1) return -1;
+    if (bIdx !== -1) return 1;
+    return 0;
   });
 
+  const findTier = (planName: string) =>
+    tiers.find((t) => t.title.toLowerCase() === planName.toLowerCase());
+
+  const getCta = (plan: PlanV2) => {
+    const tier = findTier(plan.name);
+    const isCurrentTier = currentTier?.toLowerCase() === plan.name.toLowerCase();
+    const isCurrentTierPremium = currentTier?.toLowerCase() === 'premium';
+    const isFree = plan.name.toLowerCase() === 'free';
+    const isPro = plan.name.toLowerCase() === 'pro';
+    const isPremium =
+      plan.name.toLowerCase() === 'premium' || plan.name.toLowerCase() === 'enterprise';
+    const isEducation = plan.name.toLowerCase() === 'education';
+
+    if (isCurrentTier) return { label: 'Current plan', disabled: true, onClick: noop };
+    if (isFree && !currentTier) return { label: 'Current plan', disabled: true, onClick: noop };
+
+    if (
+      subscriptionData?.subscription.canceled_at ||
+      subscriptionData?.subscription.cancel_at_period_end
+    ) {
+      if (isPro || isFree) return null;
+    }
+    if (isCurrentTierPremium && isPro) return null;
+
+    if (isFree) return { label: 'Downgrade to Free', disabled: false, onClick: onSelectFree };
+    if (isPro && tier)
+      return { label: 'Upgrade to Pro', disabled: false, onClick: onTierClick(tier) };
+    if (isPremium || isEducation)
+      return { label: 'Contact Us', disabled: false, onClick: onSelectPremiumTier };
+
+    return null;
+  };
+
   return (
-    <div
-      data-testid="tiers-list"
-      id="tiers-list"
-      className="bg-primary-9 relative flex h-full max-h-full w-full flex-col overflow-hidden px-6 py-2 text-white"
-    >
-      <div
-        id="tier-highlighter"
-        className="pointer-events-none absolute top-[10px] right-[20px] bottom-[55px] left-[20px] grid grid-cols-4 gap-6"
-      >
-        <div />
-        {tiers.map((t) => {
-          const isSelected = currentTier?.toLowerCase() === t.title.toLowerCase();
-          const isCurrentTier = currentTier?.toLowerCase() === t.title.toLowerCase();
-          const isHovered = hoveredTier === t.app_id;
-          const isFree = t.title === 'Free' && (isCurrentTier || !currentTier);
+    <div className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-4">
+      {sortedPlans.map((plan) => {
+        const cta = getCta(plan);
+        const isCurrentTier =
+          currentTier?.toLowerCase() === plan.name.toLowerCase() ||
+          (plan.name.toLowerCase() === 'free' && !currentTier);
 
-          return (
-            <div
-              id={`${t.id}-bg`}
-              key={`${t.id}-bg`}
-              className={classNames(
-                'rounded-lg',
-                (isSelected || isFree) && 'border-primary-3 bg-primary-8/90 border-2',
-                isHovered && !isSelected && 'bg-primary-5/20'
-              )}
+        return (
+          <div key={plan.name} className="flex flex-col overflow-hidden rounded-xl gap-y-4">
+            <PlanCard
+              plan={plan}
+              dark
+              hideContactButton
+              className={isCurrentTier ? 'bg-primary-7 border-primary-5' : undefined}
             />
-          );
-        })}
-      </div>
-
-      <div
-        id="tier-header"
-        className="sticky top-0 z-10 grid grid-cols-4 gap-6 bg-transparent pt-4 pb-6"
-      >
-        <div />
-        {tiers.map((t) => {
-          return (
-            // biome-ignore lint/a11y/noStaticElementInteractions: already have a button
-            <div
-              key={`tier-btn${t.id}`}
-              className="relative flex flex-col bg-transparent px-4"
-              onMouseEnter={() => setHoveredTier(t.app_id)}
-              onMouseLeave={() => setHoveredTier(null)}
-              data-testid="tier-header"
-            >
-              <h2 className="mb-2 text-2xl font-bold">{t.title}</h2>
-              {t.price && t.title === 'Pro' && (
-                <div className="mb-4 text-left">
-                  <div className="mb-3 flex items-center gap-1">
-                    <span
-                      className={classNames(
-                        'text-sm font-light text-white',
-                        interval === 'month' && 'font-bold'
-                      )}
-                    >
-                      Monthly
-                    </span>
-                    <Switch
-                      checked={interval === 'year'}
-                      name="interval"
-                      thumbCls="bg-white"
-                      className="border! border-white p-1"
-                      onCheckedChange={onChangeInterval}
-                    />
-                    <span
-                      className={classNames(
-                        'text-sm font-light text-white',
-                        interval === 'month' && 'font-bold'
-                      )}
-                    >
-                      Yearly
-                    </span>
-                  </div>
-                  {getPriceDisplay(t).discountPrice ? (
-                    <div className="flex flex-col text-gray-400">
-                      <span className="text-primary-5 text-lg font-light line-through">
-                        {getPriceDisplay(t).mainPrice}/
-                        <span className="text-sm font-light">{interval}</span>
-                      </span>
-                      <div className="flex">
-                        <span className="ml-1 text-xl font-bold text-white">
-                          {getPriceDisplay(t).discountPrice}/
-                          <span className="text-sm font-light">{interval}</span>
-                        </span>
-                        <span className="border-primary-2 text-primary-2 ml-2 rounded-full border px-3 py-1 text-sm">
-                          Launch Price
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-400">
-                      <span className="text-xl font-bold text-white">
-                        {getPriceDisplay(t).mainPrice}/
-                        <span className="text-sm font-light">{interval}</span>
-                      </span>
-                    </div>
+            {cta && (
+              <div className="px-6 pb-6">
+                <Button
+                  rounded
+                  type="button"
+                  variant={cta.disabled ? 'ghost' : 'outline'}
+                  size="lg"
+                  className={cn(
+                    'w-full border-primary-5 text-white',
+                    cta.disabled && 'pointer-events-none',
+                    !cta.disabled && 'bg-transparent hover:bg-primary-8'
                   )}
-                </div>
-              )}
-
-              {t.notes && (
-                <div className="mt-auto space-y-1 text-sm">
-                  {t.notes.map((note: string) => (
-                    <div key={note} className="flex">
-                      <span className="mr-1 text-xs">+</span> {note}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Scrollable content section */}
-      <div id="tier-details-container" className="no-scrollbar flex-1 overflow-y-auto">
-        {allCategories.map((category) => (
-          <div id="tier-details" key={`${kebabCase(category.title)}`} className="relative mt-8">
-            <h3 className="text-primary-4 mb-4 uppercase">
-              <span className="text-base font-bold">{category.title}</span>
-              {category.available === false && (
-                <span className="select ml-3 rounded-full border border-white px-2 py-1 text-xs font-light! text-white">
-                  Future release
-                </span>
-              )}
-            </h3>
-
-            {category.features.map((feature) => (
-              <div
-                key={`${kebabCase(category.title)}/${kebabCase(feature)}`}
-                className="relative grid grid-cols-4 gap-6 py-3"
-              >
-                <div className="text-base">{feature}</div>
-
-                {tiers.map((t) => (
-                  <button
-                    type="button"
-                    key={`${t.id}-${feature}`}
-                    className="flex justify-start px-4"
-                    onMouseEnter={() => setHoveredTier(t.app_id)}
-                    onMouseLeave={() => setHoveredTier(null)}
-                  >
-                    {renderFeatureAvailability(
-                      isFeatureAvailable(t, category.title, feature),
-                      getFeatureDetails(t, category.title, feature)
-                    )}
-                  </button>
-                ))}
+                  disabled={cta.disabled}
+                  onClick={cta.onClick}
+                >
+                  {cta.label}
+                </Button>
               </div>
-            ))}
+            )}
           </div>
-        ))}
-      </div>
-
-      <div
-        id="tier-buttons-container"
-        className="sticky bottom-0 z-10 grid grid-cols-4 gap-6 bg-transparent pt-4"
-      >
-        <div />
-        {tiers.map((t) => {
-          const isCurrentTier = currentTier?.toLowerCase() === t.title.toLowerCase();
-          const isCurrentTierPremium = currentTier?.toLowerCase() === 'premium';
-          const isFree = t.title === 'Free';
-          const isPro = t.title === 'Pro';
-          const isPremium = t.title === 'Premium';
-          // const isHovered = hoveredTier === t.app_id;
-          if (isFree && (isCurrentTier || !currentTier)) return <div key="free-disabled" />;
-          if (isPro && isCurrentTier) return <div key="pro-disabled" />;
-
-          if (
-            subscriptionData?.subscription.canceled_at ||
-            subscriptionData?.subscription.cancel_at_period_end
-          ) {
-            if (isPro || isFree) return <div key="tier-disabled" />;
-          }
-          if (isCurrentTierPremium && isPro) return <div key="pro-disabled" />;
-
-          let controller = noop;
-          if (isFree) controller = onSelectFree;
-          if (isPro) controller = onTierClick(t);
-          if (isPremium) controller = onSelectPremiumTier;
-          return (
-            // biome-ignore lint/a11y/noStaticElementInteractions: already have a button
-            <div
-              key={`button-${t.app_id}`}
-              className="relative px-4 mx-auto"
-              onMouseEnter={() => setHoveredTier(t.app_id)}
-              onMouseLeave={() => setHoveredTier(null)}
-            >
-              <Button
-                rounded
-                type="button"
-                variant="default"
-                size="lg"
-                className={cn(
-                  'border-primary-4! w-max border shadow-2xl',
-                  'hover:bg-primary-8/40',
-                  'hover:shadow-[1px_2px_4px_0px_#00000099]',
-                  'shadow-[8px_12px_24px_0px_#00000099]',
-                  'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
-                )}
-                data-testid={`select-${t.title.toLowerCase()}-btn`}
-                onClick={controller}
-              >
-                {isFree && !isCurrentTier && 'Downgrade to Free'}
-                {isPro && !isCurrentTier && !isCurrentTierPremium && 'Upgrade to Pro'}
-                {isPremium && 'Contact Us'}
-              </Button>
-            </div>
-          );
-        })}
-      </div>
+        );
+      })}
     </div>
   );
 }
 
 export default function TiersList({ currentTier, subscriptionData }: Props) {
   const [loading, setLoading] = useState(true);
-  const [tiers, setTiers] = useState<{ data: Array<TExtendedTier> } | { error: any }>({ data: [] });
+  const [tiers, setTiers] = useState<{ data: Array<TExtendedTier> } | { error: unknown }>({
+    data: [],
+  });
+  const [plans, setPlans] = useState<PlanV2[]>([]);
   const [currentStep, setCurrentStep] = useState<TTiersStep>(TiersStep.Listing);
 
   const onSelectPremiumTier = () => setCurrentStep(TiersStep.ContactUs);
@@ -410,13 +174,18 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data, error } = await tryCatch(getAllTiers(), () => {
-        setLoading(false);
-      });
-      if (error) {
-        return setTiers({ error });
+      const [tiersResult, plansData] = await Promise.all([
+        tryCatch(getAllTiers(), noop),
+        getPricingContent().catch(() => []),
+      ]);
+
+      if (tiersResult.error) {
+        setTiers({ error: tiersResult.error });
+      } else {
+        setTiers({ data: tiersResult.data });
       }
-      setTiers({ data });
+      setPlans(plansData ?? []);
+      setLoading(false);
     })();
   }, []);
 
@@ -452,7 +221,7 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
     );
 
   return (
-    <div id="tiers-list-container" className="mx-auto flex h-full max-w-6xl flex-col">
+    <div id="tiers-list-container" className="mx-auto flex h-full max-w-7xl flex-col">
       {match({ currentStep })
         .with({ currentStep: TiersStep.ContactUs }, () => (
           <div className="h-full grow px-6 py-3">
@@ -465,8 +234,9 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
           </div>
         ))
         .otherwise(() => (
-          <TiersComparison
-            tiers={tiers.data}
+          <TiersCards
+            tiers={'data' in tiers ? tiers.data : []}
+            plans={plans}
             currentTier={currentTier}
             onSelectPremiumTier={onSelectPremiumTier}
             onSelectFree={onDowngradeFreeClick}

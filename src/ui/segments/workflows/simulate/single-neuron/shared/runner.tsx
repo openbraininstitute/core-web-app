@@ -1,7 +1,7 @@
+/** biome-ignore-all lint/performance/noAccumulatingSpread: useless rule */
 'use client';
 
 import { captureException } from '@sentry/nextjs';
-import type { NotificationInstance } from 'antd/es/notification/interface';
 import {
   delay,
   isNil,
@@ -14,39 +14,47 @@ import {
   uniqBy,
   values,
 } from 'es-toolkit/compat';
-import { atom } from 'jotai';
+import { atom, type Getter, type Setter } from 'jotai';
 import { RESET } from 'jotai/utils';
 import Link from 'next/link';
 import { match } from 'ts-pattern';
+
 import {
   createSingleNeuronSimulation,
   createSingleNeuronSynaptomeSimulation,
   getMEModel,
 } from '@/api/entitycore/queries';
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
-import type {
-  ISingleNeuronSimulation,
-  ISingleNeuronSynaptomeSimulation,
-} from '@/api/entitycore/types';
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
+import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { config } from '@/config';
 import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
 import { messages } from '@/i18n/en/simulation';
-import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
 import { JobStatus, type Message, MessageType } from '@/services/small-scale-simulator/types';
-import type {
-  SimulationStreamData,
-  SingleNeuronModelSimulationConfig,
-} from '@/types/small-scale-simulator/single-neuron';
 import {
   genericSingleNeuronSimulationPlotDataAtomFamily,
   SimulationStatus,
   simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
+import { isType } from '@/util/type-guards';
+import { readNdjsonResponse as readNewlineDelimitedJsonResponse } from '@/utils/response';
+
+import type { NotificationInstance } from 'antd/es/notification/interface';
+import type {
+  ISingleNeuronSimulation,
+  ISingleNeuronSynaptomeSimulation,
+} from '@/api/entitycore/types';
+import type { PlotData, PlotDataEntry } from '@/services/bluenaas-single-cell/types';
+import type {
+  SimulationStreamData,
+  SingleNeuronModelSimulationConfig,
+} from '@/types/small-scale-simulator/single-neuron';
 import type {
   NeuronLocationArray,
   SimulationExperimentalSetup,
@@ -55,17 +63,14 @@ import type {
   TSimulationType,
   TStimulationConfiguration,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
-import { convertObjectKeysToSnakeCase } from '@/util/object-keys-format';
-import { readNdjsonResponse } from '@/utils/response';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
 export const createSingleNeuronSimulationAtom = atom(
   null,
   async (
-    get,
-    set,
+    _get,
+    _set,
     name: string,
     description: string,
     modelId: string,
@@ -187,6 +192,10 @@ export const createSingleNeuronSimulationAtom = atom(
   }
 );
 
+/**
+ * When the setter of this writable atom is called, it will update this atom:
+ * `genericSingleNeuronSimulationPlotDataAtomFamily( sessionId )`
+ */
 export const launchSimulationAtom = atom<
   null,
   [
@@ -235,14 +244,24 @@ export const launchSimulationAtom = atom<
         throw new Error(messages.CurrentInjectionConfigMissingError);
       }
     } else if (simulationType === 'synaptome-simulation') {
-      if (
-        !stimulationConfiguration &&
-        (!synaptomeConfiguration || !synaptomeConfiguration.length)
-      ) {
+      if (!stimulationConfiguration && !synaptomeConfiguration?.length) {
         throw new Error(messages.SynaptomeConfigurationError);
       }
     }
     const simulationStatusAtom = simulationStatusAtomFamily(sessionId);
+    const lowFundsEmailSubject = 'Insufficient%20credits%20for%20simulation';
+    let labAdminContactHref: string | null = null;
+
+    const getLabAdminContactHref = async () => {
+      if (labAdminContactHref) return labAdminContactHref;
+      const { data: membersData } = await tryCatch(listVirtualLabMembers({ virtualLabId }));
+      const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
+
+      labAdminContactHref = adminEmail
+        ? `mailto:${adminEmail}?subject=${lowFundsEmailSubject}`
+        : null;
+      return labAdminContactHref;
+    };
 
     set(simulationStatusAtom, { status: SimulationStatus.LAUNCHED });
 
@@ -287,6 +306,9 @@ export const launchSimulationAtom = atom<
 
         if (isLowFundsError) {
           errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
+          if (!isProjectAdmin) {
+            labAdminContactHref = await getLabAdminContactHref();
+          }
         }
 
         set(simulationStatusAtom, {
@@ -309,7 +331,7 @@ export const launchSimulationAtom = atom<
                 </Link>
               ) : (
                 <Link
-                  href={`${config.ROOT_ROUTE}/${virtualLabId}/overview`}
+                  href={labAdminContactHref ?? `${config.ROOT_ROUTE}/${virtualLabId}/overview`}
                   className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
                   onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
                 >
@@ -336,6 +358,9 @@ export const launchSimulationAtom = atom<
           if (errResponseObj.error_code === LOW_FUNDS_ERROR_CODE) {
             isLowFundsError = true;
             errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
+            if (!isProjectAdmin) {
+              labAdminContactHref = await getLabAdminContactHref();
+            }
           }
         } catch {
           // ignore
@@ -361,7 +386,7 @@ export const launchSimulationAtom = atom<
                 </Link>
               ) : (
                 <Link
-                  href={`${config.ROOT_ROUTE}/${virtualLabId}/overview`}
+                  href={labAdminContactHref ?? `${config.ROOT_ROUTE}/${virtualLabId}/overview`}
                   className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
                   onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
                 >
@@ -383,93 +408,29 @@ export const launchSimulationAtom = atom<
         return;
       }
 
-      await readNdjsonResponse<Message<SimulationStreamData>>(response, (message) => {
-        match(message)
-          .with({ message_type: MessageType.DATA }, ({ data }) => appendStreamData(data))
-          .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, () => {
-            notify.error({
-              message: `Simulation ${overviewConfiguration.name}`,
-              description: messages.SteamingSimulationResultDefaultError,
-              placement: 'topRight',
-              key: `simulation-failed-${sessionId}`,
-            });
-            set(simulationStatusAtom, {
-              status: SimulationStatus.ERROR,
-              description: messages.SteamingSimulationResultDefaultError,
-            });
-            throw new Error(messages.SteamingSimulationResultDefaultError, {
-              cause: 'SmallScaleSimulatorError',
-            });
-          })
-          .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, async () => {
-            set(simulationStatusAtom, { status: SimulationStatus.EXECUTED });
-            notify.success({
-              message: `Simulation ${overviewConfiguration.name}`,
-              description: messages.ExecutionSimulationSucceed,
-              placement: 'topRight',
-              key: `simulation-success-${sessionId}`,
-            });
-            const description = overviewConfiguration.description ?? '';
-            const { data, error: saveError } = await tryCatch(
-              set(
-                createSingleNeuronSimulationAtom,
-                overviewConfiguration.name,
-                description,
-                modelId,
-                memodelId,
-                virtualLabId,
-                projectId,
-                simulationType,
-                stimulationConfiguration,
-                experimentalSetupConfiguration,
-                recordingConfiguration,
-                synaptomeConfiguration,
-                get(plotDataAtom),
-                stimulusGraphResult as PlotData
-              )
-            );
-            if (saveError) {
-              set(simulationStatusAtom, {
-                status: SimulationStatus.ERROR,
-                description: messages.CreationSimulationFailed,
-              });
-              notify.error({
-                message: `Simulation ${overviewConfiguration.name}`,
-                description: messages.CreationSimulationFailed,
-                placement: 'topRight',
-                key: `simulation-failed-${sessionId}`,
-              });
-            }
-            if (data) {
-              notify.success({
-                message: (
-                  <>
-                    Simulation <strong>{overviewConfiguration.name}</strong>
-                  </>
-                ),
-                description: (
-                  <div className="flex flex-col gap-2">
-                    <p>{messages.CreationSimulationSucceed}</p>
-                    <Link
-                      href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(data.simulation.type)}/${data.simulation.id}`}
-                      className="text-primary-8 no-underline! hover:underline"
-                      onClick={() => notify.destroy(`simulation-success-${sessionId}`)}
-                    >
-                      View Simulation
-                    </Link>
-                  </div>
-                ),
-                placement: 'topRight',
-                duration: 0,
-                key: `simulation-success-${sessionId}`,
-                onClick: () => notify.destroy(`simulation-success-${sessionId}`),
-              });
-            }
-            set(simulationStatusAtom, { status: SimulationStatus.SAVED });
-          })
-          .otherwise(() => null);
-      });
-    } catch (error: any) {
+      await readNewlineDelimitedJsonResponse<Message<SimulationStreamData>>(
+        response,
+        makeMessageParser(
+          get,
+          set,
+          virtualLabId,
+          projectId,
+          notify,
+          overviewConfiguration,
+          sessionId,
+          simulationStatusAtom,
+          modelId,
+          memodelId,
+          simulationType,
+          stimulationConfiguration,
+          experimentalSetupConfiguration,
+          recordingConfiguration,
+          synaptomeConfiguration,
+          plotDataAtom,
+          stimulusGraphResult
+        )
+      );
+    } catch (error) {
       captureException(error, {
         tags: { section: 'simulation', type: 'simulationType' },
         extra: {
@@ -487,7 +448,7 @@ export const launchSimulationAtom = atom<
       });
       set(simulationStatusAtom, {
         status: SimulationStatus.ERROR,
-        description: error.cause ? `${error.cause}` : messages.RunningSimulationDefaultError,
+        description: hasCause(error) ? `${error.cause}` : messages.RunningSimulationDefaultError,
       });
       notify.error({
         message: `Simulation ${overviewConfiguration.name}`,
@@ -496,54 +457,209 @@ export const launchSimulationAtom = atom<
         key: `simulation-failed-${sessionId}`,
       });
     }
-
-    function appendStreamData(streamData: SimulationStreamData) {
-      const newPlot: PlotDataEntry = {
-        x: streamData.x,
-        y: streamData.y,
-        type: 'scatter',
-        name: streamData.name,
-        recording: streamData.recording,
-        amplitude: streamData.amplitude,
-        frequency: streamData.frequency,
-        varyingKey: streamData.varying_key,
-        variable_name: streamData.variable_name,
-        unit: streamData.unit,
-      };
-      const currentPlotData = get(plotDataAtom);
-      const currentRecording = currentPlotData![streamData.recording];
-
-      if (currentRecording) {
-        const key = makeKey(newPlot);
-        const currentRecordingIndex = currentRecording.findIndex((o) => makeKey(o) === key);
-        const value = currentRecording[currentRecordingIndex];
-        if (currentRecordingIndex === -1) {
-          currentRecording.push(newPlot);
-        } else {
-          currentRecording[currentRecordingIndex] = {
-            ...value,
-            x: [...value.x, ...newPlot.x],
-            y: [...value.y, ...newPlot.y],
-            variable_name: newPlot.variable_name ?? value.variable_name,
-            unit: newPlot.unit ?? value.unit,
-          };
-        }
-        const updatedPlot = {
-          ...get(plotDataAtom),
-          [streamData.recording]: currentRecording,
-        };
-
-        // Sort traces for each plot by `varyingKey` so that the legends appear in sorted order.
-        Object.keys(updatedPlot).forEach((recordingLocation) => {
-          updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
-        });
-
-        set(plotDataAtom, updatedPlot);
-      }
-    }
   }
 );
 
+type PlotDataAtom = ReturnType<typeof genericSingleNeuronSimulationPlotDataAtomFamily>;
+
+function makeMessageParser(
+  get: Getter,
+  set: Setter,
+  virtualLabId: string,
+  projectId: string,
+  notify: NotificationInstance,
+  overviewConfiguration: { name: string; description?: string | undefined },
+  sessionId: string,
+  simulationStatusAtom: ReturnType<typeof simulationStatusAtomFamily>,
+  modelId: string,
+  memodelId: string,
+  simulationType: TSimulationType,
+  stimulationConfiguration: {
+    id: number;
+    config_id: string;
+    inject_to: string;
+    stimulus: {
+      stimulus_type: 'current_clamp' | 'voltage_clamp' | 'conductance';
+      stimulus_protocol: 'ap_waveform' | 'idrest' | 'iv' | 'fire_pattern' | null;
+      amplitudes: number | number[];
+    };
+  },
+  experimentalSetupConfiguration: {
+    celsius: number;
+    vinit: number;
+    hypamp: number;
+    max_time: number;
+    time_step: number;
+    seed: number;
+  },
+  recordingConfiguration: {
+    section: string;
+    offset: number;
+    record_currents: boolean;
+    origin: 'injection' | 'recording';
+    color?: string | undefined;
+  }[],
+  synaptomeConfiguration: {
+    id: string;
+    config_id: string;
+    delay: number;
+    duration: number;
+    frequency: number | number[];
+    weight_scalar: number;
+    color?: string | undefined;
+  }[],
+  plotDataAtom: PlotDataAtom,
+  stimulusGraphResult: PlotData
+): ((data: Message<SimulationStreamData>) => void) | undefined {
+  const appendStreamData = makeAppendStreadData(get, set, plotDataAtom);
+  return (message) => {
+    match(message)
+      .with({ message_type: MessageType.DATA }, (msg) => {
+        const type = msg.data_type;
+        if (type === 'spikes') {
+          // @TODO: Deal with spikes in another PR
+        } else if (!type || type === 'trace') {
+          // @TODO: when BlueNaas is in production,
+          // remove this nested condition.
+          return appendStreamData(msg.data);
+        }
+      })
+      .with({ message_type: MessageType.STATUS, status: JobStatus.ERROR }, () => {
+        notify.error({
+          message: `Simulation ${overviewConfiguration.name}`,
+          description: messages.SteamingSimulationResultDefaultError,
+          placement: 'topRight',
+          key: `simulation-failed-${sessionId}`,
+        });
+        set(simulationStatusAtom, {
+          status: SimulationStatus.ERROR,
+          description: messages.SteamingSimulationResultDefaultError,
+        });
+        throw new Error(messages.SteamingSimulationResultDefaultError, {
+          cause: 'SmallScaleSimulatorError',
+        });
+      })
+      .with({ message_type: MessageType.STATUS, status: JobStatus.DONE }, async () => {
+        set(simulationStatusAtom, { status: SimulationStatus.EXECUTED });
+        notify.success({
+          message: `Simulation ${overviewConfiguration.name}`,
+          description: messages.ExecutionSimulationSucceed,
+          placement: 'topRight',
+          key: `simulation-success-${sessionId}`,
+        });
+        const description = overviewConfiguration.description ?? '';
+        const { data, error: saveError } = await tryCatch(
+          set(
+            createSingleNeuronSimulationAtom,
+            overviewConfiguration.name,
+            description,
+            modelId,
+            memodelId,
+            virtualLabId,
+            projectId,
+            simulationType,
+            stimulationConfiguration,
+            experimentalSetupConfiguration,
+            recordingConfiguration,
+            synaptomeConfiguration,
+            get(plotDataAtom),
+            stimulusGraphResult as PlotData
+          )
+        );
+        if (saveError) {
+          set(simulationStatusAtom, {
+            status: SimulationStatus.ERROR,
+            description: messages.CreationSimulationFailed,
+          });
+          notify.error({
+            message: `Simulation ${overviewConfiguration.name}`,
+            description: messages.CreationSimulationFailed,
+            placement: 'topRight',
+            key: `simulation-failed-${sessionId}`,
+          });
+        }
+        if (data) {
+          notify.success({
+            message: (
+              <>
+                Simulation <strong>{overviewConfiguration.name}</strong>
+              </>
+            ),
+            description: (
+              <div className="flex flex-col gap-2">
+                <p>{messages.CreationSimulationSucceed}</p>
+                <Link
+                  href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(data.simulation.type)}/${data.simulation.id}`}
+                  className="text-primary-8 no-underline! hover:underline"
+                  onClick={() => notify.destroy(`simulation-success-${sessionId}`)}
+                >
+                  View Simulation
+                </Link>
+              </div>
+            ),
+            placement: 'topRight',
+            duration: 0,
+            key: `simulation-success-${sessionId}`,
+            onClick: () => notify.destroy(`simulation-success-${sessionId}`),
+          });
+        }
+        set(simulationStatusAtom, { status: SimulationStatus.SAVED });
+      })
+      .otherwise(() => null);
+  };
+}
+
+function makeAppendStreadData(get: Getter, set: Setter, plotDataAtom: PlotDataAtom) {
+  return (streamData: SimulationStreamData) => {
+    const newPlot: PlotDataEntry = {
+      x: streamData.x,
+      y: streamData.y,
+      type: 'scatter',
+      name: streamData.name,
+      recording: streamData.recording,
+      amplitude: streamData.amplitude,
+      frequency: streamData.frequency,
+      varyingKey: streamData.varying_key,
+      variable_name: streamData.variable_name,
+      unit: streamData.unit,
+    };
+    const currentPlotData = get(plotDataAtom);
+    const currentRecording = currentPlotData?.[streamData.recording];
+
+    if (currentRecording) {
+      const key = makeKey(newPlot);
+      const currentRecordingIndex = currentRecording.findIndex((o) => makeKey(o) === key);
+      const value = currentRecording[currentRecordingIndex];
+      if (currentRecordingIndex === -1) {
+        currentRecording.push(newPlot);
+      } else {
+        currentRecording[currentRecordingIndex] = {
+          ...value,
+          x: [...value.x, ...newPlot.x],
+          y: [...value.y, ...newPlot.y],
+          variable_name: newPlot.variable_name ?? value.variable_name,
+          unit: newPlot.unit ?? value.unit,
+        };
+      }
+      const updatedPlot = {
+        ...get(plotDataAtom),
+        [streamData.recording]: currentRecording,
+      };
+
+      // Sort traces for each plot by `varyingKey` so that the legends appear in sorted order.
+      Object.keys(updatedPlot).forEach((recordingLocation) => {
+        updatedPlot[recordingLocation] = sortBy(updatedPlot[recordingLocation], ['varyingKey']);
+      });
+
+      set(plotDataAtom, updatedPlot);
+    }
+  };
+}
+
 function makeKey(entry: PlotDataEntry): string {
   return `${entry.name}\t${entry.variable_name}\t${entry.unit}`;
+}
+
+function hasCause(data: unknown): data is { cause: string } {
+  return isType(data, { cause: 'string' });
 }

@@ -2,6 +2,8 @@ import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
 import { isAtom } from '@/features/scan-config/components/utils';
+import { useDiffPreviewAtom } from '@/features/scan-config/hooks/use-diff-preview-atom';
+import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import {
   type AtomsMap,
   type Config,
@@ -60,6 +62,8 @@ export default function Middle({
   entityType,
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
+  const showingDiffs = useShowingDiffs();
+  const previewAtom = useDiffPreviewAtom(selectedRootElement);
 
   // for BlockDictionary the path includes the entry; for others just the root element
   const errorPathPrefix =
@@ -68,7 +72,7 @@ export default function Middle({
       : selectedRootElement;
 
   return (
-    <div className={styles.animateFadeUp}>
+    <div className={styles.animateFadeUp} id="scan-config-middle-content">
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionary
           campaignId={campaignId}
@@ -95,12 +99,14 @@ export default function Middle({
           <Block
             schema={schema}
             schemaName={schemaName}
-            disabled={!!campaignId || loading || !!aiConfig || !isChatReady}
+            disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
             config={config}
             blockSchema={selectedSchema}
-            stateAtom={atomsMap[selectedRootElement]}
+            stateAtom={previewAtom ?? atomsMap[selectedRootElement]}
             entity={entity}
             schemaMappingConfig={schemaMappingConfig}
+            rootElement={selectedRootElement}
+            selectedEntry={selectedEntry}
             errorPathPrefix={errorPathPrefix}
           />
         )}

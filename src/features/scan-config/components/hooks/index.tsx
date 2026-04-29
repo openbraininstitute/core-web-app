@@ -37,6 +37,17 @@ export function getGeneratedApiUrl({
         });
       return path;
     })
+    .with(ScanConfigActivity.Process, () => {
+      const path = match({ entityType })
+        .with(
+          { entityType: EntityTypeDict.EMCellMesh },
+          () => 'skeletonization-scan-config-generate-grid'
+        )
+        .otherwise(() => {
+          throw new Error(`Unsupported entity type ${entityType}`);
+        });
+      return path;
+    })
     .with(ScanConfigActivity.Simulate, () => {
       const path = match({ entityType })
         .with(
@@ -88,6 +99,14 @@ export function getScanConfigSchemaName({
         });
       return name as SchemaName;
     })
+    .with({ activity: ScanConfigActivity.Process }, () => {
+      const name = match({ entityType })
+        .with({ entityType: EntityTypeDict.EMCellMesh }, () => 'SkeletonizationScanConfig')
+        .otherwise(() => {
+          throw new Error(`Unsupported entity type: ${entityType}`);
+        });
+      return name as SchemaName;
+    })
     .with({ activity: ScanConfigActivity.Simulate }, () => {
       const name = match({ entityType })
         .with(
@@ -130,6 +149,7 @@ export function useValidateSchema({
   }, [schema]);
 
   // Validate initial config
+
   if (validate && initialConfig && !initialConfigValidated.current) {
     initialConfigValidated.current = true;
     validate(initialConfig);
@@ -140,7 +160,7 @@ export function useValidateSchema({
         { initialConfig, config, schema },
         { errors: validate.errors }
       );
-      throw new Error('Invalid campaign configuration');
+      throw new Error('Invalid campaign configuration', { cause: validate.errors });
     }
   }
 

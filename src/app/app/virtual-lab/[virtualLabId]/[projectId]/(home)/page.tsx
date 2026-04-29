@@ -47,7 +47,7 @@ export default async function Page(props: ServerSideComponentProp<WorkspaceConte
   return (
     <div className="w-full flex flex-col pr-2">
       <MainCards context={context} />
-      <MainVideo />
+      {/* <MainVideo /> */}
       <TutorialList />
     </div>
   );

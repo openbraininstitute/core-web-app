@@ -60,7 +60,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
 
   return (
     <div
-      className={cn('text-primary-9 relative rounded-2xl bg-white p-6', className, {
+      className={cn('text-primary-9 relative rounded-2xl bg-white p-6 w-full', className, {
         'p-0': isJson,
       })}
     >

@@ -4,6 +4,7 @@ export const EntityTypeGroup = {
   Models: 'models',
   Notebooks: 'notebooks',
   Extractions: 'extractions',
+  Processing: 'processing',
 } as const;
 
 export type TEntityTypeGroup = (typeof EntityTypeGroup)[keyof typeof EntityTypeGroup];

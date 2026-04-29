@@ -7,6 +7,7 @@ import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
 import {
   ExtractScanConfigTabs,
+  ProcessScanConfigTabs,
   ScanConfigActivity,
   SimulateScanConfigTabs,
   type TScanConfigActivity,
@@ -75,13 +76,18 @@ export default function GenerateConfigButton({
         id: ExtractScanConfigTabs.extractions,
         __activity: ScanConfigActivity.Extract,
       });
+    if (activity === ScanConfigActivity.Process)
+      setTab({
+        id: ProcessScanConfigTabs.skeletonizations,
+        __activity: ScanConfigActivity.Process,
+      });
   };
 
   return (
     <button
       type="button"
       className={classNames(
-        'flex min-h-12.5 w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
+        'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-lg drop-shadow',
         (errors && errors.length > 0) || loading
           ? 'bg-gray-300 text-gray-500'
           : 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'

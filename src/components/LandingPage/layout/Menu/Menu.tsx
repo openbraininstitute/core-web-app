@@ -3,19 +3,21 @@
 import Link from 'next/link';
 import React, { useState } from 'react';
 
+import { classNames } from '@/util/utils';
+
 import { ID_MENU } from '../../constants';
 import { IconChevronRight } from '../../icons/IconChevronRight';
 import { IconMenu } from '../../icons/IconMenu';
 import { EnumSection } from '../../sections/sections';
 import PopupMenu from './PopupMenu/PopupMenu';
 
-import { classNames } from '@/util/utils';
 import styles from './Menu.module.css';
 
 interface MenuProps {
   className?: string;
   scrollHasStarted: boolean;
   section?: EnumSection;
+  scrollContainerRef?: React.RefObject<HTMLElement | null>;
 }
 
 interface MenuItem {
@@ -32,24 +34,27 @@ const MENU_ITEMS: MenuItem[] = [
     index: EnumSection.About,
     submenu: [
       { caption: 'About OBI', slug: '/about', index: EnumSection.About },
-      { caption: 'Our story', slug: '/the-real-digital-brain-story', index: EnumSection.Story },
+      {
+        caption: 'Our story',
+        slug: '/the-real-digital-brain-story',
+        index: EnumSection.Story,
+      },
       { caption: 'Mission', slug: '/mission', index: EnumSection.Mission },
       { caption: 'Team', slug: '/team', index: EnumSection.Team },
     ],
   },
   {
-    caption: 'Resources',
-    slug: '/resources',
-    index: EnumSection.Resources,
-    submenu: [
-      { caption: 'Notebooks', slug: '/notebooks' },
-      { caption: 'Gallery', slug: '/gallery', index: EnumSection.Gallery },
-    ],
-  },
-  {
     caption: 'The Platform',
     slug: '/pricing',
-    submenu: [{ caption: 'Pricing', slug: '/pricing', index: EnumSection.Pricing }],
+    submenu: [
+      { caption: 'Features', slug: '/features', index: EnumSection.Features },
+      {
+        caption: 'Showcases',
+        slug: '/showcases',
+        index: EnumSection.Showcases,
+      },
+      { caption: 'Pricing', slug: '/pricing', index: EnumSection.Pricing },
+    ],
   },
   {
     caption: 'News',
@@ -63,7 +68,12 @@ const MENU_ITEMS: MenuItem[] = [
   },
 ];
 
-export default function Menu({ className, scrollHasStarted, section }: MenuProps) {
+export default function Menu({
+  className,
+  scrollHasStarted,
+  section,
+  scrollContainerRef,
+}: MenuProps) {
   const [showMenu, setShowMenu] = React.useState(false);
   const [showMenuComponent, setShowMenuComponent] = React.useState(true);
   const [lastScrollY, setLastScrollY] = React.useState(0);
@@ -85,8 +95,10 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
   const parentItem = getParentItemForSection(section);
 
   React.useEffect(() => {
+    const el = scrollContainerRef?.current;
+    const target = el ?? window;
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const currentScrollY = el ? el.scrollTop : window.scrollY;
 
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
         setShowMenuComponent(false);
@@ -97,10 +109,10 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
       setLastScrollY(currentScrollY);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    target.addEventListener('scroll', handleScroll, { passive: true });
 
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+    return () => target.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY, scrollContainerRef]);
 
   return (
     <>
@@ -123,14 +135,16 @@ export default function Menu({ className, scrollHasStarted, section }: MenuProps
 
         <div className={styles.items}>
           {MENU_ITEMS.map((item) => (
-            <div
-              key={item.slug}
-              className={styles.menuItemContainer}
-              onMouseEnter={() => item.submenu && setHoveredItem(item.slug)}
-              onMouseLeave={() => setHoveredItem(null)}
-            >
+            <div key={item.slug} className={styles.menuItemContainer}>
               {item.submenu ? (
-                <div className={styles.menuItemWithSubmenu}>
+                <div
+                  role="menuitem"
+                  aria-haspopup="menu"
+                  tabIndex={0}
+                  className={styles.menuItemWithSubmenu}
+                  onMouseEnter={() => setHoveredItem(item.slug)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                >
                   <button
                     type="button"
                     className={classNames(

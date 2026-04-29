@@ -1,3 +1,18 @@
+import {
+  type BrainLocationFilter,
+  type BrainRegionHierarchyFilter,
+  type ContributionFilter,
+  DefaultOrderBy,
+  type IDFilter,
+  type IlikeSearchFilter,
+  type IOrderBy,
+  type MtypeFilter,
+  type PaginationFilter,
+  type SharedFilter,
+  type SubjectFilter,
+  type TimestampsFilter,
+} from '@/api/entitycore/types/shared/request';
+
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type {
   CellMorphologyProtocolNestedFilter,
@@ -17,18 +32,6 @@ import type {
   Subject,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
-import type {
-  BrainLocationFilter,
-  BrainRegionHierarchyFilter,
-  ContributionFilter,
-  IDFilter,
-  IlikeSearchFilter,
-  MtypeFilter,
-  PaginationFilter,
-  SharedFilter,
-  SubjectFilter,
-  TimestampsFilter,
-} from '@/api/entitycore/types/shared/request';
 
 export const RepairPipelineType = {
   Raw: {
@@ -58,6 +61,22 @@ export const RepairPipelineTypeDictionary = Object.fromEntries(
 export type TRepairPipelineType =
   (typeof RepairPipelineTypeDictionary)[keyof typeof RepairPipelineTypeDictionary];
 
+export const CellMorphologyOrderBy = [
+  ...DefaultOrderBy,
+  'has_segmented_spines',
+  'brain_region__name',
+  'brain_region__acronym',
+  'mtype__pref_label',
+  'subject__name',
+  'subject__species__name',
+  'subject__strain__name',
+  'cell_morphology_protocol__name',
+  'created_by__pref_label',
+  'updated_by__pref_label',
+  'cell_morphology_protocol__generation_type',
+] as const;
+type TCellMorphologyOrderBy = typeof CellMorphologyOrderBy;
+
 export type CellMorphologyFilter = Partial<
   IDFilter &
     TimestampsFilter &
@@ -69,7 +88,8 @@ export type CellMorphologyFilter = Partial<
     SubjectFilter &
     SharedFilter &
     CellMorphologyProtocolNestedFilter &
-    IlikeSearchFilter
+    IlikeSearchFilter &
+    IOrderBy<TCellMorphologyOrderBy>
 >;
 
 interface ICellMorphologyBase extends EntityCoreIdentifiable {
