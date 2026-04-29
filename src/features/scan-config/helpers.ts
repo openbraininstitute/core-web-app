@@ -14,3 +14,12 @@ export const ACTIVITY_AI_CONFIG_MAP: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Extract]: 'smc_extraction_config',
   [ScanConfigActivity.Process]: 'smc_skeletonization_config',
 };
+
+export const ScanConfigCampaignOriginActionDict = {
+  View: 'view',
+  Duplicate: 'duplicate',
+  Task: 'task',
+} as const;
+
+export type TScanConfigCampaignOriginActionDict =
+  (typeof ScanConfigCampaignOriginActionDict)[keyof typeof ScanConfigCampaignOriginActionDict];

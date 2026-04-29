@@ -629,6 +629,7 @@ export function WorkflowActivity() {
                       entityType !== ExtendedEntitiesTypeDict.CircuitExtractionCampaign &&
                       entityType !== ExtendedEntitiesTypeDict.SkeletonizationCampaign &&
                       entityType !== ExtendedEntitiesTypeDict.IonChannelModelSimulation &&
+                      entityType !== ExtendedEntitiesTypeDict.MicrocircuitSimulation &&
                       (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ? (
                         <Button
                           rounded

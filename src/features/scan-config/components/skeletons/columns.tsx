@@ -43,7 +43,7 @@ export function ConfigListCardSkeleton() {
 
 export function InOutFilesColumnSkeleton() {
   return (
-    <div className="h-full overflow-y-auto pr-2 secondary-scrollbar bg-background!">
+    <div className="h-full w-full overflow-y-auto pr-2 secondary-scrollbar bg-background!">
       <Skeleton className="h-5 w-36 rounded-full" />
       <div className="mt-4 mb-8 flex flex-col gap-4">
         {(['file-a', 'file-b', 'file-c', 'file-d'] as const).map((key) => (

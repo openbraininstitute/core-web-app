@@ -397,7 +397,7 @@ export default function SimulationsTab({
         onSimulationStatusLoad={onSimulationStatusLoad}
         onRun={run}
         middle={
-          <div className="h-full bg-background!">
+          <div className="h-full bg-background! w-full">
             {loading ? (
               <InOutFilesColumnSkeleton />
             ) : (
@@ -419,7 +419,7 @@ export default function SimulationsTab({
           <SimulationReportsProvider reports={simConfig?.reports ?? null}>
             <FileViewer
               file={selectedFile}
-              className="h-full"
+              className="h-full w-full"
               context={context}
               loading={filesLoading}
             />
