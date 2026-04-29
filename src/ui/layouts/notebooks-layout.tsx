@@ -107,6 +107,19 @@ export function NotebooksLayout({ children, active }: Props) {
     enabled: Boolean(virtualLabId),
   });
 
+  const { data: balance } = useQuery({
+    queryKey: keyBuilder.accounting({ virtualLabId }),
+    queryFn: () => getVirtualLabAccountBalance({ virtualLabId, includeProjects: false }),
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  const vlabBalance = isNil(balance?.data?.balance)
+    ? undefined
+    : parseInt(balance?.data.balance, 10);
+
+  const budgetPerStudent = vlabBalance && Math.floor(vlabBalance / studentEmails.length);
+
   const onFinnish = useCallback(() => {
     setShowCourseModal(false);
     setStep(0);
@@ -190,7 +203,7 @@ export function NotebooksLayout({ children, active }: Props) {
     [projectId, virtualLabId, notification.warning, course]
   );
 
-  if (!virtualLabData?.data)
+  if (!virtualLabData?.data || isNil(vlabBalance) || isNil(budgetPerStudent))
     return (
       <div className="h-full flex justify-center items-center text-4xl">
         <LoadingOutlined />
@@ -306,6 +319,7 @@ export function NotebooksLayout({ children, active }: Props) {
                 studentEmails={studentEmails}
                 course={course}
                 name={virtualLabData.data.virtual_lab.name}
+                budgetPerStudent={budgetPerStudent}
               />
             )}
           </div>
@@ -325,6 +339,8 @@ const CsvUploadValidator = ({
   setStudentEmails,
   fileList,
   setFileList,
+  vlabBalance,
+  budgetPerStudent,
 }: {
   vlabId: string;
   onCancel: () => void;
@@ -333,20 +349,11 @@ const CsvUploadValidator = ({
   setStudentEmails: (emails: string[]) => void;
   fileList: UploadFile[];
   setFileList: (fileList: UploadFile[]) => void;
+  vlabBalance: number;
+  budgetPerStudent: number;
 }) => {
   const [error, setError] = useState('');
   const [credits, setCredits] = useState(0);
-
-  const { data: balance } = useQuery({
-    queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
-    queryFn: () => getVirtualLabAccountBalance({ virtualLabId: vlabId, includeProjects: false }),
-    staleTime: 0,
-    gcTime: 0,
-  });
-
-  const vlabBalance = isNil(balance?.data?.balance)
-    ? undefined
-    : parseInt(balance?.data.balance, 10);
 
   const validateCsvContent = async (text: string) => {
     const rows = text.trim().split('\n');
@@ -422,14 +429,6 @@ const CsvUploadValidator = ({
   };
 
   const minCredits = Math.max(studentEmails.length, 5);
-  const balancePerStudent = vlabBalance && Math.floor(vlabBalance / studentEmails.length);
-
-  if (isNil(balancePerStudent) || isNil(vlabBalance))
-    return (
-      <div className="flex items-center justtify-center">
-        <LoadingOutlined />
-      </div>
-    );
 
   return (
     <div className="flex flex-col gap-3">
@@ -459,7 +458,7 @@ const CsvUploadValidator = ({
         </div>
       )}
 
-      {studentEmails.length > 0 && balancePerStudent < 1000000000 && (
+      {studentEmails.length > 0 && budgetPerStudent < 1000000000 && (
         <div className="flex flex-col gap-2">
           <div className="text-lg">Purchase credits to continue.</div>
 
@@ -493,7 +492,7 @@ const CsvUploadValidator = ({
         </div>
       )}
 
-      {studentEmails.length > 0 && balancePerStudent >= 1 && (
+      {studentEmails.length > 0 && budgetPerStudent >= 1 && (
         <div className="flex flex-col gap-2">
           <span>
             {`Your current balance of ${vlabBalance} will be allocated to the students projects, each student will receive ${balancePerStudent}`}
@@ -661,16 +660,21 @@ function PaymentForm({
       }
 
       const maxAttempts = 10;
-      const intervalMs = 1000; // 1 second
+      const intervalMs = 1000;
       let attempt = 0;
       let balanceUpdated = false;
 
       // Poll the backend accounting endpoint
       while (attempt < maxAttempts) {
-        // Execute direct API call using your configured HTTP client (e.g., Axios, fetch)
-        const updatedAccountingData = await getVirtualLabAccountBalance({
-          virtualLabId: vlabId,
-          includeProjects: false,
+        const updatedAccountingData = await queryClient.fetchQuery({
+          queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
+          queryFn: () =>
+            getVirtualLabAccountBalance({
+              virtualLabId: vlabId,
+              includeProjects: false,
+            }),
+          staleTime: 0,
+          gcTime: 0,
         });
 
         const balance = updatedAccountingData?.data?.balance;
@@ -693,19 +697,13 @@ function PaymentForm({
           key: 'credits-purchase-success',
         });
 
-        await queryClient.invalidateQueries({
-          queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
-        });
-
         onSuccess();
-        return;
-      }
-
-      errorNotify({
-        message: 'There was an error crediting your balance. Please contact support.',
-        placement: 'topRight',
-        key: 'credits-purchase-error',
-      });
+      } else
+        errorNotify({
+          message: 'There was an error crediting your balance. Please contact support.',
+          placement: 'topRight',
+          key: 'credits-purchase-error',
+        });
     });
   };
 
@@ -847,11 +845,13 @@ function CourseSetup({
   studentEmails,
   course,
   name,
+  budgetPerStudent,
 }: {
   onFinnish: () => void;
   studentEmails: string[];
   course: Course;
   name: string;
+  budgetPerStudent: number;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const notification = useAppNotification();
@@ -867,25 +867,6 @@ function CourseSetup({
 
     const setupCourse = async () => {
       try {
-        const balanceRes = await getVirtualLabAccountBalance({
-          virtualLabId,
-          includeProjects: false,
-        });
-
-        const balance = balanceRes.data.balance;
-
-        console.log('\n\n BALANCE', balance);
-
-        const budgetPerStudent = Math.floor(parseInt(balance, 10) / studentEmails.length);
-
-        console.log('\n\nBUDGET PER STUDENT', budgetPerStudent);
-
-        if (budgetPerStudent < 1) {
-          throw new Error('Not enough credits to initialize course');
-        }
-
-        return;
-
         const projectCreationResults = await Promise.allSettled(
           studentEmails.map((email) =>
             createProject(virtualLabId, {
@@ -1040,7 +1021,17 @@ function CourseSetup({
     };
 
     setupCourse();
-  }, [virtualLabId, projectId, notification, studentEmails, onFinnish, course, name, queryClient]);
+  }, [
+    virtualLabId,
+    projectId,
+    notification,
+    studentEmails,
+    onFinnish,
+    course,
+    name,
+    queryClient,
+    budgetPerStudent,
+  ]);
 
   return 'Setting up course...';
 }
