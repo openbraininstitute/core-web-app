@@ -94,7 +94,7 @@ export function useQueryParameters(
     .filter(Boolean);
 
   function search() {
-    if (entity && !!entity.api.config.ilikeSearchEnabled && !isEmpty(searchString)) {
+    if (entity && entity.api.config.ilikeSearchEnabled && !isEmpty(searchString)) {
       return { ilike_search: `*${searchString}*` };
     }
     if (!isEmpty(searchString)) {

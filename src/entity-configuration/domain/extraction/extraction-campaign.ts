@@ -1,15 +1,7 @@
-import { flatMap } from 'es-toolkit/compat';
-
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import {
-  createTaskConfig,
-  getTaskActivities,
-  getTaskConfig,
-  getTaskConfigs,
-} from '@/api/entitycore/queries/task';
+import { createTaskConfig, getTaskConfig } from '@/api/entitycore/queries/task';
 import { getAsset } from '@/api/entitycore/selectors/assets';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -17,12 +9,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import {
-  getLatestExecutionStatusFromRows,
-  getTaskCampaignStatusCountMap,
-  resolveTaskCampaigns,
-  type TTaskCampaignExecutionRow,
-} from '@/entity-configuration/domain/task-helpers';
+import { Task, type TTaskFlowTypes } from '@/entity-configuration/domain/task-functions';
 
 import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -32,7 +19,11 @@ export type TTaskConfigMeta = {
   scan_parameters?: Record<string, unknown>;
 };
 
-async function resolveExtractionCampaigns({
+const TaskFlow: TTaskFlowTypes = {
+  campaignConfigType: TaskConfigType.CircuitExtractionCampaign,
+};
+
+async function list({
   withFacets,
   context,
   filters,
@@ -41,56 +32,54 @@ async function resolveExtractionCampaigns({
   context: WorkspaceContext | undefined;
   filters?: Partial<ITaskConfigFilter>;
 }) {
-  filters = discardBrainRegionQueryParams(filters);
-  return resolveTaskCampaigns({
-    withFacets,
+  return Task.many<TTaskConfigMeta>({
     context,
-    filters,
-    campaignConfigType: TaskConfigType.CircuitExtractionCampaign,
-    generationActivityType: TaskActivityType.CircuitExtractionConfigGeneration,
-    generationConfigType: TaskConfigType.CircuitExtractionConfig,
-    executionActivityType: TaskActivityType.CircuitExtractionExecution,
+    withFacets,
+    ...TaskFlow,
+    filters: {
+      ...discardBrainRegionQueryParams(filters),
+    },
   });
 }
 
-export async function resolveExtractionByCampaignId({
+async function rows({
+  campaign,
   id,
   context,
 }: {
+  campaign?: ITaskConfig<TTaskConfigMeta>;
   id: string;
   context: WorkspaceContext | undefined;
 }) {
-  const campaign = await getTaskConfig({ id, context });
+  return Task.one<TTaskConfigMeta>({
+    campaign,
+    id,
+    context,
+    ...TaskFlow,
+  });
+}
+
+async function status({ id, context }: { id: string; context?: WorkspaceContext | null }) {
+  return Task.status({
+    campaignId: id,
+    context: context ?? undefined,
+  });
+}
+
+async function resolve({ id, context }: { id: string; context?: WorkspaceContext | null }) {
+  const resolvedContext = context ?? undefined;
+  const campaign = await getTaskConfig({ id, context: resolvedContext });
 
   if (!campaign) {
     throw new Error(`No extraction campaign with id ${id} found`);
   }
 
-  // campaign → config generations
-  const generations = await getTaskActivities({
-    context,
-    withFacets: false,
-    filters: {
-      task_activity_type: TaskActivityType.CircuitExtractionConfigGeneration,
-      used__id: id,
-    },
+  const taskRows = await Task.one<TTaskConfigMeta>({
+    id,
+    context: resolvedContext,
+    ...TaskFlow,
   });
-
-  // config generations → configs
-  const allConfigIds = flatMap(generations.data, (gen) => gen.generated?.map((g) => g.id) ?? []);
-  const configs =
-    allConfigIds.length > 0
-      ? await getTaskConfigs({
-          context,
-          withFacets: false,
-          filters: {
-            task_config_type: TaskConfigType.CircuitExtractionConfig,
-            id__in: allConfigIds,
-          },
-        })
-      : { data: [] };
-
-  const firstConfig = configs.data.at(0);
+  const firstConfig = taskRows.at(0)?.provenance.config;
   // get the generation config asset from the campaign
   const assets = campaign.assets ?? [];
 
@@ -112,7 +101,7 @@ export async function resolveExtractionByCampaignId({
     entityId: campaign.id,
     entityType: EntityTypeDict.TaskConfig,
     id: configAsset.id,
-    ctx: context,
+    ctx: resolvedContext,
     asRawResponse: true,
   });
   const config = await rawConfig.json();
@@ -124,25 +113,10 @@ export async function resolveExtractionByCampaignId({
   };
 }
 
-export type TExtendedExtractionCampaignsType = AwaitedType<
-  ReturnType<typeof resolveExtractionCampaigns>
->;
+export type TExtendedExtractionCampaignsType = AwaitedType<ReturnType<typeof list>>;
 
-type TEnrichedExtractionCampaign = TExtendedExtractionCampaignsType['data'][number];
-
-// FIXME: remove this after Pavlo changes, use only `getLatestExecutionStatusFromRows`
-export function getExtractionStatus(rows: TTaskCampaignExecutionRow<TTaskConfigMeta>[]) {
-  return getLatestExecutionStatusFromRows(rows);
-}
-// FIXME: remove this after Pavlo changes, use only `getTaskCampaignStatusCountMap`
-export function getStatusCountMap(campaign: TEnrichedExtractionCampaign) {
-  return getTaskCampaignStatusCountMap(campaign);
-}
-
-export type TResolvedExtractionByCampaign = Awaited<
-  ReturnType<typeof resolveExtractionByCampaignId>
->;
-export type TResolvedExtractionByCampaigns = Awaited<ReturnType<typeof resolveExtractionCampaigns>>;
+export type TResolvedExtractionByCampaign = Awaited<ReturnType<typeof resolve>>;
+export type TResolvedExtractionByCampaigns = Awaited<ReturnType<typeof list>>;
 
 export const CircuitExtractionCampaign: EntityCoreTypeConfig<
   ITaskConfig<TTaskConfigMeta>,
@@ -160,10 +134,19 @@ export const CircuitExtractionCampaign: EntityCoreTypeConfig<
       ilikeSearchEnabled: true,
     },
     query: {
-      list: resolveExtractionCampaigns,
+      list,
+      status,
+      resolve,
+      count: (params) => Task.count({ ...params, ...TaskFlow }),
       one: (params) => getTaskConfig({ id: params.id, context: params.context }),
       create: (data) => createTaskConfig({ data, context: data.context }),
     },
+    expandRow: async (record, context) =>
+      rows({
+        campaign: record as ITaskConfig<TTaskConfigMeta>,
+        id: record.id,
+        context,
+      }),
   },
   asset: {
     extension: 'application/json',

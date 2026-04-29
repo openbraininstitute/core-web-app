@@ -1,4 +1,4 @@
-import { flatMap, get, includes, keyBy, sortBy } from 'es-toolkit/compat';
+import { get, includes, keyBy } from 'es-toolkit/compat';
 
 import { getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
@@ -12,7 +12,11 @@ import {
 import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
 import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
-import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import {
+  CircuitScaleDictionary,
+  type ICircuit,
+  type TCircuitScaleDictionary,
+} from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
@@ -21,8 +25,11 @@ import { getAssetElement } from '@/api/entitycore/utils';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+import { TASK_PAGE_SIZE } from '@/features/task-runner/constants';
+import { fetchChunkedPages } from '@/features/task-runner/query-utils';
 
-import { getExtendedSimMap, hasSimConfigAsset, migrateConfig } from './utils';
+import { getSimulationStatusFromExecutions, getSimulationStatusMap } from './status-utils';
+import { getExtendedSimMap, migrateConfig } from './utils';
 
 import type { IMEModel } from '@/api/entitycore/types';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
@@ -30,20 +37,20 @@ import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type {
   ICircuitSimulationCampaign,
   ISimulationCampaignFilter,
+  TSimulationCampaignEntityTypeDict,
 } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
-// NOTE: this is due entitycore do not support yet
-async function resolveSimulationCampaigns({
-  withFacets,
-  context,
-  filters,
-}: {
+export type SimulationCampaignListParams = {
   withFacets?: boolean;
   context: WorkspaceContext | undefined;
   filters?: Partial<ISimulationCampaignFilter>;
-}) {
+};
+
+export type SimulationRow = ISimulation & { status?: ActivityStatus };
+
+export async function list({ withFacets, context, filters }: SimulationCampaignListParams) {
   filters = discardBrainRegionQueryParams(filters);
 
   const source = await getSimulationCampaigns({
@@ -51,55 +58,240 @@ async function resolveSimulationCampaigns({
     withFacets,
     filters,
   });
-  // extract all simulation IDs
-  const allSimIds = flatMap(
-    source.data,
-    (campaign) => campaign.simulations?.map((sim) => sim.id) ?? []
-  );
-  // fetch executions related to those simulation IDs
-  const executionsResponse = await getSimulationExecutions({
-    context,
-    withFacets: false,
-    filters: { used__id__in: allSimIds },
-  });
-  const executions = executionsResponse.data;
-
-  // TODO: Switch to sim generation execution status for validation when implemented in obi-one.
-  const simulationMap = await getExtendedSimMap(allSimIds, context);
-
-  // map simulationId -> array of executions that use it
-  const executionsBySimId = executions.reduce<Record<string, typeof executions>>((acc, exec) => {
-    exec.used.forEach((usedSim) => {
-      if (!acc[usedSim.id]) acc[usedSim.id] = [];
-      acc[usedSim.id].push(exec);
-    });
-    return acc;
-  }, {});
-
-  // attach executions to each simulation (choose to add all executions as array)
-  const enrichedData = source.data.map((campaign) => ({
-    ...campaign,
-    simulations: campaign.simulations?.map((sim) => ({
-      ...simulationMap.get(sim.id),
-      executions: executionsBySimId[sim.id] ?? [],
-    })),
-  }));
-
   const circuits = await getCircuits({
     context,
-    filters: { id__in: source.data.map((l) => l.entity_id).join(',') },
+    filters: { id__in: source.data.map((campaign) => campaign.entity_id) },
   });
   const circuitMap = keyBy(circuits.data, 'id');
-  const result = enrichedData.map((entity) => ({
-    ...entity,
-    circuit: circuitMap[entity.entity_id] || null,
-  }));
 
   return {
-    data: result,
+    data: source.data.map((campaign) => ({
+      ...campaign,
+      circuit: circuitMap[campaign.entity_id] || null,
+    })),
     pagination: source.pagination,
     facets: source.facets,
   };
+}
+
+export function listByScale(scale: TCircuitScaleDictionary) {
+  return (params: SimulationCampaignListParams) => {
+    const filters = discardBrainRegionQueryParams(params.filters);
+
+    return list({
+      ...params,
+      filters: { ...filters, circuit__scale: scale },
+    });
+  };
+}
+
+export function listByEntityType(entityType: TSimulationCampaignEntityTypeDict) {
+  return ({ withFacets, context, filters }: SimulationCampaignListParams) => {
+    filters = discardBrainRegionQueryParams(filters);
+
+    return getSimulationCampaigns({
+      context,
+      withFacets,
+      filters: { ...filters, entity__type: entityType },
+    });
+  };
+}
+
+export function count(extraFilters?: Partial<ISimulationCampaignFilter>) {
+  return (params: SimulationCampaignListParams) => {
+    const filters = discardBrainRegionQueryParams(params.filters);
+
+    return getSimulationCampaigns({
+      ...params,
+      context: params.context,
+      withFacets: params.withFacets,
+      filters: {
+        ...filters,
+        ...extraFilters,
+        page: 1,
+        page_size: 1,
+      },
+    }).then((response) => response.pagination.total_items);
+  };
+}
+
+export async function children({
+  id,
+  withFacets,
+  context,
+  filters,
+}: {
+  id: string;
+  withFacets?: boolean;
+  context?: WorkspaceContext | null;
+  filters?: Record<string, unknown>;
+}) {
+  const source = await getSimulations({
+    withFacets,
+    context,
+    filters: {
+      ...filters,
+      simulation_campaign_id: id,
+    },
+  });
+
+  const collator = new Intl.Collator(undefined, {
+    numeric: true,
+    sensitivity: 'base',
+  });
+
+  return {
+    ...source,
+    data: [...source.data].sort((a, b) => collator.compare(a.name, b.name)),
+  };
+}
+
+export async function statusByIds({
+  simulations,
+  simulationIds,
+  context,
+}: {
+  simulations?: ISimulation[];
+  simulationIds?: string[];
+  context?: WorkspaceContext | null;
+}) {
+  const source =
+    simulations ??
+    Array.from((await getExtendedSimMap(simulationIds ?? [], context ?? undefined)).values());
+  const ids = source.map((simulation) => simulation.id);
+  const executions = await listExecutions({ simulationIds: ids, context });
+
+  return getSimulationStatusMap({
+    simulations: source,
+    executions,
+    createdStatus: ActivityStatus.CREATED,
+    errorStatus: ActivityStatus.ERROR,
+  }) as Map<string, ActivityStatus>;
+}
+
+export async function statusById({
+  id,
+  simulation,
+  context,
+}: {
+  id: string;
+  simulation?: ISimulation;
+  context?: WorkspaceContext | null;
+}) {
+  const source =
+    simulation ?? Array.from((await getExtendedSimMap([id], context ?? undefined)).values()).at(0);
+  const executions = await listExecutionsBySimulationId({ simulationId: id, context });
+
+  return getSimulationStatusFromExecutions({
+    simulation: source ?? { id },
+    executions,
+    createdStatus: ActivityStatus.CREATED,
+    errorStatus: ActivityStatus.ERROR,
+  }) as ActivityStatus;
+}
+
+export async function status({ id, context }: { id: string; context?: WorkspaceContext | null }) {
+  const simulations = await listAllChildren({ id, context });
+  const statusMap = await statusByIds({ simulations, context });
+
+  return Array.from(statusMap.values()).reduce<Map<ActivityStatus, number>>(
+    (map: Map<ActivityStatus, number>, value: ActivityStatus) => {
+      map.set(value, (map.get(value) ?? 0) + 1);
+      return map;
+    },
+    new Map<ActivityStatus, number>()
+  );
+}
+
+export async function rows({
+  id,
+  context,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+}): Promise<SimulationRow[]> {
+  const simulations = await listAllChildren({ id, context });
+  const statusMap = await statusByIds({ simulations, context });
+
+  return simulations.map((simulation) => ({
+    ...simulation,
+    status: statusMap.get(simulation.id) ?? getSimulationStatus(simulation),
+  }));
+}
+
+export async function listAllChildren({
+  id,
+  context,
+  pageSize = 100,
+}: {
+  id: string;
+  context?: WorkspaceContext | null;
+  pageSize?: number;
+}) {
+  const simulations: ISimulation[] = [];
+  let page = 1;
+
+  while (true) {
+    const response = await children({
+      id,
+      context,
+      filters: { page, page_size: pageSize },
+    });
+    simulations.push(...response.data);
+
+    if (response.data.length < pageSize) break;
+    page += 1;
+  }
+
+  return simulations;
+}
+
+export async function listExecutions({
+  simulationIds,
+  context,
+}: {
+  simulationIds: string[];
+  context?: WorkspaceContext | null;
+}) {
+  return fetchChunkedPages({
+    values: simulationIds,
+    chunkSize: TASK_PAGE_SIZE,
+    pageSize: TASK_PAGE_SIZE,
+    prepareValues: (values) => Array.from(new Set(values)),
+    fetchPage: ({ chunkValues, page, pageSize }) =>
+      getSimulationExecutions({
+        context,
+        withFacets: false,
+        filters: { used__id__in: chunkValues, page, page_size: pageSize },
+      }),
+  });
+}
+
+export async function listExecutionsBySimulationId({
+  simulationId,
+  context,
+  pageSize = TASK_PAGE_SIZE,
+}: {
+  simulationId: string;
+  context?: WorkspaceContext | null;
+  pageSize?: number;
+}) {
+  const executions: IExecutionActivity[] = [];
+  let page = 1;
+
+  while (true) {
+    const response = await getSimulationExecutions({
+      context,
+      withFacets: false,
+      filters: { used__id: simulationId, page, page_size: pageSize },
+    });
+    executions.push(...response.data);
+
+    if (response.data.length < pageSize) break;
+    page += 1;
+  }
+
+  return executions;
 }
 
 export async function resolveSimulationByCampaignId({
@@ -183,34 +375,19 @@ export async function resolveSimulationByCampaignId({
 
 export function getSimulationStatus(simulation: ISimulation) {
   const executions = get(simulation, 'executions', []) as IExecutionActivity[];
-  const sortedExecutions = sortBy(executions, (exec) => exec.creation_date);
 
-  // Used when there are no executions present
-  const fallbackStatus = hasSimConfigAsset(simulation)
-    ? ActivityStatus.CREATED
-    : ActivityStatus.ERROR;
-
-  const status = sortedExecutions.at(-1)?.status ?? fallbackStatus;
-
-  return status;
+  return getSimulationStatusFromExecutions({
+    simulation,
+    executions,
+    createdStatus: ActivityStatus.CREATED,
+    errorStatus: ActivityStatus.ERROR,
+  }) as ActivityStatus;
 }
 
-export function getCircuitSimulationStatusCountMap(simCampaign: ICircuitSimulationCampaign) {
-  const simulations = get(simCampaign, 'simulations', []) as ISimulation[];
-
-  const statusCountMap = simulations.reduce((map, simulation) => {
-    const status = getSimulationStatus(simulation);
-
-    return map.set(status, (map.get(status) ?? 0) + 1);
-  }, new Map());
-
-  return statusCountMap;
-}
-
-export type ExtendedCampaignsType = AwaitedType<ReturnType<typeof resolveSimulationCampaigns>>;
+export type ExtendedCampaignsType = AwaitedType<ReturnType<typeof list>>;
 
 type TResolvedSimulationByCampaign = Awaited<ReturnType<typeof resolveSimulationByCampaignId>>;
-type TResolvedSimulationByCampaigns = Awaited<ReturnType<typeof resolveSimulationCampaigns>>;
+type TResolvedSimulationByCampaigns = Awaited<ReturnType<typeof list>>;
 
 export const SimulationCampaign: EntityCoreTypeConfig<
   ICircuitSimulationCampaign,
@@ -229,24 +406,13 @@ export const SimulationCampaign: EntityCoreTypeConfig<
       ilikeSearchEnabled: true,
     },
     query: {
-      count: (...params) => {
-        const filters = discardBrainRegionQueryParams(params[0].filters);
-        return getSimulationCampaigns({
-          ...params,
-          context: params[0].context,
-          withFacets: params[0].withFacets,
-          filters: {
-            ...filters,
-            page: 1,
-            page_size: 1,
-          },
-        }).then((response) => response.pagination.total_items);
-      },
-      list: resolveSimulationCampaigns,
+      count: count(),
+      list,
       one: getSimulationCampaign,
       resolve: resolveSimulationByCampaignId,
       create: createSimulationCampaign,
     },
+    expandRow: (record, context) => rows({ id: record.id, context }),
   },
   asset: {
     extension: 'application/json',

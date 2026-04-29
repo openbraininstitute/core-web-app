@@ -14,9 +14,9 @@ export const viewDefForRegionCircuitSimulation: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.CircuitName,
-    EntityCoreFields.SimulationCampaignStatus,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
+    EntityCoreFields.LegacyActivityStatus,
   ],
   filterableFields: [
     EntityCoreFields.Name,
@@ -32,7 +32,7 @@ export const viewDefForRegionCircuitSimulation: ViewDefinitionConfig = {
   ],
   miniDetailView: [
     { field: EntityCoreFields.CircuitName },
-    { field: EntityCoreFields.SimulationCampaignStatus },
+    { field: EntityCoreFields.LegacyActivityStatus },
     { field: EntityCoreFields.RegistrationDate },
   ],
 };

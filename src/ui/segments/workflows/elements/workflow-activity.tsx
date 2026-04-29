@@ -21,28 +21,33 @@ import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
-import { TaskViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/task-activity';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   getStatusCountMap as getIonChannelModelingStatusCountMap,
   resolveIonChannelModelingByCampaignId,
   type TExtendedIonChannelModelingCampaignsType,
 } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   type ExtendedCampaignsType,
-  getCircuitSimulationStatusCountMap,
-} from '@/entity-configuration/domain/simulation';
+  rows as listSimulationRows,
+  type SimulationRow,
+} from '@/entity-configuration/domain/simulation/simulation-campaign';
 import {
   getTaskCampaignStatusCountMap,
   type TTaskCampaignRow,
-} from '@/entity-configuration/domain/task-helpers';
+} from '@/entity-configuration/domain/task-functions';
+import { LegacyCampaignStatusCell } from '@/features/task-runner/activity-execution/legacy-status-cell';
+import { ActivityAggregatedStatus } from '@/features/task-runner/activity-execution/status';
+import { ActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
+import { TaskViewConfig } from '@/features/task-runner/expanded-view';
 import { usePrevious } from '@/hooks/hooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { CardContent } from '@/ui/molecules/card';
-import { ExecutionAggregatedStatus } from '@/ui/segments/activity-execution/status';
 import { useRowSelection } from '@/ui/segments/data-table/elements/use-row-selection';
 import {
   type UseExpandableTableOptions,
@@ -58,9 +63,7 @@ import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
 import type { ColumnsType } from 'antd/es/table/interface';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [
@@ -81,6 +84,12 @@ export type WorkflowActivityProps = {
   onShouldRenderScrollableSelector: (shouldRenderScrollableSelector: boolean) => void;
   onShouldOnlyRenderScrollableSelector: (shouldRenderOnlyScrollableSelector: boolean) => void;
 };
+
+type WorkflowTaskCampaignRow = TTaskCampaignRow<{
+  scan_parameters: Record<string, unknown>;
+}>;
+type WorkflowSimulationCampaignRow = ExtendedCampaignsType['data'][number];
+type WorkflowSimulationChildRow = SimulationRow;
 
 export function WorkflowActivity() {
   const { push: navigate } = useRouter();
@@ -122,6 +131,10 @@ export function WorkflowActivity() {
     page: 1,
     pageSize: DEFAULT_PAGE_MEDIUM_SIZE,
   });
+  const resolvedActivityType: TActivityValue =
+    activityType ?? (ActivityValues.Build as TActivityValue);
+  const resolvedEntityType: TExtendedEntitiesTypeDict =
+    entityType ?? ExtendedEntitiesTypeDict.Memodel;
   const previousActivityType = usePrevious(activityType);
 
   const updateActivity = (activity: TActivityValue | null) => {
@@ -171,11 +184,22 @@ export function WorkflowActivity() {
         id: 'activity-table-type-cell-selector',
       }),
       render: (_, record) => {
-        return (
-          <span className={cn('text-primary-9 flex items-center capitalize')}>
-            {getEntityByExtendedType({ type: record.type })?.title}
-          </span>
-        );
+        const extractionTitle =
+          record.type === EntityTypeDict.TaskConfig &&
+          (record as unknown as ITaskConfig<Record<string, unknown>>).task_config_type ===
+            TaskConfigType.CircuitExtractionCampaign
+            ? getEntityByExtendedType({
+                type: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+              })?.title
+            : undefined;
+        const title =
+          extractionTitle ??
+          getEntityByExtendedType({
+            type: record.type as unknown as TExtendedEntitiesTypeDict,
+          })?.title ??
+          (entityType ? getEntityByExtendedType({ type: entityType })?.title : undefined);
+
+        return <span className={cn('text-primary-9 flex items-center capitalize')}>{title}</span>;
       },
     },
     {
@@ -193,22 +217,37 @@ export function WorkflowActivity() {
       render: (_, record) => {
         return match({ type: record.type })
           .with({ type: EntityTypeDict.SimulationCampaign }, () => {
-            const statusCountMap = getCircuitSimulationStatusCountMap(
-              record as ICircuitSimulationCampaign
+            return (
+              <LegacyCampaignStatusCell
+                campaignId={record.id}
+                context={{ virtualLabId, projectId }}
+              />
             );
-            return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
           })
           .with({ type: EntityTypeDict.TaskConfig }, () => {
+            const taskConfigType = (record as unknown as ITaskConfig<Record<string, unknown>>)
+              .task_config_type;
+            if (taskConfigType === TaskConfigType.CircuitExtractionCampaign) {
+              return (
+                <ActivityStatusCell campaignId={record.id} context={{ virtualLabId, projectId }} />
+              );
+            }
+            if (taskConfigType === TaskConfigType.SkeletonizationCampaign) {
+              return (
+                <ActivityStatusCell campaignId={record.id} context={{ virtualLabId, projectId }} />
+              );
+            }
+
             const statusCountMap = getTaskCampaignStatusCountMap(
-              record as unknown as TTaskCampaignRow<any>
+              record as unknown as WorkflowTaskCampaignRow
             );
-            return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+            return <ActivityAggregatedStatus statusCountMap={statusCountMap} />;
           })
           .with({ type: EntityTypeDict.IonChannelModelingCampaign }, () => {
             const statusCountMap = getIonChannelModelingStatusCountMap(
               record as unknown as TExtendedIonChannelModelingCampaignsType['data'][number]
             );
-            return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
+            return <ActivityAggregatedStatus statusCountMap={statusCountMap} />;
           })
           .otherwise(() => {
             const status = get(record, 'status', 'default');
@@ -227,15 +266,15 @@ export function WorkflowActivity() {
     },
   ];
 
-  const entity = getEntityByExtendedType({ type: entityType! });
+  const entity = getEntityByExtendedType({ type: resolvedEntityType });
   const {
     data: activityResult,
     isFetching,
     queryKeyHash,
   } = useQueryActivity({
-    activity: activityType!,
-    selectionType: entityType!,
-    entityType: entityType!,
+    activity: resolvedActivityType,
+    selectionType: resolvedEntityType,
+    entityType: resolvedEntityType,
     page: page ?? 1,
     pageSize: pageSize ?? DEFAULT_PAGE_MEDIUM_SIZE,
     useKeepPreviousData: previousActivityType === activityType,
@@ -303,7 +342,7 @@ export function WorkflowActivity() {
 
   const onDuplicate = () => {
     if (selectedRow?.type === ExtendedEntitiesTypeDict.TaskConfig) {
-      const taskConfig = selectedRow as ITaskConfig<any>;
+      const taskConfig = selectedRow as ITaskConfig<Record<string, unknown>>;
       if (taskConfig.task_config_type === TaskConfigType.CircuitExtractionCampaign) {
         const circuitId = taskConfig.inputs.at(0)?.id;
         navigate(
@@ -330,7 +369,7 @@ export function WorkflowActivity() {
     if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
-          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id
         }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`
       );
 
@@ -347,7 +386,7 @@ export function WorkflowActivity() {
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
-          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).circuit.id
+          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id
         }?initialCampaignId=${selectedRow.id}`
       );
     }
@@ -362,6 +401,7 @@ export function WorkflowActivity() {
       ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
       ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
       ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+      ExtendedEntitiesTypeDict.IonChannelModelSimulation,
       ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
       ExtendedEntitiesTypeDict.SkeletonizationCampaign,
     ];
@@ -372,41 +412,62 @@ export function WorkflowActivity() {
       entityType === ExtendedEntitiesTypeDict.SkeletonizationCampaign
     ) {
       return {
-        getRowKey: (record: TTaskCampaignRow<any>) => record.id,
-        getFetchId: (record: TTaskCampaignRow<any>) => record.id,
-        fetcher: async (record: TTaskCampaignRow<any>) => {
-          return record.rows ?? [];
+        getRowKey: (record: WorkflowTaskCampaignRow) => record.id,
+        getFetchId: (record: WorkflowTaskCampaignRow) => record.id,
+        fetcher: async (record: WorkflowTaskCampaignRow) => {
+          const taskConfigType = (record as unknown as ITaskConfig<Record<string, unknown>>)
+            .task_config_type;
+          if (taskConfigType === TaskConfigType.SkeletonizationCampaign) {
+            const expandRow = SkeletonizationCampaign.api.expandRow;
+            if (!expandRow) return [];
+            return expandRow(record as unknown as ITaskConfig<Record<string, unknown>>, {
+              virtualLabId,
+              projectId,
+            }) as Promise<WorkflowTaskCampaignRow['rows']>;
+          }
+          const expandRow = CircuitExtractionCampaign.api.expandRow;
+          if (!expandRow) return [];
+          return expandRow(record as unknown as ITaskConfig<Record<string, unknown>>, {
+            virtualLabId,
+            projectId,
+          }) as Promise<WorkflowTaskCampaignRow['rows']>;
         },
         renderExpanded: (
-          records: EntityCoreIdentifiable[],
-          originalRecord: TTaskCampaignRow<any>
+          records: WorkflowTaskCampaignRow['rows'],
+          originalRecord: WorkflowTaskCampaignRow
         ) => TaskViewConfig.render(originalRecord, records),
         expandIconColumnIndex: 5,
         expandIcon: TaskViewConfig.expandIcon,
-        isRowExpandable: (record: TTaskCampaignRow<any>) => {
-          const subRecords = record.rows ?? [];
-          return subRecords.length > 1;
-        },
+        isRowExpandable: (): boolean => true,
         isTopLevel: true,
       };
     }
 
     return {
-      getRowKey: (record: any) => record.id,
-      getFetchId: (record: any) => record.id,
-      fetcher: async (record: any) =>
-        entity?.api.expandRow?.(record, {
-          virtualLabId,
-          projectId,
+      getRowKey: (record: WorkflowSimulationCampaignRow) => record.id,
+      getFetchId: (record: WorkflowSimulationCampaignRow) => record.id,
+      fetcher: (record: WorkflowSimulationCampaignRow) =>
+        listSimulationRows({
+          id: record.id,
+          context: { virtualLabId, projectId },
         }),
-      renderExpanded: (records: any[], originalRecord: any) =>
-        simulationCampaignExpandedViewConfig.render(originalRecord, records),
-      expandIconColumnIndex: 6,
+      renderExpanded: (
+        records: WorkflowSimulationChildRow[],
+        originalRecord: WorkflowSimulationCampaignRow
+      ) =>
+        simulationCampaignExpandedViewConfig.render(
+          {
+            ...originalRecord,
+            simulations: records,
+          },
+          records
+        ),
+      expandIconColumnIndex: 5,
       expandIcon: simulationCampaignExpandedViewConfig.expandIcon,
-      isRowExpandable: simulationCampaignExpandedViewConfig.isExpandable,
+      isRowExpandable: (): boolean => true,
       isTopLevel: true,
     };
-  }, [entityType, entity?.api.expandRow, projectId, virtualLabId]);
+  }, [entityType, projectId, virtualLabId]);
 
   const { expandableConfig } = useExpandableTable(
     expandableOptions as UseExpandableTableOptions<EntityCoreObjectTypes> | undefined
@@ -461,7 +522,7 @@ export function WorkflowActivity() {
                 id="activities-table"
                 data-testid="activities-table"
                 wrapperClassname="max-h-[calc(100%-4rem)] h-full"
-                dataType={entityType!}
+                dataType={resolvedEntityType}
                 className={cn(
                   '[&_.ant-table]:bg-background! [&_.ant-table-thead_th]:bg-background!',
                   '[&_.ant-table-thead_th]:text-neutral-4!',
@@ -482,7 +543,7 @@ export function WorkflowActivity() {
                   ...rowSelection,
                   renderCell: (
                     _checked: boolean,
-                    record: any,
+                    record: EntityCoreObjectTypes,
                     _index: number,
                     _: React.ReactNode
                   ) => {

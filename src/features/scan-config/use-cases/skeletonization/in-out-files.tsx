@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { includes } from 'es-toolkit/compat';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { getCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
 import {
   ActivityStatus,
   type TActivityStatus,
 } from '@/api/entitycore/types/entities/task-activity';
+import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
+import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
+import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
-import { classNames } from '@/util/utils';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
@@ -23,7 +25,7 @@ type Props = {
   context: { virtualLabId: string; projectId: string };
 };
 
-export function SkeletonizationInOutFiles({
+export function InOutFiles({
   config,
   execStatus,
   execution,
@@ -56,102 +58,54 @@ export function SkeletonizationInOutFiles({
     enabled: generatedMorphologies.length > 0,
   });
 
-  useEffect(() => {
-    if (inputFiles.length > 0 && !selectedFile) {
-      onSelect(inputFiles[0]);
-    }
-  }, [inputFiles, selectedFile, onSelect]);
+  const outputFiles: TActivityCustomFile[] = useMemo(() => {
+    return (morphologies ?? [])
+      .map((morphology) => {
+        const swcAsset = morphology.assets.find((a) => a.content_type === 'application/swc');
+        if (!swcAsset) return null;
+        return {
+          entity: morphology,
+          asset: swcAsset,
+          name: morphology.name,
+          renderer: ActivityCustomFileRenderer.MiniDetailView,
+        } as TActivityCustomFile;
+      })
+      .filter((file): file is TActivityCustomFile => file !== null);
+  }, [morphologies]);
+
+  useAutoSelectFileOnConfigChange({
+    configId: config.id,
+    selectedFile,
+    inputFiles,
+    outputFiles,
+    onSelect,
+  });
 
   return (
-    <div className="h-full overflow-y-auto">
-      <h4 className="uppercase">Input files</h4>
-      <div className="mt-4 mb-8 flex flex-col gap-4">
-        {inputFiles.length === 0 && <div className="text-gray-400">No input files available</div>}
-        {inputFiles.map((file) => (
-          <FileItem
-            selected={file.asset.id === selectedFile?.asset.id}
-            key={file.asset?.id}
-            file={file}
-            onSelect={onSelect}
-            name={file.name}
-          />
-        ))}
-      </div>
-
-      {outputAvailable && (
-        <>
-          <h4 className="uppercase">Output files</h4>
-          <div className="mt-4 flex flex-col gap-4">
-            {!morphologies?.length && !isLoading && (
-              <div className="text-gray-400">No output files generated</div>
-            )}
-            {morphologies?.map((morphology) => {
-              const swcAsset = morphology.assets.find((a) => a.content_type === 'application/swc');
-              if (!swcAsset) return null;
-              return (
-                <FileItem
-                  selected={morphology.id === selectedFile?.entity.id}
-                  key={morphology.id}
-                  file={{
-                    entity: morphology,
-                    asset: swcAsset,
-                    name: morphology.name,
-                    renderer: ActivityCustomFileRenderer.MiniDetailView,
-                  }}
-                  name="Skeletonized morphology"
-                  onSelect={onSelect}
-                />
-              );
-            })}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-type FileItemProps = {
-  name?: string;
-  file: TActivityCustomFile;
-  selected?: boolean;
-  onSelect: (file: TActivityCustomFile) => void;
-};
-
-function FileItem({ name, file, selected, onSelect }: FileItemProps) {
-  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
-  const fileExt = fileName?.split('.').at(-1);
-  const displayName = name ?? fileName;
-
-  return (
-    <button
-      type="button"
-      title={displayName}
-      className={classNames(
-        'group flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white',
-        'hover:bg-gray-100 shadow-xs'
-      )}
-      onClick={() => onSelect(file)}
-    >
-      <span
-        className={classNames(
-          'truncate overflow-hidden font-semibold whitespace-nowrap',
-          selected ? 'text-white' : 'text-primary-9'
-        )}
-      >
-        {displayName}
-      </span>
-      {!name && (
-        <span
-          className={classNames(
-            'group-hover:bg-gray-200 group-hover:border-gray-100',
-            'ml-4 shrink-0 rounded-full border px-4 uppercase text-xs py-1',
-            selected ? 'border-white text-primary-9 bg-white' : 'text-neutral-5 border-neutral-5'
-          )}
-        >
-          {fileExt}
-        </span>
-      )}
-    </button>
+    <IoLayout
+      inputTitle="Input files"
+      outputTitle="Output files"
+      showOutput={outputAvailable}
+      inputIsEmpty={inputFiles.length === 0}
+      outputIsEmpty={!morphologies?.length && !isLoading}
+      inputItems={inputFiles.map((file) => (
+        <TaskIOFileItem
+          selected={file.asset.id === selectedFile?.asset.id}
+          key={file.asset?.id}
+          file={file}
+          onSelect={onSelect}
+          name={file.name}
+        />
+      ))}
+      outputItems={outputFiles.map((file) => (
+        <TaskIOFileItem
+          selected={file.entity.id === selectedFile?.entity.id}
+          key={file.entity.id}
+          file={file}
+          name="Skeletonized morphology"
+          onSelect={onSelect}
+        />
+      ))}
+    />
   );
 }
