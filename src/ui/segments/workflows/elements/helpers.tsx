@@ -256,12 +256,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
     properties: {
       build: {
         disabled: true,
-        type: ExtendedEntitiesTypeDict.Circuit,
+        type: ExtendedEntitiesTypeDict.BrainRegion,
       },
       simulate: {
         disabled: false,
-        type: ExtendedEntitiesTypeDict.BrainRegion,
-        sourceType: ExtendedEntitiesTypeDict.Circuit,
+        type: ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+        // sourceType: ExtendedEntitiesTypeDict.BrainRegion,
       },
     },
   },

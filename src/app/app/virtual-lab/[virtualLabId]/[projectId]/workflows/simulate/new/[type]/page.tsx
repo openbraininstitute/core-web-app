@@ -21,6 +21,7 @@ export default function Page({
   const { type } = use(params);
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
+
   const baseModelType = getBaseModelTypeFromActivityType({
     type: dataType,
     section: WorkspaceSection.SimulateWorkflow,
