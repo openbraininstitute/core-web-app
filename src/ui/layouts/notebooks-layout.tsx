@@ -308,6 +308,8 @@ export function NotebooksLayout({ children, active }: Props) {
                       setStudentEmails={setStudentEmails}
                       fileList={fileList}
                       setFileList={setFileList}
+                      vlabBalance={vlabBalance}
+                      budgetPerStudent={budgetPerStudent}
                     />
                   </div>
                 </div>
@@ -495,7 +497,7 @@ const CsvUploadValidator = ({
       {studentEmails.length > 0 && budgetPerStudent >= 1 && (
         <div className="flex flex-col gap-2">
           <span>
-            {`Your current balance of ${vlabBalance} will be allocated to the students projects, each student will receive ${balancePerStudent}`}
+            {`Your current balance of ${vlabBalance} will be allocated to the students projects, each student will receive ${budgetPerStudent}`}
           </span>
           <UiButton onClick={onSuccess}>Continue</UiButton>
         </div>
@@ -660,12 +662,13 @@ function PaymentForm({
       }
 
       const maxAttempts = 10;
-      const intervalMs = 1000;
+      const intervalMs = 500;
       let attempt = 0;
       let balanceUpdated = false;
 
       // Poll the backend accounting endpoint
       while (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, intervalMs));
         const updatedAccountingData = await queryClient.fetchQuery({
           queryKey: keyBuilder.accounting({ virtualLabId: vlabId }),
           queryFn: () =>
@@ -686,7 +689,6 @@ function PaymentForm({
           break;
         }
 
-        await new Promise((resolve) => setTimeout(resolve, intervalMs));
         attempt++;
       }
 
