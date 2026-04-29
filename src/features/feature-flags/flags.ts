@@ -19,12 +19,7 @@ export const extractionActivityFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
-
-
-export const flags = [
-  aiPanelStateFlag,
-  extractionActivityFlag,
-] as const;
+export const flags = [aiPanelStateFlag, extractionActivityFlag] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 

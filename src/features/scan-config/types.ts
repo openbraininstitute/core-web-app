@@ -8,7 +8,6 @@ import {
   type TEntityTypeDict,
 } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 // biome-ignore lint/style/useImportType: biome hallucination
 import {
   ExtendedEntitiesTypeDict,
@@ -16,6 +15,7 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 
 import type { atom } from 'jotai';
+import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
@@ -397,7 +397,11 @@ export type TActivityCustomFile = {
   renderer: TActivityCustomFileRenderer;
 };
 
-export type TSupportedEntitiesForScanConfiguration = ICircuit | IMEModel | IonChannelModel | IEMCellMesh;
+export type TSupportedEntitiesForScanConfiguration =
+  | ICircuit
+  | IMEModel
+  | IonChannelModel
+  | IEMCellMesh;
 
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
