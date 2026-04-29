@@ -2,15 +2,15 @@
 
 import { useEffect } from 'react';
 
-import Menu from '@/components/LandingPage/layout/Menu';
-import { EnumSection } from '@/components/LandingPage/sections/sections';
 import GalleryContent from '@/ui/segments/gallery/content';
 import HeroGallery from '@/ui/segments/gallery/hero';
+import Menu from '@/ui/segments/landing/layout/menu/menu';
+import { EnumSection } from '@/ui/segments/landing/sections/sections';
 import { useScrollHasStarted } from '@/utils/scroll-has-started';
 
 import type { GalleryContentProps } from '@/services/sanity';
 
-import styles from '@/components/LandingPage/LandingPage.module.css';
+import styles from '@/ui/segments/landing/landing-page.module.css';
 
 type GalleryPageProps = {
   galleryContent: GalleryContentProps[];

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import Menu from '@/components/LandingPage/layout/Menu';
+import Menu from '@/ui/segments/landing/layout/menu/menu';
 import { cn } from '@/utils/css-class';
 import { useScrollHasStarted } from '@/utils/scroll-has-started';
 

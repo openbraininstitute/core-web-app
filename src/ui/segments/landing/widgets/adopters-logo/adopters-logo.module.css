@@ -1,0 +1,127 @@
+.root {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: linear-gradient(105deg, #003b91 12.05%, #021034 94.44%);
+  color: #fffe;
+  padding: clamp(48px, 18vh, 160px) 0;
+}
+
+.root::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/images/partners/two-neurons-view.png');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 15vw;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(32px, 6vw, 50px);
+  align-items: stretch;
+}
+
+.title {
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  font-size: clamp(1.25rem, 2.75vw + 0.85rem, var(--font-size-XL, 1.75rem));
+  font-weight: 400;
+  line-height: 1.2;
+  color: #fffe;
+}
+
+.logos {
+  --adopters-cols: 3;
+  --adopters-logo-col-gap: clamp(14px, 3vw, 32px);
+  --adopters-row-gap: clamp(36px, 10vw, 100px);
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  column-gap: var(--adopters-logo-col-gap);
+  row-gap: var(--adopters-row-gap);
+}
+
+.logos > .link {
+  box-sizing: border-box;
+  flex: 0 1
+    calc(
+      (100% - (var(--adopters-cols) - 1) * var(--adopters-logo-col-gap)) /
+        var(--adopters-cols)
+    );
+  min-width: 0;
+  max-width: calc(
+    (100% - (var(--adopters-cols) - 1) * var(--adopters-logo-col-gap)) / var(--adopters-cols)
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+@media (max-width: 1024px) {
+  .inner {
+    padding: 0 clamp(20px, 6vw, 56px);
+  }
+
+  .logos {
+    --adopters-cols: 2;
+    --adopters-logo-col-gap: clamp(14px, 3.5vw, 28px);
+    --adopters-row-gap: clamp(32px, 8vw, 72px);
+  }
+
+  .root::before {
+    background-size: 160% auto;
+    background-position: center top;
+  }
+}
+
+@media (max-width: 640px) {
+  .inner {
+    padding: 0 clamp(16px, 5vw, 32px);
+  }
+
+  .logos > .link {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 440px) {
+  .logos {
+    --adopters-cols: 1;
+    --adopters-logo-col-gap: 12px;
+    --adopters-row-gap: clamp(28px, 10vw, 48px);
+  }
+}
+
+.link:focus-visible {
+  outline: 2px solid #fffe;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.logoImage {
+  width: auto;
+  height: auto;
+  max-height: clamp(34px, 8vw, 48px);
+  object-fit: contain;
+  vertical-align: middle;
+}
