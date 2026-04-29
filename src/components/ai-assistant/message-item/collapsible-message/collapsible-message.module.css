@@ -296,9 +296,6 @@
   grid-template-rows: 1fr;
   opacity: 1;
   transform: translateY(0);
-  max-height: 150px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
 .thinkingContentInner {

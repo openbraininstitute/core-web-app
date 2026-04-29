@@ -208,10 +208,17 @@ export function CollapsibleMessage({
             data-collapsible="true"
             data-instant={mountedAsReady.current}
           >
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               className={styles.thinkingButton}
               onClick={toggleExpanded}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleExpanded();
+                }
+              }}
               aria-expanded={isExpanded}
               data-collapsed={!isExpanded}
             >
@@ -288,7 +295,7 @@ export function CollapsibleMessage({
                   </div>
                 )}
               </div>
-            </button>
+            </div>
             <div
               className={`${styles.thinkingContent} ${isExpanded ? styles.thinkingContentExpanded : ''}`}
             >
