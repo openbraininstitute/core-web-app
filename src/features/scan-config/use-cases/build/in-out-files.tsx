@@ -7,28 +7,26 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
+import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
+import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
+import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import {
   ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { classNames } from '@/util/utils';
 
-import type { ReactNode } from 'react';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
+import type { TEmSynapseMappingCampaignMeta } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 
 type Props = {
-  config: ITaskConfig<never>;
+  config: ITaskConfig<TEmSynapseMappingCampaignMeta>;
   execStatus?: TActivityStatus;
   execution?: ITaskActivity;
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
-  // logsActive: boolean;
-  // taskConfigurationActive: boolean;
-  // onSelectLogs: () => void;
-  // onSelectTaskConfiguration: () => void;
   context: { virtualLabId: string; projectId: string };
   campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
@@ -41,10 +39,6 @@ export function InOutFiles({
   execution,
   selectedFile,
   onSelect,
-  // logsActive,
-  // taskConfigurationActive,
-  // onSelectLogs,
-  // onSelectTaskConfiguration,
   context,
   campaignOrigin,
 }: Props) {
@@ -89,23 +83,33 @@ export function InOutFiles({
       projectId: context.projectId,
       entityId: builtCircuitId ?? '',
     }),
-    // biome-ignore lint/style/noNonNullAssertion: the function is enable only if builtCircuitId is present (see useQuery/enabled)
+    // biome-ignore lint/style/noNonNullAssertion: the function is enabled only when builtCircuitId is present
     queryFn: () => getCircuit({ id: builtCircuitId!, context }),
     enabled: !!builtCircuitId,
-    // the refetch is required as the built circuit upload to s3 will not be ready immediately
     refetchInterval(query) {
-      if (campaignOrigin === ScanConfigCampaignOriginActionDict.View) {
-        return false;
-      }
+      if (campaignOrigin === ScanConfigCampaignOriginActionDict.View) return false;
+
       const data = query.state.data;
       const hasVisAsset = data?.assets?.some(
         (asset) => asset.label === AssetLabel.circuit_visualization
       );
       const hasReachedMaxRetries = query.state.dataUpdateCount >= MAX_VIS_ASSET_REFETCH_RETRIES;
-      const retry = hasVisAsset || hasReachedMaxRetries ? false : 2_000;
-      return retry;
+      return hasVisAsset || hasReachedMaxRetries ? false : 2_000;
     },
   });
+
+  const outputFiles: TActivityCustomFile[] = useMemo(() => {
+    if (!builtCircuit) return [];
+    return [
+      {
+        id: builtCircuit.id,
+        entity: builtCircuit,
+        asset: builtCircuit.assets[0],
+        name: builtCircuit.name,
+        renderer: ActivityCustomFileRenderer.MiniDetailView,
+      },
+    ];
+  }, [builtCircuit]);
 
   useEffect(() => {
     if (!outputAvailable || !builtCircuit) return;
@@ -121,160 +125,42 @@ export function InOutFiles({
     });
   }, [outputAvailable, builtCircuit, queryClient]);
 
-  useEffect(() => {
-    if (inputFiles.length > 0 && !selectedFile) {
-      onSelect(inputFiles[0]);
-    }
-  }, [inputFiles, selectedFile, onSelect]);
+  useAutoSelectFileOnConfigChange({
+    configId: config.id,
+    selectedFile,
+    inputFiles,
+    outputFiles,
+    onSelect,
+  });
 
   return (
-    <div className="h-full overflow-y-auto">
-      <h4 className="uppercase">Input files</h4>
-      <div className="mt-4 mb-8 flex flex-col gap-4">
-        {/* <TaskPanelButton
-          id={`task-configuration-${config.id}`}
-          title="Task configuration"
-          label="config"
-          selected={taskConfigurationActive}
-          onClick={onSelectTaskConfiguration}
-        /> */}
-        {inputFiles.map((file) => {
-          return (
-            <ResultItem
-              id={file.asset.id}
-              selected={file.asset.id === selectedFile?.id}
-              key={file.asset?.id}
-              file={file}
-              onSelect={onSelect}
-              name={file.name}
-            />
-          );
-        })}
-      </div>
-
-      <h4 className="uppercase">Output files</h4>
-      <div className="mt-4 flex flex-col gap-4">
-        {/* <TaskPanelButton
-          id={`logs-${config.id}`}
-          title="Task logs"
-          label="log"
-          selected={logsActive}
-          onClick={onSelectLogs}
-        /> */}
-
-        {!outputAvailable && <div className="text-gray-400">No output files yet</div>}
-        {outputAvailable && isLoading && !builtCircuit && (
-          <div className="text-gray-400">Loading output files...</div>
-        )}
-        {outputAvailable && !builtCircuit && !isLoading && (
-          <div className="text-gray-400">No output files generated</div>
-        )}
-        {outputAvailable && builtCircuit && (
-          <ResultItem
-            id={builtCircuit.id}
-            label={<small className="uppercase">Synaptome (beta)</small>}
-            selected={builtCircuit?.id === selectedFile?.id}
-            key={builtCircuit.id}
-            file={{
-              id: builtCircuit.id,
-              entity: builtCircuit,
-              asset: builtCircuit.assets[0],
-              name: builtCircuit.name,
-              renderer: ActivityCustomFileRenderer.MiniDetailView,
-            }}
-            name={builtCircuit.name}
+    <IoLayout
+      showOutput={outputAvailable}
+      inputIsEmpty={inputFiles.length === 0}
+      outputIsEmpty={!builtCircuit && !isLoading}
+      inputItems={inputFiles.map((file) => (
+        <TaskIOFileItem
+          id={file.asset.id}
+          selected={file.asset.id === selectedFile?.id}
+          key={file.asset?.id}
+          file={file}
+          onSelect={onSelect}
+          name={file.name}
+        />
+      ))}
+      outputItems={
+        outputFiles[0] ? (
+          <TaskIOFileItem
+            id={outputFiles[0].id}
+            label={<small className="uppercase">Synaptome beta</small>}
+            selected={outputFiles[0].id === selectedFile?.id}
+            key={outputFiles[0].id}
+            file={outputFiles[0]}
+            name={outputFiles[0].name}
             onSelect={onSelect}
           />
-        )}
-      </div>
-    </div>
-  );
-}
-
-// function TaskPanelButton({
-//   id,
-//   title,
-//   label,
-//   selected,
-//   onClick,
-// }: {
-//   id: string;
-//   title: string;
-//   label: string;
-//   selected: boolean;
-//   onClick: () => void;
-// }) {
-//   return (
-//     <button
-//       id={id}
-//       type="button"
-//       title={title}
-//       className={classNames(
-//         'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-//         selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white'
-//       )}
-//       onClick={onClick}
-//     >
-//       <div
-//         className={classNames(
-//           'truncate overflow-hidden font-semibold whitespace-nowrap text-left',
-//           selected ? 'text-white' : 'text-primary-9'
-//         )}
-//       >
-//         <div>{title}</div>
-//       </div>
-//       <span
-//         className={classNames(
-//           'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
-//           selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
-//         )}
-//       >
-//         {label}
-//       </span>
-//     </button>
-//   );
-// }
-
-type TResultItemProps = {
-  id: string;
-  label?: ReactNode;
-  name?: string;
-  file: TActivityCustomFile;
-  selected?: boolean;
-  onSelect: (file: TActivityCustomFile) => void;
-};
-
-function ResultItem({ id, label, name, file, selected, onSelect }: TResultItemProps) {
-  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
-  const fileExt = label ?? fileName?.split('.').at(-1);
-  const displayName = name ?? fileName;
-  return (
-    <button
-      id={id}
-      type="button"
-      title={displayName}
-      className={classNames(
-        'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white'
-      )}
-      onClick={() => onSelect(file)}
-    >
-      <div
-        className={classNames(
-          'truncate overflow-hidden font-semibold whitespace-nowrap text-left',
-          selected ? 'text-white' : 'text-primary-9'
-        )}
-      >
-        <div>{displayName}</div>
-      </div>
-      <span
-        className={classNames(
-          'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
-          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
-        )}
-      >
-        {fileExt}
-      </span>
-    </button>
+        ) : null
+      }
+    />
   );
 }

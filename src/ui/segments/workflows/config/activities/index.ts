@@ -2,8 +2,8 @@ import { WorkflowActivityDictValue } from '@/constants';
 import { extractionActivityFlag } from '@/features/feature-flags/flags';
 
 import { BuildWorkflows } from './build';
-import { ExtractBrowseWorkflows, ExtractConfigureWorkflows } from './extract';
-import { ProcessBrowseWorkflows, ProcessConfigureWorkflows } from './process';
+import { ExtractionWorkflows } from './extract';
+import { ProcessingWorkflows } from './process';
 import { SimulateWorkflows } from './simulate';
 
 import type { TActivityEntry, TActivityValue } from '../types';
@@ -32,8 +32,7 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
     order: 3,
     disabled: false,
     requiredFeatures: [extractionActivityFlag.key],
-    workflows: ExtractConfigureWorkflows,
-    browseWorkflows: ExtractBrowseWorkflows,
+    workflows: ExtractionWorkflows,
   },
   [WorkflowActivityDictValue.optimize]: {
     value: WorkflowActivityDictValue.optimize,
@@ -57,8 +56,7 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
     name: 'Processing Data',
     order: 4,
     disabled: false,
-    workflows: ProcessConfigureWorkflows,
-    browseWorkflows: ProcessBrowseWorkflows,
+    workflows: ProcessingWorkflows,
   },
 };
 

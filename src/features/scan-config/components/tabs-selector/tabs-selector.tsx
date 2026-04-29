@@ -54,14 +54,15 @@ export default function TabsSelector({
           disable: true,
         }
       : null;
+    const disabled = disableSimulations || disableConfiguration;
 
     return {
       id,
       label,
       tooltip,
-      disabled: disableSimulations || disableConfiguration,
+      disabled,
       onClick: () => {
-        if (disableResultsTab) return;
+        if (disabled) return;
         if (activity === ScanConfigActivity.Simulate) {
           setTab({
             __activity: ScanConfigActivity.Simulate,

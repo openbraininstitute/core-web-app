@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { getCellMorphology } from '@/api/entitycore/queries';
 import { tryCatch } from '@/api/utils';
-import { resolveEmSynapseMappingByCampaignId } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
+import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
@@ -40,7 +40,8 @@ export default async function Page({
 
   if (initialCampaignId) {
     const { data, error } = await tryCatch(
-      resolveEmSynapseMappingByCampaignId({
+      // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+      EmSynapseMappingCampaign.api.query.resolve!({
         id: initialCampaignId,
         context: { virtualLabId, projectId },
       })

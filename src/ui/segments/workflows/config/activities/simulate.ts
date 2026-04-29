@@ -1,5 +1,4 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { microcircuitFlag } from '@/features/feature-flags/flags';
 
 import type { IWorkflowDescriptor } from '../types';
 
@@ -59,7 +58,6 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.Microcircuit }],
     disabled: false,
-    requiredFeatures: [microcircuitFlag.key],
   },
   {
     sourceType: ExtendedEntitiesTypeDict.Metabolism,

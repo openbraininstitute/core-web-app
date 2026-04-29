@@ -1,49 +1,29 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
-import { Checkbox } from 'antd';
-import { Activity, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { Loader } from '@/components/loader';
 import { WorkspaceSection } from '@/constants';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
-import {
-  buildActivityStatusMap,
-  findLatestExecutionForEntity,
-  type TScanConfigCampaignOriginActionDict,
-} from '@/features/scan-config/helpers';
-// import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
-import {
-  useScanConfigLaunchMutation,
-  useScanConfigTaskRunner,
-} from '@/features/scan-config/task-runner';
+import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
+import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
+import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-launch-button';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files';
-import { ConfigsLeftMenu } from '@/features/scan-config/use-cases/build/left-menu';
-// import {
-//   type ITaskLogsStreamWarmupJob,
-//   TaskConfigurationViewer,
-//   TaskLogsViewer,
-//   useTaskLogsStreamsWarmup,
-// } from '@/features/task-logs-stream';
+import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
+import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
-import { classNames } from '@/util/utils';
 
-// import { log } from '@/utils/logger';
-
-import type { CheckboxProps } from 'antd';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-
-// import type { TLogLevel } from '@/features/task-logs-stream/types';
-
-import styles from '@/features/scan-config/scan-config.module.css';
+import type { TEmSynapseMappingCampaignMeta } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
+import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 
 type Props = {
   campaignId: string;
@@ -53,42 +33,18 @@ type Props = {
   isCampaignIdChanged: boolean;
 };
 
-const RightPanelModeDict = {
-  Result: 'result',
-  // Logs: 'logs',
-  // TaskConfiguration: 'task-configuration',
-} as const;
-
-type TRightPanelMode = (typeof RightPanelModeDict)[keyof typeof RightPanelModeDict];
-
-export function BuildTab({
-  campaignOriginAction,
-  campaignId,
-  virtualLabId,
-  projectId,
-  // isCampaignIdChanged,
-}: Props) {
+export function BuildTab({ campaignOriginAction, campaignId, virtualLabId, projectId }: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);
-  const [activeConfig, setActiveConfig] = useState<ITaskConfig<never> | null>(null);
-  const [initialSelectionDone, setInitialSelectionDone] = useState(false);
+  const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
+  const [activeConfig, setActiveConfig] =
+    useState<ITaskConfig<TEmSynapseMappingCampaignMeta> | null>(null);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
-  // const [jobIdsByConfigId, setJobIdsByConfigId] = useState<Record<string, string>>({});
-  const [rightPanelMode, setRightPanelMode] = useState<TRightPanelMode>(RightPanelModeDict.Result);
+  const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
+    new Map()
+  );
 
-  // reset all local state when the campaign changes
-  // biome-ignore lint/correctness/useExhaustiveDependencies: campaignId is intentionally a trigger dependency
-  useEffect(() => {
-    setSelectedConfigIds([]);
-    setActiveConfig(null);
-    setInitialSelectionDone(false);
-    setSelectedFile(undefined);
-    // setJobIdsByConfigId({});
-    setRightPanelMode(RightPanelModeDict.Result);
-  }, [campaignId]);
-
-  const { mutateAsync: runBuild, isPending: runBuildPending } = useScanConfigLaunchMutation({
+  const { mutateAsync: runBuild, isPending: runBuildPending } = useTaskLaunchMutation({
     context,
     obiOneTaskType: ObiOneTaskTypeDict.EmSynapseMapping,
     executionActivityType: TaskActivityType.EmSynapseMappingExecution,
@@ -97,250 +53,127 @@ export function BuildTab({
     logTopic: 'Build',
   });
 
-  const {
-    configGenerationLoading,
-    configsResponse,
-    configsLoading,
-    executionsResponse,
-    executionsLoading,
-  } = useScanConfigTaskRunner<never>({
-    context,
-    campaignId,
-    configGenerationActivityType: TaskActivityType.EmSynapseMappingConfigGeneration,
-    executionActivityType: TaskActivityType.EmSynapseMappingExecution,
-    taskConfigType: TaskConfigType.EmSynapseMappingConfig,
-    pauseExecutionPolling: runBuildPending,
-  });
-
-  const statusMap = useMemo(() => {
-    return buildActivityStatusMap({
-      entityIds: configsResponse?.configIds ?? [],
-      executions: executionsResponse?.data ?? [],
+  const { configGenerationLoading, configsResponse, configsLoading } =
+    useTaskRunner<TEmSynapseMappingCampaignMeta>({
+      context,
+      campaignId,
+      configGenerationActivityType: TaskActivityType.EmSynapseMappingConfigGeneration,
+      executionActivityType: TaskActivityType.EmSynapseMappingExecution,
+      taskConfigType: TaskConfigType.EmSynapseMappingConfig,
+      pauseExecutionPolling: runBuildPending,
+      loadExecutions: false,
     });
-  }, [configsResponse?.configIds, executionsResponse?.data]);
+
+  const configs = configsResponse?.configList ?? [];
+
+  const resolvedActiveConfig = activeConfig ?? configs[0] ?? null;
 
   const activeConfigExecution = useMemo(() => {
-    if (!activeConfig) return undefined;
-    const executions = executionsResponse?.data ?? [];
-    return findLatestExecutionForEntity(executions, activeConfig.id);
-  }, [activeConfig, executionsResponse?.data]);
+    if (!resolvedActiveConfig) return undefined;
+    return executionByConfigId.get(resolvedActiveConfig.id) ?? undefined;
+  }, [executionByConfigId, resolvedActiveConfig]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
 
-  // Task logs/configuration viewers are temporarily hidden from the build UI.
-  // const isExecutionTerminal =
-  //   activeConfigExecStatus === ActivityStatus.DONE ||
-  //   activeConfigExecStatus === ActivityStatus.ERROR ||
-  //   activeConfigExecStatus === ActivityStatus.CANCELLED;
-
-  // const activeLogsJobId = useMemo(() => {
-  //   if (!activeConfig) return undefined;
-  //   if (campaignOriginAction === ScanConfigCampaignOriginActionDict.View) {
-  //     return activeConfigExecution?.execution_id ?? undefined;
-  //   }
-  //   return jobIdsByConfigId[activeConfig.id] ?? activeConfigExecution?.execution_id ?? undefined;
-  // }, [activeConfig, activeConfigExecution?.execution_id, campaignOriginAction, jobIdsByConfigId]);
-
-  // const shouldEnableLogsViewer = useMemo(() => {
-  //   if (!activeConfig) return false;
-  //   return !executionsLoading || Boolean(activeLogsJobId);
-  // }, [activeConfig, activeLogsJobId, executionsLoading]);
-
-  // const warmupJobs = useMemo<ITaskLogsStreamWarmupJob[]>(() => {
-  //   const seen = new Set<string>();
-  //   const jobs: ITaskLogsStreamWarmupJob[] = [];
-  //   for (const [configId, jobId] of Object.entries(jobIdsByConfigId)) {
-  //     if (!jobId || seen.has(jobId)) continue;
-  //     seen.add(jobId);
-  //     jobs.push({ jobId, configId });
-  //   }
-  //   return jobs;
-  // }, [jobIdsByConfigId]);
-
-  // const warmupDebugLog = useCallback(
-  //   ({ level, message, payload }: { level: TLogLevel; message: string; payload?: unknown }) => {
-  //     log(level, message, payload);
-  //   },
-  //   []
-  // );
-
-  // useTaskLogsStreamsWarmup({
-  //   jobs: warmupJobs,
-  //   virtualLabId,
-  //   projectId,
-  //   enabled: true,
-  //   debugLog: warmupDebugLog,
-  // });
-
-  const onActiveConfigChange = useCallback((config: ITaskConfig<never>) => {
+  const onActiveConfigChange = useCallback((config: ITaskConfig<TEmSynapseMappingCampaignMeta>) => {
     setActiveConfig(config);
-    setSelectedFile(undefined);
-    setRightPanelMode(RightPanelModeDict.Result);
   }, []);
 
-  const onSelectedFileChange = useCallback((file: TActivityCustomFile) => {
-    setSelectedFile(file);
-    setRightPanelMode(RightPanelModeDict.Result);
-  }, []);
-
-  const onSelectedForChange = useCallback((configId: string, selected: boolean) => {
+  const onSelectedForBuildChange = useCallback((configId: string, selected: boolean) => {
     if (selected) {
-      setSelectedConfigIds((prev) => [...prev, configId]);
+      setSelectedConfigIds((prev) => [...(prev ?? []), configId]);
     } else {
-      setSelectedConfigIds((prev) => prev.filter((id) => id !== configId));
+      setSelectedConfigIds((prev) => (prev ?? []).filter((id) => id !== configId));
     }
+  }, []);
+
+  const onExecutionLoad = useCallback((configId: string, execution: ITaskActivity | null) => {
+    setExecutionByConfigId((prev) => {
+      if (prev.get(configId) === execution) return prev;
+      return new Map(prev).set(configId, execution);
+    });
   }, []);
 
   const selectableConfigIds = useMemo(() => {
     return (
       (configsResponse?.configList ?? [])
         .filter((config) => {
-          const status = statusMap.get(config.id);
+          if (!executionByConfigId.has(config.id)) return false;
+          const status = executionByConfigId.get(config.id)?.status;
           return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
         })
         .map((c) => c.id) ?? []
     );
-  }, [configsResponse?.configList, statusMap]);
+  }, [configsResponse?.configList, executionByConfigId]);
 
-  useEffect(() => {
-    if (
-      configsResponse?.configList &&
-      configsResponse.configList.length > 0 &&
-      !initialSelectionDone &&
-      !executionsLoading
-    ) {
-      setSelectedConfigIds(selectableConfigIds);
-      setInitialSelectionDone(true);
-    }
-  }, [configsResponse?.configList, executionsLoading, initialSelectionDone, selectableConfigIds]);
+  const allConfigStatusesLoaded =
+    configs.length > 0 && configs.every((config) => executionByConfigId.has(config.id));
 
-  useEffect(() => {
-    if (configsResponse?.configList && configsResponse.configList.length > 0 && !activeConfig) {
-      onActiveConfigChange(configsResponse.configList[0]);
-    }
-  }, [configsResponse?.configList, activeConfig, onActiveConfigChange]);
+  const resolvedSelectedConfigIds =
+    selectedConfigIds ?? (allConfigStatusesLoaded ? selectableConfigIds : []);
 
   const onRun = async (configIdsToRun: string[]) => {
-    for (const configId of configIdsToRun) {
-      // const launchData = await runBuild(configId);
-      await runBuild(configId);
-      // setJobIdsByConfigId((prev) => ({
-      //   ...prev,
-      //   [configId]: launchData.job_id,
-      // }));
-    }
+    await runBuild(configIdsToRun);
     setSelectedConfigIds([]);
   };
 
-  const onSelectedAll: CheckboxProps['onChange'] = (e) => {
-    setSelectedConfigIds(e.target.checked ? selectableConfigIds : []);
-  };
-
-  const allSelected = useMemo(
-    () => selectableConfigIds.length > 0 && selectableConfigIds.length === selectedConfigIds.length,
-    [selectableConfigIds, selectedConfigIds]
-  );
-
-  const launchBtnLabelPrefix = selectedConfigIds.length ? `(${selectedConfigIds.length})` : '';
-  const loading = configsLoading || configGenerationLoading || executionsLoading;
-  // const taskViewerProps = {
-  //   enabled: shouldEnableLogsViewer,
-  //   configId: activeConfig?.id,
-  //   jobId: activeLogsJobId,
-  //   virtualLabId,
-  //   projectId,
-  //   skipStream: isExecutionTerminal,
-  //   campaignOriginAction,
-  //   isCampaignIdChanged,
-  // };
+  const launchBtnLabelPrefix = resolvedSelectedConfigIds.length
+    ? `(${resolvedSelectedConfigIds.length})`
+    : '';
+  const loading = configGenerationLoading || configsLoading;
 
   return (
-    <div id="build-results" className={styles.threeColumns}>
-      <div id="build-results-left-configs" className="border-r border-gray-200 pr-4">
-        <div className="flex h-full flex-col gap-4 overflow-y-hidden">
-          <Checkbox
-            indeterminate={
-              selectedConfigIds.length > 0 && selectedConfigIds.length < selectableConfigIds.length
-            }
-            onChange={onSelectedAll}
-            checked={allSelected}
-            disabled={runBuildPending || selectableConfigIds.length === 0}
-          >
-            Select all
-          </Checkbox>
-          <div
-            id="build-results-left-configs-list"
-            className="flex grow flex-col justify-start gap-5 overflow-y-auto"
-          >
-            {loading && (
-              <div className="flex h-full items-center justify-center">
-                <Loader className="text-neutral-3" />
-              </div>
-            )}
-            {!loading &&
-              configsResponse?.configList?.map((config) => (
-                <ConfigsLeftMenu
-                  key={config.id}
-                  selected={activeConfig?.id === config.id}
-                  config={config}
-                  execStatus={statusMap.get(config.id)}
-                  onSelect={() => onActiveConfigChange(config)}
-                  onSelectedForChange={onSelectedForChange}
-                  selectedFor={selectedConfigIds.includes(config.id)}
-                  selectionDisabled={runBuildPending}
-                />
-              ))}
-          </div>
-          <button
-            id="build-results-left-configs-launch-btn"
-            className={classNames(
-              'h-12.5 mt-auto w-full cursor-pointer rounded-3xl p-2 text-white',
-              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
-              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none rounded-full'
-            )}
-            type="button"
-            onClick={() => onRun(selectedConfigIds)}
-            disabled={runBuildPending || selectedConfigIds.length === 0}
-          >
-            <div className="flex justify-center gap-4">
-              <span className="pl-10">Launch builds {launchBtnLabelPrefix}</span>
-              <div className="w-6">{runBuildPending && <LoadingOutlined />}</div>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      <div
-        id="build-results-middle-in-out-files"
-        className="relative border-r border-gray-200 px-4"
-      >
-        {!!activeConfig && (
-          <InOutFiles
-            config={activeConfig}
-            execStatus={activeConfigExecStatus}
-            execution={activeConfigExecution}
-            selectedFile={selectedFile}
-            // logsActive={rightPanelMode === RightPanelModeDict.Logs}
-            // taskConfigurationActive={rightPanelMode === RightPanelModeDict.TaskConfiguration}
-            // onSelectLogs={() => setRightPanelMode(RightPanelModeDict.Logs)}
-            // onSelectTaskConfiguration={() => {
-            //   setSelectedFile(undefined);
-            //   setRightPanelMode(RightPanelModeDict.TaskConfiguration);
-            // }}
+    <ResultsLayout
+      campaignId={campaignId}
+      left={
+        <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">
+          <TaskConfigSelectionList
+            campaignId={campaignId}
+            configs={configs}
+            selectableConfigIds={selectableConfigIds}
+            selectedConfigIds={resolvedSelectedConfigIds}
+            activeConfigId={resolvedActiveConfig?.id}
+            loading={loading}
+            selectionDisabled={runBuildPending}
+            fallbackColor="#389E0D"
             context={context}
-            onSelect={onSelectedFileChange}
-            campaignOrigin={campaignOriginAction}
+            executionActivityType={TaskActivityType.EmSynapseMappingExecution}
+            pauseStatusPolling={runBuildPending}
+            executionByConfigId={executionByConfigId}
+            onSelectConfig={onActiveConfigChange}
+            onCheckedChange={onSelectedForBuildChange}
+            onToggleSelectAll={(checked) =>
+              setSelectedConfigIds(checked ? selectableConfigIds : [])
+            }
+            onExecutionLoad={onExecutionLoad}
           />
-        )}
-      </div>
-
-      <div id="build-results-right-preview" className="relative pl-4">
-        {/* {rightPanelMode === RightPanelModeDict.Logs && <TaskLogsViewer {...taskViewerProps} />} */}
-        {/* {rightPanelMode === RightPanelModeDict.TaskConfiguration && (
-          <TaskConfigurationViewer {...taskViewerProps} />
-        )} */}
-
-        <Activity mode={rightPanelMode === RightPanelModeDict.Result ? 'visible' : 'hidden'}>
+          <TaskLaunchButton
+            label="Launch builds"
+            countLabel={launchBtnLabelPrefix}
+            pending={runBuildPending}
+            disabled={runBuildPending || resolvedSelectedConfigIds.length === 0}
+            onClick={() => onRun(resolvedSelectedConfigIds)}
+            className="rounded-full"
+          />
+        </div>
+      }
+      middle={
+        !!resolvedActiveConfig && (
+          <div className="h-full bg-background! w-full">
+            <InOutFiles
+              config={resolvedActiveConfig}
+              execStatus={activeConfigExecStatus}
+              execution={activeConfigExecution}
+              selectedFile={selectedFile}
+              context={context}
+              campaignOrigin={campaignOriginAction}
+              onSelect={setSelectedFile}
+            />
+          </div>
+        )
+      }
+      right={
+        <>
           {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
             <FileViewer file={selectedFile} className="h-full" context={context} />
           )}
@@ -355,8 +188,8 @@ export function BuildTab({
               />
             </div>
           )}
-        </Activity>
-      </div>
-    </div>
+        </>
+      }
+    />
   );
 }

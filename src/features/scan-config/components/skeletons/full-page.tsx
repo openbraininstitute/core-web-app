@@ -5,11 +5,9 @@ import styles from '@/features/scan-config/scan-config.module.css';
 
 function TabsSkeleton() {
   return (
-    <div className="flex">
-      <div className="inline-flex overflow-hidden rounded-full border border-gray-200">
-        <Skeleton className="h-10 w-32 rounded-l-full rounded-r-none" />
-        <Skeleton className="h-10 w-28 rounded-l-none rounded-r-full" />
-      </div>
+    <div className="inline-flex overflow-hidden rounded-full border border-gray-200">
+      <Skeleton className="h-10 w-40 rounded-l-full rounded-r-none" />
+      <Skeleton className="h-10 w-40 rounded-l-none rounded-r-full" />
     </div>
   );
 }
@@ -101,16 +99,13 @@ function ModelPreviewSkeleton() {
 
 export function ScanConfigSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn('flex h-full flex-col space-y-5', className)}>
-      <header className={cn(styles.header, 'px-5')}>
+    <div className={cn('flex h-full flex-col', className)}>
+      <header className={cn(styles.header)}>
         <TabsSkeleton />
         <Skeleton className="h-10 w-48 rounded-full" />
       </header>
 
-      <div className="relative mb-5 px-5">
-        <div className="w-full border-t border-gray-200" />
-      </div>
-
+      <div className="w-full border-t border-gray-200 my-5" />
       <div className={styles.threeColumns}>
         <LeftColumnSkeleton />
         <MiddleColumnSkeleton />

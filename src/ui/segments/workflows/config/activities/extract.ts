@@ -3,18 +3,7 @@ import { extractionActivityFlag } from '@/features/feature-flags/flags';
 
 import type { IWorkflowDescriptor } from '../types';
 
-export const ExtractConfigureWorkflows: readonly IWorkflowDescriptor[] = [
-  {
-    sourceType: ExtendedEntitiesTypeDict.Circuit,
-    targetType: ExtendedEntitiesTypeDict.Circuit,
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.Circuit }],
-    label: 'Circuit (beta)',
-    disabled: false,
-    requiredFeatures: [extractionActivityFlag.key],
-  },
-];
-
-export const ExtractBrowseWorkflows: readonly IWorkflowDescriptor[] = [
+export const ExtractionWorkflows: readonly IWorkflowDescriptor[] = [
   {
     sourceType: ExtendedEntitiesTypeDict.Circuit,
     targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,

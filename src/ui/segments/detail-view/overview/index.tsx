@@ -20,7 +20,7 @@ import {
 } from '@/entity-configuration/definitions/view-defs';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { circuitTypes } from '@/entity-configuration/domain/helpers';
-import { resolveEmSynapseMappingByCampaignId } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
+import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
@@ -166,7 +166,8 @@ export default async function Overview({
       entity.task_config_type === TaskConfigType.EmSynapseMappingCampaign
     ) {
       const { data: config, error } = await tryCatch(
-        resolveEmSynapseMappingByCampaignId({ id: entity.id, context: context })
+        // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+        EmSynapseMappingCampaign.api.query.resolve!({ id: entity.id, context: context })
       );
 
       if (error || !config.sourceEntityId) {

@@ -142,7 +142,7 @@ export function ScanConfigTemplate({
 
   return (
     <div className={cn('flex h-full flex-col', className)}>
-      <header className={styles.header}>
+      <header id="template-header" className={styles.header}>
         <TabsSelector
           activity={activity}
           tab={tab}
@@ -157,8 +157,8 @@ export function ScanConfigTemplate({
         </div>
       </header>
 
-      <div className="w-full border-t border-gray-200 my-5" />
-      <div className="flex-1 min-h-0">
+      <div id="template-separator" className="w-full border-t border-gray-200 my-5" />
+      <div id="template-content" className="flex-1 min-h-0">
         <div
           id="scan-config-content-columns"
           className={cn(
