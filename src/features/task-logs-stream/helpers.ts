@@ -96,14 +96,18 @@ export function dedupeRanges({ ranges }: { ranges: IHighlightRange[] }) {
 
 export function dedupeLogEntries({ entries }: { entries: ILogEntry[] }) {
   const seen = new Set<string>();
-  const deduped: ILogEntry[] = [];
-  for (const entry of entries) {
-    const fingerprint = `${entry.timestamp ?? 'no-ts'}|${entry.type}|${entry.message}`;
-    if (seen.has(fingerprint)) continue;
-    seen.add(fingerprint);
-    deduped.push(entry);
+  let deduped: ILogEntry[] | null = null;
+  for (const [index, entry] of entries.entries()) {
+    if (seen.has(entry.id)) {
+      deduped ??= entries.slice(0, index);
+      continue;
+    }
+    seen.add(entry.id);
+    if (deduped) {
+      deduped.push(entry);
+    }
   }
-  return deduped;
+  return deduped ?? entries;
 }
 
 export const STREAM_NOT_FOUND_ERROR_CODE = 'NOT_FOUND';

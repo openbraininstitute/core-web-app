@@ -66,7 +66,7 @@ function useTaskViewerData({
 }
 
 export function TaskLogsViewer(props: ITaskLogsViewerProps) {
-  const { entries, streamError, isLoading, isStreaming } = useTaskViewerData(props);
+  const { entries, streamError, isLoading } = useTaskViewerData(props);
   const { enabled, jobId } = props;
 
   if (!enabled) return null;
@@ -79,7 +79,6 @@ export function TaskLogsViewer(props: ITaskLogsViewerProps) {
         isLoading={isLoading}
         enabled={enabled}
         searchDisabled={!jobId}
-        isStreamingMode={isStreaming}
       />
     </TaskViewerFrame>
   );

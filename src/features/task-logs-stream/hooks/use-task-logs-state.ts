@@ -1,3 +1,5 @@
+import { dedupeLogEntries } from '../helpers';
+
 import type { ILogEntry, ITaskLogsDataState } from '../types';
 
 interface IResolveTaskLogsDataStateParams {
@@ -52,7 +54,10 @@ export function resolveTaskLogsDataState({
     };
   }
 
-  const liveEntries = streamEntries.length > 0 ? streamEntries : cachedStreamEntries;
+  const liveEntries = dedupeLogEntries({
+    entries: streamEntries.length > 0 ? streamEntries : cachedStreamEntries,
+  });
+  const finalReadEntries = readEntries ? dedupeLogEntries({ entries: readEntries }) : undefined;
 
   if (!hasStreamTerminated) {
     return {
@@ -64,9 +69,9 @@ export function resolveTaskLogsDataState({
     };
   }
 
-  if (readEntries && (readEntries.length > 0 || readHasTerminalStatus)) {
+  if (finalReadEntries && (finalReadEntries.length > 0 || readHasTerminalStatus)) {
     return {
-      entries: readEntries,
+      entries: finalReadEntries,
       streamError: null,
       isLoading: false,
       isStreaming: false,
