@@ -1,15 +1,22 @@
 'use client';
 
-import { get as _get, compact } from 'es-toolkit/compat';
+import { compact } from 'es-toolkit/compat';
 
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
-import { getFieldsDefinition } from '@/entity-configuration/definitions';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import {
+  collectDefaultActiveColumns,
+  collectListingFieldKeys,
+  resolveFieldListing,
+} from '@/entity-configuration/definitions/listing';
 import {
   SortOrder,
   type TCoreFilter,
+  type TFieldApiContext,
   type TSortOrder,
   type TSortState,
+  type TSortStateList,
 } from '@/entity-configuration/definitions/types';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { columnKeyToFilter } from '@/ui/segments/data-table/elements/column-key-to-filter';
@@ -22,23 +29,31 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { Nullable } from '@/utils/type';
 
-export const makeTypeDefaultFilters = ({ dataType }: { dataType: TExtendedEntitiesTypeDict }) => {
-  const columns = getViewDefinitionByExtendedType(dataType)?.columns;
-  const fields = columns ? getFieldsDefinition(columns) : [];
-  const filteredColumns = [
-    ...(columns
-      ?.filter(
-        (o) =>
-          _get(fields, o, { isFilterable: false })?.isFilterable === true ||
-          _get(fields, o, { isDisplayable: false })?.isDisplayable === true
-      )
-      ?.map((colKey) => columnKeyToFilter(colKey, dataType)) ?? []),
-  ];
-  return filteredColumns;
+type TDefaultListingContext = TFieldApiContext;
+
+export const makeTypeDefaultFilters = ({ dataType, section, scope }: TDefaultListingContext) => {
+  const context = { dataType, section, scope };
+  const view = getViewDefinitionByExtendedType(dataType);
+
+  return collectListingFieldKeys(view, context)
+    .filter((field) => {
+      const presentation = resolveFieldListing(getFieldDefinition(field), context);
+      return presentation.filterAvailable || presentation.columnAvailable;
+    })
+    .map((field) => columnKeyToFilter(field, context));
 };
 
-type DataListStateSnapshot = {
-  Sort: TSortState;
+export const makeTypeDefaultActiveColumns = ({
+  dataType,
+  section,
+  scope,
+}: TDefaultListingContext) => {
+  const context = { dataType, section, scope };
+  return collectDefaultActiveColumns(getViewDefinitionByExtendedType(dataType), context);
+};
+
+type TDataListStateSnapshot = {
+  Sort: TSortStateList;
   Search: string;
   Page: number;
   Filters: Array<TCoreFilter>;
@@ -47,17 +62,23 @@ type DataListStateSnapshot = {
 
 export const makeDataListStateSnapshotAtomsInitialValue = ({
   dataType,
+  section,
+  scope,
 }: {
   dataType: TExtendedEntitiesTypeDict;
-}): DataListStateSnapshot => ({
-  Sort: {
-    field: EntityCoreFields.RegistrationDate,
-    backendField: EntityCoreFields.RegistrationDate,
-    order: SortOrder.DESC as TSortOrder,
-  },
+  section?: TWorkspaceSection;
+  scope?: TWorkspaceScope;
+}): TDataListStateSnapshot => ({
+  Sort: [
+    {
+      field: EntityCoreFields.RegistrationDate,
+      backendField: EntityCoreFields.RegistrationDate,
+      order: SortOrder.DESC as TSortOrder,
+    } satisfies TSortState,
+  ],
   Search: '',
   Page: DEFAULT_PAGE_NUMBER,
-  Filters: makeTypeDefaultFilters({ dataType }),
+  Filters: makeTypeDefaultFilters({ dataType, section, scope }),
   View: CircuitRepresentationView.Hierarchy,
 });
 

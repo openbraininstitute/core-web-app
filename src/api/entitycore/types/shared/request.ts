@@ -230,3 +230,10 @@ export type ExperimentDateFilter = {
   experiment_date__lte: Date | null;
   experiment_date__gte: Date | null;
 };
+
+export const DefaultOrderBy = ['id', 'creation_date', 'update_date', 'name'] as const;
+export type TDefaultOrderBy = typeof DefaultOrderBy;
+
+export interface IOrderBy<T extends readonly string[] = string[]> {
+  order_by?: T[number][];
+}

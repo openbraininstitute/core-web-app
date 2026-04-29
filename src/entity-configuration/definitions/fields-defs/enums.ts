@@ -99,6 +99,8 @@ export enum EntityCoreFields {
   NotebookScale = 'notebook_scale',
   NotebookActions = 'notebook_actions',
   DenseReconstructionCellId = 'dense_reconstruction_cell_id',
+  GenerationType = 'generation_type',
+  ProtocolDesign = 'protocol_design',
   GenerationMethod = 'generation_method',
   LevelOfDetail = 'level_of_detail',
   GenerationParameters = 'generation_parameters',
