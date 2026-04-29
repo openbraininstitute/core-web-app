@@ -36,20 +36,23 @@ export function SkeletonizationConfigsLeftMenu({
     !execStatus || execStatus === ActivityStatus.CREATED || execStatus === ActivityStatus.ERROR;
 
   return (
-    <div className="flex-none">
+    <button
+      className="flex-none cursor-pointer shadow-xs group"
+      type="button"
+      title={config.name}
+      onClick={onSelect}
+    >
       <div
-        className="rounded-lg px-4 pb-4 transition-colors duration-300"
-        style={{
-          border: `2px solid ${selected ? color : 'transparent'}`,
-          backgroundColor: selected ? `${color}0f` : 'white',
-        }}
+        className="rounded-xl px-4 pb-4 transition-colors duration-300 group group-hover:bg-gray-50!"
+        style={
+          {
+            '--card-color': color,
+            border: `2px solid ${selected ? color : 'transparent'}`,
+            backgroundColor: selected ? `${color}0f` : 'white',
+          } as React.CSSProperties & { '--card-color': string }
+        }
       >
-        <button
-          type="button"
-          title={config.name}
-          className="mb-2 flex h-18 w-full cursor-pointer items-center justify-between"
-          onClick={onSelect}
-        >
+        <div className="mb-2 flex h-18 w-full items-center justify-between">
           <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
             {isSelectable ? (
               <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
@@ -80,12 +83,12 @@ export function SkeletonizationConfigsLeftMenu({
             <StatusBadge status={execStatus} />
             <RightOutlined className="ml-2 text-sm" />
           </div>
-        </button>
+        </div>
         <ScanParams
           scanParams={config.meta.scan_parameters as Record<string, string | number>}
           color={color}
         />
       </div>
-    </div>
+    </button>
   );
 }

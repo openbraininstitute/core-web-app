@@ -12,7 +12,6 @@ import {
   extractionActivityFlag,
   type FeatureFlags,
   type FlagKey,
-  microcircuitFlag,
 } from '@/features/feature-flags/flags';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -225,7 +224,7 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
   },
   [ExtendedEntitiesTypeDict.Microcircuit]: {
     group: EntityGroupDict.Circuit,
-    label: 'Microcircuit',
+    label: 'Microcircuit (beta)',
     properties: {
       build: {
         disabled: true,
@@ -233,7 +232,6 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
       },
       simulate: {
         disabled: false,
-        requiredFeatures: [microcircuitFlag.key],
         type: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
       },
     },
@@ -258,11 +256,12 @@ export const buildAndSimulateConfiguration: Partial<TBuildSimulateWorkflowConfig
     properties: {
       build: {
         disabled: true,
-        type: ExtendedEntitiesTypeDict.BrainRegion,
+        type: ExtendedEntitiesTypeDict.Circuit,
       },
       simulate: {
-        disabled: true,
+        disabled: false,
         type: ExtendedEntitiesTypeDict.BrainRegion,
+        sourceType: ExtendedEntitiesTypeDict.Circuit,
       },
     },
   },

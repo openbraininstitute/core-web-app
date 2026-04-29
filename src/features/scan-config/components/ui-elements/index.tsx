@@ -199,7 +199,13 @@ export function UIElementRender({
             schemaMappingConfig={schemaMappingConfig}
             disabled={disabled}
             value={getValue()}
-            onChange={(newV: string[]) => setState({ ...state, node_set: newV })}
+            onChange={(newV: string[]) =>
+              setState({
+                ...state,
+                // NOTE: this is requested by James for IT'IS collaboration
+                node_set: Array.isArray(newV) && newV.length === 1 ? newV[0] : newV,
+              })
+            }
             property={paramSchema.property}
           />
         );

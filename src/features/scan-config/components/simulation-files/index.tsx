@@ -5,7 +5,6 @@ import { useEffect, useMemo } from 'react';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
-import { Loader } from '@/components/loader';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
@@ -96,7 +95,7 @@ export function SimulationFiles({
   }, [loading, inputFiles, outputFiles, onSelect, selectedFile]);
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto secondary-scrollbar pr-2">
       <h4 className="uppercase">Input files</h4>
       <div className="mt-4 mb-8 flex flex-col gap-4">
         {inputFiles.map((file) => (
@@ -123,11 +122,6 @@ export function SimulationFiles({
           </div>
         </>
       )}
-      {loading && (
-        <div className="absolute inset-0 z-10 flex cursor-progress items-center justify-center rounded-2xl bg-black/4">
-          <Loader className="text-neutral-3" />
-        </div>
-      )}
     </div>
   );
 }
@@ -136,7 +130,10 @@ function useInputFiles(
   simulation: ISimulation,
   context: WorkspaceContext
 ): [boolean, TActivityCustomFile[]] {
-  const { entity, isLoading } = useModelQuery({ id: simulation.entity_id, context });
+  const { entity, isLoading } = useModelQuery({
+    id: simulation.entity_id,
+    context,
+  });
 
   const inputFiles: TActivityCustomFile[] = useMemo(() => {
     const sonataCircuitAsset =
@@ -221,8 +218,9 @@ function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
       type="button"
       title={fileName}
       className={classNames(
-        'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white'
+        'group flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
+        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white',
+        'hover:bg-gray-100 shadow-xs'
       )}
       onClick={() => onSelect(file)}
     >
@@ -236,8 +234,9 @@ function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
       </span>
       <span
         className={classNames(
-          'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
-          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
+          'group-hover:bg-gray-200 group-hover:border-gray-100',
+          'ml-4 shrink-0 rounded-full border px-4 uppercase text-xs py-1',
+          selected ? 'border-white text-primary-9 bg-white' : 'text-neutral-5 border-neutral-5'
         )}
       >
         {fileExt}

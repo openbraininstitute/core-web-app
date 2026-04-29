@@ -127,8 +127,9 @@ function FileItem({ name, file, selected, onSelect }: FileItemProps) {
       type="button"
       title={displayName}
       className={classNames(
-        'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white'
+        'group flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
+        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white',
+        'hover:bg-gray-100 shadow-xs'
       )}
       onClick={() => onSelect(file)}
     >
@@ -143,8 +144,9 @@ function FileItem({ name, file, selected, onSelect }: FileItemProps) {
       {!name && (
         <span
           className={classNames(
-            'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
-            selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
+            'group-hover:bg-gray-200 group-hover:border-gray-100',
+            'ml-4 shrink-0 rounded-full border px-4 uppercase text-xs py-1',
+            selected ? 'border-white text-primary-9 bg-white' : 'text-neutral-5 border-neutral-5'
           )}
         >
           {fileExt}

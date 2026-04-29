@@ -100,7 +100,7 @@ export default function Left({
   }, [pendingRestoreConfig, schema, setAtomsMap, setPendingRestoreConfig]);
 
   return (
-    <div className={styles.scrollable}>
+    <div className={styles.scrollable} id="scan-config-left-menu">
       <div className="flex grow flex-col items-center gap-5 overflow-y-auto overflow-x-hidden secondary-scrollbar px-2 pb-5">
         {schema.group_order.map((group) => {
           return (
