@@ -219,7 +219,7 @@ export function MainCardComingSoon({
             className="w-full bg-background shadow-none hover:bg-white hover:shadow-md"
           >
             <Link
-              href={`/app/virtual-lab/${virtualLabId}/${projectId}/workflows/simulate/new/small-microcircuit-simulation`}
+              href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/new/small-microcircuit-simulation`}
               className="text-primary-8 hover:text-primary-9 text-base!"
             >
               New small circuit simulation

@@ -86,7 +86,7 @@ export function Wallet() {
           <Link
             prefetch
             href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
-            className="inline-block"
+            className="inline-block text-gray-500"
           >
             <CoinsIcon />
             <div className="ml-2">{content}</div>
