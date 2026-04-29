@@ -70,8 +70,8 @@ export async function DataViewLayout({
 
   if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     return (
-      <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3 py-3">
-        <div className="w-full flex items-center justify-between pb-4">
+      <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3">
+        <div className="w-full flex items-center justify-between">
           {breadcrumbs}
           {closePage}
         </div>

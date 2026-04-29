@@ -142,7 +142,10 @@ export function ScanConfigTemplate({
 
   return (
     <div className={cn('flex h-full flex-col', className)}>
-      <header id="template-header" className={styles.header}>
+      <header
+        id="template-header"
+        className={cn('flex flex-nowrap justify-between items-center gap-4 pt-4 pb-2')}
+      >
         <TabsSelector
           activity={activity}
           tab={tab}
@@ -157,13 +160,14 @@ export function ScanConfigTemplate({
         </div>
       </header>
 
-      <div id="template-separator" className="w-full border-t border-gray-200 my-5" />
+      <div id="template-separator" className="w-full h-px bg-gray-200 my-2 px-3" />
       <div id="template-content" className="flex-1 min-h-0">
         <div
           id="scan-config-content-columns"
           className={cn(
+            'py-2',
             {
-              'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-[calc(100%-10px)] overflow-hidden *:min-w-0':
+              'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden *:min-w-0':
                 isConfigurationTab,
             },
             { hidden: !isConfigurationTab }
@@ -242,9 +246,9 @@ export function ScanConfigTemplate({
         <div
           id="scan-config-results"
           className={cn(
-            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-[calc(100%-10px)] overflow-hidden',
+            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden',
             { hidden: isConfigurationTab },
-            { 'h-[calc(100%-10px)]': !isConfigurationTab }
+            { 'h-full': !isConfigurationTab }
           )}
         >
           {results}

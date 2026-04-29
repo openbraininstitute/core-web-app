@@ -162,11 +162,13 @@ export function BrowseEntityScope({
     [setPageNumber, setSortState, runStorageSync]
   );
 
+  console.log('–– – browse-entity.tsx:171 – BrowseEntityScope – dataType:', dataType);
   const allColumns = useDataTableColumns<EntityCoreIdentifiableNamed>({
     dataType,
     sortState,
     setSortState: onSortChange,
   });
+
   const columns = uniqBy(
     allColumns.filter(({ key }) => (activeColumns || []).includes(key as string)),
     'key'

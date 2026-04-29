@@ -58,6 +58,14 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.Microcircuit }],
     disabled: false,
+    order: 8,
+  },
+  {
+    sourceType: ExtendedEntitiesTypeDict.BrainRegion,
+    targetType: ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.BrainRegion }],
+    disabled: false,
+    order: 9,
   },
   {
     sourceType: ExtendedEntitiesTypeDict.Metabolism,
@@ -72,11 +80,6 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
   {
     sourceType: ExtendedEntitiesTypeDict.NGVCircuit,
     targetType: ExtendedEntitiesTypeDict.NGVCircuit,
-    disabled: true,
-  },
-  {
-    sourceType: ExtendedEntitiesTypeDict.BrainRegion,
-    targetType: ExtendedEntitiesTypeDict.BrainRegion,
     disabled: true,
   },
   {

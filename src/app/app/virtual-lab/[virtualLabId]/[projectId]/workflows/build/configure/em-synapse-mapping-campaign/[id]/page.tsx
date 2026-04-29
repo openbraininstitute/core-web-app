@@ -57,14 +57,14 @@ export default async function Page({
 
   if (!initialCampaignId || (initialCampaignId && campaignData?.config.form)) {
     return (
-      <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
+      <div className="border-neutral-2 ml-2 h-full rounded-2xl border">
         <ScanConfiguration
           entityId={entity.id}
           entityType={entity.type}
           virtualLabId={virtualLabId}
           projectId={projectId}
           initialConfig={campaignData?.config.form}
-          className="px-4 pt-2"
+          className="px-4"
           activity={ScanConfigActivity.Build}
           defaultTab={{
             __activity: ScanConfigActivity.Build,
