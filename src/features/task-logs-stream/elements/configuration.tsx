@@ -29,7 +29,7 @@ function formatDateTime({ value }: { value: string | null | undefined }): string
   }).format(date);
 }
 
-function formatDuration({
+function formatDurationMinutes({
   startTime,
   endTime,
 }: {
@@ -41,17 +41,8 @@ function formatDuration({
   const endDate = new Date(endTime);
   if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return '—';
   const durationMs = Math.max(0, endDate.getTime() - startDate.getTime());
-  const totalSeconds = Math.floor(durationMs / 1_000);
-  const hours = Math.floor(totalSeconds / 3_600);
-  const minutes = Math.floor((totalSeconds % 3_600) / 60);
-  const seconds = totalSeconds % 60;
-  const parts: string[] = [];
-
-  if (hours > 0) parts.push(`${hours} h`);
-  if (minutes > 0) parts.push(`${minutes} min`);
-  if (seconds > 0 || parts.length === 0) parts.push(`${seconds} s`);
-
-  return parts.join(', ');
+  const minutes = durationMs / 60_000;
+  return `${minutes.toFixed(2)} min`;
 }
 
 function formatJson({ value }: { value: unknown }): string {
@@ -68,11 +59,8 @@ export function Configuration({ configuration }: IProps) {
 
   if (!configuration) {
     return (
-      <div className="w-full py-2 px-2">
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-base text-destructive">
-          Configuration details are not available yet. Start the task first, then check back to view
-          its settings and setup information.
-        </div>
+      <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-500">
+        Configuration details are not available for this task yet.
       </div>
     );
   }
@@ -83,7 +71,7 @@ export function Configuration({ configuration }: IProps) {
     ActivityStatusColorMap[statusKey as keyof typeof ActivityStatusColorMap] ?? '#6b7280';
   const startTime = (configuration.start_time as string | null | undefined) ?? null;
   const endTime = (configuration.end_time as string | null | undefined) ?? null;
-  const duration = formatDuration({ startTime, endTime });
+  const duration = formatDurationMinutes({ startTime, endTime });
 
   const codeCell = ({ value }: { value: unknown }) => (
     <CodeBlock

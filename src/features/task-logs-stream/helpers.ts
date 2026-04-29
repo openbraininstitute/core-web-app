@@ -62,9 +62,7 @@ export function normalizeToEntry({
       type,
       timestamp: payload.timestamp,
       message: redactSensitive({ value: String(message) }),
-      timestampGroupLabel: formatTimestampGroupLabel({
-        timestamp: payload.timestamp,
-      }),
+      timestampGroupLabel: formatTimestampGroupLabel({ timestamp: payload.timestamp }),
     };
   } catch {
     return {
@@ -106,52 +104,14 @@ export function dedupeLogEntries({ entries }: { entries: ILogEntry[] }) {
   return deduped;
 }
 
-export const STREAM_NOT_FOUND_ERROR_CODE = 'NOT_FOUND';
-export const STREAM_GENERIC_ERROR_CODE = 'GENERIC_ERROR';
-
 export class StreamHttpError extends Error {
   status: number;
-  errorCode?: string;
 
-  constructor({
-    status,
-    errorCode,
-    serverMessage,
-  }: {
-    status: number;
-    errorCode?: string;
-    serverMessage?: string;
-  }) {
-    const fallback = `We couldn't load live logs right now (HTTP ${status}). Please try again in a moment.`;
-    super(serverMessage ?? fallback);
+  constructor({ status }: { status: number }) {
+    super(`We couldn't load live logs right now (HTTP ${status}). Please try again in a moment.`);
     this.name = 'StreamHttpError';
     this.status = status;
-    this.errorCode = errorCode;
   }
-}
-
-/**
- * 404 NOT_FOUND — the backend already retried internally for ~10s.
- * The stream genuinely doesn't exist; don't retry further.
- */
-export function isStreamNotFoundError({ error }: { error: unknown }): boolean {
-  return (
-    error instanceof StreamHttpError &&
-    error.status === 404 &&
-    error.errorCode === STREAM_NOT_FOUND_ERROR_CODE
-  );
-}
-
-/**
- * 502 GENERIC_ERROR — upstream launch-system returned an unexpected error.
- * The frontend can retry a few times with backoff.
- */
-export function isStreamGenericError({ error }: { error: unknown }): boolean {
-  return (
-    error instanceof StreamHttpError &&
-    error.status === 502 &&
-    error.errorCode === STREAM_GENERIC_ERROR_CODE
-  );
 }
 
 export function formatConfigurationValue({ value }: { value: unknown }) {
@@ -188,10 +148,7 @@ export function parseJobReadLogsToEntries({ logs }: { logs: IJobRead['logs'] }):
         objectKeys.includes('status')
       ) {
         lineIndex += 1;
-        const entry = normalizeToEntry({
-          rawLine: JSON.stringify(record),
-          idx: lineIndex,
-        });
+        const entry = normalizeToEntry({ rawLine: JSON.stringify(record), idx: lineIndex });
         if (entry) entries.push(entry);
         return;
       }
@@ -203,28 +160,12 @@ export function parseJobReadLogsToEntries({ logs }: { logs: IJobRead['logs'] }):
 
     lineIndex += 1;
     const prefix = keyPath.length > 0 ? `[${keyPath.join('.')}] ` : '';
-    const entry = normalizeToEntry({
-      rawLine: `${prefix}${String(value)}`,
-      idx: lineIndex,
-    });
+    const entry = normalizeToEntry({ rawLine: `${prefix}${String(value)}`, idx: lineIndex });
     if (entry) entries.push(entry);
   };
 
-  visit(logs.stream, []);
+  visit(logs, []);
   return entries;
-}
-
-const STREAM_STOP_SENTINEL = '__STOP__';
-
-function isStopSentinel({ rawLine }: { rawLine: string }): boolean {
-  try {
-    const payload = JSON.parse(rawLine) as Record<string, unknown>;
-    return (
-      payload.message_type === STREAM_STOP_SENTINEL || payload.message === STREAM_STOP_SENTINEL
-    );
-  } catch {
-    return rawLine.trim() === STREAM_STOP_SENTINEL;
-  }
 }
 
 export async function* parseLogStreamToEntries({
@@ -248,7 +189,6 @@ export async function* parseLogStreamToEntries({
       buffer = lines.pop() ?? '';
 
       for (const line of lines) {
-        if (isStopSentinel({ rawLine: line })) return;
         lineIndex += 1;
         const entry = normalizeToEntry({ rawLine: line, idx: lineIndex });
         if (entry) yield entry;
@@ -256,37 +196,21 @@ export async function* parseLogStreamToEntries({
     }
 
     if (buffer.trim()) {
-      if (!isStopSentinel({ rawLine: buffer })) {
-        lineIndex += 1;
-        const tail = normalizeToEntry({ rawLine: buffer, idx: lineIndex });
-        if (tail) yield tail;
-      }
+      lineIndex += 1;
+      const tail = normalizeToEntry({ rawLine: buffer, idx: lineIndex });
+      if (tail) yield tail;
     }
   } finally {
     reader.releaseLock();
   }
 }
 
-/**
- * determines whether a stream error is worth retrying
- *
- * - 404 NOT_FOUND: backend already retried internally (~10s), don't retry
- * - 401/403: auth errors, don't retry
- * - 502 GENERIC_ERROR: upstream hiccup, retry with backoff
- * - 408/429/5xx (other): transient, retry with backoff
- * - network errors (no status): retry
- */
-export function isRetryableStreamError({ error }: { error: unknown }): boolean {
+export function isRetriableStreamError({ error }: { error: unknown }): boolean {
   if (error instanceof StreamHttpError) {
-    if (error.status === 404) return false;
-    if (error.status === 401 || error.status === 403) return false;
     return error.status === 408 || error.status === 429 || error.status >= 500;
   }
-  // network-level errors (fetch failed, connection reset, etc.)
   return error instanceof Error;
 }
-
-export const MAX_STREAM_RETRY_ATTEMPTS = 5;
 
 export function getReconnectDelayMs({ attempt }: { attempt: number }): number {
   const baseDelayMs = 1_000;

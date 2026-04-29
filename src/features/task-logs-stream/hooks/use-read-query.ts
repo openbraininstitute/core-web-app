@@ -10,25 +10,31 @@ export function useReadQuery({
   projectId,
   configId,
   enabled,
+  enableDebugLogs,
 }: {
   jobId?: string;
   virtualLabId: string;
   projectId: string;
   configId?: string;
   enabled: boolean;
+  enableDebugLogs: boolean;
 }) {
   return useQuery(
     queryOptions({
-      queryKey: ['task-job-read', { jobId, virtualLabId, projectId, configId }],
+      queryKey: [
+        'task-job-read',
+        { jobId, virtualLabId, projectId, configId, enableDebugLogs, enabled },
+      ],
       queryFn: ({ signal }) =>
         fetchTaskJobRead({
           jobId: jobId ?? '',
           virtualLabId,
           projectId,
+          enableDebugLogs,
           signal,
         }),
       enabled: enabled && Boolean(jobId),
-      staleTime: 30_000,
+      staleTime: Infinity,
       refetchOnWindowFocus: false,
     })
   );
