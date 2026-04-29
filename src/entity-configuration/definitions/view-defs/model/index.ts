@@ -11,11 +11,14 @@ import { ViewDefForSingleNeuronSynaptome } from '@/entity-configuration/definiti
 import { ViewDefForSmallMicrocircuit } from '@/entity-configuration/definitions/view-defs/model/small-micro-circuit';
 import { ViewDefForSynthesizedCellMorphology } from '@/entity-configuration/definitions/view-defs/model/synthesized-morphology';
 
+import { ViewDefForBrainRegion } from './brain-region';
+
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.Emodel]: ViewDefForEmodel,
   [ExtendedEntitiesTypeDict.Memodel]: ViewDefForMemodel,
+  [ExtendedEntitiesTypeDict.BrainRegion]: ViewDefForBrainRegion,
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: ViewDefForSingleNeuronSynaptome,
   [ExtendedEntitiesTypeDict.MemodelCircuit]: ViewDefForMemodel,
   [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: ViewDefForSingleNeuronCircuit,
