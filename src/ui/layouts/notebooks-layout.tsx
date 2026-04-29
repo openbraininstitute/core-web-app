@@ -182,11 +182,7 @@ export function NotebooksLayout({ children, active }: Props) {
 
   const onNotebookCreateSuccess = useCallback(
     async (notebook: EntityCoreObjectTypes) => {
-      if (
-        !isNotebook(notebook) ||
-        !course?.is_initialized ||
-        course.template_project_id !== projectId
-      ) {
+      if (!isNotebook(notebook) || course?.template_project_id !== projectId) {
         return;
       }
       try {
@@ -244,7 +240,7 @@ export function NotebooksLayout({ children, active }: Props) {
                 className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
                 onClick={() => setShowCourseModal(true)}
               >
-                {course.is_initialized ? 'Add students to course' : 'Initialize course'}
+                Add students to course
               </UiButton>
             )}
 
@@ -996,22 +992,13 @@ function CourseSetup({
           });
         }
 
-        await updateVirtualLab({
-          virtualLabId,
-          updatePayload: {
-            course: { ...course, is_initialized: true },
-          },
-        });
-
         notification.success({
-          message: course.is_initialized
-            ? `Students added successfully`
-            : 'Course initialized successfully',
+          message: 'Students added successfully',
           key: 'course-setup-success',
           placement: 'topRight',
         });
       } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : 'Failed to initialize course';
+        const errorMessage = e instanceof Error ? e.message : 'Failed to add students to course';
         notification.error({
           message: errorMessage,
           key: 'course-setup-error',
@@ -1029,7 +1016,6 @@ function CourseSetup({
     notification,
     studentEmails,
     onFinnish,
-    course,
     name,
     queryClient,
     budgetPerStudent,
