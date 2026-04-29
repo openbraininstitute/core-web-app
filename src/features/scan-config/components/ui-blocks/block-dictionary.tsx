@@ -1,4 +1,4 @@
-import { get } from 'es-toolkit/compat';
+import { get, lowerCase } from 'es-toolkit/compat';
 import { atom } from 'jotai';
 
 import {
@@ -144,7 +144,7 @@ export default function BlockDictionary({
 
                   const baseName =
                     element.ui_element === ScanConfigUIElementDict.BlockDictionary
-                      ? element.singular_name
+                      ? lowerCase(element.singular_name)
                       : 'element';
                   let counter = 0;
                   let newEntry: string;
