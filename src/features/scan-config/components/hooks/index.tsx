@@ -149,6 +149,7 @@ export function useValidateSchema({
   }, [schema]);
 
   // Validate initial config
+
   if (validate && initialConfig && !initialConfigValidated.current) {
     initialConfigValidated.current = true;
     validate(initialConfig);
@@ -159,7 +160,7 @@ export function useValidateSchema({
         { initialConfig, config, schema },
         { errors: validate.errors }
       );
-      throw new Error('Invalid campaign configuration');
+      throw new Error('Invalid campaign configuration', { cause: validate.errors });
     }
   }
 

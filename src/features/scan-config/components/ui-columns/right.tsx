@@ -1,8 +1,8 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { ModelPreview } from '@/features/scan-config/components/model-preview';
-import { IonChannelModelRecordingRender } from '@/features/scan-config/components/model-preview/ion-channel-figure-viewer';
 import {
   ScanConfigActivity,
   type TScanConfigActivity,
@@ -11,6 +11,19 @@ import {
 
 import type { Config } from '@/features/scan-config/components/components';
 import type { Nullish } from '@/utils/type';
+
+const ModelPreview = dynamic(
+  () => import('@/features/scan-config/components/model-preview').then((m) => m.ModelPreview),
+  { ssr: false }
+);
+
+const IonChannelModelRecordingRender = dynamic(
+  () =>
+    import('@/features/scan-config/components/model-preview/ion-channel-figure-viewer').then(
+      (m) => m.IonChannelModelRecordingRender
+    ),
+  { ssr: false }
+);
 
 type Props = {
   activity: TScanConfigActivity;
@@ -30,7 +43,7 @@ export function Right({
   config,
 }: Props) {
   return (
-    <>
+    <div id="scan-config-controls-right-preview" className="rounded-lg mr-2">
       {activity === ScanConfigActivity.Simulate &&
         entityType === ExtendedEntitiesTypeDict.IonChannelModel && (
           <IonChannelModelRecordingRender
@@ -44,10 +57,10 @@ export function Right({
           entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
           entityType === ExtendedEntitiesTypeDict.MEModelWithSynapses) &&
         entity && (
-          <div className="rounded-lg">
+          <div className="rounded-lg" id="scan-config-right-model-preview">
             <ModelPreview model={entity} />
           </div>
         )}
-    </>
+    </div>
   );
 }

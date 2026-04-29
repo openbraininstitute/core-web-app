@@ -14,11 +14,12 @@ import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/cam
 import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaign/simulation-result';
 import { EntityTypeDict, type IMEModel, type TEntityTypeDict } from '@/api/entitycore/types';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { resolveExecutions } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { listExecutions } from '@/entity-configuration/domain/simulation';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
+import { fetchAllPaginatedData } from '@/utils/pagination';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
@@ -57,9 +58,9 @@ export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
       const simulations = await get(simulationsAtom);
       const simulationIds = simulations.map((s) => s.id);
 
-      const simExecutions = await resolveExecutions({
+      const simExecutions = await listExecutions({
         context,
-        allSimIds: simulationIds,
+        simulationIds,
       });
 
       const executionsGrouped = simExecutions.reduce<Map<string, IExecutionActivity[]>>(
@@ -72,10 +73,10 @@ export const simExecRemoteStatusMapAtomFamily = atomFamilyWithExpiration(
           void executions.sort((a, b) => b.creation_date.localeCompare(a.creation_date))
       );
 
-      return Array.from(executionsGrouped.keys()).reduce(
-        (map, simId) => map.set(simId, executionsGrouped.get(simId)![0].status),
-        new Map()
-      );
+      return Array.from(executionsGrouped.keys()).reduce((map, simId) => {
+        const latestExecution = executionsGrouped.get(simId)?.[0];
+        return latestExecution ? map.set(simId, latestExecution.status) : map;
+      }, new Map());
     }),
   {
     ttl: 120000, // 2 minutes
@@ -178,9 +179,16 @@ export const simulationsByCampaignIdAtomFamily = readAtomFamilyWithExpiration(
   ({ campaignId, context }: { campaignId: string; context: WorkspaceContext }) =>
     atom<Promise<ISimulation[]>>(async () => {
       const filters = { simulation_campaign_id: campaignId };
-      const res = await getSimulations({ filters, context });
-
-      const simulations = res.data;
+      const simulations = await fetchAllPaginatedData<ISimulation>({
+        fn: async (page, pageSize) => {
+          const res = await getSimulations({
+            filters: { ...filters, page, page_size: pageSize },
+            context,
+          });
+          return { data: res.data || [] };
+        },
+        pageSize: 100,
+      });
 
       // To correctly sort simulations by name which might contain a simulation index.
       const collator = new Intl.Collator(undefined, {

@@ -1,22 +1,29 @@
-import { get } from 'es-toolkit/compat';
-
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { getParamLabel } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/utils';
 import { getSimulationStatus } from '@/entity-configuration/domain/simulation';
-import { ExecutionStatus } from '@/ui/segments/activity-execution/status';
-import { BaseTable } from '@/ui/segments/data-table/table';
-import { cn } from '@/utils/css-class';
+import { ActivityStatusRenderer } from '@/features/task-runner/activity-execution/status';
+import {
+  createNameColumn,
+  createScanParameterColumns,
+  createStatusColumn,
+  renderExpandedTable,
+  TaskViewConfig,
+} from '@/features/task-runner/expanded-view';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
+import type { TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { ListExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/types';
 
-const className = 'text-primary-7';
+type TSimulationRow = ISimulation & { status?: TActivityStatus };
 
 export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
-  expandIconColumnIndex: 7,
-  render: (simulationCampaign) => {
-    const simulations = simulationCampaign.simulations ?? [];
+  expandIconColumnIndex: 6,
+  expandIcon:
+    TaskViewConfig.expandIcon as ListExpandedViewConfig<ICircuitSimulationCampaign>['expandIcon'],
+  render: (simulationCampaign, records) => {
+    const simulations =
+      records.length > 0
+        ? (records as unknown as TSimulationRow[])
+        : ((simulationCampaign.simulations ?? []) as TSimulationRow[]);
 
     const allScanParamSet = simulations.reduce(
       (set, simulation) => set.union(new Set(Object.keys(simulation.scan_parameters))),
@@ -24,46 +31,16 @@ export const viewConfig: ListExpandedViewConfig<ICircuitSimulationCampaign> = {
     );
 
     const columns = [
-      {
-        title: 'Name',
-        className: cn(className, 'whitespace-nowrap'),
-        dataIndex: 'name',
-        key: 'name',
-        ellipsis: true,
-        fixed: 'left' as const,
-      },
-
-      ...Array.from(allScanParamSet).map((param) => ({
-        title: <span title={param}>{getParamLabel(param)}</span>,
-        className,
-        dataIndex: ['scan_parameters', param],
-        ellipsis: true,
-        key: param,
-      })),
-
-      {
-        title: 'Status',
-        render: (simulation: ISimulation) => (
-          <ExecutionStatus status={getSimulationStatus(simulation)} />
-        ),
-        width: 120,
-        className,
-        key: 'status',
-        fixed: 'right' as const,
-      },
+      createNameColumn<TSimulationRow>(),
+      ...createScanParameterColumns<TSimulationRow>(allScanParamSet),
+      createStatusColumn<TSimulationRow>((_: unknown, simulation: TSimulationRow) => (
+        <div className="flex items-center justify-center">
+          <ActivityStatusRenderer status={simulation.status ?? getSimulationStatus(simulation)} />
+        </div>
+      )),
     ];
 
-    return (
-      <div className="pr-36 pl-12">
-        <BaseTable
-          dataSource={simulations}
-          columns={columns}
-          dataType={ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation}
-          scrollable={false}
-          className="[&_.ant-table]:bg-background! [&_.ant-table-tbody>tr>td]:bg-background! [&_.ant-table-thead>tr>th]:bg-background!"
-        />
-      </div>
-    );
+    return renderExpandedTable<TSimulationRow>({ columns, dataSource: simulations });
   },
-  isExpandable: (simCampaign) => get(simCampaign, 'simulations', []).length > 1,
+  isExpandable: () => true,
 };

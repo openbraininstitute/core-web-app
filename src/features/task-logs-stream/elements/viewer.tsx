@@ -1,6 +1,5 @@
 'use client';
 
-import { RiFileList3Line, RiTerminalBoxLine } from '@remixicon/react';
 import { useCallback, useState } from 'react';
 
 import {
@@ -11,8 +10,6 @@ import { Configuration } from '@/features/task-logs-stream/elements/configuratio
 import { LogsViewer } from '@/features/task-logs-stream/elements/logger';
 import { useTaskLogsData } from '@/features/task-logs-stream/hooks/use-task-logs-data';
 import { ViewerTabDict } from '@/features/task-logs-stream/types';
-import { usePrevious } from '@/hooks/hooks';
-import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 import { log } from '@/utils/logger';
 
 import type { TLogLevel, TViewerTab } from '@/features/task-logs-stream/types';
@@ -38,14 +35,10 @@ export function Viewer({
   campaignOriginAction,
   isCampaignIdChanged,
 }: IProps) {
-  console.log('–– – viewer.tsx:42 – Viewer – configId:', configId);
-
-  console.log('–– – viewer.tsx:42 – Viewer – jobId:', jobId);
-
   const isViewCampaign =
     campaignOriginAction === ScanConfigCampaignOriginActionDict.View && !isCampaignIdChanged;
 
-  const [activeTab, setActiveTab] = useState<TViewerTab>(ViewerTabDict.Logs);
+  const [activeTab] = useState<TViewerTab>(ViewerTabDict.Logs);
   const debugLog = useCallback(
     ({ level, message, payload }: { level: TLogLevel; message: string; payload?: unknown }) => {
       if (!enableDebugLogs) return;
@@ -72,26 +65,6 @@ export function Viewer({
       id="job-viewer"
       className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-neutral-50 px-4"
     >
-      {isViewCampaign && (
-        <TabsSelector
-          id="job-viewer-tabs"
-          className="mb-3 w-max"
-          activeTab={activeTab}
-          onValueChange={(value) => setActiveTab(value as TViewerTab)}
-          items={[
-            {
-              key: ViewerTabDict.Logs,
-              title: 'Logs',
-              icon: <RiTerminalBoxLine size={16} />,
-            },
-            {
-              key: ViewerTabDict.Configuration,
-              title: 'Configuration',
-              icon: <RiFileList3Line size={16} />,
-            },
-          ]}
-        />
-      )}
       {activeTab === ViewerTabDict.Logs && (
         <LogsViewer
           entries={entries}

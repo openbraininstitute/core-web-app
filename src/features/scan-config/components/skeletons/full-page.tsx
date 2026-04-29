@@ -16,7 +16,7 @@ function TabsSkeleton() {
 
 function RootElementSkeleton({ expanded = false }: { expanded?: boolean }) {
   return (
-    <div className="w-full rounded-xl border border-gray-200 bg-white p-4">
+    <div className="w-full rounded-full border border-gray-200 bg-white p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Skeleton className="h-5 w-5 rounded" />
@@ -75,7 +75,7 @@ function MiddleColumnSkeleton() {
     <div
       className={cn(
         styles.scrollable,
-        'h-full overflow-y-auto border-r border-l border-gray-200 px-5'
+        'h-full overflow-y-auto border-r border-l border-gray-200 px-5 pr-2 secondary-scrollbar'
       )}
     >
       <div className="flex flex-col items-center gap-5">

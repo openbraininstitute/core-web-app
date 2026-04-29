@@ -87,7 +87,7 @@ export default function GenerateConfigButton({
     <button
       type="button"
       className={classNames(
-        'flex min-h-12.5 w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
+        'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-lg drop-shadow',
         (errors && errors.length > 0) || loading
           ? 'bg-gray-300 text-gray-500'
           : 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'

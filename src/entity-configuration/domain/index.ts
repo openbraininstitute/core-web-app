@@ -31,6 +31,7 @@ import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulat
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
+import { RegionCircuitSimulation } from '@/entity-configuration/domain/simulation/region-circuit-simulation';
 import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 
@@ -76,6 +77,7 @@ const EntityCoreSimulationConfiguration = {
   SmallMicrocircuitSimulation,
   MicrocircuitSimulation,
   IonChannelModelSimulation,
+  RegionCircuitSimulation,
 };
 
 const EntityCoreExtractionConfiguration = {

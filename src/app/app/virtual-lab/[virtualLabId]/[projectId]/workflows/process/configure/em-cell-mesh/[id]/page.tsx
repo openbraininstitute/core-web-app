@@ -6,7 +6,7 @@ import { use } from 'react';
 
 import { getEmCellMesh } from '@/api/entitycore/queries';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { resolveSkeletonizationByCampaignId } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -49,7 +49,9 @@ export default function Page({
     queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
     queryFn: async () => {
       if (!initialCampaignId) return null;
-      return await resolveSkeletonizationByCampaignId({
+      const resolveSkeletonizationCampaign = SkeletonizationCampaign.api.query.resolve;
+      if (!resolveSkeletonizationCampaign) return null;
+      return await resolveSkeletonizationCampaign({
         id: initialCampaignId,
         context: { virtualLabId, projectId },
       });
@@ -60,10 +62,7 @@ export default function Page({
     return notFound();
   }
 
-  if (
-    !initialCampaignId ||
-    (initialCampaignId && !isLoading && campaignData && campaignData.config.form)
-  ) {
+  if (!initialCampaignId || (initialCampaignId && !isLoading && campaignData?.config.form)) {
     return (
       <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
         <ScanConfiguration
@@ -72,7 +71,7 @@ export default function Page({
           virtualLabId={virtualLabId}
           projectId={projectId}
           initialConfig={campaignData?.config.form}
-          className="px-10 pt-2"
+          className="px-4 pt-2"
           activity={ScanConfigActivity.Process}
         />
         <DownloadPanel />

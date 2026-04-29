@@ -1,6 +1,6 @@
 import { CellCompositionExplorer } from '@/features/cell-composition/elements/cell-composition-explorer';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 import { Atlas } from '@/ui/segments/explore/atlas';
+import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 

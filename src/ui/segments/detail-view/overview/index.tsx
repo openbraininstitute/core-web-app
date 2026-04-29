@@ -18,10 +18,10 @@ import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
-import { resolveExtractionByCampaignId } from '@/entity-configuration/domain/extraction/extraction-campaign';
+import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { circuitTypes } from '@/entity-configuration/domain/helpers';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
-import { resolveSkeletonizationByCampaignId } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   resolveSimulationByCampaignId,
   resolveSingleNeuronSimulation,
@@ -117,8 +117,10 @@ export default async function Overview({
       'task_config_type' in entity &&
       entity.task_config_type === TaskConfigType.CircuitExtractionCampaign
     ) {
+      // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+      const resolveExtractionCampaign = CircuitExtractionCampaign.api.query.resolve!;
       const { data: extractionConfig, error } = await tryCatch(
-        resolveExtractionByCampaignId({ id: entity.id, context: context })
+        resolveExtractionCampaign({ id: entity.id, context: context })
       );
 
       if (error || !extractionConfig.circuitId) {
@@ -152,7 +154,8 @@ export default async function Overview({
     extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation ||
     extendedType === ExtendedEntitiesTypeDict.MicrocircuitSimulation ||
-    extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation
+    extendedType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation ||
+    extendedType === ExtendedEntitiesTypeDict.RegionCircuitSimulation
   ) {
     let config: AwaitedType<ReturnType<typeof resolveSimulationByCampaignId>>;
 
@@ -222,8 +225,10 @@ export default async function Overview({
   // FIXME: keeping this for backward compatibility with old extraction campaigns
   // TODO: remove this after all old extraction campaigns are migrated to new ones
   if (extendedType === ExtendedEntitiesTypeDict.CircuitExtractionCampaign) {
+    // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+    const resolveExtractionCampaign = CircuitExtractionCampaign.api.query.resolve!;
     const { data: extractionConfig, error } = await tryCatch(
-      resolveExtractionByCampaignId({ id: entity.id, context: context })
+      resolveExtractionCampaign({ id: entity.id, context: context })
     );
 
     if (error || !extractionConfig.circuitId) {
@@ -271,8 +276,10 @@ export default async function Overview({
   }
 
   if (extendedType === ExtendedEntitiesTypeDict.SkeletonizationCampaign) {
+    // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+    const resolveSkeletonizationCampaign = SkeletonizationCampaign.api.query.resolve!;
     const { data: extractionConfig, error } = await tryCatch(
-      resolveSkeletonizationByCampaignId({ id: entity.id, context })
+      resolveSkeletonizationCampaign({ id: entity.id, context })
     );
 
     if (error || !extractionConfig.emCellMeshId) {
