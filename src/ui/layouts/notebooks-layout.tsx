@@ -456,7 +456,7 @@ const CsvUploadValidator = ({
         </div>
       )}
 
-      {studentEmails.length > 0 && budgetPerStudent < 1000000000 && (
+      {studentEmails.length > 0 && budgetPerStudent < 1 && (
         <div className="flex flex-col gap-2">
           <div className="text-lg">Purchase credits to continue.</div>
 
