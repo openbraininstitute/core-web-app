@@ -292,7 +292,7 @@ export function NotebooksLayout({ children, active }: Props) {
           <div>
             {step === 0 && (
               <div>
-                <div className="mb-4 text-xl text-primary-8">Initialize Course</div>
+                <div className="mb-4 text-xl text-primary-8">Add students to course</div>
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-col">
                     <div>Upload CSV file with student information</div>
