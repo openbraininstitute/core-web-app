@@ -18,7 +18,6 @@ import {
   LIGHT_SOMA,
 } from '../constants';
 
-/* eslint-disable no-param-reassign */
 import type { ColoringType, MorphologyCanvas } from '@bbp/morphoviewer';
 
 const DEFAULT_SETTINGS: ExtendedMorphoViewerSettings = {
