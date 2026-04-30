@@ -1,9 +1,7 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element */
-
 import NextImage from 'next/image';
-import React from 'react';
+import { useState } from 'react';
 
 import { classNames } from '@/util/utils';
 
@@ -19,7 +17,7 @@ interface TeamMemberProps {
 
 export default function TeamMember({ className, value, big }: TeamMemberProps) {
   const { firstName, lastName, role, imageURL, imageWidth, imageHeight } = value;
-  const ready = useImageReady(imageURL);
+  const [ready, setReady] = useState(false);
   const name = `${firstName} ${lastName}`;
 
   return (
@@ -30,6 +28,7 @@ export default function TeamMember({ className, value, big }: TeamMemberProps) {
           alt={name}
           width={imageWidth}
           height={imageHeight}
+          onLoad={() => setReady(true)}
           className={classNames(ready && styles.ready)}
         />
       </div>
@@ -37,14 +36,4 @@ export default function TeamMember({ className, value, big }: TeamMemberProps) {
       <div className={styles.profile}>{role}</div>
     </div>
   );
-}
-
-function useImageReady(imageURL: string) {
-  const [ready, setReady] = React.useState(false);
-  React.useEffect(() => {
-    const img = new Image();
-    img.onload = () => setReady(true);
-    img.src = imageURL;
-  }, [imageURL]);
-  return ready;
 }

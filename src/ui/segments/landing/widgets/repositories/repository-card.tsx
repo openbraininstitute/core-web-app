@@ -7,7 +7,7 @@ import { IconEye } from '@/ui/segments/landing/icons/icon-eye';
 import { styleButtonHoverable } from '@/ui/segments/landing/styles';
 import { classNames } from '@/util/utils';
 
-import type { ContentForRepository } from './hooks';
+import type { ContentForRepository } from '@/services/sanity/api/get-repositories-content';
 
 import styles from './repository-card.module.css';
 

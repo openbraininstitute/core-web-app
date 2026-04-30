@@ -145,7 +145,7 @@ function useScrollWatcher(
 
         const x = card.getBoundingClientRect().x - xDiv;
         if (x >= 0) {
-          setCardIndex(index);
+          setCardIndex((prev) => (prev === index ? prev : index));
           return;
         }
       }

@@ -7,7 +7,7 @@ import { Text } from '@/ui/segments/landing/components/text/text';
 import { styleButtonHoverable } from '@/ui/segments/landing/styles';
 import { classNames } from '@/util/utils';
 
-import type { ContentForMultipleMemberItem } from './hooks';
+import type { ContentForMultipleMemberItem } from '@/services/sanity/api/get-multiple-member';
 
 import styles from './member.module.css';
 

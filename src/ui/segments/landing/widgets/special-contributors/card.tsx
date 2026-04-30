@@ -4,7 +4,7 @@ import ProgressiveImage from '@/ui/segments/landing/components/progressive-image
 import { styleButtonHoverable } from '@/ui/segments/landing/styles';
 import { classNames } from '@/util/utils';
 
-import type { ContentForSpecialContributor } from './hooks';
+import type { ContentForSpecialContributor } from '@/services/sanity/api/get-special-contributors';
 
 import styles from './card.module.css';
 

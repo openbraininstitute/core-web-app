@@ -1,19 +1,6 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-
 import { CONTRIBUTORS_LIST, type ContributorProps } from '@/constants/home/contributors-list';
 
 export type Contributor = ContributorProps;
-
-export function useContributors(): Contributor[] {
-  const [contributors, setContributors] = useState<Contributor[]>([]);
-  useEffect(() => {
-    const list: Contributor[] = CONTRIBUTORS_LIST;
-    setContributors(list.sort(sortContributors));
-  }, []);
-  return contributors;
-}
 
 function sortContributors(c1: Contributor, c2: Contributor) {
   const l1 = c1.last_name.toUpperCase();
@@ -26,4 +13,10 @@ function sortContributors(c1: Contributor, c2: Contributor) {
   if (f1 < f2) return -1;
   if (f1 > f2) return +1;
   return 0;
+}
+
+const SORTED_CONTRIBUTORS: Contributor[] = [...CONTRIBUTORS_LIST].sort(sortContributors);
+
+export function useContributors(): Contributor[] {
+  return SORTED_CONTRIBUTORS;
 }

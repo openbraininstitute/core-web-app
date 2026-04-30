@@ -4,7 +4,7 @@ import type React from 'react';
 import type {
   ContentForPriceList2LabBlocSectionPlanItem,
   ContentForPriceList2LabItem,
-} from './hooks';
+} from '@/services/sanity/api/get-price-list-content';
 
 import styles from './lab-list.module.css';
 

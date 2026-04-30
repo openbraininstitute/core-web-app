@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useRef } from 'react';
+import { createContext, useContext, useEffect, useRef } from 'react';
 
 import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
 import { classNames } from '@/util/utils';
@@ -41,17 +41,11 @@ export default function LandingPageShell({
 }: LandingPageShellProps) {
   const isFeatures = section === EnumSection.Features;
   const containerRef = useRef<HTMLDivElement>(null);
-  const contextValue = useMemo(
-    () => (isFeatures ? (containerRef as RefObject<HTMLElement | null>) : undefined),
-    [isFeatures]
-  );
+  const contextValue = isFeatures ? (containerRef as RefObject<HTMLElement | null>) : undefined;
 
   useEffect(() => {
-    if (isFeatures && containerRef.current) {
-      containerRef.current.scrollTo({ top: 0, behavior: 'instant' });
-    } else {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
+    const target = isFeatures ? containerRef.current : window;
+    target?.scrollTo({ top: 0, behavior: 'instant' });
   }, [isFeatures]);
 
   return (

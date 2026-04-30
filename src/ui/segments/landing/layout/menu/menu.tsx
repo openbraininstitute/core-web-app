@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { ID_MENU, MENU_ITEMS } from '@/ui/segments/landing/constants';
 import { IconChevronRight } from '@/ui/segments/landing/icons/icon-chevron-right';
@@ -31,7 +31,7 @@ export default function Menu({
 }: MenuProps) {
   const [showMenu, setShowMenu] = React.useState(false);
   const [showMenuComponent, setShowMenuComponent] = React.useState(true);
-  const [lastScrollY, setLastScrollY] = React.useState(0);
+  const lastScrollYRef = useRef(0);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [internalScrollStarted, setInternalScrollStarted] = React.useState(false);
   const shellScrollRef = useLandingScrollContainer();
@@ -58,22 +58,26 @@ export default function Menu({
     const target = el ?? window;
     const handleScroll = () => {
       const currentScrollY = el ? el.scrollTop : window.scrollY;
+      const lastScrollY = lastScrollYRef.current;
 
-      setInternalScrollStarted(currentScrollY > 0);
+      setInternalScrollStarted((prev) => {
+        const next = currentScrollY > 0;
+        return prev === next ? prev : next;
+      });
 
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setShowMenuComponent(false);
+        setShowMenuComponent((prev) => (prev ? false : prev));
       } else if (currentScrollY < lastScrollY) {
-        setShowMenuComponent(true);
+        setShowMenuComponent((prev) => (prev ? prev : true));
       }
 
-      setLastScrollY(currentScrollY);
+      lastScrollYRef.current = currentScrollY;
     };
 
     target.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => target.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY, effectiveScrollRef]);
+  }, [effectiveScrollRef]);
 
   return (
     <>

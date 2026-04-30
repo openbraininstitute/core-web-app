@@ -8,8 +8,7 @@ import { classNames } from '@/util/utils';
 
 import HeaderNews from './header-news';
 import ButtonComponent from './portable-text/button-component';
-import ImageFullScreen from './portable-text/image-full-screen';
-import SimpleImage from './portable-text/simple-image';
+import NewsImage from './portable-text/news-image';
 
 import type { ContentForNewsItem } from '@/services/sanity/api/get-news-item';
 
@@ -38,9 +37,11 @@ export type ButtonBlockValue = {
 const portableTextComponents = {
   types: {
     fullScreenImage: ({ value }: { value: FullScreenImageValue }) => (
-      <ImageFullScreen value={value} />
+      <NewsImage value={value} defaultAlt="Full Screen Image" />
     ),
-    image: ({ value }: { value: FullScreenImageValue }) => <SimpleImage value={value} />,
+    image: ({ value }: { value: FullScreenImageValue }) => (
+      <NewsImage value={value} defaultAlt="Simple Image" />
+    ),
     buttonComponent: ({ value }: { value: ButtonBlockValue }) => <ButtonComponent value={value} />,
   },
 };

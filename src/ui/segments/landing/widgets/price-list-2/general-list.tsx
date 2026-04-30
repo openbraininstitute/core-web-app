@@ -4,7 +4,7 @@ import type React from 'react';
 import type {
   ContentForPriceList2GeneralItem,
   ContentForPriceList2GeneralPriceItem,
-} from './hooks';
+} from '@/services/sanity/api/get-price-list-content';
 
 import styles from './general-list.module.css';
 

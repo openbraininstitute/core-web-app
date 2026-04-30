@@ -3,7 +3,7 @@ import React from 'react';
 import ProgressiveImage from '@/ui/segments/landing/components/progressive-image/progressive-image';
 import { classNames } from '@/util/utils';
 
-import type { ContentForSwipeableListItem } from './hooks';
+import type { ContentForSwipeableListItem } from '@/services/sanity/api/get-swipeable-list';
 
 import styles from './card.module.css';
 
