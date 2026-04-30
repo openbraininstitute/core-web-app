@@ -101,6 +101,8 @@ export function ScanConfigTemplate({
 
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
 
+  const configurationTabId = ScanConfigTabs[activity].configuration;
+  const isConfigurationTab = tab.id === configurationTabId;
   const results = match(activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>
@@ -135,10 +137,6 @@ export function ScanConfigTemplate({
     .otherwise(() => {
       throw new Error(`${activity} is not supported yet`);
     });
-
-  const configurationTabId = ScanConfigTabs[activity].configuration;
-
-  const isConfigurationTab = tab.id === configurationTabId;
 
   return (
     <div className={cn('flex h-full flex-col', className)}>
