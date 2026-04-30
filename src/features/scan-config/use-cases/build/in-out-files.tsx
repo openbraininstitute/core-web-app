@@ -17,14 +17,16 @@ import {
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import {
   makeLogStreamFileDescriptors,
+  makeTaskConfigurationFile,
+  makeTaskLogsFile,
   prependLogStreamFile,
 } from '@/features/task-logs-stream/descriptor';
+import { MAX_VISUALIZATION_ASSET_REFETCH_RETRIES } from '@/features/task-runner';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TEmSynapseMappingCampaignMeta } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
-import type { TBuildLogStreamFileDescriptor } from '@/features/task-logs-stream/descriptor';
 
 type Props = {
   config: ITaskConfig<TEmSynapseMappingCampaignMeta>;
@@ -35,74 +37,6 @@ type Props = {
   context: { virtualLabId: string; projectId: string };
   campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
-
-const MAX_VIS_ASSET_REFETCH_RETRIES = 10;
-
-function createVirtualLogAsset({
-  id,
-  path,
-  contentType,
-}: {
-  id: string;
-  path: string;
-  contentType: AssetContentType;
-}): IAsset {
-  return {
-    id,
-    path,
-    full_path: path,
-    bucket_name: '',
-    is_directory: false,
-    content_type: contentType,
-    size: 0,
-    label: AssetLabel.task_config,
-    status: 'created',
-  } as IAsset;
-}
-
-function createTaskConfigurationFile({
-  descriptor,
-  config,
-}: {
-  descriptor: TBuildLogStreamFileDescriptor;
-  config: ITaskConfig<TEmSynapseMappingCampaignMeta>;
-}): TActivityCustomFile {
-  return {
-    id: descriptor.id,
-    entity: config,
-    asset: createVirtualLogAsset({
-      id: descriptor.id,
-      path: descriptor.path,
-      contentType: AssetContentType.json,
-    }),
-    assetPath: descriptor.path,
-    name: descriptor.name,
-    enforcedRenderType: AssetContentType.json,
-    renderer: ActivityCustomFileRenderer.TaskConfigurationViewer,
-  };
-}
-
-function createTaskLogsFile({
-  descriptor,
-  execution,
-}: {
-  descriptor: TBuildLogStreamFileDescriptor;
-  execution: ITaskActivity;
-}): TActivityCustomFile {
-  return {
-    id: descriptor.id,
-    entity: execution as TActivityCustomFile['entity'],
-    asset: createVirtualLogAsset({
-      id: descriptor.id,
-      path: descriptor.path,
-      contentType: AssetContentType.text,
-    }),
-    assetPath: descriptor.path,
-    name: descriptor.name,
-    enforcedRenderType: AssetContentType.text,
-    renderer: ActivityCustomFileRenderer.TaskLogsViewer,
-  };
-}
 
 export function InOutFiles({
   config,
@@ -151,7 +85,7 @@ export function InOutFiles({
     }
     return prependLogStreamFile({
       file: logStreamFiles.input
-        ? createTaskConfigurationFile({ descriptor: logStreamFiles.input, config })
+        ? makeTaskConfigurationFile({ descriptor: logStreamFiles.input, config })
         : null,
       files,
     });
@@ -177,7 +111,8 @@ export function InOutFiles({
       const hasVisAsset = data?.assets?.some(
         (asset) => asset.label === AssetLabel.circuit_visualization
       );
-      const hasReachedMaxRetries = query.state.dataUpdateCount >= MAX_VIS_ASSET_REFETCH_RETRIES;
+      const hasReachedMaxRetries =
+        query.state.dataUpdateCount >= MAX_VISUALIZATION_ASSET_REFETCH_RETRIES;
       return hasVisAsset || hasReachedMaxRetries ? false : 2_000;
     },
   });
@@ -196,7 +131,7 @@ export function InOutFiles({
     return prependLogStreamFile({
       file:
         logStreamFiles.output && execution
-          ? createTaskLogsFile({ descriptor: logStreamFiles.output, execution })
+          ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
           : null,
       files,
     });

@@ -17,6 +17,7 @@ import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files'
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
@@ -28,20 +29,12 @@ import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config
 
 type Props = {
   campaignId: string;
-  virtualLabId: string;
-  projectId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
 };
 
-export function BuildTab({
-  campaignOriginAction,
-  campaignId,
-  virtualLabId,
-  projectId,
-  isCampaignIdChanged,
-}: Props) {
-  const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
+export function BuildTab({ campaignOriginAction, campaignId, isCampaignIdChanged }: Props) {
+  const context = useWorkspace();
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
   const [activeConfig, setActiveConfig] =

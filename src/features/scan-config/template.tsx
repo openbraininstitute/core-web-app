@@ -132,7 +132,11 @@ export function ScanConfigTemplate({
     ))
     .with(ScanConfigActivity.Extract, () => (
       <Suspense>
-        <ExtractionTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
+        <ExtractionTab
+          isCampaignIdChanged={isCampaignIdChanged}
+          campaignOriginAction={campaignOriginAction}
+          campaignId={campaignId}
+        />
       </Suspense>
     ))
     .with(ScanConfigActivity.Process, () => (
@@ -150,8 +154,6 @@ export function ScanConfigTemplate({
           isCampaignIdChanged={isCampaignIdChanged}
           campaignOriginAction={campaignOriginAction}
           campaignId={campaignId}
-          virtualLabId={virtualLabId}
-          projectId={projectId}
         />
       </Suspense>
     ))
