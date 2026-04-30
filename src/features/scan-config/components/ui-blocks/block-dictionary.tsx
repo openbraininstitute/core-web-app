@@ -1,3 +1,4 @@
+import { capitalize } from 'es-toolkit';
 import { get, lowerCase } from 'es-toolkit/compat';
 import { atom, useAtomValue } from 'jotai';
 
@@ -184,7 +185,7 @@ export default function BlockDictionary({
 
                   const baseName =
                     element.ui_element === ScanConfigUIElementDict.BlockDictionary
-                      ? lowerCase(element.singular_name)
+                      ? capitalize(element.singular_name)
                       : 'element';
                   let counter = 0;
                   let newEntry: string;

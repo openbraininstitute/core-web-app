@@ -30,7 +30,7 @@ export function VoltageDuration({
               {/* biome-ignore lint/suspicious/noArrayIndexKey: intentional use of index */}
               <div key={i} className="flex flex-col gap-1">
                 <div className="flex justify-between">
-                  <div className="text-neutral-3">STEP {i}</div>
+                  <div className="text-neutral-3">LEVEL {i}</div>
                   <DeleteOutlined
                     className="text-red-500"
                     onClick={() => onChange(state.toSpliced(i, 1))}
@@ -74,7 +74,7 @@ export function VoltageDuration({
             onChange([...state, { voltage: null, duration: null }]);
           }}
         >
-          Add step
+          Add level
           <PlusOutlined className="text-primary-8! " />
         </button>
       )}
