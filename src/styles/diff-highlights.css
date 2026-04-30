@@ -21,7 +21,9 @@
 .diff-base {
   border: 1.5px solid transparent;
   box-sizing: border-box;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 /* ── Colour tokens ────────────────────────────────────────────────────────── */
@@ -60,21 +62,43 @@
 .diff-highlight-removed-selected,
 .diff-highlight-modified-selected {
   border: 1.5px solid rgba(var(--diff-color), 0.55) !important;
-  box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08), inset 0 0 0 1px rgba(var(--diff-color), 0.5) !important;
+  box-shadow:
+    0 0 0 3px rgba(var(--diff-color), 0.08),
+    inset 0 0 0 1px rgba(var(--diff-color), 0.5) !important;
 }
 
 /* ── Shared keyframes ─────────────────────────────────────────────────────── */
 
 @keyframes diff-flash-slow {
-  0%    { border: 1.5px solid rgba(var(--diff-color), 0);    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0); }
-  8%    { border: 1.5px solid rgba(var(--diff-color), 0.55); box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08); }
-  75%   { border: 1.5px solid rgba(var(--diff-color), 0.55); box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08); }
-  100%  { border: 1.5px solid rgba(var(--diff-color), 0);    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0); }
+  0% {
+    border: 1.5px solid rgba(var(--diff-color), 0);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0);
+  }
+  8% {
+    border: 1.5px solid rgba(var(--diff-color), 0.55);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08);
+  }
+  75% {
+    border: 1.5px solid rgba(var(--diff-color), 0.55);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08);
+  }
+  100% {
+    border: 1.5px solid rgba(var(--diff-color), 0);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0);
+  }
 }
 
 @keyframes diff-flash-fast {
-  0%, 15%   { border: 1.5px solid rgba(var(--diff-color), 0.55); box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08); }
-  85%, 100% { border: 1.5px solid rgba(var(--diff-color), 0);    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0); }
+  0%,
+  15% {
+    border: 1.5px solid rgba(var(--diff-color), 0.55);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08);
+  }
+  85%,
+  100% {
+    border: 1.5px solid rgba(var(--diff-color), 0);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0);
+  }
 }
 
 /* ── Slow flash (2 s linear) — root elements & dictionary entries ─────── */

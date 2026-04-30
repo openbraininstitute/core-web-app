@@ -42,6 +42,9 @@ importers:
       '@octokit/core':
         specifier: ^7.0.6
         version: 7.0.6
+      '@openbraininstitute/morphoviewer':
+        specifier: ^0.24.20
+        version: 0.24.20(react@19.2.4)
       '@portabletext/react':
         specifier: ^6.0.3
         version: 6.0.3(react@19.2.4)
@@ -2312,6 +2315,11 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
+  '@openbraininstitute/morphoviewer@0.24.20':
+    resolution: {integrity: sha512-OArDnbVgMWIYhJSca0trjiHGYbcjVelb4rdRbYNeS5N0OQrtkFLy5Sqo+ryMVL4Uu3S6arT2Yi9K6aqWJ/CX+w==}
+    peerDependencies:
+      react: ^19.2.4
+
   '@opentelemetry/api-logs@0.207.0':
     resolution: {integrity: sha512-lAb0jQRVyleQQGiuuvCOTDVspc14nx6XJjP4FspJ1sNARo3Regq4ZZbrc3rN4b1TYSuUCvgH+UXUPug4SLOqEQ==}
     engines: {node: '>=8.0.0'}
@@ -4237,6 +4245,9 @@ packages:
 
   '@tolokoban/tgd@2.0.124':
     resolution: {integrity: sha512-cQqyW636ekY2gbWYMXRMz+NvkFhsFEAUnROl3r9mO3EsjVeHpiFvUpr2k0RwvaqysXO+RBk10dKAz0900hM69A==}
+
+  '@tolokoban/tgd@2.0.130':
+    resolution: {integrity: sha512-G7ac5IHASpsSPQd5JZti3idiPw2mZA9jMFW8p9k9VYF98GNMiSHJJ+/1i7aSpTO1gHEDvKequwOGUur3/nU8MQ==}
 
   '@tolokoban/tgd@2.0.78':
     resolution: {integrity: sha512-nEpIwkOO/bEEk0Fetpjc8iAaBYsRf9wZQgUMQLvrjCSv9VnG8bzOh4WKeRcSufkgUw7+Sqoe2kV3MVXB+lFL+w==}
@@ -8963,6 +8974,7 @@ packages:
 
   uuid@10.0.0:
     resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@11.1.0:
@@ -11350,6 +11362,15 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
+  '@openbraininstitute/morphoviewer@0.24.20(react@19.2.4)':
+    dependencies:
+      '@tolokoban/tgd': 2.0.130
+      fflate: 0.8.2
+      react: 19.2.4
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - '@75lb/nature'
+
   '@opentelemetry/api-logs@0.207.0':
     dependencies:
       '@opentelemetry/api': 1.9.1
@@ -13610,6 +13631,15 @@ snapshots:
   '@tanstack/virtual-core@3.14.0': {}
 
   '@tolokoban/tgd@2.0.124':
+    dependencies:
+      '@loaders.gl/core': 4.4.1
+      '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)
+      '@loaders.gl/gltf': 4.4.1(@loaders.gl/core@4.4.1)
+      gl-matrix: 3.4.4
+    transitivePeerDependencies:
+      - '@75lb/nature'
+
+  '@tolokoban/tgd@2.0.130':
     dependencies:
       '@loaders.gl/core': 4.4.1
       '@loaders.gl/draco': 4.4.1(@loaders.gl/core@4.4.1)

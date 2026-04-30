@@ -8,7 +8,7 @@ import { ColorMode } from './ColorMode';
 import { ColorsLegend } from './ColorsLegend';
 import { DendriteThickness } from './DendriteThickness';
 
-import type { MorphologyCanvas } from '@bbp/morphoviewer';
+import type { MorphologyCanvas } from '@/morpho-viewer';
 
 // import { ThicknessMode } from './ThicknessMode';
 
