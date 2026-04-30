@@ -1,14 +1,16 @@
 import { CloseOutlined } from '@ant-design/icons';
-import { MorphologyCanvas } from '@bbp/morphoviewer';
 import { useState } from 'react';
+
+import { SettingsIcon } from '@/components/icons';
+import { classNames } from '@/util/utils';
 
 import { ColorMode } from './ColorMode';
 import { ColorsLegend } from './ColorsLegend';
 import { DendriteThickness } from './DendriteThickness';
-import { ThicknessMode } from './ThicknessMode';
 
-import { SettingsIcon } from '@/components/icons';
-import { classNames } from '@/util/utils';
+import type { MorphologyCanvas } from '@bbp/morphoviewer';
+
+// import { ThicknessMode } from './ThicknessMode';
 
 import styles from './settings.module.css';
 
@@ -33,7 +35,7 @@ export function Settings({ className, painter }: SettingsProps) {
         </div>
         <ColorsLegend className={styles.legend} painter={painter} />
         <DendriteThickness painter={painter} />
-        <ThicknessMode painter={painter} />
+        {/* <ThicknessMode painter={painter} /> */}
         <ColorMode painter={painter} />
       </div>
     </div>

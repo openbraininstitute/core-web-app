@@ -16,7 +16,8 @@ import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features
 import { InOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
-import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
+import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
+import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';

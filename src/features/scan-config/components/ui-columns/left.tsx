@@ -148,7 +148,7 @@ export default function Left({
       </div>
 
       {!readOnly && (
-        <div className="mt-auto w-full pt-2 pr-4">
+        <div className="mt-auto w-full pr-4 pt-2">
           <GenerateConfigButton
             loading={loading}
             campaignId={campaignId}

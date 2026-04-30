@@ -43,7 +43,7 @@ export function Right({
   config,
 }: Props) {
   return (
-    <div id="scan-config-controls-right-preview" className="rounded-lg mr-2">
+    <div id="scan-config-controls-right-preview" className="rounded-lg mr-2 h-full">
       {activity === ScanConfigActivity.Simulate &&
         entityType === ExtendedEntitiesTypeDict.IonChannelModel && (
           <IonChannelModelRecordingRender
@@ -57,7 +57,7 @@ export function Right({
           entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
           entityType === ExtendedEntitiesTypeDict.MEModelWithSynapses) &&
         entity && (
-          <div className="rounded-lg" id="scan-config-right-model-preview">
+          <div className="rounded-lg h-full" id="scan-config-right-model-preview">
             <ModelPreview model={entity} />
           </div>
         )}

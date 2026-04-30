@@ -1,29 +1,57 @@
-import { notFound } from 'next/navigation';
+'use client';
 
-import { convertEntitySlugToExtendedType } from '@/api/entitycore/utils';
-import { WorkspaceSection } from '@/constants';
-import { WorkflowBrowseEntity } from '@/features/views/listing/browse-new-workflow';
+import { notFound } from 'next/navigation';
+import { use } from 'react';
+
+import { WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { getPrimaryConfigurationInput, getWorkflow } from '@/ui/segments/workflows/config';
+import { resolveExtendedTypeFromPathParamUrl } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { KebabCase } from '@/utils/type';
 
-export default async function Page({
+export default function Page({
   params,
 }: ServerSideComponentProp<
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   null
 >) {
-  const { type, virtualLabId, projectId } = await params;
+  const { type } = use(params);
+  const { type: targetType } = resolveExtendedTypeFromPathParamUrl({ pathParam: type });
 
-  const dataType = convertEntitySlugToExtendedType({ type });
-  if (!dataType) return notFound();
+  const workflow = getWorkflow({
+    activity: WorkflowActivityDictValue.process,
+    targetType,
+  });
+
+  const primaryInput = getPrimaryConfigurationInput({
+    activity: WorkflowActivityDictValue.process,
+    targetType,
+  });
+
+  const browseType = primaryInput?.type ?? workflow?.sourceType;
+
+  if (!workflow || !browseType) return notFound();
+
+  const extraQueryParams = primaryInput?.filters ?? workflow.filters ?? undefined;
+  const section = WorkspaceSection.ProcessWorkflow;
 
   return (
-    <WorkflowBrowseEntity
-      workspace={{ virtualLabId, projectId }}
-      baseModelType={dataType}
-      section={WorkspaceSection.ProcessWorkflow}
+    <BrowseEntityScope
+      requireMiniDetailView
+      requireBrainRegion={false}
+      section={section}
+      classNames={{ container: 'max-h-full', miniView: 'max-h-[calc(100vh-15rem)]' }}
+      dataType={browseType}
+      extraQueryParams={extraQueryParams}
+      mainTableProps={{
+        selectionType: undefined,
+      }}
+      miniViewProps={{
+        section,
+      }}
     />
   );
 }

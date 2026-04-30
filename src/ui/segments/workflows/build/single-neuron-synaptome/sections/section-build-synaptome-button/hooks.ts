@@ -16,7 +16,7 @@ import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { messages } from '@/i18n/en/synaptome';
 import useWorkspace from '@/ui/hooks/use-workspace';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { ActivityValues } from '@/ui/segments/workflows/config';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import { useBuildSingleNeuronSynaptomeSessionState } from '../../helpers';

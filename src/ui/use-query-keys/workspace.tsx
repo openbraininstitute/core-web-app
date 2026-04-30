@@ -1,7 +1,7 @@
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import type { WorkspaceContext } from '@/types/common';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 export const prefix = 'workspace';
 

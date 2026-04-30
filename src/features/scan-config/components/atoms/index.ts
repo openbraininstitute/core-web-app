@@ -4,7 +4,7 @@ import { atom } from 'jotai';
 import { atomWithRefresh } from 'jotai/utils';
 import { match } from 'ts-pattern';
 
-import { getEmCellMesh, getMEModel } from '@/api/entitycore/queries';
+import { getCellMorphology, getEmCellMesh, getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
@@ -12,7 +12,7 @@ import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-m
 import { getSimulations } from '@/api/entitycore/queries/simulation/campaign/simulation';
 import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
 import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaign/simulation-result';
-import { EntityTypeDict, type IMEModel, type TEntityTypeDict } from '@/api/entitycore/types';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { listExecutions } from '@/entity-configuration/domain/simulation';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
@@ -21,6 +21,7 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import { atomFamilyWithExpiration, readAtomFamilyWithExpiration } from '@/util/atoms';
 import { fetchAllPaginatedData } from '@/utils/pagination';
 
+import type { ICellMorphology, IMEModel, TEntityTypeDict } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
@@ -231,9 +232,9 @@ export function useModelQuery({
     isLoading: modelLoading,
     error: modelError,
   } = useQuery<
-    ICircuit | IMEModel | IonChannelModel | IEMCellMesh,
+    ICircuit | IMEModel | IonChannelModel | IEMCellMesh | ICellMorphology,
     Error,
-    ICircuit | IMEModel | IonChannelModel | IEMCellMesh
+    ICircuit | IMEModel | IonChannelModel | IEMCellMesh | ICellMorphology
   >({
     // @ts-expect-error this query won't start without the id
     queryKey: keyBuilder.entity({ id, context, type: entityType }),
@@ -244,12 +245,12 @@ export function useModelQuery({
           .with(EntityTypeDict.Circuit, () => getCircuit(params))
           // @ts-expect-error this query won't start without the id
           .with(EntityTypeDict.Memodel, () => getMEModel(params))
-          .with(EntityTypeDict.IonChannelModel, () =>
-            // @ts-expect-error this query won't start without the id
-            getIonChannelModel(params)
-          )
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.IonChannelModel, () => getIonChannelModel(params))
           // @ts-expect-error this query won't start without the id
           .with(EntityTypeDict.EMCellMesh, () => getEmCellMesh(params))
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.CellMorphology, () => getCellMorphology(params))
           .otherwise((entityType) => {
             throw new Error(`Unsupported model entity type ${entityType}`);
           })
@@ -258,7 +259,7 @@ export function useModelQuery({
     enabled: !!entityType && !!id,
     refetchOnWindowFocus: false,
   });
-
+            
   const isLoading = entityLoading || modelLoading;
   const error = entityError || modelError;
 
