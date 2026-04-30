@@ -39,6 +39,8 @@ import { editingAtom, selectedEntryAtom, selectedRootElementAtom } from '@/state
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
+import { ImportConfigButton } from './components/import-config';
+
 import type { Config } from '@/features/scan-config/components/components';
 import type { Nullish } from '@/utils/type';
 
@@ -152,6 +154,11 @@ export function ScanConfigTemplate({
           disableConfigurationTab={Boolean(!initialConfig && readOnly)}
         />
         <div className="flex items-center justify-center gap-8">
+          <ImportConfigButton
+            schema={schema}
+            setAtomsMap={setAtomsMap}
+            disabled={readOnly || !!campaignId || loading}
+          />
           {!!campaignId && (
             <ButtonCopyId label={get(messages, `${activity}.CopyCampaignId`)} value={campaignId} />
           )}

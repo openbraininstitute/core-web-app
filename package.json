@@ -135,6 +135,7 @@
     "@types/three": "^0.159.0",
     "autoprefixer": "^10.4.27",
     "check-barrel-import-violation": "^0.3.0",
+    "fast-check": "^4.7.0",
     "knip": "^5.85.0",
     "lefthook": "^2.1.2",
     "postcss": "^8.5.8",
