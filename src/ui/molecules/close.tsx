@@ -10,7 +10,7 @@ export default function Close({ href, className }: { href: string; className?: s
     <NextLink
       href={href}
       className={cn(
-        'hover:bg-neutral-1 text-neutral-5 hover:text-primary-6 ',
+        'hover:bg-white text-neutral-5 hover:text-primary-6 ',
         'flex items-center justify-center rounded-full p-2 hover:shadow-bnb',
         className
       )}

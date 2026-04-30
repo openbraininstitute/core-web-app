@@ -5,21 +5,20 @@ import { use } from 'react';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
-import {
-  type ThreeDVisualizerQueryParamKeys,
-  threeDVisualizerState,
-  type WorkflowSimulatePanelKeys,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';
 import { PanelSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { cn } from '@/utils/css-class';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type {
+  ThreeDVisualizerQueryParamKeys,
+  WorkflowSimulatePanelKeys,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
 
 export default function Page({
@@ -44,7 +43,7 @@ export default function Page({
   });
 
   return (
-    <>
+    <WorkflowSimulateLayout>
       <div className="mb-2 w-full shrink-0">
         <Header />
       </div>
@@ -80,18 +79,8 @@ export default function Page({
               disableSynapses={false}
             />
           </ResponsiveSideViewer>
-          {/* <div
-            id="simulation-panel-wrapper"
-            data-testid="simulation-panel-wrapper"
-            className={cn(
-              'grid h-full min-h-0 gap-4 overflow-hidden overflow-y-auto',
-              { 'grid-cols-[2fr_3fr]': visualizerState === threeDVisualizerState.Expanded },
-              { 'grid-cols-[2.5fr_5rem]': visualizerState === threeDVisualizerState.Collapsed }
-            )}
-          >
-          </div> */}
         </div>
       </div>
-    </>
+    </WorkflowSimulateLayout>
   );
 }

@@ -9,7 +9,6 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigActivity } from '@/features/scan-config/types';
-import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -49,8 +48,8 @@ export default function Page({
     queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
     queryFn: async () => {
       if (!initialCampaignId) return null;
-      const resolveSkeletonizationCampaign = SkeletonizationCampaign.api.query.resolve;
-      if (!resolveSkeletonizationCampaign) return null;
+      // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
+      const resolveSkeletonizationCampaign = SkeletonizationCampaign.api.query.resolve!;
       return await resolveSkeletonizationCampaign({
         id: initialCampaignId,
         context: { virtualLabId, projectId },
@@ -64,17 +63,16 @@ export default function Page({
 
   if (!initialCampaignId || (initialCampaignId && !isLoading && campaignData?.config.form)) {
     return (
-      <div className="border-neutral-2 ml-2 h-full rounded-2xl border pt-3">
+      <div className="border-neutral-2 ml-2 h-full rounded-2xl border">
         <ScanConfiguration
           entityId={entity.id}
           entityType={entity.type}
           virtualLabId={virtualLabId}
           projectId={projectId}
           initialConfig={campaignData?.config.form}
-          className="px-4 pt-2"
+          className="px-4"
           activity={ScanConfigActivity.Process}
         />
-        <DownloadPanel />
       </div>
     );
   }

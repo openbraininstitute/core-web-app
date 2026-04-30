@@ -36,6 +36,7 @@ export const WorkflowActivityDictValue = {
 export const WorkspaceSection = {
   Data: 'data',
   Notebooks: 'notebooks',
+  GeneralWorkflow: 'workflows',
   BuildWorkflow: WorkflowActivityDictValue.build,
   SimulateWorkflow: WorkflowActivityDictValue.simulate,
   ExtractWorkflow: WorkflowActivityDictValue.extract,

@@ -113,7 +113,8 @@ export function CodeBlock({
     <CodeBlockContext.Provider value={{ code, language }}>
       <div
         className={cn(
-          'group bg-background text-foreground border-neutral-light relative w-full overflow-hidden rounded-md border',
+          'group bg-background text-foreground border-neutral-light relative w-full rounded-md border',
+          scrollableX ? 'overflow-x-auto overflow-y-hidden' : 'overflow-hidden',
           className
         )}
         {...props}
@@ -123,7 +124,9 @@ export function CodeBlock({
           <div
             className={cn(
               '[&>pre]:bg-background! [&>pre]:text-foreground! [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm',
-              scrollableX ? 'overflow-x-auto' : 'overflow-hidden',
+              scrollableX
+                ? 'secondary-scrollbar overflow-x-auto overflow-y-hidden [&>pre]:min-w-max [&>pre]:w-max'
+                : 'overflow-hidden',
               contentClassName
             )}
             // biome-ignore lint/security/noDangerouslySetInnerHtml: required

@@ -12,7 +12,10 @@ import {
   useObioneJsonSchema,
   useSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
-import { ScanConfigSkeleton } from '@/features/scan-config/components/skeletons/full-page';
+import {
+  ScanConfigCampaignOriginActionDict,
+  type TScanConfigCampaignOriginActionDict,
+} from '@/features/scan-config/helpers';
 import { ScanConfigTemplate } from '@/features/scan-config/template';
 import {
   type Config,
@@ -26,6 +29,8 @@ import {
   type TSchemaMappingKey,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+
+import ScanConfigSkeleton from './components/skeletons/full-page';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -43,6 +48,7 @@ type Props = {
   readOnly?: boolean;
   className?: string;
   activity?: TScanConfigActivity;
+  campaignOriginAction?: TScanConfigCampaignOriginActionDict;
 };
 
 export function ScanConfiguration({
@@ -57,6 +63,7 @@ export function ScanConfiguration({
   className,
   activity = ScanConfigActivity.Simulate,
   schemaMappingKey = SchemaMappingKeyDict.Circuit,
+  campaignOriginAction = ScanConfigCampaignOriginActionDict.Task,
 }: Props) {
   let endpoint: string | undefined;
   let schemaName: SchemaName | undefined;
@@ -158,6 +165,7 @@ export function ScanConfiguration({
           readOnly,
           className,
           activity,
+          campaignOriginAction,
           schema,
           schemaName,
           schemaMappingConfig,

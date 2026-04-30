@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { MorphologyCanvas } from '@bbp/morphoviewer';
 
-import { classNames } from '@/util/utils';
 import { Slider } from '@/components/common/Slider';
+import { classNames } from '@/util/utils';
+
+import type { MorphologyCanvas } from '@/morpho-viewer';
 
 import styles from './dendrite-thickness.module.css';
 

@@ -7,8 +7,10 @@ import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { UniversalCellMorphology } from '@/entity-configuration/domain/experimental/universal-cell-morphology';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
+import { BrainRegion } from '@/entity-configuration/domain/model/brain-region';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
+import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
@@ -60,9 +62,11 @@ export const EntityCoreModelConfiguration = {
   PairedNeuronCircuit,
   SmallMicrocircuit,
   Microcircuit,
+  BrainRegion,
   Circuit,
   IonChannelModel,
   IonChannelModelingCampaign,
+  EmSynapseMappingCampaign,
   MEModelWithSynapsesCircuit,
   SynthesizedCellMorphology,
 } as const;

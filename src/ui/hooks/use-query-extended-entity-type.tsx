@@ -238,6 +238,7 @@ export function useQueryExtendedEntityTypeFacets({
         scope,
         dataType,
         workspace,
+        filters: queryFilters,
         ...extraQueryKey,
       },
     ],
