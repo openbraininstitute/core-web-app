@@ -15,11 +15,16 @@ import {
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  makeLogStreamFileDescriptors,
+  prependLogStreamFile,
+} from '@/features/task-logs-stream/descriptor';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TEmSynapseMappingCampaignMeta } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
+import type { TBuildLogStreamFileDescriptor } from '@/features/task-logs-stream/descriptor';
 
 type Props = {
   config: ITaskConfig<TEmSynapseMappingCampaignMeta>;
@@ -32,6 +37,72 @@ type Props = {
 };
 
 const MAX_VIS_ASSET_REFETCH_RETRIES = 10;
+
+function createVirtualLogAsset({
+  id,
+  path,
+  contentType,
+}: {
+  id: string;
+  path: string;
+  contentType: AssetContentType;
+}): IAsset {
+  return {
+    id,
+    path,
+    full_path: path,
+    bucket_name: '',
+    is_directory: false,
+    content_type: contentType,
+    size: 0,
+    label: AssetLabel.task_config,
+    status: 'created',
+  } as IAsset;
+}
+
+function createTaskConfigurationFile({
+  descriptor,
+  config,
+}: {
+  descriptor: TBuildLogStreamFileDescriptor;
+  config: ITaskConfig<TEmSynapseMappingCampaignMeta>;
+}): TActivityCustomFile {
+  return {
+    id: descriptor.id,
+    entity: config,
+    asset: createVirtualLogAsset({
+      id: descriptor.id,
+      path: descriptor.path,
+      contentType: AssetContentType.json,
+    }),
+    assetPath: descriptor.path,
+    name: descriptor.name,
+    enforcedRenderType: AssetContentType.json,
+    renderer: ActivityCustomFileRenderer.TaskConfigurationViewer,
+  };
+}
+
+function createTaskLogsFile({
+  descriptor,
+  execution,
+}: {
+  descriptor: TBuildLogStreamFileDescriptor;
+  execution: ITaskActivity;
+}): TActivityCustomFile {
+  return {
+    id: descriptor.id,
+    entity: execution as TActivityCustomFile['entity'],
+    asset: createVirtualLogAsset({
+      id: descriptor.id,
+      path: descriptor.path,
+      contentType: AssetContentType.text,
+    }),
+    assetPath: descriptor.path,
+    name: descriptor.name,
+    enforcedRenderType: AssetContentType.text,
+    renderer: ActivityCustomFileRenderer.TaskLogsViewer,
+  };
+}
 
 export function InOutFiles({
   config,
@@ -48,6 +119,14 @@ export function InOutFiles({
   const circuitAssets = circuit && 'assets' in circuit ? circuit.assets : [];
   const circuitConfigAsset = circuitAssets?.find(
     (o: IAsset) => o.label === AssetLabel.sonata_circuit
+  );
+  const logStreamFiles = useMemo(
+    () =>
+      makeLogStreamFileDescriptors({
+        configId: config.id,
+        executionId: execution?.execution_id,
+      }),
+    [config.id, execution?.execution_id]
   );
 
   const inputFiles: TActivityCustomFile[] = useMemo(() => {
@@ -70,8 +149,13 @@ export function InOutFiles({
         renderer: ActivityCustomFileRenderer.Default,
       });
     }
-    return files;
-  }, [config, circuit, configAsset, circuitConfigAsset]);
+    return prependLogStreamFile({
+      file: logStreamFiles.input
+        ? createTaskConfigurationFile({ descriptor: logStreamFiles.input, config })
+        : null,
+      files,
+    });
+  }, [config, circuit, configAsset, circuitConfigAsset, logStreamFiles.input]);
 
   const outputAvailable =
     !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
@@ -99,17 +183,24 @@ export function InOutFiles({
   });
 
   const outputFiles: TActivityCustomFile[] = useMemo(() => {
-    if (!builtCircuit) return [];
-    return [
-      {
+    const files: TActivityCustomFile[] = [];
+    if (builtCircuit) {
+      files.push({
         id: builtCircuit.id,
         entity: builtCircuit,
         asset: builtCircuit.assets[0],
         name: builtCircuit.name,
         renderer: ActivityCustomFileRenderer.MiniDetailView,
-      },
-    ];
-  }, [builtCircuit]);
+      });
+    }
+    return prependLogStreamFile({
+      file:
+        logStreamFiles.output && execution
+          ? createTaskLogsFile({ descriptor: logStreamFiles.output, execution })
+          : null,
+      files,
+    });
+  }, [builtCircuit, execution, logStreamFiles.output]);
 
   useEffect(() => {
     if (!outputAvailable || !builtCircuit) return;
@@ -135,9 +226,9 @@ export function InOutFiles({
 
   return (
     <IoLayout
-      showOutput={outputAvailable}
+      showOutput={outputAvailable || logStreamFiles.showOutput}
       inputIsEmpty={inputFiles.length === 0}
-      outputIsEmpty={!builtCircuit && !isLoading}
+      outputIsEmpty={!builtCircuit && !isLoading && !logStreamFiles.output}
       inputItems={inputFiles.map((file) => (
         <TaskIOFileItem
           id={file.asset.id}
@@ -148,19 +239,20 @@ export function InOutFiles({
           name={file.name}
         />
       ))}
-      outputItems={
-        outputFiles[0] ? (
+      outputItems={outputFiles.map((file) => {
+        const isBuiltCircuit = file.renderer === ActivityCustomFileRenderer.MiniDetailView;
+        return (
           <TaskIOFileItem
-            id={outputFiles[0].id}
-            label={<small className="uppercase">Synaptome beta</small>}
-            selected={outputFiles[0].id === selectedFile?.id}
-            key={outputFiles[0].id}
-            file={outputFiles[0]}
-            name={outputFiles[0].name}
+            id={file.id}
+            label={isBuiltCircuit ? <small className="uppercase">Synaptome beta</small> : undefined}
+            selected={file.id === selectedFile?.id}
+            key={file.id}
+            file={file}
+            name={file.name}
             onSelect={onSelect}
           />
-        ) : null
-      }
+        );
+      })}
     />
   );
 }

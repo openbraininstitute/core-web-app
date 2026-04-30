@@ -10,11 +10,11 @@ import { streamTaskLogsWithReconnect } from '@/features/task-logs-stream/queries
 import { emptyStream } from '@/utils/streamutils';
 
 import type { ILogEntry, TLogLevel } from '@/features/task-logs-stream/types';
+import type { WorkspaceContext } from '@/types/common';
 
 export interface IStreamQueryParams {
   jobId?: string;
-  virtualLabId: string;
-  projectId: string;
+  workspace: WorkspaceContext;
   configId?: string;
   enabled: boolean;
   debugLog: (params: { level: TLogLevel; message: string; payload?: unknown }) => void;
@@ -28,14 +28,13 @@ export interface IStreamQueryParams {
  */
 export function buildTaskLogsStreamQueryOptions({
   jobId,
-  virtualLabId,
-  projectId,
+  workspace,
   configId,
   enabled,
   debugLog,
 }: IStreamQueryParams) {
   return queryOptions({
-    queryKey: ['task-logs-stream', { jobId, virtualLabId, projectId, configId }],
+    queryKey: ['task-logs-stream', { jobId, configId, workspace }],
     queryFn: streamedQuery({
       streamFn: async ({ signal }) => {
         if (!jobId) return emptyStream();
@@ -46,8 +45,7 @@ export function buildTaskLogsStreamQueryOptions({
         });
         return streamTaskLogsWithReconnect({
           jobId,
-          virtualLabId,
-          projectId,
+          workspace,
           signal,
           debugLog: ({ level, message, payload }) => debugLog({ level, message, payload }),
           configId,
