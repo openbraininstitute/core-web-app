@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -18,11 +17,7 @@ import {
   OfflineTokenConsentModal,
   useEnsureOfflineTokenConsent,
 } from '@/features/offline-auth-management';
-import {
-  simExecStatusMapAtomFamily,
-  simulationsByCampaignIdAtomFamily,
-  useModelQuery,
-} from '@/features/scan-config/components/atoms';
+import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
@@ -30,7 +25,6 @@ import { getLatestSimExecStatus } from '@/features/scan-config/components/utils'
 import errorRegistry from '@/features/scan-config/error-registry';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
-import { useLastTruthyValue } from '@/hooks/hooks';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
@@ -57,11 +51,6 @@ export default function SimulationsTab({
 }: SimulationTabProps) {
   const notification = useAppNotification();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
-  const simulationsAtom = simulationsByCampaignIdAtomFamily({
-    campaignId,
-    context,
-  });
-  const allSimulations = useLastTruthyValue(simulationsAtom);
 
   const { data: simulations = [], isLoading: simulationsLoading } = useQuery({
     queryKey: ['scan-config-simulations', context, campaignId],
@@ -75,17 +64,10 @@ export default function SimulationsTab({
 
   const { entity: model } = useModelQuery({
     context,
-    id: simulations[0]?.entity_id ?? allSimulations?.[0]?.entity_id,
+    id: simulations[0]?.entity_id,
   });
 
-  const simExecStatusMapAtom = simExecStatusMapAtomFamily({
-    context,
-    campaignId,
-  });
-  const fullStatusMap = useLastTruthyValue(simExecStatusMapAtom);
-  const setSimStatus = useSetAtom(simExecStatusMapAtom);
   const [localStatusMap, setLocalStatusMap] = useState<Map<string, ActivityStatus>>(new Map());
-
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
   const [selectedSimulationIds, setSelectedSimulationIds] = useState<string[]>([]);
   const [activeSimulation, setActiveSimulation] = useState<null | ISimulation>(null);
@@ -133,9 +115,7 @@ export default function SimulationsTab({
   });
   const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
 
-  const activeSimulationExecStatus =
-    activeSimulation &&
-    (localStatusMap.get(activeSimulation.id) ?? fullStatusMap?.get(activeSimulation.id));
+  const activeSimulationExecStatus = activeSimulation && localStatusMap.get(activeSimulation.id);
 
   const onActiveSimulationChange = useCallback((simulation: ISimulation) => {
     setActiveSimulation(simulation);
@@ -149,13 +129,9 @@ export default function SimulationsTab({
     }
   }, []);
 
-  const setSimulationStatus = useCallback(
-    (simulationId: string, status: ActivityStatus) => {
-      setSimStatus(simulationId, status);
-      setLocalStatusMap((prev) => new Map(prev).set(simulationId, status));
-    },
-    [setSimStatus]
-  );
+  const setSimulationStatus = useCallback((simulationId: string, status: ActivityStatus) => {
+    setLocalStatusMap((prev) => new Map(prev).set(simulationId, status));
+  }, []);
 
   const onSimulationStatusLoad = useCallback((simulationId: string, status: ActivityStatus) => {
     setLocalStatusMap((prev) => {
