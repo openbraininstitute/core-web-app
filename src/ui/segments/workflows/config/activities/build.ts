@@ -1,4 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { emSynapseMappingActivityFlag } from '@/features/feature-flags';
 
 import type { IWorkflowDescriptor } from '../types';
 
@@ -44,6 +45,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
       },
     ],
     disabled: false,
+    requiredFeatures: [emSynapseMappingActivityFlag.key],
   },
   {
     sourceType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
