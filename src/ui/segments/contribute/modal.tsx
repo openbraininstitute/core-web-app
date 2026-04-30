@@ -78,12 +78,14 @@ interface IRenderEntityTypeContentProps {
   type: TExtendedEntitiesTypeDict;
   sessionId: string;
   onCreateSuccess?: (entity: EntityCoreObjectTypes) => Promise<void>;
+  onClose: () => void;
 }
 
 function RenderEntityTypeContent({
   type,
   sessionId: sId,
   onCreateSuccess,
+  onClose,
 }: IRenderEntityTypeContentProps) {
   return match({ type })
     .with(
@@ -106,7 +108,11 @@ function RenderEntityTypeContent({
     ))
     .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
     .with({ type: ExtendedEntitiesTypeDict.Notebook }, () => (
-      <AnalysisNotebookTemplate sessionId={sId} onCreateSuccess={onCreateSuccess} />
+      <AnalysisNotebookTemplate
+        sessionId={sId}
+        onCreateSuccess={onCreateSuccess}
+        onClose={onClose}
+      />
     ))
     .otherwise(() => null);
 }
