@@ -102,7 +102,6 @@ export const BuildScanConfigTabs = {
   results: 'results',
 } as const;
 
-
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
@@ -132,10 +131,7 @@ export const SchemaNameDict = {
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
 } as const;
 
-
 export type SchemaName = (typeof SchemaNameDict)[keyof typeof SchemaNameDict];
-
-
 
 export type TRootElement = {
   description: string;

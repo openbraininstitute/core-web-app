@@ -1,12 +1,12 @@
 'use client';
 
-import { MorphoViewerSimul, morphoViewerConvertMorphologyIntoTree } from '@bbp/morphoviewer';
 import { useAtomValue } from 'jotai';
 import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import { DefaultLoadingSuspense } from '@/components/DefaultLoadingSuspense';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { MorphoViewerSimul, morphoViewerConvertMorphologyIntoTree } from '@/morpho-viewer';
 import {
   SimulationStatus,
   simulationStatusAtomFamily,

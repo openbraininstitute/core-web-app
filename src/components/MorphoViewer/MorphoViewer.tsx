@@ -1,9 +1,10 @@
 'use client';
 
 import { FullscreenOutlined } from '@ant-design/icons';
-import { MorphologyCanvas } from '@bbp/morphoviewer';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
+
+import { MorphologyCanvas } from '@/morpho-viewer';
 
 import { ColorRamp } from './ColorRamp';
 import { useMorphoViewerSettings } from './hooks/settings';
