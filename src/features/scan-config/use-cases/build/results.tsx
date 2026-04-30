@@ -182,7 +182,7 @@ export function BuildTab({ campaignOriginAction, campaignId, virtualLabId, proje
               <MiniDetailViewRenderer
                 section={WorkspaceSection.Data}
                 record={selectedFile.entity as ICircuit}
-                dataType={ExtendedEntitiesTypeDict.Circuit}
+                dataType={ExtendedEntitiesTypeDict.MEModelWithSynapses}
                 theme={MiniDetailViewTheme.Light}
                 enableAnimation={false}
               />
