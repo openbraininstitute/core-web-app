@@ -237,7 +237,7 @@ export function NotebooksLayout({ children, active }: Props) {
             isVlabAdmin && (
               <UiButton
                 type="button"
-                className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9"
+                className="flex h-[40px] min-w-[150px] items-center justify-center rounded-md px-4 py-2 text-white bg-primary-9 rounded-full"
                 onClick={() => setShowCourseModal(true)}
               >
                 Add students to course
