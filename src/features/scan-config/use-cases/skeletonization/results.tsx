@@ -21,7 +21,8 @@ import {
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { messages as textMessages } from '@/i18n/en/scan-config';
-import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
+import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
+import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 import { InOutFiles } from './in-out-files';
 

@@ -1,14 +1,16 @@
-import kebabCase from 'es-toolkit/compat/kebabCase';
+import { kebabCase, snakeCase } from 'es-toolkit/compat';
 
-import { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import {
   getEntityByCoreType,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
+
+import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntitySlugValue } from '@/entity-configuration/domain/slug';
 import type { WorkspaceContext } from '@/types/common';
+import type { KebabCase } from './type';
 
 export const baseUri = '/app/virtual-lab';
 
@@ -80,4 +82,24 @@ export function resolveLibraryUrl({
   if (searchParams.size) querySegment = `?${searchParams.toString()}`;
 
   return `${baseUri}/lab/${ctx.virtualLabId}/project/${ctx.projectId}/library${querySegment}`;
+}
+
+export function resolveExtendedTypeFromPathParamUrl({
+  pathParam,
+}: {
+  pathParam: KebabCase<TExtendedEntitiesTypeDict>;
+}) {
+  return {
+    type: snakeCase(pathParam) as TExtendedEntitiesTypeDict,
+  };
+}
+
+export function makePathParamUrlFromExtendedType({
+  extendedType,
+}: {
+  extendedType: TExtendedEntitiesTypeDict;
+}) {
+  return {
+    pathParam: kebabCase(extendedType),
+  };
 }

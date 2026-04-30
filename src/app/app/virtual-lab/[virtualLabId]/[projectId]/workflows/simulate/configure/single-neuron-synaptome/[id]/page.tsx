@@ -5,6 +5,7 @@ import { use } from 'react';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
+import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';
 import { PanelSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
@@ -42,7 +43,7 @@ export default function Page({
   });
 
   return (
-    <>
+    <WorkflowSimulateLayout>
       <div className="mb-2 w-full shrink-0">
         <Header />
       </div>
@@ -80,6 +81,6 @@ export default function Page({
           </ResponsiveSideViewer>
         </div>
       </div>
-    </>
+    </WorkflowSimulateLayout>
   );
 }

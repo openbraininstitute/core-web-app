@@ -10,7 +10,8 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
 import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import ScanConfig from '@/features/scan-config';
+import { ScanConfiguration } from '@/features/scan-config';
+import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';
 import { PanelSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
@@ -64,19 +65,21 @@ export default function Page({
 
   if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
     return (
-      <ScanConfig
-        entityId={entity.id}
-        entityType={ExtendedEntitiesTypeDict.MemodelCircuit}
-        virtualLabId={virtualLabId}
-        projectId={projectId}
-        initialConfig={campaignData?.config.form}
-        className="px-4 pt-2"
-      />
+      <div className="border-neutral-2 ml-2 h-full rounded-2xl border">
+        <ScanConfiguration
+          entityId={entity.id}
+          entityType={ExtendedEntitiesTypeDict.MemodelCircuit}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+          initialConfig={campaignData?.config.form}
+          className="px-4"
+        />
+      </div>
     );
   }
 
   return (
-    <>
+    <WorkflowSimulateLayout>
       <div className="mb-2 w-full shrink-0">
         <Header />
       </div>
@@ -104,6 +107,6 @@ export default function Page({
           </ResponsiveSideViewer>
         </div>
       </div>
-    </>
+    </WorkflowSimulateLayout>
   );
 }

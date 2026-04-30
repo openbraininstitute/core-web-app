@@ -1,4 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ViewDefForBrainRegion } from '@/entity-configuration/definitions/view-defs/model/brain-region';
 import { ViewDefForCircuit } from '@/entity-configuration/definitions/view-defs/model/circuit';
 import { ViewDefForEmodel } from '@/entity-configuration/definitions/view-defs/model/emodel';
 import { ViewDefForIonChannelModel } from '@/entity-configuration/definitions/view-defs/model/ion-channel-model';
@@ -10,8 +11,6 @@ import { ViewDefForSingleNeuronCircuit } from '@/entity-configuration/definition
 import { ViewDefForSingleNeuronSynaptome } from '@/entity-configuration/definitions/view-defs/model/single-neuron-synaptome';
 import { ViewDefForSmallMicrocircuit } from '@/entity-configuration/definitions/view-defs/model/small-micro-circuit';
 import { ViewDefForSynthesizedCellMorphology } from '@/entity-configuration/definitions/view-defs/model/synthesized-morphology';
-
-import { ViewDefForBrainRegion } from './brain-region';
 
 import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
 

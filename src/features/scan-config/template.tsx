@@ -13,7 +13,10 @@ import {
 } from '@/features/scan-config/components/hooks/schema';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
-import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
+import {
+  ACTIVITY_AI_CONFIG_MAP,
+  type TScanConfigCampaignOriginActionDict,
+} from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
   ScanConfigActivity,
@@ -25,9 +28,11 @@ import {
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
+import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState } from '@/services/ai-agent';
 import { editingAtom, selectedEntryAtom, selectedRootElementAtom } from '@/state/config-highlights';
@@ -49,6 +54,7 @@ type Props = {
   readOnly?: boolean;
   className?: string;
   activity: TScanConfigActivity;
+  campaignOriginAction: TScanConfigCampaignOriginActionDict;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   schema: ConfigSchema;
   schemaName: SchemaName;
@@ -73,6 +79,7 @@ export function ScanConfigTemplate({
   aiEnabled,
   generatedEndpoint,
   entityType,
+  campaignOriginAction,
 }: Props) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
   const [selectedRootElement, setSelectedRootElement] = useAtom(selectedRootElementAtom);
@@ -89,6 +96,9 @@ export function ScanConfigTemplate({
     model: entity,
   });
   const config = useConfigAtom(schema, atomsMap);
+  const previousCampaignId = usePrevious(campaignId);
+  const isCampaignIdChanged = previousCampaignId !== campaignId;
+
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
 
   const results = match(activity)
@@ -111,6 +121,17 @@ export function ScanConfigTemplate({
         />
       </Suspense>
     ))
+    .with(ScanConfigActivity.Build, () => (
+      <Suspense>
+        <BuildTab
+          isCampaignIdChanged={isCampaignIdChanged}
+          campaignOriginAction={campaignOriginAction}
+          campaignId={campaignId}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+        />
+      </Suspense>
+    ))
     .otherwise(() => {
       throw new Error(`${activity} is not supported yet`);
     });
@@ -121,7 +142,10 @@ export function ScanConfigTemplate({
 
   return (
     <div className={cn('flex h-full flex-col', className)}>
-      <header className={styles.header}>
+      <header
+        id="template-header"
+        className={cn('flex flex-nowrap justify-between items-center gap-4 pt-4 pb-2')}
+      >
         <TabsSelector
           activity={activity}
           tab={tab}
@@ -136,13 +160,14 @@ export function ScanConfigTemplate({
         </div>
       </header>
 
-      <div className="w-full border-t border-gray-200 my-5" />
-      <div className="flex-1 min-h-0">
+      <div id="template-separator" className="w-full h-px bg-gray-200 my-2 px-3" />
+      <div id="template-content" className="flex-1 min-h-0">
         <div
           id="scan-config-content-columns"
           className={cn(
+            'py-2',
             {
-              'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-[calc(100%-10px)] overflow-hidden *:min-w-0':
+              'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden *:min-w-0':
                 isConfigurationTab,
             },
             { hidden: !isConfigurationTab }
@@ -221,9 +246,9 @@ export function ScanConfigTemplate({
         <div
           id="scan-config-results"
           className={cn(
-            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-[calc(100%-10px)] overflow-hidden',
+            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden',
             { hidden: isConfigurationTab },
-            { 'h-[calc(100%-10px)]': !isConfigurationTab }
+            { 'h-full': !isConfigurationTab }
           )}
         >
           {results}

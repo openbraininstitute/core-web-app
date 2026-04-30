@@ -7,7 +7,7 @@ import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
 } from '@/ui/segments/mini-detail-view/event';
-import { WorkspaceScopeSelector } from '@/ui/segments/shared/scope-selector';
+import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 
 import type { TWorkspaceScope } from '@/constants';
 
@@ -42,7 +42,7 @@ export function WorkflowScopeTabs({
   );
 
   return (
-    <WorkspaceScopeSelector
+    <TabsSelector
       activeTab={activeTab as string}
       onValueChange={onValueChange}
       className={className}

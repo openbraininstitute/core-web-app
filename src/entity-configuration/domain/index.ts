@@ -10,6 +10,7 @@ import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extract
 import { BrainRegion } from '@/entity-configuration/domain/model/brain-region';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
 import { Emodel } from '@/entity-configuration/domain/model/e-model';
+import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
@@ -65,6 +66,7 @@ export const EntityCoreModelConfiguration = {
   Circuit,
   IonChannelModel,
   IonChannelModelingCampaign,
+  EmSynapseMappingCampaign,
   MEModelWithSynapsesCircuit,
   SynthesizedCellMorphology,
 } as const;
