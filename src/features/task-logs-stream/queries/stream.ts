@@ -1,8 +1,11 @@
 'use client';
 
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
 import {
   getReconnectDelayMs,
-  isRetriableStreamError,
+  isRetryableStreamError,
+  MAX_STREAM_RETRY_ATTEMPTS,
   parseLogStreamToEntries,
   StreamHttpError,
   waitForReconnect,
@@ -14,40 +17,64 @@ export async function fetchTaskLogsStreamEndpoint({
   jobId,
   virtualLabId,
   projectId,
-  enableDebugLogs,
   signal,
 }: {
   jobId: string;
   virtualLabId: string;
   projectId: string;
-  enableDebugLogs: boolean;
   signal?: AbortSignal;
 }): Promise<AsyncIterable<ILogEntry>> {
-  const params = new URLSearchParams({
-    jobId,
-    virtualLabId,
-    projectId,
-    ...(enableDebugLogs ? { debugLogs: 'true' } : {}),
-  });
+  const session = await getSession();
 
-  const response = await fetch(`/api/task-manager/job/stream?${params.toString()}`, {
-    method: 'GET',
-    cache: 'no-store',
-    signal,
-  });
+  const response = await fetch(
+    `${config.OBI_ONE_URL}/declared/task/${encodeURIComponent(jobId)}/stream`,
+    {
+      method: 'GET',
+      cache: 'no-store',
+      signal,
+      headers: {
+        ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
+        'virtual-lab-id': virtualLabId,
+        'project-id': projectId,
+      },
+    }
+  );
 
   if (!response.ok || !response.body) {
-    throw new StreamHttpError({ status: response.status });
+    const errorBody = await readStreamErrorBody({ response });
+    throw new StreamHttpError({
+      status: response.status,
+      errorCode: errorBody?.error_code,
+      serverMessage: errorBody?.message,
+    });
   }
 
   return parseLogStreamToEntries({ stream: response.body });
+}
+
+async function readStreamErrorBody({
+  response,
+}: {
+  response: Response;
+}): Promise<{ error_code?: string; message?: string } | undefined> {
+  try {
+    const body = (await response.clone().json()) as {
+      error_code?: unknown;
+      message?: unknown;
+    };
+    return {
+      error_code: typeof body?.error_code === 'string' ? body.error_code : undefined,
+      message: typeof body?.message === 'string' ? body.message : undefined,
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 export async function* streamTaskLogsWithReconnect({
   jobId,
   virtualLabId,
   projectId,
-  enableDebugLogs,
   signal,
   debugLog,
   configId,
@@ -55,7 +82,6 @@ export async function* streamTaskLogsWithReconnect({
   jobId: string;
   virtualLabId: string;
   projectId: string;
-  enableDebugLogs: boolean;
   signal?: AbortSignal;
   debugLog: (params: { level: 'info' | 'error'; message: string; payload?: unknown }) => void;
   configId?: string;
@@ -69,7 +95,6 @@ export async function* streamTaskLogsWithReconnect({
         jobId,
         virtualLabId,
         projectId,
-        enableDebugLogs,
         signal,
       });
       retryAttempt = 0;
@@ -79,7 +104,7 @@ export async function* streamTaskLogsWithReconnect({
       return;
     } catch (error) {
       if (signal?.aborted) return;
-      if (!isRetriableStreamError({ error })) {
+      if (!isRetryableStreamError({ error }) || retryAttempt >= MAX_STREAM_RETRY_ATTEMPTS) {
         throw error;
       }
       const delayMs = getReconnectDelayMs({ attempt: retryAttempt });
