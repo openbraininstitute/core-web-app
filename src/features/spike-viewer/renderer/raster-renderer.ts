@@ -166,7 +166,7 @@ export class RasterRenderer {
     // Density-aware base: large for sparse data, small for dense
     const visibleArea = this.plotRect.width * this.plotRect.height;
     const density = this.visibleSpikes / Math.max(1, visibleArea);
-    const baseSize = Math.min(6, Math.max(2, 4 - Math.log10(Math.max(1e-4, density))));
+    const baseSize = Math.min(9, Math.max(4, 6 - Math.log10(Math.max(1e-4, density))));
 
     // Zoom scaling: grows as user zooms in
     const xZoom =
@@ -176,7 +176,7 @@ export class RasterRenderer {
     const zoom = Math.min(xZoom, yZoom);
     const zoomBonus = Math.log2(Math.max(1, zoom));
 
-    return Math.min(12, baseSize + zoomBonus);
+    return Math.min(14, baseSize + zoomBonus);
   }
 
   private handleHover(info: HoverInfo | null) {

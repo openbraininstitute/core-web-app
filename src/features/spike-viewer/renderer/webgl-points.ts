@@ -4,7 +4,7 @@ const VERTEX_SHADER = `#version 300 es
 layout(location = 0) in float a_x;
 layout(location = 1) in float a_y;
 uniform vec4 u_bounds; // xMin, yMin, xMax, yMax
-uniform float u_pointSize;
+uniform mediump float u_pointSize;
 
 void main() {
   float x = 2.0 * (a_x - u_bounds.x) / (u_bounds.z - u_bounds.x) - 1.0;
@@ -16,13 +16,21 @@ void main() {
 const FRAGMENT_SHADER = `#version 300 es
 precision mediump float;
 uniform vec4 u_color;
+uniform float u_pointSize;
 out vec4 fragColor;
 
 void main() {
-  // Vertical tick mark: only draw the center strip
+  // Vertical tick mark with soft edges (~1 px wide on every side) so
+  // subpixel jitter shows as an opacity falloff instead of a ±1 px
+  // step in width or height.
+  float feather = 1.0 / max(u_pointSize, 1.0);
   float dx = abs(gl_PointCoord.x - 0.5);
-  if (dx > 0.2) discard;
-  fragColor = u_color;
+  float dy = abs(gl_PointCoord.y - 0.5);
+  float alphaX = 1.0 - smoothstep(0.2 - feather, 0.2 + feather, dx);
+  float alphaY = 1.0 - smoothstep(0.5 - feather, 0.5, dy);
+  float alpha = alphaX * alphaY;
+  if (alpha <= 0.001) discard;
+  fragColor = vec4(u_color.rgb, u_color.a * alpha);
 }`;
 
 type PopulationBuffer = {
@@ -91,7 +99,7 @@ export class WebGLPoints {
     // biome-ignore lint/correctness/useHookAtTopLevel: WebGL API, not a React hook
     gl.useProgram(this.program);
     gl.uniform4f(this.uBounds, bounds.xMin, bounds.yMin, bounds.xMax, bounds.yMax);
-    gl.uniform1f(this.uPointSize, pointSize * (window.devicePixelRatio || 1));
+    gl.uniform1f(this.uPointSize, Math.round(pointSize * (window.devicePixelRatio || 1)));
 
     for (const pop of this.populations) {
       if (!pop.visible || pop.count === 0) continue;
