@@ -161,7 +161,12 @@ export function ContributionModal({
       { sessionId: P.string.select('sId'), entityType: P.string.select('type') },
       ({ sId, type }) => {
         return (
-          <RenderEntityTypeContent type={type} sessionId={sId} onCreateSuccess={onCreateSuccess} />
+          <RenderEntityTypeContent
+            type={type}
+            sessionId={sId}
+            onCreateSuccess={onCreateSuccess}
+            onClose={onClose}
+          />
         );
       }
     )
