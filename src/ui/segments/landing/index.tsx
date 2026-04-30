@@ -17,7 +17,7 @@ export type LandingPageProps = {
 
 export default async function LandingPage({ className, section, error }: LandingPageProps) {
   return (
-    <LandingPageShell className={className} error={error}>
+    <LandingPageShell className={className} section={section} error={error}>
       <Menu section={section} />
       <HeroServer section={section} />
       <PaddedBlock>

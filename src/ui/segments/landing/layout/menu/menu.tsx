@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { ID_MENU, MENU_ITEMS } from '@/ui/segments/landing/constants';
 import { IconChevronRight } from '@/ui/segments/landing/icons/icon-chevron-right';
 import { IconMenu } from '@/ui/segments/landing/icons/icon-menu';
+import { useLandingScrollContainer } from '@/ui/segments/landing/landing-page-shell';
 import { classNames } from '@/util/utils';
 
 import PopupMenu from './popup-menu/popup-menu';
@@ -33,6 +34,8 @@ export default function Menu({
   const [lastScrollY, setLastScrollY] = React.useState(0);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [internalScrollStarted, setInternalScrollStarted] = React.useState(false);
+  const shellScrollRef = useLandingScrollContainer();
+  const effectiveScrollRef = scrollContainerRef ?? shellScrollRef;
   const scrollHasStarted = scrollHasStartedProp ?? internalScrollStarted;
 
   // Check if current section is in a submenu, and return the parent item if so
@@ -51,7 +54,7 @@ export default function Menu({
   const parentItem = getParentItemForSection(section);
 
   React.useEffect(() => {
-    const el = scrollContainerRef?.current;
+    const el = effectiveScrollRef?.current;
     const target = el ?? window;
     const handleScroll = () => {
       const currentScrollY = el ? el.scrollTop : window.scrollY;
@@ -70,7 +73,7 @@ export default function Menu({
     target.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => target.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY, scrollContainerRef]);
+  }, [lastScrollY, effectiveScrollRef]);
 
   return (
     <>

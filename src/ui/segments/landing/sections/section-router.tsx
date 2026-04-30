@@ -2,6 +2,7 @@ import { getNewsCount, getNewsList } from '@/services/sanity/api/get-news-list';
 import { logError } from '@/util/logger';
 
 import { getSection } from '../utils';
+import SectionFeatures from './section-features/section-features';
 import SectionGeneric from './section-generic';
 import SectionNews from './section-news/section-news';
 import SectionPricing from './section-pricing/section-pricing';
@@ -42,6 +43,8 @@ export default async function SectionRouter({
     }
     case EnumSection.Showcases:
       return <SectionShowcases />;
+    case EnumSection.Features:
+      return <SectionFeatures />;
     default:
       logError('This slug has NOT been implemented yet!', getSection(section));
       return null;
