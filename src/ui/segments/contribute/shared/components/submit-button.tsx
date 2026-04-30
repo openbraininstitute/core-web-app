@@ -21,6 +21,7 @@ interface ISubmitButtonProps<
   virtualLabId: string;
   projectId: string;
   onSubmit: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => Promise<void>;
+  onDone?: () => void;
 }
 
 export function SubmitButton<
@@ -33,6 +34,7 @@ export function SubmitButton<
   virtualLabId,
   projectId,
   onSubmit,
+  onDone,
 }: ISubmitButtonProps<TFormValues, TSchema>) {
   const router = useRouter();
   const { form } = useContributionPipeline<TFormValues>();
@@ -46,6 +48,23 @@ export function SubmitButton<
         projectId,
       })
     : null;
+
+  if (detailsUrl === '__NO_DETAILS_URL__') {
+    return createdEntityId ? (
+      <Form.Item className="mb-0!">
+        <Button
+          rounded
+          type="button"
+          variant="default"
+          size="lg"
+          className={cn('px-10 select-none hover:text-white')}
+          onClick={onDone}
+        >
+          Done
+        </Button>
+      </Form.Item>
+    ) : null;
+  }
 
   if (detailsUrl) {
     return (

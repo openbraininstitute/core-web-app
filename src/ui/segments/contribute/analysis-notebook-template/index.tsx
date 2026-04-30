@@ -47,11 +47,13 @@ const AnalysisNotebookTemplateConfig = createAnalysisNotebookTemplateConfig(
 interface IAnalysisNotebookTemplateProps {
   sessionId: string;
   onCreateSuccess?: (entity: EntityCoreObjectTypes) => Promise<void>;
+  onClose: () => void;
 }
 
 export function AnalysisNotebookTemplate({
   sessionId,
   onCreateSuccess,
+  onClose,
 }: IAnalysisNotebookTemplateProps) {
   const { projectId, virtualLabId } = useWorkspace();
 
@@ -64,6 +66,8 @@ export function AnalysisNotebookTemplate({
       virtualLabId={virtualLabId}
       projectId={projectId}
       onCreateSuccess={onCreateSuccess}
+      brainRegionId={null}
+      onDone={onClose}
     />
   );
 }

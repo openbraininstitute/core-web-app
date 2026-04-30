@@ -40,7 +40,7 @@ const ContributionPipelineContext = createContext<IContributionPipelineContextVa
 interface IContributionPipelineProviderProps<TFormValues, TSchema extends ZodObject<ZodRawShape>> {
   config: IContributionFormConfig<TFormValues, TSchema>;
   sessionId: string;
-  brainRegionId: string;
+  brainRegionId: string | null;
   children: ReactNode;
 }
 
@@ -155,7 +155,7 @@ export function ContributionPipelineProvider<TFormValues, TSchema extends ZodObj
     ]
   );
   const initialValues = useMemo(
-    () => config.getInitialValues(brainRegionId) as TFormValues,
+    () => config.getInitialValues(brainRegionId as string) as TFormValues,
     [config, brainRegionId]
   );
 

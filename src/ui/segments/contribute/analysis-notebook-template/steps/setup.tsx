@@ -8,7 +8,7 @@ import {
   RequiredFieldMarker,
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
-import { EntityGroupDict } from '@/ui/segments/workflows/elements/helpers';
+import { EntityGroupDict } from '@/ui/segments/workflows/config';
 
 const SCALE_OPTIONS = Object.values(EntityGroupDict).map((value) => ({
   label: value,
@@ -68,7 +68,12 @@ export function Setup() {
           },
         ]}
       >
-        <Select className="h-12" size="large" placeholder="Select scale" options={SCALE_OPTIONS} />
+        <Select
+          className="rounded-full! h-12 [&_.ant-select-selector]:rounded-full!"
+          size="large"
+          placeholder="Select scale"
+          options={SCALE_OPTIONS}
+        />
       </Form.Item>
     </div>
   );

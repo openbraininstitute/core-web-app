@@ -32,7 +32,7 @@ export function createAnalysisNotebookTemplateConfig(
   steps: Array<IContributionStep<TAnalysisNotebookTemplateForm>>
 ): IContributionFormConfig<TAnalysisNotebookTemplateForm, typeof AnalysisNotebookTemplateSchema> {
   return {
-    entityType: ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
+    entityType: ExtendedEntitiesTypeDict.Notebook,
     title: 'Analysis Notebook Template',
     formId: 'contribute-analysis-notebook-template-modal',
     schema: AnalysisNotebookTemplateSchema,
@@ -46,7 +46,8 @@ export function createAnalysisNotebookTemplateConfig(
       } as unknown as TAnalysisNotebookTemplateForm['assets'],
       contribution: [{}] as unknown as TAnalysisNotebookTemplateForm['contribution'],
     }),
-    buildDetailsUrl: ({ virtualLabId, projectId }) =>
-      `/app/virtual-lab/${virtualLabId}/${projectId}/notebooks/private`,
+    buildDetailsUrl: () => '__NO_DETAILS_URL__',
+    /* ({ virtualLabId, projectId }) =>
+      `/app/virtual-lab/$virtualLabId/${projectId}/notebooks/private`, */
   };
 }

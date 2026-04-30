@@ -30,7 +30,7 @@ export interface IContributionFormConfig<TFormValues, TSchema extends ZodObject<
     entityId: string;
     virtualLabId: string;
     projectId: string;
-  }) => string;
+  }) => string | '__NO_DETAILS_URL__';
 }
 
 export interface IMutationKeyConfig {

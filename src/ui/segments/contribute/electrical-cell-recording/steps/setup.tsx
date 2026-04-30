@@ -282,10 +282,10 @@ export function Setup() {
 
       <Form.Item
         name={['setup', 'recording_location']}
-        label={renderLabel('Recording location', 'main')}
+        label={renderLabel('Recording location', 'main', RequiredFieldMarker)}
         rules={[
           {
-            required: false,
+            required: true,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.recording_location',

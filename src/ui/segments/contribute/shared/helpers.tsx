@@ -53,7 +53,7 @@ export function renderLabel(
     <span
       className={cn(
         'text-base font-light',
-        type === 'main' && 'text-primary-8 !font-bold',
+        type === 'main' && 'text-primary-8  font-bold!',
         type === 'secondary' && 'text-label',
         cls
       )}
@@ -61,6 +61,21 @@ export function renderLabel(
       {text} {extra}
     </span>
   );
+}
+
+/**
+ * Returns true when a Zod issue targets this field exactly, or a parent segment
+ * (e.g. contribution.0 when the field is contribution.0.agent_type). Root issues
+ * with an empty path are not mapped onto nested fields.
+ */
+function zodIssueAppliesToFieldPath(
+  issuePath: ReadonlyArray<PropertyKey>,
+  fieldPath: string
+): boolean {
+  if (issuePath.length === 0) return false;
+  const joined = issuePath.map(String).join('.');
+  if (joined === fieldPath) return true;
+  return fieldPath.startsWith(`${joined}.`);
 }
 
 /**
@@ -86,7 +101,9 @@ export function createZodFieldValidator<TSchema extends ZodType, TFormValues>(
         return Promise.reject(error.message);
       }
       if (error instanceof z.ZodError) {
-        const matchingIssue = error.issues.find((issue) => issue.path.join('.') === fieldPath);
+        const matchingIssue = error.issues.find((issue) =>
+          zodIssueAppliesToFieldPath(issue.path, fieldPath)
+        );
         if (matchingIssue) {
           return Promise.reject(matchingIssue.message);
         }
@@ -117,10 +134,9 @@ export function getValidationStatus<T>(
  * checks nested fields (e.g. ['setup', 'name']) and returns the top-level key
  * ('setup') as dirty if any of its children have been touched.
  */
-export function getDirtyFields<TFormValues>(form: FormInstance<TFormValues>): Array<string> {
+export function getDirtyFields(form: FormInstance<any>): Array<string> {
   const allFields = form.getFieldsValue(true) as Record<string, unknown>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const antForm = form as any;
+  const antForm = form;
 
   return Object.keys(allFields).filter((topLevelKey) => {
     if (antForm.isFieldTouched(topLevelKey)) return true;

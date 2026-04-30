@@ -305,7 +305,6 @@ export function NotebooksLayout({ children, active }: Props) {
                       fileList={fileList}
                       setFileList={setFileList}
                       vlabBalance={vlabBalance}
-                      budgetPerStudent={budgetPerStudent}
                     />
                   </div>
                 </div>
@@ -337,7 +336,6 @@ const CsvUploadValidator = ({
   fileList,
   setFileList,
   vlabBalance,
-  budgetPerStudent,
 }: {
   vlabId: string;
   onCancel: () => void;
@@ -347,7 +345,6 @@ const CsvUploadValidator = ({
   fileList: UploadFile[];
   setFileList: (fileList: UploadFile[]) => void;
   vlabBalance: number;
-  budgetPerStudent: number;
 }) => {
   const [error, setError] = useState('');
   const [credits, setCredits] = useState(0);
