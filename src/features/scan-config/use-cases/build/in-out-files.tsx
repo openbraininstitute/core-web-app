@@ -152,7 +152,11 @@ export function InOutFiles({
         outputFiles[0] ? (
           <TaskIOFileItem
             id={outputFiles[0].id}
-            label={<small className="uppercase">Synaptome beta</small>}
+            label={
+              <small className="uppercase">
+                Synaptome <span className="lowercase">(beta)</span>
+              </small>
+            }
             selected={outputFiles[0].id === selectedFile?.id}
             key={outputFiles[0].id}
             file={outputFiles[0]}
