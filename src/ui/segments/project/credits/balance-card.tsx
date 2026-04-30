@@ -41,7 +41,7 @@ export function BalanceCard({ onTransferCredits }: Props) {
           </div>
         </div>
 
-        <Tooltip>
+        <Tooltip open={isAdmin ? false : undefined}>
           <TooltipTrigger asChild>
             <span className={cn({ 'cursor-not-allowed': !isAdmin })}>
               <Button
@@ -50,7 +50,7 @@ export function BalanceCard({ onTransferCredits }: Props) {
                 className="text-primary-9 hover:bg-primary-8 not-disabled:shadow-2xl hover:border-white hover:text-white disabled:text-gray-500"
                 size="md"
                 variant="outline"
-                onClick={isAdmin ? onTransferCredits : undefined}
+                onClick={onTransferCredits}
                 disabled={!isAdmin}
               >
                 Transfer credits
