@@ -29,13 +29,13 @@ interface Object {
   [key: string]: Primitive | Primitive[] | Object;
 }
 
-export type ConfigValue = Primitive | Primitive[] | Object;
+export type ConfigValue = Primitive | Primitive[] | Object | ConfigValue[];
 export type Config = Record<string, Object | string>;
 
 export interface AtomsMap {
   [key: string]:
-    | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
-    | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
+    | ReturnType<typeof atom<Record<string, ConfigValue>>>
+    | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
 }
 
 export const SchemaMappingKeyDict = {
@@ -102,7 +102,6 @@ export const BuildScanConfigTabs = {
   results: 'results',
 } as const;
 
-
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
@@ -132,10 +131,7 @@ export const SchemaNameDict = {
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
 } as const;
 
-
 export type SchemaName = (typeof SchemaNameDict)[keyof typeof SchemaNameDict];
-
-
 
 export type TRootElement = {
   description: string;
