@@ -62,7 +62,7 @@ export class AxisOverlay {
     const xTickCount = Math.max(2, Math.floor(plotRect.width / 80));
     const yTickCount = Math.max(2, Math.floor(plotRect.height / 30));
     const xTicks = computeTicks(bounds.xMin, bounds.xMax, xTickCount);
-    const yTicks = computeTicks(bounds.yMin, bounds.yMax, yTickCount, true);
+    const yTicks = computeTicks(bounds.yMin, bounds.yMax, yTickCount, true).filter((v) => v >= 0);
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.save();

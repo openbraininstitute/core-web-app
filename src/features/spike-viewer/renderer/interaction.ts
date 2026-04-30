@@ -26,6 +26,7 @@ export class InteractionManager {
   private initialView: ViewBounds = { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
   private plotRect: PlotRect = { x: 0, y: 0, width: 1, height: 1 };
   private element: HTMLElement;
+  private selectionMask: HTMLDivElement;
   private selectionEl: HTMLDivElement;
 
   private drag: DragState | null = null;
@@ -44,16 +45,28 @@ export class InteractionManager {
     element.style.cursor = 'crosshair';
     element.style.touchAction = 'none';
 
+    // Wrapping mask clips the selection's huge box-shadow to the plot area,
+    // so the dim overlay covers only the chart and not the axis labels.
+    this.selectionMask = document.createElement('div');
+    Object.assign(this.selectionMask.style, {
+      position: 'absolute',
+      pointerEvents: 'none',
+      overflow: 'hidden',
+      opacity: '0',
+      transition: 'opacity 300ms ease-out',
+    } satisfies Partial<CSSStyleDeclaration>);
+
     this.selectionEl = document.createElement('div');
     Object.assign(this.selectionEl.style, {
       position: 'absolute',
       pointerEvents: 'none',
-      display: 'none',
-      background: 'rgba(0, 132, 180, 0.2)',
-      border: '1px solid #0d76a8',
+      border: '1px solid #eee',
       boxSizing: 'border-box',
+      boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.4)',
     } satisfies Partial<CSSStyleDeclaration>);
-    element.appendChild(this.selectionEl);
+
+    this.selectionMask.appendChild(this.selectionEl);
+    element.appendChild(this.selectionMask);
   }
 
   setInitialView(bounds: ViewBounds) {
@@ -117,7 +130,7 @@ export class InteractionManager {
 
   private updateSelectionRect() {
     if (!this.drag || this.drag.mode === 'pan') {
-      this.selectionEl.style.display = 'none';
+      this.selectionMask.style.opacity = '0';
       return;
     }
 
@@ -155,11 +168,16 @@ export class InteractionManager {
       h = Math.abs(y2 - y1);
     }
 
-    this.selectionEl.style.left = `${left}px`;
-    this.selectionEl.style.top = `${top}px`;
+    this.selectionMask.style.left = `${x}px`;
+    this.selectionMask.style.top = `${y}px`;
+    this.selectionMask.style.width = `${width}px`;
+    this.selectionMask.style.height = `${height}px`;
+    this.selectionMask.style.opacity = '1';
+
+    this.selectionEl.style.left = `${left - x}px`;
+    this.selectionEl.style.top = `${top - y}px`;
     this.selectionEl.style.width = `${w}px`;
     this.selectionEl.style.height = `${h}px`;
-    this.selectionEl.style.display = 'block';
   }
 
   private cursorForRegion(clientX: number, clientY: number, shiftKey: boolean): string {
@@ -248,7 +266,7 @@ export class InteractionManager {
 
     if (drag.mode === 'pan') return;
 
-    this.selectionEl.style.display = 'none';
+    this.selectionMask.style.opacity = '0';
 
     const dx = Math.abs(drag.lastClient.x - drag.startClient.x);
     const dy = Math.abs(drag.lastClient.y - drag.startClient.y);
@@ -344,8 +362,8 @@ export class InteractionManager {
     el.removeEventListener('pointercancel', this.handlePointerUp);
     el.removeEventListener('pointerleave', this.handlePointerLeave);
     el.removeEventListener('dblclick', this.handleDblClick);
-    if (this.selectionEl.parentElement === el) {
-      el.removeChild(this.selectionEl);
+    if (this.selectionMask.parentElement === el) {
+      el.removeChild(this.selectionMask);
     }
   }
 }

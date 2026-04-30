@@ -20,13 +20,15 @@ uniform float u_pointSize;
 out vec4 fragColor;
 
 void main() {
-  // Vertical tick mark with soft edges (~1 px wide on every side) so
-  // subpixel jitter shows as an opacity falloff instead of a ±1 px
-  // step in width or height.
+  // Vertical tick: solid core with ~1 px outer feather so subpixel
+  // jitter shows as opacity falloff at the edge instead of a ±1 px
+  // size step. Keeping the feather *outside* the core preserves a
+  // fully opaque body so dense overlapping ticks read as solid colour
+  // rather than accumulating a translucent haze.
   float feather = 1.0 / max(u_pointSize, 1.0);
   float dx = abs(gl_PointCoord.x - 0.5);
   float dy = abs(gl_PointCoord.y - 0.5);
-  float alphaX = 1.0 - smoothstep(0.2 - feather, 0.2 + feather, dx);
+  float alphaX = 1.0 - smoothstep(0.2, 0.2 + feather, dx);
   float alphaY = 1.0 - smoothstep(0.5 - feather, 0.5, dy);
   float alpha = alphaX * alphaY;
   if (alpha <= 0.001) discard;
@@ -135,7 +137,11 @@ export class WebGLPoints {
     this.uColor = glRequire(gl.getUniformLocation(this.program, 'u_color'), 'u_color');
     this.uPointSize = glRequire(gl.getUniformLocation(this.program, 'u_pointSize'), 'u_pointSize');
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    // Separate blend for color vs alpha: standard "over" for colour, but
+    // accumulate destination alpha toward 1.0 so the canvas stays opaque
+    // in dense regions. Without this, overlapping feathered edges keep
+    // dst.a < 1 and the browser composites pale blue over the white page.
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   }
 
   private initBuffers(populations: SpikePopulation[], colors: string[]) {
