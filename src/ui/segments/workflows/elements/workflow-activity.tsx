@@ -3,7 +3,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import { Pagination as AntPagination, Card, ConfigProvider, Empty } from 'antd';
-import { find, get, kebabCase } from 'es-toolkit/compat';
+import { get, includes, kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
@@ -57,21 +57,40 @@ import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ORIGINAL_CAMPAIGN_ID_QUERY } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
+import { ActivityValues, getActivity } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
-import { ActivityDict, ActivityValues } from '@/ui/segments/workflows/elements/helpers';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
 import type { ColumnsType } from 'antd/es/table/interface';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 const AllowedDuplicateEntityTypes: TEntityTypeDict[] = [
   EntityTypeDict.SimulationCampaign,
   EntityTypeDict.CircuitExtractionCampaign,
   EntityTypeDict.IonChannelModelingCampaign,
+  EntityTypeDict.EmSynapseMappingCampaign,
   EntityTypeDict.TaskConfig,
 ];
+
+const AllowedDuplicateBuildEntityTypes: TEntityTypeDict[] = [
+  ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+  ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
+];
+
+const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
+  ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+  ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+  ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+  ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+  ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+];
+
 export interface WorkflowActivityRef {
   dataCount: number;
   totalItems: number;
@@ -171,7 +190,7 @@ export function WorkflowActivity() {
       render: () => {
         return (
           <span className={cn('text-primary-9 flex items-center capitalize')}>
-            {find(ActivityDict, { value: activityType ?? undefined })?.name}
+            {getActivity(activityType)?.name}
           </span>
         );
       },
@@ -197,7 +216,8 @@ export function WorkflowActivity() {
           getEntityByExtendedType({
             type: record.type as unknown as TExtendedEntitiesTypeDict,
           })?.title ??
-          (entityType ? getEntityByExtendedType({ type: entityType })?.title : undefined);
+          getEntityByExtendedType({ type: entityType ?? undefined })?.title ??
+          '-';
 
         return <span className={cn('text-primary-9 flex items-center capitalize')}>{title}</span>;
       },
@@ -339,6 +359,13 @@ export function WorkflowActivity() {
       ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}/${resultsPath}`
       : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/${kebabCase(entityType)}/${selectedRow?.id}`
     : null;
+  const isIonChannelModelingCampaign =
+    entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign;
+  const isBuildActivity = activityType === ActivityValues.Build;
+  const canShowResultsAction = Boolean(
+    resultsLink && entityType && !NotAllowedResultsActionEntityTypes.includes(entityType)
+  );
+  const resultsActionLink = resultsLink ?? undefined;
 
   const onDuplicate = () => {
     if (selectedRow?.type === ExtendedEntitiesTypeDict.TaskConfig) {
@@ -357,6 +384,15 @@ export function WorkflowActivity() {
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/process/configure/em-cell-mesh/${
             emCellMeshId
           }?initialCampaignId=${selectedRow.id}`
+        );
+      }
+      if (
+        (selectedRow as ITaskConfig<any>).task_config_type ===
+        TaskConfigType.EmSynapseMappingCampaign
+      ) {
+        const morphologyId = (selectedRow as ITaskConfig<any>).inputs.at(0)?.id;
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/em-synapse-mapping-campaign/${morphologyId}?initialCampaignId=${selectedRow?.id}`
         );
       }
     }
@@ -472,7 +508,6 @@ export function WorkflowActivity() {
   const { expandableConfig } = useExpandableTable(
     expandableOptions as UseExpandableTableOptions<EntityCoreObjectTypes> | undefined
   );
-
   return (
     <section
       id="activity-table-with-filters"
@@ -621,16 +656,9 @@ export function WorkflowActivity() {
                         View configuration
                       </Link>
                     </Button>
-                    {resultsLink &&
-                      entityType !== ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.MemodelCircuitSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.CircuitExtractionCampaign &&
-                      entityType !== ExtendedEntitiesTypeDict.SkeletonizationCampaign &&
-                      entityType !== ExtendedEntitiesTypeDict.IonChannelModelSimulation &&
-                      entityType !== ExtendedEntitiesTypeDict.MicrocircuitSimulation &&
-                      (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ? (
+                    {canShowResultsAction &&
+                      resultsActionLink &&
+                      (isIonChannelModelingCampaign ? (
                         <Button
                           rounded
                           variant="outline"
@@ -645,15 +673,15 @@ export function WorkflowActivity() {
                       ) : (
                         <Button
                           rounded
-                          asChild={activityType !== ActivityValues.Build}
+                          asChild={!isBuildActivity}
                           variant="outline"
                           size={breakpoint === 'l' ? 'md' : 'lg'}
-                          disabled={activityType === ActivityValues.Build}
+                          disabled={isBuildActivity}
                           className="disabled:bg-background! disabled:text-label! select-none disabled:cursor-not-allowed group"
                         >
                           <Link
-                            href={resultsLink}
-                            aria-disabled={activityType === ActivityValues.Build}
+                            href={resultsActionLink}
+                            aria-disabled={isBuildActivity}
                             className="text-primary-9!"
                           >
                             View results
@@ -668,8 +696,8 @@ export function WorkflowActivity() {
                       className="disabled:bg-background disabled:text-label select-none disabled:cursor-not-allowed text-primary-9!"
                       disabled={
                         (activityType === ActivityValues.Build &&
-                          entityType !== ExtendedEntitiesTypeDict.IonChannelModelingCampaign) ||
-                        !AllowedDuplicateEntityTypes.includes(selectedRow.type)
+                          !includes(AllowedDuplicateBuildEntityTypes, entityType)) ||
+                        !includes(AllowedDuplicateEntityTypes, selectedRow.type)
                       }
                     >
                       Duplicate

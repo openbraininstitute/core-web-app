@@ -10,13 +10,14 @@ import {
   SelectValue,
 } from '@/ui/molecules/select';
 import {
-  ActivityDict,
-  getDropdownOptionsByCategory,
-} from '@/ui/segments/workflows/elements/helpers';
+  groupWorkflowsByEntityGroup,
+  listActivities,
+  listWorkflows,
+} from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 export function EntityTypeSelectScrollable({
   value,
@@ -40,7 +41,7 @@ export function EntityTypeSelectScrollable({
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          'w-70 max-w-max min-w-36 rounded-full border-none text-lg cursor-pointer',
+          'w-80 max-w-max min-w-36 rounded-full border-none text-lg cursor-pointer',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
       >
@@ -51,27 +52,29 @@ export function EntityTypeSelectScrollable({
         side="bottom"
         sideOffset={3}
       >
-        {getDropdownOptionsByCategory(category, featureFlags).enabledOptions.map(
-          ({ group, options }) => {
-            return (
-              <SelectGroup key={`entity-type-group-${group}`}>
-                <SelectLabel className="text-neutral-3 text-base">{group}</SelectLabel>
-                {options.map(({ label, value: _value }) => (
-                  <SelectItem
-                    key={`entity-type-${_value}`}
-                    value={_value!}
-                    className={cn(
-                      'text-primary-9 text-lg font-bold',
-                      'data-highlighted:text-primary-7! cursor-pointer'
-                    )}
-                  >
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            );
-          }
-        )}
+        {groupWorkflowsByEntityGroup(
+          listWorkflows({ activity: category, flags: featureFlags, context: 'configure' }).filter(
+            (w) => !w.disabled
+          )
+        ).map(({ group, options }) => {
+          return (
+            <SelectGroup key={`entity-type-group-${group}`}>
+              <SelectLabel className="text-neutral-3 text-base">{group}</SelectLabel>
+              {options.map(({ label, targetType }) => (
+                <SelectItem
+                  key={`entity-type-${targetType}`}
+                  value={targetType}
+                  className={cn(
+                    'text-primary-9 text-lg font-bold',
+                    'data-highlighted:text-primary-7! cursor-pointer'
+                  )}
+                >
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          );
+        })}
       </SelectContent>
     </Select>
   );
@@ -105,14 +108,11 @@ export function CategorySelectScrollable({
         side="bottom"
         sideOffset={3}
       >
-        {ActivityDict.filter(
-          (o) =>
-            !o.disabled &&
-            (!o.requiredFeatures || o.requiredFeatures.every((flag) => featureFlags[flag]))
-        ).map(({ label, value: _value }) => (
+        {listActivities(featureFlags).map(({ label, value: _value, disabled }) => (
           <SelectItem
             key={`category-${_value}`}
             value={_value}
+            disabled={Boolean(disabled)}
             className={cn(
               'text-primary-9 text-lg font-bold cursor-pointer',
               'data-highlighted:text-primary-7!'

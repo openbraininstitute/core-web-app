@@ -90,8 +90,9 @@ export type CellMorphologyFilter = Partial<
     CellMorphologyProtocolNestedFilter &
     IlikeSearchFilter &
     IOrderBy<TCellMorphologyOrderBy>
->;
-
+> & {
+  has_segmented_spines?: boolean;
+};
 interface ICellMorphologyBase extends EntityCoreIdentifiable {
   name: string;
   description: string;

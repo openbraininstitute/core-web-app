@@ -13,6 +13,7 @@ import {
   type SetAtom,
 } from '@/features/scan-config/types';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge, BadgeButton } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
@@ -51,13 +52,13 @@ export function EntitySelectorSingle({
   const instanceId = useId();
   const { virtualLabId, projectId } = useWorkspace();
   const entityConfig = getEntityByExtendedType({ type: entityType });
-
+  const { scope } = useScope();
   const { dataKey } = makeDataKey({
     virtualLabId,
     projectId,
-    section: WorkspaceSection.SimulateWorkflow,
+    section: WorkspaceSection.GeneralWorkflow,
     dataType: entityType,
-    scope: WorkspaceScope.Public,
+    scope,
     id: instanceId,
   });
 

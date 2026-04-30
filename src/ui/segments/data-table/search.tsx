@@ -1,6 +1,13 @@
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { useAtom, useSetAtom } from 'jotai';
-import { type ChangeEvent, type ComponentProps, useDeferredValue, useRef, useState } from 'react';
+import {
+  type ChangeEvent,
+  type ComponentProps,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import {
@@ -30,13 +37,14 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
 
-  // sync to atom when deferredSearchInput changes:
-  // Note: this happens during render — so no useEffect required.
-  if (searchString !== deferredSearchInput) {
+  useEffect(() => {
+    if (searchString === deferredSearchInput) {
+      return;
+    }
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSearchString(deferredSearchInput);
     runStorageSync({ Search: deferredSearchInput, Page: DEFAULT_PAGE_NUMBER });
-  }
+  }, [deferredSearchInput, runStorageSync, searchString, setPageNumber, setSearchString]);
 
   const handleToggleSearch = (): void => {
     if (isSearchOpen) {

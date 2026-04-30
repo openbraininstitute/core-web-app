@@ -17,19 +17,19 @@ export function ResultsLayout({ left, middle, right, campaignId }: Props) {
     <>
       <div
         id={leftId}
-        className="border-r border-gray-200 pr-4 secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
+        className="border-r border-gray-200 pr-4 secondary-scrollbar my-2 flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
       >
         {left}
       </div>
       <div
         id={middleId}
-        className="relative border-r border-gray-200 secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
+        className="relative border-r border-gray-200 secondary-scrollbar my-2 flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
       >
         {middle}
       </div>
       <div
         id={rightId}
-        className="relative secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
+        className="relative secondary-scrollbar flex w-full py-2 min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden"
       >
         {right}
       </div>
