@@ -168,7 +168,7 @@ export function Profile({ data }: ProfileProps) {
                   '[&_.ant-select-selection-item]:font-bold! [&_.ant-select-selection-search-input]:text-white!',
                   '[&_.ant-select-selection-placeholder]:text-white!'
                 )}
-                popupClassName="rounded-none shadow-md"
+                classNames={{ popup: { root: 'rounded-none shadow-md' } }}
                 onSearch={(va) => {
                   const countriesObject = countries
                     .sort((a, b) => a.name.localeCompare(b.name))
