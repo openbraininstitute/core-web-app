@@ -283,10 +283,14 @@ export function SynapticInputItem({
                 '[&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
                 '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
               )}
-              popupClassName={cn(
-                '[&_.ant-select-item-option-content]:text-primary-9!',
-                '[&_.rc-virtual-list-holder-inner]:gap-1'
-              )}
+              classNames={{
+                popup: {
+                  root: cn(
+                    '[&_.ant-select-item-option-content]:text-primary-9!',
+                    '[&_.rc-virtual-list-holder-inner]:gap-1'
+                  ),
+                },
+              }}
               placement="bottomLeft"
               size={breakpoint === 'l' ? 'middle' : 'large'}
               optionRender={OptionRender}

@@ -238,7 +238,7 @@ export function RoleModifier({
               value={role}
               size="large"
               options={roleOptions}
-              popupClassName="rounded-none!"
+              classNames={{ popup: { root: 'rounded-none!' } }}
               disabled={updateRoleMutation.isPending}
               loading={updateRoleMutation.isPending}
             />
