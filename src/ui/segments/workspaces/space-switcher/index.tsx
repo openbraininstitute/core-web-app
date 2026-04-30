@@ -47,7 +47,7 @@ export function resolveCurrentProjectName({
   if (!projectId) {
     return 'Select project';
   }
-  return activeProjectName ?? listedProjectName ?? null;
+  return activeProjectName || listedProjectName || null;
 }
 
 export function SpaceSwitcher({ className }: Props) {
@@ -201,20 +201,18 @@ export function SpaceSwitcher({ className }: Props) {
 
   const currentVirtualLabName = labs.find((lab) => lab.id === virtualLabId)?.name;
 
-  const listedProjectName = projectId
-    ? (projects?.data?.results.find((project) => project.id === projectId)?.name ?? null)
-    : null;
-
   const { data: activeProject, isLoading: activeProjectLoading } = useQuery({
     queryKey: keyBuilder.getWorkspace(activeWorkspace),
     queryFn: () => getProject(activeWorkspace),
-    enabled: !!virtualLabId && !!projectId && !listedProjectName,
+    enabled: !!virtualLabId && !!projectId,
     staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
   });
 
   const currentProjectName = resolveCurrentProjectName({
     projectId,
-    listedProjectName,
+    listedProjectName:
+      projects?.data?.results.find((project) => project.id === projectId)?.name ?? null,
     activeProjectName: activeProject?.data.project.name ?? null,
   });
 
