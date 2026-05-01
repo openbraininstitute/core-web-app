@@ -47,7 +47,7 @@ export function resolveCurrentProjectName({
   if (!projectId) {
     return 'Select project';
   }
-  return activeProjectName ?? listedProjectName ?? null;
+  return activeProjectName || listedProjectName || null;
 }
 
 export function SpaceSwitcher({ className }: Props) {
@@ -201,20 +201,18 @@ export function SpaceSwitcher({ className }: Props) {
 
   const currentVirtualLabName = labs.find((lab) => lab.id === virtualLabId)?.name;
 
-  const listedProjectName = projectId
-    ? (projects?.data?.results.find((project) => project.id === projectId)?.name ?? null)
-    : null;
-
   const { data: activeProject, isLoading: activeProjectLoading } = useQuery({
     queryKey: keyBuilder.getWorkspace(activeWorkspace),
     queryFn: () => getProject(activeWorkspace),
-    enabled: !!virtualLabId && !!projectId && !listedProjectName,
+    enabled: !!virtualLabId && !!projectId,
     staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
   });
 
   const currentProjectName = resolveCurrentProjectName({
     projectId,
-    listedProjectName,
+    listedProjectName:
+      projects?.data?.results.find((project) => project.id === projectId)?.name ?? null,
     activeProjectName: activeProject?.data.project.name ?? null,
   });
 
@@ -263,7 +261,7 @@ export function SpaceSwitcher({ className }: Props) {
             'relative flex h-10 w-full items-center justify-between gap-1.5 pl-4 text-sm transition-all duration-150 ease-out',
             'hover:bg-background',
             {
-              'border-neutral-2 h-16! rounded-md rounded-b-none border border-b-0 bg-white pr-4':
+              'border-neutral-2 h-16! rounded-2xl rounded-b-none border border-b-0 bg-white pr-4':
                 isExpanded,
             },
             {
@@ -316,12 +314,8 @@ export function SpaceSwitcher({ className }: Props) {
           </div>
           <AnimatePresence mode="wait">
             {!isExpanded ? (
-              <motion.div
-                key="breadcrumb"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.1 }}
+              <div
+                id="breadcrumb"
                 className={cn(
                   'flex w-full flex-1 items-center space-x-2 overflow-hidden rounded-full py-2 pr-4',
                   {
@@ -359,16 +353,12 @@ export function SpaceSwitcher({ className }: Props) {
                   </>
                 )}
                 {!virtualLabId && <span className="text-gray-500">Select virtual lab</span>}
-              </motion.div>
+              </div>
             ) : (
               userStatus === 'authenticated' &&
               !userLoading && (
-                <motion.div
-                  key="user-info"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.1 }}
+                <div
+                  id="user-info"
                   className={cn(
                     'hover:text-primary-8! text-primary-9! flex w-full items-center justify-between gap-2'
                   )}
@@ -376,17 +366,15 @@ export function SpaceSwitcher({ className }: Props) {
                   <ProfileButton username={username} onProfileClick={onProfileClick} />
                   <div className="ml-2 flex shrink-0 items-center gap-2">
                     <motion.div
-                      className="hover:bg-neutral-2/50 group flex size-8 items-center justify-center rounded-full"
+                      className="hover:bg-white hover:shadow-[-2px_0px_20px_-3px_rgba(0,0,0,0.2)] group flex size-8 items-center justify-center rounded-full"
                       animate={{ rotate: isExpanded ? 180 : 0 }}
                       transition={{ duration: 0.15, ease: 'easeOut' }}
+                      onClick={onExpandClick}
                     >
-                      <DownOutlined
-                        className="text-neutral-3 group-hover:text-primary-8"
-                        onClick={onExpandClick}
-                      />
+                      <DownOutlined className="text-neutral-3 group-hover:text-primary-8" />
                     </motion.div>
                   </div>
-                </motion.div>
+                </div>
               )
             )}
           </AnimatePresence>
@@ -401,9 +389,9 @@ export function SpaceSwitcher({ className }: Props) {
               exit={{ opacity: 0, scaleY: 0.95 }}
               transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
               className={cn(
-                'border-neutral-2 absolute top-full left-0 z-50 w-full overflow-hidden rounded-tr-lg rounded-b-lg border border-t-0 bg-white',
+                'border-neutral-2 absolute top-full left-0 z-50 w-full overflow-hidden rounded-tr-lg rounded-b-2xl border border-t-0 bg-white',
                 'relative flex flex-col pt-1 pb-2 shadow-2xl',
-                'h-full max-h-[calc(100vh-4.5rem)] min-h-[calc(100vh-5rem)] lg:max-h-[calc(100vh-4.5rem)]',
+                'h-full max-h-[calc(100vh-5.5rem)] min-h-[calc(100vh-5.5rem)]',
                 { 'rounded-t-none': isExpanded },
                 { 'z-1001': boardModalOpen }
               )}
