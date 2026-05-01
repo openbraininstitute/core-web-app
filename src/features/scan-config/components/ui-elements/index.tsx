@@ -2,7 +2,6 @@ import { Input } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
 
-import ModelDetails from '@/features/scan-config/components/model-details';
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
 import EntityPropertyDropdown from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/global';
@@ -11,6 +10,7 @@ import {
   type MechanismVariablesRoot,
   RootSelector,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import ModelIdentifier from '@/features/scan-config/components/ui-elements/model-identifier';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
@@ -28,12 +28,14 @@ import {
 } from '@/features/scan-config/types';
 import { isObject } from '@/util/type-guards';
 
+import ModelIdentifierMultiple from './model-identifier_multiple';
+import { VoltageDuration, type VoltageDurationState } from './voltage-duration';
+
 import type { SetStateAction } from 'jotai';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
-
-type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
+export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 export function UIElementRender({
   k,
@@ -83,7 +85,14 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.ModelIdentifier },
         entity: P.nonNullable,
       },
-      ({ entity }) => <ModelDetails entity={entity} />
+      ({ entity }) => <ModelIdentifier entity={entity} />
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.ModelIdentifierMultiple },
+        entity: P.nonNullable,
+      },
+      ({ entity }) => <ModelIdentifierMultiple entities={entity} />
     )
     .with(
       {
@@ -106,7 +115,6 @@ export function UIElementRender({
           onChange={(value) => {
             setState({ ...state, [k]: value });
           }}
-          errorPathPrefix={errorPathPrefix}
         />
       )
     )
@@ -199,7 +207,13 @@ export function UIElementRender({
             schemaMappingConfig={schemaMappingConfig}
             disabled={disabled}
             value={getValue()}
-            onChange={(newV: string[]) => setState({ ...state, node_set: newV })}
+            onChange={(newV: string[]) =>
+              setState({
+                ...state,
+                // NOTE: this is requested by James for IT'IS collaboration
+                node_set: Array.isArray(newV) && newV.length === 1 ? newV[0] : newV,
+              })
+            }
             property={paramSchema.property}
           />
         );
@@ -339,6 +353,24 @@ export function UIElementRender({
                 },
               });
             }}
+          />
+        );
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.VoltageDuration },
+      },
+      ({ paramSchema }) => {
+        const v = (state[k] ?? []) as unknown as VoltageDurationState[];
+        return (
+          <VoltageDuration
+            paramSchema={paramSchema}
+            state={v}
+            onChange={(newValue: VoltageDurationState[]) =>
+              setState({ ...state, [k]: newValue as unknown as ConfigValue })
+            }
+            disabled={disabled}
           />
         );
       }

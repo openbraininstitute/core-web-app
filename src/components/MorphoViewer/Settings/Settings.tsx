@@ -7,9 +7,10 @@ import { classNames } from '@/util/utils';
 import { ColorMode } from './ColorMode';
 import { ColorsLegend } from './ColorsLegend';
 import { DendriteThickness } from './DendriteThickness';
-import { ThicknessMode } from './ThicknessMode';
 
-import type { MorphologyCanvas } from '@bbp/morphoviewer';
+import type { MorphologyCanvas } from '@/morpho-viewer';
+
+// import { ThicknessMode } from './ThicknessMode';
 
 import styles from './settings.module.css';
 
@@ -34,7 +35,7 @@ export function Settings({ className, painter }: SettingsProps) {
         </div>
         <ColorsLegend className={styles.legend} painter={painter} />
         <DendriteThickness painter={painter} />
-        <ThicknessMode painter={painter} />
+        {/* <ThicknessMode painter={painter} /> */}
         <ColorMode painter={painter} />
       </div>
     </div>

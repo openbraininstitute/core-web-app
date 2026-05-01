@@ -1,0 +1,118 @@
+/*
+ * Shared diff highlight & flash styles for config UI.
+ *
+ * Three colour channels (green / red / amber) × three usage modes:
+ *   1. Static highlights  – persistent border while "View Diffs" is active
+ *   2. Static highlights (selected) – same + inset ring for selected entries
+ *   3. Flash animations   – temporary border that fades out after ~2s
+ *
+ * Two flash timing variants:
+ *   - "slow" (2s linear)  used by root elements & dictionary entries
+ *   - "fast" (1.2s ease)  used by individual fields inside blocks
+ *
+ * All colour channels share a single `--diff-color` custom property
+ * (comma-separated RGB) so keyframes and declarations are defined once.
+ *
+ * Consumed via CSS-module `composes` or plain class references.
+ */
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+
+.diff-base {
+  border: 1.5px solid transparent;
+  box-sizing: border-box;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* ── Colour tokens ────────────────────────────────────────────────────────── */
+
+.diff-highlight-added,
+.diff-highlight-added-selected,
+.diff-flash-slow-added,
+.diff-flash-fast-added {
+  --diff-color: 34, 197, 94;
+}
+
+.diff-highlight-removed,
+.diff-highlight-removed-selected,
+.diff-flash-slow-removed,
+.diff-flash-fast-removed {
+  --diff-color: 239, 68, 68;
+}
+
+.diff-highlight-modified,
+.diff-highlight-modified-selected,
+.diff-flash-slow-modified,
+.diff-flash-fast-modified {
+  --diff-color: 245, 158, 11;
+}
+
+/* ── Static highlights ────────────────────────────────────────────────────── */
+
+.diff-highlight-added,
+.diff-highlight-removed,
+.diff-highlight-modified {
+  border: 1.5px solid rgba(var(--diff-color), 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08) !important;
+}
+
+.diff-highlight-added-selected,
+.diff-highlight-removed-selected,
+.diff-highlight-modified-selected {
+  border: 1.5px solid rgba(var(--diff-color), 0.55) !important;
+  box-shadow:
+    0 0 0 3px rgba(var(--diff-color), 0.08),
+    inset 0 0 0 1px rgba(var(--diff-color), 0.5) !important;
+}
+
+/* ── Shared keyframes ─────────────────────────────────────────────────────── */
+
+@keyframes diff-flash-slow {
+  0% {
+    border: 1.5px solid rgba(var(--diff-color), 0);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0);
+  }
+  8% {
+    border: 1.5px solid rgba(var(--diff-color), 0.55);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08);
+  }
+  75% {
+    border: 1.5px solid rgba(var(--diff-color), 0.55);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08);
+  }
+  100% {
+    border: 1.5px solid rgba(var(--diff-color), 0);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0);
+  }
+}
+
+@keyframes diff-flash-fast {
+  0%,
+  15% {
+    border: 1.5px solid rgba(var(--diff-color), 0.55);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0.08);
+  }
+  85%,
+  100% {
+    border: 1.5px solid rgba(var(--diff-color), 0);
+    box-shadow: 0 0 0 3px rgba(var(--diff-color), 0);
+  }
+}
+
+/* ── Slow flash (2 s linear) — root elements & dictionary entries ─────── */
+
+.diff-flash-slow-added,
+.diff-flash-slow-removed,
+.diff-flash-slow-modified {
+  animation: diff-flash-slow 2s linear forwards !important;
+}
+
+/* ── Fast flash (1.2 s ease) — individual block fields ────────────────── */
+
+.diff-flash-fast-added,
+.diff-flash-fast-removed,
+.diff-flash-fast-modified {
+  animation: diff-flash-fast 1.2s ease-in-out forwards !important;
+}

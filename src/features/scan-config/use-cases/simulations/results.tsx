@@ -1,11 +1,7 @@
-import { LoadingOutlined, RightOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Checkbox, ConfigProvider, Modal } from 'antd';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { requestOfflineTokenConsent } from '@/api/auth-manager';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
@@ -15,50 +11,37 @@ import { ApiError } from '@/api/error';
 import { runSimulation } from '@/api/one/circuit-simulation';
 import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { useAppNotification } from '@/components/notification';
+import { listAllChildren as listAllSimulationChildren } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { hasSimConfigAsset } from '@/entity-configuration/domain/simulation/utils';
 import {
-  simExecRemoteStatusMapAtomFamily,
-  simExecStatusMapAtomFamily,
-  simulationsByCampaignIdAtomFamily,
-  useModelQuery,
-} from '@/features/scan-config/components/atoms';
+  OfflineTokenConsentModal,
+  useEnsureOfflineTokenConsent,
+} from '@/features/offline-auth-management';
+import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
-import { ScanParams } from '@/features/scan-config/components/scan-params';
 import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
+import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
+import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
 import errorRegistry from '@/features/scan-config/error-registry';
-import { StatusBadge } from '@/features/scan-config/status-badge';
+import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
-import { useLastTruthyValue } from '@/hooks/hooks';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/simulation';
-import { useConsent } from '@/services/consent';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
 import { MessageType } from '@/services/small-scale-simulator/types';
-import { executionStatusColorMap } from '@/ui/segments/activity-execution/color-map';
 import { CreditsTransferModal } from '@/ui/segments/project/credits/credits-transfer-modal';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { classNames } from '@/util/utils';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
-import type { CheckboxProps } from 'antd';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
-import styles from '@/features/scan-config/scan-config.module.css';
-
-const USER_CANCELLED = 'user_cancelled';
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
-
 type SimulationTabProps = {
   campaignId: string;
   virtualLabId: string;
   projectId: string;
-};
-
-type Consent = {
-  controller: AbortController;
-  url: string;
 };
 
 export default function SimulationsTab({
@@ -67,38 +50,38 @@ export default function SimulationsTab({
   projectId,
 }: SimulationTabProps) {
   const notification = useAppNotification();
-  const { waitForConsent } = useConsent();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
-  const simulationsAtom = simulationsByCampaignIdAtomFamily({
-    campaignId,
-    context,
+
+  const { data: simulations = [], isLoading: simulationsLoading } = useQuery({
+    queryKey: ['scan-config-simulations', context, campaignId],
+    queryFn: () =>
+      listAllSimulationChildren({
+        id: campaignId,
+        context,
+      }),
+    enabled: Boolean(campaignId),
   });
-  const simulations = useAtomValue(simulationsAtom);
 
   const { entity: model } = useModelQuery({
     context,
-    id: simulations[0].entity_id,
+    id: simulations[0]?.entity_id,
   });
 
-  const simExecStatusMapAtom = simExecStatusMapAtomFamily({
-    context,
-    campaignId,
-  });
-  const fetchRemoteSimExecStatuseMap = useSetAtom(
-    simExecRemoteStatusMapAtomFamily({ campaignId, context })
-  );
-
-  const statusMap = useLastTruthyValue(simExecStatusMapAtom);
-  const setSimStatus = useSetAtom(simExecStatusMapAtom);
-
+  const [localStatusMap, setLocalStatusMap] = useState<Map<string, ActivityStatus>>(new Map());
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
   const [selectedSimulationIds, setSelectedSimulationIds] = useState<string[]>([]);
   const [activeSimulation, setActiveSimulation] = useState<null | ISimulation>(null);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
-  const [consent, setConsent] = useState<Consent | null>(null);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const {
+    modal: offlineTokenConsentModal,
+    ensure: ensureOfflineTokenConsent,
+    cancel: cancelOfflineTokenConsent,
+    openConsentLink,
+  } = useEnsureOfflineTokenConsent({ useCache: true });
+  const previousCampaignIdRef = useRef(campaignId);
 
   const simConfigAsset = activeSimulation?.assets?.find(
     (a) => a.label === AssetLabel.sonata_simulation_config
@@ -132,7 +115,7 @@ export default function SimulationsTab({
   });
   const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
 
-  const activeSimulationExecStatus = activeSimulation && statusMap?.get(activeSimulation.id);
+  const activeSimulationExecStatus = activeSimulation && localStatusMap.get(activeSimulation.id);
 
   const onActiveSimulationChange = useCallback((simulation: ISimulation) => {
     setActiveSimulation(simulation);
@@ -146,29 +129,59 @@ export default function SimulationsTab({
     }
   }, []);
 
+  const setSimulationStatus = useCallback((simulationId: string, status: ActivityStatus) => {
+    setLocalStatusMap((prev) => new Map(prev).set(simulationId, status));
+  }, []);
+
+  const onSimulationStatusLoad = useCallback((simulationId: string, status: ActivityStatus) => {
+    setLocalStatusMap((prev) => {
+      const previous = prev.get(simulationId);
+      if (previous === status) return prev;
+      return new Map(prev).set(
+        simulationId,
+        previous ? getLatestSimExecStatus(status, previous) : status
+      );
+    });
+  }, []);
+
   const selectableSimulationIds = useMemo(() => {
     return simulations
-      .filter((simulation) =>
-        [undefined, 'created', 'error'].includes(statusMap?.get(simulation.id))
-      )
+      .filter((simulation) => {
+        const status = localStatusMap.get(simulation.id);
+        return status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
+      })
       .filter((simulation) => hasSimConfigAsset(simulation))
       .map((s) => s.id);
-  }, [simulations, statusMap]);
+  }, [localStatusMap, simulations]);
+
+  const allSimulationStatusesLoaded =
+    simulations.length > 0 && simulations.every((simulation) => localStatusMap.has(simulation.id));
+
+  useEffect(() => {
+    if (previousCampaignIdRef.current === campaignId) return;
+
+    previousCampaignIdRef.current = campaignId;
+
+    // reset launch-selection state whenever campaign changes
+    // so initial auto-selection can run for the newly loaded simulations
+    setSelectedSimulationIds([]);
+    setInitialSelectionDone(false);
+  }, [campaignId]);
 
   useEffect(() => {
     // Auto select all valid simulations with status "created" on page load.
     // Previously failed simulations with a valid simulation config have to be explicitly
     // re-selected by the user.
     const simIds = simulations
-      .filter((simulation) => [undefined, 'created'].includes(statusMap?.get(simulation.id)))
+      .filter((simulation) => localStatusMap.get(simulation.id) === ActivityStatus.CREATED)
       .filter((simulation) => hasSimConfigAsset(simulation))
       .map((s) => s.id);
 
-    if (statusMap && simulations && !initialSelectionDone) {
+    if (allSimulationStatusesLoaded && !initialSelectionDone) {
       setSelectedSimulationIds(simIds);
       setInitialSelectionDone(true);
     }
-  }, [simulations, statusMap, initialSelectionDone]);
+  }, [allSimulationStatusesLoaded, simulations, initialSelectionDone, localStatusMap]);
 
   useEffect(() => {
     // Select first simulation from the list
@@ -177,55 +190,16 @@ export default function SimulationsTab({
     }
   }, [onActiveSimulationChange, simulations]);
 
-  useEffect(() => {
-    // Poll simulation statuses if there are active (running/pending) simulations
-    // and no active simulation request with the status streaming
-    if (simRequestInProgress) return;
-
-    // TODO Optimize the polling when there are multiple simulation requests
-
-    const hasActiveSimulations = statusMap
-      ? Array.from(statusMap.values()).some((status) =>
-          [ActivityStatus.PENDING, ActivityStatus.RUNNING].includes(status)
-        )
-      : false;
-
-    if (!hasActiveSimulations) return;
-
-    const intervalId = setInterval(fetchRemoteSimExecStatuseMap, 20_000);
-
-    return () => clearInterval(intervalId);
-  }, [fetchRemoteSimExecStatuseMap, simRequestInProgress, statusMap]);
-
-  const onConsentModalClose = () => {
-    if (consent) {
-      consent.controller.abort(USER_CANCELLED);
-    }
-    setConsent(null);
-  };
-
-  // TODO: this is a POC, refactor once confirmed viable.
   const runViaLaunchSystem = async (simIds: string[]) => {
-    const consentRes = await requestOfflineTokenConsent();
-    const consentUrl = consentRes.data.consent_url;
-
-    if (consentUrl) {
-      const controller = new AbortController();
-      setConsent({ controller, url: consentUrl });
-      window.open(consentUrl, '_blank');
-
-      try {
-        await waitForConsent(controller.signal);
-      } catch (error) {
-        if (error === USER_CANCELLED) return;
-
+    const consentResult = await ensureOfflineTokenConsent();
+    if (!consentResult.ok) {
+      if (consentResult.reason !== 'cancelled') {
         notification.error({
           message: 'Unexpected error occurred, please try again later',
           duration: 10,
         });
-
-        return;
       }
+      return;
     }
 
     let nSubmissions = 0;
@@ -238,7 +212,7 @@ export default function SimulationsTab({
           simulationId: simId,
         });
         log('info', res);
-        setSimStatus(simId, ActivityStatus.PENDING);
+        setSimulationStatus(simId, ActivityStatus.PENDING);
         nSubmissions += 1;
       } catch (error) {
         log('error', 'Failed to submit a simulation');
@@ -294,7 +268,6 @@ export default function SimulationsTab({
         duration: 10,
       });
     }
-    setConsent(null);
   };
 
   // TODO Refactor
@@ -310,7 +283,7 @@ export default function SimulationsTab({
         simulationIds: simIds,
         onInit: () => {
           simIds.forEach((simId) => {
-            setSimStatus(simId, ActivityStatus.PENDING);
+            setSimulationStatus(simId, ActivityStatus.PENDING);
           });
           setSelectedSimulationIds([]);
           setSimRequestInProgress(false);
@@ -320,7 +293,7 @@ export default function SimulationsTab({
             .with({ message_type: MessageType.STATUS }, (msg) => {
               const simId = msg.ctx?.simulation_id;
               if (simId) {
-                setSimStatus(simId, msg.status as unknown as ActivityStatus);
+                setSimulationStatus(simId, msg.status as unknown as ActivityStatus);
               }
               if (msg.status !== 'done') return;
               const simulation = simulations.find((s) => s.id === simId);
@@ -383,204 +356,73 @@ export default function SimulationsTab({
     }
   };
 
-  const onSelectedAll: CheckboxProps['onChange'] = (e) => {
-    setSelectedSimulationIds(e.target.checked ? selectableSimulationIds : []);
+  const onToggleSelectAll = (checked: boolean) => {
+    setSelectedSimulationIds(checked ? selectableSimulationIds : []);
   };
-
-  const allSelected = useMemo(
-    () =>
-      selectableSimulationIds.length > 0 &&
-      selectableSimulationIds.length === selectedSimulationIds.length,
-    [selectableSimulationIds, selectedSimulationIds]
-  );
 
   const launchSimBtnLabelPrefix = selectedSimulationIds.length
     ? `(${selectedSimulationIds.length})`
     : '';
 
-  const loading = !statusMap;
-  // TODO: Add loading skeleton animation
+  const loading = simulationsLoading;
 
   return (
-    <div className={styles.threeColumns}>
-      <div className="border-r border-gray-200 pr-4">
-        <div className="flex h-full flex-col gap-4 overflow-y-hidden">
-          <Checkbox
-            indeterminate={
-              selectedSimulationIds.length > 0 &&
-              selectedSimulationIds.length < selectableSimulationIds.length
-            }
-            onChange={onSelectedAll}
-            checked={allSelected}
-            disabled={simRequestInProgress || selectableSimulationIds.length === 0}
-          >
-            Select all
-          </Checkbox>
-          {/* List of simulations */}
-          <div className="flex grow flex-col justify-start gap-5 overflow-y-auto">
-            {!loading &&
-              simulations.map((simulation) => (
-                <SimulationListItem
-                  key={simulation.id}
-                  selected={activeSimulation?.id === simulation.id}
-                  simulation={simulation}
-                  execStatus={statusMap?.get(simulation.id)}
-                  onSelect={() => onActiveSimulationChange(simulation)}
-                  onSelectedForSimChange={onSelectedForSimChange}
-                  selectedForSim={selectedSimulationIds.includes(simulation.id)}
-                  selectionForSimDisabled={simRequestInProgress}
-                  canBeSelectedForSim={hasSimConfigAsset(simulation)}
+    <>
+      <SimulationsResultsUiAdapter
+        campaignId={campaignId}
+        loading={loading}
+        simulations={simulations}
+        activeSimulationId={activeSimulation?.id}
+        selectedSimulationIds={selectedSimulationIds}
+        selectableSimulationIds={selectableSimulationIds}
+        simRequestInProgress={simRequestInProgress}
+        context={context}
+        statusMap={localStatusMap}
+        launchSimBtnLabelPrefix={launchSimBtnLabelPrefix}
+        onToggleSelectAll={onToggleSelectAll}
+        onActiveSimulationChange={onActiveSimulationChange}
+        onSelectedForSimChange={onSelectedForSimChange}
+        onSimulationStatusLoad={onSimulationStatusLoad}
+        onRun={run}
+        middle={
+          <div className="h-full bg-background! w-full">
+            {loading ? (
+              <InOutFilesColumnSkeleton />
+            ) : (
+              !!activeSimulation &&
+              activeSimulationExecStatus && (
+                <SimulationFiles
+                  simulation={activeSimulation}
+                  execStatus={activeSimulationExecStatus}
+                  selectedFile={selectedFile}
+                  context={context}
+                  onSelect={setSelectedFile}
+                  onLoadingChange={setFilesLoading}
                 />
-              ))}
-          </div>
-          <button
-            className={classNames(
-              'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
-              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)] rounded-full',
-              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
+              )
             )}
-            type="button"
-            onClick={() => run(selectedSimulationIds)}
-            disabled={simRequestInProgress || selectedSimulationIds.length === 0}
-          >
-            <div className="flex justify-center gap-4">
-              <span className="pl-10">Launch simulations {launchSimBtnLabelPrefix}</span>
-              <div className="w-6">{simRequestInProgress && <LoadingOutlined />}</div>
-            </div>
-          </button>
-        </div>
-      </div>
+          </div>
+        }
+        right={
+          <SimulationReportsProvider reports={simConfig?.reports ?? null}>
+            <FileViewer
+              file={selectedFile}
+              className="h-full w-full"
+              context={context}
+              loading={filesLoading}
+            />
+          </SimulationReportsProvider>
+        }
+      />
 
-      {/* List of input/output files for selected simulation */}
-      <div className="relative border-r border-gray-200 px-4">
-        {!!activeSimulation && activeSimulationExecStatus && (
-          <SimulationFiles
-            simulation={activeSimulation}
-            execStatus={activeSimulationExecStatus}
-            selectedFile={selectedFile}
-            context={context}
-            onSelect={setSelectedFile}
-            onLoadingChange={setFilesLoading}
-          />
-        )}
-      </div>
-
-      {/* Preview for selected file */}
-      <div className="relative pl-4">
-        <SimulationReportsProvider reports={simConfig?.reports ?? null}>
-          <FileViewer
-            file={selectedFile}
-            className="h-full"
-            context={context}
-            loading={filesLoading}
-          />
-        </SimulationReportsProvider>
-      </div>
-
-      <Modal
-        title="Waiting for the user consent"
-        open={!!consent}
-        onCancel={onConsentModalClose}
-        okButtonProps={{ style: { display: 'none' } }}
-      >
-        <p className="text-lg">
-          If the authorization window did not open automatically, please click the link below to
-          continue.
-        </p>
-
-        <a
-          className="text-primary-9 mt-4 inline-block text-lg font-semibold"
-          href={consent?.url}
-          target="_blank"
-          rel="noopener"
-        >
-          Grant consent
-        </a>
-      </Modal>
+      <OfflineTokenConsentModal
+        open={offlineTokenConsentModal.open}
+        consentUrl={offlineTokenConsentModal.consentUrl}
+        onCancel={cancelOfflineTokenConsent}
+        onOpenConsent={() => openConsentLink(offlineTokenConsentModal.consentUrl)}
+      />
 
       <CreditsTransferModal open={showCreditsModal} onClose={() => setShowCreditsModal(false)} />
-    </div>
-  );
-}
-
-type SimulationBlockProps = {
-  simulation: ISimulation;
-  execStatus?: ActivityStatus;
-  onSelect: (simulationId: string) => void;
-  selected?: boolean;
-  onSelectedForSimChange: (simulationId: string, selected: boolean) => void;
-  selectedForSim: boolean;
-  selectionForSimDisabled?: boolean;
-  canBeSelectedForSim?: boolean;
-};
-
-function SimulationListItem({
-  simulation,
-  execStatus,
-  onSelect,
-  selected,
-  onSelectedForSimChange,
-  selectedForSim,
-  selectionForSimDisabled,
-  canBeSelectedForSim,
-}: SimulationBlockProps) {
-  const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED];
-
-  const statusDetails = hasSimConfigAsset(simulation)
-    ? undefined
-    : 'There was a problem generating this simulation';
-
-  return (
-    <div className="flex-none">
-      <div
-        className="rounded-lg px-4 pb-4 transition-colors duration-300"
-        style={{
-          border: `2px solid ${selected ? color : 'transparent'}`,
-          backgroundColor: selected ? `${color}0f` : 'white', // 6% opacity for bg color
-        }}
-      >
-        <button
-          type="button"
-          title={simulation.name}
-          className="mb-2 flex h-18 w-full cursor-pointer items-center justify-between"
-          onClick={() => onSelect(simulation.id)}
-        >
-          <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
-            {!execStatus ||
-            ([ActivityStatus.CREATED, ActivityStatus.ERROR].includes(execStatus) &&
-              canBeSelectedForSim) ? (
-              <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
-                <div className="flex min-w-0 items-center" style={{ maxWidth: '100%' }}>
-                  <Checkbox
-                    className="mr-2 transition-colors duration-300 [&_.ant-checkbox+span]:block [&_.ant-checkbox+span]:truncate [&_.ant-checkbox+span]:overflow-hidden [&_.ant-checkbox+span]:text-ellipsis [&_.ant-checkbox+span]:whitespace-nowrap"
-                    disabled={selectionForSimDisabled}
-                    onChange={(e) => onSelectedForSimChange(simulation.id, e.target.checked)}
-                    checked={selectedForSim}
-                    style={{ color, maxWidth: '100%', display: 'flex' }}
-                  >
-                    <span className="text-lg transition-colors duration-300">
-                      {simulation.name}
-                    </span>
-                  </Checkbox>
-                </div>
-              </ConfigProvider>
-            ) : (
-              <span
-                style={{ color }}
-                className="block truncate text-lg transition-colors duration-300"
-              >
-                {simulation.name}
-              </span>
-            )}
-          </div>
-          <div className="ml-4 flex shrink-0">
-            <StatusBadge status={execStatus} details={statusDetails} />
-            <RightOutlined className="ml-2 text-sm" />
-          </div>
-        </button>
-
-        <ScanParams scanParams={simulation.scan_parameters} color={color} />
-      </div>
-    </div>
+    </>
   );
 }

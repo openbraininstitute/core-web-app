@@ -2,18 +2,24 @@ import { RiInformation2Line } from '@remixicon/react';
 import { Tooltip } from 'antd';
 import Link from 'next/link';
 
-import type { AdvantagesProps, PlanV2 } from '@/types/virtual-lab/pricing';
 import SubscriptionToggle from '@/ui/segments/plans/subscription-toggle';
 import SubscriptionsCosts from '@/ui/segments/plans/subscriptions-costs';
+import { cn } from '@/utils/css-class';
+
+import type { AdvantagesProps, PlanV2 } from '@/types/virtual-lab/pricing';
 
 export default function PlanHeader({
   plan,
   billingInterval,
   setBillingInterval,
+  dark,
+  hideContactButton,
 }: {
   plan: PlanV2;
   billingInterval: 'month' | 'year';
   setBillingInterval: (billingInterval: 'month' | 'year') => void;
+  dark?: boolean;
+  hideContactButton?: boolean;
 }) {
   const displayedFeatures = plan.has_subscription
     ? ((billingInterval === 'month'
@@ -21,6 +27,9 @@ export default function PlanHeader({
         : plan.yearly_subscriptions[0]?.features) ?? [])
     : [];
   const advantages = plan.advantages ?? [];
+
+  const textColor = dark ? 'text-white' : 'text-primary-9';
+  const iconColor = dark ? 'text-primary-4' : 'text-primary-9';
 
   return (
     <header className="relative flex h-[260px] w-full flex-col justify-between">
@@ -32,20 +41,24 @@ export default function PlanHeader({
               <SubscriptionToggle
                 billingInterval={billingInterval}
                 setBillingInterval={setBillingInterval}
+                dark={dark}
               />
             )}
           </div>
           {plan.has_subtitle && <div className="text-lg font-normal">{plan.subtitle}</div>}
         </div>
         {plan.has_subscription && (
-          <SubscriptionsCosts billingInterval={billingInterval} plan={plan} />
+          <SubscriptionsCosts billingInterval={billingInterval} plan={plan} dark={dark} />
         )}
       </div>
-      {plan.has_contact_button && (
+      {plan.has_contact_button && !hideContactButton && (
         <div className="w-full">
           <Link
             href="mailto:subscription@openbraininstitute.org"
-            className="text-primary border-primary block w-full border py-4 text-center text-base"
+            className={cn(
+              'block w-full border py-4 text-center text-base',
+              dark ? 'border-primary-5 text-white' : 'text-primary border-primary'
+            )}
           >
             Contact Us
           </Link>
@@ -56,14 +69,14 @@ export default function PlanHeader({
           {displayedFeatures.map((advantage: AdvantagesProps) => (
             <div
               key={`feature-${advantage.title}`}
-              className="text-primary-9 flex items-center gap-2 text-lg font-normal"
+              className={cn('flex items-center gap-2 text-lg font-normal', textColor)}
             >
               <div>+</div>
               <div>{advantage.title}</div>
               {advantage.tooltip && (
                 <div>
                   <Tooltip title={advantage.tooltip}>
-                    <RiInformation2Line className="text-primary-9 size-5" />
+                    <RiInformation2Line className={cn('size-5', iconColor)} />
                   </Tooltip>
                 </div>
               )}
@@ -72,14 +85,14 @@ export default function PlanHeader({
           {advantages.map((advantage: AdvantagesProps) => (
             <div
               key={`advantage-${advantage.title}`}
-              className="text-primary-9 flex items-center gap-2 text-lg font-normal"
+              className={cn('flex items-center gap-2 text-lg font-normal', textColor)}
             >
               <div className="mr-2">+</div>
               <div>{advantage.title}</div>
               {advantage.tooltip && (
                 <div>
                   <Tooltip title={advantage.tooltip}>
-                    <RiInformation2Line className="text-primary-9 size-5" />
+                    <RiInformation2Line className={cn('size-5', iconColor)} />
                   </Tooltip>
                 </div>
               )}

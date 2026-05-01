@@ -1,3 +1,5 @@
+'use client';
+
 import { CloseOutlined } from '@ant-design/icons';
 import { Image } from 'antd';
 import { AnimatePresence, motion } from 'motion/react';
@@ -23,7 +25,7 @@ import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/pr
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
 import { cn } from '@/utils/css-class';
 
-import { DataActions, WorkflowBuildActions, WorkflowSimulationOrExtractActions } from './actions';
+import { DataActions, WorkflowActions, WorkflowBuildActions } from './actions';
 
 import type {
   EntityCoreObjectTypes,
@@ -36,13 +38,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { TWorkspaceSection } from '@/constants';
-
-export const MiniDetailViewTheme = {
-  Light: 'light',
-  Default: 'default',
-} as const;
-
-export type TMiniDetailViewTheme = (typeof MiniDetailViewTheme)[keyof typeof MiniDetailViewTheme];
+import type { TMiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 type Props = {
   section?: TWorkspaceSection;
@@ -239,16 +235,20 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
 
   const actions = match({ section })
     .with({ section: WorkspaceSection.Data }, () => (
-      <DataActions record={record} dataType={dataType} />
+      <DataActions record={record} dataType={dataType} theme={theme} />
     ))
     .with(
-      { section: P.union(WorkspaceSection.SimulateWorkflow, WorkspaceSection.ExtractWorkflow) },
-      ({ section }) => (
-        <WorkflowSimulationOrExtractActions record={record} dataType={dataType} section={section} />
-      )
+      {
+        section: P.union(
+          WorkspaceSection.SimulateWorkflow,
+          WorkspaceSection.ExtractWorkflow,
+          WorkspaceSection.ProcessWorkflow
+        ),
+      },
+      ({ section }) => <WorkflowActions record={record} dataType={dataType} section={section} />
     )
     .with({ section: WorkspaceSection.BuildWorkflow }, () => (
-      <WorkflowBuildActions record={record} />
+      <WorkflowBuildActions record={record} dataType={dataType} />
     ))
     .otherwise(() => null);
 

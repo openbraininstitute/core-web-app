@@ -28,6 +28,7 @@ export async function fetchSanity<T>(
 ): Promise<T | undefined | null> {
   const data = await fetchSanityContent(query);
   if (isUndefined(data)) return undefined;
+  if (data === null) return null;
 
   try {
     if (typeGuard(data)) return data;

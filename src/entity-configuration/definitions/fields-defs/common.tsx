@@ -8,6 +8,7 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AgentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DownloadIcon } from '@/components/icons';
+import { WorkspaceSection } from '@/constants';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -29,11 +30,13 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IContributor, TAgentType } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
 
 const collator = new Intl.Collator('en', { sensitivity: 'base' });
 
-const renderContributors = (r: EntityTypeValue, filter: TAgentType) => {
+const renderContributors = (
+  r: Record<string, unknown> & { contributions?: Array<IContributor> | null },
+  filter: TAgentType
+) => {
   if (!('contributions' in r) || !r.contributions) return EmptyValue;
 
   const sortedContribution = r.contributions
@@ -183,17 +186,41 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
         false
       ),
-    renderForDetailView: (r) => renderContributors(r, AgentType.Person),
+    renderForDetailView: (r) =>
+      renderContributors(
+        r as Record<string, any> & { contributions?: Array<IContributor> | null },
+        AgentType.Person
+      ),
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',
     },
     defaultConstraint: 'contribution__pref_label__in',
-    order: {
-      property: 'contribution__order_by',
-      value: 'pref_label',
-    },
-    isSortable: false,
+    order: [
+      {
+        types: [
+          ExtendedEntitiesTypeDict.Emodel,
+          ExtendedEntitiesTypeDict.Circuit,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+          ExtendedEntitiesTypeDict.SmallMicrocircuit,
+          ExtendedEntitiesTypeDict.Microcircuit,
+          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          ExtendedEntitiesTypeDict.Simulation,
+          ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+          ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+          ExtendedEntitiesTypeDict.SimulationCampaign,
+          ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+          ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+          ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+        ],
+        property: 'order_by',
+        value: 'contribution__pref_label',
+      },
+    ],
+    isSortable: true,
     isFilterable: true,
     isDisplayable: true,
   },
@@ -205,17 +232,41 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
         false
       ),
-    renderForDetailView: (r) => renderContributors(r, AgentType.Organization),
+    renderForDetailView: (r) =>
+      renderContributors(
+        r as Record<string, any> & { contributions?: Array<IContributor> | null },
+        AgentType.Organization
+      ),
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',
     },
     defaultConstraint: 'contribution__pref_label__in',
-    order: {
-      property: 'contribution__order_by',
-      value: 'pref_label',
-    },
-    isSortable: false,
+    order: [
+      {
+        types: [
+          ExtendedEntitiesTypeDict.Emodel,
+          ExtendedEntitiesTypeDict.Circuit,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+          ExtendedEntitiesTypeDict.SmallMicrocircuit,
+          ExtendedEntitiesTypeDict.Microcircuit,
+          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          ExtendedEntitiesTypeDict.Simulation,
+          ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+          ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+          ExtendedEntitiesTypeDict.SimulationCampaign,
+          ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+          ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+          ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+        ],
+        property: 'order_by',
+        value: 'contribution__pref_label',
+      },
+    ],
+    isSortable: true,
     isFilterable: true,
     isDisplayable: true,
   },
@@ -236,15 +287,24 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       {
         types: [
           ExtendedEntitiesTypeDict.CellMorphology,
+          ExtendedEntitiesTypeDict.Circuit,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
+          ExtendedEntitiesTypeDict.EMCellMesh,
+          ExtendedEntitiesTypeDict.Emodel,
           ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
           ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
           ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+          ExtendedEntitiesTypeDict.IonChannelModel,
+          ExtendedEntitiesTypeDict.IonChannelRecording,
           ExtendedEntitiesTypeDict.Memodel,
-          ExtendedEntitiesTypeDict.Emodel,
+          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          ExtendedEntitiesTypeDict.Microcircuit,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
           ExtendedEntitiesTypeDict.SingleNeuronSimulation,
           ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
           ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+          ExtendedEntitiesTypeDict.SmallMicrocircuit,
         ],
         property: 'order_by',
         value: 'brain_region__name',
@@ -254,6 +314,48 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.SpeciesName]: {
     title: 'Species',
     filter: CoreFieldFilterTypeEnum.CheckList,
+    presentation: {
+      column: { available: { default: false } },
+      filter: {
+        available: {
+          default: true,
+          rules: [
+            {
+              when: {
+                dataType: [
+                  ExtendedEntitiesTypeDict.CellMorphology,
+                  ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
+                ],
+                section: WorkspaceSection.Data,
+              },
+              value: false,
+            },
+          ],
+        },
+        constraint: {
+          default: 'species__name__in',
+          rules: [
+            {
+              when: {
+                dataType: [
+                  ExtendedEntitiesTypeDict.CellMorphology,
+                  ExtendedEntitiesTypeDict.ElectricalCellRecording,
+                  ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+                  ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+                  ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+                  ExtendedEntitiesTypeDict.IonChannelModel,
+                  ExtendedEntitiesTypeDict.IonChannelRecording,
+                  ExtendedEntitiesTypeDict.Circuit,
+                  ExtendedEntitiesTypeDict.MEModelWithSynapses,
+                  ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                ],
+              },
+              value: 'subject__species__name__in',
+            },
+          ],
+        },
+      },
+    },
     render: (r) => {
       if ('species' in r)
         return renderEmptyOrValue(
@@ -286,10 +388,16 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     order: [
       {
         types: [
+          ExtendedEntitiesTypeDict.CellMorphology,
+          ExtendedEntitiesTypeDict.Circuit,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
           ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
           ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
           ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+          ExtendedEntitiesTypeDict.IonChannelModel,
+          ExtendedEntitiesTypeDict.IonChannelRecording,
+          ExtendedEntitiesTypeDict.MEModelWithSynapses,
+          ExtendedEntitiesTypeDict.UniversalCellMorphology,
         ],
         property: 'order_by',
         value: 'subject__species__name',
@@ -306,7 +414,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       if ('strain' in r)
         return renderEmptyOrValue(renderArray(ensureArray({ input: r.strain }).map((s) => s.name)));
       if ('subject' in r && 'strain' in r.subject)
-        return renderEmptyOrValue(r.subject.strain!.name);
+        return renderEmptyOrValue(r.subject.strain?.name);
       return EmptyValue;
     },
     vocabulary: {
@@ -440,6 +548,21 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
           ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
           ExtendedEntitiesTypeDict.SingleNeuronSimulation,
           ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+          ExtendedEntitiesTypeDict.Circuit,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+          ExtendedEntitiesTypeDict.SmallMicrocircuit,
+          ExtendedEntitiesTypeDict.Microcircuit,
+          ExtendedEntitiesTypeDict.EMCellMesh,
+          ExtendedEntitiesTypeDict.Emodel,
+          ExtendedEntitiesTypeDict.IonChannelModel,
+          ExtendedEntitiesTypeDict.Simulation,
+          ExtendedEntitiesTypeDict.SimulationCampaign,
+          ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+          ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+          ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+          ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+          ExtendedEntitiesTypeDict.IonChannelModelSimulation,
         ],
         property: 'order_by',
         value: 'created_by__pref_label',
@@ -473,7 +596,7 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isSortable: true,
     order: {
       property: 'order_by',
-      value: 'ion_channel',
+      value: 'ion_channel__name',
     },
     isFilterable: true,
     isDisplayable: true,

@@ -16,6 +16,7 @@ import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulat
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
 import { PairedNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/paired-neurons-simulation';
+import { RegionCircuitSimulation } from '@/entity-configuration/domain/simulation/region-circuit-simulation';
 import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { SingleNeuronSimulation } from '@/entity-configuration/domain/simulation/single-neuron-simulation';
 import { SingleNeuronSynaptomeSimulation } from '@/entity-configuration/domain/simulation/single-neuron-synaptome-simulation';
@@ -50,6 +51,7 @@ export const SimulationEntitiesTileTypes = {
   SmallMicrocircuitSimulation,
   MicrocircuitSimulation,
   IonChannelModelSimulation,
+  RegionCircuitSimulation,
 } as const;
 
 export function getEntityTypeFromUrlOnEntityScope(url: string) {

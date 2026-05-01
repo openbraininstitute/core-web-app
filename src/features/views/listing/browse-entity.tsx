@@ -17,6 +17,7 @@ import {
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
+import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
@@ -55,7 +56,7 @@ import type {
 } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import type { TSortState } from '@/entity-configuration/definitions/types';
+import type { TSortStateList } from '@/entity-configuration/definitions/types';
 import type { Props as MainTableProps } from '@/ui/segments/data-table';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
@@ -143,6 +144,7 @@ export function BrowseEntityScope({
     id,
   });
   const entity = getEntityByExtendedType({ type: dataType });
+
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
@@ -154,7 +156,7 @@ export function BrowseEntityScope({
   });
 
   const onSortChange = useCallback(
-    (newSortState: TSortState) => {
+    (newSortState: TSortStateList) => {
       setPageNumber(DEFAULT_PAGE_NUMBER);
       setSortState(newSortState);
       runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
@@ -167,6 +169,7 @@ export function BrowseEntityScope({
     sortState,
     setSortState: onSortChange,
   });
+
   const columns = uniqBy(
     allColumns.filter(({ key }) => (activeColumns || []).includes(key as string)),
     'key'
@@ -221,6 +224,7 @@ export function BrowseEntityScope({
     ...queryParameters,
     ...extraQueryParams,
     ...scopeFilter,
+    order_by: mergeOrderByWithOverride(extraQueryParams?.order_by, queryParameters?.order_by),
   };
 
   const { data, error, isFetching } = useQueryExtendedEntityType({
@@ -376,6 +380,7 @@ export function BrowseEntityScope({
             }}
             {...mainTableProps}
             filterClassNames={classNames?.filterClassNames}
+            // @ts-expect-error
             expandableOptions={expandableOptions}
             facets={{
               data: facets,

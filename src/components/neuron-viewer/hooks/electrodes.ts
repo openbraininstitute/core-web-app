@@ -13,7 +13,7 @@ import { getSessionKey } from '@/ui/segments/workflows/simulate/single-neuron/sh
 import type {
   MorphoViewerElectrodeInjection,
   MorphoViewerElectrodeRecording,
-} from '@bbp/morphoviewer';
+} from '@/morpho-viewer';
 
 export function useElectrodes(
   sessionId: string,

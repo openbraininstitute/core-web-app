@@ -11,7 +11,8 @@ import { useAtomValue } from 'jotai';
 import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
-import { SortOrder } from '@/entity-configuration/definitions/types';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import { mergeOrderByWithOverride, SortOrder } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
@@ -89,11 +90,20 @@ export function useQueryParameters(
   const filters = useAtomValue(
     coreFiltersAtom({ dataType: context.extendedEntityType, key: context.key })
   );
+
   const entity = getEntityByExtendedType({ type: context.extendedEntityType });
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
+  const orderBy = (sortState ?? [])
+    .flatMap((sort) => {
+      if (!sort.order) return [];
+      const fields = Array.isArray(sort.backendField) ? sort.backendField : [sort.backendField];
+      return fields.map((field) => `${sort.order === 'asc' ? '+' : '-'}${field}`);
+    })
+    .filter(Boolean);
+
   function search() {
-    if (entity && !!entity.api.config.ilikeSearchEnabled && !isEmpty(searchString)) {
+    if (entity?.api.config.ilikeSearchEnabled && !isEmpty(searchString)) {
       return { ilike_search: `*${searchString}*` };
     }
     if (!isEmpty(searchString)) {
@@ -101,6 +111,7 @@ export function useQueryParameters(
     }
     return null;
   }
+
   // in "all species" mode we intentionally drop brain-region filters
   const isBrainRegionRequiredAndPresent = Boolean(
     !isAllMode && requireBrainRegion && (!!defaultBrainRegion || !!selectedBrainRegion?.id)
@@ -111,12 +122,13 @@ export function useQueryParameters(
         within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
       }
     : {};
+
   const queryParameters = compactRecord({
     page_size: DEFAULT_PAGE_SIZE,
     page: pageNumber,
     with_facets: true,
+    order_by: orderBy.length > 0 ? orderBy : [`-${EntityCoreFields.RegistrationDate}`],
     ...search(),
-    order_by: `${sortState.order === SortOrder.ASC ? '+' : '-'}${sortState.backendField}`,
     ...requireBrainRegionQuery,
     ...getWorkspaceScopeFilters(context.workspaceScope, workspace),
     ...transformFiltersToQuery(filters),
@@ -178,10 +190,15 @@ export function useQueryExtendedEntityType<TData = unknown, TError = unknown>({
     { requireBrainRegion, defaultBrainRegion }
   );
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const mergedQueryParameters = {
+    ...queryParameters,
+    ...extraQueryParams,
+    order_by: mergeOrderByWithOverride(extraQueryParams?.order_by, queryParameters.order_by),
+  };
   const queryKey = buildQueryKey({
     workspace,
     context,
-    queryParameters: { ...queryParameters, ...extraQueryParams },
+    queryParameters: mergedQueryParameters,
     requireBrainRegion,
     speciesSelectionMode,
   });
@@ -232,6 +249,7 @@ export function useQueryExtendedEntityTypeFacets({
         scope,
         dataType,
         workspace,
+        filters: queryFilters,
         ...extraQueryKey,
       },
     ],

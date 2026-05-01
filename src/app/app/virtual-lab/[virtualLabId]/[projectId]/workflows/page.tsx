@@ -16,17 +16,13 @@ import { WorkflowActivityDictValue, WorkspaceScope } from '@/constants';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { SCOPE_QUERY_PARAMS } from '@/ui/hooks/use-scope';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
+import { getWorkflow, WorkflowSessionIdSearchParam } from '@/ui/segments/workflows/config';
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
-import {
-  WorkflowBuildDefaultStepNameSearchParam,
-  WorkflowBuildDefaultStepSearchParam,
-  WorkflowSessionIdSearchParam,
-} from '@/ui/segments/workflows/elements/helpers';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 export default function Page({ params }: ServerSideComponentProp<WorkspaceContext, null>) {
   useDisableElementOverflow({ id: 'workspace-body' });
@@ -63,15 +59,19 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
           activity: WorkflowActivityDictValue.build,
         },
         () => {
+          if (!value) return;
           const sessionId = crypto.randomUUID();
           const query = new URLSearchParams();
           query.set(WorkflowSessionIdSearchParam, sessionId);
-          query.set(WorkflowBuildDefaultStepSearchParam, WorkflowBuildDefaultStepNameSearchParam);
 
-          if (value)
-            navigate(
-              `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/configure/${kebabCase(value)}?${query.toString()}`
-            );
+          const workflow = getWorkflow({
+            activity: WorkflowActivityDictValue.build,
+            targetType: value,
+          });
+          const stage = workflow?.needsBrowse ? 'new' : 'configure';
+          navigate(
+            `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/${stage}/${kebabCase(value)}?${query.toString()}`
+          );
         }
       )
       .with({ activity: WorkflowActivityDictValue.simulate, value: P.nonNullable }, ({ value }) => {
@@ -88,6 +88,11 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
           );
       })
       .with({ activity: WorkflowActivityDictValue.extract, value: P.nonNullable }, ({ value }) => {
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
+        );
+      })
+      .with({ activity: WorkflowActivityDictValue.process, value: P.nonNullable }, ({ value }) => {
         navigate(
           `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/new/${kebabCase(value)}?${SCOPE_QUERY_PARAMS}=${WorkspaceScope.Public}`
         );

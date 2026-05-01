@@ -11,7 +11,10 @@ import type { ServerSideComponentProp } from '@/types/common';
 
 export default async function Page({
   searchParams,
-}: ServerSideComponentProp<null, { redirectUrl: string | undefined }>) {
+}: ServerSideComponentProp<
+  null,
+  { redirectUrl?: string; showcaseSlug?: string; showcaseSection?: string }
+>) {
   const queryParams = await searchParams;
   const session = await getSession();
   const { data: workspace, error } = await tryCatch(resolveWorkspace());
@@ -27,7 +30,13 @@ export default async function Page({
   const { virtualLab, project } = workspace;
 
   if (virtualLab && project) {
-    if (queryParams.redirectUrl) {
+    if (queryParams.showcaseSlug) {
+      const section = queryParams.showcaseSection ?? 'description';
+      redirect(
+        `${config.ROOT_ROUTE}/${virtualLab.id}/${project.id}/reports/obi-showcase/${queryParams.showcaseSlug}?section=${section}`,
+        RedirectType.replace
+      );
+    } else if (queryParams.redirectUrl) {
       redirect(queryParams.redirectUrl, RedirectType.replace);
     } else {
       // if the user has already visited a virtual lab/project and stored

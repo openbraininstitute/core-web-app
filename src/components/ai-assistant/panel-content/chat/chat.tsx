@@ -1,5 +1,5 @@
 import { useIsFetching } from '@tanstack/react-query';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
 import { useAccessToken } from '@/hooks/useAccessToken';
@@ -9,6 +9,11 @@ import {
   useServiceAiAgentSuggestionFromUserJourney,
 } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
+import {
+  activeDiffMessageIdAtom,
+  clearDiffStateAtom,
+  messageSubmittedCounterAtom,
+} from '@/state/config-highlights';
 import { classNames } from '@/util/utils';
 
 import ErrorPanel from '../../error';
@@ -16,9 +21,11 @@ import FreeCreditsNotification from '../../free-credits-notification';
 import { MessageItem } from '../../message-item';
 import { atomRateLimit } from '../../state';
 import SuggestedQuestions from '../../suggested-questions';
+import DiffBar from '../diff-bar';
 import Footer from '../footer';
 import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
 import Welcome from '../welcome';
+import { useLastMessageDiffBar } from './use-last-message-diff-bar';
 
 import styles from './chat.module.css';
 
@@ -42,7 +49,13 @@ export default function Chat({ className, threadId }: ChatProps) {
   const accessToken = useAccessToken();
   const rateLimit = useAtomValue(atomRateLimit);
   const setRateLimit = useSetAtom(atomRateLimit);
+  const [activeDiffMessageId, setActiveDiffMessageId] = useAtom(activeDiffMessageIdAtom);
+  const clearDiffState = useSetAtom(clearDiffStateAtom);
+  const setMessageSubmittedCounter = useSetAtom(messageSubmittedCounterAtom);
   const [showExhaustedNotification, setShowExhaustedNotification] = React.useState(false);
+
+  // Panel-level diff bar & highlight management for the last message
+  const { diffBarData, clearDiffBarData } = useLastMessageDiffBar(messages, status);
   const prevRemainingRef = React.useRef<number | null>(null);
   const hasInitializedRef = React.useRef(false);
 
@@ -84,6 +97,29 @@ export default function Chat({ className, threadId }: ChatProps) {
   });
 
   const [scrollHeight, setScrollHeight] = React.useState(0);
+
+  // Clear active diff view when a new message is submitted
+  React.useEffect(() => {
+    if (status === 'submitted') {
+      setActiveDiffMessageId(null);
+      clearDiffBarData();
+      clearDiffState();
+      setMessageSubmittedCounter((c) => c + 1);
+    }
+  }, [
+    status,
+    setActiveDiffMessageId,
+    clearDiffBarData,
+    clearDiffState,
+    setMessageSubmittedCounter,
+  ]);
+
+  // Clear active diff view when switching conversations
+  React.useEffect(() => {
+    setActiveDiffMessageId(null);
+    clearDiffBarData();
+    clearDiffState();
+  }, [threadId, setActiveDiffMessageId, clearDiffBarData, clearDiffState]);
 
   // Monitor scroll height changes for auto-scroll
   React.useEffect(() => {
@@ -139,6 +175,26 @@ export default function Chat({ className, threadId }: ChatProps) {
       content,
     });
   };
+
+  // Toggle diff view on/off from the diff bar
+  const handleToggleDiffs = React.useCallback(() => {
+    if (!diffBarData) return;
+
+    if (activeDiffMessageId === diffBarData.messageId) {
+      // Currently viewing diffs — turn off
+      setActiveDiffMessageId(null);
+    } else {
+      // Turn on diffs for this message
+      setActiveDiffMessageId(diffBarData.messageId);
+    }
+  }, [diffBarData, activeDiffMessageId, setActiveDiffMessageId]);
+
+  // Dismiss the diff bar entirely (also clears any active diff view)
+  const handleCloseDiffBar = React.useCallback(() => {
+    clearDiffBarData();
+    setActiveDiffMessageId(null);
+    clearDiffState();
+  }, [clearDiffBarData, setActiveDiffMessageId, clearDiffState]);
 
   const handleWheel = (event: React.WheelEvent) => {
     if (event.deltaY < 0) {
@@ -205,6 +261,13 @@ export default function Chat({ className, threadId }: ChatProps) {
         >
           Using Credit Balance
         </div>
+      )}
+      {diffBarData && (
+        <DiffBar
+          isViewingDiffs={activeDiffMessageId === diffBarData.messageId}
+          onToggleDiffs={handleToggleDiffs}
+          onClose={handleCloseDiffBar}
+        />
       )}
       <Footer
         className={className}

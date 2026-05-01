@@ -69,7 +69,6 @@ export function createFilterItemComponent(
         );
       case CoreFieldFilterTypeEnum.CheckList: {
         if (!facets || !facets[filter.field]) return emptyFilter;
-        // eslint-disable-next-line no-case-declarations
         const facetItems = map(facets[filter.field], ({ id, label, count, type: facetType }) => ({
           id,
           label,

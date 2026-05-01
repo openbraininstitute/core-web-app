@@ -1,17 +1,17 @@
 'use client';
 
-import { useParams, usePathname } from 'next/navigation';
 import { PlusOutlined } from '@ant-design/icons';
 import lowerCase from 'es-toolkit/compat/lowerCase';
 import snakeCase from 'es-toolkit/compat/snakeCase';
 import Link from 'next/link';
+import { useParams, usePathname } from 'next/navigation';
 
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { getWorkflowSegment } from '@/ui/segments/workflows/elements/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { config } from '@/config';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { getWorkflowSegment } from '@/ui/segments/workflows/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { KebabCase } from '@/utils/type';

@@ -2,16 +2,20 @@
 
 import { useEffect, useState } from 'react';
 
-function useScrollHasStarted() {
+import type { RefObject } from 'react';
+
+function useScrollHasStarted(containerRef?: RefObject<HTMLElement | null>) {
   const [scrollHasStarted, setScrollHasStarted] = useState(false);
   useEffect(() => {
+    const el = containerRef?.current;
+    const target = el ?? window;
     const handleScroll = () => {
-      setScrollHasStarted(window.scrollY > 0);
+      setScrollHasStarted(el ? el.scrollTop > 0 : window.scrollY > 0);
     };
     handleScroll();
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    target.addEventListener('scroll', handleScroll);
+    return () => target.removeEventListener('scroll', handleScroll);
+  }, [containerRef]);
   return scrollHasStarted;
 }
 

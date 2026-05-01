@@ -36,7 +36,7 @@ import {
   type BuildStepKeys,
   useBuildMeModelSessionState,
 } from '@/ui/segments/workflows/build/memodel/helpers';
-import { ActivityValues } from '@/ui/segments/workflows/elements/helpers';
+import { ActivityValues } from '@/ui/segments/workflows/config';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { browserHistoryReplace } from '@/utils/browser';
 import { cn } from '@/utils/css-class';

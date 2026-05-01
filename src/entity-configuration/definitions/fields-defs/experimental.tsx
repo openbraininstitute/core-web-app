@@ -4,6 +4,10 @@ import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import { isMemodel, isSingleNeuronSynaptome } from '@/api/entitycore/guards';
 import {
+  CellMorphologyGenerationType,
+  CellMorphologyProtocolDesign,
+} from '@/api/entitycore/types/entities/cell-morphology-protocol';
+import {
   EMCellMeshGenerationMethodDict,
   EMCellMeshTypeDict,
   type IEMCellMesh,
@@ -11,6 +15,7 @@ import {
 import { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type IEType, type IMType, MeasurementUnit } from '@/api/entitycore/types/shared/global';
+import { WorkspaceSection } from '@/constants';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -63,7 +68,152 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isFilterable: false,
     isDisplayable: true,
   },
+  [EntityCoreFields.GenerationType]: {
+    title: 'Generation type',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    presentation: {
+      column: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: true,
+            },
+          ],
+        },
+      },
+      filter: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: true,
+            },
+          ],
+        },
+        constraint: {
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: 'cell_morphology_protocol__generation_type__in',
+            },
+          ],
+        },
+        options: {
+          kind: 'static',
+          items: map(CellMorphologyGenerationType, (item) => ({
+            label: item.label,
+            value: item.key,
+            description: item.description,
+          })),
+        },
+      },
+    },
+    render: (entity) => {
+      if ('cell_morphology_protocol' in entity) {
+        return renderEmptyOrValue(
+          find(CellMorphologyGenerationType, {
+            key: entity.cell_morphology_protocol.generation_type,
+          })?.label
+        );
+      }
 
+      return EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Generation types',
+      singular: 'Generation type',
+    },
+    isSortable: true,
+    order: {
+      property: 'order_by',
+      value: ['cell_morphology_protocol__generation_type'],
+    },
+    style: { width: 190 },
+  },
+  [EntityCoreFields.ProtocolDesign]: {
+    title: 'Protocol design',
+    filter: CoreFieldFilterTypeEnum.DropdownList,
+    presentation: {
+      column: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: true,
+            },
+          ],
+        },
+      },
+      filter: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: true,
+            },
+          ],
+        },
+        constraint: {
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.BuildWorkflow,
+              },
+              value: 'cell_morphology_protocol__protocol_design__in',
+            },
+          ],
+        },
+        options: {
+          kind: 'static',
+          items: map(CellMorphologyProtocolDesign, (item) => ({
+            label: item.label,
+            value: item.key,
+            description: item.description,
+          })),
+        },
+      },
+    },
+    render: (entity) => {
+      if (
+        'cell_morphology_protocol' in entity &&
+        'protocol_design' in entity.cell_morphology_protocol
+      ) {
+        return renderEmptyOrValue(
+          find(CellMorphologyProtocolDesign, {
+            key: entity.cell_morphology_protocol.protocol_design,
+          })?.label
+        );
+      }
+
+      return EmptyValue;
+    },
+    vocabulary: {
+      plural: 'Protocol designs',
+      singular: 'Protocol design',
+    },
+    style: { width: 190 },
+  },
   [EntityCoreFields.MType]: {
     fieldType: CoreFieldType.CellType,
     title: 'M-Type',
@@ -102,9 +252,15 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
           ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.Emodel,
+          ExtendedEntitiesTypeDict.Memodel,
         ],
         property: 'order_by',
         value: 'mtype__pref_label',
+      },
+      {
+        types: [ExtendedEntitiesTypeDict.SingleNeuronSynaptome],
+        property: 'order_by',
+        value: 'me_model__mtype__pref_label',
       },
     ],
     isSortable: true,
@@ -144,9 +300,20 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'etype__pref_label__in',
     order: [
       {
-        types: [ExtendedEntitiesTypeDict.ElectricalCellRecording, ExtendedEntitiesTypeDict.Emodel],
+        types: [
+          ExtendedEntitiesTypeDict.ElectricalCellRecording,
+          ExtendedEntitiesTypeDict.Emodel,
+          ExtendedEntitiesTypeDict.IonChannelRecording,
+          ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+          ExtendedEntitiesTypeDict.Memodel,
+        ],
         property: 'order_by',
         value: 'etype__pref_label',
+      },
+      {
+        types: [ExtendedEntitiesTypeDict.SingleNeuronSynaptome],
+        property: 'order_by',
+        value: 'me_model__etype__pref_label',
       },
     ],
     isSortable: true,
@@ -167,7 +334,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Values',
       singular: 'Value',
     },
-    isSortable: false,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity],
+        property: 'order_by',
+        value: 'measurement_sample_size__value',
+      },
+    ],
     isFilterable: false,
     isDisplayable: true,
   },
@@ -188,7 +362,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'Value',
     },
     isFilterable: false,
-    isSortable: false,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity],
+        property: 'order_by',
+        value: 'measurement_mean__value',
+      },
+    ],
     isDisplayable: true,
   },
   [EntityCoreFields.Sem]: {
@@ -203,7 +384,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       plural: 'Values',
       singular: 'Value',
     },
-    isSortable: false,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity],
+        property: 'order_by',
+        value: 'measurement_standard_error__value',
+      },
+    ],
     isFilterable: false,
     isDisplayable: true,
   },
@@ -220,6 +408,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'pre_region__name__in',
     isFilterable: true,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection],
+        property: 'order_by',
+        value: 'pre_region__name',
+      },
+    ],
   },
   [EntityCoreFields.PostSynapticBrainRegion]: {
     title: 'Brain Region [To]',
@@ -234,6 +430,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'post_region__name_in',
     isFilterable: true,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection],
+        property: 'order_by',
+        value: 'post_region__name',
+      },
+    ],
   },
   [EntityCoreFields.PreSynapticCellType]: {
     title: 'Cell Type [From]',
@@ -248,6 +452,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'pre_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection],
+        property: 'order_by',
+        value: 'pre_mtype__pref_label',
+      },
+    ],
   },
   [EntityCoreFields.PostSynapticCellType]: {
     title: 'Cell Type [To]',
@@ -262,6 +474,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     defaultConstraint: 'post_mtype__pref_label__in',
     isFilterable: true,
     isDisplayable: true,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection],
+        property: 'order_by',
+        value: 'post_mtype__pref_label',
+      },
+    ],
   },
   [EntityCoreFields.NeuronDensity]: {
     title: 'Density',
@@ -521,6 +741,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return name;
     },
     defaultConstraint: 'ion_channel__name__ilike',
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.IonChannelRecording],
+        property: 'order_by',
+        value: 'ion_channel__name',
+      },
+    ],
   },
   [EntityCoreFields.Temperature]: {
     className: 'text-left',
@@ -535,6 +762,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return isNumber(temperature) || isString(temperature) ? `${temperature} °C` : EmptyValue;
     },
     defaultConstraint: 'temperature',
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.IonChannelRecording],
+        property: 'order_by',
+        value: 'temperature',
+      },
+    ],
   },
   [EntityCoreFields.CellLine]: {
     className: 'text-left',
@@ -548,6 +782,13 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       return cellLine;
     },
     defaultConstraint: 'cell_line__ilike',
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.IonChannelRecording],
+        property: 'order_by',
+        value: 'cell_line',
+      },
+    ],
   },
   [EntityCoreFields.DenseReconstructionCellId]: {
     className: 'text-left',
@@ -603,7 +844,14 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       value: item.key,
     })),
     isDisplayable: true,
-    isSortable: false,
+    isSortable: true,
+    order: [
+      {
+        types: [ExtendedEntitiesTypeDict.EMCellMesh],
+        property: 'order_by',
+        value: 'mesh_type',
+      },
+    ],
     render: (r) => {
       const entity = r as IEMCellMesh;
       if ('mesh_type' in entity) {

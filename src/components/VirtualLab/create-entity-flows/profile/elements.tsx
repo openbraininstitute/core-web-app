@@ -1,9 +1,10 @@
 import { CloseCircleFilled } from '@ant-design/icons';
-import { InputProps, InputRef, Input } from 'antd';
-import { ForwardedRef, ReactNode } from 'react';
+import { Input, type InputProps, type InputRef } from 'antd';
 
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { ForwardedRef, ReactNode } from 'react';
 
 export function ProfileError() {
   return (
@@ -36,10 +37,10 @@ export function XInput({
       ref={ref}
       placeholder={placeholder}
       className={classNames(
-        'border-primary-4! rounded-none border-0 border-b bg-transparent! px-1 font-bold tracking-wide text-white focus:ring-0',
+        'border-transparent! rounded-none border-0 border-b border-b-primary-4! rounded-b-none! bg-transparent! px-1 font-bold tracking-wide text-white! focus:ring-0',
         'hover:bg-transparent! hover:text-white! focus:bg-transparent! focus:text-white! [&_.ant-input-outlined]:bg-transparent!',
-        'focus:border-pr placeholder:text-white hover:border-white focus:border-b-2',
-        'focus-within:border-primary-4! focus-within:border-b-2! focus-within:ring-0!',
+        'focus:border-pr placeholder:text-white! hover:border-white focus:border-b-2',
+        'focus-within:border-b-2! focus-within:ring-0!',
         '[&.ant-XInput-status-error]:border-0! [&.ant-XInput-status-error]:border-b-2! [&.ant-XInput-status-error]:border-red-300!',
         '[&.ant-input-status-error]:border-0! [&.ant-input-status-error]:border-b! [&.ant-input-status-error]:border-red-500!',
         className

@@ -1,7 +1,8 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
-import { Suspense, useState } from 'react';
+import { useAtom, useSetAtom } from 'jotai';
+import { Suspense, useEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { useEntries } from '@/features/scan-config/components/hooks';
@@ -12,24 +13,34 @@ import {
 } from '@/features/scan-config/components/hooks/schema';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
-import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
+import {
+  ACTIVITY_AI_CONFIG_MAP,
+  type TScanConfigCampaignOriginActionDict,
+} from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
-  ExtractScanConfigTabs,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   ScanConfigTabs,
   type SchemaName,
-  SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
+import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
+import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState } from '@/services/ai-agent';
+import {
+  editingAtom,
+  expandedRootElementsAtom,
+  selectedEntryAtom,
+  selectedRootElementAtom,
+} from '@/state/config-highlights';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -48,6 +59,7 @@ type Props = {
   readOnly?: boolean;
   className?: string;
   activity: TScanConfigActivity;
+  campaignOriginAction: TScanConfigCampaignOriginActionDict;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   schema: ConfigSchema;
   schemaName: SchemaName;
@@ -72,15 +84,17 @@ export function ScanConfigTemplate({
   aiEnabled,
   generatedEndpoint,
   entityType,
+  campaignOriginAction,
 }: Props) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
-  const [selectedRootElement, setSelectedRootElement] = useState<string>('info');
-  const [editing, setEditing] = useState(true);
-  const [selectedEntry, setSelectedEntry] = useState('');
+  const [selectedRootElement, setSelectedRootElement] = useAtom(selectedRootElementAtom);
+  const [editing, setEditing] = useAtom(editingAtom);
+  const [selectedEntry, setSelectedEntry] = useAtom(selectedEntryAtom);
   const [loading, setLoading] = useState(false);
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
+  const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const allEntries = useEntries({ initialConfig, schema });
   const [atomsMap, setAtomsMap] = useAtomsMap({
     schema,
@@ -88,53 +102,70 @@ export function ScanConfigTemplate({
     model: entity,
   });
   const config = useConfigAtom(schema, atomsMap);
+  const previousCampaignId = usePrevious(campaignId);
+  const isCampaignIdChanged = previousCampaignId !== campaignId;
+
+  useEffect(() => {
+    // reset all scan config state when leaving the page
+    return () => {
+      setExpandedRootElements(new Set(['info']));
+      setSelectedRootElement('info');
+      setSelectedEntry('');
+      setEditing(true);
+    };
+  }, [setEditing, setExpandedRootElements, setSelectedEntry, setSelectedRootElement]);
 
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
 
-  const results = match({ activity, tab })
-    .with({ tab: { id: SimulateScanConfigTabs.configuration } }, () => null)
-    .with(
-      {
-        activity: ScanConfigActivity.Simulate,
-        tab: { id: SimulateScanConfigTabs.simulations },
-      },
-      () => (
-        <Suspense>
-          <SimulationsTab
-            campaignId={campaignId}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
-          />
-        </Suspense>
-      )
-    )
-    .with(
-      {
-        activity: ScanConfigActivity.Extract,
-        tab: { id: ExtractScanConfigTabs.extractions },
-      },
-      () => (
-        <Suspense>
-          <ExtractionTab
-            campaignId={campaignId}
-            virtualLabId={virtualLabId}
-            projectId={projectId}
-          />
-        </Suspense>
-      )
-    )
+  const configurationTabId = ScanConfigTabs[activity].configuration;
+  const isConfigurationTab = tab.id === configurationTabId;
+  const results = match(activity)
+    .with(ScanConfigActivity.Simulate, () => (
+      <Suspense>
+        <SimulationsTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
+      </Suspense>
+    ))
+    .with(ScanConfigActivity.Extract, () => (
+      <Suspense>
+        <ExtractionTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
+      </Suspense>
+    ))
+    .with(ScanConfigActivity.Process, () => (
+      <Suspense>
+        <SkeletonizationTab
+          campaignId={campaignId}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+        />
+      </Suspense>
+    ))
+    .with(ScanConfigActivity.Build, () => (
+      <Suspense>
+        <BuildTab
+          isCampaignIdChanged={isCampaignIdChanged}
+          campaignOriginAction={campaignOriginAction}
+          campaignId={campaignId}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+        />
+      </Suspense>
+    ))
     .otherwise(() => {
-      throw new Error(`${activity} is not supported yet,`);
+      throw new Error(`${activity} is not supported yet`);
     });
 
   return (
-    <div className={cn('flex h-full flex-col space-y-5', className)}>
-      <header className={styles.header}>
+    <div className={cn('flex h-full flex-col', className)}>
+      <header
+        id="template-header"
+        className={cn('flex flex-nowrap justify-between items-center gap-4 pt-4 pb-2')}
+      >
         <TabsSelector
           activity={activity}
           tab={tab}
           setTab={setTab}
           disableResultsTab={!campaignId || loading}
+          disableConfigurationTab={Boolean(!initialConfig && readOnly)}
         />
         <div className="flex items-center justify-center gap-8">
           {!!campaignId && (
@@ -142,12 +173,20 @@ export function ScanConfigTemplate({
           )}
         </div>
       </header>
-      <div className="relative mb-5">
-        <div className="w-full border-t border-gray-200" />
-      </div>
 
-      {tab.id === ScanConfigTabs[activity].configuration && (
-        <div className={styles.threeColumns}>
+      <div id="template-separator" className="w-full h-px bg-gray-200 my-2 px-3" />
+      <div id="template-content" className="flex-1 min-h-0">
+        <div
+          id="scan-config-content-columns"
+          className={cn(
+            'py-2',
+            {
+              'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden *:min-w-0':
+                isConfigurationTab,
+            },
+            { hidden: !isConfigurationTab }
+          )}
+        >
           <Left
             schema={schema}
             atomsMap={atomsMap}
@@ -175,9 +214,10 @@ export function ScanConfigTemplate({
             entityType={entityType}
           />
           <div
+            id="scan-config-controls-middle"
             className={cn(
               styles.scrollable,
-              'h-full overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
+              'h-full min-w-0 overflow-x-hidden overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
             )}
           >
             {editing && (
@@ -206,19 +246,28 @@ export function ScanConfigTemplate({
               />
             )}
           </div>
-
-          <Right
-            activity={activity}
-            entityType={entityType}
-            entity={entity}
-            selectedEntry={selectedEntry}
-            selectedRootElement={selectedRootElement}
-            config={config}
-          />
+          <div className="h-full min-w-0 overflow-auto secondary-scrollbar">
+            <Right
+              activity={activity}
+              entityType={entityType}
+              entity={entity}
+              selectedEntry={selectedEntry}
+              selectedRootElement={selectedRootElement}
+              config={config}
+            />
+          </div>
         </div>
-      )}
-
-      {results}
+        <div
+          id="scan-config-results"
+          className={cn(
+            'w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden',
+            { hidden: isConfigurationTab },
+            { 'h-full': !isConfigurationTab }
+          )}
+        >
+          {results}
+        </div>
+      </div>
     </div>
   );
 }

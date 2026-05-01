@@ -1,7 +1,7 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
   title: 'Synaptome (beta)',
@@ -18,6 +18,7 @@ export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitBuildCategory,
     EntityCoreFields.ArtifactPublishedIn,
     EntityCoreFields.ArtifactExperimentDate,
+    EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],
   miniDetailView: [

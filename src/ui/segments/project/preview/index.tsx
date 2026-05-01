@@ -197,6 +197,7 @@ function Content({
           src="/images/brain-visualization.png"
           alt=""
           fill
+          sizes="577px"
           className="scale-y-[-1] object-cover object-bottom-right"
           priority
         />

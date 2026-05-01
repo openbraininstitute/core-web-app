@@ -1,11 +1,13 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
+import { useSetAtom } from 'jotai';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
 import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
 import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-element-diff';
 import {
   type AtomsMap,
   type ConfigSchema,
@@ -17,11 +19,14 @@ import {
   type TBlock,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { expandedRootElementsAtom } from '@/state/config-highlights';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
+
+import styles from './root-element.module.css';
 
 export function RootElement({
   schema,
@@ -67,10 +72,14 @@ export function RootElement({
   setIsEditingKey: (k: boolean) => void;
 }) {
   const { isChatReady } = useAIConfig();
+  const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
+  const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
   const hasFieldErrors = useFieldErrorsForPath(rootElement);
+
   if (!schema || !schema?.properties) return;
 
   const handleEntryClick = (subkey: string) => {
+    setSelectedRootElement(rootElement); // Select the parent block
     setSelectedEntry(subkey);
     setEditing(true);
     setIsEditingKey(false);
@@ -86,19 +95,40 @@ export function RootElement({
               tab={rootElement}
               selectedTab={selectedRootElement}
               onClick={() => {
-                const isCollapseClick =
-                  selectedRootElement === rootElement &&
+                const isDictionary =
                   !isRootBlock(schema, rootElement) &&
                   rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion;
 
-                // for block_dictionary, clicking again collapses it
-                // for ScanConfigUIElementDict.BlockSingle and ScanConfigUIElementDict.BlockUnion, they stay open
-                if (isCollapseClick) {
-                  setEditing(false);
+                // BlockDictionary: always toggle expand/collapse on click,
+                // regardless of whether this root element is currently selected.
+                if (isDictionary) {
+                  setSelectedRootElement(rootElement);
                   setSelectedEntry('');
-                  setSelectedRootElement('');
+
+                  if (isExpanded) {
+                    setExpandedRootElements((prev) => {
+                      const newSet = new Set(prev);
+                      newSet.delete(rootElement);
+                      return newSet;
+                    });
+                    setEditing(false);
+                  } else {
+                    setExpandedRootElements((prev) => {
+                      const newSet = new Set(prev);
+                      newSet.add(rootElement);
+                      return newSet;
+                    });
+                    setEditing(false);
+                  }
                   return;
                 }
+
+                // Open: add to expanded set and select
+                setExpandedRootElements((prev) => {
+                  const newSet = new Set(prev);
+                  newSet.add(rootElement);
+                  return newSet;
+                });
 
                 setSelectedRootElement(rootElement);
                 setSelectedEntry('');
@@ -110,7 +140,12 @@ export function RootElement({
                   setEditing(true);
                 else setEditing(false);
               }}
-              extraClass="w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5"
+              extraClass={cn(
+                'w-full flex text-left justify-between min-h-[50px] items-center drop-shadow ml-0.5',
+                styles.rootBase,
+                diffClass
+              )}
+              style={undefined}
             >
               <span className="flex items-center gap-2 wrap-break-word min-w-0">
                 <SelectedUnionVariantLabel
@@ -155,32 +190,35 @@ export function RootElement({
         </TooltipContent>
       </Tooltip>
 
-      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
-        <BlockDictionaryEntries
-          config={config}
-          rootElement={rootElement}
-          selectedEntry={selectedEntry}
-          selectedRootElement={selectedRootElement}
-          handleEntryClick={handleEntryClick}
-          campaignId={campaignId}
-          loading={loading}
-          readOnly={!!readOnly}
-          isChatReady={isChatReady}
-          setEditing={setEditing}
-          setSelectedEntry={setSelectedEntry}
-          singularName={rootElementSchema.singular_name}
-          allEntries={allEntries}
-          newKey={newKey}
-          setNewKey={setNewKey}
-          isEditingKey={isEditingKey}
-          setIsEditingKey={setIsEditingKey}
-          atomsMap={atomsMap}
-          setAtomsMap={setAtomsMap}
-          errors={errors}
-          visible={selectedRootElement === rootElement && !!config[rootElement]}
-          rootElementSchema={rootElementSchema}
-        />
-      )}
+      {rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary &&
+        (config[rootElement] || hasHighlights) && (
+          <BlockDictionaryEntries
+            config={config}
+            rootElement={rootElement}
+            selectedEntry={selectedEntry}
+            selectedRootElement={selectedRootElement}
+            handleEntryClick={handleEntryClick}
+            campaignId={campaignId}
+            loading={loading}
+            readOnly={!!readOnly}
+            isChatReady={isChatReady}
+            setEditing={setEditing}
+            setSelectedEntry={setSelectedEntry}
+            setSelectedRootElement={setSelectedRootElement}
+            singularName={rootElementSchema.singular_name}
+            allEntries={allEntries}
+            newKey={newKey}
+            setNewKey={setNewKey}
+            isEditingKey={isEditingKey}
+            setIsEditingKey={setIsEditingKey}
+            atomsMap={atomsMap}
+            setAtomsMap={setAtomsMap}
+            errors={errors}
+            highlights={highlights}
+            visible={isExpanded}
+            rootElementSchema={rootElementSchema}
+          />
+        )}
     </div>
   );
 }

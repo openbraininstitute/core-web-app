@@ -6,7 +6,9 @@ import { authFetch } from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
 import {
+  BuildScanConfigTabs,
   ExtractScanConfigTabs,
+  ProcessScanConfigTabs,
   ScanConfigActivity,
   SimulateScanConfigTabs,
   type TScanConfigActivity,
@@ -17,7 +19,7 @@ import { useCreditsAccessGuard } from '@/hooks/use-credits-access-guard';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/scan-config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { getTypeByActivityAndSourceType } from '@/ui/segments/workflows/elements/helpers';
+import { getTargetType } from '@/ui/segments/workflows/config';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
@@ -75,13 +77,23 @@ export default function GenerateConfigButton({
         id: ExtractScanConfigTabs.extractions,
         __activity: ScanConfigActivity.Extract,
       });
+    if (activity === ScanConfigActivity.Process)
+      setTab({
+        id: ProcessScanConfigTabs.skeletonizations,
+        __activity: ScanConfigActivity.Process,
+      });
+    if (activity === ScanConfigActivity.Build)
+      setTab({
+        id: BuildScanConfigTabs.results,
+        __activity: ScanConfigActivity.Build,
+      });
   };
 
   return (
     <button
       type="button"
       className={classNames(
-        'flex min-h-12.5 w-[95%] items-center justify-center rounded-full text-lg drop-shadow',
+        'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-lg drop-shadow',
         (errors && errors.length > 0) || loading
           ? 'bg-gray-300 text-gray-500'
           : 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
@@ -190,7 +202,7 @@ export default function GenerateConfigButton({
                     virtualLabId,
                     projectId,
                     activity,
-                    entityType: getTypeByActivityAndSourceType(activity, entityType),
+                    entityType: getTargetType({ activity, sourceType: entityType }),
                   }
                 )
               ) {

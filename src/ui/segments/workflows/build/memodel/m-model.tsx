@@ -47,6 +47,7 @@ export function MModel({ sessionId }: Props) {
       requireMiniDetailView={false}
       classNames={{ container: 'max-h-full' }}
       dataType={ExtendedEntitiesTypeDict.UniversalCellMorphology}
+      extraQueryParams={{ order_by: 'cell_morphology_protocol__generation_type' }}
       miniViewProps={{ section: WorkspaceSection.BuildWorkflow }}
       allowDownload={false}
       allowDelete={false}

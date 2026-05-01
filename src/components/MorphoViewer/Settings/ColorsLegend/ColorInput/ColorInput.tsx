@@ -1,8 +1,8 @@
-import { TgdColor } from '@bbp/morphoviewer';
 import { type ChangeEvent, useRef } from 'react';
 
 import { EyeIcon } from '@/components/icons';
 import EyeSlashIcon from '@/components/icons/EyeSlashIcon';
+import { TgdColor } from '@/morpho-viewer';
 import { classNames } from '@/util/utils';
 
 import styles from './color-input.module.css';

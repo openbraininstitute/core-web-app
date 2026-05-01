@@ -19,5 +19,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     render: (r, i) => {
       return <ActionPopover notebook={r as INotebook} index={i ?? 0} />;
     },
+    isDisplayable: true,
   },
 };

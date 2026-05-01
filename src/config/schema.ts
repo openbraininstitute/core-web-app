@@ -52,7 +52,7 @@ const configFields = {
   },
   THUMBNAIL_API_URL: { schema: z.url().optional(), public: true },
   VIRTUAL_LAB_API_URL: { schema: z.url().optional(), public: true },
-
+  LAUNCH_SYSTEM_URL: { schema: z.url().optional(), public: true },
   ROOT_ROUTE: { schema: z.string(), public: true },
 
   SENTRY_DSN: {
@@ -129,6 +129,7 @@ const platformApiUrlFields = {
   SMALL_SCALE_SIMULATOR_URL: '/small-scale-simulator',
   THUMBNAIL_API_URL: '/thumbnail-generation',
   VIRTUAL_LAB_API_URL: '/virtual-lab-manager',
+  LAUNCH_SYSTEM_URL: '/launch-system',
 } as const satisfies Partial<Record<keyof typeof configFields, string>>;
 
 const baseServerSchema = z
@@ -169,10 +170,7 @@ const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
           data[field] ?? `${data.API_ORIGIN}${DEFAULT_API_BASE_PATH}${path}`,
         ])
       ),
-    })) as any as z.ZodEffects<
-    T,
-    z.infer<T> & { [K in keyof typeof platformApiUrlFields]: string }
-  >;
+    }));
 
 export const serverSchema = applyApiUrlTransforms(baseServerSchema);
 

@@ -2,12 +2,13 @@ import type { ReactNode } from 'react';
 import type { StructuralDomain } from '@/api/entitycore/types/entities/measurement-annotation';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
-import type { TWorkspaceSection } from '@/constants';
+import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
   EntityCoreFieldsValue,
 } from '@/entity-configuration/definitions/fields-defs/enums';
+import type { WorkspaceContext } from '@/types/common';
 
 export type CoreFilterValues = {
   [field: string]: string | number | string[] | GteLteValue | null | boolean;
@@ -94,12 +95,112 @@ type Style = {
 };
 
 export type OrderShape =
-  | { property: string; value: string }
+  | { property: string; value: string | Array<string> }
   | Array<{
       types: Array<Partial<TExtendedEntitiesTypeDict>>;
       property: string;
-      value: string;
+      value: string | string[];
     }>;
+
+/**
+ * runtime context used to resolve field presentation rules
+ *
+ * this context is purely configuration input
+ */
+export type TFieldApiContext = {
+  dataType: TExtendedEntitiesTypeDict;
+  section?: TWorkspaceSection;
+  scope?: TWorkspaceScope;
+};
+
+export type TMatchable<T> = T | readonly T[];
+
+/**
+ * declarative predicate for matching a field presentation rule
+ *
+ * semantics:
+ * - keys are combined with AND
+ * - array values inside a key are combined with OR
+ * - omitted keys do not constrain the match
+ */
+export type TFieldApiWhen = {
+  dataType?: TMatchable<TExtendedEntitiesTypeDict>;
+  section?: TMatchable<TWorkspaceSection>;
+  scope?: TMatchable<TWorkspaceScope>;
+};
+
+/**
+ * one ordered contextual rule
+ *
+ * rules are evaluated in declaration order, and the last matching rule wins
+ */
+export type TContextualRule<T> = {
+  when?: TFieldApiWhen;
+  matches?: (ctx: TFieldApiContext) => boolean;
+  value: T;
+};
+
+/**
+ * context-aware value with an optional default and ordered overrides
+ */
+export type TContextualValue<T> = {
+  default?: T;
+  rules?: TContextualRule<T>[];
+};
+
+/**
+ * a single selectable option shown by a field filter control.
+ */
+export interface IFilterOptionItem {
+  label: string;
+  value: string;
+  description?: ReactNode;
+}
+
+export const FilterOptionsSourceKind = {
+  Static: 'static',
+  Resolver: 'resolver',
+} as const;
+
+/**
+ * source of options for a field filter.
+ *
+ * static sources embed the options directly in the field definition.
+ * resolver sources compute options dynamically from the current field API context.
+ */
+export type TFilterOptionsSource =
+  | { kind: typeof FilterOptionsSourceKind.Static; items: IFilterOptionItem[] }
+  | {
+      kind: typeof FilterOptionsSourceKind.Resolver;
+      resolve: (args: {
+        context: TFieldApiContext;
+        workspace?: WorkspaceContext;
+      }) => IFilterOptionItem[] | Promise<IFilterOptionItem[]>;
+    };
+
+/**
+ * presentation rules for the field as a selectable column.
+ */
+export interface IFieldColumnPresentation {
+  available?: TContextualValue<boolean>;
+}
+
+/**
+ * presentation rules for the field as a filter control.
+ */
+export interface IFieldFilterPresentation {
+  available?: TContextualValue<boolean>;
+  constraint?: TContextualValue<string | Record<string, string>>;
+  options?: TFilterOptionsSource;
+}
+
+/**
+ * context-aware presentation rules for a field.
+ */
+export interface IFieldPresentation {
+  column?: IFieldColumnPresentation;
+  filter?: IFieldFilterPresentation;
+}
 
 export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   fieldType?: CoreFieldType;
@@ -107,16 +208,33 @@ export type FieldDefinition<T extends EntityCoreIdentifiable> = {
   title: ReactNode;
   description?: string;
   filter: CoreFilterType;
-  filterData?: any;
+  presentation?: IFieldPresentation;
+  /**
+   * @deprecated use `presentation.filter.options` instead.
+   * legacy static filter options source kept for backward compatibility.
+   */
+  filterData?: unknown;
+  /**
+   * @deprecated use `presentation.filter.constraint.default` instead.
+   * legacy default query constraint kept for backward compatibility.
+   */
   defaultConstraint?: string | Record<string, string>;
+  /**
+   * @deprecated use `presentation.filter.constraint.rules` instead.
+   * legacy per-data-type query constraint kept for backward compatibility.
+   */
   perTypeConstraint?: Partial<Record<TExtendedEntitiesTypeDict, string>>;
   isSortable?: boolean;
-  isFilterable?:
-    | boolean
-    | ((props: { section?: TWorkspaceSection; dataType?: TExtendedEntitiesTypeDict }) => boolean);
-  isDisplayable?:
-    | boolean
-    | ((props: { section?: TWorkspaceSection; dataType?: TExtendedEntitiesTypeDict }) => boolean);
+  /**
+   * @deprecated use `presentation.filter.available` instead.
+   * legacy filter visibility flag kept for backward compatibility.
+   */
+  isFilterable?: boolean;
+  /**
+   * @deprecated use `presentation.column.available` instead.
+   * legacy column visibility flag kept for backward compatibility.
+   */
+  isDisplayable?: boolean;
   order?: OrderShape;
   unit?: ReactNode;
   group?: StructuralDomain;
@@ -153,6 +271,57 @@ export const SortOrder = {
 export type TSortOrder = (typeof SortOrder)[keyof typeof SortOrder];
 export interface TSortState {
   field: EntityCoreFields;
-  backendField: EntityCoreFields;
+  backendField: string | Array<string>;
   order: TSortOrder | null;
+}
+export type TSortStateList = Array<TSortState>;
+
+export function normalizeOrderBy(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string' && item.length > 0);
+  }
+  if (typeof value === 'string' && value.length > 0) {
+    return [value];
+  }
+  return [];
+}
+
+export function getOrderByField(value: string): string {
+  return value.replace(/^[+-]/, '');
+}
+
+/**
+ * merge base/default ordering with user-selected ordering.
+ *
+ * rules:
+ * - base ordering is kept first (acts as primary ordering).
+ * - if user ordering targets the same field (ignoring +/- direction),
+ *   the user entry replaces the base one.
+ * - user ordering for new fields is appended.
+ * - conflicts like `field` and `-field` are collapsed to one entry.
+ */
+export function mergeOrderByWithOverride(baseOrderBy: unknown, userOrderBy: unknown): string[] {
+  const base = normalizeOrderBy(baseOrderBy);
+  const user = normalizeOrderBy(userOrderBy);
+  const baseFields = new Set(base.map(getOrderByField));
+  const userByField = new Map(user.map((item) => [getOrderByField(item), item] as const));
+  const consumedUserFields = new Set<string>();
+
+  const mergedBase = base.map((item) => {
+    const field = getOrderByField(item);
+    const replacement = userByField.get(field);
+    if (replacement) {
+      consumedUserFields.add(field);
+      return replacement;
+    }
+    return item;
+  });
+
+  const appendedUser = user.filter((item) => {
+    const field = getOrderByField(item);
+    if (consumedUserFields.has(field)) return false;
+    return !baseFields.has(field);
+  });
+
+  return [...mergedBase, ...appendedUser];
 }

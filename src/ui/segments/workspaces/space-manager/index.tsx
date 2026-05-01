@@ -3,21 +3,21 @@
 import { useCallback, useState } from 'react';
 import { match } from 'ts-pattern';
 
+import { usePrevious } from '@/hooks/hooks';
 import { useDisableWorkspaceModalFullHeight } from '@/ui/hooks/use-disable-workspace-modal-full-height';
-import { VirtualLabConfiguration } from '@/ui/segments/virtual-lab-settings';
 import { useResetQueryParams } from '@/ui/hooks/use-reset-query-params';
+import { Modal } from '@/ui/molecules/modal';
+import { AccountSettings } from '@/ui/segments/profile';
 import { ProjectCreation } from '@/ui/segments/project/create';
 import { ProjectPreview } from '@/ui/segments/project/preview';
-import { AccountSettings } from '@/ui/segments/profile';
+import { VirtualLabConfiguration } from '@/ui/segments/virtual-lab-settings';
 import {
-  type TTriggerWorkspaceConfigurationClickEvent,
-  type WorkspaceActionType,
-  WorkspaceActions,
   makeTriggerWorkspaceConfigurationClickEvent,
+  type TTriggerWorkspaceConfigurationClickEvent,
   useWorkspaceConfigurationClickEvent,
+  WorkspaceActions,
+  type WorkspaceActionType,
 } from '@/ui/segments/workspaces/space-manager/event';
-import { Modal } from '@/ui/molecules/modal';
-import { usePrevious } from '@/hooks/hooks';
 
 export function SpaceManagerContainer() {
   const resetQueryParams = useResetQueryParams();
@@ -84,10 +84,10 @@ export function SpaceManagerContainer() {
       open={contextConfig.open}
       size="lg"
       onClose={onClose}
-      width="calc(100vw - 24.9rem)" // this the width of the space-switcher in the left
-      className="bg-primary-9 top-3 right-3 h-full min-h-[400px] translate-0 transform-none! rounded-md"
+      width="calc(100vw - 25.1rem)" // this the width of the space-switcher in the left
+      className="bg-primary-9 top-3 right-3 h-full min-h-[400px] translate-0 transform-none! rounded-2xl"
       animation="fade"
-      maxHeight="calc(100vh - 1rem)"
+      maxHeight="calc(100vh - 5.5rem + 58px)"
       bodyClassName="flex flex-col h-full max-h-[calc(100vh-1rem)] min-h-0 overflow-hidden p-0"
       position="right"
       afterOpen={() => {

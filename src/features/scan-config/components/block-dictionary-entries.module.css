@@ -1,0 +1,9 @@
+/* Dictionary entry base style — transparent border for flash/highlight animations */
+
+.entryButton {
+  border: 1.5px solid transparent;
+  box-sizing: border-box;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}

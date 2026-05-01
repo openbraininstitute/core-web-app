@@ -2,14 +2,37 @@ import { kebabCase } from 'es-toolkit/compat';
 import Link from 'next/link';
 
 import { config } from '@/config';
+import { WorkflowActivityDictValue } from '@/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { getWorkflow } from '@/ui/segments/workflows/config';
+import {
+  PanelQueryParam,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
-export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }: { record: T }) {
+export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({
+  record,
+  dataType,
+}: {
+  record: T;
+  dataType?: TExtendedEntitiesTypeDict;
+}) {
   const { virtualLabId, projectId } = useWorkspace();
-  const onWorkflowClick = () => {};
+
+  // When the listing represents a Build workflow's input entity (configurationInputs),
+  // the configure page lives under the workflow's `targetType` (e.g.
+  // /workflows/build/configure/em-synapse-mapping-campaign/<id>), not under the
+  // raw record type. Fall back to `record.type` for the legacy flows.
+  const sourceType = (dataType ?? record.type) as TExtendedEntitiesTypeDict;
+  const workflow = getWorkflow({
+    activity: WorkflowActivityDictValue.build,
+    sourceType,
+  });
+  const configureSegment = kebabCase(workflow?.targetType ?? record.type);
 
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
@@ -35,10 +58,12 @@ export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({ record }
       >
         <Link
           href={{
-            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${kebabCase(record.type)}/${record.id}`,
-            query: { sessionId: crypto.randomUUID() },
+            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${configureSegment}/${record.id}`,
+            query: {
+              sessionId: crypto.randomUUID(),
+              [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
+            },
           }}
-          onClick={onWorkflowClick}
         >
           Use model
         </Link>

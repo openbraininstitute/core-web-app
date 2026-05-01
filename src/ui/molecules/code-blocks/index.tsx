@@ -21,6 +21,8 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: BundledLanguage;
   showLineNumbers?: boolean;
+  scrollableX?: boolean;
+  contentClassName?: string;
 };
 
 type CodeBlockContextType = {
@@ -33,10 +35,20 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   language: 'text' as BundledLanguage,
 });
 
+type THastLikeElement = {
+  children: Array<{
+    type: string;
+    tagName?: string;
+    properties?: Record<string, unknown>;
+    children?: Array<{ type: string; value: string }>;
+  }>;
+};
+
 const lineNumberTransformer: ShikiTransformer = {
   name: 'line-numbers',
-  line(node: Element, line: number) {
-    node.children.unshift({
+  line(node, line: number) {
+    const hastNode = node as unknown as THastLikeElement;
+    hastNode.children.unshift({
       type: 'element',
       tagName: 'span',
       properties: {
@@ -77,6 +89,8 @@ export function CodeBlock({
   code,
   language,
   showLineNumbers = false,
+  scrollableX = false,
+  contentClassName,
   className,
   children,
   ...props
@@ -98,11 +112,11 @@ export function CodeBlock({
   }, [code, language, showLineNumbers]);
 
   return (
-    // eslint-disable-next-line react/jsx-no-constructed-context-values
     <CodeBlockContext.Provider value={{ code, language }}>
       <div
         className={cn(
-          'group bg-background text-foreground border-neutral-light relative w-full overflow-hidden rounded-md border',
+          'group bg-background text-foreground border-neutral-light relative w-full rounded-md border',
+          scrollableX ? 'overflow-x-auto overflow-y-hidden' : 'overflow-hidden',
           className
         )}
         {...props}
@@ -110,7 +124,13 @@ export function CodeBlock({
         {children}
         <div className="relative">
           <div
-            className="[&>pre]:bg-background! [&>pre]:text-foreground! overflow-hidden [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm"
+            className={cn(
+              '[&>pre]:bg-background! [&>pre]:text-foreground! [&_code]:font-mono [&_code]:text-sm [&>pre]:m-0 [&>pre]:p-4 [&>pre]:text-sm',
+              scrollableX
+                ? 'secondary-scrollbar overflow-x-auto overflow-y-hidden [&>pre]:min-w-max [&>pre]:w-max'
+                : 'overflow-hidden',
+              contentClassName
+            )}
             // biome-ignore lint/security/noDangerouslySetInnerHtml: required
             dangerouslySetInnerHTML={{ __html: html }}
           />

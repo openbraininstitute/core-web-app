@@ -18,8 +18,7 @@ import {
   LIGHT_SOMA,
 } from '../constants';
 
-/* eslint-disable no-param-reassign */
-import type { ColoringType, MorphologyCanvas } from '@bbp/morphoviewer';
+import type { ColoringType, MorphologyCanvas } from '@/morpho-viewer';
 
 const DEFAULT_SETTINGS: ExtendedMorphoViewerSettings = {
   darkMode: false,
@@ -89,7 +88,7 @@ export function useMorphoViewerSettings(
     [extendedSettings, painter]
   );
   const update = (value: Partial<MorphoViewerSettings>) => {
-    const darkMode = value.isDarkMode ?? extendedSettings.darkMode;
+    const darkMode = value.isDarkMode ?? extendedSettings.darkMode ?? false;
     const newExtendedSettings =
       darkMode === extendedSettings.darkMode
         ? writeSettings({
