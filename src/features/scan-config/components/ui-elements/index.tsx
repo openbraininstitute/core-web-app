@@ -171,11 +171,11 @@ export function UIElementRender({
               [k]: { elements: copy },
             });
           }}
-          onAddElement={(newElement: number) => {
+          onAddElement={(newElement: number[]) => {
             if (!state[k]) {
               const newState = {
                 ...state,
-                [k]: { elements: [newElement] },
+                [k]: { elements: newElement },
               };
               setState(newState);
               return;
@@ -183,7 +183,7 @@ export function UIElementRender({
 
             setState({
               ...state,
-              [k]: { elements: [...elements, newElement] },
+              [k]: { elements: newElement },
             });
           }}
         />

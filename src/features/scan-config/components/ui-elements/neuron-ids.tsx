@@ -1,6 +1,6 @@
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { InputNumber } from 'antd';
-import { useState } from 'react';
+import { Button, InputNumber } from 'antd';
+import { useDeferredValue, useState } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
@@ -13,14 +13,38 @@ export default function NeuronIds({
   elements: number[];
   disabled: boolean;
   onDeleteElement: (i: number) => void;
-  onAddElement: (newElement: number) => void;
+  onAddElement: (newElements: number[]) => void;
 }) {
   const [addingElement, setAddingElement] = useState(false);
   const [newElement, setNewElement] = useState<number | null>(null);
+  const [warning, setWarning] = useState('');
+  const [edit, setEdit] = useState(false);
 
   return (
     <div className="w-full">
-      <textarea className="w-full" rows={20} />
+      {warning && <div className="text-red-500">{warning}</div>}
+      {!edit && <div>{elements.join(', ')}</div>}
+      {edit && (
+        <textarea
+          defaultValue={elements.join(', ')}
+          className="w-full"
+          rows={20}
+          onChange={(e) => {
+            setWarning('');
+            const newElements = e.target.value;
+            let values: number[] = [];
+            try {
+              values = parseCsvIntegers(newElements);
+            } catch (e) {
+              setWarning(e.message);
+            }
+            onAddElement(values);
+          }}
+        />
+      )}
+      <Button className="text-primary-8" onClick={() => setEdit(!edit)} disabled={!!warning}>
+        {edit ? 'OK' : 'Edit'}
+      </Button>
     </div>
   );
 
@@ -71,4 +95,58 @@ export default function NeuronIds({
       )}
     </div>
   );
+}
+
+function parseCsvIntegers(data: string): number[] {
+  if (!data) {
+    return [];
+  }
+
+  const result: number[] = [];
+  let line = 1;
+  let col = 1;
+  let itemStartLine = 1;
+  let itemStartCol = 1;
+  let currentItem = '';
+
+  const isValidInteger = (str: string): boolean => {
+    return /^-?\d+$/.test(str.trim());
+  };
+
+  for (let i = 0; i < data.length; i++) {
+    const char = data[i];
+
+    if (char === ',') {
+      if (!isValidInteger(currentItem)) {
+        throw new Error(
+          `Invalid integer '${currentItem}' at line ${itemStartLine}, column ${itemStartCol}`
+        );
+      }
+      result.push(parseInt(currentItem.trim(), 10));
+
+      currentItem = '';
+      col++;
+      itemStartLine = line;
+      itemStartCol = col;
+    } else {
+      currentItem += char;
+      if (char === '\n') {
+        line++;
+        col = 1;
+      } else {
+        col++;
+      }
+    }
+  }
+
+  if (currentItem.length > 0 || data.endsWith(',')) {
+    if (!isValidInteger(currentItem)) {
+      throw new Error(
+        `Invalid integer '${currentItem}' at line ${itemStartLine}, column ${itemStartCol}`
+      );
+    }
+    result.push(parseInt(currentItem.trim(), 10));
+  }
+
+  return result;
 }
