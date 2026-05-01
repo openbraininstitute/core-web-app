@@ -95,11 +95,13 @@ export function Profile({ data }: ProfileProps) {
 
   return (
     <div
+      id="profile-form-container"
       data-testid="profile-form-container"
       className="animate-fade-in flex items-center justify-center p-4"
     >
       <div className="w-full max-w-3xl">
         <Form
+          id="profile-form"
           data-testid="profile-form"
           form={form}
           layout="vertical"
