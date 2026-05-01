@@ -10,7 +10,7 @@ import type { ReactNode } from 'react';
 
 export function TutorialsColumns({ left, right }: { left: ReactNode; right: ReactNode }) {
   const [view, setView] = useAtom(leftPaneViewAtom);
-  const collapsed = view !== null;
+  const collapsed = view !== null && view !== 'tutorials';
 
   return (
     <section
@@ -20,7 +20,7 @@ export function TutorialsColumns({ left, right }: { left: ReactNode; right: Reac
     >
       <div
         className={cn(
-          'relative flex max-h-full min-w-0 flex-col gap-3 overflow-y-auto rounded-xl bg-[#ededed] p-3 transition-[width] duration-200 ease-out',
+          'relative flex max-h-full min-w-0 flex-col gap-3 overflow-y-auto transition-[width] duration-200 ease-out',
           collapsed ? 'w-[204px]' : 'w-[40%]'
         )}
       >

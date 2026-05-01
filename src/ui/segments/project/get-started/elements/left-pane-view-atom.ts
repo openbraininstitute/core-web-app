@@ -3,6 +3,7 @@
 import { atom } from 'jotai';
 
 export type LeftPaneView =
+  | 'tutorials'
   | 'about'
   | 'glossary'
   | 'terms'

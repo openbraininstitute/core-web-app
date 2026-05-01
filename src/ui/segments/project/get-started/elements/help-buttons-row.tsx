@@ -3,6 +3,7 @@
 import {
   RiArticleLine,
   RiBookOpenLine,
+  RiCompassLine,
   RiFileTextLine,
   RiInformationLine,
   RiNewspaperLine,
@@ -25,6 +26,7 @@ type Item = {
 };
 
 const ITEMS: Array<Item> = [
+  { id: 'tutorials', label: 'Tutorials + Examples', Icon: RiCompassLine },
   { id: 'about', label: 'About', Icon: RiInformationLine },
   { id: 'news', label: 'News', Icon: RiNewspaperLine },
   { id: 'publications', label: 'Publications', Icon: RiArticleLine },

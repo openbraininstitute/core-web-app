@@ -41,11 +41,11 @@ export function TutorialLeftPane({
     }
   }, [slug, setPreview, setView]);
 
-  const helpHidden = view === null;
+  const helpHidden = view === null || view === 'tutorials';
 
   return (
     <>
-      <div className={view !== null || preview ? 'hidden' : 'h-full'}>{children}</div>
+      <div className={!helpHidden || preview ? 'hidden' : 'h-full'}>{children}</div>
       {helpHidden && preview && <DataPreview />}
       {view === 'about' && (
         <AboutView blocks={aboutContent.aboutContent as PortableTextBlock[] | undefined} />
