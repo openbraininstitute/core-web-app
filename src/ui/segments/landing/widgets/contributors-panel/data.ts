@@ -20,3 +20,24 @@ const SORTED_CONTRIBUTORS: Contributor[] = [...CONTRIBUTORS_LIST].sort(sortContr
 export function useContributors(): Contributor[] {
   return SORTED_CONTRIBUTORS;
 }
+
+export function splitByCapitalLetterOfLastName(contributors: Contributor[]): Contributor[][] {
+  const mapByCapital = new Map<string, Contributor[]>();
+  for (const contrib of contributors) {
+    const cap = contrib.last_name.trim().charAt(0).toUpperCase();
+    const group = mapByCapital.get(cap);
+    if (group) {
+      group.push(contrib);
+    } else {
+      mapByCapital.set(cap, [contrib]);
+    }
+  }
+  const groups: Contributor[][] = Array.from(mapByCapital.values());
+  return groups.sort((g1, g2) => {
+    const n1 = g1[0].last_name.trim().charAt(0).toUpperCase();
+    const n2 = g2[0].last_name.trim().charAt(0).toUpperCase();
+    if (n1 < n2) return -1;
+    if (n1 > n2) return +1;
+    return 0;
+  });
+}

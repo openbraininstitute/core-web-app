@@ -29,27 +29,18 @@ export default function SectionNews({
   initialNews,
   totalCount,
 }: SectionNewsProps) {
-  const [pageStart, setPageStart] = React.useState(PAGE_SIZE);
   const [newsList, setNewsList] = React.useState<ContentForNewsList>(initialNews);
+  const [loading, setLoading] = React.useState(false);
   const [categories, setCategories] = React.useState<string[]>(ALL_CATEGORY_IDS);
-  React.useEffect(() => {
-    const action = async () => {
-      if (pageStart >= totalCount) return;
-
-      const page = await getNewsPage(pageStart, PAGE_SIZE);
-      if (page.length === 0) return;
-
-      setNewsList((prev) => {
-        if (prev.length >= pageStart + PAGE_SIZE) return prev;
-        const list = [...prev];
-        page.forEach((item, index) => {
-          list[pageStart + index] = item;
-        });
-        return list;
-      });
-    };
-    action();
-  }, [pageStart, totalCount]);
+  const handleLoadMore = async () => {
+    if (loading || newsList.length >= totalCount) return;
+    setLoading(true);
+    const page = await getNewsPage(newsList.length, PAGE_SIZE);
+    if (page.length > 0) {
+      setNewsList((prev) => [...prev, ...page]);
+    }
+    setLoading(false);
+  };
   const handleSwitchAll = () => {
     setCategories(ALL_CATEGORY_IDS);
   };
@@ -110,7 +101,8 @@ export default function SectionNews({
           <button
             type="button"
             className={styleButtonRounded}
-            onClick={() => setPageStart(pageStart + PAGE_SIZE)}
+            onClick={handleLoadMore}
+            disabled={loading}
           >
             Load {remainingCount} more article{remainingCount > 1 ? 's' : ''}
           </button>

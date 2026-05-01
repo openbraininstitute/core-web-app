@@ -1,19 +1,13 @@
-'use client';
-
 import ShowcaseCard from '@/app/showcases/ShowcaseCard';
-import { useSanity } from '@/services/sanity';
 import { styleBlockFullWidth } from '@/ui/segments/landing/styles';
-import queryForOBIShowcases from '@/ui/segments/reports/obi-showcases/query';
-import {
-  isOBIShowcaseProjectProps,
-  type OBIShowcaseProjectType,
-} from '@/ui/segments/reports/obi-showcases/types';
 
-export default function SectionShowcases() {
-  const projects = useSanity(queryForOBIShowcases, isOBIShowcaseProjectProps) as
-    | OBIShowcaseProjectType[]
-    | undefined;
+import type { OBIShowcaseProjectType } from '@/ui/segments/reports/obi-showcases/types';
 
+interface SectionShowcasesProps {
+  projects: OBIShowcaseProjectType[] | null;
+}
+
+export default function SectionShowcases({ projects }: SectionShowcasesProps) {
   if (!projects || projects.length === 0) {
     return (
       <div className={styleBlockFullWidth}>

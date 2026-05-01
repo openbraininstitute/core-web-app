@@ -1,32 +1,32 @@
 'use client';
 
 /* eslint-disable react/no-array-index-key */
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useRef } from 'react';
 
 import { IconChevronLeft } from '@/ui/segments/landing/icons/icon-chevron-left';
 import { IconChevronRight } from '@/ui/segments/landing/icons/icon-chevron-right';
 import { styleBlockSmall, styleButtonHoverable } from '@/ui/segments/landing/styles';
 import { classNames } from '@/util/utils';
 
-import { type Contributor, useContributors } from './data';
-
 import styles from './contributors-navigation.module.css';
 
+import type { Contributor } from './data';
+
 interface ContributorsNavigationProps {
-  onPageChange(contributors: Contributor[]): void;
+  pages: Contributor[][];
+  page: number;
+  onPageChange(page: number): void;
 }
 
 const LETTER_WIDTH = 32;
 const LETTER_MARGIN = 12;
 
-export default function ContributorsNavigation({ onPageChange }: ContributorsNavigationProps) {
+export default function ContributorsNavigation({
+  pages,
+  page,
+  onPageChange,
+}: ContributorsNavigationProps) {
   const refLetters = useRef<HTMLDivElement | null>(null);
-  const contributors = useContributors();
-  const pages = useMemo(() => splitByCapitalLetterOfLastName(contributors), [contributors]);
-  const [page, setPage] = useState(0);
-  useEffect(() => {
-    onPageChange(pages[page] ?? []);
-  }, [page, pages, onPageChange]);
   const handleScrollRight = () => handleScroll(refLetters.current, +1);
   const handleScrollLeft = () => handleScroll(refLetters.current, -1);
 
@@ -60,7 +60,7 @@ export default function ContributorsNavigation({ onPageChange }: ContributorsNav
                     className={styleButtonHoverable}
                     type="button"
                     disabled={page === i}
-                    onClick={() => setPage(i)}
+                    onClick={() => onPageChange(i)}
                   >
                     {group[0].last_name.trim().charAt(0).toUpperCase()}
                   </button>
@@ -80,27 +80,6 @@ export default function ContributorsNavigation({ onPageChange }: ContributorsNav
       </div>
     </div>
   );
-}
-
-function splitByCapitalLetterOfLastName(contributors: Contributor[]): Contributor[][] {
-  const mapByCapital = new Map<string, Contributor[]>();
-  for (const contrib of contributors) {
-    const cap = contrib.last_name.trim().charAt(0).toUpperCase();
-    const group = mapByCapital.get(cap);
-    if (group) {
-      group.push(contrib);
-    } else {
-      mapByCapital.set(cap, [contrib]);
-    }
-  }
-  const groups: Contributor[][] = Array.from(mapByCapital.values());
-  return groups.sort((g1: Contributor[], g2: Contributor[]) => {
-    const n1 = g1[0].last_name.trim().charAt(0).toUpperCase();
-    const n2 = g2[0].last_name.trim().charAt(0).toUpperCase();
-    if (n1 < n2) return -1;
-    if (n1 > n2) return +1;
-    return 0;
-  });
 }
 
 function handleScroll(div: HTMLDivElement | null, direction: number) {

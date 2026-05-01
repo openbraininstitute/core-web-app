@@ -1,18 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import ContributorsList from './contributors-list';
 import ContributorsNavigation from './contributors-navigation';
-
-import type { Contributor } from './data';
+import { splitByCapitalLetterOfLastName, useContributors } from './data';
 
 export function WidgetContributorsPanel() {
-  const [contributorsPage, setContributorsPage] = useState<Contributor[]>([]);
+  const contributors = useContributors();
+  const pages = useMemo(() => splitByCapitalLetterOfLastName(contributors), [contributors]);
+  const [page, setPage] = useState(0);
+  const currentPage = pages[page] ?? [];
   return (
     <>
-      <ContributorsNavigation onPageChange={setContributorsPage} />
-      <ContributorsList list={contributorsPage} />
+      <ContributorsNavigation pages={pages} page={page} onPageChange={setPage} />
+      <ContributorsList list={currentPage} />
     </>
   );
 }

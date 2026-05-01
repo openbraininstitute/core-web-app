@@ -16,8 +16,20 @@ interface ProgressiveVideoProps {
   src: string;
   autosize?: boolean;
   controls?: boolean;
+  width?: number;
+  height?: number;
   currentTime?: number;
   onCurrentTimeChange?(currentTime?: number): void;
+}
+
+const DEFAULT_ASPECT_RATIO = '16/9';
+
+function getAutosizeStyle(width?: number, height?: number): CSSProperties {
+  return {
+    width: '100%',
+    height: 'auto',
+    aspectRatio: width && height ? `${width}/${height}` : DEFAULT_ASPECT_RATIO,
+  };
 }
 
 export default function ProgressiveVideo({
@@ -25,6 +37,8 @@ export default function ProgressiveVideo({
   src,
   controls = false,
   autosize,
+  width,
+  height,
   currentTime,
   onCurrentTimeChange,
 }: ProgressiveVideoProps) {
@@ -34,16 +48,14 @@ export default function ProgressiveVideo({
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [videoPlaying, setVideoPlaying] = useState<boolean>(false);
   const refVideo = useRef<HTMLVideoElement | null>(null);
-  const [style, setStyle] = useState<CSSProperties>({});
+  const [style, setStyle] = useState<CSSProperties>(() =>
+    autosize ? getAutosizeStyle(width, height) : {}
+  );
   const handleReady = (evt: SyntheticEvent<HTMLVideoElement>) => {
     const video = evt.target as HTMLVideoElement;
     if (!autosize || !video) return;
 
-    setStyle({
-      width: '100%',
-      height: 'auto',
-      aspectRatio: `${video.videoWidth}/${video.videoHeight}`,
-    });
+    setStyle(getAutosizeStyle(video.videoWidth, video.videoHeight));
   };
 
   React.useEffect(() => {

@@ -1,6 +1,4 @@
-'use client';
-
-import { createContext, useContext, useEffect, useRef } from 'react';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
 
 import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
 import { classNames } from '@/util/utils';
@@ -10,21 +8,13 @@ import { EnumSection } from './sections/sections';
 import styles from './landing-page.module.css';
 import './global.css';
 
-import type { ReactNode, RefObject } from 'react';
+import type { ReactNode } from 'react';
 
 export type LandingPageError = {
   errorcode: string | undefined;
   originalCode: string | undefined;
   description: string | undefined;
 };
-
-const LandingScrollContainerContext = createContext<RefObject<HTMLElement | null> | undefined>(
-  undefined
-);
-
-export function useLandingScrollContainer(): RefObject<HTMLElement | null> | undefined {
-  return useContext(LandingScrollContainerContext);
-}
 
 interface LandingPageShellProps {
   className?: string;
@@ -40,22 +30,16 @@ export default function LandingPageShell({
   children,
 }: LandingPageShellProps) {
   const isFeatures = section === EnumSection.Features;
-  const containerRef = useRef<HTMLDivElement>(null);
-  const contextValue = isFeatures ? (containerRef as RefObject<HTMLElement | null>) : undefined;
-
-  useEffect(() => {
-    const target = isFeatures ? containerRef.current : window;
-    target?.scrollTo({ top: 0, behavior: 'instant' });
-  }, [isFeatures]);
 
   return (
     <div
-      ref={containerRef}
-      className={classNames(className, styles.landingPage, isFeatures && styles.featuresSnap)}
+      className={classNames(
+        className,
+        styles.landingPage,
+        isFeatures && 'landing-features-snap'
+      )}
     >
-      <LandingScrollContainerContext.Provider value={contextValue}>
-        {children}
-      </LandingScrollContainerContext.Provider>
+      <AntdRegistry>{children}</AntdRegistry>
       {error?.errorcode && <InvitationErrorDialog error={error} />}
     </div>
   );

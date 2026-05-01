@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
-
 import GalleryContent from '@/ui/segments/gallery/content';
 import HeroGallery from '@/ui/segments/gallery/hero';
 import Menu from '@/ui/segments/landing/layout/menu/menu';
@@ -18,13 +16,6 @@ type GalleryPageProps = {
 
 export default function GalleryPage({ galleryContent }: GalleryPageProps) {
   const scrollHasStarted = useScrollHasStarted();
-
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'instant',
-    });
-  }, []);
 
   return (
     <div className={styles.landingPage}>

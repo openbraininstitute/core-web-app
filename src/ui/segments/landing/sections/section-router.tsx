@@ -1,4 +1,10 @@
+import { fetchSanity } from '@/services/sanity';
+import { getCreditsPacks } from '@/services/sanity/api/get-credits-packs';
 import { getNewsCount, getNewsList } from '@/services/sanity/api/get-news-list';
+import { getPricingContent } from '@/services/sanity/api/get-pricing-content';
+import { getSinglePrices } from '@/services/sanity/api/get-single-prices';
+import queryForOBIShowcases from '@/ui/segments/reports/obi-showcases/query';
+import { isOBIShowcaseProjectProps } from '@/ui/segments/reports/obi-showcases/types';
 import { logError } from '@/util/logger';
 
 import { getSection } from '../utils';
@@ -32,8 +38,14 @@ export default async function SectionRouter({
     case EnumSection.Story:
     case EnumSection.Contact:
       return <SectionGeneric section={section} />;
-    case EnumSection.Pricing:
-      return <SectionPricing />;
+    case EnumSection.Pricing: {
+      const [prices, creditsPacks, plans] = await Promise.all([
+        getSinglePrices(),
+        getCreditsPacks(),
+        getPricingContent(),
+      ]);
+      return <SectionPricing prices={prices} creditsPacks={creditsPacks} plans={plans} />;
+    }
     case EnumSection.News: {
       const [initialNews, totalCount] = await Promise.all([
         getNewsList(NEWS_PAGE_SIZE),
@@ -41,8 +53,10 @@ export default async function SectionRouter({
       ]);
       return <SectionNews initialNews={initialNews} totalCount={totalCount} />;
     }
-    case EnumSection.Showcases:
-      return <SectionShowcases />;
+    case EnumSection.Showcases: {
+      const projects = await fetchSanity(queryForOBIShowcases, isOBIShowcaseProjectProps);
+      return <SectionShowcases projects={projects ?? null} />;
+    }
     case EnumSection.Features:
       return <SectionFeatures />;
     default:
