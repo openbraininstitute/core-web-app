@@ -19,6 +19,12 @@ export default function NeuronIds({
   const [newElement, setNewElement] = useState<number | null>(null);
 
   return (
+    <div className="w-full">
+      <textarea className="w-full" rows={20} />
+    </div>
+  );
+
+  return (
     <div
       className="text-primary-8 mt-2 flex flex-col gap-2"
       data-scan-config-block-element={ScanConfigUIElementDict.NeuronIds}
