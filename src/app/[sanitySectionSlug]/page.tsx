@@ -1,7 +1,4 @@
-import { notFound } from 'next/navigation';
-
 import LandingPage from '@/ui/segments/landing';
-import { DEFAULT_SECTION } from '@/ui/segments/landing/constants';
 import { generateMetadataFromSanity } from '@/ui/segments/landing/metadata/metadata';
 import { getSection } from '@/ui/segments/landing/utils';
 
@@ -26,10 +23,6 @@ export default async function SanityContentPage({
 }) {
   const params = await promisedParams;
   const sanitySection = getSection(params.sanitySectionSlug);
-
-  if (sanitySection.slug === DEFAULT_SECTION.slug) {
-    notFound();
-  }
 
   return <LandingPage section={sanitySection.index} />;
 }
