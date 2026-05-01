@@ -33,11 +33,7 @@ export default function LandingPageShell({
 
   return (
     <div
-      className={classNames(
-        className,
-        styles.landingPage,
-        isFeatures && 'landing-features-snap'
-      )}
+      className={classNames(className, styles.landingPage, isFeatures && 'landing-features-snap')}
     >
       <AntdRegistry>{children}</AntdRegistry>
       {error?.errorcode && <InvitationErrorDialog error={error} />}

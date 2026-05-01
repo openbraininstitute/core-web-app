@@ -8,9 +8,9 @@ import { IconChevronRight } from '@/ui/segments/landing/icons/icon-chevron-right
 import { styleBlockSmall, styleButtonHoverable } from '@/ui/segments/landing/styles';
 import { classNames } from '@/util/utils';
 
-import styles from './contributors-navigation.module.css';
-
 import type { Contributor } from './data';
+
+import styles from './contributors-navigation.module.css';
 
 interface ContributorsNavigationProps {
   pages: Contributor[][];
