@@ -7,6 +7,7 @@ import {
 import Analysis from '@/ui/segments/detail-view/analysis';
 import Configuration from '@/ui/segments/detail-view/configuration';
 import Overview from '@/ui/segments/detail-view/overview';
+import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import RelatedArtifacts from '@/ui/segments/detail-view/related-artifacts';
 import RelatedPublications from '@/ui/segments/detail-view/related-publications';
 import Results from '@/ui/segments/detail-view/results';
@@ -38,6 +39,10 @@ export function detailPageSectionRenderer({
           isWorkflow={isWorkflow}
         />
       );
+    })
+    .with({ section: DetailViewSectionsDict.Subject }, () => {
+      if (!('subject' in entity) || !entity.subject) return null;
+      return <SubjectDetails entity={entity} />;
     })
     .with({ section: DetailViewSectionsDict.Analysis }, () => {
       return <Analysis entity={entity} extendedType={entityType.extendedType} />;

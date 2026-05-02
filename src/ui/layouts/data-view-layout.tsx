@@ -5,6 +5,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
 import { WorkspaceScope } from '@/constants';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import ActionMenu from '@/ui/segments/action-menu';
@@ -85,6 +86,11 @@ export async function DataViewLayout({
 
   if (!entityType.detailViewSections) return null;
 
+  const hasSubject = 'subject' in entity && !!entity.subject;
+  const sections = hasSubject
+    ? [...entityType.detailViewSections, DetailViewSectionsDict.Subject]
+    : entityType.detailViewSections;
+
   return (
     <div
       className={cn(
@@ -116,7 +122,7 @@ export async function DataViewLayout({
       <div className="flex h-full max-h-[calc(100%-56px)] overflow-hidden pt-2">
         <div className="w-1/5 pl-5">
           <div className={cn('flex flex-col gap-3', inline && 'inline-detail-tabs')}>
-            <DetailMenu sections={entityType.detailViewSections} />
+            <DetailMenu sections={sections} />
           </div>
           <ActionMenu
             // TODO: fix entity type

@@ -589,34 +589,65 @@ dialog {
 .inline-detail-view {
   color: #fff;
 }
-.inline-detail-view .text-primary-6,
-.inline-detail-view .text-primary-7,
-.inline-detail-view .text-primary-8,
-.inline-detail-view .text-primary-9,
-.inline-detail-view .text-dark,
-.inline-detail-view .text-black,
-.inline-detail-view .text-neutral-6,
-.inline-detail-view .text-neutral-7,
-.inline-detail-view .text-neutral-8,
-.inline-detail-view .text-neutral-9,
-.inline-detail-view .text-neutral-10,
-.inline-detail-view .text-gray-700,
-.inline-detail-view .text-gray-800,
-.inline-detail-view .text-gray-900 {
-  color: #fff;
+
+/*
+  Aggressive catch-all so any descendant text — including text styled via CSS
+  modules with hardcoded `var(--color-primary-8)` / `#000` etc. — becomes
+  white. Specific lighter / semantic colors are restored below by overrides
+  with higher specificity (extra class) and matching !important.
+*/
+.inline-detail-view * {
+  color: #fff !important;
 }
-.inline-detail-view .text-neutral-5,
+
+/* Lighter Tailwind text utilities → keep light blue for muted/secondary copy. */
+.inline-detail-view .text-primary-0,
+.inline-detail-view .text-primary-1,
+.inline-detail-view .text-primary-2,
+.inline-detail-view .text-primary-3,
+.inline-detail-view .text-primary-4,
+.inline-detail-view .text-primary-5,
 .inline-detail-view .text-neutral-4,
+.inline-detail-view .text-neutral-5,
+.inline-detail-view .text-gray-400,
 .inline-detail-view .text-gray-500,
 .inline-detail-view .text-gray-600,
 .inline-detail-view .text-label {
-  color: var(--color-primary-3);
+  color: var(--color-primary-3) !important;
 }
+
+/* Semantic colors keep their meaning. */
+.inline-detail-view .text-error,
+.inline-detail-view .text-destructive {
+  color: var(--color-error) !important;
+}
+.inline-detail-view .text-warning {
+  color: var(--color-warning) !important;
+}
+.inline-detail-view .text-secondary-1,
+.inline-detail-view .text-secondary-2,
+.inline-detail-view .text-secondary-3,
+.inline-detail-view .text-accent-light {
+  color: var(--color-secondary-1) !important;
+}
+
 .inline-detail-view a {
-  color: var(--color-primary-3);
+  color: var(--color-primary-3) !important;
 }
 .inline-detail-view a:hover {
-  color: #fff;
+  color: #fff !important;
+}
+
+/*
+  Images inside any inline detail tab (overview, analysis, …) get a white
+  card background so transparent images stay legible on the dark chrome,
+  plus a soft grey border with rounded corners.
+*/
+.inline-detail-view .secondary-scrollbar img,
+.inline-detail-view .secondary-scrollbar canvas {
+  background-color: #fff;
+  border: 1px solid var(--color-neutral-2);
+  border-radius: 0.5rem;
 }
 
 /* Section navigation pills on the left should match the dark chrome rather

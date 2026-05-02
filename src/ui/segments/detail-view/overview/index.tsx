@@ -49,7 +49,6 @@ import {
 } from '@/features/scan-config/types';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
-import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
 import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
@@ -358,8 +357,6 @@ export default async function Overview({
           return <Field key={field} className={className} field={field} data={entity} />;
         })}
       </div>
-
-      {'subject' in entity && <SubjectDetails className="mb-8" entity={entity} />}
 
       {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
         singleNeuronSimulationPayload && (
