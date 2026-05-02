@@ -1,10 +1,10 @@
 'use client';
 
 import { PlusOutlined } from '@ant-design/icons';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { config } from '@/config';
-import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
+import type { TWorkspaceScope } from '@/constants';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -43,8 +43,6 @@ export function DataScopeTabs() {
 }
 
 export function DataHeader() {
-  const searchParams = useSearchParams();
-  const scope = (searchParams.get('scope') as TWorkspaceScope) ?? WorkspaceScope.Public;
   const breakpoint = useDefaultBreakpoint();
 
   const onContribute = () => {
@@ -60,29 +58,27 @@ export function DataHeader() {
       <div className="flex max-w-1/2 items-center justify-center gap-2">
         <DataScopeTabs />
       </div>
-      {scope === WorkspaceScope.Project && (
-        <div className="max-w-1/2" id="upload-data-selector" data-testid="upload-data-selector">
-          <Button
-            rounded
-            variant="success"
-            size={breakpoint === 'xl' ? 'lg' : 'md'}
-            type="button"
-            onClick={onContribute}
-            className={cn(
-              'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
-              'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
-              'transition-all duration-300 ease-out',
-              'hover:scale-[1.02] active:scale-[0.98]',
-              'disabled:cursor-not-allowed disabled:opacity-70'
-            )}
-          >
-            <div className="flex items-center justify-between gap-5">
-              <span>Upload data</span>
-              <PlusOutlined className="ml-auto text-sm" />
-            </div>
-          </Button>
-        </div>
-      )}
+      <div className="max-w-1/2" id="upload-data-selector" data-testid="upload-data-selector">
+        <Button
+          rounded
+          variant="success"
+          size={breakpoint === 'xl' ? 'lg' : 'md'}
+          type="button"
+          onClick={onContribute}
+          className={cn(
+            'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+            'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
+            'transition-all duration-300 ease-out',
+            'hover:scale-[1.02] active:scale-[0.98]',
+            'disabled:cursor-not-allowed disabled:opacity-70'
+          )}
+        >
+          <div className="flex items-center justify-between gap-5">
+            <span>Upload data</span>
+            <PlusOutlined className="ml-auto text-sm" />
+          </div>
+        </Button>
+      </div>
     </div>
   );
 }

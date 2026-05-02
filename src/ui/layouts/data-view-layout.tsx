@@ -15,6 +15,7 @@ import {
   EntityNameDisplay,
   EntityNameDisplayWrapper,
 } from '@/ui/segments/explore/entity-name-display';
+import { cn } from '@/utils/css-class';
 
 import type { PropsWithChildren } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -39,10 +40,12 @@ export async function DataViewLayout({
   context,
   type,
   id,
+  inline = false,
 }: PropsWithChildren<{
   context: WorkspaceContext;
   type: TExtendedEntitiesTypeDict;
   id: string;
+  inline?: boolean;
 }>) {
   const { virtualLabId, projectId } = context;
   const entityType = getEntityByExtendedType({ type });
@@ -70,7 +73,14 @@ export async function DataViewLayout({
 
   if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     return (
-      <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3">
+      <div
+        className={cn(
+          'ml-3 flex h-full flex-col rounded-2xl border px-3',
+          inline
+            ? 'inline-detail-view bg-primary-9 text-white border-transparent ml-0'
+            : 'border-[rgb(217,217,217)]'
+        )}
+      >
         <div className="w-full flex items-center justify-between">
           {breadcrumbs}
           {closePage}
@@ -83,14 +93,21 @@ export async function DataViewLayout({
   if (!entityType.detailViewSections) return null;
 
   return (
-    <div className="relative ml-5 flex flex-col h-full rounded-md border border-[#D9D9D9]">
+    <div
+      className={cn(
+        'relative ml-5 flex flex-col h-full rounded-md border',
+        inline
+          ? 'inline-detail-view bg-primary-9 text-white border-transparent ml-0 rounded-2xl'
+          : 'border-[#D9D9D9]'
+      )}
+    >
       <div className="w-full flex items-center justify-between px-5 py-2">
         {breadcrumbs}
         {closePage}
       </div>
       <div className="flex h-full max-h-[calc(100%-56px)] overflow-hidden pt-2">
         <div className="w-1/5 pl-5">
-          <div className="flex flex-col gap-3">
+          <div className={cn('flex flex-col gap-3', inline && 'inline-detail-tabs')}>
             <DetailMenu sections={entityType.detailViewSections} />
           </div>
           <ActionMenu

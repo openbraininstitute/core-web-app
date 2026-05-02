@@ -15,9 +15,11 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default function Page({
   children,
+  detail,
   params,
 }: ServerSideComponentProp<WorkspaceContext, null> & {
   children: ReactNode;
+  detail: ReactNode;
 }) {
   const { projectId } = use(params);
   const dataKey = resolveDataKey({ projectId, section: AppUInterfaceSection.Data });
@@ -27,7 +29,7 @@ export default function Page({
   return (
     <DataLayout>
       <DataHeader />
-      <DataInnerLayout>
+      <DataInnerLayout detail={detail}>
         <ExploreDefaultContent dataKey={dataKey}>{children}</ExploreDefaultContent>
         <ContributionModal />
       </DataInnerLayout>

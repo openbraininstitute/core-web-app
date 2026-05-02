@@ -1,0 +1,7 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e7]:
+    - img [ref=e9]
+    - generic [ref=e11]:
+      - heading "Redirecting to secure login" [level=2] [ref=e12]
+      - paragraph [ref=e13]: Please wait while we redirect you to our secure authentication portal.
+  - alert [ref=e14]

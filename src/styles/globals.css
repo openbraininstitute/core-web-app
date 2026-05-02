@@ -579,3 +579,46 @@ dialog {
     animation-duration: 0ms !important;
   }
 }
+
+/*
+  When the detail view is rendered inline (parallel slot in the data browse
+  layout), invert text colors to match the blue chrome used by the mini detail
+  view. Lighter blue (primary-3) for muted/secondary text, white for primary
+  copy and previously-dark heading text.
+*/
+.inline-detail-view {
+  color: #fff;
+}
+.inline-detail-view .text-primary-8,
+.inline-detail-view .text-primary-9 {
+  color: #fff;
+}
+.inline-detail-view .text-neutral-5,
+.inline-detail-view .text-neutral-4,
+.inline-detail-view .text-gray-500,
+.inline-detail-view .text-label {
+  color: var(--color-primary-3);
+}
+.inline-detail-view a {
+  color: var(--color-primary-3);
+}
+.inline-detail-view a:hover {
+  color: #fff;
+}
+
+/* Section navigation pills on the left should match the dark chrome rather
+   than appear as white pills. Active state keeps the highlighted blue. */
+.inline-detail-view .inline-detail-tabs > a {
+  background-color: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+}
+.inline-detail-view .inline-detail-tabs > a:hover {
+  background-color: var(--color-primary-8);
+  color: #fff;
+}
+.inline-detail-view .inline-detail-tabs > a.bg-primary-8 {
+  background-color: var(--color-primary-8);
+  border-color: transparent;
+}
