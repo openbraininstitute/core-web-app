@@ -402,7 +402,7 @@ export default async function Overview({
   return (
     <div className="mb-5 rounded-lg border border-gray-300 p-5">
       <div className="mb-4 grid grid-cols-5 gap-4">
-        <div className="col-span-4 self-start [&>*:first-child]:mt-0 [&>*:first-child]:pt-0">
+        <div className="col-span-4 self-start -mt-2 [&>*:first-child]:mt-0 [&>*:first-child]:pt-0 [&>*:first-child]:ml-0 [&>*:first-child]:pl-0 [&_img]:ml-0 [&_canvas]:ml-0">
           {imageContent}
         </div>
         <div className="flex flex-col gap-4 self-start">
