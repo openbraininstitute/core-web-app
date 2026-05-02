@@ -19,7 +19,7 @@ import { classNames } from '@/util/utils';
 import ErrorPanel from '../../error';
 import FreeCreditsNotification from '../../free-credits-notification';
 import { MessageItem } from '../../message-item';
-import { atomRateLimit } from '../../state';
+import { atomRateLimit, pendingAiPromptAtom } from '../../state';
 import SuggestedQuestions from '../../suggested-questions';
 import DiffBar from '../diff-bar';
 import Footer from '../footer';
@@ -174,6 +174,14 @@ export default function Chat({ className, threadId }: ChatProps) {
       content,
     });
   };
+
+  const [pendingPrompt, setPendingPrompt] = useAtom(pendingAiPromptAtom);
+  React.useEffect(() => {
+    if (!pendingPrompt) return;
+    if (!threadId || isLoadingMessages || status !== 'ready') return;
+    setPendingPrompt(null);
+    handlePrompt(pendingPrompt);
+  }, [pendingPrompt, threadId, isLoadingMessages, status, setPendingPrompt]);
 
   // Toggle diff view on/off from the diff bar
   const handleToggleDiffs = React.useCallback(() => {

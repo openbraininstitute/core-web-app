@@ -6,6 +6,7 @@ import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { config } from '@/config';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
+import { AiQuickInput } from '@/ui/segments/project/get-started/elements/ai-quick-input';
 import { OpenBrainWatermark } from '@/ui/segments/project/get-started/elements/open-brain-watermark';
 import {
   getQuickAccessQuery,
@@ -60,6 +61,7 @@ export default async function Layout({
       <div id="project-main-content" className="h-full w-full overflow-hidden px-3">
         {children}
       </div>
+      <AiQuickInput />
       <OpenBrainWatermark />
     </div>
   );

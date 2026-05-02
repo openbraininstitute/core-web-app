@@ -13,6 +13,8 @@ const atomToolsInvertedSelection = atomWithStorage<string[]>(
 
 export const atomRateLimit = atom<AiAgentRateLimitEndpoint | null>(null);
 
+export const pendingAiPromptAtom = atom<string | null>(null);
+
 /**
  * Atom state for the tools selection.
  */
