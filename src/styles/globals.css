@@ -650,6 +650,21 @@ dialog {
   border-radius: 0.5rem;
 }
 
+/*
+  Text inside any white-backgrounded element flips back to dark navy so it
+  stays legible. Muted labels keep their grey for hierarchy.
+*/
+.inline-detail-view .bg-white,
+.inline-detail-view .bg-white * {
+  color: var(--color-primary-9) !important;
+}
+.inline-detail-view .bg-white .text-neutral-4,
+.inline-detail-view .bg-white .text-neutral-5,
+.inline-detail-view .bg-white .text-gray-500,
+.inline-detail-view .bg-white .text-label {
+  color: var(--color-neutral-4) !important;
+}
+
 /* Section navigation pills on the left should match the dark chrome rather
    than appear as white pills. Active state keeps the highlighted blue. */
 .inline-detail-view .inline-detail-tabs > a {

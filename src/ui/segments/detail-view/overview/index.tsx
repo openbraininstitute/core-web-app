@@ -6,6 +6,7 @@ import {
   EntityTypeDict,
   type ICellMorphology,
   type IElectricalCellRecording,
+  type IMEModel,
   type ISingleNeuronSynaptome,
 } from '@/api/entitycore/types';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
@@ -36,6 +37,7 @@ import {
 import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
 import { EmCellMeshMetadata } from '@/features/entities/em-cell-mesh';
 import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
+import { PreviewThumbnail } from '@/features/thumbnail/preview';
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
@@ -362,9 +364,55 @@ export default async function Overview({
       f.field !== EntityCoreFields.RegistrationDate
   );
 
+  const memodelEntity = entity as IMEModel;
+  const memodelOverview =
+    extendedType === ExtendedEntitiesTypeDict.Memodel ? (
+      <div className="grid grid-cols-2 gap-4">
+        {(['morphology', 'emodel'] as const).map((kind) => {
+          const part =
+            kind === 'morphology' ? memodelEntity.morphology : memodelEntity.emodel;
+          if (!part) return null;
+          const isMorph = kind === 'morphology';
+          const label = isMorph ? 'M-Model' : 'E-Model';
+          const typeLabel = isMorph ? 'M-Type' : 'E-Type';
+          const typeValues = isMorph
+            ? memodelEntity.morphology?.mtypes?.map((m) => m.pref_label).filter(Boolean)
+            : memodelEntity.emodel?.etypes?.map((e) => e.pref_label).filter(Boolean);
+          return (
+            <div
+              key={kind}
+              className="border-neutral-2 flex flex-col gap-3 rounded-lg border bg-white p-4"
+            >
+              <div className="flex items-baseline gap-2">
+                <span className="text-neutral-4 uppercase">{label}</span>
+                <span className="text-primary-7 text-base font-medium">{part.name}</span>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="shrink-0">
+                  <PreviewThumbnail entity={part} height={180} width={180} />
+                </div>
+                <div className="flex flex-1 flex-col gap-2">
+                  <div>
+                    <span className="text-neutral-4">{typeLabel}: </span>
+                    {typeValues && typeValues.length > 0 ? typeValues.join(', ') : '—'}
+                  </div>
+                  <div>
+                    <span className="text-neutral-4">Brain Region: </span>
+                    {part.brain_region?.name ?? '—'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    ) : null;
+
   const imageContent =
-    extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
-    singleNeuronSimulationPayload ? (
+    extendedType === ExtendedEntitiesTypeDict.Memodel ? (
+      memodelOverview
+    ) : extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
+      singleNeuronSimulationPayload ? (
       <MEModelDetails
         meModel={singleNeuronSimulationPayload.memodel}
         virtualLabId={context.virtualLabId}
