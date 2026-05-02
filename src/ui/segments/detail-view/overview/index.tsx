@@ -400,35 +400,37 @@ export default async function Overview({
     ) : null;
 
   return (
-    <div className="mb-5 grid grid-cols-3 gap-4 rounded-lg border border-gray-300 p-5">
-      <div className="col-span-2 self-start [&>*:first-child]:mt-0 [&>*:first-child]:pt-0">
-        {imageContent}
+    <div className="mb-5 rounded-lg border border-gray-300 p-5">
+      <div className="mb-4 grid grid-cols-5 gap-4">
+        <div className="col-span-4 self-start [&>*:first-child]:mt-0 [&>*:first-child]:pt-0">
+          {imageContent}
+        </div>
+        <div className="flex flex-col gap-4 self-start">
+          {createdByField && (
+            <Field
+              key={createdByField.field}
+              field={createdByField.field}
+              data={entity}
+            />
+          )}
+          {registrationDateField && (
+            <Field
+              key={registrationDateField.field}
+              field={registrationDateField.field}
+              data={entity}
+            />
+          )}
+        </div>
       </div>
-      <div className="flex flex-col gap-4 self-start">
-        {createdByField && (
-          <Field
-            key={createdByField.field}
-            field={createdByField.field}
-            data={entity}
-          />
-        )}
-        {registrationDateField && (
-          <Field
-            key={registrationDateField.field}
-            field={registrationDateField.field}
-            data={entity}
-          />
-        )}
+      <div className="text-primary-7 mb-4 break-words">{entity.description || '—'}</div>
+      <div className="grid grid-cols-3 gap-4">
+        {remainingCommonFields.map(({ className, field }) => (
+          <Field key={field} className={className} field={field} data={entity} />
+        ))}
+        {fields.map(({ className, field }) => (
+          <Field key={field} className={className} field={field} data={entity} />
+        ))}
       </div>
-      <div className="text-primary-7 col-span-3 break-words">
-        {entity.description || '—'}
-      </div>
-      {remainingCommonFields.map(({ className, field }) => (
-        <Field key={field} className={className} field={field} data={entity} />
-      ))}
-      {fields.map(({ className, field }) => (
-        <Field key={field} className={className} field={field} data={entity} />
-      ))}
     </div>
   );
 }
