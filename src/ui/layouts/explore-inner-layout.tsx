@@ -31,8 +31,11 @@ export function DataInnerLayout({ children, detail }: Props) {
     <motion.div
       id="data-inner-layout"
       className={cn(
-        'bg-background border-neutral-2 mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)]',
-        'gap-4 overflow-hidden rounded-2xl border p-2 [grid-area:main]'
+        'mx-2 mb-2 ml-3 grid h-full max-h-[calc(100vh-8rem)] w-[calc(100%-10px)]',
+        'gap-4 overflow-hidden [grid-area:main]',
+        detailExpanded
+          ? 'bg-transparent border-0 rounded-none p-0'
+          : 'bg-background border-neutral-2 rounded-2xl border p-2'
       )}
       initial={{
         gridTemplateColumns: '27rem 1fr',

@@ -589,13 +589,26 @@ dialog {
 .inline-detail-view {
   color: #fff;
 }
+.inline-detail-view .text-primary-6,
+.inline-detail-view .text-primary-7,
 .inline-detail-view .text-primary-8,
-.inline-detail-view .text-primary-9 {
+.inline-detail-view .text-primary-9,
+.inline-detail-view .text-dark,
+.inline-detail-view .text-black,
+.inline-detail-view .text-neutral-6,
+.inline-detail-view .text-neutral-7,
+.inline-detail-view .text-neutral-8,
+.inline-detail-view .text-neutral-9,
+.inline-detail-view .text-neutral-10,
+.inline-detail-view .text-gray-700,
+.inline-detail-view .text-gray-800,
+.inline-detail-view .text-gray-900 {
   color: #fff;
 }
 .inline-detail-view .text-neutral-5,
 .inline-detail-view .text-neutral-4,
 .inline-detail-view .text-gray-500,
+.inline-detail-view .text-gray-600,
 .inline-detail-view .text-label {
   color: var(--color-primary-3);
 }
