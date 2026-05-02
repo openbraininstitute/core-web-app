@@ -1,9 +1,11 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 
 import { useSanityContentForNewsList } from '@/components/LandingPage/content';
+import { cn } from '@/utils/css-class';
 
 import type { ContentForNewsItem } from '@/components/LandingPage/content';
 
@@ -58,7 +60,62 @@ function NewsCard({ news }: { news: ContentForNewsItem }) {
   );
 }
 
-export function NewsView() {
+function getItemKey(item: ContentForNewsItem) {
+  return item.slug ?? String(item.id);
+}
+
+function NewsTimelineList({
+  items,
+  activeKey,
+  onSelect,
+}: {
+  items: ContentForNewsItem[];
+  activeKey: string | null;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <div className="flex w-full flex-col gap-4">
+      {items.map((item) => {
+        const key = getItemKey(item);
+        const isActive = activeKey === key;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            aria-label={`View news article ${item.title}`}
+            onClick={() => onSelect(key)}
+            className={cn(
+              'border-neutral-2 flex w-full items-start gap-4 rounded-xl border bg-white p-4 text-left transition-colors',
+              isActive ? 'border-primary-7' : 'hover:border-primary-7'
+            )}
+          >
+            {item.imageURL && (
+              <div className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-lg">
+                <Image
+                  src={item.imageURL}
+                  alt={item.title}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              </div>
+            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <span className="text-neutral-4 text-xs font-semibold tracking-wide uppercase">
+                {formatDate(item.date)}
+              </span>
+              <h3 className="text-primary-9 text-base leading-snug font-semibold">{item.title}</h3>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function NewsView({ slot }: { slot?: 'nav' | 'content' } = {}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const newsList = useSanityContentForNewsList();
   const items = useMemo(
     () =>
@@ -67,6 +124,38 @@ export function NewsView() {
       ),
     [newsList]
   );
+
+  const activeKey = searchParams.get('article');
+  const activeItem = items.find((i) => getItemKey(i) === activeKey) ?? items[0] ?? null;
+
+  const handleSelect = (key: string) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('article', key);
+    router.replace(`${url.pathname}${url.search}`, { scroll: false });
+  };
+
+  if (slot === 'nav') {
+    if (!items.length) return null;
+    return (
+      <NewsTimelineList
+        items={items}
+        activeKey={activeItem ? getItemKey(activeItem) : null}
+        onSelect={handleSelect}
+      />
+    );
+  }
+
+  if (slot === 'content') {
+    return (
+      <div className="mb-32 h-full max-h-[calc(100vh-18rem)] w-full overflow-y-auto p-4">
+        {activeItem ? (
+          <NewsCard news={activeItem} />
+        ) : (
+          <p className="text-primary-9/70">No news available.</p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="border-neutral-2 flex h-full max-h-[calc(100vh-18rem)] w-full flex-col gap-4 overflow-hidden rounded-2xl border bg-transparent p-6">

@@ -74,13 +74,13 @@ export function HelpButtonsRow() {
               title={label}
               aria-pressed={isSelected}
               className={cn(
-                'group relative flex aspect-square h-[68px] w-[68px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[3px] overflow-hidden rounded-lg bg-white',
+                'group bg-primary-7 relative flex aspect-square h-[68px] w-[68px] shrink-0 cursor-pointer select-none flex-col items-center justify-center gap-[3px] overflow-hidden rounded-lg',
                 'border-2 transition-colors',
-                isSelected ? 'border-primary-7' : 'border-transparent'
+                isSelected ? 'border-primary-5' : 'border-transparent'
               )}
             >
-              <Icon className="text-primary-9 size-[18px]" />
-              <span className="text-primary-9 text-center text-[11px] leading-tight font-semibold">
+              <Icon className="size-[18px] text-white" />
+              <span className="text-center text-[11px] leading-tight font-semibold text-white">
                 {label}
               </span>
             </button>

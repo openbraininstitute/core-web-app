@@ -3,7 +3,13 @@ import { RiTeamLine } from '@remixicon/react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
-import { ExploreIcon, NotebookIcon, ReportsIcon, WorkflowIcon } from '@/components/icons/buttons';
+import {
+  ExploreIcon,
+  Home,
+  NotebookIcon,
+  ReportsIcon,
+  WorkflowIcon,
+} from '@/components/icons/buttons';
 import { config } from '@/config';
 import {
   DEFAULT_BRAIN_REGION_QUERY_ANNOTATION_VALUE,
@@ -11,6 +17,7 @@ import {
 } from '@/features/brain-region-hierarchy/context';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import {
   DropdownMenu,
@@ -18,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/ui/molecules/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { FeedbackPill } from '@/ui/segments/project/feedback-pill';
@@ -27,6 +35,55 @@ import { cleanSearchParams } from '@/utils/search-params';
 
 import type React from 'react';
 import type { ReactNode } from 'react';
+
+function HelpPill() {
+  const breakpoint = useDefaultBreakpoint();
+  const { virtualLabId, projectId } = useWorkspace();
+  const pathname = usePathname();
+  const isActive = getActiveSection(pathname) === 'help';
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge
+          asChild
+          rounded
+          id="workspace-help-pill"
+          className={cn(
+            'font-bold select-none cursor-pointer shrink-0',
+            'hover:shadow-sm',
+            'p-0! flex items-center justify-center',
+            breakpoint === 'xl' ? 'size-12!' : 'size-10!',
+            isActive
+              ? 'bg-primary-9! text-white! hover:bg-primary-9! hover:text-white!'
+              : 'bg-background text-primary-9 hover:bg-background'
+          )}
+          variant="outline"
+          size={breakpoint === 'xl' ? 'lg' : 'md'}
+        >
+          <Link
+            prefetch
+            href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/help`}
+            aria-label="Open help"
+          >
+            <Home className="h-5! w-5!" />
+          </Link>
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent
+        avoidCollisions
+        side="bottom"
+        sideOffset={1}
+        collisionPadding={{ bottom: 20 }}
+        className="text-primary-8 max-w-[200px] bg-white text-base text-balance shadow-lg"
+        arrowClassName="bg-white"
+      >
+        <div className="font-bold">Help</div>
+        <p className="hyphens-auto">Tutorials, glossary, guides and more.</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 type LinkItem = {
   id: string;
@@ -126,7 +183,8 @@ export function TopMenuNavigation() {
 
   if (customBreakpoint === 'mobile') {
     return (
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-2">
+        <HelpPill />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="md" rounded className="text-primary-9 h-10 w-10 p-0">
@@ -197,6 +255,36 @@ export function TopMenuNavigation() {
 
   return (
     <>
+      <div className="group flex w-max items-center justify-center gap-0">
+        <div className="relative flex items-center">
+          <Button
+            rounded
+            id="workspace-ai-trigger"
+            variant="outline"
+            size={breakpoint === 'xl' ? 'lg' : 'md'}
+            className={cn(
+              {
+                'bg-transparent! hover:bg-transparent! hover:text-primary-9! hover:shadow-sm':
+                  !isAiOpen,
+              },
+              'font-bold',
+              { 'w-12 justify-center!': breakpoint === 'xl' },
+              { 'w-10! justify-center!': breakpoint === 'l' },
+              'group relative flex items-center justify-center',
+              'transition-all duration-400 ease-out'
+            )}
+            active={isAiOpen}
+            aria-pressed={isAiOpen}
+            onClick={() => setAiPanelState(isAiOpen ? PanelState.Collapsed : PanelState.Expanded)}
+          >
+            AI
+          </Button>
+          <span className="text-primary-9 absolute top-full left-1/2 -translate-x-1/2 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            AI Assistant
+          </span>
+        </div>
+      </div>
+      <HelpPill />
       {hashedLinks.map(
         ({
           id,
@@ -262,35 +350,6 @@ export function TopMenuNavigation() {
         }
       )}
       <FeedbackPill />
-      <div className="group flex w-max items-center justify-center gap-0">
-        <div className="relative flex items-center">
-          <Button
-            rounded
-            id="workspace-ai-trigger"
-            variant="outline"
-            size={breakpoint === 'xl' ? 'lg' : 'md'}
-            className={cn(
-              {
-                'bg-transparent! hover:bg-transparent! hover:text-primary-9! hover:shadow-sm':
-                  !isAiOpen,
-              },
-              'font-bold',
-              { 'w-12 justify-center!': breakpoint === 'xl' },
-              { 'w-10! justify-center!': breakpoint === 'l' },
-              'group relative flex items-center justify-center',
-              'transition-all duration-400 ease-out'
-            )}
-            active={isAiOpen}
-            aria-pressed={isAiOpen}
-            onClick={() => setAiPanelState(isAiOpen ? PanelState.Collapsed : PanelState.Expanded)}
-          >
-            AI
-          </Button>
-          <span className="text-primary-9 absolute top-full left-1/2 -translate-x-1/2 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            AI Assistant
-          </span>
-        </div>
-      </div>
     </>
   );
 }

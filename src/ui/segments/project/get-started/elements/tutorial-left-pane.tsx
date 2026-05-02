@@ -29,7 +29,7 @@ export function TutorialLeftPane({
   guidesContent: GuidesContentsProps;
 }) {
   const [preview, setPreview] = useAtom(dataPreviewAtom);
-  const [view, setView] = useAtom(leftPaneViewAtom);
+  const [view] = useAtom(leftPaneViewAtom);
   const { slug } = useParams<{ slug: string }>();
   const lastSlugRef = useRef(slug);
 
@@ -37,9 +37,8 @@ export function TutorialLeftPane({
     if (slug !== lastSlugRef.current) {
       lastSlugRef.current = slug;
       setPreview(null);
-      setView(null);
     }
-  }, [slug, setPreview, setView]);
+  }, [slug, setPreview]);
 
   const helpHidden = view === null || view === 'tutorials';
 
@@ -50,11 +49,11 @@ export function TutorialLeftPane({
       {view === 'about' && (
         <AboutView blocks={aboutContent.aboutContent as PortableTextBlock[] | undefined} />
       )}
-      {view === 'terms' && <TermsView />}
-      {view === 'glossary' && <GlossarySection />}
-      {view === 'features' && <FeaturesSection />}
+      {view === 'terms' && <TermsView slot="content" />}
+      {view === 'glossary' && <GlossarySection slot="content" />}
+      {view === 'features' && <FeaturesSection slot="content" />}
       {view === 'pricing' && <PricingView />}
-      {view === 'news' && <NewsView />}
+      {view === 'news' && <NewsView slot="content" />}
       {view === 'publications' && <PublicationsView />}
     </>
   );

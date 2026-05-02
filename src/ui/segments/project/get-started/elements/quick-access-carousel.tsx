@@ -57,7 +57,7 @@ function GroupRow({
 }) {
   const preview = useAtomValue(dataPreviewAtom);
   const view = useAtomValue(leftPaneViewAtom);
-  const collapsed = view !== null;
+  const collapsed = view !== null && view !== 'tutorials';
   const visibleItems = collapsed ? items.slice(0, 1) : items;
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const scrollBy = (direction: 'left' | 'right') => {

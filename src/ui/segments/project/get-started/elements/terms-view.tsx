@@ -59,7 +59,74 @@ function splitIntoCards(content: ContentForRichText): TermsCard[] {
   return cards.filter((c) => c.title || c.content.length > 0);
 }
 
-export function TermsView() {
+function TermsNavList({
+  sections,
+  currentSlug,
+  onNavClick,
+}: {
+  sections: TermsSection[];
+  currentSlug: string | null;
+  onNavClick: (slug: string) => void;
+}) {
+  return (
+    <div className="flex w-full flex-col gap-y-6">
+      <div className="flex flex-col gap-y-2">
+        <h3 className="text-primary-9 text-sm font-bold tracking-wide uppercase">Sections</h3>
+        <div className="flex flex-col gap-y-1.5">
+          {sections.map((section) => {
+            const isActive = currentSlug === section.slug;
+            return (
+              <button
+                type="button"
+                aria-label={`View terms section ${section.title}`}
+                key={section.slug}
+                onClick={() => onNavClick(section.slug)}
+                className={cn(
+                  'text-primary-9 flex w-full items-center justify-between text-left text-base',
+                  isActive && 'font-bold'
+                )}
+              >
+                {section.title}
+                {isActive && <span className="bg-primary-9 h-2 w-2 rounded-full" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TermsContentList({ sections }: { sections: TermsSection[] }) {
+  return (
+    <div className="flex flex-col items-start gap-y-8">
+      {sections.map((section) => (
+        <section
+          id={`terms-section-${section.slug}`}
+          key={section.slug}
+          className="flex w-full scroll-mt-4 flex-col items-start gap-y-4"
+        >
+          <h2 className="text-primary-9 text-2xl font-bold">{section.title}</h2>
+          <div className="flex w-full flex-col gap-4">
+            {splitIntoCards(section.content).map((card, index) => (
+              <div
+                key={card.title ?? `card-${index}`}
+                className="border-neutral-2 text-primary-9 flex w-full flex-col rounded-xl border border-solid bg-white p-6"
+              >
+                {card.title && (
+                  <h3 className="text-primary-9 mb-2 text-2xl font-bold">{card.title}</h3>
+                )}
+                <SanityContentRTF value={card.content} />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+export function TermsView({ slot }: { slot?: 'nav' | 'content' } = {}) {
   const content = useSanityContentRTF(EnumSection.TermsAndConditions);
   const sections = splitIntoSections(content);
   const searchParams = useSearchParams();
@@ -82,34 +149,32 @@ export function TermsView() {
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  if (slot === 'nav') {
+    return (
+      <div className="border-neutral-2 bg-background w-full overflow-y-auto rounded-2xl border p-4">
+        <TermsNavList sections={sections} currentSlug={currentSlug} onNavClick={handleNavClick} />
+      </div>
+    );
+  }
+
+  if (slot === 'content') {
+    return (
+      <div
+        className={cn(
+          'text-primary-9 mb-32 h-full max-h-[calc(100vh-18rem)] w-full overflow-y-auto p-4',
+          '[&_ul.sanityContentItems>li]:!list-none',
+          styles.content
+        )}
+      >
+        <TermsContentList sections={sections} />
+      </div>
+    );
+  }
+
   return (
     <div className="border-neutral-2 bg-background mb-32 flex h-full max-h-[calc(100vh-18rem)] w-full overflow-hidden rounded-2xl border p-4">
       <div className="border-neutral-2 w-1/4 shrink-0 overflow-y-auto border-r pr-4">
-        <div className="flex w-full flex-col gap-y-6">
-          <div className="flex flex-col gap-y-2">
-            <h3 className="text-primary-9 text-sm font-bold tracking-wide uppercase">Sections</h3>
-            <div className="flex flex-col gap-y-1.5">
-              {sections.map((section) => {
-                const isActive = currentSlug === section.slug;
-                return (
-                  <button
-                    type="button"
-                    aria-label={`View terms section ${section.title}`}
-                    key={section.slug}
-                    onClick={() => handleNavClick(section.slug)}
-                    className={cn(
-                      'text-primary-9 flex w-full items-center justify-between text-left text-base',
-                      isActive && 'font-bold'
-                    )}
-                  >
-                    {section.title}
-                    {isActive && <span className="bg-primary-9 h-2 w-2 rounded-full" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        <TermsNavList sections={sections} currentSlug={currentSlug} onNavClick={handleNavClick} />
       </div>
       <div
         className={cn(
@@ -118,30 +183,7 @@ export function TermsView() {
           styles.content
         )}
       >
-        <div className="flex flex-col items-start gap-y-8">
-          {sections.map((section) => (
-            <section
-              id={`terms-section-${section.slug}`}
-              key={section.slug}
-              className="flex w-full scroll-mt-4 flex-col items-start gap-y-4"
-            >
-              <h2 className="text-primary-9 text-2xl font-bold">{section.title}</h2>
-              <div className="flex w-full flex-col gap-4">
-                {splitIntoCards(section.content).map((card, index) => (
-                  <div
-                    key={card.title ?? `card-${index}`}
-                    className="border-neutral-2 text-primary-9 flex w-full flex-col rounded-xl border border-solid bg-white p-6"
-                  >
-                    {card.title && (
-                      <h3 className="text-primary-9 mb-2 text-2xl font-bold">{card.title}</h3>
-                    )}
-                    <SanityContentRTF value={card.content} />
-                  </div>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+        <TermsContentList sections={sections} />
       </div>
     </div>
   );

@@ -28,7 +28,6 @@ import {
 } from '@/ui/molecules/select';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { dataPreviewAtom } from '@/ui/segments/project/get-started/elements/data-preview-atom';
-import { leftPaneViewAtom } from '@/ui/segments/project/get-started/elements/left-pane-view-atom';
 import {
   QuickAccessGroupDict,
   type TQuickAccessGroup,
@@ -233,7 +232,6 @@ export function SingleCardItem({
 }) {
   const { push: navigate } = useRouter();
   const setDataPreview = useSetAtom(dataPreviewAtom);
-  const setLeftPaneView = useSetAtom(leftPaneViewAtom);
   const notification = useAppNotification();
   const { mutate: redirect, isPending } = useMutation({
     mutationFn: async () => {
@@ -246,7 +244,6 @@ export function SingleCardItem({
         return;
       }
       if (group === QuickAccessGroupDict.Data && compact) {
-        setLeftPaneView(null);
         setDataPreview({
           kind: 'data',
           entityId: entity.id,
@@ -260,7 +257,6 @@ export function SingleCardItem({
         const asset = (entity as INotebook).assets.find(
           (n) => n.label === AssetLabel.jupyter_notebook
         );
-        setLeftPaneView(null);
         setDataPreview({
           kind: 'notebook',
           entityId: entity.id,

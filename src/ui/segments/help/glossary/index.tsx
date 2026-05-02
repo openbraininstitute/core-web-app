@@ -17,7 +17,7 @@ export type CellTypeContentProps = {
   data: CellTypeContentForGlossaryItem[];
 };
 
-export default function GlossarySection() {
+export default function GlossarySection({ slot }: { slot?: 'nav' | 'content' } = {}) {
   const [mTypeContent, setMTypeContent] = useState<any[]>([]);
   const [eTypeContent, setETypeContent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +75,22 @@ export default function GlossarySection() {
 
   if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (slot === 'nav') {
+    return (
+      <div className="border-neutral-2 bg-background w-full overflow-y-auto rounded-2xl border p-4">
+        <GlossaryNavigation glossarySectionsTypes={glossarySectionsTypes} />
+      </div>
+    );
+  }
+
+  if (slot === 'content') {
+    return (
+      <div className="mb-32 h-full max-h-[calc(100vh-18rem)] w-full overflow-y-auto p-4">
+        <GlossaryContent glossarySections={glossarySectionsTypes} />
+      </div>
+    );
   }
 
   return (
