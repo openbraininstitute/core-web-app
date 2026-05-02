@@ -73,14 +73,7 @@ export async function DataViewLayout({
 
   if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     return (
-      <div
-        className={cn(
-          'ml-3 flex h-full flex-col rounded-2xl border px-3',
-          inline
-            ? 'inline-detail-view bg-primary-9 text-white border-transparent ml-0'
-            : 'border-[rgb(217,217,217)]'
-        )}
-      >
+      <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3">
         <div className="w-full flex items-center justify-between">
           {breadcrumbs}
           {closePage}
@@ -101,10 +94,25 @@ export async function DataViewLayout({
           : 'border-[#D9D9D9]'
       )}
     >
-      <div className="w-full flex items-center justify-between px-5 py-2">
-        {breadcrumbs}
-        {closePage}
-      </div>
+      {inline ? (
+        <div className="flex w-full items-center px-5 py-2">
+          <div className="flex w-1/5 shrink-0 items-center [&>div]:pt-0">{breadcrumbs}</div>
+          <div className="flex w-4/5 items-center justify-between gap-4 pl-10 min-w-0">
+            <h1
+              className="truncate text-2xl font-bold text-white leading-none"
+              title={entity.name}
+            >
+              {entity.name}
+            </h1>
+            <div className="[&_.mt-3]:mt-0">{closePage}</div>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full flex items-center justify-between px-5 py-2">
+          {breadcrumbs}
+          {closePage}
+        </div>
+      )}
       <div className="flex h-full max-h-[calc(100%-56px)] overflow-hidden pt-2">
         <div className="w-1/5 pl-5">
           <div className={cn('flex flex-col gap-3', inline && 'inline-detail-tabs')}>
@@ -122,8 +130,14 @@ export async function DataViewLayout({
         </div>
         <div className="w-4/5 pr-1">
           <div className="secondary-scrollbar h-full w-full overflow-x-auto overflow-y-auto p-10 pt-0">
-            <EntityNameDisplay name={entity.name} />
-            <EntityNameDisplayWrapper>{children}</EntityNameDisplayWrapper>
+            {inline ? (
+              <div className="h-full">{children}</div>
+            ) : (
+              <>
+                <EntityNameDisplay name={entity.name} />
+                <EntityNameDisplayWrapper>{children}</EntityNameDisplayWrapper>
+              </>
+            )}
           </div>
         </div>
       </div>
