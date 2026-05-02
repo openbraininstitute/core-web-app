@@ -1,11 +1,10 @@
 'use client';
 
-import { LeftOutlined, RightOutlined, VideoCameraOutlined } from '@ant-design/icons';
+import { PlayCircleFilled, VideoCameraOutlined } from '@ant-design/icons';
 import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useRef } from 'react';
 
 import { ImageIcon } from '@/components/icons/image-states';
 import { config } from '@/config';
@@ -36,6 +35,10 @@ export function TutorialCard({
       title={t}
     >
       <span className="line-clamp-3 px-3 text-center text-sm font-semibold">{t}</span>
+      <PlayCircleFilled
+        aria-hidden
+        className="text-white/80 group-hover:text-white! absolute right-2 bottom-2 text-base"
+      />
     </Link>
   );
 }
@@ -43,26 +46,10 @@ export function TutorialCard({
 export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
   const { slug } = useParams<{ slug: string }>();
   const preview = useAtomValue(dataPreviewAtom);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const scrollBy = (direction: 'left' | 'right') => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({
-      left: el.clientWidth * 0.8 * (direction === 'left' ? -1 : 1),
-      behavior: 'smooth',
-    });
-  };
 
   return (
     <section id="tutorials-list" className="w-full flex flex-col">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-primary-9 text-xl font-bold">Tutorials</h2>
-        <ScrollArrows onScroll={scrollBy} />
-      </div>
-      <div
-        ref={scrollRef}
-        className="flex w-full gap-1.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
+      <div className="flex w-full gap-1.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tutorials.map((p) => (
           <div key={p.url} className="w-52 shrink-0 flex">
             <TutorialCard title={p.title} slug={p.slug} isSelected={!preview && slug === p.slug} />
@@ -70,33 +57,6 @@ export function TutorialGrid({ tutorials }: { tutorials: Array<TTutorial> }) {
         ))}
       </div>
     </section>
-  );
-}
-
-export function ScrollArrows({ onScroll }: { onScroll: (direction: 'left' | 'right') => void }) {
-  const baseClass = cn(
-    'grid size-7 place-items-center text-neutral-4 transition-colors',
-    'hover:text-primary-9 cursor-pointer'
-  );
-  return (
-    <div className="flex items-center gap-1">
-      <button
-        type="button"
-        aria-label="Scroll left"
-        onClick={() => onScroll('left')}
-        className={baseClass}
-      >
-        <LeftOutlined className="text-xs" />
-      </button>
-      <button
-        type="button"
-        aria-label="Scroll right"
-        onClick={() => onScroll('right')}
-        className={baseClass}
-      >
-        <RightOutlined className="text-xs" />
-      </button>
-    </div>
   );
 }
 

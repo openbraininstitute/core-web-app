@@ -1,5 +1,6 @@
 'use client';
 
+import { FeedbackPill } from '@/ui/segments/project/feedback-pill';
 import { Wallet } from '@/ui/segments/project/balance';
 import { SpaceSwitcher } from '@/ui/segments/workspaces/space-switcher';
 import { TopMenuNavigation } from '@/ui/segments/workspaces/top-menu-nav';
@@ -20,7 +21,8 @@ export function WorkspaceTopMenu({ className }: Props) {
           <TopMenuNavigation />
         </HydrateWrapper>
       </div>
-      <div className="flex items-start justify-center gap-2">
+      <div className="flex items-center justify-center gap-2">
+        <FeedbackPill />
         <Wallet />
         <SpaceSwitcher className="w-93" />
       </div>

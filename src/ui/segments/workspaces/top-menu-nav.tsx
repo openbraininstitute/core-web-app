@@ -28,7 +28,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
-import { FeedbackPill } from '@/ui/segments/project/feedback-pill';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 import { cleanSearchParams } from '@/utils/search-params';
@@ -349,7 +348,6 @@ export function TopMenuNavigation() {
           );
         }
       )}
-      <FeedbackPill />
     </>
   );
 }

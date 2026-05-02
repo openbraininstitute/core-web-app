@@ -359,7 +359,8 @@ export function SingleCardItem({
               'absolute bottom-2 left-2 max-w-[calc(100%-1rem)] rounded-full px-3 py-1',
               'bg-white/90 backdrop-blur-sm',
               'text-primary-8 text-xs font-bold',
-              'group-hover:bg-primary-8 group-hover:text-white flex items-center gap-1.5'
+              'group-hover:bg-primary-8 group-hover:text-white flex items-center gap-1.5',
+              'opacity-0 transition-opacity duration-150 group-hover:opacity-100'
             )}
             title={title}
           >
