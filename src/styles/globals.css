@@ -667,17 +667,23 @@ dialog {
 
 /* Section navigation pills on the left should match the dark chrome rather
    than appear as white pills. Active state keeps the highlighted blue. */
+.inline-detail-view .inline-detail-tabs > a,
+.inline-detail-view .inline-detail-tabs > a * {
+  background-color: transparent !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
 .inline-detail-view .inline-detail-tabs > a {
-  background-color: transparent;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
 }
-.inline-detail-view .inline-detail-tabs > a:hover {
-  background-color: var(--color-primary-8);
-  color: #fff;
+.inline-detail-view .inline-detail-tabs > a:hover,
+.inline-detail-view .inline-detail-tabs > a:hover * {
+  background-color: var(--color-primary-8) !important;
+  color: #fff !important;
 }
-.inline-detail-view .inline-detail-tabs > a.bg-primary-8 {
-  background-color: var(--color-primary-8);
-  border-color: transparent;
+.inline-detail-view .inline-detail-tabs > a.bg-primary-8,
+.inline-detail-view .inline-detail-tabs > a.bg-primary-8 * {
+  background-color: var(--color-primary-8) !important;
+  color: #fff !important;
+  border-color: transparent !important;
 }
