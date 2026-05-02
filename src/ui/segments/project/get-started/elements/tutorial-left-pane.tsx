@@ -52,7 +52,7 @@ export function TutorialLeftPane({
       {view === 'terms' && <TermsView slot="content" />}
       {view === 'glossary' && <GlossarySection slot="content" />}
       {view === 'features' && <FeaturesSection slot="content" />}
-      {view === 'pricing' && <PricingView />}
+      {view === 'pricing' && <PricingView slot="content" />}
       {view === 'news' && <NewsView slot="content" />}
       {view === 'publications' && <PublicationsView />}
     </>
