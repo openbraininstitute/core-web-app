@@ -14,6 +14,7 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
@@ -350,53 +351,84 @@ export default async function Overview({
     );
   }
 
-  return (
-    <>
-      <div className="mb-5 grid grid-cols-3 gap-4 rounded-lg border border-gray-300 p-5">
-        {[...commonFields, ...fields].map(({ className, field }) => {
-          return <Field key={field} className={className} field={field} data={entity} />;
-        })}
-      </div>
+  const createdByField = commonFields.find((f) => f.field === EntityCoreFields.CreatedBy);
+  const registrationDateField = commonFields.find(
+    (f) => f.field === EntityCoreFields.RegistrationDate
+  );
+  const remainingCommonFields = commonFields.filter(
+    (f) =>
+      f.field !== EntityCoreFields.Description &&
+      f.field !== EntityCoreFields.CreatedBy &&
+      f.field !== EntityCoreFields.RegistrationDate
+  );
 
-      {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
-        singleNeuronSimulationPayload && (
-          <MEModelDetails
-            meModel={singleNeuronSimulationPayload.memodel}
-            virtualLabId={context.virtualLabId}
-            projectId={context.projectId}
-          />
-        )}
-      {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation &&
-        singleNeuronSynaptomeSimulationPayload && (
-          <SynaptomeDetails
-            meModel={singleNeuronSynaptomeSimulationPayload.memodel}
-            synaptome={singleNeuronSynaptomeSimulationPayload.synaptome}
-            virtualLabId={context.virtualLabId}
-            projectId={context.projectId}
-          />
-        )}
-      {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
-      {includes(
+  const imageContent =
+    extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
+    singleNeuronSimulationPayload ? (
+      <MEModelDetails
+        meModel={singleNeuronSimulationPayload.memodel}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+      />
+    ) : extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation &&
+      singleNeuronSynaptomeSimulationPayload ? (
+      <SynaptomeDetails
+        meModel={singleNeuronSynaptomeSimulationPayload.memodel}
+        synaptome={singleNeuronSynaptomeSimulationPayload.synaptome}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+      />
+    ) : circuitTypes.includes(extendedType) ? (
+      <CircuitViz circuit={entity as ICircuit} />
+    ) : includes(
         [
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.UniversalCellMorphology,
           ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
         ],
         extendedType
-      ) && <CellMorphologyViewer entity={entity as ICellMorphology} context={context} />}
-      {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
-        <EphysViewer entity={entity as IElectricalCellRecording} ctx={context} />
-      )}
-      {extendedType === ExtendedEntitiesTypeDict.IonChannelRecording && (
-        <IonChannelRecordingViewer resource={entity as IIonChannelRecording} ctx={context} />
-      )}
-      {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
-        <IonChannelModelOverview icm={entity as IonChannelModel} ctx={context} />
-      )}
-      {extendedType === ExtendedEntitiesTypeDict.EMCellMesh && (
-        <EmCellMeshMetadata id={entity.id} ctx={context} />
-      )}
-    </>
+      ) ? (
+      <CellMorphologyViewer entity={entity as ICellMorphology} context={context} />
+    ) : extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording ? (
+      <EphysViewer entity={entity as IElectricalCellRecording} ctx={context} />
+    ) : extendedType === ExtendedEntitiesTypeDict.IonChannelRecording ? (
+      <IonChannelRecordingViewer resource={entity as IIonChannelRecording} ctx={context} />
+    ) : extendedType === ExtendedEntitiesTypeDict.IonChannelModel ? (
+      <IonChannelModelOverview icm={entity as IonChannelModel} ctx={context} />
+    ) : extendedType === ExtendedEntitiesTypeDict.EMCellMesh ? (
+      <EmCellMeshMetadata id={entity.id} ctx={context} />
+    ) : null;
+
+  return (
+    <div className="mb-5 grid grid-cols-3 gap-4 rounded-lg border border-gray-300 p-5">
+      <div className="col-span-2">{imageContent}</div>
+      <div className="flex flex-col gap-4">
+        {createdByField && (
+          <Field
+            key={createdByField.field}
+            field={createdByField.field}
+            data={entity}
+          />
+        )}
+        {registrationDateField && (
+          <Field
+            key={registrationDateField.field}
+            field={registrationDateField.field}
+            data={entity}
+          />
+        )}
+      </div>
+      <div className="col-span-3">
+        <div className="text-neutral-4 uppercase">Description</div>
+        <div className="text-primary-7 mt-2 break-words">{entity.description || '—'}</div>
+      </div>
+      {remainingCommonFields.map(({ className, field }) => (
+        <Field key={field} className={className} field={field} data={entity} />
+      ))}
+      {fields.map(({ className, field }) => (
+        <Field key={field} className={className} field={field} data={entity} />
+      ))}
+    </div>
   );
 }
 
