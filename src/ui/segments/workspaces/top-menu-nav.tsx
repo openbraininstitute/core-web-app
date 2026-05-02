@@ -1,5 +1,6 @@
 import { MenuOutlined } from '@ant-design/icons';
 import { RiTeamLine } from '@remixicon/react';
+import { useSetAtom } from 'jotai';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
@@ -28,6 +29,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
+import { leftPaneViewAtom } from '@/ui/segments/project/get-started/elements/left-pane-view-atom';
 import { cn } from '@/utils/css-class';
 import { getActiveSection } from '@/utils/get-section';
 import { cleanSearchParams } from '@/utils/search-params';
@@ -40,6 +42,7 @@ function HelpPill() {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
   const isActive = getActiveSection(pathname) === 'help';
+  const setLeftPaneView = useSetAtom(leftPaneViewAtom);
 
   return (
     <Tooltip>
@@ -64,6 +67,7 @@ function HelpPill() {
             prefetch
             href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/help`}
             aria-label="Open help"
+            onClick={() => setLeftPaneView('tutorials')}
           >
             <Home className="h-5! w-5!" />
           </Link>

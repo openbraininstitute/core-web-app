@@ -15,4 +15,4 @@ export type LeftPaneView =
   | 'publications'
   | null;
 
-export const leftPaneViewAtom = atom<LeftPaneView>(null);
+export const leftPaneViewAtom = atom<LeftPaneView>('tutorials');
