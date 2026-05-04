@@ -292,17 +292,22 @@ export type StandalonePaymentResponse = {
   card_brand: string;
 };
 
-type UserProfile = {
-  first_name: string | null;
-  last_name: string | null;
-  email: string | null;
-  street: string | null;
-  postal_code: string | null;
-  locality: string | null;
-  region: string | null;
-  country: string | null;
+export type TUpdateUserProfileRequest = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  street: string;
+  postal_code: string;
+  locality: string;
+  region: string;
+  country: string;
 };
-export type UpdateUserProfileRequest = Partial<UserProfile>;
+
+export type TOnboardingUpdateUserProfileRequest = {
+  first_name: string;
+  last_name: string;
+  country?: string | null;
+};
 
 export type UserProfileResponse = {
   id: string;
@@ -312,10 +317,10 @@ export type UserProfileResponse = {
   last_name: string;
   email_verified: boolean;
   address: {
+    region?: string;
     street?: string;
     postal_code?: string;
     locality?: string;
-    region?: string;
     country?: string;
   };
 };

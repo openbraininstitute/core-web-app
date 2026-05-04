@@ -1,20 +1,31 @@
-import { RuleObject } from 'antd/es/form';
+import { z } from 'zod';
 
-import { ProfileFormData } from './types';
 import { isEMailFromForbiddenCountry } from '@/util/email';
 
-export function validate(data: ProfileFormData): boolean {
-  const forbiddenCountry = isEMailFromForbiddenCountry(data.email);
-  return !forbiddenCountry;
-}
-
-export function validateEMail(_rule: RuleObject, email: string): Promise<void> {
-  const forbiddenCountry = isEMailFromForbiddenCountry(email);
-  if (!forbiddenCountry) return Promise.resolve();
-
-  return Promise.reject(
-    new Error(
-      `The platform is not available in ${forbiddenCountry}. Please select a different email.`
-    )
-  );
-}
+export const ProfileFormSchema = z.object({
+  first_name: z
+    .string({ error: 'Please provide a first name!' })
+    .trim()
+    .min(1, { error: 'Please provide a first name!' }),
+  last_name: z
+    .string({ error: 'Please provide a last name!' })
+    .trim()
+    .min(1, { error: 'Please provide a last name!' }),
+  street: z.string().optional(),
+  postal_code: z.string().optional(),
+  locality: z.string().optional(),
+  region: z.string().optional(),
+  country: z
+    .string({ error: 'Please select a country!' })
+    .trim()
+    .min(1, { error: 'Please select a country!' }),
+  email: z.email({ error: 'Please provide a valid email!' }).superRefine((email, ctx) => {
+    const forbiddenCountry = isEMailFromForbiddenCountry(email);
+    if (forbiddenCountry) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `The platform is not available in ${forbiddenCountry}. Please select a different email.`,
+      });
+    }
+  }),
+});
