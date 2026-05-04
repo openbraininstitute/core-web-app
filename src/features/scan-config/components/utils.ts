@@ -31,3 +31,11 @@ export function getLatestSimExecStatus(remoteStatus: ActivityStatus, localStatus
 
   return simExecStatusListOrdered[latestStatus];
 }
+
+export const LEGACY_SIMULATION_ERROR_CODE = 'LEGACY_SIMULATION_ERROR';
+export const SCAN_CONFIG_ERRORS = {
+  [LEGACY_SIMULATION_ERROR_CODE]: {
+    title: 'Configuration is not available',
+    message: 'Configuration currently not viewable for historic simulations',
+  },
+};

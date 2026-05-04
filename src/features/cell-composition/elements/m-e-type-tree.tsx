@@ -1,5 +1,4 @@
 import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
 import { useParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { match, P } from 'ts-pattern';
@@ -13,6 +12,7 @@ import { DensityOrCountToggle } from '@/features/cell-composition/elements/compo
 import { Node } from '@/features/cell-composition/elements/default-node';
 import { getMetric, metricToUnit } from '@/features/cell-composition/elements/helpers';
 import { classNames } from '@/util/utils';
+import { createLoadableAtom } from '@/utils/jotai-loadable';
 import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { RenderNodeProps } from '@/components/tree/types';
@@ -28,14 +28,14 @@ export function CellCompositionMETypeTree() {
   const [densityOrCount, setDensityOrCount] = useState<DensityOrCount>('count');
 
   const cellCompositionForRegion = useMemo(
-    () => loadable(cellCompositionAtom({ brainRegionId: node.id })),
+    () => createLoadableAtom(cellCompositionAtom({ brainRegionId: node.id })),
     [node.id]
   );
 
   const composition = useAtomValue(cellCompositionForRegion);
   const annotations = useAtomValue(
     useMemo(
-      () => loadable(annotationTypesAtom({ virtualLabId, projectId })),
+      () => createLoadableAtom(annotationTypesAtom({ virtualLabId, projectId })),
       [virtualLabId, projectId]
     )
   );

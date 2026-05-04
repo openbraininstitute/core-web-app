@@ -2,7 +2,9 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 
 import { viewDefForIonChannelModelSimulation } from './ion-channel-model-simulation';
 import { viewDefForMEModelCircuitSimulation } from './memodel-circuit-simulation';
+import { viewDefForMicrocircuitSimulation } from './microcircuit-simulation';
 import { viewDefForPairedNeuronCircuitSimulation } from './paired-neuron-circuit-simulation';
+import { viewDefForRegionCircuitSimulation } from './region-circuit-simulation';
 import { viewDefForSimulationCampaign } from './simulation-campaign';
 import { viewDefForSingleNeuronCircuitSimulation } from './single-neuron-circuit-simulation';
 import { viewDefForSingleNeuronSimulation } from './single-neuron-simulation';
@@ -19,6 +21,8 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation]: viewDefForSingleNeuronCircuitSimulation,
   [ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation]: viewDefForPairedNeuronCircuitSimulation,
   [ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation]: viewDefForSmallMicrocircuitSimulation,
+  [ExtendedEntitiesTypeDict.MicrocircuitSimulation]: viewDefForMicrocircuitSimulation,
   [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: viewDefForMEModelCircuitSimulation,
   [ExtendedEntitiesTypeDict.IonChannelModelSimulation]: viewDefForIonChannelModelSimulation,
+  [ExtendedEntitiesTypeDict.RegionCircuitSimulation]: viewDefForRegionCircuitSimulation,
 };

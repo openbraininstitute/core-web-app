@@ -1,7 +1,7 @@
 import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAtomValue } from 'jotai';
-import { loadable, unwrap } from 'jotai/utils';
+import { unwrap } from 'jotai/utils';
 import {
   type ComponentProps,
   startTransition,
@@ -17,6 +17,7 @@ import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
+import { createLoadableAtom } from '@/utils/jotai-loadable';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/context';
@@ -48,8 +49,9 @@ export function BrainRegionDropdown({
     useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom), [])
   );
   const isLoading =
-    useAtomValue(loadable(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom)).state ===
-    'loading';
+    useAtomValue(
+      useMemo(() => createLoadableAtom(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom), [])
+    ).state === 'loading';
 
   const [selectedNode, updateSelectedNode] = useState(defaultBrainRegion);
 

@@ -20,6 +20,20 @@ import type { PropsWithChildren } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
+const LeftMenuUnsupportedEntityTypes = [
+  ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+  ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+  ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+  ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+  ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+  ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+  ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
+  ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+  ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+] as const;
+
 export async function DataViewLayout({
   children,
   context,
@@ -54,25 +68,10 @@ export async function DataViewLayout({
   );
   const closePage = <ClosePage url={parentLink} />;
 
-  if (
-    includes(
-      [
-        ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
-        ExtendedEntitiesTypeDict.MicrocircuitSimulation,
-        ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
-        ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
-        ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
-        ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
-        ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
-        ExtendedEntitiesTypeDict.IonChannelModelSimulation,
-        ExtendedEntitiesTypeDict.SkeletonizationCampaign,
-      ],
-      type
-    )
-  ) {
+  if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     return (
-      <div className="ml-5 flex h-full flex-col rounded-md border border-[rgb(217,217,217)] px-5 py-3">
-        <div className="w-full flex items-center justify-between pb-4">
+      <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3">
+        <div className="w-full flex items-center justify-between">
           {breadcrumbs}
           {closePage}
         </div>
@@ -95,6 +94,8 @@ export async function DataViewLayout({
             <DetailMenu sections={entityType.detailViewSections} />
           </div>
           <ActionMenu
+            // TODO: fix entity type
+            // @ts-expect-error this is a temporary fix
             entity={entity}
             type={type}
             ctx={{ virtualLabId, projectId }}

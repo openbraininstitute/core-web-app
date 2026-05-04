@@ -1,9 +1,9 @@
 'use client';
 
-/* eslint-disable no-param-reassign */
-import { ColoringType, MorphologyCanvas } from '@bbp/morphoviewer';
 import { atom, useAtom } from 'jotai';
 import { useEffect, useMemo } from 'react';
+
+import { atomFamilyWithExpiration } from '@/util/atoms';
 
 import {
   DARK_APICAL_DENDRITE,
@@ -17,7 +17,8 @@ import {
   LIGHT_BASAL_DENDRITE,
   LIGHT_SOMA,
 } from '../constants';
-import { atomFamilyWithExpiration } from '@/util/atoms';
+
+import type { ColoringType, MorphologyCanvas } from '@/morpho-viewer';
 
 const DEFAULT_SETTINGS: ExtendedMorphoViewerSettings = {
   darkMode: false,
@@ -87,7 +88,7 @@ export function useMorphoViewerSettings(
     [extendedSettings, painter]
   );
   const update = (value: Partial<MorphoViewerSettings>) => {
-    const darkMode = value.isDarkMode ?? extendedSettings.darkMode;
+    const darkMode = value.isDarkMode ?? extendedSettings.darkMode ?? false;
     const newExtendedSettings =
       darkMode === extendedSettings.darkMode
         ? writeSettings({

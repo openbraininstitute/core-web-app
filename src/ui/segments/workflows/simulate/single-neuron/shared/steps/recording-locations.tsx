@@ -109,7 +109,7 @@ function RecordItem({
               '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!',
               'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! rounded-md border-[1px]!'
             )}
-            popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
+            classNames={{ popup: { root: '[&_.ant-select-item-option-content]:text-primary-9!' } }}
             placement="bottomLeft"
             disabled={disable}
             size={breakpoint === 'l' ? 'middle' : 'large'}

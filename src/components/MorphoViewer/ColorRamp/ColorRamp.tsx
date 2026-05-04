@@ -1,8 +1,10 @@
 import React from 'react';
-import { MorphologyCanvas } from '@bbp/morphoviewer';
+
+import { classNames } from '@/util/utils';
 
 import { useMorphoViewerSettings } from '../hooks/settings';
-import { classNames } from '@/util/utils';
+
+import type { MorphologyCanvas } from '@/morpho-viewer';
 
 import styles from './color-ramp.module.css';
 

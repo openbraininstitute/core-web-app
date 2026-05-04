@@ -32,4 +32,15 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
       'The project does not have enough credits to run the skeletonization, please add credits and try again',
     GenericFailed: 'We are having trouble running the skeletonization, please try again later',
   },
+  [ScanConfigActivity.Build]: {
+    CoordinateCountFailed: 'An error occurred generating the build campaign coordinates',
+    ScanConfigGenerateGridFailed: 'An error occurred generating the build campaign',
+    ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the build',
+    Generate: 'Generate build(s)',
+    New: 'New build campaign',
+    CopyCampaignId: 'Copy build campaign ID',
+    InsufficientCreditsNonAdmin:
+      "You don't have enough credits to launch this build. Please contact your administrator",
+    GenericFailed: 'We are having trouble running the build, please try again later',
+  },
 };

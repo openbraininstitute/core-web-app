@@ -1,6 +1,6 @@
 .truncableImage {
   display: inline-block;
-  aspect-ratio: 3/2;
+  aspect-ratio: 3 / 2;
   background-image: var(--custom-image);
   background-size: contain;
   background-repeat: no-repeat;
