@@ -345,7 +345,10 @@ export function IonChannelFigureViewer({ entity }: { entity: IonChannelModel }) 
   }
 
   return (
-    <div className="flex h-full flex-col gap-3 overflow-hidden p-3 bg-white ml-4 rounded-md">
+    <div
+      id="scan-config-ion-channel-figure-viewer"
+      className="flex h-full flex-col gap-3 overflow-hidden p-3 bg-white ml-4 rounded-md"
+    >
       <div className="flex gap-3 shrink-0">
         <div className="flex-1 flex flex-col gap-1">
           <Select value={selectedGroup} onValueChange={handleGroupChange}>

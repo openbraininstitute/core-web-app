@@ -9,6 +9,7 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AgentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DownloadIcon } from '@/components/icons';
+import { WorkspaceSection } from '@/constants';
 import {
   CoreFieldFilterTypeEnum,
   EntityCoreFields,
@@ -30,11 +31,13 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IContributor, TAgentType } from '@/api/entitycore/types/shared/global';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
-import type { EntityTypeValue } from '@/entity-configuration/domain';
 
 const collator = new Intl.Collator('en', { sensitivity: 'base' });
 
-const renderContributors = (r: EntityTypeValue, filter: TAgentType) => {
+const renderContributors = (
+  r: Record<string, unknown> & { contributions?: Array<IContributor> | null },
+  filter: TAgentType
+) => {
   if (!('contributions' in r) || !r.contributions) return EmptyValue;
 
   const sortedContribution = r.contributions
@@ -184,7 +187,11 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
         false
       ),
-    renderForDetailView: (r) => renderContributors(r, AgentType.Person),
+    renderForDetailView: (r) =>
+      renderContributors(
+        r as Record<string, any> & { contributions?: Array<IContributor> | null },
+        AgentType.Person
+      ),
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',
@@ -226,7 +233,11 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         (r as EntityCoreObjectTypes & { contributions?: Array<IContributor> | null }).contributions,
         false
       ),
-    renderForDetailView: (r) => renderContributors(r, AgentType.Organization),
+    renderForDetailView: (r) =>
+      renderContributors(
+        r as Record<string, any> & { contributions?: Array<IContributor> | null },
+        AgentType.Organization
+      ),
     vocabulary: {
       plural: 'Contributors',
       singular: 'Contributor',
@@ -278,7 +289,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         types: [
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.Circuit,
-          ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
           ExtendedEntitiesTypeDict.EMCellMesh,
           ExtendedEntitiesTypeDict.Emodel,
@@ -305,6 +315,58 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
   [EntityCoreFields.SpeciesName]: {
     title: 'Species',
     filter: CoreFieldFilterTypeEnum.CheckList,
+    presentation: {
+      column: {
+        available: {
+          default: true,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.Data,
+              },
+              value: false,
+            },
+          ],
+        },
+      },
+      filter: {
+        available: {
+          default: true,
+          rules: [
+            {
+              when: {
+                dataType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                section: WorkspaceSection.Data,
+              },
+              value: false,
+            },
+          ],
+        },
+        constraint: {
+          default: 'species__name__in',
+          rules: [
+            {
+              when: {
+                dataType: [
+                  ExtendedEntitiesTypeDict.CellMorphology,
+                  ExtendedEntitiesTypeDict.ElectricalCellRecording,
+                  ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,
+                  ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
+                  ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection,
+                  ExtendedEntitiesTypeDict.IonChannelModel,
+                  ExtendedEntitiesTypeDict.IonChannelRecording,
+                  ExtendedEntitiesTypeDict.Circuit,
+                  ExtendedEntitiesTypeDict.MEModelWithSynapses,
+                  ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                ],
+              },
+              value: 'subject__species__name__in',
+            },
+          ],
+        },
+      },
+    },
     render: (r) => {
       if ('species' in r)
         return renderEmptyOrValue(
@@ -336,7 +398,6 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
         types: [
           ExtendedEntitiesTypeDict.CellMorphology,
           ExtendedEntitiesTypeDict.Circuit,
-          ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
           ExtendedEntitiesTypeDict.ElectricalCellRecording,
           ExtendedEntitiesTypeDict.ExperimentalBoutonDensity,
           ExtendedEntitiesTypeDict.ExperimentalNeuronDensity,

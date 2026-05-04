@@ -200,11 +200,7 @@ export default function OverlayScrollbar({
 
   return (
     <div ref={trackRef} className={styles.track} onClick={handleTrackClick}>
-      <div
-        ref={thumbRef}
-        className={styles.thumb}
-        onPointerDown={handlePointerDown}
-      />
+      <div ref={thumbRef} className={styles.thumb} onPointerDown={handlePointerDown} />
     </div>
   );
 }

@@ -1,12 +1,15 @@
 /* eslint-disable no-param-reassign */
-import { useEffect, useState } from 'react';
-import { MorphologyCanvas } from '@bbp/morphoviewer';
 
-import { MorphoViewerSettings, useMorphoViewerSettings } from '../../hooks/settings';
-import { ColorInput } from './ColorInput';
-import { classNames } from '@/util/utils';
-import { ResetIcon } from '@/components/icons';
+import React, { useEffect, useState } from 'react';
+
 import { Switch } from '@/components/common/Switch';
+import { ResetIcon } from '@/components/icons';
+import { classNames } from '@/util/utils';
+
+import { type MorphoViewerSettings, useMorphoViewerSettings } from '../../hooks/settings';
+import { ColorInput } from './ColorInput';
+
+import type { MorphologyCanvas } from '@/morpho-viewer';
 
 import styles from './colors-legend.module.css';
 
@@ -45,6 +48,7 @@ const LABELS_COLLAPSED: Labels = {
 };
 
 export function ColorsLegend({ className, painter }: ColorsLegendProps) {
+  const labels = useLabels(painter);
   const [, setBackground] = useState(painter.colors.background);
   const [settings, update, resetColors] = useMorphoViewerSettings(painter);
   const handleReset = () => {
@@ -70,7 +74,7 @@ export function ColorsLegend({ className, painter }: ColorsLegendProps) {
       >
         Dark mode
       </Switch>
-      {renderLabels(getProperLabels(painter), settings, update)}
+      {renderLabels(labels, settings, update)}
       <button className={styles.reset} type="button" onClick={handleReset}>
         <ResetIcon className={styles.icon} />
         <div>Reset colors</div>
@@ -111,7 +115,20 @@ function getProperLabels(painter: MorphologyCanvas): Partial<Labels> {
 }
 
 function getCorrectLabelsVersionDependingOnDendrites(painter: MorphologyCanvas): Labels {
-  if (!painter.hasBasalDendrite()) return LABELS_COLLAPSED;
-  if (!painter.hasApicalDendrite()) return LABELS_COLLAPSED;
-  return LABELS_EXPANDED;
+  if (painter.hasBasalDendrite() && painter.hasApicalDendrite()) {
+    return LABELS_EXPANDED;
+  }
+  return LABELS_COLLAPSED;
+}
+
+function useLabels(painter: MorphologyCanvas) {
+  const [labels, setLabels] = React.useState<Partial<Labels>>({});
+  React.useMemo(() => {
+    const action = () => setLabels(getProperLabels(painter));
+    painter.eventColorsChange.addListener(action);
+    action();
+    return () => painter.eventColorsChange.removeListener(action);
+  }, [painter]);
+
+  return labels;
 }

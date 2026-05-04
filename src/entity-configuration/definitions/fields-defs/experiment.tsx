@@ -8,15 +8,14 @@ import {
   renderDictionaryKeys,
   renderEmptyOrValue,
 } from '@/entity-configuration/definitions/renderer';
-import { getStatusCountMap } from '@/entity-configuration/domain/simulation/simulation-campaign';
+import { LegacyCampaignStatusCell } from '@/features/task-runner/activity-execution/legacy-status-cell';
+import { ActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
 import { PreviewThumbnail } from '@/features/thumbnail/preview';
-import ExecutionAggregatedStatus from '@/ui/segments/activity-execution/status';
 
 import type {
   EntityCoreObjectTypes,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
-import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
 import type { FieldsDefinitionRegistry } from '@/entity-configuration/definitions/types';
 
 export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObjectTypes>> = {
@@ -150,28 +149,39 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     isDisplayable: true,
     isFilterable: false,
   },
-  [EntityCoreFields.SimulationCampaignStatus]: {
-    title: 'Status',
-    filter: null,
-    style: { width: 160 },
-    render: (r) => {
-      const statusCountMap = getStatusCountMap(r as ICircuitSimulationCampaign);
-      return <ExecutionAggregatedStatus statusCountMap={statusCountMap} />;
-    },
-    isDisplayable: true,
-    isFilterable: false,
-  },
   [EntityCoreFields.CircuitName]: {
     title: 'Circuit',
     filter: null,
     render: (r) => renderEmptyOrValue(get(r, 'circuit.name', '')),
     isDisplayable: true,
     isFilterable: false,
+    style: { width: 200 },
   },
   [EntityCoreFields.MEModelName]: {
     title: 'ME-model',
     filter: null,
     render: (r) => renderEmptyOrValue(get(r, 'memodel.name', '')),
+    isDisplayable: true,
+    isFilterable: false,
+  },
+  // TODO: remove this after full migration to task-runner
+  [EntityCoreFields.LegacyActivityStatus]: {
+    title: 'Status',
+    filter: null,
+    style: { width: 100 },
+    render: (r) => {
+      return <LegacyCampaignStatusCell campaignId={r.id} />;
+    },
+    isDisplayable: true,
+    isFilterable: false,
+  },
+  [EntityCoreFields.TaskActivityStatus]: {
+    title: 'Status',
+    filter: null,
+    style: { width: 100 },
+    render: (r) => {
+      return <ActivityStatusCell campaignId={r.id} />;
+    },
     isDisplayable: true,
     isFilterable: false,
   },

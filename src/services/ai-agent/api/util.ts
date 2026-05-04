@@ -1,6 +1,7 @@
-import { serviceAiAgentUrl } from './url';
 import { logError } from '@/util/logger';
 import { createHeaders } from '@/util/utils';
+
+import { serviceAiAgentUrl } from './url';
 
 interface QueryOptions<T> {
   accessToken?: string | null;

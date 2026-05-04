@@ -14,7 +14,7 @@ import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
 } from '@/ui/segments/mini-detail-view/event';
-import { WorkspaceScopeSelector } from '@/ui/segments/shared/scope-selector';
+import { TabsSelector } from '@/ui/segments/shared/scope-selector';
 import { cn } from '@/utils/css-class';
 
 export function DataScopeTabs() {
@@ -39,9 +39,7 @@ export function DataScopeTabs() {
     onTabClick(value as TWorkspaceScope);
   };
 
-  return (
-    <WorkspaceScopeSelector activeTab={activeTab as string} onValueChange={handleValueChange} />
-  );
+  return <TabsSelector activeTab={activeTab as string} onValueChange={handleValueChange} />;
 }
 
 export function DataHeader() {

@@ -314,32 +314,78 @@
 /* ── Keyframes ── */
 
 @keyframes expandRow {
-  0% { grid-template-rows: 0fr; }
-  100% { grid-template-rows: 1fr; }
+  0% {
+    grid-template-rows: 0fr;
+  }
+  100% {
+    grid-template-rows: 1fr;
+  }
 }
 
 @keyframes slideInFromTop {
-  0% { opacity: 0; transform: translateY(-12px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes expandContent {
-  from { opacity: 0; max-height: 0; transform: translateY(-8px); }
-  to { opacity: 1; max-height: 2000px; transform: translateY(0); }
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideUpToCollapsible {
-  0% { opacity: 1; transform: translateY(0); max-height: 500px; margin: 4px 0; }
-  100% { opacity: 0; transform: translateY(-12px); max-height: 0; margin: 0; }
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 500px;
+    margin: 4px 0;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px);
+    max-height: 0;
+    margin: 0;
+  }
 }
 
 @keyframes fadeOutCollapse {
-  0% { opacity: 1; max-height: 5000px; transform: translateY(0); }
-  50% { opacity: 0.5; }
-  100% { opacity: 0; max-height: 0; transform: translateY(-4px); margin-top: 0; margin-bottom: 0; }
+  0% {
+    opacity: 1;
+    max-height: 5000px;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-4px);
+    margin-top: 0;
+    margin-bottom: 0;
+  }
 }

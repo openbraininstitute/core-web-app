@@ -1,13 +1,13 @@
 'use client';
 
 import { RightOutlined } from '@ant-design/icons';
-import capitalize from 'es-toolkit/compat/capitalize';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { upperFirst } from 'node_modules/es-toolkit/dist/string/upperFirst.mjs';
+
 import { convertEntitySlugToExtendedType } from '@/api/entitycore/utils';
 import { config } from '@/config';
-import type { TWorkspaceSection } from '@/constants';
+import { WorkflowActivityDictValue } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
@@ -18,11 +18,15 @@ import {
   BreadcrumbSeparator,
 } from '@/ui/molecules/breadcrumb/index';
 import {
-  getBaseModelTypeFromActivityType,
-  getCategoryDictItem,
-  getEntityTypeWorkflowConfigurationItem,
+  getActivity,
+  getBaseModelType,
+  getEntityMeta,
+  getWorkflow,
   getWorkflowSegment,
-} from '@/ui/segments/workflows/elements/helpers';
+} from '@/ui/segments/workflows/config';
+
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceSection } from '@/constants';
 import type { KebabCase } from '@/utils/type';
 
 type Props = {
@@ -37,11 +41,28 @@ export function SimulateWorkflowsBreadcrumb({ section }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
 
   const dataType = convertEntitySlugToExtendedType({ type });
-  const category = getCategoryDictItem(segment)?.name;
+  const category = getActivity(segment)?.name;
 
-  const baseType = getBaseModelTypeFromActivityType({ type: dataType, section });
-  const selectTitle = getEntityByExtendedType({ type: baseType })?.title;
-  const baseTitle = getEntityTypeWorkflowConfigurationItem({ value: baseType, section })?.label;
+  const baseType = getBaseModelType({ type: dataType, section });
+  const selectTitle =
+    getEntityMeta(baseType)?.label ?? getEntityByExtendedType({ type: baseType })?.title;
+  const baseTitle = getEntityMeta(baseType)?.label;
+  const resolvedWorkflow =
+    segment && dataType
+      ? (getWorkflow({
+          activity: segment,
+          targetType: dataType,
+        }) ??
+        getWorkflow({
+          activity: segment,
+          sourceType: dataType,
+        }))
+      : null;
+  const workflowLabel = resolvedWorkflow?.label;
+  const leftTitle =
+    segment === WorkflowActivityDictValue.process && workflowLabel
+      ? `${workflowLabel} data processing`
+      : [baseTitle, category].filter(Boolean).join(' ');
 
   const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
 
@@ -54,14 +75,14 @@ export function SimulateWorkflowsBreadcrumb({ section }: Props) {
               asChild
               className="text-primary-9 hover:text-primary-7 text-lg font-light select-none"
             >
-              <Link href={homeLink}>{capitalize(`${baseTitle} ${category}`)}</Link>
+              <Link href={homeLink}>{upperFirst(leftTitle.toLocaleLowerCase())}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator className="text-primary-9 text-lg font-bold">
             <RightOutlined className="text-sm" />
           </BreadcrumbSeparator>
           <BreadcrumbItem className="text-primary-9 hover:text-primary-7 text-lg font-bold select-none cursor-pointer">
-            {capitalize(`Select ${selectTitle}`)}
+            {upperFirst(`Select ${selectTitle ?? 'entity'}`.toLocaleLowerCase())}
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

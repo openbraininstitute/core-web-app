@@ -28,7 +28,9 @@
   min-height: 24px;
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.1);
-  transition: background 0.15s ease, width 0.15s ease;
+  transition:
+    background 0.15s ease,
+    width 0.15s ease;
   cursor: pointer;
   will-change: transform;
 }

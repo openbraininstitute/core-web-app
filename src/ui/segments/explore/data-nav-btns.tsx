@@ -2,13 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
 import { config } from '@/config';
-import type { TWorkspaceScope } from '@/constants';
 import { WorkspaceSection } from '@/constants';
-import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import type { WorkspaceContext } from '@/types/common';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
@@ -17,12 +14,19 @@ import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { isBrowser } from '@/utils/environment';
 import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkspaceScope } from '@/constants';
+import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
+import type { WorkspaceContext } from '@/types/common';
+
 function getGroupDisplayName(group: TEntityTypeGroup): string {
   const groupLabels: Record<TEntityTypeGroup, string> = {
     [EntityTypeGroup.Models]: 'Model',
     [EntityTypeGroup.Experimental]: 'Experimental',
     [EntityTypeGroup.Simulations]: 'Simulation',
     [EntityTypeGroup.Notebooks]: 'Notebook',
+    [EntityTypeGroup.Extractions]: 'Extraction',
+    [EntityTypeGroup.Processing]: 'Processing',
   };
   return groupLabels[group] || group;
 }
@@ -148,7 +152,7 @@ export function DataBreadcrumb({
 
   if (section !== WorkspaceSection.Data) return null;
   return (
-    <div className="flex flex-nowrap gap-3">
+    <div className="flex flex-nowrap gap-3 pt-3">
       <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick }} />
       <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick }} />
       <BackToEntityType
@@ -163,5 +167,5 @@ export function ClosePage({ url }: { url: string }) {
   const section = routeSegments.at(0);
   if (section !== WorkspaceSection.Data) return null;
 
-  return <Close href={url} />;
+  return <Close href={url} className="mt-3 mr-1" />;
 }

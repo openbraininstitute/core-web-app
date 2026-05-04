@@ -22,6 +22,9 @@ export const ExtendedEntitiesTypeDict = {
   MEModelWithSynapses: 'me_model_with_synapses',
   SynthesizedCellMorphology: 'synthesized_cell_morphology',
   UniversalCellMorphology: 'universal_cell_morphology',
+  CircuitExtractionCampaign: 'circuit_extraction_campaign',
+  SkeletonizationCampaign: 'skeletonization_campaign',
+  RegionCircuitSimulation: 'region_circuit_simulation',
 } as const;
 
 export type TExtendedEntitiesTypeDict =
