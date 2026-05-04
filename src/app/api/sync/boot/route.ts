@@ -91,16 +91,8 @@ async function processIdentity(body: BootstrapBody, state: BootstrapState): Prom
     updateUserOnboardingProfile({
       first_name: accountPayload.first_name,
       last_name: accountPayload.last_name,
-<<<<<<< HEAD
       country: accountPayload.country,
       email: accountPayload.email,
-||||||| parent of 7532d7c84 (update profile validation flow and virtual lab user update typing)
-    updateUserProfile({
-      ...pick(workspaceResolution?.profile, ['first_name', 'last_name', 'address']),
-      ...pick(accountPayload, ['first_name', 'last_name', 'email']),
-=======
-      country: workspaceResolution.profile?.address.country,
->>>>>>> 7532d7c84 (update profile validation flow and virtual lab user update typing)
     })
   );
 
