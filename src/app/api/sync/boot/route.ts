@@ -78,7 +78,7 @@ function streamFromGenerator(generator: AsyncGenerator<StreamChunk, void, unknow
 }
 
 async function processIdentity(body: BootstrapBody, state: BootstrapState): Promise<StepResult> {
-  const { shouldCreateVirtualLab, accountPayload, workspaceResolution } = body;
+  const { shouldCreateVirtualLab, accountPayload } = body;
 
   if (!shouldCreateVirtualLab || !accountPayload) {
     return {
@@ -91,7 +91,8 @@ async function processIdentity(body: BootstrapBody, state: BootstrapState): Prom
     updateUserOnboardingProfile({
       first_name: accountPayload.first_name,
       last_name: accountPayload.last_name,
-      country: workspaceResolution.profile?.address.country,
+      country: accountPayload.country,
+      email: accountPayload.email,
     })
   );
 

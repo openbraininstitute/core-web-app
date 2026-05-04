@@ -85,8 +85,32 @@ export const updateUserOnboardingProfile = async (payload: TOnboardingUpdateUser
       first_name: payload.first_name,
       last_name: payload.last_name,
       country: payload.country,
+      email: payload.email,
     },
   });
+};
+
+export const checkUserProfileEmailAvailability = async (email: string): Promise<boolean> => {
+  const api = await virtualLabRootApi();
+
+  try {
+    const response = await api.get<Response>(
+      '/users/profile/email/_check',
+      {
+        queryParams: { email },
+        cache: 'no-store',
+      },
+      { asRawResponse: true }
+    );
+
+    return response.status === 204;
+  } catch (error) {
+    const status = (error as { cause?: { status?: number } })?.cause?.status;
+    if (status === 422) {
+      return false;
+    }
+    throw error;
+  }
 };
 
 /**

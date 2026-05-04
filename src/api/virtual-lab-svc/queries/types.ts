@@ -306,7 +306,13 @@ export type TUpdateUserProfileRequest = {
 export type TOnboardingUpdateUserProfileRequest = {
   first_name: string;
   last_name: string;
-  country?: string | null;
+  country: string;
+  email: string;
+};
+
+export type CountryConfig = {
+  name: string;
+  code: string;
 };
 
 export type UserProfileResponse = {
