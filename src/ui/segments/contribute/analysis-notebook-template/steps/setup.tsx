@@ -35,7 +35,7 @@ export function Setup() {
         <Input
           className="h-12 rounded-full placeholder:text-sm"
           size="large"
-          placeholder="Enter cell recording name"
+          placeholder="Enter notebook template name"
         />
       </Form.Item>
 
@@ -56,7 +56,7 @@ export function Setup() {
         <Input.TextArea
           rows={5}
           className="rounded-xl placeholder:text-sm"
-          placeholder="Enter cell recording description"
+          placeholder="Enter notebook template description"
         />
       </Form.Item>
 
