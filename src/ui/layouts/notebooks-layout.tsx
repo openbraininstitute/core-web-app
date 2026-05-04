@@ -3,7 +3,8 @@ import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import NextLink from 'next/link';
-import { type ReactNode, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -24,7 +25,20 @@ type Props = {
 };
 
 export function NotebooksLayout({ children, active }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { virtualLabId, projectId } = useWorkspace();
+
+  useEffect(() => {
+    if (searchParams.get('upload') === 'true') {
+      router.replace('private');
+      makeSelectContributionEntityClickEvent({
+        display: true,
+        entityType: ExtendedEntitiesTypeDict.Notebook,
+        sessionId: crypto.randomUUID(),
+      });
+    }
+  }, [searchParams, router]);
   const notification = useAppNotification();
   const [loading, setLoading] = useState(false);
   const breakpoint = useDefaultBreakpoint();
@@ -36,11 +50,15 @@ export function NotebooksLayout({ children, active }: Props) {
   });
 
   const handleUploadData = () => {
-    makeSelectContributionEntityClickEvent({
-      display: true,
-      entityType: ExtendedEntitiesTypeDict.Notebook,
-      sessionId: crypto.randomUUID(),
-    });
+    if (active === 'public') {
+      router.push('private?upload=true');
+    } else {
+      makeSelectContributionEntityClickEvent({
+        display: true,
+        entityType: ExtendedEntitiesTypeDict.Notebook,
+        sessionId: crypto.randomUUID(),
+      });
+    }
   };
 
   async function handleRunNotebook() {
@@ -106,27 +124,25 @@ export function NotebooksLayout({ children, active }: Props) {
         </div>
 
         <div className="flex items-center gap-4">
-          {active === 'private' && (
-            <Button
-              rounded
-              variant="success"
-              size={breakpoint === 'xl' ? 'lg' : 'md'}
-              type="button"
-              onClick={handleUploadData}
-              className={cn(
-                'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
-                'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
-                'transition-all duration-300 ease-out',
-                'hover:scale-[1.02] active:scale-[0.98]',
-                'disabled:cursor-not-allowed disabled:opacity-70'
-              )}
-            >
-              <div className="flex items-center justify-between gap-5">
-                <span>Upload notebook</span>
-                <PlusOutlined className="ml-auto text-sm" />
-              </div>
-            </Button>
-          )}
+          <Button
+            rounded
+            variant="success"
+            size={breakpoint === 'xl' ? 'lg' : 'md'}
+            type="button"
+            onClick={handleUploadData}
+            className={cn(
+              'relative h-12 min-w-45 overflow-hidden border border-white/20 px-6 font-semibold',
+              'bg-linear-to-r from-green-600 via-green-700 to-green-700 bg-size-[200%_100%]',
+              'transition-all duration-300 ease-out',
+              'hover:scale-[1.02] active:scale-[0.98]',
+              'disabled:cursor-not-allowed disabled:opacity-70'
+            )}
+          >
+            <div className="flex items-center justify-between gap-5">
+              <span>Upload notebook</span>
+              <PlusOutlined className="ml-auto text-sm" />
+            </div>
+          </Button>
 
           <button
             disabled={loading}
