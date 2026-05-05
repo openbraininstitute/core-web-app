@@ -174,7 +174,7 @@ class AiAssistantClass {
   }, 50);
 }
 
-const AiAssistant = new AiAssistantClass();
+export const AiAssistant = new AiAssistantClass();
 
 export function useAiAssistant() {
   const { error } = useAppNotification();

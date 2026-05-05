@@ -14,7 +14,7 @@ import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
-import { useAiAssistant } from '../assistant';
+import { AiAssistant, useAiAssistant } from '../assistant';
 import { fetchMessagesFromDB } from '../assistant/manager/message';
 
 import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
@@ -25,9 +25,10 @@ export const agentStateAtom = atom<Record<string, Config>>({});
 
 export function useServiceAiAgentChat(threadId: string) {
   const jotaiStore = useStore();
-  const assistant = useAiAssistant();
-  const assistantInitialMessages = assistant.initialMessages.useValue();
-  const isLoadingMessages = assistant.isLoadingMessages.useValue();
+  // useAiAssistant() must be called to run init/error/health side effects
+  useAiAssistant();
+  const assistantInitialMessages = AiAssistant.initialMessages.useValue();
+  const isLoadingMessages = AiAssistant.isLoadingMessages.useValue();
   const accessToken = useAccessToken();
   const activeTools = useAIActiveTools();
   const queryClient = useQueryClient();
@@ -202,7 +203,7 @@ export function useServiceAiAgentChat(threadId: string) {
 
   const append = useCallback(
     (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
-      assistant.isEmptyThread.set(false);
+      AiAssistant.isEmptyThread.set(false);
       chat.append(message, chatRequestOptions);
       if (chat.messages.length === 0) {
         try {
@@ -258,7 +259,7 @@ export function useServiceAiAgentChat(threadId: string) {
   }, [chat, queryClient, accessToken, virtualLabId, projectId, threadId]);
 
   useEffect(() => {
-    assistant.chat.sync({
+    AiAssistant.chat.sync({
       status: chat.status,
       error: chat.error,
       append,
@@ -268,7 +269,7 @@ export function useServiceAiAgentChat(threadId: string) {
 
   useEffect(() => {
     if (chat.status === 'ready') {
-      assistant.chat.messages.set(chat.messages);
+      AiAssistant.chat.messages.set(chat.messages);
     }
   }, [chat.status, chat.messages]);
 
