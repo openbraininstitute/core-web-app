@@ -17,7 +17,8 @@ export default function Search({ onSelectThread }: SearchProps) {
 
   const highlightText = (text: string, query: string) => {
     if (!query.trim()) return text;
-    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
     return parts.map((part, i) =>
       part.toLowerCase() === query.toLowerCase() ? <mark key={i}>{part}</mark> : part
     );
