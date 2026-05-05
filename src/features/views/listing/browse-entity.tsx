@@ -77,6 +77,7 @@ type Props = {
     miniView?: ComponentProps<'div'>['className'];
     filterClassNames?: {
       container?: string;
+      speciesSelector?: string;
     };
     tableClassNames?: {
       table?: ComponentProps<'div'>['className'];
@@ -149,6 +150,9 @@ export function BrowseEntityScope({
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
 
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
+
   const { sync: runStorageSync, restore: runStorageRestore } = useDataListStateSnapshotActions({
     dataKey,
     dataType,
@@ -217,8 +221,6 @@ export function BrowseEntityScope({
     },
     { requireBrainRegion, defaultBrainRegion }
   );
-  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
-  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const queryFilters = {
     ...queryParameters,

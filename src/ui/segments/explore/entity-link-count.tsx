@@ -169,7 +169,7 @@ export function EntityLinkCount() {
       <div
         id="data-type-items-container"
         data-testid="data-type-items-container"
-        className="my-4 flex w-full flex-col items-center justify-center gap-2 px-2 py-2"
+        className="mb-4 mt-2 flex w-full flex-col items-center justify-center gap-2 px-2 py-2"
       >
         {content}
       </div>

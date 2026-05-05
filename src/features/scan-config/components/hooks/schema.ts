@@ -336,13 +336,13 @@ export function resetConfig(
         v.ui_element === ScanConfigUIElementDict.BlockUnion
       ) {
         // Create atom with empty defaults for missing single/union blocks
-        const initial: Record<string, ConfigValue> = {};
+        const initial: Record<string, ConfigValue | Array<ConfigValue>> = {};
         if ('properties' in v && v.properties) {
           Object.entries(v.properties).forEach(([subkey, subValue]) => {
             initial[subkey] = isType(subValue) ? null : (subValue.default ?? null);
           });
         }
-        map[k] = atom<Record<string, ConfigValue>>(initial);
+        map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initial);
       } else {
         // Dictionary or other block types — empty map
         map[k] = {};

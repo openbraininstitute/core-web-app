@@ -3,7 +3,6 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { capitalize } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
-import { AnimatePresence, domAnimation, LazyMotion, m } from 'motion/react';
 import { type ReactNode, Suspense, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -99,7 +98,7 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
         data-testid="atlas-regions-selector"
         data-label="brain-region-banner"
         className={cn(
-          'border-neutral-1 relative flex h-auto min-h-12 w-full items-center justify-between gap-2 rounded-full',
+          'border-gray-100 border borders relative flex h-12.5 w-full items-center justify-between gap-2 rounded-full',
           !isAllMode && 'cursor-pointer',
           !isAllMode && view === ExploreLeftMenuContext.DataGroup && 'hover:bg-background',
           classNames?.selector
@@ -169,21 +168,8 @@ function SelectedRegionPill({ region }: { region: BrainRegionHierarchyBase }) {
       />
       <Tooltip disableHoverableContent>
         <TooltipTrigger className="min-w-0 flex-1">
-          <span className="relative block h-6 min-w-0 overflow-hidden text-left">
-            <LazyMotion features={domAnimation}>
-              <AnimatePresence initial={false}>
-                <m.span
-                  key={`${region.id}-${region.name}`}
-                  initial={{ opacity: 0, y: 18, filter: 'blur(1.5px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, y: -18, filter: 'blur(1.5px)' }}
-                  transition={{ duration: 0.2, ease: [0.2, 0.65, 0.3, 1] }}
-                  className="absolute inset-0 block truncate text-base font-bold leading-6 will-change-transform"
-                >
-                  {capitalize(region.name)}
-                </m.span>
-              </AnimatePresence>
-            </LazyMotion>
+          <span className="block h-6 min-w-0 truncate text-left text-base leading-6 font-bold">
+            {capitalize(region.name)}
           </span>
         </TooltipTrigger>
         <TooltipContent
@@ -347,7 +333,7 @@ export function PortalRegionBanner({
         <RegionBanner
           view={view}
           onSwitchView={onSwitchView}
-          classNames={{ selector: 'shadow-md bg-white' }}
+          classNames={{ selector: 'bg-white shadow-sm' }}
         />
       </div>
       {isTreeOpen && targetPortalContainer

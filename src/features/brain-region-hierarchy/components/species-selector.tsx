@@ -2,7 +2,6 @@
 
 import { RiArrowDownSLine, RiCheckboxCircleFill } from '@remixicon/react';
 import { useAtomValue } from 'jotai';
-import { AnimatePresence, domAnimation, LazyMotion, m } from 'motion/react';
 
 import {
   AllSpeciesDisplayName,
@@ -61,7 +60,6 @@ export function SpeciesSelector({
   const allowAllSpecies = useAtomValue(allowAllSpeciesAtom);
 
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
-
   if (
     isLoadingAvailableHierarchySpecies ||
     isLoadingRemoteUserPreferenceHierarchySpecies ||
@@ -115,21 +113,8 @@ export function SpeciesSelector({
             {triggerLabel ? (
               <Tooltip disableHoverableContent>
                 <TooltipTrigger asChild>
-                  <span className="relative block h-6 w-full min-w-0 flex-1 overflow-hidden">
-                    <LazyMotion features={domAnimation}>
-                      <AnimatePresence initial={false}>
-                        <m.span
-                          key={triggerLabel}
-                          initial={{ opacity: 0, y: 18, filter: 'blur(1.5px)' }}
-                          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                          exit={{ opacity: 0, y: -18, filter: 'blur(1.5px)' }}
-                          transition={{ duration: 0.2, ease: [0.2, 0.65, 0.3, 1] }}
-                          className="text-primary-9 absolute inset-0 block truncate text-base leading-6 font-bold will-change-transform"
-                        >
-                          {triggerLabel}
-                        </m.span>
-                      </AnimatePresence>
-                    </LazyMotion>
+                  <span className="text-primary-9 block h-6 w-full min-w-0 flex-1 truncate text-base leading-6 font-bold">
+                    {triggerLabel}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent

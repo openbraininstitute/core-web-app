@@ -69,6 +69,7 @@ export type Props<T extends EntityCoreIdentifiable> = {
   requireSearch?: boolean;
   filterClassNames?: {
     container?: string;
+    speciesSelector?: string;
   };
   expandableOptions?: UseExpandableTableOptions<T, T> | undefined;
   showExpandButtons?: boolean;
@@ -187,7 +188,10 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
             <div className="flex min-w-0 flex-wrap items-start gap-2 [grid-area:brain-and-search]">
               {requireSpeciesSelector && (
                 <div className="shrink-0">
-                  <PortalRegionBanner dataKey={dataKey} className="w-110" />
+                  <PortalRegionBanner
+                    dataKey={dataKey}
+                    className={cn('w-110', filterClassNames?.speciesSelector)}
+                  />
                 </div>
               )}
               {!!left && <div className="min-w-0 grow basis-80">{left}</div>}

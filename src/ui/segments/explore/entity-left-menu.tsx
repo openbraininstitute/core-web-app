@@ -44,7 +44,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
       <RegionBanner
         view={view}
         onSwitchView={onSwitchView}
-        classNames={{ container: 'px-4 pb-1', selector: 'shadow-bnb' }}
+        classNames={{ container: 'px-4 pb-1', selector: 'shadow-sm bg-white' }}
       />
       <div className="relative min-h-0 flex-1 overflow-hidden">
         {!isAllMode && (

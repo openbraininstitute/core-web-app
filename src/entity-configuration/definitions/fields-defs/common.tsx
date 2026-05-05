@@ -315,20 +315,74 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
     title: 'Species',
     filter: CoreFieldFilterTypeEnum.CheckList,
     presentation: {
-      column: { available: { default: false } },
-      filter: {
+      column: {
         available: {
-          default: true,
+          default: false,
           rules: [
             {
               when: {
                 dataType: [
-                  ExtendedEntitiesTypeDict.CellMorphology,
-                  ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
+                  ExtendedEntitiesTypeDict.Circuit,
+                  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+                  ExtendedEntitiesTypeDict.MemodelCircuit,
+                  ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+                  ExtendedEntitiesTypeDict.SmallMicrocircuit,
+                  ExtendedEntitiesTypeDict.Microcircuit,
+                  ExtendedEntitiesTypeDict.BrainRegion,
+                  ExtendedEntitiesTypeDict.EMCellMesh,
+                  ExtendedEntitiesTypeDict.IonChannelModel,
+                  ExtendedEntitiesTypeDict.Memodel,
                 ],
-                section: WorkspaceSection.Data,
+                section: [
+                  WorkspaceSection.SimulateWorkflow,
+                  WorkspaceSection.ProcessWorkflow,
+                  WorkspaceSection.ExtractWorkflow,
+                ],
               },
-              value: false,
+              value: true,
+            },
+            {
+              when: {
+                dataType: [ExtendedEntitiesTypeDict.UniversalCellMorphology],
+                section: [WorkspaceSection.ScanConfigBuildWorkflow],
+              },
+              value: true,
+            },
+          ],
+        },
+      },
+      filter: {
+        available: {
+          default: false,
+          rules: [
+            {
+              when: {
+                dataType: [
+                  ExtendedEntitiesTypeDict.Circuit,
+                  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+                  ExtendedEntitiesTypeDict.MemodelCircuit,
+                  ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+                  ExtendedEntitiesTypeDict.SmallMicrocircuit,
+                  ExtendedEntitiesTypeDict.Microcircuit,
+                  ExtendedEntitiesTypeDict.BrainRegion,
+                  ExtendedEntitiesTypeDict.EMCellMesh,
+                  ExtendedEntitiesTypeDict.IonChannelModel,
+                  ExtendedEntitiesTypeDict.Memodel,
+                ],
+                section: [
+                  WorkspaceSection.SimulateWorkflow,
+                  WorkspaceSection.ProcessWorkflow,
+                  WorkspaceSection.ExtractWorkflow,
+                ],
+              },
+              value: true,
+            },
+            {
+              when: {
+                dataType: [ExtendedEntitiesTypeDict.UniversalCellMorphology],
+                section: [WorkspaceSection.ScanConfigBuildWorkflow],
+              },
+              value: true,
             },
           ],
         },
@@ -348,6 +402,12 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
                   ExtendedEntitiesTypeDict.Circuit,
                   ExtendedEntitiesTypeDict.MEModelWithSynapses,
                   ExtendedEntitiesTypeDict.UniversalCellMorphology,
+                  ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+                  ExtendedEntitiesTypeDict.SmallMicrocircuit,
+                  ExtendedEntitiesTypeDict.Microcircuit,
+                  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+                  ExtendedEntitiesTypeDict.BrainRegion,
+                  ExtendedEntitiesTypeDict.EMCellMesh,
                 ],
               },
               value: 'subject__species__name__in',
