@@ -139,6 +139,50 @@ jobs:
               });
             }
 
+  domain-attach:
+    needs: deploy
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: amplify-domain-${{ vars.AMPLIFY_PREVIEW_APP_ID }}
+      cancel-in-progress: false
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Attach preview subdomain
+        env:
+          BRANCH_NAME: ${{ needs.deploy.outputs.branch-name }}
+          PREFIX: ${{ needs.deploy.outputs.domain-safe-branch }}
+        run: |
+          set -euo pipefail
+
+          CURRENT=$(aws amplify get-domain-association \
+            --app-id "$AMPLIFY_APP_ID" \
+            --domain-name "$PREVIEW_DOMAIN" \
+            --query 'domainAssociation.subDomains[].subDomainSetting' \
+            --output json)
+
+          UPDATED=$(echo "$CURRENT" | jq --arg prefix "$PREFIX" --arg branch "$BRANCH_NAME" \
+            'map(select(.prefix != $prefix)) + [{prefix: $prefix, branchName: $branch}]')
+
+          if [ "$(echo "$CURRENT" | jq -S .)" = "$(echo "$UPDATED" | jq -S .)" ]; then
+            echo "Subdomain $PREFIX already attached to $BRANCH_NAME"
+            exit 0
+          fi
+
+          SHORTHAND=$(echo "$UPDATED" | jq -r '.[] | "prefix=\(.prefix),branchName=\(.branchName)"' | tr '\n' ' ')
+
+          aws amplify update-domain-association \
+            --app-id "$AMPLIFY_APP_ID" \
+            --domain-name "$PREVIEW_DOMAIN" \
+            --sub-domain-settings $SHORTHAND
+
+          echo "Attached $PREFIX -> $BRANCH_NAME"
+
   monitor:
     needs: deploy
     runs-on: ubuntu-latest
@@ -250,9 +294,62 @@ jobs:
             }
 
   # Branch auto-creation is disabled on the Amplify app (to stay under the 50-branch quota),
-  # so this job explicitly deletes the Amplify branch when the PR is closed.
+  # so on PR close we explicitly detach the preview subdomain (domain-detach) and then
+  # delete the Amplify branch (cleanup). The detach is serialized across PRs because
+  # update-domain-association rewrites a single shared resource.
+  domain-detach:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: amplify-domain-${{ vars.AMPLIFY_PREVIEW_APP_ID }}
+      cancel-in-progress: false
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Detach preview subdomain
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+
+          PREFIX="${BRANCH_NAME//\//-}"
+          PREFIX="${PREFIX//./-}"
+          PREFIX="${PREFIX//_/-}"
+
+          CURRENT=$(aws amplify get-domain-association \
+            --app-id "$AMPLIFY_APP_ID" \
+            --domain-name "$PREVIEW_DOMAIN" \
+            --query 'domainAssociation.subDomains[].subDomainSetting' \
+            --output json)
+
+          UPDATED=$(echo "$CURRENT" | jq --arg prefix "$PREFIX" 'map(select(.prefix != $prefix))')
+
+          if [ "$(echo "$CURRENT" | jq -S .)" = "$(echo "$UPDATED" | jq -S .)" ]; then
+            echo "Subdomain $PREFIX already absent"
+            exit 0
+          fi
+
+          SHORTHAND=$(echo "$UPDATED" | jq -r '.[] | "prefix=\(.prefix),branchName=\(.branchName)"' | tr '\n' ' ')
+
+          if [ -z "$SHORTHAND" ]; then
+            echo "Refusing to update domain association to an empty subdomain list — skipping detach"
+            exit 0
+          fi
+
+          aws amplify update-domain-association \
+            --app-id "$AMPLIFY_APP_ID" \
+            --domain-name "$PREVIEW_DOMAIN" \
+            --sub-domain-settings $SHORTHAND
+
+          echo "Detached $PREFIX"
+
   cleanup:
     if: github.event.action == 'closed'
+    needs: domain-detach
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
