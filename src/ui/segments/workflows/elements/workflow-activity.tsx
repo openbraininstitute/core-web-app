@@ -418,6 +418,7 @@ export function WorkflowActivity() {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(ExtendedEntitiesTypeDict.IonChannelModelSimulation)}?initialCampaignId=${selectedRow.id}`
       );
+      return;
     }
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
