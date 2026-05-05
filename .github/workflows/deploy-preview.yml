@@ -44,6 +44,23 @@ jobs:
           echo "branch-name=$BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "domain-safe-branch=$DOMAIN_SAFE_BRANCH" >> $GITHUB_OUTPUT
 
+      - name: Ensure Amplify branch exists
+        run: |
+          if ! aws amplify get-branch \
+              --app-id "${{ env.AMPLIFY_APP_ID }}" \
+              --branch-name "${{ steps.vars.outputs.branch-name }}" \
+              >/dev/null 2>&1; then
+            echo "Branch not found in Amplify, creating..."
+            aws amplify create-branch \
+              --app-id "${{ env.AMPLIFY_APP_ID }}" \
+              --branch-name "${{ steps.vars.outputs.branch-name }}" \
+              --stage PULL_REQUEST \
+              --framework "Next.js - SSR" \
+              --no-enable-auto-build
+          else
+            echo "Branch already exists in Amplify"
+          fi
+
       - name: Cancel running builds
         run: |
           RUNNING_JOBS=$(aws amplify list-jobs \
@@ -232,13 +249,27 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, 20000)); // Wait 20s
             }
 
-  # Note: Branch cleanup is handled automatically by:
-  # - AWS Amplify auto-disconnect for preview branches
-  # - GitHub auto-delete branch setting for merged PRs
+  # Branch auto-creation is disabled on the Amplify app (to stay under the 50-branch quota),
+  # so this job explicitly deletes the Amplify branch when the PR is closed.
   cleanup:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Delete Amplify branch
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          echo "Deleting Amplify branch: $BRANCH_NAME"
+          aws amplify delete-branch \
+            --app-id "${{ env.AMPLIFY_APP_ID }}" \
+            --branch-name "$BRANCH_NAME" || \
+            echo "Branch already deleted or never existed — continuing"
+
       - name: Update comment
         uses: actions/github-script@v7
         with:
