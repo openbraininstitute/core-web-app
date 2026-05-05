@@ -150,10 +150,11 @@ function parseCsvIntegers(data: string): number[] {
 }
 
 const Ids = memo(({ ids }: { ids: { head: number[]; tail: number[] } }) => {
-  const containerClass = 'w-full border border-gray-200 p-3 rounded-lg flex flex-wrap gap-1';
+  const containerClass = 'w-full flex flex-wrap gap-1';
   const elementClass = 'border border-gray-200 rounded-full px-3 py-1 text-primary-8 font-bold';
+
   return (
-    <>
+    <div className="border border-gray-200 p-3 rounded-lg w-full ">
       <div className={containerClass}>
         {ids.head.map((id) => (
           <div key={id} className={elementClass}>
@@ -162,7 +163,9 @@ const Ids = memo(({ ids }: { ids: { head: number[]; tail: number[] } }) => {
         ))}
       </div>
 
-      {ids.tail.length > 0 && <div className="text-gray-500 text-4xl mb-5">...</div>}
+      {ids.tail.length > 0 && (
+        <div className="text-gray-500 text-3xl mb-4 w-full flex justify-center">...</div>
+      )}
 
       {ids.tail.length > 0 && (
         <div className={containerClass}>
@@ -173,6 +176,6 @@ const Ids = memo(({ ids }: { ids: { head: number[]; tail: number[] } }) => {
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 });
