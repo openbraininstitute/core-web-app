@@ -191,7 +191,6 @@ export default function Chat({
               {(!threadId || isEmptyThread) && (
                 <div className={styles.suggestedQuestionsContainer}>
                   <SuggestedQuestions
-                    threadId={threadId}
                     onClick={handlePrompt}
                     suggestions={suggestions}
                     clearSuggestions={clearSuggestions}
@@ -202,7 +201,6 @@ export default function Chat({
               {threadId && !isEmptyThread && status === 'ready' && (
                 <div className={styles.suggestedQuestionsContainerInChat}>
                   <SuggestedQuestions
-                    threadId={threadId}
                     onClick={handlePrompt}
                     suggestions={suggestions}
                     clearSuggestions={clearSuggestions}

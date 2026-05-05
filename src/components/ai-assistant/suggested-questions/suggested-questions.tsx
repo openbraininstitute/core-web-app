@@ -7,10 +7,6 @@ import styles from './suggested-questions.module.css';
 
 interface SuggestedQuestionsProps {
   className?: string;
-  /**
-   * Suggestions depend on the current chat's thread.
-   */
-  threadId: string | undefined;
   onClick(prompt: string): void;
   suggestions: string[];
   clearSuggestions(): void;
@@ -21,7 +17,6 @@ const SKELETON_COUNT = 3;
 
 export default function SuggestedQuestions({
   className,
-  threadId,
   onClick,
   suggestions,
   clearSuggestions,
