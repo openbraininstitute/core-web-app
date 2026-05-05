@@ -28,10 +28,7 @@ export function Measurements() {
 
   return (
     <div className="h-full w-full">
-      <Form.List
-        name="measurements"
-        initialValue={[{ name: undefined, unit: FIXED_UNIT, value: undefined }]}
-      >
+      <Form.List name="measurements">
         {(fields, { remove }) => (
           <>
             <div className="flex flex-col gap-4">
