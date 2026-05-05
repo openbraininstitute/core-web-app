@@ -1,16 +1,18 @@
 import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { Button, InputNumber } from 'antd';
-import { useDeferredValue, useState } from 'react';
+import { memo, useDeferredValue, useMemo, useState } from 'react';
 
-import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
+
+import { isPlainObject } from '../utils';
 
 export default function NeuronIds({
-  elements,
+  value,
   disabled,
   onDeleteElement,
   onAddElement,
 }: {
-  elements: number[];
+  value: ConfigValue;
   disabled: boolean;
   onDeleteElement: (i: number) => void;
   onAddElement: (newElements: number[]) => void;
@@ -19,79 +21,75 @@ export default function NeuronIds({
   const [newElement, setNewElement] = useState<number | null>(null);
   const [warning, setWarning] = useState('');
   const [edit, setEdit] = useState(false);
+  const [text, setText] = useState('');
+
+  const allElements = useMemo(() => {
+    const namedTupleArray = Array.isArray(value) ? value : [value];
+
+    const allElements: number[] = namedTupleArray.flatMap((v) => {
+      if (isPlainObject(v) && Array.isArray(v.elements)) {
+        return v.elements;
+      }
+      return [];
+    });
+    return allElements;
+  }, [value]);
+
+  const renderedElements = useMemo(() => {
+    const total = allElements.length;
+    const LIMIT = 10000;
+
+    if (total <= LIMIT * 2) {
+      return {
+        head: allElements,
+        tail: [],
+      };
+    }
+
+    return {
+      head: allElements.slice(0, LIMIT),
+      tail: allElements.slice(-LIMIT),
+    };
+  }, [allElements]);
+
+  const defaultText = useMemo(() => {
+    return allElements.join(', ');
+  }, [allElements]);
 
   return (
-    <div className="w-full">
+    <div className="w-full ">
       {warning && <div className="text-red-500">{warning}</div>}
-      {!edit && <div>{elements.join(', ')}</div>}
+      {!edit && <Ids ids={renderedElements} />}
       {edit && (
         <textarea
-          defaultValue={elements.join(', ')}
+          defaultValue={defaultText}
           className="w-full"
           rows={20}
           onChange={(e) => {
             setWarning('');
-            const newElements = e.target.value;
-            let values: number[] = [];
-            try {
-              values = parseCsvIntegers(newElements);
-            } catch (e) {
-              setWarning(e.message);
-            }
-            onAddElement(values);
+            setText(e.target.value);
+            // onAddElement(values);
           }}
         />
       )}
-      <Button className="text-primary-8" onClick={() => setEdit(!edit)} disabled={!!warning}>
-        {edit ? 'OK' : 'Edit'}
-      </Button>
-    </div>
-  );
-
-  return (
-    <div
-      className="text-primary-8 mt-2 flex flex-col gap-2"
-      data-scan-config-block-element={ScanConfigUIElementDict.NeuronIds}
-    >
-      <div className="flex flex-wrap gap-3">
-        {elements.map((e, i) => (
-          // eslint-disable-next-line
-          <div key={i} className="flex gap-1">
-            {e} {!disabled && <CloseCircleOutlined onClick={() => onDeleteElement(i)} />}
-          </div>
-        ))}
-      </div>
-      {!addingElement && !disabled && (
-        <PlusCircleOutlined onClick={() => setAddingElement(true)} className="text-primary-8" />
-      )}
-      {addingElement && !disabled && (
-        <div className="flex gap-2">
-          <InputNumber
-            disabled={disabled}
-            step={1}
-            min={0}
-            onChange={(newV) => {
-              setNewElement(newV);
-            }}
-          />
-          {newElement !== null && (
-            <CheckCircleOutlined
-              className="text-primary-8"
-              onClick={() => {
-                if (newElement !== null) {
-                  onAddElement(newElement);
-                }
-              }}
-            />
-          )}
-          <CloseCircleOutlined
-            onClick={() => {
-              setAddingElement(false);
-              setNewElement(null);
-            }}
-            className="text-primary-8"
-          />
-        </div>
+      {!disabled && (
+        <Button
+          className="text-primary-8"
+          onClick={() => {
+            if (edit) {
+              try {
+                const values = parseCsvIntegers(text);
+                onAddElement(values);
+              } catch (e) {
+                setWarning((e as Error).message);
+              }
+            }
+            setEdit(!edit);
+          }}
+          disabled={!!warning}
+        >
+          {edit ? 'OK' : 'Edit'}
+        </Button>
       )}
     </div>
   );
@@ -150,3 +148,31 @@ function parseCsvIntegers(data: string): number[] {
 
   return result;
 }
+
+const Ids = memo(({ ids }: { ids: { head: number[]; tail: number[] } }) => {
+  const containerClass = 'w-full border border-gray-200 p-3 rounded-lg flex flex-wrap gap-1';
+  const elementClass = 'border border-gray-200 rounded-full px-3 py-1 text-primary-8 font-bold';
+  return (
+    <>
+      <div className={containerClass}>
+        {ids.head.map((id) => (
+          <div key={id} className={elementClass}>
+            {id}
+          </div>
+        ))}
+      </div>
+
+      {ids.tail.length > 0 && <div className="text-gray-500 text-4xl mb-5">...</div>}
+
+      {ids.tail.length > 0 && (
+        <div className={containerClass}>
+          {ids.tail.map((id) => (
+            <div key={id} className={elementClass}>
+              {id}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+});

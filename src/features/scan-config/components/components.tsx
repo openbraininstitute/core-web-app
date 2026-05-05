@@ -8,8 +8,6 @@ interface Object {
   [key: string]: Primitive | Primitive[] | Object;
 }
 
-export type ConfigValue = Primitive | Primitive[] | Object;
-
 export type Config = Record<string, Object | string>;
 
 export const getRoundedByIndex = (

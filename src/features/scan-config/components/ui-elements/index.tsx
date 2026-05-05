@@ -148,28 +148,17 @@ export function UIElementRender({
       );
     })
     .with({ paramSchema: { ui_element: ScanConfigUIElementDict.NeuronIds } }, () => {
-      const namedTupleArray = Array.isArray(value) ? value : [value];
-
-      // If it's an array of named tuples flatten it to a single array.
-      const elements: number[] = namedTupleArray.flatMap((v) => {
-        if (isPlainObject(v) && Array.isArray(v.elements)) {
-          return v.elements;
-        }
-        return [];
-      });
-
       return (
         <NeuronIds
-          elements={elements}
+          value={value}
           disabled={disabled}
           onDeleteElement={(i: number) => {
-            const copy = [...elements];
-            copy.splice(i, 1);
-
-            setState({
-              ...state,
-              [k]: { elements: copy },
-            });
+            // const copy = [...elements];
+            // copy.splice(i, 1);
+            // setState({
+            //   ...state,
+            //   [k]: { elements: copy },
+            // });
           }}
           onAddElement={(newElement: number[]) => {
             if (!state[k]) {
@@ -197,6 +186,7 @@ export function UIElementRender({
       ({ paramSchema }) => {
         const getValue = (): string[] => {
           if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
+            //@ts-expect-error: TS can't infer the type, this is guaranteed to be a string[]
             return value;
           }
           if (typeof value === 'string') return [value];
