@@ -1,0 +1,48 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 24px;
+  padding: 32px var(--padM, 1.5rem);
+  background-color: var(--color-primary);
+  color: #fffe;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-XL, 1.75rem);
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fffe;
+}
+
+.logos {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 32px;
+  align-items: center;
+}
+
+.link {
+  display: block;
+  flex-shrink: 0;
+  line-height: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.link:focus-visible {
+  outline: 2px solid #fffe;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+.logoImage {
+  width: auto;
+  height: auto;
+  max-height: 48px;
+  object-fit: contain;
+  vertical-align: middle;
+}

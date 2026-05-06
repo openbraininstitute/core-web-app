@@ -1,4 +1,4 @@
-*[_type == "pages" && slug.current == "{{SLUG}}"][0] {
+*[_type == "pages" && <SLUG_PRED>][0] {
     title,
     seoTitle,
     seoDescription,

@@ -2,7 +2,7 @@
 
 import { useSanity } from '@/services/sanity';
 
-import { getSection } from '../utils';
+import { getSanityPagesSlugPredicate, getSection } from '../utils';
 import queryContentRTF from './content.groq';
 import { type ContentForRichText, isContentForRichText } from './types';
 
@@ -31,10 +31,8 @@ function isContentForPageWithContent(data: unknown): data is ContentForPage {
 
 export function useSanityContentRTF(sectionIndex: EnumSection): ContentForRichText {
   const section = getSection(sectionIndex);
-  // In Sanity, we use only the last word of the actual slug.
-  // `/welcome/home` is referenced as `home` in Sanity.
-  const slug = section.slug.split('/').pop() || '/';
-  const query = queryContentRTF.replaceAll('<SLUG>', slug);
+  const slugPred = getSanityPagesSlugPredicate(section.slug);
+  const query = queryContentRTF.replaceAll('<SLUG_PRED>', slugPred);
   const result = useSanity(query, isContentForPageWithContent);
   return result?.content ?? [];
 }
@@ -57,7 +55,7 @@ function isContentForPagePermissive(data: unknown): data is ContentForPage {
 
 export function useSanityContentForPage(sectionIndex: EnumSection): ContentForPage | undefined {
   const section = getSection(sectionIndex);
-  const slug = section.slug.split('/').pop() || '/';
-  const query = queryContentRTF.replaceAll('<SLUG>', slug);
+  const slugPred = getSanityPagesSlugPredicate(section.slug);
+  const query = queryContentRTF.replaceAll('<SLUG_PRED>', slugPred);
   return useSanity(query, isContentForPagePermissive) ?? undefined;
 }
