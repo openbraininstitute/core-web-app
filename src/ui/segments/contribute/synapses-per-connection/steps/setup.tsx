@@ -86,7 +86,7 @@ export function Setup() {
         <Input.TextArea
           rows={5}
           className="rounded-xl placeholder:text-sm"
-          placeholder="Enter cell recording description"
+          placeholder="Enter synapses-per-connection description"
         />
       </Form.Item>
       <BrainRegionFormField name="brain_region_id" label="Brain region" />

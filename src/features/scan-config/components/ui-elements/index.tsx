@@ -29,13 +29,13 @@ import {
 import { isObject } from '@/util/type-guards';
 
 import ModelIdentifierMultiple from './model-identifier_multiple';
+import { VoltageDuration, type VoltageDurationState } from './voltage-duration';
 
 import type { SetStateAction } from 'jotai';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
-
-type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
+export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 export function UIElementRender({
   k,
@@ -115,7 +115,6 @@ export function UIElementRender({
           onChange={(value) => {
             setState({ ...state, [k]: value });
           }}
-          errorPathPrefix={errorPathPrefix}
         />
       )
     )
@@ -354,6 +353,24 @@ export function UIElementRender({
                 },
               });
             }}
+          />
+        );
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.VoltageDuration },
+      },
+      ({ paramSchema }) => {
+        const v = (state[k] ?? []) as unknown as VoltageDurationState[];
+        return (
+          <VoltageDuration
+            paramSchema={paramSchema}
+            state={v}
+            onChange={(newValue: VoltageDurationState[]) =>
+              setState({ ...state, [k]: newValue as unknown as ConfigValue })
+            }
+            disabled={disabled}
           />
         );
       }

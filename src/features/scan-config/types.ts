@@ -102,7 +102,6 @@ export const BuildScanConfigTabs = {
   results: 'results',
 } as const;
 
-
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
@@ -132,10 +131,7 @@ export const SchemaNameDict = {
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
 } as const;
 
-
 export type SchemaName = (typeof SchemaNameDict)[keyof typeof SchemaNameDict];
-
-
 
 export type TRootElement = {
   description: string;
@@ -162,6 +158,7 @@ export const ScanConfigUIElementDict = {
   IonChannelVariableModificationByNeuron: 'ion_channel_variable_modification_by_neuron',
   ModelSelectorSingle: 'model_selector_single',
   SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
+  VoltageDuration: 'voltage_duration',
   ModelIdentifierMultiple: 'model_identifier_multiple',
 } as const;
 
@@ -311,6 +308,16 @@ export interface BooleanInput extends TBlockElement {
   false_label?: string;
 }
 
+export interface VoltageDuration extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.VoltageDuration;
+  items: {
+    properties: {
+      duration: FloatParameterSweep;
+      voltage: FloatParameterSweep;
+    };
+  };
+}
+
 export interface IBlockUnion extends TRootElement {
   ui_element: typeof ScanConfigUIElementDict.BlockUnion;
   /** the property name used to block between variants (defaults to 'type') */
@@ -343,7 +350,8 @@ export type ParamSchema =
   | IonChannelRangeVariableModification
   | IonChannelGlobalVariableModification
   | ModelSelectorSingle
-  | SelectRecordableIonChannelVariable;
+  | SelectRecordableIonChannelVariable
+  | VoltageDuration;
 
 export type TBlock = {
   title: string;

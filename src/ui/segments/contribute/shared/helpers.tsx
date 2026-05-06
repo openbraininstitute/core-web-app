@@ -1,5 +1,4 @@
 import { initial, join, last, split } from 'es-toolkit/compat';
-import { z } from 'zod';
 
 import { cn } from '@/utils/css-class';
 
@@ -68,7 +67,7 @@ export function renderLabel(
  * (e.g. contribution.0 when the field is contribution.0.agent_type). Root issues
  * with an empty path are not mapped onto nested fields.
  */
-function zodIssueAppliesToFieldPath(
+function _zodIssueAppliesToFieldPath(
   issuePath: ReadonlyArray<PropertyKey>,
   fieldPath: string
 ): boolean {
@@ -93,21 +92,25 @@ export function createZodFieldValidator<TSchema extends ZodType, TFormValues>(
   extraCustomValidator?: (values: TFormValues) => void | Promise<void>
 ) {
   return async (_rule: unknown, _value: unknown): Promise<void> => {
+    const values = form.getFieldsValue(true) as TFormValues;
+    const result = await schema.safeParseAsync(values);
+
+    if (!result.success) {
+      const matchingIssue = result.error.issues.find((issue) => issue.path.join('.') === fieldPath);
+      if (matchingIssue) {
+        return Promise.reject(matchingIssue.message);
+      }
+    }
+
+    // run the extra validator when the current field has no zod errors,
+    // regardless of whether other fields failed validation.
     try {
-      const values = form.getFieldsValue(true) as TFormValues;
-      await Promise.all([schema.parseAsync(values), extraCustomValidator?.(values)]);
+      await extraCustomValidator?.(values);
     } catch (error) {
       if (error instanceof CustomFormError) {
         return Promise.reject(error.message);
       }
-      if (error instanceof z.ZodError) {
-        const matchingIssue = error.issues.find((issue) =>
-          zodIssueAppliesToFieldPath(issue.path, fieldPath)
-        );
-        if (matchingIssue) {
-          return Promise.reject(matchingIssue.message);
-        }
-      }
+      throw error;
     }
   };
 }

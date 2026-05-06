@@ -9,7 +9,7 @@ import { classNames } from '@/util/utils';
 import { type MorphoViewerSettings, useMorphoViewerSettings } from '../../hooks/settings';
 import { ColorInput } from './ColorInput';
 
-import type { MorphologyCanvas } from '@bbp/morphoviewer';
+import type { MorphologyCanvas } from '@/morpho-viewer';
 
 import styles from './colors-legend.module.css';
 

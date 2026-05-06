@@ -53,12 +53,8 @@ export default async function CreditsPage({
       queryFn: getUserGroups,
     });
 
-    const { isVirtualLabAdmin: isAdmin, isProjectAdmin } = makeRoles(
-      result,
-      virtualLabId,
-      projectId
-    );
-    if (!isAdmin && !isProjectAdmin) {
+    const { isProjectMember } = makeRoles(result, virtualLabId, projectId);
+    if (!isProjectMember) {
       throw new Error('User not allowed to access this page');
     }
   } catch {

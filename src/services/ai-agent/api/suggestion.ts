@@ -1,5 +1,6 @@
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { isType } from '@/util/type-guards';
+
 import { fetchJSON } from './util';
 
 const pendingRequests = new Map<string, Promise<string[]>>();

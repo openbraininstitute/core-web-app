@@ -11,4 +11,5 @@ export const keyBuilder = {
   s3presignedUrl: (props: Record<string, any>) => [`${prefix}-presigned-url`, { ...props }],
   quickAccessList: () => [`${prefix}-quick-access-list`],
   discoverTutorialsList: () => [`${prefix}-discover-tutorial-list`],
+  countries: () => [`${prefix}/countries`],
 };

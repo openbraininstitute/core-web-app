@@ -1,26 +1,39 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 8px 0;
-  margin: 8px 0;
+  padding: 1px 0;
+  margin: 6px 0;
 }
 
 .card {
   overflow: visible;
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  background-color: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
+  background-color: color-mix(in srgb, var(--color-primary-6) 4%, var(--color-neutral-9));
   transition:
-    box-shadow 200ms ease-out,
-    border-color 200ms ease-out,
-    background-color 200ms ease-out;
-  animation: tp-card-entrance 260ms ease-out both;
+    box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-visible-tools] .card {
+  animation: tp-card-entrance 300ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+[data-collapsing] .card {
+  animation: none;
 }
 
 .card:hover {
-  border-color: rgba(0, 0, 0, 0.12);
-  background-color: #f0f0f0;
+  border-color: color-mix(in srgb, var(--color-primary-6) 15%, var(--color-neutral-5));
+}
+
+.card:not(.cardExpanded):hover {
+  background-color: color-mix(in srgb, var(--color-primary-6) 3%, var(--color-neutral-8));
+}
+
+.header:hover {
+  background-color: color-mix(in srgb, var(--color-primary-6) 3%, var(--color-neutral-8));
 }
 
 .cardRunning {
@@ -34,11 +47,15 @@
     0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
+[data-visible-tools] .card:not(.cardRunning) {
+  background-color: var(--color-neutral-9);
+}
+
 .header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   width: 100%;
   background: none;
   border: none;
@@ -54,9 +71,11 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.5rem;
-  background-color: #f3f4f6;
-  color: #4b5563;
-  transition: all 300ms;
+  background-color: color-mix(in srgb, var(--color-primary-6) 6%, transparent);
+  color: var(--color-primary-8);
+  transition:
+    background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .iconWrapperRunning {
@@ -86,7 +105,7 @@
   font-size: 0.875rem;
   line-height: 1.25;
   font-weight: 600;
-  color: #111827;
+  color: var(--color-primary-8);
 }
 
 .status {
@@ -96,14 +115,14 @@
   gap: 0.375rem;
   font-size: 0.75rem;
   font-weight: 500;
-  transition: color 200ms;
+  transition: color 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .statusRunning {
   color: #1d4ed8;
 }
 .statusComplete {
-  color: #047857;
+  color: var(--color-secondary-5);
 }
 
 .statusText {
@@ -114,7 +133,7 @@
   height: 0.875rem;
   width: 0.875rem;
   stroke-width: 3;
-  animation: tp-scale-up 300ms ease-out forwards;
+  animation: tp-scale-up 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .actions {
@@ -134,13 +153,12 @@
   border: none;
   cursor: pointer;
   background: none;
-  color: #6b7280;
+  color: var(--color-primary-6);
 }
 
 .restoreButton:hover {
-  transform: scale(1.1);
-  background-color: #dbeafe;
-  color: #2563eb;
+  background-color: color-mix(in srgb, var(--color-primary-6) 6%, var(--color-neutral-7));
+  color: var(--color-primary-8);
 }
 
 .restoreButton:active {
@@ -205,14 +223,13 @@
 }
 
 .expandButton {
-  color: #6b7280;
+  color: var(--color-primary-6);
   background: none;
 }
 
 .expandButton:hover {
-  transform: scale(1.1);
-  background-color: #f3f4f6;
-  color: #374151;
+  background-color: color-mix(in srgb, var(--color-primary-6) 6%, var(--color-neutral-7));
+  color: var(--color-primary-8);
 }
 
 .expandButton:active {
@@ -220,14 +237,13 @@
 }
 
 .helpButton {
-  color: #2563eb;
+  color: var(--color-primary-6);
   text-decoration: none;
 }
 
 .helpButton:hover {
-  transform: scale(1.1);
-  background-color: #eff6ff;
-  color: #1d4ed8;
+  background-color: color-mix(in srgb, var(--color-primary-6) 6%, var(--color-neutral-7));
+  color: var(--color-primary-8);
 }
 
 .helpButton:active {
@@ -244,7 +260,7 @@
   width: 0.5rem;
   transform: rotate(90deg);
   transform-origin: center;
-  fill: #6b7280;
+  fill: var(--color-primary-6);
   transition: transform 300ms ease-out;
   display: block;
 }
@@ -255,12 +271,12 @@
 
 .details {
   overflow: hidden;
-  background-color: rgba(249, 250, 251, 0.5);
+  background-color: color-mix(in srgb, var(--color-primary-6) 3%, var(--color-neutral-8));
   transition:
-    max-height 320ms cubic-bezier(0.2, 0.9, 0.2, 1),
-    padding 240ms cubic-bezier(0.2, 0.9, 0.2, 1),
-    border-top-color 220ms ease,
-    opacity 260ms ease;
+    max-height 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-top-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
   border-top: 1px solid transparent;
   opacity: 0;
   max-height: 0;
@@ -273,7 +289,7 @@
 }
 
 .detailsOpen {
-  border-top-color: #e5e7eb;
+  border-top-color: color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
   opacity: 1;
   max-height: 640px;
   padding: 0.75rem;
@@ -301,7 +317,7 @@
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: #6b7280;
+  color: var(--color-primary-6);
   text-transform: uppercase;
 }
 
@@ -309,20 +325,20 @@
   max-height: 15rem;
   overflow: auto;
   border-radius: 0.375rem;
-  border: 1px solid #e5e7eb;
-  background-color: #fff;
+  border: 1px solid color-mix(in srgb, var(--color-primary-6) 20%, var(--color-neutral-6));
+  background-color: var(--color-neutral-9);
   padding: 0.625rem 0.75rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.6875rem;
   line-height: 1.625;
-  color: #1f2937;
+  color: var(--color-primary-9);
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   white-space: pre;
 }
 
 @keyframes tp-card-entrance {
   from {
-    transform: translateY(8px);
+    transform: translateY(4px);
     opacity: 0;
   }
   to {

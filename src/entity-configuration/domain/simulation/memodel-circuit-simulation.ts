@@ -1,8 +1,7 @@
 import { keyBy } from 'es-toolkit/compat';
 
-import { getMEModels } from '@/api/entitycore/queries';
+import { getMEModel, getMEModels } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getCircuit } from '@/api/entitycore/queries/model/circuit';
 import {
   createSimulationCampaign,
   getSimulationCampaign,
@@ -25,7 +24,7 @@ import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 import { count, rows as listSimulationRows } from './simulation-campaign';
 
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -95,10 +94,10 @@ export async function resolveSimulationByCampaignId({
   if (!configAsset) throw Error('No campaign config asset found');
 
   let config = null;
-  let entity: ICircuit | null = null;
+  let entity: IMEModel | null = null;
 
   if (simulation?.entity_id && populate.includes('entity')) {
-    entity = await getCircuit({ id: simulation?.entity_id, context });
+    entity = await getMEModel({ id: simulation?.entity_id, context });
   }
 
   if (populate.includes('config')) {

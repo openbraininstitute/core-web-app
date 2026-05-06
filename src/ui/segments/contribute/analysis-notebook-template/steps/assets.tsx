@@ -27,6 +27,7 @@ const FILE_CONFIGS = [
   {
     key: 'notebook' as const,
     label: 'Jupyter Notebook',
+    description: undefined as string | undefined,
     accept: ['.ipynb', '.IPYNB'],
     acceptLabel: 'ipynb',
     optional: false,
@@ -38,6 +39,10 @@ const FILE_CONFIGS = [
   {
     key: 'requirements' as const,
     label: 'Requirements File',
+    description:
+      "A requirements.txt file is a plain-text document used to manage a project's Python dependencies with pip. It lists specific packages and their version requirements, allowing users to replicate an entire environment." as
+        | string
+        | undefined,
     accept: ['.txt', '.TXT'],
     acceptLabel: 'txt',
     optional: true,
@@ -49,6 +54,10 @@ const FILE_CONFIGS = [
   {
     key: 'zip' as const,
     label: 'Supporting Files',
+    description:
+      'A zip archive containing files that support functionality. These can be code (.py) to be used in the notebook, images to be embedded, or data to be loaded. The archive will be extracted as-is at the location of the notebook file.' as
+        | string
+        | undefined,
     accept: ['.zip', '.ZIP'],
     acceptLabel: 'zip',
     optional: true,
@@ -89,7 +98,7 @@ export function Assets() {
   return (
     <div className="h-full w-full">
       <div className="mb-5">
-        <p className="text-label text-sm font-light">
+        <p className="text-black text-sm font-light">
           Upload the notebook file for your analysis notebook template. Requirements and supporting
           files are optional.
         </p>
@@ -112,6 +121,10 @@ export function Assets() {
             >
               <HiddenSentinel />
             </Form.Item>
+
+            {config.description && (
+              <p className="-mt-3 mb-2 text-xs font-light text-black">{config.description}</p>
+            )}
 
             <AssetUpload
               maxFiles={1}

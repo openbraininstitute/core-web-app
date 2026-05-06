@@ -48,6 +48,6 @@ export function createAnalysisNotebookTemplateConfig(
     }),
     buildDetailsUrl: () => '__NO_DETAILS_URL__',
     /* ({ virtualLabId, projectId }) =>
-      `/app/virtual-lab/$virtualLabId/${projectId}/notebooks/private`, */
+      `/app/virtual-lab/${virtualLabId}/${projectId}/notebooks/private`, */
   };
 }

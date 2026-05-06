@@ -59,10 +59,12 @@ function CustomRenderer({ data, selected, onSelect }: ICustomRendererProps) {
 
 type Props<TSchema extends ZodObject<ZodRawShape>> = {
   schema: TSchema;
+  required?: boolean;
 };
 
 export function ETypeClassificationSelector<TSchema extends ZodObject<ZodRawShape>>({
   schema,
+  required = true,
 }: Props<TSchema>) {
   const form = Form.useFormInstance();
   const { virtualLabId, projectId } = useWorkspace();
@@ -95,10 +97,10 @@ export function ETypeClassificationSelector<TSchema extends ZodObject<ZodRawShap
     <>
       <Form.Item
         name="etype_class_id"
-        label={renderLabel('Etype classification', 'main', RequiredFieldMarker)}
+        label={renderLabel('Etype classification', 'main', required ? RequiredFieldMarker : undefined)}
         rules={[
           {
-            required: true,
+            required,
             validator: createZodFieldValidator(schema, 'etype_class_id', form),
           },
         ]}

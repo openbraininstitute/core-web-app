@@ -4,5 +4,5 @@ import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experi
 import { ETypeClassificationSelector } from '@/ui/segments/contribute/shared/components/etype-selector';
 
 export function ETypeClassification() {
-  return <ETypeClassificationSelector schema={ExperimentalNeuronDensitySchema} />;
+  return <ETypeClassificationSelector schema={ExperimentalNeuronDensitySchema} required={false} />;
 }

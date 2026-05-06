@@ -1,86 +1,228 @@
 .history {
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 16px;
+
+  /* Force "floating" scrollbar — see chat.module.css for rationale */
+  scrollbar-width: none; /* Firefox */
+}
+
+.content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.contentWrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.content > div {
+  width: 100%;
+  max-width: 600px;
+}
+
+.header {
+  flex-shrink: 0;
+  width: 100%;
   display: grid;
-  grid-template-columns: 1fr minmax(200px, 640px) 1fr;
+  grid-template-columns: 1fr 5fr 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 0.8rem;
+  background: var(--color-neutral-9);
+  border-bottom: 1px solid var(--color-neutral-5);
 }
 
-.history > div {
-  grid-column: 2;
+.headerTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-primary-8);
+  justify-self: start;
 }
 
-.history div > .card {
+.headerSearch {
+  padding-left: 1.4em;
+  justify-self: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+.closeBtn {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-primary-5);
+  background: var(--color-neutral-9);
+  color: var(--color-primary-5);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.closeBtn:hover {
+  background: var(--color-primary-5);
+  border-color: var(--color-primary-5);
+  color: var(--color-neutral-9);
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.content div > .card {
+  animation: cardEnter 0.25s ease both;
+  animation-delay: calc(var(--index, 0) * 40ms);
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 1em;
-  margin: 1em 0;
-  color: #003;
-  box-shadow:
-    0 0.25em 0.5em #0008,
-    0 -0.25em 0.5em #fff;
-  border-radius: 1em;
-  padding: 1em;
-  border: 2px solid #fff;
-  background: linear-gradient(to top, #fff, #eee);
+  align-items: center;
+  gap: 0.75em;
+  margin: 0.5em 0;
+  color: var(--color-primary-9);
+  border-radius: 0.5em;
+  padding: 0.875em 1em;
+  border: 1px solid #e5e7eb;
+  background: var(--color-neutral-9);
+  transition: all 0.15s ease;
 }
 
-.history div > .card.currentThread {
-  background: linear-gradient(to top, #1890ff, #003a8c, #012766);
-  color: #fff;
-  border-color: #003a8c;
+.content div > .card:hover {
+  background: color-mix(in srgb, var(--color-primary-6) 5%, var(--color-neutral-9));
+  border-color: var(--color-neutral-5);
+  box-shadow: 0 2px 4px rgba(0, 58, 140, 0.1);
 }
 
-.history div > .card.currentThread .more,
-.history div > .card.currentThread menu {
-  color: #000;
+.content div > .card.currentThread {
+  background: color-mix(in srgb, var(--color-primary-6) 15%, var(--color-neutral-9));
+  color: var(--color-primary-9);
+  border: 1px solid var(--color-primary-5);
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.15);
+  font-weight: 600;
 }
 
-.history div > .mainButton {
+.content div > .card.currentThread:hover {
+  background: color-mix(in srgb, var(--color-primary-6) 25%, var(--color-neutral-9));
+  border-color: var(--color-primary-6);
+  box-shadow: 0 2px 5px rgba(24, 144, 255, 0.18);
+}
+
+.content div > .card.currentThread .more,
+.content div > .card.currentThread menu {
+  color: var(--color-neutral-9);
+}
+
+.content div > .mainButton {
   border: none;
   background: none;
-  box-shadow: none;
   text-align: left;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
   margin: 0;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
 }
 
 .delete {
-  color: #e00;
+  color: var(--color-error);
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.history > div h1 {
-  color: #0008;
+.delete:hover {
+  opacity: 1;
+}
+
+.edit {
+  color: var(--color-primary-5);
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit:hover {
+  opacity: 1;
+  color: var(--color-primary-6);
+}
+
+.content > div h1 {
+  animation: cardEnter 0.25s ease both;
+  animation-delay: calc(var(--index, 0) * 40ms);
+  color: var(--color-primary-8);
   font-variant: small-caps;
-  font-weight: bold;
-  font-size: 120%;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  margin: 1.5em 0 0.75em;
+  text-transform: uppercase;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
 }
 
 div.loadMore {
   display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
-  gap: 0;
-  padding: 1em 0;
+  justify-content: center;
+  padding: 1.5em 0;
 }
 
 div.loadMore > button {
   font: inherit;
-  line-height: inherit;
   cursor: pointer;
   background: #fff;
-  border: 2px solid #f0f0f0;
-  border-radius: 999vmax;
-  flex-flow: row;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 1em;
-  padding: 0.5em 2em;
-  line-height: 2;
+  border: 1px solid var(--color-primary-5);
+  border-radius: 0.5em;
   display: flex;
-  box-shadow:
-    0 0.5em 1em #0004,
-    0 -0.5em 0.5em #fff;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.625em 1.25em;
+  color: var(--color-primary-5);
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+div.loadMore > button:hover {
+  background: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-9));
+  border-color: var(--color-primary-5);
+  box-shadow: 0 2px 4px rgba(0, 58, 140, 0.2);
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

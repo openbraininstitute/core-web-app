@@ -7,6 +7,7 @@ import { Button, InputNumber, Modal, Spin, Upload } from 'antd';
 import { isNil } from 'es-toolkit';
 import Image from 'next/image';
 import NextLink from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { type ReactNode, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 
 import { createAsset, downloadAsset } from '@/api/entitycore/queries/assets';
@@ -77,7 +78,20 @@ type Props = {
 };
 
 export function NotebooksLayout({ children, active }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { virtualLabId, projectId } = useWorkspace();
+
+  useEffect(() => {
+    if (searchParams.get('upload') === 'true') {
+      router.replace('private');
+      makeSelectContributionEntityClickEvent({
+        display: true,
+        entityType: ExtendedEntitiesTypeDict.Notebook,
+        sessionId: crypto.randomUUID(),
+      });
+    }
+  }, [searchParams, router]);
   const notification = useAppNotification();
   const [loading, setLoading] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
@@ -134,11 +148,15 @@ export function NotebooksLayout({ children, active }: Props) {
   }, []);
 
   const handleUploadData = () => {
-    makeSelectContributionEntityClickEvent({
-      display: true,
-      entityType: ExtendedEntitiesTypeDict.Notebook,
-      sessionId: crypto.randomUUID(),
-    });
+    if (active === 'public') {
+      router.push('private?upload=true');
+    } else {
+      makeSelectContributionEntityClickEvent({
+        display: true,
+        entityType: ExtendedEntitiesTypeDict.Notebook,
+        sessionId: crypto.randomUUID(),
+      });
+    }
   };
 
   async function handleRunNotebook() {

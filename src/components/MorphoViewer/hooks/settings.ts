@@ -18,7 +18,7 @@ import {
   LIGHT_SOMA,
 } from '../constants';
 
-import type { ColoringType, MorphologyCanvas } from '@bbp/morphoviewer';
+import type { ColoringType, MorphologyCanvas } from '@/morpho-viewer';
 
 const DEFAULT_SETTINGS: ExtendedMorphoViewerSettings = {
   darkMode: false,

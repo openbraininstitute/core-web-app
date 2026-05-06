@@ -1,5 +1,6 @@
-import { fetchJSON, asyncCreateSquash } from './util';
 import { isType } from '@/util/type-guards';
+
+import { asyncCreateSquash, fetchJSON } from './util';
 
 export const serviceAiAgentListTools = asyncCreateSquash(
   async (accessToken: string): Promise<AiAgentListToolsResponse> => {

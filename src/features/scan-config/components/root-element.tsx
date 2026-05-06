@@ -71,7 +71,7 @@ export function RootElement({
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
 }) {
-  const { aiConfig, isChatReady } = useAIConfig();
+  const { isChatReady } = useAIConfig();
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
   const hasFieldErrors = useFieldErrorsForPath(rootElement);
@@ -204,6 +204,7 @@ export function RootElement({
             isChatReady={isChatReady}
             setEditing={setEditing}
             setSelectedEntry={setSelectedEntry}
+            setSelectedRootElement={setSelectedRootElement}
             singularName={rootElementSchema.singular_name}
             allEntries={allEntries}
             newKey={newKey}

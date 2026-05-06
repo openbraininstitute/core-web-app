@@ -324,7 +324,7 @@ export function WorkspaceProvision({
     setRetryState(null);
     streamRef.current({ current: false }, payloadRef.current, undefined, abortController.signal);
     return () => {
-      abortController.abort();
+      abortController.abort('unmounted');
     };
   }, []);
 
