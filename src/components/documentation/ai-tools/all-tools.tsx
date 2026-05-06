@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 
-import { WaveLoader } from '@/components/ai-assistant/wave-loader';
 import { useAITools } from '@/services/ai-agent/tools/tools';
 
 export default function AllAIToolsContent() {
@@ -18,7 +17,7 @@ export default function AllAIToolsContent() {
         </p>
       </div>
       <div className="mt-2 grid grid-cols-3 gap-4">
-        {!allTools && <WaveLoader />}
+        {!allTools && <div>Loading...</div>}
         {allTools?.map((tool: { id: string; name: string }) => (
           <Link
             href={`/app/documentation/ai-chat-tools/${tool.id}`}

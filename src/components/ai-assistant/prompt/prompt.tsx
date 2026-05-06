@@ -3,6 +3,7 @@
 import React from 'react';
 
 import SendIcon from '@/components/icons/Send';
+import StopIcon from '@/components/icons/Stop';
 import { classNames } from '@/util/utils';
 
 // import { IconGear } from '../icons/gear';
@@ -19,6 +20,8 @@ interface PromptProps {
   onChange(value: string): void;
   onClick(value: string): void;
   disabled?: boolean;
+  isStreaming?: boolean;
+  onCancel?(): void;
 }
 
 export default function Prompt({
@@ -28,6 +31,8 @@ export default function Prompt({
   onChange,
   onClick,
   disabled,
+  isStreaming,
+  onCancel,
 }: PromptProps) {
   const [showToolsSelector, setShowToolsSelector] = React.useState(false);
 
@@ -39,7 +44,9 @@ export default function Prompt({
     if (evt.key === 'Enter' && !evt.shiftKey && !evt.ctrlKey && !evt.altKey && !evt.metaKey) {
       evt.preventDefault();
       evt.stopPropagation();
-      handleSendClick();
+      if (!isStreaming) {
+        handleSendClick();
+      }
     }
   };
   // const handleToolsClick = () => {
@@ -64,14 +71,25 @@ export default function Prompt({
         {/* <button type="button" onClick={handleToolsClick} aria-label="Select tools">
           <IconGear />
         </button> */}
-        <button
-          type="button"
-          onClick={handleSendClick}
-          aria-label="Send prompt"
-          disabled={value.trim().length === 0 || disabled}
-        >
-          {disabled ? <div className={styles.spinner} /> : <SendIcon />}
-        </button>
+        {isStreaming ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            aria-label="Cancel"
+            className={styles.stopButton}
+          >
+            <StopIcon />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSendClick}
+            aria-label="Send prompt"
+            disabled={value.trim().length === 0 || disabled}
+          >
+            {disabled ? <div className={styles.spinner} /> : <SendIcon />}
+          </button>
+        )}
       </div>
       <ToolsSelector
         open={showToolsSelector}

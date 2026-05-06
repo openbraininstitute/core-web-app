@@ -30,7 +30,7 @@ dialog.dialogDelete > div {
   justify-content: flex-start;
   align-items: stretch;
   gap: 2em;
-  background: #f7f7f7;
+  background: #fafafa;
   border: 2px solid #fff;
   box-shadow: 0 1em 2em #0008;
 }

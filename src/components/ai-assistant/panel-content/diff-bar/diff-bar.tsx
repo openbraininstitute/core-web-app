@@ -1,6 +1,6 @@
 'use client';
 
-import { RiCloseLine, RiFileCodeLine } from '@remixicon/react';
+import { RiCloseLine, RiGitBranchLine } from '@remixicon/react';
 
 import { cn } from '@/utils/css-class';
 
@@ -16,7 +16,7 @@ export default function DiffBar({ isViewingDiffs, onToggleDiffs, onClose }: Diff
   return (
     <div className={styles.container}>
       <div className={styles.left}>
-        <RiFileCodeLine size={16} className={styles.icon} />
+        <RiGitBranchLine size={16} className={styles.icon} />
         <span>Changes available</span>
       </div>
       <div className={styles.actions}>
