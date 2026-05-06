@@ -21,6 +21,10 @@ import { Button } from '@/ui/molecules/button';
 import { Card, CardContent } from '@/ui/molecules/card';
 import { Input } from '@/ui/molecules/input';
 import { CustomFormError, createZodFieldValidator } from '@/ui/segments/contribute/shared/helpers';
+import {
+  personNameRegex,
+  personNameRegexMessage,
+} from '@/ui/segments/profile/sections/profile-form/validator';
 import { keyBuilder } from '@/ui/use-query-keys/user';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
@@ -33,17 +37,24 @@ export const WorkspaceIdentitySchema = z.object({
   first_name: z
     .string({ message: 'Please enter your first name' })
     .min(1, { message: 'First name is required' })
+    .regex(personNameRegex, {
+      message: personNameRegexMessage,
+    })
     .describe('first name of the user'),
   last_name: z
     .string({ message: 'Please enter your last name' })
     .min(1, { message: 'Last name is required' })
+    .regex(personNameRegex, {
+      message: personNameRegexMessage,
+    })
     .describe('last name of the user'),
   email: z
     .email({ message: 'Please enter your email address' })
     .describe('email address of the user'),
   country: z
     .string({ message: 'Please enter your country' })
-    .min(1, { message: 'Country is required' })
+    .min(2, { message: 'Country is required' })
+    .max(2, { message: 'Country is required' })
     .describe('country of the user'),
   entity: z
     .string({ message: 'Please enter your affiliation' })
@@ -225,7 +236,7 @@ export function WorkspaceIdentity({
               )}
               requiredMark={false}
               initialValues={initialValues}
-              validateTrigger={['onBlur']}
+              validateTrigger={['onBlur', 'onChange']}
             >
               <Card className="mr-4 ml-4 flex w-full max-w-lg min-w-lg flex-col bg-transparent shadow-none backdrop-blur-sm">
                 <CardContent>
@@ -375,7 +386,9 @@ export function WorkspaceIdentity({
                   <Form.Item
                     label={
                       <div className="flex items-center gap-2">
-                        <span className="block text-sm text-[#8C8C8C]">Affiliation</span>
+                        <span className="block text-sm text-[#8C8C8C]">
+                          Affiliation <sup className="text-red-500">*</sup>
+                        </span>
                         <Popover
                           placement="top"
                           trigger="hover"

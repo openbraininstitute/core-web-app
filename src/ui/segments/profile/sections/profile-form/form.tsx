@@ -150,6 +150,7 @@ export function Profile({ data }: ProfileProps) {
           autoComplete="false"
           requiredMark={false}
           preserve={false}
+          validateTrigger={['onBlur', 'onChange']}
           rootClassName={cn(
             '[&_.ant-form-item-explain-error]:text-sm! ',
             '[&_.ant-form-item-explain-error]:pl-0.5! [&_.ant-form-item-explain-error]:select-none!'
@@ -238,7 +239,6 @@ export function Profile({ data }: ProfileProps) {
             <Form.Item
               name="email"
               className="space-y-1 md:col-span-2"
-              validateTrigger={['onChange']}
               validateDebounce={500}
               validateStatus={
                 isEmailValidating ? 'validating' : hasEmailErrors ? 'error' : undefined
