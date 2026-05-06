@@ -94,11 +94,38 @@ jobs:
           echo "=== Token count ==="
           echo "$SHORTHAND" | wc -w
 
+          echo "=== Reading current auto-subdomain config ==="
+          DA=$(aws amplify get-domain-association \
+            --app-id "$AMPLIFY_APP_ID" \
+            --domain-name "$PREVIEW_DOMAIN" \
+            --output json)
+          AUTO_ENABLED=$(echo "$DA" | jq -r '.domainAssociation.enableAutoSubDomain')
+          AUTO_ROLE=$(echo "$DA" | jq -r '.domainAssociation.autoSubDomainIAMRole // empty')
+          AUTO_PATTERNS=$(echo "$DA" | jq -r '.domainAssociation.autoSubDomainCreationPatterns // [] | join(" ")')
+          echo "enableAutoSubDomain=$AUTO_ENABLED"
+          echo "autoSubDomainIAMRole=$AUTO_ROLE"
+          echo "autoSubDomainCreationPatterns=$AUTO_PATTERNS"
+
+          AUTO_FLAGS=()
+          if [ "$AUTO_ENABLED" = "true" ]; then
+            AUTO_FLAGS+=(--enable-auto-sub-domain)
+          else
+            AUTO_FLAGS+=(--no-enable-auto-sub-domain)
+          fi
+          if [ -n "$AUTO_ROLE" ]; then
+            AUTO_FLAGS+=(--auto-sub-domain-iam-role "$AUTO_ROLE")
+          fi
+          if [ -n "$AUTO_PATTERNS" ]; then
+            # shellcheck disable=SC2206
+            AUTO_FLAGS+=(--auto-sub-domain-creation-patterns $AUTO_PATTERNS)
+          fi
+
           echo "=== Calling aws amplify update-domain-association ==="
           set -x
           aws amplify update-domain-association \
             --app-id "$AMPLIFY_APP_ID" \
             --domain-name "$PREVIEW_DOMAIN" \
+            "${AUTO_FLAGS[@]}" \
             --sub-domain-settings $SHORTHAND
           set +x
 
