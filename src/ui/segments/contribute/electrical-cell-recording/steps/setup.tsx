@@ -23,6 +23,8 @@ import {
 } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
 
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 export function Setup() {
   const form = Form.useFormInstance();
 

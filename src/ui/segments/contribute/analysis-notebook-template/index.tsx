@@ -48,10 +48,7 @@ interface IAnalysisNotebookTemplateProps {
   onClose: () => void;
 }
 
-export function AnalysisNotebookTemplate({ 
-  sessionId, 
-  onClose
-}: IAnalysisNotebookTemplateProps) {
+export function AnalysisNotebookTemplate({ sessionId, onClose }: IAnalysisNotebookTemplateProps) {
   const { projectId, virtualLabId } = useWorkspace();
 
   return (

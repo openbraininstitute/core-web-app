@@ -2,14 +2,16 @@
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Form, InputNumber, Space } from 'antd';
+
 import { MeasurementStatistic } from '@/api/entitycore/types/shared/global';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
-import type { TMeasurement } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import { createZodFieldValidator, renderLabel } from '@/ui/segments/contribute/shared';
 import { cn } from '@/utils/css-class';
+
+import type { TMeasurement } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 
 const FIXED_UNIT = '1/mm³';
 

@@ -11,6 +11,7 @@ export const viewDefForEMCellMesh: ViewDefinitionConfig = {
   columns: [
     EntityCoreFields.Name,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.MeshType,
     EntityCoreFields.Contributions,
     EntityCoreFields.RegistrationDate,

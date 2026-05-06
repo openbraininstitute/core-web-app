@@ -1,32 +1,27 @@
 import { CheckOutlined, DownOutlined, LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import omit from 'es-toolkit/compat/omit';
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
+import { omit } from 'es-toolkit/compat';
 import { type ComponentProps, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { BrainIcon } from '@/components/icons';
 import {
-  brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom,
-  useBrainRegionHierarchy,
+  usePrimaryExtendedHierarchySpeciesQuery,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
 import { normalizeBrainRegionName } from '@/features/brain-region-hierarchy/helpers';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
-import { createLoadableAtom, LoadableState } from '@/utils/jotai-loadable';
 
-import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/context';
+import type { TBrainRegionHierarchyExtendedOption } from '@/features/brain-region-hierarchy/types';
 
 export function BrainRegionDropdown({
-  dataKey,
   charsPerLine = 25,
   clsx,
   showIcon = true,
 }: {
-  dataKey: string;
   clsx?: {
     trigger?: ComponentProps<'div'>['className'];
     content?: ComponentProps<'div'>['className'];
@@ -38,20 +33,11 @@ export function BrainRegionDropdown({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [parent, setParent] = useState<HTMLDivElement | null>(null);
-
-  const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom), [])
-  );
-  const isLoading =
-    useAtomValue(
-      useMemo(() => createLoadableAtom(brainRegionBasicCellGroupsRegionsExtendedHierarchyAtom), [])
-    ).state === LoadableState.Loading;
-
+  const { result: brainRegionHierarchy, loading: isLoading } =
+    usePrimaryExtendedHierarchySpeciesQuery();
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
+  const { selectedBrainRegion: node, changeBrainRegion } = useWorkspaceHierarchyRegistry();
 
-  const { node, updateHierarchyConfig } = useBrainRegionHierarchy({
-    dataKey,
-  });
   const [selectedNode, updateSelectedNode] = useState(() => node);
 
   const parentSetter = useCallback((el: HTMLDivElement) => {
@@ -59,8 +45,7 @@ export function BrainRegionDropdown({
   }, []);
 
   const filteredOptions = useMemo<Array<TBrainRegionHierarchyExtendedOption>>(() => {
-    const options = (brainRegionHierarchy?.options ??
-      []) as Array<TBrainRegionHierarchyExtendedOption>;
+    const options = brainRegionHierarchy?.options ?? [];
     if (!searchTerm.trim()) return options;
 
     return options.filter(({ label }) => label.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -97,7 +82,7 @@ export function BrainRegionDropdown({
   }, [open, rowVirtualizer, parent]);
 
   const onSelect = (option: TBrainRegionHierarchyExtendedOption) => {
-    updateHierarchyConfig(option.data);
+    changeBrainRegion(option.data);
     updateSelectedBrainRegion(omit(option.data, 'children'));
     updateSelectedNode(option.data);
     setOpen(false);
@@ -118,7 +103,8 @@ export function BrainRegionDropdown({
       <PopoverTrigger
         asChild
         className={cn(
-          'text-primary-9 border-neutral-2 hover:bg-primary-9 active:bg-primary-9 border bg-white shadow-xs hover:text-white',
+          'text-primary-9 border-neutral-2 hover:bg-primary-9 ',
+          'active:bg-primary-9 border bg-white shadow-xs hover:text-white',
           'text-md h-full flex-1 gap-1.5 rounded-md px-5',
           'flex w-full grow justify-between self-stretch',
           'max-w-64',
@@ -155,7 +141,8 @@ export function BrainRegionDropdown({
               onChange={(e) => setSearchTerm(e.target.value)}
               className={cn(
                 'border-none',
-                'placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
+                'placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 ',
+                'text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
                 { 'h-9 text-base': breakpoint === 'l' },
                 { 'h-10 text-lg': breakpoint === 'xl' }
               )}
@@ -202,7 +189,8 @@ export function BrainRegionDropdown({
                       aria-label={label}
                       onClick={() => onSelect({ label, value: v, data })}
                       className={cn(
-                        'text-primary-9 hover:bg-primary-highlight flex h-full w-full cursor-pointer items-center justify-start px-3 text-left',
+                        'text-primary-9 hover:bg-primary-highlight flex h-full w-full',
+                        'cursor-pointer items-center justify-start px-3 text-left',
                         { 'text-base': breakpoint === 'l' },
                         { 'text-lg': breakpoint === 'xl' },
                         {

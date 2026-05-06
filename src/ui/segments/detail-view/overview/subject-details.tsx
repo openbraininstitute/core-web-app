@@ -1,7 +1,8 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { Field } from '@/ui/segments/detail-view/overview/field';
-import { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import { cn } from '@/utils/css-class';
+
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 
 const columnFields: { field: EntityCoreFields; target: 'subject' | 'entity' }[][] = [
   [
@@ -9,7 +10,7 @@ const columnFields: { field: EntityCoreFields; target: 'subject' | 'entity' }[][
     { field: EntityCoreFields.Description, target: 'subject' },
   ],
   [
-    { field: EntityCoreFields.SubjectSpeciesName, target: 'entity' },
+    { field: EntityCoreFields.SpeciesName, target: 'entity' },
     { field: EntityCoreFields.SubjectStrainName, target: 'entity' },
     { field: EntityCoreFields.SubjectSex, target: 'entity' },
     { field: EntityCoreFields.SubjectWeight, target: 'entity' },

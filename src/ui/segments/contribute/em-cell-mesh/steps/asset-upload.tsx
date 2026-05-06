@@ -5,8 +5,9 @@ import { Form } from 'antd';
 import { resolveOBJFile } from '@/api/one/em-cell-mesh';
 import { tryCatch } from '@/api/utils';
 import { messages } from '@/i18n/en/upload';
-import { type FileWithPreview } from '@/ui/hooks/use-file-upload';
 import { AssetUpload } from '@/ui/segments/contribute/shared/components/asset-upload';
+
+import type { FileWithPreview } from '@/ui/hooks/use-file-upload';
 
 interface IAssetUploadProps {
   maxFiles?: number;
@@ -17,12 +18,7 @@ interface IAssetUploadProps {
   onFilesChange?: (files: FileWithPreview[]) => void;
 }
 
-function HiddenSentinel({
-  value,
-}: {
-  value?: unknown;
-  onChange?: (val: unknown) => void;
-}) {
+function HiddenSentinel({ value }: { value?: unknown; onChange?: (val: unknown) => void }) {
   return (
     <input
       type="hidden"
@@ -66,8 +62,7 @@ export function EMAssetUpload({
         acceptLabel="obj"
         onValidateFile={validateOBJFile}
         onFilesChange={(files) => {
-          const file =
-            files[0]?.file instanceof File ? (files[0].file as File) : undefined;
+          const file = files[0]?.file instanceof File ? (files[0].file as File) : undefined;
 
           // Defer form update out of the current render/state-update cycle.
           setTimeout(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   CELL_MORPHOLOGY_PROGRESS_STEPS,
@@ -17,7 +17,6 @@ import {
   Subject,
 } from '@/ui/segments/contribute/cell-morphology/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { TCellMorphologyForm } from '@/ui/segments/contribute/cell-morphology/schema';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
@@ -76,15 +75,13 @@ interface ICellMorphologyProps {
 
 export function CellMorphology({ sessionId }: ICellMorphologyProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <ContributionForm
       config={cellMorphologyConfig}
       sessionId={sessionId}
-      brainRegionId={defaultBrainRegion.id}
+      brainRegionId={selectedBrainRegion?.id!}
       pipeline={useCellMorphologyPipeline}
       progressSteps={CELL_MORPHOLOGY_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
