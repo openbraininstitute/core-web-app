@@ -2,7 +2,7 @@ name: Preview
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [ opened, synchronize, reopened, closed ]
 
 permissions:
   id-token: write
@@ -175,6 +175,8 @@ jobs:
           fi
 
           SHORTHAND=$(echo "$UPDATED" | jq -r '.[] | "prefix=\(.prefix),branchName=\(.branchName)"' | tr '\n' ' ')
+
+          echo $SHORTHAND
 
           aws amplify update-domain-association \
             --app-id "$AMPLIFY_APP_ID" \
