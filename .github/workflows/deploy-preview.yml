@@ -2,7 +2,7 @@ name: Preview
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [ opened, synchronize, reopened, closed ]
 
 permissions:
   id-token: write
@@ -171,7 +171,7 @@ jobs:
 
           if [ "$(echo "$CURRENT" | jq -S .)" = "$(echo "$UPDATED" | jq -S .)" ]; then
             echo "Subdomain $PREFIX already attached to $BRANCH_NAME"
-            exit 0
+            # exit 0
           fi
 
           SHORTHAND=$(echo "$UPDATED" | jq -r '.[] | "prefix=\(.prefix),branchName=\(.branchName)"' | tr '\n' ' ')
