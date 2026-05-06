@@ -299,6 +299,10 @@
 }
 
 .thinkingContentInner {
+  padding: 0 12px;
+}
+
+.thinkingContentExpanded > .thinkingContentInner {
   padding: 4px 12px;
 }
 
