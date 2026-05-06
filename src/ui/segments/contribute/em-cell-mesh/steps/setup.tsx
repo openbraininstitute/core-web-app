@@ -19,6 +19,8 @@ import {
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 export function Setup() {
   const form = Form.useFormInstance();
 
@@ -83,7 +85,7 @@ export function Setup() {
 
       <Form.Item
         name={['setup', 'dense_reconstruction_cell_id']}
-        label={renderLabel('Dense reconstruction cell id', 'main')}
+        label={renderLabel('Dense reconstruction cell id', 'main', RequiredFieldMarker)}
         rules={[
           {
             required: true,

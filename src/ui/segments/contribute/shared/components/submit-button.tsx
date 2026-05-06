@@ -57,9 +57,7 @@ export function SubmitButton<
           type="button"
           variant="default"
           size="lg"
-          className={cn(
-            'px-10 select-none hover:text-white'
-          )}
+          className={cn('px-10 select-none hover:text-white')}
           onClick={onDone}
         >
           Done

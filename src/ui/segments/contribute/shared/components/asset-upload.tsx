@@ -133,10 +133,7 @@ export function AssetUpload({
             )}
           >
             {validating ? (
-              <Spin
-                indicator={<LoadingOutlined className="text-primary-8" spin />}
-                size="large"
-              />
+              <Spin indicator={<LoadingOutlined className="text-primary-8" spin />} size="large" />
             ) : (
               <FileDownloadLine
                 className={cn('size-10', isDragging ? 'text-primary-9' : 'text-primary-8')}

@@ -1,5 +1,3 @@
-/* eslint-disable no-param-reassign */
-
 import React, { useEffect, useState } from 'react';
 
 import { Switch } from '@/components/common/Switch';

@@ -68,13 +68,7 @@ export async function getNotebook({
  * @param {WorkspaceContext} params.context - The workspace context
  * @returns {Promise<void>} A promise that resolves when the notebook has been deleted
  */
-export async function deleteNotebook({
-  id,
-  context,
-}: {
-  id: string;
-  context: WorkspaceContext;
-}) {
+export async function deleteNotebook({ id, context }: { id: string; context: WorkspaceContext }) {
   const api = await entityCoreApi();
   return await api.delete<void>(`${baseUri}/${id}`, {
     headers: {

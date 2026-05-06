@@ -7,7 +7,7 @@ import { cn } from '@/utils/css-class';
 
 import type { CSSProperties } from 'react';
 import type { RenderNodeProps } from '@/components/tree/types';
-import type { IBrainRegionHierarchyExtended } from '@/features/brain-region-hierarchy/context';
+import type { IBrainRegionHierarchyExtended } from '@/features/brain-region-hierarchy/types';
 
 type Props<TNode extends IBrainRegionHierarchyExtended = IBrainRegionHierarchyExtended> =
   RenderNodeProps<TNode>;
@@ -32,12 +32,19 @@ export function BrainRegionHierarchyNodeRender<TNode extends IBrainRegionHierarc
       aria-label={nodeName}
       tabIndex={0}
       className={cn(
-        'flex min-w-0 flex-1 cursor-pointer items-center transition-colors duration-200 ease-in-out',
-        'text-primary-9 hover:text-primary-8 hover:bg-primary-highlight/40 my-1.5 h-(--height) px-2 py-2 hover:font-bold',
-        { 'text-primary-8 bg-primary-highlight rounded-full font-bold': isSelected },
+        'flex min-w-0 flex-1 cursor-pointer items-center transition-colors',
+        'duration-200 ease-in-out text-primary-9 hover:text-primary-8',
+        'hover:bg-primary-highlight/40 my-1.5 h-(--height) px-2 py-2 hover:font-bold',
+        {
+          'text-primary-8 bg-primary-highlight rounded-full font-bold': isSelected,
+        },
         { 'transparent rounded-md font-medium': !isSelected },
-        { 'text-gray-500 hover:bg-zinc-200 hover:text-gray-500': !node.is_volumetric_region },
-        { 'bg-zinc-200! text-gray-500': !node.is_volumetric_region && isSelected }
+        {
+          'text-gray-500 hover:bg-zinc-200 hover:text-gray-500': !node.is_volumetric_region,
+        },
+        {
+          'bg-zinc-200! text-gray-500': !node.is_volumetric_region && isSelected,
+        }
       )}
       onClick={onClick}
       onKeyDown={(evt) => {

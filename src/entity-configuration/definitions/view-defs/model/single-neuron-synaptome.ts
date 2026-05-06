@@ -1,6 +1,8 @@
-import { DataTypeGroup, ViewDefinitionConfig } from '../types';
-import { EntityCoreFields } from '../../fields-defs/enums';
-
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
+import {
+  DataTypeGroup,
+  type ViewDefinitionConfig,
+} from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
 export const ViewDefForSingleNeuronSynaptome: ViewDefinitionConfig = {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   createElectricalCellRecordingConfig,
@@ -16,7 +16,6 @@ import {
   Subject,
 } from '@/ui/segments/contribute/electrical-cell-recording/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
 
 import type { TElectricalCellRecordingForm } from '@/ui/segments/contribute/electrical-cell-recording/schema';
 import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
@@ -73,15 +72,13 @@ interface IElectricalCellRecordingProps {
 
 export function ElectricalCellRecording({ sessionId }: IElectricalCellRecordingProps) {
   const { projectId, virtualLabId } = useWorkspace();
-  const { node: defaultBrainRegion } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   return (
     <ContributionForm
       config={electricalCellRecordingConfig}
       sessionId={sessionId}
-      brainRegionId={defaultBrainRegion.id}
+      brainRegionId={selectedBrainRegion?.id!}
       pipeline={useElectricalCellRecordingPipeline}
       progressSteps={ELECTRICAL_CELL_RECORDING_PROGRESS_STEPS}
       virtualLabId={virtualLabId}

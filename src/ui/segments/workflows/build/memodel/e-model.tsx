@@ -2,18 +2,14 @@
 
 import { ReloadOutlined } from '@ant-design/icons';
 import { Image } from 'antd';
-import compact from 'es-toolkit/compat/compact';
-import kebabCase from 'es-toolkit/compat/kebabCase';
-import omit from 'es-toolkit/compat/omit';
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
+import { kebabCase, omit } from 'es-toolkit/compat';
 import { useRouter } from 'next/navigation';
-import { type HTMLAttributes, type TdHTMLAttributes, useEffect, useMemo } from 'react';
+import { type HTMLAttributes, type TdHTMLAttributes, useEffect } from 'react';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { WorkspaceSection } from '@/constants';
 import {
   renderArray,
   renderDate,
@@ -21,17 +17,15 @@ import {
   renderPreview,
 } from '@/entity-configuration/definitions/renderer';
 import {
-  brainRegionBasicCellGroupsRegionsHierarchyAtom,
-  useBrainRegionHierarchy,
+  usePrimaryHierarchyOfCurrentSpeciesQuery,
   useSetSelectedBrainRegion,
 } from '@/features/brain-region-hierarchy/context';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
 import { cn } from '@/utils/css-class';
-
-import { WorkflowScopeTabs } from '../../elements/scope-selector';
 
 import type { IEModel } from '@/api/entitycore/types';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
@@ -62,36 +56,23 @@ export function EModel({ sessionId }: Props) {
     projectId,
   });
 
-  const dataKey = compact([
-    virtualLabId,
-    projectId,
-    WorkspaceSection.BuildWorkflow,
-    ExtendedEntitiesTypeDict.Emodel,
-    WorkspaceScope.Build,
-    sessionId,
-  ]).join('/');
-
   const { updateSelectedBrainRegion } = useSetSelectedBrainRegion();
-  const { updateHierarchyConfig } = useBrainRegionHierarchy({
-    dataKey,
-  });
+  const { changeBrainRegion } = useWorkspaceHierarchyRegistry();
+  const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
-  const brainRegionHierarchy = useAtomValue(
-    useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
-  );
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: both functions are stable
   useEffect(() => {
     if (brainRegionHierarchy) {
       const defaultBrainRegion = brainRegionHierarchy?.root;
-      updateHierarchyConfig(defaultBrainRegion);
+      changeBrainRegion(defaultBrainRegion);
       updateSelectedBrainRegion(omit(defaultBrainRegion, 'children'));
     }
-  }, [brainRegionHierarchy]);
+  }, [brainRegionHierarchy, changeBrainRegion, updateSelectedBrainRegion]);
 
   return (
     <BrowseEntityScope
       requireBrainRegion
+      requireScopeSelector
+      requireSpeciesSelector
       allowDownload={false}
       allowDelete={false}
       id={sessionId}
@@ -155,7 +136,6 @@ export function EModel({ sessionId }: Props) {
             : '';
         },
       }}
-      left={<WorkflowScopeTabs className="max-w-max" />}
     />
   );
 }
@@ -201,7 +181,6 @@ export function EModelMiniDetail({ sessionId }: Props) {
   const content = details.map(({ value, label: text, className }) => {
     return (
       <div key={`item-${text}`} className="flex w-full flex-col items-start justify-start">
-        {/* Remove the ! and use a fallback if necessary */}
         {label(text ?? '', 'secondary')}
         <div className={cn('text-primary-9 font-light', className)}>{value}</div>
       </div>
@@ -211,9 +190,9 @@ export function EModelMiniDetail({ sessionId }: Props) {
   const onReset = () => setSessionValue({ ...sessionValue, emodel: undefined });
 
   return (
-    <div className="grid h-full w-full grid-cols-2 flex-col items-start gap-4">
-      <div className="flex w-full flex-col items-center justify-center px-4">
-        <div className="mb-4 flex w-full items-center justify-between gap-2 select-none">
+    <div className="grid h-full min-h-0 w-full grid-cols-2 grid-rows-[1fr] gap-4">
+      <div className="flex min-h-0 w-full flex-col overflow-hidden px-4">
+        <div className="mb-4 flex w-full shrink-0 items-center justify-between gap-2 select-none">
           <h3 className="text-neutral-4 text-lg font-medium uppercase">E-Model</h3>
           <Button
             rounded
@@ -229,9 +208,11 @@ export function EModelMiniDetail({ sessionId }: Props) {
             </div>
           </Button>
         </div>
-        <div className="flex w-full flex-col items-start justify-center gap-5">{content}</div>
+        <div className="secondary-scrollbar flex min-h-0 flex-1 flex-col items-start justify-start gap-5 overflow-y-auto">
+          {content}
+        </div>
       </div>
-      <div className="h-full w-full rounded-2xl bg-white">
+      <div className="min-h-0 h-full w-full rounded-2xl bg-white">
         {renderPreview(
           data as unknown as EntityCoreResource,
           undefined,

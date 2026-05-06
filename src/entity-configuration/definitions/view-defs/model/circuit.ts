@@ -1,5 +1,7 @@
 import { EntitySlug } from '@/entity-configuration/domain/slug';
+
 import { EntityCoreFields } from '../../fields-defs/enums';
+
 import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForCircuit: ViewDefinitionConfig = {
@@ -12,19 +14,19 @@ export const ViewDefForCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitSubCircuit,
     EntityCoreFields.Description,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
     EntityCoreFields.CircuitScale,
     EntityCoreFields.CircuitNumberNeurons,
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,
-    EntityCoreFields.SpeciesName,
     EntityCoreFields.CircuitBuildCategory,
     EntityCoreFields.ArtifactPublishedIn,
     EntityCoreFields.ArtifactExperimentDate,
   ],
   miniDetailView: [
+    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.BrainRegion },
     { field: EntityCoreFields.CircuitScale },
-    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.CircuitSubCircuit },
     { field: EntityCoreFields.CircuitNumberNeurons },
     { field: EntityCoreFields.CircuitNumberSynapses },

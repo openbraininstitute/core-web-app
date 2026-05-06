@@ -9,6 +9,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 import { SelectPopover } from '@/ui/molecules/select-popover';
+import { AnalysisNotebookTemplate } from '@/ui/segments/contribute/analysis-notebook-template';
 import { CellMorphology } from '@/ui/segments/contribute/cell-morphology';
 import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
 import { EMCellMesh } from '@/ui/segments/contribute/em-cell-mesh';
@@ -17,7 +18,6 @@ import {
   useContributionEntityClickEvent,
 } from '@/ui/segments/contribute/event';
 import { ExperimentalBoutonDensity } from '@/ui/segments/contribute/experimental-bouton-density';
-import { AnalysisNotebookTemplate } from '@/ui/segments/contribute/analysis-notebook-template';
 import { ExperimentalNeuronDensity } from '@/ui/segments/contribute/experimental-neuron-density';
 import { ExperimentalSynapsesPerConnection } from '@/ui/segments/contribute/synapses-per-connection';
 import { cn } from '@/utils/css-class';
@@ -101,10 +101,7 @@ function RenderEntityTypeContent({ type, sessionId: sId, onClose }: IRenderEntit
     ))
     .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
     .with({ type: ExtendedEntitiesTypeDict.Notebook }, () => (
-      <AnalysisNotebookTemplate 
-        sessionId={sId} 
-        onClose={onClose}
-      />
+      <AnalysisNotebookTemplate sessionId={sId} onClose={onClose} />
     ))
     .otherwise(() => null);
 }
@@ -143,7 +140,7 @@ export function ContributionModal() {
 
   const content = match({ entityType, sessionId, entity })
     .with({ entityType: P.union(P.nullish, P._), entity: P.nullish }, () => (
-    <ExtendedEntitiesSelector onSelectEntityType={onSelectEntityType} />
+      <ExtendedEntitiesSelector onSelectEntityType={onSelectEntityType} />
     ))
     .with(
       { sessionId: P.string.select('sId'), entityType: P.string.select('type') },

@@ -12,6 +12,8 @@ import ApiError from '@/api/error';
 import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { Circuit } from '@/entity-configuration/domain/model/circuit';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import {
   useQueryExtendedEntityType,
   useQueryExtendedEntityTypeFacets,
@@ -168,6 +170,12 @@ export function BrowseCircuit({
     ...extraQueryParams,
     ...scopeFilter,
   };
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
+  const shouldUseBrainRegion =
+    !isAllSpeciesMode &&
+    requireBrainRegion &&
+    !get(queryParameters, 'within_brain_region_brain_region_id', null);
 
   const {
     data,
@@ -194,11 +202,7 @@ export function BrowseCircuit({
     defaultBrainRegion,
     useKeepPreviousData: true,
     extraQueryParams,
-    enabled: () => {
-      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
-        return false;
-      return true;
-    },
+    enabled: () => !shouldUseBrainRegion,
   });
 
   const {
@@ -213,11 +217,7 @@ export function BrowseCircuit({
     workspace: { virtualLabId, projectId },
     queryFilters,
     extraQueryKey: { view },
-    enabled: () => {
-      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
-        return false;
-      return true;
-    },
+    enabled: () => !shouldUseBrainRegion,
   });
 
   let dataSource: Array<ICircuit> = [];
