@@ -160,7 +160,7 @@ export function UIElementRender({
             // });
           }}
           onAddElement={(newElement: number[] | null) => {
-            if (newElement === null) {
+            if (newElement === null || newElement.length === 0) {
               setState({
                 ...state,
                 [k]: null,

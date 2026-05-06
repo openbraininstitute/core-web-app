@@ -66,21 +66,28 @@ export default function NeuronIds({
     setEdit(true);
   }, []);
 
-  if (value === null) {
-    return;
+  if (disabled) {
+    return <Ids ids={renderedElements} disabled />;
   }
 
   return (
     <div className="w-full ">
       {warning && <div className="text-red-500">{warning}</div>}
-      {!edit && <Ids ids={renderedElements} onEditClick={handleEditClick} disabled={disabled} />}
-      {!disabled && !edit && (
+      {!edit && value !== null && <Ids ids={renderedElements} onEditClick={handleEditClick} />}
+      {!edit && value === null && (
+        <>
+          <div className="text-primary-8 text-sm">No neuron IDs yet</div>
+          <div className="text-xs text-gray-500">
+            Add neuron IDs manually below or paste a list to get started.
+          </div>
+        </>
+      )}
+      {!edit && (
         <div className="flex mt-2 gap-2 w-[80%] float-right">
           <button
             type="button"
             className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3 relative left-[15px]"
             onClick={() => onAddElement(null)}
-            disabled={disabled}
           >
             Clear list
           </button>
@@ -88,18 +95,10 @@ export default function NeuronIds({
             type="button"
             className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3"
             onClick={handleEditClick}
-            disabled={disabled}
           >
             Edit ID list <EditOutlined className="text-xs" />
           </button>
-          <button
-            type="button"
-            className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3"
-            onClick={handleEditClick}
-            disabled={disabled}
-          >
-            Copy ID list <CopyOutlined className="text-xs" />
-          </button>
+          <CopyButton textToCopy={defaultText} />
         </div>
       )}
       {edit && (
@@ -198,8 +197,8 @@ const Ids = memo(
     disabled,
   }: {
     ids: { head: number[]; tail: number[] };
-    onEditClick: () => void;
-    disabled: boolean;
+    onEditClick?: () => void;
+    disabled?: boolean;
   }) => {
     const containerClass = 'w-full grid grid-cols-4 gap-1';
     const elementClass =
@@ -250,3 +249,28 @@ const Ids = memo(
     );
   }
 );
+
+const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      // biome-ignore lint/suspicious/noConsole: Error logging required
+      console.error('Clipboard write failed:', err);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className="text-gray-500 flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3"
+      onClick={handleCopy}
+    >
+      {copied ? 'Copied!' : 'Copy ID list'} <CopyOutlined className="text-xs" />
+    </button>
+  );
+};
