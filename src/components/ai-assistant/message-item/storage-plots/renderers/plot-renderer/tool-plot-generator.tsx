@@ -468,7 +468,12 @@ function CustomPlot({
           <FullscreenOutlined />
         </button>
         {title && (
-          <PlotTitle title={title as string} titleFont={titleFont} paddingRight="28px" compact />
+          <PlotTitle
+            title={title as string}
+            titleFont={titleFont}
+            symmetricPadding="28px"
+            compact
+          />
         )}
         {!plotReady && <ToolSkeleton />}
         <div
@@ -527,13 +532,13 @@ function CustomPlot({
 function PlotTitle({
   title,
   titleFont,
-  paddingRight,
+  symmetricPadding,
   isFullscreen,
   compact,
 }: {
   title: string;
   titleFont: { size?: number; family?: string; weight?: string; color?: string };
-  paddingRight?: string;
+  symmetricPadding?: string;
   isFullscreen?: boolean;
   compact?: boolean;
 }) {
@@ -557,8 +562,8 @@ function PlotTitle({
         fontWeight: titleFont.weight || 'bold',
         color: titleFont.color || '#333',
         lineHeight: 1.2,
-        paddingLeft: paddingRight,
-        paddingRight,
+        paddingLeft: symmetricPadding,
+        paddingRight: symmetricPadding,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
