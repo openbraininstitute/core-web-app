@@ -1,9 +1,11 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useRef, useSyncExternalStore } from 'react';
+import { useAtomValue } from 'jotai';
+import { useCallback, useSyncExternalStore } from 'react';
 
 import { WorkspaceSection } from '@/constants';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { buildQueryKey, useQueryParameters } from '@/ui/hooks/use-query-extended-entity-type';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 
@@ -31,6 +33,7 @@ export function useTableQueryCount({
   isActiveEntity: boolean;
 }) {
   const queryClient = useQueryClient();
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const { virtualLabId, projectId } = workspace;
 
   const { dataKey } = makeDataKey({
@@ -62,11 +65,8 @@ export function useTableQueryCount({
     },
     queryParameters,
     requireBrainRegion: true,
+    speciesSelectionMode,
   });
-
-  const prevCountRef = useRef<number | undefined>(undefined);
-  const queryKeyRef = useRef(queryKey);
-  queryKeyRef.current = queryKey;
 
   const cache = queryClient.getQueryCache();
 
@@ -77,14 +77,10 @@ export function useTableQueryCount({
 
   const getSnapshot = useCallback(() => {
     if (!isActiveEntity) return undefined;
-    const query = cache.find({ queryKey: queryKeyRef.current });
+    const query = cache.find({ queryKey });
     const data = query?.state?.data as EntityCoreResponse<unknown> | undefined;
-    const total = data?.pagination?.total_items;
-    if (total !== prevCountRef.current) {
-      prevCountRef.current = total;
-    }
-    return prevCountRef.current;
-  }, [isActiveEntity, cache]);
+    return data?.pagination?.total_items;
+  }, [isActiveEntity, cache, queryKey]);
 
   const count = useSyncExternalStore(subscribe, getSnapshot, () => undefined);
 

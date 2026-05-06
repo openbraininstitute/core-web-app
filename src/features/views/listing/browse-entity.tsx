@@ -173,6 +173,7 @@ export function BrowseEntityScope({
     section,
   });
 
+  // TODO: refactor this with the one in circuit
   // when species or "all species" mode changes, reset table filters/search/sort/page for this listing
   // skips while `workspaceSpecies` is briefly null during a focused-mode hierarchy switch
   useEffect(() => {
