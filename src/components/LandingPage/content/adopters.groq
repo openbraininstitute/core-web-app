@@ -1,6 +1,6 @@
 // Accepts several possible Studio type / field names; normalizeAdopters() also maps fallbacks.
 *[
-  _type in ["adopter", "earlyAdopter", "landingAdopter"] &&
+  _type in ["adopter", "adopters", "earlyAdopter", "landingAdopter"] &&
   (defined(image.asset) || defined(logo.asset))
 ] | order(name asc) {
   name,

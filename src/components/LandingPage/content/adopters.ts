@@ -38,11 +38,14 @@ function normalizeAdopters(raw: unknown[] | null | undefined): ContentForAdopter
     const url =
       toStr(o.url) || toStr(o.website) || toStr(o.href) || toStr(o.link) || toStr(o.externalUrl);
     const imageURL = toStr(o.imageURL);
-    const imageWidth = toNum(o.imageWidth);
-    const imageHeight = toNum(o.imageHeight);
-    if (!imageURL || imageWidth <= 0 || imageHeight <= 0 || !url) {
+    const rawWidth = toNum(o.imageWidth);
+    const rawHeight = toNum(o.imageHeight);
+    if (!imageURL) {
       continue;
     }
+    // Sanity often omits metadata.dimensions until processing finishes; defaults keep next/image usable.
+    const imageWidth = rawWidth > 0 ? rawWidth : 240;
+    const imageHeight = rawHeight > 0 ? rawHeight : 48;
     out.push({ name, url, imageURL, imageWidth, imageHeight });
   }
   return out;
