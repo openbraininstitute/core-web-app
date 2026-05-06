@@ -20,10 +20,25 @@ export default function FullscreenDialog({ children, dialogRef }: FullscreenDial
     }
   };
 
+  const handleBackdropKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClose();
+    }
+  };
+
   return (
     <dialog ref={dialogRef} className={styles.dialog}>
-      <div className={styles.backdrop} onClick={handleBackdropClick}>
-        <div className={styles.content} onClick={(e) => e.stopPropagation()}>
+      {/* biome-ignore lint/a11y/useSemanticElements: backdrop acts as a dismissal area, not a standalone button */}
+      <div
+        className={styles.backdrop}
+        onClick={handleBackdropClick}
+        onKeyDown={handleBackdropKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-label="Close dialog"
+      >
+        <div className={styles.content}>
           <button
             type="button"
             onClick={handleClose}
