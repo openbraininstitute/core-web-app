@@ -19,8 +19,77 @@ env:
   PREVIEW_DOMAIN: ${{ vars.AMPLIFY_PREVIEW_DOMAIN }}
 
 jobs:
-  deploy:
+  debug-domain:
     if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: amplify-domain-${{ vars.AMPLIFY_PREVIEW_APP_ID }}
+      cancel-in-progress: false
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Toggle preview subdomain (debug)
+        env:
+          BRANCH_NAME: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+
+          PREFIX="${BRANCH_NAME//\//-}"
+          PREFIX="${PREFIX//./-}"
+          PREFIX="${PREFIX//_/-}"
+
+          echo "=== Inputs ==="
+          echo "AMPLIFY_APP_ID=$AMPLIFY_APP_ID"
+          echo "PREVIEW_DOMAIN=$PREVIEW_DOMAIN"
+          echo "BRANCH_NAME=$BRANCH_NAME"
+          echo "PREFIX=$PREFIX"
+
+          CURRENT=$(aws amplify get-domain-association \
+            --app-id "$AMPLIFY_APP_ID" \
+            --domain-name "$PREVIEW_DOMAIN" \
+            --query 'domainAssociation.subDomains[].subDomainSetting' \
+            --output json)
+
+          echo "=== Current subdomains ==="
+          echo "$CURRENT" | jq .
+
+          if echo "$CURRENT" | jq -e --arg prefix "$PREFIX" 'any(.prefix == $prefix)' >/dev/null; then
+            ACTION="detach"
+            UPDATED=$(echo "$CURRENT" | jq --arg prefix "$PREFIX" \
+              'map(select(.prefix != $prefix))')
+          else
+            ACTION="attach"
+            UPDATED=$(echo "$CURRENT" | jq --arg prefix "$PREFIX" --arg branch "$BRANCH_NAME" \
+              'map(select(.prefix != $prefix)) + [{prefix: $prefix, branchName: $branch}]')
+          fi
+
+          echo "=== Action: $ACTION ==="
+          echo "=== Updated payload (JSON) ==="
+          echo "$UPDATED" | jq .
+
+          SHORTHAND=$(echo "$UPDATED" | jq -r '.[] | "prefix=\(.prefix),branchName=\(.branchName)"' | tr '\n' ' ')
+
+          echo "=== Shorthand for --sub-domain-settings ==="
+          echo "$SHORTHAND"
+          echo "=== Token count ==="
+          echo "$SHORTHAND" | wc -w
+
+          echo "=== Calling aws amplify update-domain-association ==="
+          set -x
+          aws amplify update-domain-association \
+            --app-id "$AMPLIFY_APP_ID" \
+            --domain-name "$PREVIEW_DOMAIN" \
+            --sub-domain-settings $SHORTHAND
+          set +x
+
+          echo "=== Done: $ACTION $PREFIX ==="
+
+  deploy:
+    if: false
     runs-on: ubuntu-latest
     outputs:
       job-id: ${{ steps.start-build.outputs.job-id }}
@@ -141,7 +210,7 @@ jobs:
 
   domain-attach:
     needs: deploy
-    if: github.event.action != 'closed'
+    if: false
     runs-on: ubuntu-latest
     concurrency:
       group: amplify-domain-${{ vars.AMPLIFY_PREVIEW_APP_ID }}
@@ -187,6 +256,7 @@ jobs:
 
   monitor:
     needs: deploy
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
@@ -300,7 +370,7 @@ jobs:
   # delete the Amplify branch (cleanup). The detach is serialized across PRs because
   # update-domain-association rewrites a single shared resource.
   domain-detach:
-    if: github.event.action == 'closed'
+    if: false
     runs-on: ubuntu-latest
     concurrency:
       group: amplify-domain-${{ vars.AMPLIFY_PREVIEW_APP_ID }}
@@ -350,7 +420,7 @@ jobs:
           echo "Detached $PREFIX"
 
   cleanup:
-    if: github.event.action == 'closed'
+    if: false
     needs: domain-detach
     runs-on: ubuntu-latest
     steps:
