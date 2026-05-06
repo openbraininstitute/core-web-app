@@ -32,6 +32,11 @@ function RawMessageItem({
   isLastMessage = false,
 }: MessageItemProps) {
   const debug = useDebug();
+
+  if ((value.role === 'user' || value.role === 'assistant') && value.parts.length === 0) {
+    return null;
+  }
+
   return (
     <div className={classNames(className, styles.messageItem)}>
       <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} />
@@ -78,9 +83,6 @@ function MessageChild({
           <div className={styles.userContent}>
             <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
           </div>
-          <div className={styles.info}>
-            <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
-          </div>
         </div>
       );
     case 'assistant': {
@@ -124,7 +126,9 @@ function MessageChild({
           >
             {children}
           </CollapsibleMessage>
-          <BackupPlotsWrapper message={value} isLastMessage={isLastMessage} status={status} />
+          <div className={styles.backupPlotsWrapper}>
+            <BackupPlotsWrapper message={value} isLastMessage={isLastMessage} status={status} />
+          </div>
           {debug && (
             <button
               type="button"

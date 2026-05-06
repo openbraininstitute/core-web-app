@@ -16,4 +16,11 @@ export const keyBuilderAI = {
     virtualLabId,
     projectId,
   ],
+  search: (query: string, virtualLabId: string | null, projectId: string | null) => [
+    prefix,
+    'search',
+    query,
+    virtualLabId,
+    projectId,
+  ],
 };

@@ -1,8 +1,5 @@
 'use client';
 
-import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
-import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
-
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
@@ -11,8 +8,8 @@ import {
 } from '@/ui/segments/contribute/em-cell-mesh/config';
 import { useEMCellMeshPipeline } from '@/ui/segments/contribute/em-cell-mesh/pipeline';
 import {
-  AssetUpload,
   Contribution,
+  EMAssetUpload,
   License,
   MTypeClassification,
   Setup,
@@ -20,12 +17,15 @@ import {
 } from '@/ui/segments/contribute/em-cell-mesh/steps';
 import { ContributionForm } from '@/ui/segments/contribute/shared/components/contribution-form';
 
+import type { TEMCellMeshForm } from '@/ui/segments/contribute/em-cell-mesh/schema';
+import type { IContributionStep } from '@/ui/segments/contribute/shared/types';
+
 const EM_CELL_MESH_STEP_CONFIG: IContributionStep<TEMCellMeshForm>[] = [
   {
     key: 'assets',
     label: 'Asset Upload',
     schemaFieldKey: 'assets',
-    component: AssetUpload,
+    component: EMAssetUpload,
   },
   {
     key: 'setup',

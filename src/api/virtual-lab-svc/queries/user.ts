@@ -1,16 +1,19 @@
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
+import { getSession } from '@/auth-fetch';
+import { config } from '@/config';
+import { log } from '@/utils/logger';
+
 import type {
-  UpdateUserProfileRequest,
+  TOnboardingUpdateUserProfileRequest,
+  TUpdateUserProfileRequest,
   UserProfileResponse,
   VlmRecentWorkspace,
   VlmUserGroupsResponse,
   VlmUserProfile,
 } from '@/api/virtual-lab-svc/queries/types';
-import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/auth-fetch';
-import { config } from '@/config';
 import type { IWorkspaceHierarchySpeciesPreference } from '@/features/brain-region-hierarchy/types';
 import type { WorkspaceContext } from '@/types/common';
-import { log } from '@/utils/logger';
+import type { VlmResponse } from '@/types/virtual-lab/common';
 
 function getBaseUrl() {
   return `${config.VIRTUAL_LAB_API_URL}/users`;
@@ -47,38 +50,71 @@ export const getUserProfile = async (): Promise<{
  * @param payload -  user profile data to update
  * @returns  updated user profile information
  */
-export const updateUserProfile = async (
-  payload: UpdateUserProfileRequest
-): Promise<{ profile: UserProfileResponse } | null> => {
-  const session = await getSession();
-  const response = await fetch(`${getBaseUrl()}/profile`, {
-    method: 'PATCH',
+export const updateUserProfile = async (payload: TUpdateUserProfileRequest) => {
+  const api = await virtualLabRootApi();
+  return api.patch<VlmResponse<{ profile: UserProfileResponse }>>('/users/profile', {
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
+      accept: 'application/json',
+      'content-type': 'application/json',
     },
-    body: JSON.stringify({
+    body: {
       email: payload.email,
       first_name: payload.first_name,
       last_name: payload.last_name,
+      country: payload.country,
       address: {
         street: payload.street,
         postal_code: payload.postal_code,
         locality: payload.locality,
         region: payload.region,
-        country: payload.country,
       },
-    }),
+    },
   });
+};
 
-  if (!response.ok) {
-    throw new Error(`Failed to update user profile`, {
-      cause: await response.json(),
-    });
+/**
+ * update the profile information during onboarding for the authenticated user
+ *
+ * @param payload -  user profile data to update
+ * @returns  updated user profile information
+ */
+export const updateUserOnboardingProfile = async (payload: TOnboardingUpdateUserProfileRequest) => {
+  const api = await virtualLabRootApi();
+  return api.patch<VlmResponse<{ profile: UserProfileResponse }>>('/users/onboarding/profile', {
+    headers: {
+      'Content-Type': 'application/json',
+      accept: 'application/json',
+    },
+    body: {
+      first_name: payload.first_name,
+      last_name: payload.last_name,
+      country: payload.country,
+      email: payload.email,
+    },
+  });
+};
+
+export const checkUserProfileEmailAvailability = async (email: string): Promise<boolean> => {
+  const api = await virtualLabRootApi();
+
+  try {
+    const response = await api.get<Response>(
+      '/users/profile/email/_check',
+      {
+        queryParams: { email },
+        cache: 'no-store',
+      },
+      { asRawResponse: true }
+    );
+
+    return response.status === 204;
+  } catch (error) {
+    const status = (error as { cause?: { status?: number } })?.cause?.status;
+    if (status === 422) {
+      return false;
+    }
+    throw error;
   }
-
-  const result: VlmUserProfile = await response.json();
-  return result.data;
 };
 
 /**

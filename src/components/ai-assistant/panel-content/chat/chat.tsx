@@ -1,4 +1,3 @@
-import { useIsFetching } from '@tanstack/react-query';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
@@ -19,12 +18,15 @@ import { classNames } from '@/util/utils';
 import ErrorPanel from '../../error';
 import FreeCreditsNotification from '../../free-credits-notification';
 import { MessageItem } from '../../message-item';
+import { ThinkingIndicator } from '../../message-item/thinking-indicator';
 import { atomRateLimit } from '../../state';
 import SuggestedQuestions from '../../suggested-questions';
 import DiffBar from '../diff-bar';
 import Footer from '../footer';
+import { OverlayScrollbar } from '../overlay-scrollbar';
 import TabTransitionLoader from '../tab-transition-loader/tab-transition-loader';
 import Welcome from '../welcome';
+import { useAutoScroll } from './use-auto-scroll';
 import { useLastMessageDiffBar } from './use-last-message-diff-bar';
 
 import styles from './chat.module.css';
@@ -32,19 +34,31 @@ import styles from './chat.module.css';
 export interface ChatProps {
   className?: string;
   threadId: string | undefined;
+  onRefetchSuggestions?: (fn: () => void) => void;
+  onClearSuggestions?: (fn: () => void) => void;
 }
 
-export default function Chat({ className, threadId }: ChatProps) {
+export default function Chat({
+  className,
+  threadId,
+  onRefetchSuggestions,
+  onClearSuggestions,
+}: ChatProps) {
   const assistant = useAiAssistant();
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const healthError = assistant.healthError.useValue();
-  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = React.useState(true);
 
   const { messages, status, append, error, stop, isLoadingMessages } = useServiceAiAgentChat(
     threadId ?? ''
   );
-  const [suggestions, clearSuggestions, isLoadingSuggestions] =
+  const [suggestions, clearSuggestions, isLoadingSuggestions, refetchSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
+
+  React.useEffect(() => {
+    onRefetchSuggestions?.(refetchSuggestions);
+    onClearSuggestions?.(clearSuggestions);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refetchSuggestions]);
 
   const accessToken = useAccessToken();
   const rateLimit = useAtomValue(atomRateLimit);
@@ -59,10 +73,8 @@ export default function Chat({ className, threadId }: ChatProps) {
   const prevRemainingRef = React.useRef<number | null>(null);
   const hasInitializedRef = React.useRef(false);
 
-  const refChatBottom = React.useRef<HTMLDivElement | null>(null);
   const refContainer = React.useRef<HTMLDivElement | null>(null);
 
-  // Fetch rate limit on mount and store in atom (only once)
   const { data: fetchedRateLimit } = useAiAgentRateLimit(accessToken ?? null);
 
   React.useEffect(() => {
@@ -73,13 +85,11 @@ export default function Chat({ className, threadId }: ChatProps) {
     }
   }, [fetchedRateLimit, setRateLimit]);
 
-  // Show notification only when crossing boundary (1 -> 0)
   React.useEffect(() => {
     if (rateLimit && hasInitializedRef.current) {
       const prev = prevRemainingRef.current;
       const current = rateLimit.remaining;
 
-      // Only show if we had credits before and now we don't
       if (prev !== null && prev > 0 && current === 0) {
         setShowExhaustedNotification(true);
       }
@@ -88,15 +98,13 @@ export default function Chat({ className, threadId }: ChatProps) {
     }
   }, [rateLimit]);
 
-  const isStorageQueryFetching = useIsFetching({
-    predicate: (query) => {
-      const fullQueryKey = query.queryKey.at(0);
-      return fullQueryKey === 'storage';
-    },
-    fetchStatus: 'fetching',
+  const { setAutoScroll, scrollToBottom, handleWheel } = useAutoScroll({
+    messages,
+    status,
+    isLoadingMessages,
+    threadId,
+    containerRef: refContainer,
   });
-
-  const [scrollHeight, setScrollHeight] = React.useState(0);
 
   // Clear active diff view when a new message is submitted
   React.useEffect(() => {
@@ -121,61 +129,6 @@ export default function Chat({ className, threadId }: ChatProps) {
     clearDiffState();
   }, [threadId, setActiveDiffMessageId, clearDiffBarData, clearDiffState]);
 
-  // Monitor scroll height changes for auto-scroll
-  React.useEffect(() => {
-    if (!refContainer.current) return;
-
-    const container = refContainer.current;
-    let previousScrollHeight = container.scrollHeight;
-
-    const updateScrollHeight = () => {
-      const newScrollHeight = container.scrollHeight;
-
-      if (isAutoScrollEnabled && newScrollHeight > previousScrollHeight) {
-        requestAnimationFrame(() => {
-          const maxScroll = container.scrollHeight - container.clientHeight;
-          if (maxScroll > 0) {
-            container.scrollTop = maxScroll;
-          }
-        });
-      }
-
-      setScrollHeight(newScrollHeight);
-      previousScrollHeight = newScrollHeight;
-    };
-
-    const observer = new MutationObserver(updateScrollHeight);
-    observer.observe(container, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      characterData: true,
-    });
-
-    updateScrollHeight();
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [isAutoScrollEnabled]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: @Nicolas can give more details
-  React.useEffect(() => {
-    if (isAutoScrollEnabled && refContainer.current) {
-      setTimeout(() => {
-        refChatBottom.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 200);
-    }
-  }, [scrollHeight, isAutoScrollEnabled, isStorageQueryFetching]);
-
-  const handlePrompt = (content: string) => {
-    setIsAutoScrollEnabled(true);
-    append({
-      role: 'user',
-      content,
-    });
-  };
-
   // Toggle diff view on/off from the diff bar
   const handleToggleDiffs = React.useCallback(() => {
     if (!diffBarData) return;
@@ -196,55 +149,72 @@ export default function Chat({ className, threadId }: ChatProps) {
     clearDiffState();
   }, [clearDiffBarData, setActiveDiffMessageId, clearDiffState]);
 
-  const handleWheel = (event: React.WheelEvent) => {
-    if (event.deltaY < 0) {
-      setIsAutoScrollEnabled(false);
-    } else {
-      const container = refContainer.current;
-      if (!container) return;
-      const isAtBottom =
-        container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
-      setIsAutoScrollEnabled(isAtBottom);
-    }
+  // Scrolling + autoscroll control when new message.
+  const handlePrompt = (content: string) => {
+    setAutoScroll(true);
+    append({
+      role: 'user',
+      content,
+    });
+    scrollToBottom();
+    requestAnimationFrame(scrollToBottom);
   };
 
-  if (threadId && isLoadingMessages && !isEmptyThread) {
-    return <TabTransitionLoader message="Loading conversation..." />;
-  }
+  const lastMessage = messages[messages.length - 1];
+  const hasVisibleContent = lastMessage?.parts.some(
+    (p) => (p.type === 'text' && p.text !== '') || p.type === 'tool-invocation'
+  );
+  const showThinking = status === 'submitted' || (status === 'streaming' && !hasVisibleContent);
 
   return (
-    <>
-      <div
-        className={classNames(styles.articles, className)}
-        ref={refContainer}
-        onWheel={handleWheel}
-      >
-        {(!threadId || isEmptyThread) && <Welcome />}
-        {messages.map((item, index) => (
-          <MessageItem
-            key={item.id}
-            value={item}
-            status={status}
-            isLastMessage={index === messages.length - 1}
-          />
-        ))}
+    <div className={classNames(styles.chatContainer, className)}>
+      <div className={styles.articlesWrapper}>
+        <div className={styles.articles} ref={refContainer} onWheel={handleWheel}>
+          {threadId && isLoadingMessages && !isEmptyThread ? (
+            <TabTransitionLoader message="Loading conversation..." />
+          ) : (
+            <>
+              {(!threadId || isEmptyThread) && <Welcome />}
+              {messages.map((item, index) => (
+                <MessageItem
+                  key={item.id}
+                  value={item}
+                  status={status}
+                  isLastMessage={index === messages.length - 1}
+                />
+              ))}
 
-        {status === 'ready' && messages.length > 0 && <div className={styles.footerButtons}></div>}
-        {suggestions !== undefined && status === 'ready' && (
-          <div className={styles.suggestedQuestionsContainer}>
-            <SuggestedQuestions
-              threadId={threadId}
-              messagesLength={messages.length}
-              onClick={handlePrompt}
-              suggestions={suggestions}
-              clearSuggestions={clearSuggestions}
-              isLoading={isLoadingSuggestions}
-            />
-          </div>
-        )}
-        {error && <ErrorPanel value={error} />}
-        {healthError && <ErrorPanel value={healthError} />}
-        <div ref={refChatBottom} className={styles.bottom} />
+              {showThinking && <ThinkingIndicator />}
+              {status === 'ready' && messages.length > 0 && (
+                <div className={styles.footerButtons}></div>
+              )}
+              {(!threadId || isEmptyThread) && (
+                <div className={styles.suggestedQuestionsContainer}>
+                  <SuggestedQuestions
+                    onClick={handlePrompt}
+                    suggestions={suggestions}
+                    clearSuggestions={clearSuggestions}
+                    isLoading={isLoadingSuggestions || status !== 'ready'}
+                  />
+                </div>
+              )}
+              {threadId && !isEmptyThread && status === 'ready' && (
+                <div className={styles.suggestedQuestionsContainerInChat}>
+                  <SuggestedQuestions
+                    onClick={handlePrompt}
+                    suggestions={suggestions}
+                    clearSuggestions={clearSuggestions}
+                    isLoading={isLoadingSuggestions || status !== 'ready'}
+                  />
+                </div>
+              )}
+              {error && <ErrorPanel value={error} />}
+              {healthError && <ErrorPanel value={healthError} />}
+            </>
+          )}
+          <div className={styles.bottom} />
+        </div>
+        <OverlayScrollbar containerRef={refContainer} />
       </div>
       {showExhaustedNotification && status === 'ready' && (
         <div className={styles.notificationOverlay}>
@@ -262,21 +232,33 @@ export default function Chat({ className, threadId }: ChatProps) {
           Using Credit Balance
         </div>
       )}
-      {diffBarData && (
-        <DiffBar
-          isViewingDiffs={activeDiffMessageId === diffBarData.messageId}
-          onToggleDiffs={handleToggleDiffs}
-          onClose={handleCloseDiffBar}
+      <div className={styles.bottomBar}>
+        <div
+          className={classNames(
+            styles.diffBarSlider,
+            diffBarData ? styles.diffBarSliderVisible : undefined
+          )}
+          aria-hidden={!diffBarData}
+        >
+          <div className={styles.diffBarInner}>
+            {diffBarData && (
+              <DiffBar
+                isViewingDiffs={activeDiffMessageId === diffBarData.messageId}
+                onToggleDiffs={handleToggleDiffs}
+                onClose={handleCloseDiffBar}
+              />
+            )}
+          </div>
+        </div>
+        <Footer
+          className={styles.footer}
+          status={status}
+          threadId={threadId}
+          onPrompt={handlePrompt}
+          messagesCount={messages.length}
+          stop={stop}
         />
-      )}
-      <Footer
-        className={className}
-        status={status}
-        threadId={threadId}
-        onPrompt={handlePrompt}
-        messagesCount={messages.length}
-        stop={stop}
-      />
-    </>
+      </div>
+    </div>
   );
 }

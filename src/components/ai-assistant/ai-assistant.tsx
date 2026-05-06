@@ -1,18 +1,17 @@
 'use client';
 
 import { FullscreenExitOutlined, FullscreenOutlined, MinusOutlined } from '@ant-design/icons';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 
-import { useServiceAiAgentChat } from '@/services/ai-agent';
 import { useAiAssistant } from '@/services/ai-agent/assistant';
 import { classNames } from '@/util/utils';
 
 import { AiContextProvider, MINIMAL_PANEL_SIZE, useIsDragging, usePanelWidth } from './hooks';
-import { IconChat } from './icons/chat';
 import { IconHistory } from './icons/history';
 import { IconNewChat } from './icons/new-chat';
-import PanelContent from './panel-content';
+import Chat from './panel-content/chat';
+import History from './panel-content/history';
 import PanelSplitter from './panel-splitter';
 
 import type { TAppUInterfaceSection } from '@/utils/key-builder';
@@ -44,14 +43,22 @@ export default function AiAssistant({
   const assistant = useAiAssistant();
   const threadId = assistant.threadId.useValue();
   const isEmptyThread = assistant.isEmptyThread.useValue();
-  const { status } = useServiceAiAgentChat(threadId ?? '');
+  const status = assistant.chat.status.useValue();
 
-  const canCreateNewChat = threadId && !isEmptyThread && status === 'ready';
+  const refetchSuggestionsRef = React.useRef<(() => void) | null>(null);
+  const clearSuggestionsRef = React.useRef<(() => void) | null>(null);
 
   const handleNewChat = async () => {
-    assistant.threadId.set(undefined);
     setTab('chat');
-    await assistant.createThread();
+    clearSuggestionsRef.current?.();
+    refetchSuggestionsRef.current?.();
+    if (status !== 'ready') {
+      await assistant.chat.stop();
+    }
+    if (!isEmptyThread) {
+      assistant.threadId.set(undefined);
+      await assistant.createThread();
+    }
   };
 
   const animationProps = {
@@ -79,15 +86,42 @@ export default function AiAssistant({
           transition={isDragging ? { duration: 0 } : { duration: 0.25, ease: 'easeInOut' }}
         >
           <div className={styles.header}>
-            <div className={styles.headerTitle}>AI assistant</div>
+            <nav className={styles.headerNav}>
+              <button
+                type="button"
+                className={classNames(styles.navBtn, styles.newChatBtn)}
+                onClick={handleNewChat}
+                aria-label="New Chat"
+                title="New Chat"
+              >
+                <IconNewChat />
+              </button>
+              <button
+                type="button"
+                className={classNames(
+                  styles.navBtn,
+                  styles.historyBtn,
+                  tab === 'history' && styles.navBtnActive
+                )}
+                onClick={() => setTab(tab === 'history' ? 'chat' : 'history')}
+                aria-label="History"
+                title="History"
+              >
+                <IconHistory />
+              </button>
+            </nav>
+
+            <div className={styles.headerTitle}>OBI assistant</div>
+
             <div className={styles.headerActions}>
               {onFullscreenToggle && (
                 <button
                   type="button"
                   onClick={onFullscreenToggle}
-                  className={styles.headerBtn}
+                  className={classNames(styles.headerBtn, styles.fullscreenBtn)}
                   aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                   disabled={disabled}
+                  title={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                 >
                   {fullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                 </button>
@@ -96,50 +130,43 @@ export default function AiAssistant({
                 <button
                   type="button"
                   onClick={onCollapse}
-                  className={styles.headerBtn}
+                  className={classNames(styles.headerBtn, styles.collapseBtn)}
                   aria-label="Collapse"
-                  disabled={disabled}
+                  title="Collapse"
                 >
                   <MinusOutlined />
                 </button>
               )}
             </div>
           </div>
-          <nav>
-            <button
-              type="button"
-              className={classNames(tab === 'chat' && styles.selected)}
-              onClick={() => setTab('chat')}
-              disabled={!threadId}
-            >
-              <IconChat />
-              <div>Chat</div>
-            </button>
-            <button
-              type="button"
-              className={classNames(tab === 'history' && styles.selected)}
-              onClick={() => setTab('history')}
-              disabled={!threadId}
-            >
-              <IconHistory />
-              <div>History</div>
-            </button>
-            <button
-              type="button"
-              className={styles.newChatBtn}
-              disabled={!canCreateNewChat}
-              onClick={handleNewChat}
-            >
-              <IconNewChat />
-              <div>New Chat</div>
-            </button>
-          </nav>
-          <PanelContent
-            className={styles.content}
-            threadId={threadId}
-            tab={tab}
-            onTabChange={setTab}
-          />
+
+          <div className={styles.contentWrapper}>
+            <Chat
+              className={styles.content}
+              threadId={threadId}
+              onRefetchSuggestions={(fn) => {
+                refetchSuggestionsRef.current = fn;
+              }}
+              onClearSuggestions={(fn) => {
+                clearSuggestionsRef.current = fn;
+              }}
+            />
+
+            <AnimatePresence>
+              {tab === 'history' && (
+                <motion.div
+                  className={styles.historyOverlay}
+                  initial={{ opacity: 0, scale: 0.985, y: 200 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.985, y: 200 }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                >
+                  <History onBack={() => setTab('chat')} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {!fullscreen && <PanelSplitter />}
         </motion.div>
       </div>

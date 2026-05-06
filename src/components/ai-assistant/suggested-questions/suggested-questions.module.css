@@ -1,81 +1,81 @@
 .suggestions {
   display: flex;
-  flex-wrap: nowrap;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-end;
-  gap: 0.25em;
+  gap: 0.25rem;
+}
+
+.suggestions > button,
+.skeleton {
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.skeleton {
+  height: 3.6rem;
 }
 
 .suggestions > button {
-  --color-grey: color-mix(in srgb, var(--color-neutral-0) 20%, transparent);
-  padding: 0 0 0 0.5em;
-  background-color: transparent;
-  border: none;
-  color: var(--color-primary-3);
-  transition: all 0.3s;
+  min-height: 3.6rem;
+  padding: 0.3rem 0.6rem;
+  background: color-mix(in srgb, var(--color-primary-9) 3%, white);
+  border: 1px solid color-mix(in srgb, var(--color-primary-9) 12%, transparent);
+  color: color-mix(in srgb, var(--color-primary-9) 75%, #595959);
+  transition: all 0.15s ease;
   text-align: left;
-  margin: 0.25em 0;
   display: flex;
-  width: 100%;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 0.5em;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  flex-shrink: 0;
 }
 
 .suggestions > button > svg {
-  flex: 0 0 auto;
-  color: var(--color-grey);
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: color-mix(in srgb, var(--color-primary-9) 40%, transparent);
+  transition: transform 0.15s ease;
+}
+
+.suggestions > button > div {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .suggestions > button:hover {
-  color: var(--color-primary-5);
+  border-color: color-mix(in srgb, var(--color-primary-6) 50%, transparent);
+  background: color-mix(in srgb, var(--color-primary-9) 6%, white);
+  color: var(--color-primary-9);
 }
 
-.title {
-  color: #000;
-  opacity: 0.6;
+.suggestions > button:hover > svg {
+  transform: translateX(2px);
+  color: color-mix(in srgb, var(--color-primary-9) 70%, transparent);
 }
 
 .container {
   position: relative;
 }
 
-.loading {
-  opacity: 0.4;
-  transition: opacity 0.2s;
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-primary-6) 4%, var(--color-neutral-8)) 25%,
+    color-mix(in srgb, var(--color-primary-6) 7%, var(--color-neutral-7)) 50%,
+    color-mix(in srgb, var(--color-primary-6) 4%, var(--color-neutral-8)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
-.spinnerOverlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 10;
-}
-
-.spinnerContainer {
-  display: flex;
-  justify-content: center;
-  padding: 16px 0;
-}
-
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid #e0e0e0;
-  border-top: 3px solid #333;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
+@keyframes shimmer {
   0% {
-    transform: rotate(0deg);
+    background-position: 200% 0;
   }
   100% {
-    transform: rotate(360deg);
+    background-position: -200% 0;
   }
 }

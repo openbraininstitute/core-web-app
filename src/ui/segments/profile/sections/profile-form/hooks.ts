@@ -1,26 +1,11 @@
-import { NotificationInstance } from 'antd/es/notification/interface';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
-import omit from 'es-toolkit/compat/omit';
 import get from 'es-toolkit/compat/get';
 
-import { UserProfileResponse } from '@/api/virtual-lab-svc/queries/types';
 import { updateUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { keyBuilder } from '@/ui/use-query-keys/user';
 
-interface FieldInfo {
-  errors?: string[];
-}
-
-export function useFieldsChangeHandler(setValid: (value: boolean) => void) {
-  return useCallback(
-    (_changedFields: FieldInfo[], allFields: FieldInfo[]) => {
-      const error = allFields.find((item) => (item.errors ?? []).length > 0);
-      setValid(!error);
-    },
-    [setValid]
-  );
-}
+import type { NotificationInstance } from 'antd/es/notification/interface';
+import type { TUpdateUserProfileRequest } from '@/api/virtual-lab-svc/queries/types';
 
 export function useSubmitCallback(
   errorNotify: NotificationInstance['error'],
@@ -28,8 +13,9 @@ export function useSubmitCallback(
 ) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (values: UserProfileResponse) =>
-      updateUserProfile(omit(values, ['email_verified', 'id'])),
+    mutationFn: (values: TUpdateUserProfileRequest) => {
+      return updateUserProfile(values);
+    },
     onSuccess: () => {
       successNotify({
         message: 'Your profile information has been successfully updated',
@@ -38,9 +24,13 @@ export function useSubmitCallback(
       });
     },
     onError: (error) => {
-      if (get(error, 'cause.error_code') === 'ENTITY_UPDATE__ERROR') {
+      if (get(error, 'cause.code') === 'DATA_CONFLICT') {
         errorNotify({
-          message: `We couldn’t update your information. Please check your input and try again.`,
+          message: get(
+            error,
+            'cause.message',
+            'We’re unable to update your profile with this email address. Please make sure the email is correct or try another one.'
+          ),
           placement: 'topRight',
           key: 'profile-update-error',
         });
