@@ -6,7 +6,7 @@ import {
   PlusCircleOutlined,
 } from '@ant-design/icons';
 import { Button, InputNumber } from 'antd';
-import { memo, useCallback, useDeferredValue, useMemo, useState } from 'react';
+import { Fragment, memo, useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 
 import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
 
@@ -101,6 +101,8 @@ export default function NeuronIds({
           <CopyButton textToCopy={defaultText} />
         </div>
       )}
+
+      {!edit && <HighlightedInput />}
       {edit && (
         <textarea
           defaultValue={defaultText}
@@ -272,5 +274,61 @@ const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
     >
       {copied ? 'Copied!' : 'Copy ID list'} <CopyOutlined className="text-xs" />
     </button>
+  );
+};
+
+const HighlightedInput: React.FC = () => {
+  const [value, setValue] = useState<string>('');
+  const backdropRef = useRef<HTMLDivElement>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLInputElement>) => {
+    if (backdropRef.current) {
+      // e.currentTarget is preferred over e.target for type safety here
+      backdropRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+  const renderHighlights = () => {
+    const segments = value.split(',');
+
+    return segments.map((segment, index) => {
+      const isLast = index === segments.length - 1;
+      const isValid = /^\s*\d*\s*$/.test(segment);
+
+      return (
+        <Fragment key={index}>
+          <span className={!isValid ? 'bg-red-100 text-red-600 rounded px-0.5' : 'text-gray-800'}>
+            {segment}
+          </span>
+          {!isLast && <span className="text-gray-800">,</span>}
+        </Fragment>
+      );
+    });
+  };
+
+  return (
+    <div className="relative w-full max-w-lg border border-gray-200 rounded-md focus-within:ring-2 focus-within:ring-primary-9 focus-within:border-primary-9 bg-white overflow-hidden flex items-center">
+      <div
+        ref={backdropRef}
+        className="absolute inset-0 px-3 py-2 font-mono text-sm whitespace-pre overflow-hidden pointer-events-none"
+        aria-hidden="true"
+      >
+        {renderHighlights()}
+      </div>
+
+      <input
+        type="text"
+        value={value}
+        onChange={handleChange}
+        onScroll={handleScroll}
+        className="w-full px-3 py-2 font-mono text-sm text-transparent bg-transparent caret-black outline-none block"
+        spellCheck={false}
+        placeholder="1, 2, 3..."
+      />
+    </div>
   );
 };
