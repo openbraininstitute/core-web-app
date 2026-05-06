@@ -5,6 +5,7 @@ import { isEMailFromForbiddenCountry } from '@/util/email';
 /**
  * personNameRegex allows:
  * - Any Unicode letter (\p{L})
+ * - Number
  * - Space
  * - Hyphen -
  * - Apostrophe '
@@ -12,9 +13,9 @@ import { isEMailFromForbiddenCountry } from '@/util/email';
  *
  * and requires at least one non‑space character
  */
-export const personNameRegex = /^[\p{L} .'-]+$/u;
+export const personNameRegex = /^[\p{L}\d .'-]+$/u;
 export const personNameRegexMessage =
-  "Name contains invalid characters. Use letters, spaces, hyphen (-), apostrophe (') or dot (.) only.";
+  "Name contains invalid characters. Use letters, numbers, spaces, hyphen (-), apostrophe (') or dot (.) only.";
 
 export const ProfileFormSchema = z.object({
   first_name: z
