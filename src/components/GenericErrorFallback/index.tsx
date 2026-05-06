@@ -71,9 +71,15 @@ export function withErrorConfig({
   customError?: string;
   children?: ReactNode;
 }) {
-  return function wrapper({ error }: { error?: Error & { cause?: unknown } }) {
+  return function wrapper({ error }: { error?: unknown }) {
+    const resolvedError = error instanceof Error ? error : undefined;
     return (
-      <ErrorComponent error={error} customError={customError} cls={cls} showButtons={showButtons}>
+      <ErrorComponent
+        error={resolvedError}
+        customError={customError}
+        cls={cls}
+        showButtons={showButtons}
+      >
         {children}
       </ErrorComponent>
     );

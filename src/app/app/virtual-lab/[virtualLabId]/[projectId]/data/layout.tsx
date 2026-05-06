@@ -1,3 +1,5 @@
+import { BrainRegionUrlBoundary } from '@/features/brain-region-hierarchy/components/url-boundary';
+import { BrainRegionUrlBoundaryMode } from '@/features/brain-region-hierarchy/constants';
 import { DataListStateSnapshotLifecycleManager } from '@/ui/segments/data-table/elements/data-lifecycle-manager';
 
 import type { ReactNode } from 'react';
@@ -8,5 +10,9 @@ export default function DataLayout({
 }: ServerSideComponentProp<WorkspaceContext, null> & {
   children: ReactNode;
 }) {
-  return <DataListStateSnapshotLifecycleManager>{children}</DataListStateSnapshotLifecycleManager>;
+  return (
+    <BrainRegionUrlBoundary mode={BrainRegionUrlBoundaryMode.Sync}>
+      <DataListStateSnapshotLifecycleManager>{children}</DataListStateSnapshotLifecycleManager>
+    </BrainRegionUrlBoundary>
+  );
 }

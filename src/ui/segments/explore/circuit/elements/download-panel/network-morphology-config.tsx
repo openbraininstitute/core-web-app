@@ -6,14 +6,9 @@ import { useSetAtom } from 'jotai';
 import { useParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { match, P } from 'ts-pattern';
-import type {
-  ICircuit,
-  ICircuitSonataConfiguration,
-} from '@/api/entitycore/types/entities/circuit';
+
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
-import type { WorkspaceContext } from '@/types/common';
-import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
 import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
 import {
   morphologiesContentConfiguration,
@@ -29,6 +24,13 @@ import {
 } from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
 import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type {
+  ICircuit,
+  ICircuitSonataConfiguration,
+} from '@/api/entitycore/types/entities/circuit';
+import type { WorkspaceContext } from '@/types/common';
+import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
 
 export const AssetDefaultPath = 'circuit_config.json';
 

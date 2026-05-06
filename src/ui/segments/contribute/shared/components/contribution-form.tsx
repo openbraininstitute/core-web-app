@@ -120,13 +120,7 @@ function FormContent<
   };
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      component={false}
-      requiredMark={false}
-      scrollToFirstError
-    >
+    <Form form={form} layout="vertical" component={false} requiredMark={false} scrollToFirstError>
       <div className={cn('relative mx-auto h-full w-full px-6 py-2 flex flex-col')}>
         <Form.Item noStyle>
           <input type="hidden" />
@@ -152,7 +146,7 @@ function FormContent<
                     transition={{ duration: 0.2 }}
                     style={{
                       pointerEvents: isActive ? 'auto' : 'none',
-                      display: isActive ? 'block' : 'none', 
+                      display: isActive ? 'block' : 'none',
                     }}
                     className={cn(
                       'secondary-scrollbar h-full flex-1 overflow-auto rounded-xl pr-4 pl-4',
@@ -211,8 +205,16 @@ export function ContributionForm<
   TFormValues extends Record<string, unknown>,
   TSchema extends ZodObject<ZodRawShape>,
 >(props: IContributionFormProps<TFormValues, TSchema>) {
-  const { config, sessionId, brainRegionId, pipeline, progressSteps, virtualLabId, projectId, onDone } =
-    props;
+  const {
+    config,
+    sessionId,
+    brainRegionId,
+    pipeline,
+    progressSteps,
+    virtualLabId,
+    projectId,
+    onDone,
+  } = props;
 
   return (
     <ContributionPipelineProvider

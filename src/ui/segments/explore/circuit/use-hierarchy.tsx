@@ -4,31 +4,21 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { chunk, flatMap, get, isArray, keyBy, mergeWith, uniqBy } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 import pMap from 'p-map';
+
 import {
   getCircuitHierarchyByDerivation,
   getCircuits,
 } from '@/api/entitycore/queries/model/circuit';
-import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
-import type {
-  EntityCoreResponse,
-  TFacets,
-  Pagination,
-} from '@/api/entitycore/types/shared/response';
-import type { TWorkspaceScope } from '@/constants';
 import { DEFAULT_PAGE_SIZE, WorkspaceScope } from '@/constants';
 import { circuitScaleFilter } from '@/entity-configuration/domain/model/circuit';
-import type { WorkspaceContext } from '@/types/common';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useQueryExtendedEntityType } from '@/ui/hooks/use-query-extended-entity-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import type {
-  HierarchyOutputNode,
-  TCircuitRepresentationView,
-} from '@/ui/segments/explore/circuit/helpers';
 import {
   buildFilteredHierarchyTree,
   CircuitRepresentationView,
@@ -40,6 +30,21 @@ import {
 } from '@/ui/segments/explore/circuit/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
+
+import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
+import type { HierarchyTreeResponse } from '@/api/entitycore/types/shared/hierarchy';
+import type {
+  EntityCoreResponse,
+  Pagination,
+  TFacets,
+} from '@/api/entitycore/types/shared/response';
+import type { TWorkspaceScope } from '@/constants';
+import type { WorkspaceContext } from '@/types/common';
+import type {
+  HierarchyOutputNode,
+  TCircuitRepresentationView,
+} from '@/ui/segments/explore/circuit/helpers';
 
 export function useFullRawHierarchy({
   view = CircuitRepresentationView.Flat,
@@ -164,6 +169,8 @@ export function useHierarchy({
 }) {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = useWorkspace();
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const { hierarchyByDerivation, loadingDerivation } = useHierarchyDerivationTree({
     view,
@@ -252,12 +259,11 @@ export function useHierarchy({
     useKeepPreviousData: false,
     enabled: ({ queryKey }) => {
       const [{ queryParameters }] = queryKey;
-      if (
-        get(queryParameters, 'within_brain_region_brain_region_id', null) &&
-        view === CircuitRepresentationView.Hierarchy
-      )
-        return true;
-      return false;
+      if (view !== CircuitRepresentationView.Hierarchy) return false;
+
+      if (isAllSpeciesMode) return true;
+
+      return Boolean(get(queryParameters, 'within_brain_region_brain_region_id', null));
     },
   });
 

@@ -82,29 +82,39 @@ const configFields = {
     schema: z.string().nonempty(),
     public: true,
   },
-
-  BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE: {
+  APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID: {
     schema: z.string().nonempty(),
     public: true,
   },
-  DEFAULT_BRAIN_ATLAS_ID: { schema: z.string().nonempty(), public: true },
-  DEFAULT_BRAIN_REGION_HIERARCHY_ID: {
+  MOUSE_ATLAS__ID: { schema: z.string().nonempty(), public: true },
+  MOUSE_DEFAULT__SELECTED_BRAIN_REGION_ID: {
     schema: z.string().nonempty(),
     public: true,
   },
-  DEFAULT_SELECTED_BRAIN_REGION_ID: {
+  HUMAN_DEFAULT__SELECTED_BRAIN_REGION_ID: {
     schema: z.string().nonempty(),
+    public: true,
+  },
+  RAT_DEFAULT__SELECTED_BRAIN_REGION_ID: {
+    schema: z.string().nonempty(),
+    public: true,
+  },
+  EXCLUDED_HIERARCHY_IDS: {
+    schema: z.preprocess((val) => {
+      if (typeof val === 'string') {
+        return val
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean);
+      }
+      return val;
+    }, z.array(z.string())),
     public: true,
   },
   LEGACY_DEFAULT_CIRCUIT_ID: {
     schema: z.url().nonempty(),
     public: true,
   },
-  ROOT_BRAIN_REGION_ANNOTATION_VALUE: {
-    schema: z.string().nonempty(),
-    public: true,
-  },
-  ROOT_BRAIN_REGION_ID: { schema: z.string().nonempty(), public: true },
 
   NOTEBOOK_REPO_URL: { schema: z.url(), public: true },
 } as const;
@@ -138,6 +148,7 @@ const baseServerSchema = z
   [K in keyof typeof configFields]: (typeof configFields)[K]['schema'];
 }>;
 
+// biome-ignore lint/suspicious/noExplicitAny: reason for using any
 const applyApiUrlTransforms = <T extends z.ZodObject<any>>(schema: T) =>
   schema
     .superRefine((data, ctx) => {

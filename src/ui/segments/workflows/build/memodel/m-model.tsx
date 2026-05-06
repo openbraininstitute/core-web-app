@@ -20,7 +20,6 @@ import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { label, useBuildMeModelSessionState } from '@/ui/segments/workflows/build/memodel/helpers';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
@@ -41,7 +40,8 @@ export function MModel({ sessionId }: Props) {
   return (
     <BrowseEntityScope
       requireBrainRegion
-      requireBrainRegionDropdown
+      requireScopeSelector
+      requireSpeciesSelector
       id={sessionId}
       section={WorkspaceSection.BuildWorkflow}
       requireMiniDetailView={false}
@@ -66,7 +66,6 @@ export function MModel({ sessionId }: Props) {
           });
         },
       }}
-      left={<WorkflowScopeTabs className="max-w-max" />}
     />
   );
 }
@@ -123,9 +122,9 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
   const onReset = () => setSessionValue({ ...sessionValue, mmodel: undefined });
 
   return (
-    <div className="grid h-full w-full grid-cols-2 flex-col items-start gap-4">
-      <div className="flex w-full flex-col items-center justify-center px-4">
-        <div className="mb-4 flex w-full items-center justify-between gap-2 select-none">
+    <div className="grid h-full min-h-0 w-full grid-cols-2 grid-rows-[1fr] gap-4">
+      <div className="flex min-h-0 w-full flex-col overflow-hidden px-4">
+        <div className="mb-4 flex w-full shrink-0 items-center justify-between gap-2 select-none">
           <h3 className="text-neutral-4 text-lg font-medium uppercase">M-Model</h3>
           <Button
             rounded
@@ -141,9 +140,11 @@ export function MModelMiniDetail({ sessionId }: { sessionId: string }) {
             </div>
           </Button>
         </div>
-        <div className="flex w-full flex-col items-start justify-center gap-5">{content}</div>
+        <div className="secondary-scrollbar flex min-h-0 flex-1 flex-col items-start justify-start gap-5 overflow-y-auto">
+          {content}
+        </div>
       </div>
-      <div className="h-full w-full rounded-2xl bg-white">
+      <div className="min-h-0 h-full w-full rounded-2xl bg-white">
         {renderPreview(
           data as unknown as EntityCoreResource,
           undefined,

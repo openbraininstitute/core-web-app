@@ -12,6 +12,8 @@ export const ViewDefForBrainRegion: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
+    EntityCoreFields.CircuitScale,
     EntityCoreFields.CircuitNumberNeurons,
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,

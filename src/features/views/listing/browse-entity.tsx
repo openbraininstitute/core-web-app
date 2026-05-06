@@ -19,6 +19,8 @@ import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import {
   useQueryExtendedEntityType,
   useQueryExtendedEntityTypeFacets,
@@ -75,6 +77,7 @@ type Props = {
     miniView?: ComponentProps<'div'>['className'];
     filterClassNames?: {
       container?: string;
+      speciesSelector?: string;
     };
     tableClassNames?: {
       table?: ComponentProps<'div'>['className'];
@@ -101,9 +104,9 @@ type Props = {
    */
   allowQuery?: boolean;
   /** whether to display the brain region dropdown */
-  requireBrainRegionDropdown?: boolean;
+  requireSpeciesSelector?: boolean;
+  requireScopeSelector?: boolean;
   extraQueryParams?: Record<string, unknown>;
-  left?: ReactNode;
 };
 
 export function BrowseEntityScope({
@@ -122,9 +125,9 @@ export function BrowseEntityScope({
   allowFilter = true,
   allowSearch = true,
   allowQuery = true,
-  requireBrainRegionDropdown,
+  requireSpeciesSelector,
+  requireScopeSelector,
   extraQueryParams,
-  left,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
@@ -146,6 +149,9 @@ export function BrowseEntityScope({
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
+
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const { sync: runStorageSync, restore: runStorageRestore } = useDataListStateSnapshotActions({
     dataKey,
@@ -243,7 +249,12 @@ export function BrowseEntityScope({
     extraQueryParams,
     enabled: () => {
       if (!allowQuery) return false;
-      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+      // in "all species" mode we intentionally have no brain-region filter
+      if (
+        !isAllSpeciesMode &&
+        requireBrainRegion &&
+        !get(queryParameters, 'within_brain_region_brain_region_id', null)
+      )
         return false;
       return true;
     },
@@ -262,7 +273,11 @@ export function BrowseEntityScope({
     queryFilters,
     enabled: () => {
       if (!allowQuery) return false;
-      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+      if (
+        !isAllSpeciesMode &&
+        requireBrainRegion &&
+        !get(queryParameters, 'within_brain_region_brain_region_id', null)
+      )
         return false;
       return true;
     },
@@ -341,7 +356,8 @@ export function BrowseEntityScope({
             allowDelete={allowDelete}
             allowFilter={allowFilter}
             allowSearch={allowSearch}
-            requireBrainRegionDropdown={requireBrainRegionDropdown}
+            requireSpeciesSelector={requireSpeciesSelector}
+            requireScopeSelector={requireScopeSelector}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
             dataScope={scope}
@@ -368,7 +384,6 @@ export function BrowseEntityScope({
             filterClassNames={classNames?.filterClassNames}
             // @ts-expect-error
             expandableOptions={expandableOptions}
-            left={left}
             facets={{
               data: facets,
               error: facetsError,

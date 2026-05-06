@@ -1,25 +1,25 @@
-/* eslint-disable react/jsx-props-no-spreading */
-/* eslint-disable object-shorthand */
-/* eslint-disable no-nested-ternary */
-/* eslint-disable prefer-destructuring */
-
-import renderMathInElement from 'katex/contrib/auto-render';
-import { ObjectFieldTemplateProps } from '@rjsf/utils';
-import type { ThemeProps } from '@rjsf/core';
-import { get } from 'es-toolkit/compat';
-import { useCallback } from 'react';
 import {
-  getInputProps,
   type BaseInputTemplateProps,
   type FieldTemplateProps,
+  getInputProps,
   type MultiSchemaFieldTemplateProps,
   type RegistryFieldsType,
   type RegistryWidgetsType,
   type WidgetProps,
 } from '@rjsf/utils';
+import { get } from 'es-toolkit/compat';
+import renderMathInElement from 'katex/contrib/auto-render';
+import { useCallback } from 'react';
 
-import { EquationSelectorField } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/widgets/equation-selector-card';
-import { RecordingsArrayField } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/fields/ion-channel-recordings';
+import { Input } from '@/ui/molecules/input';
+import { Textarea } from '@/ui/molecules/input/text-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/ui/molecules/select';
 import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers/render-mathematic-symbol';
 import {
   descriptionClasses,
@@ -27,16 +27,12 @@ import {
   labelClasses,
   parentDescriptionClasses,
 } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
-import { Textarea } from '@/ui/molecules/input/text-area';
-import { Input } from '@/ui/molecules/input';
+import { RecordingsArrayField } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/fields/ion-channel-recordings';
+import { EquationSelectorField } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/widgets/equation-selector-card';
 import { cn } from '@/utils/css-class';
-import {
-  SelectContent,
-  SelectTrigger,
-  SelectValue,
-  SelectItem,
-  Select,
-} from '@/ui/molecules/select';
+
+import type { ThemeProps } from '@rjsf/core';
+import type { ObjectFieldTemplateProps } from '@rjsf/utils';
 
 import 'katex/dist/katex.min.css';
 

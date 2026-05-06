@@ -7,8 +7,8 @@ import {
   createAnalysisNotebookTemplate,
   uploadNotebookTemplateFile,
 } from '@/api/entitycore/queries/experimental/analysis-notebook-template';
-import { deleteNotebook } from '@/api/entitycore/queries/notebook';
 import { createContribution } from '@/api/entitycore/queries/general/contribution';
+import { deleteNotebook } from '@/api/entitycore/queries/notebook';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useWorkspace } from '@/ui/hooks/use-workspace';

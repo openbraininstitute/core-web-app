@@ -38,6 +38,7 @@ export const WorkspaceSection = {
   Notebooks: 'notebooks',
   GeneralWorkflow: 'workflows',
   BuildWorkflow: WorkflowActivityDictValue.build,
+  ScanConfigBuildWorkflow: 'scan-config-build-workflow',
   SimulateWorkflow: WorkflowActivityDictValue.simulate,
   ExtractWorkflow: WorkflowActivityDictValue.extract,
   ProcessWorkflow: WorkflowActivityDictValue.process,

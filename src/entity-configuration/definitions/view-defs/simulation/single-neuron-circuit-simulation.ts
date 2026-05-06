@@ -20,13 +20,11 @@ export const viewDefForSingleNeuronCircuitSimulation: ViewDefinitionConfig = {
   ],
   filterableFields: [
     EntityCoreFields.Name,
-    EntityCoreFields.Contributions,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],
   displayableFields: [
     EntityCoreFields.Name,
-    EntityCoreFields.Contributions,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],

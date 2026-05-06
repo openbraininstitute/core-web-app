@@ -1,14 +1,19 @@
 'use client';
 
-import { DeleteOutlined, LoadingOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  LoadingOutlined,
+  PlayCircleOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Modal, Popconfirm } from 'antd';
 import { Popover } from 'antd/lib';
-import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { deleteNotebook } from '@/api/entitycore/queries/notebook';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
 import { EyeIconWhiteWithinBox } from '@/components/icons/EyeIcon';
@@ -37,12 +42,13 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
   const isPublic = pathname.endsWith('/public');
 
   const deleteMutation = useMutation({
-    mutationFn: () =>
-      deleteNotebook({ id: notebook.id, context: { virtualLabId, projectId } }),
+    mutationFn: () => deleteNotebook({ id: notebook.id, context: { virtualLabId, projectId } }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         predicate(query) {
-          const first = query.queryKey[0] as { context?: { extendedEntityType?: string } } | undefined;
+          const first = query.queryKey[0] as
+            | { context?: { extendedEntityType?: string } }
+            | undefined;
           return first?.context?.extendedEntityType === ExtendedEntitiesTypeDict.Notebook;
         },
       });
@@ -167,53 +173,57 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
               </div>
 
               {!isPublic && (
-              <div className="flex gap-4">
-                <Popconfirm
-                  autoAdjustOverflow
-                  destroyOnHidden
-                  placement="bottomRight"
-                  title={<div className="font-bold text-lg text-primary-8">Delete the notebook</div>}
-                  description={
-                    <div>
-                      <div className="font-bold text-sm text-primary-8">
-                        Are you sure you want to delete this notebook?
+                <div className="flex gap-4">
+                  <Popconfirm
+                    autoAdjustOverflow
+                    destroyOnHidden
+                    placement="bottomRight"
+                    title={
+                      <div className="font-bold text-lg text-primary-8">Delete the notebook</div>
+                    }
+                    description={
+                      <div>
+                        <div className="font-bold text-sm text-primary-8">
+                          Are you sure you want to delete this notebook?
+                        </div>
+                        <small className="font-light text-primary-6">
+                          This action cannot be undone.
+                        </small>
                       </div>
-                      <small className="font-light text-primary-6">This action cannot be undone.</small>
-                    </div>
-                  }
-                  okText="Yes"
-                  cancelText="No"
-                  arrow={{ pointAtCenter: false }}
-                  onConfirm={(e) => {
-                    e?.stopPropagation();
-                    deleteMutation.mutateAsync();
-                  }}
-                  classNames={{
-                    body: cn(
-                      'max-w-70',
-                      '[&_.ant-popconfirm-buttons_button]:px-4',
-                      '[&_.ant-popconfirm-buttons_button]:rounded-full [&_.ant-popconfirm-buttons_button]:px-5',
-                      '[&_.ant-popconfirm-buttons_button:first-child]',
-                      '[&_.ant-popconfirm-buttons_button:last-child]:bg-primary-8'
-                    ),
-                  }}
-                >
-                  <button
-                    data-id={`delete-btn-${index}`}
-                    disabled={deleteMutation.isPending}
-                    type="button"
-                    className="hover:text-primary-4 inline-flex items-center gap-2.5"
-                    onClick={(e) => e.stopPropagation()}
+                    }
+                    okText="Yes"
+                    cancelText="No"
+                    arrow={{ pointAtCenter: false }}
+                    onConfirm={(e) => {
+                      e?.stopPropagation();
+                      deleteMutation.mutateAsync();
+                    }}
+                    classNames={{
+                      body: cn(
+                        'max-w-70',
+                        '[&_.ant-popconfirm-buttons_button]:px-4',
+                        '[&_.ant-popconfirm-buttons_button]:rounded-full [&_.ant-popconfirm-buttons_button]:px-5',
+                        '[&_.ant-popconfirm-buttons_button:first-child]',
+                        '[&_.ant-popconfirm-buttons_button:last-child]:bg-primary-8'
+                      ),
+                    }}
                   >
-                    {deleteMutation.isPending ? (
-                      <LoadingOutlined aria-label="Deleting" />
-                    ) : (
-                      <DeleteOutlined className="text-primary-9 text-sm" aria-label="Delete" />
-                    )}
-                    {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-                  </button>
-                </Popconfirm>
-              </div>
+                    <button
+                      data-id={`delete-btn-${index}`}
+                      disabled={deleteMutation.isPending}
+                      type="button"
+                      className="hover:text-primary-4 inline-flex items-center gap-2.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {deleteMutation.isPending ? (
+                        <LoadingOutlined aria-label="Deleting" />
+                      ) : (
+                        <DeleteOutlined className="text-primary-9 text-sm" aria-label="Delete" />
+                      )}
+                      {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </Popconfirm>
+                </div>
               )}
 
               <div className="flex gap-4">

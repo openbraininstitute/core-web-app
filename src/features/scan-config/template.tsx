@@ -1,8 +1,8 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
-import { useAtom, useSetAtom } from 'jotai';
-import { Suspense, useEffect, useState } from 'react';
+import { useAtom } from 'jotai';
+import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { useEntries } from '@/features/scan-config/components/hooks';
@@ -35,12 +35,7 @@ import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletoniza
 import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState } from '@/services/ai-agent';
-import {
-  editingAtom,
-  expandedRootElementsAtom,
-  selectedEntryAtom,
-  selectedRootElementAtom,
-} from '@/state/config-highlights';
+import { editingAtom, selectedEntryAtom, selectedRootElementAtom } from '@/state/config-highlights';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -94,7 +89,6 @@ export function ScanConfigTemplate({
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
-  const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const allEntries = useEntries({ initialConfig, schema });
   const [atomsMap, setAtomsMap] = useAtomsMap({
     schema,
@@ -104,16 +98,6 @@ export function ScanConfigTemplate({
   const config = useConfigAtom(schema, atomsMap);
   const previousCampaignId = usePrevious(campaignId);
   const isCampaignIdChanged = previousCampaignId !== campaignId;
-
-  useEffect(() => {
-    // reset all scan config state when leaving the page
-    return () => {
-      setExpandedRootElements(new Set(['info']));
-      setSelectedRootElement('info');
-      setSelectedEntry('');
-      setEditing(true);
-    };
-  }, [setEditing, setExpandedRootElements, setSelectedEntry, setSelectedRootElement]);
 
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
 
