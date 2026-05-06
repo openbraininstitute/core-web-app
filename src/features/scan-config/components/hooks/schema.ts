@@ -215,6 +215,22 @@ export function useAtomsMap({
             map[k][subK] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(subV);
           });
         });
+
+      // TODO: Consider implementing schema versioning
+      // Fill in any schema-defined root keys that initialConfig omitted, so the
+      // hasInitializedMapForSchema guard above passes on the next render. Without
+      // this, the effect re-fires every render and triggers Maximum update depth.
+      for (const [k, v] of Object.entries(schema.properties)) {
+        if (isType(v) || k in map) continue;
+        if (
+          v.ui_element === ScanConfigUIElementDict.BlockSingle ||
+          v.ui_element === ScanConfigUIElementDict.BlockUnion
+        ) {
+          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>({});
+        } else {
+          map[k] = {};
+        }
+      }
     } else {
       Object.entries(schema.properties).forEach(([k, v]) => {
         if (isType(v)) return;
