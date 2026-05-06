@@ -35,7 +35,7 @@ export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
       {items?.map(({ content, display, label, toggleFunc }) => {
         const displayTrigger = display ? (
           <button
-            key={label}
+            key={`${label}-trigger-visible`}
             type="button"
             aria-label="filter-panel-hide-field-button"
             onClick={toggleFunc}
@@ -44,7 +44,7 @@ export function FilterGroup({ items, filters, setFilters }: FilterGroupProps) {
           </button>
         ) : (
           <button
-            key={label}
+            key={`${label}-trigger-invisible}`}
             type="button"
             aria-label="filter-panel-show-field-button"
             onClick={toggleFunc}

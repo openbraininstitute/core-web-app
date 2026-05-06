@@ -7,14 +7,10 @@ import map from 'es-toolkit/compat/map';
 import { useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import { match, P } from 'ts-pattern';
-import type {
-  CircuitConnectivityMatricesConfiguration,
-  ICircuit,
-} from '@/api/entitycore/types/entities/circuit';
+
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
 import { NetworkConfigItem } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
 import { connectivityMetricsContentConfiguration } from '@/ui/segments/explore/circuit/elements/download-panel/content-configuration';
 import { DownloadPanelError } from '@/ui/segments/explore/circuit/elements/download-panel/error';
@@ -25,6 +21,12 @@ import {
 } from '@/ui/segments/explore/circuit/elements/download-panel/helpers';
 import { SkeletonItem } from '@/ui/segments/explore/circuit/elements/download-panel/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+
+import type {
+  CircuitConnectivityMatricesConfiguration,
+  ICircuit,
+} from '@/api/entitycore/types/entities/circuit';
+import type { ConfigItemProps } from '@/ui/segments/explore/circuit/elements/download-panel/config-item';
 
 const AssetDefaultPath = 'matrix_config.json';
 

@@ -1,10 +1,18 @@
-import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
+
+import type { ReactNode } from 'react';
+
 // import { useNextStep } from 'nextstepjs';
 // import find from 'es-toolkit/compat/find';
 
-import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+// import { useNextStep } from 'nextstepjs';
+// import find from 'es-toolkit/compat/find';
+
+import { BrainRegionUrlBoundary } from '@/features/brain-region-hierarchy/components/url-boundary';
+import { BrainRegionUrlBoundaryMode } from '@/features/brain-region-hierarchy/constants';
 import { NotebooksLayout } from '@/ui/layouts/notebooks-layout';
+
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 // import { notebookTour } from '@/ui/segments/app-setup/discover-app';
 // import { LeftMenu } from '@/ui/segments/notebooks/left-nav-menu';
@@ -42,5 +50,9 @@ export default async function Page({
   const { scope } = params;
   if (!['public', 'private'].includes(scope)) notFound();
 
-  return <NotebooksLayout active={scope}>{children}</NotebooksLayout>;
+  return (
+    <BrainRegionUrlBoundary mode={BrainRegionUrlBoundaryMode.Strip}>
+      <NotebooksLayout active={scope}>{children}</NotebooksLayout>
+    </BrainRegionUrlBoundary>
+  );
 }

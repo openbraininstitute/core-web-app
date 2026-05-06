@@ -1,36 +1,53 @@
-/* eslint-disable no-param-reassign */
+'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { TgdColor, TgdVec4 } from '@tolokoban/tgd';
-import compact from 'es-toolkit/compat/compact';
-import find from 'es-toolkit/compat/find';
-import { useAtom, useAtomValue } from 'jotai';
-import { atomWithStorage, unwrap } from 'jotai/utils';
+import { compact, find } from 'es-toolkit/compat';
+import { useAtom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
 import React from 'react';
 
 import { useAppNotification } from '@/components/notification';
+import { Painter } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/painter';
 import {
-  brainRegionBasicCellGroupsRegionsHierarchyAtom,
-  brainRegionRootHierarchyAtom,
-  ROOT_BRAIN_REGION_ID,
-  useBrainRegionHierarchy,
+  useBrainRegionRootHierarchyQuery,
+  usePrimaryHierarchyOfCurrentSpeciesQuery,
 } from '@/features/brain-region-hierarchy/context';
-
-import { brainRegionAtlasAtom } from '../context';
-import { Painter } from './painter';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
-import type { SettingsDefinitions } from './settings';
-import type { VisibleRegion } from './types';
+import type { SettingsDefinitions } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/settings';
+import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';
 
-export function usePainter(): Painter {
-  const notif = useAppNotification();
+export const ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY = '3d-mesh-error';
+export function usePainter({
+  atlasId,
+  loading,
+}: {
+  atlasId?: string;
+  loading: boolean;
+}): Painter | null {
+  const notifier = useAppNotification();
+  const queryClient = useQueryClient();
   const refPainter = React.useRef<Painter | null>(null);
+  const refAtlasId = React.useRef<string>(atlasId);
+
+  // recreate the Painter when atlasId changes (species switch).
+  // the old Painter holds a stale AtlasID, so we must discard it.
+  if (refPainter.current && refAtlasId.current !== atlasId) {
+    refPainter.current = null;
+    refAtlasId.current = atlasId;
+  }
+
+  if (loading || !atlasId) return null;
   if (!refPainter.current) {
-    refPainter.current = new Painter();
+    refPainter.current = new Painter(atlasId, queryClient);
+    refAtlasId.current = atlasId;
     refPainter.current.eventError.addListener((message) => {
-      notif.warning({
+      notifier.warning({
         message,
-        key: '3d-mesh-error',
+        key: ATLAS_3D_VIEWER_ERROR_MESSAGE_KEY,
+        duration: 2,
       });
     });
     refPainter.current.uniforms = getAtlasViewerDefaultSettings();
@@ -39,40 +56,35 @@ export function usePainter(): Painter {
   return refPainter.current;
 }
 
-export function useAtlas() {
-  return useAtomValue(brainRegionAtlasAtom);
-}
-
-export function useVisibleRegions(dataKey: string): {
+export function useVisibleRegions(): {
   region: IBrainRegionHierarchy | undefined;
   regions: VisibleRegion[];
 } {
-  const { node: brainRegionNode } = useBrainRegionHierarchy({ dataKey });
-  const rootBrainRegions = useAtomValue(
-    React.useMemo(() => unwrap(brainRegionRootHierarchyAtom), [])
-  );
-  const brainRegions = useAtomValue(
-    React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
-  );
+  const { selectedBrainRegion: brainRegionNode } = useWorkspaceHierarchyRegistry();
+  const { result: rootBrainRegions } = useBrainRegionRootHierarchyQuery();
+  const { result: brainRegions } = usePrimaryHierarchyOfCurrentSpeciesQuery();
+
+  const rootBrainRegionId = rootBrainRegions?.root?.id;
+
   return React.useMemo(() => {
     const rootBrainRegion = find(rootBrainRegions?.options, {
-      value: ROOT_BRAIN_REGION_ID,
+      value: rootBrainRegionId,
     })?.data;
     const currentBrainRegion = find(brainRegions?.options, {
-      value: brainRegionNode.id,
+      value: brainRegionNode?.id,
     })?.data;
     const regions = compact(
       brainRegionNode ? [currentBrainRegion, rootBrainRegion] : [rootBrainRegion]
     );
     return {
-      region: regions.find((region) => region.id === brainRegionNode.id),
+      region: regions.find((region) => region.id === brainRegionNode?.id),
       regions: regions.map((region) => ({
         id: region.id,
         name: region.name,
         color: makeColor(`#${region.color_hex_triplet}`),
       })) as VisibleRegion[],
     };
-  }, [brainRegions, rootBrainRegions, brainRegionNode]);
+  }, [brainRegions, rootBrainRegions, brainRegionNode, rootBrainRegionId]);
 }
 
 export function makeColor(textColor: string): TgdVec4 {
@@ -141,10 +153,11 @@ const atlasViewerSettingsAtom = atomWithStorage(
 );
 
 export function useAtlasViewerSettingsValues(
-  painter: Painter
+  painter: Painter | null
 ): [values: SettingsDefinitions, setValues: (values: SettingsDefinitions) => void] {
   const [values, setValues] = useAtom(atlasViewerSettingsAtom);
   React.useEffect(() => {
+    if (!painter) return;
     painter.uniforms = values;
   }, [values, painter]);
   return [values, setValues];

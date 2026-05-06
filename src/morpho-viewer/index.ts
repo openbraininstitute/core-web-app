@@ -8,6 +8,7 @@ export {
 } from '@openbraininstitute/morphoviewer';
 
 export type {
+  ColoringType,
   MorphoViewerElectrodeInjection,
   MorphoViewerElectrodeRecording,
   MorphoViewerSynapsesGroup,

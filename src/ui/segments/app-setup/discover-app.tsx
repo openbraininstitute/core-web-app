@@ -347,12 +347,7 @@ export const OnboardingDiscoverSteps: Tour[] = [
       {
         icon: null,
         title: 'Atlas',
-        content: (
-          <>
-            Select the brain region you want to filter. Selecting “Basic cell groups and regions”
-            will show all the available data.
-          </>
-        ),
+        content: <>Selecting the top level will show all available data</>,
         selector: '#atlas-regions-selector',
         side: 'right',
         showControls: true,

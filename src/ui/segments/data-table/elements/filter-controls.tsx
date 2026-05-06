@@ -1,17 +1,18 @@
 'use client';
 
-import type { HTMLProps, ReactNode } from 'react';
 import { SettingsIcon } from '@/components/icons/Settings';
-import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 import { filterHasValue } from '@/ui/segments/data-table/elements/listing-filter-panel/util';
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
+
+import type { HTMLProps, ReactNode } from 'react';
+import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
 function FilterBtn({ disabled, className, children, onClick }: HTMLProps<HTMLButtonElement>) {
   return (
     <button
       className={cn(
-        'border-neutral-2 flex items-center justify-between gap-10 rounded-md border px-2 py-2',
+        'border-neutral-2 flex items-center justify-between gap-10 rounded-xl border px-2 py-2',
         { 'cursor-not-allowed bg-neutral-100': disabled },
         { 'bg-white': !disabled },
         className

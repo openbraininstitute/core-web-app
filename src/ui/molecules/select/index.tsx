@@ -1,9 +1,8 @@
 'use client';
 
 import * as SelectPrimitive from '@radix-ui/react-select';
-import { RiArrowDownSLine } from '@remixicon/react';
+import { RiArrowDownSLine, RiCheckFill } from '@remixicon/react';
 
-import { CheckIcon } from '@/components/icons';
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { cn } from '@/utils/css-class';
 
@@ -26,10 +25,12 @@ function SelectTrigger({
   size = 'default',
   children,
   icoClassName,
+  icon,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: 'sm' | 'default';
   icoClassName?: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <SelectPrimitive.Trigger
@@ -43,7 +44,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild className={icoClassName}>
-        <RiArrowDownSLine className="size-4 opacity-50" />
+        {icon ?? <RiArrowDownSLine className="size-4 opacity-50" />}
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -97,10 +98,12 @@ function SelectLabel({ className, ...props }: React.ComponentProps<typeof Select
 function SelectItem({
   className,
   children,
-  checkClassName,
+  checkIconClassName,
+  checkIcon,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item> & {
-  checkClassName?: string;
+  checkIconClassName?: string;
+  checkIcon?: React.ReactNode;
 }) {
   return (
     <SelectPrimitive.Item
@@ -111,9 +114,9 @@ function SelectItem({
       )}
       {...props}
     >
-      <span className="absolute right-2 flex size-3.5 items-center justify-center">
+      <span className="select-icon-wrapper absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <CheckIcon className={cn('size-4', checkClassName)} />
+          {checkIcon ?? <RiCheckFill className={cn('size-4', checkIconClassName)} />}
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>

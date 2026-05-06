@@ -5,3 +5,4 @@ export { LicenseSelector } from './license-selector';
 export { StepNavigation } from './step-navigation';
 export { SubjectSelector } from './subject-selector';
 export { SubmitButton } from './submit-button';
+export { SubmitEntityProgress } from './submit-progress';

@@ -20,10 +20,6 @@ import { getWorkflow, WorkflowSessionIdSearchParam } from '@/ui/segments/workflo
 import { CategoryMenu } from '@/ui/segments/workflows/elements/category-menu';
 import { TypesMenu } from '@/ui/segments/workflows/elements/types-menu';
 import { WorkflowActivity } from '@/ui/segments/workflows/elements/workflow-activity';
-import {
-  PanelQueryParam,
-  WorkflowSimulatePanels,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
@@ -67,7 +63,6 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
           const sessionId = crypto.randomUUID();
           const query = new URLSearchParams();
           query.set(WorkflowSessionIdSearchParam, sessionId);
-          query.set(PanelQueryParam, WorkflowSimulatePanels.Configuration);
 
           const workflow = getWorkflow({
             activity: WorkflowActivityDictValue.build,

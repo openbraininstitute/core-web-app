@@ -1,19 +1,20 @@
-import { useAtomValue } from 'jotai';
 import { useParams } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { match, P } from 'ts-pattern';
 
-import { Tree } from '@/components/tree';
+import Tree from '@/components/tree';
 import { renderFloatNumber } from '@/entity-configuration/definitions/renderer';
-import { useBrainRegionHierarchy } from '@/features/brain-region-hierarchy/context';
-import { annotationTypesAtom, cellCompositionAtom } from '@/features/cell-composition/context';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
+import {
+  useAnnotationTypesQuery,
+  useCellCompositionQuery,
+} from '@/features/cell-composition/context';
 import { CellCompositionSkeleton } from '@/features/cell-composition/elements/cell-composition-skeleton';
 import { DensityOrCountToggle } from '@/features/cell-composition/elements/composition-type-toggle';
-import { Node } from '@/features/cell-composition/elements/default-node';
+import Node from '@/features/cell-composition/elements/default-node';
 import { getMetric, metricToUnit } from '@/features/cell-composition/elements/helpers';
 import { classNames } from '@/util/utils';
-import { createLoadableAtom } from '@/utils/jotai-loadable';
-import { AppUInterfaceSection, resolveDataKey } from '@/utils/key-builder';
+import { cn } from '@/utils/css-class';
 
 import type { RenderNodeProps } from '@/components/tree/types';
 import type { DensityOrCount, TreeNode } from '@/features/cell-composition/types';
@@ -21,31 +22,28 @@ import type { WorkspaceContext } from '@/types/common';
 
 export function CellCompositionMETypeTree() {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
-  const { node } = useBrainRegionHierarchy({
-    dataKey: resolveDataKey({ section: AppUInterfaceSection.Data, projectId }),
-  });
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
 
   const [densityOrCount, setDensityOrCount] = useState<DensityOrCount>('count');
-
-  const cellCompositionForRegion = useMemo(
-    () => createLoadableAtom(cellCompositionAtom({ brainRegionId: node.id })),
-    [node.id]
-  );
-
-  const composition = useAtomValue(cellCompositionForRegion);
-  const annotations = useAtomValue(
-    useMemo(
-      () => createLoadableAtom(annotationTypesAtom({ virtualLabId, projectId })),
-      [virtualLabId, projectId]
-    )
-  );
+  const {
+    result: annotations,
+    loading: loadingAnnotation,
+    error: annotationError,
+  } = useAnnotationTypesQuery({
+    virtualLabId,
+    projectId,
+  });
+  const {
+    result: composition,
+    loading: loadingComposition,
+    error: compositionError,
+  } = useCellCompositionQuery({
+    brainRegionId: selectedBrainRegion?.id,
+  });
 
   const defaultNode = useCallback(
     (props: RenderNodeProps<TreeNode>) => {
-      const annotation =
-        annotations.state === 'hasData'
-          ? annotations.data.find((o) => o.id === props.node.id)
-          : null;
+      const annotation = annotations.find((o) => o.id === props.node.id);
       return (
         <Node<TreeNode>
           {...props}
@@ -70,34 +68,40 @@ export function CellCompositionMETypeTree() {
     [densityOrCount, annotations]
   );
 
-  return match({ composition, annotations })
+  return match({
+    composition,
+    annotations,
+    loadingAnnotation,
+    loadingComposition,
+    compositionError,
+    annotationError,
+  })
     .when(
-      ({ annotations: testAnnotations, composition: testComposition }) => {
-        if (testAnnotations.state === 'loading' || testComposition.state === 'loading') return true;
+      ({ loadingComposition, loadingAnnotation }) => {
+        if (loadingComposition || loadingAnnotation) return true;
         return false;
       },
       () => <CellCompositionSkeleton />
     )
     .when(
-      ({ annotations: testAnnotations, composition: testComposition }) => {
-        if (testAnnotations.state === 'hasError' || testComposition.state === 'hasError')
-          return true;
+      ({ compositionError, annotationError }) => {
+        if (compositionError || annotationError) return true;
         return false;
       },
-      ({ annotations: testAnnotations, composition: testComposition }) => {
+      ({ compositionError, annotationError }) => {
         return (
           <div>
-            {testAnnotations.state === 'hasError' &&
-              testComposition.state === 'hasError' &&
+            {!!compositionError &&
+              !!annotationError &&
               'loading data for cell composition and annotations failed'}
-            {testAnnotations.state === 'hasError' && 'loading data for annotations failed'}
-            {testComposition.state === 'hasError' && 'loading data for cell composition failed'}
+            {!!annotationError && 'loading data for annotations failed'}
+            {!!compositionError && 'loading data for cell composition failed'}
           </div>
         );
       }
     )
-    .with({ composition: { data: P.select() } }, (testComposition) => (
-      <div className="relative flex h-[80%] w-full flex-col gap-2">
+    .with({ composition: P.select() }, (testComposition) => (
+      <div className="relative flex h-90percent w-full flex-col gap-2">
         <h2
           className="sticky top-0 flex justify-between text-lg font-bold text-white"
           data-testid="total-count-or-density"
@@ -115,7 +119,10 @@ export function CellCompositionMETypeTree() {
         <div
           id="cell-composition-tree-container"
           data-testid="cell-composition-tree-container"
-          className="white-scrollbar border-primary-7 mt-2 h-full overflow-y-auto rounded-md border bg-white/2 p-4 backdrop-blur-md"
+          className={cn(
+            'white-scrollbar border-primary-7 mt-2 h-full overflow-y-auto',
+            'rounded-md border bg-white/2 p-4 backdrop-blur-md'
+          )}
         >
           <h6 className="text-primary-3 px-1.5 text-sm font-normal">M-TYPES</h6>
           <Tree<TreeNode>

@@ -6,13 +6,14 @@ import { useAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useMemo, useState } from 'react';
 
-import { BrainRegionDropdown } from '@/features/brain-region-dropdown';
+import { PortalRegionBanner } from '@/features/brain-region-hierarchy/components/region-banner';
 import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
 import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
 import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
 import { Pagination } from '@/ui/segments/data-table/elements/pagination';
 import { Search } from '@/ui/segments/data-table/search';
 import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
+import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
 
 import type { ColumnProps, TableProps } from 'antd/es/table';
@@ -62,9 +63,13 @@ export type Props<T extends EntityCoreIdentifiable> = {
   allowDelete?: boolean;
   allowFilter?: boolean;
   allowSearch?: boolean;
-  requireBrainRegionDropdown?: boolean;
+  searchOpenOnMount?: boolean;
+  requireSpeciesSelector?: boolean;
+  requireScopeSelector?: boolean;
+  requireSearch?: boolean;
   filterClassNames?: {
     container?: string;
+    speciesSelector?: string;
   };
   expandableOptions?: UseExpandableTableOptions<T, T> | undefined;
   showExpandButtons?: boolean;
@@ -99,11 +104,15 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   onRowsSelected,
   onCellClick,
   tableStyle,
+  // us
   allowDownload,
   allowDelete,
   allowFilter = true,
   allowSearch = true,
-  requireBrainRegionDropdown = false,
+  searchOpenOnMount = false,
+  requireSpeciesSelector = false,
+  requireScopeSelector = false,
+  requireSearch = true,
   filterClassNames,
   expandableOptions,
   showExpandButtons,
@@ -127,8 +136,42 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
     )
   );
 
-  const allowTopMenu = allowSearch || allowFilter || left;
+  const grid = useMemo(() => {
+    const parentAreas: string[] = [];
+    const leftAreas: string[] = [];
+    const parentColumns = [];
+    const leftColumns = [];
+    if (requireScopeSelector) {
+      parentAreas.push("'scope-selector scope-selector'");
+      parentColumns.push('1fr auto');
+    }
 
+    if (requireSpeciesSelector || requireSearch) {
+      parentAreas.push("'brain-and-search filter'");
+      if (requireSpeciesSelector) {
+        leftAreas.push('brain-region-dropdown');
+        leftColumns.push('max-content');
+      }
+      if (requireSearch) {
+        leftAreas.push('search');
+        if (requireSpeciesSelector) leftColumns.push('minmax(0, 1fr)');
+        else leftColumns.push('2fr');
+      }
+    }
+
+    return {
+      parent: {
+        gridTemplateAreas: parentAreas.join(' '),
+        gridTemplateColumns: parentColumns.join(' '),
+      } as React.CSSProperties,
+      left: {
+        gridTemplateAreas: `'${leftAreas.join(' ')}'`,
+        gridTemplateColumns: leftColumns.join(' '),
+      } as React.CSSProperties,
+    };
+  }, [requireScopeSelector, requireSpeciesSelector, requireSearch]);
+
+  const allowTopMenu = allowSearch || allowFilter || left;
   return (
     <>
       <section
@@ -140,31 +183,33 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
         )}
       >
         {allowTopMenu && (
-          <div
-            className={cn(
-              'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
-              '[grid-template-areas:"search_filter"]',
-              {
-                '[grid-template-areas:"left_search_filter"] grid-cols-[auto_1fr_1fr] gap-2': !!left,
-              }
-            )}
-          >
-            {!!left && <div className="w-full [grid-area:left]">{left}</div>}
-            {allowSearch && (
-              <div className="w-full [grid-area:search]">
-                <Search
-                  {...{
-                    dataType,
-                    dataKey,
-                    className: 'ml-0.5',
-                  }}
-                />
-              </div>
-            )}
+          <div className="mb-5 grid w-full items-start gap-2" style={grid.parent}>
+            {requireScopeSelector && <WorkflowScopeTabs className="max-w-max" />}
+            <div className="flex min-w-0 flex-wrap items-start gap-2 [grid-area:brain-and-search]">
+              {requireSpeciesSelector && (
+                <div className="shrink-0">
+                  <PortalRegionBanner
+                    dataKey={dataKey}
+                    className={cn('w-110', filterClassNames?.speciesSelector)}
+                  />
+                </div>
+              )}
+              {!!left && <div className="min-w-0 grow basis-80">{left}</div>}
+              {allowSearch && requireSearch && (
+                <div className="min-w-0 grow basis-80">
+                  <Search
+                    {...{
+                      dataType,
+                      dataKey,
+                      openOnMount: searchOpenOnMount,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
             {allowFilter && (
-              <div className="[grid-area:filter]">
+              <div className="self-start [grid-area:filter]">
                 <div className="ml-auto flex h-12 items-stretch justify-end gap-3">
-                  {requireBrainRegionDropdown && <BrainRegionDropdown dataKey={dataKey} />}
                   <FilterControls
                     filters={filters}
                     displayControlPanel={displayControlPanel}

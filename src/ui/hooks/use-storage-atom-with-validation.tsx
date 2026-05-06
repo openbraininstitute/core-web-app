@@ -131,7 +131,7 @@ export function createSuperJsonStorage<T>(storage: Storage): {
      * Stringifies and stores a value using SuperJSON
      * @param {string} key The storage key
      * @param {T} value The value to store
-     * @throws {Error} If there is an error stringifying or storing the value
+     * @throws {Error} If there is an error stringify-ing or storing the value
      */
     setItem(key: string, value: T): void {
       try {
