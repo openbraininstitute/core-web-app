@@ -159,7 +159,15 @@ export function UIElementRender({
             //   [k]: { elements: copy },
             // });
           }}
-          onAddElement={(newElement: number[]) => {
+          onAddElement={(newElement: number[] | null) => {
+            if (newElement === null) {
+              setState({
+                ...state,
+                [k]: null,
+              });
+              return;
+            }
+
             if (!state[k]) {
               const newState = {
                 ...state,

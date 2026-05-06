@@ -1,6 +1,12 @@
-import { CheckCircleOutlined, CloseCircleOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  CopyOutlined,
+  EditOutlined,
+  PlusCircleOutlined,
+} from '@ant-design/icons';
 import { Button, InputNumber } from 'antd';
-import { memo, useDeferredValue, useMemo, useState } from 'react';
+import { memo, useCallback, useDeferredValue, useMemo, useState } from 'react';
 
 import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
 
@@ -15,7 +21,7 @@ export default function NeuronIds({
   value: ConfigValue;
   disabled: boolean;
   onDeleteElement: (i: number) => void;
-  onAddElement: (newElements: number[]) => void;
+  onAddElement: (newElements: number[] | null) => void;
 }) {
   const [addingElement, setAddingElement] = useState(false);
   const [newElement, setNewElement] = useState<number | null>(null);
@@ -37,7 +43,7 @@ export default function NeuronIds({
 
   const renderedElements = useMemo(() => {
     const total = allElements.length;
-    const LIMIT = 10000;
+    const LIMIT = 12;
 
     if (total <= LIMIT * 2) {
       return {
@@ -56,10 +62,46 @@ export default function NeuronIds({
     return allElements.join(', ');
   }, [allElements]);
 
+  const handleEditClick = useCallback(() => {
+    setEdit(true);
+  }, []);
+
+  if (value === null) {
+    return;
+  }
+
   return (
     <div className="w-full ">
       {warning && <div className="text-red-500">{warning}</div>}
-      {!edit && <Ids ids={renderedElements} />}
+      {!edit && <Ids ids={renderedElements} onEditClick={handleEditClick} disabled={disabled} />}
+      {!disabled && !edit && (
+        <div className="flex mt-2 gap-2 w-[80%] float-right">
+          <button
+            type="button"
+            className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3 relative left-[15px]"
+            onClick={() => onAddElement(null)}
+            disabled={disabled}
+          >
+            Clear list
+          </button>
+          <button
+            type="button"
+            className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3"
+            onClick={handleEditClick}
+            disabled={disabled}
+          >
+            Edit ID list <EditOutlined className="text-xs" />
+          </button>
+          <button
+            type="button"
+            className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3"
+            onClick={handleEditClick}
+            disabled={disabled}
+          >
+            Copy ID list <CopyOutlined className="text-xs" />
+          </button>
+        </div>
+      )}
       {edit && (
         <textarea
           defaultValue={defaultText}
@@ -72,7 +114,7 @@ export default function NeuronIds({
           }}
         />
       )}
-      {!disabled && (
+      {!disabled && edit && (
         <Button
           className="text-primary-8"
           onClick={() => {
@@ -88,7 +130,7 @@ export default function NeuronIds({
           }}
           disabled={!!warning}
         >
-          {edit ? 'OK' : 'Edit'}
+          OK
         </Button>
       )}
     </div>
@@ -149,33 +191,62 @@ function parseCsvIntegers(data: string): number[] {
   return result;
 }
 
-const Ids = memo(({ ids }: { ids: { head: number[]; tail: number[] } }) => {
-  const containerClass = 'w-full flex flex-wrap gap-1';
-  const elementClass = 'border border-gray-200 rounded-full px-3 py-1 text-primary-8 font-bold';
+const Ids = memo(
+  ({
+    ids,
+    onEditClick,
+    disabled,
+  }: {
+    ids: { head: number[]; tail: number[] };
+    onEditClick: () => void;
+    disabled: boolean;
+  }) => {
+    const containerClass = 'w-full grid grid-cols-4 gap-1';
+    const elementClass =
+      'border border-gray-200 rounded-full px-3 py-1 text-primary-8 font-bold flex items-center justify-center';
 
-  return (
-    <div className="border border-gray-200 p-3 rounded-lg w-full ">
-      <div className={containerClass}>
-        {ids.head.map((id) => (
-          <div key={id} className={elementClass}>
-            {id}
-          </div>
-        ))}
-      </div>
-
-      {ids.tail.length > 0 && (
-        <div className="text-gray-500 text-3xl mb-4 w-full flex justify-center">...</div>
-      )}
-
-      {ids.tail.length > 0 && (
+    return (
+      <div className="border border-gray-200 p-3 rounded-lg w-full ">
         <div className={containerClass}>
-          {ids.tail.map((id) => (
-            <div key={id} className={elementClass}>
+          {ids.head.map((id, idx) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: array is readonly
+            <div key={idx} className={elementClass}>
               {id}
             </div>
           ))}
         </div>
-      )}
-    </div>
-  );
-});
+
+        {ids.tail.length > 0 && (
+          <div className="w-full flex justify-center my-3">
+            {!disabled && (
+              <button
+                type="button"
+                className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm"
+                onClick={onEditClick}
+                disabled={disabled}
+              >
+                Edit all IDs
+              </button>
+            )}
+            {disabled && (
+              <div className="text-gray-500 flex justify-center items-center  text-primary-8 w-[100px] text-2xl relative bottom-[5px]">
+                ...
+              </div>
+            )}
+          </div>
+        )}
+
+        {ids.tail.length > 0 && (
+          <div className={containerClass}>
+            {ids.tail.map((id, idx) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: array is readonly
+              <div key={idx} className={elementClass}>
+                {id}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
