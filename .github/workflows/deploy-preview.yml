@@ -166,6 +166,8 @@ jobs:
             --query 'domainAssociation.subDomains[].subDomainSetting' \
             --output json)
 
+          echo $CURRENT
+
           UPDATED=$(echo "$CURRENT" | jq --arg prefix "$PREFIX" --arg branch "$BRANCH_NAME" \
             'map(select(.prefix != $prefix)) + [{prefix: $prefix, branchName: $branch}]')
 
