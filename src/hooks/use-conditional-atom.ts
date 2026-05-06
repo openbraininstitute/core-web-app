@@ -1,6 +1,7 @@
-import { loadable } from 'jotai/utils';
-import { Atom, atom } from 'jotai';
 import isNil from 'es-toolkit/compat/isNil';
+import { type Atom, atom } from 'jotai';
+
+import { createLoadableAtom } from '@/utils/jotai-loadable';
 
 /**
  * Creates a loadable atom that returns the provided data if available,
@@ -19,5 +20,5 @@ export function conditionalAtom<T>(data: T | null | undefined, fetchAtom: Atom<P
     return await get(fetchAtom);
   });
   innerAtom.debugLabel = 'inner-conditional-atom';
-  return loadable(innerAtom);
+  return createLoadableAtom(innerAtom);
 }

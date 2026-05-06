@@ -3,6 +3,7 @@
 import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { kebabCase, snakeCase } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
@@ -12,6 +13,8 @@ import { userJourneyTracker } from '@/components/explore-section/Literature/user
 import { config } from '@/config';
 import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useTableQueryCount } from '@/ui/hooks/use-table-query-count';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -146,6 +149,7 @@ type Props = {
   extendedType: TExtendedEntitiesTypeDict;
   scope: TWorkspaceScope;
   currentBrainRegionId?: string;
+  hierarchyId?: string;
   defaultBrainRegionId?: string;
   enabled: boolean;
 };
@@ -153,10 +157,12 @@ type Props = {
 function buildQuery({
   virtualLabId,
   projectId,
+  hierarchyId,
   brainRegionId,
   scope,
   extendedType,
 }: WorkspaceContext & {
+  hierarchyId: string;
   brainRegionId: string;
   scope: TWorkspaceScope;
   extendedType: TExtendedEntitiesTypeDict;
@@ -186,6 +192,7 @@ function buildQuery({
     projectId,
     extendedEntityType: extendedType,
     brainRegionId,
+    hierarchyId,
     scope,
   });
 
@@ -209,11 +216,14 @@ export function BrowseLink({
   scope,
   enabled,
   extendedType,
+  hierarchyId,
   currentBrainRegionId,
   defaultBrainRegionId,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { type } = useParams<{ type: TExtendedEntitiesTypeDict }>();
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const entity = getEntityByExtendedType({ type: extendedType });
   const href = buildDataUrl({ virtualLabId, projectId, extendedType });
@@ -239,6 +249,7 @@ export function BrowseLink({
   const fallbackQuery = buildQuery({
     virtualLabId,
     projectId,
+    hierarchyId: hierarchyId ?? '',
     brainRegionId: currentBrainRegionId ?? '',
     scope,
     extendedType,
@@ -248,6 +259,7 @@ export function BrowseLink({
   const rootQuery = buildQuery({
     virtualLabId,
     projectId,
+    hierarchyId: hierarchyId ?? '',
     brainRegionId: defaultBrainRegionId ?? '',
     scope,
     extendedType,
@@ -261,7 +273,7 @@ export function BrowseLink({
     queryKey: fallbackQuery.queryKey,
     queryFn: () => resolveEntityCount({ query: fallbackQuery.query, entity }),
     // fetch for inactive entities and as bootstrap for active entities without cached table count yet
-    enabled: !!currentBrainRegionId && enabled,
+    enabled: enabled && (isAllMode || !!currentBrainRegionId),
     staleTime: Infinity,
   });
 
@@ -272,7 +284,7 @@ export function BrowseLink({
   } = useQuery<number | undefined>({
     queryKey: rootQuery.queryKey,
     queryFn: () => resolveEntityCount({ query: rootQuery.query, entity }),
-    enabled: !!defaultBrainRegionId && enabled,
+    enabled: enabled && (isAllMode || !!defaultBrainRegionId),
     staleTime: Infinity,
   });
 
@@ -280,7 +292,7 @@ export function BrowseLink({
   const count = isActiveEntity && hasCachedData ? tableCount : fallbackData;
   const loadingCurrent = isActiveEntity && hasCachedData ? tableCountLoading : loadingFallback;
   const isCurrentError = isActiveEntity && hasCachedData ? isTableCountError : isFallbackError;
-  const isLoading = loadingCurrent || loadingRoot;
+  const isLoading = loadingCurrent && loadingRoot;
 
   const countRenderer = match({
     isCurrentError,
@@ -288,7 +300,8 @@ export function BrowseLink({
     rootCount: root,
     isRootError,
     enabled,
-    isLoading,
+    loadingCurrent,
+    loadingRoot,
   })
     .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (
       <span className="flex items-center justify-center gap-1">
@@ -305,6 +318,25 @@ export function BrowseLink({
         <span className="font-bold">0</span>
         <span className="font-light">of</span>
         <span className="font-bold">0</span>
+      </span>
+    ))
+    .with({ enabled: true }, () => (
+      <span className="flex items-center justify-center gap-1">
+        <span className="font-bold">
+          {loadingCurrent ? (
+            <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />
+          ) : (
+            (count ?? <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />)
+          )}
+        </span>
+        <span className="font-light">of</span>
+        <span className="font-bold">
+          {loadingRoot ? (
+            <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />
+          ) : (
+            (root ?? <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />)
+          )}
+        </span>
       </span>
     ))
     .otherwise(() => null);

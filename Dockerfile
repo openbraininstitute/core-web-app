@@ -10,7 +10,6 @@ RUN corepack enable && corepack prepare pnpm@10 --activate
 
 # Install dependencies based on the preferred package manager
 COPY pnpm-lock.yaml package.json ./
-COPY tarball ./tarball
 RUN pnpm install --frozen-lockfile
 
 

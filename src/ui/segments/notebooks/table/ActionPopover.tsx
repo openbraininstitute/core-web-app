@@ -1,11 +1,18 @@
 'use client';
 
-import { LoadingOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
-import { Modal } from 'antd';
+import {
+  DeleteOutlined,
+  LoadingOutlined,
+  PlayCircleOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Modal, Popconfirm } from 'antd';
 import { Popover } from 'antd/lib';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
+import { deleteNotebook } from '@/api/entitycore/queries/notebook';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { DownloadIconWhiteWithCorners } from '@/components/icons/DownloadIcon';
@@ -16,6 +23,7 @@ import { downloadArchive } from '@/services/entity-download';
 import { type NotebookStartResponse, startNotebook } from '@/services/notebooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
+import { cn } from '@/utils/css-class';
 
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 
@@ -29,6 +37,46 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
   const notification = useAppNotification();
   const { virtualLabId, projectId } = useWorkspace();
   const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const pathname = usePathname();
+  const isPublic = pathname.endsWith('/public');
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteNotebook({ id: notebook.id, context: { virtualLabId, projectId } }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        predicate(query) {
+          const first = query.queryKey[0] as
+            | { context?: { extendedEntityType?: string } }
+            | undefined;
+          return first?.context?.extendedEntityType === ExtendedEntitiesTypeDict.Notebook;
+        },
+      });
+      await queryClient.invalidateQueries({
+        predicate(query) {
+          return query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.Notebook}`;
+        },
+      });
+      notification.success({
+        message: 'Deleted successfully',
+        description: 'The notebook has been successfully deleted.',
+        placement: 'topRight',
+      });
+    },
+    onError: (error: Error) => {
+      const cause = error.cause as { message?: string } | undefined;
+      let description = cause?.message ?? 'Unknown error';
+      if (description.toLowerCase().includes('foreign keys integrity violation')) {
+        description = 'This notebook is referenced by another record and cannot be deleted.';
+      }
+      notification.error({
+        message: 'Deletion failed',
+        description,
+        placement: 'topRight',
+        duration: 5,
+      });
+    },
+  });
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
@@ -59,7 +107,6 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
       });
       window.open(retval.url, '_blank');
     } catch (error) {
-      // Just show the hint message if we get some error
       if (error instanceof Error && 'cause' in error) {
         notification.error({
           message: (error.cause as { error_code: string; hint: string }).hint,
@@ -124,6 +171,60 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                   Download
                 </button>
               </div>
+
+              {!isPublic && (
+                <div className="flex gap-4">
+                  <Popconfirm
+                    autoAdjustOverflow
+                    destroyOnHidden
+                    placement="bottomRight"
+                    title={
+                      <div className="font-bold text-lg text-primary-8">Delete the notebook</div>
+                    }
+                    description={
+                      <div>
+                        <div className="font-bold text-sm text-primary-8">
+                          Are you sure you want to delete this notebook?
+                        </div>
+                        <small className="font-light text-primary-6">
+                          This action cannot be undone.
+                        </small>
+                      </div>
+                    }
+                    okText="Yes"
+                    cancelText="No"
+                    arrow={{ pointAtCenter: false }}
+                    onConfirm={(e) => {
+                      e?.stopPropagation();
+                      deleteMutation.mutateAsync();
+                    }}
+                    classNames={{
+                      body: cn(
+                        'max-w-70',
+                        '[&_.ant-popconfirm-buttons_button]:px-4',
+                        '[&_.ant-popconfirm-buttons_button]:rounded-full [&_.ant-popconfirm-buttons_button]:px-5',
+                        '[&_.ant-popconfirm-buttons_button:first-child]',
+                        '[&_.ant-popconfirm-buttons_button:last-child]:bg-primary-8'
+                      ),
+                    }}
+                  >
+                    <button
+                      data-id={`delete-btn-${index}`}
+                      disabled={deleteMutation.isPending}
+                      type="button"
+                      className="hover:text-primary-4 inline-flex items-center gap-2.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {deleteMutation.isPending ? (
+                        <LoadingOutlined aria-label="Deleting" />
+                      ) : (
+                        <DeleteOutlined className="text-primary-9 text-sm" aria-label="Delete" />
+                      )}
+                      {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </Popconfirm>
+                </div>
+              )}
 
               <div className="flex gap-4">
                 <button

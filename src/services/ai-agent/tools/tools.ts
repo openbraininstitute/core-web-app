@@ -1,12 +1,13 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
-import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React from 'react';
 
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
+
+import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
+import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
 
 /**
  *

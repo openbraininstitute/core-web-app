@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from 'react';
 
+import GalleryFilters from '@/ui/segments/gallery/filters';
 import Media from '@/ui/segments/gallery/media';
+import { MediaModal } from '@/ui/segments/gallery/modal';
 
 import type { GalleryContentProps } from '@/services/sanity';
-import GalleryFilters from '@/ui/segments/gallery/filters';
-import { MediaModal } from '@/ui/segments/gallery/modal';
 
 type GalleryContentComponentProps = {
   galleryContent: GalleryContentProps[];

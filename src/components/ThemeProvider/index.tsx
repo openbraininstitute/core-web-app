@@ -1,5 +1,5 @@
 import { useSetAtom } from 'jotai';
-import { ReactElement, ReactNode, useEffect } from 'react';
+import { type ReactElement, type ReactNode, useEffect } from 'react';
 
 import useTheme from '@/hooks/theme';
 import { initializeTheme, themeAtom } from '@/state/theme';

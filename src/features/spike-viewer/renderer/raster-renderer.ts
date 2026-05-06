@@ -163,20 +163,17 @@ export class RasterRenderer {
   }
 
   private computePointSize(): number {
-    // Density-aware base: large for sparse data, small for dense
-    const visibleArea = this.plotRect.width * this.plotRect.height;
-    const density = this.visibleSpikes / Math.max(1, visibleArea);
-    const baseSize = Math.min(6, Math.max(2, 4 - Math.log10(Math.max(1e-4, density))));
+    const baseSize = 8;
+    const factor = countFactor(this.visibleSpikes);
 
     // Zoom scaling: grows as user zooms in
     const xZoom =
       (this.initialView.xMax - this.initialView.xMin) / (this.view.xMax - this.view.xMin);
     const yZoom =
       (this.initialView.yMax - this.initialView.yMin) / (this.view.yMax - this.view.yMin);
-    const zoom = Math.min(xZoom, yZoom);
-    const zoomBonus = Math.log2(Math.max(1, zoom));
+    const zoomBonus = Math.log2(Math.max(1, Math.min(xZoom, yZoom)));
 
-    return Math.min(12, baseSize + zoomBonus);
+    return Math.min(14, baseSize * factor + zoomBonus);
   }
 
   private handleHover(info: HoverInfo | null) {
@@ -310,6 +307,21 @@ export class RasterRenderer {
     this.interactionLayer.remove();
     this.tooltipEl.remove();
   }
+}
+
+/**
+ * Multiplier that shrinks point size as the dataset grows. 1.0 below 1k spikes,
+ * 0.5 at/above 100k, smoothly interpolated in log-space between — count spans
+ * orders of magnitude, so log-space puts the visible transition where users
+ * actually feel it (1k → 10k → 100k) rather than compressed near the cap.
+ */
+function countFactor(n: number): number {
+  const lo = 1_000;
+  const hi = 100_000;
+  if (n <= lo) return 1.0;
+  if (n >= hi) return 0.5;
+  const t = Math.log10(n / lo) / Math.log10(hi / lo);
+  return 1.0 - 0.5 * t;
 }
 
 /** Sort timestamps and nodeIds arrays together by timestamp (ascending). */

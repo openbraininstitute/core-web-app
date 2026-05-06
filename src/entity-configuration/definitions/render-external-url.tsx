@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-
 import { EmptyValue } from '@/entity-configuration/definitions/empty-value';
+
+import type { ReactNode } from 'react';
 
 /** Renders an external URL as a link. Safe for Server Components (not from `renderer.tsx` `use client`). */
 export function renderExternalUrl(

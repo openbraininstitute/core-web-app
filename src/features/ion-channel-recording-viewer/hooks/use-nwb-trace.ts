@@ -1,8 +1,8 @@
 import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { nwbArrayBufferAtomFamily } from '@/features/ephys-viewer/atoms';
+import { createLoadableAtom } from '@/utils/jotai-loadable';
 
 import { IonChannelRecordingParser } from '../ion-channel-recording-parser';
 
@@ -20,7 +20,7 @@ export default function useTrace({
   ctx,
 }: UseTraceArgs): [IonChannelRecordingParser | null, Error | null, boolean] {
   const nwbAtom = useMemo(
-    () => loadable(nwbArrayBufferAtomFamily({ entity: resource, ctx })),
+    () => createLoadableAtom(nwbArrayBufferAtomFamily({ entity: resource, ctx })),
     [ctx, resource]
   );
   const nwb = useAtomValue(nwbAtom);

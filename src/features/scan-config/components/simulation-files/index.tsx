@@ -1,6 +1,5 @@
 import { sortBy } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
@@ -11,6 +10,7 @@ import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
+import { createLoadableAtom } from '@/utils/jotai-loadable';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { WorkspaceContext } from '@/types/common';
@@ -169,7 +169,7 @@ function useOutputFiles(
     context,
     enabled,
   });
-  const simResultLoadableAtom = useMemo(() => loadable(simResultAtom), [simResultAtom]);
+  const simResultLoadableAtom = useMemo(() => createLoadableAtom(simResultAtom), [simResultAtom]);
   const simResult = useLastTruthyValue(simResultAtom);
   const simResultLoadable = useAtomValue(simResultLoadableAtom);
 

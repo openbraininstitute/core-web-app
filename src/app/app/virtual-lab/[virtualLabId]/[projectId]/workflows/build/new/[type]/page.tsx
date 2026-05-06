@@ -39,7 +39,7 @@ export default function Page({
   return (
     <BrowseEntityScope
       requireMiniDetailView
-      section={WorkspaceSection.BuildWorkflow}
+      section={WorkspaceSection.ScanConfigBuildWorkflow}
       requireBrainRegion={false}
       classNames={{ container: 'max-h-full', miniView: 'max-h-[calc(100vh-15rem)]' }}
       dataType={browseType}
@@ -48,7 +48,7 @@ export default function Page({
         selectionType: undefined,
       }}
       miniViewProps={{
-        section: WorkspaceSection.BuildWorkflow,
+        section: WorkspaceSection.ScanConfigBuildWorkflow,
       }}
     />
   );

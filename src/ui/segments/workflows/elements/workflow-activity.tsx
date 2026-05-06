@@ -418,6 +418,7 @@ export function WorkflowActivity() {
       navigate(
         `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(ExtendedEntitiesTypeDict.IonChannelModelSimulation)}?initialCampaignId=${selectedRow.id}`
       );
+      return;
     }
     if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
       navigate(
@@ -517,7 +518,7 @@ export function WorkflowActivity() {
       <div
         id="workflow-activity-type-selectors"
         className={cn(
-          'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5 pt-2',
+          'mb-5 grid w-full grid-cols-[2fr_2fr] items-center justify-center gap-5',
           '[grid-template-areas:"selectors_filters"]'
         )}
       >

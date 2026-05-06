@@ -100,10 +100,20 @@ export function buildNetworksConfig(
   manifest?: Record<string, string>
 ) {
   const edges = networks.edges.map((o) =>
-    buildNetworkConfigItem({ item: o, selector: 'edges_file', directory, manifest })
+    buildNetworkConfigItem({
+      item: o,
+      selector: 'edges_file',
+      directory,
+      manifest,
+    })
   );
   const nodes = networks.nodes.map((o) =>
-    buildNetworkConfigItem({ item: o, selector: 'nodes_file', directory, manifest })
+    buildNetworkConfigItem({
+      item: o,
+      selector: 'nodes_file',
+      directory,
+      manifest,
+    })
   );
 
   return {

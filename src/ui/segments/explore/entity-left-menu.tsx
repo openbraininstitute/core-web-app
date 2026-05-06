@@ -1,59 +1,80 @@
 'use client';
 
+import { useAtomValue } from 'jotai';
 import { motion } from 'motion/react';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
-import { TreeSkeleton } from '@/features/brain-region-hierarchy/brain-region-skeleton';
+import { TreeSkeleton } from '@/features/brain-region-hierarchy/components/brain-region-skeleton';
 import {
   ExploreLeftMenuContext,
   RegionBanner,
-} from '@/features/brain-region-hierarchy/region-banner';
+} from '@/features/brain-region-hierarchy/components/region-banner';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
 
 import type { TTreeNode } from '@/components/tree/types';
-import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/region-banner';
+import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/components/region-banner';
 
 type Props = { dataKey: string };
 
 export function EntityLeftMenu({ dataKey }: Props) {
   const [view, updateView] = useState<TExploreLeftMenuContext>(ExploreLeftMenuContext.DataGroup);
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
-  const onSwitchView = (_view: TExploreLeftMenuContext) => updateView(_view);
+  // while in "all species" mode, force the data-group view so the hierarchy tree is never shown
+  useEffect(() => {
+    if (isAllMode && view !== ExploreLeftMenuContext.DataGroup) {
+      updateView(ExploreLeftMenuContext.DataGroup);
+    }
+  }, [isAllMode, view]);
+
+  const onSwitchView = (_view: TExploreLeftMenuContext) => {
+    if (isAllMode) return;
+    updateView(_view);
+  };
   const onClickBrainRegion = (_node: TTreeNode) => {
     onSwitchView(ExploreLeftMenuContext.DataGroup);
   };
 
   return (
     <div className="flex h-full flex-col">
-      <RegionBanner view={view} onSwitchView={onSwitchView} />
+      <RegionBanner
+        view={view}
+        onSwitchView={onSwitchView}
+        classNames={{ container: 'px-4 pb-1', selector: 'shadow-sm bg-white' }}
+      />
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        <motion.div
-          key="brain-region-hierarchy"
-          id="brain-region-hierarchy"
-          data-testid="brain-region-hierarchy"
-          initial={false}
-          animate={{
-            opacity: view === ExploreLeftMenuContext.BrainRegionHierarchy ? 1 : 0,
-            y: view === ExploreLeftMenuContext.BrainRegionHierarchy ? 0 : -6,
-          }}
-          transition={{ duration: 0.18, ease: 'easeOut' }}
-          className={`absolute inset-0 ${
-            view === ExploreLeftMenuContext.BrainRegionHierarchy
-              ? 'pointer-events-auto'
-              : 'pointer-events-none'
-          }`}
-          aria-hidden={view !== ExploreLeftMenuContext.BrainRegionHierarchy}
-        >
-          <Suspense fallback={<TreeSkeleton />}>
-            <div className="flex h-full min-h-0 flex-col overflow-hidden">
-              <div className="text-primary-9/90 mb-1 px-5 text-base font-bold">Brain region</div>
-              <div className="min-h-0 flex-1 overflow-hidden">
-                <BrainRegionHierarchy dataKey={dataKey} onClickCallback={onClickBrainRegion} />
+        {!isAllMode && (
+          <motion.div
+            key="brain-region-hierarchy"
+            id="brain-region-hierarchy"
+            data-testid="brain-region-hierarchy"
+            initial={false}
+            animate={{
+              opacity: view === ExploreLeftMenuContext.BrainRegionHierarchy ? 1 : 0,
+              y: view === ExploreLeftMenuContext.BrainRegionHierarchy ? 0 : -6,
+            }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className={`absolute inset-0 ${
+              view === ExploreLeftMenuContext.BrainRegionHierarchy
+                ? 'pointer-events-auto'
+                : 'pointer-events-none'
+            }`}
+            aria-hidden={view !== ExploreLeftMenuContext.BrainRegionHierarchy}
+          >
+            <Suspense fallback={<TreeSkeleton />}>
+              <div className="flex h-full min-h-0 flex-col overflow-hidden">
+                <div className="text-primary-9/90 mb-1 px-5 text-base font-bold">Brain region</div>
+                <div className="min-h-0 flex-1 overflow-hidden">
+                  <BrainRegionHierarchy dataKey={dataKey} onClickCallback={onClickBrainRegion} />
+                </div>
               </div>
-            </div>
-          </Suspense>
-        </motion.div>
+            </Suspense>
+          </motion.div>
+        )}
         <motion.div
           key="data-type-container"
           id="data-type-container"

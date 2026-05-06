@@ -2,6 +2,7 @@
   position: relative;
   height: 100%;
   overflow: hidden;
+  touch-action: none;
 
   > canvas {
     position: absolute;

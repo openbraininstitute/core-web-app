@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useRef } from 'react';
+import { type RefObject, useEffect, useRef } from 'react';
 
 function on<T extends Window | Document | HTMLElement | EventTarget>(
   obj: T | null,
@@ -19,7 +19,7 @@ function off<T extends Window | Document | HTMLElement | EventTarget>(
 }
 
 const defaultEvents = ['mousedown', 'touchstart'];
-const useOnClickOutside = <E extends Event = Event>(
+export const useOnClickOutside = <E extends Event = Event>(
   ref: RefObject<HTMLElement | null>,
   onClickAway: (event: E) => void,
   events: string[] = defaultEvents,

@@ -1,8 +1,10 @@
 import get from 'es-toolkit/compat/get';
+
 import { getEmDenseReconstructionDataset } from '@/api/entitycore/queries/general/em-dense-reconstruction-dataset';
-import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import { EmptyValue } from '@/entity-configuration/definitions/empty-value';
 import { ReconstructionMetadataFields } from '@/features/entities/em-cell-mesh/helpers';
+
+import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 
 type Props = {
   entity: IEMCellMesh;

@@ -259,7 +259,7 @@ export function useModelQuery({
     enabled: !!entityType && !!id,
     refetchOnWindowFocus: false,
   });
-            
+
   const isLoading = entityLoading || modelLoading;
   const error = entityError || modelError;
 

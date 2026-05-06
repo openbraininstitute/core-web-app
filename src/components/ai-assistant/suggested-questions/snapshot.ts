@@ -1,17 +1,10 @@
-import { useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
-import { useParams, usePathname, useSearchParams } from 'next/navigation';
-import React from 'react';
+'use client';
 
-import {
-  BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE,
-  brainRegionBasicCellGroupsRegionsHierarchyAtom,
-  useBrainRegionHierarchy,
-} from '@/features/brain-region-hierarchy/context';
+import { usePathname, useSearchParams } from 'next/navigation';
+
+import { usePrimaryHierarchyOfCurrentSpeciesQuery } from '@/features/brain-region-hierarchy/context';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { useCurrentExplorerArtifactValue } from '@/state/explore-section/artifact';
-import { resolveDataKey } from '@/utils/key-builder';
-
-import { useAiContext } from '../hooks';
 
 export interface Snapshot {
   isRootRegion: boolean;
@@ -22,19 +15,13 @@ export interface Snapshot {
 }
 
 export function useSnapshot(): Snapshot {
-  const params = useParams<{ projectId: string }>();
-  const { projectId } = params;
-  const { section } = useAiContext();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const dataKey = resolveDataKey({ projectId, section });
-  const { node: selectedBrainRegion } = useBrainRegionHierarchy({ dataKey });
-  const isRootRegion =
-    `${selectedBrainRegion.annotation_value}` ===
-    BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE;
-  const result = useAtomValue(
-    React.useMemo(() => unwrap(brainRegionBasicCellGroupsRegionsHierarchyAtom), [])
-  );
+  const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
+
+  const { result } = usePrimaryHierarchyOfCurrentSpeciesQuery();
+  const isRootRegion = selectedBrainRegion?.id === result?.root.id;
+
   const regionId = selectedBrainRegion?.id ?? '';
   const node = (result?.options ?? []).find((o) => o.data.id === selectedBrainRegion?.id);
   const regionTitle = node?.label ?? '';
