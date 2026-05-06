@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import {
   Input as AInput,
   Select as ASelect,

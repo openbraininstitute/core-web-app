@@ -1,8 +1,6 @@
-import { pick } from 'es-toolkit/compat';
-
 import { tryCatch } from '@/api/utils';
 import { createProject } from '@/api/virtual-lab-svc/queries/project';
-import { updateUserProfile } from '@/api/virtual-lab-svc/queries/user';
+import { updateUserOnboardingProfile } from '@/api/virtual-lab-svc/queries/user';
 import { createVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { auth } from '@/auth';
 import {
@@ -80,7 +78,7 @@ function streamFromGenerator(generator: AsyncGenerator<StreamChunk, void, unknow
 }
 
 async function processIdentity(body: BootstrapBody, state: BootstrapState): Promise<StepResult> {
-  const { shouldCreateVirtualLab, accountPayload, workspaceResolution } = body;
+  const { shouldCreateVirtualLab, accountPayload } = body;
 
   if (!shouldCreateVirtualLab || !accountPayload) {
     return {
@@ -90,14 +88,16 @@ async function processIdentity(body: BootstrapBody, state: BootstrapState): Prom
   }
 
   const { data, error } = await tryCatch(
-    updateUserProfile({
-      ...pick(workspaceResolution?.profile, ['first_name', 'last_name', 'address']),
-      ...pick(accountPayload, ['first_name', 'last_name', 'email']),
+    updateUserOnboardingProfile({
+      first_name: accountPayload.first_name,
+      last_name: accountPayload.last_name,
+      country: accountPayload.country,
+      email: accountPayload.email,
     })
   );
 
   if (data) {
-    state.profile = data.profile;
+    state.profile = data.data?.profile;
     return {
       status: WorkspaceBootstrapStepStatus.Completed,
       message: 'Your account  completed!',
@@ -224,12 +224,12 @@ async function* bootstrapWorkspace(
   let shouldProcess = !resumeFromStep;
 
   for (const sequence of WorkspaceBootstrap) {
-    // When resuming, skip steps until we reach the resume point
+    // when resuming, skip steps until we reach the resume point
     if (!shouldProcess) {
       if (sequence.step === resumeFromStep) {
         shouldProcess = true;
       } else {
-        // Emit the skipped step as passed so the client sees it as done
+        // emit the skipped step as passed so the client sees it as done
         yield {
           step: sequence.step,
           status: WorkspaceBootstrapStepStatus.Passed,
