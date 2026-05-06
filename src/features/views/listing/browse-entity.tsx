@@ -12,6 +12,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
 } from 'react';
 
 import { ApiError } from '@/api/error';
@@ -19,7 +20,10 @@ import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import {
+  speciesSelectionModeAtom,
+  workspaceHierarchySpeciesAtom,
+} from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import {
   useQueryExtendedEntityType,
@@ -151,13 +155,45 @@ export function BrowseEntityScope({
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
 
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
   const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
-  const { sync: runStorageSync, restore: runStorageRestore } = useDataListStateSnapshotActions({
+  // track stable species identity (`all` vs hierarchy id).
+  // used to detect user-driven species/mode
+  // changes without resetting listing state on the initial mount (after snapshot restore)
+  const prevSpeciesKeyRef = useRef<string | undefined>(undefined);
+
+  const {
+    sync: runStorageSync,
+    restore: runStorageRestore,
+    reset: resetDataListState,
+  } = useDataListStateSnapshotActions({
     dataKey,
     dataType,
     section,
   });
+
+  // when species or "all species" mode changes, reset table filters/search/sort/page for this listing
+  // skips while `workspaceSpecies` is briefly null during a focused-mode hierarchy switch
+  useEffect(() => {
+    const speciesKey =
+      speciesSelectionMode === SpeciesSelectionMode.All
+        ? SpeciesSelectionMode.All
+        : workspaceSpecies?.hierarchId
+          ? workspaceSpecies.hierarchId
+          : undefined;
+
+    if (speciesKey === undefined) return;
+
+    if (prevSpeciesKeyRef.current === undefined) {
+      prevSpeciesKeyRef.current = speciesKey;
+      return;
+    }
+    if (prevSpeciesKeyRef.current === speciesKey) return;
+
+    prevSpeciesKeyRef.current = speciesKey;
+    resetDataListState();
+  }, [speciesSelectionMode, workspaceSpecies?.hierarchId, resetDataListState]);
 
   const onSortChange = useCallback(
     (newSortState: TSortStateList) => {
