@@ -71,22 +71,23 @@ jobs:
           echo "=== Updated payload (JSON) ==="
           echo "$UPDATED" | jq .
 
-          SHORTHAND=$(echo "$UPDATED" | jq -r '.[] | "prefix=\(.prefix),branchName=\(.branchName)"' | tr '\n' ' ')
-
-          echo "=== Shorthand for --sub-domain-settings ==="
-          echo "$SHORTHAND"
-          echo "=== Token count ==="
-          echo "$SHORTHAND" | wc -w
-
-          echo "=== Calling aws amplify update-domain-association ==="
-          set -x
-          aws amplify update-domain-association \
+          echo "=== Existing Amplify branches ==="
+          EXISTING=$(aws amplify list-branches \
             --app-id "$AMPLIFY_APP_ID" \
-            --domain-name "$PREVIEW_DOMAIN" \
-            --sub-domain-settings $SHORTHAND
-          set +x
+            --query 'branches[].branchName' \
+            --output json)
+          echo "$EXISTING" | jq '. | sort'
+          echo "Branch count: $(echo "$EXISTING" | jq 'length')"
 
-          echo "=== Done: $ACTION $PREFIX ==="
+          echo "=== Orphans (in domain association but missing from Amplify branches) ==="
+          ORPHANS=$(jq -n --argjson updated "$UPDATED" --argjson existing "$EXISTING" '
+            ($existing | map({(.):true}) | add // {}) as $set
+            | $updated | map(select(.branchName | in($set) | not))
+          ')
+          echo "$ORPHANS" | jq .
+          echo "Orphan count: $(echo "$ORPHANS" | jq 'length')"
+
+          echo "=== Skipping update-domain-association (debug only) ==="
 
   deploy:
     if: false
