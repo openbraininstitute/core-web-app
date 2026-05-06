@@ -87,7 +87,22 @@ jobs:
           echo "$ORPHANS" | jq .
           echo "Orphan count: $(echo "$ORPHANS" | jq 'length')"
 
-          echo "=== Skipping update-domain-association (debug only) ==="
+          SHORTHAND=$(echo "$UPDATED" | jq -r '.[] | "prefix=\(.prefix),branchName=\(.branchName)"' | tr '\n' ' ')
+
+          echo "=== Shorthand for --sub-domain-settings ==="
+          echo "$SHORTHAND"
+          echo "=== Token count ==="
+          echo "$SHORTHAND" | wc -w
+
+          echo "=== Calling aws amplify update-domain-association ==="
+          set -x
+          aws amplify update-domain-association \
+            --app-id "$AMPLIFY_APP_ID" \
+            --domain-name "$PREVIEW_DOMAIN" \
+            --sub-domain-settings $SHORTHAND
+          set +x
+
+          echo "=== Done: $ACTION $PREFIX ==="
 
   deploy:
     if: false
