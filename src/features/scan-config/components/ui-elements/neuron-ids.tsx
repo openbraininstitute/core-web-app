@@ -101,7 +101,9 @@ export default function NeuronIds({
       {!edit && (
         <HighlightedInput
           handleAddIdsClick={(ids) => {
-            onAddIds([...allElements, ...ids]);
+            const newAllElements = [...allElements, ...ids];
+            onAddIds(newAllElements);
+            setText(newAllElements.join(', '));
           }}
         />
       )}
@@ -113,6 +115,7 @@ export default function NeuronIds({
             if (edit && isTextValid) {
               const values = parseCsvIntegers(text);
               onAddIds(values);
+              setText(values.join(', '));
             }
             setEdit(!edit);
           }}
