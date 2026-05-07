@@ -129,26 +129,39 @@ export default function NeuronIds({
 }
 
 function parseCsvIntegers(data: string): number[] {
+  if (!data) return [];
+
   const result: number[] = [];
-  if (!data) {
-    return [];
+  const len = data.length;
+  let current = 0;
+  let hasDigit = false;
+
+  for (let i = 0; i < len; i++) {
+    const charCode = data.charCodeAt(i);
+
+    // Character codes for '0'-'9' are 48-57
+    if (charCode >= 48 && charCode <= 57) {
+      current = current * 10 + (charCode - 48);
+      hasDigit = true;
+      continue;
+    }
+
+    // Delimiters: comma (44), newline (10), carriage return (13), space (32)
+    if (charCode === 44 || charCode === 10 || charCode === 13 || charCode === 32) {
+      if (hasDigit) {
+        result.push(current);
+        current = 0;
+        hasDigit = false;
+      }
+      continue;
+    }
+
+    // If character is not a digit or a valid delimiter, input is invalid
+    throw new Error('Invalid integer');
   }
 
-  const segments = data
-    .trim()
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s !== '');
-
-  const isValidId = (str: string): boolean => {
-    return /^\d+$/.test(str.trim());
-  };
-
-  for (const s of segments) {
-    if (!isValidId(s)) {
-      throw new Error(`Invalid integer`);
-    }
-    result.push(parseInt(s, 10));
+  if (hasDigit) {
+    result.push(current);
   }
 
   return result;
