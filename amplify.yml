@@ -5,7 +5,7 @@ frontend:
       commands:
         - echo "Node.js $(node -v)"
         - corepack enable
-        - corepack prepare pnpm@11.0.7 --activate
+        - corepack prepare pnpm@latest --activate
         - pnpm config set store-dir .pnpm-store
         - pnpm install --frozen-lockfile
     build:
@@ -35,7 +35,7 @@ frontend:
       - standalone/**
       - static/**
       - BUILD_ID
-  cache:
-    paths:
-      - .next/cache/**/*
-      - .pnpm-store/**/*
+  # cache:
+  #   paths:
+  #     - .next/cache/**/*
+  #     - .pnpm-store/**/*
