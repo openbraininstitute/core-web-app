@@ -99,8 +99,6 @@ export function ScanConfigTemplate({
   const previousCampaignId = usePrevious(campaignId);
   const isCampaignIdChanged = previousCampaignId !== campaignId;
 
-  console.log(config);
-
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
 
   const configurationTabId = ScanConfigTabs[activity].configuration;
