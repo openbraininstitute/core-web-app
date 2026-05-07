@@ -107,20 +107,30 @@ export default function NeuronIds({
       )}
       {edit && <NumberEditor value={text} setIsTextValid={setIsTextValid} setValue={setText} />}
       {!disabled && edit && (
-        <Button
-          className="text-primary-8"
-          onClick={() => {
-            if (edit && isTextValid) {
-              const values = parseCsvIntegers(text);
-              onAddIds(values);
-              setText(values.join(', '));
-            }
-            setEdit(!edit);
-          }}
-          disabled={!isTextValid}
-        >
-          OK
-        </Button>
+        <div className="flex gap-2 mt-3 justify-end">
+          <Button
+            className="border-none bg-transparent text-primary-8"
+            onClick={() => {
+              setEdit(!edit);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="text-primary-8 rounded-full font-bold"
+            onClick={() => {
+              if (edit && isTextValid) {
+                const values = parseCsvIntegers(text);
+                onAddIds(values);
+                setText(values.join(', '));
+              }
+              setEdit(!edit);
+            }}
+            disabled={!isTextValid}
+          >
+            Apply
+          </Button>
+        </div>
       )}
     </div>
   );
