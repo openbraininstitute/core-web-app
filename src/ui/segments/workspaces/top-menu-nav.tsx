@@ -54,9 +54,9 @@ const links: LinkItem[] = [
     key: 'home',
     title: 'Home',
     url: '',
-    icon: <Home className="group-hover:text-primary-3 size-5!" />,
+    icon: <Home className="group-hover:text-primary-3 !size-5" />,
     allowText: false,
-    className: 'gap-2 flex items-center justify-center',
+    className: '',
     isActive: (pathname: string) => {
       const section = getActiveSection(pathname);
       if (section) return ['overview', 'team', 'credits'].includes(section);
@@ -69,7 +69,7 @@ const links: LinkItem[] = [
     key: 'data',
     title: 'Data',
     url: 'data',
-    icon: <ExploreIcon className="group-hover:text-primary-3 size-5!" />,
+    icon: <ExploreIcon className="group-hover:text-primary-3 !size-5" />,
     allowText: true,
     className: 'px-6 gap-2',
     hasAction: false,
@@ -79,7 +79,7 @@ const links: LinkItem[] = [
     key: 'workflows',
     title: 'Workflows',
     url: 'workflows',
-    icon: <WorkflowIcon className="group-hover:text-primary-3 size-5!" />,
+    icon: <WorkflowIcon className="group-hover:text-primary-3 !size-5" />,
     allowText: true,
     className: 'px-6 gap-2',
     hasAction: true,
@@ -91,7 +91,7 @@ const links: LinkItem[] = [
     key: 'notebooks',
     title: 'Notebooks',
     url: 'notebooks',
-    icon: <NotebookIcon className="group-hover:text-primary-3 size-5!" />,
+    icon: <NotebookIcon className="group-hover:text-primary-3 !size-5" />,
     allowText: true,
     className: 'px-6 gap-2',
     hasAction: true,
@@ -103,7 +103,7 @@ const links: LinkItem[] = [
     key: 'reports',
     title: 'Reports',
     url: 'reports',
-    icon: <ReportsIcon className="group-hover:text-primary-3 size-[17px]!" />,
+    icon: <ReportsIcon className="group-hover:text-primary-3 !size-[17px]" />,
     allowText: true,
     className: 'px-6 gap-2',
     hasAction: true,
@@ -115,7 +115,7 @@ const links: LinkItem[] = [
     key: 'help',
     title: 'Help',
     url: 'help',
-    icon: <HelpIcon className="group-hover:text-primary-3 size-[17px]!" />,
+    icon: <HelpIcon className="group-hover:text-primary-3 !size-[17px]" />,
     allowText: false,
     className: '',
     hasAction: false,
@@ -125,7 +125,7 @@ const links: LinkItem[] = [
     key: 'feedbacks',
     title: 'Feedback',
     url: 'feedback',
-    icon: <FeedbackStarIcon className="group-hover:text-primary-3 size-5!" />,
+    icon: <FeedbackStarIcon className="group-hover:text-primary-3 w-6 h-6" />,
     allowText: false,
     className: '',
     hasAction: false,
@@ -252,13 +252,13 @@ export function TopMenuNavigation() {
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
                       {
-                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                        'w-12 !justify-center !px-0': !allowText && breakpoint === 'xl',
                       },
                       {
-                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                        '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
                       'group relative flex items-center justify-center cursor-pointer',
-                      'overflow-visible! py-0! select-none hover:shadow-sm hover:bg-background',
+                      '!overflow-visible !py-0 select-none hover:shadow-sm hover:bg-background',
                       { 'bg-primary-9 text-white': isActive },
                       'transition-all duration-400 ease-out',
                       clx
@@ -289,13 +289,13 @@ export function TopMenuNavigation() {
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
                       {
-                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                        'w-12 !justify-center !px-0': !allowText && breakpoint === 'xl',
                       },
                       {
-                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                        '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
                       'group relative flex items-center justify-center',
-                      'overflow-visible! py-0! select-none hover:shadow-sm hover:bg-background',
+                      '!overflow-visible !py-0 select-none hover:shadow-sm hover:bg-background',
                       { 'bg-primary-9 text-white': isActiveHelp },
                       {
                         'group-hover:rounded-r-none': hasAction,
@@ -334,13 +334,13 @@ export function TopMenuNavigation() {
                   size={breakpoint === 'xl' ? 'lg' : 'md'}
                   className={cn(
                     {
-                      'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                      'w-12 !justify-center !px-0': !allowText && breakpoint === 'xl',
                     },
                     {
-                      'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                      '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                     },
                     'group relative flex items-center justify-center',
-                    'overflow-visible! py-0! select-none hover:shadow-sm hover:bg-background',
+                    '!overflow-visible !py-0 select-none hover:shadow-sm hover:bg-background',
                     { 'bg-primary-9 text-white': isActiveLink },
                     {
                       'group-hover:rounded-r-none': hasAction,

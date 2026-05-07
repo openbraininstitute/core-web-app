@@ -63,7 +63,7 @@ export function Home(props: React.SVGProps<SVGSVGElement>) {
       width="1em"
       height="1em"
       fill="none"
-      viewBox="-1 -1 16 16"
+      viewBox="-0.5 -1 16 16"
       {...props}
     >
       <path
