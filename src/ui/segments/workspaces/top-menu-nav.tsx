@@ -258,7 +258,7 @@ export function TopMenuNavigation() {
                         '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
                       'group relative flex items-center justify-center cursor-pointer',
-                      '!overflow-visible !py-0 select-none hover:shadow-sm hover:bg-background',
+                      '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
                       { 'bg-primary-9 text-white': isActive },
                       'transition-all duration-400 ease-out',
                       clx
@@ -295,7 +295,7 @@ export function TopMenuNavigation() {
                         '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
                       'group relative flex items-center justify-center',
-                      '!overflow-visible !py-0 select-none hover:shadow-sm hover:bg-background',
+                      '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
                       { 'bg-primary-9 text-white': isActiveHelp },
                       {
                         'group-hover:rounded-r-none': hasAction,
@@ -340,7 +340,7 @@ export function TopMenuNavigation() {
                       '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                     },
                     'group relative flex items-center justify-center',
-                    '!overflow-visible !py-0 select-none hover:shadow-sm hover:bg-background',
+                    '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
                     { 'bg-primary-9 text-white': isActiveLink },
                     {
                       'group-hover:rounded-r-none': hasAction,
