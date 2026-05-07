@@ -151,15 +151,7 @@ export function UIElementRender({
         <NeuronIds
           value={value}
           disabled={disabled}
-          onDeleteElement={(i: number) => {
-            // const copy = [...elements];
-            // copy.splice(i, 1);
-            // setState({
-            //   ...state,
-            //   [k]: { elements: copy },
-            // });
-          }}
-          onAddElement={(newElement: number[] | null) => {
+          onAddIds={(newElement: number[] | null) => {
             if (newElement === null || newElement.length === 0) {
               setState({
                 ...state,

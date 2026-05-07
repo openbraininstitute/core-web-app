@@ -16,16 +16,12 @@ import { isPlainObject } from '../utils';
 export default function NeuronIds({
   value,
   disabled,
-  onDeleteElement,
-  onAddElement,
+  onAddIds,
 }: {
   value: ConfigValue;
   disabled: boolean;
-  onDeleteElement: (i: number) => void;
-  onAddElement: (newElements: number[] | null) => void;
+  onAddIds: (newElements: number[] | null) => void;
 }) {
-  const [addingElement, setAddingElement] = useState(false);
-  const [newElement, setNewElement] = useState<number | null>(null);
   const [warning, setWarning] = useState('');
   const [edit, setEdit] = useState(false);
   const [text, setText] = useState('');
@@ -84,13 +80,12 @@ export default function NeuronIds({
         </>
       )}
       {!edit && (
-        <div className="flex mt-2 gap-2 w-[80%] float-right">
+        <div className="flex mt-2 gap-2 w-[80%] float-right mb-3">
           <button
             type="button"
             className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3 relative left-[15px]"
             onClick={() => {
-              console.log('here');
-              onAddElement(null);
+              onAddIds(null);
             }}
           >
             Clear list
@@ -109,7 +104,7 @@ export default function NeuronIds({
       {!edit && (
         <HighlightedInput
           handleAddIdsClick={(ids) => {
-            onAddElement([...allElements, ...ids]);
+            onAddIds([...allElements, ...ids]);
           }}
         />
       )}
@@ -132,7 +127,7 @@ export default function NeuronIds({
             if (edit) {
               try {
                 const values = parseCsvIntegers(text);
-                onAddElement(values);
+                onAddIds(values);
               } catch (e) {
                 setWarning((e as Error).message);
               }
@@ -316,18 +311,8 @@ const HighlightedInput = ({
 
   const disabled = !!error || value === '';
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-
-      if (disabled) return;
-      const ids = parseCsvIntegers(value);
-      handleAddIdsClick(ids);
-    }
-  };
-
   return (
-    <div className="relative top-5 mb-5">
+    <div>
       <div className="grid w-full grid-cols-10 gap-2">
         <div className="relative border border-gray-200 rounded-md focus-within:ring-1 focus-within:border-0 focus-within:ring-gray-200 bg-white overflow-hidden flex items-center col-span-7">
           <div
@@ -343,9 +328,19 @@ const HighlightedInput = ({
             value={value}
             onChange={handleChange}
             onScroll={handleScroll}
-            className="w-full px-3 py-2 font-mono text-sm text-transparent bg-transparent caret-black outline-none block z-10"
+            className="w-full px-3 py-2 font-mono text-sm text-transparent bg-transparent caret-black outline-none block z-10 placeholder:text-xs"
             spellCheck={false}
             placeholder="Type your comma separated list of IDs"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+
+                if (disabled) return;
+                const ids = parseCsvIntegers(value);
+                handleAddIdsClick(ids);
+                setValue('');
+              }
+            }}
           />
         </div>
         <button
