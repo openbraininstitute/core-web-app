@@ -1,17 +1,17 @@
-import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  CopyOutlined,
-  EditOutlined,
-  PlusCircleOutlined,
-} from '@ant-design/icons';
-import { Button, InputNumber } from 'antd';
-import { Fragment, memo, useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
+import { CopyOutlined, EditOutlined } from '@ant-design/icons';
+import Editor, { type OnChange, type OnMount } from '@monaco-editor/react';
+import { Button } from 'antd';
+import { initial } from 'es-toolkit';
+import { Fragment, memo, useCallback, useMemo, useRef, useState } from 'react';
+import { set } from 'zod';
 
-import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { cn } from '@/utils/css-class';
 
 import { isPlainObject } from '../utils';
+
+import type * as monaco from 'monaco-editor';
+import type React from 'react';
+import type { ConfigValue } from '@/features/scan-config/types';
 
 export default function NeuronIds({
   value,
@@ -22,9 +22,7 @@ export default function NeuronIds({
   disabled: boolean;
   onAddIds: (newElements: number[] | null) => void;
 }) {
-  const [warning, setWarning] = useState('');
   const [edit, setEdit] = useState(false);
-  const [text, setText] = useState('');
 
   const allElements = useMemo(() => {
     const namedTupleArray = Array.isArray(value) ? value : [value];
@@ -37,6 +35,9 @@ export default function NeuronIds({
     });
     return allElements;
   }, [value]);
+
+  const [text, setText] = useState(allElements.join(', '));
+  const [isTextValid, setIsTextValid] = useState(true);
 
   const renderedElements = useMemo(() => {
     const total = allElements.length;
@@ -55,10 +56,6 @@ export default function NeuronIds({
     };
   }, [allElements]);
 
-  const defaultText = useMemo(() => {
-    return allElements.join(', ');
-  }, [allElements]);
-
   const handleEditClick = useCallback(() => {
     setEdit(true);
   }, []);
@@ -69,7 +66,6 @@ export default function NeuronIds({
 
   return (
     <div className="w-full ">
-      {warning && <div className="text-red-500">{warning}</div>}
       {!edit && value !== null && <Ids ids={renderedElements} onEditClick={handleEditClick} />}
       {!edit && value === null && (
         <>
@@ -86,6 +82,7 @@ export default function NeuronIds({
             className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3 relative left-[15px]"
             onClick={() => {
               onAddIds(null);
+              setText('');
             }}
           >
             Clear list
@@ -97,7 +94,7 @@ export default function NeuronIds({
           >
             Edit ID list <EditOutlined className="text-xs" />
           </button>
-          <CopyButton textToCopy={defaultText} />
+          <CopyButton textToCopy={text} />
         </div>
       )}
 
@@ -108,33 +105,18 @@ export default function NeuronIds({
           }}
         />
       )}
-      {edit && (
-        <textarea
-          defaultValue={defaultText}
-          className="w-full"
-          rows={20}
-          onChange={(e) => {
-            setWarning('');
-            setText(e.target.value);
-            // onAddElement(values);
-          }}
-        />
-      )}
+      {edit && <NumberEditor value={text} setIsTextValid={setIsTextValid} setValue={setText} />}
       {!disabled && edit && (
         <Button
           className="text-primary-8"
           onClick={() => {
-            if (edit) {
-              try {
-                const values = parseCsvIntegers(text);
-                onAddIds(values);
-              } catch (e) {
-                setWarning((e as Error).message);
-              }
+            if (edit && isTextValid) {
+              const values = parseCsvIntegers(text);
+              onAddIds(values);
             }
             setEdit(!edit);
           }}
-          disabled={!!warning}
+          disabled={!isTextValid}
         >
           OK
         </Button>
@@ -361,6 +343,100 @@ const HighlightedInput = ({
         </button>
       </div>
       {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
+    </div>
+  );
+};
+
+const NumberEditor = ({
+  value,
+  setValue,
+  setIsTextValid,
+}: {
+  value: string;
+  setIsTextValid: (v: boolean) => void;
+  setValue: (newV: string) => void;
+}) => {
+  const monacoRef = useRef<typeof monaco | null>(null);
+
+  const validate = (
+    content: string,
+    model: monaco.editor.ITextModel | null,
+    monacoInstance: typeof monaco
+  ): void => {
+    if (!model) return;
+
+    const markers: monaco.editor.IMarkerData[] = [];
+    const invalidTokenPattern = /(?:^|[\s,])([^,\s\n]*[^0-9,\s\n][^,\s\n]*)(?=[\s,]|$)/g;
+
+    const matches = content.matchAll(invalidTokenPattern);
+
+    for (const match of matches) {
+      const fullMatch = match[0];
+      const capturedGroup = match[1];
+
+      if (!capturedGroup) continue;
+
+      const offset = fullMatch.indexOf(capturedGroup);
+      const startIdx = (match.index ?? 0) + offset;
+      const endIdx = startIdx + capturedGroup.length;
+
+      const startPos = model.getPositionAt(startIdx);
+      const endPos = model.getPositionAt(endIdx);
+
+      markers.push({
+        severity: monacoInstance.MarkerSeverity.Error,
+        startLineNumber: startPos.lineNumber,
+        startColumn: startPos.column,
+        endLineNumber: endPos.lineNumber,
+        endColumn: endPos.column,
+        message: `"${capturedGroup}" is not a valid integer.`,
+      });
+    }
+
+    if (markers.length === 0) {
+      setIsTextValid(true);
+    } else {
+      setIsTextValid(false);
+    }
+
+    monacoInstance.editor.setModelMarkers(model, 'number-validator', markers);
+  };
+
+  const handleEditorDidMount: OnMount = (editor, monacoInstance) => {
+    monacoRef.current = monacoInstance;
+    validate(value, editor.getModel(), monacoInstance);
+  };
+
+  const handleEditorChange: OnChange = (newValue) => {
+    const val = newValue ?? '';
+    setValue(val);
+
+    if (monacoRef.current) {
+      const model = monacoRef.current.editor.getModels()[0];
+      validate(val, model, monacoRef.current);
+    }
+  };
+
+  return (
+    <div style={{ height: 500, width: '100%' }}>
+      <Editor
+        height="100%"
+        defaultLanguage="plaintext"
+        theme="vs-light"
+        value={value}
+        onMount={handleEditorDidMount}
+        onChange={handleEditorChange}
+        options={{
+          lineNumbers: 'on',
+          wordWrap: 'on',
+          minimap: { enabled: false },
+          scrollBeyondLastLine: false,
+          fontSize: 12,
+          padding: { top: 12, bottom: 12 },
+          lineNumbersMinChars: 3,
+          lineDecorationsWidth: 0,
+        }}
+      />
     </div>
   );
 };
