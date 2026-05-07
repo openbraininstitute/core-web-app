@@ -2,14 +2,17 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue } from 'jotai';
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useRef, useSyncExternalStore } from 'react';
 
+import {
+  dataBrowseListingUsesBrainRegionHierarchy,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { buildQueryKey, useQueryParameters } from '@/ui/hooks/use-query-extended-entity-type';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
@@ -33,8 +36,9 @@ export function useTableQueryCount({
   isActiveEntity: boolean;
 }) {
   const queryClient = useQueryClient();
-  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const { virtualLabId, projectId } = workspace;
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const requireBrainRegion = dataBrowseListingUsesBrainRegionHierarchy(extendedType);
 
   const { dataKey } = makeDataKey({
     virtualLabId,
@@ -53,7 +57,7 @@ export function useTableQueryCount({
       },
       workspace,
     },
-    { requireBrainRegion: true }
+    { requireBrainRegion }
   );
 
   const queryKey = buildQueryKey({
@@ -64,9 +68,13 @@ export function useTableQueryCount({
       workspaceScope: scope,
     },
     queryParameters,
-    requireBrainRegion: true,
+    requireBrainRegion,
     speciesSelectionMode,
   });
+
+  const prevCountRef = useRef<number | undefined>(undefined);
+  const queryKeyRef = useRef(queryKey);
+  queryKeyRef.current = queryKey;
 
   const cache = queryClient.getQueryCache();
 
@@ -77,10 +85,14 @@ export function useTableQueryCount({
 
   const getSnapshot = useCallback(() => {
     if (!isActiveEntity) return undefined;
-    const query = cache.find({ queryKey });
+    const query = cache.find({ queryKey: queryKeyRef.current });
     const data = query?.state?.data as EntityCoreResponse<unknown> | undefined;
-    return data?.pagination?.total_items;
-  }, [isActiveEntity, cache, queryKey]);
+    const total = data?.pagination?.total_items;
+    if (total !== prevCountRef.current) {
+      prevCountRef.current = total;
+    }
+    return prevCountRef.current;
+  }, [isActiveEntity, cache]);
 
   const count = useSyncExternalStore(subscribe, getSnapshot, () => undefined);
 

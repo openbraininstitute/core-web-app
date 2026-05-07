@@ -15,6 +15,10 @@ import {
   useRef,
 } from 'react';
 
+import {
+  dataBrowseListingUsesBrainRegionHierarchy,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
@@ -53,7 +57,6 @@ import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   EntityCoreIdentifiable,
   EntityCoreIdentifiableNamed,
@@ -70,9 +73,7 @@ const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
 type Props = {
   id?: string;
   section?: TWorkspaceSection;
-  /** whether to use the brain region filter in the query as some listing may not need it
-   * which means the query will fetch any brain region data
-   */
+  /** when omitted, derived from `dataType` (brain hierarchy only for single-neuron simulations in data) */
   requireBrainRegion?: boolean;
   /** whether to display the mini detail view */
   requireMiniDetailView?: boolean;
@@ -117,7 +118,7 @@ export function BrowseEntityScope({
   id,
   classNames,
   section = WorkspaceSection.Data,
-  requireBrainRegion = true,
+  requireBrainRegion: requireBrainRegionProp,
   requireMiniDetailView = true,
   defaultBrainRegion,
   dataType,
@@ -133,6 +134,9 @@ export function BrowseEntityScope({
   requireScopeSelector,
   extraQueryParams,
 }: Props) {
+  const requireBrainRegion =
+    requireBrainRegionProp ?? dataBrowseListingUsesBrainRegionHierarchy(dataType);
+
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
