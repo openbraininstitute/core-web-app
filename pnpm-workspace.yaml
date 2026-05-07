@@ -1,7 +1,4 @@
-allowBuilds:
-  "@parcel/watcher": true
-  "@sentry/cli": true
-  es5-ext: true
-  esbuild: true
-  lefthook: true
-  sharp: true
+onlyBuiltDependencies:
+  - '@sentry/cli'
+  - lefthook
+  - sharp
