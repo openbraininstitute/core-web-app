@@ -103,6 +103,7 @@ export function ScanConfigTemplate({
 
   const configurationTabId = ScanConfigTabs[activity].configuration;
   const isConfigurationTab = tab.id === configurationTabId;
+
   const results = match(activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>
