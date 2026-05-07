@@ -9,6 +9,7 @@ import { Button, InputNumber } from 'antd';
 import { Fragment, memo, useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 
 import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { cn } from '@/utils/css-class';
 
 import { isPlainObject } from '../utils';
 
@@ -279,15 +280,28 @@ const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
 
 const HighlightedInput: React.FC = () => {
   const [value, setValue] = useState<string>('');
+  const [error, setError] = useState('');
   const backdropRef = useRef<HTMLDivElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
+    const newValue = e.target.value;
+    setValue(newValue);
+
+    const segments = newValue.split(',');
+    const hasInvalidSegment = segments.some((segment) => {
+      const isValid = /^\s*\d*\s*$/.test(segment);
+      return !isValid && segment.trim() !== '';
+    });
+
+    if (hasInvalidSegment) {
+      setError('Invalid input: Please enter only numbers and commas.');
+    } else {
+      setError('');
+    }
   };
 
   const handleScroll = (e: React.UIEvent<HTMLInputElement>) => {
     if (backdropRef.current) {
-      // e.currentTarget is preferred over e.target for type safety here
       backdropRef.current.scrollLeft = e.currentTarget.scrollLeft;
     }
   };
@@ -300,8 +314,13 @@ const HighlightedInput: React.FC = () => {
       const isValid = /^\s*\d*\s*$/.test(segment);
 
       return (
+        // biome-ignore lint/suspicious/noArrayIndexKey: intentional
         <Fragment key={index}>
-          <span className={!isValid ? 'bg-red-100 text-red-600 rounded px-0.5' : 'text-gray-800'}>
+          <span
+            className={
+              !isValid ? 'bg-red-100 text-red-600 ring-2 ring-red-100 rounded-sm' : 'text-gray-800'
+            }
+          >
             {segment}
           </span>
           {!isLast && <span className="text-gray-800">,</span>}
@@ -311,24 +330,39 @@ const HighlightedInput: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full max-w-lg border border-gray-200 rounded-md focus-within:ring-2 focus-within:ring-primary-9 focus-within:border-primary-9 bg-white overflow-hidden flex items-center">
-      <div
-        ref={backdropRef}
-        className="absolute inset-0 px-3 py-2 font-mono text-sm whitespace-pre overflow-hidden pointer-events-none"
-        aria-hidden="true"
-      >
-        {renderHighlights()}
-      </div>
+    <div className="relative top-5 mb-5">
+      <div className="grid w-full grid-cols-10 gap-2">
+        <div className="relative border border-gray-200 rounded-md focus-within:ring-1 focus-within:border-0 focus-within:ring-gray-200 bg-white overflow-hidden flex items-center col-span-7">
+          <div
+            ref={backdropRef}
+            className="absolute inset-0 px-3 py-2 font-mono text-sm whitespace-pre overflow-hidden pointer-events-none z-0"
+            aria-hidden="true"
+          >
+            {renderHighlights()}
+          </div>
 
-      <input
-        type="text"
-        value={value}
-        onChange={handleChange}
-        onScroll={handleScroll}
-        className="w-full px-3 py-2 font-mono text-sm text-transparent bg-transparent caret-black outline-none block"
-        spellCheck={false}
-        placeholder="1, 2, 3..."
-      />
+          <input
+            type="text"
+            value={value}
+            onChange={handleChange}
+            onScroll={handleScroll}
+            className="w-full px-3 py-2 font-mono text-sm text-transparent bg-transparent caret-black outline-none block z-10"
+            spellCheck={false}
+            placeholder="Type your comma separated list of IDs"
+          />
+        </div>
+        <button
+          type="button"
+          className={cn(
+            'col-span-3 border border-gray-200 px-2 rounded-full',
+            !!error || value === '' ? 'text-gray-200' : 'text-green-600'
+          )}
+          disabled={!!error}
+        >
+          Add IDs
+        </button>
+      </div>
+      {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
     </div>
   );
 };
