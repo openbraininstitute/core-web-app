@@ -88,7 +88,10 @@ export default function NeuronIds({
           <button
             type="button"
             className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3 relative left-[15px]"
-            onClick={() => onAddElement(null)}
+            onClick={() => {
+              console.log('here');
+              onAddElement(null);
+            }}
           >
             Clear list
           </button>
@@ -103,7 +106,13 @@ export default function NeuronIds({
         </div>
       )}
 
-      {!edit && <HighlightedInput />}
+      {!edit && (
+        <HighlightedInput
+          handleAddIdsClick={(ids) => {
+            onAddElement([...allElements, ...ids]);
+          }}
+        />
+      )}
       {edit && (
         <textarea
           defaultValue={defaultText}
@@ -140,54 +149,26 @@ export default function NeuronIds({
 }
 
 function parseCsvIntegers(data: string): number[] {
+  const result: number[] = [];
   if (!data) {
     return [];
   }
 
-  const result: number[] = [];
-  let line = 1;
-  let col = 1;
-  let itemStartLine = 1;
-  let itemStartCol = 1;
-  let currentItem = '';
+  const segments = data
+    .trim()
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s !== '');
 
-  const isValidInteger = (str: string): boolean => {
-    return /^-?\d+$/.test(str.trim());
+  const isValidId = (str: string): boolean => {
+    return /^\d+$/.test(str.trim());
   };
 
-  for (let i = 0; i < data.length; i++) {
-    const char = data[i];
-
-    if (char === ',') {
-      if (!isValidInteger(currentItem)) {
-        throw new Error(
-          `Invalid integer '${currentItem}' at line ${itemStartLine}, column ${itemStartCol}`
-        );
-      }
-      result.push(parseInt(currentItem.trim(), 10));
-
-      currentItem = '';
-      col++;
-      itemStartLine = line;
-      itemStartCol = col;
-    } else {
-      currentItem += char;
-      if (char === '\n') {
-        line++;
-        col = 1;
-      } else {
-        col++;
-      }
+  for (const s of segments) {
+    if (!isValidId(s)) {
+      throw new Error(`Invalid integer`);
     }
-  }
-
-  if (currentItem.length > 0 || data.endsWith(',')) {
-    if (!isValidInteger(currentItem)) {
-      throw new Error(
-        `Invalid integer '${currentItem}' at line ${itemStartLine}, column ${itemStartCol}`
-      );
-    }
-    result.push(parseInt(currentItem.trim(), 10));
+    result.push(parseInt(s, 10));
   }
 
   return result;
@@ -278,7 +259,11 @@ const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
   );
 };
 
-const HighlightedInput: React.FC = () => {
+const HighlightedInput = ({
+  handleAddIdsClick,
+}: {
+  handleAddIdsClick: (ids: number[]) => void;
+}) => {
   const [value, setValue] = useState<string>('');
   const [error, setError] = useState('');
   const backdropRef = useRef<HTMLDivElement>(null);
@@ -329,6 +314,18 @@ const HighlightedInput: React.FC = () => {
     });
   };
 
+  const disabled = !!error || value === '';
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+
+      if (disabled) return;
+      const ids = parseCsvIntegers(value);
+      handleAddIdsClick(ids);
+    }
+  };
+
   return (
     <div className="relative top-5 mb-5">
       <div className="grid w-full grid-cols-10 gap-2">
@@ -355,9 +352,15 @@ const HighlightedInput: React.FC = () => {
           type="button"
           className={cn(
             'col-span-3 border border-gray-200 px-2 rounded-full',
-            !!error || value === '' ? 'text-gray-200' : 'text-green-600'
+            disabled ? 'text-gray-200' : 'text-green-600'
           )}
-          disabled={!!error}
+          disabled={disabled}
+          onClick={() => {
+            if (disabled) return;
+            const ids = parseCsvIntegers(value);
+            handleAddIdsClick(ids);
+            setValue('');
+          }}
         >
           Add IDs
         </button>
