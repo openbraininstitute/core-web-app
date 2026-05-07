@@ -265,7 +265,7 @@ export function TopMenuNavigation() {
                     )}
                     onClick={() => setIsFeedbackModalOpen(true)}
                   >
-                    {allowText && <span>{title}</span>}
+                    {allowText && <span className="group-hover:text-primary-3">{title}</span>}
                     {icon}
                   </Badge>
                   <span className="text-primary-9 absolute top-full right-0 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
@@ -310,7 +310,7 @@ export function TopMenuNavigation() {
                         pathname: url,
                       }}
                     >
-                      {allowText && <span>{title}</span>}
+                      {allowText && <span className="group-hover:text-primary-3">{title}</span>}
                       {icon}
                     </Link>
                   </Badge>
@@ -355,7 +355,7 @@ export function TopMenuNavigation() {
                       pathname: url,
                     }}
                   >
-                    {allowText && <span>{title}</span>}
+                    {allowText && <span className="group-hover:text-primary-3">{title}</span>}
                     {icon}
                   </Link>
                 </Badge>
