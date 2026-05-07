@@ -27,7 +27,6 @@ import {
 import { createJsonAsset } from '@/api/entitycore/queries/assets';
 import { runSingleNeuronSimulation } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
-import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { config } from '@/config';
 import {
   SingleNeuronSimulation,
@@ -215,6 +214,7 @@ export const launchSimulationAtom = atom<
     () => void,
     NotificationInstance,
     boolean,
+    (description: string) => void,
   ],
   void
 >(
@@ -237,7 +237,8 @@ export const launchSimulationAtom = atom<
     duration: number,
     onChangePanel: () => void,
     notify: NotificationInstance,
-    isProjectAdmin: boolean
+    isProjectAdmin: boolean,
+    onLowFundsError: (description: string) => void
   ) => {
     if (simulationType === 'single-neuron-simulation') {
       if (!stimulationConfiguration) {
@@ -249,20 +250,6 @@ export const launchSimulationAtom = atom<
       }
     }
     const simulationStatusAtom = simulationStatusAtomFamily(sessionId);
-    const lowFundsEmailSubject = 'Insufficient%20credits%20for%20simulation';
-    let labAdminContactHref: string | null = null;
-
-    const getLabAdminContactHref = async () => {
-      if (labAdminContactHref) return labAdminContactHref;
-      const { data: membersData } = await tryCatch(listVirtualLabMembers({ virtualLabId }));
-      const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
-
-      labAdminContactHref = adminEmail
-        ? `mailto:${adminEmail}?subject=${lowFundsEmailSubject}`
-        : null;
-      return labAdminContactHref;
-    };
-
     set(simulationStatusAtom, { status: SimulationStatus.LAUNCHED });
 
     const initialPlotData = recordingConfiguration.reduce((acc: Record<string, PlotData>, o) => {
@@ -306,9 +293,6 @@ export const launchSimulationAtom = atom<
 
         if (isLowFundsError) {
           errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
-          if (!isProjectAdmin) {
-            labAdminContactHref = await getLabAdminContactHref();
-          }
         }
 
         set(simulationStatusAtom, {
@@ -316,36 +300,17 @@ export const launchSimulationAtom = atom<
           description: errorMessage,
         });
 
-        notify.error({
-          message: `Simulation ${overviewConfiguration.name}`,
-          description: isLowFundsError ? (
-            <div className="flex flex-col gap-2  items-start">
-              <p>{errorMessage}</p>
-              {isProjectAdmin ? (
-                <Link
-                  href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
-                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
-                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
-                >
-                  Transfer credits
-                </Link>
-              ) : (
-                <Link
-                  href={labAdminContactHref ?? `${config.ROOT_ROUTE}/${virtualLabId}/overview`}
-                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
-                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
-                >
-                  Contact lab admin
-                </Link>
-              )}
-            </div>
-          ) : (
-            errorMessage
-          ),
-          placement: 'topRight',
-          key: `simulation-failed-${sessionId}`,
-          duration: 1000,
-        });
+        if (isLowFundsError) {
+          onLowFundsError(errorMessage);
+        } else {
+          notify.error({
+            message: `Simulation ${overviewConfiguration.name}`,
+            description: errorMessage,
+            placement: 'topRight',
+            key: `simulation-failed-${sessionId}`,
+            duration: 1000,
+          });
+        }
         return;
       }
 
@@ -358,9 +323,6 @@ export const launchSimulationAtom = atom<
           if (errResponseObj.error_code === LOW_FUNDS_ERROR_CODE) {
             isLowFundsError = true;
             errorMessage = isProjectAdmin ? messages.LowFundsError : messages.LowFundsErrorNonAdmin;
-            if (!isProjectAdmin) {
-              labAdminContactHref = await getLabAdminContactHref();
-            }
           }
         } catch {
           // ignore
@@ -371,36 +333,17 @@ export const launchSimulationAtom = atom<
           description: errorMessage,
         });
 
-        notify.error({
-          message: `Simulation ${overviewConfiguration.name}`,
-          description: isLowFundsError ? (
-            <div className="flex flex-col gap-2 items-start">
-              <p>{errorMessage}</p>
-              {isProjectAdmin ? (
-                <Link
-                  href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/credits`}
-                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
-                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
-                >
-                  Transfer credits
-                </Link>
-              ) : (
-                <Link
-                  href={labAdminContactHref ?? `${config.ROOT_ROUTE}/${virtualLabId}/overview`}
-                  className="text-primary-8 border-neutral-300 rounded-full border px-4 py-1.5 no-underline! hover:underline"
-                  onClick={() => notify.destroy(`simulation-failed-${sessionId}`)}
-                >
-                  Contact lab admin
-                </Link>
-              )}
-            </div>
-          ) : (
-            errorMessage
-          ),
-          placement: 'topRight',
-          key: `simulation-failed-${sessionId}`,
-          duration: isLowFundsError ? 0 : undefined,
-        });
+        if (isLowFundsError) {
+          onLowFundsError(errorMessage);
+        } else {
+          notify.error({
+            message: `Simulation ${overviewConfiguration.name}`,
+            description: errorMessage,
+            placement: 'topRight',
+            key: `simulation-failed-${sessionId}`,
+            duration: undefined,
+          });
+        }
 
         if (!isLowFundsError) {
           delay(() => set(simulationStatusAtom, RESET), 1000);
