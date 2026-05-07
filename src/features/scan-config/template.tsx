@@ -2,7 +2,7 @@
 
 import { get } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
-import { Suspense, useState } from 'react';
+import { Suspense, useLayoutEffect, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { useEntries } from '@/features/scan-config/components/hooks';
@@ -19,6 +19,7 @@ import {
 } from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
+  isType,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   ScanConfigTabs,
@@ -85,6 +86,20 @@ export function ScanConfigTemplate({
   const [selectedRootElement, setSelectedRootElement] = useAtom(selectedRootElementAtom);
   const [editing, setEditing] = useAtom(editingAtom);
   const [selectedEntry, setSelectedEntry] = useAtom(selectedEntryAtom);
+
+  useLayoutEffect(() => {
+    const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
+    if (!firstRoot) return;
+
+    const rootSpec = selectedRootElement ? schema.properties[selectedRootElement] : undefined;
+    const hasValidSelection =
+      Boolean(selectedRootElement) && rootSpec !== undefined && !isType(rootSpec);
+    if (hasValidSelection) return;
+
+    setSelectedRootElement(firstRoot);
+    setSelectedEntry('');
+  }, [schema, selectedRootElement, setSelectedEntry, setSelectedRootElement]);
+
   const [loading, setLoading] = useState(false);
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const [isEditingKey, setIsEditingKey] = useState(false);
@@ -96,6 +111,11 @@ export function ScanConfigTemplate({
     model: entity,
   });
   const config = useConfigAtom(schema, atomsMap);
+  const selectedSchemaCandidate = schema.properties[selectedRootElement];
+  const selectedSchema =
+    selectedSchemaCandidate !== undefined && !isType(selectedSchemaCandidate)
+      ? selectedSchemaCandidate
+      : undefined;
   const previousCampaignId = usePrevious(campaignId);
   const isCampaignIdChanged = previousCampaignId !== campaignId;
 
@@ -103,6 +123,7 @@ export function ScanConfigTemplate({
 
   const configurationTabId = ScanConfigTabs[activity].configuration;
   const isConfigurationTab = tab.id === configurationTabId;
+
   const results = match(activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>
@@ -204,9 +225,9 @@ export function ScanConfigTemplate({
               'h-full min-w-0 overflow-x-hidden overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
             )}
           >
-            {editing && (
+            {editing && selectedSchema !== undefined && (
               <Middle
-                key={selectedRootElement + selectedEntry}
+                key={`${schemaName}_${selectedRootElement}_${selectedEntry}`}
                 schemaName={schemaName}
                 schema={schema}
                 selectedRootElement={selectedRootElement}
@@ -224,7 +245,7 @@ export function ScanConfigTemplate({
                   setNewKey('');
                   setIsEditingKey(false);
                 }}
-                selectedSchema={schema.properties[selectedRootElement]}
+                selectedSchema={selectedSchema}
                 schemaMappingConfig={schemaMappingConfig}
                 entityType={entityType}
               />
