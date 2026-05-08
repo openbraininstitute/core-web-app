@@ -74,10 +74,10 @@ export default function NeuronIds({
         </>
       )}
       {!edit && (
-        <div className="flex mt-2 gap-2 w-[80%] float-right mb-3">
+        <div className="flex mt-2 gap-2 justify-end mb-3">
           <button
             type="button"
-            className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3 relative left-[15px]"
+            className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 text-sm gap-3"
             onClick={() => {
               onAddIds(null);
               setText('');
@@ -87,7 +87,7 @@ export default function NeuronIds({
           </button>
           <button
             type="button"
-            className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3"
+            className="text-gray-500  flex justify-center items-center border border-gray-200 p-2 rounded-full text-primary-9 text-sm gap-3"
             onClick={handleEditClick}
           >
             Edit ID list <EditOutlined className="text-xs" />
