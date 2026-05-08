@@ -99,7 +99,7 @@ export default function NeuronIds({
       {!edit && (
         <HighlightedInput
           handleAddIdsClick={(ids) => {
-            const newAllElements = [...allElements, ...ids];
+            const newAllElements = [...new Set([...allElements, ...ids])].sort((a, b) => a - b);
             onAddIds(newAllElements);
             setText(newAllElements.join(', '));
           }}
@@ -139,7 +139,7 @@ export default function NeuronIds({
 function parseCsvIntegers(data: string): number[] {
   if (!data) return [];
 
-  const result: number[] = [];
+  const result = new Set<number>();
   const len = data.length;
   let current = 0;
   let hasDigit = false;
@@ -157,22 +157,21 @@ function parseCsvIntegers(data: string): number[] {
     // Delimiters: comma (44), newline (10), carriage return (13), space (32)
     if (charCode === 44 || charCode === 10 || charCode === 13 || charCode === 32) {
       if (hasDigit) {
-        result.push(current);
+        result.add(current);
         current = 0;
         hasDigit = false;
       }
       continue;
     }
 
-    // If character is not a digit or a valid delimiter, input is invalid
     throw new Error('Invalid integer');
   }
 
   if (hasDigit) {
-    result.push(current);
+    result.add(current);
   }
 
-  return result;
+  return Array.from(result).sort((a, b) => a - b);
 }
 
 const Ids = memo(
@@ -390,7 +389,8 @@ const NumberEditor = ({
     if (!model) return;
 
     const markers: monaco.editor.IMarkerData[] = [];
-    const invalidTokenPattern = /(?:^|[\s,])([^,\s\n]*[^0-9,\s\n][^,\s\n]*)(?=[\s,]|$)/g;
+    const invalidTokenPattern =
+      /([^0-9,\n ]+|(?<=[0-9]) +(?=[0-9])|(?<=^|\n) +(?=[0-9])|,[ \n]*,|(?<=^|\n) *,)/g;
 
     const matches = content.matchAll(invalidTokenPattern);
 
@@ -442,7 +442,7 @@ const NumberEditor = ({
   };
 
   return (
-    <div style={{ height: 500, width: '100%' }}>
+    <div style={{ height: 350, width: '100%' }}>
       <Editor
         height="100%"
         defaultLanguage="plaintext"
