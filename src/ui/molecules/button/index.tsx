@@ -25,7 +25,10 @@ const buttonVariants = cva(
         ghost: 'hover:bg-neutral-1 hover:text-primary-9',
         link: 'text-primary underline-offset-4 hover:underline',
         icon: '',
-        shadow: 'flex w-full px-8 py-6 bg-linear-to-r from-[#003A8C] to-[#001026] text-white',
+        shadow: cn(
+          'flex w-full px-8 py-6 bg-linear-to-r from-primary-8 to-primary-10 text-white',
+          'hover:from-primary-9 hover:to-primary-10/70'
+        ),
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',

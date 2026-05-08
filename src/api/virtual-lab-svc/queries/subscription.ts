@@ -1,5 +1,4 @@
-import { getSession } from '@/auth-fetch';
-import { config } from '@/config';
+import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 
 import type {
   CancelSubscriptionRequest,
@@ -16,9 +15,7 @@ import type {
   VlmUserSubscriptionsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 
-function getBaseUrl() {
-  return `${config.VIRTUAL_LAB_API_URL}/subscriptions`;
-}
+const baseUri = '/subscriptions';
 
 /**
  * creates a new subscription for a virtual lab.
@@ -30,23 +27,14 @@ function getBaseUrl() {
 export async function createSubscription(
   payload: CreateSubscriptionRequest
 ): Promise<CreateSubscriptionResponse | null> {
-  const session = await getSession();
-  const response = await fetch(getBaseUrl(), {
-    method: 'POST',
+  const api = await virtualLabRootApi();
+  const result = await api.post<VlmCreateSubscriptionResponse>(baseUri, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
+      accept: 'application/json',
     },
-    body: JSON.stringify(payload),
+    body: payload,
   });
-
-  if (!response.ok) {
-    throw new Error(`Creating subscription failed`, {
-      cause: await response.json(),
-    });
-  }
-
-  const result: VlmCreateSubscriptionResponse = await response.json();
   return result.data;
 }
 
@@ -60,23 +48,14 @@ export async function createSubscription(
 export async function cancelSubscription(
   request: CancelSubscriptionRequest
 ): Promise<CancelSubscriptionResponse | null> {
-  const session = await getSession();
-  const response = await fetch(getBaseUrl(), {
-    method: 'delete',
+  const api = await virtualLabRootApi();
+  const result = await api.delete<VlmCancelSubscriptionResponse>(baseUri, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
+      accept: 'application/json',
     },
-    body: JSON.stringify(request),
+    body: request,
   });
-
-  if (!response.ok) {
-    throw new Error(`Canceling subscription failed`, {
-      cause: await response.json(),
-    });
-  }
-
-  const result: VlmCancelSubscriptionResponse = await response.json();
   return result.data;
 }
 
@@ -87,20 +66,12 @@ export async function cancelSubscription(
  * @throws {Error} - Throws an error if the request fails
  */
 export async function listSubscriptionTiers(): Promise<SubscriptionTiersResponse | null> {
-  const session = await getSession();
-  const response = await fetch(`${getBaseUrl()}/tiers`, {
+  const api = await virtualLabRootApi();
+  const result = await api.get<VlmListSubscriptionTiersResponse>(`${baseUri}/tiers`, {
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
+      accept: 'application/json',
     },
   });
-
-  if (!response.ok) {
-    throw new Error(`Listing subscription plans failed`, {
-      cause: await response.json(),
-    });
-  }
-  const result: VlmListSubscriptionTiersResponse = await response.json();
   return result.data;
 }
 
@@ -111,25 +82,13 @@ export async function listSubscriptionTiers(): Promise<SubscriptionTiersResponse
  * @throws {Error} - Throws an error if the request fails
  */
 export async function getUserActiveSubscription(): Promise<UserActiveSubscriptionResponse | null> {
-  const session = await getSession();
-  const response = await fetch(`${getBaseUrl()}/active`, {
+  const api = await virtualLabRootApi();
+  const result = await api.get<VlmActiveSubscriptionResponse>(`${baseUri}/active`, {
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
+      accept: 'application/json',
     },
     cache: 'no-store',
-    next: {
-      tags: ['active-subscription'],
-    },
   });
-
-  if (!response.ok) {
-    throw new Error(`Getting user subscription failed`, {
-      cause: await response.json(),
-    });
-  }
-
-  const result: VlmActiveSubscriptionResponse = await response.json();
   return result.data;
 }
 
@@ -140,24 +99,12 @@ export async function getUserActiveSubscription(): Promise<UserActiveSubscriptio
  * @throws {Error} - Throws an error if the request fails
  */
 export async function listUserSubscriptionsHistory(): Promise<UserSubscriptionsResponse | null> {
-  const session = await getSession();
-  const response = await fetch(`${getBaseUrl()}/history`, {
+  const api = await virtualLabRootApi();
+  const result = await api.get<VlmUserSubscriptionsResponse>(`${baseUri}/history`, {
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
+      accept: 'application/json',
     },
     cache: 'no-store',
-    next: {
-      tags: ['list-subscriptions'],
-    },
   });
-
-  if (!response.ok) {
-    throw new Error(`Listing user subscriptions with payments failed`, {
-      cause: await response.json(),
-    });
-  }
-
-  const result: VlmUserSubscriptionsResponse = await response.json();
   return result.data;
 }

@@ -68,6 +68,7 @@ export const updateUserProfile = async (payload: TUpdateUserProfileRequest) => {
         locality: payload.locality,
         region: payload.region,
       },
+      sync_billing_address: payload.sync_billing_address,
     },
   });
 };

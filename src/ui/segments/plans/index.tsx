@@ -11,7 +11,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/ui/molecules/carousel';
-import PlanCard from '@/ui/segments/plans/card';
+import { PlanCard } from '@/ui/segments/plans/card';
 
 import type { PlanV2 } from '@/types/virtual-lab/pricing';
 

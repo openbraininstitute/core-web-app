@@ -105,3 +105,5 @@ export function SpaceManagerContainer() {
     </Modal>
   );
 }
+
+export { makeTriggerWorkspaceConfigurationClickEvent } from './event';

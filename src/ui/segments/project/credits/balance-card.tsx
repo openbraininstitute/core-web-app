@@ -21,6 +21,7 @@ export function BalanceCard({ onTransferCredits }: Props) {
     queryKey: keyBuilder.accounting({ virtualLabId }),
     queryFn: () => getVirtualLabAccountBalance({ virtualLabId, includeProjects: true }),
   });
+
   const { isVirtualLabAdmin: isAdmin } = useWorkspaceMembership({ virtualLabId, projectId });
   const ProjectBalance = data?.data.projects?.find((p) => p.proj_id === projectId);
   const virtualLabBalance = data?.data?.balance ?? 0;
