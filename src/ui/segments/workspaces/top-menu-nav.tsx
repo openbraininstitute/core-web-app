@@ -54,7 +54,7 @@ const links: LinkItem[] = [
     key: 'home',
     title: 'Home',
     url: '',
-    icon: <Home className="group-hover:text-primary-3 !size-5" />,
+    icon: <Home className="group-hover:text-primary-3 !size-5 -translate-y-0.5" />,
     allowText: false,
     className: '',
     isActive: (pathname: string) => {
