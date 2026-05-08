@@ -4,6 +4,7 @@ import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import { match } from 'ts-pattern';
 
+import { StripePaymentFlow } from '@/features/payments/standalone';
 import { Button as UiButton } from '@/ui/molecules/button';
 import {
   PaymentModeSelection,
@@ -11,7 +12,6 @@ import {
   type TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
 import { PromotionCode } from '@/ui/segments/virtual-lab-settings/elements/promotion-code-form';
-import { StripePaymentFlow } from '@/ui/segments/virtual-lab-settings/elements/stripe-payment';
 
 type Props = {
   virtualLabId: string;

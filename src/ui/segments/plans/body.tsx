@@ -6,9 +6,9 @@ import type { PlanV2 } from '@/types/pricing/planv2';
 
 function FeatureIcon({ value }: { value: boolean }) {
   return value ? (
-    <RiCheckboxCircleFill className="size-4 text-green-600" />
+    <RiCheckboxCircleFill className="size-4 shrink-0 text-green-600" />
   ) : (
-    <RiCloseCircleLine className="size-4 text-gray-400" />
+    <RiCloseCircleLine className="size-4 shrink-0 text-gray-400" />
   );
 }
 

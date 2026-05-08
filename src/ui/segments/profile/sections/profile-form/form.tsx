@@ -2,7 +2,7 @@
 
 import { CheckCircleFilled, CloseCircleFilled, LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Form } from 'antd';
+import { Checkbox, Form } from 'antd';
 import { useSession } from 'next-auth/react';
 import { useRef, useState } from 'react';
 import { match, P } from 'ts-pattern';
@@ -270,6 +270,15 @@ export function Profile({ data }: ProfileProps) {
                 }
               />
             </Form.Item>
+            <Form.Item
+              name="sync_billing_address"
+              valuePropName="checked"
+              className="md:col-span-2"
+            >
+              <Checkbox className="text-white">
+                Sync this address with my billing customer address
+              </Checkbox>
+            </Form.Item>
             <div className="space-y-1 md:col-span-2">
               <Label title="Social login" />
               <div className="flex items-center gap-2 border-b border-white/30 py-2">
@@ -326,6 +335,7 @@ function useInitialValues(data: UserProfileResponse | undefined): TProfileFormDa
     locality: data?.address.locality ?? '',
     region: data?.address.region ?? '',
     country: data?.address.country ?? '',
+    sync_billing_address: false,
   };
   return initialValues;
 }

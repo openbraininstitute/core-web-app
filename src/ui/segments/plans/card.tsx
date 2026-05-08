@@ -8,7 +8,7 @@ import { cn } from '@/utils/css-class';
 
 import type { PlanV2 } from '@/types/virtual-lab/pricing';
 
-export default function PlanCard({
+export function PlanCard({
   plan,
   dark,
   className,

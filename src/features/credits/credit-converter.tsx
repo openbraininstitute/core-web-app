@@ -2,14 +2,16 @@
 
 import { Button } from 'antd';
 import { atom, useAtom } from 'jotai';
+import { useState } from 'react';
 
+import { formatMinorCurrency } from '@/features/stripe/utils';
 import { classNames } from '@/util/utils';
 
-const formatInputValue = (value: number) => {
-  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
-};
+import { CreditsAmountInput } from './credits-amount-input';
+import { useCreditConversionQuery } from './hooks';
 
-export const CONVERSION_RATE = 0.1;
+import type { CreditConversionResponse } from '@/api/virtual-lab-svc/queries/types';
+
 export const creditAtom = atom<{ credits: number; step: 'overview' | 'pay' | null }>({
   credits: 0,
   step: 'overview',
@@ -23,39 +25,40 @@ export function CreditConverter({
   onClose: () => void;
 }) {
   const [{ credits }, updateCreditState] = useAtom(creditAtom);
-  const money = parseFloat(Number(credits * CONVERSION_RATE).toFixed(2));
+  const [conversion, setConversion] = useState<CreditConversionResponse | null>(null);
+  const conversionQuery = useCreditConversionQuery({
+    payload: credits > 0 ? { credits, currency: 'chf' } : null,
+    enabled: false,
+  });
 
-  const handleCreditsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9.]/g, '');
-    const numericValue = value === '' ? 0 : parseFloat(Number(value).toFixed(2));
-
-    updateCreditState((prev) => ({ ...prev, credits: numericValue }));
+  const handleCreditsChange = (value: number | undefined) => {
+    setConversion(null);
+    updateCreditState((prev) => ({ ...prev, credits: value ?? 0 }));
   };
 
-  const onClick = () => {
+  const onClick = async () => {
     if (credits > 0) {
-      updateCreditState((prev) => ({ ...prev, step: 'pay' }));
+      const nextConversion = await conversionQuery.refetch();
+      if (nextConversion.data) {
+        setConversion(nextConversion.data);
+        updateCreditState((prev) => ({ ...prev, step: 'pay' }));
+      }
     }
   };
 
   return (
     <div data-testid="credit-converter" className="mx-auto flex w-full flex-col items-center">
       <div className="w-full rounded-lg border border-gray-200 bg-white p-6 shadow-xs">
-        <div className="mb-4 w-full bg-white">
-          <div className="flex w-full items-center justify-center">
-            <span className="text-primary-8 text-base font-semibold">Credits</span>
-            <div className="mx-4 py-2">
-              <input
-                type="text"
-                value={formatInputValue(credits)}
-                onChange={handleCreditsChange}
-                className="text-primary-8 w-full max-w-32 min-w-24 rounded-sm border border-gray-200 px-4 py-2 text-center text-xl font-bold"
-                aria-label="Credit amount"
-              />
-            </div>
-            <span className="text-primary-8 text-base font-bold">CHF {money}</span>
-          </div>
-        </div>
+        <CreditsAmountInput
+          value={credits || undefined}
+          onValueChange={handleCreditsChange}
+          hint={
+            conversion ? formatMinorCurrency(conversion.amount, conversion.currency) : 'CHF 0.00'
+          }
+          className="mb-4 border-gray-200 bg-white text-primary-8 shadow-xs"
+          inputClassName="border-gray-200 bg-white text-center text-primary-8 placeholder:text-primary-8/40"
+          loadingHint={conversionQuery.isFetching}
+        />
         {showActions && (
           <div className="flex items-center justify-center gap-2">
             <Button
@@ -80,7 +83,7 @@ export function CreditConverter({
               type="text"
               size="large"
               htmlType="button"
-              disabled={credits <= 0}
+              disabled={credits <= 0 || conversionQuery.isFetching}
               onClick={onClick}
             >
               Payment

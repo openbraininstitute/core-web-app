@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
+import { StripePaymentFlow } from '@/features/payments/standalone';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
@@ -20,7 +21,6 @@ import {
   type TPurchaseModeDictionary,
 } from '@/ui/segments/virtual-lab-settings/elements/payment-mode-selection';
 import { PromotionCode } from '@/ui/segments/virtual-lab-settings/elements/promotion-code-form';
-import { StripePaymentFlow } from '@/ui/segments/virtual-lab-settings/elements/stripe-payment';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
@@ -192,7 +192,7 @@ export function CreditsTransferModal({ open, onClose }: Props) {
         'h-190'
       )}
       headerClassName={cn('[&>div]:w-full')}
-      bodyClassName="pt-0 max-h-[calc(100%-130px)] h-full"
+      bodyClassName="pt-0 max-h-[calc(100%-150px)] h-full primary-scrollbar"
     >
       <PillTabs
         value={activeTab}

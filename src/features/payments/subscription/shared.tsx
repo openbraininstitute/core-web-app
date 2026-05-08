@@ -70,16 +70,30 @@ type TiersData = {
   tiers: TSingleTier[];
 };
 
+export const FlowStepDict = {
+  Select: 'select',
+  EmailVerification: 'email-verification',
+  Pay: 'pay',
+} as const;
+type TFlowStep = (typeof FlowStepDict)[keyof typeof FlowStepDict];
+
+export const IntervalDict = {
+  Month: 'month',
+  Year: 'year',
+} as const;
+type TInterval = (typeof IntervalDict)[keyof typeof IntervalDict];
+export const DefaultCurrency = 'chf';
+
 export const flowAtom = atom<{
-  step: 'select' | 'email-verification' | 'pay' | null;
+  step: TFlowStep | null;
   tier: TExtendedTier | null;
-  interval: 'month' | 'year';
+  interval: TInterval;
   currency?: string;
 }>({
-  step: 'select',
+  step: FlowStepDict.Select,
   tier: null,
-  interval: 'month',
-  currency: 'chf',
+  interval: IntervalDict.Month,
+  currency: DefaultCurrency,
 });
 
 export const Switch = forwardRef<
@@ -96,7 +110,6 @@ export const Switch = forwardRef<
       'focus-visible:ring-offset-background data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50',
       className
     )}
-    // eslint-disable-next-line react/jsx-props-no-spreading
     {...props}
     ref={ref}
   >

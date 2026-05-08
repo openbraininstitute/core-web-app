@@ -7,11 +7,11 @@ import { format } from 'date-fns';
 import { useState } from 'react';
 
 import { listStandalonePayments } from '@/api/virtual-lab-svc/queries/payment';
-import { FileDownloadFill } from '@/components/icons/EditorIcons';
+import { FileDownloadFill } from '@/components/icons';
 import { HistoryError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
+import { formatMinorCurrency } from '@/features/stripe/utils';
 import { Button } from '@/ui/molecules/button';
 import { Card, CardContent, CardTitle } from '@/ui/molecules/card';
-import { CONVERSION_RATE } from '@/ui/segments/virtual-lab-settings/elements/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
@@ -45,7 +45,7 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
       key: 'credits',
       width: 'max-content',
       render: (_, record) => {
-        const credits = Math.round(record.amount_paid / 100 / CONVERSION_RATE);
+        const credits = record.credits_purchased ?? 0;
         return <span className="font-medium">{credits.toLocaleString()}</span>;
       },
     },
@@ -66,12 +66,33 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
       render: () => null,
     },
     {
-      title: 'Amount',
-      key: 'amount_paid',
+      title: 'Subtotal',
+      key: 'amount_subtotal',
       width: 'max-content',
       render: (_, record) => (
         <span>
-          {record.currency.toUpperCase()} {(record.amount_paid / 100).toFixed(0)}
+          {formatMinorCurrency(
+            record.amount_subtotal ?? record.amount_paid ?? record.amount_total ?? 0,
+            record.currency
+          )}
+        </span>
+      ),
+    },
+    {
+      title: 'VAT',
+      key: 'amount_tax',
+      width: 'max-content',
+      render: (_, record) => (
+        <span>{formatMinorCurrency(record.amount_tax ?? 0, record.currency)}</span>
+      ),
+    },
+    {
+      title: 'Total',
+      key: 'amount_total',
+      width: 'max-content',
+      render: (_, record) => (
+        <span>
+          {formatMinorCurrency(record.amount_total ?? record.amount_paid ?? 0, record.currency)}
         </span>
       ),
     },
@@ -134,8 +155,8 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
                 '[&_.ant-spin-blur]:opacity-0!',
                 '[&_.ant-empty-description]:text-white!',
                 'me [&:has(.ant-table-empty)_td:last]:border-b-none!',
-                '[&_td]:last:border-b-0! bg-primary-9!',
-                ' [&_.ant-table-cell]:bg-primary-9!  [&_.ant-table-cell]:text-white!'
+                'bg-primary-9!',
+                '[&_.ant-table-cell]:bg-primary-9! [&_.ant-table-cell]:text-white!'
               )}
               rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
               pagination={{

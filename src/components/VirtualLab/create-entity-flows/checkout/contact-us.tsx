@@ -3,7 +3,7 @@ import { cn } from '@/utils/css-class';
 
 type Props = { onBack: () => void };
 
-export default function ContactUs({ onBack }: Props) {
+export function ContactUs({ onBack }: Props) {
   return (
     <div className="h-full max-h-max">
       <div data-testid="contact-us-form" className="flex flex-col gap-2">
