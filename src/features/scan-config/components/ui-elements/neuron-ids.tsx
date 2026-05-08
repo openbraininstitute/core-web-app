@@ -25,13 +25,15 @@ export default function NeuronIds({
   const allElements = useMemo(() => {
     const namedTupleArray = Array.isArray(value) ? value : [value];
 
-    const allElements: number[] = namedTupleArray.flatMap((v) => {
+    const elements: number[] = namedTupleArray.flatMap((v) => {
       if (isPlainObject(v) && Array.isArray(v.elements)) {
         return v.elements;
       }
       return [];
     });
-    return allElements;
+
+    // Remove duplicates and sort
+    return [...new Set(elements)].sort((a, b) => a - b);
   }, [value]);
 
   const [text, setText] = useState(allElements.join(', '));
