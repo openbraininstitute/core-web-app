@@ -193,9 +193,8 @@ const Ids = memo(
     return (
       <div className="border border-gray-200 p-3 rounded-lg w-full ">
         <div className={containerClass}>
-          {ids.head.map((id, idx) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: array is readonly
-            <div key={idx} className={elementClass}>
+          {ids.head.map((id) => (
+            <div key={id} className={elementClass}>
               {id}
             </div>
           ))}
@@ -223,9 +222,8 @@ const Ids = memo(
 
         {ids.tail.length > 0 && (
           <div className={containerClass}>
-            {ids.tail.map((id, idx) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: array is readonly
-              <div key={idx} className={elementClass}>
+            {ids.tail.map((id) => (
+              <div key={id} className={elementClass}>
                 {id}
               </div>
             ))}
