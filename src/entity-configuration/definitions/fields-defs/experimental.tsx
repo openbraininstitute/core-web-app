@@ -245,6 +245,9 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'M-Type',
     },
     defaultConstraint: 'mtype__pref_label__in',
+    perTypeConstraint: {
+      [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: 'me_model__mtype__pref_label__in',
+    },
     order: [
       {
         types: [
@@ -298,6 +301,9 @@ export const FieldsDefinition: Partial<FieldsDefinitionRegistry<EntityCoreObject
       singular: 'E-Type',
     },
     defaultConstraint: 'etype__pref_label__in',
+    perTypeConstraint: {
+      [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: 'me_model__etype__pref_label__in',
+    },
     order: [
       {
         types: [

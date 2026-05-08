@@ -12,14 +12,22 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
 } from 'react';
 
+import {
+  dataBrowseListingUsesBrainRegionHierarchy,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import {
+  speciesSelectionModeAtom,
+  workspaceHierarchySpeciesAtom,
+} from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import {
   useQueryExtendedEntityType,
@@ -49,7 +57,6 @@ import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   EntityCoreIdentifiable,
   EntityCoreIdentifiableNamed,
@@ -66,9 +73,7 @@ const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
 type Props = {
   id?: string;
   section?: TWorkspaceSection;
-  /** whether to use the brain region filter in the query as some listing may not need it
-   * which means the query will fetch any brain region data
-   */
+  /** when omitted, derived from `dataType` (brain hierarchy only for single-neuron simulations in data) */
   requireBrainRegion?: boolean;
   /** whether to display the mini detail view */
   requireMiniDetailView?: boolean;
@@ -113,7 +118,7 @@ export function BrowseEntityScope({
   id,
   classNames,
   section = WorkspaceSection.Data,
-  requireBrainRegion = true,
+  requireBrainRegion: requireBrainRegionProp,
   requireMiniDetailView = true,
   defaultBrainRegion,
   dataType,
@@ -129,6 +134,9 @@ export function BrowseEntityScope({
   requireScopeSelector,
   extraQueryParams,
 }: Props) {
+  const requireBrainRegion =
+    requireBrainRegionProp ?? dataBrowseListingUsesBrainRegionHierarchy(dataType);
+
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
@@ -151,13 +159,46 @@ export function BrowseEntityScope({
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
 
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
   const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
-  const { sync: runStorageSync, restore: runStorageRestore } = useDataListStateSnapshotActions({
+  // track stable species identity (`all` vs hierarchy id).
+  // used to detect user-driven species/mode
+  // changes without resetting listing state on the initial mount (after snapshot restore)
+  const prevSpeciesKeyRef = useRef<string | undefined>(undefined);
+
+  const {
+    sync: runStorageSync,
+    restore: runStorageRestore,
+    reset: resetDataListState,
+  } = useDataListStateSnapshotActions({
     dataKey,
     dataType,
     section,
   });
+
+  // TODO: refactor this with the one in circuit
+  // when species or "all species" mode changes, reset table filters/search/sort/page for this listing
+  // skips while `workspaceSpecies` is briefly null during a focused-mode hierarchy switch
+  useEffect(() => {
+    const speciesKey =
+      speciesSelectionMode === SpeciesSelectionMode.All
+        ? SpeciesSelectionMode.All
+        : workspaceSpecies?.hierarchId
+          ? workspaceSpecies.hierarchId
+          : undefined;
+
+    if (speciesKey === undefined) return;
+
+    if (prevSpeciesKeyRef.current === undefined) {
+      prevSpeciesKeyRef.current = speciesKey;
+      return;
+    }
+    if (prevSpeciesKeyRef.current === speciesKey) return;
+
+    prevSpeciesKeyRef.current = speciesKey;
+    resetDataListState();
+  }, [speciesSelectionMode, workspaceSpecies?.hierarchId, resetDataListState]);
 
   const onSortChange = useCallback(
     (newSortState: TSortStateList) => {

@@ -41,7 +41,7 @@ export default function Block({
   config: Config;
   blockSchema?: TBlock;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  stateAtom: ReturnType<typeof atom<Record<string, ConfigValue>>> | null;
+  stateAtom: ReturnType<typeof atom<Record<string, ConfigValue | ConfigValue[]>>> | null;
   hideTitle?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   rootElement?: string;

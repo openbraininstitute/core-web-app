@@ -1,5 +1,5 @@
 import { capitalize } from 'es-toolkit';
-import { get, lowerCase } from 'es-toolkit/compat';
+import { get } from 'es-toolkit/compat';
 import { atom, useAtomValue } from 'jotai';
 
 import {
@@ -201,7 +201,7 @@ export default function BlockDictionary({
                     ...atomsMap,
                     [selectedRootElement]: {
                       ...atomsMap[selectedRootElement],
-                      [newEntry]: atom<Record<string, ConfigValue>>(initial),
+                      [newEntry]: atom<Record<string, ConfigValue | ConfigValue[]>>(initial),
                     },
                   });
                 }}
