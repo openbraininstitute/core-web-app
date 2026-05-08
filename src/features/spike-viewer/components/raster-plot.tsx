@@ -71,7 +71,7 @@ export default function RasterPlot({ data }: RasterPlotProps) {
           ))
         )}
         <span className="ml-auto text-xs text-gray-400">
-          Scroll to zoom · Drag to pan · Double-click to reset
+          Drag to zoom · Shift+drag to pan · Double-click to reset
         </span>
       </div>
       <div ref={containerRef} className="min-h-0 flex-1" />

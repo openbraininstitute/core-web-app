@@ -1,13 +1,16 @@
 'use client';
 
-import { DependencyList, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useAtomValue } from 'jotai';
-import { Loadable } from 'jotai/vanilla/utils/loadable';
-import { Atom } from 'jotai/vanilla';
-import { unwrap, loadable } from 'jotai/utils';
-import { usePathname } from 'next/navigation';
 import debounce from 'es-toolkit/compat/debounce';
+import { useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
+import { usePathname } from 'next/navigation';
+import { type DependencyList, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
 import sessionAtom from '@/state/session';
+import { createLoadableAtom } from '@/utils/jotai-loadable';
+
+import type { Atom } from 'jotai/vanilla';
+import type { Loadable } from 'jotai/vanilla/utils/loadable';
 
 export function usePrevious<T>(value: T) {
   // The ref object is a generic container whose current property is mutable ...
@@ -64,7 +67,8 @@ export function useLastTruthyValue<T>(atom: Atom<T>) {
 }
 
 export function useLoadableValue<T>(atom: Atom<T>) {
-  return useAtomValue(loadable(atom));
+  const loadableAtom = useMemo(() => createLoadableAtom(atom), [atom]);
+  return useAtomValue(loadableAtom);
 }
 
 export function useEnsuredPath() {
@@ -95,6 +99,6 @@ export function useDebouncedCallback<T extends Function>(
   deps: DependencyList,
   ...params: DebounceParams
 ) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dependency list is provided by caller
   return useCallback(debounce(func, ...params), deps);
 }

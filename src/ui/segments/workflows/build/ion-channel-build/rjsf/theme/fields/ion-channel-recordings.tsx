@@ -23,7 +23,6 @@ import {
   descriptionClasses,
   labelClasses,
 } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/theme/classes';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
 
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
@@ -181,7 +180,7 @@ function RecordingsArrayFieldContent({
                   'hover:bg-neutral-1 hover:text-primary-8'
                 )}
               >
-                <span className="text-primary-9 max-w-[200px] truncate text-base font-semibold lg:text-lg">
+                <span className="text-primary-9 max-w-50 truncate text-base font-semibold lg:text-lg">
                   {recording.name}
                 </span>
                 {!readonly && !disabled && (
@@ -240,8 +239,10 @@ function RecordingsArrayFieldContent({
       >
         <div className="h-full w-full">
           <BrowseEntityScope
+            requireBrainRegion
+            requireScopeSelector
+            requireSpeciesSelector
             section={WorkspaceSection.BuildWorkflow}
-            requireBrainRegion={false}
             requireMiniDetailView={false}
             dataType={ExtendedEntitiesTypeDict.IonChannelRecording}
             scope={WorkspaceScope.BuildIonChannelModel}
@@ -257,7 +258,6 @@ function RecordingsArrayFieldContent({
                 container: 'w-2/5 min-h-full',
               },
             }}
-            left={<WorkflowScopeTabs className="max-w-max" />}
           />
         </div>
       </Modal>

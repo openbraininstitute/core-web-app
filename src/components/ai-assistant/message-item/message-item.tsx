@@ -4,7 +4,6 @@ import { getToolName, isToolUIPart } from 'ai';
 import React from 'react';
 
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
-import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
@@ -33,6 +32,18 @@ function RawMessageItem({
   isLastMessage = false,
 }: MessageItemProps) {
   const debug = useDebug();
+
+  if (value.role === 'user' && value.parts.length === 0) {
+    return null;
+  }
+
+  if (value.role === 'assistant') {
+    const hasVisibleParts = value.parts.some(
+      (p) => (p.type === 'text' && 'text' in p && p.text !== '') || isToolUIPart(p)
+    );
+    if (!hasVisibleParts) return null;
+  }
+
   return (
     <div className={classNames(className, styles.messageItem)}>
       <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} />
@@ -79,14 +90,6 @@ function MessageChild({
           <div className={styles.userContent}>
             <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
           </div>
-          <div className={styles.info}>
-            <div className={styles.timestamp}>
-              {(() => {
-                const createdAt = getCreatedAt(value);
-                return createdAt ? formatDate(createdAt) : null;
-              })()}
-            </div>
-          </div>
         </div>
       );
     case 'assistant': {
@@ -129,7 +132,9 @@ function MessageChild({
           >
             {children}
           </CollapsibleMessage>
-          <BackupPlotsWrapper message={value} isLastMessage={isLastMessage} status={status} />
+          <div className={styles.backupPlotsWrapper}>
+            <BackupPlotsWrapper message={value} isLastMessage={isLastMessage} status={status} />
+          </div>
           {debug && (
             <button
               type="button"
@@ -166,25 +171,4 @@ function useDebug(): boolean {
   const [debug, setDebug] = React.useState(false);
   React.useEffect(() => setDebug(window.localStorage.getItem('DEBUG') === '1'), []);
   return debug;
-}
-
-/**
- * Extract createdAt from a message. In v6 UIMessage no longer has createdAt,
- * but persisted v4 messages may still carry it as an extra property.
- */
-function getCreatedAt(msg: UIMessage): Date | string | undefined {
-  return (msg as UIMessage & { createdAt?: Date | string }).createdAt;
-}
-
-function formatDate(d: Date | string): string {
-  try {
-    const formatter = new Intl.DateTimeFormat(undefined, {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    });
-    const date = isString(d) ? new Date(d) : d;
-    return formatter.format(date);
-  } catch {
-    return '';
-  }
 }

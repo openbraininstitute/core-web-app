@@ -280,3 +280,61 @@ export function isThreadListResponse(data: unknown): data is ThreadListResponse 
     return false;
   }
 }
+
+export async function serviceAiAgentThreadSearch({
+  accessToken,
+  query,
+  virtualLabId,
+  projectId,
+  limit = 20,
+}: {
+  accessToken: string;
+  query: string;
+  virtualLabId: string | null;
+  projectId: string | null;
+  limit?: number;
+}): Promise<ThreadSearchResponse> {
+  const data = await fetchJSON({
+    method: 'GET',
+    accessToken,
+    path: 'threads/search',
+    params: {
+      query,
+      virtual_lab_id: virtualLabId,
+      project_id: projectId,
+      limit: `${limit}`,
+    },
+    typeGuard: isThreadSearchResponse,
+  });
+  return data;
+}
+
+export interface ThreadSearchResponse {
+  result_list: Array<{
+    thread_id: string;
+    message_id: string;
+    title: string;
+    content: string;
+  }>;
+}
+
+function isThreadSearchResponse(data: unknown): data is ThreadSearchResponse {
+  try {
+    assertType(data, {
+      result_list: [
+        'array',
+        {
+          thread_id: 'string',
+          message_id: 'string',
+          title: 'string',
+          content: 'string',
+        },
+      ],
+    });
+    return true;
+  } catch (ex) {
+    logError('Unexpected return type when searching threads:', data);
+    logError(ex);
+    return false;
+  }
+}

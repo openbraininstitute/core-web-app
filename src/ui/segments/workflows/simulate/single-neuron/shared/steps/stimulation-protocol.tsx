@@ -1,29 +1,29 @@
-import { camelCase, startCase, toPairs, get } from 'es-toolkit/compat';
-import { useAtom, useAtomValue } from 'jotai';
 import { Form, Input, Select } from 'antd';
+import { camelCase, get, startCase, toPairs } from 'es-toolkit/compat';
+import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 
-import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
+import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { DefaultInjectionColor } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
+import { AmperageConfiguration } from '@/ui/segments/workflows/simulate/single-neuron/shared/amperage-configuration';
+import {
+  PROTOCOL_DETAILS,
+  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {
   neuronSectionNamesAtomFamily,
   SimulationStatus,
-  simulationStatusAtomFamily,
   StimulationConfigurationAtomFamily,
+  simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
 import {
   createZodValidator,
   getSessionKey,
   label,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/helpers';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import {
-  STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY,
-  PROTOCOL_DETAILS,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
-import {
-  StimulationMode,
   StimulationConfigurationSchema,
+  StimulationMode,
   type TProtocolDetails,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { cn } from '@/utils/css-class';
@@ -131,7 +131,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
               'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
               '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
             )}
-            popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
+            classNames={{ popup: { root: '[&_.ant-select-item-option-content]:text-primary-9!' } }}
             placement="bottomLeft"
             disabled={!sections.length || disableForm}
             size={breakpoint === 'l' ? 'middle' : 'large'}
@@ -170,7 +170,7 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
               'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
               '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
             )}
-            popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
+            classNames={{ popup: { root: '[&_.ant-select-item-option-content]:text-primary-9!' } }}
             placement="bottomLeft"
             size={breakpoint === 'l' ? 'middle' : 'large'}
           />
@@ -201,7 +201,9 @@ export function StimulationProtocol({ sessionId, memodelId }: Props) {
                 'border-neutral-3! [&_.ant-select-selection-item]:text-primary-9! w-full rounded-md border-[1px]! [&_.ant-select-selection-item]:font-bold [&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
                 '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
               )}
-              popupClassName="[&_.ant-select-item-option-content]:text-primary-9!"
+              classNames={{
+                popup: { root: '[&_.ant-select-item-option-content]:text-primary-9!' },
+              }}
               placement="bottomLeft"
               size={breakpoint === 'l' ? 'middle' : 'large'}
             />

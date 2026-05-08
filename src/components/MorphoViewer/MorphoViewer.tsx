@@ -1,9 +1,10 @@
 'use client';
 
 import { FullscreenOutlined } from '@ant-design/icons';
-import { MorphologyCanvas } from '@bbp/morphoviewer';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
+
+import { MorphologyCanvas } from '@/morpho-viewer';
 
 import { ColorRamp } from './ColorRamp';
 import { useMorphoViewerSettings } from './hooks/settings';
@@ -26,12 +27,11 @@ interface MorphoViewerProps {
    * Text content of a SWC file.
    */
   swc: string;
-  mode?: 'light' | 'dark';
   // We disable enhanced somas until they are fixed on the backend.
   // contentUrl?: string;
 }
 
-function MorphoViewerComponent({ className, swc, mode }: MorphoViewerProps) {
+function MorphoViewerComponent({ className, swc }: MorphoViewerProps) {
   const refDiv = useRef<HTMLDivElement | null>(null);
   const refMorphoCanvas = useRef(new MorphologyCanvas());
   const morphoCanvas = refMorphoCanvas.current;
@@ -44,8 +44,9 @@ function MorphoViewerComponent({ className, swc, mode }: MorphoViewerProps) {
   useEffect(() => {
     morphoCanvas.canvas = refCanvas.current;
     morphoCanvas.swc = swc;
-    if (mode === 'dark') morphoCanvas.colors.background = '#000';
-    else if (mode === 'light') morphoCanvas.colors.background = '#fff';
+    morphoCanvas.colors.background = '#777';
+    if (isDarkMode) morphoCanvas.colors.background = '#000';
+    else morphoCanvas.colors.background = '#fff';
     const handleWarning = () => {
       setWarning(true);
     };
@@ -53,7 +54,7 @@ function MorphoViewerComponent({ className, swc, mode }: MorphoViewerProps) {
     return () => {
       morphoCanvas.eventMouseWheelWithoutCtrl.removeListener(handleWarning);
     };
-  }, [morphoCanvas, swc, setWarning, mode]);
+  }, [morphoCanvas, swc, setWarning, isDarkMode]);
 
   const handleFullscreen = () => {
     const div = refDiv.current;

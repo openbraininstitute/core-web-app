@@ -1,3 +1,4 @@
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { PanelState } from '@/ui/segments/ai/types';
 
@@ -11,14 +12,6 @@ export const aiPanelStateFlag = defineFlag<PanelState>({
   visible: false,
 });
 
-export const microcircuitFlag = defineFlag<boolean>({
-  key: 'microcircuit',
-  defaultValue: false,
-  values: [true, false],
-  description: 'Enable microcircuit (simulations)',
-  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
-});
-
 export const extractionActivityFlag = defineFlag<boolean>({
   key: 'extraction-activity',
   defaultValue: false,
@@ -27,7 +20,19 @@ export const extractionActivityFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const flags = [aiPanelStateFlag, microcircuitFlag, extractionActivityFlag] as const;
+export const emSynapseMappingActivityFlag = defineFlag<boolean>({
+  key: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
+  defaultValue: false,
+  values: [true, false],
+  description: 'Em synapse mapping activity',
+  visible: () => ['local', 'preview'].includes(config.DEPLOYMENT_ENV),
+});
+
+export const flags = [
+  aiPanelStateFlag,
+  extractionActivityFlag,
+  emSynapseMappingActivityFlag,
+] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
 

@@ -1,4 +1,5 @@
-import { CheckCircleFilled, CopyOutlined, LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
+import { RiCheckFill, RiFileCopyLine } from '@remixicon/react';
 import { useMutation } from '@tanstack/react-query';
 import { includes, kebabCase } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
@@ -14,6 +15,11 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+import {
+  MiniDetailViewTheme,
+  type TMiniDetailViewTheme,
+} from '@/ui/segments/mini-detail-view/types';
+import { cn } from '@/utils/css-class';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -22,9 +28,11 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 export function DataActions<T extends EntityCoreObjectTypes>({
   record,
   dataType,
+  theme,
 }: {
   record: T;
   dataType?: TExtendedEntitiesTypeDict;
+  theme?: TMiniDetailViewTheme;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const [, copy, , copying] = useCopyToClipboard();
@@ -54,7 +62,10 @@ export function DataActions<T extends EntityCoreObjectTypes>({
           <Button
             rounded
             title="Copy ID"
-            className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+            className={cn(
+              'hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+              { 'hover:bg-white! hover:text-primary-8!': theme === MiniDetailViewTheme.Light }
+            )}
             onClick={onCopyClipboard}
           >
             {copying ? (
@@ -69,11 +80,19 @@ export function DataActions<T extends EntityCoreObjectTypes>({
                   duration: 0.2,
                 }}
               >
-                <CheckCircleFilled className="text-accent-light" />
+                <RiCheckFill
+                  className={cn('text-accent-light size-6', {
+                    'group:hover:text-primary-8!': theme === MiniDetailViewTheme.Light,
+                  })}
+                />
               </motion.div>
             ) : (
               <div key="copy">
-                <CopyOutlined />
+                <RiFileCopyLine
+                  className={cn({
+                    'group:hover:text-primary-8!': theme === MiniDetailViewTheme.Light,
+                  })}
+                />
               </div>
             )}
           </Button>
@@ -83,46 +102,33 @@ export function DataActions<T extends EntityCoreObjectTypes>({
           side="top"
           sideOffset={3}
           align="center"
-          className="text-primary-8 bg-white"
+          className={cn('text-primary-8 bg-white', {
+            'bg-white text-primary-9': theme === MiniDetailViewTheme.Light,
+          })}
           arrowClassName="bg-white"
         >
           <span>Copy ID</span>
         </TooltipContent>
       </Tooltip>
-      {/* <Tooltip>
-        <TooltipTrigger>
-          <Button
-            rounded
-            title="Save to bookmark"
-            className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
-            onClick={onBookmark}
-          >
-            {pendingSave ? <LoadingOutlined spin className="text-primary-3" /> : <BookmarkIcon />}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent
-          avoidCollisions
-          side="top"
-          sideOffset={3}
-          align="center"
-          className="text-primary-8 bg-white"
-          arrowClassName="bg-white"
-        >
-          <span>Save to bookmark</span>
-        </TooltipContent>
-      </Tooltip> */}
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
             rounded
             title="download"
-            className="hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+            className={cn(
+              'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+              { 'hover:bg-white! hover:text-primary-8!': theme === MiniDetailViewTheme.Light }
+            )}
             onClick={onDownload}
           >
             {pendingDownload ? (
               <LoadingOutlined spin className="text-primary-3" />
             ) : (
-              <DownloadIcon />
+              <DownloadIcon
+                className={cn({
+                  'group:hover:text-primary-8!': theme === MiniDetailViewTheme.Light,
+                })}
+              />
             )}
           </Button>
         </TooltipTrigger>
@@ -131,7 +137,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
           side="top"
           sideOffset={3}
           align="center"
-          className="text-primary-8 bg-white"
+          className={cn('text-primary-8 bg-white')}
           arrowClassName="bg-white"
         >
           <span>Download</span>
@@ -143,7 +149,10 @@ export function DataActions<T extends EntityCoreObjectTypes>({
         asChild
         title="Go to details page"
         variant="default"
-        className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+        className={cn(
+          'hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+          { 'hover:bg-white! hover:text-primary-8!': theme === MiniDetailViewTheme.Light }
+        )}
       >
         <Link
           href={{

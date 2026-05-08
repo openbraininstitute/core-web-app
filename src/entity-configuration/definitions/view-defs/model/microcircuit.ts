@@ -1,7 +1,8 @@
-import { ViewDefinitionConfig } from '../types';
+import { EntitySlug } from '@/entity-configuration/domain/slug';
+
 import { EntityCoreFields } from '../../fields-defs/enums';
 
-import { EntitySlug } from '@/entity-configuration/domain/slug';
+import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForMicrocircuit: ViewDefinitionConfig = {
   title: 'Microcircuit',
@@ -11,6 +12,8 @@ export const ViewDefForMicrocircuit: ViewDefinitionConfig = {
     EntityCoreFields.Name,
     EntityCoreFields.Description,
     EntityCoreFields.BrainRegion,
+    EntityCoreFields.SpeciesName,
+    EntityCoreFields.CircuitScale,
     EntityCoreFields.CircuitNumberNeurons,
     EntityCoreFields.CircuitNumberSynapses,
     EntityCoreFields.CircuitNumberConnections,
@@ -18,9 +21,9 @@ export const ViewDefForMicrocircuit: ViewDefinitionConfig = {
     EntityCoreFields.RegistrationDate,
   ],
   miniDetailView: [
+    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.BrainRegion },
     { field: EntityCoreFields.CircuitScale },
-    { field: EntityCoreFields.SpeciesName },
     { field: EntityCoreFields.CircuitSubCircuit },
     { field: EntityCoreFields.CircuitNumberNeurons },
     { field: EntityCoreFields.CircuitNumberSynapses },

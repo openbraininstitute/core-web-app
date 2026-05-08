@@ -17,10 +17,12 @@ export const ModelEntitySlug = {
   PairedNeuronsCircuit: 'paired-neurons',
   SmallMicrocircuit: 'small-microcircuit',
   Microcircuit: 'microcircuit',
+  BrainRegion: 'brain-region',
   Circuit: 'circuit',
   IonChannelModel: 'ion-channel-model',
   IonChannelModelingCampaign: 'ion-channel-modeling-campaign',
   MEModelWithSynapses: 'me-model-with-synapses',
+  EmSynapseMappingCampaign: 'em-synapse-mapping-campaign',
 } as const;
 
 const SimulationEntitySlug = {
@@ -33,6 +35,7 @@ const SimulationEntitySlug = {
   SmallMicrocircuitSimulation: 'small-microcircuit-simulation',
   MicrocircuitSimulation: 'microcircuit-simulation',
   IonChannelModelSimulation: 'ion-channel-model-simulation',
+  RegionCircuitSimulation: 'region-circuit-simulation',
 } as const;
 
 const ExtractionEntitySlug = {

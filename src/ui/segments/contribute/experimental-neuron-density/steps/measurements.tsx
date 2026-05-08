@@ -2,14 +2,16 @@
 
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Form, InputNumber, Space } from 'antd';
+
 import { MeasurementStatistic } from '@/api/entitycore/types/shared/global';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
 import { SelectPopoverFormItem } from '@/ui/molecules/select-popover';
-import type { TMeasurement } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import { ExperimentalNeuronDensitySchema } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 import { createZodFieldValidator, renderLabel } from '@/ui/segments/contribute/shared';
 import { cn } from '@/utils/css-class';
+
+import type { TMeasurement } from '@/ui/segments/contribute/experimental-neuron-density/schema';
 
 const FIXED_UNIT = '1/mm³';
 
@@ -28,10 +30,7 @@ export function Measurements() {
 
   return (
     <div className="h-full w-full">
-      <Form.List
-        name="measurements"
-        initialValue={[{ name: undefined, unit: FIXED_UNIT, value: undefined }]}
-      >
+      <Form.List name="measurements">
         {(fields, { remove }) => (
           <>
             <div className="flex flex-col gap-4">

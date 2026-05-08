@@ -1,5 +1,5 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import React from 'react';
+
 import { logError } from '@/util/logger';
 
 export interface GenericEventInterface<T> {
@@ -57,6 +57,8 @@ export default class GenericEvent<T = void> implements GenericEventInterface<T> 
     }
   }
 }
+
+export { GenericEvent };
 
 export function useGenericEventListener<T>(event: GenericEvent<T>, listener: (value: T) => void) {
   React.useEffect(() => {

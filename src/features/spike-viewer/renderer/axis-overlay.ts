@@ -14,8 +14,8 @@ export type PlotRect = {
 
 export const MARGIN = { top: 20, right: 20, bottom: 60, left: 70 };
 
-/** Compute nice tick values for an axis range. */
-function computeTicks(min: number, max: number, targetCount: number): number[] {
+/** Compute nice tick values for an axis range. When integer is true, step is constrained to an integer >= 1. */
+function computeTicks(min: number, max: number, targetCount: number, integer = false): number[] {
   const range = max - min;
   if (range <= 0) return [min];
 
@@ -28,6 +28,8 @@ function computeTicks(min: number, max: number, targetCount: number): number[] {
   else if (residual <= 3.5) niceStep = 2 * magnitude;
   else if (residual <= 7.5) niceStep = 5 * magnitude;
   else niceStep = 10 * magnitude;
+
+  if (integer) niceStep = Math.max(1, Math.round(niceStep));
 
   const ticks: number[] = [];
   const start = Math.ceil(min / niceStep) * niceStep;
@@ -57,8 +59,10 @@ export class AxisOverlay {
     const ctx = this.ctx;
     const dpr = window.devicePixelRatio || 1;
 
-    const xTicks = computeTicks(bounds.xMin, bounds.xMax, 6);
-    const yTicks = computeTicks(bounds.yMin, bounds.yMax, 6);
+    const xTickCount = Math.max(2, Math.floor(plotRect.width / 80));
+    const yTickCount = Math.max(2, Math.floor(plotRect.height / 30));
+    const xTicks = computeTicks(bounds.xMin, bounds.xMax, xTickCount);
+    const yTicks = computeTicks(bounds.yMin, bounds.yMax, yTickCount, true).filter((v) => v >= 0);
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.save();

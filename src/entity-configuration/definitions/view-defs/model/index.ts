@@ -1,4 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { ViewDefForBrainRegion } from '@/entity-configuration/definitions/view-defs/model/brain-region';
 import { ViewDefForCircuit } from '@/entity-configuration/definitions/view-defs/model/circuit';
 import { ViewDefForEmodel } from '@/entity-configuration/definitions/view-defs/model/emodel';
 import { ViewDefForIonChannelModel } from '@/entity-configuration/definitions/view-defs/model/ion-channel-model';
@@ -16,6 +17,7 @@ import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/vi
 export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.Emodel]: ViewDefForEmodel,
   [ExtendedEntitiesTypeDict.Memodel]: ViewDefForMemodel,
+  [ExtendedEntitiesTypeDict.BrainRegion]: ViewDefForBrainRegion,
   [ExtendedEntitiesTypeDict.SingleNeuronSynaptome]: ViewDefForSingleNeuronSynaptome,
   [ExtendedEntitiesTypeDict.MemodelCircuit]: ViewDefForMemodel,
   [ExtendedEntitiesTypeDict.SingleNeuronCircuit]: ViewDefForSingleNeuronCircuit,

@@ -79,6 +79,8 @@ export function Pagination({
 
   return (
     <AntPagination
+      aria-labelledby="browse-pagination"
+      aria-description={dataKey}
       responsive
       showLessItems
       hideOnSinglePage
@@ -95,7 +97,7 @@ export function Pagination({
       aria-label="pagination for listing results"
       className={cn(
         '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active_a]:text-white!',
-        '[&_.ant-pagination-disabled_button]:text-neutral-2 [&_button.ant-pagination-item-link]:text-primary-9!',
+        '[&_.ant-pagination-disabled_button]:text-neutral-2! [&_button.ant-pagination-item-link]:text-primary-9!',
         className
       )}
     />

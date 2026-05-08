@@ -17,7 +17,15 @@ export type ViewDefinitionConfig = {
   cardViewFields?: Array<TypeSummaryProps>;
   summaryViewFields?: Array<TypeSummaryProps>;
   miniDetailView?: Array<TypeSummaryProps>;
+  /**
+   * @deprecated this was never used
+   * `presentation.filter.available` and keep this property only as a legacy fallback.
+   */
   filterableFields?: Array<EntityCoreFields>;
+  /**
+   * @deprecated this was never used
+   * `presentation.column.available` and keep this property only as a legacy fallback.
+   */
   displayableFields?: Array<EntityCoreFields>;
   mlTopic?: string;
 };

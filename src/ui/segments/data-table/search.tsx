@@ -1,6 +1,13 @@
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { useAtom, useSetAtom } from 'jotai';
-import { type ChangeEvent, type ComponentProps, useDeferredValue, useRef, useState } from 'react';
+import {
+  type ChangeEvent,
+  type ComponentProps,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { DEFAULT_PAGE_NUMBER } from '@/constants';
 import {
@@ -13,13 +20,14 @@ import { cn } from '@/utils/css-class';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 type SearchProps = {
+  openOnMount?: boolean;
   dataKey: string;
   dataType: TExtendedEntitiesTypeDict;
   className?: ComponentProps<'div'>['className'];
 };
 
-export function Search({ dataKey, dataType, className }: SearchProps) {
-  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+export function Search({ dataKey, dataType, className, openOnMount = false }: SearchProps) {
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(openOnMount ?? false);
   const [searchInput, setSearchInput] = useState<string>('');
   const deferredSearchInput = useDeferredValue(searchInput);
   const { sync: runStorageSync } = useDataListStateSnapshotActions({
@@ -30,13 +38,14 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
 
-  // sync to atom when deferredSearchInput changes:
-  // Note: this happens during render — so no useEffect required.
-  if (searchString !== deferredSearchInput) {
+  useEffect(() => {
+    if (searchString === deferredSearchInput) {
+      return;
+    }
     setPageNumber(DEFAULT_PAGE_NUMBER);
     setSearchString(deferredSearchInput);
     runStorageSync({ Search: deferredSearchInput, Page: DEFAULT_PAGE_NUMBER });
-  }
+  }, [deferredSearchInput, runStorageSync, searchString, setPageNumber, setSearchString]);
 
   const handleToggleSearch = (): void => {
     if (isSearchOpen) {
@@ -72,8 +81,8 @@ export function Search({ dataKey, dataType, className }: SearchProps) {
 
   return (
     <div
-      className={cn('flex items-center justify-start min-w-0 max-w-112.5', className, {
-        'border border-gray-100 rounded-full shadow-sm': isSearchOpen,
+      className={cn('flex items-center justify-start min-w-0 w-full max-w-90 ml-0.5 ', className, {
+        'border border-gray-100 rounded-full shadow-sm bg-white': isSearchOpen,
       })}
     >
       <div className="flex w-full items-center">

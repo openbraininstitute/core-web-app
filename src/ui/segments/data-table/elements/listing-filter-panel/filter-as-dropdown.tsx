@@ -7,7 +7,10 @@ import { cn } from '@/utils/css-class';
 import type { DefaultOptionType } from 'antd/es/select';
 import type { TCoreFilter } from '@/entity-configuration/definitions/types';
 
-export type OptionType = DefaultOptionType;
+export type OptionType = DefaultOptionType & {
+  description?: string;
+};
+
 type Props = {
   filter: TCoreFilter;
   data?: Array<OptionType>;
@@ -55,6 +58,7 @@ export function DropdownList({
     value: item.value,
     label: item.count ? `${item.label} (${item.count})` : item.label,
     key: item.id,
+    description: item.description,
   }));
 
   let value: string | string[] | undefined;
@@ -85,20 +89,41 @@ export function DropdownList({
           '[&_.ant-select-arrow]:text-white! [&_.ant-select-clear]:text-white!',
           '[&_.ant-select-selection-item]:bg-primary-7!',
           'has-[.ant-select-clear]:[&_.ant-select-arrow]:hidden!',
-          '[&_.ant-select-clear]:bg-transparent!'
+          '[&_.ant-select-clear]:bg-transparent!',
+          '[&_.ant-select-selection-item-remove]:text-white! [&_.ant-select-selection-item-remove]:ml-2!',
+          '[&_.ant-select-selection-item-remove]:hover:text-primary-4!'
         )}
         classNames={{
           popup: {
             root: cn(
               'bg-primary-8! border-neutral-3 text-white!',
-              '[&_.ant-select-item]:text-white! [&_.ant-select-item-option-selected]:bg-primary-7! [&_.ant-select-item-option-state]:text-white!',
-              '[&_.ant-select-item-option-active]:bg-white! [&_.ant-select-item-option-active]:text-primary-8! select-none!',
-              '[&_.ant-select-item-option-active.ant-select-item-option-selected]:text-white!'
+              '[&_.ant-select-item]:text-white!',
+              '[&_.ant-select-item-option-selected]:bg-[#0050B3]! [&_.ant-select-item-option-selected]:text-white!',
+              '[&_.ant-select-item-option-active]:bg-[#096DD9]! [&_.ant-select-item-option-active]:text-white! select-none!',
+              '[&_.ant-select-item-option-state]:text-white!',
+              '[&_.ant-select-item-option-active_*]:text-white!',
+              '[&_.ant-select-item-option-selected_*]:text-white!',
+              '[&_.ant-select-item-option-content]:w-full'
             ),
           },
         }}
         size="large"
         options={options}
+        optionRender={(option) => {
+          const description = option?.data?.description;
+          if (!description) {
+            return <span className="text-white">{option.label}</span>;
+          }
+
+          return (
+            <div className="group flex w-full flex-col gap-0">
+              <span className="text-white text-base font-semibold">{option.label}</span>
+              <p className="text-primary-3 text-sm whitespace-normal wrap-break-word group-hover:text-primary-8">
+                {description}
+              </p>
+            </div>
+          );
+        }}
       />
       {selectedValues.length > 0 && (
         <div className="text-primary-3! text-xs">

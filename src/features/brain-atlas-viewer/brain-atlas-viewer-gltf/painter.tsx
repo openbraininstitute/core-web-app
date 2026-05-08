@@ -13,19 +13,28 @@ import {
   webglPresetDepth,
 } from '@tolokoban/tgd';
 
-import GenericEvent from '@/util/generic-event';
+import { config } from '@/config';
+import { GenericEvent } from '@/util/generic-event';
 import { logError } from '@/util/logger';
 
-import { setCamera } from './camera';
+import { type CameraController, setCamera } from './camera';
 import { makeColor } from './hooks';
-import { getBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
+import { getCachedBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
 
+import type { QueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import type { SettingsValues } from './settings';
 import type { VisibleRegion } from './types';
 
+interface MeshBounds {
+  min: [number, number, number];
+  max: [number, number, number];
+}
+
 let globalId = 1;
 export class Painter {
+  public readonly AtlasID: string;
+
   public readonly ID: number;
 
   public readonly eventError = new GenericEvent<ReactNode>();
@@ -36,6 +45,10 @@ export class Painter {
 
   public resetCamera: () => void = () => {};
 
+  private cameraController: CameraController | null = null;
+
+  private hasFittedCamera = false;
+
   private context: TgdContext | null = null;
 
   private group: TgdPainterGroup | null = null;
@@ -45,6 +58,10 @@ export class Painter {
   private pointCloudPainter: TgdPainterPointsCloud | null = null;
 
   private pointCloudId = -1;
+
+  private contextVersion = 0;
+
+  private pointCloudRequestVersion = 0;
 
   private isAddingRegions = false;
 
@@ -59,8 +76,13 @@ export class Painter {
 
   private _uniforms: SettingsValues = {};
 
-  constructor(private readonly backgroundColor = '#002766') {
+  constructor(
+    readonly atlasId: string,
+    private readonly queryClient: QueryClient,
+    private readonly backgroundColor = '#002766'
+  ) {
     this.ID = globalId++;
+    this.AtlasID = atlasId;
   }
 
   get uniforms() {
@@ -74,13 +96,24 @@ export class Painter {
   }
 
   public readonly start = (canvas: HTMLCanvasElement | null) => {
+    this.contextVersion += 1;
+    this.pointCloudRequestVersion += 1;
+
     if (this.context) {
       this.context.delete();
       this.context = null;
-      this.isAddingRegions = false;
-      this.nextRegionsToAdd = null;
-      this.pointCloudId = -1;
     }
+
+    this.cameraController = null;
+    this.group = null;
+    this.regionPainters.clear();
+    this.pointCloudPainter = null;
+    this.isAddingRegions = false;
+    this.nextRegionsToAdd = null;
+    this.pointCloudId = -1;
+    this.hasFittedCamera = false;
+    this.loadingMesh = false;
+    this.loadingPointCloud = false;
 
     if (canvas) {
       const context = new TgdContext(canvas, {
@@ -90,7 +123,10 @@ export class Painter {
         premultipliedAlpha: false,
       });
       this.context = context;
-      this.resetCamera = setCamera(context, this.eventCameraChange);
+      const camCtrl = setCamera(context, this.eventCameraChange, this.AtlasID);
+      this.cameraController = camCtrl;
+      this.resetCamera = camCtrl.resetCamera;
+      this.hasFittedCamera = false;
       const group = new TgdPainterGroup();
       this.group = group;
       context.add(
@@ -135,6 +171,8 @@ export class Painter {
     this.loadingMesh = true;
     this.isAddingRegions = true;
     this.nextRegionsToAdd = null;
+    const shouldAutoFitCamera = !this.hasFittedCamera && this.AtlasID !== config.MOUSE_ATLAS__ID;
+    let mergedBounds: MeshBounds | null = null;
     const regionsKeys = new Set(regions.map((region) => region.id));
     const keysToRemove: string[] = [];
     for (const key of this.regionPainters.keys()) {
@@ -152,8 +190,15 @@ export class Painter {
     }
     for (const region of regions) {
       try {
-        const data = await getBrainRegionMeshArrayBuffer(accessToken, region.id);
-        await this.addMesh(data, region);
+        const data = await getCachedBrainRegionMeshArrayBuffer({
+          atlasId: this.AtlasID,
+          regionId: region.id,
+          queryClient: this.queryClient,
+        });
+        const meshBounds = await this.addMesh(data, region);
+        if (shouldAutoFitCamera && meshBounds) {
+          mergedBounds = this.mergeBounds(mergedBounds, meshBounds);
+        }
       } catch (ex) {
         logError(`Unable to load mesh for region "${region.name}":`, ex);
         this.eventError.dispatch(
@@ -163,6 +208,10 @@ export class Painter {
           </>
         );
       }
+    }
+    if (shouldAutoFitCamera && mergedBounds && this.cameraController) {
+      this.cameraController.fitToBounds(mergedBounds.min, mergedBounds.max);
+      this.hasFittedCamera = true;
     }
     this.isAddingRegions = false;
     this.loadingMesh = false;
@@ -178,32 +227,78 @@ export class Painter {
   public async setPointCloud(annotationValue: number, color: string, accessToken: string) {
     const { context, group } = this;
     if (!context || !group || this.pointCloudId === annotationValue) return;
+    const requestVersion = ++this.pointCloudRequestVersion;
+    const contextVersion = this.contextVersion;
+
+    // point cloud data is only available for the mouse atlas (legacy circuit)
+    // for other species the coordinates live in a different space and would
+    // appear misaligned with the mesh, so skip them entirely.
+    if (this.AtlasID !== config.MOUSE_ATLAS__ID) {
+      if (this.pointCloudPainter) {
+        group.remove(this.pointCloudPainter);
+        this.pointCloudPainter.delete();
+        this.pointCloudPainter = null;
+        this.pointCloudId = -1;
+        context.paint();
+      }
+      return;
+    }
 
     this.loadingPointCloud = true;
     try {
       if (this.pointCloudPainter) {
         group.remove(this.pointCloudPainter);
         this.pointCloudPainter.delete();
+        this.pointCloudPainter = null;
       }
       this.pointCloudId = annotationValue;
       if (annotationValue !== -1) {
         const dataPoint = await getPointCouldData(annotationValue, accessToken);
-        // Check if context was deleted while fetching data (e.g., user navigated away)
-        if (!this.context) return;
+        if (
+          requestVersion !== this.pointCloudRequestVersion ||
+          contextVersion !== this.contextVersion
+        ) {
+          return;
+        }
 
-        const painter = new TgdPainterPointsCloud(context, {
+        const currentContext = this.context;
+        const currentGroup = this.group;
+        if (!currentContext || !currentGroup || this.pointCloudId !== annotationValue) return;
+
+        const painter = new TgdPainterPointsCloud(currentContext, {
           dataPoint,
           minSizeInPixels: 5,
-          texture: new TgdTexture2D(context).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
+          texture: new TgdTexture2D(currentContext).loadBitmap(tgdCanvasCreateFill(1, 1, color)),
         });
-        group.add(painter);
+        currentGroup.add(painter);
         this.pointCloudPainter = painter;
       }
     } catch (ex) {
-      logError('Unable to load point could!', ex);
+      if (
+        requestVersion !== this.pointCloudRequestVersion ||
+        contextVersion !== this.contextVersion
+      ) {
+        return;
+      }
+
+      if (
+        ex instanceof Error &&
+        ex.message.includes('[TgdContext] This context has been deleted:')
+      ) {
+        logError(`Point cloud unavailable for annotation ${annotationValue}:`, ex);
+        return;
+      }
+      // reset so the same region can be retried on next render
+      this.pointCloudId = -1;
+      // not all regions have point cloud data.
+      // only log, never show a user-facing error for point cloud failures.
+      logError(`Point cloud unavailable for annotation ${annotationValue}:`, ex);
       this.eventError.dispatch(`Unable to load points cloud!`);
+    } finally {
+      if (requestVersion === this.pointCloudRequestVersion) {
+        this.loadingPointCloud = false;
+      }
     }
-    this.loadingPointCloud = false;
   }
 
   private getNextRegionsToAdd() {
@@ -229,11 +324,11 @@ export class Painter {
 
   private async addMesh(data: ArrayBuffer | null, region: VisibleRegion) {
     const { context, group, regionPainters } = this;
-    if (!context || !group || !data || regionPainters.has(region.id)) return;
-
+    if (!context || !group || !data || regionPainters.has(region.id)) return null;
     try {
       const asset = await TgdDataGlb.parse(data);
       const geometry = new TgdGeometryGltf({ data: asset });
+      const meshBounds = this.extractBoundsFromGltf(asset);
       const painterXRay = new TgdPainterXRay(context, {
         geometry,
         color: region.color,
@@ -243,10 +338,60 @@ export class Painter {
       group.add(painterXRay);
       regionPainters.set(region.id, painterXRay);
       context.paint();
+      return meshBounds;
     } catch (ex) {
       logError(`Unable to load mesh for region ${region.name}!`, ex);
       this.eventError.dispatch(`Unable to load mesh for region "${region.name}"!`);
+      return null;
     }
+  }
+
+  /**
+   * Extract the POSITION accessor's min/max from the GLTF JSON.
+   */
+  private extractBoundsFromGltf(asset: TgdDataGlb): MeshBounds | null {
+    try {
+      const json = asset.getJson();
+      const accessors = json.accessors ?? [];
+      // Find the POSITION accessor — it's the one with type "VEC3"
+      // referenced by the first mesh primitive's POSITION attribute.
+      const meshes = json.meshes ?? [];
+      const firstMesh = meshes[0];
+      if (!firstMesh) return null;
+
+      const posAttr = firstMesh.primitives[0]?.attributes?.POSITION;
+      if (typeof posAttr !== 'number') return null;
+
+      const accessor = accessors[posAttr];
+      if (!accessor?.min || !accessor?.max || accessor.min.length < 3 || accessor.max.length < 3) {
+        return null;
+      }
+
+      return {
+        min: [accessor.min[0], accessor.min[1], accessor.min[2]],
+        max: [accessor.max[0], accessor.max[1], accessor.max[2]],
+      };
+    } catch {
+      // Non-critical — fall back to default camera position
+      return null;
+    }
+  }
+
+  private mergeBounds(current: MeshBounds | null, next: MeshBounds): MeshBounds {
+    if (!current) return next;
+
+    return {
+      min: [
+        Math.min(current.min[0], next.min[0]),
+        Math.min(current.min[1], next.min[1]),
+        Math.min(current.min[2], next.min[2]),
+      ],
+      max: [
+        Math.max(current.max[0], next.max[0]),
+        Math.max(current.max[1], next.max[1]),
+        Math.max(current.max[2], next.max[2]),
+      ],
+    };
   }
 
   private set loadingMesh(loading: boolean) {

@@ -1,9 +1,10 @@
-import type { ReactNode } from 'react';
-
-import { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import { BrainRegionUrlBoundary } from '@/features/brain-region-hierarchy/components/url-boundary';
 import { ReportsInnerLayout } from '@/ui/layouts/reports-inner-layout';
 import { ReportsLayout } from '@/ui/layouts/reports-layout';
 import { ConditionalLeftMenu } from '@/ui/segments/reports/conditional-left-menu';
+
+import type { ReactNode } from 'react';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 export default async function Page({
   children,

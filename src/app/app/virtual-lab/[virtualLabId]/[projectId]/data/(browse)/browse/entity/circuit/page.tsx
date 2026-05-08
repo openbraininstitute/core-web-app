@@ -9,6 +9,7 @@ export default async function Page() {
       dataType={ExtendedEntitiesTypeDict.Circuit}
       mainTableProps={{
         selectionType: undefined,
+        searchOpenOnMount: true,
       }}
     />
   );

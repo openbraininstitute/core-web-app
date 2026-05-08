@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { DefaultChatTransport, getToolName, isToolUIPart } from 'ai';
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
@@ -15,7 +15,8 @@ import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
-import { useAiAssistant } from '../assistant';
+import { AiAssistant, useAiAssistant } from '../assistant';
+import { fetchMessagesFromDB } from '../assistant/manager/message';
 
 import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
@@ -24,9 +25,10 @@ export const agentStateAtom = atom<Record<string, Config>>({});
 
 export function useServiceAiAgentChat(threadId: string) {
   const jotaiStore = useStore();
-  const assistant = useAiAssistant();
-  const assistantInitialMessages = assistant.initialMessages.useValue();
-  const isLoadingMessages = assistant.isLoadingMessages.useValue();
+  // useAiAssistant() must be called to run init/error/health side effects
+  useAiAssistant();
+  const assistantInitialMessages = AiAssistant.initialMessages.useValue();
+  const isLoadingMessages = AiAssistant.isLoadingMessages.useValue();
   const accessToken = useAccessToken();
   const activeTools = useAIActiveTools();
   const queryClient = useQueryClient();
@@ -204,14 +206,11 @@ export function useServiceAiAgentChat(threadId: string) {
     setIsChatReady(chat.status === 'ready');
   }, [chat.status, setIsChatReady]);
 
-  return {
-    messages: chat.messages,
-    isLoadingMessages,
-    sendMessage: (text: string) => {
-      assistant.isEmptyThread.set(false);
-      chat.sendMessage({ text });
+  const sendMessage = useCallback(
+    (text:string) => {
+      AiAssistant.isEmptyThread.set(false);
+      chat.sendMessage({text});
       if (chat.messages.length === 0) {
-        // We suggest a title for the thread based on the first message
         try {
           serviceAiAgentThreadSuggestTitle({
             accessToken: accessToken ?? 'NO-TOKEN',
@@ -223,15 +222,67 @@ export function useServiceAiAgentChat(threadId: string) {
             });
           });
         } catch (ex) {
-          // Renaming the thread is not important.
-          // If it fails, we just ignore it.
           logError('Unable to rename the thread:', ex);
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chat, accessToken, threadId, queryClient, virtualLabId, projectId]
+  );
+  const stop = useCallback(async () => {
+    chat.stop();
+    queryClient.invalidateQueries({
+      queryKey: keyBuilderAI.messages(threadId, virtualLabId, projectId),
+    });
+    const oldMessages = chat.messages;
+    const messages = await fetchMessagesFromDB(
+      queryClient,
+      { accessToken: accessToken ?? 'NO-TOKEN', virtualLabId, projectId },
+      threadId
+    );
+
+    // If the messages where not saved in the DB yet, we keep the local state.
+    if (messages.length >= oldMessages.length) {
+      chat.setMessages([
+        ...oldMessages.slice(0, oldMessages.length - 1),
+        ...messages.slice(oldMessages.length - 1),
+      ]);
+    }
+    // We add a dummy AI message to sync up with backend, in case messages where not yet saved in DB.
+    else if (oldMessages.length > 0 && oldMessages[oldMessages.length - 1]?.role === 'user') {
+      chat.setMessages([
+        ...oldMessages,
+        {
+          id: `temp-id-${crypto.randomUUID()}`,
+          role: 'assistant',
+          parts: [],
+        },
+      ]);
+    }
+  }, [chat, queryClient, accessToken, virtualLabId, projectId, threadId]);
+
+  useEffect(() => {
+    AiAssistant.chat.sync({
+      status: chat.status,
+      error: chat.error,
+      sendMessage,
+      stop,
+    });
+  }, [chat.status, chat.error, sendMessage, stop]);
+
+  useEffect(() => {
+    if (chat.status === 'ready') {
+      AiAssistant.chat.messages.set(chat.messages);
+    }
+  }, [chat.status, chat.messages]);
+
+  return {
+    messages: chat.messages,
+    isLoadingMessages,
+    sendMessage,
     status: chat.status,
     error: chat.error,
-    stop: chat.stop,
+    stop,
   };
 }
 

@@ -1,9 +1,19 @@
-import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
+import { getBrainAtlases } from '@/api/entitycore/queries/general/brain-atlas';
+import {
+  getBrainRegionHierarchiesWithSpecies,
+  getBrainRegionHierarchy,
+} from '@/api/entitycore/queries/general/brain-region';
+import {
+  getUserGroups,
+  getWorkspaceHierarchySpeciesPreference,
+} from '@/api/virtual-lab-svc/queries/user';
+import { config } from '@/config';
 import { getQueryClient } from '@/query-provider/server';
 import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
+import { keyBuilderAtlas, keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { ReactNode } from 'react';
@@ -13,7 +23,43 @@ type Props = {
 };
 
 export default async function Layout({ children }: Props) {
-  getQueryClient().prefetchQuery({
+  const queryClient = getQueryClient();
+
+  queryClient.prefetchQuery({
+    queryKey: keyBuilderHierarchy.hierarchies(),
+    queryFn: async () => {
+      const result = await getBrainRegionHierarchiesWithSpecies();
+      result.data
+        .map((o) => o.id)
+        .filter((id) => !config.EXCLUDED_HIERARCHY_IDS.includes(id))
+        .forEach((id) => {
+          queryClient.prefetchQuery({
+            queryKey: keyBuilderHierarchy.hierarchy({ id }),
+            queryFn: () => getBrainRegionHierarchy({ id }),
+            staleTime: Infinity,
+            gcTime: Infinity,
+          });
+        });
+      return result;
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  queryClient.prefetchQuery({
+    queryKey: keyBuilderAtlas.all(),
+    queryFn: () => getBrainAtlases({}),
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  queryClient.prefetchQuery({
+    queryKey: keyBuilderHierarchy.hierarchyPreference(),
+    queryFn: () => getWorkspaceHierarchySpeciesPreference(),
+    staleTime: Infinity,
+  });
+
+  queryClient.prefetchQuery({
     queryKey: keyBuilder.membership(),
     queryFn: getUserGroups,
   });

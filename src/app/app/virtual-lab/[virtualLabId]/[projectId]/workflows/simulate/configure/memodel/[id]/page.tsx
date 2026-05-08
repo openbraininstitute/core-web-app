@@ -9,23 +9,22 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
-import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
-import ScanConfig from '@/features/scan-config';
-import {
-  type ThreeDVisualizerQueryParamKeys,
-  threeDVisualizerState,
-  type WorkflowSimulatePanelKeys,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
+import { ScanConfiguration } from '@/features/scan-config';
+import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';
 import { PanelSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/panel-selector';
 import { NeuronVisualizer } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/neuron-visualizer';
 import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
-import { cn } from '@/utils/css-class';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type {
+  ThreeDVisualizerQueryParamKeys,
+  WorkflowSimulatePanelKeys,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import type { ExperimentStepKeys } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu';
 
 export default function Page({
@@ -53,32 +52,42 @@ export default function Page({
     queryFn: () => getMEModel({ id: modelId, context: { virtualLabId, projectId } }),
   });
 
-  const { data: campaignData } = useQuery({
+  const { data: campaignData, isLoading: isCampaignLoading } = useQuery({
     queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
     queryFn: async () => {
       if (!initialCampaignId) return null;
       return await resolveSimulationByCampaignId({
         id: initialCampaignId,
         context: { virtualLabId, projectId },
+        populate: ['config'],
       });
     },
+    enabled: !!initialCampaignId,
   });
 
-  if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
+  if (
+    queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit &&
+    (!initialCampaignId || (!isCampaignLoading && campaignData?.config.form))
+  ) {
     return (
-      <ScanConfig
-        entityId={entity.id}
-        entityType={ExtendedEntitiesTypeDict.MemodelCircuit}
-        virtualLabId={virtualLabId}
-        projectId={projectId}
-        initialConfig={campaignData?.config.form}
-        className="px-4 pt-2"
-      />
+      <div className="border-neutral-2 ml-2 h-full rounded-2xl border">
+        <ScanConfiguration
+          entityId={entity.id}
+          entityType={ExtendedEntitiesTypeDict.MemodelCircuit}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+          initialConfig={campaignData?.config.form}
+          className="px-4"
+        />
+      </div>
     );
+  }
+  if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
+    return null;
   }
 
   return (
-    <>
+    <WorkflowSimulateLayout>
       <div className="mb-2 w-full shrink-0">
         <Header />
       </div>
@@ -106,6 +115,6 @@ export default function Page({
           </ResponsiveSideViewer>
         </div>
       </div>
-    </>
+    </WorkflowSimulateLayout>
   );
 }

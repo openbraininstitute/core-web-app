@@ -1,6 +1,4 @@
-import isEqual from 'es-toolkit/compat/isEqual';
-import { type Atom, atom } from 'jotai';
-import { atomFamily } from 'jotai-family';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { arrayToTree } from 'performant-array-to-tree';
 
 import { getEtypes } from '@/api/entitycore/queries/annotations/etype';
@@ -10,147 +8,251 @@ import { getCellCompositions } from '@/api/entitycore/queries/general/cell-compo
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getAssetElement } from '@/api/entitycore/utils';
-import { tryCatch } from '@/api/utils';
 import { renameKeyDeep } from '@/components/tree/elements/helpers';
-import { brainRegionAtlasAtom } from '@/features/brain-atlas-viewer/context';
-import { brainRegionBasicCellGroupsRegionsHierarchyAtom } from '@/features/brain-region-hierarchy/context';
+import { config } from '@/config';
+import { useBrainRegionAtlasQuery } from '@/features/brain-atlas-viewer/context';
+import { usePrimaryHierarchyOfCurrentSpeciesQuery } from '@/features/brain-region-hierarchy/context';
 import { resolveBrainRegionCellComposition } from '@/features/cell-composition/composition-constructor';
+import { keyBuilderAnnotation } from '@/ui/use-query-keys/annotation';
+import { cellCompositionKeyBuilder } from '@/ui/use-query-keys/atlas';
 import { log } from '@/utils/logger';
 import { fetchAllPaginatedData } from '@/utils/pagination';
 
 import type { ICellCompositionRoot } from '@/api/entitycore/types/entities/cell-composition';
-import type { IAnnotation } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
 
 const defaultCellCompositionName = 'Cell Composition from Blue Brain Atlas';
 
-const cellCompositionSummaryAtom = atom(async (): Promise<ICellCompositionRoot> => {
-  const { data: cellComposition, error } = await tryCatch(
-    getCellCompositions({
-      filters: { name: defaultCellCompositionName },
-    })
-  );
-  if (error) throw error;
-  if (!cellComposition.data.length)
-    throw Error(`No cell composition found for ${defaultCellCompositionName}`);
+const useCellCompositionSummaryQuery = () => {
+  const {
+    data: cellComposition,
+    error: summaryError,
+    isLoading: loadingSummary,
+  } = useQuery({
+    queryKey: cellCompositionKeyBuilder.summary(),
+    queryFn: () =>
+      getCellCompositions({
+        filters: { name: defaultCellCompositionName },
+      }),
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
+    select: (data) => data.data,
+  });
 
   const summaryAsset = getAssetElement({
-    assets: cellComposition.data.at(0)?.assets,
+    assets: cellComposition?.at(0)?.assets,
     filter(i) {
       return i.label === AssetLabel.cell_composition_summary;
     },
   });
 
-  if (!summaryAsset) throw Error(`No summary asset found for ${defaultCellCompositionName}`);
+  const {
+    isLoading: loadingAsset,
+    data: cellCompositionSummary,
+    error: assetError,
+  } = useQuery({
+    queryKey: cellCompositionKeyBuilder.summaryAsset(cellComposition?.at(0)?.id!),
+    queryFn: () =>
+      downloadAsset<ICellCompositionRoot>({
+        entityType: EntityTypeDict.CellComposition,
+        entityId: cellComposition?.at(0)?.id!,
+        id: summaryAsset?.id!,
+      }),
+    enabled: !!cellComposition?.at(0)?.id! && !!summaryAsset?.id,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
+  });
 
-  const { data: cellCompositionSummary, error: assetError } = await tryCatch(
-    downloadAsset<ICellCompositionRoot>({
-      entityType: EntityTypeDict.CellComposition,
-      entityId: cellComposition.data.at(0)?.id!,
-      id: summaryAsset.id,
-    })
-  );
-  if (assetError) throw assetError;
-  return cellCompositionSummary;
-});
+  if (summaryError) {
+    return { error: summaryError, loading: loadingSummary, result: null };
+  }
+  if (!cellComposition?.length)
+    return {
+      error: new Error(`No cell composition found for ${defaultCellCompositionName}`),
+      loading: loadingSummary,
+      result: null,
+    };
+  if (!summaryAsset) {
+    return {
+      error: new Error(`No summary asset found for ${defaultCellCompositionName}`),
+      loading: loadingSummary,
+      result: null,
+    };
+  }
 
-export const annotationTypesAtom = atomFamily<WorkspaceContext, Atom<Promise<Array<IAnnotation>>>>(
-  (ctx: WorkspaceContext) => {
-    const childAtom = atom(async () => {
-      const [etypes, mtypes] = await Promise.all([
-        fetchAllPaginatedData({
-          fn: async (page, pageSize) => {
-            const result = await getEtypes({
-              ctx,
-              filters: { page, page_size: pageSize },
-            });
-            return { data: result.data || [] };
-          },
-          pageSize: 200,
+  if (assetError)
+    return {
+      error: new Error(`No summary asset found for ${defaultCellCompositionName}`),
+      loading: loadingSummary,
+      result: null,
+    };
+
+  return {
+    error: null,
+    result: cellCompositionSummary,
+    loading: loadingAsset || loadingSummary,
+  };
+};
+
+export const useAnnotationTypesQuery = (ctx: WorkspaceContext) => {
+  const annotations = useQueries({
+    queries: [
+      {
+        queryKey: keyBuilderAnnotation.annotations({
+          type: 'eType',
+          kind: 'all',
         }),
-        fetchAllPaginatedData({
-          fn: async (page, pageSize) => {
-            const result = await getMtypes({
-              ctx,
-              filters: { page, page_size: pageSize },
-            });
-            return { data: result.data || [] };
-          },
-          pageSize: 200,
+        queryFn: async () => {
+          const data = await fetchAllPaginatedData({
+            fn: async (page: number, pageSize: number) => {
+              const result = await getEtypes({
+                ctx,
+                filters: { page, page_size: pageSize },
+              });
+              return { data: result.data || [] };
+            },
+            pageSize: 200,
+          });
+          return { data };
+        },
+      },
+      {
+        queryKey: keyBuilderAnnotation.annotations({
+          type: 'mType',
+          kind: 'all',
         }),
-      ]);
-      return [...etypes, ...mtypes];
+        queryFn: async () => {
+          const data = await fetchAllPaginatedData({
+            fn: async (page: number, pageSize: number) => {
+              const result = await getMtypes({
+                ctx,
+                filters: { page, page_size: pageSize },
+              });
+              return { data: result.data || [] };
+            },
+            pageSize: 200,
+          });
+          return { data };
+        },
+      },
+    ],
+    combine: ([p1, p2]) => {
+      return {
+        result: [...(p1.data?.data ?? []), ...(p2.data?.data ?? [])],
+        loading: p1.isLoading || p2.isLoading,
+        error: p1.error || p2.error,
+      };
+    },
+  });
+  return annotations;
+};
+
+export const useCellCompositionQuery = ({ brainRegionId }: { brainRegionId?: string }) => {
+  const {
+    result: brainRegionAtlas,
+    loadingAtlas,
+    error: atlasError,
+  } = useBrainRegionAtlasQuery({ id: config.MOUSE_ATLAS__ID });
+  const {
+    result: brainRegions,
+    loading: loadingHierarchy,
+    error: hierarchyError,
+  } = usePrimaryHierarchyOfCurrentSpeciesQuery();
+  const {
+    result: cellComposition,
+    loading: loadingComposition,
+    error: errorSummary,
+  } = useCellCompositionSummaryQuery();
+
+  const emptyResult = {
+    totalComposition: {
+      neuron: { density: 0, count: 0 },
+      glia: { density: 0, count: 0 },
+    },
+    neurons: [],
+  };
+
+  if (!cellComposition || !brainRegions || !brainRegionAtlas.atlas) {
+    log('warn', 'Missing required data for composition', {
+      hasCellComposition: !!cellComposition,
+      hasBrainRegions: !!brainRegions,
+      hasBrainRegionAtlas: !!brainRegionAtlas.atlas,
     });
 
-    childAtom.debugLabel = 'annotation-types';
-    return childAtom;
-  },
-  isEqual
-);
+    return {
+      error: errorSummary || hierarchyError || atlasError,
+      result: emptyResult,
+      loading: loadingAtlas || loadingHierarchy || loadingComposition,
+    };
+  }
+  if (!brainRegionId)
+    return {
+      error: null,
+      result: emptyResult,
+      loading: loadingAtlas || loadingHierarchy || loadingComposition,
+    };
 
-export const cellCompositionAtom = atomFamily(({ brainRegionId }: { brainRegionId: string }) => {
-  const childAtom = atom(async (get) => {
-    try {
-      const [cellComposition, brainRegions, brainRegionAtlas] = await Promise.all([
-        get(cellCompositionSummaryAtom),
-        get(brainRegionBasicCellGroupsRegionsHierarchyAtom),
-        get(brainRegionAtlasAtom),
-      ]);
+  // Guard against species transition race condition:
+  // When switching species, the selectedBrainRegion atom updates immediately with the
+  // new species' brain region ID, but the hierarchy query may still return stale data
+  // from the previous species. Verify the brainRegionId exists in the current hierarchy
+  // before resolving composition to prevent cross-species mismatches.
+  const brainRegionExistsInHierarchy = brainRegions.options.some(
+    (option) => option.value === brainRegionId
+  );
+  if (!brainRegionExistsInHierarchy) {
+    log('warn', 'Brain region ID not found in current hierarchy — species transition in progress', {
+      brainRegionId,
+    });
+    return {
+      error: null,
+      result: emptyResult,
+      loading: true,
+    };
+  }
 
-      if (!cellComposition || !brainRegions || !brainRegionAtlas?.data?.data) {
-        log('warn', 'Missing required data for composition', {
-          hasCellComposition: !!cellComposition,
-          hasBrainRegions: !!brainRegions,
-          hasBrainRegionAtlas: !!brainRegionAtlas?.data?.data,
-        });
+  try {
+    const { nodes, totalComposition } = resolveBrainRegionCellComposition({
+      brainRegionId,
+      cellCompositionRoot: cellComposition,
+      atlasRegions: brainRegionAtlas.atlas,
+      hierarchy: brainRegions,
+    });
 
-        return {
-          totalComposition: {
-            neuron: { density: 0, count: 0 },
-            glia: { density: 0, count: 0 },
-          },
-          neurons: [],
-        };
-      }
-
-      const { nodes, totalComposition } = resolveBrainRegionCellComposition({
-        brainRegionId,
-        cellCompositionRoot: cellComposition,
-        atlasRegions: brainRegionAtlas.data?.data,
-        hierarchy: brainRegions,
-      });
-
-      const neurons = renameKeyDeep(
-        arrayToTree(
-          nodes.map(({ composition, label, ...node }) => ({
-            ...node,
-            density: composition.neuron.density,
-            count: composition.neuron.count,
-            title: label,
-          })),
-          {
-            dataField: null,
-            parentId: 'parentId',
-            childrenField: 'children',
-          }
-        ),
-        'title',
-        'name'
-      );
-
-      return { totalComposition, neurons };
-    } catch (error) {
-      log('error', 'Error in cellCompositionAtom:', error);
-      return {
+    const neurons = renameKeyDeep(
+      arrayToTree(
+        nodes.map(({ composition, label, ...node }) => ({
+          ...node,
+          density: composition.neuron.density,
+          count: composition.neuron.count,
+          title: label,
+        })),
+        {
+          dataField: null,
+          parentId: 'parentId',
+          childrenField: 'children',
+        }
+      ),
+      'title',
+      'name'
+    );
+    return {
+      error: null,
+      result: { totalComposition, neurons },
+      loading: loadingAtlas || loadingHierarchy || loadingComposition,
+    };
+  } catch (error) {
+    log('error', 'Error in cellCompositionAtom:', error);
+    return {
+      error,
+      result: {
         totalComposition: {
           neuron: { density: 0, count: 0 },
           glia: { density: 0, count: 0 },
         },
         neurons: [],
-      };
-    }
-  });
-
-  childAtom.debugLabel = `cell-composition-${brainRegionId}`;
-  return childAtom;
-});
+      },
+      loading: loadingAtlas || loadingHierarchy || loadingComposition,
+    };
+  }
+};

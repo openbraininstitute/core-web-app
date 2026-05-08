@@ -2,7 +2,6 @@ import { CloseOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { InputNumber } from 'antd';
 import { isNil } from 'es-toolkit/compat';
 
-import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 export default function ParameterSweep({
@@ -14,9 +13,8 @@ export default function ParameterSweep({
   onChange,
   disabled,
   k,
-  errorPathPrefix,
 }: {
-  value: number | number[] | null;
+  value: null | number | (number | null)[];
   min: number | undefined;
   max: number | undefined;
   exclusiveMin: number | undefined;
@@ -24,7 +22,6 @@ export default function ParameterSweep({
   onChange: (v: null | number | (number | null)[]) => void;
   disabled: boolean;
   k: string;
-  errorPathPrefix?: string;
 }) {
   const mode: 'single' | 'multiple' = Array.isArray(value) ? 'multiple' : 'single';
 

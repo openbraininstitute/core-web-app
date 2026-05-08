@@ -1,41 +1,54 @@
 'use client';
 
+import { notFound } from 'next/navigation';
 import { use } from 'react';
-import snakeCase from 'es-toolkit/compat/snakeCase';
 
+import { WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { getPrimaryConfigurationInput, getWorkflow } from '@/ui/segments/workflows/config';
+import { resolveExtendedTypeFromPathParamUrl } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TWorkspaceScope } from '@/constants';
+import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { KebabCase } from '@/utils/type';
 
 export default function Page({
   params,
-  searchParams,
 }: ServerSideComponentProp<
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   { scope: TWorkspaceScope | null }
 >) {
-  const { scope } = use(searchParams);
   const { type } = use(params);
+  const { type: targetType } = resolveExtendedTypeFromPathParamUrl({ pathParam: type });
 
-  const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
+  const workflow = getWorkflow({
+    activity: WorkflowActivityDictValue.build,
+    targetType,
+  });
+  const primaryInput = getPrimaryConfigurationInput({
+    activity: WorkflowActivityDictValue.build,
+    targetType,
+  });
+
+  const browseType = primaryInput?.type ?? workflow?.sourceType;
+  if (!workflow || !browseType) return notFound();
+
+  const extraQueryParams = primaryInput?.filters ?? workflow.filters ?? undefined;
 
   return (
     <BrowseEntityScope
       requireMiniDetailView
-      section={WorkspaceSection.BuildWorkflow}
+      section={WorkspaceSection.ScanConfigBuildWorkflow}
       requireBrainRegion={false}
-      classNames={{ container: 'max-h-full' }}
-      dataType={dataType}
-      scope={scope ?? WorkspaceScope.Public}
+      classNames={{ container: 'max-h-full', miniView: 'max-h-[calc(100vh-15rem)]' }}
+      dataType={browseType}
+      extraQueryParams={extraQueryParams}
       mainTableProps={{
         selectionType: undefined,
       }}
       miniViewProps={{
-        section: WorkspaceSection.BuildWorkflow,
+        section: WorkspaceSection.ScanConfigBuildWorkflow,
       }}
     />
   );

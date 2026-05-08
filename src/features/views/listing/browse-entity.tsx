@@ -12,12 +12,23 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
 } from 'react';
 
+import {
+  dataBrowseListingUsesBrainRegionHierarchy,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { ApiError } from '@/api/error';
 import { DEFAULT_PAGE_NUMBER, WorkspaceSection } from '@/constants';
 import { listExpandedViewRegistry } from '@/entity-configuration/definitions/list-expanded-view-defs';
+import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import {
+  speciesSelectionModeAtom,
+  workspaceHierarchySpeciesAtom,
+} from '@/features/brain-region-hierarchy/context';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import {
   useQueryExtendedEntityType,
   useQueryExtendedEntityTypeFacets,
@@ -46,14 +57,13 @@ import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type {
   EntityCoreIdentifiable,
   EntityCoreIdentifiableNamed,
 } from '@/api/entitycore/types/shared/global';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
-import type { TSortState } from '@/entity-configuration/definitions/types';
+import type { TSortStateList } from '@/entity-configuration/definitions/types';
 import type { Props as MainTableProps } from '@/ui/segments/data-table';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
@@ -63,9 +73,7 @@ const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
 type Props = {
   id?: string;
   section?: TWorkspaceSection;
-  /** whether to use the brain region filter in the query as some listing may not need it
-   * which means the query will fetch any brain region data
-   */
+  /** when omitted, derived from `dataType` (brain hierarchy only for single-neuron simulations in data) */
   requireBrainRegion?: boolean;
   /** whether to display the mini detail view */
   requireMiniDetailView?: boolean;
@@ -74,6 +82,7 @@ type Props = {
     miniView?: ComponentProps<'div'>['className'];
     filterClassNames?: {
       container?: string;
+      speciesSelector?: string;
     };
     tableClassNames?: {
       table?: ComponentProps<'div'>['className'];
@@ -100,16 +109,16 @@ type Props = {
    */
   allowQuery?: boolean;
   /** whether to display the brain region dropdown */
-  requireBrainRegionDropdown?: boolean;
+  requireSpeciesSelector?: boolean;
+  requireScopeSelector?: boolean;
   extraQueryParams?: Record<string, unknown>;
-  left?: ReactNode;
 };
 
 export function BrowseEntityScope({
   id,
   classNames,
   section = WorkspaceSection.Data,
-  requireBrainRegion = true,
+  requireBrainRegion: requireBrainRegionProp,
   requireMiniDetailView = true,
   defaultBrainRegion,
   dataType,
@@ -121,10 +130,13 @@ export function BrowseEntityScope({
   allowFilter = true,
   allowSearch = true,
   allowQuery = true,
-  requireBrainRegionDropdown,
+  requireSpeciesSelector,
+  requireScopeSelector,
   extraQueryParams,
-  left,
 }: Props) {
+  const requireBrainRegion =
+    requireBrainRegionProp ?? dataBrowseListingUsesBrainRegionHierarchy(dataType);
+
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
@@ -141,18 +153,55 @@ export function BrowseEntityScope({
     id,
   });
   const entity = getEntityByExtendedType({ type: dataType });
+
   const setPageNumber = useSetAtom(corePageNumberAtom(dataKey));
   const [sortState, setSortState] = useAtom(coreSortStateAtom({ key: dataKey }));
   const activeColumns = useAtomValue(coreActiveColumnsAtom({ dataType, key: dataKey }));
 
-  const { sync: runStorageSync, restore: runStorageRestore } = useDataListStateSnapshotActions({
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
+  const isAllSpeciesMode = speciesSelectionMode === SpeciesSelectionMode.All;
+
+  // track stable species identity (`all` vs hierarchy id).
+  // used to detect user-driven species/mode
+  // changes without resetting listing state on the initial mount (after snapshot restore)
+  const prevSpeciesKeyRef = useRef<string | undefined>(undefined);
+
+  const {
+    sync: runStorageSync,
+    restore: runStorageRestore,
+    reset: resetDataListState,
+  } = useDataListStateSnapshotActions({
     dataKey,
     dataType,
     section,
   });
 
+  // TODO: refactor this with the one in circuit
+  // when species or "all species" mode changes, reset table filters/search/sort/page for this listing
+  // skips while `workspaceSpecies` is briefly null during a focused-mode hierarchy switch
+  useEffect(() => {
+    const speciesKey =
+      speciesSelectionMode === SpeciesSelectionMode.All
+        ? SpeciesSelectionMode.All
+        : workspaceSpecies?.hierarchId
+          ? workspaceSpecies.hierarchId
+          : undefined;
+
+    if (speciesKey === undefined) return;
+
+    if (prevSpeciesKeyRef.current === undefined) {
+      prevSpeciesKeyRef.current = speciesKey;
+      return;
+    }
+    if (prevSpeciesKeyRef.current === speciesKey) return;
+
+    prevSpeciesKeyRef.current = speciesKey;
+    resetDataListState();
+  }, [speciesSelectionMode, workspaceSpecies?.hierarchId, resetDataListState]);
+
   const onSortChange = useCallback(
-    (newSortState: TSortState) => {
+    (newSortState: TSortStateList) => {
       setPageNumber(DEFAULT_PAGE_NUMBER);
       setSortState(newSortState);
       runStorageSync({ Sort: newSortState, Page: DEFAULT_PAGE_NUMBER });
@@ -165,6 +214,7 @@ export function BrowseEntityScope({
     sortState,
     setSortState: onSortChange,
   });
+
   const columns = uniqBy(
     allColumns.filter(({ key }) => (activeColumns || []).includes(key as string)),
     'key'
@@ -217,6 +267,7 @@ export function BrowseEntityScope({
     ...queryParameters,
     ...extraQueryParams,
     ...scopeFilter,
+    order_by: mergeOrderByWithOverride(extraQueryParams?.order_by, queryParameters?.order_by),
   };
 
   const { data, error, isFetching } = useQueryExtendedEntityType({
@@ -239,7 +290,12 @@ export function BrowseEntityScope({
     extraQueryParams,
     enabled: () => {
       if (!allowQuery) return false;
-      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+      // in "all species" mode we intentionally have no brain-region filter
+      if (
+        !isAllSpeciesMode &&
+        requireBrainRegion &&
+        !get(queryParameters, 'within_brain_region_brain_region_id', null)
+      )
         return false;
       return true;
     },
@@ -258,7 +314,11 @@ export function BrowseEntityScope({
     queryFilters,
     enabled: () => {
       if (!allowQuery) return false;
-      if (requireBrainRegion && !get(queryParameters, 'within_brain_region_brain_region_id', null))
+      if (
+        !isAllSpeciesMode &&
+        requireBrainRegion &&
+        !get(queryParameters, 'within_brain_region_brain_region_id', null)
+      )
         return false;
       return true;
     },
@@ -337,7 +397,8 @@ export function BrowseEntityScope({
             allowDelete={allowDelete}
             allowFilter={allowFilter}
             allowSearch={allowSearch}
-            requireBrainRegionDropdown={requireBrainRegionDropdown}
+            requireSpeciesSelector={requireSpeciesSelector}
+            requireScopeSelector={requireScopeSelector}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
             dataScope={scope}
@@ -362,8 +423,8 @@ export function BrowseEntityScope({
             }}
             {...mainTableProps}
             filterClassNames={classNames?.filterClassNames}
+            // @ts-expect-error
             expandableOptions={expandableOptions}
-            left={left}
             facets={{
               data: facets,
               error: facetsError,
