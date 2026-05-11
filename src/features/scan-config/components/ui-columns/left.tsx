@@ -18,7 +18,7 @@ import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
 import { resetConfig } from '../hooks/schema';
 
-import type { Config } from '@/features/scan-config/components/components';
+import type { Config } from '@/features/scan-config/types';
 
 export default function Left({
   schema,
