@@ -1,23 +1,23 @@
 'use client';
 
 import { CheckOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
 import { Form } from 'antd';
-import type { ZodObject, ZodRawShape } from 'zod';
+import { useMemo, useState } from 'react';
 
-import { AsyncSelectFormItem, type AsyncSelectOption } from '@/ui/molecules/async-select';
 import { getMtypes } from '@/api/entitycore/queries/annotations/mtype';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { keyBuilder } from '@/ui/use-query-keys/data';
+import { AsyncSelectFormItem, type AsyncSelectOption } from '@/ui/molecules/async-select';
 import {
-  renderLabel,
   createZodFieldValidator,
   RequiredFieldMarker,
+  renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
-import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
+import type { ZodObject, ZodRawShape } from 'zod';
 import type { IMType } from '@/api/entitycore/types/shared/global';
+import type { PaginationFilter, SearchFilter } from '@/api/entitycore/types/shared/request';
 
 interface ICustomRendererProps {
   data: AsyncSelectOption<IMType>;
@@ -59,10 +59,12 @@ function CustomRenderer({ data, selected, onSelect }: ICustomRendererProps) {
 
 type Props<TSchema extends ZodObject<ZodRawShape>> = {
   schema: TSchema;
+  required?: boolean;
 };
 
 export function MTypeClassificationSelector<TSchema extends ZodObject<ZodRawShape>>({
   schema,
+  required = true,
 }: Props<TSchema>) {
   const form = Form.useFormInstance();
   const { virtualLabId, projectId } = useWorkspace();
@@ -95,10 +97,14 @@ export function MTypeClassificationSelector<TSchema extends ZodObject<ZodRawShap
     <>
       <Form.Item
         name="mtype_class_id"
-        label={renderLabel('Mtype classification', 'main', RequiredFieldMarker)}
+        label={renderLabel(
+          'Mtype classification',
+          'main',
+          required ? RequiredFieldMarker : undefined
+        )}
         rules={[
           {
-            required: true,
+            required,
             validator: createZodFieldValidator(schema, 'mtype_class_id', form),
           },
         ]}

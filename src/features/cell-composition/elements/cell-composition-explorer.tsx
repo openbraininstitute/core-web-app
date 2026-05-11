@@ -2,10 +2,25 @@
 
 import { ErrorBoundary } from 'react-error-boundary';
 
-import { CellCompositionMETypeTree } from '@/features/cell-composition/elements/m-e-type-tree';
 import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
+import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
+import { SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
+import { CellCompositionMETypeTree } from '@/features/cell-composition/elements/m-e-type-tree';
 
 export function CellCompositionExplorer() {
+  const {
+    result: { workspaceHierarchyId },
+  } = useBrainRegionRootHierarchyQuery();
+  const { runtimeHierarchyById } = useHierarchyRuntimeMetadataQuery();
+  const isMouse =
+    runtimeHierarchyById.get(workspaceHierarchyId)?.species.taxonomyId ===
+    SPECIES_TAXONOMY_IDS.MUS_MUSCULUS;
+
+  if (!isMouse) {
+    return null;
+  }
+
   return (
     <ErrorBoundary
       FallbackComponent={withErrorConfig({

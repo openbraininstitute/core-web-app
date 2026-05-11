@@ -1,8 +1,8 @@
-import { Data, Layout } from 'plotly.js-dist-min';
+import { TgdColor } from '@/morpho-viewer';
 
-import { TgdColor } from '@bbp/morphoviewer';
-import { IonChannelRecordingPlotLine } from '../../ion-channel-recording-parser';
-import { usePlotParams } from './hooks';
+import type { Data, Layout } from 'plotly.js-dist-min';
+import type { IonChannelRecordingPlotLine } from '../../ion-channel-recording-parser';
+import type { usePlotParams } from './hooks';
 
 export function factory(params: ReturnType<typeof usePlotParams>['paramsRepetition']): {
   data: Data[];

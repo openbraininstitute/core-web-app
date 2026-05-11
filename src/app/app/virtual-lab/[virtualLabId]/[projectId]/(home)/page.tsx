@@ -1,7 +1,6 @@
 import { tryCatch } from '@/api/utils';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getQueryClient } from '@/query-provider/server';
-import { MainVideo } from '@/ui/segments/project/get-started/sections/main-video';
 import { MainCards } from '@/ui/segments/project/get-started/sections/quick-access';
 import { TutorialList } from '@/ui/segments/project/get-started/sections/tutorials';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -47,7 +46,6 @@ export default async function Page(props: ServerSideComponentProp<WorkspaceConte
   return (
     <div className="w-full flex flex-col pr-2">
       <MainCards context={context} />
-      {/* <MainVideo /> */}
       <TutorialList />
     </div>
   );

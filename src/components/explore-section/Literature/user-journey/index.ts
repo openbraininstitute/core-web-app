@@ -1,6 +1,5 @@
 'use client';
 
-import { defaultExploreRegion } from '@/features/brain-region-hierarchy/context';
 import GenericEvent from '@/util/generic-event';
 import { logError } from '@/util/logger';
 import { getLocalStorageHelper } from '@/util/storage';
@@ -30,7 +29,7 @@ function isUserJourney(data: unknown): data is UserJourney {
   try {
     assertUserJourney(data);
     return true;
-  } catch (ex) {
+  } catch {
     logError('Invalid format for UserJourney:', data);
     return false;
   }
@@ -54,7 +53,7 @@ class UserJourneyTracker {
         [
           {
             timestamp: Date.now(),
-            region: defaultExploreRegion.title,
+            region: 'Cerebrum',
             artifact: null,
           },
         ],
@@ -122,4 +121,5 @@ class UserJourneyTracker {
 }
 
 const userJourneyTracker = new UserJourneyTracker();
+
 export { userJourneyTracker };

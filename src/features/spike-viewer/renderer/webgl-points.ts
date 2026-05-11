@@ -4,7 +4,7 @@ const VERTEX_SHADER = `#version 300 es
 layout(location = 0) in float a_x;
 layout(location = 1) in float a_y;
 uniform vec4 u_bounds; // xMin, yMin, xMax, yMax
-uniform float u_pointSize;
+uniform mediump float u_pointSize;
 
 void main() {
   float x = 2.0 * (a_x - u_bounds.x) / (u_bounds.z - u_bounds.x) - 1.0;
@@ -16,13 +16,23 @@ void main() {
 const FRAGMENT_SHADER = `#version 300 es
 precision mediump float;
 uniform vec4 u_color;
+uniform float u_pointSize;
 out vec4 fragColor;
 
 void main() {
-  // Vertical tick mark: only draw the center strip
+  // Vertical tick: solid core with ~1 px outer feather so subpixel
+  // jitter shows as opacity falloff at the edge instead of a ±1 px
+  // size step. Keeping the feather *outside* the core preserves a
+  // fully opaque body so dense overlapping ticks read as solid colour
+  // rather than accumulating a translucent haze.
+  float feather = 1.0 / max(u_pointSize, 1.0);
   float dx = abs(gl_PointCoord.x - 0.5);
-  if (dx > 0.2) discard;
-  fragColor = u_color;
+  float dy = abs(gl_PointCoord.y - 0.5);
+  float alphaX = 1.0 - smoothstep(0.2, 0.2 + feather, dx);
+  float alphaY = 1.0 - smoothstep(0.5 - feather, 0.5, dy);
+  float alpha = alphaX * alphaY;
+  if (alpha <= 0.001) discard;
+  fragColor = vec4(u_color.rgb, u_color.a * alpha);
 }`;
 
 type PopulationBuffer = {
@@ -91,7 +101,7 @@ export class WebGLPoints {
     // biome-ignore lint/correctness/useHookAtTopLevel: WebGL API, not a React hook
     gl.useProgram(this.program);
     gl.uniform4f(this.uBounds, bounds.xMin, bounds.yMin, bounds.xMax, bounds.yMax);
-    gl.uniform1f(this.uPointSize, pointSize * (window.devicePixelRatio || 1));
+    gl.uniform1f(this.uPointSize, Math.round(pointSize * (window.devicePixelRatio || 1)));
 
     for (const pop of this.populations) {
       if (!pop.visible || pop.count === 0) continue;
@@ -127,7 +137,11 @@ export class WebGLPoints {
     this.uColor = glRequire(gl.getUniformLocation(this.program, 'u_color'), 'u_color');
     this.uPointSize = glRequire(gl.getUniformLocation(this.program, 'u_pointSize'), 'u_pointSize');
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    // Separate blend for color vs alpha: standard "over" for colour, but
+    // accumulate destination alpha toward 1.0 so the canvas stays opaque
+    // in dense regions. Without this, overlapping feathered edges keep
+    // dst.a < 1 and the browser composites pale blue over the white page.
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   }
 
   private initBuffers(populations: SpikePopulation[], colors: string[]) {

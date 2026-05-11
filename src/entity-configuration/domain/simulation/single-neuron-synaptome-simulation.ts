@@ -6,7 +6,6 @@ import {
   getSingleNeuronSynaptomeSimulationIOResult,
   getSingleNeuronSynaptomeSimulations,
 } from '@/api/entitycore/queries/simulation/single-neuron-synaptome-simulation';
-import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
@@ -63,7 +62,7 @@ export const SingleNeuronSynaptomeSimulation: EntityCoreTypeConfig<ISingleNeuron
       },
       query: {
         count: (...params) => {
-          const filters = discardBrainRegionQueryParams(params[0].filters);
+          const filters = params[0].filters;
           return getSingleNeuronSynaptomeSimulations({
             ...params,
             context: params[0].context,

@@ -9,6 +9,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 import { SelectPopover } from '@/ui/molecules/select-popover';
+import { AnalysisNotebookTemplate } from '@/ui/segments/contribute/analysis-notebook-template';
 import { CellMorphology } from '@/ui/segments/contribute/cell-morphology';
 import { ElectricalCellRecording } from '@/ui/segments/contribute/electrical-cell-recording';
 import { EMCellMesh } from '@/ui/segments/contribute/em-cell-mesh';
@@ -75,9 +76,10 @@ function ExtendedEntitiesSelector({ onSelectEntityType }: IExtendedEntitiesSelec
 interface IRenderEntityTypeContentProps {
   type: TExtendedEntitiesTypeDict;
   sessionId: string;
+  onClose: () => void;
 }
 
-function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeContentProps) {
+function RenderEntityTypeContent({ type, sessionId: sId, onClose }: IRenderEntityTypeContentProps) {
   return match({ type })
     .with(
       {
@@ -98,6 +100,9 @@ function RenderEntityTypeContent({ type, sessionId: sId }: IRenderEntityTypeCont
       <ExperimentalSynapsesPerConnection sessionId={sId} />
     ))
     .with({ type: ExtendedEntitiesTypeDict.EMCellMesh }, () => <EMCellMesh sessionId={sId} />)
+    .with({ type: ExtendedEntitiesTypeDict.Notebook }, () => (
+      <AnalysisNotebookTemplate sessionId={sId} onClose={onClose} />
+    ))
     .otherwise(() => null);
 }
 
@@ -140,7 +145,7 @@ export function ContributionModal() {
     .with(
       { sessionId: P.string.select('sId'), entityType: P.string.select('type') },
       ({ sId, type }) => {
-        return <RenderEntityTypeContent type={type} sessionId={sId} />;
+        return <RenderEntityTypeContent type={type} sessionId={sId} onClose={onClose} />;
       }
     )
     .otherwise(() => null);

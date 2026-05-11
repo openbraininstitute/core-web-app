@@ -6,7 +6,6 @@ import { classNames } from '@/util/utils';
 
 import { IconGear } from '../../icons/gear';
 import { useAIToolsInvertedSelection } from '../../state';
-import { WaveLoader } from '../../wave-loader';
 import { IconClose } from './icon-close';
 import ToolCard from './tool-card';
 import { IconChecked } from './tool-card/icon-checked';
@@ -102,7 +101,6 @@ export default function ToolsSelector({ className, tools, open, onClose }: Tools
         ) : (
           <div className={styles.loading}>
             <div>Loading...</div>
-            <WaveLoader />
           </div>
         )}
       </div>

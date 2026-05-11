@@ -1,42 +1,34 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
-import { Checkbox } from 'antd';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { Loader } from '@/components/loader';
 import { WorkspaceSection } from '@/constants';
 import { CostConfirmationModal } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
-import {
-  buildActivityStatusMap,
-  findLatestExecutionForEntity,
-} from '@/features/scan-config/helpers';
-import {
-  useScanConfigLaunchMutation,
-  useScanConfigTaskRunner,
-} from '@/features/scan-config/task-runner';
+import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
+import { TaskConfigSelectionList } from '@/features/scan-config/components/shared/task-config-selection-list';
+import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-launch-button';
 import {
   ActivityCustomFileRenderer,
   ScanConfigActivity,
   type TActivityCustomFile,
 } from '@/features/scan-config/types';
-import { SkeletonizationInOutFiles } from '@/features/scan-config/use-cases/skeletonization/in-out-files';
-import { SkeletonizationConfigsLeftMenu } from '@/features/scan-config/use-cases/skeletonization/left-menu';
+import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
+import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { messages as textMessages } from '@/i18n/en/scan-config';
-import { MiniDetailViewRenderer, MiniDetailViewTheme } from '@/ui/segments/mini-detail-view';
-import { classNames } from '@/util/utils';
+import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
+import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
-import type { CheckboxProps } from 'antd';
+import { InOutFiles } from './in-out-files';
+
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
-
-import styles from '@/features/scan-config/scan-config.module.css';
 
 type Props = {
   campaignId: string;
@@ -47,50 +39,45 @@ type Props = {
 export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  const [selectedConfigIds, setSelectedConfigIds] = useState<string[]>([]);
+  const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
   const [activeConfig, setActiveConfig] =
     useState<ITaskConfig<TSkeletonizationTaskConfigMeta> | null>(null);
-  const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [selectedFile, setSelectedFile] = useState<TActivityCustomFile | undefined>(undefined);
   const [showCostModal, setShowCostModal] = useState(false);
+  const [executionByConfigId, setExecutionByConfigId] = useState<Map<string, ITaskActivity | null>>(
+    new Map()
+  );
 
   const { mutateAsync: runSkeletonization, isPending: runSkeletonizationPending } =
-    useScanConfigLaunchMutation({
+    useTaskLaunchMutation({
       context,
       obiOneTaskType: ObiOneTaskTypeDict.Skeletonization,
       executionActivityType: TaskActivityType.SkeletonizationExecution,
       notificationKey: 'skeletonization-config-error',
       failureMessage: textMessages[ScanConfigActivity.Process].GenericFailed,
       logTopic: 'Skeletonization',
+      requiresConsent: true,
     });
 
-  const {
-    configGenerationLoading,
-    configsResponse,
-    configsLoading,
-    executionsResponse,
-    executionsLoading,
-  } = useScanConfigTaskRunner<TSkeletonizationTaskConfigMeta>({
-    context,
-    campaignId,
-    configGenerationActivityType: TaskActivityType.SkeletonizationConfigGeneration,
-    executionActivityType: TaskActivityType.SkeletonizationExecution,
-    taskConfigType: TaskConfigType.SkeletonizationConfig,
-    pauseExecutionPolling: runSkeletonizationPending,
-  });
-
-  const statusMap = useMemo(() => {
-    return buildActivityStatusMap({
-      entityIds: configsResponse?.configIds ?? [],
-      executions: executionsResponse?.data ?? [],
+  const { configGenerationLoading, configsResponse, configsLoading } =
+    useTaskRunner<TSkeletonizationTaskConfigMeta>({
+      context,
+      campaignId,
+      configGenerationActivityType: TaskActivityType.SkeletonizationConfigGeneration,
+      executionActivityType: TaskActivityType.SkeletonizationExecution,
+      taskConfigType: TaskConfigType.SkeletonizationConfig,
+      pauseExecutionPolling: runSkeletonizationPending,
+      loadExecutions: false,
     });
-  }, [configsResponse?.configIds, executionsResponse?.data]);
+
+  const configs = configsResponse?.configList ?? [];
+
+  const resolvedActiveConfig = activeConfig ?? configs[0] ?? null;
 
   const activeConfigExecution = useMemo(() => {
-    if (!activeConfig) return undefined;
-    const executions = executionsResponse?.data ?? [];
-    return findLatestExecutionForEntity(executions, activeConfig.id);
-  }, [activeConfig, executionsResponse?.data]);
+    if (!resolvedActiveConfig) return undefined;
+    return executionByConfigId.get(resolvedActiveConfig.id) ?? undefined;
+  }, [executionByConfigId, resolvedActiveConfig]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
 
@@ -103,40 +90,36 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
 
   const onSelectedForSkeletonizationChange = useCallback((configId: string, selected: boolean) => {
     if (selected) {
-      setSelectedConfigIds((prev) => [...prev, configId]);
+      setSelectedConfigIds((prev) => [...(prev ?? []), configId]);
     } else {
-      setSelectedConfigIds((prev) => prev.filter((id) => id !== configId));
+      setSelectedConfigIds((prev) => (prev ?? []).filter((id) => id !== configId));
     }
+  }, []);
+
+  const onExecutionLoad = useCallback((configId: string, execution: ITaskActivity | null) => {
+    setExecutionByConfigId((prev) => {
+      if (prev.get(configId) === execution) return prev;
+      return new Map(prev).set(configId, execution);
+    });
   }, []);
 
   const selectableConfigIds = useMemo(() => {
     return (
       (configsResponse?.configList ?? [])
         .filter((config) => {
-          const status = statusMap.get(config.id);
+          if (!executionByConfigId.has(config.id)) return false;
+          const status = executionByConfigId.get(config.id)?.status;
           return !status || status === ActivityStatus.CREATED || status === ActivityStatus.ERROR;
         })
         .map((c) => c.id) ?? []
     );
-  }, [configsResponse?.configList, statusMap]);
+  }, [configsResponse?.configList, executionByConfigId]);
 
-  useEffect(() => {
-    if (
-      configsResponse?.configList &&
-      configsResponse.configList.length > 0 &&
-      !initialSelectionDone &&
-      !executionsLoading
-    ) {
-      setSelectedConfigIds(selectableConfigIds);
-      setInitialSelectionDone(true);
-    }
-  }, [configsResponse?.configList, executionsLoading, initialSelectionDone, selectableConfigIds]);
+  const allConfigStatusesLoaded =
+    configs.length > 0 && configs.every((config) => executionByConfigId.has(config.id));
 
-  useEffect(() => {
-    if (configsResponse?.configList && configsResponse.configList.length > 0 && !activeConfig) {
-      onActiveConfigChange(configsResponse.configList[0]);
-    }
-  }, [configsResponse?.configList, activeConfig, onActiveConfigChange]);
+  const resolvedSelectedConfigIds =
+    selectedConfigIds ?? (allConfigStatusesLoaded ? selectableConfigIds : []);
 
   const onRun = async (configIdsToRun: string[]) => {
     await runSkeletonization(configIdsToRun);
@@ -146,9 +129,9 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
   const costModalItems = useMemo(
     () =>
       (configsResponse?.configList ?? [])
-        .filter((c) => selectedConfigIds.includes(c.id))
+        .filter((c) => resolvedSelectedConfigIds.includes(c.id))
         .map((c) => ({ id: c.id, name: c.name })),
-    [configsResponse?.configList, selectedConfigIds]
+    [configsResponse?.configList, resolvedSelectedConfigIds]
   );
 
   const onCostConfirm = (confirmedIds: string[]) => {
@@ -156,100 +139,79 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
     onRun(confirmedIds);
   };
 
-  const onSelectedAll: CheckboxProps['onChange'] = (e) => {
-    setSelectedConfigIds(e.target.checked ? selectableConfigIds : []);
-  };
-
-  const allSelected = useMemo(
-    () => selectableConfigIds.length > 0 && selectableConfigIds.length === selectedConfigIds.length,
-    [selectableConfigIds, selectedConfigIds]
-  );
-
-  const launchBtnLabelPrefix = selectedConfigIds.length ? `(${selectedConfigIds.length})` : '';
-  const loading = configsLoading || configGenerationLoading || executionsLoading;
+  const launchBtnLabelPrefix = resolvedSelectedConfigIds.length
+    ? `(${resolvedSelectedConfigIds.length})`
+    : '';
+  const loading = configGenerationLoading || configsLoading;
 
   return (
-    <div className={styles.threeColumns}>
-      <div className="border-r border-gray-200 pr-4">
-        <div className="flex h-full flex-col gap-4 overflow-y-hidden">
-          <Checkbox
-            indeterminate={
-              selectedConfigIds.length > 0 && selectedConfigIds.length < selectableConfigIds.length
-            }
-            onChange={onSelectedAll}
-            checked={allSelected}
-            disabled={runSkeletonizationPending || selectableConfigIds.length === 0}
-          >
-            Select all
-          </Checkbox>
-          <div className="flex grow flex-col justify-start gap-5 overflow-y-auto">
-            {loading && (
-              <div className="flex h-full items-center justify-center">
-                <Loader className="text-neutral-3" />
-              </div>
-            )}
-            {!loading &&
-              configsResponse?.configList?.map((config) => (
-                <SkeletonizationConfigsLeftMenu
-                  key={config.id}
-                  selected={activeConfig?.id === config.id}
-                  config={config}
-                  execStatus={statusMap.get(config.id)}
-                  onSelect={() => onActiveConfigChange(config)}
-                  onSelectedForSkeletonizationChange={onSelectedForSkeletonizationChange}
-                  selectedForSkeletonization={selectedConfigIds.includes(config.id)}
-                  selectionDisabled={runSkeletonizationPending}
-                />
-              ))}
-          </div>
-          <button
-            className={classNames(
-              'min-h-[50] w-full cursor-pointer rounded-3xl p-2 text-white',
-              'bg-[linear-gradient(94.93deg,#389E0D_18.84%,#143805_116.7%)]',
-              'disabled:cursor-not-allowed disabled:bg-gray-400 disabled:bg-none'
-            )}
-            type="button"
-            onClick={() => setShowCostModal(true)}
-            disabled={runSkeletonizationPending || selectedConfigIds.length === 0}
-          >
-            <div className="flex justify-center gap-4">
-              <span className="pl-10">Launch skeletonizations {launchBtnLabelPrefix}</span>
-              <div className="w-6">{runSkeletonizationPending && <LoadingOutlined />}</div>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      <div className="relative border-r border-gray-200 px-4">
-        {!!activeConfig && (
-          <SkeletonizationInOutFiles
-            config={activeConfig}
-            execStatus={activeConfigExecStatus}
-            execution={activeConfigExecution}
-            selectedFile={selectedFile}
-            context={context}
-            onSelect={setSelectedFile}
-          />
-        )}
-      </div>
-
-      <div className="relative pl-4">
-        {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
-          <FileViewer file={selectedFile} className="h-full" context={context} />
-        )}
-        {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
-          <div className="h-full">
-            <MiniDetailViewRenderer
-              section={WorkspaceSection.Data}
-              record={selectedFile.entity as ICellMorphology}
-              dataType={EntityTypeDict.CellMorphology}
-              theme={MiniDetailViewTheme.Light}
-              enableAnimation={false}
+    <>
+      <ResultsLayout
+        campaignId={campaignId}
+        left={
+          <div className="flex h-full flex-col gap-4 overflow-y-hidden w-full">
+            <TaskConfigSelectionList
+              campaignId={campaignId}
+              configs={configs}
+              selectableConfigIds={selectableConfigIds}
+              selectedConfigIds={resolvedSelectedConfigIds}
+              activeConfigId={resolvedActiveConfig?.id}
+              loading={loading}
+              selectionDisabled={runSkeletonizationPending}
+              fallbackColor="#8c8c8c"
+              context={context}
+              executionActivityType={TaskActivityType.SkeletonizationExecution}
+              pauseStatusPolling={runSkeletonizationPending}
+              executionByConfigId={executionByConfigId}
+              onSelectConfig={onActiveConfigChange}
+              onCheckedChange={onSelectedForSkeletonizationChange}
+              onToggleSelectAll={(checked) =>
+                setSelectedConfigIds(checked ? selectableConfigIds : [])
+              }
+              onExecutionLoad={onExecutionLoad}
+            />
+            <TaskLaunchButton
+              label="Launch skeletonizations"
+              countLabel={launchBtnLabelPrefix}
+              pending={runSkeletonizationPending}
+              disabled={runSkeletonizationPending || resolvedSelectedConfigIds.length === 0}
+              onClick={() => setShowCostModal(true)}
             />
           </div>
-        )}
-      </div>
-
+        }
+        middle={
+          !!resolvedActiveConfig && (
+            <div className="h-full bg-background! w-full">
+              <InOutFiles
+                config={resolvedActiveConfig}
+                execStatus={activeConfigExecStatus}
+                execution={activeConfigExecution}
+                selectedFile={selectedFile}
+                context={context}
+                onSelect={setSelectedFile}
+              />
+            </div>
+          )
+        }
+        right={
+          <>
+            {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
+              <FileViewer file={selectedFile} className="h-full" context={context} />
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
+              <div className="h-full">
+                <MiniDetailViewRenderer
+                  section={WorkspaceSection.Data}
+                  record={selectedFile.entity as ICellMorphology}
+                  dataType={EntityTypeDict.CellMorphology}
+                  theme={MiniDetailViewTheme.Light}
+                  enableAnimation={false}
+                />
+              </div>
+            )}
+          </>
+        }
+      />
       <CostConfirmationModal
         open={showCostModal}
         onClose={() => setShowCostModal(false)}
@@ -259,6 +221,6 @@ export function SkeletonizationTab({ campaignId, virtualLabId, projectId }: Prop
         workflowLabel="skeletonizations"
         context={context}
       />
-    </div>
+    </>
   );
 }

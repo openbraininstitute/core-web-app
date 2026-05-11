@@ -14,7 +14,7 @@ function extractStorageIdsFromToolResult(result: any): string[] {
     return Array.isArray(result.storage_id) ? result.storage_id : [result.storage_id];
   }
 
-  const fileIdentifier = result.image_link ?? result.url_link;
+  const fileIdentifier = result.imageLink ?? result.image_link ?? result.url_link;
   if (!fileIdentifier) return [];
 
   const urlLinks = Array.isArray(fileIdentifier) ? fileIdentifier : [fileIdentifier];

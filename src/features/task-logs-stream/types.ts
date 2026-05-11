@@ -86,6 +86,7 @@ export interface ITaskLogsStreamState {
   entries: ILogEntry[];
   streamError: string | null;
   isLoading: boolean;
+  isStreaming: boolean;
 }
 
 export const LogLevelDict = {
@@ -149,7 +150,7 @@ export interface IJobRead {
   error_reason: TJobErrorReason | string | null;
   start_time: string | null;
   end_time: string | null;
-  logs: Record<string, unknown> | null;
+  logs: { stream: Record<string, unknown> | null } | null;
   inputs: string[];
   code: IJobCode;
   resources: IJobResources;

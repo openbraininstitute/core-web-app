@@ -1,4 +1,4 @@
-import { CheckOutlined, CopyOutlined } from '@ant-design/icons';
+import { RiCheckLine, RiFileCopyLine } from '@remixicon/react';
 
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { Button } from '@/ui/molecules/button';
@@ -40,9 +40,9 @@ export function ButtonCopyId({
               )}
             >
               {copyingCampaignId ? (
-                <CheckOutlined className="text-green-400! text-sm" />
+                <RiCheckLine className="text-green-400! text-sm" />
               ) : (
-                <CopyOutlined className="text-primary-8 text-sm" />
+                <RiFileCopyLine className="text-primary-8 text-sm" />
               )}
             </div>
           </Button>

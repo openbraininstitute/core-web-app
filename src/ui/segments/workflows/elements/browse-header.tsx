@@ -1,14 +1,14 @@
 'use client';
 
-import { getDropdownOptionsByCategory } from '@/ui/segments/workflows/elements/helpers';
+import { useFlags } from '@/features/feature-flags';
+import { listWorkflows } from '@/ui/segments/workflows/config';
 import {
   CategorySelectScrollable,
   EntityTypeSelectScrollable,
 } from '@/ui/segments/workflows/elements/selectors';
-import { useFlags } from '@/features/feature-flags';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TActivityValue } from '@/ui/segments/workflows/elements/helpers';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 const WorkflowScope = {
   Public: 'public',
@@ -93,8 +93,12 @@ export function ActivityAndTypeSelectors({
     onActivityChange(v);
     if (v) {
       const type =
-        getDropdownOptionsByCategory(v, featureFlags).enabledOptions.at(0)?.options.at(0)?.value ??
-        null;
+        listWorkflows({
+          activity: v,
+          flags: featureFlags,
+          context: 'configure',
+          sort: 'order',
+        }).find((w) => !w.disabled)?.targetType ?? null;
       onEntityTypeChange(type);
       onNavigate?.(type);
     }

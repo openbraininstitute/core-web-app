@@ -5,6 +5,11 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 
+export {
+  buildActivityStatusMap,
+  findLatestExecutionForEntity,
+} from '@/features/task-runner/status';
+
 /**
  * All valid config keys the AI agent state can hold.
  */
@@ -61,56 +66,5 @@ export const ScanConfigCampaignOriginActionDict = {
   Task: 'task',
 } as const;
 
-import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
-import type { TActivityStatus } from '@/api/entitycore/types/shared/activity';
-
-/**
- * find all executions whose `used` list references the given entity ID,
- * sorted by creation date descending (most recent first)
- */
-function getExecutionsForEntity(
-  executions: Array<ITaskActivity>,
-  entityId: string
-): Array<ITaskActivity> {
-  return executions
-    .filter((exec) => exec.used?.some((ref) => ref.id === entityId))
-    .sort((a, b) => new Date(b.creation_date).getTime() - new Date(a.creation_date).getTime());
-}
-
-/**
- * build a map of entity ID → latest execution status.
- *
- * for each entity in `entityIds`, finds the most recent execution that
- * references it in `used`, and maps the entity ID to that execution's status
- * entities with no executions are omitted from the map
- */
-export function buildActivityStatusMap({
-  entityIds,
-  executions,
-}: {
-  entityIds: Array<string>;
-  executions: Array<ITaskActivity>;
-}): Map<string, TActivityStatus> {
-  const map = new Map<string, TActivityStatus>();
-
-  for (const entityId of entityIds) {
-    const sorted = getExecutionsForEntity(executions, entityId);
-    if (sorted.length > 0) {
-      map.set(entityId, sorted[0].status);
-    }
-  }
-
-  return map;
-}
-
-/**
- * find the most recent execution that references the given entity ID
- * in its `used` list. Returns `undefined` if no execution exists.
- */
-export function findLatestExecutionForEntity(
-  executions: Array<ITaskActivity>,
-  entityId: string
-): ITaskActivity | undefined {
-  const sorted = getExecutionsForEntity(executions, entityId);
-  return sorted[0];
-}
+export type TScanConfigCampaignOriginActionDict =
+  (typeof ScanConfigCampaignOriginActionDict)[keyof typeof ScanConfigCampaignOriginActionDict];

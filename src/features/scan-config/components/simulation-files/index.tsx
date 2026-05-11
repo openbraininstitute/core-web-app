@@ -1,15 +1,16 @@
 import { sortBy } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
-import { loadable } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
-import { Loader } from '@/components/loader';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
+import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
+import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
+import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { useLastTruthyValue } from '@/hooks/hooks';
-import { classNames } from '@/util/utils';
+import { createLoadableAtom } from '@/utils/jotai-loadable';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { WorkspaceContext } from '@/types/common';
@@ -40,95 +41,81 @@ export function SimulationFiles({
 
   const loading = inputLoading || outputLoading;
 
+  const prioritizedInputFiles = useMemo(() => {
+    const selectedPath = selectedFile?.asset.path;
+
+    return [...inputFiles].sort((a, b) => {
+      const aSelected = a.asset.path === selectedPath;
+      const bSelected = b.asset.path === selectedPath;
+      if (aSelected !== bSelected) return aSelected ? -1 : 1;
+
+      const aPreferred = a.asset.label === AssetLabel.sonata_circuit;
+      const bPreferred = b.asset.label === AssetLabel.sonata_circuit;
+      if (aPreferred !== bPreferred) return aPreferred ? -1 : 1;
+
+      return 0;
+    });
+  }, [inputFiles, selectedFile?.asset.path]);
+
+  const prioritizedOutputFiles = useMemo(() => {
+    const selectedPath = selectedFile?.asset.path;
+
+    return [...outputFiles].sort((a, b) => {
+      const aSelected = a.asset.path === selectedPath;
+      const bSelected = b.asset.path === selectedPath;
+      if (aSelected !== bSelected) return aSelected ? -1 : 1;
+
+      const aPreferred =
+        a.asset.label === AssetLabel.voltage_report &&
+        a.asset.content_type === AssetContentType.nwb;
+      const bPreferred =
+        b.asset.label === AssetLabel.voltage_report &&
+        b.asset.content_type === AssetContentType.nwb;
+      if (aPreferred !== bPreferred) return aPreferred ? -1 : 1;
+
+      return 0;
+    });
+  }, [outputFiles, selectedFile?.asset.path]);
+
   // Notify parent component about the loading state
   useEffect(() => {
     onLoadingChange(loading);
   }, [loading, onLoadingChange]);
 
-  /*
-    Handle file auto-selection
-    - On page load select the voltage report if available, otherwise - circuit config.
-    - On simulation change select the file with the same asset path falling back
-      to the default selection on page load.
-  */
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-
-    const circuitConfigFile = inputFiles.find(
-      (file) => file.asset.label === AssetLabel.sonata_circuit
-    );
-
-    const voltageReportFile = outputFiles.find(
-      (file) =>
-        file.asset.label === AssetLabel.voltage_report &&
-        file.asset.content_type === AssetContentType.nwb
-    );
-
-    if (!selectedFile) {
-      if (voltageReportFile) {
-        onSelect(voltageReportFile);
-        return;
-      }
-
-      if (circuitConfigFile) {
-        onSelect(circuitConfigFile);
-        return;
-      }
-
-      return;
-    }
-
-    if (selectedFile.asset.label === AssetLabel.sonata_circuit) {
-      onSelect(selectedFile);
-      return;
-    }
-
-    const fileToSelect =
-      [...inputFiles, ...outputFiles].find((file) => file.asset.path === selectedFile.asset.path) ??
-      voltageReportFile ??
-      circuitConfigFile;
-
-    if (fileToSelect) {
-      onSelect(fileToSelect);
-    }
-  }, [loading, inputFiles, outputFiles, onSelect, selectedFile]);
+  useAutoSelectFileOnConfigChange({
+    configId: simulation.id,
+    selectedFile,
+    inputFiles: prioritizedInputFiles,
+    outputFiles: prioritizedOutputFiles,
+    onSelect,
+  });
 
   return (
-    <div className="h-full overflow-y-auto">
-      <h4 className="uppercase">Input files</h4>
-      <div className="mt-4 mb-8 flex flex-col gap-4">
-        {inputFiles.map((file) => (
-          <SimulationFile
-            selected={file.asset.path === selectedFile?.asset.path}
-            key={file.asset.id}
-            file={file}
-            onSelect={onSelect}
-          />
-        ))}
-      </div>
-      {outputAvailable && (
-        <>
-          <h4 className="uppercase">Output files</h4>
-          <div className="mt-4 flex flex-col gap-4">
-            {outputFiles.map((file) => (
-              <SimulationFile
-                selected={file.asset.path === selectedFile?.asset.path}
-                key={file.asset.id}
-                file={file}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
-        </>
-      )}
-      {loading && (
-        <div className="absolute inset-0 z-10 flex cursor-progress items-center justify-center rounded-2xl bg-black/4">
-          <Loader className="text-neutral-3" />
-        </div>
-      )}
-    </div>
+    <IoLayout
+      inputTitle="Input files"
+      outputTitle="Output files"
+      showOutput={outputAvailable}
+      inputIsEmpty={inputFiles.length === 0}
+      outputIsEmpty={outputFiles.length === 0 && !outputLoading}
+      inputItems={inputFiles.map((file) => (
+        <TaskIOFileItem
+          id={file.asset.id}
+          selected={file.asset.path === selectedFile?.asset.path}
+          key={file.asset.id}
+          file={file}
+          onSelect={onSelect}
+        />
+      ))}
+      outputItems={outputFiles.map((file) => (
+        <TaskIOFileItem
+          id={file.asset.id}
+          selected={file.asset.path === selectedFile?.asset.path}
+          key={file.asset.id}
+          file={file}
+          onSelect={onSelect}
+        />
+      ))}
+    />
   );
 }
 
@@ -136,7 +123,10 @@ function useInputFiles(
   simulation: ISimulation,
   context: WorkspaceContext
 ): [boolean, TActivityCustomFile[]] {
-  const { entity, isLoading } = useModelQuery({ id: simulation.entity_id, context });
+  const { entity, isLoading } = useModelQuery({
+    id: simulation.entity_id,
+    context,
+  });
 
   const inputFiles: TActivityCustomFile[] = useMemo(() => {
     const sonataCircuitAsset =
@@ -179,7 +169,7 @@ function useOutputFiles(
     context,
     enabled,
   });
-  const simResultLoadableAtom = useMemo(() => loadable(simResultAtom), [simResultAtom]);
+  const simResultLoadableAtom = useMemo(() => createLoadableAtom(simResultAtom), [simResultAtom]);
   const simResult = useLastTruthyValue(simResultAtom);
   const simResultLoadable = useAtomValue(simResultLoadableAtom);
 
@@ -204,44 +194,4 @@ function useOutputFiles(
 
     return [loading, files];
   }, [simResult, simResultLoadable]);
-}
-
-type SimulationFileProps = {
-  file: TActivityCustomFile;
-  selected?: boolean;
-  onSelect: (file: TActivityCustomFile) => void;
-};
-
-function SimulationFile({ file, selected, onSelect }: SimulationFileProps) {
-  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
-  const fileExt = fileName?.split('.').at(-1);
-
-  return (
-    <button
-      type="button"
-      title={fileName}
-      className={classNames(
-        'flex w-full cursor-pointer items-center justify-between rounded-4xl p-4',
-        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white'
-      )}
-      onClick={() => onSelect(file)}
-    >
-      <span
-        className={classNames(
-          'truncate overflow-hidden font-semibold whitespace-nowrap',
-          selected ? 'text-white' : 'text-primary-9'
-        )}
-      >
-        {fileName}
-      </span>
-      <span
-        className={classNames(
-          'ml-4 shrink-0 rounded-2xl border px-4 uppercase',
-          selected ? 'border-white text-white' : 'text-neutral-5 border-neutral-5'
-        )}
-      >
-        {fileExt}
-      </span>
-    </button>
-  );
 }

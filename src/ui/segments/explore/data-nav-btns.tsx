@@ -152,7 +152,7 @@ export function DataBreadcrumb({
 
   if (section !== WorkspaceSection.Data) return null;
   return (
-    <div className="flex flex-nowrap gap-3">
+    <div className="flex flex-nowrap gap-3 pt-3">
       <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick }} />
       <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick }} />
       <BackToEntityType
@@ -167,5 +167,5 @@ export function ClosePage({ url }: { url: string }) {
   const section = routeSegments.at(0);
   if (section !== WorkspaceSection.Data) return null;
 
-  return <Close href={url} />;
+  return <Close href={url} className="mt-3 mr-1" />;
 }

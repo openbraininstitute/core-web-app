@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -25,7 +25,8 @@
     "rules": {
       "recommended": true,
       "a11y": {
-        "useButtonType": "error"
+        "useButtonType": "error",
+        "noStaticElementInteractions": "info"
       },
       "correctness": {
         "noUnusedVariables": "error",
@@ -33,7 +34,12 @@
       },
       "style": {
         "noParameterAssign": "error",
-        "useConsistentArrayType": "off",
+        "useConsistentArrayType": {
+          "level": "off",
+          "options": {
+            "syntax": "generic"
+          }
+        },
         "useConst": "error",
         "useExportType": "error",
         "useImportType": "error",
@@ -46,7 +52,7 @@
         "noExplicitAny": "info",
         "noImplicitAnyLet": "warn",
         "useIterableCallbackReturn": "warn",
-        "noNonNullAssertedOptionalChain": "info"
+        "noNonNullAssertedOptionalChain": "warn"
       }
     }
   },

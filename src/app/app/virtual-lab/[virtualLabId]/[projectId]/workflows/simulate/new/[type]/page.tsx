@@ -1,12 +1,12 @@
 'use client';
 
-import snakeCase from 'es-toolkit/compat/snakeCase';
 import { notFound } from 'next/navigation';
 import { use } from 'react';
 
-import { WorkspaceSection } from '@/constants';
-import { WorkflowBrowseEntity } from '@/features/views/listing/browse-new-workflow';
-import { getBaseModelTypeFromActivityType } from '@/ui/segments/workflows/elements/helpers';
+import { WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
+import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import { getPrimaryConfigurationInput, getWorkflow } from '@/ui/segments/workflows/config';
+import { resolveExtendedTypeFromPathParamUrl } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -18,20 +18,39 @@ export default function Page({
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
   null
 >) {
-  const { type, virtualLabId, projectId } = use(params);
+  const { type } = use(params);
+  const { type: targetType } = resolveExtendedTypeFromPathParamUrl({ pathParam: type });
 
-  const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
-  const baseModelType = getBaseModelTypeFromActivityType({
-    type: dataType,
-    section: WorkspaceSection.SimulateWorkflow,
+  const workflow = getWorkflow({
+    activity: WorkflowActivityDictValue.simulate,
+    targetType,
   });
 
-  if (!baseModelType) return notFound();
+  const primaryInput = getPrimaryConfigurationInput({
+    activity: WorkflowActivityDictValue.simulate,
+    targetType,
+  });
+
+  const browseType = primaryInput?.type ?? workflow?.sourceType;
+  if (!workflow || !browseType) return notFound();
+
+  const extraQueryParams = primaryInput?.filters ?? workflow.filters ?? undefined;
+  const section = WorkspaceSection.SimulateWorkflow;
+
   return (
-    <WorkflowBrowseEntity
-      workspace={{ virtualLabId, projectId }}
-      baseModelType={baseModelType}
-      section={WorkspaceSection.SimulateWorkflow}
+    <BrowseEntityScope
+      requireMiniDetailView
+      requireBrainRegion={false}
+      section={section}
+      classNames={{ container: 'max-h-full', miniView: 'max-h-[calc(100vh-15rem)]' }}
+      dataType={browseType}
+      extraQueryParams={extraQueryParams}
+      mainTableProps={{
+        selectionType: undefined,
+      }}
+      miniViewProps={{
+        section,
+      }}
     />
   );
 }

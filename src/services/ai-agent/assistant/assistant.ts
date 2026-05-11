@@ -12,6 +12,7 @@ import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { useAiAgentHealthCheck } from '../hooks/health';
+import { ChatManager } from './manager/chat';
 import { HistoryManager } from './manager/history';
 import { MessageManager } from './manager/message';
 import { ThreadManager } from './manager/thread';
@@ -42,6 +43,8 @@ class AiAssistantClass {
   private readonly virtualLabId = new Signal<string | null>(null);
 
   private readonly projectId = new Signal<string | null>(null);
+
+  public readonly chat = new ChatManager();
 
   private readonly threadmanager = new ThreadManager(this);
 
@@ -90,7 +93,6 @@ class AiAssistantClass {
     const { threadId, isEmpty } = await this.threadmanager.createThread();
     this.isEmptyThread.set(isEmpty);
     this.initialMessages.set([]);
-    this.historyManager.reset();
     this.threadId.set(threadId);
     return threadId;
   };
@@ -172,7 +174,7 @@ class AiAssistantClass {
   }, 50);
 }
 
-const AiAssistant = new AiAssistantClass();
+export const AiAssistant = new AiAssistantClass();
 
 export function useAiAssistant() {
   const { error } = useAppNotification();
@@ -213,11 +215,22 @@ export function useAiAssistant() {
       queryClient.invalidateQueries({ queryKey: keyBuilderAI.history(virtualLabId, projectId) });
     },
     deleteThread: async (threadId: string) => {
+      const isCurrentThread = AiAssistant.threadId.get() === threadId;
+
+      if (isCurrentThread) {
+        AiAssistant.threadId.set(undefined);
+        AiAssistant.initialMessages.set([]);
+      }
+
       await AiAssistant.deleteThread(threadId);
       queryClient.invalidateQueries({ queryKey: keyBuilderAI.history(virtualLabId, projectId) });
       queryClient.invalidateQueries({
         queryKey: keyBuilderAI.messages(threadId, virtualLabId, projectId),
       });
+
+      if (isCurrentThread) {
+        await AiAssistant.createThread();
+      }
     },
     createThread: async () => {
       const threadId = await AiAssistant.createThread();

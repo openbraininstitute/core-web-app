@@ -73,21 +73,26 @@ export type TSlicingDirectionType =
   (typeof SlicingDirectionTypeDictionary)[keyof typeof SlicingDirectionTypeDictionary];
 
 export const CellMorphologyGenerationType = {
+  ComputationallySynthesized: {
+    key: 'computationally_synthesized',
+    label: 'Computationally synthesized',
+    description: 'Generated from algorithms e.g. topological synthesis',
+  },
   DigitalReconstruction: {
     key: 'digital_reconstruction',
     label: 'Digital reconstruction',
+    description:
+      'High-resolution imaging data (e.g., EM, confocal) used to generate the morphology',
   },
   ModifiedReconstruction: {
     key: 'modified_reconstruction',
     label: 'Modified reconstruction',
-  },
-  ComputationallySynthesized: {
-    key: 'computationally_synthesized',
-    label: 'Computationally synthesized',
+    description: 'Artificially built morphologies by grafting parts of different morphologies',
   },
   Placeholder: {
     key: 'placeholder',
     label: 'Placeholder',
+    description: 'Artificially built simplified morphologies /Placeholder for future data',
   },
 } as const;
 
@@ -135,21 +140,27 @@ export interface CellMorphologyProtocolBase {
 }
 
 export const CellMorphologyProtocolDesign = {
-  EM: {
-    key: 'electron_microscopy',
-    label: 'Electron microscopy (EM)',
-  },
   CellPatch: {
     key: 'cell_patch',
     label: 'Cell patch',
+    description:
+      'The cell is patched with a glass micropipette containing a diffusible tracer (dye), and the tissue subsequently fixed and imaged.',
+  },
+  EM: {
+    key: 'electron_microscopy',
+    label: 'Electron microscopy (EM)',
+    description: 'High-resolution electron microscopy imaging used to generate the morphology',
   },
   Fluorophore: {
     key: 'fluorophore',
     label: 'Fluorophore',
+    description:
+      'A fluorescent dye (like Alexa Fluor 488 or 594) added to the internal pipette solution allows imaging of living neurons.',
   },
   Imp: {
     key: 'topological_synthesis',
     label: 'Topological synthesis',
+    description: 'Generated via topological synthesis algorithm',
   },
 } as const;
 

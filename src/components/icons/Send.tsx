@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 
 type SettingsIconProps = {
   className?: string;
@@ -10,7 +10,7 @@ export default function SendIcon({ className, style, fill }: SettingsIconProps) 
   return (
     <svg
       className={className}
-      style={style}
+      style={{ ...style, marginLeft: '0.1em' }}
       width="1.5em"
       height="1.5em"
       viewBox="0 0 24 24"

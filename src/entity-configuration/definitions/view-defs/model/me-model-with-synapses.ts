@@ -1,5 +1,6 @@
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { EntityCoreFields } from '../../fields-defs/enums';
+
 import type { ViewDefinitionConfig } from '../types';
 
 export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
@@ -17,6 +18,7 @@ export const ViewDefForMEModelWithSynapsesCircuit: ViewDefinitionConfig = {
     EntityCoreFields.CircuitBuildCategory,
     EntityCoreFields.ArtifactPublishedIn,
     EntityCoreFields.ArtifactExperimentDate,
+    EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],
   miniDetailView: [

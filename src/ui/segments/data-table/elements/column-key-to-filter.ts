@@ -1,17 +1,13 @@
-import get from 'es-toolkit/compat/get';
+import { getFieldDefinition } from '@/entity-configuration/definitions';
 import {
   CoreFieldFilterTypeEnum,
-  EntityCoreFields,
+  type EntityCoreFields,
 } from '@/entity-configuration/definitions/fields-defs/enums';
-import { getFieldDefinition } from '@/entity-configuration/definitions';
+import { resolveFieldListing } from '@/entity-configuration/definitions/listing';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TCoreFilter } from '@/entity-configuration/definitions/types';
+import type { TCoreFilter, TFieldApiContext } from '@/entity-configuration/definitions/types';
 
-export function columnKeyToFilter(
-  key: EntityCoreFields,
-  dataType: TExtendedEntitiesTypeDict
-): TCoreFilter {
+export function columnKeyToFilter(key: EntityCoreFields, context: TFieldApiContext): TCoreFilter {
   const fieldConfig = getFieldDefinition(key);
   if (!fieldConfig) {
     return {
@@ -20,63 +16,65 @@ export function columnKeyToFilter(
       value: '',
     };
   }
-  const constraint = get(fieldConfig.perTypeConstraint, dataType);
+
+  const { constraint } = resolveFieldListing(fieldConfig, context);
+
   switch (fieldConfig.filter) {
     case CoreFieldFilterTypeEnum.CheckList:
       return {
         field: key,
         type: CoreFieldFilterTypeEnum.CheckList,
         value: [],
-        constraint: constraint ?? fieldConfig.defaultConstraint,
+        constraint,
       };
     case CoreFieldFilterTypeEnum.DateRange:
       return {
         field: key,
         type: CoreFieldFilterTypeEnum.DateRange,
         value: { gte: null, lte: null },
-        constraint: constraint ?? fieldConfig.defaultConstraint,
+        constraint,
       };
     case CoreFieldFilterTypeEnum.ValueRange:
       return {
         field: key,
         type: CoreFieldFilterTypeEnum.ValueRange,
         value: { gte: null, lte: null },
-        constraint: constraint ?? fieldConfig.defaultConstraint,
+        constraint,
       };
     case CoreFieldFilterTypeEnum.ValueOrRange:
       return {
         field: key,
         type: CoreFieldFilterTypeEnum.ValueOrRange,
         value: null,
-        constraint: constraint ?? fieldConfig.defaultConstraint,
+        constraint,
       };
     case CoreFieldFilterTypeEnum.Text:
       return {
         field: key,
         type: CoreFieldFilterTypeEnum.Text,
         value: '',
-        constraint: constraint ?? fieldConfig.defaultConstraint,
+        constraint,
       };
     case CoreFieldFilterTypeEnum.DropdownList:
       return {
         field: key,
         type: CoreFieldFilterTypeEnum.DropdownList,
         value: null,
-        constraint: constraint ?? fieldConfig.defaultConstraint,
+        constraint,
       };
     case CoreFieldFilterTypeEnum.Boolean:
       return {
         field: key,
         type: CoreFieldFilterTypeEnum.Boolean,
         value: null,
-        constraint: constraint ?? fieldConfig.defaultConstraint,
+        constraint,
       };
     default:
       return {
         field: key,
         type: null,
         value: null,
-        constraint: constraint ?? fieldConfig.defaultConstraint,
+        constraint,
       };
   }
 }
