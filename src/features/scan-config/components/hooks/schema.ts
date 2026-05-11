@@ -259,7 +259,6 @@ export function useAtomsMap({
 
         map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initial);
       } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
-        // Initialize as empty - user must select a variant first (like block_dictionary)
         map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initialConfigforKey);
       } else {
         map[k] = {};
