@@ -412,7 +412,7 @@ const NumberEditor = ({
     if (!model) return;
 
     const markers: monaco.editor.IMarkerData[] = [];
-    const invalidTokenPattern = /(?<=^|[,\n])[^,\n]*?([^0-9,\n ]|[0-9] +[0-9])[^,\n]*/g;
+    const invalidTokenPattern = /(?<=^|[,\n\r])[^,\n\r]*?([^0-9,\n\r ]|[0-9] +[0-9])[^,\n\r]*/g;
 
     const matches = content.matchAll(invalidTokenPattern);
 
