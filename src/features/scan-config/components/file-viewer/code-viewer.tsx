@@ -78,15 +78,23 @@ export function CodeFileViewer({
       throw error;
     }
   };
+
   const fileName = assetPath?.split('/').at(-1) ?? asset.path.split('/').at(-1);
   const language = fileName?.split('.').at(-1) as BundledLanguage;
   const filename = assetPath?.split('.').at(-1) ?? asset.path.split('/').pop() ?? 'file';
 
+  const LARGE_FILE_CHAR_LIMIT = 10000;
+  const isLargeFile = content.length > LARGE_FILE_CHAR_LIMIT;
+
+  const displayContent = isLargeFile
+    ? getTruncatedContent(content, LARGE_FILE_CHAR_LIMIT)
+    : content;
+
   return (
     <CodeBlock
-      code={content}
+      code={displayContent}
       language={language}
-      showLineNumbers
+      showLineNumbers={!isLargeFile}
       title={filename}
       className={cn(
         'secondary-scrollbar h-full overflow-auto [&_pre]:overflow-x-auto',
@@ -94,15 +102,42 @@ export function CodeFileViewer({
         'border-neutral-3 bg-white! [&_.shiki]:bg-white! [&_.shiki]:shadow-xl!'
       )}
     >
-      <div className="bg-neutral-light flex items-center justify-between px-2 py-2">
-        <CodeBlockLanguageLabel />
+      <div className="bg-neutral-light flex items-center justify-between border-b border-gray-200 px-3 py-2">
+        <div className="flex items-center gap-3">
+          <CodeBlockLanguageLabel />
+
+          {isLargeFile && (
+            <span className="rounded border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+              Large file truncated for performance
+            </span>
+          )}
+        </div>
+
         <CodeBlockCopyButton
           onCopy={handleCopy}
           onError={() => {}}
-          className="ml-auto size-8 self-end rounded-full px-2 hover:bg-gray-300"
+          className="ml-auto size-8 rounded-full px-2 hover:bg-gray-300"
           iconClassName="text-gray-500 size-4"
         />
       </div>
     </CodeBlock>
   );
+}
+
+function getTruncatedContent(text: string, maxLines: number) {
+  const lines = text.split('\n');
+
+  if (lines.length <= maxLines) {
+    return text;
+  }
+
+  const topCount = Math.floor(maxLines / 2);
+  const bottomCount = Math.ceil(maxLines / 2);
+
+  const firstPart = lines.slice(0, topCount).join('\n');
+  const lastPart = lines.slice(-bottomCount).join('\n');
+
+  const hiddenCount = lines.length - (topCount + bottomCount);
+
+  return `${firstPart}\n\n... [ ${hiddenCount} lines truncated for performance ] ...\n\n${lastPart}`;
 }
