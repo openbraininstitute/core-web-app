@@ -1,11 +1,12 @@
+import {
+  BillingQuoteRequestFlowDict,
+  type SetupIntentResponse,
+  type StandalonePaymentRequest,
+  type StandalonePaymentResponse,
+  type SubscriptionPaymentsResponse,
+} from '@/api/virtual-lab-svc/queries/types';
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 
-import type {
-  SetupIntentResponse,
-  StandalonePaymentRequest,
-  StandalonePaymentResponse,
-  SubscriptionPaymentsResponse,
-} from '@/api/virtual-lab-svc/queries/types';
 import type { VlmResponse } from '@/types/virtual-lab/common';
 
 const paymentsBaseUri = '/payments';
@@ -46,7 +47,7 @@ export async function listStandalonePayments({
       accept: 'application/json',
     },
     queryParams: {
-      payment_type: 'standalone',
+      payment_type: BillingQuoteRequestFlowDict.Standalone,
       page,
       page_size: pageSize,
       virtual_lab_id: virtualLabId,

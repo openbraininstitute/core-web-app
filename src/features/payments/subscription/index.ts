@@ -1,4 +1,4 @@
-export { default as SubscriptionPaymentForm } from './payment-form';
-export { flowAtom, getAllTiers, Switch } from './shared';
+export { default as SubscriptionPaymentForm } from '@/features/payments/subscription/payment-form';
+export { flowAtom, getAllTiers, Switch } from '@/features/payments/subscription/shared';
 
-export type { TExtendedTier } from './shared';
+export type { TExtendedTier } from '@/features/payments/subscription/shared';

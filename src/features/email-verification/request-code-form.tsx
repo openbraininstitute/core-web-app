@@ -4,6 +4,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { RiMailSendLine } from '@remixicon/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Form, Statistic } from 'antd';
+import { useMemo, useState } from 'react';
 
 import {
   EmailVerificationCodeStatusDict,
@@ -56,11 +57,15 @@ export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: Req
 
   const status = initiateStatus?.data?.status;
   const isLocked = status === EmailVerificationCodeStatusDict.Locked;
-  const lockDeadline = Date.now() + (initiateStatus?.data?.remaining_time ?? 0) * 1000;
+  const [currentTime] = useState(() => Date.now());
+  const lockDeadline = useMemo(
+    () => currentTime + (initiateStatus?.data?.remaining_time ?? 0) * 1000,
+    [currentTime, initiateStatus?.data?.remaining_time]
+  );
 
   return (
     <div className="text-white w-full px-10">
-      <h4 className="text-lg font-bold">Verify your email to continue</h4>
+      <h4 className="text-lg font-semibold">Verify your email to continue</h4>
       <p className="text-base font-light">
         We'll send a one-time code to your email. Enter it to confirm your identity and proceed with
         your purchase
@@ -80,7 +85,6 @@ export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: Req
           }}
           onFinish={generateNewCode}
           className="w-3/4 mx-auto relative"
-          autoFocus
         >
           <Form.Item
             name="email"
@@ -100,7 +104,6 @@ export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: Req
             ]}
           >
             <Input
-              autoFocus
               className={cn(
                 'h-12 border-none focus-visible:ring-0 pr-52! w-full placeholder:text-white/80',
                 'text-white text-lg!',

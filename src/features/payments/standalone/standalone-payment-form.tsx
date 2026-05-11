@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { NotificationPlacements } from 'antd/es/notification/interface';
 import { get } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useReducer, useState } from 'react';
 
 import {
   BillingQuoteRequestFlowDict,
@@ -15,16 +15,18 @@ import { useAppNotification } from '@/components/notification';
 import { CreditsAmountInput, useCreditConversionQuery } from '@/features/credits';
 import { BillingSummary } from '@/features/payments/billing-summary';
 import { useBillingQuoteQuery } from '@/features/payments/hooks';
+import { useCreateStandalonePaymentMutation } from '@/features/payments/standalone/hooks';
+import { StandalonePaymentMethodSection } from '@/features/payments/standalone/payment-method-section';
 import {
   confirmStripeSetupPaymentMethod,
   StripeSetupConfirmationError,
 } from '@/features/stripe/confirm-setup';
 import { formatMinorCurrency } from '@/features/stripe/utils';
 import { messages } from '@/i18n/en/payment';
+import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
-import { useCreateStandalonePaymentMutation } from './hooks';
-import { StandalonePaymentMethodSection } from './payment-method-section';
+import type { User } from 'next-auth';
 
 const MAX_CONVERSIONS_PER_TRANSACTION = 10;
 
@@ -49,24 +51,29 @@ export function StandalonePaymentForm({
   const [billingAddress, setBillingAddress] = useState<TBillingAddress | null>(null);
   const [credits, setCredits] = useState<number | undefined>(undefined);
   const [isPaying, setIsPaying] = useState(false);
-  const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(true);
+  const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(false);
   const [stripeElementsReady, setStripeElementsReady] = useState(false);
-  const conversionKeys = useRef(new Set<string>());
-  const [conversionCount, setConversionCount] = useState(0);
+  const [conversionKeys, addConversionKey] = useReducer((keys: Set<string>, key: string) => {
+    if (keys.has(key)) {
+      return keys;
+    }
+    const nextKeys = new Set(keys);
+    nextKeys.add(key);
+    return nextKeys;
+  }, new Set<string>());
 
   const debouncedCredits = useDeferredValue(credits);
   const conversionKey = debouncedCredits && debouncedCredits > 0 ? `${debouncedCredits}:chf` : null;
   const conversionAllowed =
     Boolean(conversionKey) &&
-    (conversionKeys.current.has(conversionKey as string) ||
-      conversionCount < MAX_CONVERSIONS_PER_TRANSACTION);
+    (conversionKeys.has(conversionKey as string) ||
+      conversionKeys.size < MAX_CONVERSIONS_PER_TRANSACTION);
 
   useEffect(() => {
-    if (conversionKey && conversionAllowed && !conversionKeys.current.has(conversionKey)) {
-      conversionKeys.current.add(conversionKey);
-      setConversionCount((count) => count + 1);
+    if (conversionKey && conversionAllowed && !conversionKeys.has(conversionKey)) {
+      addConversionKey(conversionKey);
     }
-  }, [conversionAllowed, conversionKey]);
+  }, [conversionAllowed, conversionKey, conversionKeys]);
 
   const conversionPayload = debouncedCredits
     ? {
@@ -105,7 +112,7 @@ export function StandalonePaymentForm({
 
   const limitReached = Boolean(conversionKey) && !conversionAllowed;
   const currentBillingAddress = billingAddress?.country ? billingAddress : null;
-  const user = session?.user;
+  const user = session?.user as User;
 
   const disablePaying =
     !stripe ||
@@ -155,6 +162,11 @@ export function StandalonePaymentForm({
         sync_billing_address_to_profile: saveBillingAddressToProfile,
         payment_method_id: paymentMethodId,
       });
+      if (saveBillingAddressToProfile) {
+        void queryClient.invalidateQueries({
+          queryKey: userKeyBuilder.profile(),
+        });
+      }
       successNotify({
         message: messages.paymentSuccess
           .replace('$$credits', credits.toString())
@@ -169,6 +181,7 @@ export function StandalonePaymentForm({
           queryKey: accountingKey,
         });
       }, 1_000);
+      setIsPaying(false);
     } catch (error) {
       const code = get(error, 'cause.code', 'DEFAULT');
       const serverError = get(error, 'cause.message', messages.paymentProcessingError);
@@ -185,7 +198,6 @@ export function StandalonePaymentForm({
         description,
         ...notificationConfig,
       });
-    } finally {
       setIsPaying(false);
     }
   };

@@ -4,10 +4,9 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { Elements } from '@stripe/react-stripe-js';
 import { Spin } from 'antd';
 
+import { StandalonePaymentForm } from '@/features/payments/standalone/standalone-payment-form';
 import { useSetupIntentQuery, useStripeInstanceQuery } from '@/features/stripe/hooks';
 import { buildStripeFormOptions } from '@/features/stripe/payment-elements';
-
-import { StandalonePaymentForm } from './standalone-payment-form';
 
 export function StandaloneStripePayment({
   virtualLabId,

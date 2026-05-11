@@ -4,7 +4,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { RiMailSendLine } from '@remixicon/react';
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { Statistic } from 'antd';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
   EmailVerificationCodeStatusDict,
@@ -39,6 +39,7 @@ export function VerificationCodeForm({
   const [otpKey, setOtpKey] = useState(0);
   const [code, setCode] = useState<string | null>(null);
   const [verified, setVerified] = useState(false);
+  const [currentTime] = useState(() => Date.now());
 
   const [{ data: verifyStatus }, { data: initiateStatus }] = useQueries({
     queries: [
@@ -99,12 +100,18 @@ export function VerificationCodeForm({
   const vStatus = verifyStatus?.data?.status;
   const iStatus = initiateStatus?.data?.status;
   const isVerifyLocked = vStatus === EmailVerificationCodeStatusDict.Locked;
-  const verifyLockDeadline = Date.now() + (verifyStatus?.data?.remaining_time ?? 0) * 1000;
+  const verifyLockDeadline = useMemo(
+    () => currentTime + (verifyStatus?.data?.remaining_time ?? 0) * 1000,
+    [currentTime, verifyStatus?.data?.remaining_time]
+  );
   const isVerified = verified || vStatus === EmailVerificationCodeStatusDict.Verified;
   const isCodeExpired = vStatus === EmailVerificationCodeStatusDict.Expired && !isVerified;
   const canSubmitCode = vStatus === EmailVerificationCodeStatusDict.CodeSent && !isVerifyLocked;
   const isGenerationLocked = iStatus === EmailVerificationCodeStatusDict.Locked;
-  const generationLockDeadline = Date.now() + (initiateStatus?.data?.remaining_time ?? 0) * 1000;
+  const generationLockDeadline = useMemo(
+    () => currentTime + (initiateStatus?.data?.remaining_time ?? 0) * 1000,
+    [currentTime, initiateStatus?.data?.remaining_time]
+  );
   const submitError = confirmError as ApiError | null;
   const isNotMatch =
     submitError?.cause?.details?.status === EmailVerificationCodeStatusDict.NotMatch;
@@ -122,7 +129,7 @@ export function VerificationCodeForm({
   return (
     <div className="flex flex-col gap-8 items-center justify-center mx-auto relative rounded-md p-10">
       <div className="flex flex-col items-center justify-center text-white">
-        <h4 className="font-bold text-2xl">Enter Verification Code</h4>
+        <h4 className="font-semibold text-2xl">Enter Verification Code</h4>
         <p className="text-lg">
           We sent a 6-digit code to <strong className="text-white">{email}</strong>
         </p>

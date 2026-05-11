@@ -4,10 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { EmailVerification } from '@/features/email-verification';
+import { StandaloneStripePayment } from '@/features/payments/standalone/stripe-payment';
 import { useUserPermissions } from '@/hooks/use-user-permissions';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-
-import { StandaloneStripePayment } from './stripe-payment';
 
 export function StripePaymentFlow({
   virtualLabId,

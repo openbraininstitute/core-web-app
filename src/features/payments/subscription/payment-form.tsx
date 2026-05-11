@@ -16,7 +16,7 @@ import { useAppNotification } from '@/components/notification';
 import { BillingSummary } from '@/features/payments/billing-summary';
 import { useBillingQuoteQuery } from '@/features/payments/hooks';
 import PricingToggleCards from '@/features/payments/subscription/pricing-toggle-cards';
-import { flowAtom } from '@/features/payments/subscription/shared';
+import { DefaultCurrency, flowAtom } from '@/features/payments/subscription/shared';
 import {
   confirmStripeSetupPaymentMethod,
   StripeSetupConfirmationError,
@@ -28,6 +28,7 @@ import {
   buildStripeFormOptions,
 } from '@/features/stripe/payment-elements';
 import { messages } from '@/i18n/en/payment';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager';
 import { keyBuilder } from '@/ui/use-query-keys/user';
@@ -35,6 +36,7 @@ import { cn } from '@/utils/css-class';
 
 import { useCreateSubscriptionMutation } from './hooks';
 
+import type { User } from 'next-auth';
 import type {
   CreditConversionResponse,
   TBillingAddress,
@@ -50,6 +52,7 @@ const notificationConfig = {
 };
 
 function Form({ onPrevious }: Props) {
+  const { virtualLabId } = useWorkspace();
   const queryClient = useQueryClient();
   const elements = useElements();
   const stripe = useStripe();
@@ -58,22 +61,23 @@ function Form({ onPrevious }: Props) {
   const [billingAddress, setBillingAddress] = useState<TBillingAddress | null>(null);
   const [stripeElementsReady, setElementsReady] = useState(false);
   const [isSubscribing, setSubscribing] = useState(false);
-  const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(true);
+  const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(false);
   const { success: successNotify, error: errorNotify } = useAppNotification();
   const createSubscription = useCreateSubscriptionMutation();
 
   const quotePayload = useMemo(
     () =>
-      billingAddress && tier?.app_id
+      billingAddress && tier?.app_id && virtualLabId
         ? {
-            flow: 'subscription' as const,
-            tier_id: tier.app_id,
             interval,
-            currency: 'chf',
+            virtual_lab_id: virtualLabId,
+            flow: BillingQuoteRequestFlowDict.Subscription,
+            tier_id: tier.app_id,
+            currency: DefaultCurrency,
             billing_address: billingAddress,
           }
         : null,
-    [billingAddress, interval, tier?.app_id]
+    [billingAddress, interval, tier, virtualLabId]
   );
 
   const quote = useBillingQuoteQuery({
@@ -99,7 +103,7 @@ function Form({ onPrevious }: Props) {
   const disableForm =
     !formLoaded || !stripeElementsReady || isSubscribing || quote.isFetching || !quote.data;
 
-  const user = session?.user;
+  const user = session?.user as User;
   const currentBillingAddress = billingAddress?.country ? billingAddress : null;
 
   const disablePaying =
@@ -147,7 +151,7 @@ function Form({ onPrevious }: Props) {
     }
 
     try {
-      const data = await createSubscription.mutateAsync({
+      const { data } = await createSubscription.mutateAsync({
         interval,
         tier_id: tier.app_id,
         quote_id: quote.data.quote_id,
@@ -155,8 +159,11 @@ function Form({ onPrevious }: Props) {
         sync_billing_address_to_profile: saveBillingAddressToProfile,
         payment_method_id: paymentMethodId,
       });
-      await queryClient.invalidateQueries({ queryKey: keyBuilder.subscription() });
-
+      if (saveBillingAddressToProfile) {
+        void queryClient.invalidateQueries({
+          queryKey: keyBuilder.profile(),
+        });
+      }
       if (data?.subscription.status === SubscriptionStatus.ACTIVE) {
         successNotify({
           message: messages.subscriptionPaymentSuccess,
@@ -165,12 +172,15 @@ function Form({ onPrevious }: Props) {
         });
         makeTriggerWorkspaceConfigurationClickEvent<null>({ on: false, data: null, type: null });
       }
+      setSubscribing(false);
     } catch (error) {
-      const code = get(error, 'cause.error_code', 'DEFAULT');
+      const code = get(error, 'cause.code', 'DEFAULT');
+      const serverError = get(error, 'cause.message', messages.paymentProcessingError);
       const errors = {
         ENTITY_ALREADY_EXISTS: messages.subscriptionPaymentErrorEntityAlreadyExists,
         ENTITY_NOT_CREATED: messages.subscriptionPaymentErrorEntityNotCreated,
         ENTITY_NOT_FOUND: messages.subscriptionPaymentErrorEntityNotFound,
+        PAYMENT_ERROR: serverError,
         DEFAULT: messages.paymentProcessingError,
       };
       const description = get(errors, code, messages.paymentProcessingError);
@@ -179,7 +189,6 @@ function Form({ onPrevious }: Props) {
         description,
         ...notificationConfig,
       });
-    } finally {
       setSubscribing(false);
     }
   };
