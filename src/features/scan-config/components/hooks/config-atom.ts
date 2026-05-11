@@ -3,8 +3,7 @@ import React from 'react';
 
 import { isAtom } from '@/features/scan-config/components/utils';
 
-import type { Config } from '@/features/scan-config/components/components';
-import type { AtomsMap, ConfigSchema } from '@/features/scan-config/types';
+import type { AtomsMap, Config, ConfigSchema } from '@/features/scan-config/types';
 
 export function useConfigAtom(schema: ConfigSchema | undefined, atomsMap: AtomsMap | null) {
   const configAtom = React.useMemo(() => {

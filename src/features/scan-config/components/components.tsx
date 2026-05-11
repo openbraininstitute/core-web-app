@@ -3,13 +3,6 @@ import { cn } from '@/utils/css-class';
 
 import type { TScanConfigTabs } from '@/features/scan-config/types';
 
-type Primitive = null | boolean | number | string;
-interface Object {
-  [key: string]: Primitive | Primitive[] | Object;
-}
-
-export type Config = Record<string, Object | string>;
-
 export const getRoundedByIndex = (
   index: number,
   length: number

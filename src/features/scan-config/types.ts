@@ -26,7 +26,7 @@ export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 type Primitive = null | boolean | number | string;
 interface Object {
-  [key: string]: Primitive | Primitive[] | Object;
+  [key: string]: ConfigValue | Object;
 }
 
 export type ConfigValue = Primitive | Primitive[] | Object | ConfigValue[];

@@ -18,6 +18,7 @@ import {
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import {
+  type Config,
   type ConfigSchema,
   isType,
   ScanConfigActivity,
@@ -40,7 +41,6 @@ import { editingAtom, selectedEntryAtom, selectedRootElementAtom } from '@/state
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
-import type { Config } from '@/features/scan-config/components/components';
 import type { Nullish } from '@/utils/type';
 
 import styles from '@/features/scan-config/scan-config.module.css';
