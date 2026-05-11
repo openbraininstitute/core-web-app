@@ -1,12 +1,11 @@
-/* eslint-disable react/no-array-index-key */
-/* eslint-disable no-param-reassign */
-import React, { CSSProperties, type JSX } from 'react';
+import { type CSSProperties, type JSX, useCallback, useEffect, useId, useState } from 'react';
+
+import { classNames } from '@/util/utils';
 
 import { IconChevronLeft } from '../../icons/IconChevronLeft';
 import { IconChevronRight } from '../../icons/IconChevronRight';
 import { styleButtonSquare } from '../../styles';
 
-import { classNames } from '@/util/utils';
 import styles from './swipeable-cards-list.module.css';
 
 interface SwipeableCardsListProps {
@@ -30,13 +29,13 @@ export default function SwipeableCardsList({
   gap = '48px',
   style = {},
 }: SwipeableCardsListProps) {
-  const id = React.useId();
-  const makeId = (index: number) => `${id}_${index}`;
-  const ref = React.useRef<HTMLDivElement | null>(null);
-  const [newsIndex, setNewsIndex] = React.useState(0);
+  const id = useId();
+  const makeId = useCallback((index: number) => `${id}_${index}`, [id]);
+  const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
+  const [newsIndex, setNewsIndex] = useState(0);
   const count = children.length;
-  const moveTo = useMoveTo(ref.current, count, makeId);
-  useScrollWatcher(ref.current, count, setNewsIndex, makeId);
+  const moveTo = useMoveTo(scrollEl, count, makeId);
+  useScrollWatcher(scrollEl, count, setNewsIndex, makeId);
   const handleMoveLeft = () => {
     moveTo((newsIndex + count - 1) % count);
   };
@@ -49,7 +48,7 @@ export default function SwipeableCardsList({
       className={classNames(className, styles.swipeableCardsList)}
       style={{ ...style, '--custom-gap': gap }}
     >
-      <div ref={ref} className={styles.scroll}>
+      <div ref={setScrollEl} className={styles.scroll}>
         {children.map((child, index) => {
           const key = makeId(index);
           return (
@@ -102,16 +101,15 @@ export default function SwipeableCardsList({
 }
 
 function useMoveTo(div: HTMLDivElement | null, count: number, makeId: (index: number) => string) {
-  return React.useCallback(
+  return useCallback(
     (index: number) => {
       if (!div || count === 0) return;
 
       const card = document.getElementById(makeId(index));
       if (!card) return;
 
-      // Calculate scroll position: card's left edge relative to container's left edge
-      // Since card is a direct child of the scroll container, offsetLeft gives us the position
-      const scrollPosition = card.offsetLeft;
+      const scrollPosition =
+        div.scrollLeft + card.getBoundingClientRect().left - div.getBoundingClientRect().left;
 
       div.scrollTo({
         left: scrollPosition,
@@ -128,7 +126,7 @@ function useScrollWatcher(
   setCardIndex: React.Dispatch<React.SetStateAction<number>>,
   makeId: (index: number) => string
 ) {
-  React.useEffect(() => {
+  useEffect(() => {
     if (!div || count === 0) return;
 
     const handleScroll = () => {
