@@ -482,6 +482,7 @@ const NumberEditor = ({
           lineNumbersMinChars: 3,
           lineDecorationsWidth: 0,
           readOnly: disabled,
+          automaticLayout: true,
         }}
       />
     </div>
