@@ -54,9 +54,7 @@ export function PurchasesHistory({ virtualLabId }: { virtualLabId: string }) {
       key: 'payment_date',
       width: 'max-content',
       render: (_, record) => (
-        <span>
-          {record.payment_date ? format(new Date(record.payment_date), 'MMM dd, yyyy') : 'N/A'}
-        </span>
+        <span>{record.payment_date ? format(record.payment_date, 'MMM dd, yyyy') : 'N/A'}</span>
       ),
     },
     {

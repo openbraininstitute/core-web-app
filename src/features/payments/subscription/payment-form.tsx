@@ -16,7 +16,7 @@ import { useAppNotification } from '@/components/notification';
 import { BillingSummary } from '@/features/payments/billing-summary';
 import { useBillingQuoteQuery } from '@/features/payments/hooks';
 import PricingToggleCards from '@/features/payments/subscription/pricing-toggle-cards';
-import { flowAtom } from '@/features/payments/subscription/shared';
+import { DefaultCurrency, flowAtom } from '@/features/payments/subscription/shared';
 import {
   confirmStripeSetupPaymentMethod,
   StripeSetupConfirmationError,
@@ -66,14 +66,14 @@ function Form({ onPrevious }: Props) {
     () =>
       billingAddress && tier?.app_id
         ? {
-            flow: 'subscription' as const,
-            tier_id: tier.app_id,
             interval,
-            currency: 'chf',
+            flow: BillingQuoteRequestFlowDict.Subscription,
+            tier_id: tier.app_id,
+            currency: DefaultCurrency,
             billing_address: billingAddress,
           }
         : null,
-    [billingAddress, interval, tier?.app_id]
+    [billingAddress, interval, tier]
   );
 
   const quote = useBillingQuoteQuery({
@@ -147,7 +147,7 @@ function Form({ onPrevious }: Props) {
     }
 
     try {
-      const data = await createSubscription.mutateAsync({
+      const { data } = await createSubscription.mutateAsync({
         interval,
         tier_id: tier.app_id,
         quote_id: quote.data.quote_id,
@@ -155,8 +155,11 @@ function Form({ onPrevious }: Props) {
         sync_billing_address_to_profile: saveBillingAddressToProfile,
         payment_method_id: paymentMethodId,
       });
-      await queryClient.invalidateQueries({ queryKey: keyBuilder.subscription() });
-
+      if (saveBillingAddressToProfile) {
+        void queryClient.invalidateQueries({
+          queryKey: keyBuilder.profile(),
+        });
+      }
       if (data?.subscription.status === SubscriptionStatus.ACTIVE) {
         successNotify({
           message: messages.subscriptionPaymentSuccess,
@@ -165,12 +168,15 @@ function Form({ onPrevious }: Props) {
         });
         makeTriggerWorkspaceConfigurationClickEvent<null>({ on: false, data: null, type: null });
       }
+      setSubscribing(false);
     } catch (error) {
-      const code = get(error, 'cause.error_code', 'DEFAULT');
+      const code = get(error, 'cause.code', 'DEFAULT');
+      const serverError = get(error, 'cause.message', messages.paymentProcessingError);
       const errors = {
         ENTITY_ALREADY_EXISTS: messages.subscriptionPaymentErrorEntityAlreadyExists,
         ENTITY_NOT_CREATED: messages.subscriptionPaymentErrorEntityNotCreated,
         ENTITY_NOT_FOUND: messages.subscriptionPaymentErrorEntityNotFound,
+        PAYMENT_ERROR: serverError,
         DEFAULT: messages.paymentProcessingError,
       };
       const description = get(errors, code, messages.paymentProcessingError);
@@ -179,7 +185,6 @@ function Form({ onPrevious }: Props) {
         description,
         ...notificationConfig,
       });
-    } finally {
       setSubscribing(false);
     }
   };

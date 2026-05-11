@@ -1,5 +1,5 @@
 import { CheckCircleFilled } from '@ant-design/icons';
-import { motion } from 'framer-motion';
+import { domAnimation, LazyMotion, m } from 'framer-motion';
 import { useAtom } from 'jotai';
 
 import { flowAtom, type Interval } from '@/features/payments/subscription/shared';
@@ -30,7 +30,7 @@ function PricingCard({
   onSelect,
 }: Props) {
   return (
-    <motion.button
+    <m.button
       layout
       id={id}
       data-testid="price-card"
@@ -42,27 +42,27 @@ function PricingCard({
           'bg-primary-8 text-white! shadow-md border border-primary-8':
             selectedInterval === interval,
         },
-        { 'text-primary-8 bg-white border border-gray-100': selectedInterval !== interval }
+        { 'text-primary-8 bg-white border border-neutral-100': selectedInterval !== interval }
       )}
     >
       <div className="flex w-full items-center justify-between">
         <input
           hidden
           readOnly
-          className="border-border-200 h-[22px] w-[22px] bg-transparent"
+          className="border-border-200 size-[22px] bg-transparent"
           type="radio"
           name="billing_cycle"
           checked={selectedInterval === interval}
           value={interval}
         />
       </div>
-      <span className="flex items-center gap-2 text-2xl font-bold">
+      <span className="flex items-center gap-2 text-2xl font-semibold">
         {title}
         {selectedInterval === interval && <CheckCircleFilled className="text-green-400!" />}
       </span>
       <span className="inline-block text-sm">
         <small className="mr-1 text-sm font-light">{currency}</small>
-        <span className="text-xl font-bold">
+        <span className="text-xl font-semibold">
           {price}
           <span className="font-light">
             /<span className="text-sm font-light">{interval}</span>
@@ -79,7 +79,7 @@ function PricingCard({
           Save {discount}-
         </div>
       )}
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -90,23 +90,25 @@ export default function PricingToggleCards() {
   if (!tier) return null;
 
   return (
-    <div
-      data-testid="price-cards"
-      className="flex w-full flex-row items-center justify-center gap-3 pb-4"
-    >
-      {tier?.prices?.map((o) => (
-        <PricingCard
-          key={`${o.id}`}
-          id={o.id}
-          title={tier.title}
-          price={o.discount / 100 || o.amount / 100}
-          currency={o.currency}
-          interval={o.interval}
-          discount={o.discount / 100}
-          selectedInterval={interval}
-          onSelect={handleSelect}
-        />
-      ))}
-    </div>
+    <LazyMotion features={domAnimation}>
+      <div
+        data-testid="price-cards"
+        className="flex w-full flex-row items-center justify-center gap-3 pb-4"
+      >
+        {tier?.prices?.map((o) => (
+          <PricingCard
+            key={`${o.id}`}
+            id={o.id}
+            title={tier.title}
+            price={o.discount / 100 || o.amount / 100}
+            currency={o.currency}
+            interval={o.interval}
+            discount={o.discount / 100}
+            selectedInterval={interval}
+            onSelect={handleSelect}
+          />
+        ))}
+      </div>
+    </LazyMotion>
   );
 }

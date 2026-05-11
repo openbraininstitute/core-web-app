@@ -4,7 +4,6 @@ import type {
   CancelSubscriptionRequest,
   CancelSubscriptionResponse,
   CreateSubscriptionRequest,
-  CreateSubscriptionResponse,
   SubscriptionTiersResponse,
   UserActiveSubscriptionResponse,
   UserSubscriptionsResponse,
@@ -24,18 +23,15 @@ const baseUri = '/subscriptions';
  * @returns {Promise<SubscriptionDetails>} - The created subscription details
  * @throws {Error} - Throws an error if the request fails
  */
-export async function createSubscription(
-  payload: CreateSubscriptionRequest
-): Promise<CreateSubscriptionResponse | null> {
+export async function createSubscription(payload: CreateSubscriptionRequest) {
   const api = await virtualLabRootApi();
-  const result = await api.post<VlmCreateSubscriptionResponse>(baseUri, {
+  return await api.post<VlmCreateSubscriptionResponse>(baseUri, {
     headers: {
       'Content-Type': 'application/json',
       accept: 'application/json',
     },
     body: payload,
   });
-  return result.data;
 }
 
 /**

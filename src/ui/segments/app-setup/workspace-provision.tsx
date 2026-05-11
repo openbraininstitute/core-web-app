@@ -102,14 +102,14 @@ function RetryRenameInput({
             aria-label="New virtual lab name"
           />
           {!value && (
-            <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm font-light text-gray-400 line-through">
+            <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm font-light text-neutral-400 line-through">
               {originalName}
             </span>
           )}
           <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
-            {isLoading && <LoadingOutlined className="text-primary-8 h-4 w-4 animate-spin" />}
-            {!isLoading && available && <CheckCircleFilled className="text-secondary-2 h-4 w-4" />}
-            {!isLoading && taken && <CloseCircleFilled className="text-error h-4 w-4" />}
+            {isLoading && <LoadingOutlined className="text-primary-8 size-4 animate-spin" />}
+            {!isLoading && available && <CheckCircleFilled className="text-secondary-2 size-4" />}
+            {!isLoading && taken && <CloseCircleFilled className="text-error size-4" />}
           </div>
         </div>
         <Button
@@ -120,7 +120,7 @@ function RetryRenameInput({
           disabled={!canSubmit}
           onClick={() => onConfirm(value.trim())}
           className={cn('transition-colors cursor-pointer', {
-            'bg-gray-100 text-gray-400 pointer-events-none': !canSubmit,
+            'bg-neutral-100 text-neutral-400 pointer-events-none': !canSubmit,
           })}
         >
           Confirm
@@ -144,7 +144,7 @@ function StepIcon({
   return (
     <div
       className={cn(
-        'border-neutral-2 mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border bg-gray-50 transition-all duration-300',
+        'border-neutral-2 mt-1 flex size-5 shrink-0 items-center justify-center rounded-full border bg-neutral-50 transition-all duration-300',
         {
           'bg-secondary-2 border-secondary-2': done,
           'bg-error border-error': failed,
@@ -153,10 +153,10 @@ function StepIcon({
         }
       )}
     >
-      {done && <CheckOutlined className="h-3 w-3 text-white" />}
-      {failed && <CloseOutlined className="h-3 w-3 text-white" />}
-      {retryable && <CloseOutlined className="h-3 w-3 text-white" />}
-      {inProgress && <LoadingOutlined className="h-3 w-3 animate-spin text-white" />}
+      {done && <CheckOutlined className="size-3 text-white" />}
+      {failed && <CloseOutlined className="size-3 text-white" />}
+      {retryable && <CloseOutlined className="size-3 text-white" />}
+      {inProgress && <LoadingOutlined className="size-3 animate-spin text-white" />}
     </div>
   );
 }
@@ -255,11 +255,35 @@ export function WorkspaceProvision({
   shouldCreateProject,
   move,
 }: Props) {
-  const [progress, setProgress] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
-  const [retryState, setRetryState] = useState<RetryState>(null);
+  const [{ progress, completedSteps, retryState }, setBootstrapState] = useState<{
+    progress: number;
+    completedSteps: CompletedStep[];
+    retryState: RetryState;
+  }>({
+    progress: 0,
+    completedSteps: [],
+    retryState: null,
+  });
   const [isResuming, setIsResuming] = useState(false);
   const session = useSession();
+
+  const setProgress = useCallback((progress: number) => {
+    setBootstrapState((prev) => ({ ...prev, progress }));
+  }, []);
+
+  const setCompletedSteps = useCallback((update: React.SetStateAction<CompletedStep[]>) => {
+    setBootstrapState((prev) => ({
+      ...prev,
+      completedSteps: typeof update === 'function' ? update(prev.completedSteps) : update,
+    }));
+  }, []);
+
+  const setRetryState = useCallback((update: React.SetStateAction<RetryState>) => {
+    setBootstrapState((prev) => ({
+      ...prev,
+      retryState: typeof update === 'function' ? update(prev.retryState) : update,
+    }));
+  }, []);
 
   const streamBootstrap = useCallback(
     async (
@@ -287,11 +311,7 @@ export function WorkspaceProvision({
 
         for await (const value of it) {
           if (cancelled.current) return;
-          try {
-            processChunk(value as StreamItem, setProgress, setCompletedSteps, setRetryState, move);
-          } catch (e: unknown) {
-            log('error', (e as Error).message);
-          }
+          processChunk(value as StreamItem, setProgress, setCompletedSteps, setRetryState, move);
         }
       } catch (error) {
         if (!cancelled.current) {
@@ -305,6 +325,9 @@ export function WorkspaceProvision({
       shouldCreateVirtualLab,
       shouldCreateProject,
       move,
+      setProgress,
+      setCompletedSteps,
+      setRetryState,
     ]
   );
 
@@ -319,9 +342,7 @@ export function WorkspaceProvision({
   // React Strict Mode's mount → unmount → remount cycle.
   useEffect(() => {
     const abortController = new AbortController();
-    setProgress(0);
-    setCompletedSteps([]);
-    setRetryState(null);
+    setBootstrapState({ progress: 0, completedSteps: [], retryState: null });
     streamRef.current({ current: false }, payloadRef.current, undefined, abortController.signal);
     return () => {
       abortController.abort('unmounted');
@@ -356,12 +377,12 @@ export function WorkspaceProvision({
       await streamBootstrap(cancelled, updatedPayload, resumeStep);
       setIsResuming(false);
     },
-    [accountPayload, retryState, streamBootstrap]
+    [accountPayload, retryState, streamBootstrap, setCompletedSteps, setRetryState]
   );
 
   return (
     <HydrateWrapper>
-      <div className="flex w-full max-w-max flex-col items-center justify-center space-y-2">
+      <div className="flex w-full max-w-max flex-col items-center justify-center gap-y-2">
         <svg className="h-64 w-64 -rotate-90 transform xl:h-72 xl:w-72" viewBox="0 0 128 128">
           <title>progress</title>
           <circle cx="64" cy="64" r="56" stroke="#e5e7eb" strokeWidth="4" fill="none" />

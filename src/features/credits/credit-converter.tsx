@@ -48,15 +48,15 @@ export function CreditConverter({
 
   return (
     <div data-testid="credit-converter" className="mx-auto flex w-full flex-col items-center">
-      <div className="w-full rounded-lg border border-gray-200 bg-white p-6 shadow-xs">
+      <div className="w-full rounded-lg border border-neutral-200 bg-white p-6 shadow-xs">
         <CreditsAmountInput
           value={credits || undefined}
           onValueChange={handleCreditsChange}
           hint={
             conversion ? formatMinorCurrency(conversion.amount, conversion.currency) : 'CHF 0.00'
           }
-          className="mb-4 border-gray-200 bg-white text-primary-8 shadow-xs"
-          inputClassName="border-gray-200 bg-white text-center text-primary-8 placeholder:text-primary-8/40"
+          className="mb-4 border-neutral-200 bg-white text-primary-8 shadow-xs"
+          inputClassName="border-neutral-200 bg-white text-center text-primary-8 placeholder:text-primary-8/40"
           loadingHint={conversionQuery.isFetching}
         />
         {showActions && (
@@ -77,7 +77,7 @@ export function CreditConverter({
             <Button
               key="back-to-btn"
               className={classNames(
-                'text-primary-8 rounded-md border-gray-300 bg-white px-6',
+                'text-primary-8 rounded-md border-neutral-300 bg-white px-6',
                 'hover:border-primary-8 hover:text-primary-8! hover:border! hover:bg-white! hover:font-bold'
               )}
               type="text"
@@ -93,9 +93,9 @@ export function CreditConverter({
       </div>
       {!showActions && (
         <div className="my-8 flex gap-2">
-          <span className="h-2 w-2 rounded-full bg-gray-400" />
-          <span className="h-2 w-2 rounded-full bg-gray-300" />
-          <span className="h-2 w-2 rounded-full bg-gray-300" />
+          <span className="size-2 rounded-full bg-neutral-400" />
+          <span className="size-2 rounded-full bg-neutral-300" />
+          <span className="size-2 rounded-full bg-neutral-300" />
         </div>
       )}
     </div>

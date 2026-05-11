@@ -29,7 +29,7 @@ function PlanGridSkeleton() {
               {featureRowIdsBySlot[slot].map((rowId) => (
                 <div key={rowId} className="flex items-center gap-2">
                   <Placeholder className="h-4 flex-1 rounded-full" />
-                  <Placeholder className="h-5 w-5 shrink-0 rounded-full" />
+                  <Placeholder className="size-5 shrink-0 rounded-full" />
                 </div>
               ))}
             </div>
@@ -37,7 +37,7 @@ function PlanGridSkeleton() {
               {featureRowIdsBySlot.toReversed()[slot].map((rowId) => (
                 <div key={rowId} className="flex items-center gap-2">
                   <Placeholder className="h-4 flex-1 rounded-full" />
-                  <Placeholder className="h-5 w-5 shrink-0 rounded-full" />
+                  <Placeholder className="size-5 shrink-0 rounded-full" />
                 </div>
               ))}
             </div>

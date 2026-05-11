@@ -108,6 +108,200 @@ function CustomInput({
   );
 }
 
+type EditableFieldState = {
+  firstName: boolean;
+  lastName: boolean;
+  affiliation: boolean;
+};
+
+function WorkspaceIdentityFields({
+  countries,
+  editableField,
+  emailErrors,
+  form,
+  handleEdit,
+  isCountriesLoading,
+  isCurrentEmailAvailable,
+  isEmailTouched,
+  isEmailValidating,
+  validateEmailAvailability,
+  virtualLabName,
+}: {
+  countries: Array<{ label: string; value: string }>;
+  editableField: EditableFieldState;
+  emailErrors: string[];
+  form: ReturnType<typeof Form.useForm<TWorkspaceIdentitySchema>>[0];
+  handleEdit: (fieldName: keyof EditableFieldState) => void;
+  isCountriesLoading: boolean;
+  isCurrentEmailAvailable: boolean;
+  isEmailTouched: boolean;
+  isEmailValidating: boolean;
+  validateEmailAvailability: (values: TWorkspaceIdentitySchema) => Promise<void>;
+  virtualLabName?: string;
+}) {
+  return (
+    <CardContent>
+      <Form.Item hidden name="name">
+        <input name="name" value={virtualLabName} type="text" hidden readOnly />
+      </Form.Item>
+      <Form.Item
+        name="first_name"
+        className="flex-1"
+        label={
+          <span className="block text-sm text-[#8C8C8C]">
+            First name <sup className="text-red-500">*</sup>
+          </span>
+        }
+        rules={[
+          {
+            required: true,
+            validator: createZodFieldValidator(WorkspaceIdentityFormSchema, 'first_name', form),
+          },
+        ]}
+      >
+        <CustomInput
+          placeholder="Enter your first name"
+          disabled={!editableField.firstName}
+          onEdit={() => handleEdit('firstName')}
+        />
+      </Form.Item>
+      <Form.Item
+        name="last_name"
+        className="flex-1"
+        label={
+          <span className="block text-sm text-[#8C8C8C]">
+            Last name <sup className="text-red-500">*</sup>
+          </span>
+        }
+        rules={[
+          {
+            required: true,
+            validator: createZodFieldValidator(WorkspaceIdentityFormSchema, 'last_name', form),
+          },
+        ]}
+      >
+        <CustomInput
+          placeholder="Enter your last name"
+          disabled={!editableField.lastName}
+          onEdit={() => handleEdit('lastName')}
+        />
+      </Form.Item>
+      <Form.Item
+        name="email"
+        className="flex-1"
+        validateTrigger={['onChange']}
+        validateDebounce={500}
+        validateStatus={
+          isEmailValidating ? 'validating' : emailErrors.length > 0 ? 'error' : undefined
+        }
+        label={
+          <span className="block text-sm text-[#8C8C8C]">
+            Email <sup className="text-red-500">*</sup>
+          </span>
+        }
+        rules={[
+          {
+            required: true,
+            validator: createZodFieldValidator(
+              WorkspaceIdentityFormSchema,
+              'email',
+              form,
+              validateEmailAvailability
+            ),
+          },
+        ]}
+      >
+        <CustomInput
+          placeholder="Enter your email"
+          disabled={false}
+          editable={false}
+          type="email"
+          extra={
+            isEmailValidating ? (
+              <LoadingOutlined />
+            ) : emailErrors.length > 0 ? (
+              <CloseCircleFilled className="text-destructive" />
+            ) : isEmailTouched && isCurrentEmailAvailable ? (
+              <CheckCircleFilled className="text-teal-600" />
+            ) : null
+          }
+        />
+      </Form.Item>
+      <Form.Item
+        name="country"
+        className="flex-1"
+        label={
+          <span className="block text-sm text-[#8C8C8C]">
+            Country <sup className="text-red-500">*</sup>
+          </span>
+        }
+        rules={[
+          {
+            required: true,
+            validator: createZodFieldValidator(WorkspaceIdentityFormSchema, 'country', form),
+          },
+        ]}
+      >
+        <Select
+          showSearch
+          id="country"
+          placeholder={isCountriesLoading ? 'Loading countries...' : 'Select a country'}
+          loading={isCountriesLoading}
+          filterOption={(input, option) =>
+            (option?.label?.toString() ?? '').toLowerCase().includes(input.toLowerCase())
+          }
+          options={countries}
+          className={classNames(
+            'border-neutral-1! h-auto rounded-full bg-white px-1 py-1 text-lg',
+            'shadow-sm [&_.ant-select-selector]:border-0! [&_.ant-select-selector]:bg-transparent! [&_.ant-select-selector]:shadow-none!',
+            '[&_.ant-select-selection-search-input]:text-primary-8!',
+            '[&_.ant-select-selection-item]:text-primary-8! [&_.ant-select-selection-item]:font-black!',
+            '[&_.ant-select-selection-placeholder]:text-sm! [&_.ant-select-selection-placeholder]:font-light!'
+          )}
+        />
+      </Form.Item>
+      <Form.Item
+        label={
+          <div className="flex items-center gap-2">
+            <span className="block text-sm text-[#8C8C8C]">Affiliation</span>
+            <Popover
+              placement="top"
+              trigger="hover"
+              classNames={{
+                root: cn(
+                  '[&_.ant-popover-inner]:p-0! [&_.ant-popover-inner]:bg-primary-8! max-w-[260px]',
+                  '[&_.ant-popover-arrow:before]:bg-primary-8!'
+                ),
+              }}
+              content={
+                <div className="bg-primary-8 flex flex-col items-center justify-center gap-4 rounded-lg px-5 py-3 text-white">
+                  Organization, University, Company
+                </div>
+              }
+            >
+              <InfoCircleOutlined className="text-[#8C8C8C]!" />
+            </Popover>
+          </div>
+        }
+        className="w-full flex-1"
+        name="entity"
+        rules={[
+          {
+            required: true,
+            validator: createZodFieldValidator(WorkspaceIdentityFormSchema, 'entity', form),
+          },
+        ]}
+      >
+        <CustomInput
+          placeholder="Enter your affiliation here..."
+          disabled={false}
+          editable={false}
+        />
+      </Form.Item>
+    </CardContent>
+  );
+}
+
 export function WorkspaceIdentity({
   data,
   move,
@@ -133,11 +327,7 @@ export function WorkspaceIdentity({
       })),
   });
 
-  const [editableField, setEditableField] = useState<{
-    firstName: boolean;
-    lastName: boolean;
-    affiliation: boolean;
-  }>({
+  const [editableField, setEditableField] = useState<EditableFieldState>({
     firstName: false,
     lastName: false,
     affiliation: false,
@@ -206,11 +396,13 @@ export function WorkspaceIdentity({
     try {
       const available = await checkUserProfileEmailAvailability(email);
       emailAvailabilityCacheRef.current.set(email, available);
+      setIsEmailAvailabilityChecking(false);
       if (!available) {
         throw new CustomFormError('Please make sure the email is correct or try another one.');
       }
-    } finally {
+    } catch (error) {
       setIsEmailAvailabilityChecking(false);
+      return Promise.reject(error);
     }
   };
 
@@ -239,195 +431,19 @@ export function WorkspaceIdentity({
               validateTrigger={['onBlur', 'onChange']}
             >
               <Card className="mr-4 ml-4 flex w-full max-w-lg min-w-lg flex-col bg-transparent shadow-none backdrop-blur-sm">
-                <CardContent>
-                  <Form.Item hidden name="name">
-                    <input
-                      name="name"
-                      value={virtualLabName}
-                      type="text"
-                      hidden
-                      defaultValue={virtualLabName}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    name="first_name"
-                    className="flex-1"
-                    label={
-                      <span className="block text-sm text-[#8C8C8C]">
-                        First name <sup className="text-red-500">*</sup>
-                      </span>
-                    }
-                    rules={[
-                      {
-                        required: true,
-                        validator: createZodFieldValidator(
-                          WorkspaceIdentityFormSchema,
-                          'first_name',
-                          form
-                        ),
-                      },
-                    ]}
-                  >
-                    <CustomInput
-                      placeholder="Enter your first name"
-                      disabled={!editableField.firstName}
-                      onEdit={() => handleEdit('firstName')}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    name="last_name"
-                    className="flex-1"
-                    label={
-                      <span className="block text-sm text-[#8C8C8C]">
-                        Last name <sup className="text-red-500">*</sup>
-                      </span>
-                    }
-                    rules={[
-                      {
-                        required: true,
-                        validator: createZodFieldValidator(
-                          WorkspaceIdentityFormSchema,
-                          'last_name',
-                          form
-                        ),
-                      },
-                    ]}
-                  >
-                    <CustomInput
-                      placeholder="Enter your last name"
-                      disabled={!editableField.lastName}
-                      onEdit={() => handleEdit('lastName')}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    name="email"
-                    className="flex-1"
-                    validateTrigger={['onChange']}
-                    validateDebounce={500}
-                    validateStatus={
-                      isEmailValidating
-                        ? 'validating'
-                        : emailErrors.length > 0
-                          ? 'error'
-                          : undefined
-                    }
-                    label={
-                      <span className="block text-sm text-[#8C8C8C]">
-                        Email <sup className="text-red-500">*</sup>
-                      </span>
-                    }
-                    rules={[
-                      {
-                        required: true,
-                        validator: createZodFieldValidator(
-                          WorkspaceIdentityFormSchema,
-                          'email',
-                          form,
-                          validateEmailAvailability
-                        ),
-                      },
-                    ]}
-                  >
-                    <CustomInput
-                      placeholder="Enter your email"
-                      disabled={false}
-                      editable={false}
-                      type="email"
-                      extra={
-                        isEmailValidating ? (
-                          <LoadingOutlined />
-                        ) : emailErrors.length > 0 ? (
-                          <CloseCircleFilled className="text-destructive" />
-                        ) : isEmailTouched && isCurrentEmailAvailable ? (
-                          <CheckCircleFilled className="text-teal-600" />
-                        ) : null
-                      }
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    name="country"
-                    className="flex-1"
-                    label={
-                      <span className="block text-sm text-[#8C8C8C]">
-                        Country <sup className="text-red-500">*</sup>
-                      </span>
-                    }
-                    rules={[
-                      {
-                        required: true,
-                        validator: createZodFieldValidator(
-                          WorkspaceIdentityFormSchema,
-                          'country',
-                          form
-                        ),
-                      },
-                    ]}
-                  >
-                    <Select
-                      showSearch
-                      id="country"
-                      placeholder={isCountriesLoading ? 'Loading countries...' : 'Select a country'}
-                      loading={isCountriesLoading}
-                      filterOption={(input, option) =>
-                        (option?.label?.toString() ?? '')
-                          .toLowerCase()
-                          .includes(input.toLowerCase())
-                      }
-                      options={countries}
-                      className={classNames(
-                        'border-neutral-1! h-auto rounded-full bg-white px-1 py-1 text-lg',
-                        'shadow-sm [&_.ant-select-selector]:border-0! [&_.ant-select-selector]:bg-transparent! [&_.ant-select-selector]:shadow-none!',
-                        '[&_.ant-select-selection-search-input]:text-primary-8!',
-                        '[&_.ant-select-selection-item]:text-primary-8! [&_.ant-select-selection-item]:font-black!',
-                        '[&_.ant-select-selection-placeholder]:text-sm! [&_.ant-select-selection-placeholder]:font-light!'
-                      )}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    label={
-                      <div className="flex items-center gap-2">
-                        <span className="block text-sm text-[#8C8C8C]">
-                          Affiliation <sup className="text-red-500">*</sup>
-                        </span>
-                        <Popover
-                          placement="top"
-                          trigger="hover"
-                          classNames={{
-                            root: cn(
-                              '[&_.ant-popover-inner]:p-0! [&_.ant-popover-inner]:bg-primary-8! max-w-[260px]',
-                              '[&_.ant-popover-arrow:before]:bg-primary-8!'
-                            ),
-                          }}
-                          content={
-                            <div className="bg-primary-8 flex flex-col items-center justify-center gap-4 rounded-lg px-5 py-3 text-white">
-                              Organization, University, Company
-                            </div>
-                          }
-                        >
-                          <InfoCircleOutlined className="text-[#8C8C8C]!" />
-                        </Popover>
-                      </div>
-                    }
-                    className="w-full flex-1"
-                    name="entity"
-                    rules={[
-                      {
-                        required: true,
-                        validator: createZodFieldValidator(
-                          WorkspaceIdentityFormSchema,
-                          'entity',
-                          form
-                        ),
-                      },
-                    ]}
-                  >
-                    <CustomInput
-                      placeholder="Enter your affiliation here..."
-                      disabled={false}
-                      editable={false}
-                    />
-                  </Form.Item>
-                </CardContent>
+                <WorkspaceIdentityFields
+                  countries={countries}
+                  editableField={editableField}
+                  emailErrors={emailErrors}
+                  form={form}
+                  handleEdit={handleEdit}
+                  isCountriesLoading={isCountriesLoading}
+                  isCurrentEmailAvailable={isCurrentEmailAvailable}
+                  isEmailTouched={isEmailTouched}
+                  isEmailValidating={isEmailValidating}
+                  validateEmailAvailability={validateEmailAvailability}
+                  virtualLabName={virtualLabName}
+                />
               </Card>
               <div className="mt-6 text-center">
                 <Button

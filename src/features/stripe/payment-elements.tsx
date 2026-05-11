@@ -1,8 +1,14 @@
+import { LoadingOutlined } from '@ant-design/icons';
 import { AddressElement, Elements, PaymentElement, useStripe } from '@stripe/react-stripe-js';
+import { useQueries } from '@tanstack/react-query';
 
+import { getCountries } from '@/api/virtual-lab-svc/queries/config';
+import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { stripeAppearance, stripeFonts } from '@/features/stripe/style';
 import { makeBillingAddressFromStripeEvent } from '@/features/stripe/utils';
 import { Checkbox } from '@/ui/molecules/checkbox';
+import { keyBuilder } from '@/ui/use-query-keys/third-parties';
+import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 
 import type { StripeElementsOptions } from '@stripe/stripe-js';
@@ -26,12 +32,56 @@ function StripeAddressFields({
   disabled: boolean;
   onAddressChange: (address: TBillingAddress | null) => void;
 }) {
+  const { countries, profile, isLoading } = useQueries({
+    queries: [
+      {
+        queryKey: keyBuilder.countries(),
+        queryFn: getCountries,
+        staleTime: Infinity,
+      },
+      {
+        queryKey: userKeyBuilder.profile(),
+        queryFn: getUserProfile,
+        staleTime: Infinity,
+      },
+    ],
+    combine: ([countries, profile]) => {
+      return {
+        countries: countries.data?.map((p) => p.code),
+        profile: profile.data?.profile,
+        isLoading: countries.isLoading || profile.isLoading,
+      };
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="py-2 flex items-center justify-center w-full bg-red-500">
+        <LoadingOutlined spin className="text-lg" />
+      </div>
+    );
+  }
+
   return (
     <AddressElement
       options={{
         mode: 'billing',
-        display: { name: 'full' },
+        display: { name: 'split' },
         fields: { phone: 'never' },
+        allowedCountries: countries,
+        autocomplete: { mode: 'automatic' },
+        defaultValues: {
+          firstName: profile?.first_name,
+          lastName: profile?.last_name,
+          address: {
+            country: profile?.address.country ?? 'CH',
+            line1: profile?.address.street,
+            line2: '',
+            city: profile?.address.locality,
+            postal_code: profile?.address.postal_code,
+            state: profile?.address.region,
+          },
+        },
       }}
       onChange={(event) => onAddressChange(makeBillingAddressFromStripeEvent(event))}
       className={cn(disabled && 'pointer-events-none opacity-70')}

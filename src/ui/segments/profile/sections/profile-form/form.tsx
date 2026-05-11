@@ -105,11 +105,13 @@ export function Profile({ data }: ProfileProps) {
     try {
       const available = await checkUserProfileEmailAvailability(email);
       emailAvailabilityCacheRef.current.set(email, available);
+      setIsEmailAvailabilityChecking(false);
       if (!available) {
         throw new CustomFormError('Please make sure the email is correct or try another one.');
       }
-    } finally {
+    } catch (error) {
       setIsEmailAvailabilityChecking(false);
+      return Promise.reject(error);
     }
   };
 
@@ -126,7 +128,7 @@ export function Profile({ data }: ProfileProps) {
       setEmailError(false);
     } catch (error) {
       setEmailError(true);
-      throw error;
+      return Promise.reject(error);
     }
   };
 

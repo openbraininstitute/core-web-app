@@ -65,7 +65,7 @@ export function CreditsAmountInput({
             </div>
           </div>
           <div className="mt-2 ml-2 flex items-center gap-2 text-current">
-            <CoinsIcon className="h-5 w-5" />
+            <CoinsIcon className="size-5" />
             <span className="text-sm">
               {loadingHint ? <LoadingOutlined spin className="ml-2 text-current" /> : hint}
             </span>
