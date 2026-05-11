@@ -100,6 +100,7 @@ export default function NeuronIds({
 
       {!edit && (
         <HighlightedInput
+          maxLength={1000}
           handleAddIdsClick={(ids) => {
             const newAllElements = [...new Set([...allElements, ...ids])].sort((a, b) => a - b);
             onAddIds(newAllElements);
@@ -261,8 +262,10 @@ const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
 
 const HighlightedInput = ({
   handleAddIdsClick,
+  maxLength = 1000,
 }: {
   handleAddIdsClick: (ids: number[]) => void;
+  maxLength: number;
 }) => {
   const [value, setValue] = useState<string>('');
   const [error, setError] = useState('');
@@ -270,6 +273,9 @@ const HighlightedInput = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+
+    if (newValue.length > maxLength) return;
+
     setValue(newValue);
 
     const segments = newValue.split(',');
@@ -333,6 +339,7 @@ const HighlightedInput = ({
             value={value}
             onChange={handleChange}
             onScroll={handleScroll}
+            maxLength={maxLength}
             className="w-full px-3 py-2 font-mono text-sm text-transparent bg-transparent caret-black outline-none block z-10 placeholder:text-xs"
             spellCheck={false}
             placeholder="Type your comma separated list of IDs"
@@ -365,7 +372,18 @@ const HighlightedInput = ({
           Add IDs
         </button>
       </div>
-      {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
+
+      <div className="flex justify-between items-start mt-1 px-1">
+        <div className="text-red-500 text-sm">{error}</div>
+        <div
+          className={cn(
+            'text-xs font-mono transition-colors ml-auto',
+            value.length >= maxLength ? 'text-red-500 font-bold' : 'text-gray-400'
+          )}
+        >
+          {value.length} / {maxLength} characters
+        </div>
+      </div>
     </div>
   );
 };
