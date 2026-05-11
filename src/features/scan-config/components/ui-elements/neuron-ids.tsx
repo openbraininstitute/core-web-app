@@ -60,14 +60,12 @@ export default function NeuronIds({
     setEdit(true);
   }, []);
 
-  if (disabled) {
-    return <Ids ids={renderedElements} disabled />;
-  }
-
   return (
-    <div className="w-full ">
-      {!edit && value !== null && <Ids ids={renderedElements} onEditClick={handleEditClick} />}
-      {!edit && value === null && (
+    <div className="w-full">
+      {!edit && value !== null && (
+        <Ids ids={renderedElements} onEditClick={handleEditClick} disabled={disabled} />
+      )}
+      {value === null && (
         <>
           <div className="text-primary-8 text-sm">No neuron IDs yet</div>
           <div className="text-xs text-gray-500">
@@ -77,28 +75,32 @@ export default function NeuronIds({
       )}
       {!edit && (
         <div className="flex mt-2 gap-2 justify-end mb-3">
-          <button
-            type="button"
-            className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 text-sm gap-3"
-            onClick={() => {
-              onAddIds(null);
-              setText('');
-            }}
-          >
-            Clear list
-          </button>
-          <button
-            type="button"
-            className="text-gray-500  flex justify-center items-center border border-gray-200 p-2 rounded-full text-primary-9 text-sm gap-3"
-            onClick={handleEditClick}
-          >
-            Edit ID list <EditOutlined className="text-xs" />
-          </button>
+          {!disabled && (
+            <>
+              <button
+                type="button"
+                className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 text-sm gap-3"
+                onClick={() => {
+                  onAddIds(null);
+                  setText('');
+                }}
+              >
+                Clear list
+              </button>
+              <button
+                type="button"
+                className="text-gray-500  flex justify-center items-center border border-gray-200 p-2 rounded-full text-primary-9 text-sm gap-3"
+                onClick={handleEditClick}
+              >
+                Edit ID list <EditOutlined className="text-xs" />
+              </button>
+            </>
+          )}
           <CopyButton textToCopy={text} />
         </div>
       )}
 
-      {!edit && (
+      {!edit && !disabled && (
         <HighlightedInput
           maxLength={1000}
           handleAddIdsClick={(ids) => {
@@ -108,8 +110,15 @@ export default function NeuronIds({
           }}
         />
       )}
-      {edit && <NumberEditor value={text} setIsTextValid={setIsTextValid} setValue={setText} />}
-      {!disabled && edit && (
+      {edit && (
+        <NumberEditor
+          value={text}
+          setIsTextValid={setIsTextValid}
+          setValue={setText}
+          disabled={disabled}
+        />
+      )}
+      {edit && (
         <div className="flex gap-2 mt-3 justify-end">
           <Button
             className="border-none bg-transparent text-primary-8"
@@ -119,20 +128,22 @@ export default function NeuronIds({
           >
             Cancel
           </Button>
-          <Button
-            className="text-primary-8 rounded-full font-bold"
-            onClick={() => {
-              if (edit && isTextValid) {
-                const values = parseCsvIntegers(text);
-                onAddIds(values);
-                setText(values.join(', '));
-              }
-              setEdit(!edit);
-            }}
-            disabled={!isTextValid}
-          >
-            Apply
-          </Button>
+          {
+            <Button
+              className="text-primary-8 rounded-full font-bold"
+              onClick={() => {
+                if (edit && isTextValid) {
+                  const values = parseCsvIntegers(text);
+                  onAddIds(values);
+                  setText(values.join(', '));
+                }
+                setEdit(!edit);
+              }}
+              disabled={!isTextValid || disabled}
+            >
+              Apply
+            </Button>
+          }
         </div>
       )}
     </div>
@@ -203,21 +214,13 @@ const Ids = memo(
 
         {ids.tail.length > 0 && (
           <div className="w-full flex justify-center my-3">
-            {!disabled && (
-              <button
-                type="button"
-                className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm"
-                onClick={onEditClick}
-                disabled={disabled}
-              >
-                Edit all IDs
-              </button>
-            )}
-            {disabled && (
-              <div className="text-gray-500 flex justify-center items-center  text-primary-8 w-[100px] text-2xl relative bottom-[5px]">
-                ...
-              </div>
-            )}
+            <button
+              type="button"
+              className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm"
+              onClick={onEditClick}
+            >
+              {!disabled ? 'Edit all IDs' : 'View all Ids'}
+            </button>
           </div>
         )}
 
@@ -392,10 +395,12 @@ const NumberEditor = ({
   value,
   setValue,
   setIsTextValid,
+  disabled,
 }: {
   value: string;
   setIsTextValid: (v: boolean) => void;
   setValue: (newV: string) => void;
+  disabled: boolean;
 }) => {
   const monacoRef = useRef<typeof monaco | null>(null);
 
@@ -476,6 +481,7 @@ const NumberEditor = ({
           padding: { top: 12, bottom: 12 },
           lineNumbersMinChars: 3,
           lineDecorationsWidth: 0,
+          readOnly: disabled,
         }}
       />
     </div>
