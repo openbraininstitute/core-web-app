@@ -4,6 +4,11 @@ import { type DynamicToolUIPart, getToolName, isToolUIPart, type ToolUIPart } fr
 import { useAtom, useSetAtom } from 'jotai';
 import React from 'react';
 
+import {
+  findConfigKeyInState,
+  type TAIConfigKey,
+  VALID_AI_CONFIG_KEYS,
+} from '@/features/scan-config/helpers';
 import { agentStateAtom, configStateAtom } from '@/services/ai-agent/hooks/chat';
 import {
   clearDiffStateAtom,
@@ -16,11 +21,6 @@ import { adjustParentTypes, computeLiveDiffs, type DiffResult } from '@/utils/di
 
 import type { UIMessage } from '@ai-sdk/react';
 import type { Config } from '@/features/scan-config/components/components';
-import {
-  VALID_AI_CONFIG_KEYS,
-  type TAIConfigKey,
-  findConfigKeyInState,
-} from '@/features/scan-config/helpers';
 
 // ── Helpers (exported for reuse by panel-level hook) ─────────────────────────
 
@@ -142,7 +142,9 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
     // Only check if it looks like a UUID (entity-specific pages).
     const urlSegments = globalThis.location?.pathname?.split('/').filter(Boolean) ?? [];
     const urlEntityId = urlSegments[urlSegments.length - 1];
-    const isUuid = urlEntityId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(urlEntityId);
+    const isUuid =
+      urlEntityId &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(urlEntityId);
     if (isUuid && messageKey) {
       const messageConfig = result.state[messageKey];
       if (messageConfig && !JSON.stringify(messageConfig).includes(urlEntityId)) {

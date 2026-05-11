@@ -1,9 +1,9 @@
-import { ScanConfigActivity, type TScanConfigActivity } from '@/features/scan-config/types';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
+import { ScanConfigActivity, type TScanConfigActivity } from '@/features/scan-config/types';
 
 export {
   buildActivityStatusMap,
