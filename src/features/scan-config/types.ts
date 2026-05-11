@@ -25,7 +25,7 @@ import type { Prettify } from '@/utils/type';
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 type Primitive = null | boolean | number | string;
-interface Object {
+export interface Object {
   [key: string]: ConfigValue | Object;
 }
 

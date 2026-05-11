@@ -169,7 +169,7 @@ const ModelIdentifierSelector = {
 
 export function useAtomsMap({
   schema,
-  initialConfig,
+  initialConfig = {},
   model,
 }: {
   schema?: ConfigSchema;
@@ -183,106 +183,92 @@ export function useAtomsMap({
 
     const map: {
       [key: string]:
-        | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
-        | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
+        | ReturnType<typeof atom<Record<string, ConfigValue>>>
+        | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
     } = {};
 
-    // Logic to build the atoms map based on initialConfig OR schema defaults
-    if (initialConfig) {
-      for (const [k, v] of Object.entries(schema.properties)) {
-        if (isType(v)) continue;
-        if (
-          typeof initialConfig[k] !== 'string' &&
-          (v.ui_element === ScanConfigUIElementDict.BlockSingle ||
-            v.ui_element === ScanConfigUIElementDict.BlockUnion)
-        ) {
-          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initialConfig[k] ?? v);
-        } else {
-          Object.entries(initialConfig)
-            .filter(([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k))
-            .forEach(([k, v]) => {
-              map[k] = {};
-              Object.entries(v).forEach(([subK, subV]) => {
-                if (!isPlainObject(subV) || isAtom(map[k])) return;
-                map[k][subK] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(subV);
+    Object.entries(schema.properties).forEach(([k, v]) => {
+      if (isType(v)) return;
+
+      const initialConfigforKey = initialConfig[k] ?? {};
+
+      if (!isPlainObject(initialConfigforKey)) return;
+
+      if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
+        const initial: Record<string, ConfigValue | Array<ConfigValue>> = initialConfigforKey;
+
+        Object.entries(v.properties).forEach(([subkey, subValue]) => {
+          if (subkey in initial) return;
+          initial[subkey] = subValue.default ?? null;
+          if (
+            model &&
+            !isType(subValue) &&
+            subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
+          ) {
+            const formModelType = match(model)
+              .with({ type: EntityTypeDict.EMCellMesh }, () => 'EMCellMeshFromID')
+              .with(
+                { type: EntityTypeDict.Memodel },
+                () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
+              )
+              .with(
+                {
+                  type: EntityTypeDict.Circuit,
+                  scale: CircuitScaleDictionary.Single,
+                },
+                () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.MEModelWithSynapses]
+              )
+              .with(
+                { type: EntityTypeDict.Circuit },
+                () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Circuit]
+              )
+              .with(
+                { type: EntityTypeDict.CellMorphology },
+                () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
+              )
+              .otherwise(() => {
+                throw new Error(`Unsupported entity type: ${model.type}`);
               });
-            });
-        }
-      }
-    } else {
-      Object.entries(schema.properties).forEach(([k, v]) => {
-        if (isType(v)) return;
-        if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
-          const initial: Record<string, ConfigValue | Array<ConfigValue>> = {};
 
-          Object.entries(v.properties).forEach(([subkey, subValue]) => {
-            initial[subkey] = subValue.default ?? null;
-            if (
-              model &&
-              !isType(subValue) &&
-              subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
-            ) {
-              const formModelType = match(model)
-                .with({ type: EntityTypeDict.EMCellMesh }, () => 'EMCellMeshFromID')
-                .with(
-                  { type: EntityTypeDict.Memodel },
-                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
-                )
-                .with(
-                  {
-                    type: EntityTypeDict.Circuit,
-                    scale: CircuitScaleDictionary.Single,
-                  },
-                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.MEModelWithSynapses]
-                )
-                .with(
-                  { type: EntityTypeDict.Circuit },
-                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Circuit]
-                )
-                .with(
-                  { type: EntityTypeDict.CellMorphology },
-                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
-                )
-                .otherwise(() => {
-                  throw new Error(`Unsupported entity type: ${model.type}`);
-                });
-
-              initial[subkey] = {
+            initial[subkey] = {
+              type: formModelType,
+              id_str: model.id,
+            };
+          }
+          if (
+            model &&
+            !isType(subValue) &&
+            subValue.ui_element === ScanConfigUIElementDict.ModelIdentifierMultiple
+          ) {
+            const formModelType = match(model)
+              .with(
+                { type: EntityTypeDict.CellMorphology },
+                () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
+              )
+              .otherwise(() => {
+                throw new Error(`Unsupported entity type: ${model.type}`);
+              });
+            initial[subkey] = [
+              {
                 type: formModelType,
                 id_str: model.id,
-              };
-            }
-            if (
-              model &&
-              !isType(subValue) &&
-              subValue.ui_element === ScanConfigUIElementDict.ModelIdentifierMultiple
-            ) {
-              const formModelType = match(model)
-                .with(
-                  { type: EntityTypeDict.CellMorphology },
-                  () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
-                )
-                .otherwise(() => {
-                  throw new Error(`Unsupported entity type: ${model.type}`);
-                });
-              initial[subkey] = [
-                {
-                  type: formModelType,
-                  id_str: model.id,
-                },
-              ];
-            }
-          });
+              },
+            ];
+          }
+        });
 
-          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initial);
-        } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
-          // Initialize as empty - user must select a variant first (like block_dictionary)
-          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>({});
-        } else {
-          map[k] = {};
-        }
-      });
-    }
+        map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initial);
+      } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
+        // Initialize as empty - user must select a variant first (like block_dictionary)
+        map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initialConfigforKey);
+      } else {
+        map[k] = {};
+        Object.entries(initialConfigforKey).forEach(([subK, subV]) => {
+          if (!isPlainObject(subV) || isAtom(map[k])) return;
+          map[k][subK] = atom<Record<string, ConfigValue>>(subV);
+        });
+      }
+    });
 
     setAtomsMap(map);
   }, [schema, model, initialConfig]);
