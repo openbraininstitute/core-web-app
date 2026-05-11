@@ -180,17 +180,6 @@ export function useAtomsMap({
 
   useEffect(() => {
     if (!schema?.properties) return;
-    const expectedRootKeys = Object.entries(schema.properties)
-      .filter(([_, v]) => !isType(v))
-      .map(([k]) => k);
-    const hasInitializedMapForSchema =
-      Object.keys(atomsMap).length > 0 && expectedRootKeys.every((key) => key in atomsMap);
-
-    // skip re-init when map is already complete, otherwise we wipe dictionary entry state
-    // (e.g. newly added "Ion Channel Model 0") and BlockDictionary falls back to type cards
-    if (hasInitializedMapForSchema) {
-      return;
-    }
 
     const map: {
       [key: string]:
@@ -200,35 +189,24 @@ export function useAtomsMap({
 
     // Logic to build the atoms map based on initialConfig OR schema defaults
     if (initialConfig) {
-      Object.entries(initialConfig)
-        .filter(([k]) => isRootBlock(schema, k) || isRootBlockSingle(schema, k))
-        .forEach(([k, v]) => {
-          if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(v);
-        });
-
-      Object.entries(initialConfig)
-        .filter(([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k))
-        .forEach(([k, v]) => {
-          map[k] = {};
-          Object.entries(v).forEach(([subK, subV]) => {
-            if (!isPlainObject(subV) || isAtom(map[k])) return;
-            map[k][subK] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(subV);
-          });
-        });
-
-      // TODO: Consider implementing schema versioning
-      // Fill in any schema-defined root keys that initialConfig omitted, so the
-      // hasInitializedMapForSchema guard above passes on the next render. Without
-      // this, the effect re-fires every render and triggers Maximum update depth.
       for (const [k, v] of Object.entries(schema.properties)) {
-        if (isType(v) || k in map) continue;
+        if (isType(v)) continue;
         if (
-          v.ui_element === ScanConfigUIElementDict.BlockSingle ||
-          v.ui_element === ScanConfigUIElementDict.BlockUnion
+          typeof initialConfig[k] !== 'string' &&
+          (v.ui_element === ScanConfigUIElementDict.BlockSingle ||
+            v.ui_element === ScanConfigUIElementDict.BlockUnion)
         ) {
-          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>({});
+          map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initialConfig[k] ?? v);
         } else {
-          map[k] = {};
+          Object.entries(initialConfig)
+            .filter(([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k))
+            .forEach(([k, v]) => {
+              map[k] = {};
+              Object.entries(v).forEach(([subK, subV]) => {
+                if (!isPlainObject(subV) || isAtom(map[k])) return;
+                map[k][subK] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(subV);
+              });
+            });
         }
       }
     } else {
@@ -307,7 +285,7 @@ export function useAtomsMap({
     }
 
     setAtomsMap(map);
-  }, [schema, model, initialConfig, atomsMap]);
+  }, [schema, model, initialConfig]);
 
   return [atomsMap, setAtomsMap] as const;
 }
