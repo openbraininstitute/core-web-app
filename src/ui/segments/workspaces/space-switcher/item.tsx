@@ -43,13 +43,12 @@ export function Item({
     isFetched,
     isSuccess,
   } = useQuery({
-    queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId: lab.id! }),
-    queryFn: async () => await listProjects({ virtualLabId: lab.id! }),
+    queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId: lab.id }),
+    queryFn: async () => await listProjects({ virtualLabId: lab.id }),
     enabled: !!lab.id && (isOpen || tryingToExpand.has(lab.id)),
   });
   const data = orderBy(projects?.data?.results, ['updated_at'], ['desc']);
 
-  // automatically move from trying to expanded when query succeeds
   useEffect(() => {
     if (tryingToExpand.has(lab.id) && isSuccess && isFetched) {
       toggleLabExpansion(lab.id, 'opened');
@@ -59,13 +58,10 @@ export function Item({
   const onDownClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.stopPropagation();
     if (expandedLabs.has(lab.id)) {
-      // lab is expanded, collapse it
       toggleLabExpansion(lab.id);
     } else if (tryingToExpand.has(lab.id)) {
-      // lab is trying to expand, cancel it
       toggleLabExpansion(lab.id);
     } else {
-      // lab is not expanded or trying, start trying to expand
       toggleLabExpansion(lab.id, 'trying');
     }
   };
