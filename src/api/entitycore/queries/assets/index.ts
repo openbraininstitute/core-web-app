@@ -2,6 +2,7 @@ import { kebabCase } from 'es-toolkit/compat';
 
 import { authApiClient } from '@/api/api-client';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
+import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 import { compactRecord } from '@/utils/dictionary';
 
@@ -63,6 +64,38 @@ export async function getAsset({
   return await api.get<IAsset>(`/${entityType}/${entityId}/assets/${id}`, {
     ...getEntityCoreContext(ctx),
   });
+}
+
+/**
+ * Resolves the URL + headers needed to download a specific asset, without performing the request.
+ * Useful for handing the request off to environments outside the main `ApiClient` flow (e.g. a Web
+ * Worker that streams the response body into `CacheStorage`).
+ */
+export async function buildAssetDownloadRequest({
+  ctx,
+  entityType,
+  entityId,
+  id,
+  assetPath = '',
+}: {
+  ctx?: WorkspaceContext | null;
+  entityType: TEntityTypeDict;
+  entityId: string;
+  id: string;
+  assetPath?: string;
+}): Promise<{ url: string; headers: Record<string, string> }> {
+  const session = await getSession();
+  const url = new URL(
+    `${config.ENTITY_CORE_URL}/${kebabCase(entityType)}/${entityId}/assets/${id}/download`
+  );
+  if (assetPath) url.searchParams.append('asset_path', assetPath);
+
+  const headers: Record<string, string> = {};
+  if (session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;
+  const ctxHeaders = getEntityCoreContext(ctx).headers;
+  if (ctxHeaders) Object.assign(headers, ctxHeaders);
+
+  return { url: url.toString(), headers };
 }
 
 export async function downloadAsset(params: {
