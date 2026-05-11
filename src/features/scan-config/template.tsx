@@ -13,7 +13,7 @@ import {
 } from '@/features/scan-config/components/hooks/schema';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
-import { ACTIVITY_AI_CONFIG_MAP } from '@/features/scan-config/helpers';
+import { getConfigKeyForEntity } from '@/features/scan-config/helpers';
 import {
   type ConfigSchema,
   ExtractScanConfigTabs,
@@ -93,7 +93,10 @@ export function ScanConfigTemplate({
   });
   const config = useConfigAtom(schema, atomsMap);
 
-  useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
+  useAgentState(
+    aiEnabled ? getConfigKeyForEntity(entityType, activity, entity as { scale?: string } | undefined) : '',
+    config
+  );
   const { aiConfig } = useAIConfig();
 
   const results = match({ activity, tab })

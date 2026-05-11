@@ -16,6 +16,11 @@ import { adjustParentTypes, computeLiveDiffs, type DiffResult } from '@/utils/di
 
 import type { UIMessage } from '@ai-sdk/react';
 import type { Config } from '@/features/scan-config/components/components';
+import {
+  VALID_AI_CONFIG_KEYS,
+  type TAIConfigKey,
+  findConfigKeyInState,
+} from '@/features/scan-config/helpers';
 
 // ── Helpers (exported for reuse by panel-level hook) ─────────────────────────
 
@@ -28,9 +33,12 @@ export function completedEditStateParts(
   ) as (ToolUIPart | DynamicToolUIPart)[];
 }
 
-/** Strip the leading `smc_simulation_config` segment when present. */
+/** Strip the leading config key segment when present. */
 export function stripConfigPrefix(path: string[]): string[] {
-  return path[0] === 'smc_simulation_config' && path.length > 1 ? path.slice(1) : path;
+  if (path.length > 1 && VALID_AI_CONFIG_KEYS.includes(path[0] as TAIConfigKey)) {
+    return path.slice(1);
+  }
+  return path;
 }
 
 /** Strip config prefix from diffs and derive highlights in a single pass. */
@@ -73,7 +81,8 @@ export function findLastNewConfig(
     const last = calls[0];
     if (last.state === 'output-available') {
       const result = last.output as Record<string, any>;
-      return result?.state?.smc_simulation_config || null;
+      const key = findConfigKeyInState(result?.state ?? {});
+      return key ? result.state[key] : null;
     }
   } catch (error) {
     console.error('Failed to get latest state:', error);
@@ -89,6 +98,7 @@ interface UseMessageDiffsArgs {
 
 export interface MessageDiffActions {
   hasEditStateCalls: boolean;
+  canRestore: boolean;
   handlePreviewRestore: () => void;
   handleConfirmRestore: () => void;
   handleCancelRestore: () => void;
@@ -114,6 +124,35 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
   /** The config from the *last* completed editstate call in this message. */
   const lastNewConfig = React.useMemo(() => findLastNewConfig(message.parts), [message.parts]);
 
+  /** Check if the message's editstate config key matches the currently active page key
+   *  AND the config belongs to the same entity as the current URL. */
+  const canRestore = React.useMemo(() => {
+    if (!hasEditStateCalls) return false;
+    const calls = completedEditStateParts(message.parts);
+    if (calls.length === 0) return false;
+    const lastCall = calls[calls.length - 1];
+    if (lastCall.state !== 'output-available' || !lastCall.output) return false;
+    const result = lastCall.output as Record<string, any>;
+    const messageKey = findConfigKeyInState(result?.state ?? {});
+    const activeKey = findConfigKeyInState(agentState as Record<string, unknown>);
+    if (messageKey === null || messageKey !== activeKey) return false;
+
+    // Check that the message config belongs to the same entity as the current page.
+    // The URL's last path segment is the entity ID on entity-specific pages.
+    // Only check if it looks like a UUID (entity-specific pages).
+    const urlSegments = globalThis.location?.pathname?.split('/').filter(Boolean) ?? [];
+    const urlEntityId = urlSegments[urlSegments.length - 1];
+    const isUuid = urlEntityId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(urlEntityId);
+    if (isUuid && messageKey) {
+      const messageConfig = result.state[messageKey];
+      if (messageConfig && !JSON.stringify(messageConfig).includes(urlEntityId)) {
+        return false;
+      }
+    }
+
+    return true;
+  }, [hasEditStateCalls, message.parts, agentState]);
+
   /** Extract the config from the *last* completed editstate call (for restore). */
   const getLatestState = React.useCallback((): Config | null => {
     return (lastNewConfig as Config) ?? null;
@@ -125,8 +164,8 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
     const latestState = getLatestState();
     if (!latestState) return;
 
-    const currentLiveConfig =
-      (agentState as Record<string, unknown>)?.smc_simulation_config ?? null;
+    const activeKey = findConfigKeyInState(agentState as Record<string, unknown>);
+    const currentLiveConfig = activeKey ? (agentState as any)[activeKey] : null;
 
     let liveDiffs: DiffResult[] = [];
     if (currentLiveConfig && typeof currentLiveConfig === 'object') {
@@ -188,6 +227,7 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
 
   return {
     hasEditStateCalls,
+    canRestore,
     handlePreviewRestore,
     handleConfirmRestore,
     handleCancelRestore,

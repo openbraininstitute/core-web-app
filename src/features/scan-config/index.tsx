@@ -141,7 +141,8 @@ export function ScanConfiguration({
     );
   }
 
-  const aiEnabled = entity ? 'scale' in entity && entity.scale !== 'single' : false;
+  const aiEnabled =
+    activity === ScanConfigActivity.Simulate || activity === ScanConfigActivity.Process;
 
   if (entity || usedType) {
     return (
