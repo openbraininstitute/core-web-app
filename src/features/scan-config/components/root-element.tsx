@@ -3,13 +3,14 @@ import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import { useSetAtom } from 'jotai';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
-import { Chevron, type Config, LeftMenuTab } from '@/features/scan-config/components/components';
+import { Chevron, LeftMenuTab } from '@/features/scan-config/components/components';
 import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-element-diff';
 import {
   type AtomsMap,
+  type Config,
   type ConfigSchema,
   type IBlockDictionary,
   type IBlockSingle,
