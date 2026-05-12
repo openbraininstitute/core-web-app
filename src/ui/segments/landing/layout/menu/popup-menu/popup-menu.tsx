@@ -6,7 +6,6 @@ import { DEFAULT_SECTION, MENU_ITEMS } from '@/ui/segments/landing/constants';
 import { IconClose } from '@/ui/segments/landing/icons/icon-close';
 import { classNames } from '@/util/utils';
 
-
 interface PopupMenuProps {
   className?: string;
   visible: boolean;

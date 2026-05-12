@@ -1,16 +1,16 @@
 'use client';
 
 import { InfoCircleOutlined } from '@ant-design/icons';
-import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 
-import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
-
 import { useAITool } from '@/services/ai-agent/tools/tools';
 import slugiy from '@/util/slugify';
+
+import type React from 'react';
+import type { AIChatToolsSectionProps } from '@/ui/segments/help/ai-chat-tools';
 
 function MarkdownCodeBlock({ children }: { children?: React.ReactNode }) {
   return (
