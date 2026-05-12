@@ -1,7 +1,7 @@
 import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import Editor, { type OnChange, type OnMount } from '@monaco-editor/react';
 import { Button } from 'antd';
-import { Fragment, memo, useCallback, useMemo, useRef, useState } from 'react';
+import { Fragment, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/utils/css-class';
 
