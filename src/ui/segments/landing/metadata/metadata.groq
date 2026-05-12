@@ -1,0 +1,9 @@
+*[_type == "pages" && <SLUG_PRED>][0] {
+    title,
+    seoTitle,
+    seoDescription,
+    seoKeywords,
+    'imageURL': ogImage.asset->url,
+    'imageWidth': ogImage.asset->metadata.dimensions.width,
+    'imageHeight': ogImage.asset->metadata.dimensions.height
+}

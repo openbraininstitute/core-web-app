@@ -20,17 +20,18 @@ function isAiAgentListToolsResponse(data: unknown): data is AiAgentListToolsResp
   return isType(data, ['array', { name: 'string', nameFrontend: 'string' }]);
 }
 
-export const serviceAiAgentGetTool = asyncCreateSquash(
-  async (accessToken: string, toolId: string): Promise<AiAgentGetToolResponse> => {
-    const data = await fetchJSON({
-      method: 'GET',
-      accessToken,
-      path: `tools/${toolId}`,
-      typeGuard: isAiAgentGetToolResponse,
-    });
-    return data;
-  }
-);
+export async function serviceAiAgentGetTool(
+  accessToken: string,
+  toolId: string
+): Promise<AiAgentGetToolResponse> {
+  const data = await fetchJSON({
+    method: 'GET',
+    accessToken,
+    path: `tools/${toolId}`,
+    typeGuard: isAiAgentGetToolResponse,
+  });
+  return data;
+}
 
 export type AiAgentGetToolResponse = {
   name: string;

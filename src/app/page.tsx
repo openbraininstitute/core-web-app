@@ -1,15 +1,15 @@
+import LandingPage from '@/ui/segments/landing';
+import { generateMetadataFromSanity } from '@/ui/segments/landing/metadata/metadata';
+import { EnumSection } from '@/ui/segments/landing/sections/sections';
+
 import type { Metadata } from 'next';
 
-import LandingPage from '@/components/LandingPage';
-import { generateMetadataFromSanity } from '@/components/LandingPage/metadata';
-import { EnumSection } from '@/components/LandingPage/sections/sections';
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const metadata = await generateMetadataFromSanity('/');
   return metadata;
 }
-
-export const dynamic = 'force-dynamic';
 
 export default async function RootPage({
   searchParams: promisedParams,

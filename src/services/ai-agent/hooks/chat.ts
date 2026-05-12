@@ -6,7 +6,7 @@ import { DefaultChatTransport, getToolName, isToolUIPart } from 'ai';
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
 
-import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
+import { atomRateLimit } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { findConfigKeyInState } from '@/features/scan-config/helpers';
 import { useAccessToken } from '@/hooks/useAccessToken';
@@ -31,7 +31,6 @@ export function useServiceAiAgentChat(threadId: string) {
   const assistantInitialMessages = AiAssistant.initialMessages.useValue();
   const isLoadingMessages = AiAssistant.isLoadingMessages.useValue();
   const accessToken = useAccessToken();
-  const activeTools = useAIActiveTools();
   const queryClient = useQueryClient();
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
@@ -78,7 +77,6 @@ export function useServiceAiAgentChat(threadId: string) {
         Authorization: `Bearer ${accessToken}`,
       }),
       body: () => ({
-        toolSelection: activeTools,
         frontendUrl: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
         sharedState: jotaiStore.get(agentStateAtom),
       }),
@@ -209,9 +207,9 @@ export function useServiceAiAgentChat(threadId: string) {
   }, [chat.status, setIsChatReady]);
 
   const sendMessage = useCallback(
-    (text:string) => {
+    (text: string) => {
       AiAssistant.isEmptyThread.set(false);
-      chat.sendMessage({text});
+      chat.sendMessage({ text });
       if (chat.messages.length === 0) {
         try {
           serviceAiAgentThreadSuggestTitle({

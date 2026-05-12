@@ -28,12 +28,31 @@ interface CollapsibleMessageProps {
   hasEditStateCalls?: boolean;
 }
 
-/** Index of the LAST `step-start` part. -1 if there are none (single-step message). */
-function findLastStepStart(parts: UIMessage['parts']): number {
-  for (let i = parts.length - 1; i >= 0; i--) {
-    if (parts[i].type === 'step-start') return i;
+/**
+ * Index of the LAST `step-start` part that already has visible content
+ * (text or tool-invocation) after it. This avoids collapsing the previous step
+ * while the model is still only emitting reasoning tokens in the new step,
+ * which would otherwise show a blank area to the user.
+ */
+function findLastVisibleStepStart(parts: UIMessage['parts']): number {
+  let lastStepStart = -1;
+  let lastVisibleStepStart = -1;
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (part.type === 'step-start') {
+      lastStepStart = i;
+    } else if (
+      lastStepStart !== lastVisibleStepStart &&
+      ((part.type === 'text' && 'text' in part && part.text !== '') ||
+        part.type === 'tool-invocation')
+    ) {
+      // The current step has produced visible content — mark it as the boundary.
+      lastVisibleStepStart = lastStepStart;
+    }
   }
-  return -1;
+
+  return lastVisibleStepStart;
 }
 
 /** Number of `step-start` parts strictly before `index`. */
@@ -63,7 +82,12 @@ export function CollapsibleMessage({
   const mountedAsReady = React.useRef(status === 'ready');
 
   // Boundary between collapsed (prior steps) and visible (current/last step).
-  const lastStepStartIndex = React.useMemo(() => findLastStepStart(message.parts), [message.parts]);
+  // Only advances once the new step has produced visible content (text/tool),
+  // so reasoning-only phases don't cause a blank visible area.
+  const lastStepStartIndex = React.useMemo(
+    () => findLastVisibleStepStart(message.parts),
+    [message.parts]
+  );
 
   // Indices currently sliding from the visible area into the collapsible during streaming.
   const [animatingIndices, setAnimatingIndices] = React.useState<Set<number>>(new Set());
