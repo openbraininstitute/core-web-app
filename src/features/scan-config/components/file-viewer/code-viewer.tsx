@@ -86,9 +86,7 @@ export function CodeFileViewer({
   const LARGE_FILE_CHAR_LIMIT = 10000;
   const isLargeFile = content.length > LARGE_FILE_CHAR_LIMIT;
 
-  const displayContent = isLargeFile
-    ? getTruncatedContent(content, LARGE_FILE_CHAR_LIMIT)
-    : content;
+  const displayContent = getTruncatedContent(content, LARGE_FILE_CHAR_LIMIT);
 
   return (
     <CodeBlock
