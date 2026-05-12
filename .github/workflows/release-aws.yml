@@ -20,7 +20,7 @@ jobs:
           exit 1
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Get full history to check existing tags
 
@@ -59,7 +59,7 @@ jobs:
           echo "Using app version: ${APP_VERSION}"
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.PUBLICECR_UPLOAD_ROLE_ARN }}
           aws-region: ${{ vars.PUBLICECR_REGION }}

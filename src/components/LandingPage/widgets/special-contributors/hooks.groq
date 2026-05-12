@@ -1,9 +1,0 @@
-*[_type=="specialContributors"] {
-  orcid,
-  googleScholar,
-  "firstName": first_name,
-  "lastName": last_name,
-  "imageURL": image.asset->url,
-  "imageWidth": image.asset->metadata.dimensions.width,
-  "imageHeight": image.asset->metadata.dimensions.height
-}
