@@ -1,9 +1,0 @@
-*[_type=="milestone"] | order(date) {
-  title,
-  "description": introduction,
-  "astrocytes": numberOfAstrocytes,
-  "neurons": numerOfNeurons,
-  "imageURL": image.asset->url,
-  "imageWidth": image.asset->metadata.dimensions.width,
-  "imageHeight": image.asset->metadata.dimensions.height,
-}

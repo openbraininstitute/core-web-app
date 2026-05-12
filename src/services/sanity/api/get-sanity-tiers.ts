@@ -1,7 +1,7 @@
 import { getClient } from '@/services/sanity/client';
 import tiersQuery from '@/services/sanity/queries/tiers';
 
-import type { ContentForPricing } from '@/components/LandingPage/content/pricing';
+import type { ContentForPricing } from '@/services/sanity/api/get-pricing-features';
 
 export async function getSanityTiers(): Promise<ContentForPricing | undefined | null> {
   try {

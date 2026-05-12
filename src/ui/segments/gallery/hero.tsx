@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React from 'react';
 
-import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
+import ProgressiveImage from '@/ui/segments/landing/components/progressive-image/progressive-image';
 import { cn } from '@/utils/css-class';
 
 type HeroProps = {
