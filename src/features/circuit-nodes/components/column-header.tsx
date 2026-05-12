@@ -8,6 +8,8 @@ import {
 import { Dropdown } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
+import { cn } from '@/utils/css-class';
+
 import type { CustomHeaderProps } from 'ag-grid-react';
 import type { MenuProps } from 'antd';
 
@@ -117,11 +119,12 @@ export function ColumnHeader(props: Props) {
     <button
       ref={filterBtnRef}
       type="button"
-      className={styles.iconButton}
+      className={cn(styles.iconButton, filterActive && styles.active)}
       aria-label="Filter"
       onClick={() => filterBtnRef.current && showFilter(filterBtnRef.current)}
     >
       {filterActive ? <RiFilter3Fill size={14} /> : <RiFilter3Line size={14} />}
+      {filterActive && <span className={styles.activeDot} aria-hidden />}
     </button>
   );
 
