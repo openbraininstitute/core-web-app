@@ -1,0 +1,17 @@
+// Accepts several possible Studio type / field names; normalizeAdopters() also maps fallbacks.
+*[
+  _type in ["adopter", "adopters", "earlyAdopter", "landingAdopter"] &&
+  (defined(image.asset) || defined(logo.asset))
+] | order(name asc) {
+  name,
+  "url": coalesce(url, website, href, externalUrl),
+  "imageURL": coalesce(image.asset->url, logo.asset->url),
+  "imageWidth": coalesce(
+    image.asset->metadata.dimensions.width,
+    logo.asset->metadata.dimensions.width
+  ),
+  "imageHeight": coalesce(
+    image.asset->metadata.dimensions.height,
+    logo.asset->metadata.dimensions.height
+  ),
+}

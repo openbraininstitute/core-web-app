@@ -1,8 +1,9 @@
-import { EnumSection } from '../sections/sections';
-import { getSection } from '../utils';
+import { useSanity } from '@/services/sanity';
+
+import { getSanityPagesSlugPredicate, getSection } from '../utils';
 import { tryType } from './_common';
 
-import { useSanity } from '@/services/sanity';
+import type { EnumSection } from '../sections/sections';
 
 interface ContentForHero {
   title: string;
@@ -44,13 +45,11 @@ const DEFAULT_CONTENT_FOR_HERO: ContentForHero = {
 
 export function useSanityContentForHero(sectionIndex: EnumSection): ContentForHero {
   const section = getSection(sectionIndex);
-  // Sanity onl uses th last pat of the slug.
-  // `/welcome/news` becomes `news`.
-  const slug = section.slug.split('/').pop() || '/';
+  const slugPred = getSanityPagesSlugPredicate(section.slug);
 
   return (
     useSanity(
-      `*[_type=="pages"][slug.current==${JSON.stringify(slug)}][0]{
+      `*[_type=="pages"][${slugPred}][0]{
   title,
   "content": introduction,
   "backgroundType": mediaType,

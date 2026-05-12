@@ -1,6 +1,21 @@
-import { DEFAULT_SECTION, Section, SECTIONS } from './constants';
-import { EnumSection } from './sections/sections';
 import { isString } from '@/util/type-guards';
+
+import { DEFAULT_SECTION, SECTIONS, type Section } from './constants';
+
+import type { EnumSection } from './sections/sections';
+
+/**
+ * Predicate for `*[_type=="pages"][<here>][0]` so the homepage matches Sanity whether
+ * `slug.current` is stored as `"/"` or `"home"` (datasets differ; see `content/portals.ts`).
+ */
+export function getSanityPagesSlugPredicate(sectionSlug: string): string {
+  const segments = sectionSlug.split('/').filter(Boolean);
+  const last = segments.at(-1);
+  if (last === undefined) {
+    return '(slug.current == "/" || slug.current == "home")';
+  }
+  return `slug.current == ${JSON.stringify(last)}`;
+}
 
 export function getSection(slugOrIndex: string | EnumSection): Section {
   return isString(slugOrIndex) ? getSectionFromSlug(slugOrIndex) : getSectionFromIndex(slugOrIndex);

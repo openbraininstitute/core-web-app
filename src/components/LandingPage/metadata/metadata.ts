@@ -2,13 +2,15 @@ import { fetchSanity } from '@/services/sanity';
 import { logError } from '@/util/logger';
 
 import { tryType, typeStringOrNull } from '../content';
+import { getSanityPagesSlugPredicate } from '../utils';
 import { DEFAULT_METADATA } from './default';
 import queryTemplate from './metadata.groq';
 
 import type { Metadata } from 'next';
 
 export async function generateMetadataFromSanity(slug: string): Promise<Metadata> {
-  const query = queryTemplate.replace('{{SLUG}}', slug);
+  const slugPred = getSanityPagesSlugPredicate(slug);
+  const query = queryTemplate.replace('<SLUG_PRED>', slugPred);
   try {
     const content = await fetchSanity(query, isContentForSeo);
     if (!content) return DEFAULT_METADATA;
