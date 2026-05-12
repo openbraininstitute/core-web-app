@@ -13,12 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: 10
+          version: 11
 
       - name: Set-up Node
         uses: actions/setup-node@v6
@@ -36,7 +36,7 @@ jobs:
         run: cat pnpm-audit-output.json | jq .
 
       - name: Upload audit output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pnpm-audit-output.json
           path: pnpm-audit-output.json
