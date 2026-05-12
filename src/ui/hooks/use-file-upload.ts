@@ -119,6 +119,9 @@ export const useFileUpload = (
         const fileExtension = `.${file instanceof File ? file.name.split('.').pop() : file.name.split('.').pop()}`;
 
         const isAccepted = acceptedTypes.some((type) => {
+          // Normalise bare extensions like "swc", "h5", "ASC" → ".swc", ".h5", ".asc"
+          // Safari often returns an empty MIME type for uncommon formats, so we
+          // must reliably fall back to extension-based matching in all cases.
           const normalisedType =
             !type.startsWith('.') && !type.includes('/')
               ? `.${type.toLowerCase()}`
@@ -132,6 +135,8 @@ export const useFileUpload = (
             // fileType may be empty on Safari — skip wildcard check in that case
             return fileType ? fileType.startsWith(`${baseType}/`) : false;
           }
+          // Exact MIME match; if Safari gave us an empty type, also try matching
+          // the MIME string against the file extension as a last resort
           return fileType ? fileType === normalisedType : false;
         });
 
@@ -164,6 +169,7 @@ export const useFileUpload = (
 
   const clearFiles = useCallback(() => {
     setState((prev) => {
+      // Clean up object URLs
       for (const file of prev.files) {
         if (file.preview && file.file instanceof File && file.file.type.startsWith('image/')) {
           URL.revokeObjectURL(file.preview);
@@ -192,12 +198,15 @@ export const useFileUpload = (
       const newFilesArray = Array.from(newFiles);
       const errors: string[] = [];
 
+      // Clear existing errors when new files are uploaded
       setState((prev) => ({ ...prev, errors: [] }));
 
+      // In single file mode, clear existing files first
       if (!multiple) {
         clearFiles();
       }
 
+      // Check if adding these files would exceed maxFiles (only in multiple mode)
       if (
         multiple &&
         maxFiles !== Number.POSITIVE_INFINITY &&
@@ -212,17 +221,20 @@ export const useFileUpload = (
       const validFiles: FileWithPreview[] = [];
 
       for (const file of newFilesArray) {
+        // Only check for duplicates if multiple files are allowed
         if (multiple) {
           const isDuplicate = state.files.some(
             (existingFile) =>
               existingFile.file.name === file.name && existingFile.file.size === file.size
           );
 
+          // Skip duplicate files silently
           if (isDuplicate) {
             return;
           }
         }
 
+        // Check file size
         if (file.size > maxSize) {
           errors.push(
             multiple
@@ -248,6 +260,7 @@ export const useFileUpload = (
         }
       }
 
+      // Only update state if we have valid files to add
       if (validFiles.length > 0) {
         onFilesAdded?.(validFiles, setState);
       } else if (errors.length > 0) {
@@ -258,6 +271,7 @@ export const useFileUpload = (
         }));
       }
 
+      // Reset input value after handling files
       if (inputRef.current) {
         inputRef.current.value = '';
       }
@@ -337,11 +351,13 @@ export const useFileUpload = (
       e.stopPropagation();
       setState((prev) => ({ ...prev, isDragging: false }));
 
+      // Don't process files if the input is disabled
       if (inputRef.current?.disabled) {
         return;
       }
 
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        // In single file mode, only use the first file
         if (!multiple) {
           const file = e.dataTransfer.files[0];
           addFiles([file]);
@@ -401,6 +417,7 @@ export const useFileUpload = (
   ];
 };
 
+// Helper function to format bytes to human-readable format
 export const formatBytes = (bytes: number, decimals = 2): string => {
   if (bytes === 0) return '0 Bytes';
 
