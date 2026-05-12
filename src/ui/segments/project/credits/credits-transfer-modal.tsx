@@ -155,7 +155,7 @@ export function CreditsTransferModal({ open, onClose }: Props) {
         <div className="flex w-full flex-col gap-4 select-none">
           <div className="flex w-full items-center justify-between gap-4">
             <div className="flex flex-col items-start justify-between">
-              <h2 className="text-2xl font-semibold text-white">{project?.data.project.name}</h2>
+              <h2 className="text-2xl font-semibold text-white">{project?.data?.name}</h2>
               <p className="text-neutral-1 text-sm font-light">
                 Buy and transfer credits between your virtual lab and projects.
               </p>

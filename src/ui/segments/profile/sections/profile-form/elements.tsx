@@ -4,7 +4,7 @@ import { Select as ASelect, Input, type InputProps, type InputRef, type SelectPr
 import { classNames } from '@/util/utils';
 import { cn } from '@/utils/css-class';
 
-import type { ForwardedRef, ReactNode } from 'react';
+import type { ForwardedRef } from 'react';
 
 export function ProfileError() {
   return (
@@ -30,12 +30,13 @@ export function Select({ options, value, onChange, className, ...props }: Select
   return (
     <ASelect
       className={cn(
-        'border-primary-8 min-w-36 border-0 border-b ring-0 focus:border-b-2! [&.ant-select-focused]:border-b-2',
-        'shadow-none ring-0 [&.ant-select-focused_.ant-select-selector]:ring-0!',
+        'border-gray-100! rounded-lg min-w-36 border-2! [&.ant-select-focused]:border-2',
+        'shadow-none ring-0 [&.ant-select-focused_.ant-select-selector]:ring-0! focus-within:border-gray-300!',
         '[&_.ant-select-selector]:border-0! focus:[&_.ant-select-selector]:ring-0!',
-        'placeholder:text-gray-400 hover:border-gray-400',
+        'placeholder:text-primary-9 hover:border-gray-200!',
         className
       )}
+      size="large"
       classNames={{ popup: { root: 'rounded-none shadow-md' } }}
       placeholder="select virtual lab"
       options={options}
@@ -46,39 +47,69 @@ export function Select({ options, value, onChange, className, ...props }: Select
   );
 }
 
+const EMPTY_READONLY_DISPLAY = '\u2014';
+
 export function XInput({
   placeholder,
   className,
+  plain,
+  value,
   ref,
   ...props
-}: InputProps & { ref?: ForwardedRef<InputRef> }) {
+}: InputProps & { ref?: ForwardedRef<InputRef>; plain?: boolean }) {
+  const resolvedValue =
+    plain && (value === undefined || value === null || value === '')
+      ? EMPTY_READONLY_DISPLAY
+      : value;
+
+  const plainClasses = cn(
+    'rounded-lg min-h-12 border-2! border-transparent! bg-transparent! p-0! font-bold tracking-wide text-primary-9! shadow-none!',
+    '[&_.ant-input]:m-0! [&_.ant-input]:px-0! [&_.ant-input]:py-0!',
+    'transition-[border-color,box-shadow] duration-200 ease-in-out',
+    'hover:border-transparent! hover:bg-transparent! hover:text-primary-9!',
+    'focus:border-transparent! focus:bg-transparent! focus:shadow-none! focus:text-primary-9! focus-within:border-transparent!',
+    '[&_.ant-input]:cursor-default',
+    '[&.ant-input-affix-wrapper-disabled]:border-transparent! [&.ant-input-affix-wrapper-disabled]:bg-transparent!',
+    '[&.ant-input-affix-wrapper-disabled]:text-primary-9! [&.ant-input-affix-wrapper-disabled]:opacity-100!',
+    '[&_.ant-input-disabled]:bg-transparent! [&_.ant-input-disabled]:text-primary-9! [&_.ant-input-disabled]:opacity-100!',
+    '[&.ant-input-outlined]:bg-transparent!'
+  );
+  const defaultClasses = classNames(
+    'rounded-lg min-h-12 border-2 border-gray-100! bg-transparent! px-3 py-2 font-bold tracking-wide text-primary-9! focus:ring-0',
+    'transition-[border-color,box-shadow] duration-200 ease-in-out',
+    'hover:bg-transparent! hover:text-primary-9! focus:bg-transparent! focus:text-primary-9! [&_.ant-input-outlined]:bg-transparent!',
+    'focus:border-pr placeholder:text-primary-9! hover:border-gray-200!',
+    ' focus-within:border-gray-300!',
+    '[&.ant-XInput-status-error]:border-1.5! [&.ant-XInput-status-error]:border-destructive!',
+    '[&.ant-input-status-error]:border-1.5! [&.ant-input-status-error]:border-destructive!'
+  );
   return (
     <Input
       ref={ref}
+      size="large"
       placeholder={placeholder}
-      className={classNames(
-        'border-transparent! rounded-none border-0 border-b border-b-primary-4! rounded-b-none! bg-transparent! px-1 font-bold tracking-wide text-white! focus:ring-0',
-        'hover:bg-transparent! hover:text-white! focus:bg-transparent! focus:text-white! [&_.ant-input-outlined]:bg-transparent!',
-        'focus:border-pr placeholder:text-white! hover:border-white focus:border-b-2',
-        'focus-within:border-b-2! focus-within:ring-0!',
-        '[&.ant-XInput-status-error]:border-0! [&.ant-XInput-status-error]:border-b-2! [&.ant-XInput-status-error]:border-red-300!',
-        '[&.ant-input-status-error]:border-0! [&.ant-input-status-error]:border-b-2! [&.ant-input-status-error]:border-red-500!',
-        className
-      )}
+      className={cn(plain ? plainClasses : defaultClasses, className)}
+      value={resolvedValue}
       {...props}
     />
   );
 }
 
-export function Label({ title }: { title: string }) {
-  return <span className="text-primary-4 text-sm font-light">{title}</span>;
+export function Label({
+  title,
+  className,
+  required,
+}: {
+  title: string;
+  className?: string;
+  required?: boolean;
+}) {
+  return (
+    <span className={cn('text-primary-4 text-sm font-light', className)}>
+      {title} {required && <sup className="text-base text-red-500">*</sup>}
+    </span>
+  );
 }
-
-export const label = (text: string, extra?: ReactNode) => (
-  <span className={cn('text-primary-4 text-sm font-light')}>
-    {text} {extra}
-  </span>
-);
 
 export function GitHubIcon() {
   return (

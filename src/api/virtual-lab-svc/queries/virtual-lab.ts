@@ -1,14 +1,15 @@
 import { isEmpty } from 'es-toolkit/compat';
 
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 
 import type {
+  TGetSelfVirtualLabResponse,
+  TListPendingVirtualLabsResponse,
+  TListTenantVirtualLabsResponse,
   TVirtualLab,
   TVirtualLabExistsVerificationResponse,
-  TVirtualLabListResponse,
   TVirtualLabResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import type { TVirtualLabPayload } from '@/api/virtual-lab-svc/validation';
@@ -16,6 +17,84 @@ import type { VlmResponse } from '@/types/virtual-lab/common';
 
 function getBaseUrl() {
   return `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
+}
+
+export function virtualLabServiceRowToClient(row: TVirtualLab): TVirtualLab {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    reference_email: row.reference_email ?? '',
+    email_verified: row.email_verified ?? false,
+    entity: row.entity,
+    compute_cell: row.compute_cell ?? 'cell_a',
+    created_at: row.created_at,
+    updated_at: row.updated_at ?? row.created_at,
+    projects_count: row.projects_count ?? null,
+    created_by: null,
+  };
+}
+
+/**
+ * Pending virtual-lab invitations for the authenticated user
+ */
+export async function listPendingVirtualLabRequests({
+  page = 1,
+  size = 10,
+}: {
+  page?: number;
+  size?: number;
+} = {}): Promise<TListPendingVirtualLabsResponse> {
+  const api = await virtualLabRootApi();
+  return api.get<TListPendingVirtualLabsResponse>('/virtual-labs/requests', {
+    headers: { accept: 'application/json' },
+    queryParams: { page, size },
+  });
+}
+
+/**
+ * Virtual labs the requester belongs to
+ */
+export async function listTenantVirtualLabs({
+  page = 1,
+  size = 10,
+  query,
+  scope,
+  order_by = 'creation_date',
+  order_direction = 'desc',
+  admin_access_only,
+}: {
+  page?: number;
+  size?: number;
+  query?: string;
+  scope?: 'all' | 'self' | 'external';
+  order_by: 'creation_date' | 'update_date' | 'scope';
+  order_direction: 'asc' | 'desc';
+  admin_access_only?: boolean;
+}): Promise<TListTenantVirtualLabsResponse> {
+  const api = await virtualLabRootApi();
+  return api.get<TListTenantVirtualLabsResponse>('/virtual-labs', {
+    headers: { accept: 'application/json' },
+    queryParams: {
+      page,
+      size,
+      ...(!isEmpty(query) ? { query } : {}),
+      ...(scope !== undefined ? { scope } : {}),
+      ...(order_by !== undefined ? { order_by } : {}),
+      ...(order_direction !== undefined ? { order_direction } : {}),
+      ...(admin_access_only !== undefined ? { admin_access_only } : {}),
+    },
+  });
+}
+
+/**
+ * The requester's owned virtual lab
+ */
+export async function getSelfVirtualLab(): Promise<TGetSelfVirtualLabResponse> {
+  const api = await virtualLabRootApi();
+  return api.get<TGetSelfVirtualLabResponse>('/virtual-labs/self', {
+    headers: { accept: 'application/json' },
+  });
 }
 
 /**
@@ -79,55 +158,6 @@ export async function createVirtualLab({
 }
 
 /**
- * List all virtual labs for a user.
- *
- * @returns {Promise<TVirtualLabResponse[]>} - api response with the list of virtual labs.
- * @throws {Error} - Throws an error if the request fails or the response is invalid.
- */
-
-export async function listVirtualLabs({
-  include = [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS, LabTypeEnum.PENDING_LABS],
-  page = 1,
-  size = 10,
-  query = '',
-}: {
-  include: Array<LabTypeEnum>;
-  page?: number;
-  size?: number;
-  query?: string;
-}): Promise<TVirtualLabListResponse> {
-  const session = await getSession();
-  const params = new URLSearchParams({
-    page: page.toString(),
-    size: size.toString(),
-    ...(!isEmpty(query) ? { query } : {}),
-  });
-  for (const item of include) {
-    params.append('include', item);
-  }
-  const url = `${getBaseUrl()}?${params.toString()}`;
-
-  const response = await fetch(url, {
-    method: 'get',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
-    },
-    cache: 'no-store',
-    next: {
-      tags: ['list-virtual-labs'],
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`listing virtual labs failed`, { cause: await response.json() });
-  }
-
-  const result: TVirtualLabListResponse = await response.json();
-  return result;
-}
-
-/**
  * Get details for a single virtual lab.
  *
  * @param {string} id - The ID of the virtual lab to retrieve
@@ -143,7 +173,6 @@ export async function getVirtualLab(id: string): Promise<TVirtualLabResponse> {
       Authorization: `Bearer ${session?.accessToken}`,
     },
   });
-
   if (!response.ok) {
     throw new Error(`getting virtual lab failed`, { cause: await response.json() });
   }

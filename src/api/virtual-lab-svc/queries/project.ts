@@ -10,7 +10,13 @@ import type {
 } from '@/api/virtual-lab-svc/queries/types';
 import type { TProjectPayload, TUserRole } from '@/api/virtual-lab-svc/validation';
 import type { WorkspaceContext } from '@/types/common';
-import type { ProjectResponse } from '@/types/virtual-lab/projects';
+import type {
+  ProjectDetailResponse,
+  ProjectExpandParam,
+  ProjectResponse,
+} from '@/types/virtual-lab/projects';
+
+const baseUri = '/virtual-labs';
 
 function getBaseUrl() {
   return `${config.VIRTUAL_LAB_API_URL}/virtual-labs`;
@@ -83,7 +89,8 @@ export async function createProject(
  * @param {Object} params - The parameters for fetching projects
  * @param {string} params.virtualLabId - The ID of the virtual lab
  * @param {number} params.page - The page number (default: 1)
- * @param {number} params.size - The number of items per page (default: 20)
+ * @param {string} [params.search] - Case-insensitive substring search on name and description
+ * @param {number} params.size - The number of items per page (default: 40)
  * @returns {Promise<VlmProjectsResponse>} - Returns the paginated projects data
  * @throws {Error} - Throws an error if the API request fails
  */
@@ -91,30 +98,27 @@ export async function listProjects({
   virtualLabId,
   page = 1,
   size = 40,
+  search,
 }: {
   virtualLabId: string;
   page?: number;
   size?: number;
+  search?: string;
 }): Promise<VlmProjectsResponse> {
-  const session = await getSession();
+  const api = await virtualLabRootApi();
+  const url = `${baseUri}/${virtualLabId}/projects`;
 
-  const response = await fetch(
-    `${getBaseUrl()}/${virtualLabId}/projects?page=${page}&size=${size}`,
-    {
-      method: 'get',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Fetching projects failed`, { cause: await response.json() });
-  }
-
-  const result = (await response.json()) as VlmProjectsResponse;
-  return result;
+  return await api.get<VlmProjectsResponse>(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    queryParams: {
+      page,
+      size,
+      ...(search?.trim() ? { search: search.trim() } : {}),
+    },
+  });
 }
 
 /**
@@ -159,9 +163,20 @@ export async function attachUsersToProject({
   return result;
 }
 
-export async function getProject({ virtualLabId, projectId }: WorkspaceContext) {
+export async function getProject(
+  { virtualLabId, projectId }: WorkspaceContext,
+  options?: { expand?: ProjectExpandParam[] }
+): Promise<ProjectDetailResponse> {
   const api = await virtualLabRootApi();
-  return await api.get<ProjectResponse>(`/virtual-labs/${virtualLabId}/projects/${projectId}`);
+  const url = `${baseUri}/${virtualLabId}/projects/${projectId}`;
+  const expand = options?.expand?.filter(Boolean);
+  return await api.get<ProjectDetailResponse>(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    queryParams: expand?.length ? { expand } : {},
+  });
 }
 
 export async function updateProject({

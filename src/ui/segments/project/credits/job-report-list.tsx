@@ -41,7 +41,7 @@ const categoryLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.WholeBrainSimulation]: 'Simulate',
 };
 
-function categoryRenderFn(subtype: ServiceSubtype) {
+export function categoryRenderFn(subtype: ServiceSubtype) {
   return categoryLabel[subtype] ?? subtype;
 }
 
@@ -75,7 +75,7 @@ const typeLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.WholeBrainSimulation]: 'Circuit representing an entire brain',
 };
 
-function TypeRenderFn(subtype: ServiceSubtype) {
+export function typeRenderFn(subtype: ServiceSubtype) {
   return typeLabel[subtype] ?? subtype;
 }
 
@@ -143,7 +143,7 @@ export function JobReportList() {
             rowKey="job_id"
           >
             <Column title="Category" dataIndex="subtype" key="category" render={categoryRenderFn} />
-            <Column title="Type" dataIndex="subtype" key="type" render={TypeRenderFn} />
+            <Column title="Type" dataIndex="subtype" key="type" render={typeRenderFn} />
             <Column title="Member" dataIndex="user_id" key="user" render={userRenderFn} />
             <Column title="Date" dataIndex="started_at" key="date" render={renderDateAndHour} />
             <Column title="Cost (Credits)" dataIndex="amount" key="cost" render={costRenderFn} />

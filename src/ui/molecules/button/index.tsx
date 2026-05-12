@@ -65,17 +65,17 @@ const buttonVariants = cva(
       {
         size: 'sm',
         variant: 'icon',
-        className: 'h-8 w-8',
+        className: 'h-8 w-8 size-8!',
       },
       {
         size: 'md',
         variant: 'icon',
-        className: 'h-10 w-10',
+        className: 'h-10 w-10 size-10!',
       },
       {
         size: 'lg',
         variant: 'icon',
-        className: 'h-12 w-12',
+        className: 'h-12 w-12 size-12!',
       },
     ],
   }

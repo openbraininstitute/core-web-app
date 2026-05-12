@@ -92,10 +92,7 @@ function EditableName({
         keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB, LabTypeEnum.MEMBERSHIP_LABS] }),
         (old: TVirtualLabListResponse) => {
           if (!old?.data) return old;
-          const updatedVirtualLab = {
-            ...old.data.virtual_lab,
-            name,
-          };
+          const updatedVirtualLab = old.data.virtual_lab ? { ...old.data.virtual_lab, name } : null;
 
           const updatedMembershipLabs = {
             ...old.data.membership_labs,
@@ -499,7 +496,7 @@ export function VirtualLabConfiguration({ onClose, payload }: Props) {
     >
       <div
         id="virtual-lab-settings-header"
-        className="bg-primary-9 sticky top-0 left-0 z-[1002] px-6 pt-2"
+        className="bg-primary-9 sticky top-0 left-0 z-1002 px-6 pt-2"
       >
         <Header onClose={onClose} virtualLab={payload?.data} key={payload?.data?.id} />
         <Tabs id={payload?.virtualLabId} />

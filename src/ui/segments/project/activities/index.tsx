@@ -24,8 +24,21 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
-export function ProjectActivities() {
-  const { virtualLabId, projectId } = useWorkspace();
+export function ProjectActivities({
+  targetVirtualLabId,
+  targetProjectId,
+  showTitle = true,
+  card = true,
+}: {
+  targetVirtualLabId?: string;
+  targetProjectId?: string;
+  showTitle?: boolean;
+  card?: boolean;
+}) {
+  const context = useWorkspace();
+  const virtualLabId = targetVirtualLabId || context.virtualLabId;
+  const projectId = targetProjectId || context.projectId;
+
   const [page, setPage] = useState(1);
   const [entityType, setEntityType] = useState<TExtendedEntitiesTypeDict>(
     ExtendedEntitiesTypeDict.Memodel
@@ -111,69 +124,82 @@ export function ProjectActivities() {
     data && !data.pagination.total_items && !isQueryEnabled && activity && entityType;
 
   return (
-    <Card className="w-full shadow-xs flex flex-col h-full overflow-hidden">
-      <CardHeader className="text-primary-9 flex items-center justify-between font-bold shrink-0 bg-background">
-        <Header onScaleChange={setEntityType} onTypeChange={setActivity} onPageChange={setPage} />
-      </CardHeader>
-      <CardContent className="flex-1 overflow-hidden flex flex-col">
+    <div
+      className={cn(
+        card ? 'border border-gray-200 rounded-2xl p-4' : 'border-none px-7',
+        'w-full shadow-xs flex flex-col h-full overflow-hidden'
+      )}
+    >
+      <Header
+        onScaleChange={setEntityType}
+        onTypeChange={setActivity}
+        onPageChange={setPage}
+        showTitle={showTitle}
+      />
+      <div className="flex-1 overflow-hidden flex flex-col mt-5">
         {shouldShowEmptyState ? (
           <Card className="text-neutral-4 shadow-xs">
             <CardContent>You don't have any activities yet </CardContent>
           </Card>
         ) : (
           <div className="flex flex-1 flex-col overflow-hidden">
-            <ConfigProvider theme={{ hashed: false }}>
-              <div className="flex-1 overflow-hidden">
-                <Table
-                  className={cn(
-                    '[&_.ant-table]:bg-background! [&_.ant-table-thead_th]:bg-background!',
-                    '[&_.ant-table-thead_th]:text-neutral-4!',
-                    '[&_.ant-table-placeholder]:bg-background!',
-                    '[&_.ant-table-body]:secondary-scrollbar!'
-                  )}
-                  scroll={{ y: 'calc(100vh - 20rem)' }}
-                  loading={isFetching}
-                  dataSource={data?.data}
-                  columns={columns}
-                  rowKey={(o) => o.id}
-                  pagination={false}
-                  locale={{
-                    emptyText: (
-                      <Empty
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        description={
-                          <span className="text-primary-9">
-                            No activities found for{' '}
-                            <strong>{getEntityByExtendedType({ type: entityType })?.title}</strong>.
-                          </span>
-                        }
-                      />
-                    ),
-                  }}
-                />
-              </div>
-              <div className="flex shrink-0 items-center justify-end py-3">
-                <AntPagination
-                  responsive
-                  showLessItems
-                  hideOnSinglePage
-                  pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
-                  defaultPageSize={DEFAULT_PAGE_MEDIUM_SIZE}
-                  current={page}
-                  total={data?.pagination.total_items}
-                  showSizeChanger={false}
-                  size="default"
-                  onChange={(_page) => setPage(_page)}
-                  className={cn(
-                    '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active_a]:text-white!',
-                    '[&_.ant-pagination-disabled_button]:text-neutral-2! [&_button.ant-pagination-item-link]:text-primary-9!'
-                  )}
-                />
-              </div>
-            </ConfigProvider>
+            <div className="flex-1 overflow-hidden">
+              <Table
+                bordered
+                className={cn(
+                  '[&_.ant-table]:bg-zinc-100! [&_.ant-table-container]:bg-zinc-100!',
+                  '[&_.ant-table-content]:bg-zinc-100! [&_.ant-table-body]:bg-zinc-100!',
+                  '[&_.ant-table-thead_th]:bg-zinc-100! [&_.ant-table-thead_th]:text-neutral-4!',
+                  '[&_.ant-table-tbody_td]:bg-zinc-100! [&_.ant-table-cell]:bg-zinc-100!',
+                  '[&_.ant-table-cell-row-hover]:bg-zinc-100!',
+                  '[&_.ant-table-cell-fix-left]:bg-zinc-100! [&_.ant-table-cell-fix-right]:bg-zinc-100!',
+                  '[&_tr.ant-table-placeholder]:bg-zinc-100! [&_tr.ant-table-placeholder:hover_td]:bg-zinc-100!',
+                  '[&_.ant-table-summary]:bg-zinc-100!',
+                  '[&_.ant-spin-container]:bg-zinc-100! [&_.ant-spin-nested-loading]:bg-zinc-100!',
+                  '[&_.ant-table-body]:secondary-scrollbar!'
+                )}
+                scroll={{ y: 'calc(100vh - 20rem)' }}
+                loading={isFetching}
+                dataSource={data?.data}
+                columns={columns}
+                rowKey={(o) => o.id}
+                pagination={false}
+                locale={{
+                  emptyText: (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={
+                        <span className="text-primary-9">
+                          No activities found for{' '}
+                          <strong>{getEntityByExtendedType({ type: entityType })?.title}</strong>.
+                        </span>
+                      }
+                    />
+                  ),
+                }}
+              />
+            </div>
+            <div className="flex shrink-0 items-center justify-end py-3">
+              <AntPagination
+                responsive
+                showLessItems
+                hideOnSinglePage
+                pageSize={DEFAULT_PAGE_MEDIUM_SIZE}
+                defaultPageSize={DEFAULT_PAGE_MEDIUM_SIZE}
+                current={page}
+                total={data?.pagination.total_items}
+                showSizeChanger={false}
+                size="default"
+                onChange={(_page) => setPage(_page)}
+                className={cn(
+                  '[&_.ant-pagination-item-active]:bg-primary-9! [&_.ant-pagination-item-active_a]:text-white!',
+                  '[&_.ant-pagination-disabled_button]:text-neutral-2! [&_button.ant-pagination-item-link]:text-primary-9!'
+                )}
+              />
+            </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

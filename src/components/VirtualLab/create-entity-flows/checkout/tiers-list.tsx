@@ -6,8 +6,7 @@ import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { getSelfVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { ContactUs } from '@/components/VirtualLab/create-entity-flows/checkout/contact-us';
 import { DowngradeFree } from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
 import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/checkout/skeleton';
@@ -53,13 +52,13 @@ function TiersCards({
   const [, updateFlowState] = useAtom(flowAtom);
 
   const { data: virtualLabData, isPending } = useQuery({
-    queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
-    queryFn: async () => await listVirtualLabs({ include: [LabTypeEnum.MY_LAB] }),
+    queryKey: keyBuilder.myLab(),
+    queryFn: async () => await getSelfVirtualLab(),
   });
 
   const onTierClick = (t: TExtendedTier) => () => {
     if (t.title === 'Pro' && t.app_id) {
-      if (!isPending && !virtualLabData?.data?.virtual_lab.email_verified) {
+      if (!isPending && !virtualLabData?.data?.email_verified) {
         updateFlowState((prev) => ({ ...prev, tier: t, step: 'email-verification' }));
       } else {
         updateFlowState((prev) => ({ ...prev, tier: t, step: 'pay' }));
@@ -132,7 +131,7 @@ function TiersCards({
   };
 
   return (
-    <div className="grid items-stretch gap-4 p-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid items-stretch gap-4 pb-3 sm:grid-cols-2 xl:grid-cols-4 mr-1">
       {sortedPlans.map((plan) => {
         const cta = getCta(plan);
         const isCurrentTier =
@@ -147,11 +146,10 @@ function TiersCards({
           >
             <PlanCard
               plan={plan}
-              dark
               hideContactButton
+              isCurrentTier={isCurrentTier}
               className={cn('min-h-0 flex-1', {
-                'bg-primary-7 border-primary-5 shadow-[inset_0_1px_0_rgba(24,144,255,1),0_1px_2px_rgba(24,144,255,0.04)]':
-                  isCurrentTier,
+                'bg-primary-7 border-primary-5 shadow-md': isCurrentTier,
               })}
             />
             <div className="mt-auto flex min-h-18 shrink-0 items-end pb-6">
@@ -162,10 +160,10 @@ function TiersCards({
                   variant={buttonVariant}
                   size="lg"
                   className={cn(
-                    'w-full border-primary-5 text-white',
+                    'w-full border-primary-9 text-primary-9 font-semibold',
                     { 'pointer-events-none': cta.disabled },
-                    { 'bg-transparent hover:bg-primary-8': !cta.disabled },
-                    { 'font-bold': isCurrentTier }
+                    { 'bg-transparent hover:bg-primary-8 hover:text-white': !cta.disabled },
+                    { 'font-bold text-white': isCurrentTier }
                   )}
                   disabled={cta.disabled}
                   onClick={cta.onClick}
@@ -246,7 +244,10 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
   }
 
   return (
-    <div id="tiers-list-container" className="mx-auto flex h-full max-w-7xl flex-col">
+    <div
+      id="tiers-list-container"
+      className="mx-auto flex h-full max-w-7xl flex-col overflow-y-auto secondary-scrollbar"
+    >
       {match({ currentStep })
         .with({ currentStep: TiersStep.ContactUs }, () => (
           <div className="h-full grow px-6 py-3">

@@ -1,17 +1,49 @@
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import type { WorkspaceContext } from '@/types/common';
+import type { ProjectExpandParam } from '@/types/virtual-lab/projects';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 export const prefix = 'workspace';
 
 export const keyBuilder = {
-  getWorkspace: ({ virtualLabId, projectId }: WorkspaceContext) => [
-    `${prefix}/project`,
-    { virtualLabId, projectId },
-  ],
+  /** Matches all `getWorkspace` variants for this lab/project (any `expand`). Use with `invalidateQueries`. */
+  workspaceProject: ({ virtualLabId, projectId }: WorkspaceContext) =>
+    [`${prefix}/project`, virtualLabId, projectId] as const,
+  getWorkspace: ({
+    virtualLabId,
+    projectId,
+    expand,
+  }: WorkspaceContext & { expand?: readonly ProjectExpandParam[] }) =>
+    [
+      `${prefix}/project`,
+      virtualLabId,
+      projectId,
+      expand != null && expand.length > 0 ? [...expand].sort().join(',') : '',
+    ] as const,
   getOneLab: ({ virtualLabId }: { virtualLabId: string }) => [`${prefix}-lab`, { virtualLabId }],
   listAllLabs: ({ includes }: { includes?: Array<LabTypeEnum> }) => [`${prefix}/all`, { includes }],
+  listTenantVirtualLabs: ({
+    page,
+    size,
+    query,
+    scope,
+    admin_access_only,
+    order_by,
+    order_direction,
+  }: Partial<{
+    page?: number;
+    size?: number;
+    query?: string;
+    scope?: 'all' | 'self' | 'external';
+    admin_access_only?: boolean;
+    order_by: 'creation_date' | 'update_date' | 'scope';
+    order_direction: 'asc' | 'desc';
+  }>) => [
+    `${prefix}/tenants`,
+    { page, size, query, scope, admin_access_only, order_by, order_direction },
+  ],
+  myLab: () => [`${prefix}/me`],
   listWorkspaceProjects: ({ virtualLabId }: { virtualLabId: string }) => [
     `${prefix}/projects-list`,
     { virtualLabId },

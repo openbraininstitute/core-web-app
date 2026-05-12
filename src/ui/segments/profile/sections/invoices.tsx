@@ -1,18 +1,92 @@
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Button, ConfigProvider, theme } from 'antd';
-import Table, { type ColumnsType } from 'antd/es/table';
 import { format } from 'date-fns';
 import flatMap from 'es-toolkit/compat/flatMap';
 
 import { listUserSubscriptionsHistory } from '@/api/virtual-lab-svc/queries/subscription';
 import { FileDownloadFill } from '@/components/icons/EditorIcons';
-import { getStatusColor } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
+import { EmptyMinimal, ErrorMinimal } from '@/ui/molecules/feedback-card';
 import { keyBuilder } from '@/ui/use-query-keys/user';
-import { cn } from '@/utils/css-class';
 import { formatCurrency } from '@/utils/format';
 
 import type { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
+
+type InvoicePayment = SubscriptionPaymentDetails & {
+  subscription_id: string;
+  subscription_type: 'FREE' | 'PREMIUM' | 'PRO';
+};
+
+function getInvoiceObject(payment: InvoicePayment) {
+  if (payment.subscription_type === 'PRO') return 'Subscription Pro';
+  if (payment.subscription_type === 'PREMIUM') return 'Subscription Premium';
+  return 'Subscription Free';
+}
+
+function getInvoiceDownloadUrl(payment: InvoicePayment) {
+  return payment.invoice_pdf ?? payment.receipt_url;
+}
+
+function InvoiceCard({ payment }: { payment: InvoicePayment }) {
+  const downloadUrl = getInvoiceDownloadUrl(payment);
+  const period = `${format(new Date(payment.period_start), 'MMM dd')} - ${format(
+    new Date(payment.period_end),
+    'MMM dd, yyyy'
+  )}`;
+
+  return (
+    <article className="rounded-2xl bg-white px-6 py-5 shadow-[0_18px_50px_-36px_rgba(0,39,102,0.55)]">
+      <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+        <div>
+          <p className="text-neutral-4 text-lg">Object</p>
+          <p className="text-primary-9 text-xl font-bold">{getInvoiceObject(payment)}</p>
+        </div>
+        <div>
+          <p className="text-neutral-4 text-lg">Period</p>
+          <p className="text-primary-9 text-xl font-bold">{period}</p>
+        </div>
+        <div>
+          <p className="text-neutral-4 text-lg">Status</p>
+          <p className="text-primary-9 text-xl font-bold capitalize">{payment.status}</p>
+        </div>
+        <div>
+          <p className="text-neutral-4 text-lg">Payment method</p>
+          <p
+            className="text-primary-9 text-xl font-bold"
+            title={
+              payment.card_brand && payment.card_last4
+                ? `${payment.card_brand} **** ${payment.card_last4}`
+                : undefined
+            }
+          >
+            Credit card
+          </p>
+        </div>
+        <div>
+          <p className="text-neutral-4 text-lg">Amount</p>
+          <p className="text-primary-9 text-xl font-bold">
+            {formatCurrency(payment.amount_paid / 100, payment.currency)}
+          </p>
+        </div>
+      </div>
+      <div className="border-neutral-2 mt-5 flex justify-end border-t pt-5">
+        {downloadUrl ? (
+          <a
+            className="text-primary-9 hover:text-primary-7 inline-flex items-center gap-3 text-lg font-bold"
+            href={downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Download <FileDownloadFill className="size-5" />
+          </a>
+        ) : (
+          <span className="text-neutral-4 inline-flex items-center gap-3 text-lg font-bold">
+            Download <FileDownloadFill className="size-5" />
+          </span>
+        )}
+      </div>
+    </article>
+  );
+}
 
 export function Invoices() {
   const { data, isError, isLoading } = useQuery({
@@ -28,134 +102,37 @@ export function Invoices() {
         subscription_id: subscription.id,
         subscription_type: subscription.subscription_type,
       }))
-  );
+  ) as Array<InvoicePayment>;
 
-  if (isError) {
+  if (isLoading) {
     return (
-      <div className={cn('my-6 flex w-full flex-col items-center justify-center gap-2')}>
-        <ExclamationCircleOutlined className="text-current" />
-        <div className="text-current">There is some issues loading your invoices history</div>
+      <div className="text-primary-9 flex h-40 items-center justify-center">
+        <LoadingOutlined spin />
       </div>
     );
   }
 
-  const columns: ColumnsType<SubscriptionPaymentDetails> = [
-    {
-      title: 'Object',
-      dataIndex: '',
-      key: 'subscription_type',
-      render: (record) => {
-        if (record.subscription_type === 'PRO') {
-          return <span className="font-bold text-white">Subscription Pro</span>;
-        }
-        if (record.subscription_type === 'PREMIUM') {
-          return <span className="font-bold text-white">Subscription Premium</span>;
-        }
-        if (record.subscription_type === 'FREE') {
-          return <span className="font-bold text-white">Subscription Free</span>;
-        }
-      },
-    },
-    {
-      title: 'Period',
-      key: 'period',
-      render: (_, record) => (
-        <span>
-          {format(new Date(record.period_start), 'MMM dd')} -{' '}
-          {format(new Date(record.period_end), 'MMM dd, yyyy')}
-        </span>
-      ),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <span className={`rounded-sm px-2 py-1 text-base capitalize ${getStatusColor(status)}`}>
-          {status}
-        </span>
-      ),
-    },
-    {
-      title: 'Payment Method',
-      key: 'payment_method',
-      render: (_, record) => `${record.card_brand} **** ${record.card_last4}`,
-    },
-    {
-      title: 'Amount',
-      dataIndex: 'amount_paid',
-      key: 'amount_paid',
-      render: (amount: number, record) => formatCurrency(amount / 100, record.currency),
-    },
-    {
-      title: 'Invoice',
-      key: 'receipt',
-      align: 'center',
-      render: (_, record) => (
-        <>
-          {record.receipt_url && (
-            <a href={record.receipt_url} target="_blank" rel="noopener noreferrer">
-              <Button
-                aria-label="download invoice"
-                type="text"
-                icon={<FileDownloadFill className="text-xl text-white!" />}
-                size="small"
-              />
-            </a>
-          )}
-          {record.invoice_pdf && (
-            <a href={record.invoice_pdf} target="_blank" rel="noopener noreferrer">
-              <Button
-                aria-label="download invoice"
-                type="text"
-                icon={<FileDownloadFill className="text-xl text-white!" />}
-                size="small"
-              />
-            </a>
-          )}
-        </>
-      ),
-    },
-  ];
+  if (isError) {
+    return (
+      <ErrorMinimal
+        title="Invoices error"
+        description="We were unable to fetch your invoices history from our servers. Please refresh the page or try again later. if the issue persists, please contact support at support@openbraininstitute.org."
+      />
+    );
+  }
 
   return (
-    <div data-testid="payments-list" className="h-full w-full py-5">
-      <ConfigProvider
-        theme={{
-          algorithm: theme.defaultAlgorithm,
-          components: {
-            Table: {
-              colorBgContainer: '#002766',
-              colorText: 'white',
-              colorTextHeading: 'white',
-              borderColor: '#096DD9',
-              headerBg: '#002766',
-              headerColor: '#BAE7FF',
-              headerSplitColor: 'transparent',
-              rowHoverBg: '#0050B3',
-              borderRadius: 0,
-            },
-          },
-        }}
-      >
-        <Table
-          loading={isLoading}
-          data-testid="invoices-history"
-          rootClassName={cn(
-            '[&_.ant-spin-blur]:opacity-0! [&_.ant-table-thead>tr>th]:font-light!',
-            '[&_.ant-table-thead>tr>th]:font-light! [&_.ant-table-thead]:text-sm',
-            '[&_.ant-empty-description]:text-white!',
-            '[&_.ant-table-cell]:bg-primary-9! [&_.ant-table-cell]:text-white!'
-          )}
-          rowClassName="border-b border-primary-4 last:[&_td]:border-b-0!"
-          columns={columns}
-          dataSource={allPayments}
-          rowKey="id"
-          pagination={false}
-          className="w-full"
-          size="middle"
+    <div data-testid="payments-list" className="flex h-full w-full flex-col gap-5">
+      {allPayments.map((payment) => (
+        <InvoiceCard key={payment.id} payment={payment} />
+      ))}
+      {allPayments.length === 0 && (
+        <EmptyMinimal
+          tag="No invoices found"
+          title="No invoices found"
+          description="You have not made any payments yet."
         />
-      </ConfigProvider>
+      )}
     </div>
   );
 }

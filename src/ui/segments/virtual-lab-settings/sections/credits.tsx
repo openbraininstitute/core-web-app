@@ -1,12 +1,12 @@
 'use client';
 
-import { match } from 'ts-pattern';
 import { useState } from 'react';
+import { match } from 'ts-pattern';
 
-import { CreditsManagement } from '@/ui/segments/virtual-lab-settings/elements/credits-management';
-import { PurchasesHistory } from '@/ui/segments/virtual-lab-settings/elements/payment-history';
-import { ManageCreditsStep } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
 import { BuyCredits } from '@/ui/segments/virtual-lab-settings/elements/buy-credits';
+import { CreditsManagement } from '@/ui/segments/virtual-lab-settings/elements/credits-management';
+import { ManageCreditsStep } from '@/ui/segments/virtual-lab-settings/elements/manage-credits';
+import { PurchasesHistory } from '@/ui/segments/virtual-lab-settings/elements/payment-history';
 
 type Props = {
   virtualLabId: string;

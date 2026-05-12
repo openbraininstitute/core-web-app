@@ -29,7 +29,6 @@ import {
 } from '@/features/stripe/payment-elements';
 import { messages } from '@/i18n/en/payment';
 import { Button } from '@/ui/molecules/button';
-import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager';
 import { keyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 
@@ -166,7 +165,6 @@ function Form({ onPrevious }: Props) {
           description: messages.subscriptionPaymentSuccessDescription,
           ...notificationConfig,
         });
-        makeTriggerWorkspaceConfigurationClickEvent<null>({ on: false, data: null, type: null });
       }
       setSubscribing(false);
     } catch (error) {
@@ -193,17 +191,17 @@ function Form({ onPrevious }: Props) {
     <form
       data-testid="subscription-payment-from"
       name="stripe-payment-flow-step"
-      className="mx-auto flex h-full min-h-0 w-full flex-col overflow-y-auto primary-scrollbar px-4 py-6"
+      className="mx-auto flex h-full min-h-0 w-full flex-col overflow-y-auto secondary-scrollbar px-4 py-6"
       onSubmit={onSubmit}
     >
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3">
         <PricingToggleCards />
         <BillingSummary
           quote={quote.data ?? null}
           conversion={billingSummaryFallback}
           loading={quote.isFetching}
         />
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-white">
+        <div className="rounded-2xl border border-gray-200 bg-white/5 p-4 text-primary-9">
           <div className="mb-4 font-semibold">Payment method</div>
           <div className="flex flex-col gap-4">
             <BillingAddressElement
@@ -227,7 +225,11 @@ function Form({ onPrevious }: Props) {
               type="button"
               variant="ghost"
               size="lg"
-              className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
+              className={cn(
+                'w-max border border-none text-primary-9',
+                'shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]',
+                'hover:bg-gray-100'
+              )}
               disabled={isSubscribing}
               onClick={onPrevious}
             >
@@ -238,13 +240,7 @@ function Form({ onPrevious }: Props) {
               type="submit"
               variant="default"
               size="lg"
-              className={cn(
-                'border-primary-4! w-max border shadow-2xl',
-                'hover:bg-primary-8/40',
-                'hover:shadow-[1px_2px_4px_0px_#00000099]',
-                'shadow-[8px_12px_24px_0px_#00000099]',
-                'shadow-[-8px_-8px_42px_0px_#FFFFFF29]'
-              )}
+              className={cn('w-max border border-none shadow-2xl text-white', 'hover:bg-primary-8')}
               disabled={disableForm}
             >
               <div className="flex items-center gap-2 px-6">

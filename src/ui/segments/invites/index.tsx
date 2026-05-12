@@ -1,26 +1,27 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@bprogress/next/app';
-import { useSession } from 'next-auth/react';
+import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
-import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { acceptInvite } from '@/api/virtual-lab-svc/queries/invite';
-import { Card, CardDescription } from '@/ui/molecules/card';
-import { getErrorUrl } from '@/ui/segments/invites/helpers';
-import { Button } from '@/ui/molecules/button';
-import { ApiErrorCause } from '@/api/error';
 import { tryCatch } from '@/api/utils';
-import { cn } from '@/utils/css-class';
+import { acceptInvite } from '@/api/virtual-lab-svc/queries/invite';
+import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { config } from '@/config';
 import {
-  InvitationContentResponse,
+  type InvitationContentResponse,
   InviteErrorCodes,
   InviteOriginDict,
 } from '@/types/virtual-lab/invites';
+import { Button } from '@/ui/molecules/button';
+import { Card, CardDescription } from '@/ui/molecules/card';
+import { getErrorUrl } from '@/ui/segments/invites/helpers';
+import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
+
+import type { ApiErrorCause } from '@/api/error';
 
 export function InvitationProcessing({ data }: { data: InvitationContentResponse }) {
   const { data: session } = useSession();
@@ -55,7 +56,7 @@ export function InvitationProcessing({ data }: { data: InvitationContentResponse
             if (error) {
               navigate(`${config.ROOT_ROUTE}/sync`);
             }
-            const projectId = results?.data?.results.at(0)?.id;
+            const projectId = results?.data?.data.at(0)?.id;
             if (projectId) {
               navigate(`${config.ROOT_ROUTE}/${result.data.virtual_lab_id}/${projectId}`);
             } else {

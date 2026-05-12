@@ -25,8 +25,8 @@ export function BillingSummary({
   const taxCountry = quote?.tax_country;
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-white">
-      <div className="mb-4 font-semibold">{title}</div>
+    <div className="rounded-2xl border border-gray-200 bg-white/5 p-4 text-sm text-primary-9">
+      <div className="mb-4 font-bold">{title}</div>
       <div className="flex justify-between gap-4">
         <span>Subtotal excl. VAT</span>
         <BillingAmount loading={loading} value={formatMinorCurrency(subtotal, currency)} />
@@ -35,11 +35,11 @@ export function BillingSummary({
         <span>VAT{taxCountry === 'CH' ? ' (CH)' : ''}</span>
         <BillingAmount loading={loading} value={formatMinorCurrency(taxAmount, currency)} />
       </div>
-      <div className="mt-3 flex justify-between gap-4 border-t border-white/15 pt-3 font-semibold">
+      <div className="mt-3 flex justify-between gap-4 border-t border-gray-200 pt-3 font-semibold">
         <span>Total due today</span>
         <BillingAmount loading={loading} value={formatMinorCurrency(total, currency)} wide />
       </div>
-      {taxCountry === 'CH' && <div className="text-xs text-white/70">Incl. VAT (CH)</div>}
+      {taxCountry === 'CH' && <div className="text-xs text-gray-400">Incl. VAT (CH)</div>}
     </div>
   );
 }
@@ -57,10 +57,10 @@ function BillingAmount({
     return (
       <span
         title="Calculating"
-        className={cn('h-4 rounded-full animate-pulse  bg-white/20', wide ? 'w-24' : 'w-20')}
+        className={cn('h-4 rounded-full animate-pulse bg-gray-100', wide ? 'w-24' : 'w-20')}
       />
     );
   }
 
-  return <span>{value}</span>;
+  return <span className="font-bold">{value}</span>;
 }

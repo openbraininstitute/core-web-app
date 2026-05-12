@@ -51,7 +51,7 @@ export function CreditsManagement({
         isLoading: loading,
         balanceMap: balanceList,
         virtualLabBalance: LabBalance,
-        projects: projectsQuery.data?.data?.results ?? [],
+        projects: projectsQuery.data?.data?.data ?? [],
       };
     },
   });

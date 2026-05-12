@@ -146,7 +146,7 @@ export function ManageCreditsStep({
                 You transferred <span className="text-primary-9 font-bold">{amount}</span> credits
                 to{' '}
                 <span className="text-primary-9 font-bold">
-                  {projectsRes.data?.data?.results.find((p) => p.id === selectedProjectId)?.name}
+                  {projectsRes.data?.data?.data.find((p) => p.id === selectedProjectId)?.name}
                 </span>
               </span>
             )}
@@ -155,7 +155,7 @@ export function ManageCreditsStep({
                 You transferred <span className="text-primary-9 font-bold">{amount}</span> credits
                 from{' '}
                 <span className="text-primary-9 font-bold">
-                  {projectsRes.data?.data?.results.find((p) => p.id === selectedProjectId)?.name}
+                  {projectsRes.data?.data?.data.find((p) => p.id === selectedProjectId)?.name}
                 </span>{' '}
                 to <span className="text-primary-9 font-bold">{virtualLabName}</span>
               </span>
@@ -183,7 +183,7 @@ export function ManageCreditsStep({
   });
 
   const projects = useMemo(() => {
-    const list = (projectsRes?.data?.data?.results ?? []).map((p) => ({
+    const list = (projectsRes?.data?.data?.data ?? []).map((p) => ({
       value: String(p.id),
       label: String(p.name ?? ''),
     }));

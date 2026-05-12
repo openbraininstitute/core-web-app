@@ -37,12 +37,12 @@ function PricingCard({
       onClick={() => onSelect(interval)}
       type="button"
       className={cn(
-        'relative flex grow flex-col items-start rounded-lg p-6',
+        'relative flex grow flex-col items-start rounded-2xl p-6',
         {
           'bg-primary-8 text-white! shadow-md border border-primary-8':
             selectedInterval === interval,
         },
-        { 'text-primary-8 bg-white border border-neutral-100': selectedInterval !== interval }
+        { 'text-primary-8 bg-white border border-gray-200': selectedInterval !== interval }
       )}
     >
       <div className="flex w-full items-center justify-between">
@@ -93,7 +93,7 @@ export default function PricingToggleCards() {
     <LazyMotion features={domAnimation}>
       <div
         data-testid="price-cards"
-        className="flex w-full flex-row items-center justify-center gap-3 pb-4"
+        className="flex w-full flex-row items-center justify-center gap-3"
       >
         {tier?.prices?.map((o) => (
           <PricingCard

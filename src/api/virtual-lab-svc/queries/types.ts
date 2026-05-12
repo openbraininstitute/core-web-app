@@ -32,21 +32,27 @@ export type MemberResponse = VlmResponse<{
 
 export type Project = {
   id: string;
-  nexus_project_id: string;
   name: string;
-  description: string;
+  description: string | null;
+  contact_email?: string | null;
   created_at: string;
-  updated_at: string;
-  virtual_lab_id: string;
+  updated_at: string | null;
+  virtual_lab_id?: string;
   user_count?: number;
 };
 
-type ProjectsResponse = {
-  results: Array<Project>;
+export type Pagination = {
   page: number;
   size: number;
   page_size: number;
   total: number;
+  has_next: boolean;
+  has_previous: boolean;
+};
+
+export type PaginatedProjectsPayload = {
+  data: Array<Project>;
+  pagination: Pagination;
 };
 
 type ProjectResponse = {
@@ -67,11 +73,25 @@ export type TVirtualLab = {
   entity: string;
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
-  members_count: number | null;
   projects_count: number | null;
   created_by: string | null;
   compute_cell: string;
 };
+
+export type TVirtualLabWithInviteRow = TVirtualLab & { invite_id: string };
+
+export type TPaginatedVirtualLabPayload<TRow> = {
+  data: TRow[];
+  pagination: Pagination;
+};
+
+export type TListPendingVirtualLabsResponse = VlmResponse<
+  TPaginatedVirtualLabPayload<TVirtualLabWithInviteRow>
+>;
+
+export type TListTenantVirtualLabsResponse = VlmResponse<TPaginatedVirtualLabPayload<TVirtualLab>>;
+
+export type TGetSelfVirtualLabResponse = VlmResponse<TVirtualLab>;
 
 export type TVirtualLabExistsVerificationResponse = VlmResponse<{
   exists: boolean;
@@ -176,7 +196,7 @@ export type SubscriptionTiersResponse = {
 
 export type TVirtualLabListResponse = VlmResponse<{
   pending_labs: Array<TVirtualLab & { invite_id: string }>;
-  virtual_lab: TVirtualLab;
+  virtual_lab: TVirtualLab | null;
   membership_labs: {
     total: number;
     filtered_total: number;
@@ -544,7 +564,7 @@ export type VlmListSubscriptionTiersResponse = VlmResponse<SubscriptionTiersResp
 export type VlmActiveSubscriptionResponse = VlmResponse<UserActiveSubscriptionResponse>;
 export type VlmNextPaymentResponse = VlmResponse<NextPaymentDateResponse>;
 export type VlmUserProfile = VlmResponse<{ profile: UserProfileResponse }>;
-export type VlmProjectsResponse = VlmResponse<ProjectsResponse>;
+export type VlmProjectsResponse = VlmResponse<PaginatedProjectsPayload>;
 export type VlmProjectResponse = VlmResponse<ProjectResponse>;
 export type VlmProjectStatsResponse = VlmResponse<ProjectStats>;
 export type VlmVirtualLabStatsResponse = VlmResponse<VirtualLabStats>;
