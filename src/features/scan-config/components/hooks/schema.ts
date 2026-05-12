@@ -195,11 +195,9 @@ export function useAtomsMap({
       if (!isPlainObject(initialConfigforKey)) return;
 
       if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
-        const initial: Record<string, ConfigValue | Array<ConfigValue>> = initialConfigforKey;
-
         Object.entries(v.properties).forEach(([subkey, subValue]) => {
-          if (subkey in initial) return;
-          initial[subkey] = subValue.default ?? null;
+          if (subkey in initialConfigforKey) return;
+          initialConfigforKey[subkey] = subValue.default ?? null;
           if (
             model &&
             !isType(subValue) &&
@@ -248,7 +246,7 @@ export function useAtomsMap({
               .otherwise(() => {
                 throw new Error(`Unsupported entity type: ${model.type}`);
               });
-            initial[subkey] = [
+            initialConfigforKey[subkey] = [
               {
                 type: formModelType,
                 id_str: model.id,
@@ -257,7 +255,7 @@ export function useAtomsMap({
           }
         });
 
-        map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initial);
+        map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initialConfigforKey);
       } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
         map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initialConfigforKey);
       } else {

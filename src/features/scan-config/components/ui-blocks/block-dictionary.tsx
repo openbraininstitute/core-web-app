@@ -74,9 +74,11 @@ export default function BlockDictionary({
   const showingDiffs = useShowingDiffs();
   const previewAtom = useDiffPreviewAtom(selectedRootElement, selectedEntry);
 
-  const selectedBlockLocal = isPlainObject(config[selectedRootElement])
-    ? config[selectedRootElement][selectedEntry]?.type
-    : undefined;
+  const selectedBlockLocal =
+    isPlainObject(config[selectedRootElement]) &&
+    isPlainObject(config[selectedRootElement][selectedEntry])
+      ? config[selectedRootElement][selectedEntry]?.type
+      : undefined;
 
   const selectedBlockAI =
     aiConfig && isPlainObject(aiConfig[selectedRootElement])

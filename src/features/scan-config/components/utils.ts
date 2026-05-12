@@ -1,13 +1,11 @@
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 
 import type { Atom } from 'jotai';
+import type { ConfigValue } from '../types';
 
 export type Primitive = null | boolean | number | string;
-export interface ConfigObject {
-  [key: string]: Primitive | Primitive[] | ConfigObject;
-}
 
-export function isPlainObject(value: unknown): value is Record<string, ConfigObject> {
+export function isPlainObject(value: unknown): value is Record<string, ConfigValue> {
   return typeof value === 'object' && !Array.isArray(value) && value !== null;
 }
 

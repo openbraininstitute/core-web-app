@@ -30,7 +30,7 @@ export interface Object {
 }
 
 export type ConfigValue = Primitive | Primitive[] | Object | ConfigValue[];
-export type Config = Record<string, Object | string>;
+export type Config = Record<string, ConfigValue>;
 
 export interface AtomsMap {
   [key: string]:

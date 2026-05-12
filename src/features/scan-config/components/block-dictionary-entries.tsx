@@ -181,7 +181,7 @@ export default function BlockDictionaryEntries({
     Object.entries(config)
       .filter(([configK]) => configK !== 'initialize')
       .forEach(([configK, configV]) => {
-        if (typeof configV !== 'object') return;
+        if (!isPlainObject(configV)) return;
 
         // Check all keys in a section (e.g stimuli, recordings)
         Object.entries(configV).forEach(([_, entryV]) => {
@@ -190,9 +190,8 @@ export default function BlockDictionaryEntries({
           // Check all values in a particular object (a single stimuli, a single timestamp, etc)
           Object.entries(entryV).forEach(([fieldK, field]) => {
             if (
-              !isPlainObject(entryV) ||
+              !isPlainObject(entryV[fieldK]) ||
               !isPlainObject(field) ||
-              typeof field.block_name !== 'string' ||
               isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
               field.block_name !== selectedEntry
             )
@@ -211,8 +210,7 @@ export default function BlockDictionaryEntries({
     setNewKey('');
   };
 
-  // FIXME: @Nicolas, do we need this isDeleted flag?
-  function renderBlockTab(entry: string, isDeleted: boolean = false) {
+  function renderBlockTab(entry: string) {
     const isSelected = selectedRootElement === rootElement && entry === selectedEntry;
     const entryDiffClass = getEntryDiffClass(entry, isSelected);
 
@@ -254,7 +252,7 @@ export default function BlockDictionaryEntries({
         >
           <div className="flex flex-col w-full gap-1.5 px-4">
             {/* Render deleted entries first with red border */}
-            {deletedEntriesFromHighlights.map((entry) => renderBlockTab(entry, true))}
+            {deletedEntriesFromHighlights.map((entry) => renderBlockTab(entry))}
 
             {/* Render added entries from highlights (restore flow, aiConfig may be null) */}
             {addedEntriesFromHighlights.map((entry) => renderBlockTab(entry))}
@@ -391,7 +389,7 @@ export default function BlockDictionaryEntries({
                                       Object.entries(config)
                                         .filter(([configK]) => configK !== 'initialize')
                                         .forEach(([configK, configV]) => {
-                                          if (typeof configV !== 'object') return;
+                                          if (!isPlainObject(configV)) return;
 
                                           // Check all keys in a section (e.g stimuli, recordings)
                                           Object.entries(configV).forEach(([entryKey, entryV]) => {
