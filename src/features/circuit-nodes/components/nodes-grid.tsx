@@ -21,6 +21,7 @@ import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 type Props = {
   columns: ColumnMeta[];
   rowCount: number;
+  filteredCount: number | null;
   datasource: IDatasource;
   visibleColumns: Set<string>;
   onVisibleColumnsChange: (next: Set<string>) => void;
@@ -86,6 +87,7 @@ function formatNumber(v: number): string {
 export function NodesGrid({
   columns,
   rowCount,
+  filteredCount,
   datasource,
   visibleColumns,
   onVisibleColumnsChange,
@@ -169,7 +171,16 @@ export function NodesGrid({
   return (
     <div className={`ag-theme-quartz ${styles.gridWrapper}`}>
       <div className={styles.gridHeader}>
-        <span className={styles.gridStat}>{rowCount.toLocaleString()} nodes</span>
+        <span className={styles.gridStat}>
+          {filteredCount === null ? (
+            <>{rowCount.toLocaleString()} nodes</>
+          ) : (
+            <>
+              <strong className={styles.gridStatHighlight}>{filteredCount.toLocaleString()}</strong>{' '}
+              of {rowCount.toLocaleString()} nodes
+            </>
+          )}
+        </span>
       </div>
       <div className={styles.grid}>
         <AgGridReact

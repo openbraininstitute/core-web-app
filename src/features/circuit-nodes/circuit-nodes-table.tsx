@@ -53,6 +53,7 @@ export default function CircuitNodesTable({ circuit, className, onModeChange }: 
 
   const {
     rowCount,
+    filteredCount,
     columns,
     datasource,
     isLoading: workerLoading,
@@ -93,6 +94,7 @@ export default function CircuitNodesTable({ circuit, className, onModeChange }: 
             hasPopulation: !!population,
             columns,
             rowCount,
+            filteredCount,
             datasource,
             visibleColumns,
             setVisibleColumns,
@@ -111,6 +113,7 @@ function renderBody({
   hasPopulation,
   columns,
   rowCount,
+  filteredCount,
   datasource,
   visibleColumns,
   setVisibleColumns,
@@ -122,6 +125,7 @@ function renderBody({
   hasPopulation: boolean;
   columns: ReturnType<typeof useNodesWorker>['columns'];
   rowCount: number;
+  filteredCount: number | null;
   datasource: ReturnType<typeof useNodesWorker>['datasource'];
   visibleColumns: Set<string>;
   setVisibleColumns: (next: Set<string>) => void;
@@ -157,6 +161,7 @@ function renderBody({
     <NodesGrid
       columns={columns}
       rowCount={rowCount}
+      filteredCount={filteredCount}
       datasource={datasource}
       visibleColumns={visibleColumns}
       onVisibleColumnsChange={setVisibleColumns}

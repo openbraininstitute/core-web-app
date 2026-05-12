@@ -139,6 +139,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.gridStatHighlight {
+  font-weight: 600;
+  color: #111827;
+}
+
 .grid {
   flex: 1 1 auto;
   min-height: 0;

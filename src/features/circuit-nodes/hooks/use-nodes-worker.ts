@@ -31,6 +31,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
 
   const [status, setStatus] = useState<Status>('idle');
   const [openResult, setOpenResult] = useState<OpenResponse | null>(null);
+  const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
       teardownWorker(workerRef);
       setStatus('idle');
       setOpenResult(null);
+      setFilteredCount(null);
       setError(null);
       return;
     }
@@ -79,6 +81,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
         if (cancelled || generationRef.current !== generation) return;
 
         setOpenResult(result);
+        setFilteredCount(null);
         setStatus('ready');
       } catch (e) {
         if (cancelled || generationRef.current !== generation) return;
@@ -123,6 +126,8 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
             columns: visibleColumnsFromContext(params.context, columns),
           })
           .then((res) => {
+            const hasFilter = !!params.filterModel && Object.keys(params.filterModel).length > 0;
+            setFilteredCount(hasFilter ? res.total : null);
             const lastRow = res.total <= params.endRow ? res.total : undefined;
             params.successCallback(res.rows, lastRow);
           })
@@ -133,6 +138,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
 
   return {
     rowCount: openResult?.rowCount ?? 0,
+    filteredCount,
     columns: openResult?.columns as ColumnMeta[] | undefined,
     datasource,
     isLoading: status === 'loading',
