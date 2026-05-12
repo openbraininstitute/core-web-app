@@ -1,13 +1,13 @@
 'use client';
 
-import { DownOutlined, LoadingOutlined, RightOutlined } from '@ant-design/icons';
+import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { RiArrowDownSLine, RiArrowRightSLine } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { orderBy } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
-import { LabCompany } from '@/components/icons/buttons';
 import { Button } from '@/ui/molecules/button';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
@@ -19,7 +19,8 @@ import { cn } from '@/utils/css-class';
 import type { Project, TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
-  lab: TVirtualLab & { isMine: boolean };
+  lab: TVirtualLab;
+  isUserLab: boolean;
   isActive: boolean;
   isOpen: boolean;
   activeProjectId: string | null;
@@ -30,6 +31,7 @@ type Props = {
 
 export function Item({
   lab,
+  isUserLab,
   activeProjectId,
   isActive,
   isOpen,
@@ -47,7 +49,8 @@ export function Item({
     queryFn: async () => await listProjects({ virtualLabId: lab.id }),
     enabled: !!lab.id && (isOpen || tryingToExpand.has(lab.id)),
   });
-  const data = orderBy(projects?.data?.results, ['updated_at'], ['desc']);
+
+  const data = orderBy(projects?.data?.data ?? [], ['updated_at'], ['desc']);
 
   useEffect(() => {
     if (tryingToExpand.has(lab.id) && isSuccess && isFetched) {
@@ -84,8 +87,17 @@ export function Item({
     });
   };
 
+  const onCreateProject = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.stopPropagation();
+    makeTriggerWorkspaceConfigurationClickEvent({
+      on: true,
+      type: WorkspaceActions.NewProject,
+      data: { mode: 'fixed-virtual-lab', virtualLabId: lab.id },
+    });
+  };
+
   const onVlabClick = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
+    e: React.MouseEvent<HTMLElement, MouseEvent> | React.KeyboardEvent<HTMLElement>
   ) => {
     e.stopPropagation();
     makeTriggerWorkspaceConfigurationClickEvent({
@@ -107,10 +119,10 @@ export function Item({
         aria-label="virtual-lab-item"
         data-testid="virtual-lab-item"
         className={cn(
-          'group flex cursor-pointer items-center justify-between px-2 py-3 transition-colors duration-150 hover:bg-gray-50',
+          'group flex cursor-pointer items-center justify-between pl-4 pr-2 py-3 transition-colors duration-150 hover:bg-gray-50',
           'hover:bg-neutral-1 rounded-2xl',
           { 'rounded-b-none': expandedLabs.has(lab.id) },
-          { 'bg-primary-9 text-white': lab.isMine }
+          { 'bg-primary-9! text-white': isUserLab }
         )}
         onKeyDown={onVlabClick}
         onClick={onVlabClick}
@@ -119,25 +131,23 @@ export function Item({
           {isActive && (
             <div
               id="active-lab-indicator"
-              className={cn('mx-2 block h-3 w-3 rounded-full', {
-                'bg-white': isOpen,
+              className={cn('block size-2 lg:size-2.5 rounded-full', {
+                'bg-white! group-hover:bg-white!': isUserLab,
+                'bg-primary-9! group-hover:bg-primary-8!': !isUserLab && isActive,
                 'bg-primary-9': !isOpen,
               })}
             />
           )}
-          <LabCompany
-            className={cn('text-label size-4! min-h-4 min-w-4', { 'text-primary-3': lab.isMine })}
-          />
           <h4
             className={cn('text-primary-9 text-md line-clamp-1 truncate font-bold', {
-              'group-hover:text-primary-8! text-white!': lab.isMine,
+              'group-hover:text-white! text-white!': isUserLab,
             })}
             title={lab.name}
           >
             {lab.name}
           </h4>
         </div>
-        <div className="ml-auto flex items-center">
+        <div className="ml-auto flex items-center gap-1">
           <motion.div
             animate={{ rotate: expandedLabs.has(lab.id) ? 180 : 0 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
@@ -149,14 +159,17 @@ export function Item({
                 rounded
                 size="sm"
                 variant="outline"
-                className="flex h-7 w-7 items-center justify-center rounded-full border-none bg-transparent p-0"
+                className={cn(
+                  'flex h-7 w-7 items-center justify-center rounded-full border-none bg-transparent p-0',
+                  'group-hover:active:text-white! group-hover:border group-hover:shadow-sm'
+                )}
                 onClick={onDownClick}
               >
-                <DownOutlined
-                  className={cn(
-                    'text-primary-7 group-hover:text-primary-8 h-4 w-4 hover:text-white',
-                    { 'hover:text-primary-4 text-primary-3': lab.isMine }
-                  )}
+                <RiArrowDownSLine
+                  className={cn(' size-6', {
+                    'group-hover:text-white! text-white!': isUserLab,
+                    'group-hover:text-primary-8! text-primary-8!': !isUserLab && isActive,
+                  })}
                 />
               </Button>
             )}
@@ -191,14 +204,17 @@ export function Item({
                   )}
                 >
                   <Button
-                    borderless
                     rounded
                     size="md"
                     variant="outline"
-                    className={cn('w-full justify-start shadow-sm', {
-                      'text-primary-8 hover:text-primary-9 bg-white font-bold shadow-[16px_16px_30px_0px_#0000000F,-12px_-8px_32px_0px_#FFFFFF52]':
-                        isProjectActive,
-                    })}
+                    className={cn(
+                      'w-full justify-start bg-white! border shadow-none border-gray-200',
+                      'hover:bg-gray-100!',
+                      {
+                        'text-primary-8 scale-101 hover:text-primary-9 bg-white! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
+                          isProjectActive,
+                      }
+                    )}
                     title={project.name}
                     onClick={() =>
                       onProjectClick({
@@ -209,19 +225,31 @@ export function Item({
                     id={`project-item-${project.id}`}
                     data-testid="project-item-selector"
                   >
-                    {isProjectActive && (
-                      <div className="mr-2 size-3 min-h-3 min-w-3 rounded-[9999px] bg-current" />
-                    )}
                     <span className="line-clamp-1 truncate" title={project.name}>
                       {project.name}
                     </span>
-                    <RightOutlined
-                      className={`ml-auto ${isProjectActive ? 'text-neutral-2' : 'text-neutral-3'}`}
+                    <RiArrowRightSLine
+                      className={`ml-auto ${isProjectActive ? 'text-primary-9! translate-x-0.5' : 'text-gray-300!'}`}
                     />
                   </Button>
                 </motion.div>
               );
             })}
+            <div className="mt-1 flex justify-end">
+              <Button
+                rounded
+                size="md"
+                variant="outline"
+                className={cn(
+                  'border-gray-200 text-gray-500 hover:text-primary-9 hover:bg-gray-50!',
+                  'min-w-32 justify-between rounded-full bg-white px-4 text-sm font-semibold'
+                )}
+                onClick={onCreateProject}
+              >
+                Add project
+                <PlusOutlined className="ml-3 text-sm" />
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

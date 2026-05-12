@@ -5,13 +5,13 @@ import type { PlanV2 } from '@/types/virtual-lab/pricing';
 export default function SubscriptionsCosts({
   billingInterval,
   plan,
-  dark,
+  isCurrentTier,
 }: {
   billingInterval: 'month' | 'year';
   plan: PlanV2;
-  dark?: boolean;
+  isCurrentTier?: boolean;
 }) {
-  const borderColor = dark ? 'border-primary-7' : 'border-neutral-2';
+  const borderColor = isCurrentTier ? 'border-primary-7' : 'border-neutral-2';
 
   return (
     <div className={cn('relative my-2 w-full border-y py-2', borderColor)}>

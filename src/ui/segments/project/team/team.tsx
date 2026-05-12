@@ -1,14 +1,14 @@
 'use client';
 
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { match } from 'ts-pattern';
 import { useState } from 'react';
+import { match } from 'ts-pattern';
 
-import { InviteMembers } from '@/ui/segments/project/team/team-invitation';
 import { listProjectMembers } from '@/api/virtual-lab-svc/queries/member';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { InviteMembers } from '@/ui/segments/project/team/team-invitation';
 import { ListingMembers } from '@/ui/segments/project/team/team-listing';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 const StepDict = {
   Listing: 'listing',

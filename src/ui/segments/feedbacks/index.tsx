@@ -114,7 +114,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
     retry: false,
   });
 
-  const projectName = projectData?.data?.project?.name ?? '';
+  const projectName = projectData?.data?.name ?? '';
   const virtualLabName = virtualLabData?.data?.virtual_lab?.name ?? '';
 
   const getMonthYearLabel = () => {

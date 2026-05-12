@@ -1,11 +1,17 @@
 'use client';
 
-import { ArrowLeftOutlined, DeleteFilled, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftOutlined,
+  DeleteFilled,
+  LoadingOutlined,
+  PlusOutlined,
+  SendOutlined,
+} from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, ConfigProvider, Empty, Input, List, Table } from 'antd';
+import { List, Table } from 'antd';
 import { compact, filter, get, map, sortBy, uniqBy } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
-import { useEffect, useMemo, useState } from 'react';
+import { type SVGProps, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
 
@@ -17,8 +23,9 @@ import {
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
-import { Badge } from '@/ui/molecules/badge';
 import { Button as UiButton } from '@/ui/molecules/button';
+import { XInput } from '@/ui/segments/profile/sections/profile-form/elements';
+import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { extractInitials } from '@/util/slugify';
 import { classNames } from '@/util/utils';
@@ -29,6 +36,24 @@ import type { ColumnType } from 'antd/es/table';
 import type { Member, TRole } from '@/api/virtual-lab-svc/queries/types';
 
 const emailSchema = z.email('Email is not valid').min(3, 'Email is required');
+
+function MailRemove(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
+      <title>Mail Remove</title>
+      <g
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      >
+        <path d="m7 7.5l2.942 1.74c1.715 1.014 2.4 1.014 4.116 0L17 7.5" />
+        <path d="M21.993 11c.012-.826.009-.649-.009-1.476c-.065-3.065-.098-4.598-1.229-5.733c-1.131-1.136-2.705-1.175-5.854-1.254a115 115 0 0 0-5.802 0c-3.149.079-4.723.118-5.854 1.254c-1.131 1.135-1.164 2.668-1.23 5.733a69 69 0 0 0 0 2.952c.066 3.065.099 4.598 1.23 5.733c1.131 1.136 2.705 1.175 5.854 1.254q1.454.037 2.901.037m3-5l3.5 3.5m0 0l3.5 3.5M18.5 18L15 21.5m3.5-3.5l3.5-3.5" />
+      </g>
+    </svg>
+  );
+}
 
 const Steps = {
   InviteMember: 'invite-member',
@@ -92,18 +117,15 @@ function EmailInput({
 
   return (
     <div>
-      <Input
+      <XInput
         id="email"
         size="large"
+        autoComplete="off"
         placeholder="Enter email address..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
         status={error ? 'error' : undefined}
-        className={cn(
-          'focus:white hover:bg-primary-9! border-white bg-transparent hover:text-white!',
-          'focus-within:bg-primary-9! bg-primary-9! text-white! focus-within:text-white!',
-          'placeholder:text-sm! placeholder:text-white'
-        )}
+        className={cn('placeholder:text-sm! placeholder:text-gray-400! placeholder:font-light')}
         disabled={disabled}
       />
       {error && <small style={{ color: 'red', marginTop: 4 }}>{error}</small>}
@@ -117,6 +139,17 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
   const [inviteList, setInviteList] = useState<Array<InvitePayload>>([
     { email: '', role: 'admin' },
   ]);
+  const inviteListScrollRef = useRef<HTMLDivElement>(null);
+  const prevInviteCountRef = useRef(inviteList.length);
+
+  useLayoutEffect(() => {
+    const nextLen = inviteList.length;
+    const el = inviteListScrollRef.current;
+    if (nextLen > prevInviteCountRef.current && el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }
+    prevInviteCountRef.current = nextLen;
+  }, [inviteList.length]);
 
   const addEmailField = () => {
     setInviteList((prev) => [...prev, { email: '', role: 'admin' }]);
@@ -202,66 +235,55 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
     },
   });
 
+  const userToInviteCount = inviteList.filter(
+    (invite) => invite.email && emailSchema.safeParse(invite.email).success
+  ).length;
   return (
-    <div className="flex h-full flex-col pb-10">
-      <div className="bg-primary-9 sticky top-0 z-10 flex shrink-0 items-center px-6 py-5">
-        <div className="flex w-full items-center gap-4">
-          <UiButton
-            rounded
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="hover:bg-neutral-2/20 h-auto !px-4 py-2! text-white hover:text-white"
-          >
-            <ArrowLeftOutlined className="text-lg" />
-            <span className="ml-4 text-lg font-bold text-white">Administrators</span>
-          </UiButton>
+    <div className="flex min-h-0 flex-1 flex-col gap-3.5 rounded-2xl bg-white w-full pb-7 px-4 pt-0">
+      <div className="shrink-0 pt-5">
+        <GhostRoundedIconButton
+          icon={<ArrowLeftOutlined />}
+          label="Administrators"
+          classNames={{ label: 'font-semibold', root: 'hover:bg-gray-100' }}
+          onClick={onBack}
+          iconPosition="start"
+        />
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col border border-gray-100 rounded-2xl px-4">
+        <div className="mx-auto flex w-full max-w-3xl shrink-0 items-center justify-between px-2 py-4 pb-8">
+          <h2 className="text-xl font-semibold text-primary-9 ">
+            Invite new administrators to virtual lab
+            <div className="flex items-center gap-2">
+              <small className="text-sm font-light text-primary-9">
+                <span className="font-bold">
+                  {
+                    uniqBy(
+                      inviteList.filter(
+                        (invite) => invite.email && emailSchema.safeParse(invite.email).success
+                      ),
+                      'email'
+                    ).length
+                  }
+                </span>
+                <span className="ml-1">invitation(s) ready</span>
+              </small>
+            </div>
+          </h2>
         </div>
-      </div>
 
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-8 py-4 pb-8">
-        <h2 className="text-xl font-semibold text-white">
-          Invite new administrators to virtual lab
-          <div className="flex items-center gap-2">
-            <small className="text-sm font-light text-white">
-              <span className="font-bold">
-                {
-                  uniqBy(
-                    inviteList.filter(
-                      (invite) => invite.email && emailSchema.safeParse(invite.email).success
-                    ),
-                    'email'
-                  ).length
-                }
-              </span>
-              <span className="ml-1">invitation(s) ready</span>
-            </small>
-          </div>
-        </h2>
-      </div>
-
-      <div className="h-full grow overflow-hidden px-3">
-        <ConfigProvider
-          renderEmpty={() => (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="No invitations to display"
-              className="text-white"
-            />
-          )}
-        >
-          <div className="primary-scrollbar mx-auto h-full w-full max-w-3xl overflow-y-auto px-4">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div
+            ref={inviteListScrollRef}
+            className="secondary-scrollbar mx-auto min-h-0 flex-1 w-full max-w-3xl overflow-y-auto overscroll-contain"
+          >
             <List
               id="virtual-lab-list-users"
               data-testid="virtual-lab-list-users"
               dataSource={inviteList}
-              className="text-white"
+              className="text-white mr-1 px-4"
               renderItem={(invite, index) => (
-                <List.Item
-                  key={index}
-                  className="!border-primary-7 hover:bg-primary-9/10 !px-4 !py-3"
-                >
+                <List.Item key={index} className="border-primary-7 bg-white py-3!">
                   <div className="flex w-full items-start justify-start gap-3">
                     <div className="flex-1">
                       <EmailInput
@@ -272,70 +294,56 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
                         inviteList={inviteList}
                       />
                     </div>
-                    <UiButton
-                      type="button"
-                      variant="ghost"
-                      size="lg"
-                      onClick={() => removeEmailField(index)}
-                      className="hover:bg-neutral-1/20 hover:text-destructive h-12! w-12 !p-2 text-white"
-                      disabled={mutate.isPending || inviteList.length === 1}
-                    >
-                      <DeleteFilled className="text-lg" />
-                    </UiButton>
+                    <div className="self-stretch flex items-center justify-center">
+                      <UiButton
+                        type="button"
+                        variant="icon"
+                        size="md"
+                        rounded
+                        onClick={() => removeEmailField(index)}
+                        disabled={mutate.isPending || inviteList.length === 1}
+                        className={cn(
+                          'border border-gray-200 disabled:cursor-pointer cursor-pointer disabled:pointer-events-none',
+                          'hover:bg-neutral-1/20 hover:text-destructive p-2 text-primary-9'
+                        )}
+                      >
+                        <DeleteFilled className="text-lg" />
+                      </UiButton>
+                    </div>
                   </div>
                 </List.Item>
               )}
             />
-            <div className="flex justify-start p-4">
-              <UiButton
-                rounded
-                type="button"
-                variant="outline"
-                size="md"
-                onClick={addEmailField}
-                className={cn(
-                  'border-primary-4 group bg-primary-9 hover:text-primary-4',
-                  'px-4 text-white select-none hover:border-white'
-                )}
-                disabled={mutate.isPending}
-              >
-                <PlusOutlined className="mr-2" />
-                Add administrator
-              </UiButton>
-            </div>
           </div>
-        </ConfigProvider>
+          <div className="mx-auto flex w-full max-w-3xl shrink-0 justify-end py-4">
+            <GhostRoundedIconButton
+              icon={<PlusOutlined />}
+              label="Add administrator"
+              iconPosition="start"
+              onClick={addEmailField}
+              disabled={mutate.isPending}
+              classNames={{ root: 'w-max' }}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="mx-auto mt-auto flex w-full max-w-3xl flex-shrink-0 items-center justify-end px-8 pt-4">
+      <div className="mx-auto mt-auto flex w-full max-w-3xl shrink-0 items-center justify-end  pt-4">
         <div className="flex gap-3 self-end">
-          <UiButton
-            rounded
-            type="button"
-            variant="outline"
-            size="lg"
-            onClick={onBack}
-            disabled={mutate.isPending}
-          >
-            Cancel
-          </UiButton>
-          <UiButton
-            rounded
-            type="button"
-            variant="outline"
-            size="lg"
+          <GhostRoundedIconButton label="Cancel" onClick={onBack} disabled={mutate.isPending} />
+          <GhostRoundedIconButton
+            icon={
+              mutate.isPending ? <LoadingOutlined spin /> : <SendOutlined className="-rotate-45" />
+            }
+            label={`Send ${userToInviteCount} invitation(s)`}
             onClick={() => mutate.mutateAsync()}
             disabled={mutate.isPending || !inviteList.some((invite) => invite.email)}
-          >
-            Send{' '}
-            {
-              inviteList.filter(
-                (invite) => invite.email && emailSchema.safeParse(invite.email).success
-              ).length
-            }{' '}
-            invitation(s)
-            {mutate.isPending && <LoadingOutlined spin className="ml-3" />}
-          </UiButton>
+            classNames={{
+              root: 'bg-primary-9 text-white hover:bg-primary-8 group',
+              label: 'text-white',
+              iconWrapper: 'bg-primary-9 text-white! group-hover:bg-primary-8!',
+            }}
+          />
         </div>
       </div>
     </div>
@@ -395,20 +403,17 @@ function CancelInvitation({ user, virtualLabId }: { user: Member; virtualLabId: 
 
   return (
     !user.invite_accepted && (
-      <div className="flex w-full flex-col items-center justify-end text-right">
-        <Button
-          data-testid="cancel-invite-btn"
-          key="cancel-invite"
-          type="text"
-          htmlType="button"
-          size="middle"
-          className="hover:text-primary-2! w-max! self-end text-white! opacity-100!"
-          disabled={mutateInvite.isPending}
-          loading={mutateInvite.isPending}
+      <div className="flex w-full flex-col items-end justify-end text-right">
+        <GhostRoundedIconButton
+          icon={
+            mutateInvite.isPending ? <LoadingOutlined spin /> : <MailRemove className="size-6!" />
+          }
+          label="Cancel invitation"
+          size="md"
           onClick={() => mutateInvite.mutateAsync()}
-        >
-          Cancel invitation
-        </Button>
+          disabled={mutateInvite.isPending}
+          classNames={{ root: 'w-max group' }}
+        />
       </div>
     )
   );
@@ -422,6 +427,8 @@ type ListingStepProps = {
 function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
   const { data } = useSession();
   const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
+  const tableSlotRef = useRef<HTMLDivElement>(null);
+  const [tableBodyScrollY, setTableBodyScrollY] = useState<number>();
 
   const { data: team, isLoading } = useQuery({
     queryKey: keyBuilder.listVirtualLabTeam({ virtualLabId }),
@@ -429,7 +436,6 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
   });
 
   const ownerId = team?.data?.owner_id;
-  const total = team?.data?.total;
   const users = team?.data?.users;
 
   const columns: Array<ColumnType<Member>> = useMemo(
@@ -438,8 +444,9 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
         title: 'name',
         dataIndex: 'name',
         key: 'name',
+        width: '200px',
         render: (_: string, record: Member, indx) => (
-          <div className="flex w-max items-center justify-center">
+          <div className="flex w-max items-start justify-start">
             <MemberAvatarCasual
               withEmail
               isOwner={ownerId === record.id}
@@ -466,12 +473,16 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
                       record.email
                   : record.email
               )}
+              pendingIcon={{
+                envelop: '#90a1b9',
+                halfCircle: '#002766',
+              }}
               cls={{
                 text: classNames(
-                  'text-white!  wrap-text',
+                  'text-primary-9! w-full wrap-text',
                   record.invite_accepted ? 'font-bold' : 'font-light'
                 ),
-                email: 'text-primary-4!',
+                email: 'text-primary-8!',
               }}
             />
           </div>
@@ -481,7 +492,7 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
         title: 'Last active',
         dataIndex: 'last_active',
         key: 'last_active',
-        render: () => <span className="text-primary-3" />,
+        render: () => <span className="text-primary-9 w-full" />,
       },
       {
         title: 'Action',
@@ -510,56 +521,34 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
     [users, ownerId, data?.user.id]
   );
 
+  useLayoutEffect(() => {
+    const el = tableSlotRef.current;
+    if (!el) return;
+
+    const measure = (contentHeight: number) => {
+      const h = Math.floor(contentHeight);
+      setTableBodyScrollY(h > 12 ? Math.max(80, h - 4) : undefined);
+    };
+
+    measure(el.getBoundingClientRect().height);
+
+    const ro = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      measure(entry.contentRect.height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <div
-      className="flex h-full flex-col py-2"
+      className="flex h-full min-h-0 flex-col rounded-2xl bg-white w-full p-7 px-0"
       id="team-members-container"
       data-testid="team-members-container"
     >
-      <div className="bg-primary-9 sticky top-0 z-10 flex shrink-0 items-center justify-between px-6 py-5">
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-primary-3 text-lg font-bold">Administrators</span>
-          {total && (
-            <Badge
-              variant="outline"
-              className="bg-primary-9 border-neutral-1/30 min-w-8 border py-1! text-sm font-bold text-white"
-            >
-              {total}
-            </Badge>
-          )}
-        </div>
-        {isVirtualLabAdmin && (
-          <UiButton
-            rounded
-            key="add-member"
-            data-testid="add-member-btn"
-            type="button"
-            size="md"
-            variant="outline"
-            className="border-primary-4 bg-primary-9 hover:text-primary-4 px-4 text-white hover:border-white"
-            onClick={onInviteMemberClick}
-          >
-            <div className="flex gap-5">
-              Add administrator
-              <PlusOutlined />
-            </div>
-          </UiButton>
-        )}
-      </div>
-      <div className="h-full grow overflow-hidden px-6">
-        <ConfigProvider
-          theme={{
-            components: {
-              Table: {
-                colorBgContainer: 'rgba(255, 255, 255, 0)',
-                colorText: '#FFFFFF',
-                borderColor: 'rgba(255, 255, 255, 0)',
-                cellPaddingInline: 0,
-                rowHoverBg: 'rgb(0,58,140,0.7)',
-              },
-            },
-          }}
-        >
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-2 w-full mb-8">
+        <div ref={tableSlotRef} className="flex min-h-0 flex-1 flex-col overflow-hidden w-full">
           <Table
             id="team-members-table"
             bordered={false}
@@ -570,19 +559,38 @@ function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps)
             showHeader={false}
             size="middle"
             rowKey={(record) => record.id ?? record.email}
-            rootClassName="[&_.ant-spin-blur]:opacity-0 [&_#team-members-table]:bg-primary-9!"
+            rootClassName={cn(
+              '[&_.ant-spin-blur]:opacity-0',
+              '[&_.ant-table-wrapper]:bg-white!',
+              '[&_#team-members-table]:bg-white!'
+            )}
             className={cn(
-              'h-full',
+              'h-full min-h-0',
+              '[&_.ant-table]:bg-white!',
               '[&_.ant-table-tbody>tr]:transition-all [&_.ant-table-tbody>tr]:duration-1000',
               '[&_.ant-table-tbody>tr.ant-table-row-remove]:h-0 [&_.ant-table-tbody>tr.ant-table-row-remove]:opacity-40',
-              '[&_.ant-table-body]:primary-scrollbar [&_.ant-table-body]:max-h-full [&_.ant-table-body]:overflow-auto [&_.ant-table-container]:h-full',
-              '[&_.ant-empty-description]:text-white!',
-              '[&_.ant-table-cell]:bg-primary-9!'
+              '[&_.ant-table-body]:secondary-scrollbar! [&_.ant-table-body]:pr-3',
+              '[&_.ant-table-placeholder]:bg-white!',
+              '[&_.ant-table-container]:h-full [&_.ant-table-container]:min-h-0',
+              '[&_.ant-empty-description]:text-primary-9!',
+              '[&_.ant-table-cell]:bg-white!'
             )}
-            scroll={{ y: 'calc(100vh - 250px)' }}
+            scroll={{
+              y: tableBodyScrollY ?? 'calc(100vh - 40rem)',
+            }}
           />
-        </ConfigProvider>
+        </div>
       </div>
+      {isVirtualLabAdmin && (
+        <div className="flex justify-end w-full mt-auto px-7">
+          <GhostRoundedIconButton
+            icon={<PlusOutlined />}
+            label="Add administrator"
+            onClick={onInviteMemberClick}
+            classNames={{ root: 'w-max' }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -595,10 +603,12 @@ export function TeamTable({ virtualLabId }: { virtualLabId: string }) {
 
   return match(currentStep)
     .with(Steps.ListingMembers, () => (
-      <ListingMembers onInviteMemberClick={handleInviteMemberClick} virtualLabId={virtualLabId} />
+      <div className="flex h-full min-h-0 flex-col">
+        <ListingMembers onInviteMemberClick={handleInviteMemberClick} virtualLabId={virtualLabId} />
+      </div>
     ))
     .with(Steps.InviteMember, () => (
-      <div className="animate-fade-in h-full">
+      <div className="animate-fade-in flex h-full min-h-0 flex-col">
         <InviteMembers onBack={handleBackToListing} virtualLabId={virtualLabId} />
       </div>
     ))

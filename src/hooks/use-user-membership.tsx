@@ -3,8 +3,7 @@ import { find, groupBy } from 'es-toolkit/compat';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
-import { getVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { LabTypeEnum } from '@/api/virtual-lab-svc/types';
+import { getSelfVirtualLab, getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { VlmUserGroupsResponse } from '@/api/virtual-lab-svc/queries/types';
@@ -57,8 +56,8 @@ export function useWorkspaceMembership({ virtualLabId, projectId }: Props) {
         queryFn: getUserGroups,
       },
       {
-        queryKey: keyBuilder.listAllLabs({ includes: [LabTypeEnum.MY_LAB] }),
-        queryFn: async () => await listVirtualLabs({ include: [LabTypeEnum.MY_LAB] }),
+        queryKey: keyBuilder.myLab(),
+        queryFn: async () => await getSelfVirtualLab(),
       },
       {
         queryKey: keyBuilder.getOneLab({ virtualLabId: virtualLabId || '' }),
@@ -69,19 +68,23 @@ export function useWorkspaceMembership({ virtualLabId, projectId }: Props) {
         queryKey: keyBuilder.getWorkspace({
           virtualLabId: virtualLabId || '',
           projectId: projectId || '',
+          expand: ['admin'],
         }),
         queryFn: async () =>
-          await getProject({ virtualLabId: virtualLabId!, projectId: projectId! }),
+          await getProject(
+            { virtualLabId: virtualLabId!, projectId: projectId! },
+            { expand: ['admin'] }
+          ),
         enabled: !!virtualLabId && !!projectId,
       },
     ],
   });
-  const ownerVirtualLabId = myVirtualLab?.data?.virtual_lab.id;
+  const ownerVirtualLabId = myVirtualLab?.data?.id;
   const { userGroups, isVirtualLabMember, isVirtualLabAdmin, isProjectMember, isProjectAdmin } =
     makeRoles(data, virtualLabId, projectId);
   const isVirtualLabOwner = ownerVirtualLabId === virtualLabId;
   const virtualLabAdmins = currentVirtualLab?.data?.admins;
-  const projectAdmins = currentProject?.data.project.admins;
+  const projectAdmins = currentProject?.data?.admin;
   const isLoading =
     loadingGroups || loadingVirtualLab || loadingCurrentVirtualLab || loadingCurrentProject;
 
