@@ -6,6 +6,8 @@ const appVersion = process.env.APP_VERSION;
 
 const isPreviewBuild = !!(process.env.AWS_APP_ID || process.env.AWS_AMPLIFY_BUILD);
 
+const LANDING_CACHE_CONTROL = 'public, s-maxage=60, stale-while-revalidate=3600';
+
 const SentryOptions: SentryBuildOptions = {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
@@ -117,6 +119,15 @@ const config = {
         pathname: '/**',
       },
     ],
+  },
+  async headers() {
+    const cacheHeader = [{ key: 'Cache-Control', value: LANDING_CACHE_CONTROL }];
+    return [
+      { source: '/', headers: cacheHeader },
+      // Single-segment public landing pages (excluding `/app/*` and `/api/*`).
+      // `[^/]+` keeps the match to one segment so nested routes don't pick this up.
+      { source: '/:segment((?!app|api)[^/]+)', headers: cacheHeader },
+    ];
   },
   async redirects() {
     return [
