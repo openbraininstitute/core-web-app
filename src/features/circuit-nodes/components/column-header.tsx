@@ -92,6 +92,8 @@ export function ColumnHeader(props: Props) {
       disabled: !onOpenChooser,
     },
     { key: 'reset', label: 'Reset Columns', onClick: () => onReset?.() },
+    { type: 'divider' },
+    { key: 'reset-filters', label: 'Reset Filters', onClick: () => api.setFilterModel(null) },
   ];
 
   const onLabelClick = (e: React.MouseEvent) => {

@@ -1,6 +1,8 @@
-import { RiArrowDownSLine, RiContractUpDownLine, RiFullscreenLine } from '@remixicon/react';
 import { Select, Tooltip } from 'antd';
 
+import CollapsedIcon from '@/components/icons/circuit-nodes-mode/collapsed';
+import FullIcon from '@/components/icons/circuit-nodes-mode/full';
+import HalfIcon from '@/components/icons/circuit-nodes-mode/half';
 import { classNames } from '@/util/utils';
 
 import type { DisplayMode, NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
@@ -78,21 +80,21 @@ export function NodesToolbar({
           onClick={() => onModeChange('collapsed')}
           label="Collapse"
         >
-          <RiArrowDownSLine size={16} />
+          <CollapsedIcon />
         </ModeButton>
         <ModeButton
           active={mode === 'half'}
           onClick={() => onModeChange('half')}
           label="Half height"
         >
-          <RiContractUpDownLine size={16} />
+          <HalfIcon />
         </ModeButton>
         <ModeButton
           active={mode === 'full'}
           onClick={() => onModeChange('full')}
           label="Full height"
         >
-          <RiFullscreenLine size={16} />
+          <FullIcon />
         </ModeButton>
       </div>
     </div>
