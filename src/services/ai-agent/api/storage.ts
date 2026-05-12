@@ -13,7 +13,6 @@ export async function serviceAiAgentStorageGetFileContent({
     accessToken,
     method: 'GET',
     path: `storage/${fileIdentifier}/presigned-url`,
-    params: { file_identifier: fileIdentifier },
     typeGuard: isString,
   });
   assertString(url, 'presigned-url');

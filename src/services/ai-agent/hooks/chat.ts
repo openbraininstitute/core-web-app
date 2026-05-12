@@ -1,11 +1,12 @@
 'use client';
 
-import { type CreateMessage, type Message, useChat } from '@ai-sdk/react';
+import { useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
+import { DefaultChatTransport, getToolName, isToolUIPart } from 'ai';
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
 
-import { atomRateLimit, useAIActiveTools } from '@/components/ai-assistant/state';
+import { atomRateLimit } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { lastConfigUpdateAtom, preMessageConfigAtom } from '@/state/config-highlights';
@@ -17,7 +18,6 @@ import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { AiAssistant, useAiAssistant } from '../assistant';
 import { fetchMessagesFromDB } from '../assistant/manager/message';
 
-import type { ChatRequestOptions, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { Config } from '@/features/scan-config/components/components';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
@@ -30,7 +30,6 @@ export function useServiceAiAgentChat(threadId: string) {
   const assistantInitialMessages = AiAssistant.initialMessages.useValue();
   const isLoadingMessages = AiAssistant.isLoadingMessages.useValue();
   const accessToken = useAccessToken();
-  const activeTools = useAIActiveTools();
   const queryClient = useQueryClient();
   const virtualLabId = useParamVirtualLabId();
   const projectId = useParamProjectId();
@@ -70,33 +69,47 @@ export function useServiceAiAgentChat(threadId: string) {
   }, [threadId]);
 
   const chat = useChat({
-    api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
     id: threadId,
-    initialMessages: assistantInitialMessages,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    experimental_prepareRequestBody: ({ messages }) => {
-      const lastMessage = messages.at(-1);
+    transport: new DefaultChatTransport({
+      api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
+      headers: () => ({
+        Authorization: `Bearer ${accessToken}`,
+      }),
+      body: () => ({
+        frontendUrl: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
+        sharedState: jotaiStore.get(agentStateAtom),
+      }),
+      prepareSendMessagesRequest: ({ messages, body }) => {
+        const lastMessage = messages.at(-1);
 
-      return {
-        content: (lastMessage?.content ?? '').trim(),
-        tool_selection: activeTools,
-        frontend_url: `${globalThis.location.origin}${globalThis.location.pathname}${globalThis.location.search}`,
-        shared_state: jotaiStore.get(agentStateAtom),
-      };
-    },
-    fetch: async (url, options) => {
-      const resp = await fetch(url, options);
-      const newRateLimit: AiAgentRateLimitEndpoint = {
-        limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
-        remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
-        reset_in: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
-      };
-      setRateLimit(newRateLimit);
-      return resp;
-    },
+        return {
+          body: {
+            ...body,
+            parts: lastMessage?.parts ?? [],
+          },
+        };
+      },
+      fetch: async (url, options) => {
+        const resp = await fetch(url, options);
+        const newRateLimit: AiAgentRateLimitEndpoint = {
+          limit: parseInt(resp.headers.get('x-ratelimit-limit') ?? '-1', 10),
+          remaining: parseInt(resp.headers.get('x-ratelimit-remaining') ?? '-1', 10),
+          reset_in: parseInt(resp.headers.get('x-ratelimit-reset') ?? '-1', 10),
+        };
+        setRateLimit(newRateLimit);
+        return resp;
+      },
+    }),
+    messages: assistantInitialMessages,
   });
+
+  // Sync loaded messages into the chat hook when they change
+  // (useChat's `messages` prop is only read on mount; subsequent updates need setMessages)
+  useEffect(() => {
+    if (assistantInitialMessages.length > 0) {
+      chat.setMessages(assistantInitialMessages);
+    }
+  }, [assistantInitialMessages]);
 
   useEffect(() => {
     const lastMessage = chat.messages[chat.messages.length - 1];
@@ -110,15 +123,11 @@ export function useServiceAiAgentChat(threadId: string) {
     // Find the most recent editstate tool result in the last message.
     const editstateResult = lastMessage.parts
       .toReversed()
-      .find(
-        (p) =>
-          p.type === 'tool-invocation' &&
-          p.toolInvocation.toolName === 'editstate' &&
-          p.toolInvocation.state === 'result'
-      ) as ToolInvocationUIPart | undefined;
+      .filter(isToolUIPart)
+      .find((p) => getToolName(p) === 'editstate' && p.state === 'output-available');
 
     // Derive a stable ID for the invocation we found (if any).
-    const invocationId = editstateResult?.toolInvocation?.toolCallId ?? null;
+    const invocationId = editstateResult?.toolCallId ?? null;
 
     // If the messages array matches the initial load exactly, mark the
     // latest invocation as processed so we don't re-handle it, but don't
@@ -136,13 +145,11 @@ export function useServiceAiAgentChat(threadId: string) {
     // Mark as processed before doing work to avoid double-firing.
     lastProcessedInvocationIdRef.current = invocationId;
 
-    // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
-    if (!editstateResult?.toolInvocation?.result) return;
+    if (!editstateResult?.output) return;
 
     try {
-      // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
-      const result = JSON.parse(editstateResult.toolInvocation.result);
-      const newConfig = result.state.smc_simulation_config ?? null;
+      const result = editstateResult.output as Record<string, any>;
+      const newConfig = result.state?.smc_simulation_config ?? null;
       // Use lastAppliedConfigRef for incremental flash diffs. Falls back
       // to the live agentStateAtom for the very first editstate call.
       const oldConfig =
@@ -168,11 +175,11 @@ export function useServiceAiAgentChat(threadId: string) {
       // Only flash when the very last part is the editstate result itself
       const lastPart = lastMessage.parts[lastMessage.parts.length - 1];
       const isLastPartEditState =
-        lastPart?.type === 'tool-invocation' &&
-        lastPart.toolInvocation.toolName === 'editstate' &&
-        lastPart.toolInvocation.state === 'result';
+        isToolUIPart(lastPart) &&
+        getToolName(lastPart) === 'editstate' &&
+        lastPart.state === 'output-available';
 
-      if (isLastPartEditState && newConfig && editstateResult.toolInvocation.args) {
+      if (isLastPartEditState && newConfig && editstateResult.input) {
         configUpdateCounterRef.current += 1;
         setLastConfigUpdate({
           oldConfig: oldConfig as Record<string, unknown> | null,
@@ -181,11 +188,7 @@ export function useServiceAiAgentChat(threadId: string) {
         });
       }
     } catch {
-      logError(
-        'Failed to parse tool invocation result as JSON:',
-        // @ts-expect-error - ToolInvocationUIPart union is not narrowed to the 'result' state variant
-        editstateResult.toolInvocation.result
-      );
+      logError('Failed to parse tool invocation result as JSON:', editstateResult.output);
     }
   }, [
     chat.messages,
@@ -201,16 +204,16 @@ export function useServiceAiAgentChat(threadId: string) {
     setIsChatReady(chat.status === 'ready');
   }, [chat.status, setIsChatReady]);
 
-  const append = useCallback(
-    (message: Message | CreateMessage, chatRequestOptions?: ChatRequestOptions) => {
+  const sendMessage = useCallback(
+    (text: string) => {
       AiAssistant.isEmptyThread.set(false);
-      chat.append(message, chatRequestOptions);
+      chat.sendMessage({ text });
       if (chat.messages.length === 0) {
         try {
           serviceAiAgentThreadSuggestTitle({
             accessToken: accessToken ?? 'NO-TOKEN',
             threadId,
-            title: message.content,
+            title: text,
           }).then(() => {
             queryClient.invalidateQueries({
               queryKey: keyBuilderAI.history(virtualLabId, projectId),
@@ -224,7 +227,6 @@ export function useServiceAiAgentChat(threadId: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [chat, accessToken, threadId, queryClient, virtualLabId, projectId]
   );
-
   const stop = useCallback(async () => {
     chat.stop();
     queryClient.invalidateQueries({
@@ -251,7 +253,6 @@ export function useServiceAiAgentChat(threadId: string) {
         {
           id: `temp-id-${crypto.randomUUID()}`,
           role: 'assistant',
-          content: '',
           parts: [],
         },
       ]);
@@ -262,10 +263,10 @@ export function useServiceAiAgentChat(threadId: string) {
     AiAssistant.chat.sync({
       status: chat.status,
       error: chat.error,
-      append,
+      sendMessage,
       stop,
     });
-  }, [chat.status, chat.error, append, stop]);
+  }, [chat.status, chat.error, sendMessage, stop]);
 
   useEffect(() => {
     if (chat.status === 'ready') {
@@ -276,7 +277,7 @@ export function useServiceAiAgentChat(threadId: string) {
   return {
     messages: chat.messages,
     isLoadingMessages,
-    append,
+    sendMessage,
     status: chat.status,
     error: chat.error,
     stop,

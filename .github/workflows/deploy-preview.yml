@@ -29,7 +29,7 @@ jobs:
       preview-url: ${{ steps.get-url.outputs.url }}
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
@@ -78,7 +78,7 @@ jobs:
           echo "url=https://${{ steps.vars.outputs.domain-safe-branch }}.${{ env.PREVIEW_DOMAIN }}" >> $GITHUB_OUTPUT
 
       - name: Post initial comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           PREVIEW_URL: ${{ steps.get-url.outputs.url }}
         with:
@@ -127,13 +127,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.PREVIEW_DEPLOY_AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Monitor build and update comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           JOB_ID: ${{ needs.deploy.outputs.job-id }}
           BRANCH_NAME: ${{ needs.deploy.outputs.branch-name }}
@@ -240,7 +240,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Update comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const marker = '<!-- amplify-preview-comment -->';

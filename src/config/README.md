@@ -149,7 +149,7 @@ Platform API URLs can fallback to `API_ORIGIN` if not explicitly set:
 
 ```typescript
 const platformApiUrlFields = {
-  AI_AGENT_URL: "/agent",
+  AI_AGENT_URL: "/agent-ts/api",
   AUTH_MANAGER_URL: "/auth-manager/v1",
   CELL_API_URL: "/circuit",
   ENTITY_CORE_URL: "/entitycore",

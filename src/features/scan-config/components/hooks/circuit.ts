@@ -51,6 +51,7 @@ export function useCircuitImageURL(circuitId: string) {
     },
     refetchOnWindowFocus: false,
   });
+
   const isLoading = circuitLoading || assetLoading;
   const error = circuitError || assetError;
 

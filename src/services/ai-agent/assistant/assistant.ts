@@ -18,13 +18,13 @@ import { MessageManager } from './manager/message';
 import { ThreadManager } from './manager/thread';
 import { Signal } from './signal';
 
-import type { Message } from '@ai-sdk/react';
+import type { UIMessage } from '@ai-sdk/react';
 import type { AiAssistantHistory, AssistantContext, AssistantError } from './types';
 
 class AiAssistantClass {
   public readonly threadId = new Signal<string | undefined>(undefined);
 
-  public readonly initialMessages = new Signal<Message[]>([]);
+  public readonly initialMessages = new Signal<UIMessage[]>([]);
 
   public readonly isLoadingMessages = new Signal<boolean>(false);
 
