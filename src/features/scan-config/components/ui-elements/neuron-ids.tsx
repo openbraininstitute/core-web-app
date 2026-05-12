@@ -1,4 +1,4 @@
-import { CopyOutlined, EditOutlined } from '@ant-design/icons';
+import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import Editor, { type OnChange, type OnMount } from '@monaco-editor/react';
 import { Button } from 'antd';
 import { Fragment, memo, useCallback, useMemo, useRef, useState } from 'react';
@@ -27,7 +27,7 @@ export default function NeuronIds({
 
     const elements: number[] = namedTupleArray.flatMap((v) => {
       if (isPlainObject(v) && Array.isArray(v.elements)) {
-        return v.elements;
+        return v.elements as number[];
       }
       return [];
     });
@@ -56,14 +56,23 @@ export default function NeuronIds({
     };
   }, [allElements]);
 
-  const handleEditClick = useCallback(() => {
+  const handleEditClick = () => {
     setEdit(true);
-  }, []);
+  };
 
   return (
     <div className="w-full">
       {!edit && value !== null && (
-        <Ids ids={renderedElements} onEditClick={handleEditClick} disabled={disabled} />
+        <Ids
+          ids={renderedElements}
+          onEditClick={handleEditClick}
+          disabled={disabled}
+          onDeleteItem={(deleteId: number) => {
+            const newAllElements = allElements.filter((id) => id !== deleteId);
+            onAddIds(newAllElements);
+            setText(newAllElements.join(', '));
+          }}
+        />
       )}
       {value === null && (
         <>
@@ -188,55 +197,57 @@ function parseCsvIntegers(data: string): number[] {
   return Array.from(result).sort((a, b) => a - b);
 }
 
-const Ids = memo(
-  ({
-    ids,
-    onEditClick,
-    disabled,
-  }: {
-    ids: { head: number[]; tail: number[] };
-    onEditClick?: () => void;
-    disabled?: boolean;
-  }) => {
-    const containerClass = 'w-full grid grid-cols-4 gap-1';
-    const elementClass =
-      'border border-gray-200 rounded-full px-3 py-1 text-primary-8 font-bold flex items-center justify-center';
+const Ids = ({
+  ids,
+  onEditClick,
+  disabled,
+  onDeleteItem,
+}: {
+  ids: { head: number[]; tail: number[] };
+  onDeleteItem: (id: number) => void;
+  onEditClick?: () => void;
+  disabled?: boolean;
+}) => {
+  const containerClass = 'w-full grid grid-cols-4 gap-1';
+  const elementClass =
+    'border border-gray-200 rounded-full px-3 py-1 text-primary-8 font-bold flex items-center justify-center gap-3';
 
-    return (
-      <div className="border border-gray-200 p-3 rounded-lg w-full ">
+  return (
+    <div className="border border-gray-200 p-3 rounded-lg w-full ">
+      <div className={containerClass}>
+        {ids.head.map((id) => (
+          <div key={id} className={elementClass}>
+            {id}
+            {!disabled && <DeleteOutlined onClick={() => onDeleteItem(id)} />}
+          </div>
+        ))}
+      </div>
+
+      {ids.tail.length > 0 && (
+        <div className="w-full flex justify-center my-3">
+          <button
+            type="button"
+            className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm"
+            onClick={onEditClick}
+          >
+            {!disabled ? 'Edit all IDs' : 'View all Ids'}
+          </button>
+        </div>
+      )}
+
+      {ids.tail.length > 0 && (
         <div className={containerClass}>
-          {ids.head.map((id) => (
+          {ids.tail.map((id) => (
             <div key={id} className={elementClass}>
               {id}
+              {!disabled && <DeleteOutlined onClick={() => onDeleteItem(id)} />}
             </div>
           ))}
         </div>
-
-        {ids.tail.length > 0 && (
-          <div className="w-full flex justify-center my-3">
-            <button
-              type="button"
-              className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm"
-              onClick={onEditClick}
-            >
-              {!disabled ? 'Edit all IDs' : 'View all Ids'}
-            </button>
-          </div>
-        )}
-
-        {ids.tail.length > 0 && (
-          <div className={containerClass}>
-            {ids.tail.map((id) => (
-              <div key={id} className={elementClass}>
-                {id}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-);
+      )}
+    </div>
+  );
+};
 
 const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
   const [copied, setCopied] = useState(false);
