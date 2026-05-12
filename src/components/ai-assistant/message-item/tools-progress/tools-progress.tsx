@@ -1,3 +1,5 @@
+import { RiCloseLine } from '@remixicon/react';
+import { type DynamicToolUIPart, getToolName, type ToolUIPart } from 'ai';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -11,14 +13,13 @@ import { cn } from '@/utils/css-class';
 import { IconGear } from '../../icons/gear';
 import LoadingDots from './loading-dots/loading-dots';
 
-import type { ToolInvocation, ToolInvocationUIPart } from '@ai-sdk/ui-utils';
 import type { AIAssistantTool } from '@/services/ai-agent/tools/ai-assistant-tool';
 
 import styles from './tools-progress.module.css';
 
 interface ToolsProgressProps {
   className?: string;
-  part: ToolInvocationUIPart;
+  part: ToolUIPart | DynamicToolUIPart;
 }
 
 export default function ToolsProgress({ className, part }: ToolsProgressProps) {
@@ -43,10 +44,11 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
   const toolsState = getToolsState(part, tools);
   if (toolsState === null) return null;
 
-  const { tool, state, invocation, key } = toolsState;
+  const { tool, state, key } = toolsState;
   const Icon = tool.icon;
   const isExpanded = expandedToolKeys.has(key);
-  const isRunning = state !== 'result';
+  const isRunning = state !== 'output-available' && state !== 'output-error';
+  const isError = state === 'output-error';
 
   return (
     <div className={cn(styles.container, className)}>
@@ -54,6 +56,7 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
         className={cn(
           styles.card,
           isRunning && styles.cardRunning,
+          isError && styles.cardError,
           isExpanded && styles.cardExpanded
         )}
         key={key}
@@ -76,13 +79,20 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
             <div
               className={cn(
                 styles.status,
-                isRunning ? styles.statusRunning : styles.statusComplete
+                isRunning && styles.statusRunning,
+                isError && styles.statusError,
+                !isRunning && !isError && styles.statusComplete
               )}
             >
               {isRunning ? (
                 <>
                   <LoadingDots />
                   <span className={styles.statusText}>Running</span>
+                </>
+              ) : isError ? (
+                <>
+                  <RiCloseLine className={styles.checkIcon} />
+                  <span>Error</span>
                 </>
               ) : (
                 <>
@@ -111,30 +121,30 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
         </button>
 
         {/* Expandable Details */}
-        {invocation && (
-          <div
-            className={cn(styles.details, isExpanded ? styles.detailsOpen : styles.detailsClosed)}
-            aria-hidden={!isExpanded}
-            role="region"
-            aria-label={`${tool.name} details`}
-          >
-            <div className={styles.detailsInner}>
-              {invocation.args && Object.keys(invocation.args).length > 0 && (
-                <div className={styles.section}>
-                  <div className={styles.sectionTitle}>Arguments</div>
-                  <pre className={styles.codeBlock}>{formatInputOutputs(invocation.args)}</pre>
-                </div>
-              )}
+        <div
+          className={cn(styles.details, isExpanded ? styles.detailsOpen : styles.detailsClosed)}
+          aria-hidden={!isExpanded}
+          role="region"
+          aria-label={`${tool.name} details`}
+        >
+          <div className={styles.detailsInner}>
+            {part.input != null &&
+            typeof part.input === 'object' &&
+            Object.keys(part.input as Record<string, unknown>).length > 0 ? (
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>Arguments</div>
+                <pre className={styles.codeBlock}>{formatInputOutputs(part.input)}</pre>
+              </div>
+            ) : null}
 
-              {invocation.state === 'result' && invocation.result && (
-                <div className={styles.section}>
-                  <div className={styles.sectionTitle}>Result</div>
-                  <pre className={styles.codeBlock}>{formatInputOutputs(invocation.result)}</pre>
-                </div>
-              )}
-            </div>
+            {part.state === 'output-available' && part.output != null ? (
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>Result</div>
+                <pre className={styles.codeBlock}>{formatInputOutputs(part.output)}</pre>
+              </div>
+            ) : null}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -142,23 +152,23 @@ export default function ToolsProgress({ className, part }: ToolsProgressProps) {
 
 type ToolsStates = {
   tool: AIAssistantTool;
-  state: 'partial-call' | 'call' | 'result';
-  invocation: ToolInvocation;
+  state: (ToolUIPart | DynamicToolUIPart)['state'];
   key: string;
 };
 
-function getToolsState(part: ToolInvocationUIPart, tools: AIAssistantTool[]): ToolsStates | null {
-  const invocation = part.toolInvocation;
-  if (!invocation || !invocation.toolName) return null;
-  const tool = tools.find((t) => t.id === invocation.toolName);
+function getToolsState(
+  part: ToolUIPart | DynamicToolUIPart,
+  tools: AIAssistantTool[]
+): ToolsStates | null {
+  const toolName = getToolName(part);
+  if (!toolName) return null;
+  const tool = tools.find((t) => t.id === toolName);
   if (!tool) return null;
-  const keyBase = (invocation.toolName ?? 'tool') as string;
-  const key = `${keyBase}-${tool.id}`;
+  const key = `${toolName}-${tool.id}`;
 
   return {
     tool,
-    state: invocation.state,
-    invocation,
+    state: part.state,
     key,
   };
 }

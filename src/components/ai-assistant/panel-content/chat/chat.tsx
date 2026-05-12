@@ -1,3 +1,4 @@
+import { isToolUIPart } from 'ai';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React from 'react';
 
@@ -48,7 +49,7 @@ export default function Chat({
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const healthError = assistant.healthError.useValue();
 
-  const { messages, status, append, error, stop, isLoadingMessages } = useServiceAiAgentChat(
+  const { messages, status, sendMessage, error, stop, isLoadingMessages } = useServiceAiAgentChat(
     threadId ?? ''
   );
   const [suggestions, clearSuggestions, isLoadingSuggestions, refetchSuggestions] =
@@ -152,17 +153,14 @@ export default function Chat({
   // Scrolling + autoscroll control when new message.
   const handlePrompt = (content: string) => {
     setAutoScroll(true);
-    append({
-      role: 'user',
-      content,
-    });
+    sendMessage(content);
     scrollToBottom();
     requestAnimationFrame(scrollToBottom);
   };
 
   const lastMessage = messages[messages.length - 1];
   const hasVisibleContent = lastMessage?.parts.some(
-    (p) => (p.type === 'text' && p.text !== '') || p.type === 'tool-invocation'
+    (p) => (p.type === 'text' && 'text' in p && p.text !== '') || isToolUIPart(p)
   );
   const showThinking = status === 'submitted' || (status === 'streaming' && !hasVisibleContent);
 

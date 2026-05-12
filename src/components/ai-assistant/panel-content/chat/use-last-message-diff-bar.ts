@@ -19,7 +19,7 @@ import {
   processAccumulatedDiffs,
 } from '../../message-item/use-message-diffs';
 
-import type { UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/react';
 
 export interface LastMessageDiffBarState {
   diffBarData: DiffBarData | null;

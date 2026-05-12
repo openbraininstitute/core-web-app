@@ -14,42 +14,41 @@ export const serviceAiAgentListTools = asyncCreateSquash(
   }
 );
 
-type AiAgentListToolsResponse = Array<{ name: string; name_frontend: string }>;
+type AiAgentListToolsResponse = Array<{ name: string; nameFrontend: string }>;
 
 function isAiAgentListToolsResponse(data: unknown): data is AiAgentListToolsResponse {
-  return isType(data, ['array', { name: 'string', name_frontend: 'string' }]);
+  return isType(data, ['array', { name: 'string', nameFrontend: 'string' }]);
 }
 
-export const serviceAiAgentGetTool = asyncCreateSquash(
-  async (accessToken: string, toolId: string): Promise<AiAgentGetToolResponse> => {
-    const data = await fetchJSON({
-      method: 'GET',
-      accessToken,
-      path: `tools/${toolId}`,
-      typeGuard: isAiAgentGetToolResponse,
-    });
-    return data;
-  }
-);
+export async function serviceAiAgentGetTool(
+  accessToken: string,
+  toolId: string
+): Promise<AiAgentGetToolResponse> {
+  const data = await fetchJSON({
+    method: 'GET',
+    accessToken,
+    path: `tools/${toolId}`,
+    typeGuard: isAiAgentGetToolResponse,
+  });
+  return data;
+}
 
 export type AiAgentGetToolResponse = {
   name: string;
-  name_frontend: string;
+  nameFrontend: string;
   description: string;
-  description_frontend: string;
-  is_online: boolean;
-  hil: boolean;
-  input_schema: string;
+  descriptionFrontend: string;
+  isOnline: boolean;
+  inputSchema: string;
 };
 
 function isAiAgentGetToolResponse(data: unknown): data is AiAgentGetToolResponse {
   return isType(data, {
     name: 'string',
-    name_frontend: 'string',
+    nameFrontend: 'string',
     description: 'string',
-    description_frontend: 'string',
-    is_online: 'boolean',
-    hil: 'boolean',
-    input_schema: 'string',
+    descriptionFrontend: 'string',
+    isOnline: 'boolean',
+    inputSchema: 'string',
   });
 }

@@ -33,17 +33,17 @@ export default function AIToolCard({ content }: { content: AIChatToolsSectionPro
       id={slugiy(content.name)}
     >
       <h2 className="text-primary-9 text-2xl font-bold">{content.name}</h2>
-
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks]}
-        className="text-[1.2em] leading-normal"
-        rehypePlugins={[rehypeRaw]}
-        components={{
-          code: MarkdownCodeBlock,
-        }}
-      >
-        {description}
-      </ReactMarkdown>
+      <div className="text-[1.2em] leading-normal">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkBreaks]}
+          rehypePlugins={[rehypeRaw]}
+          components={{
+            code: MarkdownCodeBlock,
+          }}
+        >
+          {description}
+        </ReactMarkdown>
+      </div>
     </article>
   );
 }

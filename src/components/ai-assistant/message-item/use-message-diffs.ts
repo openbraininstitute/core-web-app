@@ -1,5 +1,6 @@
 'use client';
 
+import { type DynamicToolUIPart, getToolName, isToolUIPart, type ToolUIPart } from 'ai';
 import { useAtom, useSetAtom } from 'jotai';
 import React from 'react';
 
@@ -13,19 +14,18 @@ import {
 } from '@/state/config-highlights';
 import { adjustParentTypes, computeLiveDiffs, type DiffResult } from '@/utils/diff';
 
-import type { ToolInvocationUIPart, UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/react';
 import type { Config } from '@/features/scan-config/components/components';
 
 // ── Helpers (exported for reuse by panel-level hook) ─────────────────────────
 
 /** Filter parts down to completed editstate tool invocations. */
-export function completedEditStateParts(parts: UIMessage['parts']): ToolInvocationUIPart[] {
+export function completedEditStateParts(
+  parts: UIMessage['parts']
+): (ToolUIPart | DynamicToolUIPart)[] {
   return parts.filter(
-    (p) =>
-      p.type === 'tool-invocation' &&
-      p.toolInvocation.toolName === 'editstate' &&
-      p.toolInvocation.state === 'result'
-  ) as ToolInvocationUIPart[];
+    (p) => isToolUIPart(p) && getToolName(p) === 'editstate' && p.state === 'output-available'
+  ) as (ToolUIPart | DynamicToolUIPart)[];
 }
 
 /** Strip the leading `smc_simulation_config` segment when present. */
@@ -71,8 +71,8 @@ export function findLastNewConfig(
 
   try {
     const last = calls[0];
-    if (last.toolInvocation.state === 'result') {
-      const result = JSON.parse(last.toolInvocation.result as string);
+    if (last.state === 'output-available') {
+      const result = last.output as Record<string, any>;
       return result?.state?.smc_simulation_config || null;
     }
   } catch (error) {
@@ -107,10 +107,7 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
   // ── Derived data ─────────────────────────────────────────────────────────
 
   const hasEditStateCalls = React.useMemo(
-    () =>
-      message.parts.some(
-        (p) => p.type === 'tool-invocation' && p.toolInvocation.toolName === 'editstate'
-      ),
+    () => message.parts.some((p) => isToolUIPart(p) && getToolName(p) === 'editstate'),
     [message.parts]
   );
 
