@@ -228,7 +228,7 @@ export function useAtomsMap({
                 throw new Error(`Unsupported entity type: ${model.type}`);
               });
 
-            initial[subkey] = {
+            initialConfigforKey[subkey] = {
               type: formModelType,
               id_str: model.id,
             };
