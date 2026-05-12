@@ -43,7 +43,7 @@ export function Right({
   config,
 }: Props) {
   return (
-    <div id="scan-config-controls-right-preview" className="rounded-lg mr-2 h-full">
+    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 py-1 h-full">
       {activity === ScanConfigActivity.Simulate &&
         entityType === ExtendedEntitiesTypeDict.IonChannelModel && (
           <IonChannelModelRecordingRender
@@ -52,15 +52,18 @@ export function Right({
             config={config}
           />
         )}
-      {activity === ScanConfigActivity.Simulate &&
+      {((activity === ScanConfigActivity.Simulate &&
         (entityType === ExtendedEntitiesTypeDict.Circuit ||
           entityType === ExtendedEntitiesTypeDict.MemodelCircuit ||
           entityType === ExtendedEntitiesTypeDict.MEModelWithSynapses) &&
-        entity && (
-          <div className="rounded-lg h-full" id="scan-config-right-model-preview">
-            <ModelPreview model={entity} />
-          </div>
-        )}
+        entity) ||
+        (activity === ScanConfigActivity.Extract &&
+          entity &&
+          entityType === ExtendedEntitiesTypeDict.Circuit)) && (
+        <div className="rounded-lg h-full" id="scan-config-right-model-preview">
+          <ModelPreview model={entity} />
+        </div>
+      )}
     </div>
   );
 }
