@@ -9,7 +9,7 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
-import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
+import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { ScanConfiguration } from '@/features/scan-config';
 import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
@@ -52,18 +52,23 @@ export default function Page({
     queryFn: () => getMEModel({ id: modelId, context: { virtualLabId, projectId } }),
   });
 
-  const { data: campaignData } = useQuery({
+  const { data: campaignData, isLoading: isCampaignLoading } = useQuery({
     queryKey: keyBuilder.simCampaign({ entityId: initialCampaignId }),
     queryFn: async () => {
       if (!initialCampaignId) return null;
       return await resolveSimulationByCampaignId({
         id: initialCampaignId,
         context: { virtualLabId, projectId },
+        populate: ['config'],
       });
     },
+    enabled: !!initialCampaignId,
   });
 
-  if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
+  if (
+    queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit &&
+    (!initialCampaignId || (!isCampaignLoading && campaignData?.config.form))
+  ) {
     return (
       <div className="border-neutral-2 ml-2 h-full rounded-2xl border">
         <ScanConfiguration
@@ -76,6 +81,9 @@ export default function Page({
         />
       </div>
     );
+  }
+  if (queryParams.dataType === ExtendedEntitiesTypeDict.MemodelCircuit) {
+    return null;
   }
 
   return (

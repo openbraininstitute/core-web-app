@@ -23,6 +23,8 @@ import {
 } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
 
+import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
+
 export function Setup() {
   const form = Form.useFormInstance();
 
@@ -282,10 +284,10 @@ export function Setup() {
 
       <Form.Item
         name={['setup', 'recording_location']}
-        label={renderLabel('Recording location', 'main')}
+        label={renderLabel('Recording location', 'main', RequiredFieldMarker)}
         rules={[
           {
-            required: false,
+            required: true,
             validator: createZodFieldValidator(
               ElectricalCellRecordingSchema,
               'setup.recording_location',

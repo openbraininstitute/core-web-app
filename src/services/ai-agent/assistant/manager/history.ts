@@ -85,18 +85,18 @@ export class HistoryManager {
               virtualLabId,
               cursor: this.cursor,
               pageSize: PAGE_SIZE,
-              excludeEmptyThreads: true,
+              excludeEmpty: true,
             });
           },
           staleTime: 30000,
         });
-        this.cursor = resp.next_cursor ?? null;
-        this.hasMorePages = resp.has_more;
+        this.cursor = resp.nextCursor ?? null;
+        this.hasMorePages = resp.hasMore;
         return resp.results.map((result) => {
           const item: AiAssistantHistoryItem = {
-            id: result.thread_id,
+            id: result.id,
             title: result.title,
-            date: new Date(result.update_date),
+            date: new Date(result.updatedAt),
           };
           return item;
         });

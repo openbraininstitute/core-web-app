@@ -50,7 +50,7 @@ export default function ServerComponent() {
 ### In API Routes
 
 ```typescript
-import { serverConfig } from '@/config/server';
+import { serverConfig } from "@/config/server";
 
 export async function GET() {
   const response = await fetch(serverConfig.VIRTUAL_LAB_API_URL, {
@@ -66,7 +66,7 @@ export async function GET() {
 ### In Client-Side Utilities (Non-React)
 
 ```typescript
-import { config } from '@/config';
+import { config } from "@/config";
 
 export function createApiClient() {
   return {
@@ -81,13 +81,13 @@ Note: `config` is an alias for `clientConfig` and only contains public propertie
 ### In Middleware
 
 ```typescript
-import { serverConfig } from '@/config/server';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { serverConfig } from "@/config/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
-  response.headers.set('X-Root-Route', serverConfig.ROOT_ROUTE);
+  response.headers.set("X-Root-Route", serverConfig.ROOT_ROUTE);
 
   return response;
 }
@@ -99,7 +99,7 @@ export function middleware(request: NextRequest) {
 
 ```typescript
 // WRONG: Accessing config during import/evaluation
-import { config } from '@/config';
+import { config } from "@/config";
 const apiUrl = config.VIRTUAL_LAB_API_URL;
 
 export function myFunction() {
@@ -107,7 +107,7 @@ export function myFunction() {
 }
 
 // CORRECT: Accessing config inside function
-import { config } from '@/config';
+import { config } from "@/config";
 
 export function myFunction() {
   const apiUrl = config.VIRTUAL_LAB_API_URL;
@@ -130,7 +130,13 @@ Configuration is defined once in `configFields` object with:
 const configFields = {
   KEYCLOAK_CLIENT_SECRET: { schema: z.string().nonempty(), public: false },
   DEPLOYMENT_ENV: {
-    schema: z.enum(['local', 'preview', 'development', 'staging', 'production']),
+    schema: z.enum([
+      "local",
+      "preview",
+      "development",
+      "staging",
+      "production",
+    ]),
     public: true,
   },
   // ...
@@ -143,15 +149,15 @@ Platform API URLs can fallback to `API_ORIGIN` if not explicitly set:
 
 ```typescript
 const platformApiUrlFields = {
-  AI_AGENT_URL: '/agent',
-  AUTH_MANAGER_URL: '/auth-manager/v1',
-  CELL_API_URL: '/circuit',
-  ENTITY_CORE_URL: '/entitycore',
-  NOTEBOOK_API_URL: '/notebook_service',
-  OBI_ONE_URL: '/obi-one',
-  SMALL_SCALE_SIMULATOR_URL: '/small-scale-simulator',
-  THUMBNAIL_API_URL: '/thumbnail-generation',
-  VIRTUAL_LAB_API_URL: '/virtual-lab-manager',
+  AI_AGENT_URL: "/agent-ts/api",
+  AUTH_MANAGER_URL: "/auth-manager/v1",
+  CELL_API_URL: "/circuit",
+  ENTITY_CORE_URL: "/entitycore",
+  NOTEBOOK_API_URL: "/notebook_service",
+  OBI_ONE_URL: "/obi-one",
+  SMALL_SCALE_SIMULATOR_URL: "/small-scale-simulator",
+  THUMBNAIL_API_URL: "/thumbnail-generation",
+  VIRTUAL_LAB_API_URL: "/virtual-lab-manager",
 };
 ```
 
@@ -251,10 +257,10 @@ Properties with `public: true` are available in both contexts:
 - Entity core configuration:
   - `ENTITY_CORE_PUBLIC_PROJECT_ID`, `ENTITY_CORE_PUBLIC_VIRTUAL_LAB_ID`
 - Brain region configuration:
-  - `BASIC_CELL_GROUPS_AND_REGIONS_BRAIN_REGION_ANNOTATION_VALUE`
-  - `DEFAULT_BRAIN_ATLAS_ID`, `DEFAULT_BRAIN_REGION_HIERARCHY_ID`
-  - `DEFAULT_SELECTED_BRAIN_REGION_ID`, `LEGACY_DEFAULT_CIRCUIT_ID`
-  - `ROOT_BRAIN_REGION_ANNOTATION_VALUE`, `ROOT_BRAIN_REGION_ID`
+  - `MOUSE_PRIMARY_ANATOMICAL_DIVISIONS_ANNOTATION_VALUE`
+  - `DEFAULT_BRAIN_ATLAS_ID`, `APP_DEFAULT_BRAIN_REGION_HIERARCHY_ID`
+  - `MOUSE_DEFAULT_SELECTED_BRAIN_REGION_ID`, `LEGACY_DEFAULT_CIRCUIT_ID`
+  - `MOUSE_ROOT_BRAIN_REGION_ANNOTATION_VALUE`, `MOUSE_ROOT_BRAIN_REGION_ID`
 - `NOTEBOOK_REPO_URL`
 
 See `configFields` in `schema.ts` for complete list.
@@ -264,7 +270,7 @@ See `configFields` in `schema.ts` for complete list.
 TypeScript types are automatically inferred from Zod schemas:
 
 ```typescript
-import type { ServerConfig, ClientConfig } from '@/config';
+import type { ServerConfig, ClientConfig } from "@/config";
 
 // ServerConfig includes all properties
 // ClientConfig includes only public subset

@@ -21,7 +21,6 @@ import { Modal } from '@/ui/molecules/modal';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { coreSelectedRowsAtom } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
 
@@ -85,8 +84,11 @@ export function EntitySelectorSingle({
     staleTime: 600, // 10 minutes
   });
 
-  const onDisplay = useCallback(() => setIsModalOpen(true), []);
   const onClose = () => setIsModalOpen(false);
+
+  const onDisplay = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
 
   const onSelect = () => {
     const selected = selectedRows.at(0);
@@ -176,7 +178,7 @@ export function EntitySelectorSingle({
                 {!disabled && (
                   <BadgeButton
                     onClick={onRemoveRecording}
-                    className="absolute end-3 top-1/2 -translate-y-1/2"
+                    className="absolute inset-e-3 top-1/2 -translate-y-1/2"
                   >
                     <CloseOutlined className="text-xs! [&>svg]:size-3!" />
                   </BadgeButton>
@@ -189,7 +191,9 @@ export function EntitySelectorSingle({
             )}
           </div>
           {!disabled && (
-            <div className={cn('absolute end-3 top-1/2 ', '-translate-y-1/2 [&_svg]:size-3.5!')}>
+            <div
+              className={cn('absolute inset-e-3 top-1/2 ', '-translate-y-1/2 [&_svg]:size-3.5!')}
+            >
               <SearchOutlined className={cn('text-primary-9 ')} />
             </div>
           )}
@@ -208,6 +212,7 @@ export function EntitySelectorSingle({
         }
         headerClassName="[&>div]:text-2xl! select-none font-bold [&>div]:text-primary-8! "
         bodyClassName="h-full w-full max-h-[calc(100vh-140px)]"
+        closeIconClassName="rounded-full size-8 flex items-center justify-center hover:text-primary-8!"
         className="h-screen w-screen rounded-none"
         size="full"
         footer={
@@ -232,6 +237,7 @@ export function EntitySelectorSingle({
         <div className="h-full w-full">
           <BrowseEntityScope
             id={instanceId}
+            requireScopeSelector
             requireBrainRegion={false}
             requireMiniDetailView={false}
             section={WorkspaceSection.SimulateWorkflow}
@@ -241,20 +247,15 @@ export function EntitySelectorSingle({
             mainTableProps={{
               selectionType: 'radio',
               onRowsSelected,
+              searchOpenOnMount: true,
             }}
             classNames={{
               container: 'h-full',
               filterClassNames: {
                 container: 'w-2/5 min-h-full',
+                // speciesSelector: 'w-90',
               },
             }}
-            left={
-              <WorkflowScopeTabs
-                className="max-w-max"
-                defaultScope={WorkspaceScope.Public}
-                ref={scopeRef}
-              />
-            }
           />
         </div>
       </Modal>

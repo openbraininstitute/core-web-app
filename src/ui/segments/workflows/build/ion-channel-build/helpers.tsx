@@ -53,7 +53,10 @@ export function useGenerativeFormSchemaApi({
           return result;
         },
       });
-      const schema = (await dereferenceOpenApiSchema({ json, form })) as RJSFSchema;
+      const schema = (await dereferenceOpenApiSchema({
+        json,
+        form,
+      })) as RJSFSchema;
       return patchSchema?.(schema) ?? schema;
     },
   });

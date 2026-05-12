@@ -1,13 +1,18 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
+import { useAtomValue } from 'jotai';
 import { useCallback, useRef, useSyncExternalStore } from 'react';
 
+import {
+  dataBrowseListingUsesBrainRegionHierarchy,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { buildQueryKey, useQueryParameters } from '@/ui/hooks/use-query-extended-entity-type';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
@@ -32,6 +37,8 @@ export function useTableQueryCount({
 }) {
   const queryClient = useQueryClient();
   const { virtualLabId, projectId } = workspace;
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const requireBrainRegion = dataBrowseListingUsesBrainRegionHierarchy(extendedType);
 
   const { dataKey } = makeDataKey({
     virtualLabId,
@@ -50,7 +57,7 @@ export function useTableQueryCount({
       },
       workspace,
     },
-    { requireBrainRegion: true }
+    { requireBrainRegion }
   );
 
   const queryKey = buildQueryKey({
@@ -61,7 +68,8 @@ export function useTableQueryCount({
       workspaceScope: scope,
     },
     queryParameters,
-    requireBrainRegion: true,
+    requireBrainRegion,
+    speciesSelectionMode,
   });
 
   const prevCountRef = useRef<number | undefined>(undefined);

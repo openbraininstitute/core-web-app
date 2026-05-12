@@ -1,12 +1,13 @@
 /* eslint-disable no-param-reassign */
-import React from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
-import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
+import { useQuery } from '@tanstack/react-query';
+import React from 'react';
 
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
+
+import { serviceAiAgentGetTool, serviceAiAgentListTools } from '../api/tools';
+import { AIAssistantTool } from './ai-assistant-tool/ai-assistant-tool';
 
 /**
  *
@@ -15,7 +16,6 @@ import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
  * Or `null` if an error occured.
  */
 export function useAITools(): AIAssistantTool[] | undefined | null {
-  const queryClient = useQueryClient();
   const accessToken = useAccessToken();
   const toolsLoader = React.useCallback(() => loadTools(accessToken), [accessToken]);
   const { data, isError, isLoading } = useQuery({
@@ -23,16 +23,12 @@ export function useAITools(): AIAssistantTool[] | undefined | null {
     queryFn: toolsLoader,
     staleTime: 180000,
   });
-  React.useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: keyBuilderAI.tools() });
-  }, [accessToken, queryClient]);
   if (isLoading) return undefined;
 
   return isError ? null : data;
 }
 
 export function useAITool(toolId: string) {
-  const queryClient = useQueryClient();
   const accessToken = useAccessToken();
   const toolLoader = React.useCallback(() => loadTool(accessToken, toolId), [accessToken, toolId]);
   const { data, isError, isLoading } = useQuery({
@@ -40,9 +36,6 @@ export function useAITool(toolId: string) {
     queryFn: toolLoader,
     staleTime: 600000,
   });
-  React.useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: keyBuilderAI.tool(toolId) });
-  }, [accessToken, queryClient, toolId]);
   if (isLoading) return undefined;
 
   return isError ? null : data;
@@ -53,17 +46,13 @@ async function loadTools(accessToken: string | undefined): Promise<AIAssistantTo
 
   const list = await serviceAiAgentListTools(accessToken);
   const tools: AIAssistantTool[] = list.map(
-    (summary) => new AIAssistantTool(summary.name, summary.name_frontend, '')
+    (summary) => new AIAssistantTool(summary.name, summary.nameFrontend, '')
   );
   return tools.sort(sortToolsByName);
 }
 
 function sortToolsByName(tool1: AIAssistantTool, tool2: AIAssistantTool): number {
-  const name1 = tool1.name.trim().toLowerCase();
-  const name2 = tool2.name.trim().toLowerCase();
-  if (name1 < name2) return +1;
-  if (name1 > name2) return -1;
-  return 0;
+  return tool1.name.trim().localeCompare(tool2.name.trim(), undefined, { sensitivity: 'base' });
 }
 
 async function loadTool(accessToken: string | undefined, toolId: string): Promise<AIAssistantTool> {
@@ -71,5 +60,5 @@ async function loadTool(accessToken: string | undefined, toolId: string): Promis
     return new AIAssistantTool(toolId, '', '');
   }
   const tool = await serviceAiAgentGetTool(accessToken, toolId);
-  return new AIAssistantTool(tool.name, tool.name_frontend, tool.description_frontend);
+  return new AIAssistantTool(tool.name, tool.nameFrontend, tool.descriptionFrontend);
 }

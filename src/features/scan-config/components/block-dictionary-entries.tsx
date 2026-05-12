@@ -93,6 +93,7 @@ export default function BlockDictionaryEntries({
   isChatReady,
   setEditing,
   setSelectedEntry,
+  setSelectedRootElement,
   singularName,
   allEntries,
   newKey,
@@ -118,6 +119,7 @@ export default function BlockDictionaryEntries({
   isChatReady: boolean;
   setEditing: (editing: boolean) => void;
   setSelectedEntry: (entry: string) => void;
+  setSelectedRootElement: (rootElement: string) => void;
   singularName: string;
   allEntries: Set<string>;
   newKey: string;
@@ -169,7 +171,7 @@ export default function BlockDictionaryEntries({
       typeof configInitialize.node_set.block_name === 'string' &&
       configInitialize.node_set.block_name === selectedEntry
     ) {
-      atomsMap.initialize = atom<Record<string, ConfigValue>>({
+      atomsMap.initialize = atom<Record<string, ConfigValue | Array<ConfigValue>>>({
         ...configInitialize,
         node_set: { ...configInitialize.node_set, block_name: newKey },
       });
@@ -209,7 +211,8 @@ export default function BlockDictionaryEntries({
     setNewKey('');
   };
 
-  function renderBlockTab(entry: string, isDeleted = false) {
+  // FIXME: @Nicolas, do we need this isDeleted flag?
+  function renderBlockTab(entry: string, isDeleted: boolean = false) {
     const isSelected = selectedRootElement === rootElement && entry === selectedEntry;
     const entryDiffClass = getEntryDiffClass(entry, isSelected);
 
@@ -376,7 +379,9 @@ export default function BlockDictionaryEntries({
                                         typeof configInitialize.node_set.block_name === 'string' &&
                                         configInitialize.node_set.block_name === subkey
                                       ) {
-                                        atomsMap.initialize = atom<Record<string, ConfigValue>>({
+                                        atomsMap.initialize = atom<
+                                          Record<string, ConfigValue | Array<ConfigValue>>
+                                        >({
                                           ...configInitialize,
                                           node_set: null,
                                         });
@@ -405,11 +410,13 @@ export default function BlockDictionaryEntries({
 
                                               // Deleting the reference to current object
 
-                                              delete entryV[fieldK]; //eslint-disable-line
+                                              delete entryV[fieldK];
 
                                               // The atom that has a reference to current object
                                               atomsMap[configK][entryKey] =
-                                                atom<Record<string, ConfigValue>>(entryV);
+                                                atom<
+                                                  Record<string, ConfigValue | Array<ConfigValue>>
+                                                >(entryV);
                                             });
                                           });
                                         });
@@ -468,6 +475,7 @@ export default function BlockDictionaryEntries({
               )}
               type="button"
               onClick={() => {
+                setSelectedRootElement(rootElement);
                 setEditing(true);
                 setSelectedEntry('');
               }}

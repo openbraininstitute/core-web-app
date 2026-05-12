@@ -38,7 +38,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     <html
       lang="en"
       className={`${titilliumWeb.variable} ${gabarito.variable} ${DMSerifText.variable}`}
-      data-scroll-behavior="smooth"
     >
       <head>
         <script

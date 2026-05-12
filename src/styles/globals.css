@@ -401,7 +401,6 @@
 @layer utilities {
   html {
     font-size: 14px;
-    scroll-behavior: smooth;
   }
 
   body {
@@ -410,6 +409,12 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (min-width: 768px) {
+    html:has(.landing-features-snap) {
+      scroll-snap-type: y mandatory;
+    }
   }
 
   .ant-tabs-top > .ant-tabs-nav::before {

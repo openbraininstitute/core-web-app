@@ -3,15 +3,22 @@
 import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { kebabCase, snakeCase } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 import Link from 'next/link';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 
+import {
+  dataBrowseListingUsesBrainRegionHierarchy,
+  type TExtendedEntitiesTypeDict,
+} from '@/api/entitycore/types/extended-entity-type';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { config } from '@/config';
 import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
+import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useTableQueryCount } from '@/ui/hooks/use-table-query-count';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -25,7 +32,6 @@ import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
 import type { ReactNode } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
@@ -146,6 +152,7 @@ type Props = {
   extendedType: TExtendedEntitiesTypeDict;
   scope: TWorkspaceScope;
   currentBrainRegionId?: string;
+  hierarchyId?: string;
   defaultBrainRegionId?: string;
   enabled: boolean;
 };
@@ -153,20 +160,25 @@ type Props = {
 function buildQuery({
   virtualLabId,
   projectId,
+  hierarchyId,
   brainRegionId,
   scope,
   extendedType,
+  applyBrainRegionFilter,
 }: WorkspaceContext & {
+  hierarchyId: string;
   brainRegionId: string;
   scope: TWorkspaceScope;
   extendedType: TExtendedEntitiesTypeDict;
+  applyBrainRegionFilter: boolean;
 }) {
-  const brainRegionQuery = brainRegionId
-    ? {
-        within_brain_region_brain_region_id: brainRegionId,
-        within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
-      }
-    : {};
+  const brainRegionQuery =
+    applyBrainRegionFilter && brainRegionId
+      ? {
+          within_brain_region_brain_region_id: brainRegionId,
+          within_brain_region_direction: BrainRegionDirection.ASCENDANTS_AND_DESCENDANTS,
+        }
+      : {};
   const query = {
     withFacets: false,
     context: {
@@ -186,6 +198,7 @@ function buildQuery({
     projectId,
     extendedEntityType: extendedType,
     brainRegionId,
+    hierarchyId,
     scope,
   });
 
@@ -209,11 +222,14 @@ export function BrowseLink({
   scope,
   enabled,
   extendedType,
+  hierarchyId,
   currentBrainRegionId,
   defaultBrainRegionId,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const { type } = useParams<{ type: TExtendedEntitiesTypeDict }>();
+  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
+  const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const entity = getEntityByExtendedType({ type: extendedType });
   const href = buildDataUrl({ virtualLabId, projectId, extendedType });
@@ -235,23 +251,34 @@ export function BrowseLink({
     isActiveEntity,
   });
 
+  const scopesListingByBrainRegion = dataBrowseListingUsesBrainRegionHierarchy(extendedType);
+
   // fallback count query: used when this entity type is NOT the active table entity
   const fallbackQuery = buildQuery({
     virtualLabId,
     projectId,
+    hierarchyId: hierarchyId ?? '',
     brainRegionId: currentBrainRegionId ?? '',
     scope,
     extendedType,
+    applyBrainRegionFilter: scopesListingByBrainRegion,
   });
 
   // root count query: always fetch results (unfiltered total)
   const rootQuery = buildQuery({
     virtualLabId,
     projectId,
+    hierarchyId: hierarchyId ?? '',
     brainRegionId: defaultBrainRegionId ?? '',
     scope,
     extendedType,
+    applyBrainRegionFilter: scopesListingByBrainRegion,
   });
+
+  const brainRegionDependentFetch =
+    !scopesListingByBrainRegion || isAllMode || !!currentBrainRegionId;
+  const brainRegionDependentRootFetch =
+    !scopesListingByBrainRegion || isAllMode || !!defaultBrainRegionId;
 
   const {
     isLoading: loadingFallback,
@@ -261,7 +288,7 @@ export function BrowseLink({
     queryKey: fallbackQuery.queryKey,
     queryFn: () => resolveEntityCount({ query: fallbackQuery.query, entity }),
     // fetch for inactive entities and as bootstrap for active entities without cached table count yet
-    enabled: !!currentBrainRegionId && enabled,
+    enabled: enabled && brainRegionDependentFetch,
     staleTime: Infinity,
   });
 
@@ -272,7 +299,7 @@ export function BrowseLink({
   } = useQuery<number | undefined>({
     queryKey: rootQuery.queryKey,
     queryFn: () => resolveEntityCount({ query: rootQuery.query, entity }),
-    enabled: !!defaultBrainRegionId && enabled,
+    enabled: enabled && brainRegionDependentRootFetch,
     staleTime: Infinity,
   });
 
@@ -280,7 +307,7 @@ export function BrowseLink({
   const count = isActiveEntity && hasCachedData ? tableCount : fallbackData;
   const loadingCurrent = isActiveEntity && hasCachedData ? tableCountLoading : loadingFallback;
   const isCurrentError = isActiveEntity && hasCachedData ? isTableCountError : isFallbackError;
-  const isLoading = loadingCurrent || loadingRoot;
+  const isLoading = loadingCurrent && loadingRoot;
 
   const countRenderer = match({
     isCurrentError,
@@ -288,7 +315,8 @@ export function BrowseLink({
     rootCount: root,
     isRootError,
     enabled,
-    isLoading,
+    loadingCurrent,
+    loadingRoot,
   })
     .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (
       <span className="flex items-center justify-center gap-1">
@@ -305,6 +333,25 @@ export function BrowseLink({
         <span className="font-bold">0</span>
         <span className="font-light">of</span>
         <span className="font-bold">0</span>
+      </span>
+    ))
+    .with({ enabled: true }, () => (
+      <span className="flex items-center justify-center gap-1">
+        <span className="font-bold">
+          {loadingCurrent ? (
+            <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />
+          ) : (
+            (count ?? <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />)
+          )}
+        </span>
+        <span className="font-light">of</span>
+        <span className="font-bold">
+          {loadingRoot ? (
+            <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />
+          ) : (
+            (root ?? <Skeleton className="inline-block h-3 w-5 rounded-full align-middle" />)
+          )}
+        </span>
       </span>
     ))
     .otherwise(() => null);

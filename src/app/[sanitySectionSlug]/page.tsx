@@ -1,17 +1,14 @@
-import { notFound } from 'next/navigation';
-
-import LandingPage from '@/components/LandingPage';
-import { DEFAULT_SECTION } from '@/components/LandingPage/constants';
-import { generateMetadataFromSanity } from '@/components/LandingPage/metadata';
-import { getSection } from '@/components/LandingPage/utils';
+import LandingPage from '@/ui/segments/landing';
+import { generateMetadataFromSanity } from '@/ui/segments/landing/metadata/metadata';
+import { getSection } from '@/ui/segments/landing/utils';
 
 import type { Metadata } from 'next';
-
-export const dynamic = 'force-dynamic';
 
 export type ParamProps = {
   params: Promise<{ sanitySectionSlug: string }>;
 };
+
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(props: ParamProps): Promise<Metadata> {
   const params = await props.params;
@@ -26,10 +23,6 @@ export default async function SanityContentPage({
 }) {
   const params = await promisedParams;
   const sanitySection = getSection(params.sanitySectionSlug);
-
-  if (sanitySection.slug === DEFAULT_SECTION.slug) {
-    notFound();
-  }
 
   return <LandingPage section={sanitySection.index} />;
 }

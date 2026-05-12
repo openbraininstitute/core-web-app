@@ -1,4 +1,4 @@
-export { AssetUpload } from './asset-upload';
+export { EMAssetUpload } from './asset-upload';
 export { Contribution } from './contribution';
 export { License } from './license';
 export { MTypeClassification } from './mtype';

@@ -2,7 +2,7 @@ import React from 'react';
 
 import { classNames } from '@/util/utils';
 
-import type { MorphoViewerSynapsesGroup } from '@bbp/morphoviewer';
+import type { MorphoViewerSynapsesGroup } from '@/morpho-viewer';
 import type { Morphology } from '@/services/bluenaas-single-cell/types';
 
 import styles from './debug-panel.module.css';

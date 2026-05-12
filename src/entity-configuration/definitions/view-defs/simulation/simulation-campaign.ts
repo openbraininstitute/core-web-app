@@ -25,7 +25,6 @@ export const viewDefForSimulationCampaign: ViewDefinitionConfig = {
   ],
   displayableFields: [
     EntityCoreFields.Name,
-    EntityCoreFields.Contributions,
     EntityCoreFields.CreatedBy,
     EntityCoreFields.RegistrationDate,
   ],

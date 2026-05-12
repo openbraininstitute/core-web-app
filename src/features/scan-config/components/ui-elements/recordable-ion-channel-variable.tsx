@@ -345,7 +345,7 @@ export function SelectRecordableIonChannelVariable({
                           key={itemValue}
                           value={itemValue}
                           className="pl-4 text-primary-8 hover:text-primary-7! text-base font-semibold cursor-pointer"
-                          checkClassName="size-3 text-primary-8"
+                          checkIconClassName="size-3 text-primary-8"
                         >
                           <span>{variable.variable_name}</span>
                           <span className="ml-1.5 text-xs text-gray-400 font-normal">

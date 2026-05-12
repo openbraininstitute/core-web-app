@@ -92,14 +92,13 @@ div.viewerContainer {
 
   @container (width < 800px) {
     & {
-        width: 100%;
-        height: 50cqh;
+      width: 100%;
+      height: 50cqh;
     }
 
     &.collapsed {
-        width: 100%;
-        height: 3em;
+      width: 100%;
+      height: 3em;
     }
   }
-
 }

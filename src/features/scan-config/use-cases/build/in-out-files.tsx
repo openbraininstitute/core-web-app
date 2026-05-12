@@ -243,12 +243,16 @@ export function InOutFiles({
         const isBuiltCircuit = file.renderer === ActivityCustomFileRenderer.MiniDetailView;
         return (
           <TaskIOFileItem
-            id={file.id}
-            label={isBuiltCircuit ? <small className="uppercase">Synaptome beta</small> : undefined}
-            selected={file.id === selectedFile?.id}
-            key={file.id}
-            file={file}
-            name={file.name}
+            id={outputFiles[0].id}
+            label={
+              <small className="uppercase">
+                Synaptome <span className="lowercase">(beta)</span>
+              </small>
+            }
+            selected={outputFiles[0].id === selectedFile?.id}
+            key={outputFiles[0].id}
+            file={outputFiles[0]}
+            name={outputFiles[0].name}
             onSelect={onSelect}
           />
         );

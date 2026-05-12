@@ -1,12 +1,13 @@
+'use client';
+
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
 import React from 'react';
 
-import useFullHeight from '@/hooks/useFullHeight';
+import ProgressiveImage from '@/ui/segments/landing/components/progressive-image/progressive-image';
 import { classNames } from '@/util/utils';
-
-import ProgressiveImage from '@/components/LandingPage/components/ProgressiveImage';
 import { cn } from '@/utils/css-class';
+import useFullHeight from '@/utils/use-full-height';
 
 import styles from './hero.module.css';
 

@@ -16,18 +16,17 @@ const AtlasViewer = dynamic(() => import('@/features/brain-atlas-viewer'), {
 });
 
 type Props = {
-  dataKey: string;
   children: ReactNode;
 };
 
-export function Atlas({ dataKey, children }: Props) {
+export function Atlas({ children }: Props) {
   return (
     <div
       id="three-d-area"
       data-testid="three-d-area"
       className="3d bg-primary-9 relative h-full w-full rounded-2xl p-1"
     >
-      <AtlasViewer dataKey={dataKey}>{children}</AtlasViewer>
+      <AtlasViewer>{children}</AtlasViewer>
     </div>
   );
 }

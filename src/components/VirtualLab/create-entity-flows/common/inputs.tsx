@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-props-no-spreading */
-
 import {
   Input as AInput,
   Select as ASelect,
@@ -60,7 +58,7 @@ export function Select({ options, value, onChange, className, ...props }: Select
         'placeholder:text-gray-400 hover:border-gray-400',
         className
       )}
-      popupClassName="rounded-none shadow-md"
+      classNames={{ popup: { root: 'rounded-none shadow-md' } }}
       placeholder="select virtual lab"
       options={options}
       value={value}

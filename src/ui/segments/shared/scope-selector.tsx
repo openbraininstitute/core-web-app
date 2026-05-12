@@ -56,7 +56,7 @@ export function TabsSelector({
       onValueChange={onValueChange}
     >
       <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-2 bg-white p-0 shadow-md', {
+        className={cn('grid h-10 w-full grid-cols-2 bg-white p-0 shadow-md ml-0.5', {
           'h-12': breakpoint === 'xl',
         })}
       >

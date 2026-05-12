@@ -1,8 +1,5 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React from 'react';
 
-import { IconClose } from '@/components/LandingPage/icons/IconClose';
 import { classNames } from '@/util/utils';
 
 import { HintContent } from '../hint';
@@ -32,12 +29,14 @@ export default function AddRecordingDialog({
     item: null,
     offset: 0,
   });
+
   React.useEffect(() => {
     if (item) setOpen(true);
-  }, [item, offset]);
+  }, [item]);
+
   const handleClose = React.useCallback(() => {
     setOpen(false);
-  }, [setOpen]);
+  }, []);
   const handleMoveInjection = () => {
     handleClose();
     if (item) data.moveInjection(item.sectionName);
@@ -49,12 +48,14 @@ export default function AddRecordingDialog({
   useEscapeHandler(handleClose);
 
   return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: already have a button inside
     <div
       className={classNames(className, styles.addRecordingDialog, open && styles.open)}
       title={`y = ${y}`}
       onClick={handleClose}
       role="alertdialog"
     >
+      {/** biome-ignore lint/a11y/useKeyWithClickEvents: already have a button inside */}
       <div
         className={y < 0 ? styles.top : styles.bottom}
         onClick={(evt) => {
@@ -68,7 +69,18 @@ export default function AddRecordingDialog({
             {item?.sectionName} ({offset.toFixed(2)})
           </h2>
           <button type="button" onClick={handleClose}>
-            <IconClose />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="1.5em"
+              height="1.5em"
+            >
+              <title>window-close</title>
+              <path
+                fill="currentColor"
+                d="M13.46,12L19,17.54V19H17.54L12,13.46L6.46,19H5V17.54L10.54,12L5,6.46V5H6.46L12,10.54L17.54,5H19V6.46L13.46,12Z"
+              />
+            </svg>
             <div>Cancel</div>
           </button>
         </header>

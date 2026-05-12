@@ -1,11 +1,11 @@
 'use client';
 
-import React, { type CSSProperties } from 'react';
 import { CaretRightFilled } from '@ant-design/icons';
+import React, { type CSSProperties } from 'react';
 
 import { classNames } from '@/util/utils';
 
-import type { TTreeNode, RenderNodeProps } from '@/components/tree/types';
+import type { RenderNodeProps, TTreeNode } from '@/components/tree/types';
 
 type Props<TNode extends TTreeNode = TTreeNode> = RenderNodeProps<TNode>;
 
@@ -22,6 +22,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
   const nodeName = node.name;
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: button cannot be a descendant of button
     <div
       id={node.id.toString()}
       title={nodeName}
@@ -45,9 +46,9 @@ export default function DefaultNode<TNode extends TTreeNode>({
         } as CSSProperties
       }
     >
-      <div className="mr-1.5 flex min-w-0 flex-shrink flex-grow basis-0 items-center">
+      <div className="mr-1.5 flex min-w-0 shrink grow basis-0 items-center">
         <div className="flex items-baseline">
-          <span className={classNames('text-base', isSelected ? 'line-clamp-1' : '')}>
+          <span className={classNames('text-base text-left', isSelected ? 'line-clamp-1' : '')}>
             {nodeName}
           </span>
         </div>
@@ -55,7 +56,7 @@ export default function DefaultNode<TNode extends TTreeNode>({
       {hasChildren && (
         <button
           className={classNames(
-            'ml-auto flex flex-shrink-0 items-center justify-center',
+            'ml-auto flex shrink-0 items-center justify-center',
             isSelected ? 'text-primary-9' : 'text-primary-9/60'
           )}
           type="button"

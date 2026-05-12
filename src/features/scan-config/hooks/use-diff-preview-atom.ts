@@ -23,7 +23,7 @@ import type { ConfigValue } from '../types';
 export function useDiffPreviewAtom(
   selectedRootElement: string,
   selectedEntry?: string
-): ReturnType<typeof atom<Record<string, ConfigValue>>> | null {
+): ReturnType<typeof atom<Record<string, ConfigValue | ConfigValue[]>>> | null {
   const { aiConfig } = useAIConfig();
   const highlights = useAtomValue(configHighlightsAtom);
   const showingDiffs = highlights.length > 0;
@@ -43,7 +43,7 @@ export function useDiffPreviewAtom(
   }, [showingDiffs, aiConfig, selectedRootElement, selectedEntry]);
 
   return useMemo(
-    () => (previewData ? atom<Record<string, ConfigValue>>(previewData) : null),
+    () => (previewData ? atom<Record<string, ConfigValue | ConfigValue[]>>(previewData) : null),
     [previewData]
   );
 }

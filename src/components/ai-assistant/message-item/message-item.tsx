@@ -1,9 +1,9 @@
 'use client';
 
+import { getToolName, isToolUIPart } from 'ai';
 import React from 'react';
 
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
-import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
 
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
@@ -12,7 +12,7 @@ import { CollapsibleMessage } from './collapsible-message';
 import ToolsProgress from './tools-progress';
 import { useMessageDiffs } from './use-message-diffs';
 
-import type { ToolInvocation, UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/react';
 
 import styles from './message-item.module.css';
 
@@ -32,6 +32,18 @@ function RawMessageItem({
   isLastMessage = false,
 }: MessageItemProps) {
   const debug = useDebug();
+
+  if (value.role === 'user' && value.parts.length === 0) {
+    return null;
+  }
+
+  if (value.role === 'assistant') {
+    const hasVisibleParts = value.parts.some(
+      (p) => (p.type === 'text' && 'text' in p && p.text !== '') || isToolUIPart(p)
+    );
+    if (!hasVisibleParts) return null;
+  }
+
   return (
     <div className={classNames(className, styles.messageItem)}>
       <MessageChild value={value} debug={debug} status={status} isLastMessage={isLastMessage} />
@@ -78,9 +90,6 @@ function MessageChild({
           <div className={styles.userContent}>
             <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
           </div>
-          <div className={styles.info}>
-            <div className={styles.timestamp}>{value.createdAt && formatDate(value.createdAt)}</div>
-          </div>
         </div>
       );
     case 'assistant': {
@@ -101,10 +110,9 @@ function MessageChild({
             </GithubFlavorMarkdown>
           );
         }
-        if (part.type === 'tool-invocation') {
-          const { toolCallId } = part.toolInvocation;
+        if (isToolUIPart(part)) {
           return (
-            <div key={`tool-${toolCallId}`}>
+            <div key={`tool-${part.toolCallId}`}>
               <ToolsProgress part={part} />
             </div>
           );
@@ -124,7 +132,9 @@ function MessageChild({
           >
             {children}
           </CollapsibleMessage>
-          <BackupPlotsWrapper message={value} isLastMessage={isLastMessage} status={status} />
+          <div className={styles.backupPlotsWrapper}>
+            <BackupPlotsWrapper message={value} isLastMessage={isLastMessage} status={status} />
+          </div>
           {debug && (
             <button
               type="button"
@@ -148,19 +158,12 @@ function debugToConsole(value: UIMessage) {
   // eslint-disable-next-line no-console
   console.log(value);
   for (const part of value.parts) {
-    if (part.type !== 'tool-invocation') continue;
+    if (!isToolUIPart(part)) continue;
 
-    const toolInvocation = part.toolInvocation as ToolInvocation & { result: string };
     // eslint-disable-next-line no-console
-    console.debug(`%c${toolInvocation.toolName}`, 'font-weight: bolder; font-size: 110%');
-    const { result } = toolInvocation;
-    try {
-      // eslint-disable-next-line no-console
-      console.debug(JSON.parse(result));
-    } catch (_ex) {
-      // eslint-disable-next-line no-console
-      console.error('Not a valid JSON:', result);
-    }
+    console.debug(`%c${getToolName(part)}`, 'font-weight: bolder; font-size: 110%');
+    // eslint-disable-next-line no-console
+    console.debug(part.output);
   }
 }
 
@@ -168,17 +171,4 @@ function useDebug(): boolean {
   const [debug, setDebug] = React.useState(false);
   React.useEffect(() => setDebug(window.localStorage.getItem('DEBUG') === '1'), []);
   return debug;
-}
-
-function formatDate(d: Date | string): string {
-  try {
-    const formatter = new Intl.DateTimeFormat(undefined, {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    });
-    const date = isString(d) ? new Date(d) : d;
-    return formatter.format(date);
-  } catch {
-    return '';
-  }
 }

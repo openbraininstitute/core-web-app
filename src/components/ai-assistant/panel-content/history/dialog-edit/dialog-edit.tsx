@@ -29,9 +29,22 @@ export default function DialogEdit({
     const dialog = ref.current;
     if (!dialog) return;
 
-    if (open) dialog.showModal();
-    else dialog.close();
-  }, [open]);
+    const handleCancel = (e: Event) => {
+      e.preventDefault();
+      onCancel();
+    };
+
+    if (open) {
+      dialog.showModal();
+      dialog.addEventListener('cancel', handleCancel);
+    } else {
+      dialog.close();
+    }
+
+    return () => {
+      dialog.removeEventListener('cancel', handleCancel);
+    };
+  }, [open, onCancel]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === 'Enter') {

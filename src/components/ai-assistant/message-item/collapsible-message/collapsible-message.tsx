@@ -1,6 +1,7 @@
 'use client';
 
-import { RiArrowDownSLine, RiCheckLine, RiCloseLine, RiResetLeftLine } from '@remixicon/react';
+import { RiCheckLine, RiCloseLine, RiResetLeftLine } from '@remixicon/react';
+import { getToolName, isToolUIPart } from 'ai';
 import { useAtomValue } from 'jotai';
 import React from 'react';
 
@@ -11,9 +12,11 @@ import {
 } from '@/state/config-highlights';
 import { cn } from '@/utils/css-class';
 
-import type { UIMessage } from '@ai-sdk/ui-utils';
+import type { UIMessage } from '@ai-sdk/react';
 
 import styles from './collapsible-message.module.css';
+
+const COLLAPSE_ANIMATION_MS = 350;
 
 interface CollapsibleMessageProps {
   message: UIMessage;
@@ -25,6 +28,48 @@ interface CollapsibleMessageProps {
   hasEditStateCalls?: boolean;
 }
 
+/**
+ * Index of the LAST `step-start` part that already has visible content
+ * (text or tool-invocation) after it. This avoids collapsing the previous step
+ * while the model is still only emitting reasoning tokens in the new step,
+ * which would otherwise show a blank area to the user.
+ */
+function findLastVisibleStepStart(parts: UIMessage['parts']): number {
+  let lastStepStart = -1;
+  let lastVisibleStepStart = -1;
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (part.type === 'step-start') {
+      lastStepStart = i;
+    } else if (
+      lastStepStart !== lastVisibleStepStart &&
+      ((part.type === 'text' && 'text' in part && part.text !== '') ||
+        part.type === 'tool-invocation')
+    ) {
+      // The current step has produced visible content — mark it as the boundary.
+      lastVisibleStepStart = lastStepStart;
+    }
+  }
+
+  return lastVisibleStepStart;
+}
+
+/** Number of `step-start` parts strictly before `index`. */
+function countStepsBefore(parts: UIMessage['parts'], index: number): number {
+  let count = 0;
+  for (let i = 0; i < Math.min(index, parts.length); i++) {
+    if (parts[i].type === 'step-start') count++;
+  }
+  return count;
+}
+
+function hasCompletedEditState(parts: UIMessage['parts']): boolean {
+  return parts.some(
+    (p) => isToolUIPart(p) && getToolName(p) === 'editstate' && p.state === 'output-available'
+  );
+}
+
 export function CollapsibleMessage({
   message,
   status,
@@ -34,12 +79,39 @@ export function CollapsibleMessage({
   onCancelRestore,
   hasEditStateCalls = false,
 }: CollapsibleMessageProps) {
-  const [collapsedIndices, setCollapsedIndices] = React.useState<Set<number>>(new Set());
-  const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(null);
-  const [isConfirmingRestore, setIsConfirmingRestore] = React.useState(false);
-  const previousPartsLength = React.useRef(0);
+  const mountedAsReady = React.useRef(status === 'ready');
 
-  // Cancel pending restore when a new message is submitted (counter increments)
+  // Boundary between collapsed (prior steps) and visible (current/last step).
+  // Only advances once the new step has produced visible content (text/tool),
+  // so reasoning-only phases don't cause a blank visible area.
+  const lastStepStartIndex = React.useMemo(
+    () => findLastVisibleStepStart(message.parts),
+    [message.parts]
+  );
+
+  // Indices currently sliding from the visible area into the collapsible during streaming.
+  const [animatingIndices, setAnimatingIndices] = React.useState<Set<number>>(new Set());
+  const previousStepStartRef = React.useRef(lastStepStartIndex);
+
+  React.useEffect(() => {
+    const previous = previousStepStartRef.current;
+    previousStepStartRef.current = lastStepStartIndex;
+
+    if (status !== 'streaming' || lastStepStartIndex <= previous) return undefined;
+
+    const toAnimate = new Set<number>();
+    for (let i = Math.max(0, previous); i < lastStepStartIndex; i++) {
+      toAnimate.add(i);
+    }
+    if (toAnimate.size === 0) return undefined;
+
+    setAnimatingIndices(toAnimate);
+    const timer = setTimeout(() => setAnimatingIndices(new Set()), COLLAPSE_ANIMATION_MS);
+    return () => clearTimeout(timer);
+  }, [lastStepStartIndex, status]);
+
+  // ── Restore confirmation ─────────────────────────────────────────────────
+  const [isConfirmingRestore, setIsConfirmingRestore] = React.useState(false);
   const submittedCounter = useAtomValue(messageSubmittedCounterAtom);
   const isChatReady = useAtomValue(isChatReadyAtom);
   const restorePreviewMessageId = useAtomValue(restorePreviewMessageIdAtom);
@@ -53,216 +125,159 @@ export function CollapsibleMessage({
     prevCounterRef.current = submittedCounter;
   }, [submittedCounter, onCancelRestore]);
 
-  // Cancel this message's restore confirmation if another message took over
   React.useEffect(() => {
     if (isConfirmingRestore && restorePreviewMessageId && restorePreviewMessageId !== message.id) {
       setIsConfirmingRestore(false);
     }
   }, [restorePreviewMessageId, isConfirmingRestore, message.id]);
 
-  // Count steps in collapsed content (consecutive tool calls = 1 step)
-  const stepCount = React.useMemo(() => {
-    const parts = message.parts;
-    let count = 0;
-    let inToolSequence = false;
+  const showRestore = React.useMemo(
+    () => hasEditStateCalls && isChatReady && hasCompletedEditState(message.parts),
+    [hasEditStateCalls, isChatReady, message.parts]
+  );
 
-    for (let i = 0; i < parts.length; i++) {
-      if (collapsedIndices.has(i)) {
-        const part = parts[i];
+  // ── Layout ───────────────────────────────────────────────────────────────
+  const stepCount = React.useMemo(
+    () => countStepsBefore(message.parts, lastStepStartIndex),
+    [message.parts, lastStepStartIndex]
+  );
 
-        if (part.type === 'tool-invocation') {
-          // If we're not already in a tool sequence, this is a new step
-          if (!inToolSequence) {
-            count++;
-            inToolSequence = true;
-          }
-          // Otherwise, it's part of the same parallel tool call step
-        } else if (part.type === 'text' && 'text' in part && part.text !== '') {
-          // Text part ends the tool sequence
-          inToolSequence = false;
-        }
-      }
-    }
-
-    return count;
-  }, [message.parts, collapsedIndices]);
-
-  // Check if there are COMPLETED editstate calls in the entire message
-  const hasCompletedEditState = React.useMemo(() => {
-    if (!hasEditStateCalls) return false;
-
-    const parts = message.parts;
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      if (
-        part.type === 'tool-invocation' &&
-        part.toolInvocation.toolName === 'editstate' &&
-        part.toolInvocation.state === 'result'
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }, [message.parts, hasEditStateCalls]);
-
-  // Track which parts should be collapsed
-  React.useEffect(() => {
-    const parts = message.parts;
-
-    // Find indices that should be collapsed
-    // A part should be collapsed if:
-    // 1. It's a text or tool-invocation
-    // 2. There's at least one more text part after it
-    const newCollapsedIndices = new Set<number>();
-
-    // Find the last text part index
-    let lastTextIndex = -1;
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const part = parts[i];
-      if (part.type === 'text' && 'text' in part && part.text !== '') {
-        lastTextIndex = i;
-        break;
-      }
-    }
-
-    // If we're streaming and a new text part appeared after previous content
-    if (status === 'streaming' && parts.length > previousPartsLength.current) {
-      // Check if the new part is a text part
-      const newPartIndex = parts.length - 1;
-      const newPart = parts[newPartIndex];
-
-      if (newPart.type === 'text' && 'text' in newPart && newPartIndex > 0) {
-        // Collapse everything before this new text part
-        for (let i = 0; i < newPartIndex; i++) {
-          if (!collapsedIndices.has(i)) {
-            // Trigger animation for newly collapsed items
-            setAnimatingIndex(i);
-            setTimeout(() => setAnimatingIndex(null), 300);
-          }
-          newCollapsedIndices.add(i);
-        }
-        setCollapsedIndices(newCollapsedIndices);
-      }
-    }
-
-    // When streaming finishes, collapse everything except the last text
-    // Only do this once when transitioning to ready
-    if (status === 'ready' && lastTextIndex > 0 && collapsedIndices.size === 0) {
-      for (let i = 0; i < lastTextIndex; i++) {
-        newCollapsedIndices.add(i);
-      }
-      setCollapsedIndices(newCollapsedIndices);
-    }
-
-    previousPartsLength.current = parts.length;
-  }, [message.parts, status]);
-
-  // Separate collapsed and visible children
   const collapsedChildren: React.ReactNode[] = [];
   const visibleChildren: React.ReactNode[] = [];
 
   children.forEach((child, index) => {
-    if (collapsedIndices.has(index)) {
-      collapsedChildren.push(
+    if (child === null || child === undefined) return;
+
+    if (animatingIndices.has(index)) {
+      visibleChildren.push(
         <div
-          key={`collapsed-${index}`}
-          className={index === animatingIndex ? styles.slideToCollapsible : ''}
+          key={`animating-${index}`}
+          className={styles.slideToCollapsible}
+          data-collapsing="true"
         >
           {child}
         </div>
       );
+    } else if (index < lastStepStartIndex) {
+      collapsedChildren.push(<div key={`collapsed-${index}`}>{child}</div>);
     } else {
       visibleChildren.push(child);
     }
   });
 
   const [isExpanded, setIsExpanded] = React.useState(false);
-
-  const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
-  };
+  const toggleExpanded = () => setIsExpanded(!isExpanded);
+  const showCollapsibleContainer = collapsedChildren.length > 0 || animatingIndices.size > 0;
 
   return (
     <>
-      {collapsedChildren.length > 0 && (
-        <div className={styles.thinkingContainer} data-receiving={animatingIndex !== null}>
-          <button
-            type="button"
-            className={styles.thinkingButton}
-            onClick={toggleExpanded}
-            aria-expanded={isExpanded}
-            data-collapsed={!isExpanded}
+      {showCollapsibleContainer && (
+        <div className={styles.thinkingContainerWrapper} data-instant={mountedAsReady.current}>
+          <div
+            className={styles.thinkingContainer}
+            data-receiving={animatingIndices.size > 0}
+            data-collapsible="true"
+            data-instant={mountedAsReady.current}
           >
-            <div className={styles.thinkingHeader}>
-              <div className={styles.thinkingLabelContainer}>
-                <RiArrowDownSLine
-                  size={16}
-                  className={styles.chevron}
-                  data-collapsed={!isExpanded}
-                />
-                <span className={styles.thinkingLabel}>
-                  {isConfirmingRestore
-                    ? 'Restore this state?'
-                    : isExpanded
-                      ? `Hide Steps (${stepCount})`
-                      : `Show Steps (${stepCount})`}
-                </span>
-              </div>
-              {hasCompletedEditState && isChatReady && (
-                <div className={styles.actionButtons}>
-                  {isConfirmingRestore ? (
-                    <>
-                      <button
-                        type="button"
-                        className={cn(styles.actionButton, styles.confirmYes)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsConfirmingRestore(false);
-                          onConfirmRestore?.();
-                        }}
-                        aria-label="Confirm restore"
-                      >
-                        <RiCheckLine size={16} />
-                        <span>Yes</span>
-                      </button>
-                      <button
-                        type="button"
-                        className={cn(styles.actionButton, styles.confirmNo)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsConfirmingRestore(false);
-                          onCancelRestore?.();
-                        }}
-                        aria-label="Cancel restore"
-                      >
-                        <RiCloseLine size={16} />
-                        <span>No</span>
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      className={styles.actionButton}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsConfirmingRestore(true);
-                        onPreviewRestore?.();
-                      }}
-                      aria-label="Restore state"
-                      title="Restore state"
-                    >
-                      <RiResetLeftLine size={16} />
-                      <span>Restore State</span>
-                    </button>
-                  )}
+            <div
+              role="button"
+              tabIndex={0}
+              className={styles.thinkingButton}
+              onClick={toggleExpanded}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleExpanded();
+                }
+              }}
+              aria-expanded={isExpanded}
+              data-collapsed={!isExpanded}
+            >
+              <div className={styles.thinkingHeader}>
+                <div className={styles.thinkingLabelContainer}>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={styles.chevron}
+                    data-collapsed={!isExpanded}
+                  >
+                    <path
+                      d="M4 6L8 10L12 6"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span className={styles.thinkingLabel}>
+                    {isExpanded ? `Hide reasoning (${stepCount})` : `Show reasoning (${stepCount})`}
+                  </span>
                 </div>
-              )}
+                {showRestore && (
+                  <div className={styles.headerActions}>
+                    {isConfirmingRestore ? (
+                      <>
+                        <button
+                          type="button"
+                          className={cn(styles.confirmBtn, styles.confirmBtnYes)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsConfirmingRestore(false);
+                            onConfirmRestore?.();
+                          }}
+                          aria-label="Confirm restore"
+                        >
+                          <RiCheckLine size={13} />
+                          <span>Yes, restore</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={cn(styles.confirmBtn, styles.confirmBtnNo)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsConfirmingRestore(false);
+                            onCancelRestore?.();
+                          }}
+                          aria-label="Cancel restore"
+                        >
+                          <RiCloseLine size={13} />
+                          <span>Cancel</span>
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className={styles.restoreBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsConfirmingRestore(true);
+                          onPreviewRestore?.();
+                        }}
+                        aria-label="Restore state"
+                        title="Restore to this state"
+                      >
+                        <RiResetLeftLine size={14} />
+                        <span>Restore</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </button>
-          {isExpanded && <div className={styles.thinkingContent}>{collapsedChildren}</div>}
+            <div
+              className={`${styles.thinkingContent} ${isExpanded ? styles.thinkingContentExpanded : ''}`}
+            >
+              <div className={styles.thinkingContentInner}>{collapsedChildren}</div>
+            </div>
+          </div>
         </div>
       )}
-      {visibleChildren}
+      <div className={styles.contentWrapper} data-visible-tools="true">
+        {visibleChildren}
+      </div>
     </>
   );
 }

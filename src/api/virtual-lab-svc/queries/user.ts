@@ -1,15 +1,19 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
 import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
+import { log } from '@/utils/logger';
 
 import type {
-  UpdateUserProfileRequest,
+  TOnboardingUpdateUserProfileRequest,
+  TUpdateUserProfileRequest,
   UserProfileResponse,
   VlmRecentWorkspace,
   VlmUserGroupsResponse,
   VlmUserProfile,
 } from '@/api/virtual-lab-svc/queries/types';
+import type { IWorkspaceHierarchySpeciesPreference } from '@/features/brain-region-hierarchy/types';
 import type { WorkspaceContext } from '@/types/common';
+import type { VlmResponse } from '@/types/virtual-lab/common';
 
 function getBaseUrl() {
   return `${config.VIRTUAL_LAB_API_URL}/users`;
@@ -20,7 +24,9 @@ function getBaseUrl() {
  *
  * @returns user profile information
  */
-export const getUserProfile = async (): Promise<{ profile: UserProfileResponse } | null> => {
+export const getUserProfile = async (): Promise<{
+  profile: UserProfileResponse;
+} | null> => {
   const session = await getSession();
   const response = await fetch(`${getBaseUrl()}/profile`, {
     method: 'get',
@@ -44,36 +50,71 @@ export const getUserProfile = async (): Promise<{ profile: UserProfileResponse }
  * @param payload -  user profile data to update
  * @returns  updated user profile information
  */
-export const updateUserProfile = async (
-  payload: UpdateUserProfileRequest
-): Promise<{ profile: UserProfileResponse } | null> => {
-  const session = await getSession();
-  const response = await fetch(`${getBaseUrl()}/profile`, {
-    method: 'PATCH',
+export const updateUserProfile = async (payload: TUpdateUserProfileRequest) => {
+  const api = await virtualLabRootApi();
+  return api.patch<VlmResponse<{ profile: UserProfileResponse }>>('/users/profile', {
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
+      accept: 'application/json',
+      'content-type': 'application/json',
     },
-    body: JSON.stringify({
+    body: {
       email: payload.email,
       first_name: payload.first_name,
       last_name: payload.last_name,
+      country: payload.country,
       address: {
         street: payload.street,
         postal_code: payload.postal_code,
         locality: payload.locality,
         region: payload.region,
-        country: payload.country,
       },
-    }),
+    },
   });
+};
 
-  if (!response.ok) {
-    throw new Error(`Failed to update user profile`, { cause: await response.json() });
+/**
+ * update the profile information during onboarding for the authenticated user
+ *
+ * @param payload -  user profile data to update
+ * @returns  updated user profile information
+ */
+export const updateUserOnboardingProfile = async (payload: TOnboardingUpdateUserProfileRequest) => {
+  const api = await virtualLabRootApi();
+  return api.patch<VlmResponse<{ profile: UserProfileResponse }>>('/users/onboarding/profile', {
+    headers: {
+      'Content-Type': 'application/json',
+      accept: 'application/json',
+    },
+    body: {
+      first_name: payload.first_name,
+      last_name: payload.last_name,
+      country: payload.country,
+      email: payload.email,
+    },
+  });
+};
+
+export const checkUserProfileEmailAvailability = async (email: string): Promise<boolean> => {
+  const api = await virtualLabRootApi();
+
+  try {
+    const response = await api.get<Response>(
+      '/users/profile/email/_check',
+      {
+        queryParams: { email },
+        cache: 'no-store',
+      },
+      { asRawResponse: true }
+    );
+
+    return response.status === 204;
+  } catch (error) {
+    const status = (error as { cause?: { status?: number } })?.cause?.status;
+    if (status === 422) {
+      return false;
+    }
+    throw error;
   }
-
-  const result: VlmUserProfile = await response.json();
-  return result.data;
 };
 
 /**
@@ -92,12 +133,15 @@ export const getUserGroups = async (): Promise<VlmUserGroupsResponse> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get user groups`, { cause: await response.json() });
+    throw new Error(`Failed to get user groups`, {
+      cause: await response.json(),
+    });
   }
 
   return await response.json();
 };
 
+const userPreferencesBaseUri = '/users/preferences';
 /**
  * Fetches the current user's most recently used workspace preference
  *
@@ -106,7 +150,7 @@ export const getUserGroups = async (): Promise<VlmUserGroupsResponse> => {
  */
 export const getUserRecentWorkspace = async () => {
   const api = await virtualLabRootApi();
-  return await api.get<VlmRecentWorkspace>(`/users/preferences/recent-workspace`);
+  return await api.get<VlmRecentWorkspace>(`${userPreferencesBaseUri}/recent-workspace`);
 };
 
 /**
@@ -123,7 +167,7 @@ export const setUserRecentWorkspace = async ({
   workspace: WorkspaceContext;
 }): Promise<VlmRecentWorkspace> => {
   const api = await virtualLabRootApi();
-  return await api.post<VlmRecentWorkspace>(`/users/preferences/recent-workspace`, {
+  return await api.post<VlmRecentWorkspace>(`${userPreferencesBaseUri}/recent-workspace`, {
     headers: {
       'Content-Type': 'application/json',
       accept: 'application/json',
@@ -136,3 +180,57 @@ export const setUserRecentWorkspace = async ({
     },
   });
 };
+
+/**
+ * Response shape for brain region preference API
+ */
+export interface IVlmWorkspaceHierarchySpeciesPreference {
+  message: string;
+  data: {
+    user_id: string;
+    preference: IWorkspaceHierarchySpeciesPreference;
+    updated_at: string;
+  } | null;
+}
+
+/**
+ * Fetches the user's brain region hierarchy preference from the API
+ *
+ * @returns Promise with the user's brain region preference, or null if not set
+ */
+export async function getWorkspaceHierarchySpeciesPreference(): Promise<IVlmWorkspaceHierarchySpeciesPreference | null> {
+  try {
+    const api = await virtualLabRootApi();
+    return await api.get<IVlmWorkspaceHierarchySpeciesPreference>(
+      `${userPreferencesBaseUri}/workspace-hierarchy-species`
+    );
+  } catch (error) {
+    log('warn', 'Failed to fetch brain region preference from API:', error);
+    return null;
+  }
+}
+
+/**
+ * sets the user's brain region hierarchy species preference
+ *
+ * @param preference - The brain region preference to persist
+ */
+export async function updateBrainRegionPreference(
+  preference: IWorkspaceHierarchySpeciesPreference
+): Promise<void> {
+  // Fire-and-forget: execute async but don't await
+
+  try {
+    const api = await virtualLabRootApi();
+    await api.patch(`${userPreferencesBaseUri}/workspace-hierarchy-species`, {
+      headers: {
+        'Content-Type': 'application/json',
+        accept: 'application/json',
+      },
+      body: preference,
+    });
+  } catch (error) {
+    // Log but don't throw - this is intentionally fire-and-forget
+    log('warn', 'Failed to persist brain region preference to API:', error);
+  }
+}

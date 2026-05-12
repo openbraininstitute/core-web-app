@@ -196,7 +196,7 @@ export function BuildTab({
               <MiniDetailViewRenderer
                 section={WorkspaceSection.Data}
                 record={selectedFile.entity as ICircuit}
-                dataType={ExtendedEntitiesTypeDict.Circuit}
+                dataType={ExtendedEntitiesTypeDict.MEModelWithSynapses}
                 theme={MiniDetailViewTheme.Light}
                 enableAnimation={false}
               />
