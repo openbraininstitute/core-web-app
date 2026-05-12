@@ -1,12 +1,17 @@
-import { RiLayoutColumnLine } from '@remixicon/react';
 import { AgGridReact } from 'ag-grid-react';
-import { Checkbox, Dropdown } from 'antd';
-import { useEffect, useMemo, useRef } from 'react';
+import { Modal } from 'antd';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { CategoricalFilter } from '@/features/circuit-nodes/components/categorical-filter';
+import { ColumnChooser } from '@/features/circuit-nodes/components/column-chooser';
+import { ColumnHeader } from '@/features/circuit-nodes/components/column-header';
+import { formatColumnLabel } from '@/features/circuit-nodes/format-column-label';
 import { DEFAULT_VISIBLE_COLUMNS } from '@/features/circuit-nodes/types';
 
-import type { ColDef, GridReadyEvent, IDatasource } from 'ag-grid-community';
+import type { ColDef, ColumnMovedEvent, GridReadyEvent, IDatasource } from 'ag-grid-community';
 import type { ColumnMeta } from '@/features/circuit-nodes/types';
+
+const CATEGORICAL_SET_FILTER_MAX = 100;
 
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
@@ -21,24 +26,53 @@ type Props = {
   onVisibleColumnsChange: (next: Set<string>) => void;
 };
 
-function buildColumnDefs(columns: ColumnMeta[], visible: Set<string>): ColDef[] {
-  return columns.map((c) => {
+type BuildArgs = {
+  orderedColumns: ColumnMeta[];
+  visible: Set<string>;
+  onReset: () => void;
+  onOpenChooser: () => void;
+};
+
+function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: BuildArgs): ColDef[] {
+  return orderedColumns.map((c) => {
     const isNumeric = c.kind === 'numeric';
+    const useSetFilter =
+      c.kind === 'categorical' && (c.library?.length ?? 0) < CATEGORICAL_SET_FILTER_MAX;
     return {
       field: c.name,
-      headerName: c.name,
+      headerName: formatColumnLabel(c.name),
+      headerComponent: ColumnHeader,
+      headerComponentParams: {
+        onReset,
+        isNumeric,
+        onOpenChooser,
+      },
       sortable: true,
       resizable: true,
       hide: !visible.has(c.name),
-      filter: isNumeric ? 'agNumberColumnFilter' : 'agTextColumnFilter',
+      filter: useSetFilter
+        ? CategoricalFilter
+        : isNumeric
+          ? 'agNumberColumnFilter'
+          : 'agTextColumnFilter',
+      filterParams: useSetFilter ? { library: c.library } : undefined,
+      suppressHeaderMenuButton: true,
       minWidth: isNumeric ? 100 : 120,
+      width: isNumeric ? 120 : 160,
       cellClass: isNumeric ? 'ag-right-aligned-cell' : undefined,
-      type: isNumeric ? 'rightAligned' : undefined,
       valueFormatter: isNumeric
         ? (p) => (typeof p.value === 'number' ? formatNumber(p.value) : p.value)
         : undefined,
     } satisfies ColDef;
   });
+}
+
+function sameOrder(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }
 
 function formatNumber(v: number): string {
@@ -57,10 +91,50 @@ export function NodesGrid({
   onVisibleColumnsChange,
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
+
+  const [orderedNames, setOrderedNames] = useState<string[]>(() => defaultColumnOrder(columns));
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const openChooser = useCallback(() => setChooserOpen(true), []);
+
+  // Reset to default order when the column set changes (e.g. new population).
+  useEffect(() => {
+    setOrderedNames(defaultColumnOrder(columns));
+  }, [columns]);
+
+  const orderedColumns = useMemo(() => {
+    const byName = new Map(columns.map((c) => [c.name, c]));
+    const known = orderedNames.map((n) => byName.get(n)).filter((c): c is ColumnMeta => Boolean(c));
+    const knownSet = new Set(known.map((c) => c.name));
+    const rest = columns.filter((c) => !knownSet.has(c.name));
+    return [...known, ...rest];
+  }, [columns, orderedNames]);
+
+  const resetAll = useCallback(() => {
+    const api = gridRef.current?.api;
+    if (api) api.resetColumnState();
+    setOrderedNames(defaultColumnOrder(columns));
+    onVisibleColumnsChange(defaultVisibleColumnSet(columns));
+  }, [columns, onVisibleColumnsChange]);
+
   const columnDefs = useMemo(
-    () => buildColumnDefs(columns, visibleColumns),
-    [columns, visibleColumns]
+    () =>
+      buildColumnDefs({
+        orderedColumns,
+        visible: visibleColumns,
+        onReset: resetAll,
+        onOpenChooser: openChooser,
+      }),
+    [orderedColumns, visibleColumns, resetAll, openChooser]
   );
+
+  const onColumnMoved = (e: ColumnMovedEvent) => {
+    if (!e.finished) return;
+    const nextOrder = e.api
+      .getColumnState()
+      .map((s) => s.colId)
+      .filter((id): id is string => typeof id === 'string');
+    setOrderedNames((prev) => (sameOrder(prev, nextOrder) ? prev : nextOrder));
+  };
 
   // Keep ag-grid context up to date so the datasource can request only visible columns.
   useEffect(() => {
@@ -69,6 +143,17 @@ export function NodesGrid({
     api.setGridOption('context', { visibleColumns: Array.from(visibleColumns) });
     api.refreshInfiniteCache();
   }, [visibleColumns]);
+
+  // Reflect external order changes (e.g. from the column chooser) onto the grid.
+  // ag-grid will fire onColumnMoved with the same order; `sameOrder` short-circuits the loop.
+  useEffect(() => {
+    const api = gridRef.current?.api;
+    if (!api) return;
+    api.applyColumnState({
+      state: orderedNames.map((colId) => ({ colId })),
+      applyOrder: true,
+    });
+  }, [orderedNames]);
 
   const onGridReady = (e: GridReadyEvent) => {
     e.api.setGridOption('context', { visibleColumns: Array.from(visibleColumns) });
@@ -85,40 +170,6 @@ export function NodesGrid({
     <div className={`ag-theme-quartz ${styles.gridWrapper}`}>
       <div className={styles.gridHeader}>
         <span className={styles.gridStat}>{rowCount.toLocaleString()} nodes</span>
-        <Dropdown
-          trigger={['click']}
-          placement="bottomRight"
-          menu={{
-            items: [
-              {
-                key: 'header',
-                type: 'group',
-                label: 'Columns',
-                children: columns.map((c) => ({
-                  key: c.name,
-                  label: (
-                    <Checkbox
-                      checked={visibleColumns.has(c.name)}
-                      onChange={(ev) => {
-                        const next = new Set(visibleColumns);
-                        if (ev.target.checked) next.add(c.name);
-                        else next.delete(c.name);
-                        onVisibleColumnsChange(next);
-                      }}
-                    >
-                      {c.name}
-                    </Checkbox>
-                  ),
-                })),
-              },
-            ],
-          }}
-        >
-          <button type="button" className={styles.columnsButton}>
-            <RiLayoutColumnLine size={14} />
-            <span>Columns</span>
-          </button>
-        </Dropdown>
       </div>
       <div className={styles.grid}>
         <AgGridReact
@@ -133,20 +184,45 @@ export function NodesGrid({
           suppressMultiSort={false}
           suppressColumnVirtualisation
           suppressCellFocus
+          maintainColumnOrder
           onGridReady={onGridReady}
+          onColumnMoved={onColumnMoved}
           context={{ visibleColumns: Array.from(visibleColumns) }}
         />
       </div>
+      <Modal
+        title="Choose columns"
+        open={chooserOpen}
+        onCancel={() => setChooserOpen(false)}
+        footer={null}
+        width={360}
+      >
+        <ColumnChooser
+          columns={columns}
+          orderedNames={orderedNames}
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={onVisibleColumnsChange}
+          onOrderedNamesChange={setOrderedNames}
+        />
+      </Modal>
     </div>
   );
 }
 
 export function defaultVisibleColumnSet(columns: ColumnMeta[]): Set<string> {
   const names = new Set(columns.map((c) => c.name));
-  const filtered = Array.from(DEFAULT_VISIBLE_COLUMNS).filter((n) => names.has(n));
+  const filtered = DEFAULT_VISIBLE_COLUMNS.filter((n) => names.has(n));
   // If none of the defaults match this dataset (unusual), fall back to first 12 columns.
   if (filtered.length === 0) return new Set(columns.slice(0, 12).map((c) => c.name));
   return new Set(filtered);
+}
+
+function defaultColumnOrder(columns: ColumnMeta[]): string[] {
+  const names = new Set(columns.map((c) => c.name));
+  const preferred = DEFAULT_VISIBLE_COLUMNS.filter((n) => names.has(n));
+  const preferredSet = new Set(preferred);
+  const rest = columns.map((c) => c.name).filter((n) => !preferredSet.has(n));
+  return [...preferred, ...rest];
 }
 
 export { DEFAULT_VISIBLE_COLUMNS };

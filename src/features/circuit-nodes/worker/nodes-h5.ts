@@ -1,6 +1,7 @@
 import { Dataset, File, Group } from 'h5wasm';
 
 import type {
+  ColumnFilter,
   ColumnKind,
   ColumnMeta,
   GetRowsRequest,
@@ -43,6 +44,10 @@ type SyntheticNodeIdHandle = {
 type ColumnHandle = CategoricalHandle | NumericHandle | StringHandle | SyntheticNodeIdHandle;
 
 type LoadedColumn = Float32Array | Float64Array | Uint32Array | string[];
+
+type Compiled =
+  | { kind: 'generic'; handle: ColumnHandle; data: LoadedColumn; filter: TextFilter | NumberFilter }
+  | { kind: 'set'; data: Uint32Array; mask: Uint8Array };
 
 function classifyDtype(dtype: string): ColumnKind {
   // h5wasm encodes dtypes using Python `struct` codes (after an optional `<`/`>`/`|` byte-order):
@@ -226,12 +231,16 @@ export class NodesSession {
 
   private buildViewKey(
     sortItems: SortItem[],
-    filterEntries: [string, TextFilter | NumberFilter][]
+    filterEntries: [string, ColumnFilter][]
   ): string | null {
     if (sortItems.length === 0 && filterEntries.length === 0) return null;
     const sortKey = sortItems.map((s) => `${s.column}:${s.direction}`).join('|');
     const filterKey = filterEntries
-      .map(([col, f]) => `${col}:${JSON.stringify(f)}`)
+      .map(([col, f]) => {
+        // Set filters are order-independent — canonicalize so reordered selections hit the cache.
+        const norm = f.filterType === 'set' ? { ...f, values: [...f.values].sort() } : f;
+        return `${col}:${JSON.stringify(norm)}`;
+      })
       .sort()
       .join('|');
     return `sort=${sortKey}::filter=${filterKey}`;
@@ -240,7 +249,7 @@ export class NodesSession {
   private resolveView(
     viewKey: string,
     sortItems: SortItem[],
-    filterEntries: [string, TextFilter | NumberFilter][]
+    filterEntries: [string, ColumnFilter][]
   ): Uint32Array {
     const cached = this.viewCache.get(viewKey);
     if (cached) return cached;
@@ -262,18 +271,35 @@ export class NodesSession {
     return indices;
   }
 
-  private applyFilters(entries: [string, TextFilter | NumberFilter][]): Uint32Array {
+  private applyFilters(entries: [string, ColumnFilter][]): Uint32Array {
     const out: number[] = [];
-    const compiled = entries.flatMap(([col, f]) => {
+    const compiled = entries.flatMap((entry): Compiled[] => {
+      const [col, f] = entry;
       const handle = this.columnIndex.get(col);
       if (!handle) return [];
-      return [{ col, filter: f, handle, data: this.loadColumn(col) }];
+      const data = this.loadColumn(col);
+      if (f.filterType === 'set') {
+        // Set filter is meaningful only on categorical columns; ignore otherwise.
+        if (handle.kind !== 'categorical') return [];
+        const mask = new Uint8Array(handle.library.length);
+        const allowed = new Set(f.values);
+        for (let i = 0; i < handle.library.length; i++) {
+          if (allowed.has(handle.library[i])) mask[i] = 1;
+        }
+        return [{ kind: 'set', data: data as Uint32Array, mask }];
+      }
+      return [{ kind: 'generic', handle, data, filter: f }];
     });
 
     for (let i = 0; i < this.rowCount; i++) {
       let pass = true;
       for (const c of compiled) {
-        if (!matchOne(c.handle, c.data, i, c.filter)) {
+        if (c.kind === 'set') {
+          if (c.mask[c.data[i]] !== 1) {
+            pass = false;
+            break;
+          }
+        } else if (!matchOne(c.handle, c.data, i, c.filter)) {
           pass = false;
           break;
         }

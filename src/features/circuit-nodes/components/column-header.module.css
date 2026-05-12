@@ -1,0 +1,63 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  font-size: 0.875rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.label {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.headerRight .label {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.label:disabled {
+  cursor: default;
+}
+
+.labelText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sortIcon {
+  flex: 0 0 auto;
+  color: #6b7280;
+}
+
+.iconButton {
+  flex: 0 0 auto;
+  background: none;
+  border: 0;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.iconButton:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #111827;
+}

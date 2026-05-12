@@ -32,7 +32,14 @@ export type NumberFilter = {
   filterTo?: number;
 };
 
-export type FilterModel = Record<string, TextFilter | NumberFilter>;
+export type SetFilter = {
+  filterType: 'set';
+  values: string[];
+};
+
+export type ColumnFilter = TextFilter | NumberFilter | SetFilter;
+
+export type FilterModel = Record<string, ColumnFilter>;
 
 export type GetRowsRequest = {
   start: number;
@@ -82,16 +89,16 @@ export type DisplayMode = 'collapsed' | 'half' | 'full';
 
 export const CIRCUIT_H5_CACHE = 'obi-circuit-h5-v1';
 
-export const DEFAULT_VISIBLE_COLUMNS: ReadonlySet<string> = new Set([
+export const DEFAULT_VISIBLE_COLUMNS: readonly string[] = [
   'node_id',
+  'region',
+  'layer',
   'mtype',
   'etype',
-  'region',
   'morph_class',
   'synapse_class',
-  'layer',
   'morphology',
   'x',
   'y',
   'z',
-]);
+];
