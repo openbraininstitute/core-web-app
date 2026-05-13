@@ -152,6 +152,7 @@ export const ScanConfigUIElementDict = {
   VoltageDuration: 'voltage_duration',
   ModelIdentifierMultiple: 'model_identifier_multiple',
   StringSelectionEnhanced: 'string_selection_enhanced',
+  NeuronPropertyFilter: 'neuron_property_filter',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -324,6 +325,10 @@ export interface VoltageDuration extends TBlockElement {
   };
 }
 
+export interface NeuronPropertyFilter extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter;
+}
+
 export interface IBlockUnion extends TRootElement {
   ui_element: typeof ScanConfigUIElementDict.BlockUnion;
   /** the property name used to block between variants (defaults to 'type') */
@@ -358,7 +363,8 @@ export type ParamSchema =
   | ModelSelectorSingle
   | SelectRecordableIonChannelVariable
   | VoltageDuration
-  | StringSelectionEnhanced;
+  | StringSelectionEnhanced
+  | NeuronPropertyFilter;
 
 export type TBlock = {
   title: string;

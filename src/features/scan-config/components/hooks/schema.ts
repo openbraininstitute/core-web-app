@@ -5,6 +5,7 @@ import { type QueryClient, useQuery } from '@tanstack/react-query';
 import { omit, pick } from 'es-toolkit/compat';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
+import { z } from 'zod';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -71,10 +72,28 @@ export function useObioneJsonSchema({ schemaName }: { schemaName?: SchemaName | 
 
 export type TSchemaMappingConfiguration = {
   usability: Record<string, boolean> | null;
-  properties: Record<string, any> | null;
+  properties:
+    | (Record<string, any> & { NodePropertyUniqueValuesByPopulation: NodeProperties })
+    | null;
 };
 
 const SCHEMA_MAPPING_CONFIGURATION_STALE_TIME_MS = 60 * 60 * 1000;
+
+const stringArraySchema = z.array(z.string());
+const nodePropertyUniqueValuesSchema = z.record(
+  z.string(),
+  z.record(z.string(), stringArraySchema)
+);
+
+type NodeProperties = z.infer<typeof nodePropertyUniqueValuesSchema>;
+
+export const usabilitySchema = z.record(z.string(), z.boolean());
+export const configSchema = z
+  .object({
+    NodePropertyUniqueValuesByPopulation: nodePropertyUniqueValuesSchema,
+    usability: usabilitySchema,
+  })
+  .catchall(z.unknown());
 
 export function useSchemaMappingConfiguration({
   entityId,
@@ -91,25 +110,25 @@ export function useSchemaMappingConfiguration({
     queryKey: ['schema-mapping-configuration', { workspace, entityId, endpoint }],
     queryFn: async () => {
       const api = await obioneApi();
-      return api.get<{
-        usability: {
-          [key: string]: boolean;
-        } | null;
-        [key: string]: any;
-      }>(`/declared${endpoint}`.replace('{circuit_id}', entityId ?? ''), {
+
+      const resp = await api.get(`/declared${endpoint}`.replace('{circuit_id}', entityId ?? ''), {
         headers: {
           ...getEntityCoreContext(workspace).headers,
         },
       });
+
+      const validatedData = configSchema.parse(resp);
+
+      return validatedData;
     },
     enabled: !!endpoint && isSchemaLoaded,
     refetchOnWindowFocus: false,
     staleTime: SCHEMA_MAPPING_CONFIGURATION_STALE_TIME_MS,
-    select: (resp) => {
+    select: (validatedData) => {
       return {
-        properties: omit(resp, ['usability']),
-        usability: pick(resp, ['usability']).usability,
-      };
+        properties: omit(validatedData, ['usability']),
+        usability: validatedData.usability,
+      } as TSchemaMappingConfiguration;
     },
   });
 }

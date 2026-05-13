@@ -26,10 +26,11 @@ import {
   type ConfigValue,
   type ParamSchema,
   ScanConfigUIElementDict,
-  type SchemaName,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { isObject } from '@/util/type-guards';
+
+import NeuronPropertyFilter from './neuron-property-filter';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -41,7 +42,6 @@ export function UIElementRender({
   k,
   disabled,
   paramSchema,
-  value,
   state,
   config,
   schema,
@@ -53,9 +53,7 @@ export function UIElementRender({
   k: string;
   disabled: boolean;
   paramSchema: ParamSchema;
-  value: ConfigValue;
   config: Config;
-  schemaName: SchemaName;
   schema: ConfigSchema;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   state: Record<string, ConfigValue>;
@@ -63,6 +61,7 @@ export function UIElementRender({
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   errorPathPrefix?: string;
 }) {
+  const value = state[k];
   return match({ entity, paramSchema })
     .with(
       {
@@ -206,13 +205,13 @@ export function UIElementRender({
             schemaMappingConfig={schemaMappingConfig}
             disabled={disabled}
             value={getValue()}
-            onChange={(newV: string[]) =>
+            onChange={(newV: string[]) => {
               setState({
                 ...state,
                 // NOTE: this is requested by James for IT'IS collaboration
-                node_set: Array.isArray(newV) && newV.length === 1 ? newV[0] : newV,
-              })
-            }
+                [k]: Array.isArray(newV) && newV.length === 1 ? newV[0] : newV,
+              });
+            }}
             property={paramSchema.property}
           />
         );
@@ -385,6 +384,31 @@ export function UIElementRender({
             disabled={disabled}
           />
         );
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.NeuronPropertyFilter },
+      },
+      () => {
+        const getPopulationValue = (): string | null => {
+          const selectedPopulation = state.population;
+
+          if (Array.isArray(selectedPopulation) && typeof selectedPopulation[0] === 'string') {
+            return selectedPopulation[0] ?? null;
+          }
+          if (typeof selectedPopulation === 'string') return selectedPopulation;
+          return null;
+        };
+
+        const selectedPopulation = getPopulationValue();
+
+        const properties =
+          schemaMappingConfig?.properties?.NodePropertyUniqueValuesByPopulation[
+            selectedPopulation ?? ''
+          ] ?? {};
+
+        return <NeuronPropertyFilter properties={properties} />;
       }
     )
     .otherwise(() => null);

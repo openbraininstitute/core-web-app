@@ -11,7 +11,6 @@ import type {
   ConfigSchema,
   ConfigValue,
   IRootBlockUnion,
-  SchemaName,
   TBlock,
   TSupportedEntitiesForScanConfiguration,
   TSupportedEntityTypesForScanConfiguration,
@@ -19,7 +18,6 @@ import type {
 import type { Nullish } from '@/utils/type';
 
 type Props = {
-  schemaName: SchemaName;
   schema: ConfigSchema;
   blockUnionSchema: IRootBlockUnion;
   selectedRootElement: string;
@@ -40,7 +38,6 @@ function getDiscriminatorProperty(schema: IRootBlockUnion): string {
 }
 
 export default function BlockUnion({
-  schemaName,
   schema,
   blockUnionSchema,
   selectedRootElement,
@@ -93,7 +90,6 @@ export default function BlockUnion({
         <Block
           hideTitle
           schema={schema}
-          schemaName={schemaName}
           key={`${selectedRootElement}_${selectedType}`}
           disabled={!!campaignId || loading || showingDiffs}
           config={config}
