@@ -364,6 +364,7 @@ export default function BlockDictionaryEntries({
                                     e.stopPropagation();
 
                                     setEditing(false);
+                                    setSelectedRootElement(rootElement);
 
                                     const currentTabAtoms = atomsMap[rootElement];
 
