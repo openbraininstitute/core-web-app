@@ -9,7 +9,18 @@ import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
+import {
+  ScanConfigCampaignOriginActionDict,
+  type TScanConfigCampaignOriginActionDict,
+} from '@/features/scan-config/helpers';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  makeLogStreamFileDescriptors,
+  makeTaskConfigurationFile,
+  makeTaskLogsFile,
+  prependLogStreamFile,
+} from '@/features/task-logs-stream/descriptor';
+import { MAX_VISUALIZATION_ASSET_REFETCH_RETRIES } from '@/features/task-runner';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
@@ -23,6 +34,7 @@ type Props = {
   selectedFile?: TActivityCustomFile;
   onSelect: (file: TActivityCustomFile) => void;
   context: { virtualLabId: string; projectId: string };
+  campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
 
 export function InOutFiles({
@@ -32,12 +44,21 @@ export function InOutFiles({
   selectedFile,
   onSelect,
   context,
+  campaignOrigin,
 }: Props) {
   const { entity: circuit } = useModelQuery({ id: execution?.generated.at(0)?.id, context });
   const extractionConfigAsset = config.assets.find((o) => o.label === AssetLabel.task_config);
   const circuitAssets = circuit && 'assets' in circuit ? circuit.assets : [];
   const circuitConfigAsset = circuitAssets?.find(
     (o: IAsset) => o.label === AssetLabel.sonata_circuit
+  );
+  const logStreamFiles = useMemo(
+    () =>
+      makeLogStreamFileDescriptors({
+        configId: config.id,
+        executionId: execution?.execution_id,
+      }),
+    [config.id, execution?.execution_id]
   );
 
   const inputFiles: TActivityCustomFile[] = useMemo(() => {
@@ -60,8 +81,13 @@ export function InOutFiles({
         renderer: ActivityCustomFileRenderer.Default,
       });
     }
-    return files;
-  }, [config, circuit, circuitConfigAsset, extractionConfigAsset]);
+    return prependLogStreamFile({
+      file: logStreamFiles.input
+        ? makeTaskConfigurationFile({ descriptor: logStreamFiles.input, config })
+        : null,
+      files,
+    });
+  }, [config, circuit, extractionConfigAsset, circuitConfigAsset, logStreamFiles.input]);
 
   const outputAvailable =
     !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
@@ -76,29 +102,38 @@ export function InOutFiles({
     // biome-ignore lint/style/noNonNullAssertion: the function is enable only if extractedCircuitId is present (see useQuery/enabled)
     queryFn: () => getCircuit({ id: extractedCircuitId!, context }),
     enabled: !!extractedCircuitId,
-    // the refetch is required as the extraction upload to s3 will not be ready immediately
     refetchInterval(query) {
+      if (campaignOrigin === ScanConfigCampaignOriginActionDict.View) return false;
+
       const data = query.state.data;
       const hasVisAsset = data?.assets?.some(
         (asset) => asset.label === AssetLabel.circuit_visualization
       );
-      const retry = hasVisAsset ? false : 2_000;
-      return retry;
+      const hasReachedMaxRetries =
+        query.state.dataUpdateCount >= MAX_VISUALIZATION_ASSET_REFETCH_RETRIES;
+      return hasVisAsset || hasReachedMaxRetries ? false : 2_000;
     },
   });
 
   const outputFiles: TActivityCustomFile[] = useMemo(() => {
-    if (!extractedCircuit) return [];
-    return [
-      {
+    const files: TActivityCustomFile[] = [];
+    if (extractedCircuit) {
+      files.push({
         id: extractedCircuit.id,
         entity: extractedCircuit,
         asset: extractedCircuit.assets[0],
         name: extractedCircuit.name,
         renderer: ActivityCustomFileRenderer.MiniDetailView,
-      },
-    ];
-  }, [extractedCircuit]);
+      });
+    }
+    return prependLogStreamFile({
+      file:
+        logStreamFiles.output && execution
+          ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
+          : null,
+      files,
+    });
+  }, [extractedCircuit, execution, logStreamFiles.output]);
 
   useAutoSelectFileOnConfigChange({
     configId: config.id,
@@ -110,9 +145,9 @@ export function InOutFiles({
 
   return (
     <IoLayout
-      showOutput={outputAvailable}
+      showOutput={outputAvailable || logStreamFiles.showOutput}
       inputIsEmpty={inputFiles.length === 0}
-      outputIsEmpty={!extractedCircuit && !isLoading}
+      outputIsEmpty={!extractedCircuit && !isLoading && !logStreamFiles.output}
       inputItems={inputFiles.map((file) => (
         <TaskIOFileItem
           id={file.asset.id}
@@ -123,19 +158,20 @@ export function InOutFiles({
           name={file.name}
         />
       ))}
-      outputItems={
-        outputFiles[0] ? (
+      outputItems={outputFiles.map((file) => {
+        const isExtractedCircuit = file.renderer === ActivityCustomFileRenderer.MiniDetailView;
+        return (
           <TaskIOFileItem
-            id={outputFiles[0].id}
-            label={<small className="uppercase">Circuit</small>}
-            selected={outputFiles[0].id === selectedFile?.id}
-            key={outputFiles[0].id}
-            file={outputFiles[0]}
-            name={outputFiles[0].name}
+            id={file.id}
+            label={isExtractedCircuit ? <small className="uppercase">Circuit</small> : undefined}
+            selected={file.id === selectedFile?.id}
+            key={file.id}
+            file={file}
+            name={file.name}
             onSelect={onSelect}
           />
-        ) : null
-      }
+        );
+      })}
     />
   );
 }
