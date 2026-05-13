@@ -53,7 +53,6 @@ export function useAnalysisNotebookTemplatePipeline({
             get((query.queryKey as ExtendedEntityTypeQueryKey)[0], 'context.extendedEntityType') ===
             ExtendedEntitiesTypeDict.Notebook,
         }),
-        queryClient.invalidateQueries(),
       ]);
     },
   });
