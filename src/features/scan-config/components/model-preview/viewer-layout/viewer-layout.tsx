@@ -25,9 +25,9 @@ export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
     <div className={cn(styles.layout, className, 'px-5 text-gray-500')}>
       <header className="text-lg uppercase">
         <div>Preview</div>
-        <button type="button" onClick={handleDownload}>
-          <IconDownloadFile />
-        </button>
+        {/* <button type="button" onClick={handleDownload}>
+          <IconDownload/>
+        </button> */}
       </header>
       <div className={styles.viewer}>
         {error ? (
