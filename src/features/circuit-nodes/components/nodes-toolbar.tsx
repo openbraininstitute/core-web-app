@@ -47,7 +47,7 @@ export function NodesToolbar({
   onModeChange,
 }: Props) {
   return (
-    <div className={styles.toolbar}>
+    <div className={cn(styles.toolbar, mode === 'collapsed' && styles.toolbarCollapsed)}>
       <div className={styles.toolbarGroup}>
         <span className={styles.toolbarLabel}>View</span>
         <Select value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
