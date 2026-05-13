@@ -41,41 +41,66 @@
 
 .sortIcon {
   flex: 0 0 auto;
-  color: #6b7280;
+  color: var(--color-primary-9);
+}
+
+.sortIconWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.sortIndex {
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-primary-9);
+  margin-left: 1px;
 }
 
 .iconButton {
   position: relative;
   flex: 0 0 auto;
-  background: none;
+  width: 22px;
+  height: 22px;
+  background: #fff;
   border: 0;
-  padding: 2px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: var(--color-primary-9);
   cursor: pointer;
-  border-radius: 3px;
-}
-
-.iconButton:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: #111827;
+  border-radius: 9999px;
+  box-shadow:
+    0 4px 16px 0 rgba(0, 0, 0, 0.1),
+    -6px -6px 20px 0 rgba(255, 255, 255, 0.82);
 }
 
 .iconButton.active,
 .iconButton.active:hover {
-  color: var(--color-primary-6, #096dd9);
+  color: var(--color-primary-9);
+}
+
+.columnMenu :global(.ant-dropdown-menu-item),
+.columnMenu :global(.ant-dropdown-menu-title-content) {
+  color: var(--color-primary-9);
+}
+
+.columnMenu :global(.ant-dropdown-menu-item-disabled),
+.columnMenu :global(.ant-dropdown-menu-item-disabled .ant-dropdown-menu-title-content) {
+  color: rgba(0, 39, 102, 0.4);
 }
 
 .activeDot {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 6px;
-  height: 6px;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--color-primary-6, #096dd9);
+  background: var(--color-green-main);
   box-shadow: 0 0 0 1.5px #fff;
   pointer-events: none;
 }

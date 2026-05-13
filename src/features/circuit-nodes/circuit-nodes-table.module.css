@@ -40,42 +40,15 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6b7280;
+  color: var(--color-label);
 }
 
 .toolbarSpacer {
   flex: 1 1 auto;
 }
 
-.viewSwitch {
-  display: inline-flex;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.viewSwitchOption {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.8125rem;
-  background: #fff;
-  border: 0;
-  cursor: pointer;
-  color: #374151;
-}
-
-.viewSwitchOption + .viewSwitchOption {
-  border-left: 1px solid #e5e7eb;
-}
-
-.viewSwitchOptionActive {
-  background: #111827;
-  color: #fff;
-}
-
-.viewSwitchOptionDisabled {
-  cursor: not-allowed;
-  color: #9ca3af;
-  background: #f9fafb;
+.viewSelect {
+  min-width: 140px;
 }
 
 .populationSelect {
@@ -104,7 +77,7 @@
 }
 
 .modeButtonActive {
-  color: #002766;
+  color: var(--color-dark);
 }
 
 .body {
@@ -127,7 +100,7 @@
   justify-content: space-between;
   padding: 0.375rem 0.75rem;
   font-size: 0.8125rem;
-  color: #4b5563;
+  color: var(--color-label);
   border-bottom: 1px solid #f1f5f9;
   flex: 0 0 auto;
 }
@@ -138,7 +111,7 @@
 
 .gridStatHighlight {
   font-weight: 600;
-  color: #111827;
+  color: var(--color-dark);
 }
 
 .grid {
@@ -153,7 +126,7 @@
 }
 
 .grid :global(.ag-header) {
-  background: #f9fafb;
+  background: transparent;
 }
 
 .grid :global(.ag-header-cell) {
@@ -161,11 +134,15 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #4b5563;
+  color: var(--color-label);
 }
 
 .grid :global(.ag-row) {
   font-size: 0.8125rem;
+}
+
+.grid :global(.ag-cell) {
+  color: var(--color-dark);
 }
 
 .centered {

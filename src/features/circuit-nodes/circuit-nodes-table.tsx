@@ -1,12 +1,13 @@
 'use client';
 
-import { Alert, Empty, Spin } from 'antd';
+import { Empty, Spin } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
 import { NodesToolbar } from '@/features/circuit-nodes/components/nodes-toolbar';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { GenericError } from '@/ui/molecules/generic-error';
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -134,12 +135,16 @@ function renderBody({
 }) {
   if (configError) {
     return (
-      <Alert
-        type="error"
-        showIcon
-        message="Could not load circuit configuration"
-        description={configError.message}
-      />
+      <div className={styles.centered}>
+        <GenericError
+          content={
+            <>
+              Could not load circuit configuration
+              <span className="mt-2 block text-base opacity-80">{configError.message}</span>
+            </>
+          }
+        />
+      </div>
     );
   }
   if (configLoading) return <CenteredSpin label="Loading circuit configuration…" />;
@@ -148,12 +153,16 @@ function renderBody({
   }
   if (workerError) {
     return (
-      <Alert
-        type="error"
-        showIcon
-        message="Could not load nodes dataset"
-        description={workerError.message}
-      />
+      <div className={styles.centered}>
+        <GenericError
+          content={
+            <>
+              Could not load nodes dataset
+              <span className="mt-2 block text-base opacity-80">{workerError.message}</span>
+            </>
+          }
+        />
+      </div>
     );
   }
   if (workerLoading || !columns || !datasource) {

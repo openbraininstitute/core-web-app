@@ -59,8 +59,8 @@ function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: Bu
           : 'agTextColumnFilter',
       filterParams: useSetFilter ? { library: c.library } : undefined,
       suppressHeaderMenuButton: true,
-      minWidth: isNumeric ? 100 : 120,
-      width: isNumeric ? 120 : 160,
+      minWidth: isNumeric ? 120 : 140,
+      width: isNumeric ? 140 : 160,
       cellClass: isNumeric ? 'ag-right-aligned-cell' : undefined,
       valueFormatter: isNumeric
         ? (p) => (typeof p.value === 'number' ? formatNumber(p.value) : p.value)

@@ -36,19 +36,27 @@ export function ColumnHeader(props: Props) {
   } = props;
 
   const [sort, setSortState] = useState(column.getSort());
+  const [sortIndex, setSortIndex] = useState<number | null | undefined>(column.getSortIndex());
+  const [multiSortActive, setMultiSortActive] = useState(false);
   const [filterActive, setFilterActive] = useState(column.isFilterActive());
   const filterBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    const onSort = () => setSortState(column.getSort());
+    const onSort = () => {
+      setSortState(column.getSort());
+      setSortIndex(column.getSortIndex());
+      const sortedCount = api.getColumnState().filter((c) => c.sort != null).length;
+      setMultiSortActive(sortedCount > 1);
+    };
     const onFilter = () => setFilterActive(column.isFilterActive());
-    column.addEventListener('sortChanged', onSort);
+    api.addEventListener('sortChanged', onSort);
     column.addEventListener('filterChanged', onFilter);
+    onSort();
     return () => {
-      column.removeEventListener('sortChanged', onSort);
+      api.removeEventListener('sortChanged', onSort);
       column.removeEventListener('filterChanged', onFilter);
     };
-  }, [column]);
+  }, [column, api]);
 
   const colId = column.getColId();
   const applyPin = (pinned: 'left' | 'right' | null) =>
@@ -101,6 +109,26 @@ export function ColumnHeader(props: Props) {
     progressSort(e.shiftKey);
   };
 
+  const sortBadge =
+    multiSortActive && sortIndex != null ? (
+      <span className={styles.sortIndex} aria-hidden>
+        {sortIndex + 1}
+      </span>
+    ) : null;
+
+  const sortArrow =
+    sort === 'asc' ? (
+      <span className={styles.sortIconWrap}>
+        <RiArrowUpSLine size={14} className={styles.sortIcon} />
+        {sortBadge}
+      </span>
+    ) : sort === 'desc' ? (
+      <span className={styles.sortIconWrap}>
+        <RiArrowDownSLine size={14} className={styles.sortIcon} />
+        {sortBadge}
+      </span>
+    ) : null;
+
   const labelBtn = (
     <button
       type="button"
@@ -109,11 +137,9 @@ export function ColumnHeader(props: Props) {
       title={displayName}
       disabled={!enableSorting}
     >
-      {isNumeric && sort === 'asc' && <RiArrowUpSLine size={14} className={styles.sortIcon} />}
-      {isNumeric && sort === 'desc' && <RiArrowDownSLine size={14} className={styles.sortIcon} />}
+      {isNumeric && sortArrow}
       <span className={styles.labelText}>{displayName}</span>
-      {!isNumeric && sort === 'asc' && <RiArrowUpSLine size={14} className={styles.sortIcon} />}
-      {!isNumeric && sort === 'desc' && <RiArrowDownSLine size={14} className={styles.sortIcon} />}
+      {!isNumeric && sortArrow}
     </button>
   );
 
@@ -131,7 +157,12 @@ export function ColumnHeader(props: Props) {
   );
 
   const menuBtn = (
-    <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
+    <Dropdown
+      menu={{ items }}
+      trigger={['click']}
+      placement="bottomRight"
+      overlayClassName={styles.columnMenu}
+    >
       <button type="button" className={styles.iconButton} aria-label="Column menu">
         <RiMore2Fill size={14} />
       </button>
