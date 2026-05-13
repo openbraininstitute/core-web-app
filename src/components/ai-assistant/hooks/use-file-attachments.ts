@@ -4,11 +4,23 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAppNotification } from '@/components/notification';
 
-export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
-export const ACCEPTED_FILE_TYPES = [...ACCEPTED_IMAGE_TYPES, 'application/pdf'];
+const ACCEPTED_FILE_TYPES = [...ACCEPTED_IMAGE_TYPES, 'application/pdf'];
 
-export const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
+const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
+
+const MIME_LABELS: Record<string, string> = {
+  'image/jpeg': 'JPEG',
+  'image/png': 'PNG',
+  'image/gif': 'GIF',
+  'image/webp': 'WebP',
+  'application/pdf': 'PDF',
+};
+
+const ACCEPTED_FILE_TYPES_DESCRIPTION = ACCEPTED_FILE_TYPES.map(
+  (t) => MIME_LABELS[t] ?? t
+).join(', ');
 
 export interface FileAttachment {
   id: string;
@@ -46,7 +58,7 @@ export function useFileAttachments() {
         if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
           notifyError({
             message: 'Invalid file type',
-            description: 'Accepted: JPEG, PNG, GIF, WebP, and PDF.',
+            description: `Accepted: ${ACCEPTED_FILE_TYPES_DESCRIPTION}.`,
           });
           continue;
         }
@@ -54,7 +66,7 @@ export function useFileAttachments() {
         if (file.size > MAX_FILE_SIZE_BYTES) {
           notifyError({
             message: 'File too large',
-            description: 'Files must be 20 MB or smaller.',
+            description: `Files must be ${MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB or smaller.`,
           });
           continue;
         }

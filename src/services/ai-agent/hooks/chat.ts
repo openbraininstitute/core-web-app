@@ -2,11 +2,12 @@
 
 import { useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { DefaultChatTransport, getToolName, isToolUIPart } from 'ai';
+import { DefaultChatTransport, FileUIPart, getToolName, isToolUIPart } from 'ai';
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { atomRateLimit } from '@/components/ai-assistant/state';
+
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { lastConfigUpdateAtom, preMessageConfigAtom } from '@/state/config-highlights';
@@ -209,7 +210,7 @@ export function useServiceAiAgentChat(threadId: string) {
     async (text: string, files?: File[]) => {
       AiAssistant.isEmptyThread.set(false);
 
-      let fileUIParts: import('ai').FileUIPart[] | undefined;
+      let fileUIParts: FileUIPart[] | undefined;
       if (files && files.length > 0 && accessToken && threadId) {
         try {
           fileUIParts = await uploadFilesAndCreateParts(files, accessToken, threadId);

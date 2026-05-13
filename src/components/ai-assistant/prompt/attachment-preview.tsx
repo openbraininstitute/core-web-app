@@ -1,4 +1,5 @@
 import { CloseOutlined } from '@ant-design/icons';
+import { RiFileTextLine } from '@remixicon/react';
 
 import { classNames } from '@/util/utils';
 
@@ -23,7 +24,7 @@ export function AttachmentPreview({ attachments, onRemove }: AttachmentPreviewPr
           <div key={attachment.id} className={styles.thumbnail}>
             {isPdf ? (
               <div className={styles.pdfPlaceholder}>
-                <span className={styles.pdfLabel}>PDF</span>
+                <RiFileTextLine size={22} color="#555" />
                 <span className={styles.pdfName}>{attachment.file.name}</span>
               </div>
             ) : (
