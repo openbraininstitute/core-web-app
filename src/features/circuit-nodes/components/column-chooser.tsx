@@ -1,8 +1,9 @@
 import { RiDraggable } from '@remixicon/react';
 import { Checkbox } from 'antd';
+import capitalize from 'es-toolkit/compat/capitalize';
 import { useMemo, useRef, useState } from 'react';
 
-import { formatColumnLabel } from '@/features/circuit-nodes/format-column-label';
+import { cn } from '@/utils/css-class';
 
 import type { ColumnMeta } from '@/features/circuit-nodes/types';
 
@@ -97,14 +98,13 @@ export function ColumnChooser({
         const dragActive = draggingIndex !== null;
         const showLineAbove = dragActive && dropIndex === index;
         const showLineBelow = dragActive && dropIndex === index + 1;
-        const cls = [
+        const cls = cn(
           styles.row,
-          isDragging ? styles.rowDragging : '',
-          showLineAbove ? styles.rowDropAbove : '',
-          showLineBelow ? styles.rowDropBelow : '',
-        ]
-          .filter(Boolean)
-          .join(' ');
+          isDragging && styles.rowDragging,
+          showLineAbove && styles.rowDropAbove,
+          showLineBelow && styles.rowDropBelow
+        );
+        const label = capitalize(name.replace(/_/g, ' '));
         return (
           <li
             key={name}
@@ -122,8 +122,8 @@ export function ColumnChooser({
               checked={visibleColumns.has(name)}
               onChange={(ev) => toggle(name, ev.target.checked)}
             />
-            <span className={styles.label} title={formatColumnLabel(name)}>
-              {formatColumnLabel(name)}
+            <span className={styles.label} title={label}>
+              {label}
             </span>
           </li>
         );

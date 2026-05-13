@@ -1,13 +1,13 @@
 'use client';
 
 import { Alert, Empty, Spin } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
 import { NodesToolbar } from '@/features/circuit-nodes/components/nodes-toolbar';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
-import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { DisplayMode, NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
@@ -36,7 +36,6 @@ export default function CircuitNodesTable({ circuit, className, onModeChange }: 
     onModeChange?.(mode);
   }, [mode, onModeChange]);
 
-  // Initialize / reconcile selected population when config arrives.
   useEffect(() => {
     if (!config) return;
     if (populationName && config.nodes.some((p) => p.name === populationName)) return;
@@ -66,15 +65,18 @@ export default function CircuitNodesTable({ circuit, className, onModeChange }: 
   });
 
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set());
+  const lastColumnsKeyRef = useRef<string>('');
 
-  // Set defaults when columns first arrive (or change set identity, e.g. new population).
   useEffect(() => {
     if (!columns || columns.length === 0) return;
+    const key = columns.map((c) => c.name).join('|');
+    if (key === lastColumnsKeyRef.current) return;
+    lastColumnsKeyRef.current = key;
     setVisibleColumns(defaultVisibleColumnSet(columns));
   }, [columns]);
 
   return (
-    <div className={classNames(styles.root, styles[`mode_${mode}`], className)}>
+    <div className={cn(styles.root, styles[`mode_${mode}`], className)}>
       <NodesToolbar
         view={view}
         onViewChange={setView}

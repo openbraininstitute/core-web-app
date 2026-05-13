@@ -3,6 +3,8 @@ import { useGridFilter } from 'ag-grid-react';
 import { Checkbox, Input } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useDebouncedCallback } from '@/hooks/hooks';
+
 import type { CustomFilterProps } from 'ag-grid-react';
 import type { InputRef } from 'antd';
 import type { SetFilter } from '@/features/circuit-nodes/types';
@@ -19,18 +21,9 @@ export function CategoricalFilter({ model, onModelChange, library }: Params) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(() => new Set(model?.values ?? library));
 
-  // Re-sync if ag-grid resets the model externally (e.g. clearFilters from outside).
   useEffect(() => {
     setSelected(new Set(model?.values ?? library));
   }, [model, library]);
-
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-    },
-    []
-  );
 
   const hidePopupRef = useRef<(() => void) | null>(null);
   const inputRef = useRef<InputRef>(null);
@@ -43,18 +36,18 @@ export function CategoricalFilter({ model, onModelChange, library }: Params) {
     },
   });
 
-  const applyImmediate = (next: Set<string>) => {
-    if (timer.current) clearTimeout(timer.current);
+  const emit = (next: Set<string>) => {
     if (next.size === library.length) onModelChange(null);
     else onModelChange({ filterType: 'set', values: Array.from(next) });
   };
 
-  const commit = (next: Set<string>) => {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      if (next.size === library.length) onModelChange(null);
-      else onModelChange({ filterType: 'set', values: Array.from(next) });
-    }, APPLY_DEBOUNCE_MS);
+  const commit = useDebouncedCallback(emit, [library, onModelChange], APPLY_DEBOUNCE_MS);
+
+  useEffect(() => () => commit.cancel(), [commit]);
+
+  const applyImmediate = (next: Set<string>) => {
+    commit.cancel();
+    emit(next);
   };
 
   const update = (next: Set<string>) => {

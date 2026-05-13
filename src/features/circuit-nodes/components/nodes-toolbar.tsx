@@ -1,9 +1,7 @@
 import { Select, Tooltip } from 'antd';
 
-import CollapsedIcon from '@/components/icons/circuit-nodes-mode/collapsed';
-import FullIcon from '@/components/icons/circuit-nodes-mode/full';
-import HalfIcon from '@/components/icons/circuit-nodes-mode/half';
-import { classNames } from '@/util/utils';
+import CircuitNodesModeIcon from '@/components/icons/circuit-nodes-mode';
+import { cn } from '@/utils/css-class';
 
 import type { DisplayMode, NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
 
@@ -35,7 +33,7 @@ export function NodesToolbar({
         <div className={styles.viewSwitch}>
           <button
             type="button"
-            className={classNames(
+            className={cn(
               styles.viewSwitchOption,
               view === 'nodes' && styles.viewSwitchOptionActive
             )}
@@ -47,7 +45,7 @@ export function NodesToolbar({
           <Tooltip title="Coming soon">
             <button
               type="button"
-              className={classNames(styles.viewSwitchOption, styles.viewSwitchOptionDisabled)}
+              className={cn(styles.viewSwitchOption, styles.viewSwitchOptionDisabled)}
               disabled
               aria-pressed={false}
             >
@@ -80,21 +78,21 @@ export function NodesToolbar({
           onClick={() => onModeChange('collapsed')}
           label="Collapse"
         >
-          <CollapsedIcon />
+          <CircuitNodesModeIcon mode="collapsed" />
         </ModeButton>
         <ModeButton
           active={mode === 'half'}
           onClick={() => onModeChange('half')}
           label="Half height"
         >
-          <HalfIcon />
+          <CircuitNodesModeIcon mode="half" />
         </ModeButton>
         <ModeButton
           active={mode === 'full'}
           onClick={() => onModeChange('full')}
           label="Full height"
         >
-          <FullIcon />
+          <CircuitNodesModeIcon mode="full" />
         </ModeButton>
       </div>
     </div>
@@ -116,7 +114,7 @@ function ModeButton({
     <Tooltip title={label}>
       <button
         type="button"
-        className={classNames(styles.modeButton, active && styles.modeButtonActive)}
+        className={cn(styles.modeButton, active && styles.modeButtonActive)}
         onClick={onClick}
         aria-pressed={active}
         aria-label={label}

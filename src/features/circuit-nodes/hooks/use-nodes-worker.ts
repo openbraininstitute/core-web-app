@@ -36,7 +36,6 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
 
   useEffect(() => {
     if (!enabled || !population || !circuitAssetId || !circuitId) {
-      // Tear down any existing worker if we're no longer active.
       teardownWorker(workerRef);
       setStatus('idle');
       setOpenResult(null);
@@ -97,7 +96,6 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     };
   }, [enabled, circuitId, circuitAssetId, population, ctx]);
 
-  // Unmount cleanup.
   useEffect(() => {
     return () => teardownWorker(workerRef);
   }, []);
@@ -127,7 +125,8 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
           })
           .then((res) => {
             const hasFilter = !!params.filterModel && Object.keys(params.filterModel).length > 0;
-            setFilteredCount(hasFilter ? res.total : null);
+            const next = hasFilter ? res.total : null;
+            setFilteredCount((prev) => (prev === next ? prev : next));
             const lastRow = res.total <= params.endRow ? res.total : undefined;
             params.successCallback(res.rows, lastRow);
           })
@@ -139,7 +138,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
   return {
     rowCount: openResult?.rowCount ?? 0,
     filteredCount,
-    columns: openResult?.columns as ColumnMeta[] | undefined,
+    columns: openResult?.columns,
     datasource,
     isLoading: status === 'loading',
     error,

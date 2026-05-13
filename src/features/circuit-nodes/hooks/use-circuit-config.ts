@@ -30,7 +30,7 @@ function stripBase(file: string, base: string): string {
   return file;
 }
 
-export function parseSonataConfig(
+function parseSonataConfig(
   raw: ICircuitSonataConfiguration,
   circuitAssetId: string
 ): ParsedCircuitConfig {

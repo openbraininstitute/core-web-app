@@ -2,7 +2,7 @@ import { ready } from 'h5wasm';
 
 import { CIRCUIT_H5_CACHE } from '@/features/circuit-nodes/types';
 
-export class AssetFetchError extends Error {
+class AssetFetchError extends Error {
   status: number;
   constructor(status: number, message: string) {
     super(message);

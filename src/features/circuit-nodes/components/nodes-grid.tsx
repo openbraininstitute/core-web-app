@@ -1,11 +1,12 @@
 import { AgGridReact } from 'ag-grid-react';
 import { Modal } from 'antd';
+import capitalize from 'es-toolkit/compat/capitalize';
+import isEqual from 'es-toolkit/compat/isEqual';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CategoricalFilter } from '@/features/circuit-nodes/components/categorical-filter';
 import { ColumnChooser } from '@/features/circuit-nodes/components/column-chooser';
 import { ColumnHeader } from '@/features/circuit-nodes/components/column-header';
-import { formatColumnLabel } from '@/features/circuit-nodes/format-column-label';
 import { DEFAULT_VISIBLE_COLUMNS } from '@/features/circuit-nodes/types';
 
 import type { ColDef, ColumnMovedEvent, GridReadyEvent, IDatasource } from 'ag-grid-community';
@@ -41,7 +42,7 @@ function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: Bu
       c.kind === 'categorical' && (c.library?.length ?? 0) < CATEGORICAL_SET_FILTER_MAX;
     return {
       field: c.name,
-      headerName: formatColumnLabel(c.name),
+      headerName: capitalize(c.name.replace(/_/g, ' ')),
       headerComponent: ColumnHeader,
       headerComponentParams: {
         onReset,
@@ -68,14 +69,6 @@ function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: Bu
   });
 }
 
-function sameOrder(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
 function formatNumber(v: number): string {
   if (!Number.isFinite(v)) return String(v);
   if (Number.isInteger(v)) return String(v);
@@ -98,7 +91,6 @@ export function NodesGrid({
   const [chooserOpen, setChooserOpen] = useState(false);
   const openChooser = useCallback(() => setChooserOpen(true), []);
 
-  // Reset to default order when the column set changes (e.g. new population).
   useEffect(() => {
     setOrderedNames(defaultColumnOrder(columns));
   }, [columns]);
@@ -135,10 +127,9 @@ export function NodesGrid({
       .getColumnState()
       .map((s) => s.colId)
       .filter((id): id is string => typeof id === 'string');
-    setOrderedNames((prev) => (sameOrder(prev, nextOrder) ? prev : nextOrder));
+    setOrderedNames((prev) => (isEqual(prev, nextOrder) ? prev : nextOrder));
   };
 
-  // Keep ag-grid context up to date so the datasource can request only visible columns.
   useEffect(() => {
     const api = gridRef.current?.api;
     if (!api) return;
@@ -146,8 +137,6 @@ export function NodesGrid({
     api.refreshInfiniteCache();
   }, [visibleColumns]);
 
-  // Reflect external order changes (e.g. from the column chooser) onto the grid.
-  // ag-grid will fire onColumnMoved with the same order; `sameOrder` short-circuits the loop.
   useEffect(() => {
     const api = gridRef.current?.api;
     if (!api) return;
@@ -223,7 +212,6 @@ export function NodesGrid({
 export function defaultVisibleColumnSet(columns: ColumnMeta[]): Set<string> {
   const names = new Set(columns.map((c) => c.name));
   const filtered = DEFAULT_VISIBLE_COLUMNS.filter((n) => names.has(n));
-  // If none of the defaults match this dataset (unusual), fall back to first 12 columns.
   if (filtered.length === 0) return new Set(columns.slice(0, 12).map((c) => c.name));
   return new Set(filtered);
 }
@@ -235,5 +223,3 @@ function defaultColumnOrder(columns: ColumnMeta[]): string[] {
   const rest = columns.map((c) => c.name).filter((n) => !preferredSet.has(n));
   return [...preferred, ...rest];
 }
-
-export { DEFAULT_VISIBLE_COLUMNS };

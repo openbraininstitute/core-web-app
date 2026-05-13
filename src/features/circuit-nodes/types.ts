@@ -7,27 +7,33 @@ export type ColumnMeta = {
   library?: string[];
 };
 
+export type SortDirection = 'asc' | 'desc';
+
 export type SortItem = {
   column: string;
-  direction: 'asc' | 'desc';
+  direction: SortDirection;
 };
+
+export type TextFilterOp = 'contains' | 'equals' | 'notEqual' | 'startsWith' | 'endsWith';
 
 export type TextFilter = {
   filterType: 'text';
-  type: 'contains' | 'equals' | 'notEqual' | 'startsWith' | 'endsWith';
+  type: TextFilterOp;
   filter: string;
 };
 
+export type NumberFilterOp =
+  | 'equals'
+  | 'notEqual'
+  | 'lessThan'
+  | 'lessThanOrEqual'
+  | 'greaterThan'
+  | 'greaterThanOrEqual'
+  | 'inRange';
+
 export type NumberFilter = {
   filterType: 'number';
-  type:
-    | 'equals'
-    | 'notEqual'
-    | 'lessThan'
-    | 'lessThanOrEqual'
-    | 'greaterThan'
-    | 'greaterThanOrEqual'
-    | 'inRange';
+  type: NumberFilterOp;
   filter: number;
   filterTo?: number;
 };

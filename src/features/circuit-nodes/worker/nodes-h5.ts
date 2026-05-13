@@ -1,4 +1,5 @@
 import { Dataset, File, Group } from 'h5wasm';
+import { match } from 'ts-pattern';
 
 import type {
   ColumnFilter,
@@ -201,8 +202,8 @@ export class NodesSession {
     const rows: Record<string, string | number>[] = [];
     if (sliceEnd <= sliceStart) return { rows, total };
 
-    // Pre-load columns that we'll read this page from. With an identity view we can do
-    // narrow hyperslab reads; with a view we need the whole column to gather from.
+    // With an identity view we can do narrow hyperslab reads; with a view we
+    // need the whole column to gather from.
     const indices: number[] | Uint32Array = view
       ? view.subarray(sliceStart, sliceEnd)
       : range(sliceStart, sliceEnd);
@@ -254,15 +255,12 @@ export class NodesSession {
     const cached = this.viewCache.get(viewKey);
     if (cached) return cached;
 
-    // Step 1: filter → array of matching row indices.
     let indices: Uint32Array;
     if (filterEntries.length === 0) {
       indices = identityIndices(this.rowCount);
     } else {
       indices = this.applyFilters(filterEntries);
     }
-
-    // Step 2: sort the matching indices.
     if (sortItems.length > 0) {
       indices = this.applySort(indices, sortItems);
     }
@@ -272,7 +270,6 @@ export class NodesSession {
   }
 
   private applyFilters(entries: [string, ColumnFilter][]): Uint32Array {
-    const out: number[] = [];
     const compiled = entries.flatMap((entry): Compiled[] => {
       const [col, f] = entry;
       const handle = this.columnIndex.get(col);
@@ -291,6 +288,8 @@ export class NodesSession {
       return [{ kind: 'generic', handle, data, filter: f }];
     });
 
+    const buf = new Uint32Array(this.rowCount);
+    let cursor = 0;
     for (let i = 0; i < this.rowCount; i++) {
       let pass = true;
       for (const c of compiled) {
@@ -304,10 +303,9 @@ export class NodesSession {
           break;
         }
       }
-      if (pass) out.push(i);
+      if (pass) buf[cursor++] = i;
     }
-
-    return Uint32Array.from(out);
+    return buf.slice(0, cursor);
   }
 
   private applySort(indices: Uint32Array, sortItems: SortItem[]): Uint32Array {
@@ -317,15 +315,15 @@ export class NodesSession {
       return [{ ...s, handle, data: this.loadColumn(s.column) }];
     });
 
-    const arr = Array.from(indices);
-    arr.sort((a, b) => {
+    const sorted = indices.slice();
+    sorted.sort((a, b) => {
       for (const c of compiled) {
         const cmp = compareAt(c.handle, c.data, a, b);
         if (cmp !== 0) return c.direction === 'asc' ? cmp : -cmp;
       }
       return a - b;
     });
-    return Uint32Array.from(arr);
+    return sorted;
   }
 
   private loadColumn(name: string): LoadedColumn {
@@ -516,46 +514,31 @@ function matchOne(
 function matchText(value: string, f: TextFilter): boolean {
   const v = value.toLowerCase();
   const q = (f.filter ?? '').toLowerCase();
-  switch (f.type) {
-    case 'contains':
-      return v.includes(q);
-    case 'equals':
-      return v === q;
-    case 'notEqual':
-      return v !== q;
-    case 'startsWith':
-      return v.startsWith(q);
-    case 'endsWith':
-      return v.endsWith(q);
-    default:
-      return true;
-  }
+  return match(f.type)
+    .with('contains', () => v.includes(q))
+    .with('equals', () => v === q)
+    .with('notEqual', () => v !== q)
+    .with('startsWith', () => v.startsWith(q))
+    .with('endsWith', () => v.endsWith(q))
+    .exhaustive();
 }
 
 function matchNumber(value: number, f: NumberFilter): boolean {
   const q = Number(f.filter);
-  switch (f.type) {
-    case 'equals':
-      return value === q;
-    case 'notEqual':
-      return value !== q;
-    case 'lessThan':
-      return value < q;
-    case 'lessThanOrEqual':
-      return value <= q;
-    case 'greaterThan':
-      return value > q;
-    case 'greaterThanOrEqual':
-      return value >= q;
-    case 'inRange': {
+  return match(f.type)
+    .with('equals', () => value === q)
+    .with('notEqual', () => value !== q)
+    .with('lessThan', () => value < q)
+    .with('lessThanOrEqual', () => value <= q)
+    .with('greaterThan', () => value > q)
+    .with('greaterThanOrEqual', () => value >= q)
+    .with('inRange', () => {
       const q2 = Number(f.filterTo ?? q);
       const lo = Math.min(q, q2);
       const hi = Math.max(q, q2);
       return value >= lo && value <= hi;
-    }
-    default:
-      return true;
-  }
+    })
+    .exhaustive();
 }
 
 function decodeSliceForPage(handle: ColumnHandle, sliced: unknown): (string | number)[] {
