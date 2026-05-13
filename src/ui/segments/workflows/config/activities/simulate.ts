@@ -2,6 +2,8 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 
 import type { IWorkflowDescriptor } from '../types';
 
+const simulatableCircuitFilters = { has_electrical_cell_models: true } as const;
+
 export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
   {
     sourceType: ExtendedEntitiesTypeDict.Memodel,
@@ -38,7 +40,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-        filters: { has_electrical_cell_models: true },
+        filters: simulatableCircuitFilters,
       },
     ],
     order: 5,
@@ -50,7 +52,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
-        filters: { has_electrical_cell_models: true },
+        filters: simulatableCircuitFilters,
       },
     ],
     order: 6,
@@ -62,7 +64,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.SmallMicrocircuit,
-        filters: { has_electrical_cell_models: true },
+        filters: simulatableCircuitFilters,
       },
     ],
     order: 7,
@@ -74,7 +76,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.Microcircuit,
-        filters: { has_electrical_cell_models: true },
+        filters: simulatableCircuitFilters,
       },
     ],
     disabled: false,
@@ -86,7 +88,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     configurationInputs: [
       {
         type: ExtendedEntitiesTypeDict.BrainRegion,
-        filters: { has_electrical_cell_models: true },
+        filters: simulatableCircuitFilters,
       },
     ],
     disabled: false,
