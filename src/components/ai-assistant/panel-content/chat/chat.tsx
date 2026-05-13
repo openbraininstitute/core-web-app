@@ -30,6 +30,7 @@ import Welcome from '../welcome';
 import { useAutoScroll } from './use-auto-scroll';
 import { useLastMessageDiffBar } from './use-last-message-diff-bar';
 
+import messageStyles from '../../message-item/message-item.module.css';
 import styles from './chat.module.css';
 
 export interface ChatProps {
@@ -49,9 +50,8 @@ export default function Chat({
   const isEmptyThread = assistant.isEmptyThread.useValue();
   const healthError = assistant.healthError.useValue();
 
-  const { messages, status, sendMessage, error, stop, isLoadingMessages } = useServiceAiAgentChat(
-    threadId ?? ''
-  );
+  const { messages, status, sendMessage, error, stop, isLoadingMessages, pendingUserMessage } =
+    useServiceAiAgentChat(threadId ?? '');
   const [suggestions, clearSuggestions, isLoadingSuggestions, refetchSuggestions] =
     useServiceAiAgentSuggestionFromUserJourney(threadId ?? '', status);
 
@@ -182,7 +182,16 @@ export default function Chat({
                 />
               ))}
 
-              {showThinking && <ThinkingIndicator />}
+              {pendingUserMessage && (
+                <div className={styles.messageItem}>
+                  <PendingUserMessage
+                    text={pendingUserMessage.text}
+                    files={pendingUserMessage.files}
+                  />
+                </div>
+              )}
+
+              {showThinking && !pendingUserMessage && <ThinkingIndicator />}
               {status === 'ready' && messages.length > 0 && (
                 <div className={styles.footerButtons}></div>
               )}
@@ -192,11 +201,11 @@ export default function Chat({
                     onClick={handlePrompt}
                     suggestions={suggestions}
                     clearSuggestions={clearSuggestions}
-                    isLoading={isLoadingSuggestions || status !== 'ready'}
+                    isLoading={isLoadingSuggestions || status !== 'ready' || !!pendingUserMessage}
                   />
                 </div>
               )}
-              {threadId && !isEmptyThread && status === 'ready' && (
+              {threadId && !isEmptyThread && status === 'ready' && !pendingUserMessage && (
                 <div className={styles.suggestedQuestionsContainerInChat}>
                   <SuggestedQuestions
                     onClick={handlePrompt}
@@ -255,7 +264,46 @@ export default function Chat({
           onPrompt={handlePrompt}
           messagesCount={messages.length}
           stop={stop}
+          isUploading={!!pendingUserMessage}
         />
+      </div>
+    </div>
+  );
+}
+
+function PendingUserMessage({
+  text,
+  files,
+}: {
+  text: string;
+  files: { name: string; type: string; previewUrl: string; uploaded: boolean }[];
+}) {
+  return (
+    <div className={messageStyles.user}>
+      <div className={messageStyles.userContent}>
+        {text && <div>{text}</div>}
+        {files.map((file) => (
+          <div key={file.name} className={styles.pendingFile}>
+            {file.type.startsWith('image/') && file.previewUrl ? (
+              <img
+                src={file.previewUrl}
+                alt={file.name}
+                className={messageStyles.userImage}
+                style={{ opacity: file.uploaded ? 1 : 0.6 }}
+              />
+            ) : (
+              <div className={styles.pendingFilePill}>
+                {!file.uploaded && <span className={styles.pendingFileSpinner} />}
+                <span>{file.name}</span>
+              </div>
+            )}
+            {file.type.startsWith('image/') && !file.uploaded && (
+              <div className={styles.pendingFileOverlay}>
+                <span className={styles.pendingFileSpinner} />
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

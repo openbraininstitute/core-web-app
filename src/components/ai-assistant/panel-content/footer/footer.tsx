@@ -13,12 +13,20 @@ interface FooterProps {
   messagesCount: number;
   stop(): void;
   isLoadingSuggestions?: boolean;
+  isUploading?: boolean;
 }
 
 const isStreaming = (status: FooterProps['status']) =>
   status === 'streaming' || status === 'submitted';
 
-export default function Footer({ className, status, onPrompt, stop, threadId }: FooterProps) {
+export default function Footer({
+  className,
+  status,
+  onPrompt,
+  stop,
+  threadId,
+  isUploading,
+}: FooterProps) {
   const [prompt, setPrompt] = React.useState('');
   const { attachments, addFiles, removeAttachment, clearAttachments, handlePaste } =
     useFileAttachments();
@@ -37,8 +45,8 @@ export default function Footer({ className, status, onPrompt, stop, threadId }: 
         value={prompt}
         onChange={setPrompt}
         onClick={handlePrompt}
-        disabled={!threadId}
-        isStreaming={isStreaming(status)}
+        disabled={!threadId || isUploading}
+        isStreaming={isStreaming(status) || !!isUploading}
         onCancel={stop}
         attachments={attachments}
         onAddFiles={addFiles}

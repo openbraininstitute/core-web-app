@@ -18,9 +18,9 @@ const MIME_LABELS: Record<string, string> = {
   'application/pdf': 'PDF',
 };
 
-const ACCEPTED_FILE_TYPES_DESCRIPTION = ACCEPTED_FILE_TYPES.map(
-  (t) => MIME_LABELS[t] ?? t
-).join(', ');
+const ACCEPTED_FILE_TYPES_DESCRIPTION = ACCEPTED_FILE_TYPES.map((t) => MIME_LABELS[t] ?? t).join(
+  ', '
+);
 
 export interface FileAttachment {
   id: string;
