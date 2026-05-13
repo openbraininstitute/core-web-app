@@ -360,8 +360,6 @@ export default function BlockDictionaryEntries({
                                 <DeleteOutlined
                                   className="cursor-pointer"
                                   onClick={(e) => {
-                                    e.stopPropagation();
-
                                     setEditing(false);
 
                                     const selectedTabAtoms = atomsMap[selectedRootElement];

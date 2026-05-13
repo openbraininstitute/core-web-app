@@ -1,7 +1,7 @@
 import { atom, useAtom } from 'jotai';
 import React from 'react';
 
-import { isAtom } from '@/features/scan-config/components/utils';
+import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
 
 import type { AtomsMap, Config, ConfigSchema } from '@/features/scan-config/types';
 
@@ -15,7 +15,7 @@ export function useConfigAtom(schema: ConfigSchema | undefined, atomsMap: AtomsM
         else {
           result[key] = {};
           Object.entries(atomsMap[key]).forEach(([subkey, v]) => {
-            if (typeof result[key] === 'string') return;
+            if (!isPlainObject(result[key])) return;
             result[key][subkey] = get(v);
           });
         }

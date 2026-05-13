@@ -111,6 +111,9 @@ export function ScanConfigTemplate({
     model: entity,
   });
   const config = useConfigAtom(schema, atomsMap);
+
+  console.log('config', config, atomsMap);
+
   const selectedSchemaCandidate = schema.properties[selectedRootElement];
   const selectedSchema =
     selectedSchemaCandidate !== undefined && !isType(selectedSchemaCandidate)

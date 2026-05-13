@@ -2,7 +2,7 @@ import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { useQuery } from '@tanstack/react-query';
 import { omit, pick } from 'es-toolkit/compat';
 import { atom } from 'jotai';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
@@ -167,108 +167,122 @@ const ModelIdentifierSelector = {
   [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'CellMorphologyFromID',
 };
 
+function buildInitialAtomsMap(
+  schema: ConfigSchema,
+  initialConfig: Config | undefined,
+  model: TSupportedEntitiesForScanConfiguration | Nullish
+) {
+  if (!schema.properties) return {};
+
+  const map: {
+    [key: string]:
+      | ReturnType<typeof atom<Record<string, ConfigValue>>>
+      | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
+  } = {};
+
+  const safeInitialConfig = initialConfig ?? {};
+
+  Object.entries(schema.properties).forEach(([k, v]) => {
+    if (isType(v)) return;
+
+    const safeInitialConfigforKey = safeInitialConfig[k] ?? {};
+
+    if (!isPlainObject(safeInitialConfigforKey)) return;
+
+    const initialConfigforKey = { ...safeInitialConfigforKey };
+
+    if (!isPlainObject(initialConfigforKey)) return;
+
+    if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
+      Object.entries(v.properties).forEach(([subkey, subValue]) => {
+        if (subkey in initialConfigforKey) return;
+
+        initialConfigforKey[subkey] = subValue.default ?? null;
+
+        if (
+          model &&
+          !isType(subValue) &&
+          subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
+        ) {
+          const formModelType = match(model)
+            .with({ type: EntityTypeDict.EMCellMesh }, () => 'EMCellMeshFromID')
+            .with(
+              { type: EntityTypeDict.Memodel },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
+            )
+            .with(
+              {
+                type: EntityTypeDict.Circuit,
+                scale: CircuitScaleDictionary.Single,
+              },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.MEModelWithSynapses]
+            )
+            .with(
+              { type: EntityTypeDict.Circuit },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Circuit]
+            )
+            .with(
+              { type: EntityTypeDict.CellMorphology },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
+            )
+            .otherwise(() => {
+              throw new Error(`Unsupported entity type: ${model.type}`);
+            });
+
+          initialConfigforKey[subkey] = {
+            type: formModelType,
+            id_str: model.id,
+          };
+        }
+        if (
+          model &&
+          !isType(subValue) &&
+          subValue.ui_element === ScanConfigUIElementDict.ModelIdentifierMultiple
+        ) {
+          const formModelType = match(model)
+            .with(
+              { type: EntityTypeDict.CellMorphology },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
+            )
+            .otherwise(() => {
+              throw new Error(`Unsupported entity type: ${model.type}`);
+            });
+          initialConfigforKey[subkey] = [
+            {
+              type: formModelType,
+              id_str: model.id,
+            },
+          ];
+        }
+      });
+
+      map[k] = atom<Record<string, ConfigValue>>(initialConfigforKey);
+    } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
+      map[k] = atom<Record<string, ConfigValue>>(initialConfigforKey);
+    } else {
+      map[k] = {};
+      Object.entries(initialConfigforKey).forEach(([subK, subV]) => {
+        if (!isPlainObject(subV) || isAtom(map[k])) return;
+        map[k][subK] = atom<Record<string, ConfigValue>>(subV);
+      });
+    }
+  });
+
+  return map;
+}
+
 export function useAtomsMap({
   schema,
-  initialConfig = {},
+  initialConfig,
   model,
 }: {
-  schema?: ConfigSchema;
+  schema: ConfigSchema;
   initialConfig?: Config;
   model: TSupportedEntitiesForScanConfiguration | Nullish;
 }) {
-  const [atomsMap, setAtomsMap] = useState<AtomsMap>({});
-
-  useEffect(() => {
-    if (!schema?.properties) return;
-
-    const map: {
-      [key: string]:
-        | ReturnType<typeof atom<Record<string, ConfigValue>>>
-        | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
-    } = {};
-
-    Object.entries(schema.properties).forEach(([k, v]) => {
-      if (isType(v)) return;
-
-      const initialConfigforKey = initialConfig[k] ?? {};
-
-      if (!isPlainObject(initialConfigforKey)) return;
-
-      if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
-        Object.entries(v.properties).forEach(([subkey, subValue]) => {
-          if (subkey in initialConfigforKey) return;
-          initialConfigforKey[subkey] = subValue.default ?? null;
-          if (
-            model &&
-            !isType(subValue) &&
-            subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier
-          ) {
-            const formModelType = match(model)
-              .with({ type: EntityTypeDict.EMCellMesh }, () => 'EMCellMeshFromID')
-              .with(
-                { type: EntityTypeDict.Memodel },
-                () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
-              )
-              .with(
-                {
-                  type: EntityTypeDict.Circuit,
-                  scale: CircuitScaleDictionary.Single,
-                },
-                () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.MEModelWithSynapses]
-              )
-              .with(
-                { type: EntityTypeDict.Circuit },
-                () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Circuit]
-              )
-              .with(
-                { type: EntityTypeDict.CellMorphology },
-                () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
-              )
-              .otherwise(() => {
-                throw new Error(`Unsupported entity type: ${model.type}`);
-              });
-
-            initialConfigforKey[subkey] = {
-              type: formModelType,
-              id_str: model.id,
-            };
-          }
-          if (
-            model &&
-            !isType(subValue) &&
-            subValue.ui_element === ScanConfigUIElementDict.ModelIdentifierMultiple
-          ) {
-            const formModelType = match(model)
-              .with(
-                { type: EntityTypeDict.CellMorphology },
-                () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
-              )
-              .otherwise(() => {
-                throw new Error(`Unsupported entity type: ${model.type}`);
-              });
-            initialConfigforKey[subkey] = [
-              {
-                type: formModelType,
-                id_str: model.id,
-              },
-            ];
-          }
-        });
-
-        map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initialConfigforKey);
-      } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
-        map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initialConfigforKey);
-      } else {
-        map[k] = {};
-        Object.entries(initialConfigforKey).forEach(([subK, subV]) => {
-          if (!isPlainObject(subV) || isAtom(map[k])) return;
-          map[k][subK] = atom<Record<string, ConfigValue>>(subV);
-        });
-      }
-    });
-
-    setAtomsMap(map);
-  }, [schema, model, initialConfig]);
+  const [atomsMap, setAtomsMap] = useState<AtomsMap>(() =>
+    buildInitialAtomsMap(schema, initialConfig, model)
+  );
 
   return [atomsMap, setAtomsMap] as const;
 }
