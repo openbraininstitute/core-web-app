@@ -175,12 +175,11 @@ function Form({ onPrevious }: Props) {
       setSubscribing(false);
     } catch (error) {
       const code = get(error, 'cause.code', 'DEFAULT');
-      const serverError = get(error, 'cause.message', messages.paymentProcessingError);
       const errors = {
         ENTITY_ALREADY_EXISTS: messages.subscriptionPaymentErrorEntityAlreadyExists,
         ENTITY_NOT_CREATED: messages.subscriptionPaymentErrorEntityNotCreated,
         ENTITY_NOT_FOUND: messages.subscriptionPaymentErrorEntityNotFound,
-        PAYMENT_ERROR: serverError,
+        PAYMENT_ERROR: `We couldn’t process your payment because the billing country does not match the country associated with your payment method. Please verify your billing details and try again.`,
         DEFAULT: messages.paymentProcessingError,
       };
       const description = get(errors, code, messages.paymentProcessingError);

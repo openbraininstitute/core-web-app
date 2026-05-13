@@ -170,8 +170,7 @@ export function StandalonePaymentForm({
       successNotify({
         message: messages.paymentSuccess
           .replace('$$credits', credits.toString())
-          .replace('$$amount', (data.amount_total / 100).toString())
-          .replace('$$currency', data.currency.toUpperCase()),
+          .replace('$$price', formatMinorCurrency(data.amount_total, data.currency)),
         ...notificationConfig,
       });
       const accountingKey = keyBuilder.accounting({ virtualLabId });
@@ -184,12 +183,11 @@ export function StandalonePaymentForm({
       setIsPaying(false);
     } catch (error) {
       const code = get(error, 'cause.code', 'DEFAULT');
-      const serverError = get(error, 'cause.message', messages.paymentProcessingError);
       const errors = {
         ENTITY_ALREADY_EXISTS: messages.paymentProcessingErrorEntityAlreadyExists,
         ENTITY_NOT_CREATED: messages.paymentProcessingErrorEntityNotCreated,
         ENTITY_NOT_FOUND: messages.paymentProcessingErrorEntityNotFound,
-        PAYMENT_ERROR: serverError,
+        PAYMENT_ERROR: `We couldn’t process your payment because the billing country does not match the country associated with your payment method. Please verify your billing details and try again.`,
         DEFAULT: messages.paymentProcessingError,
       };
       const description = get(errors, code, messages.paymentProcessingError);

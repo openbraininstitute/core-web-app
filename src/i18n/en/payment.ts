@@ -4,7 +4,7 @@ export const messages = {
     'We couldn’t save your payment method. Please try again, or use a different card.',
   paymentProcessingErrorFallback:
     "We couldn't process your payment. Please check your card details and try again.",
-  paymentSuccess: `Successfully purchased $$credits credits for $$amount $$currency`,
+  paymentSuccess: `Successfully purchased $$credits credits for $$price`,
   paymentProcessingError:
     'There was a problem processing your payment. Please try again or contact support if the issue persists.',
   paymentProcessingErrorEntityAlreadyExists: 'This payment has already been processed',
