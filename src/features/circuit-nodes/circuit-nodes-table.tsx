@@ -31,23 +31,19 @@ export default function CircuitNodesTable({ circuit, className, onModeChange }: 
 
   const [view, setView] = useState<ViewMode>('nodes');
   const [mode, setMode] = useState<DisplayMode>('collapsed');
-  const [populationName, setPopulationName] = useState<string | undefined>();
+  const [selectedPopulationName, setSelectedPopulationName] = useState<string | undefined>();
 
   useEffect(() => {
     onModeChange?.(mode);
   }, [mode, onModeChange]);
 
-  useEffect(() => {
-    if (!config) return;
-    if (populationName && config.nodes.some((p) => p.name === populationName)) return;
-    const next = pickDefaultPopulation(config.nodes);
-    setPopulationName(next?.name);
-  }, [config, populationName]);
+  const population = useMemo(() => {
+    if (!config) return undefined;
+    const current = config.nodes.find((p) => p.name === selectedPopulationName);
+    return current ?? pickDefaultPopulation(config.nodes);
+  }, [config, selectedPopulationName]);
 
-  const population = useMemo(
-    () => config?.nodes.find((p) => p.name === populationName),
-    [config, populationName]
-  );
+  const populationName = population?.name;
 
   const enabled = mode !== 'collapsed' && view === 'nodes';
 
@@ -83,7 +79,7 @@ export default function CircuitNodesTable({ circuit, className, onModeChange }: 
         onViewChange={setView}
         populations={config?.nodes ?? []}
         populationName={populationName}
-        onPopulationChange={setPopulationName}
+        onPopulationChange={setSelectedPopulationName}
         mode={mode}
         onModeChange={setMode}
       />
