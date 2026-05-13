@@ -33,20 +33,22 @@ export function useAnalysisNotebookTemplatePipeline({
   const { projectId, virtualLabId } = useWorkspace();
 
   const invalidateNotebookQueries = () =>
-    Promise.all([
-      queryClient.invalidateQueries({
-        predicate: (query) =>
-          query.queryKey[0] === `data-entity-count-${ExtendedEntitiesTypeDict.Notebook}`,
-      }),
-      queryClient.invalidateQueries({
-        predicate: (query) =>
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const firstKeySegment = query.queryKey[0];
+
+        const matchesEntityCount =
+          firstKeySegment === `data-entity-count-${ExtendedEntitiesTypeDict.Notebook}`;
+
+        const matchesExtendedEntity =
           get(
-            (query.queryKey as ExtendedEntityTypeQueryKey)[0],
+            firstKeySegment as ExtendedEntityTypeQueryKey[0],
             'context.extendedEntityType'
-          ) === ExtendedEntitiesTypeDict.Notebook,
-      }),
-      queryClient.invalidateQueries(),
-    ]);
+          ) === ExtendedEntitiesTypeDict.Notebook;
+
+        return matchesEntityCount || matchesExtendedEntity;
+      },
+    });
 
   const createNotebookAsync = useMutation({
     mutationFn: (values: TAnalysisNotebookTemplateForm) =>
