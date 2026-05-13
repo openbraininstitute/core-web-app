@@ -14,6 +14,9 @@ import type {
 
 const SYNTHETIC_NODE_ID = 'node_id';
 
+const LOADED_COLUMN_CACHE_SIZE = 12;
+const VIEW_CACHE_SIZE = 8;
+
 type CategoricalHandle = {
   kind: 'categorical';
   name: string;
@@ -96,8 +99,8 @@ export class NodesSession {
   rowCount: number;
   columns: ColumnMeta[];
   private columnIndex: Map<string, ColumnHandle>;
-  private loaded: Map<string, LoadedColumn>;
-  private viewCache: Map<string, Uint32Array>;
+  private loaded: LruMap<string, LoadedColumn>;
+  private viewCache: LruMap<string, Uint32Array>;
 
   constructor(filename: string, populationKey: string) {
     this.filename = filename;
@@ -173,8 +176,8 @@ export class NodesSession {
     this.columnIndex.set(SYNTHETIC_NODE_ID, syntheticHandle);
     for (const h of handles) this.columnIndex.set(h.name, h);
 
-    this.loaded = new Map();
-    this.viewCache = new Map();
+    this.loaded = new LruMap(LOADED_COLUMN_CACHE_SIZE);
+    this.viewCache = new LruMap(VIEW_CACHE_SIZE);
   }
 
   close(): void {
@@ -539,6 +542,37 @@ function matchNumber(value: number, f: NumberFilter): boolean {
       return value >= lo && value <= hi;
     })
     .exhaustive();
+}
+
+class LruMap<K, V> {
+  private map = new Map<K, V>();
+  constructor(private capacity: number) {}
+
+  get(key: K): V | undefined {
+    const value = this.map.get(key);
+    if (value === undefined) return undefined;
+    this.map.delete(key);
+    this.map.set(key, value);
+    return value;
+  }
+
+  set(key: K, value: V): void {
+    if (this.map.has(key)) this.map.delete(key);
+    this.map.set(key, value);
+    while (this.map.size > this.capacity) {
+      const oldest = this.map.keys().next().value as K | undefined;
+      if (oldest === undefined) break;
+      this.map.delete(oldest);
+    }
+  }
+
+  has(key: K): boolean {
+    return this.map.has(key);
+  }
+
+  clear(): void {
+    this.map.clear();
+  }
 }
 
 function decodeSliceForPage(handle: ColumnHandle, sliced: unknown): (string | number)[] {
