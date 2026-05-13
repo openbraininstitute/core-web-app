@@ -5,6 +5,7 @@ import { useQueries } from '@tanstack/react-query';
 import { buildTaskLogsStreamQueryOptions } from '@/features/task-logs-stream/hooks/use-stream-query';
 
 import type { TLogLevel } from '@/features/task-logs-stream/types';
+import type { WorkspaceContext } from '@/types/common';
 
 export interface ITaskLogsStreamWarmupJob {
   jobId: string;
@@ -32,14 +33,12 @@ export interface ITaskLogsStreamWarmupJob {
  */
 export function useTaskLogsStreamsWarmup({
   jobs,
-  virtualLabId,
-  projectId,
+  workspace,
   enabled,
   debugLog,
 }: {
   jobs: ITaskLogsStreamWarmupJob[];
-  virtualLabId: string;
-  projectId: string;
+  workspace: WorkspaceContext;
   enabled: boolean;
   debugLog: (params: { level: TLogLevel; message: string; payload?: unknown }) => void;
 }) {
@@ -47,8 +46,7 @@ export function useTaskLogsStreamsWarmup({
     queries: jobs.map(({ jobId, configId }) =>
       buildTaskLogsStreamQueryOptions({
         jobId,
-        virtualLabId,
-        projectId,
+        workspace,
         configId,
         enabled,
         debugLog,

@@ -1,14 +1,13 @@
 'use client';
 
 import isString from 'es-toolkit/compat/isString';
-
 import {
-  useCallback,
-  useRef,
-  useState,
   type ChangeEvent,
   type DragEvent,
   type InputHTMLAttributes,
+  useCallback,
+  useRef,
+  useState,
 } from 'react';
 
 import { messages } from '@/i18n/en/upload';
@@ -120,9 +119,7 @@ export const useFileUpload = (
 
         const isAccepted = acceptedTypes.some((type) => {
           const normalisedType =
-            !type.startsWith('.') && !type.includes('/')
-              ? `.${type.toLowerCase()}`
-              : type;
+            !type.startsWith('.') && !type.includes('/') ? `.${type.toLowerCase()}` : type;
 
           if (normalisedType.startsWith('.')) {
             return fileExtension.toLowerCase() === normalisedType.toLowerCase();

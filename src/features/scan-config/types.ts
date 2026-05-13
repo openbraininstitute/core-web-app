@@ -405,6 +405,8 @@ export function isType(v: TRootElement | Type | TBlockElement): v is Type {
 export const ActivityCustomFileRenderer = {
   MiniDetailView: 'mini-detail-view',
   Default: 'default',
+  TaskConfigurationViewer: 'task-configuration-viewer',
+  TaskLogsViewer: 'task-logs-viewer',
 } as const;
 
 export type TActivityCustomFileRenderer =
