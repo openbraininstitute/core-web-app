@@ -15,6 +15,7 @@ import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
+import { uploadFilesAndCreateParts } from '../api/upload';
 import { AiAssistant, useAiAssistant } from '../assistant';
 import { fetchMessagesFromDB } from '../assistant/manager/message';
 
@@ -205,9 +206,23 @@ export function useServiceAiAgentChat(threadId: string) {
   }, [chat.status, setIsChatReady]);
 
   const sendMessage = useCallback(
-    (text: string) => {
+    async (text: string, files?: File[]) => {
       AiAssistant.isEmptyThread.set(false);
-      chat.sendMessage({ text });
+
+      let fileUIParts: import('ai').FileUIPart[] | undefined;
+      if (files && files.length > 0 && accessToken && threadId) {
+        try {
+          fileUIParts = await uploadFilesAndCreateParts(files, accessToken, threadId);
+        } catch {
+          // If upload fails, send without files
+        }
+      }
+
+      chat.sendMessage({
+        text,
+        ...(fileUIParts && fileUIParts.length > 0 ? { files: fileUIParts } : {}),
+      });
+
       if (chat.messages.length === 0) {
         try {
           serviceAiAgentThreadSuggestTitle({

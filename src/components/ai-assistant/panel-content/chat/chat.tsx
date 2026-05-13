@@ -151,9 +151,9 @@ export default function Chat({
   }, [clearDiffBarData, setActiveDiffMessageId, clearDiffState]);
 
   // Scrolling + autoscroll control when new message.
-  const handlePrompt = (content: string) => {
+  const handlePrompt = (content: string, files?: File[]) => {
     setAutoScroll(true);
-    sendMessage(content);
+    sendMessage(content, files);
     scrollToBottom();
     requestAnimationFrame(scrollToBottom);
   };

@@ -23,8 +23,15 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary-9) 10%, transparent);
 }
 
-.prompt > .input {
+.inputWrapper {
   flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  cursor: text;
+}
+
+.prompt > .inputWrapper > .input {
   min-height: 1.5em;
   max-height: 10em;
   color: #000;
@@ -32,7 +39,7 @@
   overflow: hidden;
 }
 
-.prompt > .input > .content {
+.prompt > .inputWrapper > .input > .content {
   margin: 0;
   padding: 0 0 0 0.3em;
   opacity: 0;
@@ -40,11 +47,11 @@
   word-break: break-word;
 }
 
-.prompt > .input > textarea,
-.prompt > .input > textarea:hover,
-.prompt > .input > textarea:focus,
-.prompt > .input > textarea:focus-within,
-.prompt > .input > textarea:focus-visible {
+.prompt > .inputWrapper > .input > textarea,
+.prompt > .inputWrapper > .input > textarea:hover,
+.prompt > .inputWrapper > .input > textarea:focus,
+.prompt > .inputWrapper > .input > textarea:focus-within,
+.prompt > .inputWrapper > .input > textarea:focus-visible {
   border: none;
   outline: none;
   background-color: transparent;
@@ -60,17 +67,21 @@
   word-break: break-word;
 }
 
-.prompt > button {
-  flex: 0 0 auto;
+.actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25em;
+  flex-shrink: 0;
+}
+
+.actions > button:not(.stopButton):not(.attachButton) {
   transition: background-color 0.2s ease;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.prompt > button:not(.stopButton) {
   background-color: var(--color-neutral-8);
   color: var(--color-neutral-3);
   border-radius: 50%;
@@ -79,24 +90,50 @@
   height: 2.5em;
 }
 
-.prompt > button:not(.stopButton):not([disabled]) {
+.actions > button:not(.stopButton):not(.attachButton):not([disabled]) {
   background-color: var(--color-primary-8);
   color: var(--color-neutral-9);
 }
 
-.prompt > button:not(.stopButton):hover:not([disabled]) {
+.actions > button:not(.stopButton):not(.attachButton):hover:not([disabled]) {
   background-color: var(--color-primary-6);
 }
 
-.prompt > button:not(.stopButton)[disabled] {
+.actions > button:not(.stopButton):not(.attachButton)[disabled] {
   cursor: default;
   color: var(--color-neutral-9);
   background-color: color-mix(in srgb, var(--color-primary-6) 10%, var(--color-neutral-7));
 }
 
+.attachButton {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4em;
+  border-radius: 50%;
+  font-size: 1.25em;
+  color: var(--color-neutral-3);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.attachButton:hover {
+  background-color: var(--color-neutral-7);
+  color: var(--color-neutral-1);
+}
+
 .stopButton {
   border-radius: 50%;
   background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 2.5em;
   height: 2.5em;
   transition:
@@ -110,6 +147,10 @@
   transition:
     box-shadow 0.15s ease,
     background-color 0.15s ease;
+}
+
+.hiddenFileInput {
+  display: none;
 }
 
 .spinner {
