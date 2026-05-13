@@ -1,9 +1,10 @@
 import { RiSearchLine } from '@remixicon/react';
 import { useGridFilter } from 'ag-grid-react';
-import { Checkbox, Input } from 'antd';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Input } from 'antd';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { useDebouncedCallback } from '@/hooks/hooks';
+import { Checkbox } from '@/ui/molecules/checkbox';
 
 import type { CustomFilterProps } from 'ag-grid-react';
 import type { InputRef } from 'antd';
@@ -17,7 +18,9 @@ type Params = CustomFilterProps<unknown, unknown, SetFilter | null> & {
   library: string[];
 };
 
-export function CategoricalFilter({ model, onModelChange, library }: Params) {
+export function CategoricalFilter({ model, onModelChange, library: rawLibrary }: Params) {
+  const idPrefix = useId();
+  const library = useMemo(() => [...rawLibrary].sort((a, b) => a.localeCompare(b)), [rawLibrary]);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(() => new Set(model?.values ?? library));
 
@@ -116,21 +119,25 @@ export function CategoricalFilter({ model, onModelChange, library }: Params) {
         {visible.length === 0 ? (
           <div className={styles.filterEmpty}>No matches</div>
         ) : (
-          visible.map((v) => (
-            <Checkbox
-              key={v}
-              checked={selected.has(v)}
-              onChange={(e) => {
-                const next = new Set(selected);
-                if (e.target.checked) next.add(v);
-                else next.delete(v);
-                update(next);
-              }}
-              title={v}
-            >
-              <span className={styles.filterLabel}>{v}</span>
-            </Checkbox>
-          ))
+          visible.map((v) => {
+            const id = `${idPrefix}-${v}`;
+            return (
+              <label key={v} htmlFor={id} className={styles.filterRow} title={v}>
+                <Checkbox
+                  id={id}
+                  className="border-primary-9 data-[state=checked]:bg-primary-9 data-[state=checked]:border-primary-9 data-[state=checked]:text-white"
+                  checked={selected.has(v)}
+                  onCheckedChange={(checked) => {
+                    const next = new Set(selected);
+                    if (checked === true) next.add(v);
+                    else next.delete(v);
+                    update(next);
+                  }}
+                />
+                <span className={styles.filterLabel}>{v}</span>
+              </label>
+            );
+          })
         )}
       </div>
     </div>

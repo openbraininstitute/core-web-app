@@ -16,7 +16,7 @@ import type { DisplayMode, NodePopulation, ViewMode } from '@/features/circuit-n
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
 const triggerCls = cn(
-  'h-auto rounded-full border-0 bg-white px-5 py-2.5',
+  'h-auto rounded-full border-0 bg-white px-5 py-1',
   'text-primary-9 text-sm font-bold',
   'shadow-[6px_6px_14px_0_#0000000f,-8px_-8px_20px_0_#ffffffd1]',
   'focus-visible:ring-0 focus-visible:border-0'
@@ -24,7 +24,7 @@ const triggerCls = cn(
 
 const contentCls = 'bg-white border-gray-200';
 
-const itemCls = cn('text-primary-9 text-sm', 'data-[state=checked]:font-bold');
+const itemCls = 'text-primary-9 text-sm data-[state=checked]:font-bold';
 
 type Props = {
   view: ViewMode;
