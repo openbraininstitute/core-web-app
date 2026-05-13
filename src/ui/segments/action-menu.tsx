@@ -16,6 +16,7 @@ import NextLink from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
 
 import { deleteCellMorphology } from '@/api/entitycore/queries/experimental/cell-morphology';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
@@ -128,9 +129,13 @@ export default function ActionMenu({
   });
 
   const isSimulatable =
-    typeof entityType.isSimulatable === 'boolean'
+    (typeof entityType.isSimulatable === 'boolean'
       ? entityType.isSimulatable
-      : 'scale' in entity && entityType.isSimulatable(entity.scale);
+      : 'scale' in entity && entityType.isSimulatable(entity.scale)) &&
+    !(
+      entityType.type === EntityTypeDict.Circuit &&
+      (entity as ICircuit).has_electrical_cell_models === false
+    );
 
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-base font-bold">
