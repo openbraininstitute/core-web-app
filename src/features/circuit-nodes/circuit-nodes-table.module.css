@@ -4,7 +4,8 @@
   width: 100%;
   min-height: 0;
   background: #fff;
-  border-top: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1rem;
 }
 
 .mode_collapsed {
@@ -22,18 +23,27 @@
 }
 
 .toolbar {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.7rem;
+  padding-right: 80px;
+  padding-bottom: 0.7rem;
   border-bottom: 1px solid #f1f5f9;
   flex: 0 0 auto;
+  min-width: 0;
 }
 
 .toolbarGroup {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.toolbarGroupGrow {
+  flex: 1 1 auto;
 }
 
 .toolbarLabel {
@@ -43,20 +53,23 @@
   color: var(--color-label);
 }
 
-.toolbarSpacer {
-  flex: 1 1 auto;
-}
-
 .viewSelect {
-  min-width: 140px;
+  min-width: 84px;
 }
 
 .populationSelect {
-  min-width: 280px;
+  width: 100%;
+  min-width: 0;
+  max-width: 252px;
 }
 
 .modeButtons {
+  position: absolute;
+  top: 0;
+  right: 0.7rem;
+  height: 28px;
   display: inline-flex;
+  align-items: center;
   gap: 0;
 }
 
@@ -98,7 +111,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.375rem 0.75rem;
+  padding: 0.375rem 0;
   font-size: 0.8125rem;
   color: var(--color-label);
   border-bottom: 1px solid #f1f5f9;

@@ -68,7 +68,7 @@ export function NodesToolbar({
         </Select>
       </div>
 
-      <div className={styles.toolbarGroup}>
+      <div className={cn(styles.toolbarGroup, styles.toolbarGroupGrow)}>
         <span className={styles.toolbarLabel}>Population</span>
         <Select
           value={populationName}
@@ -76,7 +76,7 @@ export function NodesToolbar({
           disabled={populations.length === 0}
         >
           <SelectTrigger
-            className={cn(triggerCls, styles.populationSelect)}
+            className={cn(triggerCls, styles.populationSelect, 'w-full min-w-0')}
             icon={<RiArrowDownSLine className="text-primary-9 size-4 opacity-100" />}
           >
             <SelectValue />
@@ -90,8 +90,6 @@ export function NodesToolbar({
           </SelectContent>
         </Select>
       </div>
-
-      <div className={styles.toolbarSpacer} />
 
       <div className={styles.modeButtons}>
         <ModeButton
