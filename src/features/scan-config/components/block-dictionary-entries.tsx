@@ -330,6 +330,7 @@ export default function BlockDictionaryEntries({
                                       className="ml-3"
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        setSelectedRootElement(rootElement);
                                         setSelectedEntry(subkey);
                                         setIsEditingKey(true);
                                         setNewKey(subkey);
@@ -360,12 +361,14 @@ export default function BlockDictionaryEntries({
                                 <DeleteOutlined
                                   className="cursor-pointer"
                                   onClick={(e) => {
+                                    e.stopPropagation();
+
                                     setEditing(false);
 
-                                    const selectedTabAtoms = atomsMap[selectedRootElement];
+                                    const currentTabAtoms = atomsMap[rootElement];
 
-                                    if (!isAtom(selectedTabAtoms)) {
-                                      delete selectedTabAtoms[subkey];
+                                    if (!isAtom(currentTabAtoms)) {
+                                      delete currentTabAtoms[subkey];
 
                                       // Initialize case
                                       const configInitialize = config.initialize;
@@ -420,7 +423,7 @@ export default function BlockDictionaryEntries({
                                       setAtomsMap({
                                         ...atomsMap,
                                         [selectedRootElement]: {
-                                          ...selectedTabAtoms,
+                                          ...currentTabAtoms,
                                         },
                                       });
                                     }
