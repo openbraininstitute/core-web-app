@@ -14,7 +14,7 @@ const PATHS: Record<DisplayMode, { d: string; label: string }> = {
   full: { d: 'M1.067 1.066 H13.334 V14.933 H1.067 Z', label: 'Full height' },
 };
 
-export default function CircuitNodesModeIcon({ mode, className, style, size = 16 }: Props) {
+export default function ModeIcon({ mode, className, style, size = 16 }: Props) {
   const { d, label } = PATHS[mode];
   return (
     <svg

@@ -1,7 +1,6 @@
 import { RiArrowDownSLine } from '@remixicon/react';
 import { Tooltip } from 'antd';
 
-import CircuitNodesModeIcon from '@/components/icons/circuit-nodes-mode';
 import {
   Select,
   SelectContent,
@@ -10,6 +9,8 @@ import {
   SelectValue,
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
+
+import ModeIcon from './mode-icon';
 
 import type { DisplayMode, NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
 
@@ -98,21 +99,21 @@ export function NodesToolbar({
           onClick={() => onModeChange('collapsed')}
           label="Collapse"
         >
-          <CircuitNodesModeIcon mode="collapsed" />
+          <ModeIcon mode="collapsed" />
         </ModeButton>
         <ModeButton
           active={mode === 'half'}
           onClick={() => onModeChange('half')}
           label="Half height"
         >
-          <CircuitNodesModeIcon mode="half" />
+          <ModeIcon mode="half" />
         </ModeButton>
         <ModeButton
           active={mode === 'full'}
           onClick={() => onModeChange('full')}
           label="Full height"
         >
-          <CircuitNodesModeIcon mode="full" />
+          <ModeIcon mode="full" />
         </ModeButton>
       </div>
     </div>
