@@ -12,7 +12,6 @@ import {
   type IBlockSingle,
   type IRootBlockUnion,
   ScanConfigUIElementDict,
-  type SchemaName,
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
@@ -24,7 +23,6 @@ import type { Nullish } from '@/utils/type';
 import styles from '@/features/scan-config/scan-config.module.css';
 
 type MiddleProps = {
-  schemaName: SchemaName;
   schema: ConfigSchema;
   selectedRootElement: string;
   editing: boolean;
@@ -44,7 +42,6 @@ type MiddleProps = {
 };
 
 export default function Middle({
-  schemaName,
   schema,
   selectedRootElement,
   atomsMap,
@@ -85,7 +82,6 @@ export default function Middle({
           setAtomsMap={setAtomsMap}
           selectedEntry={selectedEntry}
           setSelectedEntry={setSelectedEntry}
-          schemaName={schemaName}
           blockDictionarySchema={selectedSchema}
           selectedRootElement={selectedRootElement}
           onNewBlockClick={onNewBlockClick}
@@ -98,7 +94,6 @@ export default function Middle({
         isAtom(atomsMap[selectedRootElement]) && (
           <Block
             schema={schema}
-            schemaName={schemaName}
             disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
             config={config}
             blockSchema={selectedSchema}
@@ -114,7 +109,6 @@ export default function Middle({
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockUnion && (
         <BlockUnion
           schema={schema}
-          schemaName={schemaName}
           blockUnionSchema={selectedSchema}
           selectedRootElement={selectedRootElement}
           atomsMap={atomsMap}

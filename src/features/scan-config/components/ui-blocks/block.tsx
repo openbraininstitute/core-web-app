@@ -22,7 +22,6 @@ import type { TSchemaMappingConfiguration } from '@/features/scan-config/compone
 import type { Nullish } from '@/utils/type';
 
 export default function Block({
-  schemaName,
   schema,
   disabled,
   blockSchema,
@@ -35,7 +34,6 @@ export default function Block({
   selectedEntry,
   errorPathPrefix,
 }: {
-  schemaName: SchemaName;
   schema: ConfigSchema;
   disabled: boolean;
   config: Config;
@@ -140,10 +138,8 @@ export default function Block({
                               k={k}
                               disabled={disabled}
                               paramSchema={blockElementSchema}
-                              value={value}
                               config={config}
                               schema={schema}
-                              schemaName={schemaName}
                               entity={entity}
                               schemaMappingConfig={schemaMappingConfig}
                               state={state}

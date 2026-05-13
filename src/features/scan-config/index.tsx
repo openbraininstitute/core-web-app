@@ -107,7 +107,7 @@ export function ScanConfiguration({
 
   // TODO: discussed with @James to refactor this endpoint to purpose-based endpoints
   // one for usage and one for property mapping
-  const { data: schemaMappingConfig, isLoading: loadingConfiguration } =
+  const { data: schemaMappingConfig, isPending: loadingConfiguration } =
     useSchemaMappingConfiguration({
       entityId: entity?.id,
       workspace: { virtualLabId, projectId },

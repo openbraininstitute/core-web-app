@@ -18,7 +18,6 @@ import {
   type ConfigValue,
   type IBlockDictionary,
   ScanConfigUIElementDict,
-  type SchemaName,
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
@@ -32,7 +31,6 @@ import { cn } from '@/utils/css-class';
 import type { Nullish } from '@/utils/type';
 
 type Props = {
-  schemaName: SchemaName;
   schema: ConfigSchema;
   blockDictionarySchema: IBlockDictionary;
   selectedRootElement: string;
@@ -52,7 +50,6 @@ type Props = {
 };
 
 export default function BlockDictionary({
-  schemaName,
   schema,
   blockDictionarySchema,
   selectedRootElement,
@@ -107,7 +104,6 @@ export default function BlockDictionary({
 
     return (
       <Block
-        schemaName={schemaName}
         schema={schema}
         key={`${selectedRootElement}_${selectedEntry}`}
         disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
