@@ -2,7 +2,8 @@ import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 import type { VlmResponse } from './common';
 
 /** `GET .../projects/:id` — allowed `expand` query values. */
-export type ProjectExpandParam = 'admin' | 'virtual_lab';
+export type TGetProjectExpandParam = 'admins' | 'virtual_lab';
+export type TCreateProjectExpandParam = 'balance' | 'virtual_lab';
 
 /** Body of `VliAppResponse` for single-project detail (`ProjectDetailOut`). */
 export type ProjectDetailOut = {

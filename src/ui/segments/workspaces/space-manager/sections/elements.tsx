@@ -99,7 +99,7 @@ export function PanelTabs({
   return (
     <nav
       aria-label="Workspace manager sections"
-      className="flex min-w-0 items-center gap-3"
+      className="flex min-w-0 items-center gap-1"
       data-testid="workspace-manager-section-tabs"
       id="workspace-manager-section-tabs"
     >

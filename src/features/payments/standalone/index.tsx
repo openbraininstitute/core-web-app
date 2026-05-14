@@ -17,12 +17,12 @@ export function StripePaymentFlow({
 }) {
   const { data: virtualLabData, isLoading } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
-    queryFn: () => getVirtualLab(virtualLabId),
+    queryFn: () => getVirtualLab({ id: virtualLabId }),
     enabled: Boolean(virtualLabId),
   });
   const { isVirtualLabAdmin } = useUserPermissions({ virtualLabId, projectId: undefined });
 
-  if (!isLoading && !virtualLabData?.data?.virtual_lab.email_verified && isVirtualLabAdmin) {
+  if (!isLoading && !virtualLabData?.email_verified && isVirtualLabAdmin) {
     return <EmailVerification virtualLabId={virtualLabId} />;
   }
 

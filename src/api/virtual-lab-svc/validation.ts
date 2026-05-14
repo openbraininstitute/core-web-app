@@ -25,16 +25,6 @@ export type TUserRole = z.infer<typeof UserRoleSchema>;
 export const ProjectPayloadSchema = z.object({
   name: z.string().describe('Name of the project'),
   description: z.string().optional().describe('Optional description of the project'),
-  include_members: z
-    .array(
-      z.object({
-        id: z.uuid().optional().describe('ID of the member to be included'),
-        email: z.email().describe('Email of the member to be included'),
-        role: UserRoleSchema.describe('Role assigned to the member'),
-      })
-    )
-    .nullable()
-    .describe('List of members to be included in the project'),
 });
 export type TProjectPayload = z.infer<typeof ProjectPayloadSchema>;
 

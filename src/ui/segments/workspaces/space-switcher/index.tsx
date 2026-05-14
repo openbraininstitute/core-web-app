@@ -9,10 +9,7 @@ import { type ComponentProps, useCallback, useMemo, useRef, useState } from 'rea
 
 import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import {
-  getSelfVirtualLab,
-  listTenantVirtualLabs,
-} from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { getSelfVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { UserFilled } from '@/components/icons/buttons';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -74,6 +71,11 @@ export function SpaceSwitcher({ className }: Props) {
       data: { mode: 'select-virtual-lab' },
     });
 
+  const labFilters = {
+    scope: 'all',
+    order_by: 'owner',
+    order_direction: 'asc',
+  } as const;
   const [
     { data: myLab, isLoading: myLabLoading },
     { data: virtualLabs, isLoading: labsLoading },
@@ -88,11 +90,9 @@ export function SpaceSwitcher({ className }: Props) {
       },
       {
         queryKey: keyBuilder.listTenantVirtualLabs({
-          order_by: 'scope',
-          order_direction: 'asc',
+          filters: labFilters,
         }),
-        queryFn: async () =>
-          await listTenantVirtualLabs({ order_by: 'scope', order_direction: 'asc' }),
+        queryFn: async () => await listVirtualLabs({ filters: labFilters }),
         staleTime: Number.POSITIVE_INFINITY,
         gcTime: Number.POSITIVE_INFINITY,
       },
@@ -109,12 +109,15 @@ export function SpaceSwitcher({ className }: Props) {
     ? `${user.profile.first_name} ${user.profile.last_name}`
     : (user?.profile.preferred_username ?? user?.profile.email);
 
-  const labs = virtualLabs?.data?.data;
+  const labs = virtualLabs?.data;
   const myLabId = myLab?.data?.id;
 
   const { isLoading: projectsLoading, data: projects } = useQuery({
     queryKey: keyBuilder.listWorkspaceProjects(workspaceProjectList),
-    queryFn: async () => await listProjects({ ...workspaceProjectList, page: 1, size: 40 }),
+    queryFn: async () =>
+      // TODO: do not fetch by fixed page_size
+      // make it loop through pages until it gets all projects
+      await listProjects({ ...workspaceProjectList, pagination: { page: 1, page_size: 40 } }),
     enabled: !!virtualLabId,
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: Number.POSITIVE_INFINITY,
@@ -201,9 +204,8 @@ export function SpaceSwitcher({ className }: Props) {
 
   const currentProjectName = resolveCurrentProjectName({
     projectId,
-    listedProjectName:
-      projects?.data?.data?.find((project) => project.id === projectId)?.name ?? null,
-    activeProjectName: activeProject?.data?.name ?? null,
+    listedProjectName: projects?.data?.find((project) => project.id === projectId)?.name ?? null,
+    activeProjectName: activeProject?.name ?? null,
   });
 
   const currentProjectLabel = currentProjectName ?? (projectId ? 'Project' : 'Select project');
@@ -411,7 +413,7 @@ export function SpaceSwitcher({ className }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.05, duration: 0.1 }}
-                className="mt-auto p-4 flex items-center justify-end"
+                className="mt-auto p-4 pb-1 flex items-center justify-end"
               >
                 <GhostRoundedIconButton
                   label="Create new project"

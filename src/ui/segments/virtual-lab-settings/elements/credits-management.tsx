@@ -36,7 +36,9 @@ export function CreditsManagement({
       },
       {
         queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
-        queryFn: () => listProjects({ virtualLabId, page: 1, size: 40 }),
+        // TODO: do not fetch by fixed page_size
+        // make it loop through pages until it gets all projects
+        queryFn: () => listProjects({ virtualLabId, pagination: { page: 1, page_size: 40 } }),
         enabled: isAdmin,
       },
     ],
@@ -51,7 +53,7 @@ export function CreditsManagement({
         isLoading: loading,
         balanceMap: balanceList,
         virtualLabBalance: LabBalance,
-        projects: projectsQuery.data?.data?.data ?? [],
+        projects: projectsQuery.data?.data ?? [],
       };
     },
   });

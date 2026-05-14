@@ -1,6 +1,7 @@
 'use client';
 
-import { ArrowLeftOutlined, ExportOutlined, LoadingOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, LoadingOutlined } from '@ant-design/icons';
+import { RiArrowLeftRightLine, RiCloseLine } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
@@ -9,7 +10,7 @@ import { getUserActiveSubscription } from '@/api/virtual-lab-svc/queries/subscri
 import { SubscriptionStatus } from '@/api/virtual-lab-svc/queries/types';
 import { CheckoutFlow } from '@/components/VirtualLab/create-entity-flows/checkout';
 import { DowngradeFree } from '@/components/VirtualLab/create-entity-flows/checkout/downgrade';
-import { SubscriptionCheckoutError } from '@/components/VirtualLab/create-entity-flows/subscription/elements';
+import { ErrorMinimal } from '@/ui/molecules/feedback-card';
 import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { keyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
@@ -106,14 +107,14 @@ function CurrentSubscriptionCard({
       <div className="mt-8 flex flex-wrap items-center justify-end gap-3">
         {isPaid && !isCanceling ? (
           <GhostRoundedIconButton
-            icon={<ExportOutlined />}
+            icon={<RiCloseLine />}
             label="Downgrade plan"
             classNames={{ label: 'font-semibold' }}
             onClick={onDowngrade}
           />
         ) : null}
         <GhostRoundedIconButton
-          icon={<ExportOutlined />}
+          icon={<RiArrowLeftRightLine />}
           label="Change subscription"
           classNames={{ label: 'font-semibold' }}
           onClick={onChangeSubscription}
@@ -126,12 +127,14 @@ function CurrentSubscriptionCard({
 function SubscriptionTiersView({
   data,
   onBack,
+  onExpandedChange,
 }: {
   data: LoadedSubscriptionResponse;
   onBack: () => void;
+  onExpandedChange: ((expanded: boolean) => void) | undefined;
 }) {
   return (
-    <section className="flex min-h-full h-full flex-col overflow-hidden w-full rounded-2xl bg-white pb-2 px-4 pt-0">
+    <section className="flex min-h-full h-full flex-col overflow-hidden w-full rounded-2xl bg-white pb-5 px-4 pt-0">
       <div className="shrink-0 pt-5">
         <GhostRoundedIconButton
           icon={<ArrowLeftOutlined />}
@@ -143,7 +146,7 @@ function SubscriptionTiersView({
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden h-full">
-        <CheckoutFlow data={data} />
+        <CheckoutFlow data={data} onExpandedChange={onExpandedChange} />
       </div>
     </section>
   );
@@ -151,8 +154,19 @@ function SubscriptionTiersView({
 
 function SubscriptionDowngradeView({ onBack }: { onBack: () => void }) {
   return (
-    <section className="bg-primary-10 rounded-2xl p-6">
-      <DowngradeFree onBack={onBack} />
+    <section className="flex min-h-full h-max flex-col overflow-hidden w-full rounded-2xl bg-white pb-6 px-4 pt-0">
+      <div className="shrink-0 pt-5">
+        <GhostRoundedIconButton
+          icon={<ArrowLeftOutlined />}
+          label="Current subscription"
+          classNames={{ label: 'font-semibold', root: 'hover:bg-gray-100' }}
+          onClick={onBack}
+          iconPosition="start"
+        />
+      </div>
+      <div className="relative flex h-full grow flex-col mt-3">
+        <DowngradeFree onBack={onBack} />
+      </div>
     </section>
   );
 }
@@ -163,12 +177,14 @@ function Content({
   setMode,
   selectionStartTier,
   setSelectionStartTier,
+  onExpandedChange,
 }: {
   data: LoadedSubscriptionResponse;
   mode: TSubscriptionMode;
   setMode: Dispatch<SetStateAction<TSubscriptionMode>>;
   selectionStartTier: TSubscriptionTier | null;
   setSelectionStartTier: Dispatch<SetStateAction<TSubscriptionTier | null>>;
+  onExpandedChange: ((expanded: boolean) => void) | undefined;
 }) {
   const tierKey = data.subscription.tier;
 
@@ -200,7 +216,11 @@ function Content({
 
   return match(mode)
     .with(SubscriptionModeDict.Tiers, () => (
-      <SubscriptionTiersView data={data} onBack={backToCurrent} />
+      <SubscriptionTiersView
+        data={data}
+        onBack={backToCurrent}
+        onExpandedChange={onExpandedChange}
+      />
     ))
     .with(SubscriptionModeDict.Downgrade, () => (
       <SubscriptionDowngradeView onBack={backToCurrent} />
@@ -241,7 +261,7 @@ export function Subscription({ onExpandedChange }: SubscriptionProps) {
   const viewState = resolveSubscriptionView(isLoading, isError, data);
 
   useEffect(() => {
-    onExpandedChangeRef.current?.(mode !== SubscriptionModeDict.Current);
+    onExpandedChangeRef.current?.(mode === SubscriptionModeDict.Tiers);
   }, [mode]);
 
   useEffect(() => {
@@ -250,7 +270,15 @@ export function Subscription({ onExpandedChange }: SubscriptionProps) {
 
   return match(viewState)
     .with({ tag: 'loading' }, () => <SubscriptionLoading />)
-    .with({ tag: 'error' }, () => <SubscriptionCheckoutError />) // TODO: Add error state
+    .with({ tag: 'error' }, () => (
+      <ErrorMinimal
+        title="Subscription error"
+        description='We were unable to load the subscription plans and payment options at this time. This
+            could be preventing you from viewing available plans or completing your purchase. Please
+            try refreshing the page or return later. If the issue persists, please contact support
+            at <a href="mailto:support@openbraininstitute.org">support@openbraininstitute.org</a>.'
+      />
+    ))
     .with({ tag: 'ready' }, ({ data: subscriptionData }) => (
       <Content
         data={subscriptionData}
@@ -258,9 +286,8 @@ export function Subscription({ onExpandedChange }: SubscriptionProps) {
         setMode={setMode}
         selectionStartTier={selectionStartTier}
         setSelectionStartTier={setSelectionStartTier}
+        onExpandedChange={onExpandedChange}
       />
     ))
     .exhaustive();
 }
-
-export default Subscription;

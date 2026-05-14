@@ -28,6 +28,7 @@ import {
   buildStripeFormOptions,
 } from '@/features/stripe/payment-elements';
 import { messages } from '@/i18n/en/payment';
+import useWorkspace from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { keyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
@@ -49,6 +50,7 @@ const notificationConfig = {
 };
 
 function Form({ onPrevious }: Props) {
+  const { virtualLabId } = useWorkspace();
   const queryClient = useQueryClient();
   const elements = useElements();
   const stripe = useStripe();
@@ -63,16 +65,17 @@ function Form({ onPrevious }: Props) {
 
   const quotePayload = useMemo(
     () =>
-      billingAddress && tier?.app_id
+      billingAddress && tier?.app_id && virtualLabId
         ? {
             interval,
+            virtual_lab_id: virtualLabId,
             flow: BillingQuoteRequestFlowDict.Subscription,
             tier_id: tier.app_id,
             currency: DefaultCurrency,
             billing_address: billingAddress,
           }
         : null,
-    [billingAddress, interval, tier]
+    [billingAddress, interval, virtualLabId, tier]
   );
 
   const quote = useBillingQuoteQuery({

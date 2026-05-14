@@ -328,7 +328,7 @@ function InviteMembers({ onBack, virtualLabId }: InviteMemberStepProps) {
         </div>
       </div>
 
-      <div className="mx-auto mt-auto flex w-full max-w-3xl shrink-0 items-center justify-end  pt-4">
+      <div className="mx-auto mt-auto flex w-full max-w-3xl shrink-0 items-center justify-end">
         <div className="flex gap-3 self-end">
           <GhostRoundedIconButton label="Cancel" onClick={onBack} disabled={mutate.isPending} />
           <GhostRoundedIconButton

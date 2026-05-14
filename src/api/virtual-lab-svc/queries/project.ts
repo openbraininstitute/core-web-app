@@ -3,18 +3,17 @@ import { getSession } from '@/auth-fetch';
 import { config } from '@/config';
 
 import type {
-  ProjectCreationResponse,
+  IProject,
+  IProjectExpandedResponse,
   ProjectExistsVerificationResponse,
+  TCreateProjectExpandParam,
+  TGetProjectExpandParam,
+  TPagination,
   VlmAttachUsersToProjectResponse,
-  VlmProjectsResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import type { TProjectPayload, TUserRole } from '@/api/virtual-lab-svc/validation';
 import type { WorkspaceContext } from '@/types/common';
-import type {
-  ProjectDetailResponse,
-  ProjectExpandParam,
-  ProjectResponse,
-} from '@/types/virtual-lab/projects';
+import type { ProjectResponse } from '@/types/virtual-lab/projects';
 
 const baseUri = '/virtual-labs';
 
@@ -57,30 +56,31 @@ export async function checkProjectExists({
   return result.data?.exist ?? null;
 }
 
+/**
+ * Creates a new project in the given virtual lab.
+ *
+ * @param {string} virtualLabId - The ID of the virtual lab that will own the project.
+ * @param {TProjectPayload} payload - Project `name` and `description`.
+ * @param {Array<TCreateProjectExpandParam>} [expand] - Optional relation keys (`balance`, `virtual_lab`) to include in the response.
+ * @returns {Promise<IProjectExpandedResponse>} The created project response from the API.
+ * @throws {Error} Throws if the virtual lab API request fails.
+ */
 export async function createProject(
   virtualLabId: string,
-  { name, description, include_members }: TProjectPayload
-): Promise<ProjectCreationResponse> {
-  const session = await getSession();
-  const response = await fetch(`${getBaseUrl()}/${virtualLabId}/projects`, {
-    method: 'POST',
+  { name, description }: TProjectPayload,
+  expand?: Array<TCreateProjectExpandParam>
+) {
+  const api = await virtualLabRootApi();
+  return api.post<IProjectExpandedResponse>(`/virtual-labs/${virtualLabId}/projects`, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.accessToken}`,
     },
-    body: JSON.stringify({
+    body: {
       name,
       description,
-      include_members,
-    }),
+    },
+    queryParams: { expand },
   });
-
-  if (!response.ok) {
-    throw new Error(`Creating project failed`, { cause: await response.json() });
-  }
-
-  const result: ProjectCreationResponse = await response.json();
-  return result;
 }
 
 /**
@@ -91,32 +91,33 @@ export async function createProject(
  * @param {number} params.page - The page number (default: 1)
  * @param {string} [params.search] - Case-insensitive substring search on name and description
  * @param {number} params.size - The number of items per page (default: 40)
- * @returns {Promise<VlmProjectsResponse>} - Returns the paginated projects data
+ * @returns {Promise<TPagination<IProject>>} - Returns the paginated projects data
  * @throws {Error} - Throws an error if the API request fails
  */
 export async function listProjects({
   virtualLabId,
-  page = 1,
-  size = 40,
-  search,
+  pagination,
+  filter,
 }: {
   virtualLabId: string;
-  page?: number;
-  size?: number;
-  search?: string;
-}): Promise<VlmProjectsResponse> {
+  pagination?: { page: number; page_size: number };
+  filter?: {
+    order_by?: 'created_at' | 'updated_at' | 'name' | 'owner';
+    order_direction?: 'asc' | 'desc';
+    query?: string;
+  };
+}) {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects`;
 
-  return await api.get<VlmProjectsResponse>(url, {
+  return await api.get<TPagination<IProject>>(url, {
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
     queryParams: {
-      page,
-      size,
-      ...(search?.trim() ? { search: search.trim() } : {}),
+      ...pagination,
+      ...filter,
     },
   });
 }
@@ -163,19 +164,29 @@ export async function attachUsersToProject({
   return result;
 }
 
-export async function getProject(
-  { virtualLabId, projectId }: WorkspaceContext,
-  options?: { expand?: ProjectExpandParam[] }
-): Promise<ProjectDetailResponse> {
+/**
+ * Fetches a single project by ID within a virtual lab.
+ *
+ * @param {Object} params - Request parameters.
+ * @param {string} params.virtualLabId - The ID of the virtual lab.
+ * @param {string} params.projectId - The ID of the project.
+ * @param {TGetProjectExpandParam[]} [params.expand] - Optional relation keys (`admins`, `virtual_lab`) to include in the response.
+ * @returns {Promise<IProjectExpandedResponse>} The project payload from the API.
+ * @throws {Error} Throws if the virtual lab API request fails.
+ */
+export async function getProject({
+  virtualLabId,
+  projectId,
+  expand,
+}: WorkspaceContext & { expand?: TGetProjectExpandParam[] }) {
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects/${projectId}`;
-  const expand = options?.expand?.filter(Boolean);
-  return await api.get<ProjectDetailResponse>(url, {
+  return await api.get<IProjectExpandedResponse>(url, {
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    queryParams: expand?.length ? { expand } : {},
+    queryParams: { expand },
   });
 }
 

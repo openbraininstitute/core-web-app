@@ -73,7 +73,10 @@ function VirtualLabOverviewForm({ virtualLab, virtualLabId }: Props) {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: keyBuilder.getOneLab({ virtualLabId }) }),
         queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === 'workspace/tenants',
+          predicate: (query) => {
+            const [key, _] = query.queryKey as [string, any];
+            return key === 'workspace/list-filtered-virtual-labs';
+          },
         }),
       ]);
       setIsEditing(false);
@@ -200,21 +203,17 @@ function VirtualLabOverviewForm({ virtualLab, virtualLabId }: Props) {
 
 export function VirtualLabOverview({ virtualLabId }: { virtualLabId: string }) {
   const {
-    data: labResponse,
+    data: virtualLab,
     isError,
     refetch,
     isLoading: isLabLoading,
   } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
-    queryFn: () => {
-      return getVirtualLab(virtualLabId);
-    },
+    queryFn: () => getVirtualLab({ id: virtualLabId }),
     enabled: Boolean(virtualLabId),
     gcTime: 0,
     staleTime: 0,
   });
-
-  const virtualLab = labResponse?.data?.virtual_lab;
 
   if (isLabLoading) {
     return (

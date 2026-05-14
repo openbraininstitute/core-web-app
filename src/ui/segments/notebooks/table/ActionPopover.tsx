@@ -80,7 +80,7 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
-    queryFn: () => getVirtualLab(virtualLabId),
+    queryFn: () => getVirtualLab({ id: virtualLabId }),
     enabled: Boolean(virtualLabId),
   });
 
@@ -234,12 +234,12 @@ export default function ActionPopover({ notebook, index }: ActionPopoverProps) {
                   className="hover:text-primary-4 inline-flex items-center gap-2.5"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (virtualLabData == null || virtualLabData.data == null) {
+                    if (virtualLabData == null || virtualLabData == null) {
                       throw new Error(
                         `Could not fetch virtual lab data with useQuery ${virtualLabData}`
                       );
                     }
-                    handleRunNotebook(virtualLabData.data?.virtual_lab.compute_cell, 0);
+                    handleRunNotebook(virtualLabData.compute_cell, 0);
                   }}
                 >
                   {!loading && <PlayCircleOutlined aria-label="Run" />}

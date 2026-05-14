@@ -54,7 +54,7 @@ export async function MainCards({ context }: { context: WorkspaceContext }) {
 
   const virtualLab = await queryClient.fetchQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId: context.virtualLabId }),
-    queryFn: () => getVirtualLab(context.virtualLabId),
+    queryFn: () => getVirtualLab({ id: context.virtualLabId }),
   });
 
   const previews = quickAccessList.map((o) => {

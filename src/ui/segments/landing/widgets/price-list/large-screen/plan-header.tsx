@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 
-import { useCurrency } from '@/components/LandingPage/atoms';
 import { Switch } from '@/features/payments/subscription';
+import { useCurrency } from '@/ui/segments/landing/atoms';
 import { classNames } from '@/util/utils';
 
-import ContactUs from '../../contact-us';
+import ContactUs from '../contact-us';
 
 import type {
   ContentForPricingPlan,

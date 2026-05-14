@@ -1,5 +1,6 @@
 'use client';
 
+import { RiRestartLine } from '@remixicon/react';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { noop } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
@@ -13,7 +14,9 @@ import { TiersListSkeleton } from '@/components/VirtualLab/create-entity-flows/c
 import { flowAtom, getAllTiers, type TExtendedTier } from '@/features/payments/subscription';
 import { getPricingContent } from '@/services/sanity';
 import { Button } from '@/ui/molecules/button';
+import { ErrorMinimal } from '@/ui/molecules/feedback-card';
 import { PlanCard } from '@/ui/segments/plans/card';
+import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
@@ -24,6 +27,7 @@ type TCurrentTier = 'FREE' | 'PRO' | 'PREMIUM';
 type Props = {
   currentTier?: TCurrentTier;
   subscriptionData: UserActiveSubscriptionResponse;
+  onExpandedChange: ((expanded: boolean) => void) | undefined;
 };
 
 const TiersStep = {
@@ -131,7 +135,7 @@ function TiersCards({
   };
 
   return (
-    <div className="grid items-stretch gap-4 pb-3 sm:grid-cols-2 xl:grid-cols-4 mr-1">
+    <div className="grid items-stretch gap-4 pb-3 grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 mr-1">
       {sortedPlans.map((plan) => {
         const cta = getCta(plan);
         const isCurrentTier =
@@ -179,14 +183,23 @@ function TiersCards({
   );
 }
 
-export default function TiersList({ currentTier, subscriptionData }: Props) {
+export function TiersList({ currentTier, subscriptionData, onExpandedChange }: Props) {
   const [currentStep, setCurrentStep] = useState<TTiersStep>(TiersStep.Listing);
 
-  const onSelectPremiumTier = () => setCurrentStep(TiersStep.ContactUs);
-  const onDowngradeFreeClick = () => setCurrentStep(TiersStep.Downgrade);
-  const onBackToListing = () => setCurrentStep(TiersStep.Listing);
+  const onSelectPremiumTier = () => {
+    onExpandedChange?.(false);
+    setCurrentStep(TiersStep.ContactUs);
+  };
+  const onDowngradeFreeClick = () => {
+    onExpandedChange?.(false);
+    setCurrentStep(TiersStep.Downgrade);
+  };
+  const onBackToListing = () => {
+    onExpandedChange?.(true);
+    setCurrentStep(TiersStep.Listing);
+  };
 
-  const { plans, tiers, loading, error } = useQueries({
+  const { plans, tiers, loading, error, refresh } = useQueries({
     queries: [
       {
         queryKey: ['tiers-list'],
@@ -204,6 +217,10 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
         error: tiersResult.error || plansResult.error,
         tiers: tiersResult.data,
         plans: plansResult.data,
+        refresh: () => {
+          tiersResult.refetch();
+          plansResult.refetch();
+        },
       };
     },
   });
@@ -214,32 +231,17 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
 
   if (error) {
     return (
-      <div className="mb-6 transform rounded-xs bg-red-900 p-6 transition-all duration-500 hover:scale-[1.01] hover:shadow-xl">
-        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h2 className="mb-2 text-2xl font-semibold text-red-200">
-              Unable to load subscription tiers
-            </h2>
-            <p className="max-w-xl text-red-200/80">
-              We&lsquo;re having trouble loading the subscription tiers.
-              <br />
-              Please try refreshing the page or contact support if the issue persists.
-            </p>
-          </div>
-          <div className="mb-2 flex items-center gap-2 self-baseline">
-            <Button
-              rounded
-              type="button"
-              variant="ghost"
-              size="lg"
-              className="hover:border-primary-4! w-max border border-none text-white shadow-2xl hover:border"
-              onClick={() => window.location.reload()}
-            >
-              Refresh Page
-            </Button>
-          </div>
-        </div>
-      </div>
+      <ErrorMinimal
+        title="Unable to load subscription tiers"
+        description="We&lsquo;re having trouble loading the subscription tiers. Please try refreshing the page or contact support if the issue persists."
+        primaryAction={
+          <GhostRoundedIconButton
+            label="Refresh"
+            icon={<RiRestartLine />}
+            onClick={() => refresh()}
+          />
+        }
+      />
     );
   }
 
@@ -250,12 +252,12 @@ export default function TiersList({ currentTier, subscriptionData }: Props) {
     >
       {match({ currentStep })
         .with({ currentStep: TiersStep.ContactUs }, () => (
-          <div className="h-full grow px-6 py-3">
+          <div className="h-full grow">
             <ContactUs onBack={onBackToListing} />
           </div>
         ))
         .with({ currentStep: TiersStep.Downgrade }, () => (
-          <div className="h-full grow px-6 py-3">
+          <div className="h-full grow">
             <DowngradeFree onBack={onBackToListing} />
           </div>
         ))

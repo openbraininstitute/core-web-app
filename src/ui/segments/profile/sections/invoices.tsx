@@ -1,7 +1,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import flatMap from 'es-toolkit/compat/flatMap';
+import { flatMap } from 'es-toolkit/compat';
 
 import { listUserSubscriptionsHistory } from '@/api/virtual-lab-svc/queries/subscription';
 import { FileDownloadFill } from '@/components/icons/EditorIcons';
@@ -17,9 +17,9 @@ type InvoicePayment = SubscriptionPaymentDetails & {
 };
 
 function getInvoiceObject(payment: InvoicePayment) {
-  if (payment.subscription_type === 'PRO') return 'Subscription Pro';
-  if (payment.subscription_type === 'PREMIUM') return 'Subscription Premium';
-  return 'Subscription Free';
+  if (payment.subscription_type === 'PRO') return 'Pro';
+  if (payment.subscription_type === 'PREMIUM') return 'Premium';
+  return 'Free';
 }
 
 function getInvoiceDownloadUrl(payment: InvoicePayment) {
@@ -34,24 +34,24 @@ function InvoiceCard({ payment }: { payment: InvoicePayment }) {
   )}`;
 
   return (
-    <article className="rounded-2xl bg-white px-6 py-5 shadow-[0_18px_50px_-36px_rgba(0,39,102,0.55)]">
-      <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+    <article className="rounded-2xl bg-white px-6 py-7 pb-3">
+      <div className="grid grid-cols-2 gap-x-10 gap-y-1">
         <div>
-          <p className="text-neutral-4 text-lg">Object</p>
-          <p className="text-primary-9 text-xl font-bold">{getInvoiceObject(payment)}</p>
+          <p className="text-neutral-4 text-base">Object</p>
+          <p className="text-primary-9 text-base font-bold">{getInvoiceObject(payment)}</p>
         </div>
         <div>
-          <p className="text-neutral-4 text-lg">Period</p>
-          <p className="text-primary-9 text-xl font-bold">{period}</p>
+          <p className="text-neutral-4 text-base">Period</p>
+          <p className="text-primary-9 text-base font-bold">{period}</p>
         </div>
         <div>
-          <p className="text-neutral-4 text-lg">Status</p>
-          <p className="text-primary-9 text-xl font-bold capitalize">{payment.status}</p>
+          <p className="text-neutral-4 text-base">Status</p>
+          <p className="text-primary-9 text-base font-bold capitalize">{payment.status}</p>
         </div>
         <div>
-          <p className="text-neutral-4 text-lg">Payment method</p>
+          <p className="text-neutral-4 text-base">Payment method</p>
           <p
-            className="text-primary-9 text-xl font-bold"
+            className="text-primary-9 text-base font-bold"
             title={
               payment.card_brand && payment.card_last4
                 ? `${payment.card_brand} **** ${payment.card_last4}`
@@ -62,13 +62,13 @@ function InvoiceCard({ payment }: { payment: InvoicePayment }) {
           </p>
         </div>
         <div>
-          <p className="text-neutral-4 text-lg">Amount</p>
-          <p className="text-primary-9 text-xl font-bold">
+          <p className="text-neutral-4 text-base">Amount</p>
+          <p className="text-primary-9 text-base font-bold">
             {formatCurrency(payment.amount_paid / 100, payment.currency)}
           </p>
         </div>
       </div>
-      <div className="border-neutral-2 mt-5 flex justify-end border-t pt-5">
+      <div className="border-neutral-2 mt-5 flex justify-end border-t py-4 pb-2">
         {downloadUrl ? (
           <a
             className="text-primary-9 hover:text-primary-7 inline-flex items-center gap-3 text-lg font-bold"
@@ -93,7 +93,6 @@ export function Invoices() {
     queryKey: keyBuilder.invoices(),
     queryFn: listUserSubscriptionsHistory,
   });
-
   const allPayments = flatMap(data?.subscriptions, (subscription) =>
     subscription.payments
       .filter((payment) => !payment.is_standalone)

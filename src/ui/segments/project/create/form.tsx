@@ -3,21 +3,21 @@
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, Select } from 'antd';
+import { get } from 'es-toolkit/compat';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
 import { checkProjectExists, createProject } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
-import { listTenantVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Label, XInput } from '@/ui/segments/profile/sections/profile-form/elements';
 import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
-
-import { Label, XInput } from '../../profile/sections/profile-form/elements';
-import { GhostRoundedIconButton } from '../../workspaces/space-manager/sections/elements';
 
 import type { TProjectPayload } from '@/api/virtual-lab-svc/validation';
 
@@ -38,15 +38,16 @@ export function CreationForm({
   const { push: navigate } = useRouter();
   const [form] = Form.useForm<ProjectCreationFormValues>();
 
-  const queryParams = {
+  const filters = {
     scope: 'all',
-    order_by: 'creation_date',
+    order_by: 'owner',
     order_direction: 'desc',
+    admin_access_only: true,
   } as const;
 
   const { data: virtualLabs, isLoading: virtualLabsLoading } = useQuery({
-    queryKey: keyBuilder.listTenantVirtualLabs(queryParams),
-    queryFn: () => listTenantVirtualLabs(queryParams),
+    queryKey: keyBuilder.listTenantVirtualLabs({ filters }),
+    queryFn: () => listVirtualLabs({ filters }),
     enabled: !!showVirtualLabSelect,
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: Number.POSITIVE_INFINITY,
@@ -65,18 +66,26 @@ export function CreationForm({
       return createProject(targetVirtualLabId, payload);
     },
     onError(error) {
+      const code = get(error, 'cause.code', 'DEFAULT');
+      const description = {
+        LIMIT_EXCEEDED:
+          'You have reached the maximum number of projects allowed. Please delete an existing project or contact support for more details.',
+        DEFAULT: 'Project creation failed. Please check your details and try again.',
+      };
       if (error) {
         notifyError({
-          message: 'Project creation failed. Please check your details and try again.',
+          message: 'Error creating project',
+          description: description[code],
           placement: 'topRight',
+          key: 'create-project-error',
         });
       }
     },
     onSuccess(data, variables) {
-      if (data.data?.project.id) {
+      if (data.id) {
         mutateRecentWorkspace.mutate({
           vlabId: variables.virtual_lab_id,
-          prjId: data.data.project.id,
+          prjId: data.id,
         });
       }
       notifySuccess({
@@ -86,13 +95,22 @@ export function CreationForm({
     },
     onSettled: async (result) => {
       await queryClient.invalidateQueries({
-        queryKey: keyBuilder.listWorkspaceProjects({
-          virtualLabId: form.getFieldValue('virtual_lab_id'),
-        }),
+        predicate: (query) => {
+          const queryKey = query.queryKey as [string, { virtualLabId?: string }];
+          const [key, params] = queryKey;
+          return key === `workspace/projects-list` && params?.virtualLabId === selectedVirtualLabId;
+        },
       });
-      if (result?.data?.project) {
-        const virLabId = result.data.project.virtual_lab_id;
-        const projectId = result.data.project.id;
+      await queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey as [string, { virtualLabId?: string }];
+          const [key] = queryKey;
+          return key === 'workspace/list-filtered-virtual-labs';
+        },
+      });
+      if (result?.id) {
+        const virLabId = result.virtual_lab_id;
+        const projectId = result.id;
         makeTriggerWorkspaceConfigurationClickEvent({ on: false, data: null, type: null });
         navigate(`${config.ROOT_ROUTE}/${virLabId}/${projectId}`);
       }
@@ -129,8 +147,7 @@ export function CreationForm({
       initialValues={{
         name: '',
         description: '',
-        include_members: [],
-        virtual_lab_id: selectedVirtualLabId,
+        virtual_lab_id: undefined,
       }}
       disabled={isPending}
     >
@@ -155,7 +172,7 @@ export function CreationForm({
                 '[&_.ant-select-selection-item]:text-primary-9!',
                 'placeholder:text-gray-400! placeholder:text-sm! placeholder:font-light!'
               )}
-              options={(virtualLabs?.data?.data ?? []).map((lab) => ({
+              options={(virtualLabs?.data ?? []).map((lab) => ({
                 label: lab.name,
                 value: lab.id,
               }))}

@@ -19,7 +19,6 @@ import {
 } from '@/ui/segments/workspaces/space-manager/sections/account';
 import { PanelTabs, type TabItem } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import {
-  getProjectUrl,
   ProjectContent,
   type TActiveSection as TProjectActiveSection,
 } from '@/ui/segments/workspaces/space-manager/sections/project';
@@ -159,6 +158,7 @@ export function WorkspaceManagerModal({
   virtualLabId,
 }: Props) {
   const [localSection, setLocalSection] = useState<string | undefined>(section);
+
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [switcherRight, setSwitcherRight] = useState<number | null>(null);
   const activeVirtualLabId = targetVirtualLabId ?? virtualLabId;
@@ -270,6 +270,7 @@ export function WorkspaceManagerModal({
           asChild
           variant="default"
           rounded
+          size="responsive"
           className={cn(
             'bg-primary-9 mt-4 flex h-11 w-full shrink-0',
             'justify-between px-5 text-base shadow-none hover:bg-primary-9/90'
@@ -277,10 +278,7 @@ export function WorkspaceManagerModal({
         >
           <Link
             className="text-inherit flex w-full items-center justify-between gap-2"
-            href={getProjectUrl({
-              virtualLabId: x.targetVirtualLabId,
-              projectId: x.targetProjectId,
-            })}
+            href={`/app/virtual-lab/${x.targetVirtualLabId}/${x.targetProjectId}`}
             data-testid="workspace-manager-go-to-project-link"
             id="workspace-manager-go-to-project-link"
           >
@@ -301,7 +299,7 @@ export function WorkspaceManagerModal({
       width={shouldUseFullWidth ? undefined : modalWidth}
       className="top-3 h-full min-h-[400px] translate-0 transform-none! overflow-hidden rounded-2xl bg-zinc-100"
       animation="fade"
-      maxHeight="calc(100vh - 5.5rem + 58px)"
+      maxHeight="calc(100vh - 5.5rem + 55px)"
       bodyClassName="flex h-full max-h-[calc(100vh-1rem)] min-h-0 flex-col overflow-hidden p-0"
       position="custom"
       style={modalStyle}
@@ -316,14 +314,37 @@ export function WorkspaceManagerModal({
           data-testid="workspace-manager-modal-header"
           id="workspace-manager-modal-header"
         >
-          <PanelTabs
-            activeKey={activeSection}
-            items={tabs}
-            onSelect={(nextSection) => {
-              setIsContentExpanded(false);
-              setLocalSection(nextSection);
-            }}
-          />
+          {kind === WorkspaceManagerKindDict.Project &&
+          activeSection === WorkspaceManagerSectionDict.New ? (
+            <Button
+              rounded
+              key="create-new-project"
+              type="button"
+              variant="ghost"
+              size="responsive"
+              className={cn(
+                'text-primary-9 font-bold min-w-28 pl-1! pr-7 text-xl',
+                'transition-[background-color,box-shadow,color] duration-200',
+                'focus-visible:ring-primary-6 focus-visible:ring-2',
+                'cursor-default'
+              )}
+              data-testid="create-new-project-button"
+              id="create-new-project-button"
+              onClick={() => {}}
+            >
+              Create new project
+            </Button>
+          ) : (
+            <PanelTabs
+              activeKey={activeSection}
+              items={tabs}
+              onSelect={(nextSection) => {
+                if (nextSection === activeSection) return;
+                setIsContentExpanded(false);
+                setLocalSection(nextSection);
+              }}
+            />
+          )}
           <Button
             type="button"
             aria-label="Close workspace manager"

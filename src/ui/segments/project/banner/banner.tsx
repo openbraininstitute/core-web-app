@@ -131,7 +131,7 @@ export function ProjectCard(): ReactElement {
               { required: true, message: 'Name is required' },
               { max: maxNameLength, message: 'Name must be less than 60 characters' },
             ]}
-            initialValue={result.data.name}
+            initialValue={result.name}
           >
             <Input.TextArea
               id="project-name"
@@ -160,7 +160,7 @@ export function ProjectCard(): ReactElement {
               href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`}
               className="pr-1.5 text-primary-9 hover:text-primary-7"
             >
-              {isPending ? variables?.name : result.data.name}
+              {isPending ? variables?.name : result.name}
             </Link>
             {mounted && isVirtualLabAdmin && (
               <Button
@@ -185,7 +185,7 @@ export function ProjectCard(): ReactElement {
         {isEditing ? (
           <Form.Item
             name="description"
-            initialValue={result.data.description ?? ''}
+            initialValue={result.description ?? ''}
             rules={[
               {
                 max: maxDescriptionLength,
@@ -210,7 +210,7 @@ export function ProjectCard(): ReactElement {
         ) : (
           <ExpandableText
             id="project-description-text"
-            text={isPending ? variables?.description : (result.data.description ?? '')}
+            text={isPending ? variables?.description : (result.description ?? '')}
             collapsedLines={4}
             className={cn(
               'text-left text-balance wrap-break-word hyphens-manual text-base',

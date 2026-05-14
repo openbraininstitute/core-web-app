@@ -7,21 +7,21 @@ import { getUserProfile, getUserRecentWorkspace } from '@/api/virtual-lab-svc/qu
 import { getSelfVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 
 import type {
-  Project,
+  IProject,
   RecentWorkspace,
   TVirtualLab,
   UserProfileResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 
 export type TResolvedWorkspace = {
-  project: Project | null;
+  project: IProject | null;
   virtualLab: TVirtualLab | null;
   profile: UserProfileResponse | null;
 };
 
 export const resolveWorkspace = async () => {
   let virtualLabId: string | undefined;
-  let project: Project | null = null;
+  let project: IProject | null = null;
   let virtualLab: TVirtualLab | null = null;
   let recentWorkspace: RecentWorkspace['recent_workspace']['workspace'] | null = null;
 
@@ -37,9 +37,9 @@ export const resolveWorkspace = async () => {
   if (virtualLab) {
     virtualLabId = virtualLab.id;
     const { data: projectResult } = await tryCatch(
-      listProjects({ virtualLabId, page: 1, size: 1 })
+      listProjects({ virtualLabId, pagination: { page: 1, page_size: 1 } })
     );
-    const oneProject = head(projectResult?.data?.data);
+    const oneProject = head(projectResult?.data);
     if (oneProject) {
       project = oneProject;
     }

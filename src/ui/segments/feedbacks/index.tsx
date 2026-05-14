@@ -109,13 +109,13 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
 
   const { data: virtualLabData } = useQuery({
     queryKey: keyBuilder.getOneLab({ virtualLabId }),
-    queryFn: () => getVirtualLab(virtualLabId),
+    queryFn: () => getVirtualLab({ id: virtualLabId }),
     enabled: mounted && Boolean(virtualLabId),
     retry: false,
   });
 
-  const projectName = projectData?.data?.name ?? '';
-  const virtualLabName = virtualLabData?.data?.virtual_lab?.name ?? '';
+  const projectName = projectData?.name ?? '';
+  const virtualLabName = virtualLabData?.name ?? '';
 
   const getMonthYearLabel = () => {
     const now = new Date();

@@ -165,7 +165,7 @@ export function Profile({ data }: ProfileProps) {
           disabled={formDisabled}
           onFinish={onSubmit}
           scrollToFirstError
-          autoComplete="false"
+          autoComplete="off"
           requiredMark={false}
           preserve={false}
           validateTrigger={isEditing ? ['onBlur', 'onChange'] : []}
@@ -174,7 +174,7 @@ export function Profile({ data }: ProfileProps) {
             '[&_.ant-form-item-explain-error]:pl-0.5! [&_.ant-form-item-explain-error]:select-none!'
           )}
         >
-          <div className="grid w-full min-w-0 grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+          <div className="grid w-full min-w-0 grid-cols-1 gap-x-6 gap-y-4 p-4 md:grid-cols-2">
             <Form.Item
               rules={[
                 {
@@ -383,7 +383,9 @@ export function Profile({ data }: ProfileProps) {
             )}
             aria-hidden={readOnly}
           >
-            <Checkbox className="text-primary-9">Use this address as my billing address</Checkbox>
+            <Checkbox className={cn('text-primary-9')}>
+              Use this address as my billing address
+            </Checkbox>
           </Form.Item>
           <div className="relative mt-3 min-h-14">
             {isEditing ? (

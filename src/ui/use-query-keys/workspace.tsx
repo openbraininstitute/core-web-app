@@ -1,7 +1,8 @@
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TGetVirtualLabExpandParam } from '@/api/virtual-lab-svc/queries/types';
 import type { LabTypeEnum } from '@/api/virtual-lab-svc/types';
 import type { WorkspaceContext } from '@/types/common';
-import type { ProjectExpandParam } from '@/types/virtual-lab/projects';
+import type { TGetProjectExpandParam } from '@/types/virtual-lab/projects';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 export const prefix = 'workspace';
@@ -14,40 +15,46 @@ export const keyBuilder = {
     virtualLabId,
     projectId,
     expand,
-  }: WorkspaceContext & { expand?: readonly ProjectExpandParam[] }) =>
-    [
-      `${prefix}/project`,
-      virtualLabId,
-      projectId,
-      expand != null && expand.length > 0 ? [...expand].sort().join(',') : '',
-    ] as const,
-  getOneLab: ({ virtualLabId }: { virtualLabId: string }) => [`${prefix}-lab`, { virtualLabId }],
+  }: WorkspaceContext & { expand?: readonly TGetProjectExpandParam[] }) =>
+    [`${prefix}/project`, { virtualLabId, projectId, expand }] as const,
+  getOneLab: ({
+    virtualLabId,
+    expand,
+  }: {
+    virtualLabId: string;
+    expand?: Array<TGetVirtualLabExpandParam>;
+  }) => [`${prefix}-lab`, { virtualLabId, expand }],
+  /**
+   * @deprecated
+   */
   listAllLabs: ({ includes }: { includes?: Array<LabTypeEnum> }) => [`${prefix}/all`, { includes }],
   listTenantVirtualLabs: ({
-    page,
-    size,
-    query,
-    scope,
-    admin_access_only,
-    order_by,
-    order_direction,
+    pagination,
+    filters,
   }: Partial<{
-    page?: number;
-    size?: number;
-    query?: string;
-    scope?: 'all' | 'self' | 'external';
-    admin_access_only?: boolean;
-    order_by: 'creation_date' | 'update_date' | 'scope';
-    order_direction: 'asc' | 'desc';
-  }>) => [
-    `${prefix}/tenants`,
-    { page, size, query, scope, admin_access_only, order_by, order_direction },
-  ],
+    pagination?: { page: number; page_size: number };
+    filters?: {
+      scope?: 'all' | 'self' | 'external';
+      admin_access_only?: boolean;
+      order_by?: 'created_at' | 'updated_at' | 'name' | 'owner';
+      order_direction?: 'asc' | 'desc';
+      query?: string;
+    };
+  }>) => [`${prefix}/list-filtered-virtual-labs`, { pagination, filters }],
   myLab: () => [`${prefix}/me`],
-  listWorkspaceProjects: ({ virtualLabId }: { virtualLabId: string }) => [
-    `${prefix}/projects-list`,
-    { virtualLabId },
-  ],
+  listWorkspaceProjects: ({
+    virtualLabId,
+    pagination,
+    filter,
+  }: {
+    virtualLabId: string;
+    pagination?: { page: number; page_size: number };
+    filter?: {
+      order_by?: 'created_at' | 'updated_at' | 'name' | 'owner';
+      order_direction?: 'asc' | 'desc';
+      query?: string;
+    };
+  }) => [`${prefix}/projects-list`, { virtualLabId, pagination, filter }],
   listVirtualLabTeam: ({ virtualLabId }: { virtualLabId: string }) => [
     `${prefix}/team`,
     { virtualLabId },
