@@ -54,7 +54,7 @@ export default async function Page({
   const { data: virtualLab } = await tryCatch(
     queryClient.fetchQuery({
       queryKey: keyBuilder.getOneLab({ virtualLabId: context.virtualLabId }),
-      queryFn: () => getVirtualLab(context.virtualLabId),
+      queryFn: () => getVirtualLab({ id: context.virtualLabId }),
     })
   );
 

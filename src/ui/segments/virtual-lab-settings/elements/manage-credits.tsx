@@ -99,7 +99,7 @@ export function ManageCreditsStep({
     queries: [
       {
         queryKey: keyBuilder.getOneLab({ virtualLabId }),
-        queryFn: () => getVirtualLab(virtualLabId),
+        queryFn: () => getVirtualLab({ id: virtualLabId }),
         enabled: Boolean(virtualLabId),
       },
       {
@@ -109,7 +109,9 @@ export function ManageCreditsStep({
       },
       {
         queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId }),
-        queryFn: () => listProjects({ virtualLabId, page: 1, size: 40 }),
+        // TODO: do not fetch by fixed page_size
+        // make it loop through pages until it gets all projects
+        queryFn: () => listProjects({ virtualLabId, pagination: { page: 1, page_size: 40 } }),
         enabled: Boolean(virtualLabId),
       },
     ],
@@ -146,7 +148,7 @@ export function ManageCreditsStep({
                 You transferred <span className="text-primary-9 font-bold">{amount}</span> credits
                 to{' '}
                 <span className="text-primary-9 font-bold">
-                  {projectsRes.data?.data?.data.find((p) => p.id === selectedProjectId)?.name}
+                  {projectsRes.data?.data?.find((p) => p.id === selectedProjectId)?.name}
                 </span>
               </span>
             )}
@@ -155,7 +157,7 @@ export function ManageCreditsStep({
                 You transferred <span className="text-primary-9 font-bold">{amount}</span> credits
                 from{' '}
                 <span className="text-primary-9 font-bold">
-                  {projectsRes.data?.data?.data.find((p) => p.id === selectedProjectId)?.name}
+                  {projectsRes.data?.data?.find((p) => p.id === selectedProjectId)?.name}
                 </span>{' '}
                 to <span className="text-primary-9 font-bold">{virtualLabName}</span>
               </span>
@@ -183,7 +185,7 @@ export function ManageCreditsStep({
   });
 
   const projects = useMemo(() => {
-    const list = (projectsRes?.data?.data?.data ?? []).map((p) => ({
+    const list = (projectsRes?.data?.data ?? []).map((p) => ({
       value: String(p.id),
       label: String(p.name ?? ''),
     }));
@@ -211,7 +213,7 @@ export function ManageCreditsStep({
   }, [balanceMap, selectedProjectId]);
 
   const virtualLabName = useMemo(() => {
-    return labDetails?.data?.data?.virtual_lab?.name ?? 'Virtual Lab';
+    return labDetails?.data?.name ?? 'Virtual Lab';
   }, [labDetails]);
 
   const onSwap = () => {

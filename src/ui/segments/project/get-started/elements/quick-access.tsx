@@ -34,7 +34,10 @@ import { cn } from '@/utils/css-class';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { INotebook } from '@/api/entitycore/types/entities/notebook';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TVirtualLabResponse } from '@/api/virtual-lab-svc/queries/types';
+import type {
+  IVirtualLabExpandedResponse,
+  TVirtualLabResponse,
+} from '@/api/virtual-lab-svc/queries/types';
 import type { WorkspaceContext } from '@/types/common';
 
 const IMAGE_SHINE_ANIMATION = {
@@ -65,7 +68,7 @@ export function MainCardItem({
   title: string | undefined;
   description: string | undefined;
   context: WorkspaceContext;
-  virtualLab: TVirtualLabResponse;
+  virtualLab: IVirtualLabExpandedResponse;
   artifactTitle?: string | null;
 }) {
   const { push: navigate } = useRouter();
@@ -87,7 +90,7 @@ export function MainCardItem({
           asset.path,
           virtualLabId,
           projectId,
-          virtualLab.data?.virtual_lab.compute_cell ?? 'aws',
+          virtualLab.compute_cell ?? 'aws',
           0
         );
         window.open(notebook.url, '_blank');
@@ -98,7 +101,7 @@ export function MainCardItem({
   return (
     <Card
       className={cn(
-        'w-full min-h-[320px] bg-white border-none pt-0 relative overflow-hidden',
+        'w-full min-h-80 bg-white border-none pt-0 relative overflow-hidden',
         'shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]',
         'hover:shadow-bnb hover:bg-gray-100/70 hover:border group',
         'cursor-pointer select-none'
@@ -106,7 +109,7 @@ export function MainCardItem({
       onClick={() => redirect()}
       title={title}
     >
-      <div className="absolute top-0 left-0 z-0 h-[200px] w-full p-3">
+      <div className="absolute top-0 left-0 z-0 h-50 w-full p-3">
         <div className="relative h-full w-full overflow-hidden rounded-md shadow-[12px_12px_20px_0px_rgba(0,0,0,0.058)]">
           {thumbnail ? (
             <>

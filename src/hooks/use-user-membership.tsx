@@ -61,20 +61,21 @@ export function useWorkspaceMembership({ virtualLabId, projectId }: Props) {
       },
       {
         queryKey: keyBuilder.getOneLab({ virtualLabId: virtualLabId || '' }),
-        queryFn: async () => await getVirtualLab(virtualLabId!),
+        queryFn: async () => await getVirtualLab({ id: virtualLabId! }),
         enabled: !!virtualLabId,
       },
       {
         queryKey: keyBuilder.getWorkspace({
           virtualLabId: virtualLabId || '',
           projectId: projectId || '',
-          expand: ['admin'],
+          expand: ['admins'],
         }),
         queryFn: async () =>
-          await getProject(
-            { virtualLabId: virtualLabId!, projectId: projectId! },
-            { expand: ['admin'] }
-          ),
+          await getProject({
+            virtualLabId: virtualLabId!,
+            projectId: projectId!,
+            expand: ['admins'],
+          }),
         enabled: !!virtualLabId && !!projectId,
       },
     ],
@@ -83,8 +84,8 @@ export function useWorkspaceMembership({ virtualLabId, projectId }: Props) {
   const { userGroups, isVirtualLabMember, isVirtualLabAdmin, isProjectMember, isProjectAdmin } =
     makeRoles(data, virtualLabId, projectId);
   const isVirtualLabOwner = ownerVirtualLabId === virtualLabId;
-  const virtualLabAdmins = currentVirtualLab?.data?.admins;
-  const projectAdmins = currentProject?.data?.admin;
+  const virtualLabAdmins = currentVirtualLab?.admins;
+  const projectAdmins = currentProject?.admins;
   const isLoading =
     loadingGroups || loadingVirtualLab || loadingCurrentVirtualLab || loadingCurrentProject;
 

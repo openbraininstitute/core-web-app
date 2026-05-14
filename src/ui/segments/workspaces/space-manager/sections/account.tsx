@@ -26,7 +26,7 @@ export function AccountContent({ activeSection, onExpandedChange }: Props) {
       <div
         data-testid="workspace-manager-account-subscription-section"
         id="workspace-manager-account-subscription-section"
-        className="mr-1 h-full overflow-hidden"
+        className="mr-1 min-h-0"
       >
         <Subscription onExpandedChange={onExpandedChange} />
       </div>

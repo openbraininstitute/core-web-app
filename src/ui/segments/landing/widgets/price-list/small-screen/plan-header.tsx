@@ -1,6 +1,3 @@
-/* eslint-disable react/no-array-index-key */
-import React from 'react';
-
 import { useCurrency } from '@/ui/segments/landing/atoms';
 import { classNames } from '@/util/utils';
 

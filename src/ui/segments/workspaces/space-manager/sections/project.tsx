@@ -63,23 +63,28 @@ function ProjectOverviewPanel({
   const [isEditing, setIsEditing] = useState(false);
   const [form] = Form.useForm<TProjectOverviewForm>();
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const {
+    data: project,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: keyBuilder.getWorkspace({
       virtualLabId: targetVirtualLabId,
       projectId: targetProjectId,
       expand: ['virtual_lab'],
     }),
     queryFn: () =>
-      getProject(
-        { virtualLabId: targetVirtualLabId, projectId: targetProjectId },
-        { expand: ['virtual_lab'] }
-      ),
+      getProject({
+        virtualLabId: targetVirtualLabId,
+        projectId: targetProjectId,
+        expand: ['virtual_lab'],
+      }),
     enabled: !!targetProjectId && !!targetVirtualLabId,
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: Number.POSITIVE_INFINITY,
   });
 
-  const project = data?.data;
   const virtualLabName = project?.virtual_lab?.name ?? 'Virtual lab';
 
   const { mutateAsync, isPending } = useMutation({
@@ -95,13 +100,25 @@ function ProjectOverviewPanel({
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: keyBuilder.workspaceProject({
-            virtualLabId: targetVirtualLabId,
-            projectId: targetProjectId,
-          }),
+          predicate: (query) => {
+            const queryKey = query.queryKey as [string, { virtualLabId?: string }];
+            const [key, params] = queryKey;
+            return key === `workspace/projects-list` && params?.virtualLabId === targetVirtualLabId;
+          },
         }),
         queryClient.invalidateQueries({
-          queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId: targetVirtualLabId }),
+          predicate: (query) => {
+            const queryKey = query.queryKey as [
+              string,
+              { virtualLabId?: string; projectId?: string },
+            ];
+            const [key, params] = queryKey;
+            return (
+              key === `workspace/project` &&
+              params?.virtualLabId === targetVirtualLabId &&
+              params?.projectId === targetProjectId
+            );
+          },
         }),
       ]);
       setIsEditing(false);
@@ -1244,6 +1261,7 @@ export function ProjectContent({
         className="h-full grow overflow-hidden"
       >
         <ProjectCreation
+          key={`project-creation-${targetVirtualLabId}`}
           fixedVirtualLabId={targetVirtualLabId}
           onClose={onClose}
           showVirtualLabSelect={!targetVirtualLabId}
@@ -1259,14 +1277,4 @@ export function ProjectContent({
       targetVirtualLabId={targetVirtualLabId}
     />
   );
-}
-
-export function getProjectUrl({
-  projectId,
-  virtualLabId,
-}: {
-  projectId: string;
-  virtualLabId: string;
-}) {
-  return `/app/virtual-lab/${virtualLabId}/${projectId}`;
 }

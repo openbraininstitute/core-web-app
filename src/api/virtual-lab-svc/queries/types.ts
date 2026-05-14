@@ -7,6 +7,20 @@ interface VlmResponse<T> {
   data: T | null;
 }
 
+export type TGetProjectExpandParam = 'admins' | 'virtual_lab';
+export type TCreateProjectExpandParam = 'balance' | 'virtual_lab';
+export type TGetVirtualLabExpandParam = 'admins' | 'owner';
+
+interface IVirtualLabUser {
+  id: string;
+  username: string;
+  email: string;
+  created_at: string;
+  first_name: string;
+  last_name: string;
+  name: string;
+}
+
 export type TRole = TUserRole;
 export type Member = {
   id: string;
@@ -30,6 +44,11 @@ export type MemberResponse = VlmResponse<{
   user: Member;
 }>;
 
+/**
+ * @deprecated
+ *
+ * use IProject instead
+ */
 export type Project = {
   id: string;
   name: string;
@@ -59,10 +78,25 @@ type ProjectResponse = {
   data: Project;
 };
 
-export type ProjectCreationResponse = VlmResponse<{
-  project: Project;
-  balance_added: boolean;
-}>;
+export interface IProjectExtra {
+  user_count: number;
+  balance_added: boolean | null;
+  admins: Array<string> | null;
+}
+
+export interface IProject {
+  id: string;
+  name: string;
+  description: string;
+  contact_email: string;
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+  virtual_lab_id: string;
+}
+
+export interface IProjectExpandedResponse extends IProject, IProjectExtra {
+  virtual_lab: TVirtualLab | null;
+}
 
 export type TVirtualLab = {
   id: string;
@@ -78,18 +112,17 @@ export type TVirtualLab = {
   compute_cell: string;
 };
 
+export interface IVirtualLabExpandedResponse extends TVirtualLab {
+  owner: IVirtualLabUser | null;
+  admins: Array<string> | null;
+}
+
 export type TVirtualLabWithInviteRow = TVirtualLab & { invite_id: string };
 
-export type TPaginatedVirtualLabPayload<TRow> = {
+export type TPagination<TRow> = {
   data: TRow[];
   pagination: Pagination;
 };
-
-export type TListPendingVirtualLabsResponse = VlmResponse<
-  TPaginatedVirtualLabPayload<TVirtualLabWithInviteRow>
->;
-
-export type TListTenantVirtualLabsResponse = VlmResponse<TPaginatedVirtualLabPayload<TVirtualLab>>;
 
 export type TGetSelfVirtualLabResponse = VlmResponse<TVirtualLab>;
 
@@ -117,6 +150,11 @@ export type VirtualLabResponseData = {
   admins: Array<string> | null;
 };
 
+/**
+ * @deprecated
+ *
+ * use TVirtualLab
+ */
 export type TVirtualLabResponse = VlmResponse<VirtualLabResponseData>;
 
 type VerificationCodeEmailResponseData = {

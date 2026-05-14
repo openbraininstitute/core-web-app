@@ -3,11 +3,11 @@
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { RiArrowDownSLine, RiArrowRightSLine } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
-import { orderBy } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Button } from '@/ui/molecules/button';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
@@ -16,7 +16,7 @@ import {
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
-import type { Project, TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type { IProject, TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
 
 type Props = {
   lab: TVirtualLab;
@@ -45,12 +45,22 @@ export function Item({
     isFetched,
     isSuccess,
   } = useQuery({
-    queryKey: keyBuilder.listWorkspaceProjects({ virtualLabId: lab.id }),
-    queryFn: async () => await listProjects({ virtualLabId: lab.id }),
+    queryKey: keyBuilder.listWorkspaceProjects({
+      virtualLabId: lab.id,
+      filter: { order_by: 'updated_at', order_direction: 'desc' },
+    }),
+    queryFn: async () =>
+      await listProjects({
+        virtualLabId: lab.id,
+        // TODO: do not fetch by fixed page_size
+        // make it loop through pages until it gets all projects
+        pagination: { page: 1, page_size: 40 },
+        filter: { order_by: 'updated_at', order_direction: 'desc' },
+      }),
     enabled: !!lab.id && (isOpen || tryingToExpand.has(lab.id)),
   });
-
-  const data = orderBy(projects?.data?.data ?? [], ['updated_at'], ['desc']);
+  const { isVirtualLabAdmin, isVirtualLabOwner } = useWorkspaceMembership({ virtualLabId: lab.id });
+  const canCreateProject = isVirtualLabAdmin || isVirtualLabOwner;
 
   useEffect(() => {
     if (tryingToExpand.has(lab.id) && isSuccess && isFetched) {
@@ -74,7 +84,7 @@ export function Item({
     project,
   }: {
     virtualLabId: string;
-    project: Project;
+    project: IProject;
   }) => {
     makeTriggerWorkspaceConfigurationClickEvent({
       on: true,
@@ -191,7 +201,7 @@ export function Item({
               }
             )}
           >
-            {data?.map((project, projectIndex) => {
+            {projects?.data?.map((project, projectIndex) => {
               const isProjectActive = project.id === activeProjectId;
               return (
                 <motion.div
@@ -235,21 +245,23 @@ export function Item({
                 </motion.div>
               );
             })}
-            <div className="mt-1 flex justify-end">
-              <Button
-                rounded
-                size="md"
-                variant="outline"
-                className={cn(
-                  'border-gray-200 text-gray-500 hover:text-primary-9 hover:bg-gray-50!',
-                  'min-w-32 justify-between rounded-full bg-white px-4 text-sm font-semibold'
-                )}
-                onClick={onCreateProject}
-              >
-                Add project
-                <PlusOutlined className="ml-3 text-sm" />
-              </Button>
-            </div>
+            {canCreateProject && (
+              <div className="mt-1 flex justify-end">
+                <Button
+                  rounded
+                  size="md"
+                  variant="outline"
+                  className={cn(
+                    'border-gray-200 text-gray-500 hover:text-primary-9 hover:bg-gray-50!',
+                    'min-w-32 justify-between rounded-full bg-white px-4 text-sm font-semibold'
+                  )}
+                  onClick={onCreateProject}
+                >
+                  Add project
+                  <PlusOutlined className="ml-3 text-sm" />
+                </Button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

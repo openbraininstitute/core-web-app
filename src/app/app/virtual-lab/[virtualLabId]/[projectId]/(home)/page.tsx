@@ -22,8 +22,8 @@ export async function generateMetadata({
       queryFn: () => getProject({ virtualLabId, projectId }),
     })
   );
-  const projectName = res?.data?.name ?? 'Project';
-  const projectDescription = res?.data?.description ?? '';
+  const projectName = res?.name ?? 'Project';
+  const projectDescription = res?.description ?? '';
 
   const title = `Project: ${projectName} - Get Started | Open Brain Institute`;
   const description =
