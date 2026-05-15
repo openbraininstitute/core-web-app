@@ -1,7 +1,7 @@
 import saveAs from 'file-saver';
 import React from 'react';
 
-import { downloadAsset, getAssets } from '@/api/entitycore/queries/assets';
+import { downloadAsset, getAssets } from '@/api/entitycore/queries';
 import useWorkspace from '@/ui/hooks/use-workspace';
 
 import { CircuitLoader } from './circuit-loader';

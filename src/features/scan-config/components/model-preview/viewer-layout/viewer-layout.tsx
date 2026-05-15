@@ -1,5 +1,6 @@
-import { IconDownloadFile } from '@/components/LandingPage/icons/IconDownloadFile';
-import { LoadingNeuronSpinner } from '@/components/neuron-viewer/loading-neuron-spinner';
+import React from 'react';
+
+import { LoadingNeuronSpinner } from '@/components/neuron-viewer/';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -16,18 +17,18 @@ export interface ViewerLayoutProps {
 }
 
 export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
+  const [progress, setProgress] = React.useState(0);
   const circuitLoader = useCircuitLoader(model);
   const loaded = circuitLoader.useLoaded();
+  const ready = loaded && progress >= 1;
   const error = circuitLoader.useError();
   const handleDownload = useDownloadHandler(model);
+  console.log('🐞 [viewer-layout@26] progress =', progress); // @FIXME: Remove this line written on 2026-05-15 at 09:55
 
   return (
     <div className={cn(styles.layout, className, 'px-5 text-gray-500')}>
       <header className="text-lg uppercase">
         <div>Preview</div>
-        {/* <button type="button" onClick={handleDownload}>
-          <IconDownload/>
-        </button> */}
       </header>
       <div className={styles.viewer}>
         {error ? (
@@ -50,11 +51,13 @@ export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
               <MorphoViewerSmallCircuit
                 circuit={circuitLoader.circuit}
                 loadCell={circuitLoader.loadCell}
+                onLoadProgress={setProgress}
+                highlightedCellIds={['NOPE/980120A_-_Scale_x1.000_y1.150_z1.000_-_Clone_0']}
                 gizmo
                 scalebar
               />
             )}
-            {!loaded && (
+            {!ready && (
               <div className={styles.spinner}>
                 <LoadingNeuronSpinner label="Circuit" />
               </div>
