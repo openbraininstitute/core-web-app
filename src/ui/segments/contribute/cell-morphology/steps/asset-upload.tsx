@@ -8,7 +8,7 @@ import { isNil, reject } from 'es-toolkit/compat';
 import JSZip from 'jszip';
 import { useState } from 'react';
 
-import { resolveNeuronFile } from '@/api/one/cell-morphology';
+import { resolveNeuronFile, isNeuronFileError } from '@/api/one/cell-morphology';
 import { tryCatch } from '@/api/utils';
 import { DownloadAsBoxIcon } from '@/components/icons/buttons';
 import { FileDownloadLine } from '@/components/icons/File';
@@ -89,13 +89,36 @@ export function AssetUpload({
       const { data: resolution, error } = await tryCatch(resolveNeuronFile(file as File));
 
       if (error) {
+        console.log('RAW ERROR:', JSON.stringify(error), error, Object.keys(error as any));
         setResolveNeuronFileLoading(false);
 
-        const detailMessage = (error as Error).message || 'An unknown error occurred';
+        const neuronError = isNeuronFileError(error) ? error.neuronFileError : null;
+        const detailMessage = neuronError?.detail ?? (error as Error).message ?? 'An unknown error occurred';
+
+        const errorLines: string[] = [
+          messages.ResolveNeuronFileFailed.replace('$$', file.name),
+          detailMessage,
+        ];
+
+        if (neuronError?.quality_checks) {
+          const { ran_to_completion, failed_checks, passed_checks } = neuronError.quality_checks;
+          if (ran_to_completion) {
+            if (failed_checks.length > 0) {
+              errorLines.push(`\nFailed quality checks (${failed_checks.length}):`);
+              failed_checks.forEach((check) => errorLines.push(`  ✗ ${check}`));
+            }
+            if (passed_checks.length > 0) {
+              errorLines.push(`\nPassed quality checks (${passed_checks.length}):`);
+              passed_checks.forEach((check) => errorLines.push(`  ✓ ${check}`));
+            }
+          } else {
+            errorLines.push('\nQuality checks could not be completed for this file.');
+          }
+        }
 
         setState((prev) => ({
           ...prev,
-          errors: [messages.ResolveNeuronFileFailed.replace('$$', file.name), detailMessage],
+          errors: errorLines,
         }));
         return;
       }

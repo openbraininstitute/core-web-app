@@ -325,7 +325,7 @@ class ApiClient {
         responseData = (await response.arrayBuffer()) as unknown as T;
       }
 
-      if (!response.ok) {
+      if (!response.ok && !config.asRawResponse) {
         if ((config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
           const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
 
