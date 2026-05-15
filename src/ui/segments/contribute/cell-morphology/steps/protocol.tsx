@@ -1,5 +1,5 @@
 import { Form, Select } from 'antd';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 
 import { getProtocols } from '@/api/entitycore/queries/general/protocol';
 import { RepairPipelineType } from '@/api/entitycore/types/entities/cell-morphology';
@@ -31,17 +31,24 @@ export function Protocol() {
   const isDigitalReconstruction =
     selectedProtocolGenerationType === CellMorphologyGenerationType.DigitalReconstruction.key;
 
+  const selectedProtocolId = Form.useWatch('cell_morphology_protocol_id', form);
+
   const handleProtocolSelect = useCallback(
     (option: AsyncSelectOption<IProtocol> | undefined) => {
       const generationType = option?.data?.generation_type ?? null;
-      form.setFieldValue('_protocol_generation_type', generationType);
-
-      if (generationType !== CellMorphologyGenerationType.DigitalReconstruction.key) {
-        form.setFieldValue('repair_pipeline_state', undefined);
-      }
+      
+      form.setFieldsValue({
+        _protocol_generation_type: generationType,
+      });
     },
     [form]
   );
+
+  useEffect(() => {
+    if (selectedProtocolGenerationType !== CellMorphologyGenerationType.DigitalReconstruction.key) {
+      form.setFieldValue('repair_pipeline_state', undefined);
+    }
+  }, [selectedProtocolGenerationType, form]);
 
   const ProtocolDropdown = useMemo(
     () =>
@@ -81,9 +88,7 @@ export function Protocol() {
         <ProtocolDropdown />
       </Form.Item>
 
-      <Form.Item name="_protocol_generation_type" hidden noStyle>
-        <input type="hidden" />
-      </Form.Item>
+      <Form.Item name="_protocol_generation_type" hidden noStyle />
 
       {isDigitalReconstruction && (
         <Form.Item name="repair_pipeline_state" label={renderLabel('Repair pipeline type', 'main')}>
