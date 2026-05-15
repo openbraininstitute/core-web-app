@@ -147,7 +147,9 @@ export function Profile({ data }: ProfileProps) {
 
   const formDisabled = !isEditing || isPending;
   const readOnly = !isEditing;
-
+  const readOnlyLabelClassName = {
+    'text-gray-500': readOnly,
+  };
   return (
     <div
       id="profile-form-container"
@@ -184,7 +186,13 @@ export function Profile({ data }: ProfileProps) {
               ]}
               className="w-full min-w-0 [&_.ant-form-item-label]:pb-0!"
               name="first_name"
-              label={<Label title="First Name" className="text-primary-9" required />}
+              label={
+                <Label
+                  title="First Name"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                  required
+                />
+              }
             >
               <XInput
                 id="first_name"
@@ -203,7 +211,13 @@ export function Profile({ data }: ProfileProps) {
               ]}
               name="last_name"
               className="w-full min-w-0 [&_.ant-form-item-label]:pb-0!"
-              label={<Label title="Last Name" className="text-primary-9" required />}
+              label={
+                <Label
+                  title="Last Name"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                  required
+                />
+              }
             >
               <XInput
                 id="last_name"
@@ -226,7 +240,13 @@ export function Profile({ data }: ProfileProps) {
                       ? 'error'
                       : undefined
               }
-              label={<Label title="Email" className="text-primary-9" required />}
+              label={
+                <Label
+                  title="Email"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                  required
+                />
+              }
               rules={[
                 {
                   required: true,
@@ -260,7 +280,7 @@ export function Profile({ data }: ProfileProps) {
             <div className="md:col-span-2">
               <Label
                 title="Social Login"
-                className="text-primary-9 [&_.ant-form-item-label]:pb-0!"
+                className={cn('text-primary-9', readOnlyLabelClassName)}
               />
               <div
                 className={cn(
@@ -285,28 +305,42 @@ export function Profile({ data }: ProfileProps) {
             <Form.Item
               name="street"
               className="md:col-span-2 [&_.ant-form-item-label]:pb-0!"
-              label={<Label title="Address" className="text-primary-9" />}
+              label={
+                <Label title="Address" className={cn('text-primary-9', readOnlyLabelClassName)} />
+              }
             >
               <XInput id="street" name="street" type="text" plain={readOnly} />
             </Form.Item>
             <Form.Item
               name="postal_code"
               className="[&_.ant-form-item-label]:pb-0!"
-              label={<Label title="Postal Code" className="text-primary-9" />}
+              label={
+                <Label
+                  title="Postal Code"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                />
+              }
             >
               <XInput id="postal_code" name="postal_code" type="text" plain={readOnly} />
             </Form.Item>
             <Form.Item
               name="locality"
               className="[&_.ant-form-item-label]:pb-0!"
-              label={<Label title="City" className="text-primary-9" />}
+              label={
+                <Label title="City" className={cn('text-primary-9', readOnlyLabelClassName)} />
+              }
             >
               <XInput id="locality" name="locality" type="text" plain={readOnly} />
             </Form.Item>
             <Form.Item
               name="region"
               className="[&_.ant-form-item-label]:pb-0!"
-              label={<Label title="State/Canton" className="text-primary-9" />}
+              label={
+                <Label
+                  title="State/Canton"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                />
+              }
             >
               <XInput id="region" name="region" type="text" plain={readOnly} />
             </Form.Item>
@@ -319,7 +353,13 @@ export function Profile({ data }: ProfileProps) {
                   validator: createZodFieldValidator(ProfileFormSchema, 'country', form),
                 },
               ]}
-              label={<Label title="Country" className="text-primary-9" required />}
+              label={
+                <Label
+                  title="Country"
+                  className={cn('text-primary-9', readOnlyLabelClassName)}
+                  required
+                />
+              }
             >
               <Select
                 showSearch

@@ -60,6 +60,10 @@ export type Project = {
   user_count?: number;
 };
 
+/**
+ * Legacy pagination shape (e.g. `PaginatedProjectsPayload`). Not used for virtual-lab
+ * `ListResponse` — that uses {@link PaginationResponse}.
+ */
 export type Pagination = {
   page: number;
   size: number;
@@ -80,7 +84,6 @@ type ProjectResponse = {
 
 export interface IProjectExtra {
   user_count: number;
-  balance_added: boolean | null;
   admins: Array<string> | null;
 }
 
@@ -119,9 +122,17 @@ export interface IVirtualLabExpandedResponse extends TVirtualLab {
 
 export type TVirtualLabWithInviteRow = TVirtualLab & { invite_id: string };
 
-export type TPagination<TRow> = {
+/** Virtual-lab service `PaginationResponse` — current page, page size, total rows in DB. */
+export type PaginationResponse = {
+  page: number;
+  page_size: number;
+  total_items: number;
+};
+
+/** Virtual-lab service `ListResponse[M]`. */
+export type ListResponse<TRow> = {
   data: TRow[];
-  pagination: Pagination;
+  pagination: PaginationResponse;
 };
 
 export type TGetSelfVirtualLabResponse = VlmResponse<TVirtualLab>;

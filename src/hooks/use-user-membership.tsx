@@ -80,11 +80,13 @@ export function useWorkspaceMembership({ virtualLabId, projectId }: Props) {
       },
     ],
   });
+
   const ownerVirtualLabId = myVirtualLab?.data?.id;
   const { userGroups, isVirtualLabMember, isVirtualLabAdmin, isProjectMember, isProjectAdmin } =
     makeRoles(data, virtualLabId, projectId);
   const isVirtualLabOwner = ownerVirtualLabId === virtualLabId;
   const virtualLabAdmins = currentVirtualLab?.admins;
+  const virtualLabOwnerId = currentVirtualLab?.created_by;
   const projectAdmins = currentProject?.admins;
   const isLoading =
     loadingGroups || loadingVirtualLab || loadingCurrentVirtualLab || loadingCurrentProject;
@@ -93,6 +95,7 @@ export function useWorkspaceMembership({ virtualLabId, projectId }: Props) {
     isLoading,
     userGroups,
     virtualLabAdmins,
+    virtualLabOwnerId,
     projectAdmins,
     isVirtualLabMember,
     isVirtualLabAdmin,

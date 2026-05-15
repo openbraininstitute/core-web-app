@@ -28,12 +28,14 @@ type VerificationCodeFormProps = {
   email: string;
   virtualLabId: string;
   onVerificationComplete?: () => void;
+  classname?: string;
 };
 
 export function VerificationCodeForm({
   email,
   virtualLabId,
   onVerificationComplete,
+  classname,
 }: VerificationCodeFormProps) {
   const queryClient = useQueryClient();
   const [otpKey, setOtpKey] = useState(0);
@@ -127,7 +129,14 @@ export function VerificationCodeForm({
   );
 
   return (
-    <div className="flex flex-col gap-8 items-center justify-center mx-auto relative rounded-md p-10">
+    <div
+      id="verification-code-form"
+      data-testid="verification-code-form"
+      className={cn(
+        'flex flex-col gap-8 items-center justify-center mx-auto relative rounded-md p-10',
+        classname
+      )}
+    >
       <div className="flex flex-col items-center justify-center text-primary-9">
         <h4 className="font-semibold text-2xl">Enter Verification Code</h4>
         <p className="text-lg">

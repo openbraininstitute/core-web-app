@@ -24,9 +24,15 @@ type RequestCodeFormProps = {
   virtualLabId: string;
   onCodeSent: (value: boolean) => void;
   onEmailChange: (email: string) => void;
+  classname?: string;
 };
 
-export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: RequestCodeFormProps) {
+export function RequestCodeForm({
+  virtualLabId,
+  onCodeSent,
+  onEmailChange,
+  classname,
+}: RequestCodeFormProps) {
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
   const email = Form.useWatch('email', form);
@@ -64,8 +70,12 @@ export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: Req
   );
 
   return (
-    <div className="text-primary-9 w-full px-10">
-      <h4 className="text-lg font-semibold">Verify your email to continue</h4>
+    <div
+      id="request-code-form"
+      data-testid="request-code-form"
+      className={cn('text-primary-9 w-full px-2', classname)}
+    >
+      <h4 className="text-lg font-bold">Verify your email to continue</h4>
       <p className="text-base font-light">
         We'll send a one-time code to your email. Enter it to confirm your identity and proceed with
         your purchase
@@ -85,7 +95,7 @@ export function RequestCodeForm({ virtualLabId, onCodeSent, onEmailChange }: Req
           }}
           autoComplete="off"
           onFinish={generateNewCode}
-          className="w-3/4 mx-auto relative"
+          className="w-full mx-auto relative"
         >
           <Form.Item
             name="email"

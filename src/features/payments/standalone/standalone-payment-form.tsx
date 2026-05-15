@@ -49,7 +49,7 @@ export function StandalonePaymentForm({
   const [billingAddress, setBillingAddress] = useState<TBillingAddress | null>(null);
   const [credits, setCredits] = useState<number | undefined>(undefined);
   const [isPaying, setIsPaying] = useState(false);
-  const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(true);
+  const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(false);
   const [stripeElementsReady, setStripeElementsReady] = useState(false);
   const [conversionKeys, addConversionKey] = useReducer((keys: Set<string>, key: string) => {
     if (keys.has(key)) {
@@ -153,32 +153,40 @@ export function StandalonePaymentForm({
     }
 
     try {
-      const { data } = await createStandalonePayment.mutateAsync({
-        quote_id: quote.data.quote_id,
-        virtual_lab_id: virtualLabId,
-        billing_address: currentBillingAddress,
-        sync_billing_address_to_profile: saveBillingAddressToProfile,
-        payment_method_id: paymentMethodId,
-      });
-      if (saveBillingAddressToProfile) {
-        void queryClient.invalidateQueries({
-          queryKey: userKeyBuilder.profile(),
-        });
-      }
-      successNotify({
-        message: messages.paymentSuccess
-          .replace('$$credits', credits.toString())
-          .replace('$$amount', (data.amount_total / 100).toString())
-          .replace('$$currency', data.currency.toUpperCase()),
-        ...notificationConfig,
-      });
-      const accountingKey = keyBuilder.accounting({ virtualLabId });
+      const { data } = await createStandalonePayment.mutateAsync(
+        {
+          quote_id: quote.data.quote_id,
+          virtual_lab_id: virtualLabId,
+          billing_address: currentBillingAddress,
+          sync_billing_address_to_profile: saveBillingAddressToProfile,
+          payment_method_id: paymentMethodId,
+        },
+        {
+          onSuccess: () => {
+            successNotify({
+              message: messages.paymentSuccess
+                .replace('$$credits', credits.toString())
+                .replace('$$amount', (data.amount_total / 100).toString())
+                .replace('$$currency', data.currency.toUpperCase()),
+              ...notificationConfig,
+            });
+            const accountingKey = keyBuilder.accounting({ virtualLabId });
+            window.setTimeout(() => {
+              void queryClient.invalidateQueries({
+                queryKey: accountingKey,
+              });
+            }, 1_000);
+          },
+          onSettled: async (_, __, vars) => {
+            if (vars.sync_billing_address_to_profile) {
+              await queryClient.invalidateQueries({
+                queryKey: userKeyBuilder.profile(),
+              });
+            }
+          },
+        }
+      );
       onCancel();
-      window.setTimeout(() => {
-        void queryClient.invalidateQueries({
-          queryKey: accountingKey,
-        });
-      }, 1_000);
       setIsPaying(false);
     } catch (error) {
       const code = get(error, 'cause.code', 'DEFAULT');
@@ -201,7 +209,7 @@ export function StandalonePaymentForm({
   };
 
   return (
-    <div className="flex min-h-0 w-full flex-col gap-4">
+    <div className="flex w-full flex-col gap-6">
       <CreditsAmountInput
         hint={limitReached ? 'Calculation of order full amount limit reached' : conversionText}
         value={credits}

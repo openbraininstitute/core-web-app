@@ -17,7 +17,7 @@ import {
 
 import { WorkspaceManagerModal } from './modal';
 
-type ProjectPreviewPayload = {
+type TProjectPreviewPayload = {
   projectId?: string | null;
   virtualLabId?: string | null;
   data?: {
@@ -26,7 +26,7 @@ type ProjectPreviewPayload = {
   } | null;
 };
 
-type VirtualLabPayload = {
+type TVirtualLabPayload = {
   virtualLabId?: string | null;
   data?: {
     id?: string | null;
@@ -40,7 +40,7 @@ const ProfileSectionDict = {
 } as const;
 type TProfileSection = (typeof ProfileSectionDict)[keyof typeof ProfileSectionDict];
 
-type ProfilePayload = {
+type TProfilePayload = {
   section?: TProfileSection;
 };
 
@@ -108,7 +108,7 @@ export function SpaceManagerContainer() {
   }
 
   if (contextConfig.type === WorkspaceActions.ProfileSettings) {
-    const section = (payload as ProfilePayload | null)?.section ?? ProfileSectionDict.Profile;
+    const section = (payload as TProfilePayload | null)?.section ?? ProfileSectionDict.Profile;
     return (
       <WorkspaceManagerModal
         key={contextConfig.type}
@@ -124,7 +124,7 @@ export function SpaceManagerContainer() {
   }
 
   if (contextConfig.type === WorkspaceActions.VirtualLabConfiguration) {
-    const virtualLabPayload = payload as VirtualLabPayload | null;
+    const virtualLabPayload = payload as TVirtualLabPayload | null;
     const targetVirtualLabId =
       virtualLabPayload?.virtualLabId ?? virtualLabPayload?.data?.id ?? virtualLabId;
     return (
@@ -143,7 +143,7 @@ export function SpaceManagerContainer() {
   }
 
   if (contextConfig.type === WorkspaceActions.ProjectPreview) {
-    const projectPayload = payload as ProjectPreviewPayload | null;
+    const projectPayload = payload as TProjectPreviewPayload | null;
     const targetProjectId = projectPayload?.projectId ?? projectPayload?.data?.id;
     const targetVirtualLabId = projectPayload?.virtualLabId ?? projectPayload?.data?.virtual_lab_id;
     if (!targetProjectId || !targetVirtualLabId) return null;

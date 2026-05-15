@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Form } from 'antd';
 import { get } from 'es-toolkit/compat';
@@ -8,7 +9,6 @@ import z from 'zod';
 
 import { redeemPromotionCode } from '@/api/virtual-lab-svc/queries/promotion';
 import { SparklesFill } from '@/components/icons/sparkles';
-import { Button } from '@/ui/molecules/button';
 import { Input } from '@/ui/molecules/input';
 import {
   PurchaseModeDictionary,
@@ -17,6 +17,8 @@ import {
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
+import { GhostRoundedIconButton } from '../../workspaces/space-manager/sections/elements';
+
 const PromoCodeSchema = z.object({
   promo_code: z.string().min(1),
 });
@@ -24,9 +26,13 @@ const PromoCodeSchema = z.object({
 export function PromotionCode({
   virtualLabId,
   onModeChange,
+  classnames,
 }: {
   virtualLabId: string;
   onModeChange: (m: TPurchaseModeDictionary) => void;
+  classnames?: {
+    root?: string;
+  };
 }) {
   const queryClient = useQueryClient();
   const [form] = Form.useForm<{ promo_code: string }>();
@@ -61,96 +67,116 @@ export function PromotionCode({
   };
 
   return (
-    <div
+    <section
+      id="promotion-code-form"
+      data-testid="promotion-code-form"
       className={cn(
-        'rounded-2xl bg-gradient-to-br from-emerald-500/15',
-        'to-emerald-500/5 p-6 backdrop-blur-lg select-none md:p-8'
+        'flex h-full min-h-0 w-full flex-1 flex-col gap-3.5 rounded-2xl bg-white pt-0',
+        classnames?.root
       )}
     >
-      <div className="mb-6 flex items-center gap-3">
-        <div className="rounded-lg bg-emerald-400/30 p-2">
-          <SparklesFill className="h-5 w-5 text-emerald-100" />
-        </div>
-        <h2 className="text-xl font-semibold text-white">Redeem Promo Code</h2>
+      <div className="shrink-0 pt-5 back-button-wrapper">
+        <GhostRoundedIconButton
+          icon={<ArrowLeftOutlined />}
+          label="Select option"
+          classNames={{ label: 'font-semibold', root: 'hover:bg-gray-100' }}
+          onClick={() => onModeChange('selection')}
+          iconPosition="start"
+        />
       </div>
-
-      <Form
-        name="promotion-code"
-        className="space-y-6 [&_.ant-form-item-explain-error]:text-sm"
-        onFinish={handlePromoApply}
-        initialValues={{
-          promo_code: undefined,
-        }}
-        disabled={isPending}
-        form={form}
-      >
-        <div className="w-full">
-          <div className="mb-3 block text-white">Promotion Code</div>
-          <Form.Item
-            label={null}
-            name="promo_code"
-            id="promo_code"
-            rules={[
-              {
-                type: 'string',
-                required: true,
-                min: 1,
-                message: 'Please enter promotion code',
-              },
-            ]}
-            className="mb-0"
-            extra={
-              <span className="text-error text-sm select-none">
-                {get(promoError, 'cause.message', null)}
-              </span>
-            }
-          >
-            <Input
-              type="text"
-              min={1}
-              placeholder="Enter promotion code"
-              className={cn(
-                'h-16 w-full rounded-xl border-white/20 bg-[#052f66] text-white placeholder:text-white/50',
-                '[appearance:textfield] border px-4 py-1 pr-28 text-xl! font-bold placeholder:text-sm',
-                '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
-              )}
-            />
-          </Form.Item>
-
-          {isSuccess && (
-            <div className="rounded-lg bg-emerald-500/20 p-4 backdrop-blur-sm">
-              <div className="flex items-center gap-2 text-emerald-100">
-                <SparklesFill className="h-5 w-5" />
-                <span className="font-medium">Code applied successfully!</span>
-              </div>
-              <p className="mt-2 text-2xl font-bold text-white">
-                +{result.data?.credits_granted} Credits
-              </p>
+      <div className="min-h-0 flex-1 mb-4 overflow-x-hidden overflow-y-auto secondary-scrollbar [scrollbar-gutter:stable]">
+        <div
+          id="standalone-stripe-payment-content"
+          className="mr-1 flex flex-col rounded-2xl border border-gray-100 p-4"
+        >
+          <div className="mb-6 flex items-center gap-3">
+            <div className="rounded-lg bg-teal-600/80 p-2">
+              <SparklesFill className="h-5 w-5 text-teal-200" />
             </div>
-          )}
-        </div>
+            <h2 className="text-xl font-semibold text-primary-9">Redeem promotion code</h2>
+          </div>
 
-        <div className="flex gap-3">
-          <Button
-            rounded
-            type="button"
-            onClick={() => onModeChange(PurchaseModeDictionary.Selection)}
-            variant="outline"
-            className="h-12 flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
+          <Form
+            name="promotion-code"
+            className="[&_.ant-form-item-explain-error]:text-sm"
+            onFinish={handlePromoApply}
+            initialValues={{
+              promo_code: undefined,
+            }}
+            disabled={isPending}
+            form={form}
           >
-            Cancel
-          </Button>
-          <Button
-            rounded
-            type="submit"
-            variant="success"
-            className="h-12 flex-1 text-base font-semibold disabled:opacity-50"
-            disabled={disableSubmit}
-          >
-            Apply Code
-          </Button>
+            <div className="w-full">
+              <Form.Item
+                label={null}
+                name="promo_code"
+                id="promo_code"
+                rules={[
+                  {
+                    type: 'string',
+                    required: true,
+                    min: 1,
+                    message: 'Please enter promotion code',
+                  },
+                ]}
+                className="mb-0!"
+                extra={
+                  <span className="text-destructive text-sm select-none">
+                    {get(promoError, 'cause.message', null)}
+                  </span>
+                }
+              >
+                <Input
+                  inputMode="text"
+                  min={1}
+                  placeholder="Enter promotion code"
+                  className={cn(
+                    'rounded-2xl min-h-14 text-xl! border-2 border-gray-100! bg-transparent! px-3 py-2 font-bold tracking-wide text-primary-9! focus:ring-0',
+                    'transition-[border-color,box-shadow] duration-200 ease-in-out',
+                    'hover:bg-transparent! hover:text-primary-9! focus:bg-transparent! focus:text-primary-9! [&_.ant-input-outlined]:bg-transparent!',
+                    'focus:border-pr placeholder:text-primary-9! hover:border-gray-200!',
+                    ' focus-within:border-gray-300! focus-visible:ring-0',
+                    'placeholder:text-gray-400 placeholder:font-light placeholder:text-sm',
+                    '[&.ant-input-status-error]:border-1.5! [&.ant-XInput-status-error]:border-destructive!',
+                    '[&.ant-input-status-error]:border-1.5! [&.ant-input-status-error]:border-destructive!'
+                  )}
+                />
+              </Form.Item>
+
+              {isSuccess && (
+                <div className="rounded-lg bg-teal-600/50 p-4 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-white">
+                    <SparklesFill className="h-5 w-5" />
+                    <span className="font-bold text-teal-800">Code applied successfully!</span>
+                  </div>
+                  <p className="mt-2 text-2xl font-bold text-white">
+                    +{result.data?.credits_granted} Credits
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 justify-end mt-6">
+              <GhostRoundedIconButton
+                type="button"
+                label="Cancel"
+                classNames={{ label: 'font-semibold', root: 'hover:bg-gray-100' }}
+                onClick={() => onModeChange(PurchaseModeDictionary.Selection)}
+              />
+
+              <GhostRoundedIconButton
+                label="Apply Code"
+                type="submit"
+                classNames={{
+                  root: 'bg-primary-9 text-white hover:bg-primary-8 group px-8',
+                  label: 'text-white',
+                }}
+                disabled={disableSubmit}
+              />
+            </div>
+          </Form>
         </div>
-      </Form>
-    </div>
+      </div>
+    </section>
   );
 }

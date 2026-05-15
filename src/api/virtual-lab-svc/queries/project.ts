@@ -5,10 +5,10 @@ import { config } from '@/config';
 import type {
   IProject,
   IProjectExpandedResponse,
+  ListResponse,
   ProjectExistsVerificationResponse,
   TCreateProjectExpandParam,
   TGetProjectExpandParam,
-  TPagination,
   VlmAttachUsersToProjectResponse,
 } from '@/api/virtual-lab-svc/queries/types';
 import type { TProjectPayload, TUserRole } from '@/api/virtual-lab-svc/validation';
@@ -91,7 +91,7 @@ export async function createProject(
  * @param {number} params.page - The page number (default: 1)
  * @param {string} [params.search] - Case-insensitive substring search on name and description
  * @param {number} params.size - The number of items per page (default: 40)
- * @returns {Promise<TPagination<IProject>>} - Returns the paginated projects data
+ * @returns {Promise<ListResponse<IProject>>} - Returns the paginated projects data
  * @throws {Error} - Throws an error if the API request fails
  */
 export async function listProjects({
@@ -110,7 +110,7 @@ export async function listProjects({
   const api = await virtualLabRootApi();
   const url = `${baseUri}/${virtualLabId}/projects`;
 
-  return await api.get<TPagination<IProject>>(url, {
+  return await api.get<ListResponse<IProject>>(url, {
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',

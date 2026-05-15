@@ -273,10 +273,17 @@ export function Subscription({ onExpandedChange }: SubscriptionProps) {
     .with({ tag: 'error' }, () => (
       <ErrorMinimal
         title="Subscription error"
-        description='We were unable to load the subscription plans and payment options at this time. This
+        description={
+          <>
+            We were unable to load the subscription plans and payment options at this time. This
             could be preventing you from viewing available plans or completing your purchase. Please
             try refreshing the page or return later. If the issue persists, please contact support
-            at <a href="mailto:support@openbraininstitute.org">support@openbraininstitute.org</a>.'
+            at <a href="mailto:support@openbraininstitute.org">support@openbraininstitute.org</a>.
+          </>
+        }
+        classNames={{
+          description: 'text-pretty',
+        }}
       />
     ))
     .with({ tag: 'ready' }, ({ data: subscriptionData }) => (

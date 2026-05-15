@@ -59,7 +59,7 @@ function Form({ onPrevious }: Props) {
   const [billingAddress, setBillingAddress] = useState<TBillingAddress | null>(null);
   const [stripeElementsReady, setElementsReady] = useState(false);
   const [isSubscribing, setSubscribing] = useState(false);
-  const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(true);
+  const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(false);
   const { success: successNotify, error: errorNotify } = useAppNotification();
   const createSubscription = useCreateSubscriptionMutation();
 

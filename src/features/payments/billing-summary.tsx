@@ -25,7 +25,7 @@ export function BillingSummary({
   const taxCountry = quote?.tax_country;
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white/5 p-4 text-sm text-primary-9">
+    <div className="rounded-2xl border border-gray-200 p-4 text-sm text-primary-9">
       <div className="mb-4 font-bold">{title}</div>
       <div className="flex justify-between gap-4">
         <span>Subtotal excl. VAT</span>

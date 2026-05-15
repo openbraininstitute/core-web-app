@@ -1,7 +1,6 @@
 'use client';
 
-import { PlusOutlined } from '@ant-design/icons';
-import { RiArrowDownSLine, RiArrowRightSLine } from '@remixicon/react';
+import { RiArrowDownSLine, RiArrowRightSLine, RiCheckFill, RiFileCopyLine } from '@remixicon/react';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
@@ -11,6 +10,8 @@ import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project'
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { getSelfVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { UserFilled } from '@/components/icons/buttons';
+import { SignOutFill } from '@/components/icons/EditorIcons';
+import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -62,14 +63,12 @@ export function SpaceSwitcher({ className }: Props) {
   const [boardModalOpen, setBoardModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { status: userStatus } = useSession();
+  const { status: userStatus, data: sessionData } = useSession();
+  const [, copyAccessToken, , copying] = useCopyToClipboard();
 
-  const onCreateProject = () =>
-    makeTriggerWorkspaceConfigurationClickEvent({
-      on: true,
-      type: WorkspaceActions.NewProject,
-      data: { mode: 'select-virtual-lab' },
-    });
+  const onCopyToken = () => {
+    if (sessionData?.accessToken) void copyAccessToken(sessionData.accessToken);
+  };
 
   const labFilters = {
     scope: 'all',
@@ -266,7 +265,7 @@ export function SpaceSwitcher({ className }: Props) {
             {/** biome-ignore lint/a11y/noStaticElementInteractions: button can not have nested buttons */}
             <div
               className={cn(
-                'flex items-center gap-1.5 rounded-full',
+                'flex h-auto w-auto shrink-0 items-center justify-center rounded-full',
                 'hover:bg-background border-none'
               )}
               onKeyDown={onProfileClick}
@@ -284,7 +283,9 @@ export function SpaceSwitcher({ className }: Props) {
               currentVirtualLabName &&
               !isExpanded && (
                 <div
-                  className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden pl-2 select-none"
+                  id="current-virtual-lab-name"
+                  data-testid="current-virtual-lab-name"
+                  className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden select-none"
                   title={currentVirtualLabName}
                   data-label={currentVirtualLabName}
                 >
@@ -313,7 +314,11 @@ export function SpaceSwitcher({ className }: Props) {
                     {isCurrentProjectLoading ? (
                       <Skeleton className="h-5 w-24 flex-1 rounded-full" />
                     ) : (
-                      <span className="text-primary-9 min-w-0 flex-1 truncate pl-2 text-left font-bold">
+                      <span
+                        id="current-project-name"
+                        data-testid="current-project-name"
+                        className="text-primary-9 min-w-0 flex-1 truncate text-left font-bold"
+                      >
                         {currentProjectLabel}
                       </span>
                     )}
@@ -348,9 +353,10 @@ export function SpaceSwitcher({ className }: Props) {
                     'hover:text-primary-8! text-primary-9! flex w-full items-center justify-between gap-2'
                   )}
                 >
-                  <ProfileButton username={username} onProfileClick={onProfileClick} />
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <ProfileButton username={username} onProfileClick={onProfileClick} />
+                  </div>
                   <div className="ml-2 flex shrink-0 items-center gap-2">
-                    <span className="text-neutral-5 ml-2 shrink-0 text-sm">Logout</span>
                     <motion.div
                       className="bg-white inset-shadow-sm group flex size-8 items-center justify-center rounded-full"
                       animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -413,13 +419,39 @@ export function SpaceSwitcher({ className }: Props) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.05, duration: 0.1 }}
-                className="mt-auto p-4 pb-1 flex items-center justify-end"
+                className="mt-auto w-full gap-2 p-4 pb-2 grid grid-cols-2"
               >
                 <GhostRoundedIconButton
-                  label="Create new project"
-                  onClick={onCreateProject}
-                  icon={<PlusOutlined />}
-                  classNames={{ label: 'text-primary-9 font-bold' }}
+                  type="button"
+                  label="Copy token"
+                  onClick={onCopyToken}
+                  icon={
+                    copying ? (
+                      <RiCheckFill className="size-5! text-emerald-600! hover:text-emerald-700!" />
+                    ) : (
+                      <RiFileCopyLine className="size-3.5" />
+                    )
+                  }
+                  size="responsive"
+                  className="shrink-0 sm:max-w-[min(100%,14rem)]"
+                  classNames={{
+                    label: 'text-base font-semibold text-primary-9',
+                    iconWrapper: 'border-neutral-2/80',
+                    root: 'min-w-0 flex-1 justify-between pl-4! pr-2!',
+                  }}
+                />
+                <GhostRoundedIconButton
+                  href="/app/log-out"
+                  prefetch={false}
+                  label="Logout"
+                  icon={<SignOutFill className="size-3.5" />}
+                  size="responsive"
+                  className="min-w-0 flex-1"
+                  classNames={{
+                    label: 'text-base font-semibold text-white',
+                    iconWrapper: 'text-white hover:bg-primary-8',
+                    root: 'group min-w-0 flex-1 justify-between pr-2! pl-4! bg-primary-9 text-white hover:bg-primary-8',
+                  }}
                 />
               </motion.div>
             </motion.div>
@@ -452,10 +484,10 @@ function ProfileButton({
   );
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: button can't have nested buttons
+    // biome-ignore lint/a11y/noStaticElementInteractions: nested inside workspace `<button>` trigger; cannot use `<button>`
     <div
       className={cn(
-        'flex max-w-[calc(100%-100px)] flex-row items-center gap-1.5 rounded-full bg-white px-5 py-2 shadow-md md:h-9 lg:h-10',
+        'flex h-10 max-w-full min-w-0 flex-row items-center gap-1.5 rounded-full bg-white px-3 shadow-[0px_-2px_15px_0px_rgba(0,0,0,0.1)] xl:h-12 xl:gap-2 xl:px-5',
         'hover:bg-background',
         { 'bg-primary-9 hover:text-primary-9 text-white hover:bg-white': isActive }
       )}
@@ -465,8 +497,10 @@ function ProfileButton({
       title={username}
       data-label={username}
     >
-      <UserFilled className="shrink-0 text-base text-current xl:text-lg" />
-      <h3 className="line-clamp-1 min-w-0 truncate text-left text-sm font-bold">{username}</h3>
+      <UserFilled className="size-4 shrink-0 text-current xl:size-4.5" />
+      <h3 className="line-clamp-1 min-w-0 flex-1 truncate text-left text-sm font-bold xl:text-base">
+        {username}
+      </h3>
     </div>
   );
 }

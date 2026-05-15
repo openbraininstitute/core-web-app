@@ -120,6 +120,11 @@ export function Item({
     });
   };
 
+  const projectRows = projects?.data ?? [];
+  const hasProjects = projectRows.length > 0;
+  const showProjectsEmpty =
+    expandedLabs.has(lab.id) && !projectsLoading && isFetched && !hasProjects;
+
   return (
     <div className={cn('border-neutral-2 text-primary-9 bg-background mx-3 rounded-2xl border')}>
       {/** biome-ignore lint/a11y/useSemanticElements: button can't have nested buttons */}
@@ -201,52 +206,72 @@ export function Item({
               }
             )}
           >
-            {projects?.data?.map((project, projectIndex) => {
-              const isProjectActive = project.id === activeProjectId;
-              return (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: projectIndex * 0.01, duration: 0.1 }}
-                  className={cn(
-                    'flex w-full cursor-pointer items-center justify-between transition-colors duration-150'
-                  )}
-                >
-                  <Button
-                    rounded
-                    size="md"
-                    variant="outline"
+            {hasProjects &&
+              projectRows.map((project, projectIndex) => {
+                const isProjectActive = project.id === activeProjectId;
+                return (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: projectIndex * 0.01, duration: 0.1 }}
                     className={cn(
-                      'w-full justify-start bg-white! border shadow-none border-gray-200',
-                      'hover:bg-gray-100!',
-                      {
-                        'text-primary-8 scale-101 hover:text-primary-9 bg-white! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
-                          isProjectActive,
-                      }
+                      'flex w-full cursor-pointer items-center justify-between transition-colors duration-150'
                     )}
-                    title={project.name}
-                    onClick={() =>
-                      onProjectClick({
-                        virtualLabId: lab.id,
-                        project,
-                      })
-                    }
-                    id={`project-item-${project.id}`}
-                    data-testid="project-item-selector"
                   >
-                    <span className="line-clamp-1 truncate" title={project.name}>
-                      {project.name}
-                    </span>
-                    <RiArrowRightSLine
-                      className={`ml-auto ${isProjectActive ? 'text-primary-9! translate-x-0.5' : 'text-gray-300!'}`}
-                    />
-                  </Button>
-                </motion.div>
-              );
-            })}
+                    <Button
+                      rounded
+                      size="md"
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start bg-white! border shadow-none border-gray-200',
+                        'hover:bg-gray-100!',
+                        {
+                          'text-primary-8 scale-101 hover:text-primary-9 bg-white! font-bold shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)]':
+                            isProjectActive,
+                        }
+                      )}
+                      title={project.name}
+                      onClick={() =>
+                        onProjectClick({
+                          virtualLabId: lab.id,
+                          project,
+                        })
+                      }
+                      id={`project-item-${project.id}`}
+                      data-testid="project-item-selector"
+                    >
+                      <span className="line-clamp-1 truncate" title={project.name}>
+                        {project.name}
+                      </span>
+                      <RiArrowRightSLine
+                        className={`ml-auto ${isProjectActive ? 'text-primary-9! translate-x-0.5' : 'text-gray-300!'}`}
+                      />
+                    </Button>
+                  </motion.div>
+                );
+              })}
+            {showProjectsEmpty && (
+              <div
+                data-testid="space-switcher-projects-empty"
+                className="rounded-xl border border-dashed border-gray-200 bg-neutral-1/40 px-3 py-5 text-center"
+              >
+                <p className="text-primary-8 text-sm font-medium">No projects to display</p>
+                {!canCreateProject && (
+                  <div className="flex flex-col items-center justify-start">
+                    <p className="text-primary-8/70 mt-1 text-left text-xs font-normal">
+                      You currently do not have access to any projects in this lab or permission to
+                      create new ones.
+                    </p>
+                    <p className="text-primary-8/70 mt-1 text-left text-xs font-normal">
+                      Reach out to the lab owner for access or project creation permissions.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
             {canCreateProject && (
-              <div className="mt-1 flex justify-end">
+              <div className={cn('flex justify-end', hasProjects ? 'mt-1' : 'mt-2')}>
                 <Button
                   rounded
                   size="md"

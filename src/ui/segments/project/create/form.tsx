@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, Select } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { checkProjectExists, createProject } from '@/api/virtual-lab-svc/queries/project';
 import { setUserRecentWorkspace } from '@/api/virtual-lab-svc/queries/user';
@@ -32,11 +32,18 @@ export function CreationForm({
 }) {
   const { virtualLabId } = useWorkspace();
   const selectedVirtualLabId = fixedVirtualLabId ?? virtualLabId;
+
   const { success: notifySuccess, error: notifyError } = useAppNotification();
   const queryClient = useQueryClient();
 
   const { push: navigate } = useRouter();
   const [form] = Form.useForm<ProjectCreationFormValues>();
+
+  useEffect(() => {
+    if (!showVirtualLabSelect && selectedVirtualLabId) {
+      form.setFieldsValue({ virtual_lab_id: selectedVirtualLabId });
+    }
+  }, [form, showVirtualLabSelect, selectedVirtualLabId]);
 
   const filters = {
     scope: 'all',
@@ -118,7 +125,11 @@ export function CreationForm({
   });
 
   const onFormSubmit = async (values: ProjectCreationFormValues) => {
-    await mutateAsync(values);
+    const virtual_lab_id = showVirtualLabSelect
+      ? values.virtual_lab_id
+      : (selectedVirtualLabId ?? values.virtual_lab_id);
+    if (!virtual_lab_id) return;
+    await mutateAsync({ ...values, virtual_lab_id });
   };
 
   const [validName, setValidName] = useState<{
@@ -132,7 +143,10 @@ export function CreationForm({
 
   const values = Form.useWatch([], form);
   const hasErrors = form.getFieldsError().some(({ errors }) => errors.length > 0);
-  const requiredFilled = !!values?.name?.trim() && !!(fixedVirtualLabId ?? values?.virtual_lab_id);
+  const resolvedVirtualLabId = showVirtualLabSelect
+    ? values?.virtual_lab_id
+    : (selectedVirtualLabId ?? values?.virtual_lab_id);
+  const requiredFilled = !!values?.name?.trim() && !!resolvedVirtualLabId;
   const submittable = requiredFilled && !hasErrors && validName.status === 'valid';
 
   return (
@@ -179,8 +193,8 @@ export function CreationForm({
             />
           </Form.Item>
         ) : (
-          <Form.Item hidden name="virtual_lab_id">
-            <input name="virtual_lab_id" type="text" value={selectedVirtualLabId} hidden />
+          <Form.Item name="virtual_lab_id" hidden>
+            <Input type="hidden" />
           </Form.Item>
         )}
         <Form.Item
@@ -188,6 +202,7 @@ export function CreationForm({
           label={<Label title="Project&#39;s Name" className="text-primary-9" required />}
           name="name"
           className="w-full"
+          dependencies={['virtual_lab_id']}
           rules={[
             { required: true, message: 'Please enter project name' },
             {
@@ -196,27 +211,36 @@ export function CreationForm({
             },
             {
               validator: async (_rule: unknown, name: string) => {
-                if (name === nameRef.current) return;
                 if (!name?.trim()) {
                   setValidName({ loading: false, status: 'non-valid' });
                   return Promise.reject();
                 }
-                nameRef.current = name;
-                setValidName({ loading: true, status: null });
-                const formVirtualLabId = form.getFieldValue('virtual_lab_id');
-                if (!formVirtualLabId) {
+                const virtualLabIdForCheck = showVirtualLabSelect
+                  ? form.getFieldValue('virtual_lab_id')
+                  : (selectedVirtualLabId ?? form.getFieldValue('virtual_lab_id'));
+
+                if (!virtualLabIdForCheck) {
                   setValidName({ loading: false, status: 'non-valid' });
                   return Promise.reject(new Error('Please select a virtual lab first.'));
                 }
+
+                const validationCacheKey = `${virtualLabIdForCheck}::${name.trim()}`;
+                if (validationCacheKey === nameRef.current) {
+                  return Promise.resolve();
+                }
+
+                setValidName({ loading: true, status: null });
                 try {
-                  const exists = await checkProjectExists({ vlabId: formVirtualLabId, name });
+                  const exists = await checkProjectExists({ vlabId: virtualLabIdForCheck, name });
                   if (exists) {
                     setValidName({ loading: false, status: 'non-valid' });
                     return Promise.reject(new Error('This project name is already taken.'));
                   }
+                  nameRef.current = validationCacheKey;
                   setValidName({ loading: false, status: 'valid' });
                   return Promise.resolve();
                 } catch (err) {
+                  nameRef.current = null;
                   setValidName({ loading: false, status: 'non-valid' });
                   throw err instanceof Error
                     ? err
