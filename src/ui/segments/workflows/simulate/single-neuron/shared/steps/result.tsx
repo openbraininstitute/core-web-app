@@ -1,21 +1,20 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import get from 'es-toolkit/compat/get';
 import { useAtomValue } from 'jotai';
+import dynamic from 'next/dynamic';
+import { useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
 
-import get from 'es-toolkit/compat/get';
-import dynamic from 'next/dynamic';
-
 import { SimulationColors } from '@/ui/segments/workflows/build/single-neuron-synaptome/helpers';
-import {
-  useCurrentSimulationConfig,
-  useRecordingPlotData,
-} from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
 import {
   SimulationStatus,
   simulationStatusAtomFamily,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/context';
+import {
+  useCurrentSimulationConfig,
+  useRecordingPlotData,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/hooks';
 import { cn } from '@/utils/css-class';
 
 import type { PlotData } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
