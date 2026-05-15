@@ -29,11 +29,17 @@ import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
+import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import { ErrorSoft } from '@/ui/molecules/feedback-card';
 import { Label, XInput } from '@/ui/segments/profile/sections/profile-form/elements';
 import { ProjectActivities } from '@/ui/segments/project/activities';
 import { ProjectCreation } from '@/ui/segments/project/create';
+import { canChangeProjectMemberRole } from '@/ui/segments/project/team/role-changer';
+import {
+  type TWorkspaceManagerSection,
+  WorkspaceManagerSectionDict,
+} from '@/ui/segments/workspaces/space-manager/constants';
 import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { extractInitials } from '@/util/slugify';
@@ -43,7 +49,6 @@ import { log } from '@/utils/logger';
 
 import type { ColumnType } from 'antd/es/table';
 import type { Member, TRole } from '@/api/virtual-lab-svc/queries/types';
-import type { TWorkspaceManagerSection } from '@/ui/segments/workspaces/space-manager/constants';
 
 const { TextArea } = Input;
 
@@ -302,6 +307,32 @@ const projectRoleOptions: Array<{ value: TRole; label: string }> = [
   { value: 'admin', label: 'Administrator' },
   { value: 'member', label: 'Member' },
 ];
+
+function ProjectRoleBadge({ role }: { role: TRole }) {
+  const label = get(find(projectRoleOptions, { value: role }), 'label', 'Member');
+  if (role === 'admin') {
+    return (
+      <Badge
+        variant="default"
+        size="sm"
+        rounded
+        className="h-7! px-2.5! py-0! text-xs font-semibold"
+      >
+        {label}
+      </Badge>
+    );
+  }
+  return (
+    <Badge
+      variant="outline"
+      size="sm"
+      rounded
+      className="h-7! border-primary-7! bg-primary-1/40 px-2.5! py-0! text-xs font-semibold text-primary-9"
+    >
+      {label}
+    </Badge>
+  );
+}
 
 type ProjectInvitePayload = { email: string; role: TRole };
 
@@ -724,20 +755,16 @@ function ProjectRoleModifier({
   user,
   targetVirtualLabId,
   targetProjectId,
-  projectOwnerId,
+  virtualLabOwnerId,
   virtualLabAdmins,
   projectAdmins,
-  isVirtualLabAdmin,
-  isProjectAdmin,
 }: {
   user: Member;
   targetVirtualLabId: string;
   targetProjectId: string;
-  projectOwnerId?: string;
+  virtualLabOwnerId?: string | null;
   virtualLabAdmins?: Array<string> | null;
   projectAdmins?: Array<string> | null;
-  isVirtualLabAdmin: boolean;
-  isProjectAdmin: boolean;
 }) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
@@ -844,21 +871,18 @@ function ProjectRoleModifier({
     );
   }
 
-  const isProjectOwner =
-    isVirtualLabAdmin || (projectOwnerId === user.id && user.id === session?.user.id);
-  const isWorkspaceAdmin = virtualLabAdmins?.includes(user.id) || projectAdmins?.includes(user.id);
-  const isSelf = user.id === session?.user.id;
-  const isReadOnly =
-    isSelf ||
-    (!isProjectOwner && isWorkspaceAdmin) ||
-    (!isVirtualLabAdmin && !isProjectAdmin && !isProjectOwner);
+  const canChangeRole = canChangeProjectMemberRole({
+    viewerId: session?.user.id,
+    targetUserId: user.id,
+    virtualLabOwnerId,
+    virtualLabAdmins,
+    projectAdmins,
+  });
 
-  if (isReadOnly) {
+  if (!canChangeRole) {
     return (
       <div className="flex w-full flex-col items-end justify-end pr-3 text-right">
-        <div className="text-primary-9 w-max self-end font-semibold">
-          {get(find(projectRoleOptions, { value: user.role }), 'label', 'Member')}
-        </div>
+        <ProjectRoleBadge role={user.role} />
       </div>
     );
   }
@@ -939,6 +963,7 @@ function ProjectMembersListing({
   const { data: session } = useSession();
   const {
     virtualLabAdmins,
+    virtualLabOwnerId,
     projectAdmins,
     isVirtualLabAdmin,
     isProjectAdmin,
@@ -1028,11 +1053,9 @@ function ProjectMembersListing({
               user={record}
               targetVirtualLabId={targetVirtualLabId}
               targetProjectId={targetProjectId}
-              projectOwnerId={ownerId}
+              virtualLabOwnerId={virtualLabOwnerId}
               virtualLabAdmins={virtualLabAdmins}
               projectAdmins={projectAdmins}
-              isVirtualLabAdmin={isVirtualLabAdmin}
-              isProjectAdmin={isProjectAdmin}
             />
           );
         },
@@ -1040,10 +1063,9 @@ function ProjectMembersListing({
     ],
     [
       ownerId,
+      virtualLabOwnerId,
       virtualLabAdmins,
       projectAdmins,
-      isVirtualLabAdmin,
-      isProjectAdmin,
       isMembershipLoading,
       targetVirtualLabId,
       targetProjectId,
@@ -1203,11 +1225,15 @@ function ProjectResolvedContent({
     );
   }
 
-  if (activeSection === 'history' && targetProjectId && targetVirtualLabId) {
+  if (
+    activeSection === WorkspaceManagerSectionDict.Activities &&
+    targetProjectId &&
+    targetVirtualLabId
+  ) {
     return (
       <div
-        data-testid="workspace-manager-project-history-section"
-        id="workspace-manager-project-history-section"
+        data-testid="workspace-manager-project-activities-section"
+        id="workspace-manager-project-activities-section"
         className="h-full grow overflow-hidden"
       >
         <ProjectActivities
@@ -1239,7 +1265,7 @@ function ProjectResolvedContent({
 }
 
 export type TActiveSection =
-  | Extract<TWorkspaceManagerSection, 'overview' | 'members' | 'history'>
+  | Extract<TWorkspaceManagerSection, 'overview' | 'members' | 'activities'>
   | 'new';
 type Props = {
   activeSection: TActiveSection;

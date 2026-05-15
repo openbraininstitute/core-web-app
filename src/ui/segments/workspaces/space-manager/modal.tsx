@@ -1,18 +1,28 @@
 'use client';
 
 import { CloseOutlined, RightOutlined } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useEffect, useLayoutEffect, useState, ViewTransition } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, ViewTransition } from 'react';
 import { match } from 'ts-pattern';
 
+import { getProject } from '@/api/virtual-lab-svc/queries/project';
+import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { config } from '@/config';
 import { Button } from '@/ui/molecules/button';
 import { Modal } from '@/ui/molecules/modal';
 import {
+  type TWorkspaceManagerCreditsPanel,
   type TWorkspaceManagerKind,
+  WorkspaceManagerCreditsPanelDict,
   WorkspaceManagerKindDict,
   WorkspaceManagerSectionDict,
 } from '@/ui/segments/workspaces/space-manager/constants';
 import { makeTriggerWorkspaceConfigurationClickEvent } from '@/ui/segments/workspaces/space-manager/event';
+import {
+  handleWorkspacePanelMenuItemSelect,
+  handleWorkspacePanelSectionSelect,
+} from '@/ui/segments/workspaces/space-manager/navigation';
 import {
   AccountContent,
   type TActiveSection as TAccountActiveSection,
@@ -26,26 +36,45 @@ import {
   type TActiveSection as TVirtualLabActiveSection,
   VirtualLabContent,
 } from '@/ui/segments/workspaces/space-manager/sections/virtual-lab';
+import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 
 import type { CSSProperties } from 'react';
+
+const showExperimentalFeatures = config.DEPLOYMENT_ENV !== 'production';
 
 const AccountTabsDict: Array<TabItem> = [
   { key: WorkspaceManagerSectionDict.Profile, label: 'Profile' },
   { key: WorkspaceManagerSectionDict.Subscription, label: 'Subscription' },
   { key: WorkspaceManagerSectionDict.Invoices, label: 'Invoices' },
+  ...(showExperimentalFeatures
+    ? [
+        {
+          key: WorkspaceManagerSectionDict.ExperimentalFeatures,
+          label: 'Feature Flags',
+        },
+      ]
+    : []),
 ];
 
 const VirtualLabTabsDict: Array<TabItem> = [
   { key: WorkspaceManagerSectionDict.Overview, label: 'Overview' },
   { key: WorkspaceManagerSectionDict.Members, label: 'Administrators' },
-  { key: WorkspaceManagerSectionDict.Credits, label: 'Credits' },
+  {
+    key: WorkspaceManagerSectionDict.Credits,
+    label: 'Credits',
+    menuItems: [
+      { key: WorkspaceManagerCreditsPanelDict.Buy, label: 'Buy credits' },
+      { key: WorkspaceManagerCreditsPanelDict.Transfer, label: 'Transfer credits' },
+      { key: WorkspaceManagerCreditsPanelDict.History, label: 'History' },
+    ],
+  },
 ];
 
 const ProjectTabsDict: Array<TabItem> = [
   { key: WorkspaceManagerSectionDict.Overview, label: 'Overview' },
   { key: WorkspaceManagerSectionDict.Members, label: 'Members' },
-  { key: WorkspaceManagerSectionDict.History, label: 'Activities' },
+  { key: WorkspaceManagerSectionDict.Activities, label: 'Activities' },
 ];
 
 type Props = {
@@ -73,6 +102,7 @@ const ValidSectionByKind: Record<TWorkspaceManagerKind, ReadonlySet<string>> = {
     WorkspaceManagerSectionDict.Profile,
     WorkspaceManagerSectionDict.Subscription,
     WorkspaceManagerSectionDict.Invoices,
+    ...(showExperimentalFeatures ? [WorkspaceManagerSectionDict.ExperimentalFeatures] : []),
   ]),
   [WorkspaceManagerKindDict.VirtualLab]: new Set([
     WorkspaceManagerSectionDict.Overview,
@@ -82,7 +112,7 @@ const ValidSectionByKind: Record<TWorkspaceManagerKind, ReadonlySet<string>> = {
   [WorkspaceManagerKindDict.Project]: new Set([
     WorkspaceManagerSectionDict.Overview,
     WorkspaceManagerSectionDict.Members,
-    WorkspaceManagerSectionDict.History,
+    WorkspaceManagerSectionDict.Activities,
     WorkspaceManagerSectionDict.New,
   ]),
 };
@@ -133,7 +163,7 @@ function resolveShouldUseFullWidth({
     .with(
       {
         kind: WorkspaceManagerKindDict.Project,
-        activeSection: WorkspaceManagerSectionDict.History,
+        activeSection: WorkspaceManagerSectionDict.Activities,
       },
       () => true
     )
@@ -148,6 +178,128 @@ function resolveShouldUseFullWidth({
     .otherwise(() => false);
 }
 
+type WaveTabProps = {
+  kind: TWorkspaceManagerKind;
+  virtualLabId: string;
+  projectId?: string;
+  targetVirtualLabId?: string;
+  activeSection: string;
+  onClose: () => void;
+};
+
+function WorkspaceMenuHeader({
+  kind,
+  virtualLabId,
+  projectId,
+  targetVirtualLabId,
+  activeSection,
+  onClose,
+}: WaveTabProps) {
+  const isNewProject =
+    kind === WorkspaceManagerKindDict.Project && activeSection === WorkspaceManagerSectionDict.New;
+  const isExistingProject =
+    kind === WorkspaceManagerKindDict.Project &&
+    Boolean(projectId) &&
+    activeSection !== WorkspaceManagerSectionDict.New;
+  const isVirtualLab = kind === WorkspaceManagerKindDict.VirtualLab;
+  const shouldRender = isVirtualLab || isExistingProject || isNewProject;
+
+  const labIdForQuery = isNewProject && targetVirtualLabId ? targetVirtualLabId : virtualLabId;
+
+  const projectQuery = useQuery({
+    queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId: projectId ?? '' }),
+    queryFn: () => getProject({ virtualLabId, projectId: projectId as string }),
+    enabled: isExistingProject,
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
+  });
+
+  const labQuery = useQuery({
+    queryKey: keyBuilder.getOneLab({ virtualLabId: labIdForQuery }),
+    queryFn: () => getVirtualLab({ id: labIdForQuery }),
+    enabled:
+      Boolean(labIdForQuery) &&
+      shouldRender &&
+      (isVirtualLab || isExistingProject || (isNewProject && Boolean(targetVirtualLabId))),
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
+  });
+
+  if (!shouldRender) return null;
+
+  const labName = labQuery.data?.name ?? '';
+  const projectName = projectQuery.data?.name ?? '';
+  const mainName = isNewProject
+    ? targetVirtualLabId
+      ? labName
+      : 'Create new project'
+    : isExistingProject
+      ? projectName
+      : labName;
+  const eyebrow = isNewProject
+    ? targetVirtualLabId
+      ? 'Virtual Lab'
+      : 'Project'
+    : isExistingProject
+      ? labName || 'Virtual Lab'
+      : 'Virtual Lab';
+
+  const eyebrowPending =
+    (isVirtualLab || isExistingProject || (isNewProject && Boolean(targetVirtualLabId))) &&
+    !labName &&
+    labQuery.isLoading;
+
+  const mainLinePending = isNewProject
+    ? Boolean(targetVirtualLabId) && labQuery.isLoading
+    : isExistingProject
+      ? projectQuery.isLoading
+      : labQuery.isLoading;
+
+  return (
+    <section
+      aria-label={
+        isNewProject && !targetVirtualLabId
+          ? 'Create new project'
+          : isExistingProject
+            ? `Project: ${projectName}`
+            : `Virtual Lab: ${labName}`
+      }
+      className="relative rounded-xl  mb-3 flex h-18 shrink-0 items-center justify-between gap-4 bg-white px-4"
+      data-testid="workspace-manager-wave-tab"
+      id="workspace-manager-wave-tab"
+    >
+      <div className="flex min-w-0 flex-1 flex-col leading-tight">
+        <span
+          className="truncate text-[11px] font-light uppercase tracking-[0.14em] text-primary-9"
+          title={eyebrow}
+        >
+          {eyebrowPending ? '\u2026' : eyebrow}
+        </span>
+        <span className="truncate text-sm font-bold text-primary-9" title={mainName}>
+          {mainLinePending && !mainName ? '\u2026' : mainName || '\u00A0'}
+        </span>
+      </div>
+
+      <Button
+        type="button"
+        aria-label="Close workspace manager"
+        variant="icon"
+        size="md"
+        rounded
+        className={cn(
+          'text-primary-9 hover:bg-white hover:shadow-sm',
+          'shrink-0 border border-gray-200 bg-white text-xl shadow-none hover:text-primary-9'
+        )}
+        data-testid="workspace-manager-modal-close"
+        id="workspace-manager-modal-close"
+        onClick={onClose}
+      >
+        <CloseOutlined />
+      </Button>
+    </section>
+  );
+}
+
 export function WorkspaceManagerModal({
   kind,
   onOpenChange,
@@ -158,6 +310,10 @@ export function WorkspaceManagerModal({
   virtualLabId,
 }: Props) {
   const [localSection, setLocalSection] = useState<string | undefined>(section);
+
+  const [creditsPanel, setCreditsPanel] = useState<TWorkspaceManagerCreditsPanel>(
+    WorkspaceManagerCreditsPanelDict.History
+  );
 
   const [isContentExpanded, setIsContentExpanded] = useState(false);
   const [switcherRight, setSwitcherRight] = useState<number | null>(null);
@@ -181,6 +337,34 @@ export function WorkspaceManagerModal({
   );
 
   const tabs = resolveTabs(kind, targetProjectId, targetVirtualLabId);
+
+  const waveTabVisible =
+    kind === WorkspaceManagerKindDict.VirtualLab ||
+    (kind === WorkspaceManagerKindDict.Project &&
+      (activeSection === WorkspaceManagerSectionDict.New || Boolean(targetProjectId)));
+
+  const panelNavigationCtx = useMemo(
+    () => ({
+      activeSection,
+      creditsPanel,
+      kind,
+      setCreditsPanel,
+      setIsContentExpanded,
+      setLocalSection,
+    }),
+    [activeSection, creditsPanel, kind]
+  );
+
+  const onPanelSectionSelect = useCallback(
+    (sectionKey: string) => handleWorkspacePanelSectionSelect(sectionKey, panelNavigationCtx),
+    [panelNavigationCtx]
+  );
+
+  const onPanelMenuItemSelect = useCallback(
+    (args: { itemKey: string; tabKey: string }) =>
+      handleWorkspacePanelMenuItemSelect(args, panelNavigationCtx),
+    [panelNavigationCtx]
+  );
 
   const routeKey = `${kind}-${activeSection}-${activeVirtualLabId}-${targetProjectId ?? ''}`;
 
@@ -235,6 +419,8 @@ export function WorkspaceManagerModal({
     .with(WorkspaceManagerKindDict.VirtualLab, () => (
       <VirtualLabContent
         activeSection={activeSection as TVirtualLabActiveSection}
+        creditsPanel={creditsPanel}
+        onCreditsPanelChange={setCreditsPanel}
         targetVirtualLabId={activeVirtualLabId}
       />
     ))
@@ -301,6 +487,7 @@ export function WorkspaceManagerModal({
       animation="fade"
       maxHeight="calc(100vh - 5.5rem + 55px)"
       bodyClassName="flex h-full max-h-[calc(100vh-1rem)] min-h-0 flex-col overflow-hidden p-0"
+      overlayClassName="bg-primary-8/10 backdrop-blur-xs"
       position="custom"
       style={modalStyle}
     >
@@ -309,63 +496,52 @@ export function WorkspaceManagerModal({
         data-testid="workspace-manager-modal-shell"
         id="workspace-manager-modal-shell"
       >
+        <WorkspaceMenuHeader
+          kind={kind}
+          virtualLabId={activeVirtualLabId}
+          projectId={targetProjectId}
+          targetVirtualLabId={targetVirtualLabId}
+          activeSection={activeSection}
+          onClose={onClose}
+        />
+
         <header
           className="flex shrink-0 items-center justify-between gap-6"
           data-testid="workspace-manager-modal-header"
           id="workspace-manager-modal-header"
         >
           {kind === WorkspaceManagerKindDict.Project &&
-          activeSection === WorkspaceManagerSectionDict.New ? (
-            <Button
-              rounded
-              key="create-new-project"
-              type="button"
-              variant="ghost"
-              size="responsive"
-              className={cn(
-                'text-primary-9 font-bold min-w-28 pl-1! pr-7 text-xl',
-                'transition-[background-color,box-shadow,color] duration-200',
-                'focus-visible:ring-primary-6 focus-visible:ring-2',
-                'cursor-default'
-              )}
-              data-testid="create-new-project-button"
-              id="create-new-project-button"
-              onClick={() => {}}
-            >
-              Create new project
-            </Button>
-          ) : (
+          activeSection === WorkspaceManagerSectionDict.New ? null : (
             <PanelTabs
               activeKey={activeSection}
               items={tabs}
-              onSelect={(nextSection) => {
-                if (nextSection === activeSection) return;
-                setIsContentExpanded(false);
-                setLocalSection(nextSection);
-              }}
+              onMenuItemSelect={onPanelMenuItemSelect}
+              onSectionSelect={onPanelSectionSelect}
             />
           )}
-          <Button
-            type="button"
-            aria-label="Close workspace manager"
-            variant="icon"
-            size="md"
-            rounded
-            className={cn(
-              'text-primary-9 hover:bg-white hover:shadow-sm',
-              'shrink-0 border border-gray-200 text-xl shadow-none hover:text-primary-9'
-            )}
-            data-testid="workspace-manager-modal-close"
-            id="workspace-manager-modal-close"
-            onClick={onClose}
-          >
-            <CloseOutlined />
-          </Button>
+          {!waveTabVisible && (
+            <Button
+              type="button"
+              aria-label="Close workspace manager"
+              variant="icon"
+              size="md"
+              rounded
+              className={cn(
+                'text-primary-9 hover:bg-white hover:shadow-sm',
+                'shrink-0 border border-gray-200 text-xl shadow-none hover:text-primary-9'
+              )}
+              data-testid="workspace-manager-modal-close"
+              id="workspace-manager-modal-close"
+              onClick={onClose}
+            >
+              <CloseOutlined />
+            </Button>
+          )}
         </header>
 
         <ViewTransition key={routeKey} default="none" enter="fade-in" exit="fade-out">
           <main
-            className="secondary-scrollbar mt-4 min-h-0 flex-1 overflow-y-auto"
+            className="secondary-scrollbar mt-4 flex min-h-0 flex-1 flex-col overflow-y-auto"
             data-testid="workspace-manager-modal-main"
             id="workspace-manager-modal-main"
           >

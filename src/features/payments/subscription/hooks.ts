@@ -11,6 +11,7 @@ export function useCreateSubscriptionMutation() {
     mutationFn: (payload: CreateSubscriptionRequest) => createSubscription(payload),
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: keyBuilder.subscription() });
+      void queryClient.invalidateQueries({ queryKey: keyBuilder.invoices() });
     },
   });
 }

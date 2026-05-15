@@ -9,8 +9,9 @@ export type TWorkspaceManagerKind =
 
 export const WorkspaceManagerSectionDict = {
   Credits: 'credits',
+  ExperimentalFeatures: 'experimental-features',
   Invoices: 'invoices',
-  History: 'history',
+  Activities: 'activities',
   Members: 'members',
   New: 'new',
   Overview: 'overview',
@@ -21,3 +22,19 @@ export const WorkspaceManagerSectionDict = {
 
 export type TWorkspaceManagerSection =
   (typeof WorkspaceManagerSectionDict)[keyof typeof WorkspaceManagerSectionDict];
+
+/** Sub-views for the Virtual Lab credits area (workspace manager). */
+export const WorkspaceManagerCreditsPanelDict = {
+  Buy: 'buy',
+  History: 'history',
+  Transfer: 'transfer',
+} as const;
+
+export type TWorkspaceManagerCreditsPanel =
+  (typeof WorkspaceManagerCreditsPanelDict)[keyof typeof WorkspaceManagerCreditsPanelDict];
+
+export function isWorkspaceManagerCreditsPanelKey(
+  value: string
+): value is TWorkspaceManagerCreditsPanel {
+  return (Object.values(WorkspaceManagerCreditsPanelDict) as string[]).includes(value);
+}

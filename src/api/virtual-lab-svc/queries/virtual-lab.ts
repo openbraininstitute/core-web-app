@@ -4,9 +4,9 @@ import { config } from '@/config';
 
 import type {
   IVirtualLabExpandedResponse,
+  ListResponse,
   TGetSelfVirtualLabResponse,
   TGetVirtualLabExpandParam,
-  TPagination,
   TVirtualLab,
   TVirtualLabExistsVerificationResponse,
   TVirtualLabWithInviteRow,
@@ -39,7 +39,7 @@ export function virtualLabServiceRowToClient(row: TVirtualLab): TVirtualLab {
  *
  * @param {Object} [params={}] - Request parameters.
  * @param {{ page: number; page_size: number }} [params.pagination] - Page index and page size.
- * @returns {Promise<TPagination<TVirtualLabWithInviteRow>>} Paginated pending request rows.
+ * @returns {Promise<ListResponse<TVirtualLabWithInviteRow>>} Paginated pending request rows.
  * @throws {Error} Throws if the virtual lab API request fails.
  */
 export async function listPendingVirtualLabRequests({
@@ -48,7 +48,7 @@ export async function listPendingVirtualLabRequests({
   pagination?: { page: number; page_size: number };
 } = {}) {
   const api = await virtualLabRootApi();
-  return api.get<TPagination<TVirtualLabWithInviteRow>>('/virtual-labs/requests', {
+  return api.get<ListResponse<TVirtualLabWithInviteRow>>('/virtual-labs/requests', {
     headers: { accept: 'application/json' },
     queryParams: { ...pagination },
   });
@@ -65,7 +65,7 @@ export async function listPendingVirtualLabRequests({
  * @param {'created_at'|'updated_at'|'name'|'owner'} [params.filters.order_by] - Sort field.
  * @param {'asc'|'desc'} [params.filters.order_direction] - Sort direction.
  * @param {string} [params.filters.query] - Case-insensitive search on lab fields (API-defined).
- * @returns {Promise<TPagination<TVirtualLab>>} Paginated virtual lab rows.
+ * @returns {Promise<ListResponse<TVirtualLab>>} Paginated virtual lab rows.
  * @throws {Error} Throws if the virtual lab API request fails.
  */
 export async function listVirtualLabs({
@@ -82,7 +82,7 @@ export async function listVirtualLabs({
   };
 }) {
   const api = await virtualLabRootApi();
-  return api.get<TPagination<TVirtualLab>>('/virtual-labs', {
+  return api.get<ListResponse<TVirtualLab>>('/virtual-labs', {
     headers: { accept: 'application/json' },
     queryParams: {
       ...pagination,

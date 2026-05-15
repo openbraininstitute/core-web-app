@@ -1,25 +1,32 @@
+'use client';
+
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { flatMap } from 'es-toolkit/compat';
+import { useMemo, useState } from 'react';
 
-import { listUserSubscriptionsHistory } from '@/api/virtual-lab-svc/queries/subscription';
+import { listUserSubscriptionInvoicePayments } from '@/api/virtual-lab-svc/queries/payment';
 import { FileDownloadFill } from '@/components/icons/EditorIcons';
 import { EmptyMinimal, ErrorMinimal } from '@/ui/molecules/feedback-card';
+import { ListPagination } from '@/ui/molecules/list-pagination';
 import { keyBuilder } from '@/ui/use-query-keys/user';
+import { cn } from '@/utils/css-class';
 import { formatCurrency } from '@/utils/format';
 
 import type { SubscriptionPaymentDetails } from '@/api/virtual-lab-svc/queries/types';
 
+const PAGE_SIZE = 4;
+
 type InvoicePayment = SubscriptionPaymentDetails & {
-  subscription_id: string;
-  subscription_type: 'FREE' | 'PREMIUM' | 'PRO';
+  subscription_id?: string;
+  subscription_type?: 'FREE' | 'PREMIUM' | 'PRO';
 };
 
 function getInvoiceObject(payment: InvoicePayment) {
   if (payment.subscription_type === 'PRO') return 'Pro';
   if (payment.subscription_type === 'PREMIUM') return 'Premium';
-  return 'Free';
+  if (payment.subscription_type === 'FREE') return 'Free';
+  return 'Subscription';
 }
 
 function getInvoiceDownloadUrl(payment: InvoicePayment) {
@@ -34,7 +41,13 @@ function InvoiceCard({ payment }: { payment: InvoicePayment }) {
   )}`;
 
   return (
-    <article className="rounded-2xl bg-white px-6 py-7 pb-3">
+    <article
+      className={cn(
+        'rounded-2xl border border-gray-200 bg-white px-4 py-4',
+        'text-primary-9',
+        'hover:bg-gray-50'
+      )}
+    >
       <div className="grid grid-cols-2 gap-x-10 gap-y-1">
         <div>
           <p className="text-neutral-4 text-base">Object</p>
@@ -68,10 +81,10 @@ function InvoiceCard({ payment }: { payment: InvoicePayment }) {
           </p>
         </div>
       </div>
-      <div className="border-neutral-2 mt-5 flex justify-end border-t py-4 pb-2">
+      <div className="border-neutral-2 mt-3 flex justify-end border-t pt-3">
         {downloadUrl ? (
           <a
-            className="text-primary-9 hover:text-primary-7 inline-flex items-center gap-3 text-lg font-bold"
+            className="text-primary-9 hover:text-primary-7 inline-flex items-center gap-2 text-sm font-bold"
             href={downloadUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -89,29 +102,24 @@ function InvoiceCard({ payment }: { payment: InvoicePayment }) {
 }
 
 export function Invoices() {
-  const { data, isError, isLoading } = useQuery({
-    queryKey: keyBuilder.invoices(),
-    queryFn: listUserSubscriptionsHistory,
+  const [page, setPage] = useState(1);
+
+  const { data, error, isLoading } = useQuery({
+    queryKey: keyBuilder.invoicesPaginated({ page, pageSize: PAGE_SIZE }),
+    queryFn: () =>
+      listUserSubscriptionInvoicePayments({
+        page,
+        pageSize: PAGE_SIZE,
+      }),
   });
-  const allPayments = flatMap(data?.subscriptions, (subscription) =>
-    subscription.payments
-      .filter((payment) => !payment.is_standalone)
-      .map((payment) => ({
-        ...payment,
-        subscription_id: subscription.id,
-        subscription_type: subscription.subscription_type,
-      }))
-  ) as Array<InvoicePayment>;
 
-  if (isLoading) {
-    return (
-      <div className="text-primary-9 flex h-40 items-center justify-center">
-        <LoadingOutlined spin />
-      </div>
-    );
-  }
+  const payments = useMemo(() => {
+    const rows = (data?.data?.payments ?? []).filter((payment) => !payment.is_standalone);
+    return rows as InvoicePayment[];
+  }, [data?.data?.payments]);
+  const totalItems = data?.data?.total_count ?? 0;
 
-  if (isError) {
+  if (error) {
     return (
       <ErrorMinimal
         title="Invoices error"
@@ -121,17 +129,26 @@ export function Invoices() {
   }
 
   return (
-    <div data-testid="payments-list" className="flex h-full w-full flex-col gap-5">
-      {allPayments.map((payment) => (
-        <InvoiceCard key={payment.id} payment={payment} />
-      ))}
-      {allPayments.length === 0 && (
-        <EmptyMinimal
-          tag="No invoices found"
-          title="No invoices found"
-          description="You have not made any payments yet."
-        />
-      )}
+    <div data-testid="payments-list" className="flex min-h-0 w-full flex-1 flex-col gap-5">
+      <div
+        className={cn(
+          'secondary-scrollbar flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-1'
+        )}
+      >
+        {isLoading ? (
+          <div className="text-primary-9 flex min-h-32 flex-1 items-center justify-center">
+            <LoadingOutlined spin />
+          </div>
+        ) : payments.length === 0 ? (
+          <EmptyMinimal
+            title="No invoices found"
+            description="You have not made any payments yet."
+          />
+        ) : (
+          payments.map((payment) => <InvoiceCard key={payment.id} payment={payment} />)
+        )}
+      </div>
+      <ListPagination current={page} pageSize={PAGE_SIZE} total={totalItems} onChange={setPage} />
     </div>
   );
 }

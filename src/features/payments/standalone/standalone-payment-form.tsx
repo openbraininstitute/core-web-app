@@ -194,32 +194,40 @@ export function StandalonePaymentForm({
     }
 
     try {
-      const { data } = await createStandalonePayment.mutateAsync({
-        quote_id: quote.data.quote_id,
-        virtual_lab_id: virtualLabId,
-        billing_address: currentBillingAddress,
-        sync_billing_address_to_profile: saveBillingAddressToProfile,
-        payment_method_id: paymentMethodId,
-      });
-      if (saveBillingAddressToProfile) {
-        void queryClient.invalidateQueries({
-          queryKey: userKeyBuilder.profile(),
-        });
-      }
-      successNotify({
-        message: messages.paymentSuccess
-          .replace('$$credits', credits.toString())
-          .replace('$$price', formatMinorCurrency(data.amount_total, data.currency)),
-        ...notificationConfig,
-      });
-      clearCachedPaymentMethodId();
-      const accountingKey = keyBuilder.accounting({ virtualLabId });
+      await createStandalonePayment.mutateAsync(
+        {
+          quote_id: quote.data.quote_id,
+          virtual_lab_id: virtualLabId,
+          billing_address: currentBillingAddress,
+          sync_billing_address_to_profile: saveBillingAddressToProfile,
+          payment_method_id: paymentMethodId,
+        },
+        {
+          onSuccess: (res) => {
+            successNotify({
+              message: messages.paymentSuccess
+                .replace('$$credits', credits.toString())
+                .replace('$$price', formatMinorCurrency(res.data.amount_total, res.data.currency)),
+              ...notificationConfig,
+            });
+            clearCachedPaymentMethodId();
+            const accountingKey = keyBuilder.accounting({ virtualLabId });
+            window.setTimeout(() => {
+              void queryClient.invalidateQueries({
+                queryKey: accountingKey,
+              });
+            }, 1_000);
+          },
+          onSettled: async (_, __, vars) => {
+            if (vars.sync_billing_address_to_profile) {
+              await queryClient.invalidateQueries({
+                queryKey: userKeyBuilder.profile(),
+              });
+            }
+          },
+        }
+      );
       onCancel();
-      window.setTimeout(() => {
-        void queryClient.invalidateQueries({
-          queryKey: accountingKey,
-        });
-      }, 1_000);
       setIsPaying(false);
     } catch (error) {
       const code = get(error, 'cause.code', 'DEFAULT');
@@ -233,7 +241,7 @@ export function StandalonePaymentForm({
   };
 
   return (
-    <div className="flex min-h-0 w-full flex-col gap-4">
+    <div className="flex w-full flex-col gap-6">
       <CreditsAmountInput
         hint={limitReached ? 'Calculation of order full amount limit reached' : conversionText}
         value={credits}

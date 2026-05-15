@@ -54,3 +54,23 @@ export async function listStandalonePayments({
     },
   });
 }
+
+export async function listUserSubscriptionInvoicePayments({
+  page = 1,
+  pageSize = 12,
+}: {
+  page?: number;
+  pageSize?: number;
+}): Promise<SubscriptionPaymentsResponse> {
+  const api = await virtualLabRootApi();
+  return await api.get<SubscriptionPaymentsResponse>(`${subscriptionsBaseUri}/payments`, {
+    headers: {
+      accept: 'application/json',
+    },
+    queryParams: {
+      payment_type: BillingQuoteRequestFlowDict.Subscription,
+      page,
+      page_size: pageSize,
+    },
+  });
+}

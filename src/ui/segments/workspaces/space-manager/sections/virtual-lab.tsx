@@ -6,6 +6,7 @@ import { Credits } from '@/ui/segments/virtual-lab-settings/sections/credits';
 import { VirtualLabOverview } from '@/ui/segments/virtual-lab-settings/sections/form';
 import { TeamTable } from '@/ui/segments/virtual-lab-settings/sections/team';
 import {
+  type TWorkspaceManagerCreditsPanel,
   type TWorkspaceManagerSection,
   WorkspaceManagerSectionDict,
 } from '@/ui/segments/workspaces/space-manager/constants';
@@ -14,10 +15,17 @@ export type TActiveSection = Extract<TWorkspaceManagerSection, 'overview' | 'mem
 
 type Props = {
   activeSection: TActiveSection;
+  creditsPanel: TWorkspaceManagerCreditsPanel;
+  onCreditsPanelChange: (panel: TWorkspaceManagerCreditsPanel) => void;
   targetVirtualLabId: string;
 };
 
-export function VirtualLabContent({ activeSection, targetVirtualLabId }: Props) {
+export function VirtualLabContent({
+  activeSection,
+  creditsPanel,
+  onCreditsPanelChange,
+  targetVirtualLabId,
+}: Props) {
   return match(activeSection)
     .with(WorkspaceManagerSectionDict.Members, () => (
       <div
@@ -32,9 +40,13 @@ export function VirtualLabContent({ activeSection, targetVirtualLabId }: Props) 
       <div
         data-testid="workspace-manager-virtual-lab-credits-section"
         id="workspace-manager-virtual-lab-credits-section"
-        className="h-full grow overflow-hidden"
+        className="flex h-full min-h-0 grow flex-col overflow-hidden"
       >
-        <Credits virtualLabId={targetVirtualLabId} />
+        <Credits
+          creditsPanel={creditsPanel}
+          onCreditsPanelChange={onCreditsPanelChange}
+          virtualLabId={targetVirtualLabId}
+        />
       </div>
     ))
     .with(WorkspaceManagerSectionDict.Overview, () => (

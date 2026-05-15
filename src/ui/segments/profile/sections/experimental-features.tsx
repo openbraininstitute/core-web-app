@@ -7,6 +7,7 @@ import { useAppNotification } from '@/components/notification';
 import { resetFlags, setFlag } from '@/features/feature-flags';
 import { flags } from '@/features/feature-flags/flags';
 import { useFlags } from '@/features/feature-flags/provider';
+import { Button } from '@/ui/molecules/button';
 
 export function ExperimentalFeatures() {
   const { error: errorNotify } = useAppNotification();
@@ -58,13 +59,22 @@ export function ExperimentalFeatures() {
   };
 
   return (
-    <div className="mt-8 flex items-center justify-center text-gray-100">
-      <div className="w-full max-w-3xl">
+    <div
+      data-testid="experimental-features-list"
+      className="flex h-full min-h-0 w-full flex-1 flex-col gap-3.5 rounded-2xl bg-white px-4 pt-0"
+    >
+      <div
+        id="experimental-features-content"
+        className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col p-4"
+      >
         <div className="space-y-3">
           {visibleFlags.map(({ key, description, values, labels }) => (
-            <div key={key} className="flex items-start justify-between gap-4 py-2">
+            <div
+              key={key}
+              className="flex items-center justify-between gap-4 py-2 border border-gray-100 p-4 rounded-lg"
+            >
               <div className="flex-1">
-                <div className="font-medium">{description}</div>
+                <div className="font-bold text-lg">{description}</div>
               </div>
               <Select
                 value={optimisticFlags[key] ?? flagValues[key as keyof typeof flagValues]}
@@ -76,14 +86,16 @@ export function ExperimentalFeatures() {
             </div>
           ))}
         </div>
-        <div className="mt-8 text-right">
-          <button
+        <div className="mt-4 text-right">
+          <Button
             type="button"
+            variant="destructive"
+            rounded
             onClick={() => resetFlags()}
-            className="bg-destructive mt-4 rounded px-4 py-2 text-sm text-white hover:bg-red-600"
+            className="mt-4 px-10 text-sm"
           >
             Reset All
-          </button>
+          </Button>
         </div>
       </div>
     </div>

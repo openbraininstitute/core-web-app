@@ -78,7 +78,7 @@ export async function assignProjectBudget({
   );
 
   if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
+    throw new Error(`Status: ${response.status}`, { cause: await response.json() });
   }
 
   return response.json();
@@ -103,7 +103,7 @@ export async function reverseProjectBudget({
   );
 
   if (!response.ok) {
-    throw new Error(`Status: ${response.status}`);
+    throw new Error(`Status: ${response.status}`, { cause: await response.json() });
   }
 
   return response.json();

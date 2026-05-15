@@ -96,7 +96,7 @@ importers:
         specifier: ^6.3.0
         version: 6.3.0(@stripe/stripe-js@9.5.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@stripe/stripe-js':
-        specifier: ^9.4.0
+        specifier: ^9.5.0
         version: 9.5.0
       '@tanstack/react-query':
         specifier: ^5.100.9
