@@ -14,6 +14,7 @@ import {
 import { useAIConfig } from '@/services/ai-agent';
 import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/config-highlights';
 
+import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
 import { resetConfig } from '../hooks/schema';
@@ -45,6 +46,7 @@ export default function Left({
   activity,
   generatedEndpoint,
   entityType,
+  aiEnabled,
 }: {
   schema: ConfigSchema;
   atomsMap: AtomsMap;
@@ -70,6 +72,7 @@ export default function Left({
   activity: TScanConfigActivity;
   generatedEndpoint: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
+  aiEnabled?: boolean;
 }) {
   const errors = useValidateSchema({ initialConfig, config, schema });
   const { aiConfig, setAiConfig } = useAIConfig();
@@ -100,10 +103,13 @@ export default function Left({
   return (
     <div id="scan-config-controls-left" className="flex h-full min-h-0 flex-col">
       <div className="secondary-scrollbar flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto overflow-x-hidden px-2 pb-5">
-        {schema.group_order.map((group) => {
+        {schema.group_order.map((group, groupIndex) => {
           return (
             <div key={group} className="w-full flex flex-col gap-1.5">
-              <h4 className="self-start text-gray-500 uppercase">{group}</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="self-start text-gray-500 uppercase">{group}</h4>
+                {groupIndex === 0 && aiEnabled && <EditWithChatButton />}
+              </div>
               {schema.properties &&
                 Object.entries(schema.properties)
                   .filter(
