@@ -1,11 +1,11 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { useQuery } from '@tanstack/react-query';
 import { omit, pick } from 'es-toolkit/compat';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
@@ -97,40 +97,13 @@ export function getBlockUsabilityConfig({ block }: { block: TBlock }) {
   };
 }
 
-export function useDefaultConfig(
-  schemaName: SchemaName,
-  formModelType: 'CircuitFromId' = 'CircuitFromId'
-) {
+export function useDefaultConfig(schemaName: SchemaName) {
   const { schema } = useObioneJsonSchema({ schemaName });
 
-  if (!schema) return;
-
-  const map: {
-    [key: string]: ConfigValue | Record<string, ConfigValue>;
-  } = {};
-
-  Object.entries(schema.properties).forEach(([k, v]) => {
-    if (isType(v)) return;
-    if (v.ui_element === ScanConfigUIElementDict.BlockSingle) {
-      const initial: Record<string, ConfigValue> = {};
-
-      Object.entries(v.properties).forEach(([subkey, subValue]) => {
-        initial[subkey] = subValue.default ?? null;
-        if (!isType(subValue) && subValue.ui_element === ScanConfigUIElementDict.ModelIdentifier) {
-          initial[subkey] = {
-            type: formModelType,
-            id_str: '',
-          };
-        }
-      });
-
-      map[k] = initial;
-    } else {
-      map[k] = {};
-    }
-  });
-
-  return map as Config;
+  return useMemo(() => {
+    if (!schema) return;
+    return buildInitialConfigState(schema, {}, { type: 'circuit' } as ICircuit);
+  }, [schema]);
 }
 
 export function isRootBlock(schema: ConfigSchema, key: string) {

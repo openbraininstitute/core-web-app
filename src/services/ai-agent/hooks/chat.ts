@@ -18,7 +18,7 @@ import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { AiAssistant, useAiAssistant } from '../assistant';
 import { fetchMessagesFromDB } from '../assistant/manager/message';
 
-import type { Config } from '@/features/scan-config/components/components';
+import type { Config } from '@/features/scan-config/types';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
 export const agentStateAtom = atom<Record<string, Config>>({});
@@ -109,7 +109,7 @@ export function useServiceAiAgentChat(threadId: string) {
     if (assistantInitialMessages.length > 0) {
       chat.setMessages(assistantInitialMessages);
     }
-  }, [assistantInitialMessages]);
+  }, [assistantInitialMessages, chat.setMessages]);
 
   useEffect(() => {
     const lastMessage = chat.messages[chat.messages.length - 1];
