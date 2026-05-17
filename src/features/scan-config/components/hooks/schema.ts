@@ -177,7 +177,10 @@ function buildInitialConfigState(
   const safeInitialConfig = initialConfig ?? {};
 
   Object.entries(schema.properties).forEach(([k, v]) => {
-    if (isType(v)) return;
+    if (isType(v)) {
+      state[k] = v.const;
+      return;
+    }
 
     const safeInitialConfigforKey = safeInitialConfig[k] ?? {};
 

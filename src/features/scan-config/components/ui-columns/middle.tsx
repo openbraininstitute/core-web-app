@@ -101,7 +101,7 @@ export default function Middle({
             blockSchema={selectedSchema}
             state={preview ?? config[selectedRootElement] ?? {}}
             setState={(newState) => {
-              return { ...config, [selectedRootElement]: newState };
+              setConfig({ ...config, [selectedRootElement]: newState });
             }}
             entity={entity}
             schemaMappingConfig={schemaMappingConfig}

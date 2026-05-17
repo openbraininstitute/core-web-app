@@ -74,7 +74,7 @@ export function UIElementRender({
           value={typeof value === 'string' ? value : ''}
           className="w-full"
           onChange={(e) => {
-            setState({ ...state, [k]: e.currentTarget.value });
+            setState({ ...state, [k]: e.currentTarget.value || null });
           }}
         />
       )
