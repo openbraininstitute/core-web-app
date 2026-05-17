@@ -140,13 +140,6 @@ export function isRootBlock(schema: ConfigSchema, key: string) {
   );
 }
 
-export function isRootBlockSingle(schema: ConfigSchema, key: string) {
-  return (
-    schema.properties?.[key] &&
-    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockUnion
-  );
-}
-
 async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
   const res = await fetch(`${config.OBI_ONE_URL}/openapi.json`);
   const json = await res.json();
