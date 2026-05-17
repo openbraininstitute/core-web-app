@@ -17,6 +17,8 @@ import {
 } from '@/features/scan-config/types';
 import { log } from '@/utils/logger';
 
+import { isPlainObject } from '../utils';
+
 import type { Nullish } from '@/utils/type';
 
 export function getGeneratedApiUrl({
@@ -208,19 +210,25 @@ export function useEntries({
 }: {
   schema: ConfigSchema | undefined;
   initialConfig?: Config;
-}) {
-  const allEntries = useRef<Set<string>>(new Set());
+}): Set<string> {
+  const allEntries = useRef<Set<string> | null>(null);
 
-  useEffect(() => {
-    if (!initialConfig || !schema) return;
+  const newSet = new Set<string>();
+
+  if (!allEntries.current) {
+    allEntries.current = newSet;
+    if (!initialConfig || !schema) return allEntries.current;
+
     Object.entries(initialConfig)
       .filter(([k]) => !isRootBlock(schema, k))
       .forEach(([_key, value]) => {
+        if (!isPlainObject(value)) return;
         Object.keys(value).forEach((entryKey) => {
+          if (!allEntries.current) return;
           allEntries.current.add(entryKey);
         });
       });
-  }, [schema, initialConfig]);
+  }
 
   return allEntries.current;
 }
