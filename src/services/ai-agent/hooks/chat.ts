@@ -332,10 +332,9 @@ export function useAIConfig() {
 
   const aiCircuitId = aiConfig.initialize.circuit.id_str;
   const agentCircuitId = aiAgentState.smc_simulation_config.initialize.circuit.id_str;
-  const guardPassed = aiCircuitId === agentCircuitId;
 
   return {
-    aiConfig: guardPassed ? aiConfig : null,
+    aiConfig: aiCircuitId === agentCircuitId ? aiConfig : null,
     setAiConfig,
     isChatReady,
   };
