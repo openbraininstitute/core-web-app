@@ -261,7 +261,7 @@ function buildInitialConfigState(
 
       Object.entries(initialConfigforKey).forEach(([subK, subV]) => {
         if (!isPlainObject(subV)) return;
-        nestedState[subK] = subV as Record<string, ConfigValue>;
+        nestedState[subK] = subV;
       });
 
       state[k] = nestedState;
