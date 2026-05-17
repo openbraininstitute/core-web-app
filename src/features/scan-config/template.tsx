@@ -29,7 +29,6 @@ import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
-import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
@@ -95,8 +94,6 @@ export function ScanConfigTemplate({
   });
 
   const selectedSchema = schema.properties[selectedRootElement];
-  const previousCampaignId = usePrevious(campaignId);
-  const isCampaignIdChanged = previousCampaignId !== campaignId;
 
   useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
 
