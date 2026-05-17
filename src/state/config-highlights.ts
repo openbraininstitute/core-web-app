@@ -1,5 +1,4 @@
 import { atom } from 'jotai';
-import memoizeOne from 'memoize-one';
 
 import { computeLiveDiffs, type DiffResult } from '@/utils/diff';
 
