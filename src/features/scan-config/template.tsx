@@ -83,22 +83,11 @@ export function ScanConfigTemplate({
   campaignOriginAction,
 }: Props) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
-  const [selectedRootElement, setSelectedRootElement] = useAtom(selectedRootElementAtom);
-  const [editing, setEditing] = useAtom(editingAtom);
-  const [selectedEntry, setSelectedEntry] = useAtom(selectedEntryAtom);
-
-  useLayoutEffect(() => {
-    const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
-    if (!firstRoot) return;
-
-    const rootSpec = selectedRootElement ? schema.properties[selectedRootElement] : undefined;
-    const hasValidSelection =
-      Boolean(selectedRootElement) && rootSpec !== undefined && !isType(rootSpec);
-    if (hasValidSelection) return;
-
-    setSelectedRootElement(firstRoot);
-    setSelectedEntry('');
-  }, [schema, selectedRootElement, setSelectedEntry, setSelectedRootElement]);
+  const [selectedRootElement, setSelectedRootElement] = useState(
+    Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0] ?? ''
+  );
+  const [editing, setEditing] = useState(true);
+  const [selectedEntry, setSelectedEntry] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');

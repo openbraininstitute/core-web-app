@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+import memoizeOne from 'memoize-one';
 
 import { computeLiveDiffs, type DiffResult } from '@/utils/diff';
 
@@ -62,19 +63,20 @@ export const expandedRootElementsAtom = atom(
  * Atom to control which root element is selected/expanded in the scan config UI
  * Used by AI assistant to programmatically expand blocks
  */
-export const selectedRootElementAtom = atom<string>('info');
+
+export const selectedRootElementAtom = memoizeOne((_: string) => atom<string>(''));
 
 /**
  * Atom to control whether the middle panel is in editing mode
  * Used by AI assistant to show the config editor when expanding blocks
  */
-export const editingAtom = atom<boolean>(true);
+export const editingAtom = memoizeOne((_: string) => atom(true));
 
 /**
  * Atom to track which child entry should be selected within a dictionary block
  * Used to control which entry is shown in the middle panel
  */
-export const selectedEntryAtom = atom<string>('');
+export const selectedEntryAtom = memoizeOne((_: string) => atom<string>(''));
 
 /**
  * Atom to track active flash animations.

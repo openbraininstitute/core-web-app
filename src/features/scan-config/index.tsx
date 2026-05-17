@@ -154,6 +154,7 @@ export function ScanConfiguration({
   if (entity || usedType) {
     return (
       <ScanConfigTemplate
+        key={schemaName + entityId}
         {...{
           entity,
           entityType: usedType,
