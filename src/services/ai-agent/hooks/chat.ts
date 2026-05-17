@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { DefaultChatTransport, getToolName, isToolUIPart } from 'ai';
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
+import { isPlainObject } from 'node_modules/zod/v4/core/util.cjs';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { atomRateLimit } from '@/components/ai-assistant/state';
@@ -317,8 +318,20 @@ export function useAIConfig() {
   const [aiAgentState] = useAtom(agentStateAtom);
   const [isChatReady] = useAtom(isChatReadyAtom);
 
-  const aiCircuitId = (aiConfig as any)?.initialize?.circuit?.id_str;
-  const agentCircuitId = (aiAgentState as any)?.smc_simulation_config?.initialize?.circuit?.id_str;
+  if (!isPlainObject(aiConfig) || !isPlainObject(aiAgentState)) return;
+  if (
+    !isPlainObject(aiConfig.initialize) ||
+    !isPlainObject(aiAgentState.smc_simulation_config.initialize)
+  )
+    return;
+  if (
+    !isPlainObject(aiConfig.initialize.circuit) ||
+    !isPlainObject(aiAgentState.smc_simulation_config.initialize.circuit)
+  )
+    return;
+
+  const aiCircuitId = aiConfig.initialize.circuit.id_str;
+  const agentCircuitId = aiAgentState.smc_simulation_config.initialize.circuit.id_str;
   const guardPassed = aiCircuitId === agentCircuitId;
 
   return {
