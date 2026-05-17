@@ -31,7 +31,6 @@ import { isObject } from '@/util/type-guards';
 import ModelIdentifierMultiple from './model-identifier_multiple';
 import { VoltageDuration, type VoltageDurationState } from './voltage-duration';
 
-import type { SetStateAction } from 'jotai';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
@@ -59,7 +58,7 @@ export function UIElementRender({
   schema: ConfigSchema;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   state: Record<string, ConfigValue>;
-  setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
+  setState: (newState: Record<string, ConfigValue>) => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   errorPathPrefix?: string;
 }) {

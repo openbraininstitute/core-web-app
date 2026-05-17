@@ -9,7 +9,6 @@ import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-element-diff';
 import {
-  type AtomsMap,
   type Config,
   type ConfigSchema,
   type IBlockDictionary,
@@ -33,11 +32,10 @@ export function RootElement({
   schema,
   rootElement,
   rootElementSchema,
-  atomsMap,
-  setAtomsMap,
   selectedRootElement,
   setSelectedRootElement,
   config,
+  setConfig,
   campaignId,
   loading,
   errors,
@@ -54,11 +52,10 @@ export function RootElement({
   schema: ConfigSchema | null; // The global schema
   rootElement: string;
   rootElementSchema: IBlockSingle | IBlockDictionary | IRootBlockUnion;
-  atomsMap: AtomsMap;
-  setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   selectedRootElement: string;
   setSelectedRootElement: (configTab: string) => void;
   config: Config;
+  setConfig: (newConfig: Config) => void;
   campaignId: string;
   loading: boolean;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
@@ -195,6 +192,7 @@ export function RootElement({
         (config[rootElement] || hasHighlights) && (
           <BlockDictionaryEntries
             config={config}
+            setConfig={setConfig}
             rootElement={rootElement}
             selectedEntry={selectedEntry}
             selectedRootElement={selectedRootElement}
@@ -212,8 +210,6 @@ export function RootElement({
             setNewKey={setNewKey}
             isEditingKey={isEditingKey}
             setIsEditingKey={setIsEditingKey}
-            atomsMap={atomsMap}
-            setAtomsMap={setAtomsMap}
             errors={errors}
             highlights={highlights}
             visible={isExpanded}

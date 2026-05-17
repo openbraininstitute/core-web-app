@@ -5,11 +5,7 @@ import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { useEntries } from '@/features/scan-config/components/hooks';
-import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
-import {
-  type TSchemaMappingConfiguration,
-  useAtomsMap,
-} from '@/features/scan-config/components/hooks/schema';
+import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
@@ -39,6 +35,7 @@ import { useAgentState } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
 import styles from '@/features/scan-config/scan-config.module.css';
@@ -91,12 +88,11 @@ export function ScanConfigTemplate({
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
   const allEntries = useEntries({ initialConfig, schema });
-  const [atomsMap, setAtomsMap] = useAtomsMap({
+  const [config, setConfig] = useConfig({
     schema,
     initialConfig,
     model: entity,
   });
-  const config = useConfigAtom(schema, atomsMap);
 
   const selectedSchema = schema.properties[selectedRootElement];
   const previousCampaignId = usePrevious(campaignId);
@@ -177,11 +173,10 @@ export function ScanConfigTemplate({
         >
           <Left
             schema={schema}
-            atomsMap={atomsMap}
-            setAtomsMap={setAtomsMap}
             selectedRootElement={selectedRootElement}
             setSelectedRootElement={setSelectedRootElement}
             config={config}
+            setConfig={setConfig}
             campaignId={campaignId}
             loading={loading}
             selectedEntry={selectedEntry}
@@ -215,13 +210,12 @@ export function ScanConfigTemplate({
                 schema={schema}
                 selectedRootElement={selectedRootElement}
                 editing={editing}
-                atomsMap={atomsMap}
-                setAtomsMap={setAtomsMap}
                 selectedEntry={selectedEntry}
                 setSelectedEntry={setSelectedEntry}
                 campaignId={campaignId}
                 loading={loading}
                 config={config}
+                setConfig={setConfig}
                 entity={entity}
                 allEntries={allEntries}
                 onNewBlockClick={() => {

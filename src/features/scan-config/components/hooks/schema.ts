@@ -1,7 +1,6 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { useQuery } from '@tanstack/react-query';
 import { omit, pick } from 'es-toolkit/compat';
-import { atom } from 'jotai';
 import { useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -11,9 +10,8 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import { config } from '@/config';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
-  type AtomsMap,
   type Config,
   type ConfigSchema,
   type ConfigValue,
@@ -167,18 +165,14 @@ const ModelIdentifierSelector = {
   [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'CellMorphologyFromID',
 };
 
-function buildInitialAtomsMap(
+function buildInitialConfigState(
   schema: ConfigSchema,
   initialConfig: Config | undefined,
   model: TSupportedEntitiesForScanConfiguration | Nullish
-) {
+): Config {
   if (!schema.properties) return {};
 
-  const map: {
-    [key: string]:
-      | ReturnType<typeof atom<Record<string, ConfigValue>>>
-      | Record<string, ReturnType<typeof atom<Record<string, ConfigValue>>>>;
-  } = {};
+  const state: Config = {};
 
   const safeInitialConfig = initialConfig ?? {};
 
@@ -256,22 +250,25 @@ function buildInitialAtomsMap(
         }
       });
 
-      map[k] = atom<Record<string, ConfigValue>>(initialConfigforKey);
+      state[k] = initialConfigforKey;
     } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
-      map[k] = atom<Record<string, ConfigValue>>(initialConfigforKey);
+      state[k] = initialConfigforKey;
     } else {
-      map[k] = {};
+      const nestedState: Record<string, Record<string, ConfigValue>> = {};
+
       Object.entries(initialConfigforKey).forEach(([subK, subV]) => {
-        if (!isPlainObject(subV) || isAtom(map[k])) return;
-        map[k][subK] = atom<Record<string, ConfigValue>>(subV);
+        if (!isPlainObject(subV)) return;
+        nestedState[subK] = subV as Record<string, ConfigValue>;
       });
+
+      state[k] = nestedState;
     }
   });
 
-  return map;
+  return state;
 }
 
-export function useAtomsMap({
+export function useConfig({
   schema,
   initialConfig,
   model,
@@ -280,68 +277,11 @@ export function useAtomsMap({
   initialConfig?: Config;
   model: TSupportedEntitiesForScanConfiguration | Nullish;
 }) {
-  const [atomsMap, setAtomsMap] = useState<AtomsMap>(() =>
-    buildInitialAtomsMap(schema, initialConfig, model)
+  const [configState, setConfigState] = useState<Config>(() =>
+    buildInitialConfigState(schema, initialConfig, model)
   );
 
-  return [atomsMap, setAtomsMap] as const;
-}
-
-export function resetConfig(
-  schema: ConfigSchema,
-  newConfig: Config,
-  setAtomsMap: (newMap: AtomsMap) => void
-) {
-  const map: {
-    [key: string]:
-      | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
-      | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
-  } = {};
-
-  // First, populate from newConfig
-  Object.entries(newConfig)
-    .filter(([k]) => isRootBlock(schema, k) || isRootBlockSingle(schema, k))
-    .forEach(([k, v]) => {
-      if (isPlainObject(v)) map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(v);
-    });
-
-  Object.entries(newConfig)
-    .filter(([k]) => !isRootBlock(schema, k) && !isRootBlockSingle(schema, k))
-    .forEach(([k, v]) => {
-      map[k] = {};
-      if (!v || !isPlainObject(v)) return;
-      Object.entries(v).forEach(([subK, subV]) => {
-        if (!isPlainObject(subV) || isAtom(map[k])) return;
-        map[k][subK] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(subV);
-      });
-    });
-
-  // Ensure ALL schema-defined root keys exist in the map, even if absent from newConfig.
-  // Without this, useAtomsMap's hasInitializedMapForSchema guard fails and re-initializes
-  // the entire map from defaults, wiping the restored data.
-  if (schema?.properties) {
-    for (const [k, v] of Object.entries(schema.properties)) {
-      if (isType(v) || k in map) continue;
-      if (
-        v.ui_element === ScanConfigUIElementDict.BlockSingle ||
-        v.ui_element === ScanConfigUIElementDict.BlockUnion
-      ) {
-        // Create atom with empty defaults for missing single/union blocks
-        const initial: Record<string, ConfigValue | Array<ConfigValue>> = {};
-        if ('properties' in v && v.properties) {
-          Object.entries(v.properties).forEach(([subkey, subValue]) => {
-            initial[subkey] = isType(subValue) ? null : (subValue.default ?? null);
-          });
-        }
-        map[k] = atom<Record<string, ConfigValue | Array<ConfigValue>>>(initial);
-      } else {
-        // Dictionary or other block types — empty map
-        map[k] = {};
-      }
-    }
-  }
-
-  setAtomsMap(map);
+  return [configState, setConfigState] as const;
 }
 
 export function useReferenceTypeDict(schema: ConfigSchema) {

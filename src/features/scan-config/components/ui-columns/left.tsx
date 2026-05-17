@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { RootElement } from '@/features/scan-config/components/root-element';
 import { useConfigUpdateFlashes } from '@/features/scan-config/hooks/use-config-update-flashes';
 import {
-  type AtomsMap,
   type ConfigSchema,
   isType,
   type TScanConfigActivity,
@@ -16,17 +15,15 @@ import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/conf
 
 import GenerateConfigButton from '../generate-config-button';
 import { useValidateSchema } from '../hooks';
-import { resetConfig } from '../hooks/schema';
 
 import type { Config } from '@/features/scan-config/types';
 
 export default function Left({
   schema,
-  atomsMap,
-  setAtomsMap,
   selectedRootElement,
   setSelectedRootElement,
   config,
+  setConfig,
   campaignId,
   loading,
   selectedEntry,
@@ -47,11 +44,10 @@ export default function Left({
   entityType,
 }: {
   schema: ConfigSchema;
-  atomsMap: AtomsMap;
-  setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   selectedRootElement: string;
   setSelectedRootElement: (rootElement: string) => void;
   config: Config;
+  setConfig: (newConfig: Config) => void;
   campaignId: string;
   loading: boolean;
   selectedEntry: string;
@@ -84,18 +80,18 @@ export default function Left({
   useEffect(() => {
     if (restorePreviewActive) return;
     if (aiConfig && !campaignId) {
-      resetConfig(schema, aiConfig, setAtomsMap);
+      setConfig(aiConfig);
       setAiConfig(null);
     }
-  }, [aiConfig, campaignId, schema, setAtomsMap, setAiConfig, restorePreviewActive]);
+  }, [aiConfig, campaignId, setConfig, setAiConfig, restorePreviewActive]);
 
   // Apply confirmed restore config to live atoms
   useEffect(() => {
     if (pendingRestoreConfig) {
-      resetConfig(schema, pendingRestoreConfig as Config, setAtomsMap);
+      setConfig(pendingRestoreConfig);
       setPendingRestoreConfig(null);
     }
-  }, [pendingRestoreConfig, schema, setAtomsMap, setPendingRestoreConfig]);
+  }, [pendingRestoreConfig, setConfig, setPendingRestoreConfig]);
 
   return (
     <div id="scan-config-controls-left" className="flex h-full min-h-0 flex-col">
@@ -122,11 +118,10 @@ export default function Left({
                         rootElement={k}
                         schema={schema}
                         rootElementSchema={rootElementSchema}
-                        atomsMap={atomsMap}
-                        setAtomsMap={setAtomsMap}
                         selectedRootElement={selectedRootElement}
                         setSelectedRootElement={setSelectedRootElement}
                         config={config}
+                        setConfig={setConfig}
                         campaignId={campaignId}
                         loading={loading}
                         errors={errors}

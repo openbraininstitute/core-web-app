@@ -2,6 +2,8 @@ import { atom } from 'jotai';
 
 import { computeLiveDiffs, type DiffResult } from '@/utils/diff';
 
+import type { Config } from '@/features/scan-config/types';
+
 /**
  * Highlight descriptor for a single config path change.
  */
@@ -179,7 +181,7 @@ export interface DiffBarData {
  * Set by handleConfirmRestore, consumed by left.tsx to call resetConfig.
  * Cleared after consumption.
  */
-export const pendingRestoreConfigAtom = atom<Record<string, any> | null>(null);
+export const pendingRestoreConfigAtom = atom<Config | null>(null);
 
 /**
  * When true, the aiConfig auto-apply effect in left.tsx is suppressed.

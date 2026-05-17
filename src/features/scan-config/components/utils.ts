@@ -1,16 +1,11 @@
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 
-import type { Atom } from 'jotai';
 import type { ConfigValue } from '../types';
 
 export type Primitive = null | boolean | number | string;
 
 export function isPlainObject(value: unknown): value is Record<string, ConfigValue> {
   return typeof value === 'object' && !Array.isArray(value) && value !== null;
-}
-
-export function isAtom<T>(val: unknown): val is Atom<T> {
-  return typeof val === 'object' && val !== null && 'read' in val;
 }
 
 const simExecStatusListOrdered = [

@@ -8,7 +8,7 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { Input } from 'antd';
-import { atom, useAtom } from 'jotai';
+import { useAtom } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, memo, useMemo } from 'react';
 
@@ -17,17 +17,11 @@ import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import { isAtom, isPlainObject } from './utils';
+import { isPlainObject } from './utils';
 
 import type { ErrorObject } from 'ajv';
 import type React from 'react';
-import type {
-  AtomsMap,
-  Config,
-  ConfigValue,
-  IBlockDictionary,
-  TBlock,
-} from '@/features/scan-config/types';
+import type { Config, IBlockDictionary, TBlock } from '@/features/scan-config/types';
 import type { ConfigHighlight } from '@/state/config-highlights';
 
 import styles from './block-dictionary-entries.module.css';
@@ -83,6 +77,7 @@ function EntryTab({
 
 export default function BlockDictionaryEntries({
   config,
+  setConfig,
   rootElement,
   selectedEntry,
   selectedRootElement,
@@ -100,14 +95,13 @@ export default function BlockDictionaryEntries({
   setNewKey,
   isEditingKey,
   setIsEditingKey,
-  atomsMap,
-  setAtomsMap,
   errors,
   highlights = [],
   visible,
   rootElementSchema,
 }: {
   config: Config;
+  setConfig: (newConfig: Config) => void;
   rootElementSchema: IBlockDictionary;
   rootElement: string;
   selectedEntry: string;
@@ -126,8 +120,6 @@ export default function BlockDictionaryEntries({
   setNewKey: (k: string) => void;
   isEditingKey: boolean;
   setIsEditingKey: (k: boolean) => void;
-  atomsMap: AtomsMap;
-  setAtomsMap: React.Dispatch<React.SetStateAction<AtomsMap>>;
   errors: ErrorObject<string, Record<string, any>, unknown>[] | null | undefined;
   highlights?: ConfigHighlight[];
   visible: boolean;
@@ -149,61 +141,50 @@ export default function BlockDictionaryEntries({
     e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.KeyboardEvent<HTMLInputElement>
   ) => {
     e.stopPropagation();
+
     if (newKeyError) return;
-    const selectedTabAtoms = atomsMap[selectedRootElement];
     if (newKey === selectedEntry) return;
-    if (isAtom(selectedTabAtoms)) return;
     if (!isPlainObject(config[selectedRootElement])) return;
+
+    const newConfig = structuredClone(config);
+    const targetSection = newConfig[selectedRootElement];
 
     allEntries.delete(selectedEntry);
     allEntries.add(newKey);
 
-    selectedTabAtoms[newKey] = selectedTabAtoms[selectedEntry];
-    delete selectedTabAtoms[selectedEntry];
+    if (!isPlainObject(targetSection)) return;
 
-    // Rename references
+    targetSection[newKey] = targetSection[selectedEntry];
+    delete targetSection[selectedEntry];
 
-    // Initialize case
-    const configInitialize = config.initialize;
+    const initConfig = newConfig.initialize;
     if (
-      isPlainObject(configInitialize) &&
-      isPlainObject(configInitialize.node_set) &&
-      typeof configInitialize.node_set.block_name === 'string' &&
-      configInitialize.node_set.block_name === selectedEntry
+      isPlainObject(initConfig) &&
+      isPlainObject(initConfig.node_set) &&
+      typeof initConfig.node_set.block_name === 'string' &&
+      initConfig.node_set.block_name === selectedEntry
     ) {
-      atomsMap.initialize = atom<Record<string, ConfigValue | Array<ConfigValue>>>({
-        ...configInitialize,
-        node_set: { ...configInitialize.node_set, block_name: newKey },
-      });
+      initConfig.node_set.block_name = newKey;
     }
 
-    // Check all keys in the config
-    Object.entries(config)
-      .filter(([configK]) => configK !== 'initialize')
-      .forEach(([configK, configV]) => {
-        if (!isPlainObject(configV)) return;
+    Object.entries(newConfig).forEach(([configK, configV]) => {
+      if (configK === 'initialize' || !isPlainObject(configV)) return;
 
-        // Check all keys in a section (e.g stimuli, recordings)
-        Object.entries(configV).forEach(([_, entryV]) => {
-          if (!isPlainObject(entryV)) return;
+      // Evaluate items within sections (e.g., stimuli, recordings)
+      Object.values(configV).forEach((entryV) => {
+        if (!isPlainObject(entryV)) return;
 
-          // Check all values in a particular object (a single stimuli, a single timestamp, etc)
-          Object.entries(entryV).forEach(([fieldK, field]) => {
-            if (
-              !isPlainObject(entryV[fieldK]) ||
-              !isPlainObject(field) ||
-              isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
-              field.block_name !== selectedEntry
-            )
-              return;
+        // Evaluate fields within the specific object
+        Object.values(entryV).forEach((field) => {
+          if (!isPlainObject(field) || field.block_name !== selectedEntry) return;
 
-            // Renaming the reference to current object
-            entryV[fieldK].block_name = newKey;
-          });
+          // Update the block_name reference
+          field.block_name = newKey;
         });
       });
+    });
 
-    setAtomsMap({ ...atomsMap });
+    setConfig(newConfig);
 
     setIsEditingKey(false);
     setSelectedEntry(newKey);
@@ -360,74 +341,53 @@ export default function BlockDictionaryEntries({
                               highlights.length === 0 && (
                                 <DeleteOutlined
                                   className="cursor-pointer"
-                                  onClick={(e) => {
+                                  onClick={(e: React.MouseEvent) => {
                                     e.stopPropagation();
 
                                     setEditing(false);
                                     setSelectedRootElement(rootElement);
 
-                                    const currentTabAtoms = atomsMap[rootElement];
+                                    if (!isPlainObject(config[rootElement])) return;
 
-                                    if (!isAtom(currentTabAtoms)) {
-                                      delete currentTabAtoms[subkey];
+                                    const newConfig = structuredClone(config);
+                                    const targetSection = newConfig[rootElement];
 
-                                      // Initialize case
-                                      const configInitialize = config.initialize;
-                                      if (
-                                        isPlainObject(configInitialize) &&
-                                        isPlainObject(configInitialize.node_set) &&
-                                        typeof configInitialize.node_set.block_name === 'string' &&
-                                        configInitialize.node_set.block_name === subkey
-                                      ) {
-                                        atomsMap.initialize = atom<
-                                          Record<string, ConfigValue | Array<ConfigValue>>
-                                        >({
-                                          ...configInitialize,
-                                          node_set: null,
-                                        });
-                                      }
+                                    if (!isPlainObject(targetSection)) return;
 
-                                      // Check all keys in the config
-                                      Object.entries(config)
-                                        .filter(([configK]) => configK !== 'initialize')
-                                        .forEach(([configK, configV]) => {
-                                          if (!isPlainObject(configV)) return;
+                                    delete targetSection[subkey];
 
-                                          // Check all keys in a section (e.g stimuli, recordings)
-                                          Object.entries(configV).forEach(([entryKey, entryV]) => {
-                                            if (!isPlainObject(entryV)) return;
-
-                                            // Check all values in a particular object (a single stimuli, a single timestamp, etc)
-                                            Object.entries(entryV).forEach(([fieldK, field]) => {
-                                              if (
-                                                !isPlainObject(entryV) ||
-                                                !isPlainObject(field) ||
-                                                typeof field.block_name !== 'string' ||
-                                                isAtom(atomsMap[configK]) || // skip top level atoms (e.g initialize)
-                                                field.block_name !== subkey
-                                              )
-                                                return;
-
-                                              // Deleting the reference to current object
-
-                                              delete entryV[fieldK];
-
-                                              // The atom that has a reference to current object
-                                              atomsMap[configK][entryKey] =
-                                                atom<
-                                                  Record<string, ConfigValue | Array<ConfigValue>>
-                                                >(entryV);
-                                            });
-                                          });
-                                        });
-
-                                      setAtomsMap({
-                                        ...atomsMap,
-                                        [selectedRootElement]: {
-                                          ...currentTabAtoms,
-                                        },
-                                      });
+                                    const initConfig = newConfig.initialize;
+                                    if (
+                                      isPlainObject(initConfig) &&
+                                      isPlainObject(initConfig.node_set) &&
+                                      typeof initConfig.node_set.block_name === 'string' &&
+                                      initConfig.node_set.block_name === subkey
+                                    ) {
+                                      initConfig.node_set = null;
                                     }
+
+                                    Object.entries(newConfig).forEach(([configK, configV]) => {
+                                      if (configK === 'initialize' || !isPlainObject(configV))
+                                        return;
+
+                                      Object.values(configV).forEach((entryV) => {
+                                        if (!isPlainObject(entryV)) return;
+
+                                        Object.entries(entryV).forEach(([fieldK, field]) => {
+                                          if (
+                                            !isPlainObject(field) ||
+                                            typeof field.block_name !== 'string' ||
+                                            field.block_name !== subkey
+                                          ) {
+                                            return;
+                                          }
+
+                                          delete entryV[fieldK];
+                                        });
+                                      });
+                                    });
+
+                                    setConfig(newConfig);
 
                                     setSelectedEntry('');
                                     allEntries.delete(subkey);
