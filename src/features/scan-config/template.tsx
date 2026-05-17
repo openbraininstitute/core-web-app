@@ -1,8 +1,7 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
-import { useAtom } from 'jotai';
-import { Suspense, useLayoutEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { useEntries } from '@/features/scan-config/components/hooks';
@@ -99,11 +98,7 @@ export function ScanConfigTemplate({
   });
   const config = useConfigAtom(schema, atomsMap);
 
-  const selectedSchemaCandidate = schema.properties[selectedRootElement];
-  const selectedSchema =
-    selectedSchemaCandidate !== undefined && !isType(selectedSchemaCandidate)
-      ? selectedSchemaCandidate
-      : undefined;
+  const selectedSchema = schema.properties[selectedRootElement];
   const previousCampaignId = usePrevious(campaignId);
   const isCampaignIdChanged = previousCampaignId !== campaignId;
 
