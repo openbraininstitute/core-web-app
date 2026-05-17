@@ -37,7 +37,6 @@ import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletoniza
 import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState } from '@/services/ai-agent';
-import { editingAtom, selectedEntryAtom, selectedRootElementAtom } from '@/state/config-highlights';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -83,9 +82,8 @@ export function ScanConfigTemplate({
   campaignOriginAction,
 }: Props) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
-  const [selectedRootElement, setSelectedRootElement] = useState(
-    Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0] ?? ''
-  );
+  const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
+  const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
   const [editing, setEditing] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState('');
 
