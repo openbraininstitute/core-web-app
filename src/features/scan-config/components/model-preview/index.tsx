@@ -18,13 +18,18 @@ export function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfig
         disableSynapses
       />
     ))
-    .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single }, () => (
+    .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.PairNeuron }, () => (
+      <CircuitPreview circuit={model as ICircuit} />
+    ))
+    .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.SmallMicrocircuit }, () => (
+      <CircuitPreview circuit={model as ICircuit} />
+    ))
+    .with({ type: EntityTypeDict.Circuit }, () => (
       <div className="px-5 text-gray-500">
         <div className="text-lg uppercase">Preview</div>
         <div className="mt-2">Coming soon</div>
       </div>
     ))
-    .with({ type: EntityTypeDict.Circuit }, () => <CircuitPreview circuit={model as ICircuit} />)
     .otherwise(() => null);
 }
 

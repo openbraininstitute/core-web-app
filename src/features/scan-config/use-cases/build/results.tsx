@@ -15,10 +15,8 @@ import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
-import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
-import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
