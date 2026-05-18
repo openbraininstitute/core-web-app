@@ -81,7 +81,7 @@ export default function Left({
     if (restorePreviewActive) return;
     if (aiConfig && !campaignId) {
       setConfig(aiConfig);
-      setAiConfig(null);
+      setAiConfig({});
     }
   }, [aiConfig, campaignId, setConfig, setAiConfig, restorePreviewActive]);
 
