@@ -1,8 +1,9 @@
-import React from 'react';
 import Plotly from 'plotly.js-dist-min';
+import React from 'react';
 
-import { PlotInstance } from '../plots-parser';
 import { PLOT_CONFIG, PLOT_LAYOUT } from '../layout-config';
+
+import type { PlotInstance } from '../plots-parser';
 
 export function usePlotly(
   refPlot: React.RefObject<HTMLDivElement | null>,
@@ -26,10 +27,12 @@ export function usePlotly(
       return item;
     });
     const layout = structuredClone(PLOT_LAYOUT);
-    if (!layout.xaxis) layout.xaxis = { title: instance.xaxis };
-    else layout.xaxis.title = instance.xaxis;
-    if (!layout.yaxis) layout.yaxis = { title: instance.yaxis };
-    else layout.yaxis.title = instance.yaxis;
+    if (!layout.xaxis)
+      layout.xaxis = { title: { text: instance.xaxis, font: { size: 12 }, standoff: 6 } };
+    else layout.xaxis.title = { text: instance.xaxis, font: { size: 12 }, standoff: 6 };
+    if (!layout.yaxis)
+      layout.yaxis = { title: { text: instance.yaxis, font: { size: 12 }, standoff: 6 } };
+    else layout.yaxis.title = { text: instance.yaxis, font: { size: 12 }, standoff: 6 };
     layout.showlegend = false;
     layout.datarevision = performance.now();
     delete layout.height;
