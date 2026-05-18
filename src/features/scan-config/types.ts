@@ -22,11 +22,11 @@ import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/glo
 import type { Prettify } from '@/utils/type';
 
 type Primitive = null | boolean | number | string;
-export interface Object {
-  [key: string]: ConfigValue | Object;
+export interface ConfigObject {
+  [key: string]: ConfigValue | ConfigObject;
 }
 
-export type ConfigValue = Primitive | Primitive[] | Object | ConfigValue[];
+export type ConfigValue = Primitive | Primitive[] | ConfigObject | ConfigValue[];
 export type Config = Record<string, ConfigValue>;
 
 export const SchemaMappingKeyDict = {
