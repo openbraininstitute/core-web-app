@@ -27,7 +27,6 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TEmSynapseMappingCampaignMeta } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
-import type { TBuildLogStreamFileDescriptor } from '@/features/task-logs-stream/descriptor';
 
 type Props = {
   config: ITaskConfig<TEmSynapseMappingCampaignMeta>;
@@ -38,74 +37,6 @@ type Props = {
   context: { virtualLabId: string; projectId: string };
   campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
-
-const MAX_VIS_ASSET_REFETCH_RETRIES = 10;
-
-function createVirtualLogAsset({
-  id,
-  path,
-  contentType,
-}: {
-  id: string;
-  path: string;
-  contentType: AssetContentType;
-}): IAsset {
-  return {
-    id,
-    path,
-    full_path: path,
-    bucket_name: '',
-    is_directory: false,
-    content_type: contentType,
-    size: 0,
-    label: AssetLabel.task_config,
-    status: 'created',
-  } as IAsset;
-}
-
-function createTaskConfigurationFile({
-  descriptor,
-  config,
-}: {
-  descriptor: TBuildLogStreamFileDescriptor;
-  config: ITaskConfig<TEmSynapseMappingCampaignMeta>;
-}): TActivityCustomFile {
-  return {
-    id: descriptor.id,
-    entity: config,
-    asset: createVirtualLogAsset({
-      id: descriptor.id,
-      path: descriptor.path,
-      contentType: AssetContentType.json,
-    }),
-    assetPath: descriptor.path,
-    name: descriptor.name,
-    enforcedRenderType: AssetContentType.json,
-    renderer: ActivityCustomFileRenderer.TaskConfigurationViewer,
-  };
-}
-
-function createTaskLogsFile({
-  descriptor,
-  execution,
-}: {
-  descriptor: TBuildLogStreamFileDescriptor;
-  execution: ITaskActivity;
-}): TActivityCustomFile {
-  return {
-    id: descriptor.id,
-    entity: execution as TActivityCustomFile['entity'],
-    asset: createVirtualLogAsset({
-      id: descriptor.id,
-      path: descriptor.path,
-      contentType: AssetContentType.text,
-    }),
-    assetPath: descriptor.path,
-    name: descriptor.name,
-    enforcedRenderType: AssetContentType.text,
-    renderer: ActivityCustomFileRenderer.TaskLogsViewer,
-  };
-}
 
 export function InOutFiles({
   config,

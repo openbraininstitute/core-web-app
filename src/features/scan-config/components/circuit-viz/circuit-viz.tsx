@@ -35,8 +35,8 @@ const CircuitViz = memo(({ id, visible }: { id: string; visible: boolean }) => {
           <details className="text-red-500">
             <summary>
               <strong>Couldn't load the visualization</strong>
-              <div>{error.message}</div>
             </summary>
+            <div>{error.message}</div>
           </details>
         )}
       </div>
