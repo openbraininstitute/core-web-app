@@ -12,9 +12,11 @@ import {
   renderLabel,
 } from '@/ui/segments/contribute/shared/helpers';
 import { cn } from '@/utils/css-class';
+import { useRef } from 'react';
 
 export function Setup() {
   const form = Form.useFormInstance();
+  const initialBrainRegionId = useRef(form.getFieldValue(['setup', 'brain_region_id']));
 
   return (
     <div className="h-full w-full">
@@ -62,8 +64,8 @@ export function Setup() {
           },
         ]}
       >
-        <BrainRegionSelector />
-      </Form.Item>
+      <BrainRegionSelector defaultBrainRegion={{ id: initialBrainRegionId.current } as IBrainRegionHierarchy} />
+ </Form.Item>
 
       <Form.Item
         name={['setup', 'experiment_date']}
