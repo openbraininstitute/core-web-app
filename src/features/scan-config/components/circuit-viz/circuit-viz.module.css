@@ -1,0 +1,43 @@
+@keyframes anim-rotation {
+    from {
+        transform: rotate(0)
+    }
+
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+.morphoViewer {
+    font: inherit;
+    color: #000;
+
+    .showAxons {
+        display: flex;
+        flex-wrap: nowrap;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 1em;
+
+        > :global(button.ant-switch) {
+            border-radius: 99vmax;
+            height: 22px;
+            border: none;
+        }
+    }
+
+    div.progress {
+        margin-left: 2em;
+        display: flex;
+        flex-wrap: nowrap;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 0.5em;
+
+        >svg {
+            animation: linear .6s anim-rotation infinite;
+        }
+    }
+}
