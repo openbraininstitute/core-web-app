@@ -78,7 +78,9 @@ export default function BlockDictionary({
       : undefined;
 
   const selectedBlockAI =
-    aiConfig && isPlainObject(aiConfig[selectedRootElement])
+    aiConfig &&
+    isPlainObject(aiConfig[selectedRootElement]) &&
+    isPlainObject(aiConfig[selectedRootElement]?.[selectedEntry])
       ? aiConfig[selectedRootElement][selectedEntry]?.type
       : undefined;
 
