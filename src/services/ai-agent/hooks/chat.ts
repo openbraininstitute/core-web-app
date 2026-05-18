@@ -4,11 +4,11 @@ import { useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { DefaultChatTransport, getToolName, isToolUIPart } from 'ai';
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
-import { isPlainObject } from 'node_modules/zod/v4/core/util.cjs';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { atomRateLimit } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { lastConfigUpdateAtom, preMessageConfigAtom } from '@/state/config-highlights';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
