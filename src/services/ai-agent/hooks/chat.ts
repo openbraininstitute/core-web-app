@@ -285,7 +285,7 @@ export function useServiceAiAgentChat(threadId: string) {
   };
 }
 
-export const configStateAtom = atom<Config | null>(null);
+export const configStateAtom = atom<Config>({});
 export const isChatReadyAtom = atom(true);
 
 export function useAgentState(key: string, config?: Config) {
@@ -318,23 +318,30 @@ export function useAIConfig() {
   const [aiAgentState] = useAtom(agentStateAtom);
   const [isChatReady] = useAtom(isChatReadyAtom);
 
-  if (!isPlainObject(aiConfig) || !isPlainObject(aiAgentState)) return;
+  const defaultConfig = {
+    aiConfig: null,
+    setAiConfig,
+    isChatReady,
+  };
+
   if (
-    !isPlainObject(aiConfig.initialize) ||
-    !isPlainObject(aiAgentState.smc_simulation_config.initialize)
+    !isPlainObject(aiConfig?.initialize) ||
+    !isPlainObject(aiAgentState?.smc_simulation_config?.initialize)
   )
-    return;
+    return defaultConfig;
   if (
-    !isPlainObject(aiConfig.initialize.circuit) ||
-    !isPlainObject(aiAgentState.smc_simulation_config.initialize.circuit)
+    !isPlainObject(aiConfig?.initialize?.circuit) ||
+    !isPlainObject(aiAgentState?.smc_simulation_config?.initialize?.circuit)
   )
-    return;
+    return defaultConfig;
 
   const aiCircuitId = aiConfig.initialize.circuit.id_str;
   const agentCircuitId = aiAgentState.smc_simulation_config.initialize.circuit.id_str;
 
+  if (aiCircuitId !== agentCircuitId) return defaultConfig;
+
   return {
-    aiConfig: aiCircuitId === agentCircuitId ? aiConfig : null,
+    aiConfig,
     setAiConfig,
     isChatReady,
   };
