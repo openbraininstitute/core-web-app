@@ -93,7 +93,7 @@ function Form({ onPrevious }: Props) {
         credits: 0,
         currency: selectedPrice.currency,
         amount: selectedPrice.discount || selectedPrice.amount,
-        rate: BillingQuoteRequestFlowDict.Subscription,
+        rate: 0,
       }
     : null;
 

@@ -27,6 +27,7 @@ export function parseCreditsAmount(value: string) {
 export function CreditsAmountInput({
   className,
   disabled,
+  discountPct,
   hint,
   inputClassName,
   loadingHint = false,
@@ -35,12 +36,15 @@ export function CreditsAmountInput({
 }: {
   className?: string;
   disabled?: boolean;
+  discountPct?: number;
   hint: string;
   inputClassName?: string;
   loadingHint?: boolean;
   onValueChange: (credits: number | undefined) => void;
   value: number | undefined;
 }) {
+  const showSavePercent = discountPct != null && discountPct > 0;
+
   return (
     <div className={cn('rounded-lg  text-primary-9', className)}>
       <div className="flex flex-col gap-3 md:flex-row md:items-start">
@@ -69,11 +73,18 @@ export function CreditsAmountInput({
               Credits
             </div>
           </div>
-          <div className="mt-2 ml-2 flex items-center gap-2 text-current">
-            <CoinsIcon className="size-5" />
-            <span className="text-sm">
-              {loadingHint ? <LoadingOutlined spin className="ml-2 text-current" /> : hint}
-            </span>
+          <div className="mt-2 ml-2 flex min-w-0 items-center justify-between gap-3 text-current">
+            <div className="flex min-w-0 items-center gap-2">
+              <CoinsIcon className="size-5 shrink-0" />
+              <span className="truncate text-sm">
+                {loadingHint ? <LoadingOutlined spin className="text-current" /> : hint}
+              </span>
+            </div>
+            {showSavePercent ? (
+              <span className="shrink-0 text-sm font-semibold text-emerald-700">
+                You save {discountPct}%
+              </span>
+            ) : null}
           </div>
         </div>
       </div>

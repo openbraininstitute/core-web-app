@@ -55,6 +55,11 @@ export function CreditConverter({
           hint={
             conversion ? formatMinorCurrency(conversion.amount, conversion.currency) : 'CHF 0.00'
           }
+          discountPct={
+            conversion?.discount_pct && conversion.discount_pct > 0
+              ? conversion.discount_pct
+              : undefined
+          }
           className="mb-4 border-neutral-200 bg-white text-primary-8 shadow-xs"
           inputClassName="border-neutral-200 bg-white text-center text-primary-8 placeholder:text-primary-8/40"
           loadingHint={conversionQuery.isFetching}

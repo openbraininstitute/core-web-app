@@ -473,7 +473,9 @@ export type CreditConversionResponse = {
   credits: number;
   currency: string;
   amount: number;
-  rate: string;
+  rate: number;
+  discount_pct?: number;
+  base_rate?: number;
 };
 
 type ProjectStats = {

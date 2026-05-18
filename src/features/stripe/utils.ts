@@ -36,9 +36,10 @@ export function makeStripeBilling(address: TBillingAddress, user: User) {
   };
 }
 
-export function formatMinorCurrency(amount: number, currency: string) {
+export function formatMinorCurrency(amount: number, currency?: string | null) {
+  const code = (currency?.trim() ? currency : 'chf').toUpperCase();
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currency.toUpperCase(),
+    currency: code,
   }).format(amount / 100);
 }

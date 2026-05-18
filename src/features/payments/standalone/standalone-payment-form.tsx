@@ -66,6 +66,7 @@ export function StandalonePaymentForm({
     Boolean(conversionKey) &&
     (conversionKeys.has(conversionKey as string) ||
       conversionKeys.size < MAX_CONVERSIONS_PER_TRANSACTION);
+  const limitReached = Boolean(conversionKey) && !conversionAllowed;
 
   useEffect(() => {
     if (conversionKey && conversionAllowed && !conversionKeys.has(conversionKey)) {
@@ -84,6 +85,16 @@ export function StandalonePaymentForm({
     payload: conversionPayload,
     enabled: conversionAllowed,
   });
+
+  const conversionRow =
+    conversion.data && debouncedCredits === conversion.data.credits && !conversion.isFetching
+      ? conversion.data
+      : null;
+
+  const discountPct =
+    !limitReached && conversionRow && conversionRow.discount_pct && conversionRow.discount_pct > 0
+      ? conversionRow.discount_pct
+      : undefined;
 
   const quotePayload = useMemo(
     () =>
@@ -108,7 +119,6 @@ export function StandalonePaymentForm({
     ? formatMinorCurrency(conversion.data.amount, conversion.data.currency)
     : '0.00 CHF';
 
-  const limitReached = Boolean(conversionKey) && !conversionAllowed;
   const currentBillingAddress = billingAddress?.country ? billingAddress : null;
   const user = session?.user;
 
@@ -167,7 +177,7 @@ export function StandalonePaymentForm({
               message: messages.paymentSuccess
                 .replace('$$credits', credits.toString())
                 .replace('$$amount', (data.amount_total / 100).toString())
-                .replace('$$currency', data.currency.toUpperCase()),
+                .replace('$$currency', (data.currency ?? 'chf').toUpperCase()),
               ...notificationConfig,
             });
             const accountingKey = keyBuilder.accounting({ virtualLabId });
@@ -214,6 +224,7 @@ export function StandalonePaymentForm({
         hint={limitReached ? 'Calculation of order full amount limit reached' : conversionText}
         value={credits}
         disabled={isPaying}
+        discountPct={discountPct}
         loadingHint={conversion.isFetching}
         onValueChange={setCredits}
       />
