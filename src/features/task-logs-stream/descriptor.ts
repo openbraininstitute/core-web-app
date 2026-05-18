@@ -1,42 +1,42 @@
-import { AssetContentType, AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
-import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
+import { AssetContentType, AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global'
+import { ActivityCustomFileRenderer } from '@/features/scan-config/types'
 
-import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
-import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity'
+import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config'
+import type { TActivityCustomFile } from '@/features/scan-config/types'
 
 export const LogStreamFileRenderer = {
   TaskConfiguration: 'task-configuration-viewer',
   TaskLogs: 'task-logs-viewer',
-} as const;
+} as const
 
 export type TLogStreamFileRenderer =
-  (typeof LogStreamFileRenderer)[keyof typeof LogStreamFileRenderer];
+  (typeof LogStreamFileRenderer)[keyof typeof LogStreamFileRenderer]
 
 export type TLogStreamFileDescriptor = {
-  id: string;
-  name: string;
-  path: string;
-  renderer: TLogStreamFileRenderer;
-};
+  id: string
+  name: string
+  path: string
+  renderer: TLogStreamFileRenderer
+}
 
 export function makeLogStreamFileDescriptors({
   configId,
   executionId,
 }: {
-  configId: string;
-  executionId?: string | null;
+  configId: string
+  executionId?: string | null
 }): {
-  input: TLogStreamFileDescriptor | null;
-  output: TLogStreamFileDescriptor | null;
-  showOutput: boolean;
+  input: TLogStreamFileDescriptor | null
+  output: TLogStreamFileDescriptor | null
+  showOutput: boolean
 } {
   if (!executionId) {
     return {
       input: null,
       output: null,
       showOutput: false,
-    };
+    }
   }
 
   return {
@@ -53,11 +53,11 @@ export function makeLogStreamFileDescriptors({
       renderer: LogStreamFileRenderer.TaskLogs,
     },
     showOutput: true,
-  };
+  }
 }
 
 export function prependLogStreamFile<T>({ file, files }: { file: T | null; files: T[] }): T[] {
-  return file ? [file, ...files] : files;
+  return file ? [file, ...files] : files
 }
 
 function makeVirtualLogAsset({
@@ -65,9 +65,9 @@ function makeVirtualLogAsset({
   path,
   contentType,
 }: {
-  id: string;
-  path: string;
-  contentType: AssetContentType;
+  id: string
+  path: string
+  contentType: AssetContentType
 }): IAsset {
   return {
     id,
@@ -79,15 +79,15 @@ function makeVirtualLogAsset({
     size: 0,
     label: AssetLabel.task_config,
     status: 'created',
-  } as IAsset;
+  } as IAsset
 }
 
 export function makeTaskConfigurationFile<T extends Record<string, unknown>>({
   descriptor,
   config,
 }: {
-  descriptor: TLogStreamFileDescriptor;
-  config: ITaskConfig<T>;
+  descriptor: TLogStreamFileDescriptor
+  config: ITaskConfig<T>
 }): TActivityCustomFile {
   return {
     id: descriptor.id,
@@ -101,15 +101,15 @@ export function makeTaskConfigurationFile<T extends Record<string, unknown>>({
     name: descriptor.name,
     enforcedRenderType: AssetContentType.json,
     renderer: ActivityCustomFileRenderer.TaskConfigurationViewer,
-  };
+  }
 }
 
 export function makeTaskLogsFile({
   descriptor,
   execution,
 }: {
-  descriptor: TLogStreamFileDescriptor;
-  execution: ITaskActivity;
+  descriptor: TLogStreamFileDescriptor
+  execution: ITaskActivity
 }): TActivityCustomFile {
   return {
     id: descriptor.id,
@@ -123,5 +123,5 @@ export function makeTaskLogsFile({
     name: descriptor.name,
     enforcedRenderType: AssetContentType.text,
     renderer: ActivityCustomFileRenderer.TaskLogsViewer,
-  };
+  }
 }

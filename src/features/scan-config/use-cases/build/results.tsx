@@ -15,6 +15,7 @@ import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
+import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -33,8 +34,14 @@ type Props = {
   isCampaignIdChanged: boolean;
 };
 
-export function BuildTab({ campaignOriginAction, campaignId, isCampaignIdChanged }: Props) {
-  const context = useWorkspace();
+export function BuildTab({
+  campaignOriginAction,
+  campaignId,
+  virtualLabId,
+  projectId,
+  isCampaignIdChanged,
+}: Props) {
+  const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
   const [activeConfig, setActiveConfig] =
