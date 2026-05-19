@@ -1,12 +1,7 @@
 pre-commit:
   commands:
-    format:
-      priority: 1
-      glob: "*.{js,ts,cjs,mjs,jsx,tsx,json,jsonc}"
-      run: npx biome format --write {staged_files}
-      stage_fixed: true
     check:
-      priority: 2
-      glob: "*.{js,ts,cjs,mjs,jsx,tsx,json,jsonc}"
+      priority: 1
+      glob: "*.{css,js,ts,cjs,mjs,jsx,tsx,json,jsonc}"
       run: pnpx @biomejs/biome check --formatter-enabled=true --write {staged_files}
       stage_fixed: true
