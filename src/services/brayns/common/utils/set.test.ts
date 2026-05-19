@@ -1,4 +1,4 @@
-import { compareSets, SetComparaisonResult } from './set';
+import { compareSets, type SetComparaisonResult } from './set';
 
 describe('services/brayns/utils/set.ts', () => {
   describe('compareSets()', () => {

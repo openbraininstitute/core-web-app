@@ -1,6 +1,6 @@
-import { Metadata } from 'next';
-
 import AllFeaturesContent from '@/components/documentation/features/all-features-content';
+
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'All Features',
