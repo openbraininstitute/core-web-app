@@ -3,12 +3,13 @@ import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpe
 import { ScanConfigActivity, SchemaMappingKeyDict } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
 import { scanConfigEntityQueries } from '@/features/scan-config/workflow/entity-queries';
+import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 export const simulateCircuitWorkflow = defineScanConfigWorkflow({
   id: 'simulate-circuit',
   activity: ScanConfigActivity.Simulate,
   entity: {
-    mode: 'route-id',
+    mode: ScanConfigEntitySourceMode.RouteId,
     query: scanConfigEntityQueries.circuit,
   },
   campaign: {

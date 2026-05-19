@@ -3,12 +3,13 @@ import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpe
 import { ExtractScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
 import { scanConfigEntityQueries } from '@/features/scan-config/workflow/entity-queries';
+import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 export const extractCircuitWorkflow = defineScanConfigWorkflow({
   id: 'extract-circuit',
   activity: ScanConfigActivity.Extract,
   entity: {
-    mode: 'route-id',
+    mode: ScanConfigEntitySourceMode.RouteId,
     query: scanConfigEntityQueries.circuit,
   },
   campaign: {

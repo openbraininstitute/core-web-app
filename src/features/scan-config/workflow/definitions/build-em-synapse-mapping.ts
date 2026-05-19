@@ -3,12 +3,13 @@ import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpe
 import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
 import { scanConfigEntityQueries } from '@/features/scan-config/workflow/entity-queries';
+import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 export const buildEmSynapseMappingWorkflow = defineScanConfigWorkflow({
   id: 'build-em-synapse-mapping',
   activity: ScanConfigActivity.Build,
   entity: {
-    mode: 'route-id',
+    mode: ScanConfigEntitySourceMode.RouteId,
     query: scanConfigEntityQueries.cellMorphology,
   },
   campaign: {

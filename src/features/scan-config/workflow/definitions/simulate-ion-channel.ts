@@ -3,12 +3,13 @@ import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/sim
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity, SchemaMappingKeyDict } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
+import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 export const simulateIonChannelWorkflow = defineScanConfigWorkflow({
   id: 'simulate-ion-channel-model',
   activity: ScanConfigActivity.Simulate,
   entity: {
-    mode: 'static-type',
+    mode: ScanConfigEntitySourceMode.StaticType,
     entityType: ExtendedEntitiesTypeDict.IonChannelModel,
   },
   campaign: {
