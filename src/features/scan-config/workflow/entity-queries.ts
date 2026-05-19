@@ -1,11 +1,13 @@
 import { getCellMorphology, getEmCellMesh } from '@/api/entitycore/queries';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
+import { getMEModel } from '@/api/entitycore/queries/model/me-model';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ICellMorphology } from '@/api/entitycore/types';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
+import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { TEntityRouteQuery } from '@/features/scan-config/workflow/types';
 
 export const scanConfigEntityQueries = {
@@ -18,6 +20,16 @@ export const scanConfigEntityQueries = {
       }),
     queryFn: ({ context, id }) => getCircuit({ id, context }),
   } satisfies TEntityRouteQuery<ICircuit>,
+
+  meModel: {
+    queryKey: ({ context, id }) =>
+      keyBuilder.meModel({
+        virtualLabId: context.virtualLabId,
+        projectId: context.projectId,
+        entityId: id,
+      }),
+    queryFn: ({ context, id }) => getMEModel({ id, context }),
+  } satisfies TEntityRouteQuery<IMEModel>,
 
   emCellMesh: {
     queryKey: ({ context, id }) =>

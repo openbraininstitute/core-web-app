@@ -3,6 +3,8 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
+import { getSupportedEntityTypesForScanConfiguration } from '@/features/scan-config/types';
+
 import type {
   ScanConfigEntitySourceMode,
   TResolvedScanConfigEntity,
@@ -58,7 +60,7 @@ export function useRouteIdWorkflowEntity({
 
   return {
     entity,
-    entityType: entity.type,
+    entityType: getSupportedEntityTypesForScanConfiguration({ entity }),
     entityId: entity.id,
   };
 }

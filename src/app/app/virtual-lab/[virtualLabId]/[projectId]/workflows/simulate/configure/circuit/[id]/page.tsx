@@ -1,8 +1,5 @@
 'use client';
 
-import {
-  createScanConfigWorkflowPage,
-  simulateCircuitWorkflow,
-} from '@/features/scan-config/workflow';
+import { createSimulateCircuitScanConfigPage } from '@/features/scan-config/workflow';
 
-export default createScanConfigWorkflowPage(simulateCircuitWorkflow);
+export default createSimulateCircuitScanConfigPage();

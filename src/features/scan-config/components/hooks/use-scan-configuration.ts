@@ -10,6 +10,7 @@
 import { get } from 'es-toolkit/compat';
 import { useMemo } from 'react';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import {
@@ -98,7 +99,7 @@ export function useScanConfiguration({
   defaultTab = ScanConfigDefaultTab,
   readOnly,
   activity = ScanConfigActivity.Simulate,
-  schemaMappingKey = SchemaMappingKeyDict.Circuit,
+  schemaMappingKey,
   campaignOriginAction = ScanConfigCampaignOriginActionDict.Task,
 }: TUseScanConfigurationParams): TUseScanConfigurationResult {
   const shouldFetchEntity = !entityFromProps && !!entityId;
@@ -145,8 +146,23 @@ export function useScanConfiguration({
     schemaName: resolved?.schemaName,
   });
 
-  const property_endpoints = schemaMappingKey
-    ? get(schema?.property_endpoints, schemaMappingKey, '')
+  const effectiveSchemaMappingKey = useMemo((): TSchemaMappingKey | undefined => {
+    if (schemaMappingKey) {
+      return schemaMappingKey;
+    }
+
+    if (
+      resolved?.usedType === ExtendedEntitiesTypeDict.Circuit ||
+      resolved?.usedType === ExtendedEntitiesTypeDict.MEModelWithSynapses
+    ) {
+      return SchemaMappingKeyDict.Circuit;
+    }
+
+    return undefined;
+  }, [resolved?.usedType, schemaMappingKey]);
+
+  const property_endpoints = effectiveSchemaMappingKey
+    ? get(schema?.property_endpoints, effectiveSchemaMappingKey, '')
     : '';
 
   const { data: schemaMappingConfig, isLoading: loadingConfiguration } =
@@ -154,7 +170,8 @@ export function useScanConfiguration({
       entityId: entity?.id,
       workspace: { virtualLabId, projectId },
       endpoint: property_endpoints,
-      isSchemaLoaded: !loadingSchema && !!schema && schemaMappingKey === 'Circuit',
+      isSchemaLoaded:
+        !loadingSchema && !!schema && effectiveSchemaMappingKey === SchemaMappingKeyDict.Circuit,
     });
 
   const isLoading = loadingConfiguration || isEntityLoading || loadingSchema;
