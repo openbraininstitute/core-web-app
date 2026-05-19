@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import { roundToSignificantFigures } from './single-neuron';
 
 describe('single-neuron', () => {

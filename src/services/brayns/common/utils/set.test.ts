@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import { compareSets, type SetComparaisonResult } from './set';
 
 describe('services/brayns/utils/set.ts', () => {

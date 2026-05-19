@@ -1,4 +1,6 @@
-import { TypeDef, assertType, ensureType, isType } from '.';
+import { describe, expect, it } from 'vitest';
+
+import { assertType, ensureType, isType, type TypeDef } from '.';
 
 const isNeverMyType = (_data: unknown) => false;
 
