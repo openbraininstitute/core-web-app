@@ -235,7 +235,7 @@ const Ids = ({
             className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm"
             onClick={onEditClick}
           >
-            {!disabled ? 'Edit all IDs' : 'View all Ids'}
+            {!disabled ? 'View/Edit all IDs' : 'View all IDs'}
           </button>
         </div>
       )}
