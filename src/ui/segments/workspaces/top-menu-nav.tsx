@@ -16,6 +16,7 @@ import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import {
   DropdownMenu,
@@ -53,9 +54,9 @@ const links: LinkItem[] = [
     key: 'home',
     title: 'Home',
     url: '',
-    icon: <Home className="group-hover:text-primary-3 text-lg" />,
+    icon: <Home className="group-hover:text-primary-3 !size-5 -translate-y-0.5" />,
     allowText: false,
-    className: 'gap-2 flex items-center justify-center',
+    className: '',
     isActive: (pathname: string) => {
       const section = getActiveSection(pathname);
       if (section) return ['overview', 'team', 'credits'].includes(section);
@@ -68,9 +69,9 @@ const links: LinkItem[] = [
     key: 'data',
     title: 'Data',
     url: 'data',
-    icon: <ExploreIcon className="group-hover:text-primary-3 text-xl" />,
+    icon: <ExploreIcon className="group-hover:text-primary-3 !size-5" />,
     allowText: true,
-    className: 'px-6 gap-8',
+    className: 'px-6 gap-2',
     hasAction: false,
   },
   {
@@ -78,9 +79,9 @@ const links: LinkItem[] = [
     key: 'workflows',
     title: 'Workflows',
     url: 'workflows',
-    icon: <WorkflowIcon className="group-hover:text-primary-3 text-xl" />,
+    icon: <WorkflowIcon className="group-hover:text-primary-3 !size-5" />,
     allowText: true,
-    className: 'px-6 gap-8',
+    className: 'px-6 gap-2',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
       `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`,
@@ -90,9 +91,9 @@ const links: LinkItem[] = [
     key: 'notebooks',
     title: 'Notebooks',
     url: 'notebooks',
-    icon: <NotebookIcon className="group-hover:text-primary-3 h-5!" />,
+    icon: <NotebookIcon className="group-hover:text-primary-3 !size-5" />,
     allowText: true,
-    className: 'px-6 gap-8',
+    className: 'px-6 gap-2',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
       `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
@@ -102,9 +103,9 @@ const links: LinkItem[] = [
     key: 'reports',
     title: 'Reports',
     url: 'reports',
-    icon: <ReportsIcon className="group-hover:text-primary-3 h-5!" />,
+    icon: <ReportsIcon className="group-hover:text-primary-3 !size-[17px]" />,
     allowText: true,
-    className: 'px-6 gap-8',
+    className: 'px-6 gap-2',
     hasAction: true,
     action: ({ virtualLabId, projectId }: { virtualLabId: string; projectId: string }) =>
       `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/notebooks`,
@@ -114,7 +115,7 @@ const links: LinkItem[] = [
     key: 'help',
     title: 'Help',
     url: 'help',
-    icon: <HelpIcon className="group-hover:text-primary-3 h-5! w-5!" />,
+    icon: <HelpIcon className="group-hover:text-primary-3 !size-[17px]" />,
     allowText: false,
     className: '',
     hasAction: false,
@@ -124,7 +125,7 @@ const links: LinkItem[] = [
     key: 'feedbacks',
     title: 'Feedback',
     url: 'feedback',
-    icon: <FeedbackStarIcon className="group-hover:text-primary-3 h-6! w-6!" />,
+    icon: <FeedbackStarIcon className="group-hover:text-primary-3 w-6 h-6" />,
     allowText: false,
     className: '',
     hasAction: false,
@@ -240,31 +241,33 @@ export function TopMenuNavigation() {
           hasAction,
         }) => {
           if (id === 'workspace-feedbacks') {
+            const isActive = activeSection === baseUrl;
             return (
               <div key={key} className="group flex w-max items-center justify-center gap-0">
                 <div className="relative flex items-center">
-                  <Button
+                  <Badge
                     rounded
                     id={id}
                     variant="outline"
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
                       {
-                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                        'w-12 !justify-center !px-0': !allowText && breakpoint === 'xl',
                       },
                       {
-                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                        '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
-                      'group relative flex items-center justify-between',
+                      'group relative flex items-center justify-center cursor-pointer',
+                      '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
+                      { 'bg-primary-9 text-white': isActive },
                       'transition-all duration-400 ease-out',
                       clx
                     )}
-                    active={activeSection === baseUrl || isActive?.(pathname)}
                     onClick={() => setIsFeedbackModalOpen(true)}
                   >
-                    {allowText && <span>{title}</span>}
+                    {allowText && <span className="group-hover:text-primary-3">{title}</span>}
                     {icon}
-                  </Button>
+                  </Badge>
                   <span className="text-primary-9 absolute top-full right-0 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                     Feedback
                   </span>
@@ -274,10 +277,11 @@ export function TopMenuNavigation() {
           }
 
           if (id === 'workspace-help') {
+            const isActiveHelp = activeSection === baseUrl || isActive?.(pathname);
             return (
               <div key={key} className="group flex w-max items-center justify-center gap-0">
                 <div className="relative flex items-center">
-                  <Button
+                  <Badge
                     asChild
                     rounded
                     id={id}
@@ -285,19 +289,20 @@ export function TopMenuNavigation() {
                     size={breakpoint === 'xl' ? 'lg' : 'md'}
                     className={cn(
                       {
-                        'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                        'w-12 !justify-center !px-0': !allowText && breakpoint === 'xl',
                       },
                       {
-                        'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                        '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
-                      'group relative flex items-center justify-between',
+                      'group relative flex items-center justify-center',
+                      '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
+                      { 'bg-primary-9 text-white': isActiveHelp },
                       {
-                        'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
+                        'group-hover:rounded-r-none': hasAction,
                       },
                       'transition-all duration-400 ease-out',
                       clx
                     )}
-                    active={activeSection === baseUrl || isActive?.(pathname)}
                   >
                     <Link
                       prefetch
@@ -305,10 +310,10 @@ export function TopMenuNavigation() {
                         pathname: url,
                       }}
                     >
-                      {allowText && <span>{title}</span>}
+                      {allowText && <span className="group-hover:text-primary-3">{title}</span>}
                       {icon}
                     </Link>
-                  </Button>
+                  </Badge>
                   <span className="text-primary-9 absolute top-full left-1/2 -translate-x-1/2 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                     Help
                   </span>
@@ -317,10 +322,11 @@ export function TopMenuNavigation() {
             );
           }
 
+          const isActiveLink = activeSection === baseUrl || isActive?.(pathname);
           return (
             <div key={key} className="group flex w-max items-center justify-center gap-0">
               <div className="relative flex items-center">
-                <Button
+                <Badge
                   asChild
                   rounded
                   id={id}
@@ -328,19 +334,20 @@ export function TopMenuNavigation() {
                   size={breakpoint === 'xl' ? 'lg' : 'md'}
                   className={cn(
                     {
-                      'w-12 justify-center!': !allowText && breakpoint === 'xl',
+                      'w-12 !justify-center !px-0': !allowText && breakpoint === 'xl',
                     },
                     {
-                      'w-10! justify-center!': breakpoint === 'l' && !allowText,
+                      '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                     },
-                    'group relative flex items-center justify-between',
+                    'group relative flex items-center justify-center',
+                    '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
+                    { 'bg-primary-9 text-white': isActiveLink },
                     {
-                      'group-hover:rounded-r-none group-hover:border-r-0': hasAction,
+                      'group-hover:rounded-r-none': hasAction,
                     },
                     'transition-all duration-400 ease-out',
                     clx
                   )}
-                  active={activeSection === baseUrl || isActive?.(pathname)}
                 >
                   <Link
                     prefetch
@@ -348,10 +355,10 @@ export function TopMenuNavigation() {
                       pathname: url,
                     }}
                   >
-                    {allowText && <span>{title}</span>}
+                    {allowText && <span className="group-hover:text-primary-3">{title}</span>}
                     {icon}
                   </Link>
-                </Button>
+                </Badge>
               </div>
             </div>
           );

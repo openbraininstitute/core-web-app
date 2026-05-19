@@ -1,17 +1,17 @@
 'use client';
 
-import { parseAsString, SingleParserBuilder, useQueryState } from 'nuqs';
+import { parseAsString, type SingleParserBuilder, useQueryState } from 'nuqs';
 import { match } from 'ts-pattern';
 
-import { Content as SynaptomeContent } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome';
 import { Content as MEModelContent } from '@/ui/segments/workflows/simulate/single-neuron/memodel';
-import { Results } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/result';
-import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
 import {
   PanelQueryParam,
-  WorkflowSimulatePanelKeys,
+  type WorkflowSimulatePanelKeys,
   WorkflowSimulatePanels,
 } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
+import { Results } from '@/ui/segments/workflows/simulate/single-neuron/shared/steps/result';
+import { SimulationType } from '@/ui/segments/workflows/simulate/single-neuron/shared/types';
+import { Content as SynaptomeContent } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome';
 
 import type { IMEModel, ISingleNeuronSynaptome } from '@/api/entitycore/types';
 

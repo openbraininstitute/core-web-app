@@ -10,6 +10,7 @@
     "start": "next start",
     "test:node": "node --experimental-strip-types --test **/*.nodetest.*",
     "lint": "biome check",
+    "lint:cached": "biome lint --staged --diagnostic-level=error",
     "ci": "biome ci",
     "format": "biome format --write",
     "analyze": "next experimental-analyze",

@@ -39,7 +39,7 @@ export function useAutoScroll({
     if (isAutoScrollRef.current) {
       scrollToBottom();
     }
-  }, [messages, isLoadingMessages, scrollToBottom]);
+  }, [isLoadingMessages, scrollToBottom]);
 
   const prevStatusRef = React.useRef(status);
   React.useEffect(() => {
@@ -54,7 +54,7 @@ export function useAutoScroll({
   React.useEffect(() => {
     setAutoScroll(true);
     scrollToBottom();
-  }, [threadId, scrollToBottom, setAutoScroll]);
+  }, [scrollToBottom, setAutoScroll]);
 
   const handleWheel = React.useCallback(
     (event: React.WheelEvent) => {
