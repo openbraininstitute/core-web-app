@@ -362,6 +362,7 @@ const HighlightedInput = ({
             className="w-full px-3 py-2 font-mono text-sm text-transparent bg-transparent caret-black outline-none block z-10 placeholder:text-xs"
             spellCheck={false}
             placeholder="Type your comma separated list of IDs"
+            title="Type your comma separated list of IDs"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
