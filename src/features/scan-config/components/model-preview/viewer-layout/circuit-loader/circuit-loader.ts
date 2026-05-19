@@ -240,8 +240,8 @@ export class CircuitLoader {
       .sort((key1, key2) => {
         const obj1 = nodeSetsFile[key1];
         const obj2 = nodeSetsFile[key2];
-        const cnt1 = obj1.node_id ?? 0;
-        const cnt2 = obj2.node_id ?? 0;
+        const cnt1 = obj1.node_id?.length ?? 0;
+        const cnt2 = obj2.node_id?.length ?? 0;
         if (cnt1 < cnt2) return +1;
         if (cnt1 > cnt2) return -1;
         if (key1 < key2) return -1;
