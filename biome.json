@@ -83,6 +83,21 @@
       "selfCloseVoidElements": "always"
     }
   },
+  "overrides": [
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "tests/**"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noConsole": "off", "noExplicitAny": "off" },
+          "style": { "noNonNullAssertion": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["tests/**"],
+      "formatter": { "lineWidth": 120 }
+    }
+  ],
   "assist": {
     "enabled": true,
     "actions": {
