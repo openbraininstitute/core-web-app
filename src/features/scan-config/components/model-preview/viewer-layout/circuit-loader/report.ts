@@ -32,7 +32,6 @@ export class Report {
   logFailure(error: unknown): this {
     const message = resolveMessage(error);
     this._tasks.push({ message, failure: true });
-    this.debug();
     this.hasError = true;
     return this;
   }
