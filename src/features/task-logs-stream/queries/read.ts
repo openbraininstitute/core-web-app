@@ -5,16 +5,15 @@ import { config } from '@/config';
 import { StreamHttpError } from '@/features/task-logs-stream/helpers';
 
 import type { IJobRead } from '@/features/task-logs-stream/types';
+import type { WorkspaceContext } from '@/types/common';
 
 export async function fetchTaskJobRead({
   jobId,
-  virtualLabId,
-  projectId,
+  workspace,
   signal,
 }: {
   jobId: string;
-  virtualLabId: string;
-  projectId: string;
+  workspace: WorkspaceContext;
   signal?: AbortSignal;
 }): Promise<IJobRead> {
   const session = await getSession();
@@ -25,8 +24,8 @@ export async function fetchTaskJobRead({
     signal,
     headers: {
       ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
-      'virtual-lab-id': virtualLabId,
-      'project-id': projectId,
+      'virtual-lab-id': workspace.virtualLabId,
+      'project-id': workspace.projectId,
     },
   });
 

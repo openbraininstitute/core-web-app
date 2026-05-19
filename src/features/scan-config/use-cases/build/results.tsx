@@ -14,6 +14,7 @@ import { TaskConfigSelectionList } from '@/features/scan-config/components/share
 import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-launch-button';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files';
+import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
 import { useTaskRunner } from '@/features/task-runner/hooks/queries';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
@@ -27,13 +28,17 @@ import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config
 
 type Props = {
   campaignId: string;
-  virtualLabId: string;
-  projectId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
 };
 
-export function BuildTab({ campaignOriginAction, campaignId, virtualLabId, projectId }: Props) {
+export function BuildTab({
+  campaignOriginAction,
+  campaignId,
+  virtualLabId,
+  projectId,
+  isCampaignIdChanged,
+}: Props) {
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
   const [selectedConfigIds, setSelectedConfigIds] = useState<string[] | null>(null);
@@ -74,6 +79,13 @@ export function BuildTab({ campaignOriginAction, campaignId, virtualLabId, proje
   }, [executionByConfigId, resolvedActiveConfig]);
 
   const activeConfigExecStatus = activeConfigExecution?.status;
+  const activeExecutionJobId = activeConfigExecution?.execution_id ?? undefined;
+  const taskLogsViewerEnabled = !!resolvedActiveConfig && !!activeExecutionJobId;
+  const taskLogsShouldReadSnapshot =
+    !!activeConfigExecStatus &&
+    [ActivityStatus.CANCELLED, ActivityStatus.DONE, ActivityStatus.ERROR].includes(
+      activeConfigExecStatus
+    );
 
   const onActiveConfigChange = useCallback((config: ITaskConfig<TEmSynapseMappingCampaignMeta>) => {
     setActiveConfig(config);
@@ -187,6 +199,28 @@ export function BuildTab({ campaignOriginAction, campaignId, virtualLabId, proje
                 enableAnimation={false}
               />
             </div>
+          )}
+          {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
+            <TaskConfigurationViewer
+              jobId={activeExecutionJobId}
+              workspace={context}
+              configId={resolvedActiveConfig?.id}
+              enabled={taskLogsViewerEnabled}
+              skipStream
+              campaignOriginAction={campaignOriginAction}
+              isCampaignIdChanged={isCampaignIdChanged}
+            />
+          )}
+          {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
+            <TaskLogsViewer
+              jobId={activeExecutionJobId}
+              workspace={context}
+              configId={resolvedActiveConfig?.id}
+              enabled={taskLogsViewerEnabled}
+              skipStream={taskLogsShouldReadSnapshot}
+              campaignOriginAction={campaignOriginAction}
+              isCampaignIdChanged={isCampaignIdChanged}
+            />
           )}
         </>
       }

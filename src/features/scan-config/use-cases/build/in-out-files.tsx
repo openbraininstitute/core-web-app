@@ -15,6 +15,13 @@ import {
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  makeLogStreamFileDescriptors,
+  makeTaskConfigurationFile,
+  makeTaskLogsFile,
+  prependLogStreamFile,
+} from '@/features/task-logs-stream/descriptor';
+import { MAX_VISUALIZATION_ASSET_REFETCH_RETRIES } from '@/features/task-runner';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
@@ -31,8 +38,6 @@ type Props = {
   campaignOrigin: TScanConfigCampaignOriginActionDict;
 };
 
-const MAX_VIS_ASSET_REFETCH_RETRIES = 10;
-
 export function InOutFiles({
   config,
   execStatus,
@@ -48,6 +53,14 @@ export function InOutFiles({
   const circuitAssets = circuit && 'assets' in circuit ? circuit.assets : [];
   const circuitConfigAsset = circuitAssets?.find(
     (o: IAsset) => o.label === AssetLabel.sonata_circuit
+  );
+  const logStreamFiles = useMemo(
+    () =>
+      makeLogStreamFileDescriptors({
+        configId: config.id,
+        executionId: execution?.execution_id,
+      }),
+    [config.id, execution?.execution_id]
   );
 
   const inputFiles: TActivityCustomFile[] = useMemo(() => {
@@ -70,8 +83,13 @@ export function InOutFiles({
         renderer: ActivityCustomFileRenderer.Default,
       });
     }
-    return files;
-  }, [config, circuit, configAsset, circuitConfigAsset]);
+    return prependLogStreamFile({
+      file: logStreamFiles.input
+        ? makeTaskConfigurationFile({ descriptor: logStreamFiles.input, config })
+        : null,
+      files,
+    });
+  }, [config, circuit, configAsset, circuitConfigAsset, logStreamFiles.input]);
 
   const outputAvailable =
     !!execStatus && includes([ActivityStatus.ERROR, ActivityStatus.DONE], execStatus);
@@ -93,23 +111,31 @@ export function InOutFiles({
       const hasVisAsset = data?.assets?.some(
         (asset) => asset.label === AssetLabel.circuit_visualization
       );
-      const hasReachedMaxRetries = query.state.dataUpdateCount >= MAX_VIS_ASSET_REFETCH_RETRIES;
+      const hasReachedMaxRetries =
+        query.state.dataUpdateCount >= MAX_VISUALIZATION_ASSET_REFETCH_RETRIES;
       return hasVisAsset || hasReachedMaxRetries ? false : 2_000;
     },
   });
 
   const outputFiles: TActivityCustomFile[] = useMemo(() => {
-    if (!builtCircuit) return [];
-    return [
-      {
+    const files: TActivityCustomFile[] = [];
+    if (builtCircuit) {
+      files.push({
         id: builtCircuit.id,
         entity: builtCircuit,
         asset: builtCircuit.assets[0],
         name: builtCircuit.name,
         renderer: ActivityCustomFileRenderer.MiniDetailView,
-      },
-    ];
-  }, [builtCircuit]);
+      });
+    }
+    return prependLogStreamFile({
+      file:
+        logStreamFiles.output && execution
+          ? makeTaskLogsFile({ descriptor: logStreamFiles.output, execution })
+          : null,
+      files,
+    });
+  }, [builtCircuit, execution, logStreamFiles.output]);
 
   useEffect(() => {
     if (!outputAvailable || !builtCircuit) return;
@@ -135,9 +161,9 @@ export function InOutFiles({
 
   return (
     <IoLayout
-      showOutput={outputAvailable}
+      showOutput={outputAvailable || logStreamFiles.showOutput}
       inputIsEmpty={inputFiles.length === 0}
-      outputIsEmpty={!builtCircuit && !isLoading}
+      outputIsEmpty={!builtCircuit && !isLoading && !logStreamFiles.output}
       inputItems={inputFiles.map((file) => (
         <TaskIOFileItem
           id={file.asset.id}
@@ -148,23 +174,26 @@ export function InOutFiles({
           name={file.name}
         />
       ))}
-      outputItems={
-        outputFiles[0] ? (
+      outputItems={outputFiles.map((file) => {
+        const isBuiltCircuit = file.renderer === ActivityCustomFileRenderer.MiniDetailView;
+        return (
           <TaskIOFileItem
-            id={outputFiles[0].id}
+            id={file.id}
             label={
-              <small className="uppercase">
-                Synaptome <span className="lowercase">(beta)</span>
-              </small>
+              isBuiltCircuit ? (
+                <small className="uppercase">
+                  Synaptome <span className="lowercase">(beta)</span>
+                </small>
+              ) : null
             }
-            selected={outputFiles[0].id === selectedFile?.id}
-            key={outputFiles[0].id}
-            file={outputFiles[0]}
-            name={outputFiles[0].name}
+            selected={file.id === selectedFile?.id}
+            key={file.id}
+            file={file}
+            name={file.name}
             onSelect={onSelect}
           />
-        ) : null
-      }
+        );
+      })}
     />
   );
 }

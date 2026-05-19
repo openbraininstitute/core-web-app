@@ -102,7 +102,6 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   if (!record) return null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = viewConfig?.miniDetailView;
-
   const preview = match({ type: record.type })
     .with({ type: P.nullish }, () => null)
     .with(
@@ -247,9 +246,12 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
       },
       ({ section }) => <WorkflowActions record={record} dataType={dataType} section={section} />
     )
-    .with({ section: WorkspaceSection.BuildWorkflow }, () => (
-      <WorkflowBuildActions record={record} dataType={dataType} />
-    ))
+    .with(
+      {
+        section: P.union(WorkspaceSection.ScanConfigBuildWorkflow, WorkspaceSection.BuildWorkflow),
+      },
+      () => <WorkflowBuildActions record={record} dataType={dataType} />
+    )
     .otherwise(() => null);
 
   return (

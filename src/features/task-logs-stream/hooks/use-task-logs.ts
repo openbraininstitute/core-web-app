@@ -18,18 +18,19 @@ import {
   type TLogLevel,
 } from '@/features/task-logs-stream/types';
 
+import type { WorkspaceContext } from '@/types/common';
+
 export function useTaskLogsData({
   jobId,
-  virtualLabId,
-  projectId,
+  workspace,
+
   configId,
   enabled,
   skipStream = false,
   debugLog,
 }: {
   jobId?: string;
-  virtualLabId: string;
-  projectId: string;
+  workspace: WorkspaceContext;
   configId?: string;
   enabled: boolean;
   /** skip the stream entirely and read the job directly (e.g. terminal execution status) */
@@ -40,8 +41,7 @@ export function useTaskLogsData({
 
   const streamQuery = useStreamQuery({
     jobId,
-    virtualLabId,
-    projectId,
+    workspace,
     configId,
     enabled: enabled && !skipStream,
     debugLog,
@@ -51,8 +51,7 @@ export function useTaskLogsData({
   // this gives us configuration data while the stream is still running
   const readQuery = useReadQuery({
     jobId,
-    virtualLabId,
-    projectId,
+    workspace,
     configId,
     enabled: enabled && Boolean(jobId),
   });
@@ -68,10 +67,10 @@ export function useTaskLogsData({
   useEffect(() => {
     if (hasStreamTerminated && jobId) {
       queryClient.invalidateQueries({
-        queryKey: ['task-job-read', { jobId, virtualLabId, projectId, configId }],
+        queryKey: ['task-job-read', { jobId, configId, workspace }],
       });
     }
-  }, [hasStreamTerminated, jobId, virtualLabId, projectId, configId, queryClient]);
+  }, [hasStreamTerminated, jobId, configId, workspace, queryClient]);
 
   // configuration is available from the read endpoint as soon as the job exists
   const configuration = readQuery.data ? extractConfiguration({ data: readQuery.data }) : null;
@@ -80,10 +79,7 @@ export function useTaskLogsData({
   // This preserves live entries across page/tab remounts while the warmup
   // observer keeps the underlying streamed query alive.
   const cachedStreamData = jobId
-    ? queryClient.getQueryData<unknown>([
-        'task-logs-stream',
-        { jobId, virtualLabId, projectId, configId },
-      ])
+    ? queryClient.getQueryData<unknown>(['task-logs-stream', { jobId, configId, workspace }])
     : undefined;
   const streamEntries = getStreamEntries({ data: streamQuery.data });
   const cachedStreamEntries = getStreamEntries({ data: cachedStreamData });
@@ -100,7 +96,7 @@ export function useTaskLogsData({
     if (!enabled || !jobId || skipStream) return;
     if (!hasStreamTerminated || readHasTerminalStatus) return;
     queryClient.invalidateQueries({
-      queryKey: ['task-logs-stream', { jobId, virtualLabId, projectId, configId }],
+      queryKey: ['task-logs-stream', { jobId, configId, workspace }],
     });
   }, [
     enabled,
@@ -108,8 +104,7 @@ export function useTaskLogsData({
     skipStream,
     hasStreamTerminated,
     readHasTerminalStatus,
-    virtualLabId,
-    projectId,
+    workspace,
     configId,
     queryClient,
   ]);
