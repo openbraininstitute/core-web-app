@@ -100,7 +100,7 @@ export default function BlockUnion({
           blockSchema={selectedBlockSchema}
           state={config[selectedRootElement]}
           setState={(newConfig) => {
-            return { ...config, [selectedRootElement]: newConfig };
+            setConfig({ ...config, [selectedRootElement]: newConfig });
           }}
           entity={entity}
           schemaMappingConfig={schemaMappingConfig}
