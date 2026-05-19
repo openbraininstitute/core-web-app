@@ -10,11 +10,11 @@ import { log } from '@/utils/logger';
 import type { ReactNode } from 'react';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TLogLevel } from '@/features/task-logs-stream/types';
+import type { WorkspaceContext } from '@/types/common';
 
 interface ITaskLogsViewerProps {
   jobId?: string;
-  virtualLabId: string;
-  projectId: string;
+  workspace: WorkspaceContext;
   configId?: string;
   enabled: boolean;
   enableDebugLogs?: boolean;
@@ -28,7 +28,7 @@ function TaskViewerFrame({ children }: { children: ReactNode }) {
   return (
     <div
       id="job-viewer"
-      className="flex h-full min-h-0 flex-col overflow-hidden bg-neutral-50 px-4"
+      className="flex h-full min-h-0 flex-col overflow-hidden bg-neutral-50 px-4 w-full"
     >
       {children}
     </div>
@@ -37,8 +37,7 @@ function TaskViewerFrame({ children }: { children: ReactNode }) {
 
 function useTaskViewerData({
   jobId,
-  virtualLabId,
-  projectId,
+  workspace,
   configId,
   enabled,
   enableDebugLogs = false,
@@ -54,8 +53,7 @@ function useTaskViewerData({
 
   const taskLogsData = useTaskLogsData({
     jobId,
-    virtualLabId,
-    projectId,
+    workspace,
     configId,
     enabled,
     skipStream,
