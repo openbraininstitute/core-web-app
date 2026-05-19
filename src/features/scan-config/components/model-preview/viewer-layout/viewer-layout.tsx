@@ -23,7 +23,6 @@ export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
   const ready = loaded && progress >= 1;
   const error = circuitLoader.useError();
   const handleDownload = useDownloadHandler(model);
-  console.log('🐞 [viewer-layout@26] progress =', progress); // @FIXME: Remove this line written on 2026-05-15 at 09:55
 
   return (
     <div className={cn(styles.layout, className, 'px-5 text-gray-500')}>
@@ -52,7 +51,7 @@ export default function ViewerLayout({ className, model }: ViewerLayoutProps) {
                 circuit={circuitLoader.circuit}
                 loadCell={circuitLoader.loadCell}
                 onLoadProgress={setProgress}
-                highlightedCellIds={['NOPE/980120A_-_Scale_x1.000_y1.150_z1.000_-_Clone_0']}
+                highlightedCellIds={[]}
                 gizmo
                 scalebar
               />

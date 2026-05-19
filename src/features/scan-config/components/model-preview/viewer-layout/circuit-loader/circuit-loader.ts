@@ -68,10 +68,8 @@ export class CircuitLoader {
   readonly loadCell = async (id: string): Promise<MorphoViewerSmallCircuitCellData | null> => {
     try {
       const morphologyFilename = `${this.morphologiesDir}/${id}.swc`;
-      console.log('Loading', morphologyFilename);
       const morphology = await this.loadText(morphologyFilename);
       const tree = convertSwcToTree(morphology);
-      console.log('🐞 [circuit-loader@73] tree =', tree); // @FIXME: Remove this line written on 2026-05-15 at 09:58
       return { type: 'tree', data: tree };
     } catch (error) {
       const { report } = this;
@@ -181,7 +179,6 @@ export class CircuitLoader {
       `nodes/${nodeSet.population}/0/orientation_w`,
       assertArrayNumber
     );
-    console.log('🐞 [circuit-loader@184] ids =', ids); // @FIXME: Remove this line written on 2026-05-15 at 10:10
     return ids.map((id, index) => {
       const cell: MorphoViewerSmallCircuitCell = {
         id,
@@ -202,7 +199,6 @@ export class CircuitLoader {
           unknown: '#f80',
         },
       };
-      console.log('🐞 [circuit-loader@205] cell =', cell); // @FIXME: Remove this line written on 2026-05-15 at 10:10
       return cell;
     });
   }
