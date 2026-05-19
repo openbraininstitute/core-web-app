@@ -215,7 +215,7 @@ const Ids = ({
 }) => {
   const containerClass = 'w-full grid grid-cols-4 gap-1';
   const elementClass =
-    'border border-gray-200 rounded-full px-3 py-1 text-primary-8 font-bold flex items-center justify-center gap-3';
+    'border border-gray-200 rounded-full py-1 px-0 text-primary-8 font-bold flex items-center justify-center gap-1 text-xs';
 
   return (
     <div className="border border-gray-200 p-3 rounded-lg w-full ">
