@@ -408,7 +408,31 @@ export function UIElementRender({
             selectedPopulation
           ] ?? {};
 
-        return <NeuronPropertyFilter properties={properties} />;
+        const getValue = () => {
+          if (Array.isArray(value)) {
+            return value;
+          }
+          if (isPlainObject(value)) {
+            return [value];
+          }
+          return [];
+        };
+
+        return (
+          <NeuronPropertyFilter
+            properties={properties}
+            value={getValue() as unknown as INeuronPropertyFilter[]}
+            onChange={(newValue: INeuronPropertyFilter[]) => {
+              const getNewValue = () => {
+                if (newValue.length === 0) return null;
+                if (newValue.length === 1) return newValue[0];
+                return newValue;
+              };
+
+              setState({ ...state, [k]: getNewValue() as ConfigValue });
+            }}
+          />
+        );
       }
     )
     .otherwise(() => null);
