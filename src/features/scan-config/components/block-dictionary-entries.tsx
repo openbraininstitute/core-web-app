@@ -156,8 +156,11 @@ export default function BlockDictionaryEntries({
 
     if (!isPlainObject(targetSection)) return;
 
-    targetSection[newKey] = targetSection[selectedEntry];
-    delete targetSection[selectedEntry];
+    const targetSectionRenamed = Object.fromEntries(
+      Object.entries(targetSection).map(([k, v]) => (k === selectedEntry ? [newKey, v] : [k, v]))
+    );
+
+    newConfig[selectedRootElement] = targetSectionRenamed;
 
     const initConfig = newConfig.initialize;
     if (
