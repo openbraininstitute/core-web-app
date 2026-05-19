@@ -5,8 +5,7 @@ import type { AiAgentRateLimitEndpoint } from '@/services/ai-agent/hooks/rate-li
 export const atomRateLimit = atom<AiAgentRateLimitEndpoint | null>(null);
 
 /**
- * Atom used to pre-fill the chat prompt from external components.
- * When set to a non-empty string, the Footer component will pick it up,
- * populate the input, and reset this atom to ''.
+ * Shared prompt atom — the single source of truth for the chat input value.
+ * External components (e.g. "Edit with chat" button) can write to this directly.
  */
-export const draftPromptAtom = atom<string>('');
+export const promptAtom = atom<string>('');

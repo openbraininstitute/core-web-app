@@ -4,7 +4,7 @@ import { RiChatAiLine } from '@remixicon/react';
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
 
-import { draftPromptAtom } from '@/components/ai-assistant/state';
+import { promptAtom } from '@/components/ai-assistant/state';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 
@@ -12,20 +12,14 @@ const DEFAULT_PROMPT = 'Help me complete this configuration and suggest improvem
 
 export function EditWithChatButton() {
   const { setState, isCollapsed } = usePanelState();
-  const setDraftPrompt = useSetAtom(draftPromptAtom);
+  const setPrompt = useSetAtom(promptAtom);
 
   const handleClick = useCallback(() => {
     if (isCollapsed) {
       setState(PanelState.Expanded);
     }
-
-    setTimeout(
-      () => {
-        setDraftPrompt(DEFAULT_PROMPT);
-      },
-      isCollapsed ? 350 : 0
-    );
-  }, [isCollapsed, setState, setDraftPrompt]);
+    setPrompt(DEFAULT_PROMPT);
+  }, [isCollapsed, setState, setPrompt]);
 
   return (
     <button

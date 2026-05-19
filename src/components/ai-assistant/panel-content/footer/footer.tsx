@@ -2,7 +2,7 @@ import { useAtom } from 'jotai';
 import React from 'react';
 
 import Prompt from '../../prompt';
-import { draftPromptAtom } from '../../state';
+import { promptAtom } from '../../state';
 
 interface FooterProps {
   className?: string;
@@ -18,16 +18,7 @@ const isStreaming = (status: FooterProps['status']) =>
   status === 'streaming' || status === 'submitted';
 
 export default function Footer({ className, status, onPrompt, stop, threadId }: FooterProps) {
-  const [prompt, setPrompt] = React.useState('');
-  const [draftPrompt, setDraftPrompt] = useAtom(draftPromptAtom);
-
-  // Pick up externally-set draft prompt (e.g. from "Edit with chat" button)
-  React.useEffect(() => {
-    if (draftPrompt) {
-      setPrompt(draftPrompt);
-      setDraftPrompt('');
-    }
-  }, [draftPrompt, setDraftPrompt]);
+  const [prompt, setPrompt] = useAtom(promptAtom);
 
   const handlePrompt = (value: string) => {
     onPrompt(value);
