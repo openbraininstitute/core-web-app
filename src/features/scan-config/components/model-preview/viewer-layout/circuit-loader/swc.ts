@@ -2,9 +2,11 @@ import { MorphoViewerTreeItemType } from '@/morpho-viewer';
 
 import type { MorphoViewerTree, MorphoViewerTreeItem } from '@/morpho-viewer';
 
+const SWC_COLUMNS_COUNT = 7;
+
 export function convertSwcToTree(swc: string): MorphoViewerTree {
   const tree: MorphoViewerTree = {
-    cellId: 'test',
+    cellId: 'ID',
     roots: [],
   };
   const lines = swc
@@ -12,7 +14,7 @@ export function convertSwcToTree(swc: string): MorphoViewerTree {
     .map((line) => line.trim())
     .filter((line) => !line.startsWith('#'))
     .map((line) => line.split(/[ \t]+/g).map(parseFloat))
-    .filter((items) => items.length >= 7);
+    .filter((items) => items.length >= SWC_COLUMNS_COUNT);
   const parents = new Map<number, MorphoViewerTreeItem>();
   for (const [index, type, x, y, z, radius, parent] of lines) {
     const item: MorphoViewerTreeItem = {
