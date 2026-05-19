@@ -1,6 +1,6 @@
-import { Metadata } from 'next';
-
 import SingleFeatureContent from '@/components/documentation/features/single-feature-content';
+
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Available Features',

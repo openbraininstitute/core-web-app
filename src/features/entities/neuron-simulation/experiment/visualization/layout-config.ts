@@ -1,4 +1,4 @@
-import Plotly from 'plotly.js-dist-min';
+import type Plotly from 'plotly.js-dist-min';
 
 export const PLOT_LAYOUT: Partial<Plotly.Layout> = {
   plot_bgcolor: '#fff',
@@ -22,7 +22,7 @@ export const PLOT_LAYOUT: Partial<Plotly.Layout> = {
   },
   showlegend: false,
   height: 320,
-  margin: { t: 20, r: 20, b: 20, l: 20 },
+  margin: { t: 20, r: 20, b: 50, l: 60 },
   legend: {
     orientation: 'h',
     yanchor: 'top',
