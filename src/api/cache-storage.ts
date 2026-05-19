@@ -14,7 +14,7 @@ export type CacheConfiguration = {
 export type CacheState = 'fresh' | 'stale' | 'expired' | 'miss';
 
 // Defaults: 1 day fresh, 6 days stale-while-revalidate. Tuned for slow-changing
-// reference data (atlas regions, meshes, point clouds, composition summary).
+// reference data (meshes, point clouds, composition summary).
 // Override per call site when a different cadence makes sense.
 export function swrCacheConfig(
   cacheName: string,
