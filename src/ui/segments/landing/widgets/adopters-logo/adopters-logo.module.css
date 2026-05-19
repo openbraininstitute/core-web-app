@@ -10,11 +10,11 @@
 }
 
 .root::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: url('/images/partners/two-neurons-view.png');
+  background-image: url("/images/partners/two-neurons-view.png");
   background-position: center top;
   background-repeat: no-repeat;
   background-size: cover;
@@ -61,13 +61,11 @@
 .logos > .link {
   box-sizing: border-box;
   flex: 0 1
-    calc(
-      (100% - (var(--adopters-cols) - 1) * var(--adopters-logo-col-gap)) /
-        var(--adopters-cols)
-    );
+    calc((100% - (var(--adopters-cols) - 1) * var(--adopters-logo-col-gap)) / var(--adopters-cols));
   min-width: 0;
   max-width: calc(
-    (100% - (var(--adopters-cols) - 1) * var(--adopters-logo-col-gap)) / var(--adopters-cols)
+    (100% - (var(--adopters-cols) - 1) * var(--adopters-logo-col-gap)) /
+    var(--adopters-cols)
   );
   display: flex;
   flex-direction: column;

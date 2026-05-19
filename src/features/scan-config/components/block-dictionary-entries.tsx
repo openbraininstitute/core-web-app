@@ -8,6 +8,7 @@ import {
   WarningFilled,
 } from '@ant-design/icons';
 import { Input } from 'antd';
+import { kebabCase } from 'es-toolkit/compat';
 import { useAtom } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, memo, useMemo } from 'react';
@@ -45,6 +46,7 @@ function EntryTab({
     /* biome-ignore lint/a11y/useSemanticElements: input cannot be nested inside button */
     <div
       role="button"
+      id={`${kebabCase(entryKey)}-menu-block-dictionary-sub-entry__item`}
       key={entryKey}
       className={cn(
         'text-primary-8 flex h-12.5 min-h-12.5 min-w-37.5 items-center justify-between ',
@@ -217,7 +219,7 @@ export default function BlockDictionaryEntries({
     <AnimatePresence>
       {visible && (
         <motion.div
-          data-scan-config-menu="menu-block-dictionary-sub-entry"
+          data-scan-config-menu={`${rootElement}-menu-block-dictionary-sub-entry`}
           data-active={visible}
           key={rootElement}
           initial={{ y: -10, opacity: 0, height: 0, marginBottom: -12 }}
@@ -231,7 +233,10 @@ export default function BlockDictionaryEntries({
           transition={{ duration: 0.3, ease: 'linear' }}
           className={cn('flex flex-col w-full items-center z-0 mb-4!')}
         >
-          <div className="flex flex-col w-full gap-1.5 px-4">
+          <div
+            id={`${rootElement}-menu-block-dictionary-sub-entry__container`}
+            className="flex flex-col w-full gap-1.5 px-4"
+          >
             {/* Render deleted entries first with red border */}
             {deletedEntriesFromHighlights.map((entry) => renderBlockTab(entry))}
 
