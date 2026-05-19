@@ -102,7 +102,27 @@ with these substitutions (see the Phase 1.A PR for worked examples):
 - `mock.module(path, { namedExports })` / `jest.mock(path, factory)` → `vi.mock(path, () => factory)`. Because `vi.mock` is hoisted, drop the `await import(...)`-after-mock dance and use top-level static imports. For factories that need shared state, lift it into `vi.hoisted(() => ({...}))`.
 - Rename `.nodetest.ts` → `.test.ts` and `.nodetest.tsx` → `.test.tsx`. The latter lands in the `component` (jsdom) project automatically.
 
-## E2E
+## E2E tests
 
-Phase 1 adds `tests/e2e/` and the Playwright config. The first specs are the
-public landing page and the unauthenticated `/app/virtual-lab` redirect.
+Playwright specs live in `tests/e2e/*.spec.ts`. The current set is two
+golden-path specs:
+
+- `tests/e2e/landing.spec.ts` — public landing page renders a `<main>` and
+  produces no console errors; unauthenticated `/app/virtual-lab` is
+  redirected to `/app/log-in` by `src/proxy.ts`.
+
+```bash
+pnpm test:e2e:install   # one-time per machine: installs the Chromium browser
+pnpm test:e2e           # run the specs
+```
+
+`playwright.config.ts` boots a web server automatically:
+
+- locally: `pnpm dev` (HMR, reused if already running)
+- in CI (`CI=1`): `pnpm build && pnpm start` (closer to prod, no HMR overhead)
+
+The landing spec collects `pageerror` and `console.error` events into a list
+and asserts the list is empty. A new console error on `/` is a real
+regression — fix the source, do not relax the assertion.
+
+Authenticated flows are deferred until Phase 4 (Keycloak test realm or mock).
