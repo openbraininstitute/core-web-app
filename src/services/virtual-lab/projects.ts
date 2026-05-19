@@ -1,12 +1,12 @@
-import { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
 import authFetch, { authFetchRetryOnError, authFetchWithoutRetry } from '@/auth-fetch';
 import { config } from '@/config';
-import {
+
+import type { MembersResponse } from '@/api/virtual-lab-svc/queries/types';
+import type {
   ProjectBalance,
   ProjectBalanceResponse,
   ProjectJobReportsResponse,
 } from '@/types/accounting';
-
 import type { VirtualLabAPIListData, VlmResponse } from '@/types/virtual-lab/common';
 import type { Project, ProjectResponse } from '@/types/virtual-lab/projects';
 
