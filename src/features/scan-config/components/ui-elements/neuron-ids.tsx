@@ -62,10 +62,10 @@ export default function NeuronIds({
 
   return (
     <>
-      {allElements.length > 0 && (
-        <div className="float-right relative -top-[30px] text-primary-9 text-base font-semibold uppercase">{`${allElements.length}`}</div>
-      )}
-      <div className="w-full">
+      <div className="w-full flex flex-col gap-3">
+        {allElements.length > 0 && (
+          <div className="text-primary-8 text-sm">{`${allElements.length} ${allElements.length === 1 ? 'ID' : 'IDs'}`}</div>
+        )}
         {!edit && value !== null && (
           <Ids
             ids={renderedElements}
@@ -79,15 +79,15 @@ export default function NeuronIds({
           />
         )}
         {value === null && (
-          <>
+          <div>
             <div className="text-primary-8 text-sm">No neuron IDs yet</div>
             <div className="text-xs text-gray-500">
               Add neuron IDs manually below or paste a list to get started.
             </div>
-          </>
+          </div>
         )}
         {!edit && (
-          <div className="flex mt-2 gap-2 justify-end mb-3">
+          <div className="flex gap-2 justify-end">
             {!disabled && (
               <>
                 <button
@@ -392,7 +392,7 @@ const HighlightedInput = ({
         </button>
       </div>
 
-      <div className="flex justify-between items-start mt-1 px-1">
+      <div className="flex justify-between items-start px-1">
         <div className="text-red-500 text-sm">{error}</div>
         <div
           className={cn(
