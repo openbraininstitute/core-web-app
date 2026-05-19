@@ -29,7 +29,7 @@
     "@apidevtools/json-schema-ref-parser": "^13.0.5",
     "@bprogress/next": "^3.2.12",
     "@octokit/core": "^7.0.6",
-    "@openbraininstitute/morphoviewer": "^0.24.24",
+    "@openbraininstitute/morphoviewer": "^0.25.1",
     "@portabletext/react": "^6.2.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-checkbox": "^1.3.3",
