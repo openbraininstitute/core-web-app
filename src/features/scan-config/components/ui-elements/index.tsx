@@ -28,7 +28,7 @@ import {
 import { isObject } from '@/util/type-guards';
 
 import ModelIdentifierMultiple from './model-identifier_multiple';
-import NeuronPropertyFilter from './neuron-property-filter';
+import NeuronPropertyFilter, { type INeuronPropertyFilter } from './neuron-property-filter';
 import { VoltageDuration, type VoltageDurationState } from './voltage-duration';
 
 import type { SetStateAction } from 'jotai';
@@ -395,7 +395,31 @@ export function UIElementRender({
             selectedPopulation
           ] ?? {};
 
-        return <NeuronPropertyFilter properties={properties} />;
+        const getValue = () => {
+          if (Array.isArray(value)) {
+            return value;
+          }
+          if (isPlainObject(value)) {
+            return [value];
+          }
+          return [];
+        };
+
+        return (
+          <NeuronPropertyFilter
+            properties={properties}
+            value={getValue() as unknown as INeuronPropertyFilter[]}
+            onChange={(newValue: INeuronPropertyFilter[]) => {
+              const getNewValue = () => {
+                if (newValue.length === 0) return null;
+                if (newValue.length === 1) return newValue[0];
+                return newValue;
+              };
+
+              setState({ ...state, [k]: getNewValue() as ConfigValue });
+            }}
+          />
+        );
       }
     )
     .otherwise(() => null);
