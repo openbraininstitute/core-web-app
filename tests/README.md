@@ -91,6 +91,17 @@ satisfies `clientSchema` in `src/config/schema.ts`. If a test needs different
 values, override individual keys in the test file before importing the code
 under test.
 
+## Porting an old test
+
+The legacy `*.nodetest.*` files were removed in Phase 1.A. If you find an
+older test that still uses Node's built-in runner or Jest globals, port it
+with these substitutions (see the Phase 1.A PR for worked examples):
+
+- `node:test` / `jest.*` globals → `import { describe, expect, it, vi } from 'vitest'`.
+- `node:assert/strict` → `expect(...).toBe(...)` / `.toEqual(...)` / `.toThrow(...)`.
+- `mock.module(path, { namedExports })` / `jest.mock(path, factory)` → `vi.mock(path, () => factory)`. Because `vi.mock` is hoisted, drop the `await import(...)`-after-mock dance and use top-level static imports. For factories that need shared state, lift it into `vi.hoisted(() => ({...}))`.
+- Rename `.nodetest.ts` → `.test.ts` and `.nodetest.tsx` → `.test.tsx`. The latter lands in the `component` (jsdom) project automatically.
+
 ## E2E
 
 Phase 1 adds `tests/e2e/` and the Playwright config. The first specs are the

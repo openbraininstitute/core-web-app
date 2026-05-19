@@ -10,7 +10,6 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:node": "node --experimental-strip-types --test **/*.nodetest.*",
     "lint": "biome check",
     "lint:cached": "biome lint --staged --diagnostic-level=error",
     "ci": "biome ci",
