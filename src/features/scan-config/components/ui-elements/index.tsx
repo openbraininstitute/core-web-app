@@ -391,21 +391,21 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.NeuronPropertyFilter },
       },
       () => {
-        const getPopulationValue = (): string | null => {
+        const getPopulationValue = (): string => {
           const selectedPopulation = state.population;
 
           if (Array.isArray(selectedPopulation) && typeof selectedPopulation[0] === 'string') {
-            return selectedPopulation[0] ?? null;
+            return selectedPopulation[0] ?? '';
           }
           if (typeof selectedPopulation === 'string') return selectedPopulation;
-          return null;
+          return '';
         };
 
         const selectedPopulation = getPopulationValue();
 
         const properties =
           schemaMappingConfig?.properties?.NodePropertyUniqueValuesByPopulation[
-            selectedPopulation ?? ''
+            selectedPopulation
           ] ?? {};
 
         return <NeuronPropertyFilter properties={properties} />;
