@@ -1,5 +1,4 @@
 import { useAtom } from 'jotai';
-import React from 'react';
 
 import Prompt from '../../prompt';
 import { promptAtom } from '../../state';
