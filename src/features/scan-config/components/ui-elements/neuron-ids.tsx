@@ -61,101 +61,106 @@ export default function NeuronIds({
   };
 
   return (
-    <div className="w-full">
-      {!edit && value !== null && (
-        <Ids
-          ids={renderedElements}
-          onEditClick={handleEditClick}
-          disabled={disabled}
-          onDeleteItem={(deleteId: number) => {
-            const newAllElements = allElements.filter((id) => id !== deleteId);
-            onAddIds(newAllElements);
-            setText(newAllElements.join(', '));
-          }}
-        />
+    <>
+      {allElements.length > 0 && (
+        <div className="float-right relative -top-[30px] text-primary-9 text-base font-semibold uppercase">{`${allElements.length}`}</div>
       )}
-      {value === null && (
-        <>
-          <div className="text-primary-8 text-sm">No neuron IDs yet</div>
-          <div className="text-xs text-gray-500">
-            Add neuron IDs manually below or paste a list to get started.
-          </div>
-        </>
-      )}
-      {!edit && (
-        <div className="flex mt-2 gap-2 justify-end mb-3">
-          {!disabled && (
-            <>
-              <button
-                type="button"
-                className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 text-sm gap-3"
-                onClick={() => {
-                  onAddIds(null);
-                  setText('');
-                }}
-              >
-                Clear list
-              </button>
-              <button
-                type="button"
-                className="text-gray-500  flex justify-center items-center border border-gray-200 p-2 rounded-full text-primary-9 text-sm gap-3"
-                onClick={handleEditClick}
-              >
-                Edit ID list <EditOutlined className="text-xs" />
-              </button>
-            </>
-          )}
-          <CopyButton textToCopy={text} />
-        </div>
-      )}
-
-      {!edit && !disabled && (
-        <HighlightedInput
-          maxLength={1000}
-          handleAddIdsClick={(ids) => {
-            const newAllElements = [...new Set([...allElements, ...ids])].sort((a, b) => a - b);
-            onAddIds(newAllElements);
-            setText(newAllElements.join(', '));
-          }}
-        />
-      )}
-      {edit && (
-        <NumberEditor
-          value={text}
-          setIsTextValid={setIsTextValid}
-          setValue={setText}
-          disabled={disabled}
-        />
-      )}
-      {edit && (
-        <div className="flex gap-2 mt-3 justify-end">
-          <Button
-            className="border-none bg-transparent text-primary-8"
-            onClick={() => {
-              setEdit(!edit);
+      <div className="w-full">
+        {!edit && value !== null && (
+          <Ids
+            ids={renderedElements}
+            onEditClick={handleEditClick}
+            disabled={disabled}
+            onDeleteItem={(deleteId: number) => {
+              const newAllElements = allElements.filter((id) => id !== deleteId);
+              onAddIds(newAllElements);
+              setText(newAllElements.join(', '));
             }}
-          >
-            Cancel
-          </Button>
-          {
+          />
+        )}
+        {value === null && (
+          <>
+            <div className="text-primary-8 text-sm">No neuron IDs yet</div>
+            <div className="text-xs text-gray-500">
+              Add neuron IDs manually below or paste a list to get started.
+            </div>
+          </>
+        )}
+        {!edit && (
+          <div className="flex mt-2 gap-2 justify-end mb-3">
+            {!disabled && (
+              <>
+                <button
+                  type="button"
+                  className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 text-sm gap-3"
+                  onClick={() => {
+                    onAddIds(null);
+                    setText('');
+                  }}
+                >
+                  Clear list
+                </button>
+                <button
+                  type="button"
+                  className="text-gray-500  flex justify-center items-center border border-gray-200 p-2 rounded-full text-primary-9 text-sm gap-3"
+                  onClick={handleEditClick}
+                >
+                  Edit ID list <EditOutlined className="text-xs" />
+                </button>
+              </>
+            )}
+            <CopyButton textToCopy={text} />
+          </div>
+        )}
+
+        {!edit && !disabled && (
+          <HighlightedInput
+            maxLength={1000}
+            handleAddIdsClick={(ids) => {
+              const newAllElements = [...new Set([...allElements, ...ids])].sort((a, b) => a - b);
+              onAddIds(newAllElements);
+              setText(newAllElements.join(', '));
+            }}
+          />
+        )}
+        {edit && (
+          <NumberEditor
+            value={text}
+            setIsTextValid={setIsTextValid}
+            setValue={setText}
+            disabled={disabled}
+          />
+        )}
+        {edit && (
+          <div className="flex gap-2 mt-3 justify-end">
             <Button
-              className="text-primary-8 rounded-full font-bold"
+              className="border-none bg-transparent text-primary-8"
               onClick={() => {
-                if (edit && isTextValid) {
-                  const values = parseCsvIntegers(text);
-                  onAddIds(values);
-                  setText(values.join(', '));
-                }
                 setEdit(!edit);
               }}
-              disabled={!isTextValid || disabled}
             >
-              Apply
+              Cancel
             </Button>
-          }
-        </div>
-      )}
-    </div>
+            {
+              <Button
+                className="text-primary-8 rounded-full font-bold"
+                onClick={() => {
+                  if (edit && isTextValid) {
+                    const values = parseCsvIntegers(text);
+                    onAddIds(values);
+                    setText(values.join(', '));
+                  }
+                  setEdit(!edit);
+                }}
+                disabled={!isTextValid || disabled}
+              >
+                Apply
+              </Button>
+            }
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
