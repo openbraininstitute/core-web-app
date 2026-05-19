@@ -55,9 +55,7 @@ export async function checkCache(
 
   try {
     const cache = await caches.open(cacheConfig.cacheName);
-    // ignoreVary: defensive against entries stored by older versions of this
-    // wrapper that carried over a `Vary` header from a redirected origin.
-    const cachedResponse = await cache.match(url, { ignoreVary: true });
+    const cachedResponse = await cache.match(url);
 
     if (!cachedResponse) {
       return { state: 'miss', response: null };
