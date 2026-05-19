@@ -104,4 +104,5 @@ function NumberEditor({
 
 export default dynamic(() => Promise.resolve(NumberEditor), {
   ssr: false,
+  loading: () => <div style={{ height: 350, width: '100%' }} />,
 });
