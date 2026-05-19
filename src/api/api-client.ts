@@ -1,10 +1,19 @@
 import isNil from 'es-toolkit/compat/isNil';
 import omitBy from 'es-toolkit/compat/omitBy';
 
+import {
+  checkCache,
+  clearCache,
+  scheduleRevalidation,
+  shouldUseCache,
+  storeInCache,
+} from '@/api/cache-storage';
 import { parseApiError } from '@/api/utils';
 import { getSession } from '@/auth-fetch';
 import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
+
+import type { CacheConfiguration } from '@/api/cache-storage';
 
 type BackoffStrategy = {
   type: 'exponential' | 'custom';
@@ -32,20 +41,12 @@ type RequestOptions = {
   next?: NextFetchRequestConfig;
 };
 
-// New cache configuration type
-type CacheConfiguration = {
-  enabled: boolean;
-  ttlInSeconds: number;
-  cacheName: string;
-  excludeUrls?: RegExp[];
-};
-
 type ApiClientOptions = {
   rootUri: string;
   token?: string;
   headers?: Record<string, string>;
   config?: RequestConfiguration;
-  cache?: CacheConfiguration; // Add cache configuration to options
+  cache?: CacheConfiguration;
 };
 
 export type ErrorCause<T extends Record<string, any>> = {
@@ -69,7 +70,7 @@ class ApiClient {
 
   private _retryOnException?: boolean;
 
-  private _cacheConfig?: CacheConfiguration; // Cache configuration
+  private _cacheConfig?: CacheConfiguration;
 
   private requestInterceptors: ((request: Request) => Promise<Request>)[] = [];
 
@@ -86,111 +87,63 @@ class ApiClient {
     this._backoff = config.backoff;
     this._retryOnError = config.retryOnError;
     this._retryOnException = config.retryOnException;
-    this._cacheConfig = cache; // Store cache configuration
+    this._cacheConfig = cache;
   }
 
-  /**
-   * checks if caching should be used for a specific URL
-   *
-   * @param {string} url - url to check
-   * @param {CacheConfiguration} cacheConfig - cache configuration
-   * @returns {boolean} whether caching should be used
-   */
-  private shouldUseCache(url: string, cacheConfig?: CacheConfiguration): boolean {
-    if (!cacheConfig?.enabled) return false;
-
-    // check if url is in the exclude list
-    if (cacheConfig.excludeUrls) {
-      for (const pattern of cacheConfig.excludeUrls) {
-        if (pattern.test(url)) return false;
-      }
+  private async decodeResponse<T>(response: Response, asRawResponse?: boolean): Promise<T> {
+    if (asRawResponse) {
+      return response as unknown as T;
     }
-
-    return true;
+    const contentType = response.headers.get('Content-Type') || '';
+    if (contentType.includes('application/json')) {
+      return response.json();
+    }
+    if (contentType.includes('text')) {
+      return (await response.text()) as unknown as T;
+    }
+    if (contentType.includes('application/octet-stream')) {
+      return (await response.blob()) as unknown as T;
+    }
+    return (await response.arrayBuffer()) as unknown as T;
   }
 
-  /**
-   * checks if a cached response exists and is still valid
-   *
-   * @param {string} url - url to fetch from cache
-   * @param {CacheConfiguration} cacheConfig -  cache configuration
-   * @returns {Promise<{ valid: boolean, response: Response | null }>} cache status and response
-   */
-  private async checkCache(
-    url: string,
-    cacheConfig: CacheConfiguration
-  ): Promise<{
-    valid: boolean;
-    response: Response | null;
-  }> {
-    if (typeof caches === 'undefined') {
-      return { valid: false, response: null };
+  private async executeNetworkRequest(
+    method: string,
+    urlString: string,
+    options: RequestOptions
+  ): Promise<Response> {
+    let request = new Request(urlString, {
+      method,
+      headers: compactRecord({
+        ...this._headers,
+        ...(this._token ? { Authorization: `Bearer ${this._token}` } : {}),
+        ...options.headers,
+      }),
+      body: (() => {
+        if (!options.body) {
+          return undefined;
+        }
+        if (options.body instanceof FormData) {
+          return options.body;
+        }
+        return JSON.stringify(options.body);
+      })(),
+      signal: options.signal,
+      cache: options.cache,
+      next: options.next,
+    });
+
+    for (const interceptor of this.requestInterceptors) {
+      request = await interceptor(request);
     }
 
-    try {
-      const cache = await caches.open(cacheConfig.cacheName);
-      const cachedResponse = await cache.match(url);
+    let response = await fetch(request);
 
-      if (!cachedResponse) {
-        return { valid: false, response: null };
-      }
-
-      // check if the cache has expired
-      const cacheDate = cachedResponse.headers.get('x-cache-timestamp');
-
-      if (!cacheDate) {
-        return { valid: false, response: cachedResponse };
-      }
-
-      const cacheTimestamp = parseInt(cacheDate, 10);
-      const now = Date.now();
-      const ageInSeconds = (now - cacheTimestamp) / 1000;
-
-      return {
-        valid: ageInSeconds < cacheConfig.ttlInSeconds,
-        response: cachedResponse,
-      };
-    } catch (e) {
-      log('warn', 'Cache API access failed:', e);
-      return { valid: false, response: null };
+    for (const interceptor of this.responseInterceptors) {
+      response = await interceptor(response);
     }
-  }
 
-  /**
-   * stores a response in the cache
-   *
-   * @param {string} url - url to use as the cache key
-   * @param {Response} response - response to cache
-   * @param {CacheConfiguration} cacheConfig - cache configuration
-   * @returns {Promise<void>}
-   */
-  private async storeInCache(
-    url: string,
-    response: Response,
-    cacheConfig: CacheConfiguration
-  ): Promise<void> {
-    if (typeof caches === 'undefined') return;
-
-    try {
-      const cache = await caches.open(cacheConfig.cacheName);
-
-      // Clone the response before using it
-      const responseToCache = response.clone();
-
-      // Create a new response with our custom timestamp header
-      const headers = new Headers(responseToCache.headers);
-      headers.set('x-cache-timestamp', Date.now().toString());
-
-      const cachedResponseToStore = new Response(await responseToCache.blob(), {
-        status: responseToCache.status,
-        statusText: responseToCache.statusText,
-        headers,
-      });
-
-      await cache.put(url, cachedResponseToStore);
-    } catch (e) {
-      log('warn', 'Failed to store in cache:', e);
-    }
+    return response;
   }
 
   /**
@@ -226,39 +179,25 @@ class ApiClient {
 
     const urlString = url.toString();
 
-    // determine if caching should be used for this request
     const requestCacheConfig = config.cache ?? this._cacheConfig;
     const useCache =
       method.toLowerCase() === 'get' &&
-      this.shouldUseCache(urlString, requestCacheConfig) &&
+      shouldUseCache(urlString, requestCacheConfig) &&
       !config.asRawResponse;
 
-    // get from cache first for "get" requests
     if (useCache && requestCacheConfig) {
-      const { valid, response: cachedResponse } = await this.checkCache(
-        urlString,
-        requestCacheConfig
-      );
+      const { state, response: cachedResponse } = await checkCache(urlString, requestCacheConfig);
 
-      if (valid && cachedResponse) {
-        log('debug', `[cached] ${urlString}`);
-        const contentType = cachedResponse.headers.get('Content-Type') || '';
-        if (config.asRawResponse) {
-          return cachedResponse as unknown as T;
+      if (cachedResponse && (state === 'fresh' || state === 'stale')) {
+        log('debug', `[cached:${state}] ${urlString}`);
+        if (state === 'stale') {
+          scheduleRevalidation(urlString, requestCacheConfig, () =>
+            this.executeNetworkRequest(method, urlString, options)
+          );
         }
-        if (contentType.includes('application/json')) {
-          return cachedResponse.json();
-        }
-        if (contentType.includes('text')) {
-          return (await cachedResponse.text()) as unknown as T;
-        }
-        if (contentType.includes('application/octet-stream')) {
-          return (await cachedResponse.blob()) as unknown as T;
-        }
-        return (await cachedResponse.arrayBuffer()) as unknown as T;
+        return this.decodeResponse<T>(cachedResponse, config.asRawResponse);
       }
 
-      // if cache is invalid or expired, continue with the request
       if (cachedResponse) {
         log('log', `Cache expired for ${urlString}, fetching fresh data`);
       }
@@ -266,36 +205,7 @@ class ApiClient {
 
     const runRequest = async (): Promise<T> => {
       attempt++;
-      let request = new Request(urlString, {
-        method,
-        headers: compactRecord({
-          ...this._headers,
-          ...(this._token ? { Authorization: `Bearer ${this._token}` } : {}),
-          ...options.headers,
-        }),
-        body: (() => {
-          if (!options.body) {
-            return undefined;
-          }
-          if (options.body instanceof FormData) {
-            return options.body;
-          }
-          return JSON.stringify(options.body);
-        })(),
-        signal: options.signal,
-        cache: options.cache,
-        next: options.next,
-      });
-
-      for (const interceptor of this.requestInterceptors) {
-        request = await interceptor(request);
-      }
-
-      let response = await fetch(request);
-
-      for (const interceptor of this.responseInterceptors) {
-        response = await interceptor(response);
-      }
+      const response = await this.executeNetworkRequest(method, urlString, options);
 
       if (!response.ok && (config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
         const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
@@ -306,24 +216,11 @@ class ApiClient {
         return runRequest();
       }
 
-      // store successful GET responses in cache if caching is enabled
       if (useCache && response.ok && requestCacheConfig) {
-        await this.storeInCache(urlString, response, requestCacheConfig);
+        await storeInCache(urlString, response, requestCacheConfig);
       }
 
-      const contentType = response.headers.get('Content-Type') || '';
-      let responseData: T;
-      if (config.asRawResponse) {
-        responseData = response as unknown as T;
-      } else if (contentType.includes('application/json')) {
-        responseData = await response.json();
-      } else if (contentType.includes('text')) {
-        responseData = (await response.text()) as unknown as T;
-      } else if (contentType.includes('application/octet-stream')) {
-        responseData = (await response.blob()) as unknown as T;
-      } else {
-        responseData = (await response.arrayBuffer()) as unknown as T;
-      }
+      const responseData = await this.decodeResponse<T>(response, config.asRawResponse);
 
       if (!response.ok) {
         if ((config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
@@ -335,12 +232,12 @@ class ApiClient {
           return runRequest();
         }
         log('error', 'Request failed', {
-          url: url.toString(),
+          url: urlString,
           status: response.status,
           message: (responseData as any).message || `Request failed with status ${response.status}`,
           data: responseData,
         });
-        throw await parseApiError(request.url, response.status, responseData);
+        throw await parseApiError(urlString, response.status, responseData);
       }
 
       return responseData;
@@ -379,34 +276,10 @@ class ApiClient {
     return backoff.type === 'exponential' ? backoff.delay * 2 ** (attempt - 1) : backoff.delay;
   }
 
-  /**
-   * clears all cached responses or specific URL
-   *
-   * @param {string} [url] - optional specific url to clear from cache
-   * @returns {Promise<boolean>} Whether the operation succeeded
-   */
   async clearCache(url?: string): Promise<boolean> {
-    if (!this._cacheConfig?.enabled || typeof caches === 'undefined') {
-      return false;
-    }
-
-    try {
-      const cache = await caches.open(this._cacheConfig.cacheName);
-
-      if (url) {
-        // Clear specific URL
-        const fullUrl = new URL(url, this._rootUrl).toString();
-        await cache.delete(fullUrl);
-      } else {
-        // Clear all cache
-        await caches.delete(this._cacheConfig.cacheName);
-      }
-
-      return true;
-    } catch (e) {
-      log('error', 'Failed to clear cache:', e);
-      return false;
-    }
+    if (!this._cacheConfig) return false;
+    const fullUrl = url ? new URL(url, this._rootUrl).toString() : undefined;
+    return clearCache(this._cacheConfig, fullUrl);
   }
 
   get<T>(

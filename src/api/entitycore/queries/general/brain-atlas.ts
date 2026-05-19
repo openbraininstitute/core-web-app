@@ -1,3 +1,4 @@
+import { swrCacheConfig } from '@/api/cache-storage';
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 
 import type {
@@ -83,16 +84,22 @@ export async function getBrainAtlasRegions({
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
-  return await api.get<EntityCoreResponse<IBrainAtlasRegion>>(`${baseUri}/${atlasId}/regions`, {
-    queryParams: {
-      ...filters,
+  return await api.get<EntityCoreResponse<IBrainAtlasRegion>>(
+    `${baseUri}/${atlasId}/regions`,
+    {
+      queryParams: {
+        ...filters,
+      },
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        ...getEntityCoreContext(context).headers,
+      },
     },
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      ...getEntityCoreContext(context).headers,
-    },
-  });
+    // Cache only when no workspace context is set: Cache Storage keys by URL,
+    // so context-bearing requests would risk cross-org leakage.
+    context ? undefined : { cache: swrCacheConfig('brain-atlas-metadata') }
+  );
 }
 
 /**
