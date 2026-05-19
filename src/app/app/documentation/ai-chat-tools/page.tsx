@@ -1,6 +1,6 @@
-import { Metadata } from 'next';
-
 import AllAIToolsContent from '@/components/documentation/ai-tools/all-tools';
+
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'AI Chat tools',
