@@ -80,13 +80,13 @@ export default function NeuronIds({
             <>
               <button
                 type="button"
-                className="text-gray-500  flex justify-center items-center py-2 rounded-full text-primary-9 text-sm gap-3"
+                className="text-gray-500 flex justify-center items-center border border-gray-200 p-2 rounded-full text-primary-9 text-sm gap-3"
                 onClick={() => {
                   onAddIds(null);
                   setText('');
                 }}
               >
-                Clear list
+                Clear list <DeleteOutlined className="text-xs" />
               </button>
               <button
                 type="button"

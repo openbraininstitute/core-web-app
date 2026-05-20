@@ -77,7 +77,7 @@ function NumberEditor({
   };
 
   return (
-    <div style={{ height: 350, width: '100%' }}>
+    <div style={{ height: 275, width: '100%' }}>
       <Editor
         height="100%"
         defaultLanguage="plaintext"
@@ -104,5 +104,5 @@ function NumberEditor({
 
 export default dynamic(() => Promise.resolve(NumberEditor), {
   ssr: false,
-  loading: () => <div style={{ height: 350, width: '100%' }} />,
+  loading: () => <div style={{ height: 275, width: '100%' }} />,
 });
