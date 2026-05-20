@@ -18,6 +18,7 @@ type RequestConfiguration = {
   backoff?: BackoffStrategy;
   retryOnError?: boolean;
   retryOnException?: boolean;
+  passThroughErrors?: boolean;
 };
 
 type RequestOptions = {
@@ -32,7 +33,6 @@ type RequestOptions = {
   next?: NextFetchRequestConfig;
 };
 
-// New cache configuration type
 type CacheConfiguration = {
   enabled: boolean;
   ttlInSeconds: number;
@@ -45,7 +45,7 @@ type ApiClientOptions = {
   token?: string;
   headers?: Record<string, string>;
   config?: RequestConfiguration;
-  cache?: CacheConfiguration; // Add cache configuration to options
+  cache?: CacheConfiguration;
 };
 
 export type ErrorCause<T extends Record<string, any>> = {
@@ -99,7 +99,6 @@ class ApiClient {
   private shouldUseCache(url: string, cacheConfig?: CacheConfiguration): boolean {
     if (!cacheConfig?.enabled) return false;
 
-    // check if url is in the exclude list
     if (cacheConfig.excludeUrls) {
       for (const pattern of cacheConfig.excludeUrls) {
         if (pattern.test(url)) return false;
@@ -135,7 +134,6 @@ class ApiClient {
         return { valid: false, response: null };
       }
 
-      // check if the cache has expired
       const cacheDate = cachedResponse.headers.get('x-cache-timestamp');
 
       if (!cacheDate) {
@@ -174,10 +172,8 @@ class ApiClient {
     try {
       const cache = await caches.open(cacheConfig.cacheName);
 
-      // Clone the response before using it
       const responseToCache = response.clone();
 
-      // Create a new response with our custom timestamp header
       const headers = new Headers(responseToCache.headers);
       headers.set('x-cache-timestamp', Date.now().toString());
 
@@ -226,14 +222,12 @@ class ApiClient {
 
     const urlString = url.toString();
 
-    // determine if caching should be used for this request
     const requestCacheConfig = config.cache ?? this._cacheConfig;
     const useCache =
       method.toLowerCase() === 'get' &&
       this.shouldUseCache(urlString, requestCacheConfig) &&
       !config.asRawResponse;
 
-    // get from cache first for "get" requests
     if (useCache && requestCacheConfig) {
       const { valid, response: cachedResponse } = await this.checkCache(
         urlString,
@@ -258,7 +252,6 @@ class ApiClient {
         return (await cachedResponse.arrayBuffer()) as unknown as T;
       }
 
-      // if cache is invalid or expired, continue with the request
       if (cachedResponse) {
         log('log', `Cache expired for ${urlString}, fetching fresh data`);
       }
@@ -306,7 +299,6 @@ class ApiClient {
         return runRequest();
       }
 
-      // store successful GET responses in cache if caching is enabled
       if (useCache && response.ok && requestCacheConfig) {
         await this.storeInCache(urlString, response, requestCacheConfig);
       }
@@ -325,7 +317,7 @@ class ApiClient {
         responseData = (await response.arrayBuffer()) as unknown as T;
       }
 
-      if (!response.ok && !config.asRawResponse) {
+      if (!response.ok && !config.passThroughErrors) {
         if ((config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
           const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
 
@@ -394,11 +386,9 @@ class ApiClient {
       const cache = await caches.open(this._cacheConfig.cacheName);
 
       if (url) {
-        // Clear specific URL
         const fullUrl = new URL(url, this._rootUrl).toString();
         await cache.delete(fullUrl);
       } else {
-        // Clear all cache
         await caches.delete(this._cacheConfig.cacheName);
       }
 

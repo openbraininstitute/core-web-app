@@ -15,6 +15,10 @@ export type NeuronRegistered = {
   id: string;
 };
 
+type ErrorEnvelope = { 
+  detail: NeuronFileError 
+};
+
 export function isNeuronFileError(err: unknown): err is Error & { neuronFileError: NeuronFileError } {
   return (
     err instanceof Error &&
@@ -30,17 +34,11 @@ export async function resolveNeuronFile(file: File): Promise<NeuronResolution> {
 
   const response = await api.post<Response>(
     '/declared/test-neuron-file',
-    {
-      headers: {
-        accept: 'application/json',
-      },
-      body: formData,
-    },
-    { asRawResponse: true }
+    { body: formData },
+    { asRawResponse: true, passThroughErrors: true } // ✅ Correct
   );
 
   if (!response.ok) {
-    type ErrorEnvelope = { detail: NeuronFileError };
     const envelope: ErrorEnvelope = await response.json().catch(() => ({
       detail: { code: 'UNKNOWN', detail: `Request failed with status ${response.status}` },
     }));
@@ -70,7 +68,7 @@ export async function createAndRegisterMorphometrics(
   formData.append('file', file, file.name);
   formData.append('metadata', JSON.stringify(payload));
 
-  const response = await api.post(
+  const response = await api.post<Response>(
     '/declared/register-morphology-with-calculated-metrics',
     {
       headers: {
@@ -80,13 +78,38 @@ export async function createAndRegisterMorphometrics(
       },
       body: formData,
     },
-    { asRawResponse: true }
+    { asRawResponse: true, passThroughErrors: true } // ✅ Fixed: Passed passThroughErrors flag
   );
+
+  if (!response.ok) {
+    const envelope: ErrorEnvelope = await response.json().catch(() => {
+      let code = 'SERVER_ERROR';
+      if (response.status === 401) code = 'UNAUTHENTICATED';
+      if (response.status === 403) code = 'FORBIDDEN';
+      if (response.status === 404) code = 'NOT_FOUND';
+      if (response.status === 413) code = 'FILE_TOO_LARGE';
+
+      return {
+        detail: { 
+          code, 
+          detail: `Request failed with status ${response.status}: ${response.statusText}` 
+        },
+      };
+    });
+
+    const errorBody: NeuronFileError = typeof envelope.detail === 'object'
+      ? envelope.detail
+      : { code: 'UNKNOWN', detail: String(envelope.detail) };
+
+    const error = new Error(errorBody.detail);
+    (error as any).neuronFileError = errorBody;
+    throw error;
+  }
 
   const data = await response.json();
 
   return {
-    isValid: response.ok,
+    isValid: true,
     id: data.entity_id,
   };
 }
