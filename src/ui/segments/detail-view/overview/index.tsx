@@ -38,7 +38,7 @@ import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-mo
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
-import { ScanConfiguration } from '@/features/scan-config';
+import { ScanConfigContainer } from '@/features/scan-config';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   BuildScanConfigTabs,
@@ -141,12 +141,12 @@ export default async function Overview({
 
       return (
         <>
-          <ScanConfiguration
+          <ScanConfigContainer
             entityId={extractionConfig.circuitId}
             entityType={extendedType}
             virtualLabId={context.virtualLabId}
             projectId={context.projectId}
-            initialCampaignId={extractionConfig.campaign.id}
+            originId={extractionConfig.campaign.id}
             initialConfig={extractionConfig.config?.form}
             readOnly={!isWorkflow}
             defaultTab={{
@@ -176,12 +176,12 @@ export default async function Overview({
 
       return (
         <>
-          <ScanConfiguration
+          <ScanConfigContainer
             entityId={config.sourceEntityId}
             entityType={ExtendedEntitiesTypeDict.CellMorphology}
             virtualLabId={context.virtualLabId}
             projectId={context.projectId}
-            initialCampaignId={config.campaign.id}
+            originId={config.campaign.id}
             initialConfig={config.config?.form}
             readOnly={!isWorkflow}
             defaultTab={{
@@ -209,12 +209,12 @@ export default async function Overview({
     if (!config.simulation?.entity_id) notFound();
 
     return (
-      <ScanConfiguration
+      <ScanConfigContainer
         entityId={config.simulation.entity_id}
         entityType={extendedType}
         virtualLabId={context.virtualLabId}
         projectId={context.projectId}
-        initialCampaignId={config.campaign.id}
+        originId={config.campaign.id}
         initialConfig={config.config?.form}
         readOnly={!isWorkflow}
         // This is a temporary solution to show sim campaigns not compliant with obi-one gen config.
@@ -246,12 +246,12 @@ export default async function Overview({
     if (!config.simulation?.entity_id) notFound();
 
     return (
-      <ScanConfiguration
+      <ScanConfigContainer
         entityId={config.simulation.entity_id}
         entityType={ExtendedEntitiesTypeDict.IonChannelModel}
         virtualLabId={context.virtualLabId}
         projectId={context.projectId}
-        initialCampaignId={config.campaign.id}
+        originId={config.campaign.id}
         initialConfig={config.config?.form}
         readOnly={!isWorkflow}
         // This is a temporary solution to show sim campaigns not compliant with obi-one gen config.
@@ -280,12 +280,12 @@ export default async function Overview({
 
     return (
       <>
-        <ScanConfiguration
+        <ScanConfigContainer
           entityId={extractionConfig.circuitId}
           entityType={extendedType}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
-          initialCampaignId={extractionConfig.campaign.id}
+          originId={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
           readOnly={!isWorkflow}
           defaultTab={{
@@ -332,12 +332,12 @@ export default async function Overview({
 
     return (
       <>
-        <ScanConfiguration
+        <ScanConfigContainer
           entityId={extractionConfig.emCellMeshId}
           entityType={extendedType}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
-          initialCampaignId={extractionConfig.campaign.id}
+          originId={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
           readOnly={!isWorkflow}
           defaultTab={{

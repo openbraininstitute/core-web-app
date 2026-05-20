@@ -13,30 +13,43 @@ import {
   type TScanConfigWorkflowStatus,
 } from '@/features/scan-config/workflow/types';
 import { useWorkflowCampaign } from '@/features/scan-config/workflow/use-workflow-campaign';
+import { log } from '@/utils/logger';
 
 const ScanConfigWorkflowContext = createContext<TScanConfigWorkflowContextValue | null>(null);
 
 function entitySourceRequiresEntity(
   entitySource: TScanConfigWorkflowDefinition['entity']
 ): boolean {
-  return entitySource.mode === ScanConfigEntitySourceMode.RouteId;
+  return (
+    entitySource.mode === ScanConfigEntitySourceMode.Session && entitySource.query !== undefined
+  );
+}
+
+function requiresWorkflowSelection(entitySource: TScanConfigWorkflowDefinition['entity']): boolean {
+  return entitySource.mode === ScanConfigEntitySourceMode.Session;
 }
 
 function resolveWorkflowStatus({
   entity,
   campaign,
   requiresEntity,
+  needsSelection,
 }: {
   entity: TResolvedScanConfigEntity;
   campaign: TScanConfigWorkflowContextValue['campaign'];
   requiresEntity: boolean;
+  needsSelection: boolean;
 }): TScanConfigWorkflowStatus {
   if (campaign.error) {
     return ScanConfigWorkflowStatus.Blocked;
   }
 
+  if (needsSelection && entity.workflowSelection === null) {
+    return ScanConfigWorkflowStatus.Blocked;
+  }
+
   // Resume URL had a campaign id, but resolve returned nothing → 404 (not a blank pending screen).
-  if (campaign.initialCampaignId && !campaign.isLoading && !campaign.campaignData) {
+  if (campaign.originId && !campaign.isLoading && !campaign.campaignData) {
     return ScanConfigWorkflowStatus.Blocked;
   }
 
@@ -66,13 +79,20 @@ function ScanConfigWorkflowContextValueProvider({
   });
 
   const requiresEntity = entitySourceRequiresEntity(definition.entity);
-
+  const needsSelection = requiresWorkflowSelection(definition.entity);
+  log('debug', 'ScanConfigWorkflowContextValueProvider', {
+    entity,
+    campaign,
+    requiresEntity,
+    needsSelection,
+  });
   const status = resolveWorkflowStatus({
     entity,
     campaign,
     requiresEntity,
+    needsSelection,
   });
-
+  log('debug', 'ScanConfigWorkflowContextValueProvider', { status });
   const value = useMemo<TScanConfigWorkflowContextValue>(
     () => ({
       definition,
@@ -84,7 +104,7 @@ function ScanConfigWorkflowContextValueProvider({
     }),
     [campaign, definition, entity, status, workspace]
   );
-
+  log('debug', 'ScanConfigWorkflowContextValueProvider', { value });
   return (
     <ScanConfigWorkflowContext.Provider value={value}>
       {children}

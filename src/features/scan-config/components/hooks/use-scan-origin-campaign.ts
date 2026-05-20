@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * loads an existing campaign when `initialCampaignId` is on the URL (or passed in)
+ * loads an existing campaign when `originId` is on the URL (or passed in)
  *
  * plug in a `resolve` function per workflow (simulate, extract, build, ...)
  * `shouldRenderScanConfig` tells when it's OK to show the editor
@@ -17,15 +17,15 @@ import type { Config } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 
 /** campaign payload shape, just need the form blob */
-type CampaignWithFormConfig = {
+type TCampaignWithFormConfig = {
   config?: {
     form?: Config;
   };
 };
 
-export type UseScanConfigOriginCampaignParams<T extends CampaignWithFormConfig> = {
-  /** from `?initialCampaignId=`, skip the query when this is missing */
-  initialCampaignId?: string;
+export type TUseScanConfigOriginCampaignParams<T extends TCampaignWithFormConfig> = {
+  /** from `?originId=`, skip the query when this is missing */
+  originId?: string;
   context: WorkspaceContext;
   /** workflow-specific fetcher, e.g. `resolveSimulationByCampaignId` */
   resolve: (args: { id: string; context: WorkspaceContext }) => Promise<T | null>;
@@ -40,25 +40,25 @@ export type UseScanConfigOriginCampaignParams<T extends CampaignWithFormConfig> 
  * - `initialConfig`, `config.form` from the campaign, pass into `useScanConfiguration`
  * - `shouldRenderScanConfig`, false while loading an existing campaign that has no form yet
  */
-export function useScanConfigOriginCampaign<T extends CampaignWithFormConfig>({
-  initialCampaignId,
+export function useScanConfigOriginCampaign<T extends TCampaignWithFormConfig>({
+  originId,
   context,
   resolve,
   enabled = true,
-}: UseScanConfigOriginCampaignParams<T>) {
+}: TUseScanConfigOriginCampaignParams<T>) {
   const { data, error, isLoading } = useQuery({
-    queryKey: initialCampaignId
-      ? keyBuilder.simCampaign({ entityId: initialCampaignId })
+    queryKey: originId
+      ? keyBuilder.simCampaign({ entityId: originId })
       : ['scan-config-campaign', 'idle', context],
     queryFn: async () => {
-      if (!initialCampaignId) return null;
-      return await resolve({ id: initialCampaignId, context });
+      if (!originId) return null;
+      return await resolve({ id: originId, context });
     },
-    enabled: enabled && !!initialCampaignId,
+    enabled: enabled && !!originId,
   });
 
   const shouldRenderScanConfig =
-    !initialCampaignId || (Boolean(initialCampaignId) && !isLoading && Boolean(data?.config?.form));
+    !originId || (Boolean(originId) && !isLoading && Boolean(data?.config?.form));
 
   return {
     campaignData: data,

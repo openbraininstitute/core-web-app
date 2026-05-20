@@ -1,10 +1,16 @@
-import groupBy from 'es-toolkit/compat/groupBy';
-import sortBy from 'es-toolkit/compat/sortBy';
+import { groupBy, sortBy } from 'es-toolkit/compat';
 
-import { WorkspaceSection } from '@/constants';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
+import { getScanConfigSchemaName } from '@/features/scan-config/components/hooks';
+import { fetchSchema } from '@/features/scan-config/components/hooks/schema';
+import { parseSchemaInitializeSelection } from '@/features/scan-config/schema/parse-initialize-selection';
+import { WorkflowInitializeSelectionMode } from '@/features/scan-config/schema/types';
+import { ScanConfigActivity } from '@/features/scan-config/types';
+import { isSimulateCircuitSourceType } from '@/features/scan-config/workflow/simulate-circuit-workflows';
+import { ActivityRegistry } from '@/ui/segments/workflows/config/activities';
+import { EntityTypeCatalog } from '@/ui/segments/workflows/config/entity-types';
 
-import { ActivityRegistry } from './activities';
-import { EntityTypeCatalog } from './entity-types';
 import {
   EntityGroupDict,
   type IWorkflowConfigurationInput,
@@ -17,13 +23,22 @@ import {
   type TGroupedWorkflows,
   type TWorkflowListContext,
   type TWorkflowListSort,
+  type TWorkflowSourceType,
+  WorkflowInitialStagePolicyDict,
   WorkflowListContextDict,
   WorkflowListSortDict,
+  WorkflowSelectionSourceTypeDict,
 } from './types';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceSection } from '@/constants';
 import type { FeatureFlags, FlagKey } from '@/features/feature-flags/flags';
+import type { TWorkflowSelectionConfig } from '@/features/scan-config/schema/types';
+import type {
+  SchemaName,
+  TScanConfigActivity,
+  TSupportedEntityTypesForScanConfiguration,
+} from '@/features/scan-config/types';
 
 const featuresSatisfied = (
   required: readonly FlagKey[] | undefined,
@@ -56,15 +71,253 @@ export function getEntityMeta(
   return EntityTypeCatalog[value] ?? null;
 }
 
+export function isMultipleWorkflowSource(
+  sourceType: TWorkflowSourceType | null | undefined
+): sourceType is typeof WorkflowSelectionSourceTypeDict.Multiple {
+  return sourceType === WorkflowSelectionSourceTypeDict.Multiple;
+}
+
+export function workflowHasMultipleSelectionInputs(workflow: IWorkflowDescriptor): boolean {
+  return isMultipleWorkflowSource(workflow.sourceType);
+}
+
+const workflowActivityToScanConfigActivity: Partial<Record<TActivityValue, TScanConfigActivity>> = {
+  [WorkflowActivityDictValue.build]: ScanConfigActivity.Build,
+  [WorkflowActivityDictValue.simulate]: ScanConfigActivity.Simulate,
+  [WorkflowActivityDictValue.extract]: ScanConfigActivity.Extract,
+  [WorkflowActivityDictValue.process]: ScanConfigActivity.Process,
+};
+
+export function getWorkflowScanConfigActivity(
+  activity: TActivityValue | string | null | undefined
+): TScanConfigActivity | null {
+  if (!activity) {
+    return null;
+  }
+
+  return workflowActivityToScanConfigActivity[activity as TActivityValue] ?? null;
+}
+
+export function getWorkflowScanConfigEntityType(opts: {
+  workflow: IWorkflowDescriptor;
+  activity: TActivityValue;
+}): TSupportedEntityTypesForScanConfiguration | null {
+  const { workflow, activity } = opts;
+  if (!workflow.isScanConfig) {
+    return null;
+  }
+
+  const primaryInput =
+    workflow.configurationInputs?.find((input) => input.required !== false) ??
+    workflow.configurationInputs?.[0];
+  const configurationInputType = primaryInput?.type;
+
+  if (activity === WorkflowActivityDictValue.simulate) {
+    const sourceType =
+      configurationInputType ??
+      (isMultipleWorkflowSource(workflow.sourceType) ? null : workflow.sourceType);
+
+    if (sourceType && isSimulateCircuitSourceType(sourceType)) {
+      return ExtendedEntitiesTypeDict.Circuit;
+    }
+
+    if (sourceType === ExtendedEntitiesTypeDict.MemodelCircuit) {
+      return ExtendedEntitiesTypeDict.MemodelCircuit;
+    }
+
+    if (sourceType === ExtendedEntitiesTypeDict.IonChannelModel) {
+      return ExtendedEntitiesTypeDict.IonChannelModel;
+    }
+  }
+
+  if (activity === WorkflowActivityDictValue.extract) {
+    return ExtendedEntitiesTypeDict.Circuit;
+  }
+
+  if (activity === WorkflowActivityDictValue.process) {
+    return ExtendedEntitiesTypeDict.EMCellMesh;
+  }
+
+  if (
+    activity === WorkflowActivityDictValue.build &&
+    configurationInputType === ExtendedEntitiesTypeDict.UniversalCellMorphology
+  ) {
+    return ExtendedEntitiesTypeDict.UniversalCellMorphology;
+  }
+
+  return (configurationInputType as TSupportedEntityTypesForScanConfiguration | undefined) ?? null;
+}
+
+/** first url segment after choosing a workflow type: entity browse (`new`) or configure (`configure`). */
+// TODO: rename "new" to "browse"
+export const WorkflowInitialStageDict = {
+  New: 'new',
+  Configure: 'configure',
+} as const;
+export type TWorkflowInitialStage =
+  (typeof WorkflowInitialStageDict)[keyof typeof WorkflowInitialStageDict];
+
+export type TResolvedWorkflowInitialStage = {
+  stage: TWorkflowInitialStage;
+  workflow: IWorkflowDescriptor | null;
+  /** when true, append {@link WORKFLOW_SESSION_ID_SEARCH_PARAM} on navigation from the workflows hub */
+  attachSessionId: boolean;
+};
+
+/**
+ * maps schema `initialize` selection to `new` vs `configure`
+ *
+ * `none` → configure; `single` | `multiple` | `grouped` → browse (`new`)
+ */
+export function getWorkflowInitialStageFromSelection(
+  selection: TWorkflowSelectionConfig | null | undefined
+): TWorkflowInitialStage {
+  if (!selection || selection.selectionMode === WorkflowInitializeSelectionMode.None) {
+    return WorkflowInitialStageDict.Configure;
+  }
+
+  return WorkflowInitialStageDict.New;
+}
+
+function resolveAttachSessionOnNavigate(
+  workflow: IWorkflowDescriptor,
+  stage: TWorkflowInitialStage
+): boolean {
+  if (workflow.attachSessionOnNavigate !== undefined) {
+    return workflow.attachSessionOnNavigate;
+  }
+
+  return stage === WorkflowInitialStageDict.New;
+}
+
+/**
+ * resolves `new` vs `configure` from {@link IWorkflowDescriptor.initialStage}
+ *
+ * only `schema` policy reads `selection` (from scan-config `initialize`)
+ */
+export function getWorkflowInitialStage(opts: {
+  workflow: IWorkflowDescriptor | null | undefined;
+  selection?: TWorkflowSelectionConfig | null | undefined;
+}): TWorkflowInitialStage {
+  const { workflow, selection } = opts;
+
+  if (!workflow) {
+    return WorkflowInitialStageDict.Configure;
+  }
+
+  switch (workflow.initialStage) {
+    case WorkflowInitialStagePolicyDict.Configure:
+      return WorkflowInitialStageDict.Configure;
+    case WorkflowInitialStagePolicyDict.Browse:
+      return WorkflowInitialStageDict.New;
+    case WorkflowInitialStagePolicyDict.Schema:
+      return getWorkflowInitialStageFromSelection(selection);
+    default:
+      return WorkflowInitialStageDict.Configure;
+  }
+}
+
+/** whether `/workflows/{activity}/new/{type}` may render (schema workflows may redirect to configure). */
+export function workflowAllowsBrowseRoute(
+  workflow: IWorkflowDescriptor | null | undefined
+): boolean {
+  return workflow != null && workflow.initialStage !== WorkflowInitialStagePolicyDict.Configure;
+}
+
+/**
+ * resolves the initial route segment and workflow descriptor for a workflow type
+ *
+ * @returns {@link TResolvedWorkflowInitialStage} with `workflow` from {@link getWorkflow}
+ * @throws when {@link fetchSchema} fails for a workflow with `initialStage: schema`
+ */
+export async function resolveWorkflowInitialStage(opts: {
+  activity: TActivityValue;
+  targetType: TExtendedEntitiesTypeDict;
+}): Promise<TResolvedWorkflowInitialStage> {
+  const workflow = getWorkflow({ activity: opts.activity, targetType: opts.targetType });
+
+  if (!workflow) {
+    return { stage: WorkflowInitialStageDict.Configure, workflow: null, attachSessionId: false };
+  }
+
+  let selection: TWorkflowSelectionConfig | null | undefined;
+
+  if (workflow.initialStage === WorkflowInitialStagePolicyDict.Schema) {
+    const schemaName = getWorkflowScanConfigSchemaName({
+      activity: opts.activity,
+      targetType: opts.targetType,
+    });
+
+    if (!schemaName) {
+      const stage = WorkflowInitialStageDict.Configure;
+      return {
+        stage,
+        workflow,
+        attachSessionId: resolveAttachSessionOnNavigate(workflow, stage),
+      };
+    }
+
+    const schema = await fetchSchema({ schemaName });
+    selection = parseSchemaInitializeSelection({ schema, schemaName });
+  }
+
+  const stage = getWorkflowInitialStage({ workflow, selection });
+
+  return {
+    stage,
+    workflow,
+    attachSessionId: resolveAttachSessionOnNavigate(workflow, stage),
+  };
+}
+
+/**
+ * human-readable noun for the primary entity the user selects (breadcrumbs, table copy)
+ *
+ * returns plural `entities` when the workflow has multiple {@link IWorkflowConfigurationInput}
+ * entries or no resolvable type otherwise the entity catalog `title` or `label`, or `entity`
+ */
+export function getWorkflowBrowseSelectionLabel(opts: {
+  activity: TActivityValue | string | null | undefined;
+  sourceType?: TWorkflowSourceType;
+  targetType?: TExtendedEntitiesTypeDict;
+  context?: TWorkflowListContext;
+}): string {
+  const workflow = getWorkflow(opts);
+  if (!workflow || workflowHasMultipleSelectionInputs(workflow)) {
+    return 'entities';
+  }
+
+  const primaryInput = getPrimaryConfigurationInput(opts);
+  const entityType =
+    primaryInput?.type ??
+    (isMultipleWorkflowSource(workflow.sourceType) ? undefined : workflow.sourceType);
+
+  if (!entityType) {
+    return 'entities';
+  }
+
+  return getEntityMeta(entityType)?.title ?? getEntityMeta(entityType)?.label ?? 'entity';
+}
+
+function resolveWorkflowEntity(workflow: IWorkflowDescriptor): TEntityTypeMeta {
+  const catalogKey = isMultipleWorkflowSource(workflow.sourceType)
+    ? workflow.targetType
+    : workflow.sourceType;
+
+  return (
+    EntityTypeCatalog[catalogKey] ?? {
+      value: catalogKey,
+      group: EntityGroupDict.Cellular,
+      label: workflow.label ?? String(catalogKey),
+    }
+  );
+}
+
 function resolveWorkflow(
   workflow: IWorkflowDescriptor,
   flags: FeatureFlags | undefined
 ): ResolvedWorkflow {
-  const entity = EntityTypeCatalog[workflow.sourceType] ?? {
-    value: workflow.sourceType,
-    group: EntityGroupDict.Cellular,
-    label: workflow.sourceType,
-  };
+  const entity = resolveWorkflowEntity(workflow);
   const entityFeaturesSatisfied = featuresSatisfied(entity.requiredFeatures, flags);
   const workflowFeaturesSatisfied = featuresSatisfied(workflow.requiredFeatures, flags);
   const disabled =
@@ -131,7 +384,7 @@ export function groupWorkflowsByEntityGroup<T extends { entity: TEntityTypeMeta 
 
 export function getWorkflow(opts: {
   activity: TActivityValue | string | null | undefined;
-  sourceType?: TExtendedEntitiesTypeDict;
+  sourceType?: TWorkflowSourceType;
   targetType?: TExtendedEntitiesTypeDict;
   context?: TWorkflowListContext;
 }): IWorkflowDescriptor | null {
@@ -151,7 +404,7 @@ export function getSourceType(opts: {
   activity: TActivityValue | string | null | undefined;
   targetType: TExtendedEntitiesTypeDict;
   context?: TWorkflowListContext;
-}): TExtendedEntitiesTypeDict | undefined {
+}): TWorkflowSourceType | undefined {
   return getWorkflow({
     activity: opts.activity,
     targetType: opts.targetType,
@@ -161,7 +414,7 @@ export function getSourceType(opts: {
 
 export function getTargetType(opts: {
   activity: TActivityValue | string | null | undefined;
-  sourceType: TExtendedEntitiesTypeDict;
+  sourceType: TWorkflowSourceType;
   context?: TWorkflowListContext;
 }): TExtendedEntitiesTypeDict | undefined {
   return getWorkflow({
@@ -177,7 +430,7 @@ export function getTargetType(opts: {
  */
 export function getConfigurationInputs(opts: {
   activity: TActivityValue | string | null | undefined;
-  sourceType?: TExtendedEntitiesTypeDict;
+  sourceType?: TWorkflowSourceType;
   targetType?: TExtendedEntitiesTypeDict;
   context?: TWorkflowListContext;
 }): readonly IWorkflowConfigurationInput[] {
@@ -185,18 +438,80 @@ export function getConfigurationInputs(opts: {
 }
 
 /**
- * Returns the primary configuration input (first required, falling back to
- * the first entry) for a workflow. Used by the pre-configure browse page to
- * decide which entity type to list and which filters to apply.
+ * returns the default configuration input (first required, falling back to the first entry)
  */
 export function getPrimaryConfigurationInput(opts: {
   activity: TActivityValue | string | null | undefined;
-  sourceType?: TExtendedEntitiesTypeDict;
+  sourceType?: TWorkflowSourceType;
   targetType?: TExtendedEntitiesTypeDict;
   context?: TWorkflowListContext;
 }): IWorkflowConfigurationInput | undefined {
   const inputs = getConfigurationInputs(opts);
   return inputs.find((i) => i.required !== false) ?? inputs[0];
+}
+
+/**
+ * merges workflow `configurationInputs` with optional schema-derived browse selection rules.
+ *
+ * Schema `selectionMode` wins when set and not {@link WorkflowInitializeSelectionMode.None};
+ * otherwise mode is `multiple` if any input allows `multiple`, else `single`. Fills
+ * `acceptedEntityTypes` from inputs and defaults `tableSelectionType` to radio/checkbox.
+ */
+function buildSelectionConfigFromConfigurationInputs(opts: {
+  inputs: readonly IWorkflowConfigurationInput[];
+  schemaSelection?: TWorkflowSelectionConfig | null;
+  activity?: TActivityValue | string | null | undefined;
+  targetType?: TExtendedEntitiesTypeDict;
+}): TWorkflowSelectionConfig {
+  const { inputs, schemaSelection, activity, targetType } = opts;
+  const resolvedSelectionMode =
+    schemaSelection?.selectionMode &&
+    schemaSelection.selectionMode !== WorkflowInitializeSelectionMode.None
+      ? schemaSelection.selectionMode
+      : inputs.some((input) => input.multiple)
+        ? WorkflowInitializeSelectionMode.Multiple
+        : WorkflowInitializeSelectionMode.Single;
+
+  const schemaName =
+    (activity && targetType
+      ? getWorkflowScanConfigSchemaName({ activity, targetType })
+      : undefined) ?? schemaSelection?.schemaName;
+
+  return {
+    schemaName,
+    uiElement: schemaSelection?.uiElement ?? null,
+    selectionMode: resolvedSelectionMode,
+    acceptedFromIdTypes: schemaSelection?.acceptedFromIdTypes ?? [],
+    acceptedEntityTypes: inputs.map((input) => input.type),
+    tableSelectionType:
+      schemaSelection?.tableSelectionType ??
+      (resolvedSelectionMode === WorkflowInitializeSelectionMode.Single ? 'radio' : 'checkbox'),
+  };
+}
+
+export function resolveWorkflowBrowseSelectionConfig(opts: {
+  activity: TActivityValue | string | null | undefined;
+  sourceType?: TWorkflowSourceType;
+  targetType?: TExtendedEntitiesTypeDict;
+  context?: TWorkflowListContext;
+  schemaSelection?: TWorkflowSelectionConfig | null;
+}): TWorkflowSelectionConfig | null {
+  const workflow = getWorkflow(opts);
+  if (!workflow?.isScanConfig) {
+    return null;
+  }
+
+  const inputs = getConfigurationInputs(opts);
+  if (inputs.length === 0) {
+    return null;
+  }
+
+  return buildSelectionConfigFromConfigurationInputs({
+    inputs,
+    schemaSelection: opts.schemaSelection,
+    activity: opts.activity,
+    targetType: opts.targetType,
+  });
 }
 
 const sectionToActivity: Partial<Record<TWorkspaceSection, TActivityValue>> = {
@@ -214,6 +529,40 @@ const sectionToActivity: Partial<Record<TWorkspaceSection, TActivityValue>> = {
  * Internally reads the first required `configurationInputs` entry, falling
  * back to the workflow's `sourceType` for back-compat.
  */
+export function getWorkflowScanConfigSchemaName(opts: {
+  activity: TActivityValue | string | null | undefined;
+  sourceType?: TWorkflowSourceType;
+  targetType?: TExtendedEntitiesTypeDict;
+  context?: TWorkflowListContext;
+}): SchemaName | undefined {
+  const workflow = getWorkflow(opts);
+  if (!workflow?.isScanConfig || !opts.activity) {
+    return undefined;
+  }
+
+  const scanConfigActivity = getWorkflowScanConfigActivity(opts.activity);
+  if (!scanConfigActivity) {
+    return undefined;
+  }
+
+  const entityType = getWorkflowScanConfigEntityType({
+    workflow,
+    activity: opts.activity as TActivityValue,
+  });
+  if (!entityType) {
+    return undefined;
+  }
+
+  try {
+    return getScanConfigSchemaName({
+      activity: scanConfigActivity,
+      entityType,
+    });
+  } catch {
+    return undefined;
+  }
+}
+
 export function getBaseModelType(opts: {
   section: TWorkspaceSection;
   type: TExtendedEntitiesTypeDict;
@@ -228,7 +577,15 @@ export function getBaseModelType(opts: {
   if (!workflow) return undefined;
   const inputs = workflow.configurationInputs ?? [];
   const required = inputs.find((i) => i.required !== false);
-  return required?.type ?? workflow.sourceType;
+  if (required?.type) {
+    return required.type;
+  }
+
+  if (isMultipleWorkflowSource(workflow.sourceType)) {
+    return inputs[0]?.type;
+  }
+
+  return workflow.sourceType as TExtendedEntitiesTypeDict;
 }
 
 export function getWorkflowSegment(url: string): TActivityValue | null {

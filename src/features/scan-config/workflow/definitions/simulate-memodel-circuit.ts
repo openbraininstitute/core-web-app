@@ -9,7 +9,7 @@ export const simulateMemodelCircuitWorkflow = defineScanConfigWorkflow({
   id: 'simulate-memodel-circuit',
   activity: ScanConfigActivity.Simulate,
   entity: {
-    mode: ScanConfigEntitySourceMode.RouteId,
+    mode: ScanConfigEntitySourceMode.Session,
     query: scanConfigEntityQueries.meModel,
   },
   campaign: {

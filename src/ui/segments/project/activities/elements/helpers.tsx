@@ -115,18 +115,21 @@ function buildScales(): Partial<Record<TExtendedEntitiesTypeDict, TScaleActivity
 
     for (const workflow of workflows) {
       const scaleType =
-        activity === ActivityValues.Build && workflow.needsBrowse
+        activity === ActivityValues.Build && workflow.isScanConfig
           ? workflow.targetType
           : workflow.sourceType;
-      const entity = getEntityMeta(scaleType);
-      const existing = scales[scaleType];
+      const resolvedScaleType =
+        scaleType === 'multiple' ? workflow.targetType : (scaleType as TExtendedEntitiesTypeDict);
+      const entity = getEntityMeta(resolvedScaleType);
+      const existing = scales[resolvedScaleType];
 
-      scales[scaleType] = {
-        title: existing?.title ?? workflow.label ?? entity?.title ?? entity?.label ?? scaleType,
+      scales[resolvedScaleType] = {
+        title:
+          existing?.title ?? workflow.label ?? entity?.title ?? entity?.label ?? resolvedScaleType,
         build: activity === ActivityValues.Build ? workflow.targetType : (existing?.build ?? null),
         simulate:
           activity === ActivityValues.Simulate ? workflow.targetType : (existing?.simulate ?? null),
-        link: existing?.link ?? (workflow.needsBrowse ? 'workflows' : 'explore'),
+        link: existing?.link ?? (workflow.isScanConfig ? 'workflows' : 'explore'),
       };
     }
   }

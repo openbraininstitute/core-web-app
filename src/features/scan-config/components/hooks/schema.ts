@@ -149,7 +149,11 @@ export function isRootBlockSingle(schema: ConfigSchema, key: string) {
   );
 }
 
-async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
+export async function fetchSchema({
+  schemaName,
+}: {
+  schemaName: SchemaName;
+}): Promise<ConfigSchema> {
   const res = await fetch(`${config.OBI_ONE_URL}/openapi.json`);
   const json = await res.json();
   const dereferenced = await $RefParser.dereference(json);

@@ -1,16 +1,15 @@
 export {
-  type TScanConfigurationReadyState as ScanConfigurationReadyState,
-  type TUseScanConfigurationParams as UseScanConfigurationParams,
-  type TUseScanConfigurationResult as UseScanConfigurationResult,
+  type TScanConfigurationReadyState,
+  type TUseScanConfigurationParams,
+  type TUseScanConfigurationResult,
   useScanConfiguration,
 } from '@/features/scan-config/components/hooks/use-scan-configuration';
 export {
-  type UseScanConfigOriginCampaignParams as UseScanConfigCampaignParams,
-  useScanConfigOriginCampaign as useScanConfigCampaign,
+  type TUseScanConfigOriginCampaignParams,
+  useScanConfigOriginCampaign,
 } from '@/features/scan-config/components/hooks/use-scan-origin-campaign';
 export {
   ScanConfigContainer,
-  ScanConfigContainer as ScanConfiguration,
   ScanConfigContainer as default,
   type ScanConfigContainerProps,
 } from '@/features/scan-config/container';
@@ -25,8 +24,8 @@ export {
 } from '@/features/scan-config/workflow';
 
 export type {
-  ScanConfigCampaignSource,
-  ScanConfigEditorOptions,
-  ScanConfigEntitySource,
-  ScanConfigWorkflowDefinition,
+  TScanConfigCampaignSource,
+  TScanConfigEditorOptions,
+  TScanConfigEntitySource,
+  TScanConfigWorkflowDefinition,
 } from '@/features/scan-config/workflow';

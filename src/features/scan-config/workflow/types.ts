@@ -9,6 +9,7 @@ import type {
   TSchemaMappingKey,
   TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import type { TWorkflowSelectionPayload } from '@/features/scan-config/workflow/selection/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export type TCampaignWithFormConfig = {
@@ -26,18 +27,19 @@ export type TEntityRouteQuery<TEntity extends TSupportedEntitiesForScanConfigura
 };
 
 export const ScanConfigEntitySourceMode = {
-  RouteId: 'route-id',
+  Session: 'session',
   StaticType: 'static-type',
 } as const;
 export type TScanConfigEntitySourceMode =
   (typeof ScanConfigEntitySourceMode)[keyof typeof ScanConfigEntitySourceMode];
-/** How the configure step resolves its target entity(ies). Extend with new modes as flows grow. */
+/** How the configure step resolves its target entity(ies). */
 export type TScanConfigEntitySource =
   | {
-      mode: typeof ScanConfigEntitySourceMode.RouteId;
-      /** Route param name. Defaults to `id`. */
+      mode: typeof ScanConfigEntitySourceMode.Session;
+      /** Route param name for the workflow session id. Defaults to `id`. */
       param?: string;
-      query: TEntityRouteQuery<TSupportedEntitiesForScanConfiguration>;
+      /** When set, loads the primary entity from the first ref in session selection. */
+      query?: TEntityRouteQuery<TSupportedEntitiesForScanConfiguration>;
     }
   | {
       mode: typeof ScanConfigEntitySourceMode.StaticType;
@@ -70,10 +72,11 @@ export type TResolvedScanConfigEntity = {
   entity: TSupportedEntitiesForScanConfiguration | null;
   entityType: TExtendedEntitiesTypeDict;
   entityId?: string;
+  workflowSelection: TWorkflowSelectionPayload | null;
 };
 
 export type TResolvedScanConfigCampaign = {
-  initialCampaignId?: string;
+  originId?: string;
   initialConfig?: Config;
   campaignData: TCampaignWithFormConfig | null | undefined;
   isLoading: boolean;
@@ -102,9 +105,9 @@ export type TScanConfigWorkflowContextValue = {
 export type TScanConfigWorkflowPageProps = {
   definition: TScanConfigWorkflowDefinition;
   workspace: WorkspaceContext;
-  routeParams: Record<string, string | undefined>;
   searchParams: Record<string, string | string[] | undefined>;
-  /** Override default Frame + Editor + Aside layout. */
+  routeParams: Record<string, string | undefined>;
+  /** override default frame + editor + aside layout */
   children?: ReactNode;
 };
 

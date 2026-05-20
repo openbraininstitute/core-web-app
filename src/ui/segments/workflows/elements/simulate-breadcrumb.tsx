@@ -8,7 +8,6 @@ import { upperFirst } from 'node_modules/es-toolkit/dist/string/upperFirst.mjs';
 import { convertEntitySlugToExtendedType } from '@/api/entitycore/utils';
 import { config } from '@/config';
 import { WorkflowActivityDictValue } from '@/constants';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   Breadcrumb,
@@ -19,9 +18,9 @@ import {
 } from '@/ui/molecules/breadcrumb/index';
 import {
   getActivity,
-  getBaseModelType,
   getEntityMeta,
   getWorkflow,
+  getWorkflowBrowseSelectionLabel,
   getWorkflowSegment,
 } from '@/ui/segments/workflows/config';
 
@@ -33,7 +32,7 @@ type Props = {
   section: TWorkspaceSection;
 };
 
-export function SimulateWorkflowsBreadcrumb({ section }: Props) {
+export function SimulateWorkflowsBreadcrumb(_props: Props) {
   const pathname = usePathname();
   const segment = getWorkflowSegment(pathname);
 
@@ -43,10 +42,11 @@ export function SimulateWorkflowsBreadcrumb({ section }: Props) {
   const dataType = convertEntitySlugToExtendedType({ type });
   const category = getActivity(segment)?.name;
 
-  const baseType = getBaseModelType({ type: dataType, section });
-  const selectTitle =
-    getEntityMeta(baseType)?.label ?? getEntityByExtendedType({ type: baseType })?.title;
-  const baseTitle = getEntityMeta(baseType)?.label;
+  const selectTitle = getWorkflowBrowseSelectionLabel({
+    activity: segment,
+    targetType: dataType,
+  });
+  const buildTitle = getEntityMeta(dataType)?.label;
   const resolvedWorkflow =
     segment && dataType
       ? (getWorkflow({
@@ -62,7 +62,7 @@ export function SimulateWorkflowsBreadcrumb({ section }: Props) {
   const leftTitle =
     segment === WorkflowActivityDictValue.process && workflowLabel
       ? `${workflowLabel} data processing`
-      : [baseTitle, category].filter(Boolean).join(' ');
+      : [buildTitle, category].filter(Boolean).join(' ');
 
   const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
 
@@ -82,7 +82,7 @@ export function SimulateWorkflowsBreadcrumb({ section }: Props) {
             <RightOutlined className="text-sm" />
           </BreadcrumbSeparator>
           <BreadcrumbItem className="text-primary-9 hover:text-primary-7 text-lg font-bold select-none cursor-pointer">
-            {upperFirst(`Select ${selectTitle ?? 'entity'}`.toLocaleLowerCase())}
+            {upperFirst(`Select ${selectTitle}`.toLocaleLowerCase())}
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

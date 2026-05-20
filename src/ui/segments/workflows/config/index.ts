@@ -9,18 +9,34 @@ export {
   getSourceType,
   getTargetType,
   getWorkflow,
+  getWorkflowBrowseSelectionLabel,
+  getWorkflowInitialStage,
+  getWorkflowInitialStageFromSelection,
+  getWorkflowScanConfigActivity,
+  getWorkflowScanConfigEntityType,
+  getWorkflowScanConfigSchemaName,
   getWorkflowSegment,
   groupWorkflowsByEntityGroup,
+  isMultipleWorkflowSource,
   listActivities,
   listWorkflows,
+  resolveWorkflowBrowseSelectionConfig,
+  resolveWorkflowInitialStage,
+  workflowAllowsBrowseRoute,
+  workflowHasMultipleSelectionInputs,
 } from './helpers';
 export {
   EntityGroupDict,
+  WORKFLOW_SESSION_ID_SEARCH_PARAM,
+  WorkflowBrowseDefaults,
+  WorkflowInitialStagePolicyDict,
   WorkflowListContextDict,
   WorkflowListSortDict,
-  WorkflowSessionIdSearchParam,
+  WorkflowSelectionSourceTypeDict,
+  WorkflowStagePresets,
 } from './types';
 
+export type { TResolvedWorkflowInitialStage } from './helpers';
 export type {
   IWorkflowConfigurationInput as WorkflowConfigurationInput,
   IWorkflowDescriptor as WorkflowDescriptor,
@@ -30,5 +46,6 @@ export type {
   TEntityGroupValue,
   TEntityTypeMeta as EntityTypeMeta,
   TGroupedWorkflows as GroupedWorkflows,
+  TWorkflowInitialStagePolicy,
   TWorkflowListContext as WorkflowListContext,
 } from './types';

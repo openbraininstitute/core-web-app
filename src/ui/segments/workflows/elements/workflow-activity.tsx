@@ -39,6 +39,7 @@ import {
   getTaskCampaignStatusCountMap,
   type TTaskCampaignRow,
 } from '@/entity-configuration/domain/task-functions';
+import { buildScanConfigConfigureHrefWithOrigin } from '@/features/scan-config/workflow/selection';
 import { isSimulateCircuitSourceType } from '@/features/scan-config/workflow/simulate-circuit-workflows';
 import { LegacyCampaignStatusCell } from '@/features/task-runner/activity-execution/legacy-status-cell';
 import { ActivityAggregatedStatus } from '@/features/task-runner/activity-execution/status';
@@ -58,7 +59,12 @@ import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ORIGINAL_CAMPAIGN_ID_QUERY } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-import { ActivityValues, getActivity, getWorkflow } from '@/ui/segments/workflows/config';
+import {
+  ActivityValues,
+  getActivity,
+  getPrimaryConfigurationInput,
+  getWorkflow,
+} from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
@@ -368,78 +374,115 @@ export function WorkflowActivity() {
   );
   const resultsActionLink = resultsLink ?? undefined;
 
+  const workflowBase = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
+
   const onDuplicate = () => {
-    if (selectedRow?.type === ExtendedEntitiesTypeDict.TaskConfig) {
+    if (!selectedRow) {
+      return;
+    }
+
+    if (selectedRow.type === ExtendedEntitiesTypeDict.TaskConfig) {
       const taskConfig = selectedRow as ITaskConfig<Record<string, unknown>>;
       if (taskConfig.task_config_type === TaskConfigType.CircuitExtractionCampaign) {
         const circuitId = taskConfig.inputs.at(0)?.id;
+        if (!circuitId) return;
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/extract/configure/circuit/${
-            circuitId
-          }?initialCampaignId=${selectedRow.id}`
+          buildScanConfigConfigureHrefWithOrigin({
+            configurePathPrefix: `${workflowBase}/extract/configure/circuit`,
+            entityType: ExtendedEntitiesTypeDict.Circuit,
+            entityId: circuitId,
+            originId: selectedRow.id,
+          })
         );
+        return;
       }
       if (taskConfig.task_config_type === TaskConfigType.SkeletonizationCampaign) {
         const emCellMeshId = taskConfig.inputs.at(0)?.id;
+        if (!emCellMeshId) return;
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/process/configure/em-cell-mesh/${
-            emCellMeshId
-          }?initialCampaignId=${selectedRow.id}`
+          buildScanConfigConfigureHrefWithOrigin({
+            configurePathPrefix: `${workflowBase}/process/configure/em-cell-mesh`,
+            entityType: ExtendedEntitiesTypeDict.EMCellMesh,
+            entityId: emCellMeshId,
+            originId: selectedRow.id,
+          })
         );
+        return;
       }
-      if (
-        (selectedRow as ITaskConfig<any>).task_config_type ===
-        TaskConfigType.EmSynapseMappingCampaign
-      ) {
-        const morphologyId = (selectedRow as ITaskConfig<any>).inputs.at(0)?.id;
+      if (taskConfig.task_config_type === TaskConfigType.EmSynapseMappingCampaign) {
+        const morphologyId = taskConfig.inputs.at(0)?.id;
+        if (!morphologyId) return;
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/em-synapse-mapping-campaign/${morphologyId}?initialCampaignId=${selectedRow?.id}`
+          buildScanConfigConfigureHrefWithOrigin({
+            configurePathPrefix: `${workflowBase}/build/configure/em-synapse-mapping-campaign`,
+            entityType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
+            entityId: morphologyId,
+            originId: selectedRow.id,
+          })
         );
+        return;
       }
     }
     if (entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/ion-channel-modeling-campaign?${ORIGINAL_CAMPAIGN_ID_QUERY}=${selectedRow?.id}`
+        `${workflowBase}/build/configure/ion-channel-modeling-campaign?${ORIGINAL_CAMPAIGN_ID_QUERY}=${selectedRow.id}`
       );
       return;
     }
     if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
+      const entityId = (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id;
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/me-model-circuit/${
-          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id
-        }?initialCampaignId=${selectedRow?.id}`
+        buildScanConfigConfigureHrefWithOrigin({
+          configurePathPrefix: `${workflowBase}/simulate/configure/${kebabCase(ExtendedEntitiesTypeDict.MemodelCircuit)}`,
+          entityType: ExtendedEntitiesTypeDict.MemodelCircuit,
+          entityId,
+          originId: selectedRow.id,
+        })
       );
-
       return;
     }
     if (
-      selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign &&
+      selectedRow.type === ExtendedEntitiesTypeDict.SimulationCampaign &&
       entityType === ExtendedEntitiesTypeDict.IonChannelModelSimulation
     ) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${kebabCase(ExtendedEntitiesTypeDict.IonChannelModelSimulation)}?initialCampaignId=${selectedRow.id}`
+        `${workflowBase}/simulate/configure/${kebabCase(ExtendedEntitiesTypeDict.IonChannelModelSimulation)}?originId=${selectedRow.id}`
       );
       return;
     }
-    if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign && entityType) {
+    if (selectedRow.type === ExtendedEntitiesTypeDict.SimulationCampaign && entityType) {
       const workflow = getWorkflow({
         activity: WorkflowActivityDictValue.simulate,
         targetType: entityType,
       });
       const entityId = (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id;
-      const query = new URLSearchParams({ initialCampaignId: selectedRow.id });
+      const workflowSourceType =
+        getPrimaryConfigurationInput({
+          activity: WorkflowActivityDictValue.simulate,
+          targetType: entityType,
+        })?.type ?? entityType;
 
-      if (workflow && isSimulateCircuitSourceType(workflow.sourceType)) {
-        query.set('dataType', workflow.sourceType);
+      if (workflow && isSimulateCircuitSourceType(workflowSourceType)) {
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${entityId}?${query}`
+          buildScanConfigConfigureHrefWithOrigin({
+            configurePathPrefix: `${workflowBase}/simulate/configure/circuit`,
+            entityType: workflowSourceType,
+            entityId,
+            originId: selectedRow.id,
+            query: { dataType: workflowSourceType },
+          })
         );
         return;
       }
 
-      const configureSegment = workflow ? kebabCase(workflow.sourceType) : 'circuit';
+      const configureSegment = workflow ? kebabCase(workflowSourceType) : 'circuit';
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${configureSegment}/${entityId}?${query}`
+        buildScanConfigConfigureHrefWithOrigin({
+          configurePathPrefix: `${workflowBase}/simulate/configure/${configureSegment}`,
+          entityType: workflowSourceType,
+          entityId,
+          originId: selectedRow.id,
+        })
       );
     }
   };

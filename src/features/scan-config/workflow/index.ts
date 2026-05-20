@@ -1,4 +1,5 @@
 export { ScanConfigWorkflow } from '@/features/scan-config/workflow/components';
+export { SCAN_CONFIG_ORIGIN_ID_SEARCH_PARAM } from '@/features/scan-config/workflow/constants';
 export {
   ScanConfigWorkflowProvider,
   useScanConfigWorkflow,
@@ -15,20 +16,25 @@ export {
   type ScanConfigWorkflowConfigurePageProps,
 } from '@/features/scan-config/workflow/page-template';
 export {
+  buildScanConfigConfigureHref,
+  buildScanConfigConfigureHrefWithOrigin,
+  persistSingleSelectionForConfigure,
+} from '@/features/scan-config/workflow/selection';
+export {
   getSimulateCircuitWorkflow,
   isSimulateCircuitSourceType,
   simulateCircuitWorkflowBySourceType,
 } from '@/features/scan-config/workflow/simulate-circuit-workflows';
 
 export type {
-  TCampaignResolver as CampaignResolver,
-  TCampaignWithFormConfig as CampaignWithFormConfig,
-  TCreateScanConfigWorkflowPageOptions as CreateScanConfigWorkflowPageOptions,
-  TEntityRouteQuery as EntityRouteQuery,
-  TScanConfigCampaignSource as ScanConfigCampaignSource,
-  TScanConfigEditorOptions as ScanConfigEditorOptions,
-  TScanConfigEntitySource as ScanConfigEntitySource,
-  TScanConfigWorkflowContextValue as ScanConfigWorkflowContextValue,
-  TScanConfigWorkflowDefinition as ScanConfigWorkflowDefinition,
-  TScanConfigWorkflowStatus as ScanConfigWorkflowStatus,
+  TCampaignResolver,
+  TCampaignWithFormConfig,
+  TCreateScanConfigWorkflowPageOptions,
+  TEntityRouteQuery,
+  TScanConfigCampaignSource,
+  TScanConfigEditorOptions,
+  TScanConfigEntitySource,
+  TScanConfigWorkflowContextValue,
+  TScanConfigWorkflowDefinition,
+  TScanConfigWorkflowStatus,
 } from '@/features/scan-config/workflow/types';

@@ -111,6 +111,12 @@ type Props = {
   /** whether to display the brain region dropdown */
   requireSpeciesSelector?: boolean;
   requireScopeSelector?: boolean;
+  requireEntityTypeSelector?: {
+    value: TExtendedEntitiesTypeDict;
+    options: Array<{ label: string; value: TExtendedEntitiesTypeDict; count?: number }>;
+    enabled: boolean;
+    onSelect: (value: TExtendedEntitiesTypeDict) => void;
+  };
   extraQueryParams?: Record<string, unknown>;
 };
 
@@ -132,6 +138,7 @@ export function BrowseEntityScope({
   allowQuery = true,
   requireSpeciesSelector,
   requireScopeSelector,
+  requireEntityTypeSelector,
   extraQueryParams,
 }: Props) {
   const requireBrainRegion =
@@ -140,6 +147,7 @@ export function BrowseEntityScope({
   const { virtualLabId, projectId } = useWorkspace();
   const { mdv, setMdv } = useMiniDetailView();
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
+
   const scopeFilter = getWorkspaceScopeFilters(scope, {
     virtualLabId,
     projectId,
@@ -399,6 +407,7 @@ export function BrowseEntityScope({
             allowSearch={allowSearch}
             requireSpeciesSelector={requireSpeciesSelector}
             requireScopeSelector={requireScopeSelector}
+            requireEntityTypeSelector={requireEntityTypeSelector}
             sticky={{ offsetHeader: 75.5 }}
             isLoading={isFetching}
             dataScope={scope}

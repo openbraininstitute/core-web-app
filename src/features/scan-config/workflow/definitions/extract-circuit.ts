@@ -9,7 +9,7 @@ export const extractCircuitWorkflow = defineScanConfigWorkflow({
   id: 'extract-circuit',
   activity: ScanConfigActivity.Extract,
   entity: {
-    mode: ScanConfigEntitySourceMode.RouteId,
+    mode: ScanConfigEntitySourceMode.Session,
     query: scanConfigEntityQueries.circuit,
   },
   campaign: {

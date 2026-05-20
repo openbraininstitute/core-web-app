@@ -8,7 +8,6 @@ import { upperFirst } from 'node_modules/es-toolkit/dist/string/upperFirst.mjs';
 
 import { config } from '@/config';
 import { WorkflowActivityDictValue } from '@/constants';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   Breadcrumb,
@@ -20,7 +19,7 @@ import {
 import {
   getActivity,
   getEntityMeta,
-  getPrimaryConfigurationInput,
+  getWorkflowBrowseSelectionLabel,
   getWorkflowSegment,
 } from '@/ui/segments/workflows/config';
 
@@ -37,16 +36,10 @@ export function BuildWorkflowsBreadcrumb() {
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
   const category = getActivity(segment)?.name;
 
-  // when the active workflow has configurationInputs (needsBrowse), the user
-  // is selecting the input entity, surface that in the breadcrumb instead of
-  // the target entity
-  const primaryInput = getPrimaryConfigurationInput({
+  const selectTitle = getWorkflowBrowseSelectionLabel({
     activity: WorkflowActivityDictValue.build,
     targetType: dataType,
   });
-  const browseType = (primaryInput?.type as TExtendedEntitiesTypeDict | undefined) ?? dataType;
-
-  const selectTitle = getEntityByExtendedType({ type: browseType })?.title;
   const buildTitle = getEntityMeta(dataType)?.label;
   const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
   const leftTitle = [buildTitle, category].filter(Boolean).join(' ');

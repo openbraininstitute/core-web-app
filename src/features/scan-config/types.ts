@@ -171,10 +171,12 @@ export interface StringInput extends TBlockElement {
 
 export interface ModelIdentifier extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifier;
+  accepted_input_types?: readonly string[];
 }
 
 export interface ModelIdentifierMultiple extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifierMultiple;
+  accepted_input_types?: readonly string[];
 }
 export interface FloatParameterSweep extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.FloatParameterSweep;

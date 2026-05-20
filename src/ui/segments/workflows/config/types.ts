@@ -3,7 +3,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { WorkflowActivityDictValue } from '@/constants';
 import type { FlagKey } from '@/features/feature-flags/flags';
 
-export const WorkflowSessionIdSearchParam = 'sessionId';
+export const WORKFLOW_SESSION_ID_SEARCH_PARAM = 'session';
 
 export const EntityGroupDict = {
   Subcellular: 'Subcellular',
@@ -16,6 +16,16 @@ export type TEntityGroupValue = (typeof EntityGroupDict)[keyof typeof EntityGrou
 
 export type TActivityValue =
   (typeof WorkflowActivityDictValue)[keyof typeof WorkflowActivityDictValue];
+
+/** Pseudo source type when a workflow accepts multiple entity types via `configurationInputs`. */
+export const WorkflowSelectionSourceTypeDict = {
+  Multiple: 'multiple',
+} as const;
+
+export type TWorkflowSelectionSourceType =
+  (typeof WorkflowSelectionSourceTypeDict)[keyof typeof WorkflowSelectionSourceTypeDict];
+
+export type TWorkflowSourceType = TExtendedEntitiesTypeDict | TWorkflowSelectionSourceType;
 
 /**
  * Presentation metadata for an extended entity type. Used for labels, grouping,
@@ -33,8 +43,9 @@ export type TEntityTypeMeta = {
 };
 
 /**
- * An entity the user must pick during the configuration step of a workflow.
- * A workflow can declare zero, one or many inputs.
+ * An entity the user can pick on the workflow `/new` browse step.
+ * Declare every allowed input type here, including per-type filters.
+ * Table selection mode (radio vs checkbox) comes from the scan config schema.
  */
 export type IWorkflowConfigurationInput = {
   type: TExtendedEntitiesTypeDict;
@@ -44,9 +55,34 @@ export type IWorkflowConfigurationInput = {
   filters?: Record<string, unknown>;
 };
 
+/** how the hub picks the first route segment (`new` browse vs `configure`). */
+export const WorkflowInitialStagePolicyDict = {
+  /** skip entity browse; open configure directly */
+  Configure: 'configure',
+  /** always open `/new` entity browse first */
+  Browse: 'browse',
+  /** `new` vs `configure` from scan-config schema `initialize` (single/multiple/grouped vs none) */
+  Schema: 'schema',
+} as const;
+
+export type TWorkflowInitialStagePolicy =
+  (typeof WorkflowInitialStagePolicyDict)[keyof typeof WorkflowInitialStagePolicyDict];
+
 export type IWorkflowDescriptor = {
-  sourceType: TExtendedEntitiesTypeDict;
+  sourceType: TWorkflowSourceType;
   targetType: TExtendedEntitiesTypeDict;
+  /** first route segment after choosing this workflow on the hub */
+  initialStage: TWorkflowInitialStagePolicy;
+  /**
+   * when set, overrides default session attachment on hub navigation
+   * (default: attach when resolved stage is `new`)
+   */
+  attachSessionOnNavigate?: boolean;
+  /**
+   * when `true`, load ObiOne schema for browse selection mode and configure wiring
+   * (via {@link getScanConfigSchemaName}).
+   */
+  isScanConfig: boolean;
   /**
    * Entity type(s) the user must pick during the configuration step.
    * - Build workflows: usually empty (creating from scratch).
@@ -65,16 +101,34 @@ export type IWorkflowDescriptor = {
   order?: number;
   beta?: boolean;
   requiredFeatures?: readonly FlagKey[];
-  /**
-   * When `true`, the configuration flow first routes to a browse page
-   * (`/workflows/<activity>/new/<kebab(targetType)>`) where the user picks
-   * the primary `configurationInputs` entity before landing on the configure
-   * page (`/workflows/<activity>/configure/<kebab(targetType)>/<id>`).
-   *
-   * When `false` or omitted, the configure page is opened directly.
-   */
-  needsBrowse?: boolean;
+  /** When true, browse table shows species / brain region selector. */
+  requireSpecies: boolean;
+  /** When true, browse table shows workspace scope selector. */
+  requireScope: boolean;
 };
+
+/** shared {@link IWorkflowDescriptor} fragments for activity registry entries */
+export const WorkflowStagePresets = {
+  LegacyBuild: {
+    initialStage: WorkflowInitialStagePolicyDict.Configure,
+    attachSessionOnNavigate: true,
+  },
+  LegacySimulateBrowse: {
+    initialStage: WorkflowInitialStagePolicyDict.Browse,
+    attachSessionOnNavigate: false,
+  },
+  ScanConfig: {
+    initialStage: WorkflowInitialStagePolicyDict.Schema,
+  },
+  Disabled: {
+    initialStage: WorkflowInitialStagePolicyDict.Configure,
+  },
+} as const;
+
+export const WorkflowBrowseDefaults = {
+  requireSpecies: false,
+  requireScope: false,
+} as const satisfies Pick<IWorkflowDescriptor, 'requireSpecies' | 'requireScope'>;
 
 export type TActivityEntry = {
   value: TActivityValue;

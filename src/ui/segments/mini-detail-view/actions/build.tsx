@@ -6,6 +6,7 @@ import { WorkflowActivityDictValue } from '@/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { getWorkflow } from '@/ui/segments/workflows/config';
+import { WorkflowConfigureUseModelLink } from '@/ui/segments/workflows/elements/workflow-link';
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
@@ -17,22 +18,23 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({
   record,
   dataType,
+  hideUseModelAction = false,
 }: {
   record: T;
   dataType?: TExtendedEntitiesTypeDict;
+  hideUseModelAction?: boolean;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
 
-  // When the listing represents a Build workflow's input entity (configurationInputs),
-  // the configure page lives under the workflow's `targetType` (e.g.
-  // /workflows/build/configure/em-synapse-mapping-campaign/<id>), not under the
-  // raw record type. Fall back to `record.type` for the legacy flows.
   const sourceType = (dataType ?? record.type) as TExtendedEntitiesTypeDict;
   const workflow = getWorkflow({
     activity: WorkflowActivityDictValue.build,
     sourceType,
   });
   const configureSegment = kebabCase(workflow?.targetType ?? record.type);
+  const workflowBase = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build`;
+  const useModelButtonClassName =
+    'hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]';
 
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
@@ -41,7 +43,7 @@ export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({
         asChild
         title="Go to details page"
         variant="default"
-        className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
+        className={useModelButtonClassName}
       >
         <Link
           href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`}
@@ -49,25 +51,22 @@ export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({
           View details
         </Link>
       </Button>
-      <Button
-        rounded
-        asChild
-        title="Start build"
-        variant="default"
-        className="hover:bg-primary-7/40 h-12 border border-white/16 px-10 font-bold shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]"
-      >
-        <Link
-          href={{
-            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${configureSegment}/${record.id}`,
-            query: {
-              sessionId: crypto.randomUUID(),
-              [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
-            },
+      {!hideUseModelAction && (
+        <WorkflowConfigureUseModelLink
+          rounded
+          title="Start build"
+          variant="default"
+          className={useModelButtonClassName}
+          configurePathPrefix={`${workflowBase}/configure/${configureSegment}`}
+          entityType={sourceType}
+          entityId={record.id}
+          query={{
+            [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
           }}
         >
           Use model
-        </Link>
-      </Button>
+        </WorkflowConfigureUseModelLink>
+      )}
     </div>
   );
 }

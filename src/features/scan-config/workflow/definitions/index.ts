@@ -17,7 +17,7 @@ export function defineSimulateCircuitScanConfigWorkflow({
     id,
     activity: ScanConfigActivity.Simulate,
     entity: {
-      mode: ScanConfigEntitySourceMode.RouteId,
+      mode: ScanConfigEntitySourceMode.Session,
       query: scanConfigEntityQueries.circuit,
     },
     campaign: { resolve },

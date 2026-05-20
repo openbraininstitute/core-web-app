@@ -13,7 +13,7 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
 type ConfigurePageParams = WorkspaceContext & { id?: string };
 type ConfigurePageSearchParams = {
-  initialCampaignId?: string;
+  originId?: string;
   [key: string]: string | string[] | undefined;
 };
 

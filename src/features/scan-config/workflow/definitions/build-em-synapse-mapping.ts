@@ -9,7 +9,7 @@ export const buildEmSynapseMappingWorkflow = defineScanConfigWorkflow({
   id: 'build-em-synapse-mapping',
   activity: ScanConfigActivity.Build,
   entity: {
-    mode: ScanConfigEntitySourceMode.RouteId,
+    mode: ScanConfigEntitySourceMode.Session,
     query: scanConfigEntityQueries.cellMorphology,
   },
   campaign: {

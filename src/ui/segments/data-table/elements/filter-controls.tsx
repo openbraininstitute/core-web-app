@@ -62,10 +62,10 @@ export function FilterControls({
         <FilterBtn
           disabled={disabled}
           onClick={onFilterClick}
-          className="hover:bg-neutral-1 group min-w-max bg-white select-none"
+          className="hover:bg-neutral-1 group min-w-max bg-white select-none rounded-full h-12!"
         >
           <div className="flex items-center gap-1">
-            <span className="bg-primary-8 rounded-sm px-2.5 py-1 text-sm font-bold text-white">
+            <span className="bg-primary-8 rounded-full px-2.5 py-1 text-sm font-bold text-white">
               {selectedFiltersCount}
             </span>
             <div className="flex flex-col items-start">

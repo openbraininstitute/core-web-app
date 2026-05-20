@@ -14,10 +14,10 @@ import type {
 } from '@/features/scan-config/workflow/types';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 
-type ConfigurePageParams = WorkspaceContext & { id?: string };
-type ConfigurePageSearchParams = {
+type TConfigurePageParams = WorkspaceContext & { id?: string };
+type TConfigurePageSearchParams = {
   dataType?: string;
-  initialCampaignId?: string;
+  originId?: string;
   [key: string]: string | string[] | undefined;
 };
 
@@ -26,10 +26,10 @@ type ConfigurePageSearchParams = {
  * keeps page files to a single declarative export
  *
  * @example
- * export default createScanConfigWorkflowPage(simulateSmallMicrocircuitWorkflow);
+ * export default makeScanConfigWorkflowPage(simulateSmallMicrocircuitWorkflow);
  *
  * @example
- * export default createScanConfigWorkflowPage(extractCircuitWorkflow, {
+ * export default makeScanConfigWorkflowPage(extractCircuitWorkflow, {
  *   aside: <DownloadPanel />,
  * });
  */
@@ -38,7 +38,7 @@ export function makeScanConfigWorkflowPage(
   options?: TCreateScanConfigWorkflowPageOptions
 ) {
   log('debug', '[MakeScanConfigWorkflowPage]', { definition, options });
-  function Page(props: ServerSideComponentProp<ConfigurePageParams, ConfigurePageSearchParams>) {
+  function Page(props: ServerSideComponentProp<TConfigurePageParams, TConfigurePageSearchParams>) {
     return (
       <ScanConfigWorkflowConfigurePage definition={definition} aside={options?.aside} {...props} />
     );
@@ -53,7 +53,7 @@ export function makeScanConfigWorkflowPage(
  * resolves the workflow definition from `?dataType=`, then delegates to {@link makeScanConfigWorkflowPage}
  */
 export function makeSimulateCircuitScanConfigPage(options?: TCreateScanConfigWorkflowPageOptions) {
-  function Page(props: ServerSideComponentProp<ConfigurePageParams, ConfigurePageSearchParams>) {
+  function Page(props: ServerSideComponentProp<TConfigurePageParams, TConfigurePageSearchParams>) {
     const searchParams = use(props.searchParams);
     const rawDataType = searchParams.dataType;
     const dataType = typeof rawDataType === 'string' ? rawDataType : undefined;

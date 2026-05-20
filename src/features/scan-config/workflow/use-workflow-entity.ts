@@ -3,8 +3,17 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getSupportedEntityTypesForScanConfiguration } from '@/features/scan-config/types';
+import {
+  getPrimarySelectionRef,
+  readWorkflowSelection,
+} from '@/features/scan-config/workflow/selection';
 
+import type {
+  TWorkflowSelectionPayload,
+  TWorkflowSelectionRef,
+} from '@/features/scan-config/workflow/selection/types';
 import type {
   ScanConfigEntitySourceMode,
   TResolvedScanConfigEntity,
@@ -12,7 +21,7 @@ import type {
 } from '@/features/scan-config/workflow/types';
 import type { WorkspaceContext } from '@/types/common';
 
-function readRouteEntityId(
+function readRouteSessionId(
   routeParams: Record<string, string | undefined>,
   param = 'id'
 ): string | undefined {
@@ -29,38 +38,76 @@ export function useStaticTypeWorkflowEntity(
     () => ({
       entity: null,
       entityType: entitySource.entityType,
+      workflowSelection: null,
     }),
     [entitySource.entityType]
   );
 }
 
-export function useRouteIdWorkflowEntity({
+export function useSessionSelectionOnlyWorkflowEntity({
+  routeParams,
+  param = 'id',
+}: {
+  routeParams: Record<string, string | undefined>;
+  param?: string;
+}): TResolvedScanConfigEntity {
+  const sessionId = readRouteSessionId(routeParams, param);
+  const workflowSelection = sessionId ? readWorkflowSelection(sessionId) : null;
+  const primaryRef = workflowSelection ? getPrimarySelectionRef(workflowSelection) : null;
+
+  return useMemo(
+    () => ({
+      entity: null,
+      entityType: primaryRef?.type ?? ExtendedEntitiesTypeDict.UniversalCellMorphology,
+      entityId: primaryRef?.id,
+      workflowSelection,
+    }),
+    [primaryRef?.id, primaryRef?.type, workflowSelection]
+  );
+}
+
+export function useSessionWithQueryWorkflowEntity({
   entitySource,
   workspace,
-  routeParams,
+  primaryRef,
+  workflowSelection,
 }: {
   entitySource: Extract<
     TScanConfigEntitySource,
-    { mode: typeof ScanConfigEntitySourceMode.RouteId }
-  >;
+    { mode: typeof ScanConfigEntitySourceMode.Session }
+  > & {
+    query: NonNullable<
+      Extract<TScanConfigEntitySource, { mode: typeof ScanConfigEntitySourceMode.Session }>['query']
+    >;
+  };
   workspace: WorkspaceContext;
-  routeParams: Record<string, string | undefined>;
+  primaryRef: TWorkflowSelectionRef;
+  workflowSelection: TWorkflowSelectionPayload;
 }): TResolvedScanConfigEntity {
-  const param = entitySource.param ?? 'id';
-  const entityId = readRouteEntityId(routeParams, param);
-
-  if (!entityId) {
-    throw new Error(`Missing route param "${param}" for scan config workflow entity`);
-  }
-
   const { data: entity } = useSuspenseQuery({
-    queryKey: entitySource.query.queryKey({ context: workspace, id: entityId }),
-    queryFn: () => entitySource.query.queryFn({ context: workspace, id: entityId }),
+    queryKey: entitySource.query.queryKey({ context: workspace, id: primaryRef.id }),
+    queryFn: () => entitySource.query.queryFn({ context: workspace, id: primaryRef.id }),
   });
 
   return {
     entity,
     entityType: getSupportedEntityTypesForScanConfiguration({ entity }),
     entityId: entity.id,
+    workflowSelection,
   };
+}
+
+export function readSessionSelectionFromRoute(
+  routeParams: Record<string, string | undefined>,
+  param = 'id'
+): {
+  sessionId: string | undefined;
+  workflowSelection: TWorkflowSelectionPayload | null;
+  primaryRef: TWorkflowSelectionRef | null;
+} {
+  const sessionId = readRouteSessionId(routeParams, param);
+  const workflowSelection = sessionId ? readWorkflowSelection(sessionId) : null;
+  const primaryRef = workflowSelection ? getPrimarySelectionRef(workflowSelection) : null;
+
+  return { sessionId, workflowSelection, primaryRef };
 }

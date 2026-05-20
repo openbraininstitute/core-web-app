@@ -10,6 +10,7 @@ import TableControls from '@/ui/segments/data-table/elements/controls';
 import { useOnCellRouteHandler } from '@/ui/segments/data-table/elements/hooks';
 import {
   type RenderButtonProps,
+  type TableRowSelectionProps,
   useRowSelection,
 } from '@/ui/segments/data-table/elements/use-row-selection';
 import {
@@ -256,6 +257,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   renderButton,
   selectionType,
   onRowsSelected,
+  selectedRows,
   scrollable = true,
   dataKey,
   expandableConfig,
@@ -276,8 +278,9 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     renderButton?: (props: RenderButtonProps<T>) => ReactNode;
     selectionType?: RowSelectionType;
     scrollable?: boolean;
-    onRowsSelected?: (rows: Array<T>) => void;
     dataKey: string;
+    /** When `selectedRows` is omitted, selection falls back to `coreSelectedRowsAtom(dataKey)`. */
+  } & TableRowSelectionProps<T> & {
     expandableConfig?: ExpandableConfig<T>;
     expandableOptions?: UseExpandableTableOptions<T, T>;
     showExpandButtons?: boolean;
@@ -289,11 +292,16 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
     allowDownload?: boolean;
     allowDelete?: boolean;
   }) {
-  const { rowSelection, selectedRows, clearSelectedRows } = useRowSelection({
+  const {
+    rowSelection,
+    selectedRows: activeSelectedRows,
+    clearSelectedRows,
+  } = useRowSelection({
     dataKey,
     selectionType,
     onRowsSelected,
     dataSource,
+    selectedRows,
   });
 
   const { expandableConfig: generatedExpandableConfig } = useExpandableTable(expandableOptions);
@@ -323,7 +331,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
       <TableControls
         visible
         renderButton={renderButton}
-        selectedRows={selectedRows}
+        selectedRows={activeSelectedRows}
         clearSelectedRows={clearSelectedRows}
         dataType={dataType}
         workspace={workspace}

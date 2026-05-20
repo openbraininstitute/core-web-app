@@ -43,11 +43,13 @@ import type { TMiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types'
 type Props = {
   section?: TWorkspaceSection;
   dataType: TExtendedEntitiesTypeDict;
+  hideUseModelAction?: boolean;
 };
 
 export function MiniDetailView<T extends EntityCoreObjectTypes>({
   section = WorkspaceSection.Data,
   dataType,
+  hideUseModelAction = false,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
   const { mdv, setMdv } = useMiniDetailView();
@@ -80,6 +82,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       record={record}
       dataType={dataType}
       onClose={onClose}
+      hideUseModelAction={hideUseModelAction}
     />
   );
 }
@@ -91,6 +94,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   onClose,
   theme = 'default',
   enableAnimation = true,
+  hideUseModelAction = false,
 }: {
   section: TWorkspaceSection;
   record: T | null;
@@ -98,6 +102,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   onClose?: () => void;
   theme?: TMiniDetailViewTheme;
   enableAnimation?: boolean;
+  hideUseModelAction?: boolean;
 }) {
   if (!record) return null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
@@ -244,13 +249,26 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           WorkspaceSection.ProcessWorkflow
         ),
       },
-      ({ section }) => <WorkflowActions record={record} dataType={dataType} section={section} />
+      ({ section }) => (
+        <WorkflowActions
+          record={record}
+          dataType={dataType}
+          section={section}
+          hideUseModelAction={hideUseModelAction}
+        />
+      )
     )
     .with(
       {
         section: P.union(WorkspaceSection.ScanConfigBuildWorkflow, WorkspaceSection.BuildWorkflow),
       },
-      () => <WorkflowBuildActions record={record} dataType={dataType} />
+      () => (
+        <WorkflowBuildActions
+          record={record}
+          dataType={dataType}
+          hideUseModelAction={hideUseModelAction}
+        />
+      )
     )
     .otherwise(() => null);
 
@@ -301,7 +319,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-1.5 rounded-md p-2 hover:bg-white/20"
+                  className="mt-1.5 rounded-full p-2 hover:bg-white/20"
                 >
                   <CloseOutlined className="text-white" />
                 </button>

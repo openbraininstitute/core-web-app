@@ -8,7 +8,7 @@ export const processEmCellMeshWorkflow = defineScanConfigWorkflow({
   id: 'process-em-cell-mesh',
   activity: ScanConfigActivity.Process,
   entity: {
-    mode: ScanConfigEntitySourceMode.RouteId,
+    mode: ScanConfigEntitySourceMode.Session,
     query: scanConfigEntityQueries.emCellMesh,
   },
   campaign: {

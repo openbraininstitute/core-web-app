@@ -24,7 +24,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <BuildWorkflowsBreadcrumb />
         <motion.div
           id="workflow-new-inner-layout"
-          className={cn('grid gap-2 [grid-area:main]', 'h-full max-h-[calc(100%-4rem)] px-3 py-2')}
+          className={cn('grid gap-2 [grid-area:main]', 'h-full max-h-[calc(100%-3rem)] px-3 py-2')}
           initial={{
             gridTemplateColumns: mdv ? '3fr 2fr' : '1fr',
             gridTemplateAreas: mdv ? "'body mini-view'" : "'body'",
