@@ -33,6 +33,7 @@ import {
   type TResolvedSimulationByCampaign as TResolvedIonChannelModelSimulationByCampaign,
 } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
+import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
 import { EmCellMeshMetadata } from '@/features/entities/em-cell-mesh';
 import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
@@ -351,8 +352,39 @@ export default async function Overview({
     );
   }
 
+  const morphologyTypes = [
+    ExtendedEntitiesTypeDict.CellMorphology,
+    ExtendedEntitiesTypeDict.UniversalCellMorphology,
+    ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
+  ] as const;
+
+  const hasVisualization =
+    circuitTypes.includes(extendedType) ||
+    includes(morphologyTypes, extendedType) ||
+    extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording ||
+    extendedType === ExtendedEntitiesTypeDict.IonChannelRecording ||
+    extendedType === ExtendedEntitiesTypeDict.IonChannelModel;
+
   return (
     <>
+      {hasVisualization && (
+        <div className="mb-8">
+          {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
+          {includes(morphologyTypes, extendedType) && (
+            <CellMorphologyViewer entity={entity as ICellMorphology} />
+          )}
+          {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
+            <EphysViewer entity={entity as IElectricalCellRecording} ctx={context} />
+          )}
+          {extendedType === ExtendedEntitiesTypeDict.IonChannelRecording && (
+            <IonChannelRecordingViewer resource={entity as IIonChannelRecording} ctx={context} />
+          )}
+          {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
+            <IonChannelModelOverview icm={entity as IonChannelModel} ctx={context} />
+          )}
+        </div>
+      )}
+
       <div className="mb-5 grid grid-cols-3 gap-4 rounded-lg border border-gray-300 p-5">
         {[...commonFields, ...fields].map(({ className, field }) => {
           return <Field key={field} className={className} field={field} data={entity} />;
@@ -378,26 +410,13 @@ export default async function Overview({
             projectId={context.projectId}
           />
         )}
-      {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
-      {includes(
-        [
-          ExtendedEntitiesTypeDict.CellMorphology,
-          ExtendedEntitiesTypeDict.UniversalCellMorphology,
-          ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
-        ],
-        extendedType
-      ) && <CellMorphologyViewer entity={entity as ICellMorphology} context={context} />}
-      {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
-        <EphysViewer entity={entity as IElectricalCellRecording} ctx={context} />
-      )}
-      {extendedType === ExtendedEntitiesTypeDict.IonChannelRecording && (
-        <IonChannelRecordingViewer resource={entity as IIonChannelRecording} ctx={context} />
-      )}
-      {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
-        <IonChannelModelOverview icm={entity as IonChannelModel} ctx={context} />
-      )}
+
       {extendedType === ExtendedEntitiesTypeDict.EMCellMesh && (
         <EmCellMeshMetadata id={entity.id} ctx={context} />
+      )}
+
+      {includes(morphologyTypes, extendedType) && (
+        <Morphometrics className="mb-8" morphology={entity as ICellMorphology} context={context} />
       )}
     </>
   );

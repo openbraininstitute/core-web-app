@@ -30,7 +30,7 @@ export default function EphysViewer({
 }) {
   const [trace, error] = useTrace({ entity, assetId, ctx });
 
-  const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
+  const [view, setView] = useState<VIEW>(VIEW.DETAILED);
   const [repetition, setRepetition] = useState<string>();
   const [cellId, setCellId] = useState<string>('All');
   const [protocol, setProtocol] = useState<string>('All');

@@ -104,8 +104,11 @@ export async function DataViewLayout({
           />
         </div>
         <div className="w-4/5 pr-1">
-          <div className="secondary-scrollbar h-full w-full overflow-x-auto overflow-y-auto p-10 pt-0">
-            <EntityNameDisplay name={entity.name} />
+          <div className="secondary-scrollbar flex h-full w-full flex-col overflow-x-auto overflow-y-auto p-10 pt-0">
+            <EntityNameDisplay
+              name={entity.name}
+              description={'description' in entity ? entity.description : undefined}
+            />
             <EntityNameDisplayWrapper>{children}</EntityNameDisplayWrapper>
           </div>
         </div>
