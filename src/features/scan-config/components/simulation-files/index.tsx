@@ -9,10 +9,18 @@ import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  makeLogStreamFileDescriptors,
+  makeTaskConfigurationFile,
+  makeTaskLogsFile,
+  prependLogStreamFile,
+} from '@/features/task-logs-stream/descriptor';
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { createLoadableAtom } from '@/utils/jotai-loadable';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
+import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
+import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { WorkspaceContext } from '@/types/common';
 
 type SimulationFilesProps = {
@@ -22,6 +30,7 @@ type SimulationFilesProps = {
   onSelect: (file: TActivityCustomFile) => void;
   onLoadingChange: (loading: boolean) => void;
   context: WorkspaceContext;
+  jobId?: string;
 };
 
 export function SimulationFiles({
@@ -31,6 +40,7 @@ export function SimulationFiles({
   onSelect,
   onLoadingChange,
   context,
+  jobId,
 }: SimulationFilesProps) {
   const [inputLoading, inputFiles] = useInputFiles(simulation, context);
 
@@ -39,12 +49,46 @@ export function SimulationFiles({
 
   const [outputLoading, outputFiles] = useOutputFiles(simulation, context, outputAvailable);
 
+  const logStreamFiles = useMemo(
+    () =>
+      makeLogStreamFileDescriptors({
+        configId: simulation.id,
+        executionId: jobId,
+      }),
+    [simulation.id, jobId]
+  );
+
+  const inputFilesWithLogs = useMemo(() => {
+    return prependLogStreamFile({
+      file: logStreamFiles.input
+        ? makeTaskConfigurationFile({
+            descriptor: logStreamFiles.input,
+            config: simulation as unknown as ITaskConfig<Record<string, unknown>>,
+          })
+        : null,
+      files: inputFiles,
+    });
+  }, [inputFiles, logStreamFiles.input, simulation]);
+
+  const outputFilesWithLogs = useMemo(() => {
+    return prependLogStreamFile({
+      file:
+        logStreamFiles.output && jobId
+          ? makeTaskLogsFile({
+              descriptor: logStreamFiles.output,
+              execution: { execution_id: jobId } as ITaskActivity,
+            })
+          : null,
+      files: outputFiles,
+    });
+  }, [outputFiles, logStreamFiles.output, jobId]);
+
   const loading = inputLoading || outputLoading;
 
   const prioritizedInputFiles = useMemo(() => {
     const selectedPath = selectedFile?.asset.path;
 
-    return [...inputFiles].sort((a, b) => {
+    return [...inputFilesWithLogs].sort((a, b) => {
       const aSelected = a.asset.path === selectedPath;
       const bSelected = b.asset.path === selectedPath;
       if (aSelected !== bSelected) return aSelected ? -1 : 1;
@@ -55,12 +99,12 @@ export function SimulationFiles({
 
       return 0;
     });
-  }, [inputFiles, selectedFile?.asset.path]);
+  }, [inputFilesWithLogs, selectedFile?.asset.path]);
 
   const prioritizedOutputFiles = useMemo(() => {
     const selectedPath = selectedFile?.asset.path;
 
-    return [...outputFiles].sort((a, b) => {
+    return [...outputFilesWithLogs].sort((a, b) => {
       const aSelected = a.asset.path === selectedPath;
       const bSelected = b.asset.path === selectedPath;
       if (aSelected !== bSelected) return aSelected ? -1 : 1;
@@ -75,7 +119,7 @@ export function SimulationFiles({
 
       return 0;
     });
-  }, [outputFiles, selectedFile?.asset.path]);
+  }, [outputFilesWithLogs, selectedFile?.asset.path]);
 
   // Notify parent component about the loading state
   useEffect(() => {
@@ -94,24 +138,30 @@ export function SimulationFiles({
     <IoLayout
       inputTitle="Input files"
       outputTitle="Output files"
-      showOutput={outputAvailable}
-      inputIsEmpty={inputFiles.length === 0}
-      outputIsEmpty={outputFiles.length === 0 && !outputLoading}
-      inputItems={inputFiles.map((file) => (
+      showOutput={outputAvailable || logStreamFiles.showOutput}
+      inputIsEmpty={inputFilesWithLogs.length === 0}
+      outputIsEmpty={outputFilesWithLogs.length === 0 && !outputLoading}
+      inputItems={inputFilesWithLogs.map((file) => (
         <TaskIOFileItem
-          id={file.asset.id}
-          selected={file.asset.path === selectedFile?.asset.path}
-          key={file.asset.id}
+          id={file.id ?? file.asset.id}
+          selected={
+            file.id ? file.id === selectedFile?.id : file.asset.path === selectedFile?.asset.path
+          }
+          key={file.id ?? file.asset.id}
           file={file}
+          name={file.name}
           onSelect={onSelect}
         />
       ))}
-      outputItems={outputFiles.map((file) => (
+      outputItems={outputFilesWithLogs.map((file) => (
         <TaskIOFileItem
-          id={file.asset.id}
-          selected={file.asset.path === selectedFile?.asset.path}
-          key={file.asset.id}
+          id={file.id ?? file.asset.id}
+          selected={
+            file.id ? file.id === selectedFile?.id : file.asset.path === selectedFile?.asset.path
+          }
+          key={file.id ?? file.asset.id}
           file={file}
+          name={file.name}
           onSelect={onSelect}
         />
       ))}

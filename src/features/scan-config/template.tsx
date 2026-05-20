@@ -127,7 +127,13 @@ export function ScanConfigTemplate({
   const results = match(activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>
-        <SimulationsTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
+        <SimulationsTab
+          campaignId={campaignId}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+          campaignOriginAction={campaignOriginAction}
+          isCampaignIdChanged={isCampaignIdChanged}
+        />
       </Suspense>
     ))
     .with(ScanConfigActivity.Extract, () => (
