@@ -4,6 +4,7 @@ allowBuilds:
   es5-ext: true
   esbuild: true
   lefthook: true
+  msw: false
   sharp: true
 
 minimumReleaseAge: 10080

@@ -148,6 +148,7 @@
     "knip": "^5.88.1",
     "lefthook": "^2.1.6",
     "monaco-editor": "^0.55.1",
+    "msw": "^2.14.6",
     "postcss": "^8.5.14",
     "raw-loader": "^4.0.2",
     "sass": "^1.99.0",
