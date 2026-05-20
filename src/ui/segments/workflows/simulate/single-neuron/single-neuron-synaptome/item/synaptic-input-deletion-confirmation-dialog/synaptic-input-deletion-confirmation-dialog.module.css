@@ -1,12 +1,30 @@
 dialog.synapticInputDeletionConfirmationDialog {
+  --transition-duration: 200ms;
   margin: auto;
   padding: 1em;
   border-radius: 0.5em;
   box-shadow: 0 0.5em 1em #000a;
   width: 240px;
+  opacity: 1;
+  transition:
+    opacity var(--transition-duration) ease,
+    overlay var(--transition-duration) ease allow-discrete,
+    display var(--transition-duration) ease allow-discrete;
+
+  @starting-style {
+    opacity: 0;
+  }
 
   &::backdrop {
     background: #0005;
+    transition:
+      background var(--transition-duration) ease,
+      overlay var(--transition-duration) ease allow-discrete,
+      display var(--transition-duration) ease allow-discrete;
+
+    @starting-style {
+      background: #0000;
+    }
   }
 
   > footer {
