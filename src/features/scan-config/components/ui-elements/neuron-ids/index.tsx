@@ -61,12 +61,10 @@ export default function NeuronIds({
 
   return (
     <div className="w-full flex flex-col gap-3">
-      {allElements.length > 0 && (
-        <div className="text-primary-8 text-sm">{`${allElements.length} ${allElements.length === 1 ? 'ID' : 'IDs'}`}</div>
-      )}
-      {!edit && value !== null && (
+      {!edit && (
         <Ids
           ids={renderedElements}
+          totalIds={allElements.length}
           onEditClick={handleEditClick}
           disabled={disabled}
           onDeleteItem={(deleteId: number) => {
@@ -75,14 +73,6 @@ export default function NeuronIds({
             setText(newAllElements.join(', '));
           }}
         />
-      )}
-      {value === null && (
-        <div>
-          <div className="text-primary-8 text-sm">No neuron IDs yet</div>
-          <div className="text-xs text-gray-500">
-            Add neuron IDs manually below or paste a list to get started.
-          </div>
-        </div>
       )}
       {!edit && (
         <div className="flex gap-2 justify-end">
@@ -204,8 +194,10 @@ const Ids = ({
   onEditClick,
   disabled,
   onDeleteItem,
+  totalIds,
 }: {
   ids: { head: number[]; tail: number[] };
+  totalIds: number;
   onDeleteItem: (id: number) => void;
   onEditClick?: () => void;
   disabled?: boolean;
@@ -216,6 +208,7 @@ const Ids = ({
 
   return (
     <div className="border border-gray-200 p-3 rounded-lg w-full ">
+      <div className="relative -top-[5px] text-primary-8 text-sm">{`${totalIds} ${totalIds === 1 ? 'ID' : 'IDs'}`}</div>
       <div className={containerClass}>
         {ids.head.map((id) => (
           <div key={id} className={elementClass}>
@@ -229,7 +222,7 @@ const Ids = ({
         <div className="w-full flex justify-center my-3">
           <button
             type="button"
-            className="text-gray-500  flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm"
+            className="text-gray-500 flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm"
             onClick={onEditClick}
           >
             {!disabled ? 'View/Edit all IDs' : 'View all IDs'}
