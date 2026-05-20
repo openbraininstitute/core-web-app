@@ -41,10 +41,8 @@ export function useAnalysisNotebookTemplatePipeline({
           firstKeySegment === `data-entity-count-${ExtendedEntitiesTypeDict.Notebook}`;
 
         const matchesExtendedEntity =
-          get(
-            firstKeySegment as ExtendedEntityTypeQueryKey[0],
-            'context.extendedEntityType'
-          ) === ExtendedEntitiesTypeDict.Notebook;
+          get(firstKeySegment as ExtendedEntityTypeQueryKey[0], 'context.extendedEntityType') ===
+          ExtendedEntitiesTypeDict.Notebook;
 
         return matchesEntityCount || matchesExtendedEntity;
       },

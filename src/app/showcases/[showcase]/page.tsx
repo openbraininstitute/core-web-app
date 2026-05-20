@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 
 import singleShowcaseQuery from '@/app/api/sanity/query';
-import ShowcaseDetailLayout from '@/components/LandingPage/layout/ShowcaseDetailLayout';
 import { fetchSanity } from '@/services/sanity';
+import ShowcaseDetailLayout from '@/ui/segments/landing/layout/showcase-detail';
 import { SanityShowcaseSchema } from '@/ui/segments/reports/obi-showcases/types';
 
 import ShowcaseDetailContent from './ShowcaseDetailContent';

@@ -1,8 +1,8 @@
-import { Metadata } from 'next';
+import LandingPage from '@/ui/segments/landing';
+import { generateMetadataFromSanity } from '@/ui/segments/landing/metadata/metadata';
+import { EnumSection } from '@/ui/segments/landing/sections/sections';
 
-import LandingPage from '@/components/LandingPage';
-import { generateMetadataFromSanity } from '@/components/LandingPage/metadata';
-import { EnumSection } from '@/components/LandingPage/sections/sections';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 

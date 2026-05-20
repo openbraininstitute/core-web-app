@@ -2,8 +2,8 @@ export function FeedbackStarIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}
-      width="103"
-      height="88"
+      width="24"
+      height="24"
       viewBox="0 0 103 88"
       fill="currentColor"
       xmlns="http://www.w3.org/2000/svg"

@@ -1,14 +1,14 @@
-import { throttle, isEqual, differenceWith } from 'es-toolkit/compat';
+import { differenceWith, isEqual, throttle } from 'es-toolkit/compat';
 import {
   AmbientLight,
   Color,
-  CylinderGeometry,
+  type CylinderGeometry,
   DoubleSide,
   EdgesGeometry,
   Fog,
   LineBasicMaterial,
   LineSegments,
-  Mesh,
+  type Mesh,
   MeshLambertMaterial,
   Object3D,
   PerspectiveCamera,
@@ -24,12 +24,12 @@ import {
 // @ts-expect-error
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-import RendererCtrl from './renderer-ctrl';
-import type { Morphology, SecMarkerConfig } from './types';
-import { createSegMarkerMesh, createSegmentMesh, NeuronSegmentInfo } from './renderer-utils';
 import { Labels } from './labels';
+import RendererCtrl from './renderer-ctrl';
+import { createSegMarkerMesh, createSegmentMesh, type NeuronSegmentInfo } from './renderer-utils';
 
-import { SynapsesMesh } from '@/components/neuron-viewer/hooks/events';
+import type { SynapsesMesh } from '@/components/neuron-viewer/hooks/events';
+import type { Morphology, SecMarkerConfig } from './types';
 
 const FOG_COLOR = 0xffffff;
 const FOG_NEAR = 1;

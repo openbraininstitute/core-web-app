@@ -29,15 +29,15 @@ export class ThreadManager {
     const lastThread = await serviceAiAgentThreadList({
       ...context,
       pageSize: 1,
-      excludeEmptyThreads: false,
+      excludeEmpty: false,
     });
 
     if (lastThread.results.length > 0) {
       const thread = lastThread.results[0];
 
-      // Compare up to milliseconds
-      if (new Date(thread.creation_date).getTime() === new Date(thread.update_date).getTime()) {
-        return { threadId: thread.thread_id, isEmpty: true };
+      // Compare up to milliseconds — if createdAt === updatedAt, the thread has no messages
+      if (new Date(thread.createdAt).getTime() === new Date(thread.updatedAt).getTime()) {
+        return { threadId: thread.id, isEmpty: true };
       }
     }
 

@@ -12,16 +12,15 @@ import {
 } from '@/features/task-logs-stream/helpers';
 
 import type { ILogEntry } from '@/features/task-logs-stream/types';
+import type { WorkspaceContext } from '@/types/common';
 
 export async function fetchTaskLogsStreamEndpoint({
   jobId,
-  virtualLabId,
-  projectId,
+  workspace,
   signal,
 }: {
   jobId: string;
-  virtualLabId: string;
-  projectId: string;
+  workspace: WorkspaceContext;
   signal?: AbortSignal;
 }): Promise<AsyncIterable<ILogEntry>> {
   const session = await getSession();
@@ -34,8 +33,8 @@ export async function fetchTaskLogsStreamEndpoint({
       signal,
       headers: {
         ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
-        'virtual-lab-id': virtualLabId,
-        'project-id': projectId,
+        'virtual-lab-id': workspace.virtualLabId,
+        'project-id': workspace.projectId,
       },
     }
   );
@@ -73,15 +72,13 @@ async function readStreamErrorBody({
 
 export async function* streamTaskLogsWithReconnect({
   jobId,
-  virtualLabId,
-  projectId,
+  workspace,
   signal,
   debugLog,
   configId,
 }: {
   jobId: string;
-  virtualLabId: string;
-  projectId: string;
+  workspace: WorkspaceContext;
   signal?: AbortSignal;
   debugLog: (params: { level: 'info' | 'error'; message: string; payload?: unknown }) => void;
   configId?: string;
@@ -93,8 +90,7 @@ export async function* streamTaskLogsWithReconnect({
     try {
       const stream = await fetchTaskLogsStreamEndpoint({
         jobId,
-        virtualLabId,
-        projectId,
+        workspace,
         signal,
       });
       retryAttempt = 0;
