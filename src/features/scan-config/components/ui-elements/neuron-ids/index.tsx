@@ -206,9 +206,15 @@ const Ids = ({
   const elementClass =
     'border border-gray-200 rounded-full py-1 px-0 text-primary-8 font-bold flex items-center justify-center gap-1 text-xs';
 
+  const getTotalIdsText = () => {
+    if (totalIds === 0) return 'No IDs';
+    if (totalIds === 1) return '1 ID';
+    return `${totalIds} IDs`;
+  };
+
   return (
     <div className="border border-gray-200 p-3 rounded-lg w-full ">
-      <div className="relative -top-[5px] text-primary-8 text-sm">{`${totalIds} ${totalIds === 1 ? 'ID' : 'IDs'}`}</div>
+      <div className="relative -top-[5px] text-primary-8 text-sm">{getTotalIdsText()}</div>
       <div className={containerClass}>
         {ids.head.map((id) => (
           <div key={id} className={elementClass}>
@@ -383,10 +389,10 @@ const HighlightedInput = ({
         </button>
       </div>
 
-      <div className="flex justify-between items-start px-1">
-        <div className="text-red-500 text-sm">{error}</div>
+      <div className="flex justify-between">
+        <div className="text-red-500 text-xs">{error}</div>
         {value.length >= maxLength && (
-          <div className="text-xs font-mono transition-colors ml-auto text-red-500 font-bold">
+          <div className="text-xs  text-red-500">
             {value.length} / {maxLength} characters
           </div>
         )}
