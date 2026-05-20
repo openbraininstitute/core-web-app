@@ -19,7 +19,7 @@ export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
   if (!entity) return null;
 
   return (
-    <div className="h-[calc(100vh-20rem)] min-h-[480px] w-full">
+    <div className="h-[min(360px,42vh)] min-h-[260px] w-full">
       <div className="h-full">
         <ErrorBoundary
           FallbackComponent={withErrorConfig({
