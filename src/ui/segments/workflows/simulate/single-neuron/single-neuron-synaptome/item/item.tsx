@@ -10,7 +10,7 @@ import { Form, Select } from 'antd';
 import find from 'es-toolkit/compat/find';
 import { useAtom } from 'jotai';
 import { useParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Color } from 'three';
 
 import { getSingleNeuronSynaptomePlacement } from '@/api/small-scale-simulator';
@@ -47,6 +47,8 @@ import { OptionRender } from '@/ui/segments/workflows/simulate/single-neuron/sin
 import { FrequencyFormItem } from '@/ui/segments/workflows/simulate/single-neuron/single-neuron-synaptome/item/frequency-input';
 import { cn } from '@/utils/css-class';
 
+import { SynapticInputDeletionConfirmationDialog } from './synaptic-input-deletion-confirmation-dialog';
+
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { WorkspaceContext } from '@/types/common';
 import type { UpdateSynapseSimulationProperty } from '@/types/small-scale-simulator/single-neuron';
@@ -75,6 +77,7 @@ export function SynapticInputItem({
   sessionId,
   disableControls,
 }: Props) {
+  const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = React.useState(false);
   const breakpoint = useDefaultBreakpoint();
   const { error: notifyError } = useAppNotification();
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
@@ -177,137 +180,138 @@ export function SynapticInputItem({
       newValue,
     });
   };
-
+  const handleDelete = () => {
+    removeForm();
+    abortController.current.abort();
+  };
   useEffect(() => {
     return () => {
       abortController.current.abort();
     };
   }, []);
-  return (
-    <div className="flex w-full flex-col items-start justify-start gap-1.5">
-      <div
-        id={`synaptic-input-${index}`}
-        className="flex w-full min-w-max items-center justify-between gap-2 text-lg font-bold"
-      >
-        <div className="flex w-full items-center justify-between gap-2">
-          <div className="flex items-center gap-4">
-            <div
-              className={cn(
-                'bg-primary-8 flex h-12 w-12 items-center justify-center rounded-full',
-                'text-center align-middle font-bold text-white'
-              )}
-            >
-              {index + 1}
-            </div>
-            <span className="text-neutral-3 font-light uppercase">Synaptic input</span>
-          </div>
-          <div className="flex items-center justify-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  rounded
-                  type="button"
-                  aria-label={synapseDisplayed ? 'Hide synapses' : 'Show synapses'}
-                  title={synapseDisplayed ? 'Hide synapses' : 'Show synapses'}
-                  variant="outline"
-                  onClick={synapseDisplayed ? onHideSynapse : onShowSynapse}
-                  disabled={visualizeLoading || disableControls}
-                  className="text-primary-9 group disabled:bg-neutral-1 disabled:text-neutral-2 h-12 w-12"
-                >
-                  {resolveIcon(synapseDisplayed, visualizeLoading)}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                sideOffset={0}
-                className="text-primary-9 bg-white shadow-lg select-none"
-                arrowClassName="bg-white"
-              >
-                {synapseDisplayed ? 'Hide synapses' : 'Show synapses'}
-              </TooltipContent>
-            </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  rounded
-                  aria-label={`Delete synaptic input ${index}`}
-                  type="button"
-                  title="Delete synapses"
-                  variant="outline"
-                  className="text-primary-9 hover:text-primary-8 disabled:bg-neutral-1 disabled:text-neutral-2 h-12 w-12"
-                  disabled={disableControls}
-                >
-                  <DeleteOutlined />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                sideOffset={5}
-                className="text-primary-9 flex max-w-60 flex-col items-center justify-center gap-2 bg-white shadow-lg select-none"
-                arrowClassName="bg-white"
+  return (
+    <>
+      <div className="flex w-full flex-col items-start justify-start gap-1.5">
+        <div
+          id={`synaptic-input-${index}`}
+          className="flex w-full min-w-max items-center justify-between gap-2 text-lg font-bold"
+        >
+          <div className="flex w-full items-center justify-between gap-2">
+            <div className="flex items-center gap-4">
+              <div
+                className={cn(
+                  'bg-primary-8 flex h-12 w-12 items-center justify-center rounded-full',
+                  'text-center align-middle font-bold text-white'
+                )}
               >
-                <p className="text-primary-9 text-justify text-sm">
-                  Are you sure you want to delete this synaptic input configuration?
-                </p>
-                <Button
-                  onClick={() => {
-                    removeForm();
-                    abortController.current.abort();
-                  }}
-                  className="self-end"
+                {index + 1}
+              </div>
+              <span className="text-neutral-3 font-light uppercase">Synaptic input</span>
+            </div>
+            <div className="flex items-center justify-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    rounded
+                    type="button"
+                    aria-label={synapseDisplayed ? 'Hide synapses' : 'Show synapses'}
+                    title={synapseDisplayed ? 'Hide synapses' : 'Show synapses'}
+                    variant="outline"
+                    onClick={synapseDisplayed ? onHideSynapse : onShowSynapse}
+                    disabled={visualizeLoading || disableControls}
+                    className="text-primary-9 group disabled:bg-neutral-1 disabled:text-neutral-2 h-12 w-12"
+                  >
+                    {resolveIcon(synapseDisplayed, visualizeLoading)}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  sideOffset={0}
+                  className="text-primary-9 bg-white shadow-lg select-none"
+                  arrowClassName="bg-white"
                 >
-                  Confirm
-                </Button>
-              </TooltipContent>
-            </Tooltip>
+                  {synapseDisplayed ? 'Hide synapses' : 'Show synapses'}
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    rounded
+                    aria-label={`Delete synaptic input ${index}`}
+                    type="button"
+                    title="Delete synapses"
+                    variant="outline"
+                    className="text-primary-9 hover:text-primary-8 disabled:bg-neutral-1 disabled:text-neutral-2 h-12 w-12"
+                    disabled={disableControls}
+                    onClick={() => setDeleteConfirmDialogOpen(true)}
+                  >
+                    <DeleteOutlined />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  sideOffset={0}
+                  className="text-primary-9 bg-white shadow-lg select-none"
+                  arrowClassName="bg-white"
+                >
+                  Remove this synaptic input from the list
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="border-neutral-2 flex w-full flex-col rounded-2xl border px-5 pt-2 pb-4">
-        <div className="flex flex-col">
-          <Form.Item
-            label={label('synapse group', true)}
-            name={[formName, 'id']}
-            rules={[{ required: true, type: 'string' }]}
-            labelAlign="left"
-          >
-            <Select
-              showSearch
-              placeholder="Select synapse set"
-              onChange={onIdChange}
-              options={options}
-              className={cn(
-                'border-neutral-3! rounded-md border-[1px]!',
-                '[&_.ant-select-selection-item]:text-primary-9! [&_.ant-select-selection-item]:font-bold',
-                '[&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
-                '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
-              )}
-              classNames={{
-                popup: {
-                  root: cn(
-                    '[&_.ant-select-item-option-content]:text-primary-9!',
-                    '[&_.rc-virtual-list-holder-inner]:gap-1'
-                  ),
-                },
-              }}
-              placement="bottomLeft"
-              size={breakpoint === 'l' ? 'middle' : 'large'}
-              optionRender={OptionRender}
-              prefix={<div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />}
-            />
-          </Form.Item>
+        <div className="border-neutral-2 flex w-full flex-col rounded-2xl border px-5 pt-2 pb-4">
+          <div className="flex flex-col">
+            <Form.Item
+              label={label('synapse group', true)}
+              name={[formName, 'id']}
+              rules={[{ required: true, type: 'string' }]}
+              labelAlign="left"
+            >
+              <Select
+                showSearch
+                placeholder="Select synapse set"
+                onChange={onIdChange}
+                options={options}
+                className={cn(
+                  'border-neutral-3! rounded-md border-[1px]!',
+                  '[&_.ant-select-selection-item]:text-primary-9! [&_.ant-select-selection-item]:font-bold',
+                  '[&_.ant-select-selection-placeholder]:text-base! [&_.ant-select-selection-placeholder]:font-light!',
+                  '[&_.ant-select-selector]:rounded-md! [&_.ant-select-selector]:border-none! [&_.ant-select-selector]:shadow-none!'
+                )}
+                classNames={{
+                  popup: {
+                    root: cn(
+                      '[&_.ant-select-item-option-content]:text-primary-9!',
+                      '[&_.rc-virtual-list-holder-inner]:gap-1'
+                    ),
+                  },
+                }}
+                placement="bottomLeft"
+                size={breakpoint === 'l' ? 'middle' : 'large'}
+                optionRender={OptionRender}
+                prefix={<div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />}
+              />
+            </Form.Item>
+          </div>
+          <ConfigInputList index={index} formName={formName} onChange={onChange} />
+          <FrequencyFormItem
+            index={index}
+            formName={formName}
+            onChange={onChange}
+            simIndexWithVariableFrequency={synapseWithFrequencyStep}
+            sessionId={sessionId}
+          />
         </div>
-        <ConfigInputList index={index} formName={formName} onChange={onChange} />
-        <FrequencyFormItem
-          index={index}
-          formName={formName}
-          onChange={onChange}
-          simIndexWithVariableFrequency={synapseWithFrequencyStep}
-          sessionId={sessionId}
-        />
       </div>
-    </div>
+      <SynapticInputDeletionConfirmationDialog
+        open={deleteConfirmDialogOpen}
+        onOpenChange={setDeleteConfirmDialogOpen}
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }
 
