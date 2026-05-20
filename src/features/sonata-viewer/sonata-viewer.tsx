@@ -40,7 +40,7 @@ export default function SonataViewer({
   const report = useSimulationReport(assetFileName);
   const variableName = report?.variable_name !== 'v' ? report?.variable_name : undefined;
 
-  const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
+  const [view, setView] = useState<VIEW>(VIEW.INTERACTIVE);
   const [defaultPopulation, setDefaultPopulation] = useState<string>();
   const [defaultNodeId, setDefaultNodeId] = useState<number>();
 

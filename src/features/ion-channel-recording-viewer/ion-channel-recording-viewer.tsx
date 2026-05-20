@@ -26,7 +26,7 @@ export default function IonChannelRecordingViewer({
   ctx?: WorkspaceContext;
 }) {
   const [trace, error] = useTrace({ resource, ctx });
-  const [view, setView] = useState<VIEW>(VIEW.OVERVIEW);
+  const [view, setView] = useState<VIEW>(VIEW.DETAILED);
 
   const handleViewChange = (e: RadioChangeEvent) => {
     setView(e.target.value as VIEW);
