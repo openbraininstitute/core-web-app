@@ -103,7 +103,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
   };
 
   const onConfigProperty = ({ id, key: configKey, newValue }: UpdateSynapseSimulationProperty) => {
-    let color = placementConfigForForm(id)?.color!;
+    let color = placementConfigForForm(id)?.color;
     if (configKey === 'id') {
       color = data?.synapses.find((sc: TSingleNeuronSynaptomeConfiguration) => sc.id === newValue)
         ?.color!;
