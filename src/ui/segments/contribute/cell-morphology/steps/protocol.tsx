@@ -31,8 +31,6 @@ export function Protocol() {
   const isDigitalReconstruction =
     selectedProtocolGenerationType === CellMorphologyGenerationType.DigitalReconstruction.key;
 
-  const selectedProtocolId = Form.useWatch('cell_morphology_protocol_id', form);
-
   const handleProtocolSelect = useCallback(
     (option: AsyncSelectOption<IProtocol> | undefined) => {
       const generationType = option?.data?.generation_type ?? null;
