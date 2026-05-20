@@ -294,15 +294,16 @@ export default function SimulationsTab({
   };
 
   const shouldTreatSimulationAsTask =
-    get(model, 'scale', null) === CircuitScaleDictionary.Microcircuit;
+    get(model, 'scale', null) === CircuitScaleDictionary.Microcircuit ||
+    get(model, 'scale', null) === CircuitScaleDictionary.Region;
 
   // TODO Refactor
   const run = async (simIds: string[]) => {
+    setSimRequestInProgress(true);
     if (shouldTreatSimulationAsTask) {
       return runViaLaunchSystem(simIds);
     }
 
-    setSimRequestInProgress(true);
     try {
       await runSimulationBatch({
         ctx: { virtualLabId, projectId },
