@@ -9,6 +9,18 @@ export default defineConfig({
   test: {
     globals: false,
     css: false,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.{test,spec}.{ts,tsx}',
+        'src/**/types.ts',
+        'src/**/*.d.ts',
+        'src/app/**',
+        'src/styles/**',
+      ],
+    },
     projects: [
       {
         extends: true,
