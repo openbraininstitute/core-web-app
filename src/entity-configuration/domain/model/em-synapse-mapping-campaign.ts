@@ -135,6 +135,7 @@ export const EmSynapseMappingCampaign: EntityCoreTypeConfig<
     query: {
       list,
       status,
+      // NOTE: this is guaranteed to be defined because it is used in the workflow definitions
       resolve,
       count: (params) => Task.count({ ...params, ...TaskFlow }),
       one: (params) => getTaskConfig({ id: params.id, context: params.context }),
