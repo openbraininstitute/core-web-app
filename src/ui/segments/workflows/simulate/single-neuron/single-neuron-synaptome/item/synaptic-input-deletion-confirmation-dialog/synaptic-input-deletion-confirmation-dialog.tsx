@@ -51,7 +51,13 @@ export function SynapticInputDeletionConfirmationDialog({
         <Button variant="outline" onClick={handleClose}>
           Cancel
         </Button>
-        <Button variant="success" onClick={onConfirm}>
+        <Button
+          variant="success"
+          onClick={() => {
+            handleClose();
+            onConfirm();
+          }}
+        >
           Confirm
         </Button>
       </footer>

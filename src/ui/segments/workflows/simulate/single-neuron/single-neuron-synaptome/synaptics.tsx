@@ -81,7 +81,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
     const simConfigForForm = state.find((_: SynapseConfiguration, ind) => ind === simFormIndex);
     return data?.synapses.find((s) => s.id === simConfigForForm?.id);
   };
-  const onRemoveSynapseConfig = (key: number) => {
+  const onRemoveSynapseConfig = (synapseConfigKey: number) => {
     const safeStorage = typeof window !== 'undefined' ? sessionStorage : null;
     if (safeStorage) {
       state.forEach((_, index) => {
@@ -93,13 +93,13 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
       });
     }
 
-    const removedConfigId = state[key]?.config_id;
+    const removedConfigId = state[synapseConfigKey]?.config_id;
     if (removedConfigId && synapsesPlacement?.[removedConfigId]) {
       const { [removedConfigId]: _, ...rest } = synapsesPlacement;
       setSynapsesPlacement(rest);
     }
 
-    update(state.filter((_, index) => index !== key) ?? []);
+    update(state.filter((_, index) => index !== synapseConfigKey) ?? []);
   };
 
   const onConfigProperty = ({ id, key: configKey, newValue }: UpdateSynapseSimulationProperty) => {

@@ -181,6 +181,7 @@ export function SynapticInputItem({
     });
   };
   const handleDelete = () => {
+    setDeleteConfirmDialogOpen(false);
     removeForm();
     abortController.current.abort();
   };
