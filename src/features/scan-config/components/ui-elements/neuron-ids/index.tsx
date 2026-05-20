@@ -351,8 +351,8 @@ const HighlightedInput = ({
             maxLength={maxLength}
             className="w-full px-3 py-2 font-mono text-sm text-transparent bg-transparent caret-black outline-none block z-10 placeholder:text-xs"
             spellCheck={false}
-            placeholder="Type your comma separated list of IDs"
-            title="Type your comma separated list of IDs"
+            placeholder="Type comma separated list of IDs"
+            title="Type comma separated list of IDs"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -385,14 +385,11 @@ const HighlightedInput = ({
 
       <div className="flex justify-between items-start px-1">
         <div className="text-red-500 text-sm">{error}</div>
-        <div
-          className={cn(
-            'text-xs font-mono transition-colors ml-auto',
-            value.length >= maxLength ? 'text-red-500 font-bold' : 'text-gray-400'
-          )}
-        >
-          {value.length} / {maxLength} characters
-        </div>
+        {value.length >= maxLength && (
+          <div className="text-xs font-mono transition-colors ml-auto text-red-500 font-bold">
+            {value.length} / {maxLength} characters
+          </div>
+        )}
       </div>
     </div>
   );
