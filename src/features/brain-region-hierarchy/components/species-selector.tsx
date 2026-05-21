@@ -2,6 +2,7 @@
 
 import { RiArrowDownSLine, RiCheckboxCircleFill } from '@remixicon/react';
 import { useAtomValue } from 'jotai';
+import { useMemo } from 'react';
 
 import {
   AllSpeciesDisplayName,
@@ -56,15 +57,40 @@ export function SpeciesSelector({
   const { loading: isLoadingRemoteUserPreferenceHierarchySpecies } =
     useRemoteUserPreferenceHierarchySpeciesQuery();
 
-  const { syncSettled, speciesSelectionMode } = useWorkspaceHierarchyRegistry();
+  const {
+    syncSettled,
+    speciesSelectionMode,
+    workspaceHierarchyId,
+    workspaceSpecies: registryWorkspaceSpecies,
+  } = useWorkspaceHierarchyRegistry();
   const allowAllSpecies = useAtomValue(allowAllSpeciesAtom);
 
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
-  if (
-    isLoadingAvailableHierarchySpecies ||
-    isLoadingRemoteUserPreferenceHierarchySpecies ||
-    !syncSettled
-  ) {
+
+  const displaySpecies = useMemo(() => {
+    if (isAllMode) {
+      return null;
+    }
+
+    if (selectedSpecies?.displayName) {
+      return selectedSpecies;
+    }
+
+    const hierarchyId = selectedSpecies?.hierarchId ?? workspaceHierarchyId;
+    if (!hierarchyId || !remoteAvailableHierarchies) {
+      return null;
+    }
+
+    return (
+      remoteAvailableHierarchies.find((hierarchy) => hierarchy.id === hierarchyId)?.species ?? null
+    );
+  }, [isAllMode, remoteAvailableHierarchies, selectedSpecies, workspaceHierarchyId]);
+
+  const isQueriesLoading =
+    isLoadingAvailableHierarchySpecies || isLoadingRemoteUserPreferenceHierarchySpecies;
+  const isSpeciesReady = isAllMode || !!displaySpecies?.displayName;
+
+  if (isQueriesLoading || !syncSettled || !isSpeciesReady) {
     return (
       <div className={cn('flex items-center gap-2 py-2', className)}>
         <span className="text-neutral-5 text-sm">Species</span>
@@ -90,8 +116,10 @@ export function SpeciesSelector({
       return (indexA === -1 ? Infinity : indexA) - (indexB === -1 ? Infinity : indexB);
     });
 
-  const currentValue = isAllMode ? SpeciesSelectionMode.All : selectedSpecies?.hierarchId || '';
-  const triggerLabel = isAllMode ? AllSpeciesDisplayName : selectedSpecies?.displayName;
+  const currentValue = isAllMode
+    ? SpeciesSelectionMode.All
+    : displaySpecies?.hierarchId || registryWorkspaceSpecies?.hierarchId || '';
+  const triggerLabel = isAllMode ? AllSpeciesDisplayName : displaySpecies?.displayName;
 
   return (
     <span id="species-selector" className={cn('flex w-full min-w-0 items-center py-2', className)}>
@@ -110,26 +138,22 @@ export function SpeciesSelector({
         >
           <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
             <span className="text-neutral-5 shrink-0 text-base font-normal">Species</span>
-            {triggerLabel ? (
-              <Tooltip disableHoverableContent>
-                <TooltipTrigger asChild>
-                  <span className="text-primary-9 block h-6 w-full min-w-0 flex-1 truncate text-base leading-6 font-bold">
-                    {triggerLabel}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent
-                  avoidCollisions
-                  side="top"
-                  sideOffset={0}
-                  className="bg-white shadow-bnb text-primary-8 border-gray-200"
-                  arrowClassName="bg-white"
-                >
+            <Tooltip disableHoverableContent>
+              <TooltipTrigger asChild>
+                <span className="text-primary-9 block h-6 w-full min-w-0 flex-1 truncate text-base leading-6 font-bold">
                   {triggerLabel}
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <div className="h-5 w-16 animate-pulse rounded-full bg-gray-200" />
-            )}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent
+                avoidCollisions
+                side="top"
+                sideOffset={0}
+                className="bg-white shadow-bnb text-primary-8 border-gray-200"
+                arrowClassName="bg-white"
+              >
+                {triggerLabel}
+              </TooltipContent>
+            </Tooltip>
           </div>
         </SelectTrigger>
         <SelectContent
@@ -172,7 +196,10 @@ export function SpeciesSelector({
               <div className="flex flex-col">
                 <span
                   className={cn('text-base font-medium text-primary-8', {
-                    'font-bold': !isAllMode && selectedSpecies?.hierarchId === species.hierarchId,
+                    'font-bold':
+                      !isAllMode &&
+                      (displaySpecies?.hierarchId ?? registryWorkspaceSpecies?.hierarchId) ===
+                        species.hierarchId,
                   })}
                 >
                   {species.displayName}
