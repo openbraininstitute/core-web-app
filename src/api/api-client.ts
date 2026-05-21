@@ -18,7 +18,6 @@ type RequestConfiguration = {
   backoff?: BackoffStrategy;
   retryOnError?: boolean;
   retryOnException?: boolean;
-  passThroughErrors?: boolean;
 };
 
 type RequestOptions = {
@@ -31,6 +30,7 @@ type RequestOptions = {
   signal?: AbortSignal;
   cache?: RequestCache;
   next?: NextFetchRequestConfig;
+  asRawResponse?: boolean;
 };
 
 type CacheConfiguration = {
@@ -69,7 +69,7 @@ class ApiClient {
 
   private _retryOnException?: boolean;
 
-  private _cacheConfig?: CacheConfiguration; // Cache configuration
+  private _cacheConfig?: CacheConfiguration;
 
   private requestInterceptors: ((request: Request) => Promise<Request>)[] = [];
 
@@ -86,16 +86,9 @@ class ApiClient {
     this._backoff = config.backoff;
     this._retryOnError = config.retryOnError;
     this._retryOnException = config.retryOnException;
-    this._cacheConfig = cache; // Store cache configuration
+    this._cacheConfig = cache;
   }
 
-  /**
-   * checks if caching should be used for a specific URL
-   *
-   * @param {string} url - url to check
-   * @param {CacheConfiguration} cacheConfig - cache configuration
-   * @returns {boolean} whether caching should be used
-   */
   private shouldUseCache(url: string, cacheConfig?: CacheConfiguration): boolean {
     if (!cacheConfig?.enabled) return false;
 
@@ -108,13 +101,6 @@ class ApiClient {
     return true;
   }
 
-  /**
-   * checks if a cached response exists and is still valid
-   *
-   * @param {string} url - url to fetch from cache
-   * @param {CacheConfiguration} cacheConfig -  cache configuration
-   * @returns {Promise<{ valid: boolean, response: Response | null }>} cache status and response
-   */
   private async checkCache(
     url: string,
     cacheConfig: CacheConfiguration
@@ -154,14 +140,6 @@ class ApiClient {
     }
   }
 
-  /**
-   * stores a response in the cache
-   *
-   * @param {string} url - url to use as the cache key
-   * @param {Response} response - response to cache
-   * @param {CacheConfiguration} cacheConfig - cache configuration
-   * @returns {Promise<void>}
-   */
   private async storeInCache(
     url: string,
     response: Response,
@@ -171,9 +149,7 @@ class ApiClient {
 
     try {
       const cache = await caches.open(cacheConfig.cacheName);
-
       const responseToCache = response.clone();
-
       const headers = new Headers(responseToCache.headers);
       headers.set('x-cache-timestamp', Date.now().toString());
 
@@ -189,17 +165,6 @@ class ApiClient {
     }
   }
 
-  /**
-   * makes an http request with optional caching.
-   *
-   * @template T
-   * @param {string} method - http method (GET, POST, etc.)
-   * @param {string} endpoint -  endpoint to send the request to
-   * @param {RequestOptions} [options] - options for the request
-   * @param {RequestConfiguration & { cache?: CacheConfiguration }} [config] - configuration for the request including cache options
-   * @param {() => void} [onAbort] - callback function to execute if the request is aborted
-   * @returns {Promise<T>} a promise that resolves to the response data
-   */
   private async _request<T>(
     method: string,
     endpoint: string,
@@ -221,12 +186,14 @@ class ApiClient {
     });
 
     const urlString = url.toString();
-
     const requestCacheConfig = config.cache ?? this._cacheConfig;
+    
+    const isRawResponseRequested = options.asRawResponse || config.asRawResponse || false;
+
     const useCache =
       method.toLowerCase() === 'get' &&
       this.shouldUseCache(urlString, requestCacheConfig) &&
-      !config.asRawResponse;
+      !isRawResponseRequested;
 
     if (useCache && requestCacheConfig) {
       const { valid, response: cachedResponse } = await this.checkCache(
@@ -237,7 +204,7 @@ class ApiClient {
       if (valid && cachedResponse) {
         log('debug', `[cached] ${urlString}`);
         const contentType = cachedResponse.headers.get('Content-Type') || '';
-        if (config.asRawResponse) {
+        if (isRawResponseRequested) {
           return cachedResponse as unknown as T;
         }
         if (contentType.includes('application/json')) {
@@ -305,7 +272,8 @@ class ApiClient {
 
       const contentType = response.headers.get('Content-Type') || '';
       let responseData: T;
-      if (config.asRawResponse) {
+      
+      if (isRawResponseRequested) {
         responseData = response as unknown as T;
       } else if (contentType.includes('application/json')) {
         responseData = await response.json();
@@ -317,7 +285,7 @@ class ApiClient {
         responseData = (await response.arrayBuffer()) as unknown as T;
       }
 
-      if (!response.ok && !config.passThroughErrors) {
+      if (!response.ok) {
         if ((config.retryOnError ?? this._retryOnError) && attempt < maxAttempts) {
           const delay = this.calculateBackoff(attempt, config.backoff ?? this._backoff);
 
@@ -326,20 +294,17 @@ class ApiClient {
           });
           return runRequest();
         }
-        log('error', 'Request failed', {
-          url: url.toString(),
-          status: response.status,
-          message: (responseData as any).message || `Request failed with status ${response.status}`,
-          data: responseData,
-        });
-        throw await parseApiError(request.url, response.status, responseData);
+        log('error', 'Request failed', response.status);
+        
+        const rawPayload = isRawResponseRequested ? response : await response.clone().text().catch(() => null);
+        throw await parseApiError(request.url, response.status, rawPayload);
       }
 
       return responseData;
     };
 
     try {
-      return runRequest();
+      return await runRequest();
     } catch (error: any) {
       if (error.name === 'AbortError') {
         onAbort?.();
@@ -356,13 +321,6 @@ class ApiClient {
     }
   }
 
-  /**
-   * calculates the backoff delay based on the attempt number and strategy.
-   *
-   * @param {number} attempt - The current attempt number
-   * @param {BackoffStrategy} [backoff] - The backoff strategy
-   * @returns {number} The calculated delay in milliseconds
-   */
   private calculateBackoff(attempt: number, backoff?: BackoffStrategy): number {
     if (!backoff) return 0;
     if (backoff.type === 'custom' && backoff.fn) {
@@ -371,12 +329,6 @@ class ApiClient {
     return backoff.type === 'exponential' ? backoff.delay * 2 ** (attempt - 1) : backoff.delay;
   }
 
-  /**
-   * clears all cached responses or specific URL
-   *
-   * @param {string} [url] - optional specific url to clear from cache
-   * @returns {Promise<boolean>} Whether the operation succeeded
-   */
   async clearCache(url?: string): Promise<boolean> {
     if (!this._cacheConfig?.enabled || typeof caches === 'undefined') {
       return false;
@@ -428,13 +380,6 @@ class ApiClient {
   }
 }
 
-/**
- * creates an authenticated API client.
- *
- * @param {string} rootUri - the root url for the api client
- * @param {CacheConfiguration} [cacheConfig] - optional cache configuration
- * @returns {Promise<ApiClient>} a promise that resolves to an instance of ApiClient
- */
 export async function authApiClient(rootUri: string, cacheConfig?: CacheConfiguration) {
   const session = await getSession();
 

@@ -1,4 +1,5 @@
 import { obioneApi } from '@/api/one/utils';
+import ApiError from '@/api/error';
 
 export type NeuronResolution = {
   isValid: boolean;
@@ -15,10 +16,6 @@ export type NeuronRegistered = {
   id: string;
 };
 
-type ErrorEnvelope = { 
-  detail: NeuronFileError 
-};
-
 export function isNeuronFileError(err: unknown): err is Error & { neuronFileError: NeuronFileError } {
   return (
     err instanceof Error &&
@@ -32,30 +29,73 @@ export async function resolveNeuronFile(file: File): Promise<NeuronResolution> {
   const formData = new FormData();
   formData.append('file', file, file.name);
 
-  const response = await api.post<Response>(
-    '/declared/test-neuron-file',
-    { body: formData },
-    { asRawResponse: true, passThroughErrors: true } // ✅ Correct
-  );
+  try {
+    const response = await api.post<Response>(
+      '/declared/test-neuron-file',
+      { 
+        body: formData,
+        asRawResponse: true 
+      }
+    );
 
-  if (!response.ok) {
-    const envelope: ErrorEnvelope = await response.json().catch(() => ({
-      detail: { code: 'UNKNOWN', detail: `Request failed with status ${response.status}` },
-    }));
+    const contentType = response.headers.get('Content-Type') || '';
+    if (contentType.includes('application/json')) {
+      const errorJson = await response.json().catch(() => ({}));
+      let code = 'VALIDATION_ERROR';
+      let detail = 'Invalid neuron file structure';
+
+      if (errorJson?.detail) {
+        if (typeof errorJson.detail === 'object') {
+          code = errorJson.detail.code || code;
+          detail = errorJson.detail.detail || detail;
+        } else {
+          detail = String(errorJson.detail);
+        }
+      } else if (errorJson?.message) {
+        detail = errorJson.message;
+      }
+
+      const errorBody: NeuronFileError = { code, detail };
+      const customError = new Error(errorBody.detail);
+      (customError as any).neuronFileError = errorBody;
+      throw customError;
+    }
+
+    return {
+      isValid: true,
+      buffer: await response.arrayBuffer(),
+    };
+  } catch (error: any) {
+    if (error && 'neuronFileError' in error) {
+      throw error;
+    }
+
+    let code = 'UNKNOWN';
+    let detail = error.message || 'Request failed';
+
+    if (error instanceof ApiError && error.cause) {
+      const cause = error.cause;
+      code = cause.code || code;
+      
+      const rawPayload = cause.details || cause.originalError;
+      if (rawPayload && typeof rawPayload === 'object') {
+        if (rawPayload.detail && typeof rawPayload.detail === 'object') {
+          code = rawPayload.detail.code || code;
+          detail = rawPayload.detail.detail || detail;
+        } else {
+          detail = rawPayload.detail || rawPayload.message || detail;
+        }
+      } else if (typeof rawPayload === 'string') {
+        detail = rawPayload;
+      }
+    }
+
+    const errorBody: NeuronFileError = { code, detail };
+    const customError = new Error(errorBody.detail);
     
-    const errorBody: NeuronFileError = typeof envelope.detail === 'object'
-      ? envelope.detail
-      : { code: 'UNKNOWN', detail: String(envelope.detail) };
-    
-    const error = new Error(errorBody.detail);
-    (error as any).neuronFileError = errorBody;
-    throw error;
+    (customError as any).neuronFileError = errorBody;
+    throw customError;
   }
-
-  return {
-    isValid: true,
-    buffer: await response.arrayBuffer(),
-  };
 }
 
 export async function createAndRegisterMorphometrics(
@@ -68,48 +108,53 @@ export async function createAndRegisterMorphometrics(
   formData.append('file', file, file.name);
   formData.append('metadata', JSON.stringify(payload));
 
-  const response = await api.post<Response>(
-    '/declared/register-morphology-with-calculated-metrics',
-    {
-      headers: {
-        accept: 'application/json',
-        'project-id': context.projectId,
-        'virtual-lab-id': context.virtualLabId,
-      },
-      body: formData,
-    },
-    { asRawResponse: true, passThroughErrors: true } // ✅ Fixed: Passed passThroughErrors flag
-  );
-
-  if (!response.ok) {
-    const envelope: ErrorEnvelope = await response.json().catch(() => {
-      let code = 'SERVER_ERROR';
-      if (response.status === 401) code = 'UNAUTHENTICATED';
-      if (response.status === 403) code = 'FORBIDDEN';
-      if (response.status === 404) code = 'NOT_FOUND';
-      if (response.status === 413) code = 'FILE_TOO_LARGE';
-
-      return {
-        detail: { 
-          code, 
-          detail: `Request failed with status ${response.status}: ${response.statusText}` 
+  try {
+    const data = await api.post<{ entity_id: string }>(
+      '/declared/register-morphology-with-calculated-metrics',
+      {
+        headers: {
+          accept: 'application/json',
+          'project-id': context.projectId,
+          'virtual-lab-id': context.virtualLabId,
         },
-      };
-    });
+        body: formData,
+      }
+    );
 
-    const errorBody: NeuronFileError = typeof envelope.detail === 'object'
-      ? envelope.detail
-      : { code: 'UNKNOWN', detail: String(envelope.detail) };
+    return {
+      isValid: true,
+      id: data.entity_id,
+    };
+  } catch (error: any) {
+    let code = 'SERVER_ERROR';
+    let detail = error.message;
 
-    const error = new Error(errorBody.detail);
-    (error as any).neuronFileError = errorBody;
-    throw error;
+    if (error instanceof ApiError) {
+      const cause = error.cause;
+      const status = cause?.status;
+
+      if (status === 401) code = 'UNAUTHENTICATED';
+      else if (status === 403) code = 'FORBIDDEN';
+      else if (status === 404) code = 'NOT_FOUND';
+      else if (status === 413) code = 'FILE_TOO_LARGE';
+      else if (cause?.code) code = cause.code;
+
+      const rawPayload = cause?.details || cause?.originalError;
+      if (rawPayload && typeof rawPayload === 'object') {
+        if (rawPayload.detail && typeof rawPayload.detail === 'object') {
+          detail = rawPayload.detail.detail || detail;
+        } else {
+          detail = rawPayload.detail || rawPayload.message || detail;
+        }
+      } else if (typeof rawPayload === 'string') {
+        detail = rawPayload;
+      }
+    }
+
+    const errorBody: NeuronFileError = { code, detail };
+    const customError = new Error(errorBody.detail);
+    
+    (customError as any).neuronFileError = errorBody;
+    throw customError;
   }
-
-  const data = await response.json();
-
-  return {
-    isValid: true,
-    id: data.entity_id,
-  };
 }

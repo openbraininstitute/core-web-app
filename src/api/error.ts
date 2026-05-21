@@ -3,6 +3,7 @@ export interface ApiErrorCause {
   message?: string;
   status?: number;
   details?: any;
+  originalError?: any;
 }
 
 /*

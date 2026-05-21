@@ -51,17 +51,10 @@ function findMappedEntry<T>(arr: any[], fn: (item: any) => any) {
   return undefined;
 }
 
-const API_ERROR_CODE_PATHS = ['error.code', 'error_code', 'code'];
-const API_ERROR_MESSAGE_PATHS = ['error.message', 'error_message', 'message'];
-const API_ERROR_DETAILS_PATHS = ['error.details', 'error_details', 'details', 'data'];
+const API_ERROR_CODE_PATHS = ['error.code', 'error_code', 'code', 'detail.code'];
+const API_ERROR_MESSAGE_PATHS = ['error.message', 'error_message', 'message', 'detail.detail'];
+const API_ERROR_DETAILS_PATHS = ['error.details', 'error_details', 'details', 'data', 'detail'];
 
-/*
- * Parse the error code from the API response.
- *
- * @param response The HTTP Response object to read from
- *
- * @returns The error code or null if not found
- */
 export async function parseApiError(
   url: string,
   status: number,
@@ -70,21 +63,41 @@ export async function parseApiError(
   const errMessage = `Error while fetching ${url}`;
 
   try {
-    const responseData =
-      apiClientResponseData instanceof Response
-        ? await apiClientResponseData.json()
-        : apiClientResponseData;
+    let responseData: any = null;
+
+    if (apiClientResponseData instanceof Response) {
+      const rawText = await apiClientResponseData.clone().text().catch(() => '');
+      try {
+        responseData = JSON.parse(rawText);
+      } catch {
+        responseData = { message: rawText || apiClientResponseData.statusText };
+      }
+    } else if (typeof apiClientResponseData === 'string') {
+      try {
+        responseData = JSON.parse(apiClientResponseData);
+      } catch {
+        responseData = { message: apiClientResponseData };
+      }
+    } else {
+      responseData = apiClientResponseData;
+    }
 
     const code = findMappedEntry<string>(API_ERROR_CODE_PATHS, (path) => get(responseData, path));
-    const message = findMappedEntry<string>(API_ERROR_MESSAGE_PATHS, (path) =>
-      get(responseData, path)
-    );
-    const details = findMappedEntry<string>(API_ERROR_DETAILS_PATHS, (path) =>
-      get(responseData, path)
-    );
+    const message = findMappedEntry<string>(API_ERROR_MESSAGE_PATHS, (path) => get(responseData, path));
+    
+    let details = findMappedEntry<any>(API_ERROR_DETAILS_PATHS, (path) => get(responseData, path));
+    if (!details) {
+      details = responseData; 
+    }
 
-    return new ApiError(errMessage, { code, message, details, status });
+    return new ApiError(errMessage, { 
+      code, 
+      message, 
+      details, 
+      status,
+      originalError: apiClientResponseData 
+    });
   } catch {
-    return new ApiError(errMessage, { status });
+    return new ApiError(errMessage, { status, originalError: apiClientResponseData });
   }
 }
