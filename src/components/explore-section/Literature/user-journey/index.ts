@@ -1,9 +1,9 @@
 'use client';
 
 import GenericEvent from '@/util/generic-event';
-import { logError } from '@/util/logger';
 import { getLocalStorageHelper } from '@/util/storage';
 import { assertType } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
 
 const MAX_COUNT = 3;
 

@@ -1,9 +1,10 @@
-import queryForDataTypes from '../query/data-types-query';
-import { ContentForGlossaryItem } from '../type';
-
 import { useSanity } from '@/services/sanity';
-import { logError } from '@/util/logger';
-import { assertType, TypeDef } from '@/util/type-guards';
+import { assertType, type TypeDef } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
+
+import queryForDataTypes from '../query/data-types-query';
+
+import type { ContentForGlossaryItem } from '../type';
 
 export function useSanityContentForExperimentsModels() {
   return useSanity(queryForDataTypes, isContentForGlossary) ?? [];

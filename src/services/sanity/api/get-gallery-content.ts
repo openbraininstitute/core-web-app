@@ -1,6 +1,6 @@
 import { getClient } from '@/services/sanity/client';
 import galleryQuery from '@/services/sanity/queries/gallery';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 export type GalleryContentProps = {
   title: string;

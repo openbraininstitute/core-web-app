@@ -1,6 +1,6 @@
 import { getClient } from '@/services/sanity/client';
 import { tryType } from '@/services/sanity/type-utils';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import type { TypeDef } from '@/util/type-guards';
 

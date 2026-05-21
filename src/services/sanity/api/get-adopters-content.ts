@@ -1,5 +1,5 @@
 import { getClient } from '@/services/sanity/client';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import query from './adopters.groq';
 

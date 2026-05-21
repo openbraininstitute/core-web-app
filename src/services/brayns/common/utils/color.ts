@@ -1,4 +1,4 @@
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 const LUMINANCE_THRESHOLD = 0.62;
 const HALF = 0.5;
