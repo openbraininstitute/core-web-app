@@ -1,16 +1,15 @@
 'use client';
 
 import * as SwitchPrimitives from '@radix-ui/react-switch';
-import keyBy from 'es-toolkit/compat/keyBy';
-import map from 'es-toolkit/compat/map';
-import merge from 'es-toolkit/compat/merge';
-import omit from 'es-toolkit/compat/omit';
+import { keyBy, map, merge, omit } from 'es-toolkit/compat';
 import { atom } from 'jotai';
-import { forwardRef } from 'react';
 
 import { listSubscriptionTiers } from '@/api/virtual-lab-svc/queries/subscription';
 import { getSanityTiers } from '@/services/sanity';
 import { classNames } from '@/util/utils';
+
+import type { ComponentPropsWithRef } from 'react';
+import type { ContentForPricing } from '@/components/LandingPage/content/pricing';
 
 type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
 
@@ -70,72 +69,86 @@ type TiersData = {
   tiers: TSingleTier[];
 };
 
+export const FlowStepDict = {
+  Select: 'select',
+  EmailVerification: 'email-verification',
+  Pay: 'pay',
+} as const;
+type TFlowStep = (typeof FlowStepDict)[keyof typeof FlowStepDict];
+
+export const IntervalDict = {
+  Month: 'month',
+  Year: 'year',
+} as const;
+type TInterval = (typeof IntervalDict)[keyof typeof IntervalDict];
+export const DefaultCurrency = 'chf';
+
 export const flowAtom = atom<{
-  step: 'select' | 'email-verification' | 'pay' | null;
+  step: TFlowStep | null;
   tier: TExtendedTier | null;
-  interval: 'month' | 'year';
+  interval: TInterval;
   currency?: string;
 }>({
-  step: 'select',
+  step: FlowStepDict.Select,
   tier: null,
-  interval: 'month',
-  currency: 'chf',
+  interval: IntervalDict.Month,
+  currency: DefaultCurrency,
 });
 
-export const Switch = forwardRef<
-  React.ComponentRef<typeof SwitchPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root> & {
-    thumbCls: string;
-  }
->(({ className, thumbCls, ...props }, ref) => (
-  <SwitchPrimitives.Root
-    className={classNames(
-      'peer inline-flex h-5 w-11 shrink-0 cursor-pointer items-center',
-      'data-[state=unchecked]:bg-input border-primary-8 rounded-full border-2 transition-colors',
-      'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
-      'focus-visible:ring-offset-background data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50',
-      className
-    )}
-    // eslint-disable-next-line react/jsx-props-no-spreading
-    {...props}
-    ref={ref}
-  >
-    <SwitchPrimitives.Thumb
+export function Switch({
+  className,
+  thumbCls,
+  ref,
+  ...props
+}: ComponentPropsWithRef<typeof SwitchPrimitives.Root> & {
+  thumbCls: string;
+}) {
+  return (
+    <SwitchPrimitives.Root
       className={classNames(
-        'bg-background pointer-events-none block h-3 w-3 rounded-full shadow-lg ring-0 transition-transform',
-        'data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
-        thumbCls
+        'peer inline-flex h-5 w-11 shrink-0 cursor-pointer items-center',
+        'data-[state=unchecked]:bg-input border-primary-8 rounded-full border-2 transition-colors',
+        'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
+        'focus-visible:ring-offset-background data-[state=checked]:bg-primary disabled:cursor-not-allowed disabled:opacity-50',
+        className
       )}
-    />
-  </SwitchPrimitives.Root>
-));
-Switch.displayName = 'Switch';
+      {...props}
+      ref={ref}
+    >
+      <SwitchPrimitives.Thumb
+        className={classNames(
+          'bg-background pointer-events-none block h-3 w-3 rounded-full shadow-lg ring-0 transition-transform',
+          'data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
+          thumbCls
+        )}
+      />
+    </SwitchPrimitives.Root>
+  );
+}
 
-function transformData(data: any): TiersData {
-  const transformedTiers: TSingleTier[] = data.plans?.map((plan: any) => {
-    const tierFeatures: FeatureCategory[] = data.features?.map((category: any) => {
+function transformData(data: ContentForPricing): TiersData {
+  const transformedTiers: TSingleTier[] = data.plans.map((plan) => {
+    const tierFeatures: FeatureCategory[] = data.features.map((category) => {
       // transform features within this category for this plan
-      const featuresList = category.features
-        ?.map((feature: any) => {
-          // Check if this feature is available for the current plan
-          const planFeature = feature.plans?.find((p: any) => p.id === plan.id);
+      const featuresList = category.features?.flatMap((feature) => {
+        // Check if this feature is available for the current plan
+        const planFeature = feature.plans?.find((p) => p.id === plan.id);
 
-          if (!planFeature) {
-            return null;
-          }
-          const transformedFeature: TTierFeature = {
-            title: feature.title,
-          };
-          if (planFeature.label) {
-            transformedFeature.specialLabel = [planFeature.label];
-          }
-          if (planFeature.tooltip) {
-            transformedFeature.tooltip = [planFeature.tooltip];
-          }
+        if (!planFeature) {
+          return [];
+        }
+        const transformedFeature: TTierFeature = {
+          title: feature.title,
+        };
+        if (planFeature.label) {
+          transformedFeature.specialLabel = [planFeature.label];
+        }
+        if (planFeature.tooltip) {
+          transformedFeature.tooltip = [planFeature.tooltip];
+        }
 
-          return transformedFeature;
-        })
-        .filter(Boolean);
+        return [transformedFeature];
+      });
 
       return {
         title: category.title,
@@ -157,7 +170,7 @@ function transformData(data: any): TiersData {
     if (plan.price) {
       transformedTier.price = {
         month: plan.price.month || [],
-        discount: plan.price.discount || [],
+        discount: plan.price.discount ?? [],
         yearNormal: plan.price.yearNormal || [],
         yearDiscount: plan.price.yearDiscount || [],
       };
@@ -171,7 +184,7 @@ function transformData(data: any): TiersData {
   };
 }
 
-const renameAndRemove = (arr: Array<any>, oldKey: string, newKey: string) =>
+const renameAndRemove = (arr: Array<Record<string, unknown>>, oldKey: string, newKey: string) =>
   map(arr, (obj) =>
     obj[oldKey] !== undefined ? { ...omit(obj, oldKey), [newKey]: obj[oldKey] } : obj
   );
@@ -183,7 +196,7 @@ export async function getAllTiers(): Promise<Array<TExtendedTier>> {
   }
   const tiers1 = keyBy(renameAndRemove(appTiers.tiers, 'id', 'app_id'), 'sanity_id');
   const tiers2 = keyBy(transformData(sanityTiers).tiers, 'id');
-  const tiers = Object.values(merge({}, tiers1, tiers2));
+  const tiers = Object.values(merge({}, tiers1, tiers2)) as Array<TExtendedTier>;
 
   return tiers;
 }

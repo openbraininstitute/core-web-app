@@ -1,9 +1,12 @@
+import { CheckCircleFilled } from '@ant-design/icons';
+import { domAnimation, LazyMotion, m } from 'framer-motion';
 import { useAtom } from 'jotai';
-import { motion } from 'framer-motion';
 
-import { ReactNode } from 'react';
-import { flowAtom, Interval } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
+import { flowAtom, type Interval } from '@/features/payments/subscription/shared';
 import { classNames } from '@/util/utils';
+import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 type Props = {
   id: string;
@@ -27,37 +30,39 @@ function PricingCard({
   onSelect,
 }: Props) {
   return (
-    <motion.button
+    <m.button
       layout
       id={id}
       data-testid="price-card"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
       onClick={() => onSelect(interval)}
       type="button"
-      className={classNames(
-        'border-0.5 relative flex grow flex-col items-start rounded-lg border-gray-100 p-6',
-        selectedInterval === interval ? 'bg-primary-8 text-white!' : 'text-primary-8 bg-white'
+      className={cn(
+        'relative flex grow flex-col items-start rounded-lg p-6',
+        {
+          'bg-primary-8 text-white! shadow-md border border-primary-8':
+            selectedInterval === interval,
+        },
+        { 'text-primary-8 bg-white border border-neutral-100': selectedInterval !== interval }
       )}
     >
       <div className="flex w-full items-center justify-between">
         <input
           hidden
           readOnly
-          className="border-border-200 h-[22px] w-[22px] bg-transparent"
+          className="border-border-200 size-[22px] bg-transparent"
           type="radio"
           name="billing_cycle"
           checked={selectedInterval === interval}
           value={interval}
         />
       </div>
-      <span className="text-2xl font-bold">{title}</span>
+      <span className="flex items-center gap-2 text-2xl font-semibold">
+        {title}
+        {selectedInterval === interval && <CheckCircleFilled className="text-green-400!" />}
+      </span>
       <span className="inline-block text-sm">
         <small className="mr-1 text-sm font-light">{currency}</small>
-        <span className="text-xl font-bold">
+        <span className="text-xl font-semibold">
           {price}
           <span className="font-light">
             /<span className="text-sm font-light">{interval}</span>
@@ -74,7 +79,7 @@ function PricingCard({
           Save {discount}-
         </div>
       )}
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -85,12 +90,12 @@ export default function PricingToggleCards() {
   if (!tier) return null;
 
   return (
-    <div
-      data-testid="price-cards"
-      className="flex w-full flex-row items-center justify-center gap-3 pb-4"
-    >
-      {tier?.prices &&
-        tier.prices.map((o) => (
+    <LazyMotion features={domAnimation}>
+      <div
+        data-testid="price-cards"
+        className="flex w-full flex-row items-center justify-center gap-3 pb-4"
+      >
+        {tier?.prices?.map((o) => (
           <PricingCard
             key={`${o.id}`}
             id={o.id}
@@ -103,6 +108,7 @@ export default function PricingToggleCards() {
             onSelect={handleSelect}
           />
         ))}
-    </div>
+      </div>
+    </LazyMotion>
   );
 }
