@@ -4,15 +4,11 @@ import dynamic from 'next/dynamic';
 import { memo, useState } from 'react';
 
 import { IconGear } from '@/components/ai-assistant/icons/gear';
-import {
-  type Cell,
-  type MorphoViewerTreeItem,
-  MorphoViewerTreeItemType,
-  type Sections,
-} from '@/features/scan-config/types';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 
 import { useCircuit } from './hooks';
+
+import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
 
 import styles from './circuit-viz.module.css';
 
