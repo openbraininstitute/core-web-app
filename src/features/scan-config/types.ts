@@ -1,4 +1,5 @@
 import { match } from 'ts-pattern';
+import { z } from 'zod';
 
 import {
   EntityTypeDict,
@@ -15,28 +16,19 @@ import {
   TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 
-import type { atom } from 'jotai';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
 import type { Prettify } from '@/utils/type';
 
-export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
-
 type Primitive = null | boolean | number | string;
-interface Object {
-  [key: string]: Primitive | Primitive[] | Object;
+export interface ConfigObject {
+  [key: string]: ConfigValue | ConfigObject;
 }
 
-export type ConfigValue = Primitive | Primitive[] | Object;
-export type Config = Record<string, Object | string>;
-
-export interface AtomsMap {
-  [key: string]:
-    | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
-    | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
-}
+export type ConfigValue = Primitive | Primitive[] | ConfigObject | ConfigValue[];
+export type Config = Record<string, ConfigValue>;
 
 export const SchemaMappingKeyDict = {
   Circuit: 'Circuit',
@@ -411,6 +403,8 @@ export function isType(v: TRootElement | Type | TBlockElement): v is Type {
 export const ActivityCustomFileRenderer = {
   MiniDetailView: 'mini-detail-view',
   Default: 'default',
+  TaskConfigurationViewer: 'task-configuration-viewer',
+  TaskLogsViewer: 'task-logs-viewer',
 } as const;
 
 export type TActivityCustomFileRenderer =
@@ -425,6 +419,63 @@ export type TActivityCustomFile = {
   enforcedRenderType?: AssetContentType;
   renderer: TActivityCustomFileRenderer;
 };
+
+export const NodeSchema = z.object({
+  morphology_file: z.string(),
+  morphology_name: z.string(),
+  position: z.tuple([z.number(), z.number(), z.number()]),
+  orientation: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+});
+
+export const NodesSchema = z.array(NodeSchema);
+
+export enum MorphoViewerTreeItemType {
+  Soma = 0,
+  Dendrite,
+  BasalDendrite,
+  ApicalDendrite,
+  Myelin,
+  Axon,
+  Selected,
+  Liaison,
+  Unknown,
+}
+
+const Point3DSchema = z.tuple([z.number(), z.number(), z.number()]);
+
+export const SectionSchema = z.object({
+  id: z.string(),
+  parent_id: z.string().nullable(),
+  type: z.enum(MorphoViewerTreeItemType),
+  points: z.array(Point3DSchema),
+  radii: z.array(z.number()),
+});
+
+export const SectionsArraySchema = z.array(SectionSchema);
+export type Sections = z.infer<typeof SectionsArraySchema>;
+
+export type Node = z.infer<typeof NodeSchema>;
+export type Nodes = z.infer<typeof NodesSchema>;
+
+export type Cell = {
+  id: string;
+  center: [number, number, number];
+  orientation: [number, number, number, number];
+  somaRadius: number;
+  color: string;
+};
+
+export interface MorphoViewerTreeItem {
+  x: number;
+  y: number;
+  z: number;
+  radius: number;
+  type: MorphoViewerTreeItemType;
+  sectionId: string;
+  segmentId: string;
+  distanceFromSoma: number;
+  children?: MorphoViewerTreeItem[];
+}
 
 export type TSupportedEntitiesForScanConfiguration =
   | ICircuit

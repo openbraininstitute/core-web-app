@@ -7,8 +7,8 @@ import React from 'react';
 import { useAppNotification } from '@/components/notification';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
-import { logError } from '@/util/logger';
 import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
+import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadDelete, serviceAiAgentThreadRename } from '../api';
 import { useAiAgentHealthCheck } from '../hooks/health';

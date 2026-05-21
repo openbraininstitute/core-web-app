@@ -1,26 +1,28 @@
 /* eslint-disable @next/next/no-img-element */
+/** biome-ignore-all lint/performance/noImgElement: the images are coming from remote here */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: the images are coming from remote here */
 
 import { FullscreenOutlined } from '@ant-design/icons';
 import React from 'react';
 
 import FullscreenDialog from '@/components/ai-assistant/message-item/fullscreen-dialog/fullscreen-dialog';
 import ToolSkeleton from '@/components/ai-assistant/message-item/storage-plots/renderers/skeleton/tool-skeleton';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import dialogStyles from '@/components/ai-assistant/message-item/fullscreen-dialog/fullscreen-dialog.module.css';
 import styles from './truncable-image.module.css';
 
 export interface TruncableImageProps {
-  className?: string;
   src?: string;
   isStreaming?: boolean;
 }
 
-export default function TruncableImage({ className, src, isStreaming }: TruncableImageProps) {
+export default function TruncableImage({ src, isStreaming }: TruncableImageProps) {
   const refDialog = React.useRef<HTMLDialogElement | null>(null);
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the pattern seems correct here.
   React.useEffect(() => {
     setImageLoaded(false);
     setImageError(false);
@@ -77,6 +79,13 @@ export default function TruncableImage({ className, src, isStreaming }: Truncabl
             setImageError(true);
           }}
           onClick={handleShow}
+          onKeyDown={(evt) => {
+            if (![' ', 'Enter'].includes(evt.key)) return;
+
+            evt.preventDefault();
+            evt.stopPropagation();
+            handleShow();
+          }}
         />
       </div>
       <FullscreenDialog dialogRef={refDialog}>

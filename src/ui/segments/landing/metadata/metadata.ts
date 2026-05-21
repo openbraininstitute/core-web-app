@@ -1,6 +1,6 @@
 import { fetchSanity } from '@/services/sanity';
 import { tryType, typeStringOrNull } from '@/services/sanity/type-utils';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import { getSanityPagesSlugPredicate } from '../utils';
 import { DEFAULT_METADATA } from './default';

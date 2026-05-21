@@ -5,7 +5,7 @@
  * block-dictionary.tsx so those components stay focused on layout.
  */
 
-import { atom, useAtomValue } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 
 import { useAIConfig } from '@/services/ai-agent';
@@ -20,10 +20,7 @@ import type { ConfigValue } from '../types';
  * given root element (and optionally a specific entry within it).
  * Returns `null` otherwise.
  */
-export function useDiffPreviewAtom(
-  selectedRootElement: string,
-  selectedEntry?: string
-): ReturnType<typeof atom<Record<string, ConfigValue | ConfigValue[]>>> | null {
+export function useDiffPreview(selectedRootElement: string, selectedEntry?: string) {
   const { aiConfig } = useAIConfig();
   const highlights = useAtomValue(configHighlightsAtom);
   const showingDiffs = highlights.length > 0;
@@ -42,8 +39,5 @@ export function useDiffPreviewAtom(
     return rootData as Record<string, ConfigValue>;
   }, [showingDiffs, aiConfig, selectedRootElement, selectedEntry]);
 
-  return useMemo(
-    () => (previewData ? atom<Record<string, ConfigValue | ConfigValue[]>>(previewData) : null),
-    [previewData]
-  );
+  return previewData;
 }

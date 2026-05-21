@@ -180,14 +180,19 @@ export async function statusById({
 }) {
   const source =
     simulation ?? Array.from((await getExtendedSimMap([id], context ?? undefined)).values()).at(0);
-  const executions = await listExecutionsBySimulationId({ simulationId: id, context });
+  const executions = await listExecutionsBySimulationId({
+    simulationId: id,
+    context,
+  });
 
-  return getSimulationStatusFromExecutions({
+  const results = getSimulationStatusFromExecutions({
     simulation: source ?? { id },
     executions,
     createdStatus: ActivityStatus.CREATED,
     errorStatus: ActivityStatus.ERROR,
   }) as ActivityStatus;
+
+  return results;
 }
 
 export async function status({ id, context }: { id: string; context?: WorkspaceContext | null }) {

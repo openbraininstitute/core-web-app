@@ -5,15 +5,20 @@ import {
   type InputRef,
   type SelectProps,
 } from 'antd';
-import { type ForwardedRef, forwardRef } from 'react';
 
 import { cn } from '@/utils/css-class';
 
 import type { TextAreaProps } from 'antd/lib/input/TextArea';
+import type { Ref } from 'react';
 
 const { TextArea: ATextArea } = AInput;
 
-function XInput({ placeholder, className, ...props }: InputProps, ref: ForwardedRef<InputRef>) {
+export function Input({
+  placeholder,
+  className,
+  ref,
+  ...props
+}: InputProps & { ref?: Ref<InputRef> }) {
   return (
     <AInput
       ref={ref}
@@ -30,7 +35,6 @@ function XInput({ placeholder, className, ...props }: InputProps, ref: Forwarded
     />
   );
 }
-export const Input = forwardRef(XInput);
 
 export function TextArea({ placeholder, rows = 4, className, ...props }: TextAreaProps) {
   return (

@@ -5,6 +5,7 @@ import { type EntityCoreObjectTypes, EntityTypeDict } from '@/api/entitycore/typ
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
+import { resolveSimulateConfigureSegment } from '@/features/scan-config/workflow/resolve-configure-segment';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import {
@@ -35,6 +36,12 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
     detailUrl = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.MEModelWithSynapses)}/${record.id}`;
   }
 
+  const configureSegment = resolveSimulateConfigureSegment({
+    section,
+    recordType: record.type,
+    dataType,
+  });
+
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
       <Button
@@ -55,11 +62,11 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
       >
         <Link
           href={{
-            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${section}/configure/${kebabCase(record.type)}/${record.id}`,
+            pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${section}/configure/${configureSegment}/${record.id}`,
             query: {
               sessionId: crypto.randomUUID(),
               [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
-              dataType,
+              ...(dataType ? { dataType } : {}),
             },
           }}
         >

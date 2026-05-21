@@ -4,27 +4,26 @@ import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import { fetchTaskJobRead } from '@/features/task-logs-stream/queries/read';
 
+import type { WorkspaceContext } from '@/types/common';
+
 export function useReadQuery({
   jobId,
-  virtualLabId,
-  projectId,
+  workspace,
   configId,
   enabled,
 }: {
   jobId?: string;
-  virtualLabId: string;
-  projectId: string;
+  workspace: WorkspaceContext;
   configId?: string;
   enabled: boolean;
 }) {
   return useQuery(
     queryOptions({
-      queryKey: ['task-job-read', { jobId, virtualLabId, projectId, configId }],
+      queryKey: ['task-job-read', { jobId, configId, workspace }],
       queryFn: ({ signal }) =>
         fetchTaskJobRead({
           jobId: jobId ?? '',
-          virtualLabId,
-          projectId,
+          workspace,
           signal,
         }),
       enabled: enabled && Boolean(jobId),

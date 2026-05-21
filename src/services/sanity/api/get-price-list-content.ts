@@ -1,6 +1,6 @@
 import { getClient } from '@/services/sanity/client';
 import { tryType, typeNumberOrNull, typeStringOrNull } from '@/services/sanity/type-utils';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 export interface ContentForPriceList2LabBlocSectionPlanItem {
   id: string;

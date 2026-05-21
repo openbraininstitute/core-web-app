@@ -21,19 +21,13 @@ import {
   type IonChannelSelection,
   IonChannelVariableSelector,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/selector';
-import {
-  type ConfigValue,
-  ScanConfigUIElementDict,
-  type SetAtom,
-} from '@/features/scan-config/types';
-
-import type { SetStateAction } from 'jotai';
+import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 interface RangeProps {
   data: MechanismVariablesRoot | null;
   disabled: boolean;
   state: Record<string, ConfigValue>;
-  setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
+  setState: (newState: Record<string, ConfigValue>) => void;
   fieldKey: string;
   modificationType: string;
   errorPathPrefix?: string;

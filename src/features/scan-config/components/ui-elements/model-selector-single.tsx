@@ -31,7 +31,7 @@ export type SelectorValue = { id_str: string; type: string };
 interface SelectorModalProps {
   disabled?: boolean;
   entityType: TEntityTypeDict;
-  onChange: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
+  onChange: (newState: Record<string, ConfigValue>) => void;
   filters?: Record<string, unknown>;
   value?: ConfigValue;
   valueType?: string;

@@ -1,5 +1,5 @@
-import { logError } from '@/util/logger';
 import { assertType, isType } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
 
 import { fetchJSON, isVoidType } from './util';
 

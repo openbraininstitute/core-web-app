@@ -31,7 +31,6 @@ import ModelIdentifierMultiple from './model-identifier_multiple';
 import NeuronPropertyFilter, { type INeuronPropertyFilter } from './neuron-property-filter';
 import { VoltageDuration, type VoltageDurationState } from './voltage-duration';
 
-import type { SetStateAction } from 'jotai';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
@@ -56,7 +55,7 @@ export function UIElementRender({
   schema: ConfigSchema;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   state: Record<string, ConfigValue>;
-  setState: SetAtom<[SetStateAction<Record<string, ConfigValue>>], void>;
+  setState: (newState: Record<string, ConfigValue>) => void;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   errorPathPrefix?: string;
 }) {
@@ -73,7 +72,7 @@ export function UIElementRender({
           value={typeof value === 'string' ? value : ''}
           className="w-full"
           onChange={(e) => {
-            setState({ ...state, [k]: e.currentTarget.value });
+            setState({ ...state, [k]: e.currentTarget.value || null });
           }}
         />
       )
@@ -145,34 +144,23 @@ export function UIElementRender({
       );
     })
     .with({ paramSchema: { ui_element: ScanConfigUIElementDict.NeuronIds } }, () => {
-      const namedTupleArray = Array.isArray(value) ? value : [value];
-
-      // If it's an array of named tuples flatten it to a single array.
-      const elements: number[] = namedTupleArray.flatMap((v) => {
-        if (isPlainObject(v) && Array.isArray(v.elements)) {
-          return v.elements;
-        }
-        return [];
-      });
-
       return (
         <NeuronIds
-          elements={elements}
+          value={value}
           disabled={disabled}
-          onDeleteElement={(i: number) => {
-            const copy = [...elements];
-            copy.splice(i, 1);
+          onAddIds={(newElement: number[] | null) => {
+            if (newElement === null || newElement.length === 0) {
+              setState({
+                ...state,
+                [k]: null,
+              });
+              return;
+            }
 
-            setState({
-              ...state,
-              [k]: { elements: copy },
-            });
-          }}
-          onAddElement={(newElement: number) => {
             if (!state[k]) {
               const newState = {
                 ...state,
-                [k]: { elements: [newElement] },
+                [k]: { elements: newElement },
               };
               setState(newState);
               return;
@@ -180,7 +168,7 @@ export function UIElementRender({
 
             setState({
               ...state,
-              [k]: { elements: [...elements, newElement] },
+              [k]: { elements: newElement },
             });
           }}
         />
@@ -194,6 +182,7 @@ export function UIElementRender({
       ({ paramSchema }) => {
         const getValue = (): string[] => {
           if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
+            //@ts-expect-error: TS can't infer the type, this is guaranteed to be a string[]
             return value;
           }
           if (typeof value === 'string') return [value];

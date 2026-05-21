@@ -5,3 +5,11 @@ allowBuilds:
   esbuild: true
   lefthook: true
   sharp: true
+
+minimumReleaseAge: 10080
+minimumReleaseAgeStrict: true
+minimumReleaseAgeExclude:
+  - '@openbraininstitute/*'
+  - '@tolokoban/tgd'
+blockExoticSubdeps: true
+verifyDepsBeforeRun: error

@@ -1,11 +1,9 @@
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import BlockDictionary from '@/features/scan-config/components/ui-blocks/block-dictionary';
 import BlockUnion from '@/features/scan-config/components/ui-blocks/block-union';
-import { isAtom } from '@/features/scan-config/components/utils';
-import { useDiffPreviewAtom } from '@/features/scan-config/hooks/use-diff-preview-atom';
+import { useDiffPreview } from '@/features/scan-config/hooks/use-diff-preview-atom';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import {
-  type AtomsMap,
   type Config,
   type ConfigSchema,
   type IBlockDictionary,
@@ -17,6 +15,8 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 
+import { isPlainObject } from '../utils';
+
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
@@ -26,13 +26,12 @@ type MiddleProps = {
   schema: ConfigSchema;
   selectedRootElement: string;
   editing: boolean;
-  atomsMap: AtomsMap;
-  setAtomsMap: (v: AtomsMap) => void;
   selectedEntry: string;
   setSelectedEntry: (entry: string) => void;
   campaignId: string;
   loading: boolean;
   config: Config;
+  setConfig: (newConfig: Config) => void;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   entityType: TSupportedEntityTypesForScanConfiguration;
   allEntries: Set<string>;
@@ -44,13 +43,12 @@ type MiddleProps = {
 export default function Middle({
   schema,
   selectedRootElement,
-  atomsMap,
-  setAtomsMap,
   selectedEntry,
   setSelectedEntry,
   campaignId,
   loading,
   config,
+  setConfig,
   entity,
   allEntries,
   onNewBlockClick,
@@ -60,7 +58,7 @@ export default function Middle({
 }: MiddleProps) {
   const { aiConfig, isChatReady } = useAIConfig();
   const showingDiffs = useShowingDiffs();
-  const previewAtom = useDiffPreviewAtom(selectedRootElement);
+  const preview = useDiffPreview(selectedRootElement);
 
   // for BlockDictionary the path includes the entry; for others just the root element
   const errorPathPrefix =
@@ -75,11 +73,10 @@ export default function Middle({
           campaignId={campaignId}
           loading={loading}
           config={config}
+          setConfig={setConfig}
           entity={entity}
           allEntries={allEntries}
           schema={schema}
-          atomsMap={atomsMap}
-          setAtomsMap={setAtomsMap}
           selectedEntry={selectedEntry}
           setSelectedEntry={setSelectedEntry}
           blockDictionarySchema={selectedSchema}
@@ -91,13 +88,16 @@ export default function Middle({
       )}
 
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockSingle &&
-        isAtom(atomsMap[selectedRootElement]) && (
+        isPlainObject(config[selectedRootElement]) && (
           <Block
             schema={schema}
             disabled={!!campaignId || loading || !!aiConfig || !isChatReady || showingDiffs}
             config={config}
             blockSchema={selectedSchema}
-            stateAtom={previewAtom ?? atomsMap[selectedRootElement]}
+            state={preview ?? config[selectedRootElement] ?? {}}
+            setState={(newState) => {
+              setConfig({ ...config, [selectedRootElement]: newState });
+            }}
             entity={entity}
             schemaMappingConfig={schemaMappingConfig}
             rootElement={selectedRootElement}
@@ -111,11 +111,10 @@ export default function Middle({
           schema={schema}
           blockUnionSchema={selectedSchema}
           selectedRootElement={selectedRootElement}
-          atomsMap={atomsMap}
-          setAtomsMap={setAtomsMap}
           campaignId={campaignId}
           loading={loading}
           config={config}
+          setConfig={setConfig}
           entity={entity}
           entityType={entityType}
           schemaMappingConfig={schemaMappingConfig}

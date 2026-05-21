@@ -1,16 +1,15 @@
 import { CloseOutlined } from '@ant-design/icons';
-import { atom } from 'jotai';
 
 import Block from '@/features/scan-config/components/ui-blocks/block';
-import { isAtom, isPlainObject } from '@/features/scan-config/components/utils';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import { isType } from '@/features/scan-config/types';
 
-import type { Config, ConfigValue } from '@/features/scan-config/components/components';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type {
-  AtomsMap,
+  Config,
   ConfigSchema,
+  ConfigValue,
   IRootBlockUnion,
   TBlock,
   TSupportedEntitiesForScanConfiguration,
@@ -22,11 +21,10 @@ type Props = {
   schema: ConfigSchema;
   blockUnionSchema: IRootBlockUnion;
   selectedRootElement: string;
-  atomsMap: AtomsMap;
-  setAtomsMap: (v: AtomsMap) => void;
   campaignId: string;
   loading: boolean;
   config: Config;
+  setConfig: (newConfig: Config) => void;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   entityType: TSupportedEntityTypesForScanConfiguration;
@@ -43,11 +41,10 @@ export default function BlockUnion({
   schema,
   blockUnionSchema,
   selectedRootElement,
-  atomsMap,
-  setAtomsMap,
   campaignId,
   loading,
   config,
+  setConfig,
   entity,
   schemaMappingConfig,
   errorPathPrefix,
@@ -69,7 +66,7 @@ export default function BlockUnion({
   });
 
   // If a variant is selected and we have an atom, show the form
-  if (selectedBlockSchema && isAtom(atomsMap[selectedRootElement])) {
+  if (selectedBlockSchema && isPlainObject(config[selectedRootElement])) {
     return (
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -80,9 +77,9 @@ export default function BlockUnion({
               aria-label="Reset block selection"
               className="cursor-pointer text-neutral-3 transition-colors hover:text-primary-8 px-2 py-1 hover:bg-neutral-3/20 rounded-full"
               onClick={() => {
-                setAtomsMap({
-                  ...atomsMap,
-                  [selectedRootElement]: atom<Record<string, ConfigValue>>({}),
+                setConfig({
+                  ...config,
+                  [selectedRootElement]: {},
                 });
               }}
             >
@@ -97,7 +94,10 @@ export default function BlockUnion({
           disabled={!!campaignId || loading || showingDiffs}
           config={config}
           blockSchema={selectedBlockSchema}
-          stateAtom={atomsMap[selectedRootElement]}
+          state={config[selectedRootElement]}
+          setState={(newConfig) => {
+            setConfig({ ...config, [selectedRootElement]: newConfig });
+          }}
           entity={entity}
           schemaMappingConfig={schemaMappingConfig}
           errorPathPrefix={errorPathPrefix}
@@ -135,9 +135,9 @@ export default function BlockUnion({
                 });
               }
 
-              setAtomsMap({
-                ...atomsMap,
-                [selectedRootElement]: atom<Record<string, ConfigValue>>(initial),
+              setConfig({
+                ...config,
+                [selectedRootElement]: initial,
               });
             }}
           >
