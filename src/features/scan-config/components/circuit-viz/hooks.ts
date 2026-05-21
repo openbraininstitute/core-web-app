@@ -105,12 +105,3 @@ function useCircuitNodes(id: string, virtualLabId: string, projectId: string) {
     refetchOnReconnect: false,
   });
 }
-
-// interface CircuitNode {
-//   morphology_file: string
-//   morphology_name: string
-//   position: [number, number, number]
-//   orientation: [number, number, number, number]
-// }
-
-// function assertCircuitNodeArray(data: unknown): asserts data is CircuitNode[] {}
