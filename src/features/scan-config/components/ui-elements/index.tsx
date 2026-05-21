@@ -409,13 +409,17 @@ export function UIElementRender({
           ] ?? {};
 
         const getValue = () => {
-          if (Array.isArray(value)) {
+          if (Object.keys(properties).length === 0) return [];
+
+          if (Array.isArray(value) && value.length > 0) {
             return value;
           }
+
           if (isPlainObject(value)) {
             return [value];
           }
-          return [];
+
+          return [{ filter_dict: [] }];
         };
 
         return (
