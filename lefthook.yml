@@ -1,7 +1,7 @@
 pre-commit:
-  parallel: true
   commands:
     check:
-      glob: "*.{js,ts,cjs,mjs,jsx,tsx,json,jsonc}"
-      run: pnpx @biomejs/biome check --formatter-enabled=true --write {staged_files}
+      priority: 1
+      glob: "*.{css,js,ts,cjs,mjs,jsx,tsx,json,jsonc}"
+      run: pnpm exec biome check --formatter-enabled=true --write {staged_files}
       stage_fixed: true
