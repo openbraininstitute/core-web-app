@@ -55,6 +55,11 @@ import {
   useMiniDetailView,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
+import {
+  detailViewPaginationClass,
+  type DetailViewVariant,
+} from '@/ui/segments/detail-view/variant-styles';
+import '@/ui/segments/detail-view/detail-view-pagination.css';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
@@ -147,6 +152,9 @@ type Props = {
     filters: Record<string, unknown>;
     context: WorkspaceContext;
   }) => Promise<TFacets | undefined>;
+  detailVariant?: DetailViewVariant;
+  /** When true, list content sits on a white inset panel — use default pagination styling */
+  contentOnInsetPanel?: boolean;
 };
 
 export function BrowseEntityScope({
@@ -171,6 +179,8 @@ export function BrowseEntityScope({
   extraQueryParams,
   listQueryFn,
   facetsQueryFn,
+  detailVariant = 'light',
+  contentOnInsetPanel = false,
 }: Props) {
   const requireBrainRegion =
     requireBrainRegionProp ?? dataBrowseListingUsesBrainRegionHierarchy(dataType);
@@ -476,6 +486,11 @@ export function BrowseEntityScope({
               }}
               {...mainTableProps}
               requireEntityTypeSelector={requireEntityTypeSelector}
+              paginationClassName={
+                detailVariant === 'onPrimary' && !contentOnInsetPanel
+                  ? detailViewPaginationClass(detailVariant)
+                  : undefined
+              }
               filterClassNames={classNames?.filterClassNames}
               // @ts-expect-error
               expandableOptions={expandableOptions}

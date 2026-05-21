@@ -12,6 +12,11 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { tryCatch } from '@/api/utils';
 import { WorkspaceScope } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
+import {
+  detailViewInsetPanelClass,
+  type DetailViewVariant,
+} from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
 
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
@@ -20,12 +25,22 @@ import type { IIonChannelModelingConfig } from '@/api/entitycore/types/entities/
 import type { IonChannelFittingGridScanGenerationTask } from '@/api/one/types/ion-channel-fitting-scan-task';
 import type { WorkspaceContext } from '@/types/common';
 
+const browseScopeProps = {
+  allowQuery: false,
+  allowFilter: false,
+  allowSearch: false,
+  requireMiniDetailView: false,
+  requireBrainRegion: false,
+} as const;
+
 export function IonChannelRecordingRelatedArtifacts({
   icm,
   context,
+  variant = 'light',
 }: {
   icm: IonChannelModel;
   context: WorkspaceContext;
+  variant?: DetailViewVariant;
 }) {
   const { data, error } = useSuspenseQuery({
     queryKey: ['ion-channel-recording-related-artifacts', { id: icm.id, context }],
@@ -134,11 +149,15 @@ export function IonChannelRecordingRelatedArtifacts({
     return (
       <BrowseEntityScope
         dataType={ExtendedEntitiesTypeDict.IonChannelRecording}
-        {...{
-          allowQuery: false,
-          allowFilter: false,
-          allowSearch: false,
+        detailVariant={variant}
+        contentOnInsetPanel={variant === 'onPrimary'}
+        classNames={{
+          container: cn(
+            'max-h-none!',
+            variant === 'onPrimary' && detailViewInsetPanelClass(variant)
+          ),
         }}
+        {...browseScopeProps}
       />
     );
   }
@@ -148,12 +167,15 @@ export function IonChannelRecordingRelatedArtifacts({
       dataType={ExtendedEntitiesTypeDict.IonChannelRecording}
       extraQueryParams={{ id__in: data }}
       scope={WorkspaceScope.Combined}
-      {...{
-        requireMiniDetailView: false,
-        requireBrainRegion: false,
-        allowFilter: false,
-        allowSearch: false,
+      detailVariant={variant}
+      contentOnInsetPanel={variant === 'onPrimary'}
+      classNames={{
+        container: cn(
+          'max-h-none!',
+          variant === 'onPrimary' && detailViewInsetPanelClass(variant)
+        ),
       }}
+      {...browseScopeProps}
     />
   );
 }

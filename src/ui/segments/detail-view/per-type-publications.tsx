@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import { getScientificArtifactPublicationLinks } from '@/api/entitycore/queries/general/scientific-artifact-publication-link';
 import { Card } from '@/ui/segments/explore/circuit/elements/publication-item/card';
+import { detailViewValueClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { TPublicationTypeDictionary } from '@/api/entitycore/types/entities/scientific-artifact-publication-link';
@@ -15,9 +16,11 @@ import type { WorkspaceContext } from '@/types/common';
 export function PerTypePublications({
   entity,
   type,
+  variant = 'light',
 }: {
   entity: TRetrieveEntityOutput;
   type: TPublicationTypeDictionary;
+  variant?: DetailViewVariant;
 }) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
   const [pagination, setPagination] = useState<{
@@ -88,16 +91,25 @@ export function PerTypePublications({
             <div className="flex flex-col items-center justify-center">
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={<p className="text-gray-500">No related publications found</p>}
+                description={
+                  <p
+                    className={
+                      variant === 'onPrimary' ? 'text-primary-3' : 'text-gray-500'
+                    }
+                  >
+                    No related publications found
+                  </p>
+                }
               />
             </div>
           ),
         }}
         renderItem={(publication) => (
-          <List.Item key={publication.id}>
+          <List.Item key={publication.id} className="border-none! px-0! py-2!">
             <Card
               publication={publication.publication}
               scientificArtifact={publication.scientific_artifact}
+              className="w-full"
             />
           </List.Item>
         )}
@@ -105,7 +117,7 @@ export function PerTypePublications({
       {isError && (
         <div className="my-5 flex flex-col items-center justify-center">
           <div className="flex w-max items-center justify-between gap-6 rounded-md bg-red-50 p-4">
-            <p className="text-primary-8">{error.message}</p>
+            <p className={detailViewValueClass(variant)}>{error.message}</p>
             <CloseCircleTwoTone
               twoToneColor="#ff4d4f"
               className="text-md cursor-pointer hover:scale-110"

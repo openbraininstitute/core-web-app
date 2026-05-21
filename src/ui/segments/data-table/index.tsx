@@ -84,6 +84,7 @@ export type Props<T extends EntityCoreIdentifiable> = {
     loading: boolean;
     error: Error | null;
   };
+  paginationClassName?: ComponentProps<typeof Pagination>['className'];
 } & TableRowSelectionProps<T>;
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
@@ -125,6 +126,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   left,
   scrollable = true,
   facets,
+  paginationClassName,
 }: Props<T>) {
   const [displayControlPanel, setDisplayControlPanel] = useState(false);
   const onDisplayControlPanel = (value: boolean) => setDisplayControlPanel(value);
@@ -206,7 +208,9 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           showExpandButtons={showExpandButtons}
           controls={
             <div className="w-full">
-              <Pagination {...{ dataKey, dataType, section, resultPagination }} />
+              <Pagination
+                {...{ dataKey, dataType, section, resultPagination, className: paginationClassName }}
+              />
             </div>
           }
         />

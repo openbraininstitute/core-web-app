@@ -12,7 +12,7 @@ import Overview from '@/ui/segments/explore/circuit/elements/overview';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 
-export default async function Configuration({
+export default async function AnalysisSection({
   entity,
   extendedType,
 }: {
@@ -22,14 +22,15 @@ export default async function Configuration({
   const entityType = getEntityByExtendedType({ type: extendedType });
   if (!entityType) notFound();
 
+  const fieldVariant = detailViewVariantFromGroup(entityType.group);
+
   if (circuitTypes.includes(extendedType)) {
-    return <Overview circuit={entity as ICircuit} />;
+    return <Overview circuit={entity as ICircuit} variant={fieldVariant} />;
   }
   if (
     extendedType === ExtendedEntitiesTypeDict.Memodel ||
     extendedType === ExtendedEntitiesTypeDict.Emodel
   ) {
-    const fieldVariant = detailViewVariantFromGroup(entityType.group);
     return <Analysis entity={entity} variant={fieldVariant} />;
   }
 

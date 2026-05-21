@@ -515,7 +515,7 @@ export default async function Overview({
 
   const emCellMeshSection =
     extendedType === ExtendedEntitiesTypeDict.EMCellMesh ? (
-      <EmCellMeshMetadata id={entity.id} ctx={context} />
+      <EmCellMeshMetadata id={entity.id} ctx={context} variant={fieldVariant} />
     ) : null;
 
   const morphometricsSection = includes(morphologyTypes, extendedType) ? (
