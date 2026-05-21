@@ -43,6 +43,7 @@ export class RasterRenderer {
   private plotRect: PlotRect = { x: 0, y: 0, width: 1, height: 1 };
   private sortedPops: SortedPopulation[] = [];
   private visibleSpikes = 0;
+  private baseSize = 6;
   private dirty = true;
   private rafId: number | null = null;
   private resizeRafId: number | null = null;
@@ -131,6 +132,11 @@ export class RasterRenderer {
     this.scheduleRender();
   }
 
+  setBaseSize(size: number) {
+    this.baseSize = size;
+    this.scheduleRender();
+  }
+
   setVisiblePopulations(names: Set<string>) {
     for (const pop of this.sortedPops) {
       const visible = names.has(pop.name);
@@ -163,7 +169,6 @@ export class RasterRenderer {
   }
 
   private computePointSize(): number {
-    const baseSize = 8;
     const factor = countFactor(this.visibleSpikes);
 
     // Zoom scaling: grows as user zooms in
@@ -173,7 +178,12 @@ export class RasterRenderer {
       (this.initialView.yMax - this.initialView.yMin) / (this.view.yMax - this.view.yMin);
     const zoomBonus = Math.log2(Math.max(1, Math.min(xZoom, yZoom)));
 
-    return Math.min(14, baseSize * factor + zoomBonus);
+    // Offset keeps the smallest slider value visible even when `factor` shrinks
+    // to 0.5 on dense datasets; without it, baseSize=1 renders sub-pixel dots.
+    // Cap scales with user-chosen baseSize so large slider values aren't clipped;
+    // it still bounds runaway growth from zoomBonus.
+    const cap = Math.max(14, this.baseSize * 3);
+    return Math.min(cap, (this.baseSize + 1) * factor + zoomBonus);
   }
 
   private handleHover(info: HoverInfo | null) {

@@ -20,17 +20,14 @@ uniform float u_pointSize;
 out vec4 fragColor;
 
 void main() {
-  // Vertical tick: solid core with ~1 px outer feather so subpixel
+  // Round marker: solid core with ~1 px outer feather so subpixel
   // jitter shows as opacity falloff at the edge instead of a ±1 px
   // size step. Keeping the feather *outside* the core preserves a
-  // fully opaque body so dense overlapping ticks read as solid colour
+  // fully opaque body so dense overlapping dots read as solid colour
   // rather than accumulating a translucent haze.
   float feather = 1.0 / max(u_pointSize, 1.0);
-  float dx = abs(gl_PointCoord.x - 0.5);
-  float dy = abs(gl_PointCoord.y - 0.5);
-  float alphaX = 1.0 - smoothstep(0.2, 0.2 + feather, dx);
-  float alphaY = 1.0 - smoothstep(0.5 - feather, 0.5, dy);
-  float alpha = alphaX * alphaY;
+  float dist = distance(gl_PointCoord, vec2(0.5));
+  float alpha = 1.0 - smoothstep(0.5 - feather, 0.5, dist);
   if (alpha <= 0.001) discard;
   fragColor = vec4(u_color.rgb, u_color.a * alpha);
 }`;
@@ -101,7 +98,7 @@ export class WebGLPoints {
     // biome-ignore lint/correctness/useHookAtTopLevel: WebGL API, not a React hook
     gl.useProgram(this.program);
     gl.uniform4f(this.uBounds, bounds.xMin, bounds.yMin, bounds.xMax, bounds.yMax);
-    gl.uniform1f(this.uPointSize, Math.round(pointSize * (window.devicePixelRatio || 1)));
+    gl.uniform1f(this.uPointSize, pointSize * (window.devicePixelRatio || 1));
 
     for (const pop of this.populations) {
       if (!pop.visible || pop.count === 0) continue;
