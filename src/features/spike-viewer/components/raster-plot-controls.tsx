@@ -29,7 +29,7 @@ export default function RasterPlotControls({
           </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-64 border-neutral-2 bg-white shadow-lg">
-          <div className="flex flex-col gap-2">
+          <div className="flex select-none flex-col gap-2">
             <div className="flex items-center justify-between text-xs text-gray-600">
               <span>Marker size</span>
               <span className="tabular-nums">{markerSize}</span>
