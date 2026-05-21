@@ -60,7 +60,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
   const breakpoint = useDefaultBreakpoint();
   const spcKey = getSessionKey(STIMULATION_PROTOCOL_CONFIGURATION_SESSION_KEY, sessionId);
   const { virtualLabId, projectId } = useWorkspace();
-  const [synapsesPlacement] = useAtom(SynapsesPlacementAtomFamily(sessionId));
+  const [synapsesPlacement, setSynapsesPlacement] = useAtom(SynapsesPlacementAtomFamily(sessionId));
   const key = getSessionKey(SYNAPTIC_INPUTS_CONFIGURATION_SESSION_KEY, sessionId);
   const [state, update] = useAtom(SynaptomeConfigurationAtomFamily(key));
   const [stimulationState, updateStimulation] = useAtom(StimulationConfigurationAtomFamily(spcKey));
@@ -81,7 +81,7 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
     const simConfigForForm = state.find((_: SynapseConfiguration, ind) => ind === simFormIndex);
     return data?.synapses.find((s) => s.id === simConfigForForm?.id);
   };
-  const onRemoveSynapseConfig = (_key: number) => {
+  const onRemoveSynapseConfig = (synapseConfigKey: number) => {
     const safeStorage = typeof window !== 'undefined' ? sessionStorage : null;
     if (safeStorage) {
       state.forEach((_, index) => {
@@ -93,11 +93,17 @@ export function SynapticsConfiguration({ sessionId, memodelId, synaptome }: Prop
       });
     }
 
-    update(state.filter((_, index) => index !== _key) ?? []);
+    const removedConfigId = state[synapseConfigKey]?.config_id;
+    if (removedConfigId && synapsesPlacement?.[removedConfigId]) {
+      const { [removedConfigId]: _, ...rest } = synapsesPlacement;
+      setSynapsesPlacement(rest);
+    }
+
+    update(state.filter((_, index) => index !== synapseConfigKey) ?? []);
   };
 
   const onConfigProperty = ({ id, key: configKey, newValue }: UpdateSynapseSimulationProperty) => {
-    let color = placementConfigForForm(id)?.color!;
+    let color = placementConfigForForm(id)?.color;
     if (configKey === 'id') {
       color = data?.synapses.find((sc: TSingleNeuronSynaptomeConfiguration) => sc.id === newValue)
         ?.color!;
