@@ -41,12 +41,14 @@ export default function ActionMenu({
   type,
   parentLink,
   isPublicEntity,
+  variant = 'light',
 }: {
   entity: EntityTypeValue;
   ctx: WorkspaceContext;
   type: TExtendedEntitiesTypeDict;
   parentLink: string;
   isPublicEntity: boolean;
+  variant?: 'light' | 'onPrimary';
 }) {
   const { replace: navigate } = useRouter();
   const queryClient = useQueryClient();
@@ -142,13 +144,21 @@ export default function ActionMenu({
     });
   }, [isSimulatable, ctx, type, entity]);
 
+  const iconClass = variant === 'onPrimary' ? 'text-white' : 'text-primary-8';
+
   return (
-    <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-base font-bold">
+    <div
+      className={cn(
+        'mt-10 flex flex-col gap-5 px-5 text-base font-bold',
+        variant === 'onPrimary' ? 'text-white' : 'text-primary-9'
+      )}
+    >
       <Action
+        variant={variant}
         onClick={() => !copying && copy(entity.id)}
         icon={
           !copying ? (
-            <CopyOutlined className="text-primary-8" />
+            <CopyOutlined className={iconClass} />
           ) : (
             <CheckOutlined className="text-teal-400" />
           )
@@ -159,19 +169,22 @@ export default function ActionMenu({
 
       {simulateHref && (
         <NextLink href={simulateHref}>
-          <Action icon={<ExperimentOutlined className="text-primary-8" />}>Simulate</Action>
+          <Action variant={variant} icon={<ExperimentOutlined className={iconClass} />}>
+            Simulate
+          </Action>
         </NextLink>
       )}
 
       {entityType.isDownloadable && (
         <Action
+          variant={variant}
           onClick={() => {
             if (entity.type === ExtendedEntitiesTypeDict.Circuit) setCircuit(entity as ICircuit);
             else {
               downloadArchive(entityType.type, [entity.id], ctx);
             }
           }}
-          icon={<DownloadOutlined className="text-primary-8" />}
+          icon={<DownloadOutlined className={iconClass} />}
         >
           Download
         </Action>
@@ -206,7 +219,10 @@ export default function ActionMenu({
           }}
         >
           <span className="cursor-pointer">
-            <Action icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}>
+            <Action
+              variant={variant}
+              icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}
+            >
               {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </Action>
           </span>

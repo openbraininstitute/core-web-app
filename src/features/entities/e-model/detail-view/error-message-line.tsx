@@ -2,6 +2,12 @@ import { ReactNode } from 'react';
 import { WarningFilled } from '@ant-design/icons';
 
 import { Header } from '@/features/entities/e-model/detail-view/header';
+import {
+  detailViewInsetPanelClass,
+  detailViewValueClass,
+  type DetailViewVariant,
+} from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
 
 type Props = {
   message?: ReactNode;
@@ -22,9 +28,19 @@ function ErrorMessageBox({ message }: Props) {
   );
 }
 
-function InfoMessageBox({ message }: Props) {
+function InfoMessageBox({
+  message,
+  variant = 'light',
+}: Props & { variant?: DetailViewVariant }) {
   return (
-    <div className="border-neutral-3 text-neutral-4 flex items-center justify-center gap-4 border p-16 text-xl">
+    <div
+      className={cn(
+        'flex items-center justify-center gap-4 border p-16 text-xl',
+        variant === 'onPrimary'
+          ? cn(detailViewInsetPanelClass(variant), 'text-primary-7')
+          : 'border-neutral-3 text-neutral-4'
+      )}
+    >
       {message}
     </div>
   );
@@ -34,17 +50,21 @@ export function StandardFallback({
   children,
   type,
   message,
+  variant = 'light',
 }: {
   children: ReactNode;
   type: 'error' | 'info';
   message?: ReactNode;
+  variant?: DetailViewVariant;
 }) {
   function renderSwitch() {
     switch (type) {
       case 'error':
         return <ErrorMessageBox message={message ?? 'No information available'} />;
       case 'info':
-        return <InfoMessageBox message={message ?? 'No information available'} />;
+        return (
+          <InfoMessageBox message={message ?? 'No information available'} variant={variant} />
+        );
       default:
         return undefined;
     }
@@ -52,7 +72,7 @@ export function StandardFallback({
 
   return (
     <div className="flex flex-col gap-4">
-      <Header>{children}</Header>
+      <Header variant={variant}>{children}</Header>
       {renderSwitch()}
     </div>
   );

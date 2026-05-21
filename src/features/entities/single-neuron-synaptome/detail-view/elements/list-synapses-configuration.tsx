@@ -9,22 +9,31 @@ import {
 import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
 import { getSimulationColor, SYNAPSE_CODE_TO_TYPE } from '@/constants/simulate/single-neuron';
 
+import { detailViewHeadingClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
+
 import type { TSingleNeuronSynaptomeConfiguration } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 
 type Props = {
   config: {
     synapses: Array<TSingleNeuronSynaptomeConfiguration>;
   } | null;
+  variant?: DetailViewVariant;
 };
 
-export default function SynapseGroupList({ config }: Props) {
+export default function SynapseGroupList({ config, variant = 'light' }: Props) {
   if (config && !config.synapses.length) {
-    return <Empty description="No synapses found" />;
+    return (
+      <Empty
+        description="No synapses found"
+        className={variant === 'onPrimary' ? '[&_.ant-empty-description]:text-primary-3' : undefined}
+      />
+    );
   }
 
   return (
     <div className="w-full">
-      <h2 className="text-primary-8 mb-8 text-2xl font-bold">Synapse groups</h2>
+      <h2 className={cn('mb-8', detailViewHeadingClass(variant, '2xl'))}>Synapse groups</h2>
       <div className="flex flex-row flex-wrap gap-4">
         {config?.synapses?.map(
           ({ id, name, formula, target, type, color, soma_synapse_count }, indx) => (
@@ -40,7 +49,7 @@ export default function SynapseGroupList({ config }: Props) {
               >
                 {indx + 1}
               </div>
-              <div className="flex w-full flex-col gap-5 border border-gray-300 p-6">
+              <div className="flex w-full flex-col gap-5 border border-gray-300 bg-white p-6">
                 <ConfigItem {...{ label: 'name', value: name }} />
                 <div className="grid grid-cols-2 gap-2">
                   <ConfigItem

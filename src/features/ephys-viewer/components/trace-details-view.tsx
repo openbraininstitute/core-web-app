@@ -12,6 +12,12 @@ import SweepSelector from '@/features/ephys-viewer/components/sweep-selector';
 import { RecordingType, type SweepData } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 
+import {
+  ephysHeadingClass,
+  ephysSectionLabelClass,
+  type EphysViewerVariant,
+} from '@/features/ephys-viewer/label-styles';
+
 import type NWBTrace from '@/features/ephys-viewer/nwb-trace';
 
 interface TraceDetailsViewProps {
@@ -19,6 +25,7 @@ interface TraceDetailsViewProps {
   defaultCellId?: string;
   defaultProtocol?: string;
   defaultRepetition?: string;
+  variant?: EphysViewerVariant;
 }
 
 interface CellDetailsProps {
@@ -27,6 +34,7 @@ interface CellDetailsProps {
   showCellLabel?: boolean;
   defaultProtocol?: string;
   defaultRepetition?: string;
+  variant?: EphysViewerVariant;
 }
 
 function CellDetails({
@@ -35,6 +43,7 @@ function CellDetails({
   showCellLabel,
   defaultProtocol,
   defaultRepetition,
+  variant = 'light',
 }: CellDetailsProps) {
   const [reset, setReset] = useState<boolean>(false);
 
@@ -145,13 +154,14 @@ function CellDetails({
 
   return (
     <div className="flex flex-col gap-10">
-      {showCellLabel && <div className="text-primary-9 text-xl font-bold">{cellId}</div>}
+      {showCellLabel && <div className={ephysHeadingClass(variant)}>{cellId}</div>}
       <div className="flex flex-wrap gap-8">
         <OptionSelect
           label={{ title: 'Protocol', numberOfAvailable: trace.getProtocols(cellId).length }}
           options={dataSetOptions}
           value={selectedProtocol}
           onChange={handleProtocolChange}
+          variant={variant}
         />
         <OptionSelect
           label={{ title: 'Repetition', numberOfAvailable: Object.keys(repetitions).length }}
@@ -159,6 +169,7 @@ function CellDetails({
           value={selectedRepetition}
           onChange={handleRepetitionChange}
           hideWhenSingle
+          variant={variant}
         />
         <SweepSelector
           onPreviewSweep={handlePreviewSweep}
@@ -167,6 +178,7 @@ function CellDetails({
           previewItem={previewItem}
           setSelectedSweeps={setSelectedSweeps}
           sweepOptions={sweepOptions}
+          variant={variant}
         />
         {hasCurrentRecordings && (
           <Radio.Group
@@ -245,6 +257,7 @@ function TraceDetailsView({
   defaultCellId,
   defaultProtocol,
   defaultRepetition,
+  variant = 'light',
 }: TraceDetailsViewProps) {
   const cellIds = useMemo(() => trace.getCellIds(), [trace]);
   const [selectedCellId, setSelectedCellId] = useState<string>(
@@ -260,7 +273,9 @@ function TraceDetailsView({
     <div className="flex flex-col gap-10">
       {cellIds.length > 1 && (
         <div className="flex flex-col gap-2">
-          <div className="text-sm font-medium">Select cell ({cellIds.length} available)</div>
+          <div className={ephysSectionLabelClass(variant)}>
+            Select cell ({cellIds.length} available)
+          </div>
           <Select
             className="cell-select w-48"
             placeholder="Select a cell"
@@ -286,6 +301,7 @@ function TraceDetailsView({
             showCellLabel={cellIds.length > 1}
             defaultProtocol={defaultProtocol}
             defaultRepetition={defaultRepetition}
+            variant={variant}
           />
         ))}
       </div>

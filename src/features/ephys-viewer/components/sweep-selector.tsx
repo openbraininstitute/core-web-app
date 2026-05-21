@@ -1,6 +1,11 @@
 import React, { ChangeEvent } from 'react';
 import { Button } from 'antd';
 
+import {
+  ephysControlLabelClass,
+  ephysControlSubLabelClass,
+  type EphysViewerVariant,
+} from '@/features/ephys-viewer/label-styles';
 import { classNames } from '@/util/utils';
 
 import styles from './sweep-selector.module.css';
@@ -12,6 +17,7 @@ type TraceSelectorGroupProps = {
   setSelectedSweeps: (sweeps: string[]) => void;
   colorMap: Map<string, string>;
   previewItem?: string;
+  variant?: EphysViewerVariant;
 };
 
 function SweepSelector({
@@ -21,6 +27,7 @@ function SweepSelector({
   onPreviewSweep,
   setSelectedSweeps,
   colorMap,
+  variant = 'light',
 }: TraceSelectorGroupProps) {
   const [preview, setPreview] = React.useState<string | undefined>(undefined);
   const handlePreviewSweep = (id: string | undefined) => {
@@ -83,8 +90,11 @@ function SweepSelector({
   return (
     <div className={styles.flex}>
       <div className="flex flex-col gap-3">
-        <span className="text-dark font-bold">
-          Sweep <small className="text-sm font-light">({sweepOptions.length} available)</small>
+        <span className={ephysControlLabelClass(variant)}>
+          Sweep{' '}
+          <small className={ephysControlSubLabelClass(variant)}>
+            ({sweepOptions.length} available)
+          </small>
         </span>
         <div className="flex flex-wrap items-center">{sweeps}</div>
       </div>

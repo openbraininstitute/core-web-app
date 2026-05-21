@@ -7,6 +7,7 @@ import {
 } from '@/ui/molecules/select';
 import { isType } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
+import { detailViewLabelClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -19,6 +20,7 @@ export interface SelectAnalysisProps {
   value: string;
   onChange(value: string): void;
   results: FlatValidationResult[];
+  variant?: DetailViewVariant;
 }
 
 export interface SelectAnalysisOption {
@@ -26,7 +28,13 @@ export interface SelectAnalysisOption {
   value: string;
 }
 
-export function SelectAnalysis({ className, value, onChange, results }: SelectAnalysisProps) {
+export function SelectAnalysis({
+  className,
+  value,
+  onChange,
+  results,
+  variant = 'light',
+}: SelectAnalysisProps) {
   const options: SelectAnalysisOption[] = [
     { label: 'All', value: 'all' },
     ...results.map((result) => {
@@ -39,7 +47,7 @@ export function SelectAnalysis({ className, value, onChange, results }: SelectAn
 
   return (
     <div className={classNames(className, styles.selectAnalysis)}>
-      <div className="text-neutral-3 ml-3 inline-block">SELECT ANALYSIS</div>
+      <div className={cn('ml-3 inline-block', detailViewLabelClass(variant))}>SELECT ANALYSIS</div>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
           size="default"

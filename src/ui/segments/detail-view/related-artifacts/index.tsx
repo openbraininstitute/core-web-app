@@ -6,6 +6,7 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 import MEModelResults from '@/features/entities/me-model/detail-view/simulation';
 import SynaptomeResults from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
 import { ICMRelatedArtifacts } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/index';
@@ -25,13 +26,20 @@ export default async function RelatedArtifacts({
   extendedType: TExtendedEntitiesTypeDict;
   context: WorkspaceContext;
 }) {
-  return match({ entityConfig: getEntityByExtendedType({ type: extendedType }) })
+  const entityConfig = getEntityByExtendedType({ type: extendedType });
+  const fieldVariant = entityConfig
+    ? detailViewVariantFromGroup(entityConfig.group)
+    : 'light';
+
+  return match({ entityConfig })
     .with({ entityConfig: { extendedType: ExtendedEntitiesTypeDict.Memodel } }, () => (
-      <MEModelResults modelId={entity.id} context={context} />
+      <MEModelResults modelId={entity.id} context={context} variant={fieldVariant} />
     ))
     .with(
       { entityConfig: { extendedType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome } },
-      () => <SynaptomeResults modelId={entity.id} context={context} />
+      () => (
+        <SynaptomeResults modelId={entity.id} context={context} variant={fieldVariant} />
+      )
     )
     .with(
       {
@@ -45,7 +53,11 @@ export default async function RelatedArtifacts({
       () => <RelatedCircuits circuit={entity as ICircuit} />
     )
     .with({ entityConfig: { extendedType: ExtendedEntitiesTypeDict.IonChannelModel } }, () => (
-      <ICMRelatedArtifacts icm={entity as IonChannelModel} context={context} />
+      <ICMRelatedArtifacts
+        icm={entity as IonChannelModel}
+        context={context}
+        variant={fieldVariant}
+      />
     ))
     .otherwise(() => notFound());
 }

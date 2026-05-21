@@ -1,5 +1,16 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-export function Header({ children }: { children: ReactNode }) {
-  return <div className="text-primary-8 text-2xl font-bold">{children}</div>;
+import {
+  detailViewHeadingClass,
+  type DetailViewVariant,
+} from '@/ui/segments/detail-view/variant-styles';
+
+export function Header({
+  children,
+  variant = 'light',
+}: {
+  children: ReactNode;
+  variant?: DetailViewVariant;
+}) {
+  return <div className={detailViewHeadingClass(variant, '2xl')}>{children}</div>;
 }

@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown';
 
 import { Explanation } from '@/components/explanation';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { detailViewLinkClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
 import { classNames } from '@/util/utils';
 
 import { validationDescription } from '../hooks/dictionary';
@@ -15,9 +17,15 @@ export interface ValidationExplanationProps {
   className?: string;
   passed: boolean;
   entity: TRetrieveEntityOutput;
+  variant?: DetailViewVariant;
 }
 
-export function ValidationExplanation({ className, passed, entity }: ValidationExplanationProps) {
+export function ValidationExplanation({
+  className,
+  passed,
+  entity,
+  variant = 'light',
+}: ValidationExplanationProps) {
   const entityConfig = getEntityByCoreType({ type: entity.type });
   const title = entityConfig?.title;
   const text = get(validationDescription, entity.type, null);
@@ -26,9 +34,12 @@ export function ValidationExplanation({ className, passed, entity }: ValidationE
   return (
     <Explanation
       hasDescription
+      variant={variant}
       title={
         <>
-          <div>{title} Validation</div>
+          <div className={variant === 'onPrimary' ? 'text-white' : undefined}>
+            {title} Validation
+          </div>
           <div className={passed ? styles.passed : styles.failed}>
             {passed ? 'passed' : 'failed'}
           </div>
@@ -43,7 +54,7 @@ export function ValidationExplanation({ className, passed, entity }: ValidationE
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="text-primary-6 hover:text-primary-8 underline"
+              className={cn('underline', detailViewLinkClass(variant))}
             >
               {children}
             </a>

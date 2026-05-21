@@ -7,6 +7,8 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { CHART_LINE_COLOR } from '@/features/ephys-viewer/constants';
 import { useOverviewPlotConfig } from '@/features/ephys-viewer/hooks/config-hooks';
+import type { EphysViewerVariant } from '@/features/ephys-viewer/label-styles';
+import { ephysSectionLabelClass } from '@/features/ephys-viewer/label-styles';
 import { RecordingType } from '@/features/ephys-viewer/nwb-trace';
 import useResizeObserver from '@/hooks/use-resize-observer-w-ref';
 import optimizePlotData from '@/util/explore-section/optimizeTrace';
@@ -47,6 +49,7 @@ interface TraceOverviewComponentProps {
   onCellIdChange: (cellId: string) => void;
   onProtocolChange: (value: string) => void;
   onRepetitionClick: (stimulusType: string, rep: string) => () => void;
+  variant?: EphysViewerVariant;
 }
 
 const colorMap = {
@@ -277,6 +280,7 @@ export default function TraceOverview({
   onCellIdChange,
   onProtocolChange,
   onRepetitionClick,
+  variant = 'light',
 }: TraceOverviewComponentProps) {
   const cellIds = useMemo(() => trace.getCellIds(), [trace]);
 
@@ -315,7 +319,7 @@ export default function TraceOverview({
   return (
     <div className="flex flex-col gap-10">
       {cellIds.length > 1 && (
-        <div className="flex flex-col gap-2">
+        <div className={cn('flex flex-col gap-2', ephysSectionLabelClass(variant))}>
           Select cell ({cellIds.length} available)
           <Select
             className="cell-select"
@@ -334,7 +338,7 @@ export default function TraceOverview({
       )}
 
       {allProtocols.length > 1 && (
-        <div className="flex flex-col gap-2">
+        <div className={cn('flex flex-col gap-2', ephysSectionLabelClass(variant))}>
           Select Stimulus ({allProtocols.length} available)
           <Select
             className="stimulus-select"

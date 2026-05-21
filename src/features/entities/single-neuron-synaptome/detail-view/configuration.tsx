@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
@@ -10,6 +11,15 @@ import {
   renderArray,
 } from '@/entity-configuration/definitions/renderer';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
+import {
+  detailViewHeadingClass,
+  detailViewLabelClass,
+  detailViewLinkClass,
+  detailViewPanelBorderClass,
+  detailViewValueClass,
+  type DetailViewVariant,
+} from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEType, IMType } from '@/api/entitycore/types/shared/global';
@@ -20,41 +30,53 @@ export default function Configuration({
   memodel,
   virtualLabId,
   projectId,
+  variant = 'light',
 }: {
   memodel: IMEModel;
   virtualLabId: string;
   projectId: string;
+  variant?: DetailViewVariant;
 }) {
   return (
-    <div className="relative mt-2 flex gap-10 overflow-hidden rounded-md border border-gray-400 p-4">
+    <div
+      className={cn(
+        'relative mt-2 flex gap-10 overflow-hidden rounded-md border p-4',
+        detailViewPanelBorderClass(variant)
+      )}
+    >
       <Link
         href={resolveExploreDetailsPageUrl({
           ctx: { virtualLabId, projectId },
           dataType: ExtendedEntitiesTypeDict.Memodel,
           entityId: memodel.id,
         })}
-        className="text-primary-8 hover:text-primary-7 absolute top-4 right-4 flex items-center justify-center font-bold"
+        className={cn(
+          'absolute top-4 right-4 flex items-center justify-center',
+          detailViewLinkClass(variant)
+        )}
       >
         View details
       </Link>
       <div className="flex flex-shrink-0 flex-col items-start gap-2">
-        <div className="mb-2 text-xl font-light text-gray-400 uppercase">single neuron model</div>
+        <div className={cn('mb-2 text-xl font-light uppercase', detailViewLabelClass(variant))}>
+          single neuron model
+        </div>
         <div className="flex items-start gap-2">
-          <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
+          <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border bg-white">
             {renderPreview<ICellMorphology>(memodel.morphology, {
               height: 200,
               width: 200,
             })}
           </div>
-          <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border">
+          <div className="border-neutral-3 flex h-56 w-56 items-center justify-center border bg-white">
             {renderPreview(memodel.emodel, { height: 200, width: 200 })}
           </div>
         </div>
       </div>
       <div className="mt-12 min-w-0 flex-1">
-        <div className="text-neutral-4 font-thin uppercase">NAME</div>
-        <div className="text-primary-8 my-1 text-3xl font-bold break-words">{memodel.name}</div>
-        <MeModelDetails memodel={memodel} />
+        <div className={detailViewLabelClass(variant)}>NAME</div>
+        <div className={cn('my-1 break-words', detailViewHeadingClass(variant))}>{memodel.name}</div>
+        <MeModelDetails memodel={memodel} variant={variant} />
       </div>
     </div>
   );
@@ -62,50 +84,48 @@ export default function Configuration({
 
 type ModelDetails = {
   memodel: IMEModel;
+  variant: DetailViewVariant;
 };
 
-function MeModelDetails({ memodel }: ModelDetails) {
+function MeModelDetails({ memodel, variant }: ModelDetails) {
   const mmodel = memodel.morphology;
   const { emodel } = memodel;
 
+  const fields: Array<{ label: string; value: ReactNode; span?: 2 }> = [
+    { label: 'm-model', value: renderEmptyOrValue(mmodel.name) },
+    { label: 'e-model', value: renderEmptyOrValue(emodel.name) },
+    { label: 'Brain Region', value: renderEmptyOrValue(memodel.brain_region.name) },
+    {
+      label: 'E-Type',
+      value: renderEmptyOrValue(
+        renderArray(
+          (memodel as EntityCoreObjectTypes & { etypes: Array<IEType> | null }).etypes?.map(
+            (m) => m.pref_label
+          ) || []
+        )
+      ),
+    },
+    {
+      label: 'M-Type',
+      value: renderEmptyOrValue(
+        renderArray(
+          (memodel as EntityCoreObjectTypes & { mtypes: Array<IMType> | null }).mtypes?.map(
+            (m) => m.pref_label
+          ) || []
+        )
+      ),
+      span: 2,
+    },
+  ];
+
   return (
-    <div className="text-primary-8 mt-4 grid grid-cols-2 gap-4 gap-x-12">
-      <div className="col-span-1">
-        <div className="text-neutral-4 font-thin uppercase">m-model</div>
-        <div className="break-words">{renderEmptyOrValue(mmodel.name)}</div>
-      </div>
-      <div className="col-span-1">
-        <div className="text-neutral-4 font-thin uppercase">e-model</div>
-        <div className="break-words">{renderEmptyOrValue(emodel.name)}</div>
-      </div>
-      <div className="col-span-1">
-        <div className="text-neutral-4 font-thin uppercase">Brain Region</div>
-        <div className="break-words">{renderEmptyOrValue(memodel.brain_region.name)}</div>
-      </div>
-      <div className="col-span-1">
-        <div className="text-neutral-4 font-thin uppercase">E-Type</div>
-        <div className="break-words">
-          {renderEmptyOrValue(
-            renderArray(
-              (memodel as EntityCoreObjectTypes & { etypes: Array<IEType> | null }).etypes?.map(
-                (m) => m.pref_label
-              ) || []
-            )
-          )}
+    <div className={cn('mt-4 grid grid-cols-2 gap-4 gap-x-12', detailViewValueClass(variant))}>
+      {fields.map((field) => (
+        <div key={field.label} className={field.span === 2 ? 'col-span-2' : 'col-span-1'}>
+          <div className={detailViewLabelClass(variant)}>{field.label}</div>
+          <div className="break-words">{field.value}</div>
         </div>
-      </div>
-      <div className="col-span-2">
-        <div className="text-neutral-4 font-thin uppercase">M-Type</div>
-        <div className="break-words">
-          {renderEmptyOrValue(
-            renderArray(
-              (memodel as EntityCoreObjectTypes & { mtypes: Array<IMType> | null }).mtypes?.map(
-                (m) => m.pref_label
-              ) || []
-            )
-          )}
-        </div>
-      </div>
+      ))}
     </div>
   );
 }

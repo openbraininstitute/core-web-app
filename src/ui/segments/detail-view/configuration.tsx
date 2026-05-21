@@ -9,6 +9,7 @@ import {
   applyEntityExpansions,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
+import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 import { SingleNeuronSynaptome as singleNeuronSynaptomeEntity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import {
   singleNeuronSimulationApiQueryExpand,
@@ -95,6 +96,8 @@ export default async function Configuration({
   const entityType = getEntityByExtendedType({ type: extendedType });
   if (!entityType) notFound();
 
+  const fieldVariant = detailViewVariantFromGroup(entityType.group);
+
   if (extendedType === 'emodel') {
     let morphology: ICellMorphologyExpanded | ICellMorphology;
 
@@ -109,12 +112,15 @@ export default async function Configuration({
     }
 
     return (
-      <EModelConfig payload={{ source: entity as IEModel, exemplar_morphology: morphology }} />
+      <EModelConfig
+        payload={{ source: entity as IEModel, exemplar_morphology: morphology }}
+        variant={fieldVariant}
+      />
     );
   }
 
   if (extendedType === 'memodel') {
-    return <MEModelConfig model={entity as IMEModel} />;
+    return <MEModelConfig model={entity as IMEModel} variant={fieldVariant} />;
   }
 
   if (extendedType === 'single_neuron_synaptome') {
@@ -135,10 +141,11 @@ export default async function Configuration({
           memodel={data.memodel}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
+          variant={fieldVariant}
         />
 
         <div className="mt-10">
-          <SynapseGroupList config={data.config} />
+          <SynapseGroupList config={data.config} variant={fieldVariant} />
         </div>
       </div>
     );

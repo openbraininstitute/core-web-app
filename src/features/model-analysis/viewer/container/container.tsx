@@ -8,6 +8,9 @@ import { SelectAnalysis } from '@/features/model-analysis/viewer/container/selec
 import { ValidationExplanation } from '@/features/model-analysis/viewer/container/validation-explanation';
 import { ValidationResultCard } from '@/features/model-analysis/viewer/container/validation-explanation/card';
 
+import { detailViewValueClass, type DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
+
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { TValidationResultNonUndefined } from '@/features/model-analysis/explorer/use-analysis';
 
@@ -15,14 +18,22 @@ type Props = {
   rin: number | undefined;
   validationResults: TValidationResultNonUndefined;
   entity: TRetrieveEntityOutput;
+  variant?: DetailViewVariant;
 };
 
-export function ViewerContainer({ rin, validationResults, entity }: Props) {
+export function ViewerContainer({
+  rin,
+  validationResults,
+  entity,
+  variant = 'light',
+}: Props) {
   const [selectedId, setSelectedId] = useState<string>('all');
   const flatValidationResults = useFlatValidationResults(validationResults, rin, entity.type);
   const selectedValidationResults = useSelectedValidationResults(flatValidationResults, selectedId);
 
-  if (flatValidationResults.length === 0) return <div>No validation results found</div>;
+  if (flatValidationResults.length === 0) {
+    return <div className={detailViewValueClass(variant)}>No validation results found</div>;
+  }
 
   const passed = flatValidationResults.reduce(
     (accumulator, item) => accumulator && item.passed,
@@ -31,10 +42,15 @@ export function ViewerContainer({ rin, validationResults, entity }: Props) {
 
   return (
     <>
-      <ValidationExplanation passed={passed} entity={entity} />
-      <SelectAnalysis value={selectedId} onChange={setSelectedId} results={flatValidationResults} />
+      <ValidationExplanation passed={passed} entity={entity} variant={variant} />
+      <SelectAnalysis
+        value={selectedId}
+        onChange={setSelectedId}
+        results={flatValidationResults}
+        variant={variant}
+      />
       {selectedValidationResults.map((result) => (
-        <ValidationResultCard key={result.id} value={result} />
+        <ValidationResultCard key={result.id} value={result} variant={variant} />
       ))}
     </>
   );

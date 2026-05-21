@@ -1,0 +1,45 @@
+.trace-view-mode-toggle-on-primary.ant-radio-group {
+  display: inline-flex;
+}
+
+.trace-view-mode-toggle-on-primary .ant-radio-button-wrapper {
+  background: transparent;
+  border-color: rgb(255 255 255 / 0.35);
+  color: var(--color-primary-2);
+  font-weight: 600;
+}
+
+.trace-view-mode-toggle-on-primary .ant-radio-button-wrapper:hover {
+  color: #fff;
+}
+
+.trace-view-mode-toggle-on-primary .ant-radio-button-wrapper-checked {
+  background: var(--color-primary-8) !important;
+  border-color: var(--color-primary-8) !important;
+  color: #fff !important;
+}
+
+.trace-view-mode-toggle-on-primary .ant-radio-button-wrapper-checked:hover {
+  color: #fff !important;
+}
+
+.trace-view-mode-toggle-on-primary
+  .ant-radio-button-wrapper-checked
+  .ant-radio-button-label,
+.trace-view-mode-toggle-on-primary .ant-radio-button-wrapper-checked .anticon {
+  color: #fff !important;
+}
+
+.trace-view-mode-toggle-on-primary .ant-radio-button-wrapper::before {
+  background-color: rgb(255 255 255 / 0.35) !important;
+}
+
+.trace-view-mode-toggle-on-primary .ant-radio-button-wrapper:first-child {
+  border-start-start-radius: 9999px;
+  border-end-start-radius: 9999px;
+}
+
+.trace-view-mode-toggle-on-primary .ant-radio-button-wrapper:last-child {
+  border-start-end-radius: 9999px;
+  border-end-end-radius: 9999px;
+}

@@ -35,19 +35,23 @@ export function BackToListingOriginButton({
   virtualLabId,
   projectId,
   onClick,
-}: WorkspaceContext & { onClick: () => void }) {
+  variant = 'light',
+}: WorkspaceContext & { onClick: () => void; variant?: 'light' | 'onPrimary' }) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
 
+  const linkClass =
+    variant === 'onPrimary' ? 'capitalize hover:text-primary-3' : 'capitalize';
+
   return (
-    <Breadcrumb>
+    <Breadcrumb variant={variant} tone="inactive">
       <Link
         onClick={onClick}
         href={{
           pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
           query: query.toString(),
         }}
-        className="capitalize"
+        className={linkClass}
       >
         Data
       </Link>
@@ -60,19 +64,23 @@ export function BackToCategory({
   projectId,
   group,
   onClick,
-}: WorkspaceContext & { group: TEntityTypeGroup; onClick: () => void }) {
+  variant = 'light',
+}: WorkspaceContext & { group: TEntityTypeGroup; onClick: () => void; variant?: 'light' | 'onPrimary' }) {
   const queryParams = useSearchParams();
   const groupDisplayName = getGroupDisplayName(group);
 
+  const linkClass =
+    variant === 'onPrimary' ? 'capitalize hover:text-primary-3' : 'capitalize';
+
   return (
-    <Breadcrumb>
+    <Breadcrumb variant={variant} tone="inactive">
       <Link
         onClick={onClick}
         href={{
           pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
           query: { ...Object.fromEntries(queryParams.entries()), group },
         }}
-        className="capitalize"
+        className={linkClass}
       >
         {groupDisplayName}
       </Link>
@@ -88,26 +96,31 @@ export function BackToEntityType({
   onClick,
   group,
   scope,
+  variant = 'light',
 }: WorkspaceContext & {
   type: TExtendedEntitiesTypeDict;
   title: string;
   group: TEntityTypeGroup;
   scope: TWorkspaceScope;
   onClick: () => void;
+  variant?: 'light' | 'onPrimary';
 }) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
   query.set('group', group);
   query.set('scope', scope);
 
+  const linkClass = variant === 'onPrimary' ? 'hover:text-primary-3' : undefined;
+
   return (
-    <Breadcrumb showChevron={false} cls={{ label: 'font-bold' }}>
+    <Breadcrumb showChevron={false} variant={variant} tone="active">
       <Link
         onClick={onClick}
         href={{
           pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${type}`,
           query: query.toString(),
         }}
+        className={linkClass}
       >
         {title}
       </Link>
@@ -120,11 +133,13 @@ export function DataBreadcrumb({
   title,
   group,
   scope,
+  variant = 'light',
 }: {
   type: TExtendedEntitiesTypeDict;
   group: TEntityTypeGroup;
   scope: TWorkspaceScope;
   title: string;
+  variant?: 'light' | 'onPrimary';
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
@@ -152,20 +167,34 @@ export function DataBreadcrumb({
 
   if (section !== WorkspaceSection.Data) return null;
   return (
-    <div className="flex flex-nowrap gap-3 pt-3">
-      <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick }} />
-      <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick }} />
+    <div className="flex flex-nowrap gap-3">
+      <BackToListingOriginButton
+        {...{ virtualLabId, projectId, onClick: onLinkClick, variant }}
+      />
+      <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick, variant }} />
       <BackToEntityType
-        {...{ virtualLabId, projectId, type, title, group, scope, onClick: onLinkClick }}
+        {...{ virtualLabId, projectId, type, title, group, scope, onClick: onLinkClick, variant }}
       />
     </div>
   );
 }
 
-export function ClosePage({ url }: { url: string }) {
+export function ClosePage({
+  url,
+  variant = 'light',
+}: {
+  url: string;
+  variant?: 'light' | 'onPrimary';
+}) {
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
   const section = routeSegments.at(0);
   if (section !== WorkspaceSection.Data) return null;
 
-  return <Close href={url} className="mt-3 mr-1" />;
+  return (
+    <Close
+      href={url}
+      className="mr-1"
+      variant={variant}
+    />
+  );
 }

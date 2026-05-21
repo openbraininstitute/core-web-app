@@ -11,7 +11,8 @@ import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-d
 
 export const useMorphometrics = (
   morphology: ICellMorphologyExpanded,
-  showLabel: boolean = false
+  showLabel: boolean = false,
+  variant: 'light' | 'onPrimary' = 'light'
 ) => {
   const groupedCardFields = groupBy(
     getViewDefinitionByExtendedType(ExtendedEntitiesTypeDict.CellMorphology)!.cardViewFields,
@@ -26,8 +27,19 @@ export const useMorphometrics = (
     const fieldObj = getFieldDefinition(field.field);
 
     return (
-      <div className="text-primary-8 mr-10" key={field.field}>
-        {showLabel && <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>}
+      <div
+        className={variant === 'onPrimary' ? 'mr-10 text-white' : 'text-primary-8 mr-10'}
+        key={field.field}
+      >
+        {showLabel && (
+          <div
+            className={
+              variant === 'onPrimary' ? 'text-primary-3 uppercase' : 'text-neutral-4 uppercase'
+            }
+          >
+            {fieldObj?.title}
+          </div>
+        )}
         <div className={`${showLabel ? 'mt-2' : 'mt-0 ml-6'}`}>
           <div className={`mb-2 h-6 truncate ${field.className}`}>
             {morphology ? fieldObj?.render?.(morphology) : EmptyValue}

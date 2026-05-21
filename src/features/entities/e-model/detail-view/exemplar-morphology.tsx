@@ -12,6 +12,11 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { getFieldsDefinition } from '@/entity-configuration/definitions';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import {
+  detailViewInsetPanelClass,
+  type DetailViewVariant,
+} from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
 
 import type {
   EntityCoreObjectTypes,
@@ -44,9 +49,10 @@ function makeColumns(virtualLabId: string, projectId: string): ColumnsType<ICell
 
 type Props = {
   exemplarMorphology: ICellMorphology | ICellMorphologyExpanded;
+  variant?: DetailViewVariant;
 };
 
-export function ExemplarMorphology({ exemplarMorphology }: Props) {
+export function ExemplarMorphology({ exemplarMorphology, variant = 'light' }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const exemplarMorphologyAsList = exemplarMorphology ? [exemplarMorphology] : [];
   const morphologies = exemplarMorphologyAsList;
@@ -58,7 +64,11 @@ export function ExemplarMorphology({ exemplarMorphology }: Props) {
   const title = 'Exemplar morphology';
 
   if (!morphologies) {
-    return <StandardFallback type="error">{title}</StandardFallback>;
+    return (
+      <StandardFallback type="error" variant={variant}>
+        {title}
+      </StandardFallback>
+    );
   }
 
   if (exemplarMorphologyAsList.length > 0 && morphologies && morphologies.length !== 1) {
@@ -71,20 +81,22 @@ export function ExemplarMorphology({ exemplarMorphology }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Header>{title}</Header>
-      <BaseTable
-        size="small"
-        wrapperClassname="h-full min-h-max "
-        className="h-full [&_.ant-table-body]:max-h-full!"
-        dataType={ExtendedEntitiesTypeDict.CellMorphology}
-        dataSource={morphologies}
-        rowKey="id"
-        columns={columns}
-        rowClassName="[&:last-child>td]:border-b-0!"
-        scroll={{
-          x: true,
-        }}
-      />
+      <Header variant={variant}>{title}</Header>
+      <div className={cn(detailViewInsetPanelClass(variant))}>
+        <BaseTable
+          size="small"
+          wrapperClassname="h-full min-h-max "
+          className="h-full [&_.ant-table-body]:max-h-full!"
+          dataType={ExtendedEntitiesTypeDict.CellMorphology}
+          dataSource={morphologies}
+          rowKey="id"
+          columns={columns}
+          rowClassName="[&:last-child>td]:border-b-0!"
+          scroll={{
+            x: true,
+          }}
+        />
+      </div>
       <ErrorMessageLine message={displayMorphologyError} />
     </div>
   );

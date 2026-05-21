@@ -9,6 +9,11 @@ import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { EmodelRelatedArtifacts } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/e-model';
 import { IonChannelRecordingRelatedArtifacts } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/ion-channel-recording';
 import { RelatedArtifactEvents } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/table-click-events';
+import {
+  detailViewPillTabsListClass,
+  detailViewPillTabsTriggerClass,
+  type DetailViewVariant,
+} from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
@@ -32,9 +37,11 @@ const tabsConfigItems: Array<{
 export function ICMRelatedArtifacts({
   icm,
   context,
+  variant = 'light',
 }: {
   icm: IonChannelModel;
   context: WorkspaceContext;
+  variant?: DetailViewVariant;
 }) {
   const breakpoint = useDefaultBreakpoint();
   const [currentTab, setCurrentTab] = useState<TKeys>(IonChannelRecording.extendedType);
@@ -50,19 +57,18 @@ export function ICMRelatedArtifacts({
         onValueChange={(value) => setCurrentTab(value as TKeys)}
       >
         <PillTabsList
-          className={cn('inline-flex h-10 w-fit bg-white p-0 shadow-md', {
-            'h-12': breakpoint === 'xl',
-          })}
+          className={detailViewPillTabsListClass(
+            variant,
+            cn({ 'h-12': breakpoint === 'xl' })
+          )}
         >
           {tabsConfigItems.map((tab) => (
             <PillTabsTrigger
               key={tab.key}
               value={tab.key}
-              className={cn(
-                'max-w-max',
-                'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-4 py-3',
-                'text-base select-none data-[state=active]:font-bold data-[state=active]:text-white',
-                { 'h-12': breakpoint === 'xl' }
+              className={detailViewPillTabsTriggerClass(
+                variant,
+                cn({ 'h-12': breakpoint === 'xl' })
               )}
             >
               {tab.title}

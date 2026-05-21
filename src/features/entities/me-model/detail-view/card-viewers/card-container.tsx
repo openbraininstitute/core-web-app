@@ -2,14 +2,20 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 
 import { renderEmptyOrValue } from '@/entity-configuration/definitions/renderer';
-import { classNames } from '@/util/utils';
+import {
+  detailViewCardBorderClass,
+  detailViewHeadingClass,
+  detailViewLabelClass,
+  detailViewLinkClass,
+  detailViewValueClass,
+  type DetailViewVariant,
+} from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
 import styles from './card-container.module.css';
-
-const subtitleStyle = 'uppercase font-thin text-neutral-4';
 
 type Detail = {
   label: string;
@@ -20,12 +26,12 @@ type ModelDetailsProps = {
   details: Detail[];
 };
 
-function ModelDetails({ details }: ModelDetailsProps) {
+function ModelDetails({ details, variant }: ModelDetailsProps & { variant: DetailViewVariant }) {
   return (
-    <div className="text-primary-8 mt-4 grid grid-cols-3 gap-4">
+    <div className={cn('mt-4 grid grid-cols-3 gap-4', detailViewValueClass(variant))}>
       {details.map((detail) => (
         <div key={`${detail.label}-${detail.value?.toString()}`}>
-          <div className={subtitleStyle}>{detail.label}</div>
+          <div className={detailViewLabelClass(variant)}>{detail.label}</div>
           <div>{renderEmptyOrValue(detail.value)}</div>
         </div>
       ))}
@@ -45,6 +51,7 @@ type Props = {
   modelDetails: Detail[];
   thumbnail: ReactNode;
   reselectLink?: boolean;
+  variant?: DetailViewVariant;
 };
 
 export default function ModelCard({
@@ -56,6 +63,7 @@ export default function ModelCard({
   modelDetails,
   thumbnail,
   reselectLink = false,
+  variant = 'light',
 }: Props) {
   const cardLink = reselectLink ? (
     <Link
@@ -63,34 +71,43 @@ export default function ModelCard({
         pathname: selectUrl,
         query: queryParams,
       }}
-      className="text-primary-8 font-bold"
+      className={detailViewLinkClass(variant)}
     >
       Select a different {title.toLowerCase()}
     </Link>
   ) : (
-    <Link href={exploreUrl} target="_blank" className="text-primary-8 font-bold">
+    <Link href={exploreUrl} target="_blank" className={detailViewLinkClass(variant)}>
       More details
     </Link>
   );
 
   return (
-    <div className={styles.cardContainer}>
+    <div
+      className={cn(
+        styles.cardContainer,
+        'border',
+        detailViewCardBorderClass(variant),
+        variant === 'onPrimary' && 'bg-transparent'
+      )}
+    >
       <div className="flex justify-between">
-        <div className={classNames('text-2xl', subtitleStyle)}>{title}</div>
+        <div className={cn('text-2xl uppercase font-thin', detailViewLabelClass(variant))}>
+          {title}
+        </div>
         {cardLink}
       </div>
 
       <div className="mt-2 flex gap-10">
         <div
-          className="border-neutral-2 m-0 flex flex-col items-center justify-center border"
+          className="border-neutral-2 m-0 flex flex-col items-center justify-center border bg-white"
           style={{ height: 202, width: 202 }}
         >
           {thumbnail}
         </div>
         <div className="grow">
-          <div className={subtitleStyle}>NAME</div>
-          <div className={styles.name}>{model.name}</div>
-          <ModelDetails details={modelDetails} />
+          <div className={detailViewLabelClass(variant)}>NAME</div>
+          <div className={cn('my-1 break-words', detailViewHeadingClass(variant))}>{model.name}</div>
+          <ModelDetails details={modelDetails} variant={variant} />
         </div>
       </div>
     </div>
