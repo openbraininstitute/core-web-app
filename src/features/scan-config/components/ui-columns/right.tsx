@@ -9,7 +9,7 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 
-import type { Config } from '@/features/scan-config/components/components';
+import type { Config } from '@/features/scan-config/types';
 import type { Nullish } from '@/utils/type';
 
 const ModelPreview = dynamic(

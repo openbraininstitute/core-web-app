@@ -23,7 +23,7 @@ import { getTargetType } from '@/ui/segments/workflows/config';
 import { assertErrorMessage, classNames } from '@/util/utils';
 
 import type { ErrorObject } from 'ajv';
-import type { Config } from '@/features/scan-config/components/components';
+import type { Config } from '@/features/scan-config/types';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
 
