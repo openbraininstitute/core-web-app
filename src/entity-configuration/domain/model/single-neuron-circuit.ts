@@ -12,10 +12,13 @@ export const circuitScaleFilter = {
   scale__in: [CircuitScaleDictionary.Single],
 };
 
+// NOTE:
+// THIS should be deleted
+// THIS is duplicated with MEModelWithSynapsesCircuit
 export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
   title: 'Single neuron',
-  extendedType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+  extendedType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
   type: EntityTypeDict.Circuit,
   slug: EntitySlug.SingleNeuronCircuit,
   api: {

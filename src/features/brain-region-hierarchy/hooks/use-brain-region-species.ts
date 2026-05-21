@@ -78,7 +78,7 @@ export function useAvailableHierarchySpeciesQuery() {
 
   return {
     remoteAvailableHierarchies: query.data,
-    loading: query.isLoading,
+    loading: query.isPending,
     error: query.error,
   };
 }
@@ -91,7 +91,7 @@ export function useHierarchyRuntimeMetadataQuery() {
   } = useAvailableHierarchySpeciesQuery();
   const {
     data: atlasData,
-    isLoading: loadingAtlases,
+    isPending: loadingAtlases,
     error: atlasError,
   } = useQuery({
     queryKey: keyBuilderAtlas.all(),
@@ -138,7 +138,7 @@ export function useHierarchyRuntimeMetadataQuery() {
 export function useRemoteUserPreferenceHierarchySpeciesQuery() {
   const {
     data,
-    isLoading: isLoadingRemotePreference,
+    isPending: isLoadingRemotePreference,
     error,
   } = useQuery({
     queryKey: keyBuilderHierarchy.hierarchyPreference(),

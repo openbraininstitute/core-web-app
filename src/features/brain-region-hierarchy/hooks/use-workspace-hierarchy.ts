@@ -9,6 +9,8 @@ import { updateBrainRegionPreference } from '@/api/virtual-lab-svc/queries/user'
 import { config } from '@/config';
 import {
   allowAllSpeciesAtom,
+  hierarchyRegistryLastAppliedUrlOverrideAtom,
+  hierarchyRegistrySyncSettledAtom,
   selectedBrainRegionAtom,
   speciesSelectionModeAtom,
   useBrainRegionRootHierarchyQuery,
@@ -25,6 +27,7 @@ import {
 } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
@@ -32,6 +35,9 @@ import type {
   BrainRegionHierarchySelection,
   IWorkspaceSpecies,
 } from '@/features/brain-region-hierarchy/types';
+
+let hierarchyRegistryInitPromise: Promise<void> | null = null;
+let hierarchyRegistryInitWorkspaceKey: string | null = null;
 
 /**
  * manages and synchronizes the workspace-local selection of a species and a brain-region hierarchy.
@@ -130,9 +136,13 @@ export function useLocalStoreHierarchySpeciesAndBrainRegion() {
  * 4. Config defaults (fallback)
  */
 export function useWorkspaceHierarchyRegistry() {
-  // track initialization to prevent infinite loops
-  const isInitializedRef = useRef(false);
-  const lastAppliedUrlOverrideRef = useRef<string | null>(null);
+  const { virtualLabId, projectId } = useWorkspace();
+  const workspaceKey = `${virtualLabId}:${projectId}`;
+  const prevWorkspaceKeyRef = useRef(workspaceKey);
+  const [syncSettled, setSyncSettled] = useAtom(hierarchyRegistrySyncSettledAtom);
+  const [lastAppliedUrlOverride, setLastAppliedUrlOverride] = useAtom(
+    hierarchyRegistryLastAppliedUrlOverrideAtom
+  );
   const queryClient = useQueryClient();
 
   const {
@@ -173,6 +183,18 @@ export function useWorkspaceHierarchyRegistry() {
     : focusedUrlOverride
       ? `${focusedUrlOverride.hierarchyId}:${focusedUrlOverride.brainRegionId}`
       : null;
+
+  useEffect(() => {
+    if (prevWorkspaceKeyRef.current === workspaceKey) {
+      return;
+    }
+
+    prevWorkspaceKeyRef.current = workspaceKey;
+    hierarchyRegistryInitPromise = null;
+    hierarchyRegistryInitWorkspaceKey = null;
+    setSyncSettled(false);
+    setLastAppliedUrlOverride(null);
+  }, [workspaceKey, setSyncSettled, setLastAppliedUrlOverride]);
 
   const defaultingCurrentHierarchyId =
     focusedUrlOverride?.hierarchyId ||
@@ -408,13 +430,20 @@ export function useWorkspaceHierarchyRegistry() {
    * or defaults once the current route boundary has settled.
    */
   useEffect(() => {
-    if (
-      isInitializedRef.current ||
-      isLoadingAvailableHierarchiesSpecies ||
-      isLoadingRemotePreference ||
-      remoteAvailableHierarchies?.length === 0
-    )
+    if (syncSettled || isLoadingAvailableHierarchiesSpecies || isLoadingRemotePreference) {
       return;
+    }
+
+    if (!remoteAvailableHierarchies?.length) {
+      setSyncSettled(true);
+      return;
+    }
+
+    if (hierarchyRegistryInitPromise && hierarchyRegistryInitWorkspaceKey === workspaceKey) {
+      return;
+    }
+
+    hierarchyRegistryInitWorkspaceKey = workspaceKey;
 
     async function sync() {
       const hasFocusedUrlOverride = !!focusedUrlOverride;
@@ -438,8 +467,7 @@ export function useWorkspaceHierarchyRegistry() {
           perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
           speciesSelectionMode: SpeciesSelectionMode.All,
         });
-        lastAppliedUrlOverrideRef.current = 'all';
-        isInitializedRef.current = true;
+        setLastAppliedUrlOverride('all');
         return;
       }
 
@@ -464,11 +492,11 @@ export function useWorkspaceHierarchyRegistry() {
               speciesSelectionMode: SpeciesSelectionMode.Focused,
             });
           }
-          lastAppliedUrlOverrideRef.current = overrideKey;
-          isInitializedRef.current = true;
+          setLastAppliedUrlOverride(overrideKey);
           return;
         }
-        lastAppliedUrlOverrideRef.current = overrideKey;
+        setLastAppliedUrlOverride(overrideKey);
+        return;
       }
 
       // remote preference is "all": honor it if the page allows it
@@ -484,7 +512,6 @@ export function useWorkspaceHierarchyRegistry() {
           perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
           speciesSelectionMode: SpeciesSelectionMode.All,
         });
-        isInitializedRef.current = true;
         return;
       }
 
@@ -509,7 +536,6 @@ export function useWorkspaceHierarchyRegistry() {
             perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
             speciesSelectionMode: SpeciesSelectionMode.Focused,
           });
-          isInitializedRef.current = true;
           return;
         }
       }
@@ -519,7 +545,6 @@ export function useWorkspaceHierarchyRegistry() {
         setSelectedBrainRegion(null);
         setWorkspaceSpecies(null);
         setSpeciesSelectionMode(SpeciesSelectionMode.All);
-        isInitializedRef.current = true;
         return;
       }
 
@@ -533,7 +558,6 @@ export function useWorkspaceHierarchyRegistry() {
             hierarchy.id,
             browserStorageHierarchy.brainRegionId
           );
-          isInitializedRef.current = true;
           return;
         }
       }
@@ -553,12 +577,17 @@ export function useWorkspaceHierarchyRegistry() {
           speciesSelectionMode: SpeciesSelectionMode.Focused,
         });
       }
-
-      isInitializedRef.current = true;
     }
 
-    void sync();
+    hierarchyRegistryInitPromise = sync()
+      .catch(() => undefined)
+      .finally(() => {
+        setSyncSettled(true);
+        hierarchyRegistryInitPromise = null;
+      });
   }, [
+    workspaceKey,
+    syncSettled,
     remoteAvailableHierarchies,
     isLoadingAvailableHierarchiesSpecies,
     isLoadingRemotePreference,
@@ -569,6 +598,8 @@ export function useWorkspaceHierarchyRegistry() {
     browserStorageHierarchy,
     defaultHierarchy,
     setBrowserStorageHierarchy,
+    setSyncSettled,
+    setLastAppliedUrlOverride,
     changeLocalStoreHierarchySpecies,
     runtimeHierarchyById,
     setSelectedBrainRegion,
@@ -582,13 +613,13 @@ export function useWorkspaceHierarchyRegistry() {
    */
   useEffect(() => {
     if (
-      !isInitializedRef.current ||
+      !syncSettled ||
       isLoadingAvailableHierarchiesSpecies ||
       remoteAvailableHierarchies?.length === 0 ||
       (!focusedUrlOverride && !isAllUrlOverride)
     ) {
       if (!focusedUrlOverride && !isAllUrlOverride) {
-        lastAppliedUrlOverrideRef.current = null;
+        setLastAppliedUrlOverride(null);
       }
       return;
     }
@@ -596,10 +627,10 @@ export function useWorkspaceHierarchyRegistry() {
     // handle `?s=all` url override
     if (isAllUrlOverride && allowAllSpecies) {
       const overrideKey = 'all';
-      if (lastAppliedUrlOverrideRef.current === overrideKey) return;
+      if (lastAppliedUrlOverride === overrideKey) return;
 
       if (speciesSelectionMode === SpeciesSelectionMode.All) {
-        lastAppliedUrlOverrideRef.current = overrideKey;
+        setLastAppliedUrlOverride(overrideKey);
         return;
       }
 
@@ -614,14 +645,14 @@ export function useWorkspaceHierarchyRegistry() {
         perHierarchyMemory: browserStorageHierarchy?.perHierarchyMemory,
         speciesSelectionMode: SpeciesSelectionMode.All,
       });
-      lastAppliedUrlOverrideRef.current = overrideKey;
+      setLastAppliedUrlOverride(overrideKey);
       return;
     }
 
     if (!focusedUrlOverride) return;
 
     const overrideKey = `${focusedUrlOverride.hierarchyId}:${focusedUrlOverride.brainRegionId}`;
-    if (lastAppliedUrlOverrideRef.current === overrideKey) return;
+    if (lastAppliedUrlOverride === overrideKey) return;
 
     const matchesSelectedRegion =
       speciesSelectionMode === SpeciesSelectionMode.Focused &&
@@ -630,7 +661,7 @@ export function useWorkspaceHierarchyRegistry() {
         selectedBrainRegion?.id === focusedUrlOverride.brainRegionId);
 
     if (matchesSelectedRegion) {
-      lastAppliedUrlOverrideRef.current = overrideKey;
+      setLastAppliedUrlOverride(overrideKey);
       return;
     }
 
@@ -641,7 +672,7 @@ export function useWorkspaceHierarchyRegistry() {
         (h) => h.id === currentUrlOverride.hierarchyId
       );
       if (!hierarchy) {
-        lastAppliedUrlOverrideRef.current = overrideKey;
+        setLastAppliedUrlOverride(overrideKey);
         return;
       }
 
@@ -660,11 +691,14 @@ export function useWorkspaceHierarchyRegistry() {
           speciesSelectionMode: SpeciesSelectionMode.Focused,
         });
       }
-      lastAppliedUrlOverrideRef.current = overrideKey;
+      setLastAppliedUrlOverride(overrideKey);
     }
 
     void applyUrlOverride();
   }, [
+    syncSettled,
+    lastAppliedUrlOverride,
+    setLastAppliedUrlOverride,
     isLoadingAvailableHierarchiesSpecies,
     remoteAvailableHierarchies,
     focusedUrlOverride,
@@ -681,11 +715,50 @@ export function useWorkspaceHierarchyRegistry() {
   ]);
 
   /**
+   * after global init, ensure focused mode always has a workspace species label
+   * (guards against transient null atoms between parallel consumers).
+   */
+  useEffect(() => {
+    if (!syncSettled || speciesSelectionMode === SpeciesSelectionMode.All || workspaceSpecies) {
+      return;
+    }
+    if (isLoadingAvailableHierarchiesSpecies || !remoteAvailableHierarchies?.length) {
+      return;
+    }
+
+    const hierarchyId =
+      remoteUserPreferenceHierarchySpecies?.hierarchy_id ||
+      browserStorageHierarchy?.hierarchyId ||
+      defaultHierarchy?.id;
+
+    if (!hierarchyId) {
+      return;
+    }
+
+    void changeLocalStoreHierarchySpecies(
+      hierarchyId,
+      browserStorageHierarchy?.brainRegionId ??
+        remoteUserPreferenceHierarchySpecies?.brain_region_id ??
+        null
+    );
+  }, [
+    syncSettled,
+    speciesSelectionMode,
+    workspaceSpecies,
+    isLoadingAvailableHierarchiesSpecies,
+    remoteAvailableHierarchies,
+    remoteUserPreferenceHierarchySpecies,
+    browserStorageHierarchy,
+    defaultHierarchy?.id,
+    changeLocalStoreHierarchySpecies,
+  ]);
+
+  /**
    * set default brain region when hierarchy data loads and no region is selected
    */
   // biome-ignore lint/correctness/useExhaustiveDependencies: syncExternalStores is stable
   useEffect(() => {
-    if (!brainRegions || !isInitializedRef.current) return;
+    if (!brainRegions || !syncSettled) return;
     if (speciesSelectionMode === SpeciesSelectionMode.All) return; // no region selection when in "all" mode
     // skip while a species transition is mid-flight (workspaceSpecies temporarily
     // null). firing here would PATCH the preference with a stale fallback hierarchy.
@@ -728,6 +801,7 @@ export function useWorkspaceHierarchyRegistry() {
     });
   }, [
     brainRegions,
+    syncSettled,
     speciesSelectionMode,
     selectedBrainRegion,
     defaultBrainRegionObject,
@@ -743,7 +817,7 @@ export function useWorkspaceHierarchyRegistry() {
    * fall back to a focused selection instead of rendering a broken state.
    */
   useEffect(() => {
-    if (!isInitializedRef.current) return;
+    if (!syncSettled) return;
     if (allowAllSpecies) return;
     if (speciesSelectionMode !== SpeciesSelectionMode.All) return;
 
@@ -757,6 +831,7 @@ export function useWorkspaceHierarchyRegistry() {
 
     void changeBulkStoreHierarchySpecies(fallbackHierarchyId);
   }, [
+    syncSettled,
     allowAllSpecies,
     speciesSelectionMode,
     browserStorageHierarchy?.hierarchyId,
@@ -772,7 +847,7 @@ export function useWorkspaceHierarchyRegistry() {
     browserStorageHierarchy?.hierarchyId ||
     config.APP_DEFAULT__BRAIN_REGION_HIERARCHY_ID;
   const hasPendingUrlOverride =
-    !!currentUrlOverrideKey && lastAppliedUrlOverrideRef.current !== currentUrlOverrideKey;
+    !!currentUrlOverrideKey && lastAppliedUrlOverride !== currentUrlOverrideKey;
 
   return {
     workspaceSpecies,
@@ -780,7 +855,7 @@ export function useWorkspaceHierarchyRegistry() {
     workspaceHierarchyId,
     remoteAvailableHierarchies,
     isLoadingAvailableHierarchiesSpecies,
-    syncSettled: isInitializedRef.current,
+    syncSettled,
     hasPendingUrlOverride,
     speciesSelectionMode,
     changeBulkStoreHierarchySpecies,

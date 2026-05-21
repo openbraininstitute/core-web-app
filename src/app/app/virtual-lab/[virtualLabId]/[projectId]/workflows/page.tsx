@@ -1,18 +1,17 @@
 'use client';
 
 import { useRouter } from '@bprogress/next';
-import { kebabCase } from 'es-toolkit/compat';
 import { AnimatePresence, motion } from 'motion/react';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { use, useCallback, useState } from 'react';
 
-import { config } from '@/config';
 import { WorkspaceScope } from '@/constants';
 import { createWorkflowSessionId } from '@/features/scan-config/workflow/selection';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { SCOPE_QUERY_PARAMS } from '@/ui/hooks/use-scope';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import {
+  buildWorkflowHubStageHref,
   resolveWorkflowInitialStage,
   WORKFLOW_SESSION_ID_SEARCH_PARAM,
 } from '@/ui/segments/workflows/config';
@@ -65,21 +64,27 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
       query.set(SCOPE_QUERY_PARAMS, WorkspaceScope.Public);
 
       try {
-        const { stage, attachSessionId } = await resolveWorkflowInitialStage({
+        const { stage, attachSessionId, workflow } = await resolveWorkflowInitialStage({
           activity,
           targetType: value,
         });
 
-        if (attachSessionId) {
-          query.set(WORKFLOW_SESSION_ID_SEARCH_PARAM, createWorkflowSessionId());
+        const sessionId = attachSessionId ? createWorkflowSessionId() : undefined;
+
+        if (sessionId) {
+          query.set(WORKFLOW_SESSION_ID_SEARCH_PARAM, sessionId);
         }
 
         navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${activity}/${stage}/${kebabCase(value)}?${query.toString()}`,
-          {
-            showProgress: true,
-            startPosition: 0.5,
-          }
+          buildWorkflowHubStageHref({
+            activity,
+            targetType: value,
+            workspace: { virtualLabId, projectId },
+            stage,
+            workflow,
+            sessionId,
+            query: Object.fromEntries(query.entries()),
+          })
         );
       } finally {
         setIsNavigating(false);

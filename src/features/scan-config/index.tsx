@@ -14,7 +14,6 @@ export {
   type ScanConfigContainerProps,
 } from '@/features/scan-config/container';
 export {
-  createScanConfigWorkflowPage,
   defineScanConfigWorkflow,
   ScanConfigWorkflow,
   ScanConfigWorkflowConfigurePage,

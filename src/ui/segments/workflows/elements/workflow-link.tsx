@@ -2,17 +2,20 @@
 
 import { useRouter } from '@bprogress/next';
 
-import { buildScanConfigConfigureHref } from '@/features/scan-config/workflow/selection';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { log } from '@/utils/logger';
+import { buildEntityConfigureHref } from '@/ui/segments/workflows/config/routes';
 
 import type { ComponentProps, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TActivityValue } from '@/ui/segments/workflows/config/types';
 
-type WorkflowConfigureUseModelLinkProps = {
-  configurePathPrefix: string;
-  entityType: TExtendedEntitiesTypeDict;
+export type WorkflowConfigureUseModelLinkProps = {
+  activity: TActivityValue;
+  targetType: TExtendedEntitiesTypeDict;
   entityId: string;
+  entityType?: TExtendedEntitiesTypeDict;
+  originId?: string;
   query?: Record<string, string | undefined>;
   children: ReactNode;
   title?: string;
@@ -20,9 +23,11 @@ type WorkflowConfigureUseModelLinkProps = {
 } & Pick<ComponentProps<typeof Button>, 'rounded' | 'variant'>;
 
 export function WorkflowConfigureUseModelLink({
-  configurePathPrefix,
-  entityType,
+  activity,
+  targetType,
   entityId,
+  entityType,
+  originId,
   query,
   children,
   title,
@@ -31,23 +36,22 @@ export function WorkflowConfigureUseModelLink({
   variant = 'default',
 }: WorkflowConfigureUseModelLinkProps) {
   const router = useRouter();
-  log('debug', 'WorkflowConfigureUseModelLink', {
-    configurePathPrefix,
-    entityType,
-    entityId,
-    query,
-    title,
-  });
+  const { virtualLabId, projectId } = useWorkspace();
+
   return (
     <Button
       onClick={() => {
-        const href = buildScanConfigConfigureHref({
-          configurePathPrefix,
-          entityType,
-          entityId,
-          query,
-        });
-        router.push(href);
+        router.push(
+          buildEntityConfigureHref({
+            activity,
+            targetType,
+            workspace: { virtualLabId, projectId },
+            entityId,
+            entityType,
+            originId,
+            query,
+          })
+        );
       }}
       rounded={rounded}
       title={title}

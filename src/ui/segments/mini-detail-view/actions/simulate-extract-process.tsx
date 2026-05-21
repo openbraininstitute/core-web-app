@@ -5,9 +5,9 @@ import { type EntityCoreObjectTypes, EntityTypeDict } from '@/api/entitycore/typ
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
-import { resolveSimulateConfigureSegment } from '@/features/scan-config/workflow/resolve-configure-segment';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { getWorkflow } from '@/ui/segments/workflows/config';
 import { WorkflowConfigureUseModelLink } from '@/ui/segments/workflows/elements/workflow-link';
 import {
   PanelQueryParam,
@@ -16,6 +16,7 @@ import {
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceSection } from '@/constants';
+import type { TActivityValue } from '@/ui/segments/workflows/config/types';
 
 function resolveConfigureEntityType<T extends EntityCoreObjectTypes>(
   record: T,
@@ -42,14 +43,18 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
   section,
   record,
   dataType,
+  workflowTargetType,
   hideUseModelAction = false,
 }: {
   section: TWorkspaceSection;
   record: T;
   dataType?: TExtendedEntitiesTypeDict;
+  /** campaign target type for scan-config configure URLs (browse page `targetType`) */
+  workflowTargetType?: TExtendedEntitiesTypeDict;
   hideUseModelAction?: boolean;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
+  const activity = section as TActivityValue;
 
   let detailUrl = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(record.type)}/${record.id}`;
 
@@ -60,14 +65,19 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
     detailUrl = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${kebabCase(ExtendedEntitiesTypeDict.MEModelWithSynapses)}/${record.id}`;
   }
 
-  const configureSegment = resolveSimulateConfigureSegment({
-    section,
-    recordType: record.type,
-    dataType,
+  const configureEntityType = resolveConfigureEntityType(record, dataType);
+
+  const workflow = getWorkflow({
+    activity,
+    targetType: workflowTargetType,
+    sourceType: workflowTargetType ? undefined : configureEntityType,
   });
 
-  const configureEntityType = resolveConfigureEntityType(record, dataType);
-  const workflowBase = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${section}`;
+  const targetType = workflowTargetType ?? workflow?.targetType;
+
+  if (!targetType) {
+    return null;
+  }
 
   return (
     <div className="sticky bottom-0 mt-auto flex items-center justify-center gap-2 self-end p-4">
@@ -86,7 +96,8 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
           title="Start simulation"
           variant="default"
           className={modelButtonClassName}
-          configurePathPrefix={`${workflowBase}/configure/${configureSegment}`}
+          activity={activity}
+          targetType={targetType}
           entityType={configureEntityType}
           entityId={record.id}
           query={{

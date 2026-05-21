@@ -111,14 +111,9 @@ function resolveSelectionMode(
   uiElement: TWorkflowInitializeModelUiElement,
   property: Record<string, unknown>
 ): TWorkflowSelectionConfig['selectionMode'] {
-  if (uiElement === ScanConfigUIElementDict.ModelIdentifier) {
+  if (uiElement === ScanConfigUIElementDict.ModelIdentifier)
     return WorkflowInitializeSelectionMode.Single;
-  }
-
-  if (hasNamedTupleShape(property)) {
-    return WorkflowInitializeSelectionMode.Grouped;
-  }
-
+  if (hasNamedTupleShape(property)) return WorkflowInitializeSelectionMode.Grouped;
   return WorkflowInitializeSelectionMode.Multiple;
 }
 
@@ -182,7 +177,7 @@ export type TParseInitializeSelectionParams = {
  *
  * @param params - loaded schema and its ObiOne schema name
  * @returns {@link TWorkflowSelectionConfig} consumed by workflow browse UI and
- *   merged with workflow descriptors in {@link useWorkflowSelectionConfig}
+ *   consumed by workflow browse UI via {@link useWorkflowSelectionConfig}
  *
  * @example
  * ```ts

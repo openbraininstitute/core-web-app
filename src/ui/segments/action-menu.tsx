@@ -21,13 +21,14 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
-import { config } from '@/config';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { WorkflowActivityDictValue, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import Action from '@/ui/molecules/side-menu-action';
 import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { SimulateWorkflows } from '@/ui/segments/workflows/config/activities/simulate';
+import { buildEntityConfigureHref } from '@/ui/segments/workflows/config/routes';
 import {
   PanelQueryParam,
   WorkflowSimulatePanels,
@@ -37,6 +38,37 @@ import { cn } from '@/utils/css-class';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityTypeValue } from '@/entity-configuration/domain';
 import type { WorkspaceContext } from '@/types/common';
+
+// TODO:
+// this needs to be augmented to handle circuit simulations more efficiently
+function buildDataViewSimulateHref({
+  extendedType,
+  entityType,
+  entityId,
+  workspace,
+  isPublicEntity,
+}: {
+  extendedType: TExtendedEntitiesTypeDict;
+  entityType: TExtendedEntitiesTypeDict;
+  entityId: string;
+  workspace: Pick<WorkspaceContext, 'virtualLabId' | 'projectId'>;
+  isPublicEntity: boolean;
+}): string | null {
+  const workflow = SimulateWorkflows.find((w) => !w.disabled && w.sourceType === extendedType);
+  if (!workflow) return null;
+
+  return buildEntityConfigureHref({
+    activity: WorkflowActivityDictValue.simulate,
+    targetType: workflow.targetType,
+    workspace,
+    entityId,
+    entityType,
+    query: {
+      [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
+      ...(isPublicEntity ? { scope: WorkspaceScope.Public } : {}),
+    },
+  });
+}
 
 export default function ActionMenu({
   entity,
@@ -132,6 +164,16 @@ export default function ActionMenu({
       ? entityType.isSimulatable
       : 'scale' in entity && entityType.isSimulatable(entity.scale);
 
+  const simulateHref =
+    isSimulatable &&
+    buildDataViewSimulateHref({
+      extendedType: type,
+      entityType: entity.type,
+      entityId: entity.id,
+      workspace: ctx,
+      isPublicEntity,
+    });
+
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-base font-bold">
       <Action
@@ -146,18 +188,10 @@ export default function ActionMenu({
         {copying ? 'Copied' : 'Copy ID'}
       </Action>
 
-      {isSimulatable && (
+      {simulateHref && (
         <Action
           icon={
-            <NextLink
-              href={{
-                pathname: `${config.ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`,
-                query: {
-                  sessionId: crypto.randomUUID(),
-                  [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
-                },
-              }}
-            >
+            <NextLink href={simulateHref}>
               <ExperimentOutlined className="text-primary-8" />
             </NextLink>
           }

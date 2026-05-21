@@ -27,11 +27,13 @@ export default function Layout({ children }: { children: ReactNode }) {
           className={cn('grid gap-2 [grid-area:main]', 'h-full max-h-[calc(100%-3rem)] px-3 py-2')}
           initial={{
             gridTemplateColumns: mdv ? '3fr 2fr' : '1fr',
-            gridTemplateAreas: mdv ? "'body mini-view'" : "'body'",
+            gridTemplateRows: '1fr auto',
+            gridTemplateAreas: mdv ? "'body mini-view' 'footer mini-view'" : "'body' 'footer'",
           }}
           animate={{
             gridTemplateColumns: mdv ? '3fr 2fr' : '1fr',
-            gridTemplateAreas: mdv ? "'body mini-view'" : "'body'",
+            gridTemplateRows: '1fr auto',
+            gridTemplateAreas: mdv ? "'body mini-view' 'footer mini-view'" : "'body' 'footer'",
           }}
           transition={{
             type: 'spring',

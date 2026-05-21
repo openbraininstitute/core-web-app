@@ -13,8 +13,7 @@ export type TTableSelectionType = (typeof TableSelectionType)[keyof typeof Table
  * how many entities a workflow browse page lets the user pick before configure
  *
  * parsed from the scan-config schema `initialize` block via
- * {@link parseInitializeSelection} and merged with workflow `configurationInputs`
- * in {@link resolveWorkflowBrowseSelectionConfig}
+ * {@link parseSchemaInitializeSelection}
  */
 export const WorkflowInitializeSelectionMode = {
   /** no entity picker; browse selection is disabled or handled elsewhere */

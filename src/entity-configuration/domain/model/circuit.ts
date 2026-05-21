@@ -70,5 +70,13 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   isDownloadable: true,
   isCopyable: true,
   isSimulatable: (scale: TCircuitScaleDictionary) =>
-    includes([CircuitScaleDictionary.SmallMicrocircuit, CircuitScaleDictionary.PairNeuron], scale),
+    includes(
+      [
+        CircuitScaleDictionary.SmallMicrocircuit,
+        CircuitScaleDictionary.PairNeuron,
+        CircuitScaleDictionary.Microcircuit,
+        CircuitScaleDictionary.Region,
+      ],
+      scale
+    ),
 } as const;
