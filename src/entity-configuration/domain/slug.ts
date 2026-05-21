@@ -18,6 +18,7 @@ export const ModelEntitySlug = {
   SmallMicrocircuit: 'small-microcircuit',
   Microcircuit: 'microcircuit',
   BrainRegion: 'brain-region',
+  WholeBrain: 'whole-brain',
   Circuit: 'circuit',
   IonChannelModel: 'ion-channel-model',
   IonChannelModelingCampaign: 'ion-channel-modeling-campaign',

@@ -22,6 +22,7 @@ import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { SmallMicrocircuit } from '@/entity-configuration/domain/model/small-microcircuit';
 import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
+import { WholeBrain } from '@/entity-configuration/domain/model/whole-brain';
 import { Notebook } from '@/entity-configuration/domain/notebook';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
@@ -64,6 +65,7 @@ export const EntityCoreModelConfiguration = {
   SmallMicrocircuit,
   Microcircuit,
   BrainRegion,
+  WholeBrain,
   Circuit,
   IonChannelModel,
   IonChannelModelingCampaign,
