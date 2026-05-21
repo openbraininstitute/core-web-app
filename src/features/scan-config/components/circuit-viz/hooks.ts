@@ -65,7 +65,6 @@ export function useCircuit(circuitId: string, showAxon: boolean) {
     loadCell,
   };
 }
-
 function useCircuitNodes(id: string, virtualLabId: string, projectId: string) {
   return useQuery({
     queryKey: keyBuilder.circuitNodes(id),
