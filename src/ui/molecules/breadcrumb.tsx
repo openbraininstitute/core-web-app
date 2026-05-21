@@ -2,6 +2,8 @@ import { RightOutlined } from '@ant-design/icons';
 import type { ReactNode } from 'react';
 import { cn } from '@/utils/css-class';
 
+import '@/ui/segments/detail-view/detail-view-breadcrumb.css';
+
 export default function Breadcrumb({
   children,
   cls,
@@ -21,11 +23,12 @@ export default function Breadcrumb({
   const textClass =
     variant === 'onPrimary'
       ? tone === 'active'
-        ? 'text-primary-3 font-semibold'
-        : 'text-primary-2'
+        ? 'breadcrumb-on-primary-active'
+        : 'breadcrumb-on-primary-inactive'
       : cn('text-primary-8', tone === 'active' && 'font-bold');
 
-  const separatorClass = variant === 'onPrimary' ? 'text-primary-1' : 'text-primary-8';
+  const separatorClass =
+    variant === 'onPrimary' ? 'breadcrumb-on-primary-separator' : 'text-primary-8';
 
   return (
     <div className="align-center inline-flex items-center justify-center gap-2">
