@@ -35,6 +35,7 @@ export default function NeuronPropertyFilter({
           <div key={i} className="border border-gray-300 rounded-md">
             {Object.keys(f.filter_dict).map((p) => (
               <PropertyValueSelector
+                propertyName={p}
                 key={p}
                 values={properties[p]}
                 selected={f.filter_dict[p]}
@@ -118,10 +119,12 @@ function DropdownSelect({
 }
 
 function PropertyValueSelector({
+  propertyName,
   values,
   selected,
   onValuesChange,
 }: {
+  propertyName: string;
   values: string[];
   selected: string[];
   onValuesChange: (selected: string[]) => void;
@@ -135,24 +138,27 @@ function PropertyValueSelector({
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {values.map((val) => {
-        const isSelected = selected.includes(val);
-        return (
-          <button
-            key={val}
-            type="button"
-            className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-              isSelected
-                ? 'border-blue-500 bg-blue-500 text-white'
-                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-            }`}
-            onClick={() => toggle(val)}
-          >
-            {val}
-          </button>
-        );
-      })}
+    <div>
+      {propertyName}
+      <div className="flex flex-wrap gap-2">
+        {values.map((val) => {
+          const isSelected = selected.includes(val);
+          return (
+            <button
+              key={val}
+              type="button"
+              className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                isSelected
+                  ? 'border-blue-500 bg-blue-500 text-white'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+              }`}
+              onClick={() => toggle(val)}
+            >
+              {val}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
