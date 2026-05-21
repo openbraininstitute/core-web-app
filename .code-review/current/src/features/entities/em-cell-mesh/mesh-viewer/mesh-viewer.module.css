@@ -1,0 +1,23 @@
+.meshViewer {
+  margin: 2em 0;
+
+  > div.container {
+    position: relative;
+    width: 100%;
+    height: 75vh;
+    border-radius: 0.5em;
+    overflow: hidden;
+    background-color: #000;
+    color: #fff;
+    font: inherit;
+    font-weight: bold;
+
+    > .octree {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}

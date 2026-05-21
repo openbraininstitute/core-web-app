@@ -1,7 +1,7 @@
 import { getClient } from '@/services/sanity/client';
 import { tryType } from '@/services/sanity/type-utils';
 import { getSanityPagesSlugPredicate } from '@/ui/segments/landing/utils';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 export interface ContentForHero {
   title: string;

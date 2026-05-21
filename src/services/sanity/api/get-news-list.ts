@@ -5,8 +5,8 @@ import {
   typeImage,
   typeStringOrNull,
 } from '@/services/sanity/type-utils';
-import { logError } from '@/util/logger';
 import { isNumber } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
 
 import type { ContentForNewsItem } from '@/services/sanity/api/get-news-item';
 

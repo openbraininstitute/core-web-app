@@ -1,6 +1,6 @@
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
-import Error from '../error';
+import ViewError from '../error';
 import SanityContentImage from './sanity-content-image/sanity-content-image';
 import SanityContentItems from './sanity-content-items';
 import { SanityContentMultipleButton } from './sanity-content-multiple-button/sanity-content-multiple-button';
@@ -68,13 +68,13 @@ function renderItem(
     default:
       logError("Don't know how to render this item:", item);
       return (
-        <Error>
+        <ViewError>
           Don&apos;t know (yet) how to display this content:{' '}
           <strong>
             <code>&quot;{(item as { _type: string })._type}&quot;</code>
           </strong>
           !
-        </Error>
+        </ViewError>
       );
   }
 }

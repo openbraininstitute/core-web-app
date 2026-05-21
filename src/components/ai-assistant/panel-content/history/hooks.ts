@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import type {
   AiAssistantHistory,
