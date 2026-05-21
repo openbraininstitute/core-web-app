@@ -57,12 +57,12 @@ export function useScanConfigOriginCampaign<T extends TCampaignWithFormConfig>({
     enabled: enabled && !!originId,
   });
 
-  const shouldRenderScanConfig =
-    !originId || (Boolean(originId) && !isLoading && Boolean(data?.config?.form));
+  const initialConfig = data?.config?.form ?? (data?.config as Config | undefined);
+  const shouldRenderScanConfig = !originId || (!isLoading && Boolean(data));
 
   return {
     campaignData: data,
-    initialConfig: data?.config?.form,
+    initialConfig,
     error,
     isLoading,
     shouldRenderScanConfig,

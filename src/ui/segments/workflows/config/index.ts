@@ -12,9 +12,6 @@ export {
   getWorkflowBrowseSelectionLabel,
   getWorkflowInitialStage,
   getWorkflowInitialStageFromSelection,
-  getWorkflowScanConfigActivity,
-  getWorkflowScanConfigEntityType,
-  getWorkflowScanConfigSchemaName,
   getWorkflowSegment,
   groupWorkflowsByEntityGroup,
   isMultipleWorkflowSource,
@@ -25,10 +22,23 @@ export {
   workflowAllowsBrowseRoute,
   workflowHasMultipleSelectionInputs,
 } from './helpers';
+/** Workflow configure URL builders — see module docs in `./routes`. */
+export {
+  /** Entity-known entry point (mini-detail, workflow links). */
+  buildEntityConfigureHref,
+  /** Scan-config configure URL; session id in path. */
+  buildScanConfigConfigureHref,
+  buildWorkflowConfigurePathPrefix,
+  /** Workflows hub → `new` browse or `configure` stage. */
+  buildWorkflowHubStageHref,
+  getWorkflowTypeRouteKey,
+  resolveWorkflowTargetTypeFromRoute,
+} from './routes';
 export {
   EntityGroupDict,
   WORKFLOW_SESSION_ID_SEARCH_PARAM,
   WorkflowBrowseDefaults,
+  WorkflowConfigureRoutingDict,
   WorkflowInitialStagePolicyDict,
   WorkflowListContextDict,
   WorkflowListSortDict,
@@ -46,6 +56,7 @@ export type {
   TEntityGroupValue,
   TEntityTypeMeta as EntityTypeMeta,
   TGroupedWorkflows as GroupedWorkflows,
+  TWorkflowConfigureRouting,
   TWorkflowInitialStagePolicy,
   TWorkflowListContext as WorkflowListContext,
 } from './types';

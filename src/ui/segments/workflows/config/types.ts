@@ -2,6 +2,8 @@ import type { ComponentType } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkflowActivityDictValue } from '@/constants';
 import type { FlagKey } from '@/features/feature-flags/flags';
+import type { SchemaName } from '@/features/scan-config/types';
+import type { TScanConfigWorkflowDefinition } from '@/features/scan-config/workflow/types';
 
 export const WORKFLOW_SESSION_ID_SEARCH_PARAM = 'session';
 
@@ -55,7 +57,14 @@ export type IWorkflowConfigurationInput = {
   filters?: Record<string, unknown>;
 };
 
-/** how the hub picks the first route segment (`new` browse vs `configure`). */
+/**
+ * how the hub picks the first route segment (`new` browse vs `configure`).
+ *
+ * Configure: open configure directly
+ * Browse: open `/new` entity browse first
+ * Schema: `new` vs `configure` from scan-config schema `initialize` (single/multiple/grouped vs none)
+ *
+ */
 export const WorkflowInitialStagePolicyDict = {
   /** skip entity browse; open configure directly */
   Configure: 'configure',
@@ -67,6 +76,15 @@ export const WorkflowInitialStagePolicyDict = {
 
 export type TWorkflowInitialStagePolicy =
   (typeof WorkflowInitialStagePolicyDict)[keyof typeof WorkflowInitialStagePolicyDict];
+
+/** how scan-config configure URLs are built (`session` = persist selection; `standalone` = route id only). */
+export const WorkflowConfigureRoutingDict = {
+  Session: 'session',
+  Standalone: 'standalone',
+} as const;
+
+export type TWorkflowConfigureRouting =
+  (typeof WorkflowConfigureRoutingDict)[keyof typeof WorkflowConfigureRoutingDict];
 
 export type IWorkflowDescriptor = {
   sourceType: TWorkflowSourceType;
@@ -80,7 +98,7 @@ export type IWorkflowDescriptor = {
   attachSessionOnNavigate?: boolean;
   /**
    * when `true`, load ObiOne schema for browse selection mode and configure wiring
-   * (via {@link getScanConfigSchemaName}).
+   * (via {@link IWorkflowDescriptor.scanConfig.schemaName}).
    */
   isScanConfig: boolean;
   /**
@@ -101,19 +119,30 @@ export type IWorkflowDescriptor = {
   order?: number;
   beta?: boolean;
   requiredFeatures?: readonly FlagKey[];
-  /** When true, browse table shows species / brain region selector. */
+  /** when true, browse table shows species / brain region selector. */
   requireSpecies: boolean;
-  /** When true, browse table shows workspace scope selector. */
+  /** when true, browse table shows workspace scope selector. */
   requireScope: boolean;
+  /** scan-config configure page binding when {@link isScanConfig} is true */
+  scanConfig?: {
+    definition: TScanConfigWorkflowDefinition;
+    /** ObiOne JSON schema for browse `initialize` selection rules */
+    schemaName: SchemaName;
+  };
+  /**
+   * scan-config configure URL shape; defaults to {@link WorkflowConfigureRoutingDict.Session}.
+   * {@link WorkflowConfigureRoutingDict.Standalone} skips persisting a browse selection (e.g. ion channel).
+   */
+  configureRouting?: TWorkflowConfigureRouting;
 };
 
 /** shared {@link IWorkflowDescriptor} fragments for activity registry entries */
 export const WorkflowStagePresets = {
-  LegacyBuild: {
+  DirectConfigure: {
     initialStage: WorkflowInitialStagePolicyDict.Configure,
     attachSessionOnNavigate: true,
   },
-  LegacySimulateBrowse: {
+  BrowseFirst: {
     initialStage: WorkflowInitialStagePolicyDict.Browse,
     attachSessionOnNavigate: false,
   },

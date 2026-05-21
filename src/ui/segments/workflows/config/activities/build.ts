@@ -1,5 +1,7 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { emSynapseMappingActivityFlag } from '@/features/feature-flags';
+import { SchemaNameDict } from '@/features/scan-config/types';
+import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
 
 import {
   WorkflowBrowseDefaults,
@@ -7,12 +9,12 @@ import {
   WorkflowStagePresets,
 } from '../types';
 
-import type { IWorkflowDescriptor } from '../types';
+import type { IWorkflowDescriptor } from '@/ui/segments/workflows/config/types';
 
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.LegacyBuild,
+    ...WorkflowStagePresets.DirectConfigure,
     sourceType: ExtendedEntitiesTypeDict.Memodel,
     targetType: ExtendedEntitiesTypeDict.Memodel,
     isScanConfig: false,
@@ -21,7 +23,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   },
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.LegacyBuild,
+    ...WorkflowStagePresets.DirectConfigure,
     sourceType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
     isScanConfig: false,
@@ -30,7 +32,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   },
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.LegacyBuild,
+    ...WorkflowStagePresets.DirectConfigure,
     sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
     targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
     isScanConfig: false,
@@ -53,6 +55,10 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     label: 'Electron microscopy synaptome',
     isScanConfig: true,
+    scanConfig: {
+      definition: buildEmSynapseMappingWorkflow,
+      schemaName: SchemaNameDict.EMSynapseMappingScanConfig,
+    },
     requireSpecies: true,
     requireScope: false,
     order: 5,

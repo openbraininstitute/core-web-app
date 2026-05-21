@@ -1,80 +1,57 @@
 'use client';
 
 import { notFound } from 'next/navigation';
-import { use, useMemo } from 'react';
+import { use } from 'react';
 
 import { ScanConfigWorkflowConfigurePage } from '@/features/scan-config/workflow/page-template';
-import { getSimulateCircuitWorkflow } from '@/features/scan-config/workflow/simulate-circuit-workflows';
-import { log } from '@/utils/logger';
+import { getWorkflow, getWorkflowConfigurePageAside } from '@/ui/segments/workflows/config/helpers';
+import { resolveWorkflowTargetTypeFromRoute } from '@/ui/segments/workflows/config/routes';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type {
-  TCreateScanConfigWorkflowPageOptions,
-  TScanConfigWorkflowDefinition,
-} from '@/features/scan-config/workflow/types';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { TActivityValue } from '@/ui/segments/workflows/config/types';
+import type { KebabCase } from '@/utils/type';
 
-type TConfigurePageParams = WorkspaceContext & { id?: string };
 type TConfigurePageSearchParams = {
   dataType?: string;
   originId?: string;
   [key: string]: string | string[] | undefined;
 };
 
+type TActivityConfigureCatchAllParams = WorkspaceContext & {
+  type: string;
+  id: string;
+};
+
 /**
- * factory for workflow configure routes
- * keeps page files to a single declarative export
+ * per-activity catch-all configure route factory
+ *
+ * resolves `[type]` → workflow descriptor → `scanConfig.definition`, then renders
+ * {@link ScanConfigWorkflowConfigurePage}. Session id is the `[id]` path segment.
  *
  * @example
- * export default makeScanConfigWorkflowPage(simulateSmallMicrocircuitWorkflow);
- *
- * @example
- * export default makeScanConfigWorkflowPage(extractCircuitWorkflow, {
- *   aside: <DownloadPanel />,
- * });
+ * export default makeActivityScanConfigConfigureCatchAllPage('simulate');
  */
-export function makeScanConfigWorkflowPage(
-  definition: TScanConfigWorkflowDefinition,
-  options?: TCreateScanConfigWorkflowPageOptions
-) {
-  log('debug', '[MakeScanConfigWorkflowPage]', { definition, options });
-  function Page(props: ServerSideComponentProp<TConfigurePageParams, TConfigurePageSearchParams>) {
-    return (
-      <ScanConfigWorkflowConfigurePage definition={definition} aside={options?.aside} {...props} />
+export function makeActivityScanConfigConfigureCatchAllPage(activity: TActivityValue) {
+  function Page(
+    props: ServerSideComponentProp<TActivityConfigureCatchAllParams, TConfigurePageSearchParams>
+  ) {
+    const resolvedParams = use(props.params);
+    const targetType = resolveWorkflowTargetTypeFromRoute(
+      resolvedParams.type as KebabCase<TExtendedEntitiesTypeDict>
     );
-  }
+    const workflow = getWorkflow({ activity, targetType });
+    const definition = workflow?.scanConfig?.definition;
 
-  Page.displayName = `ScanConfigWorkflowPage(${definition.id})`;
-  return Page;
-}
-
-/**
- * shared `/simulate/configure/circuit/[id]` page
- * resolves the workflow definition from `?dataType=`, then delegates to {@link makeScanConfigWorkflowPage}
- */
-export function makeSimulateCircuitScanConfigPage(options?: TCreateScanConfigWorkflowPageOptions) {
-  function Page(props: ServerSideComponentProp<TConfigurePageParams, TConfigurePageSearchParams>) {
-    const searchParams = use(props.searchParams);
-    const rawDataType = searchParams.dataType;
-    const dataType = typeof rawDataType === 'string' ? rawDataType : undefined;
-
-    if (!dataType) {
+    if (!workflow?.isScanConfig || !definition) {
       notFound();
     }
 
-    const definition = getSimulateCircuitWorkflow(dataType as TExtendedEntitiesTypeDict);
-    if (!definition) {
-      notFound();
-    }
+    const aside = getWorkflowConfigurePageAside({ activity, targetType });
 
-    const ConfiguredPage = useMemo(
-      () => makeScanConfigWorkflowPage(definition, options),
-      [definition]
-    );
-
-    return <ConfiguredPage {...props} />;
+    return <ScanConfigWorkflowConfigurePage definition={definition} aside={aside} {...props} />;
   }
 
-  Page.displayName = 'SimulateCircuitScanConfigPage';
+  Page.displayName = `ActivityScanConfigConfigureCatchAllPage(${activity})`;
   return Page;
 }

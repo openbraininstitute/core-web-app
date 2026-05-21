@@ -4,10 +4,7 @@ export {
   ScanConfigWorkflowProvider,
   useScanConfigWorkflow,
 } from '@/features/scan-config/workflow/context';
-export {
-  makeScanConfigWorkflowPage as createScanConfigWorkflowPage,
-  makeSimulateCircuitScanConfigPage as createSimulateCircuitScanConfigPage,
-} from '@/features/scan-config/workflow/create-page';
+export { makeActivityScanConfigConfigureCatchAllPage } from '@/features/scan-config/workflow/create-page';
 export { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
 export * from '@/features/scan-config/workflow/definitions';
 export { scanConfigEntityQueries } from '@/features/scan-config/workflow/entity-queries';
