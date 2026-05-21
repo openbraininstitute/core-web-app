@@ -29,7 +29,7 @@ import type { IWorkflowConfigurationInput } from '@/ui/segments/workflows/config
 /**
  * parent-owned row selections keyed by extended entity type
  *
- * each workflow `configurationInput` type maps to the rows the user checked
+ * each accepted entity type from the schema maps to the rows the user checked
  * in that entity's browse table
  */
 export type TWorkflowBrowseSelectionsByType = Partial<
@@ -39,28 +39,22 @@ export type TWorkflowBrowseSelectionsByType = Partial<
 /** arguments for {@link isWorkflowMultiEntityBrowse} */
 export type IsWorkflowMultiEntityBrowseParams = {
   selectionConfig: TWorkflowSelectionConfig | null | undefined;
-  configurationInputsCount: number;
 };
 
 /**
  * whether the workflow browse page should use multi-entity selection ux
  *
- * returns `true` when:
- * - the workflow exposes more than one `configurationInput` (entity-type tabs), or
- * - schema/rules imply checkbox, `multiple`, or `grouped` selection
+ * derived only from the scan-config schema rules in {@link selectionConfig}.
+ * returns `true` when schema implies checkbox, `multiple`, or `grouped` selection.
  *
  * when `true`, browse hides per-row "Use model", shows type badges, and uses a
  * footer "Configure N selected entities" action instead
  *
- * @param opts - resolved selection config and number of configuration inputs
+ * @param opts - resolved selection config from the fetched scan-config schema
  * @returns `true` for multi-table / multi-select browse behavior
  */
 export function isWorkflowMultiEntityBrowse(opts: IsWorkflowMultiEntityBrowseParams): boolean {
-  const { selectionConfig, configurationInputsCount } = opts;
-
-  if (configurationInputsCount > 1) {
-    return true;
-  }
+  const { selectionConfig } = opts;
 
   if (!selectionConfig) {
     return false;

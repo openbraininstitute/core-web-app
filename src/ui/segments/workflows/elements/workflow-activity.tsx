@@ -39,8 +39,6 @@ import {
   getTaskCampaignStatusCountMap,
   type TTaskCampaignRow,
 } from '@/entity-configuration/domain/task-functions';
-import { buildScanConfigConfigureHrefWithOrigin } from '@/features/scan-config/workflow/selection';
-import { isSimulateCircuitSourceType } from '@/features/scan-config/workflow/simulate-circuit-workflows';
 import { LegacyCampaignStatusCell } from '@/features/task-runner/activity-execution/legacy-status-cell';
 import { ActivityAggregatedStatus } from '@/features/task-runner/activity-execution/status';
 import { ActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
@@ -64,7 +62,9 @@ import {
   getActivity,
   getPrimaryConfigurationInput,
   getWorkflow,
+  WorkflowConfigureRoutingDict,
 } from '@/ui/segments/workflows/config';
+import { buildScanConfigConfigureHref } from '@/ui/segments/workflows/config/routes';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
@@ -381,14 +381,18 @@ export function WorkflowActivity() {
       return;
     }
 
+    const workspace = { virtualLabId, projectId };
+
     if (selectedRow.type === ExtendedEntitiesTypeDict.TaskConfig) {
       const taskConfig = selectedRow as ITaskConfig<Record<string, unknown>>;
       if (taskConfig.task_config_type === TaskConfigType.CircuitExtractionCampaign) {
         const circuitId = taskConfig.inputs.at(0)?.id;
         if (!circuitId) return;
         navigate(
-          buildScanConfigConfigureHrefWithOrigin({
-            configurePathPrefix: `${workflowBase}/extract/configure/circuit`,
+          buildScanConfigConfigureHref({
+            activity: WorkflowActivityDictValue.extract,
+            targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+            workspace,
             entityType: ExtendedEntitiesTypeDict.Circuit,
             entityId: circuitId,
             originId: selectedRow.id,
@@ -400,8 +404,10 @@ export function WorkflowActivity() {
         const emCellMeshId = taskConfig.inputs.at(0)?.id;
         if (!emCellMeshId) return;
         navigate(
-          buildScanConfigConfigureHrefWithOrigin({
-            configurePathPrefix: `${workflowBase}/process/configure/em-cell-mesh`,
+          buildScanConfigConfigureHref({
+            activity: WorkflowActivityDictValue.process,
+            targetType: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+            workspace,
             entityType: ExtendedEntitiesTypeDict.EMCellMesh,
             entityId: emCellMeshId,
             originId: selectedRow.id,
@@ -413,8 +419,10 @@ export function WorkflowActivity() {
         const morphologyId = taskConfig.inputs.at(0)?.id;
         if (!morphologyId) return;
         navigate(
-          buildScanConfigConfigureHrefWithOrigin({
-            configurePathPrefix: `${workflowBase}/build/configure/em-synapse-mapping-campaign`,
+          buildScanConfigConfigureHref({
+            activity: WorkflowActivityDictValue.build,
+            targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
+            workspace,
             entityType: ExtendedEntitiesTypeDict.UniversalCellMorphology,
             entityId: morphologyId,
             originId: selectedRow.id,
@@ -432,8 +440,10 @@ export function WorkflowActivity() {
     if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
       const entityId = (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id;
       navigate(
-        buildScanConfigConfigureHrefWithOrigin({
-          configurePathPrefix: `${workflowBase}/simulate/configure/${kebabCase(ExtendedEntitiesTypeDict.MemodelCircuit)}`,
+        buildScanConfigConfigureHref({
+          activity: WorkflowActivityDictValue.simulate,
+          targetType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+          workspace,
           entityType: ExtendedEntitiesTypeDict.MemodelCircuit,
           entityId,
           originId: selectedRow.id,
@@ -446,7 +456,17 @@ export function WorkflowActivity() {
       entityType === ExtendedEntitiesTypeDict.IonChannelModelSimulation
     ) {
       navigate(
-        `${workflowBase}/simulate/configure/${kebabCase(ExtendedEntitiesTypeDict.IonChannelModelSimulation)}?originId=${selectedRow.id}`
+        buildScanConfigConfigureHref({
+          activity: WorkflowActivityDictValue.simulate,
+          targetType: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+          workspace,
+          originId: selectedRow.id,
+          standalone:
+            getWorkflow({
+              activity: WorkflowActivityDictValue.simulate,
+              targetType: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+            })?.configureRouting === WorkflowConfigureRoutingDict.Standalone,
+        })
       );
       return;
     }
@@ -462,28 +482,18 @@ export function WorkflowActivity() {
           targetType: entityType,
         })?.type ?? entityType;
 
-      if (workflow && isSimulateCircuitSourceType(workflowSourceType)) {
+      if (workflow?.isScanConfig) {
         navigate(
-          buildScanConfigConfigureHrefWithOrigin({
-            configurePathPrefix: `${workflowBase}/simulate/configure/circuit`,
+          buildScanConfigConfigureHref({
+            activity: WorkflowActivityDictValue.simulate,
+            targetType: entityType,
+            workspace,
             entityType: workflowSourceType,
             entityId,
             originId: selectedRow.id,
-            query: { dataType: workflowSourceType },
           })
         );
-        return;
       }
-
-      const configureSegment = workflow ? kebabCase(workflowSourceType) : 'circuit';
-      navigate(
-        buildScanConfigConfigureHrefWithOrigin({
-          configurePathPrefix: `${workflowBase}/simulate/configure/${configureSegment}`,
-          entityType: workflowSourceType,
-          entityId,
-          originId: selectedRow.id,
-        })
-      );
     }
   };
 
