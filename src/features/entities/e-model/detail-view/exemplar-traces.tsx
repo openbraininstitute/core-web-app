@@ -16,6 +16,13 @@ import { ErrorData } from '@/components/message-banners/error';
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { DEFAULT_PAGE_XSMALL_SIZE } from '@/constants';
+import {
+  detailViewInsetPanelClass,
+  detailViewPaginationClass,
+  type DetailViewVariant,
+} from '@/ui/segments/detail-view/variant-styles';
+import '@/ui/segments/detail-view/detail-view-pagination.css';
+import { cn } from '@/utils/css-class';
 
 import type {
   EntityCoreObjectTypes,
@@ -49,9 +56,10 @@ function makeColumns(
 
 type Props = {
   source: IEModel;
+  variant?: DetailViewVariant;
 };
 
-export function ExemplarTraces({ source }: Props) {
+export function ExemplarTraces({ source, variant = 'light' }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const [{ pageNumber, pageSize }, updatePageState] = useState({
     pageNumber: 1,
@@ -98,7 +106,10 @@ export function ExemplarTraces({ source }: Props) {
             {Array.from({ length: 5 }, (_, i) => i).map((value) => (
               <div
                 key={`row-ske-${value}`}
-                className="flex h-[132px] w-full items-center gap-x-6 border-b border-gray-300 py-8"
+                className={cn(
+                  'flex h-[132px] w-full items-center gap-x-6 border-b py-8',
+                  variant === 'onPrimary' ? 'border-white/20' : 'border-gray-300'
+                )}
               >
                 <div className="flex w-[330px] items-center justify-start">
                   <div className="h-[116px] w-[184px] rounded-md bg-gray-200" />
@@ -142,47 +153,52 @@ export function ExemplarTraces({ source }: Props) {
       },
       ({ result }) => {
         return (
-          <BaseTable
-            size="small"
-            wrapperClassname="h-full min-h-max "
-            className="h-full [&_.ant-table-body]:max-h-full!"
-            dataType={ExtendedEntitiesTypeDict.ElectricalCellRecording}
-            dataSource={result.data}
-            rowKey="id"
-            columns={columns}
-            rowClassName="[&:last-child>td]:border-b-0!"
-            scroll={{
-              x: true,
-            }}
-          />
+          <div className={cn(detailViewInsetPanelClass(variant))}>
+            <BaseTable
+              size="small"
+              wrapperClassname="h-full min-h-max "
+              className="h-full [&_.ant-table-body]:max-h-full!"
+              dataType={ExtendedEntitiesTypeDict.ElectricalCellRecording}
+              dataSource={result.data}
+              rowKey="id"
+              columns={columns}
+              rowClassName="[&:last-child>td]:border-b-0!"
+              scroll={{
+                x: true,
+              }}
+            />
+          </div>
         );
       }
     )
     .otherwise(() => null);
 
   return (
-    <>
-      <Header>Exemplar Traces</Header>
-      <Pagination
-        simple
-        responsive
-        hideOnSinglePage
-        defaultPageSize={DEFAULT_PAGE_XSMALL_SIZE}
-        total={total}
-        pageSize={pageSize}
-        current={pageNumber}
-        defaultCurrent={1}
-        align="end"
-        size="default"
-        role="button"
-        onChange={(_page, _pageSize) => {
-          updatePageState({
-            pageNumber: _page,
-            pageSize: _pageSize,
-          });
-        }}
-      />
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Header variant={variant}>Exemplar Traces</Header>
+        <Pagination
+          simple
+          responsive
+          hideOnSinglePage
+          defaultPageSize={DEFAULT_PAGE_XSMALL_SIZE}
+          total={total}
+          pageSize={pageSize}
+          current={pageNumber}
+          defaultCurrent={1}
+          align="end"
+          size="default"
+          role="button"
+          className={cn('m-0!', detailViewPaginationClass(variant))}
+          onChange={(_page, _pageSize) => {
+            updatePageState({
+              pageNumber: _page,
+              pageSize: _pageSize,
+            });
+          }}
+        />
+      </div>
       {content}
-    </>
+    </div>
   );
 }

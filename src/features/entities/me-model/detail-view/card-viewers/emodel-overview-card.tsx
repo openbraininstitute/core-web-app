@@ -12,6 +12,10 @@ import {
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { classNames } from '@/util/utils';
+import {
+  detailViewCardBorderClass,
+  type DetailViewVariant,
+} from '@/ui/segments/detail-view/variant-styles';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 
@@ -19,12 +23,18 @@ type Props = {
   mode: 'select' | 'summary';
   data?: IEModel;
   reselectLink?: boolean;
+  variant?: DetailViewVariant;
 };
 
 const title = 'E-Model';
 const selectUrl = 'configure/e-model';
 
-function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Props) {
+function EModelOverviewCard({
+  mode = 'summary',
+  data,
+  reselectLink = false,
+  variant = 'light',
+}: Props) {
   const searchParams = useSearchParams();
 
   const params = useParams<{
@@ -73,6 +83,7 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
           // selectedEModel && <EModelThumbnail emodel={selectedEModel} />
         }
         reselectLink={reselectLink}
+        variant={variant}
       />
     );
   }
@@ -84,8 +95,11 @@ function EModelOverviewCard({ mode = 'summary', data, reselectLink = false }: Pr
         query: getSelectUrlQueryParams(),
       }}
       className={classNames(
-        'border-neutral-2 text-neutral-4 hover:bg-primary-7 flex h-48 w-full',
-        'items-center rounded-lg border pl-32 text-4xl hover:text-white'
+        'flex h-48 w-full items-center rounded-lg border pl-32 text-4xl',
+        detailViewCardBorderClass(variant),
+        variant === 'onPrimary'
+          ? 'text-primary-2 hover:bg-primary-8 hover:text-white'
+          : 'border-neutral-2 text-neutral-4 hover:bg-primary-7 hover:text-white'
       )}
     >
       Select {title.toLowerCase()}

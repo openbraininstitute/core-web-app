@@ -10,9 +10,10 @@ type FieldProps = {
   field: EntityCoreFields;
   className?: string;
   data: any;
+  variant?: 'light' | 'onPrimary';
 };
 
-export function Field({ field, className, data }: FieldProps) {
+export function Field({ field, className, data, variant = 'light' }: FieldProps) {
   const fieldObj = getFieldDefinition(field);
 
   let renderedContent: ReactNode = null;
@@ -25,9 +26,30 @@ export function Field({ field, className, data }: FieldProps) {
   }
 
   return (
-    <div className={classNames('text-primary-7 flex flex-col', className)}>
-      <div className="text-neutral-4 uppercase">{fieldObj?.title}</div>
-      <div className={classNames('mt-2 break-words', fieldObj?.className)}>{renderedContent}</div>
+    <div
+      className={classNames(
+        'flex flex-col',
+        variant === 'onPrimary' ? 'text-white' : 'text-primary-7',
+        className
+      )}
+    >
+      <div
+        className={classNames(
+          'uppercase',
+          variant === 'onPrimary' ? 'text-primary-3' : 'text-neutral-4'
+        )}
+      >
+        {fieldObj?.title}
+      </div>
+      <div
+        className={classNames(
+          'mt-2 break-words',
+          variant === 'onPrimary' && 'font-bold',
+          fieldObj?.className
+        )}
+      >
+        {renderedContent}
+      </div>
     </div>
   );
 }

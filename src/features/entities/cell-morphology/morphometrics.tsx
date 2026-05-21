@@ -40,10 +40,12 @@ export function Morphometrics({
   morphology,
   context,
   className,
+  variant = 'onPrimary',
 }: {
   morphology: ICellMorphology;
   className?: string;
   context: WorkspaceContext;
+  variant?: 'light' | 'onPrimary';
 }) {
   const { data: measurementKinds, isLoading } = useQuery({
     queryKey: ['measurement-annotations', morphology.id],
@@ -65,19 +67,37 @@ export function Morphometrics({
     },
   } as ICellMorphologyExpanded;
 
-  const { filteredGroupedCardFields, renderMetric } = useMorphometrics(expandedMorphology, true);
+  const { filteredGroupedCardFields, renderMetric } = useMorphometrics(
+    expandedMorphology,
+    true,
+    variant
+  );
 
   return (
     <div className={cn('flex max-w-(--breakpoint-2xl) flex-col gap-10 pl-2', className)}>
-      <Divider className="w-full" />
-      <h1 className="text-primary-8 text-xl font-bold">Morphometrics</h1>
+      <Divider className={cn('w-full', variant === 'onPrimary' && 'border-white/20')} />
+      <h1
+        className={cn(
+          'text-xl font-bold',
+          variant === 'onPrimary' ? 'text-white' : 'text-primary-8'
+        )}
+      >
+        Morphometrics
+      </h1>
       {isLoading ? (
         <MorphometricsSkeleton />
       ) : (
         <div className="grid grid-cols-5 gap-4 wrap-break-word">
           {Object.entries(filteredGroupedCardFields).map(([group, fields]) => (
             <div key={group}>
-              <h2 className="text-primary-8 mb-8 text-lg font-semibold">{startCase(group)}</h2>
+              <h2
+                className={cn(
+                  'mb-8 text-lg font-semibold',
+                  variant === 'onPrimary' ? 'text-white' : 'text-primary-8'
+                )}
+              >
+                {startCase(group)}
+              </h2>
               {fields.map((field) => renderMetric(field))}
             </div>
           ))}

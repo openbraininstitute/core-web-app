@@ -13,6 +13,8 @@ import {
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { classNames } from '@/util/utils';
+import type { DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
+import { detailViewCardBorderClass } from '@/ui/segments/detail-view/variant-styles';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 
@@ -20,12 +22,18 @@ type Props = {
   mode: 'select' | 'summary';
   data?: ICellMorphology | ICellMorphology;
   reselectLink?: boolean;
+  variant?: DetailViewVariant;
 };
 
 const title = 'M-Model';
 const selectUrl = 'configure/morphology';
 
-function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }: Props) {
+function MorphologyOverviewCard({
+  mode = 'summary',
+  data,
+  reselectLink = false,
+  variant = 'light',
+}: Props) {
   const searchParams = useSearchParams();
   const params = useParams<{
     virtualLabId: string;
@@ -70,6 +78,7 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
         modelDetails={details}
         reselectLink={reselectLink}
         thumbnail={renderPreview<ICellMorphology>(data, { height: 200, width: 200 })}
+        variant={variant}
       />
     );
   }
@@ -81,8 +90,11 @@ function MorphologyOverviewCard({ mode = 'summary', data, reselectLink = false }
         query: getSelectUrlQueryParams(),
       }}
       className={classNames(
-        'border-neutral-2 text-neutral-4 hover:bg-primary-7 flex h-48 w-full',
-        'items-center rounded-lg border pl-32 text-4xl hover:text-white'
+        'flex h-48 w-full items-center rounded-lg border pl-32 text-4xl',
+        detailViewCardBorderClass(variant),
+        variant === 'onPrimary'
+          ? 'text-primary-2 hover:bg-primary-8 hover:text-white'
+          : 'border-neutral-2 text-neutral-4 hover:bg-primary-7 hover:text-white'
       )}
     >
       Select {title.toLowerCase()}

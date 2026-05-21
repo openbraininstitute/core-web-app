@@ -19,7 +19,7 @@ export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
   if (!entity) return null;
 
   return (
-    <div className="h-[min(360px,42vh)] min-h-[260px] w-full">
+    <div className="h-[min(360px,42vh)] min-h-[260px] w-full overflow-hidden rounded-2xl border border-neutral-2 bg-white">
       <div className="h-full">
         <ErrorBoundary
           FallbackComponent={withErrorConfig({
@@ -52,7 +52,7 @@ function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
   if (result) {
     return (
       <MorphoViewer
-        className="h-full"
+        className="h-full overflow-hidden rounded-2xl border-0!"
         swc={result}
         // We disable enhanced somas until they are fixed on the backend.
         // contentUrl={swcContentUrl}
@@ -61,7 +61,7 @@ function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
   }
   if (!isLoading && !result) {
     return (
-      <div className="border-neutral-3 flex h-full w-full flex-col items-center justify-center gap-3 border">
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-white">
         No morphology data available.
       </div>
     );

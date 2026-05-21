@@ -1,18 +1,5 @@
 .cardContainer {
-  /* "border-neutral-2 w-full rounded-[6px] border p-10" */
   width: 100%;
   border-radius: 6px;
-  border: 1px solid var(--color-neutral-2);
   padding: calc(var(--spacing) * 10);
-
-  div.name {
-    white-space: wrap;
-    text-wrap: balance;
-    word-break: break-word;
-    font-weight: bold;
-    font-size: var(--text-3xl);
-    color: var(--color-primary-8);
-    line-height: var(--tw-leading, var(--text-3xl--line-height));
-    margin-block: calc(var(--spacing) * 1);
-  }
 }

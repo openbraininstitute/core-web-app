@@ -14,12 +14,14 @@ import {
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
+import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import {
   CommonSummaryViewFields,
   getViewDefinitionByExtendedType,
 } from '@/entity-configuration/definitions/view-defs';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
-import { circuitTypes } from '@/entity-configuration/domain/helpers';
+import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
@@ -365,59 +367,129 @@ export default async function Overview({
     extendedType === ExtendedEntitiesTypeDict.IonChannelRecording ||
     extendedType === ExtendedEntitiesTypeDict.IonChannelModel;
 
+  const isSimulationPage =
+    getEntityByExtendedType({ type: extendedType })?.group === EntityTypeGroup.Simulations;
+  const fieldVariant = isSimulationPage ? 'light' : 'onPrimary';
+  const metadataBorderClass = isSimulationPage ? 'border-gray-300' : 'border-white/20';
+  const summaryFields: TypeSummaryProps[] = isSimulationPage
+    ? [{ field: EntityCoreFields.Description, className: 'col-span-2' }, ...commonFields, ...fields]
+    : [...commonFields, ...fields];
+
+  const metadataGrid = (
+    <div className={`mb-5 grid grid-cols-3 gap-4 rounded-lg border p-5 ${metadataBorderClass}`}>
+      {summaryFields.map(({ className, field }) => {
+        return (
+          <Field
+            key={field}
+            className={className}
+            field={field}
+            data={entity}
+            variant={fieldVariant}
+          />
+        );
+      })}
+    </div>
+  );
+
+  const visualizations = hasVisualization ? (
+    <div className={isSimulationPage ? undefined : 'mb-8'}>
+      {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
+      {includes(morphologyTypes, extendedType) && (
+        <CellMorphologyViewer entity={entity as ICellMorphology} />
+      )}
+      {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
+        <EphysViewer
+          entity={entity as IElectricalCellRecording}
+          ctx={context}
+          defaultToInteractiveDetails={!isSimulationPage}
+          variant={fieldVariant}
+        />
+      )}
+      {extendedType === ExtendedEntitiesTypeDict.IonChannelRecording && (
+        <IonChannelRecordingViewer
+          resource={entity as IIonChannelRecording}
+          ctx={context}
+          variant={fieldVariant}
+        />
+      )}
+      {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
+        <IonChannelModelOverview
+          icm={entity as IonChannelModel}
+          ctx={context}
+          variant={fieldVariant}
+        />
+      )}
+    </div>
+  ) : null;
+
+  const subjectSection =
+    'subject' in entity ? (
+      <SubjectDetails
+        className="mb-8"
+        entity={entity}
+        variant={fieldVariant}
+      />
+    ) : null;
+
+  const meModelSection =
+    extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
+    singleNeuronSimulationPayload ? (
+      <MEModelDetails
+        meModel={singleNeuronSimulationPayload.memodel}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+        variant={fieldVariant}
+      />
+    ) : null;
+
+  const synaptomeSection =
+    extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation &&
+    singleNeuronSynaptomeSimulationPayload ? (
+      <SynaptomeDetails
+        meModel={singleNeuronSynaptomeSimulationPayload.memodel}
+        synaptome={singleNeuronSynaptomeSimulationPayload.synaptome}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+        variant={fieldVariant}
+      />
+    ) : null;
+
+  const emCellMeshSection =
+    extendedType === ExtendedEntitiesTypeDict.EMCellMesh ? (
+      <EmCellMeshMetadata id={entity.id} ctx={context} />
+    ) : null;
+
+  const morphometricsSection = includes(morphologyTypes, extendedType) ? (
+    <Morphometrics
+      className="mb-8"
+      morphology={entity as ICellMorphology}
+      context={context}
+      variant={fieldVariant}
+    />
+  ) : null;
+
+  if (isSimulationPage) {
+    return (
+      <>
+        {metadataGrid}
+        {subjectSection}
+        {meModelSection}
+        {synaptomeSection}
+        {visualizations}
+        {emCellMeshSection}
+      </>
+    );
+  }
+
   return (
     <>
-      {hasVisualization && (
-        <div className="mb-8">
-          {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
-          {includes(morphologyTypes, extendedType) && (
-            <CellMorphologyViewer entity={entity as ICellMorphology} />
-          )}
-          {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
-            <EphysViewer entity={entity as IElectricalCellRecording} ctx={context} />
-          )}
-          {extendedType === ExtendedEntitiesTypeDict.IonChannelRecording && (
-            <IonChannelRecordingViewer resource={entity as IIonChannelRecording} ctx={context} />
-          )}
-          {extendedType === ExtendedEntitiesTypeDict.IonChannelModel && (
-            <IonChannelModelOverview icm={entity as IonChannelModel} ctx={context} />
-          )}
-        </div>
-      )}
-
-      <div className="mb-5 grid grid-cols-3 gap-4 rounded-lg border border-gray-300 p-5">
-        {[...commonFields, ...fields].map(({ className, field }) => {
-          return <Field key={field} className={className} field={field} data={entity} />;
-        })}
-      </div>
-
-      {'subject' in entity && <SubjectDetails className="mb-8" entity={entity} />}
-
-      {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSimulation &&
-        singleNeuronSimulationPayload && (
-          <MEModelDetails
-            meModel={singleNeuronSimulationPayload.memodel}
-            virtualLabId={context.virtualLabId}
-            projectId={context.projectId}
-          />
-        )}
-      {extendedType === ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation &&
-        singleNeuronSynaptomeSimulationPayload && (
-          <SynaptomeDetails
-            meModel={singleNeuronSynaptomeSimulationPayload.memodel}
-            synaptome={singleNeuronSynaptomeSimulationPayload.synaptome}
-            virtualLabId={context.virtualLabId}
-            projectId={context.projectId}
-          />
-        )}
-
-      {extendedType === ExtendedEntitiesTypeDict.EMCellMesh && (
-        <EmCellMeshMetadata id={entity.id} ctx={context} />
-      )}
-
-      {includes(morphologyTypes, extendedType) && (
-        <Morphometrics className="mb-8" morphology={entity as ICellMorphology} context={context} />
-      )}
+      {visualizations}
+      {metadataGrid}
+      {subjectSection}
+      {meModelSection}
+      {synaptomeSection}
+      {emCellMeshSection}
+      {morphometricsSection}
     </>
   );
 }

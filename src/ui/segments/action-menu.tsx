@@ -44,12 +44,14 @@ export default function ActionMenu({
   type,
   parentLink,
   isPublicEntity,
+  variant = 'light',
 }: {
   entity: EntityTypeValue;
   ctx: WorkspaceContext;
   type: TExtendedEntitiesTypeDict;
   parentLink: string;
   isPublicEntity: boolean;
+  variant?: 'light' | 'onPrimary';
 }) {
   const { replace: navigate } = useRouter();
   const queryClient = useQueryClient();
@@ -132,12 +134,20 @@ export default function ActionMenu({
       ? entityType.isSimulatable
       : 'scale' in entity && entityType.isSimulatable(entity.scale);
 
+  const iconClass = variant === 'onPrimary' ? 'text-white' : 'text-primary-8';
+
   return (
-    <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-base font-bold">
+    <div
+      className={cn(
+        'mt-10 flex flex-col gap-5 px-5 text-base font-bold',
+        variant === 'onPrimary' ? 'text-white' : 'text-primary-9'
+      )}
+    >
       <Action
+        variant={variant}
         icon={
           !copying ? (
-            <CopyOutlined onClick={() => copy(entity.id)} className="text-primary-8" />
+            <CopyOutlined onClick={() => copy(entity.id)} className={iconClass} />
           ) : (
             <CheckOutlined className="text-teal-400" />
           )
@@ -148,6 +158,7 @@ export default function ActionMenu({
 
       {isSimulatable && (
         <Action
+          variant={variant}
           icon={
             <NextLink
               href={{
@@ -158,7 +169,7 @@ export default function ActionMenu({
                 },
               }}
             >
-              <ExperimentOutlined className="text-primary-8" />
+              <ExperimentOutlined className={iconClass} />
             </NextLink>
           }
         >
@@ -168,9 +179,10 @@ export default function ActionMenu({
 
       {entityType.isDownloadable && (
         <Action
+          variant={variant}
           icon={
             <DownloadOutlined
-              className="text-primary-8"
+              className={iconClass}
               onClick={() => {
                 if (entity.type === ExtendedEntitiesTypeDict.Circuit)
                   setCircuit(entity as ICircuit);
@@ -214,7 +226,10 @@ export default function ActionMenu({
           }}
         >
           <span className="cursor-pointer">
-            <Action icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}>
+            <Action
+              variant={variant}
+              icon={deleteMutation.isPending ? <LoadingOutlined /> : <DeleteOutlined />}
+            >
               {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
             </Action>
           </span>

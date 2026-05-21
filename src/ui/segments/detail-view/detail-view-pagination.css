@@ -1,0 +1,61 @@
+/* Ant Design simple pagination on the blue detail-view panel */
+.detail-view-pagination-on-primary.ant-pagination,
+.detail-view-pagination-on-primary.ant-pagination-simple {
+  color: #fff;
+}
+
+.detail-view-pagination-on-primary .ant-pagination-prev,
+.detail-view-pagination-on-primary .ant-pagination-next,
+.detail-view-pagination-on-primary .ant-pagination-item-link,
+.detail-view-pagination-on-primary .ant-pagination-prev button,
+.detail-view-pagination-on-primary .ant-pagination-next button {
+  color: #fff !important;
+}
+
+.detail-view-pagination-on-primary .ant-pagination-item-link {
+  border-color: rgb(255 255 255 / 0.35) !important;
+  background: transparent !important;
+}
+
+.detail-view-pagination-on-primary .ant-pagination-item-link:hover {
+  background: rgb(255 255 255 / 0.1) !important;
+}
+
+.detail-view-pagination-on-primary .ant-pagination-item-link .anticon,
+.detail-view-pagination-on-primary .ant-pagination-item-link-icon,
+.detail-view-pagination-on-primary .ant-pagination-item-link svg {
+  color: #fff !important;
+  fill: currentColor;
+}
+
+/* rc-pagination / antd arrow glyphs rendered via ::before / ::after */
+.detail-view-pagination-on-primary .ant-pagination-prev .ant-pagination-item-link::before,
+.detail-view-pagination-on-primary .ant-pagination-next .ant-pagination-item-link::before,
+.detail-view-pagination-on-primary .ant-pagination-prev .ant-pagination-item-link::after,
+.detail-view-pagination-on-primary .ant-pagination-next .ant-pagination-item-link::after {
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+.detail-view-pagination-on-primary .ant-pagination-disabled .ant-pagination-item-link,
+.detail-view-pagination-on-primary .ant-pagination-disabled .ant-pagination-item-link .anticon,
+.detail-view-pagination-on-primary .ant-pagination-disabled .ant-pagination-item-link svg {
+  color: rgb(255 255 255 / 0.4) !important;
+  border-color: rgb(255 255 255 / 0.2) !important;
+}
+
+.detail-view-pagination-on-primary .ant-pagination-simple-pager {
+  color: #fff !important;
+}
+
+.detail-view-pagination-on-primary .ant-pagination-simple-pager input {
+  color: var(--color-primary-8) !important;
+  background-color: #fff !important;
+  border-color: rgb(255 255 255 / 0.35) !important;
+}
+
+.detail-view-pagination-on-primary .ant-pagination-slash,
+.detail-view-pagination-on-primary .ant-pagination-simple-pager > span {
+  color: #fff !important;
+  margin-inline: 0.25rem;
+}

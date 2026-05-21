@@ -8,9 +8,14 @@ import { ExpandableText } from '@/ui/molecules/more-less-text';
 type EntityNameDisplayProps = {
   name: string;
   description?: string | null;
+  variant?: 'light' | 'onPrimary';
 };
 
-export function EntityNameDisplay({ name, description }: EntityNameDisplayProps) {
+export function EntityNameDisplay({
+  name,
+  description,
+  variant = 'onPrimary',
+}: EntityNameDisplayProps) {
   const pathname = usePathname();
 
   // Extract section from pathname (last segment after the entity ID)
@@ -28,22 +33,31 @@ export function EntityNameDisplay({ name, description }: EntityNameDisplayProps)
     return null;
   }
 
+  if (variant === 'light') {
+    return (
+      <div className="mb-4">
+        <div className="text-neutral-4 uppercase">Name</div>
+        <div className="text-primary-8 line-clamp-3 text-2xl font-bold">{name}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-4">
-      <div className="text-primary-8 line-clamp-3 text-2xl font-bold">{name}</div>
+      <div className="line-clamp-3 text-2xl font-bold text-white">{name}</div>
       {description && (
         <ExpandableText
           id="entity-description"
           text={description}
           collapsedLines={3}
-          className="text-neutral-6 mt-2 text-base leading-6"
+          className="text-primary-3 mt-2 text-base leading-6"
           btnWrapperClassName="mt-1"
         >
           {({ isExpanded, toggle }) => (
             <button
               type="button"
               onClick={toggle}
-              className="text-primary-7 text-sm underline underline-offset-2"
+              className="text-sm text-white/90 underline decoration-white/40 underline-offset-2 hover:text-white"
             >
               {isExpanded ? 'Show less' : 'Show more'}
             </button>
@@ -56,9 +70,13 @@ export function EntityNameDisplay({ name, description }: EntityNameDisplayProps)
 
 type EntityNameDisplayWrapperProps = {
   children: ReactNode;
+  variant?: 'light' | 'onPrimary';
 };
 
-export function EntityNameDisplayWrapper({ children }: EntityNameDisplayWrapperProps) {
+export function EntityNameDisplayWrapper({
+  children,
+  variant = 'onPrimary',
+}: EntityNameDisplayWrapperProps) {
   const pathname = usePathname();
 
   // Extract section from pathname (last segment after the entity ID)
@@ -71,5 +89,13 @@ export function EntityNameDisplayWrapper({ children }: EntityNameDisplayWrapperP
     currentSection === DetailViewSectionsDict.RelatedPublications ||
     currentSection === DetailViewSectionsDict.RelatedArtifacts;
 
-  return <div className={shouldHide ? 'h-full' : 'min-h-0 flex-1'}>{children}</div>;
+  return (
+    <div
+      className={
+        shouldHide ? 'h-full' : variant === 'light' ? 'h-[calc(100%-7rem)]' : undefined
+      }
+    >
+      {children}
+    </div>
+  );
 }
