@@ -78,11 +78,7 @@ export function useCircuit(id: string, showAxon: boolean) {
     },
   };
 }
-function useCircuitNodes(
-  id: string,
-  virtualLabId: string,
-  projectId: string
-): { data: any; error: any; isLoading: any } {
+function useCircuitNodes(id: string, virtualLabId: string, projectId: string) {
   return useQuery({
     queryKey: keyBuilder.circuitNodes(id),
     queryFn: async () => {
