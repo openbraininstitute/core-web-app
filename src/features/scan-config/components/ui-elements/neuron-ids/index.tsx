@@ -72,33 +72,10 @@ export default function NeuronIds({
             onAddIds(newAllElements);
             setText(newAllElements.join(', '));
           }}
+          onAddIds={onAddIds}
+          setText={setText}
+          text={text}
         />
-      )}
-      {!edit && (
-        <div className="flex gap-2 justify-end">
-          {!disabled && (
-            <>
-              <button
-                type="button"
-                className="text-gray-500 flex justify-center items-center border border-gray-200 p-2 rounded-full text-primary-9 text-sm gap-3"
-                onClick={() => {
-                  onAddIds(null);
-                  setText('');
-                }}
-              >
-                Clear list <DeleteOutlined className="text-xs" />
-              </button>
-              <button
-                type="button"
-                className="text-gray-500  flex justify-center items-center border border-gray-200 p-2 rounded-full text-primary-9 text-sm gap-3"
-                onClick={handleEditClick}
-              >
-                Edit ID list <EditOutlined className="text-xs" />
-              </button>
-            </>
-          )}
-          <CopyButton textToCopy={text} />
-        </div>
       )}
 
       {!edit && !disabled && (
@@ -195,12 +172,18 @@ const Ids = ({
   disabled,
   onDeleteItem,
   totalIds,
+  onAddIds,
+  setText,
+  text,
 }: {
   ids: { head: number[]; tail: number[] };
   totalIds: number;
   onDeleteItem: (id: number) => void;
   onEditClick?: () => void;
   disabled?: boolean;
+  onAddIds: (newElements: number[] | null) => void;
+  setText: (text: string) => void;
+  text: string;
 }) => {
   const containerClass = 'w-full grid grid-cols-4 gap-1';
   const elementClass =
@@ -214,7 +197,33 @@ const Ids = ({
 
   return (
     <div className="border border-gray-200 p-3 rounded-lg w-full ">
-      <div className="relative -top-[5px] text-primary-8 text-sm">{getTotalIdsText()}</div>
+      <div className="flex justify-between items-center mb-3">
+        <div className="text-primary-8">{getTotalIdsText()}</div>
+        <div className="flex gap-2 justify-end">
+          {!disabled && (
+            <>
+              <button
+                type="button"
+                className="text-gray-500 flex justify-center items-center border border-gray-200 px-2 py-1 rounded-full text-primary-9 text-sm gap-2"
+                onClick={() => {
+                  onAddIds(null);
+                  setText('');
+                }}
+              >
+                Clear <DeleteOutlined className="text-xs" />
+              </button>
+              <button
+                type="button"
+                className="text-gray-500 flex justify-center items-center border border-gray-200 px-2 py-1 rounded-full text-primary-9 text-sm gap-2"
+                onClick={onEditClick}
+              >
+                Edit <EditOutlined className="text-xs" />
+              </button>
+            </>
+          )}
+          <CopyButton textToCopy={text} />
+        </div>
+      </div>
       <div className={containerClass}>
         {ids.head.map((id) => (
           <div key={id} className={elementClass}>
@@ -267,10 +276,10 @@ const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
   return (
     <button
       type="button"
-      className="text-gray-500 flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm gap-3"
+      className="text-gray-500 flex justify-center items-center border border-gray-200 px-2 py-1 rounded-full text-primary-9 text-sm gap-2"
       onClick={handleCopy}
     >
-      {copied ? 'Copied!' : 'Copy ID list'} <CopyOutlined className="text-xs" />
+      {copied ? 'Copied!' : 'Copy'} <CopyOutlined className="text-xs" />
     </button>
   );
 };
