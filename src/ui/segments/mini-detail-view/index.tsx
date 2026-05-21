@@ -44,12 +44,15 @@ type Props = {
   section?: TWorkspaceSection;
   dataType: TExtendedEntitiesTypeDict;
   hideUseModelAction?: boolean;
+  /** browse campaign target type for scan-config configure URLs */
+  workflowTargetType?: TExtendedEntitiesTypeDict;
 };
 
 export function MiniDetailView<T extends EntityCoreObjectTypes>({
   section = WorkspaceSection.Data,
   dataType,
   hideUseModelAction = false,
+  workflowTargetType,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
   const { mdv, setMdv } = useMiniDetailView();
@@ -83,6 +86,7 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       dataType={dataType}
       onClose={onClose}
       hideUseModelAction={hideUseModelAction}
+      workflowTargetType={workflowTargetType}
     />
   );
 }
@@ -95,6 +99,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   theme = 'default',
   enableAnimation = true,
   hideUseModelAction = false,
+  workflowTargetType,
 }: {
   section: TWorkspaceSection;
   record: T | null;
@@ -103,6 +108,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   theme?: TMiniDetailViewTheme;
   enableAnimation?: boolean;
   hideUseModelAction?: boolean;
+  workflowTargetType?: TExtendedEntitiesTypeDict;
 }) {
   if (!record) return null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
@@ -255,6 +261,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           dataType={dataType}
           section={section}
           hideUseModelAction={hideUseModelAction}
+          workflowTargetType={workflowTargetType}
         />
       )
     )
@@ -267,6 +274,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           record={record}
           dataType={dataType}
           hideUseModelAction={hideUseModelAction}
+          workflowTargetType={workflowTargetType}
         />
       )
     )

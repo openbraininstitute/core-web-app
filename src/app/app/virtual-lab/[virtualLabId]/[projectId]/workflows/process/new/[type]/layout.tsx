@@ -34,7 +34,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           initial={false}
           animate={{
             gridTemplateColumns: mdv ? '3fr 2fr' : '1fr',
-            gridTemplateAreas: mdv ? "'body mini-view'" : "'body'",
+            gridTemplateRows: '1fr auto',
+            gridTemplateAreas: mdv ? "'body mini-view' 'footer mini-view'" : "'body' 'footer'",
           }}
           transition={{
             type: 'spring',
