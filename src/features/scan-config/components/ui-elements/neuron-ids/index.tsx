@@ -35,7 +35,7 @@ export default function NeuronIds({
     return [...new Set(elements)].sort((a, b) => a - b);
   }, [value]);
 
-  const [text, setText] = useState(allElements.join(', '));
+  const [text, setText] = useState(() => allElements.join(', '));
   const [isTextValid, setIsTextValid] = useState(true);
 
   const renderedElements = useMemo(() => {
