@@ -10,6 +10,7 @@ import { match, P } from 'ts-pattern';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { keyBuilder } from '@/ui/use-query-keys/data';
+import type { DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 import { trackDownloadProgress } from '@/utils/track-download-progress';
 
@@ -39,6 +40,7 @@ interface Props {
     };
   };
   optimized?: boolean; // whether to use next/image optimization or not (default: true)
+  variant?: DetailViewVariant;
 }
 
 interface ImageCacheEntry {
@@ -60,7 +62,9 @@ export function ProgressiveEntityImage({
   xPadding,
   clsx,
   optimized = true,
+  variant = 'light',
 }: Props) {
+  const onPrimary = variant === 'onPrimary';
   const context = useParams<WorkspaceContext>();
   const queryClient = useQueryClient();
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -199,7 +203,10 @@ export function ProgressiveEntityImage({
   return match({ status, asset })
     .with({ status: 'idle' }, () => (
       <div
-        className="flex w-full flex-col items-center justify-center border border-gray-300 bg-gray-100 p-4"
+        className={cn(
+          'flex w-full flex-col items-center justify-center border p-4',
+          onPrimary ? 'border-white/20 bg-white/10' : 'border-gray-300 bg-gray-100'
+        )}
         style={{ width, height }}
       >
         <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="" />
@@ -225,7 +232,10 @@ export function ProgressiveEntityImage({
     ))
     .with({ status: 'loading' }, () => (
       <div
-        className="flex flex-col items-center justify-center border border-gray-100 bg-gray-100/20"
+        className={cn(
+          'flex flex-col items-center justify-center border',
+          onPrimary ? 'border-white/20 bg-white/10' : 'border-gray-100 bg-gray-100/20'
+        )}
         style={{ width, height }}
       >
         <div className="space-y-4 text-center">
@@ -235,8 +245,13 @@ export function ProgressiveEntityImage({
               type="circle"
               percent={Math.round(downloadProgress)}
               size={64}
-              strokeColor={clsx?.progress?.strokeColor || '096dd9'}
-              className={cn('[&_.ant-progress-text]:text-primary-8!', clsx?.progress?.className)}
+              strokeColor={clsx?.progress?.strokeColor || (onPrimary ? '#fff' : '#096dd9')}
+              className={cn(
+                onPrimary
+                  ? '[&_.ant-progress-text]:text-white!'
+                  : '[&_.ant-progress-text]:text-primary-8!',
+                clsx?.progress?.className
+              )}
             />
           </div>
         </div>
@@ -277,7 +292,11 @@ export function ProgressiveEntityImage({
 
       return (
         <div
-          className={cn('w-full', bordered && 'border border-gray-300', className)}
+          className={cn(
+            'w-full',
+            bordered && (onPrimary ? 'border border-neutral-2' : 'border border-gray-300'),
+            className
+          )}
           style={{
             paddingTop: yPadding,
             paddingBottom: yPadding,

@@ -12,6 +12,7 @@ import SimulationDetail from '@/features/entities/neuron-simulation/simulation-r
 import ConfigItem from '@/features/entities/single-neuron-synaptome/build/elements/config-item';
 import {
   detailViewHeadingClass,
+  detailViewInsetPanelClass,
   detailViewValueClass,
   type DetailViewVariant,
 } from '@/ui/segments/detail-view/variant-styles';
@@ -103,7 +104,12 @@ export default function Results({ modelId, context, variant = 'light' }: Props) 
   }
 
   return (
-    <div className="flex w-full flex-col gap-2">
+    <div
+      className={cn(
+        'flex w-full flex-col gap-2',
+        variant === 'onPrimary' && detailViewInsetPanelClass(variant)
+      )}
+    >
       {simulations.data.map((sim, indx) => (
         <ErrorBoundary
           fallback={withErrorConfig({

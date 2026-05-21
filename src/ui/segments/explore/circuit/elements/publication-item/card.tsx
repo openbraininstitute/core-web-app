@@ -10,11 +10,12 @@ import type { ScientificArtifactBase } from '@/api/entitycore/types/entities/sci
 interface Props {
   publication: IPublication;
   scientificArtifact: ScientificArtifactBase;
+  className?: string;
 }
 
-export function Card({ publication, scientificArtifact }: Props) {
+export function Card({ publication, scientificArtifact, className }: Props) {
   return (
-    <div className="w-full p-2">
+    <div className={className ?? 'w-full p-2'}>
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <Header title={publication.title!} />

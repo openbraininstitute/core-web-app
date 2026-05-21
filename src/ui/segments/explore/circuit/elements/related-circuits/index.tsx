@@ -4,6 +4,8 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useParams } from 'next/navigation';
 
 import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
+import type { DetailViewVariant } from '@/ui/segments/detail-view/variant-styles';
+import { cn } from '@/utils/css-class';
 import { Derived } from '@/ui/segments/explore/circuit/elements/related-circuits/derived';
 import { DerivedFrom } from '@/ui/segments/explore/circuit/elements/related-circuits/derived-from';
 import { Parent } from '@/ui/segments/explore/circuit/elements/related-circuits/parent';
@@ -16,9 +18,10 @@ import type { WorkspaceContext } from '@/types/common';
 
 type Props = {
   circuit: ICircuit;
+  variant?: DetailViewVariant;
 };
 
-export function RelatedCircuits({ circuit }: Props) {
+export function RelatedCircuits({ circuit, variant = 'light' }: Props) {
   const { virtualLabId, projectId } = useParams<WorkspaceContext>();
 
   const { isLoading, derived, derivedFrom, parent, subCircuits } = useHierarchyAllLevels({
@@ -30,14 +33,14 @@ export function RelatedCircuits({ circuit }: Props) {
   if (isLoading) {
     return (
       <div className="flex w-full items-center justify-center py-10">
-        <LoadingOutlined className="text-primary-7" />
+        <LoadingOutlined className={cn(variant === 'onPrimary' ? 'text-white' : 'text-primary-7')} />
       </div>
     );
   }
 
   return (
-    <div className="mt-5">
-      <Tabs defaultMessage="No related circuits found">
+    <div className={variant === 'onPrimary' ? undefined : 'mt-5'}>
+      <Tabs defaultMessage="No related circuits found" variant={variant}>
         <Tab label="Parent circuit" visible={Boolean(circuit.root_circuit_id)}>
           <Parent data={parent} />
         </Tab>

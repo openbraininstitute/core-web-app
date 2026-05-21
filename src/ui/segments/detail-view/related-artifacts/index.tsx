@@ -50,7 +50,7 @@ export default async function RelatedArtifacts({
           ),
         },
       },
-      () => <RelatedCircuits circuit={entity as ICircuit} />
+      () => <RelatedCircuits circuit={entity as ICircuit} variant={fieldVariant} />
     )
     .with({ entityConfig: { extendedType: ExtendedEntitiesTypeDict.IonChannelModel } }, () => (
       <ICMRelatedArtifacts

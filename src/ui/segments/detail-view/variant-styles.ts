@@ -68,8 +68,31 @@ export function detailViewPillTabsTriggerClass(
   return cn(
     'max-w-max h-10 px-4 py-3 text-base select-none',
     variant === 'onPrimary'
-      ? 'text-primary-2 hover:text-white data-[state=active]:bg-primary-8 data-[state=active]:font-bold data-[state=active]:text-white'
+      ? 'text-[#adcdf2] hover:text-white data-[state=active]:bg-primary-8 data-[state=active]:font-bold data-[state=active]:text-white'
       : 'text-primary-8 data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 data-[state=active]:font-bold data-[state=active]:text-white',
     className
   );
+}
+
+/** Segmented tab buttons (tabbed-page) on the blue detail panel */
+export function detailViewTabbedTabButtonClass(variant: DetailViewVariant, active: boolean) {
+  if (variant === 'onPrimary') {
+    return cn(
+      'rounded-none border border-white/20 bg-transparent text-[#adcdf2] shadow-none',
+      'hover:bg-primary-8/60 hover:text-white',
+      active && 'bg-primary-8 font-bold text-white'
+    );
+  }
+  return cn('rounded-none', active && 'bg-primary-9 text-white');
+}
+
+export function detailViewTabbedEmptyClass(variant: DetailViewVariant) {
+  return cn(
+    'flex w-full items-center justify-center rounded-2xl border p-5 select-none',
+    variant === 'onPrimary' ? 'border-white/20 text-white' : 'border-neutral-2 text-primary-8'
+  );
+}
+
+export function detailViewTabbedContentClass(variant: DetailViewVariant) {
+  return cn('mt-5 min-h-0', variant === 'onPrimary' && detailViewInsetPanelClass(variant));
 }
