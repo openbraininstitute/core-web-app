@@ -1,0 +1,27 @@
+/* Breadcrumb on the blue detail panel — overrides layout text-white inheritance */
+.breadcrumb-trail-on-primary {
+  color: #adcdf2;
+}
+
+.breadcrumb-trail-on-primary a {
+  color: #adcdf2 !important;
+}
+
+.breadcrumb-trail-on-primary a:hover {
+  color: #c5e8ff !important;
+}
+
+.breadcrumb-trail-on-primary .breadcrumb-on-primary-separator,
+.breadcrumb-trail-on-primary .breadcrumb-on-primary-separator .anticon {
+  color: #adcdf2 !important;
+}
+
+.breadcrumb-trail-on-primary .breadcrumb-on-primary-active,
+.breadcrumb-trail-on-primary .breadcrumb-on-primary-active a {
+  color: #c5e8ff !important;
+  font-weight: 600;
+}
+
+.breadcrumb-trail-on-primary .breadcrumb-on-primary-active a:hover {
+  color: #fff !important;
+}

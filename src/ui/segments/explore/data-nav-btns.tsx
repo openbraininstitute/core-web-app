@@ -9,6 +9,8 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import Breadcrumb from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
+import '@/ui/segments/detail-view/detail-view-breadcrumb.css';
+import { cn } from '@/utils/css-class';
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { isBrowser } from '@/utils/environment';
@@ -41,7 +43,7 @@ export function BackToListingOriginButton({
   const query = new URLSearchParams(queryParams);
 
   const linkClass =
-    variant === 'onPrimary' ? 'capitalize hover:text-primary-3' : 'capitalize';
+    variant === 'onPrimary' ? 'breadcrumb-on-primary-link capitalize' : 'capitalize';
 
   return (
     <Breadcrumb variant={variant} tone="inactive">
@@ -70,7 +72,7 @@ export function BackToCategory({
   const groupDisplayName = getGroupDisplayName(group);
 
   const linkClass =
-    variant === 'onPrimary' ? 'capitalize hover:text-primary-3' : 'capitalize';
+    variant === 'onPrimary' ? 'breadcrumb-on-primary-link capitalize' : 'capitalize';
 
   return (
     <Breadcrumb variant={variant} tone="inactive">
@@ -110,7 +112,8 @@ export function BackToEntityType({
   query.set('group', group);
   query.set('scope', scope);
 
-  const linkClass = variant === 'onPrimary' ? 'hover:text-primary-3' : undefined;
+  const linkClass =
+    variant === 'onPrimary' ? 'breadcrumb-on-primary-link-active' : undefined;
 
   return (
     <Breadcrumb showChevron={false} variant={variant} tone="active">
@@ -167,7 +170,7 @@ export function DataBreadcrumb({
 
   if (section !== WorkspaceSection.Data) return null;
   return (
-    <div className="flex flex-nowrap gap-3">
+    <div className={cn('flex flex-nowrap gap-3', variant === 'onPrimary' && 'breadcrumb-trail-on-primary')}>
       <BackToListingOriginButton
         {...{ virtualLabId, projectId, onClick: onLinkClick, variant }}
       />
