@@ -6,14 +6,11 @@ import { useAtom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 import { useMemo, useState } from 'react';
 
-import { PortalRegionBanner } from '@/features/brain-region-hierarchy/components/region-banner';
 import { coreFiltersAtom } from '@/ui/segments/data-table/elements/context';
-import { FilterControls } from '@/ui/segments/data-table/elements/filter-controls';
 import { ListingFilterPanel } from '@/ui/segments/data-table/elements/listing-filter-panel/listing-filter-panel';
 import { Pagination } from '@/ui/segments/data-table/elements/pagination';
-import { Search } from '@/ui/segments/data-table/search';
+import { TableTools } from '@/ui/segments/data-table/elements/table-tools';
 import { type OnCellClick, WrapperTable } from '@/ui/segments/data-table/table';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { cn } from '@/utils/css-class';
 
 import type { ColumnProps, TableProps } from 'antd/es/table';
@@ -30,7 +27,11 @@ import type {
 } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { WorkspaceContext } from '@/types/common';
-import type { RenderButtonProps } from '@/ui/segments/data-table/elements/use-row-selection';
+import type { EntityTypeSelectorProps } from '@/ui/segments/data-table/elements/entity-selector';
+import type {
+  RenderButtonProps,
+  TableRowSelectionProps,
+} from '@/ui/segments/data-table/elements/use-row-selection';
 import type { UseExpandableTableOptions } from '@/ui/segments/data-table/expandable-row/use-expandable-table';
 
 export type Props<T extends EntityCoreIdentifiable> = {
@@ -51,7 +52,6 @@ export type Props<T extends EntityCoreIdentifiable> = {
   selectionType?: RowSelectionType;
   onRow?: TableProps<T>['onRow'];
   sticky?: TableProps<T>['sticky'];
-  onRowsSelected?: ((rows: T[]) => void) | undefined;
   renderButton?: ((props: RenderButtonProps<T>) => ReactNode) | undefined;
   onCellClick?: OnCellClick<T> | undefined;
   showLoadingState?: boolean;
@@ -66,6 +66,9 @@ export type Props<T extends EntityCoreIdentifiable> = {
   searchOpenOnMount?: boolean;
   requireSpeciesSelector?: boolean;
   requireScopeSelector?: boolean;
+  requireEntityTypeSelector?: EntityTypeSelectorProps & {
+    enabled: boolean;
+  };
   requireSearch?: boolean;
   filterClassNames?: {
     container?: string;
@@ -81,7 +84,7 @@ export type Props<T extends EntityCoreIdentifiable> = {
     loading: boolean;
     error: Error | null;
   };
-};
+} & TableRowSelectionProps<T>;
 
 export function MainTable<T extends EntityCoreIdentifiableNamed>({
   dataKey,
@@ -102,6 +105,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   selectionType,
   onRow,
   onRowsSelected,
+  selectedRows,
   onCellClick,
   tableStyle,
   // us
@@ -113,6 +117,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   requireSpeciesSelector = false,
   requireScopeSelector = false,
   requireSearch = true,
+  requireEntityTypeSelector,
   filterClassNames,
   expandableOptions,
   showExpandButtons,
@@ -136,42 +141,13 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
     )
   );
 
-  const grid = useMemo(() => {
-    const parentAreas: string[] = [];
-    const leftAreas: string[] = [];
-    const parentColumns = [];
-    const leftColumns = [];
-    if (requireScopeSelector) {
-      parentAreas.push("'scope-selector scope-selector'");
-      parentColumns.push('1fr auto');
-    }
+  const showScope = requireScopeSelector;
+  const showSpecies = requireSpeciesSelector;
+  const showSearch = allowSearch && requireSearch;
+  const showEntityType = requireEntityTypeSelector?.enabled ?? false;
 
-    if (requireSpeciesSelector || requireSearch) {
-      parentAreas.push("'brain-and-search filter'");
-      if (requireSpeciesSelector) {
-        leftAreas.push('brain-region-dropdown');
-        leftColumns.push('max-content');
-      }
-      if (requireSearch) {
-        leftAreas.push('search');
-        if (requireSpeciesSelector) leftColumns.push('minmax(0, 1fr)');
-        else leftColumns.push('2fr');
-      }
-    }
+  const showFilter = allowFilter;
 
-    return {
-      parent: {
-        gridTemplateAreas: parentAreas.join(' '),
-        gridTemplateColumns: parentColumns.join(' '),
-      } as React.CSSProperties,
-      left: {
-        gridTemplateAreas: `'${leftAreas.join(' ')}'`,
-        gridTemplateColumns: leftColumns.join(' '),
-      } as React.CSSProperties,
-    };
-  }, [requireScopeSelector, requireSpeciesSelector, requireSearch]);
-
-  const allowTopMenu = allowSearch || allowFilter || left;
   return (
     <>
       <section
@@ -182,45 +158,24 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           cls?.container
         )}
       >
-        {allowTopMenu && (
-          <div className="mb-5 grid w-full items-start gap-2" style={grid.parent}>
-            {requireScopeSelector && <WorkflowScopeTabs className="max-w-max" />}
-            <div className="flex min-w-0 flex-wrap items-start gap-2 [grid-area:brain-and-search]">
-              {requireSpeciesSelector && (
-                <div className="shrink-0">
-                  <PortalRegionBanner
-                    dataKey={dataKey}
-                    className={cn('w-110', filterClassNames?.speciesSelector)}
-                  />
-                </div>
-              )}
-              {!!left && <div className="min-w-0 grow basis-80">{left}</div>}
-              {allowSearch && requireSearch && (
-                <div className="min-w-0 grow basis-80">
-                  <Search
-                    {...{
-                      dataType,
-                      dataKey,
-                      openOnMount: searchOpenOnMount,
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-            {allowFilter && (
-              <div className="self-start [grid-area:filter]">
-                <div className="ml-auto flex h-12 items-stretch justify-end gap-3">
-                  <FilterControls
-                    filters={filters}
-                    displayControlPanel={displayControlPanel}
-                    setDisplayControlPanel={onDisplayControlPanel}
-                    className="justify-end self-end"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        <TableTools
+          dataKey={dataKey}
+          dataType={dataType}
+          searchOpenOnMount={searchOpenOnMount}
+          showScope={showScope}
+          showSpecies={showSpecies}
+          showSearch={showSearch}
+          left={left}
+          showEntityType={showEntityType}
+          entityTypeSelector={
+            requireEntityTypeSelector?.enabled ? requireEntityTypeSelector : undefined
+          }
+          showFilter={showFilter}
+          filters={filters}
+          displayControlPanel={displayControlPanel}
+          setDisplayControlPanel={onDisplayControlPanel}
+          filterClassNames={filterClassNames}
+        />
         <WrapperTable<T>
           dataType={dataType}
           columns={columns}
@@ -236,6 +191,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           renderButton={renderButton}
           selectionType={selectionType}
           onRowsSelected={onRowsSelected}
+          selectedRows={selectedRows}
           dataKey={dataKey}
           rowClassName={rowClassName}
           tableStyle={tableStyle}
