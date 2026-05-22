@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth/constants';
+import { AUTH_PROXY_REDIRECT_TARGET_COOKIE, PREVIEW_DOMAIN_SUFFIX } from '@/auth/constants';
 import { serverConfig } from '@/config/server';
 
 export async function GET() {
@@ -33,7 +33,7 @@ export async function GET() {
 function isValidPreviewDomain(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.hostname.endsWith('.preview.openbraininstitute.org');
+    return parsed.hostname.endsWith(PREVIEW_DOMAIN_SUFFIX);
   } catch {
     return false;
   }

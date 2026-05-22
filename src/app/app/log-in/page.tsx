@@ -4,14 +4,14 @@ import { useSearchParams } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 import { useEffect, useRef } from 'react';
 
-import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth/constants';
+import { AUTH_PROXY_REDIRECT_TARGET_COOKIE, PREVIEW_DOMAIN_SUFFIX } from '@/auth/constants';
 import { config } from '@/config';
 
 const SYNC_PATH = `${config.ROOT_ROUTE}/sync`;
 
 function setAuthProxyRedirectCookie(url: string) {
   // biome-ignore lint/suspicious/noDocumentCookie: Enable auth for preview deployments with only one subdomain registered in Keycloak as redirect_uri
-  document.cookie = `${AUTH_PROXY_REDIRECT_TARGET_COOKIE}=${encodeURIComponent(url)}; path=/; domain=.preview.openbraininstitute.org; secure; samesite=lax`;
+  document.cookie = `${AUTH_PROXY_REDIRECT_TARGET_COOKIE}=${encodeURIComponent(url)}; path=/; domain=${PREVIEW_DOMAIN_SUFFIX}; secure; samesite=lax`;
 }
 
 function parseCandidate(candidate: string): URL | null {
