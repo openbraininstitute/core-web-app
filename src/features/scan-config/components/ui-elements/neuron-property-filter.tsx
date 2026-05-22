@@ -1,3 +1,4 @@
+import { DeleteOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useState } from 'react';
 
@@ -25,7 +26,13 @@ export default function NeuronPropertyFilter({
 
         return (
           // biome-ignore lint/suspicious/noArrayIndexKey: no stable unique key available
-          <div key={i} className="border border-gray-300 rounded-md">
+          <div key={i} className="border border-gray-300 rounded-md relative">
+            {i !== 0 && (
+              <DeleteOutlined
+                className="absolute top-2 right-2 text-red-500 cursor-pointer hover:text-red-700"
+                onClick={() => onChange(value.filter((_, idx) => idx !== i))}
+              />
+            )}
             {Object.keys(f.filter_dict).map((p) => (
               <PropertyValueSelector
                 propertyName={p}
