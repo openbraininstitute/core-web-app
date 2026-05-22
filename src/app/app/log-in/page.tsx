@@ -57,7 +57,9 @@ export default function Page() {
 
     hasInitiated.current = true;
 
-    if (session.status === 'authenticated') {
+    // A 'RefreshAccessTokenError' session decrypts as authenticated but can't
+    // mint fresh access tokens — fall through to re-auth instead of bouncing.
+    if (session.status === 'authenticated' && !session.data?.error) {
       const safeTarget = redirectURL && isSameOriginTarget(redirectURL) ? redirectURL : SYNC_PATH;
       window.location.replace(safeTarget);
       return;
@@ -72,7 +74,7 @@ export default function Page() {
     } else {
       signIn('keycloak', { callbackUrl });
     }
-  }, [redirectURL, session.status]);
+  }, [redirectURL, session.status, session.data?.error]);
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4">
