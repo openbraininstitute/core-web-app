@@ -400,11 +400,16 @@ export function UIElementRender({
 
         return (
           <NeuronPropertyFilter
+            population={selectedPopulation}
             properties={properties}
             value={getValue() as unknown as INeuronPropertyFilter[]}
             onChange={(newValue: INeuronPropertyFilter[]) => {
               const getNewValue = () => {
-                if (newValue.length === 0) return null;
+                if (
+                  newValue.length === 0 ||
+                  (newValue.length === 1 && Object.keys(newValue[0].filter_dict).length === 0)
+                )
+                  return null;
                 if (newValue.length === 1) return newValue[0];
                 return newValue;
               };
