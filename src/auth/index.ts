@@ -1,5 +1,6 @@
 import { getServerSession, type NextAuthOptions, type Session, type TokenSet } from 'next-auth';
 
+import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth/constants';
 import { serverConfig as config } from '@/config/server';
 import { log } from '@/utils/logger';
 
@@ -32,6 +33,8 @@ function getSharedCookieDomain(authProxyUrl: string): string {
     return '';
   }
 }
+
+const authProxyHostname = config.AUTH_PROXY_URL ? new URL(config.AUTH_PROXY_URL).hostname : null;
 
 /**
  * Updates or inserts a refresh token in the authentication manager service.
@@ -164,15 +167,26 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async redirect({ url, baseUrl }) {
-      // Used for preview deployments to return back from the auth proxy
-      if (config.AUTH_PROXY_URL) {
-        const authProxyHostname = new URL(config.AUTH_PROXY_URL).hostname;
-        const baseHostname = new URL(baseUrl).hostname;
-        if (baseHostname === authProxyHostname && url.startsWith(baseUrl)) {
-          return `${config.AUTH_PROXY_URL}/api/auth/redirect-after-signin`;
-        }
-      }
-      return url;
+      // Preview-only detour: when a user starts on a non-proxy subdomain we
+      // funnel them through the auth proxy and stash the real target in the
+      // `auth-proxy-redirect-target` cookie. After OAuth, NextAuth lands back
+      // on the proxy domain and we send the browser to `redirect-after-signin`
+      // so it can read that cookie and bounce to the original subdomain.
+      //
+      // If the cookie isn't set, the user logged in directly on the proxy
+      // domain — there's no cross-subdomain dereference to do, so skip the
+      // detour and let NextAuth use `url` as-is. Without this guard we'd
+      // route them through a handler that has nothing to read and would fall
+      // back to a server-derived origin (broken under Amplify Lambda).
+      if (!authProxyHostname || !url.startsWith(baseUrl)) return url;
+      if (new URL(baseUrl).hostname !== authProxyHostname) return url;
+      // Dynamic import: `next/headers` is server-only, but this module is
+      // reachable from client component import graphs (via `auth-fetch`).
+      // Pulling it in at the top level breaks the client build.
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      if (!cookieStore.has(AUTH_PROXY_REDIRECT_TARGET_COOKIE)) return url;
+      return `${config.AUTH_PROXY_URL}/api/auth/redirect-after-signin`;
     },
     async jwt({ token, account, user, profile }) {
       // Initial sign in
