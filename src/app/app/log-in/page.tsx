@@ -28,7 +28,7 @@ function isSyncTarget(candidate: string): boolean {
   return parseCandidate(candidate)?.pathname === SYNC_PATH;
 }
 
-// `callbackUrl` is attacker-controlled — guard same-origin to avoid an open redirect.
+// Guard same-origin to avoid an open redirect, as `callbackUrl` might be attacker-controlled.
 function isSameOriginTarget(candidate: string): boolean {
   return parseCandidate(candidate)?.origin === window.location.origin;
 }
