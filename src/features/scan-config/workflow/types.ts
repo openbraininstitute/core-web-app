@@ -1,4 +1,3 @@
-import type { QueryKey } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
@@ -6,10 +5,11 @@ import type {
   Config,
   TScanConfigActivity,
   TScanConfigTabs,
-  TSchemaMappingKey,
   TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { WorkspaceContext } from '@/types/common';
+import type { TScanConfigRegistryConfig } from '@/ui/segments/workflows/config/scan-config-binding';
 
 export type TCampaignWithFormConfig = {
   config?: {
@@ -20,28 +20,23 @@ export type TCampaignWithFormConfig = {
 export type TCampaignResolver<T extends TCampaignWithFormConfig = TCampaignWithFormConfig> =
   (args: { id: string; context: WorkspaceContext }) => Promise<T | null>;
 
-export type TEntityRouteQuery<TEntity extends TSupportedEntitiesForScanConfiguration> = {
-  queryKey: (args: { context: WorkspaceContext; id: string }) => QueryKey;
-  queryFn: (args: { context: WorkspaceContext; id: string }) => Promise<TEntity>;
-};
-
 export const ScanConfigEntitySourceMode = {
-  RouteId: 'route-id',
   StaticType: 'static-type',
+  Session: 'session',
 } as const;
 export type TScanConfigEntitySourceMode =
   (typeof ScanConfigEntitySourceMode)[keyof typeof ScanConfigEntitySourceMode];
-/** How the configure step resolves its target entity(ies). Extend with new modes as flows grow. */
+
+/** How the configure step resolves its target entity(ies). */
 export type TScanConfigEntitySource =
-  | {
-      mode: typeof ScanConfigEntitySourceMode.RouteId;
-      /** Route param name. Defaults to `id`. */
-      param?: string;
-      query: TEntityRouteQuery<TSupportedEntitiesForScanConfiguration>;
-    }
   | {
       mode: typeof ScanConfigEntitySourceMode.StaticType;
       entityType: TExtendedEntitiesTypeDict;
+    }
+  | {
+      mode: typeof ScanConfigEntitySourceMode.Session;
+      /** Route param holding the workflow session id (`wf_…`). Defaults to `id`. */
+      param?: string;
     };
 
 export type TScanConfigCampaignSource = {
@@ -50,7 +45,6 @@ export type TScanConfigCampaignSource = {
 };
 
 export type TScanConfigEditorOptions = {
-  schemaMappingKey?: TSchemaMappingKey;
   defaultTab?: TScanConfigTabs;
   campaignOriginAction?: TScanConfigCampaignOriginActionDict;
   className?: string;
@@ -70,6 +64,7 @@ export type TResolvedScanConfigEntity = {
   entity: TSupportedEntitiesForScanConfiguration | null;
   entityType: TExtendedEntitiesTypeDict;
   entityId?: string;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
 };
 
 export type TResolvedScanConfigCampaign = {
@@ -92,6 +87,7 @@ export type TScanConfigWorkflowStatus =
 
 export type TScanConfigWorkflowContextValue = {
   definition: TScanConfigWorkflowDefinition;
+  scanConfig: TScanConfigRegistryConfig;
   workspace: WorkspaceContext;
   entity: TResolvedScanConfigEntity;
   campaign: TResolvedScanConfigCampaign;
@@ -101,6 +97,7 @@ export type TScanConfigWorkflowContextValue = {
 
 export type TScanConfigWorkflowPageProps = {
   definition: TScanConfigWorkflowDefinition;
+  scanConfig: TScanConfigRegistryConfig;
   workspace: WorkspaceContext;
   routeParams: Record<string, string | undefined>;
   searchParams: Record<string, string | string[] | undefined>;
