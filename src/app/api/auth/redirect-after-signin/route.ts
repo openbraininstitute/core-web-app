@@ -14,13 +14,8 @@ export async function GET() {
     return response;
   }
 
-  // Fall back to the auth-proxy URL from config, not `request.url`. Under
-  // Amplify Lambda, `request.url` reflects the function's internal binding
-  // (e.g. `https://localhost:3000`) rather than the public host, so building
-  // the fallback off the request would redirect the browser to localhost.
-  // `AUTH_PROXY_URL` is guaranteed at runtime on preview (this route is only
-  // reachable through the preview detour), but the schema marks it optional,
-  // so guard the construction.
+  // Build the fallback from config, not `request.url` — under Amplify Lambda
+  // the latter resolves to the function's internal binding, not the public host.
   if (!serverConfig.AUTH_PROXY_URL) {
     return new NextResponse('Auth proxy is not configured', { status: 500 });
   }

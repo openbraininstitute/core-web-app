@@ -28,14 +28,13 @@ function isSyncTarget(candidate: string): boolean {
   return parseCandidate(candidate)?.pathname === SYNC_PATH;
 }
 
-// `callbackUrl` is taken from the query string and is fully attacker-controlled.
-// Anywhere we navigate to it directly (bypassing NextAuth's own checks) we must
-// confirm it stays on this origin, otherwise `/app/log-in?callbackUrl=https://evil`
-// becomes a silent open redirect for already-authenticated users.
+// `callbackUrl` is attacker-controlled — guard same-origin to avoid an open redirect.
 function isSameOriginTarget(candidate: string): boolean {
   return parseCandidate(candidate)?.origin === window.location.origin;
 }
 
+// Pass sync-targeted URLs through unchanged; re-wrapping them under `?redirectUrl=`
+// grows `__Secure-next-auth.callback-url` on every re-auth until it hits 431.
 function resolveCallbackUrl(redirectURL: string | null, onboarding: string): string {
   if (!redirectURL) return onboarding;
   if (isSyncTarget(redirectURL)) {
@@ -53,8 +52,7 @@ export default function Page() {
 
   useEffect(() => {
     if (hasInitiated.current) return;
-    // Wait for the session probe so we don't trigger a redundant OAuth
-    // round-trip for a user who already has a valid Keycloak session.
+    // Wait for the session probe to skip a redundant OAuth round-trip for an SSO'd user.
     if (session.status === 'loading') return;
 
     hasInitiated.current = true;
@@ -65,13 +63,6 @@ export default function Page() {
       return;
     }
 
-    // If the incoming `callbackUrl` already targets the sync page (from
-    // `buildPlatformLoginUrl`, from NextAuth middleware intercepting an
-    // unauthenticated sync visit, or from a prior wrap) pass it through
-    // unchanged. Re-wrapping it adds another `?redirectUrl=` layer and
-    // re-encodes every percent in the previous layer, which is what blows
-    // the `__Secure-next-auth.callback-url` cookie past the upstream header
-    // limit on repeated re-auth and ends in HTTP 431.
     const onboarding = `${window.location.origin}${SYNC_PATH}`;
     const callbackUrl = resolveCallbackUrl(redirectURL, onboarding);
 
