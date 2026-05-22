@@ -43,11 +43,15 @@ import type { TMiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types'
 type Props = {
   section?: TWorkspaceSection;
   dataType: TExtendedEntitiesTypeDict;
+  hideUseModelAction?: boolean;
+  workflowTargetType?: TExtendedEntitiesTypeDict;
 };
 
 export function MiniDetailView<T extends EntityCoreObjectTypes>({
   section = WorkspaceSection.Data,
   dataType,
+  hideUseModelAction,
+  workflowTargetType,
 }: Props) {
   const [record, setRecord] = useState<T | null>(null);
   const { mdv, setMdv } = useMiniDetailView();
@@ -80,6 +84,8 @@ export function MiniDetailView<T extends EntityCoreObjectTypes>({
       record={record}
       dataType={dataType}
       onClose={onClose}
+      hideUseModelAction={hideUseModelAction}
+      workflowTargetType={workflowTargetType}
     />
   );
 }
@@ -91,6 +97,8 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   onClose,
   theme = 'default',
   enableAnimation = true,
+  hideUseModelAction,
+  workflowTargetType,
 }: {
   section: TWorkspaceSection;
   record: T | null;
@@ -98,6 +106,8 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   onClose?: () => void;
   theme?: TMiniDetailViewTheme;
   enableAnimation?: boolean;
+  hideUseModelAction?: boolean;
+  workflowTargetType?: TExtendedEntitiesTypeDict;
 }) {
   if (!record) return null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
@@ -244,13 +254,28 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           WorkspaceSection.ProcessWorkflow
         ),
       },
-      ({ section }) => <WorkflowActions record={record} dataType={dataType} section={section} />
+      ({ section }) => (
+        <WorkflowActions
+          record={record}
+          dataType={dataType}
+          section={section}
+          hideUseModelAction={hideUseModelAction}
+          workflowTargetType={workflowTargetType}
+        />
+      )
     )
     .with(
       {
         section: P.union(WorkspaceSection.ScanConfigBuildWorkflow, WorkspaceSection.BuildWorkflow),
       },
-      () => <WorkflowBuildActions record={record} dataType={dataType} />
+      () => (
+        <WorkflowBuildActions
+          record={record}
+          dataType={dataType}
+          hideUseModelAction={hideUseModelAction}
+          workflowTargetType={workflowTargetType}
+        />
+      )
     )
     .otherwise(() => null);
 
