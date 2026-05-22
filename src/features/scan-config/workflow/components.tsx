@@ -68,6 +68,7 @@ function ScanConfigWorkflowEditor() {
       entityId={entity.entityId}
       virtualLabId={workspace.virtualLabId}
       projectId={workspace.projectId}
+      origin={campaign.origin}
       initialConfig={initialConfig}
       activity={definition.activity}
       defaultTab={editor.defaultTab}

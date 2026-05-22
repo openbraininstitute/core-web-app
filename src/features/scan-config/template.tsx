@@ -44,7 +44,7 @@ type Props = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   virtualLabId: string;
   projectId: string;
-  initialCampaignId?: string;
+  origin?: string;
   initialConfig?: Config;
   defaultTab?: TScanConfigTabs;
   readOnly?: boolean;
@@ -63,7 +63,7 @@ export function ScanConfigTemplate({
   entity,
   virtualLabId,
   projectId,
-  initialCampaignId,
+  origin,
   initialConfig,
   defaultTab = ScanConfigDefaultTab,
   readOnly,
@@ -84,7 +84,7 @@ export function ScanConfigTemplate({
   const [selectedEntry, setSelectedEntry] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
+  const [campaignId, setCampaignId] = useState(origin ?? '');
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
   const allEntries = useEntries({ initialConfig, schema });

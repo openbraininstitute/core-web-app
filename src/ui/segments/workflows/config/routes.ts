@@ -1,5 +1,4 @@
 import { config } from '@/config';
-import { isSimulateCircuitSourceType } from '@/features/scan-config/workflow/simulate-circuit-workflows';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 import { WorkflowSchemaSelectionMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import {
@@ -49,17 +48,6 @@ function usesStaticScanConfigConfigureRoute(workflow: IWorkflowDescriptor | null
     workflow?.isScanConfig === true &&
     workflow.scanConfig?.definition.entity.mode === ScanConfigEntitySourceMode.StaticType
   );
-}
-
-function withSimulateCircuitDataType(
-  workflow: IWorkflowDescriptor,
-  query: Record<string, string | undefined>
-): Record<string, string | undefined> {
-  if (!isSimulateCircuitSourceType(workflow.sourceType)) {
-    return query;
-  }
-
-  return { ...query, dataType: workflow.sourceType };
 }
 
 function resolveScanConfigSessionId(opts: {
@@ -169,7 +157,7 @@ function buildConfigureUrlWithSelection({
     targetType,
     workspace,
     selection,
-    query: workflow ? withSimulateCircuitDataType(workflow, query) : query,
+    query,
   });
 }
 
@@ -229,7 +217,7 @@ export function buildConfigureUrlForEntity({
     workspace,
     entityRef: entityType ? { type: entityType, id: entityId } : undefined,
     selection,
-    query: withSimulateCircuitDataType(workflow, query),
+    query,
   });
 }
 

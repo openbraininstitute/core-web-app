@@ -64,7 +64,6 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
 
   const useModelQuery = {
     [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
-    ...(dataType ? { dataType } : {}),
   };
 
   return (

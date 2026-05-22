@@ -26,8 +26,7 @@ import type { KebabCase } from '@/utils/type';
 
 type ConfigurePageParams = WorkspaceContext & { id?: string; type?: string };
 type ConfigurePageSearchParams = {
-  dataType?: string;
-  initialCampaignId?: string;
+  origin?: string;
   [key: string]: string | string[] | undefined;
 };
 
