@@ -69,7 +69,7 @@ export class AxisOverlay {
     ctx.scale(dpr, dpr);
 
     this.drawBackground(ctx, plotRect);
-    this.drawGrid(ctx, bounds, plotRect, xTicks, yTicks);
+    this.drawGrid(ctx, bounds, plotRect, xTicks);
     this.drawAxes(ctx, bounds, plotRect, xTicks, yTicks);
     this.drawAxisTitles(ctx, plotRect, ctx.canvas.height / dpr);
 
@@ -85,8 +85,7 @@ export class AxisOverlay {
     ctx: CanvasRenderingContext2D,
     bounds: ViewBounds,
     rect: PlotRect,
-    xTicks: number[],
-    yTicks: number[]
+    xTicks: number[]
   ) {
     ctx.strokeStyle = '#e8e8e8';
     ctx.lineWidth = 1;
@@ -96,13 +95,6 @@ export class AxisOverlay {
       const px = rect.x + ((v - bounds.xMin) / (bounds.xMax - bounds.xMin)) * rect.width;
       ctx.moveTo(px, rect.y);
       ctx.lineTo(px, rect.y + rect.height);
-    }
-
-    for (const v of yTicks) {
-      const py =
-        rect.y + rect.height - ((v - bounds.yMin) / (bounds.yMax - bounds.yMin)) * rect.height;
-      ctx.moveTo(rect.x, py);
-      ctx.lineTo(rect.x + rect.width, py);
     }
 
     ctx.stroke();
