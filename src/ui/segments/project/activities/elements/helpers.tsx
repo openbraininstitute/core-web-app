@@ -13,6 +13,7 @@ import {
   getActivity,
   getEntityMeta,
   listWorkflows,
+  WorkflowInitialStagePolicyDict,
 } from '@/ui/segments/workflows/config';
 
 import type { ReactNode } from 'react';
@@ -114,10 +115,7 @@ function buildScales(): Partial<Record<TExtendedEntitiesTypeDict, TScaleActivity
     );
 
     for (const workflow of workflows) {
-      const scaleType =
-        activity === ActivityValues.Build && workflow.needsBrowse
-          ? workflow.targetType
-          : workflow.sourceType;
+      const scaleType = workflow.sourceType;
       const entity = getEntityMeta(scaleType);
       const existing = scales[scaleType];
 
@@ -126,7 +124,12 @@ function buildScales(): Partial<Record<TExtendedEntitiesTypeDict, TScaleActivity
         build: activity === ActivityValues.Build ? workflow.targetType : (existing?.build ?? null),
         simulate:
           activity === ActivityValues.Simulate ? workflow.targetType : (existing?.simulate ?? null),
-        link: existing?.link ?? (workflow.needsBrowse ? 'workflows' : 'explore'),
+        link:
+          existing?.link ??
+          (workflow.initialStage === WorkflowInitialStagePolicyDict.Browse ||
+          (workflow.isScanConfig && workflow.initialStage === WorkflowInitialStagePolicyDict.Schema)
+            ? 'workflows'
+            : 'explore'),
       };
     }
   }
