@@ -1,20 +1,22 @@
 import { z } from 'zod';
 
-import {
-  type ICellMorphology,
-  type ICircuit,
-  type IMEModel,
-  type IonChannelModel,
-  type TEntityTypeDict,
-} from '@/api/entitycore/types';
 // biome-ignore lint/style/useImportType: biome hallucination
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
+import type {
+  ICellMorphology,
+  ICircuit,
+  IMEModel,
+  IonChannelModel,
+  TEntityTypeDict,
+} from '@/api/entitycore/types';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
 import type { Prettify } from '@/utils/type';
+
+export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 type Primitive = null | boolean | number | string;
 export interface ConfigObject {
