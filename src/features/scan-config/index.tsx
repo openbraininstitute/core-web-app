@@ -20,7 +20,6 @@ export {
   ScanConfigWorkflow,
   ScanConfigWorkflowConfigurePage,
   ScanConfigWorkflowProvider,
-  scanConfigEntityQueries,
   useScanConfigWorkflow,
 } from '@/features/scan-config/workflow';
 

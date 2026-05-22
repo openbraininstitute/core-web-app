@@ -12,6 +12,11 @@ export const circuitScaleFilter = {
   scale__in: [CircuitScaleDictionary.Single],
 };
 
+/**
+ * @deprecated Use {@link MEModelWithSynapsesCircuit} from
+ * `@/entity-configuration/domain/model/me-model-with-synapses` for workflow browse
+ * and simulation configuration. Retained for existing entity listings and detail views.
+ */
 export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   group: EntityTypeGroup.Models,
   title: 'Single neuron',

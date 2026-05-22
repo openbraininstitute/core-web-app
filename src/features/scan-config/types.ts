@@ -1,20 +1,14 @@
-import { match } from 'ts-pattern';
 import { z } from 'zod';
 
 import {
-  EntityTypeDict,
   type ICellMorphology,
   type ICircuit,
   type IMEModel,
   type IonChannelModel,
   type TEntityTypeDict,
 } from '@/api/entitycore/types';
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 // biome-ignore lint/style/useImportType: biome hallucination
-import {
-  ExtendedEntitiesTypeDict,
-  TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
@@ -487,40 +481,3 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.CellMorphology
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
   | typeof ExtendedEntitiesTypeDict.SingleNeuronCircuit;
-
-export const getSupportedEntityTypesForScanConfiguration = ({
-  entity,
-}: {
-  entity?: TSupportedEntitiesForScanConfiguration | { type: TExtendedEntitiesTypeDict };
-}) => {
-  return match({ entity })
-    .with(
-      {
-        entity: {
-          type: EntityTypeDict.Circuit,
-          scale: CircuitScaleDictionary.Single,
-        },
-      },
-      () => ExtendedEntitiesTypeDict.MEModelWithSynapses
-    )
-    .with({ entity: { type: EntityTypeDict.Circuit } }, () => ExtendedEntitiesTypeDict.Circuit)
-    .with(
-      { entity: { type: EntityTypeDict.Memodel } },
-      () => ExtendedEntitiesTypeDict.MemodelCircuit
-    )
-    .with(
-      { entity: { type: EntityTypeDict.IonChannelModel } },
-      () => ExtendedEntitiesTypeDict.IonChannelModel
-    )
-    .with(
-      { entity: { type: EntityTypeDict.EMCellMesh } },
-      () => ExtendedEntitiesTypeDict.EMCellMesh
-    )
-    .with(
-      { entity: { type: EntityTypeDict.CellMorphology } },
-      () => ExtendedEntitiesTypeDict.UniversalCellMorphology
-    )
-    .otherwise(() => {
-      throw new Error('Not supported entity for scan configuration');
-    });
-};

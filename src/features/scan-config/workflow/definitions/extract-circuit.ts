@@ -2,15 +2,13 @@ import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extract
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ExtractScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
-import { scanConfigEntityQueries } from '@/features/scan-config/workflow/entity-queries';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 export const extractCircuitWorkflow = defineScanConfigWorkflow({
   id: 'extract-circuit',
   activity: ScanConfigActivity.Extract,
   entity: {
-    mode: ScanConfigEntitySourceMode.RouteId,
-    query: scanConfigEntityQueries.circuit,
+    mode: ScanConfigEntitySourceMode.Session,
   },
   campaign: {
     resolve: async ({ id, context }) => {

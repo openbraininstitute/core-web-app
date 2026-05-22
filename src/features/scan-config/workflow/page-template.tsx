@@ -10,6 +10,7 @@ import type {
   TScanConfigWorkflowDefinition,
 } from '@/features/scan-config/workflow/types';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { TScanConfigRegistryConfig } from '@/ui/segments/workflows/config/scan-config-binding';
 
 type ConfigurePageParams = WorkspaceContext & { id?: string };
 type ConfigurePageSearchParams = {
@@ -22,6 +23,7 @@ export type ScanConfigWorkflowConfigurePageProps = ServerSideComponentProp<
   ConfigurePageSearchParams
 > & {
   definition: TScanConfigWorkflowDefinition;
+  scanConfig: TScanConfigRegistryConfig;
   aside?: TCreateScanConfigWorkflowPageOptions['aside'];
   children?: React.ReactNode;
 };
@@ -39,6 +41,7 @@ function DefaultScanConfigWorkflowLayout({ aside }: { aside?: React.ReactNode })
 
 export function ScanConfigWorkflowConfigurePage({
   definition,
+  scanConfig,
   aside,
   searchParams,
   params,
@@ -51,6 +54,7 @@ export function ScanConfigWorkflowConfigurePage({
   return (
     <ScanConfigWorkflowProvider
       definition={definition}
+      scanConfig={scanConfig}
       workspace={{ virtualLabId, projectId }}
       routeParams={routeParams}
       searchParams={resolvedSearchParams}

@@ -4,12 +4,12 @@ export {
   useScanConfigWorkflow,
 } from '@/features/scan-config/workflow/context';
 export {
+  makeActivityScanConfigConfigureCatchAllPage,
   makeScanConfigWorkflowPage as createScanConfigWorkflowPage,
   makeSimulateCircuitScanConfigPage as createSimulateCircuitScanConfigPage,
 } from '@/features/scan-config/workflow/create-page';
 export { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
 export * from '@/features/scan-config/workflow/definitions';
-export { scanConfigEntityQueries } from '@/features/scan-config/workflow/entity-queries';
 export {
   ScanConfigWorkflowConfigurePage,
   type ScanConfigWorkflowConfigurePageProps,
@@ -24,7 +24,6 @@ export type {
   TCampaignResolver as CampaignResolver,
   TCampaignWithFormConfig as CampaignWithFormConfig,
   TCreateScanConfigWorkflowPageOptions as CreateScanConfigWorkflowPageOptions,
-  TEntityRouteQuery as EntityRouteQuery,
   TScanConfigCampaignSource as ScanConfigCampaignSource,
   TScanConfigEditorOptions as ScanConfigEditorOptions,
   TScanConfigEntitySource as ScanConfigEntitySource,

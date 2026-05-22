@@ -2,15 +2,13 @@ import { resolveSimulationByCampaignId } from '@/entity-configuration/domain/sim
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity, SchemaMappingKeyDict } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
-import { scanConfigEntityQueries } from '@/features/scan-config/workflow/entity-queries';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 export const simulateMemodelCircuitWorkflow = defineScanConfigWorkflow({
   id: 'simulate-memodel-circuit',
   activity: ScanConfigActivity.Simulate,
   entity: {
-    mode: ScanConfigEntitySourceMode.RouteId,
-    query: scanConfigEntityQueries.meModel,
+    mode: ScanConfigEntitySourceMode.Session,
   },
   campaign: {
     resolve: resolveSimulationByCampaignId,
