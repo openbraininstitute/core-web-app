@@ -298,9 +298,12 @@ export default function SimulationsTab({
     setSelectedSimulationIds([]);
   };
 
-  const shouldTreatSimulationAsTask =
-    get(model, 'scale', null) === CircuitScaleDictionary.Microcircuit ||
-    get(model, 'scale', null) === CircuitScaleDictionary.Region;
+  const shouldTreatSimulationAsTask = [
+    CircuitScaleDictionary.Microcircuit,
+    CircuitScaleDictionary.Region,
+    CircuitScaleDictionary.System,
+    CircuitScaleDictionary.WholeBrain,
+  ].includes(get(model, 'scale', null));
 
   // TODO Refactor
   const run = async (simIds: string[]) => {
