@@ -1,10 +1,5 @@
 import { Button } from 'antd';
-import { get } from 'es-toolkit/compat';
 import { useState } from 'react';
-
-import { ScanConfigUIElementDict } from '@/features/scan-config/types';
-
-import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 
 export interface INeuronPropertyFilter {
   filter_dict: Record<string, string[]>;
@@ -19,8 +14,6 @@ export default function NeuronPropertyFilter({
   properties: Record<string, string[]>;
   onChange: (newValue: INeuronPropertyFilter[]) => void;
 }) {
-  console.log(value);
-
   if (Object.keys(properties).length === 0)
     return <div className="text-gray-500">Select a population</div>;
 
