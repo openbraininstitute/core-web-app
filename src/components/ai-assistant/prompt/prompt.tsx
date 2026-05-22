@@ -1,7 +1,7 @@
 'use client';
 
 import { RiAttachment2 } from '@remixicon/react';
-import { useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import SendIcon from '@/components/icons/Send';
 import StopIcon from '@/components/icons/Stop';
@@ -43,6 +43,46 @@ export default function Prompt({
 }: PromptProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounterRef = useRef(0);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current += 1;
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDragOver(true);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current = 0;
+      setIsDragOver(false);
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && onAddFiles) {
+        onAddFiles(files);
+      }
+    },
+    [onAddFiles]
+  );
 
   const handleSendClick = () => {
     const promptText = value.trim();
@@ -66,7 +106,13 @@ export default function Prompt({
   };
 
   return (
-    <div className={classNames(className, styles.prompt)}>
+    <div
+      className={classNames(className, styles.prompt, isDragOver && styles.dragOver)}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: click-to-focus delegates to textarea */}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: click-to-focus delegates to textarea */}
       <div className={styles.inputWrapper} onClick={() => textareaRef.current?.focus()}>

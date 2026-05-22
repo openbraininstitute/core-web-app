@@ -23,6 +23,12 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary-9) 10%, transparent);
 }
 
+.dragOver {
+  border-color: var(--color-primary-6);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-6) 25%, transparent);
+  background-color: color-mix(in srgb, var(--color-primary-9) 5%, #fff);
+}
+
 .inputWrapper {
   flex: 1 1 auto;
   min-width: 0;
