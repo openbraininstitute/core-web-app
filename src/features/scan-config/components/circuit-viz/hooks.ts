@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import React from 'react';
 
 import authFetch from '@/auth-fetch';
@@ -6,12 +6,7 @@ import { config } from '@/config';
 import useWorkspace from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
-import {
-  MorphoViewerTreeItemType,
-  NodesSchema,
-  type Sections,
-  SectionsArraySchema,
-} from '../../types';
+import { MorphoViewerTreeItemType, NodesSchema, SectionsArraySchema } from '../../types';
 import { buildMorphoTree } from './circuit-viz';
 
 import type { MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
