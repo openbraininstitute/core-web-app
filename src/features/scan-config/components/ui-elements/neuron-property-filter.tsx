@@ -86,40 +86,37 @@ function DropdownSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!isOpen) {
-    return (
+  return (
+    <div className="relative">
       <button
         type="button"
         className="rounded-full border border-gray-300 text-primary-8 font-semibold px-3 py-[6px] flex justify-between"
-        onClick={() => setIsOpen(true)}
+        onClick={() => setIsOpen(!isOpen)}
       >
         {placeholder}
         <PlusOutlined />
       </button>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <div className="rounded border border-gray-300 bg-white shadow-sm">
-        {options.length === 0 ? (
-          <div className="px-3 py-2 text-sm text-gray-400">No options available</div>
-        ) : (
-          options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
-              onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
-              }}
-            >
-              {option.label}
-            </button>
-          ))
-        )}
-      </div>
+      {isOpen && (
+        <div className="absolute left-0 top-full z-10 mt-1 w-full rounded border border-gray-300 bg-white shadow-sm">
+          {options.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-gray-400">No options available</div>
+          ) : (
+            options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
+                onClick={() => {
+                  onChange(option.value);
+                  setIsOpen(false);
+                }}
+              >
+                {option.label}
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
