@@ -183,7 +183,7 @@ export class RasterRenderer {
     // Cap scales with user-chosen baseSize so large slider values aren't clipped;
     // it still bounds runaway growth from zoomBonus.
     const cap = Math.max(14, this.baseSize * 3);
-    return Math.min(cap, (this.baseSize + 1) * factor + zoomBonus);
+    return Math.min(cap, (this.baseSize + 0.5) * factor + zoomBonus);
   }
 
   private handleHover(info: HoverInfo | null) {

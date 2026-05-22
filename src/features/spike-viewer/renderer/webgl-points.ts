@@ -1,36 +1,7 @@
+import FRAGMENT_SHADER from './webgl-points.frag';
+import VERTEX_SHADER from './webgl-points.vert';
+
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
-
-const VERTEX_SHADER = `#version 300 es
-layout(location = 0) in float a_x;
-layout(location = 1) in float a_y;
-uniform vec4 u_bounds; // xMin, yMin, xMax, yMax
-uniform mediump float u_pointSize;
-
-void main() {
-  float x = 2.0 * (a_x - u_bounds.x) / (u_bounds.z - u_bounds.x) - 1.0;
-  float y = 2.0 * (a_y - u_bounds.y) / (u_bounds.w - u_bounds.y) - 1.0;
-  gl_Position = vec4(x, y, 0.0, 1.0);
-  gl_PointSize = u_pointSize;
-}`;
-
-const FRAGMENT_SHADER = `#version 300 es
-precision mediump float;
-uniform vec4 u_color;
-uniform float u_pointSize;
-out vec4 fragColor;
-
-void main() {
-  // Round marker: solid core with ~1 px outer feather so subpixel
-  // jitter shows as opacity falloff at the edge instead of a ±1 px
-  // size step. Keeping the feather *outside* the core preserves a
-  // fully opaque body so dense overlapping dots read as solid colour
-  // rather than accumulating a translucent haze.
-  float feather = 1.0 / max(u_pointSize, 1.0);
-  float dist = distance(gl_PointCoord, vec2(0.5));
-  float alpha = 1.0 - smoothstep(0.5 - feather, 0.5, dist);
-  if (alpha <= 0.001) discard;
-  fragColor = vec4(u_color.rgb, u_color.a * alpha);
-}`;
 
 type PopulationBuffer = {
   name: string;
