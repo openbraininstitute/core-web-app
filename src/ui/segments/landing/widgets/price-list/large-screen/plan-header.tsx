@@ -1,10 +1,8 @@
 'use client';
 
-/* eslint-disable react/no-array-index-key */
-
 import { useState } from 'react';
 
-import { Switch } from '@/components/VirtualLab/create-entity-flows/checkout/shared';
+import { Switch } from '@/features/payments/subscription';
 import { useCurrency } from '@/ui/segments/landing/atoms';
 import { classNames } from '@/util/utils';
 
@@ -108,8 +106,8 @@ export default function PlanHeader({ className, plan }: PlanHeaderProps) {
             )}
           </div>
           <ul className="mt-2">
-            {plan.notes.map((note, index) => (
-              <li key={index}>{note}</li>
+            {plan.notes.map((note) => (
+              <li key={note}>{note}</li>
             ))}
           </ul>
         </>

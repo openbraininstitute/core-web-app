@@ -2,7 +2,7 @@
 
 import { CheckCircleFilled, CloseCircleFilled, LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Form } from 'antd';
+import { Checkbox, Form } from 'antd';
 import { useSession } from 'next-auth/react';
 import { useRef, useState } from 'react';
 import { match, P } from 'ts-pattern';
@@ -105,11 +105,13 @@ export function Profile({ data }: ProfileProps) {
     try {
       const available = await checkUserProfileEmailAvailability(email);
       emailAvailabilityCacheRef.current.set(email, available);
+      setIsEmailAvailabilityChecking(false);
       if (!available) {
         throw new CustomFormError('Please make sure the email is correct or try another one.');
       }
-    } finally {
+    } catch (error) {
       setIsEmailAvailabilityChecking(false);
+      return Promise.reject(error);
     }
   };
 
@@ -126,7 +128,7 @@ export function Profile({ data }: ProfileProps) {
       setEmailError(false);
     } catch (error) {
       setEmailError(true);
-      throw error;
+      return Promise.reject(error);
     }
   };
 
@@ -270,6 +272,15 @@ export function Profile({ data }: ProfileProps) {
                 }
               />
             </Form.Item>
+            <Form.Item
+              name="sync_billing_address"
+              valuePropName="checked"
+              className="md:col-span-2"
+            >
+              <Checkbox className="text-white">
+                Sync this address with my billing customer address
+              </Checkbox>
+            </Form.Item>
             <div className="space-y-1 md:col-span-2">
               <Label title="Social login" />
               <div className="flex items-center gap-2 border-b border-white/30 py-2">
@@ -326,6 +337,7 @@ function useInitialValues(data: UserProfileResponse | undefined): TProfileFormDa
     locality: data?.address.locality ?? '',
     region: data?.address.region ?? '',
     country: data?.address.country ?? '',
+    sync_billing_address: false,
   };
   return initialValues;
 }

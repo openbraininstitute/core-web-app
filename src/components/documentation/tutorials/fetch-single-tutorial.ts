@@ -1,9 +1,9 @@
-import { PortableTextBlock } from 'next-sanity';
-import { StepProps } from '../type';
-
 import { useSanity } from '@/services/sanity';
-import { logError } from '@/util/logger';
-import { assertType, TypeDef } from '@/util/type-guards';
+import { assertType, type TypeDef } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
+
+import type { PortableTextBlock } from 'next-sanity';
+import type { StepProps } from '../type';
 
 export function useSanityForSingleTutorial({ slug }: { slug: string }) {
   const query = `

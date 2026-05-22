@@ -36,9 +36,9 @@ import WidgetRepositories from '@/ui/segments/landing/widgets/repositories/repos
 import WidgetSpecialContributors from '@/ui/segments/landing/widgets/special-contributors/special-contributors';
 import { WidgetSwipeableList } from '@/ui/segments/landing/widgets/swipeable-list/swipeable-list';
 import { WidgetVirtualLabsPanel } from '@/ui/segments/landing/widgets/virtual-labs-panel/virtual-labs-panel';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
-import Error from '../error';
+import ViewError from '../error';
 
 import type { EmailType } from '@/services/sanity/api/get-email-content';
 import type { ContentForRichTextWidget } from '@/services/sanity/types/rtf-content';
@@ -130,12 +130,12 @@ export default async function SanityContentWidget({ value }: SanityContentWidget
     }
     default:
       return (
-        <Error>
+        <ViewError>
           Unknown widget{' '}
           <code>
             <strong>{value.name}</strong>
           </code>
-        </Error>
+        </ViewError>
       );
   }
 }

@@ -1,5 +1,5 @@
-import { logError } from '@/util/logger';
 import { createHeaders } from '@/util/utils';
+import { logError } from '@/utils/logger';
 
 import { serviceAiAgentUrl } from './url';
 

@@ -5,16 +5,17 @@ import styles from './loading-neuron-spinner.module.css';
 
 export interface LoadingNeuronSpinnerProps {
   className?: string;
+  label?: string;
 }
 
-export function LoadingNeuronSpinner({ className }: LoadingNeuronSpinnerProps) {
+export function LoadingNeuronSpinner({ className, label = 'Neuron' }: LoadingNeuronSpinnerProps) {
   return (
     <div className={cn(className, styles.loadingNeuronSpinner)}>
       <IconSpinner />
       <div>
         Loading
         <br />
-        Neuron
+        {label}
       </div>
     </div>
   );

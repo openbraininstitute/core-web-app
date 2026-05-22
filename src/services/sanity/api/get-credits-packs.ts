@@ -1,6 +1,6 @@
 import { getClient } from '@/services/sanity/client';
 import creditsQuery from '@/services/sanity/queries/credits';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 export type CreditsPack = {
   quantity: string;

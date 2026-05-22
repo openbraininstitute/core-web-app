@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { get } from 'es-toolkit/compat';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -8,7 +9,8 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ApiError } from '@/api/error';
-import { runSimulation } from '@/api/one/circuit-simulation';
+import { runTask } from '@/api/one/runner';
+import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { listVirtualLabMembers } from '@/api/virtual-lab-svc/queries/member';
 import { useAppNotification } from '@/components/notification';
 import { listAllChildren as listAllSimulationChildren } from '@/entity-configuration/domain/simulation/simulation-campaign';
@@ -23,8 +25,10 @@ import { SimulationFiles } from '@/features/scan-config/components/simulation-fi
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
 import errorRegistry from '@/features/scan-config/error-registry';
+import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
+import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { messages } from '@/i18n/en/simulation';
 import { runSimulationBatch } from '@/services/small-scale-simulator/circuit';
@@ -35,6 +39,7 @@ import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
+import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
@@ -42,12 +47,16 @@ type SimulationTabProps = {
   campaignId: string;
   virtualLabId: string;
   projectId: string;
+  campaignOriginAction: TScanConfigCampaignOriginActionDict;
+  isCampaignIdChanged: boolean;
 };
 
 export default function SimulationsTab({
   campaignId,
   virtualLabId,
   projectId,
+  campaignOriginAction,
+  isCampaignIdChanged,
 }: SimulationTabProps) {
   const notification = useAppNotification();
   const context = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
@@ -75,6 +84,7 @@ export default function SimulationsTab({
   const [initialSelectionDone, setInitialSelectionDone] = useState(false);
   const [filesLoading, setFilesLoading] = useState(false);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
+  const [jobIdMap, setJobIdMap] = useState<Map<string, string>>(new Map());
   const {
     modal: offlineTokenConsentModal,
     ensure: ensureOfflineTokenConsent,
@@ -116,6 +126,14 @@ export default function SimulationsTab({
   const adminEmail = membersData?.data?.users.find((user) => user.role === 'admin')?.email;
 
   const activeSimulationExecStatus = activeSimulation && localStatusMap.get(activeSimulation.id);
+
+  const activeJobId = activeSimulation ? jobIdMap.get(activeSimulation.id) : undefined;
+  const taskLogsViewerEnabled = !!activeSimulation && !!activeJobId;
+  const taskLogsShouldReadSnapshot =
+    !!activeSimulationExecStatus &&
+    [ActivityStatus.CANCELLED, ActivityStatus.DONE, ActivityStatus.ERROR].includes(
+      activeSimulationExecStatus
+    );
 
   const onActiveSimulationChange = useCallback((simulation: ISimulation) => {
     setActiveSimulation(simulation);
@@ -207,11 +225,13 @@ export default function SimulationsTab({
 
     for (const simId of simIds) {
       try {
-        const res = await runSimulation({
+        const res = await runTask({
           ctx: { virtualLabId, projectId },
-          simulationId: simId,
+          task_type: ObiOneTaskTypeDict.CircuitSimulation,
+          config_id: simId,
         });
         log('info', res);
+        setJobIdMap((prev) => new Map(prev).set(simId, res.job_id));
         setSimulationStatus(simId, ActivityStatus.PENDING);
         nSubmissions += 1;
       } catch (error) {
@@ -221,7 +241,8 @@ export default function SimulationsTab({
         }
       }
     }
-
+    setSelectedSimulationIds([]);
+    setSimRequestInProgress(false);
     if (lowFundsError) {
       const notificationKey = 'simulation-low-funds';
       notification.error({
@@ -268,15 +289,21 @@ export default function SimulationsTab({
         duration: 10,
       });
     }
+
+    setSelectedSimulationIds([]);
   };
+
+  const shouldTreatSimulationAsTask =
+    get(model, 'scale', null) === CircuitScaleDictionary.Microcircuit ||
+    get(model, 'scale', null) === CircuitScaleDictionary.Region;
 
   // TODO Refactor
   const run = async (simIds: string[]) => {
-    if (model && 'scale' in model && model.scale === CircuitScaleDictionary.Microcircuit) {
+    setSimRequestInProgress(true);
+    if (shouldTreatSimulationAsTask) {
       return runViaLaunchSystem(simIds);
     }
 
-    setSimRequestInProgress(true);
     try {
       await runSimulationBatch({
         ctx: { virtualLabId, projectId },
@@ -398,20 +425,48 @@ export default function SimulationsTab({
                   context={context}
                   onSelect={setSelectedFile}
                   onLoadingChange={setFilesLoading}
+                  jobId={activeJobId}
                 />
               )
             )}
           </div>
         }
         right={
-          <SimulationReportsProvider reports={simConfig?.reports ?? null}>
-            <FileViewer
-              file={selectedFile}
-              className="h-full w-full"
-              context={context}
-              loading={filesLoading}
-            />
-          </SimulationReportsProvider>
+          <>
+            {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
+              <TaskConfigurationViewer
+                jobId={activeJobId}
+                workspace={context}
+                configId={activeSimulation?.id}
+                enabled={taskLogsViewerEnabled}
+                skipStream
+                campaignOriginAction={campaignOriginAction}
+                isCampaignIdChanged={isCampaignIdChanged}
+              />
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
+              <TaskLogsViewer
+                jobId={activeJobId}
+                workspace={context}
+                configId={activeSimulation?.id}
+                enabled={taskLogsViewerEnabled}
+                skipStream={taskLogsShouldReadSnapshot}
+                campaignOriginAction={campaignOriginAction}
+                isCampaignIdChanged={isCampaignIdChanged}
+              />
+            )}
+            {selectedFile?.renderer !== ActivityCustomFileRenderer.TaskLogsViewer &&
+              selectedFile?.renderer !== ActivityCustomFileRenderer.TaskConfigurationViewer && (
+                <SimulationReportsProvider reports={simConfig?.reports ?? null}>
+                  <FileViewer
+                    file={selectedFile}
+                    className="h-full w-full"
+                    context={context}
+                    loading={filesLoading}
+                  />
+                </SimulationReportsProvider>
+              )}
+          </>
         }
       />
 

@@ -1,6 +1,6 @@
 import { getClient } from '@/services/sanity/client';
 import singlePricesQuery from '@/services/sanity/queries/single-prices';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 export type SinglePrice = {
   itemName: string;

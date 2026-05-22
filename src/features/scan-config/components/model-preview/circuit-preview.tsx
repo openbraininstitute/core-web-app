@@ -1,4 +1,4 @@
-import { Image as AntdImage } from 'antd';
+import { Image as AntdImage, Segmented } from 'antd';
 import { useLayoutEffect, useState } from 'react';
 
 import { BrokenImageIcon, ImageIcon } from '@/components/icons/image-states';
@@ -6,14 +6,37 @@ import { useCircuitImageURL } from '@/features/scan-config/components/hooks/circ
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { classNames } from '@/util/utils';
 
+import CircuitViz from '../circuit-viz';
+
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 
-interface Props {
+interface CircuitPreviewProps {
   className?: string;
   circuit: ICircuit;
 }
 
-export function CircuitPreview({ className, circuit }: Props) {
+export function CircuitPreview({ className, circuit }: CircuitPreviewProps) {
+  const [mode, setMode] = useState<'image' | 'viz'>('image');
+
+  return (
+    <div className="h-full flex flex-col">
+      <Segmented
+        className="self-end mb-3"
+        options={[
+          { label: 'Image View', value: 'image' },
+          { label: 'Visualization', value: 'viz' },
+        ]}
+        onChange={(v) => setMode(v as 'image' | 'viz')}
+      />
+      <div className="flex-1">
+        {mode === 'image' && <CircuitImage className={className} circuit={circuit} />}
+        <CircuitViz key={circuit.id} id={circuit.id} visible={mode === 'viz'} />
+      </div>
+    </div>
+  );
+}
+
+export function CircuitImage({ className, circuit }: CircuitPreviewProps) {
   const { data, isLoading, error } = useCircuitImageURL(circuit?.id);
   const [loaded, setLoaded] = useState(false);
 

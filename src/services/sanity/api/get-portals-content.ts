@@ -1,7 +1,7 @@
 import { getClient } from '@/services/sanity/client';
 import { tryType } from '@/services/sanity/type-utils';
-import { logError } from '@/util/logger';
 import { isString } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
 
 export interface ContentForPortalsListItem {
   title: string;

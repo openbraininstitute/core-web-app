@@ -31,10 +31,12 @@ export function VoltageDuration({
               <div key={i} className="flex flex-col gap-1">
                 <div className="flex justify-between">
                   <div className="text-neutral-3">LEVEL {i}</div>
-                  <DeleteOutlined
-                    className="text-red-500"
-                    onClick={() => onChange(state.toSpliced(i, 1))}
-                  />
+                  {!disabled && (
+                    <DeleteOutlined
+                      className="text-red-500"
+                      onClick={() => onChange(state.toSpliced(i, 1))}
+                    />
+                  )}
                 </div>
                 <div className="border border-1  border-gray-200 p-3">
                   <div className="text-neutral-3">VOLTAGE</div>

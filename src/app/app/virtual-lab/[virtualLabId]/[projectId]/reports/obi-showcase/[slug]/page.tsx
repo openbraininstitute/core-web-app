@@ -1,13 +1,15 @@
 import { notFound } from 'next/navigation';
+
 import singleShowcaseQuery from '@/app/api/sanity/query';
 import { fetchSanity } from '@/services/sanity';
-import type { ServerSideComponentProp } from '@/types/common';
 import ArtifactsSection from '@/ui/segments/reports/obi-showcases/artifacts';
 import DescriptionSection from '@/ui/segments/reports/obi-showcases/description';
 import NotebooksSection from '@/ui/segments/reports/obi-showcases/notebooks';
+import { SanityShowcaseSchema } from '@/ui/segments/reports/obi-showcases/types';
+
+import type { ServerSideComponentProp } from '@/types/common';
 import type { ShowCaseProjectQueryType } from '@/ui/segments/reports/obi-showcases/showcase-type';
 import type { SanityShowcaseType } from '@/ui/segments/reports/obi-showcases/types';
-import { SanityShowcaseSchema } from '@/ui/segments/reports/obi-showcases/types';
 
 export default async function OBIShowcasePage({
   params: promisedParams,

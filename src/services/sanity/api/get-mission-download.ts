@@ -1,6 +1,6 @@
 import { getClient } from '@/services/sanity/client';
 import { tryType, typeImage } from '@/services/sanity/type-utils';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import type { RichText } from '@/services/sanity/type-utils';
 

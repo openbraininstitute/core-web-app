@@ -2,6 +2,7 @@ import dynamic from 'next/dynamic';
 
 export {
   MorphologyCanvas,
+  MorphoViewerTreeItemType,
   morphoViewerConvertMorphologyIntoTree,
   TgdColor,
   tgdFullscreenToggle,
@@ -11,7 +12,11 @@ export type {
   ColoringType,
   MorphoViewerElectrodeInjection,
   MorphoViewerElectrodeRecording,
+  MorphoViewerSmallCircuitCell,
+  MorphoViewerSmallCircuitCellData,
   MorphoViewerSynapsesGroup,
+  MorphoViewerTree,
+  MorphoViewerTreeItem,
 } from '@openbraininstitute/morphoviewer';
 
 export const MorphoViewerOctree = dynamic(

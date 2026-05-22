@@ -2,6 +2,8 @@ import { atom } from 'jotai';
 
 import { computeLiveDiffs, type DiffResult } from '@/utils/diff';
 
+import type { Config } from '@/features/scan-config/types';
+
 /**
  * Highlight descriptor for a single config path change.
  */
@@ -55,26 +57,6 @@ export const expandedRootElementsAtom = atom(
     }));
   }
 );
-
-// ── Independent UI atoms (not part of the diff group) ────────────────────────
-
-/**
- * Atom to control which root element is selected/expanded in the scan config UI
- * Used by AI assistant to programmatically expand blocks
- */
-export const selectedRootElementAtom = atom<string>('info');
-
-/**
- * Atom to control whether the middle panel is in editing mode
- * Used by AI assistant to show the config editor when expanding blocks
- */
-export const editingAtom = atom<boolean>(true);
-
-/**
- * Atom to track which child entry should be selected within a dictionary block
- * Used to control which entry is shown in the middle panel
- */
-export const selectedEntryAtom = atom<string>('');
 
 /**
  * Atom to track active flash animations.
@@ -199,7 +181,7 @@ export interface DiffBarData {
  * Set by handleConfirmRestore, consumed by left.tsx to call resetConfig.
  * Cleared after consumption.
  */
-export const pendingRestoreConfigAtom = atom<Record<string, any> | null>(null);
+export const pendingRestoreConfigAtom = atom<Config | null>(null);
 
 /**
  * When true, the aiConfig auto-apply effect in left.tsx is suppressed.

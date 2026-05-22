@@ -1,7 +1,7 @@
 import { getClient } from '@/services/sanity/client';
 import { isContentForRichText } from '@/services/sanity/types/rtf-content';
 import { getSanityPagesSlugPredicate } from '@/ui/segments/landing/utils';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import type { ContentForRichText } from '@/services/sanity/types/rtf-content';
 

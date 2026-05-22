@@ -5,7 +5,7 @@ import {
   typeImage,
   typeStringOrNull,
 } from '@/services/sanity/type-utils';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import type { PortableTextBlock } from '@portabletext/react';
 import type { ContentForRichText } from '@/services/sanity/types/rtf-content';

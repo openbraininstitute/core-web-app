@@ -148,6 +148,9 @@ export type CreateSubscriptionRequest = {
   tier_id: string;
   interval: string;
   payment_method_id: string;
+  quote_id?: string;
+  billing_address: TBillingAddress;
+  sync_billing_address_to_profile: boolean;
   metadata?: Record<string, string>;
 };
 
@@ -227,7 +230,14 @@ export type SubscriptionType = 'FREE' | 'PRO' | 'PREMIUM';
 export type SubscriptionPaymentDetails = {
   id: string;
   amount_paid: number;
+  amount_subtotal?: number | null;
+  amount_tax?: number | null;
+  amount_total?: number | null;
   currency: string;
+  tax_country?: string | null;
+  tax_behavior?: string | null;
+  tax_status?: string | null;
+  credits_purchased?: number | null;
   status: string;
   payment_date: string;
   payment_type?: string;
@@ -277,15 +287,22 @@ export type UserSubscriptionsResponse = {
 };
 
 export type StandalonePaymentRequest = {
-  amount: number;
-  currency: string;
+  quote_id: string;
   virtual_lab_id: string;
   payment_method_id: string;
+  billing_address: TBillingAddress;
+  sync_billing_address_to_profile: boolean;
 };
 
 export type StandalonePaymentResponse = {
   amount: number;
+  amount_subtotal: number;
+  amount_tax: number;
+  amount_total: number;
   currency: string;
+  tax_country?: string | null;
+  tax_behavior?: string | null;
+  tax_status?: string | null;
   status: string;
   receipt_url?: string;
   card_last4: string;
@@ -301,6 +318,7 @@ export type TUpdateUserProfileRequest = {
   locality: string;
   region: string;
   country: string;
+  sync_billing_address: boolean;
 };
 
 export type TOnboardingUpdateUserProfileRequest = {
@@ -329,6 +347,64 @@ export type UserProfileResponse = {
     locality?: string;
     country?: string;
   };
+};
+
+export type TBillingAddress = {
+  name?: string | null;
+  line1?: string | null;
+  line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country: string;
+};
+
+export const BillingQuoteRequestFlowDict = {
+  Standalone: 'standalone',
+  Subscription: 'subscription',
+} as const;
+type TBillingQuoteRequestFlow =
+  (typeof BillingQuoteRequestFlowDict)[keyof typeof BillingQuoteRequestFlowDict];
+
+export type TBillingQuoteRequest =
+  | {
+      flow: typeof BillingQuoteRequestFlowDict.Standalone;
+      virtual_lab_id: string;
+      credits: number;
+      currency: string;
+      billing_address: TBillingAddress;
+    }
+  | {
+      flow: typeof BillingQuoteRequestFlowDict.Subscription;
+      tier_id: string;
+      interval: string;
+      currency: string;
+      billing_address: TBillingAddress;
+    };
+
+export type BillingQuoteResponse = {
+  quote_id: string;
+  flow: TBillingQuoteRequestFlow;
+  subtotal: number;
+  tax_amount: number;
+  total: number;
+  currency: string;
+  tax_behavior: 'exclusive';
+  tax_country?: string | null;
+  tax_status: string;
+  expires_at: string;
+};
+
+export type CreditConversionRequest = {
+  credits: number;
+  currency: string;
+};
+
+export type CreditConversionResponse = {
+  credits: number;
+  currency: string;
+  amount: number;
+  rate: string;
 };
 
 type ProjectStats = {

@@ -1,6 +1,6 @@
 import { getClient } from '@/services/sanity/client';
 import pricingQuery from '@/services/sanity/queries/pricing';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import type { AdvantagesProps, PlanV2 } from '@/types/virtual-lab/pricing';
 

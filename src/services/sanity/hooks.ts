@@ -1,9 +1,8 @@
 import React from 'react';
 
 import { getClient } from '@/services/sanity/client';
-import { logError } from '@/util/logger';
 import { isUndefined } from '@/util/type-guards';
-import { log } from '@/utils/logger';
+import { log, logError } from '@/utils/logger';
 
 export function useSanity<T>(
   query: string,
