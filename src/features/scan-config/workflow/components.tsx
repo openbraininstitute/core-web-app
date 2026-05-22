@@ -1,9 +1,13 @@
 'use client';
 
 import { notFound } from 'next/navigation';
+import { useMemo } from 'react';
 
+import { useObioneJsonSchema } from '@/features/scan-config/components/hooks/schema';
 import { ScanConfigContainer } from '@/features/scan-config/container';
 import { useScanConfigWorkflow } from '@/features/scan-config/workflow/context';
+import { mergeWorkflowSessionSelectionIntoConfig } from '@/features/scan-config/workflow/workflow-session-selection';
+import { resolveScanConfigFromIdType } from '@/ui/segments/workflows/config/scan-config-binding';
 import { cn } from '@/utils/css-class';
 
 import { ScanConfigWorkflowStatus } from './types';
@@ -39,22 +43,38 @@ function ScanConfigWorkflowFrame({
 }
 
 function ScanConfigWorkflowEditor() {
-  const { definition, workspace, entity, campaign, editor } = useScanConfigWorkflow();
+  const { definition, scanConfig, workspace, entity, campaign, editor } = useScanConfigWorkflow();
+  const { configureBinding, schemaName } = scanConfig;
+
+  const { schema } = useObioneJsonSchema({ schemaName });
+
+  const initialConfig = useMemo(() => {
+    const base = campaign.initialConfig;
+    if (!base || !entity.workflowSessionSelection || !schema) {
+      return base;
+    }
+
+    return mergeWorkflowSessionSelectionIntoConfig({
+      config: base,
+      schema,
+      sessionSelection: entity.workflowSessionSelection,
+      resolveFromIdType: (browseType) => resolveScanConfigFromIdType(configureBinding, browseType),
+    });
+  }, [campaign.initialConfig, configureBinding, entity.workflowSessionSelection, schema]);
 
   return (
     <ScanConfigContainer
       entity={entity.entity}
       entityId={entity.entityId}
-      entityType={entity.entityType}
       virtualLabId={workspace.virtualLabId}
       projectId={workspace.projectId}
-      initialConfig={campaign.initialConfig}
+      initialConfig={initialConfig}
       activity={definition.activity}
-      schemaMappingKey={editor.schemaMappingKey}
       defaultTab={editor.defaultTab}
       readOnly={editor.readOnly}
       campaignOriginAction={editor.campaignOriginAction}
       className={editor.className}
+      scanConfig={scanConfig}
     />
   );
 }

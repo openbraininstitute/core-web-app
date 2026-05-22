@@ -10,13 +10,8 @@
 import { get } from 'es-toolkit/compat';
 import { useMemo } from 'react';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
-import {
-  getGeneratedApiUrl,
-  getScanConfigSchemaName,
-} from '@/features/scan-config/components/hooks';
 import {
   type TSchemaMappingConfiguration,
   useObioneJsonSchema,
@@ -29,24 +24,24 @@ import {
 import {
   type Config,
   type ConfigSchema,
-  getSupportedEntityTypesForScanConfiguration,
   ScanConfigActivity,
   ScanConfigDefaultTab,
   SchemaMappingKeyDict,
   type SchemaName,
   type TScanConfigActivity,
   type TScanConfigTabs,
-  type TSchemaMappingKey,
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import {
+  resolveScanConfigFromRegistry,
+  type TScanConfigRegistryConfig,
+} from '@/ui/segments/workflows/config/scan-config-binding';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Nullish } from '@/utils/type';
 
 export type TUseScanConfigurationParams = {
   entityId?: string | Nullish;
-  entityType: TExtendedEntitiesTypeDict;
   entity?: TSupportedEntitiesForScanConfiguration | Nullish;
   virtualLabId: string;
   projectId: string;
@@ -55,8 +50,8 @@ export type TUseScanConfigurationParams = {
   defaultTab?: TScanConfigTabs;
   readOnly?: boolean;
   activity?: TScanConfigActivity;
-  schemaMappingKey?: TSchemaMappingKey;
   campaignOriginAction?: TScanConfigCampaignOriginActionDict;
+  scanConfig: TScanConfigRegistryConfig;
 };
 
 export type TScanConfigurationReadyState = {
@@ -90,7 +85,6 @@ export type TUseScanConfigurationResult = {
 
 export function useScanConfiguration({
   entityId,
-  entityType,
   entity: entityFromProps,
   virtualLabId,
   projectId,
@@ -99,8 +93,8 @@ export function useScanConfiguration({
   defaultTab = ScanConfigDefaultTab,
   readOnly,
   activity = ScanConfigActivity.Simulate,
-  schemaMappingKey,
   campaignOriginAction = ScanConfigCampaignOriginActionDict.Task,
+  scanConfig,
 }: TUseScanConfigurationParams): TUseScanConfigurationResult {
   const shouldFetchEntity = !entityFromProps && !!entityId;
 
@@ -121,48 +115,24 @@ export function useScanConfiguration({
       return null;
     }
 
-    if (!entity && !entityType) {
-      return null;
-    }
-
-    const usedType = getSupportedEntityTypesForScanConfiguration({
-      entity: entity ?? { type: entityType },
-    });
+    const {
+      entityType: usedType,
+      schemaName,
+      generatedEndpoint: endpoint,
+      schemaMappingKey: effectiveSchemaMappingKey,
+    } = resolveScanConfigFromRegistry(scanConfig);
 
     const entityConfig = getEntityByExtendedType({ type: usedType });
-    const endpoint = getGeneratedApiUrl({
-      activity,
-      entityType: usedType,
-    });
-    const schemaName = getScanConfigSchemaName({
-      activity,
-      entityType: usedType,
-    });
 
-    return { usedType, entityConfig, endpoint, schemaName };
-  }, [activity, entity, entityType, isEntityLoading]);
+    return { usedType, entityConfig, endpoint, schemaName, effectiveSchemaMappingKey };
+  }, [entity, isEntityLoading, scanConfig]);
 
   const { schema, isLoading: loadingSchema } = useObioneJsonSchema({
     schemaName: resolved?.schemaName,
   });
 
-  const effectiveSchemaMappingKey = useMemo((): TSchemaMappingKey | undefined => {
-    if (schemaMappingKey) {
-      return schemaMappingKey;
-    }
-
-    if (
-      resolved?.usedType === ExtendedEntitiesTypeDict.Circuit ||
-      resolved?.usedType === ExtendedEntitiesTypeDict.MEModelWithSynapses
-    ) {
-      return SchemaMappingKeyDict.Circuit;
-    }
-
-    return undefined;
-  }, [resolved?.usedType, schemaMappingKey]);
-
-  const property_endpoints = effectiveSchemaMappingKey
-    ? get(schema?.property_endpoints, effectiveSchemaMappingKey, '')
+  const property_endpoints = resolved?.effectiveSchemaMappingKey
+    ? get(schema?.property_endpoints, resolved.effectiveSchemaMappingKey, '')
     : '';
 
   const { data: schemaMappingConfig, isLoading: loadingConfiguration } =
@@ -171,7 +141,9 @@ export function useScanConfiguration({
       workspace: { virtualLabId, projectId },
       endpoint: property_endpoints,
       isSchemaLoaded:
-        !loadingSchema && !!schema && effectiveSchemaMappingKey === SchemaMappingKeyDict.Circuit,
+        !loadingSchema &&
+        !!schema &&
+        resolved?.effectiveSchemaMappingKey === SchemaMappingKeyDict.Circuit,
     });
 
   const isLoading = loadingConfiguration || isEntityLoading || loadingSchema;

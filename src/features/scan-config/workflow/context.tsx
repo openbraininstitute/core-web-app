@@ -8,7 +8,6 @@ import {
   ScanConfigWorkflowStatus,
   type TResolvedScanConfigEntity,
   type TScanConfigWorkflowContextValue,
-  type TScanConfigWorkflowDefinition,
   type TScanConfigWorkflowPageProps,
   type TScanConfigWorkflowStatus,
 } from '@/features/scan-config/workflow/types';
@@ -16,31 +15,25 @@ import { useWorkflowCampaign } from '@/features/scan-config/workflow/use-workflo
 
 const ScanConfigWorkflowContext = createContext<TScanConfigWorkflowContextValue | null>(null);
 
-function entitySourceRequiresEntity(
-  entitySource: TScanConfigWorkflowDefinition['entity']
-): boolean {
-  return entitySource.mode === ScanConfigEntitySourceMode.RouteId;
-}
-
 function resolveWorkflowStatus({
   entity,
   campaign,
-  requiresEntity,
+  needsSelection,
 }: {
   entity: TResolvedScanConfigEntity;
   campaign: TScanConfigWorkflowContextValue['campaign'];
-  requiresEntity: boolean;
+  needsSelection: boolean;
 }): TScanConfigWorkflowStatus {
   if (campaign.error) {
     return ScanConfigWorkflowStatus.Blocked;
   }
 
-  // Resume URL had a campaign id, but resolve returned nothing → 404 (not a blank pending screen).
-  if (campaign.initialCampaignId && !campaign.isLoading && !campaign.campaignData) {
+  if (needsSelection && !entity.workflowSessionSelection) {
     return ScanConfigWorkflowStatus.Blocked;
   }
 
-  if (requiresEntity && !entity.entity) {
+  // resume URL had a campaign id, but resolve returned nothing → 404 (not a blank pending screen).
+  if (campaign.initialCampaignId && !campaign.isLoading && !campaign.campaignData) {
     return ScanConfigWorkflowStatus.Blocked;
   }
 
@@ -53,8 +46,8 @@ function resolveWorkflowStatus({
 
 function ScanConfigWorkflowContextValueProvider({
   definition,
+  scanConfig,
   workspace,
-  routeParams,
   searchParams,
   entity,
   children,
@@ -65,24 +58,20 @@ function ScanConfigWorkflowContextValueProvider({
     searchParams,
   });
 
-  const requiresEntity = entitySourceRequiresEntity(definition.entity);
-
-  const status = resolveWorkflowStatus({
-    entity,
-    campaign,
-    requiresEntity,
-  });
+  const needsSelection = definition.entity.mode === ScanConfigEntitySourceMode.Session;
+  const status = resolveWorkflowStatus({ entity, campaign, needsSelection });
 
   const value = useMemo<TScanConfigWorkflowContextValue>(
     () => ({
       definition,
+      scanConfig,
       workspace,
       entity,
       campaign,
       status,
       editor: definition.editor ?? {},
     }),
-    [campaign, definition, entity, status, workspace]
+    [campaign, definition, entity, scanConfig, status, workspace]
   );
 
   return (
@@ -94,6 +83,7 @@ function ScanConfigWorkflowContextValueProvider({
 
 export function ScanConfigWorkflowProvider({
   definition,
+  scanConfig,
   workspace,
   routeParams,
   searchParams,
@@ -102,12 +92,13 @@ export function ScanConfigWorkflowProvider({
   return (
     <ScanConfigWorkflowEntityProvider
       entitySource={definition.entity}
-      workspace={workspace}
       routeParams={routeParams}
+      configureBinding={scanConfig.configureBinding}
     >
       {(entity) => (
         <ScanConfigWorkflowContextValueProvider
           definition={definition}
+          scanConfig={scanConfig}
           workspace={workspace}
           routeParams={routeParams}
           searchParams={searchParams}
