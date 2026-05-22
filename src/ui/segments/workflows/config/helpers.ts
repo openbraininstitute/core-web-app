@@ -2,6 +2,15 @@ import groupBy from 'es-toolkit/compat/groupBy';
 import sortBy from 'es-toolkit/compat/sortBy';
 
 import { WorkspaceSection } from '@/constants';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { fetchObiOneJsonSchema } from '@/features/scan-config/components/hooks/schema';
+import {
+  parseWorkflowSchemaSelection,
+  type TWorkflowSchemaSelection,
+  type TWorkflowSchemaSelectionGrouped,
+  type TWorkflowSchemaSelectionMultiple,
+  WorkflowSchemaSelectionMode,
+} from '@/features/scan-config/workflow/workflow-schema-selection';
 
 import { ActivityRegistry } from './activities';
 import { EntityTypeCatalog } from './entity-types';
@@ -15,15 +24,22 @@ import {
   type TEntityGroupValue,
   type TEntityTypeMeta,
   type TGroupedWorkflows,
+  type TResolvedWorkflowInitialStage,
+  type TWorkflowInitialStage,
   type TWorkflowListContext,
   type TWorkflowListSort,
+  WorkflowInitialStageDict,
+  WorkflowInitialStagePolicyDict,
   WorkflowListContextDict,
   WorkflowListSortDict,
 } from './types';
 
+import type { QueryClient } from '@tanstack/react-query';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceSection } from '@/constants';
 import type { FeatureFlags, FlagKey } from '@/features/feature-flags/flags';
+import type { TScanConfigWorkflowDefinition } from '@/features/scan-config/workflow/types';
+import type { TScanConfigRegistryConfig } from './scan-config-binding';
 
 const featuresSatisfied = (
   required: readonly FlagKey[] | undefined,
@@ -56,6 +72,12 @@ export function getEntityMeta(
   return EntityTypeCatalog[value] ?? null;
 }
 
+export function workflowHasMultipleSources(
+  workflow: IWorkflowDescriptor | null | undefined
+): boolean {
+  return Boolean(workflow?.hasMultipleSources);
+}
+
 function resolveWorkflow(
   workflow: IWorkflowDescriptor,
   flags: FeatureFlags | undefined
@@ -63,7 +85,7 @@ function resolveWorkflow(
   const entity = EntityTypeCatalog[workflow.sourceType] ?? {
     value: workflow.sourceType,
     group: EntityGroupDict.Cellular,
-    label: workflow.sourceType,
+    label: workflow.label ?? String(workflow.sourceType),
   };
   const entityFeaturesSatisfied = featuresSatisfied(entity.requiredFeatures, flags);
   const workflowFeaturesSatisfied = featuresSatisfied(workflow.requiredFeatures, flags);
@@ -147,6 +169,32 @@ export function getWorkflow(opts: {
   );
 }
 
+function collectRegistryWorkflows(activity: TActivityEntry): readonly IWorkflowDescriptor[] {
+  const browseWorkflows = activity.browseWorkflows ?? [];
+  return [...activity.workflows, ...browseWorkflows];
+}
+
+/** Resolves registry scan-config config for a workflow definition id. */
+export function findScanConfigRegistryByDefinition(
+  definition: TScanConfigWorkflowDefinition
+): TScanConfigRegistryConfig | null {
+  for (const activity of Object.values(ActivityRegistry)) {
+    for (const workflow of collectRegistryWorkflows(activity)) {
+      const scanConfig = workflow.scanConfig;
+      if (scanConfig?.definition.id !== definition.id) {
+        continue;
+      }
+
+      return {
+        configureBinding: scanConfig.configureBinding,
+        schemaName: scanConfig.schemaName,
+      };
+    }
+  }
+
+  return null;
+}
+
 export function getSourceType(opts: {
   activity: TActivityValue | string | null | undefined;
   targetType: TExtendedEntitiesTypeDict;
@@ -211,8 +259,7 @@ const sectionToActivity: Partial<Record<TWorkspaceSection, TActivityValue>> = {
  * be either the workflow's sourceType or its targetType), return the single
  * entity type that needs to be selected at the configuration step.
  *
- * Internally reads the first required `configurationInputs` entry, falling
- * back to the workflow's `sourceType` for back-compat.
+ * Falls back to `sourceType` when it differs from `targetType` (legacy browse-first).
  */
 export function getBaseModelType(opts: {
   section: TWorkspaceSection;
@@ -226,12 +273,134 @@ export function getBaseModelType(opts: {
     getWorkflow({ activity, sourceType: opts.type });
 
   if (!workflow) return undefined;
+  if (workflowHasMultipleSources(workflow)) return undefined;
   const inputs = workflow.configurationInputs ?? [];
   const required = inputs.find((i) => i.required !== false);
-  return required?.type ?? workflow.sourceType;
+  if (required?.type) return required.type;
+  return workflow.sourceType;
 }
 
 export function getWorkflowSegment(url: string): TActivityValue | null {
   const match = url.match(/\/workflows\/([^/]+)/);
   return match ? (match[1] as TActivityValue) : null;
+}
+
+function workflowSchemaSelectionHasAcceptedEntityTypes(
+  config: TWorkflowSchemaSelection | null | undefined
+): config is TWorkflowSchemaSelectionMultiple | TWorkflowSchemaSelectionGrouped {
+  return (
+    config?.selectionMode === WorkflowSchemaSelectionMode.Multiple ||
+    config?.selectionMode === WorkflowSchemaSelectionMode.Grouped
+  );
+}
+
+function getWorkflowInitialStageFromSelection(
+  selection: TWorkflowSchemaSelection | null | undefined
+): TWorkflowInitialStage {
+  if (!selection || selection.selectionMode === WorkflowSchemaSelectionMode.None) {
+    return WorkflowInitialStageDict.Configure;
+  }
+
+  return WorkflowInitialStageDict.New;
+}
+
+export function getWorkflowInitialStage(opts: {
+  workflow: IWorkflowDescriptor | null | undefined;
+  selection?: TWorkflowSchemaSelection | null | undefined;
+}): TWorkflowInitialStage {
+  return resolveWorkflowRouteStage(opts);
+}
+
+export function resolveWorkflowRouteStage(opts: {
+  workflow: IWorkflowDescriptor | null | undefined;
+  selection?: TWorkflowSchemaSelection | null | undefined;
+}): TWorkflowInitialStage {
+  const { workflow, selection } = opts;
+
+  if (!workflow) {
+    return WorkflowInitialStageDict.Configure;
+  }
+
+  switch (workflow.initialStage) {
+    case WorkflowInitialStagePolicyDict.Configure:
+      return WorkflowInitialStageDict.Configure;
+    case WorkflowInitialStagePolicyDict.Browse:
+      return WorkflowInitialStageDict.New;
+    case WorkflowInitialStagePolicyDict.Schema:
+      return getWorkflowInitialStageFromSelection(selection);
+    default:
+      return WorkflowInitialStageDict.Configure;
+  }
+}
+
+export async function inferWorkflowStartingPageRemoteSchemaBased(opts: {
+  qc?: QueryClient;
+  activity: TActivityValue;
+  targetType: TExtendedEntitiesTypeDict;
+}): Promise<TResolvedWorkflowInitialStage> {
+  const workflow = getWorkflow({ activity: opts.activity, targetType: opts.targetType });
+
+  if (!workflow) {
+    return { stage: WorkflowInitialStageDict.Configure, workflow: null, schemaSelection: null };
+  }
+
+  let schemaSelection: TWorkflowSchemaSelection | null | undefined;
+
+  if (workflow.initialStage === WorkflowInitialStagePolicyDict.Schema) {
+    const schemaName = workflow.scanConfig?.schemaName;
+
+    if (!schemaName) {
+      return {
+        stage: WorkflowInitialStageDict.Configure,
+        workflow,
+        schemaSelection: null,
+      };
+    }
+
+    const schema = await fetchObiOneJsonSchema({ qc: opts.qc, schemaName });
+    schemaSelection = parseWorkflowSchemaSelection({ schema, schemaName });
+  }
+
+  return {
+    stage: resolveWorkflowRouteStage({ workflow, selection: schemaSelection }),
+    workflow,
+    schemaSelection: schemaSelection ?? null,
+  };
+}
+
+/** Noun after "Select" in build/simulate workflow breadcrumbs on `/workflows/.../new/[type]`. */
+export function getWorkflowNewPageBreadcrumbSelectNoun(opts: {
+  workflow: IWorkflowDescriptor | null | undefined;
+  selectionConfig: TWorkflowSchemaSelection | null | undefined;
+}): string {
+  const { workflow, selectionConfig } = opts;
+  if (!workflow) return 'entity';
+
+  const mode = selectionConfig?.selectionMode;
+
+  if (
+    workflowHasMultipleSources(workflow) ||
+    workflowSchemaSelectionHasAcceptedEntityTypes(selectionConfig)
+  ) {
+    return 'entities';
+  }
+
+  if (mode === WorkflowSchemaSelectionMode.Single) {
+    const entityType = workflow.sourceType;
+    return (
+      getEntityMeta(entityType)?.title ??
+      getEntityByExtendedType({ type: entityType })?.title ??
+      'entity'
+    );
+  }
+
+  if (workflow.sourceType !== workflow.targetType) {
+    return (
+      getEntityMeta(workflow.sourceType)?.title ??
+      getEntityByExtendedType({ type: workflow.sourceType })?.title ??
+      'entity'
+    );
+  }
+
+  return 'entity';
 }
