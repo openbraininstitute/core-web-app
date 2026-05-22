@@ -16,28 +16,19 @@ import {
   TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
 
-import type { atom } from 'jotai';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
 import type { Prettify } from '@/utils/type';
 
-export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
-
 type Primitive = null | boolean | number | string;
-interface Object {
-  [key: string]: Primitive | Primitive[] | Object;
+export interface ConfigObject {
+  [key: string]: ConfigValue | ConfigObject;
 }
 
-export type ConfigValue = Primitive | Primitive[] | Object;
-export type Config = Record<string, Object | string>;
-
-export interface AtomsMap {
-  [key: string]:
-    | ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>
-    | Record<string, ReturnType<typeof atom<Record<string, ConfigValue | Array<ConfigValue>>>>>;
-}
+export type ConfigValue = Primitive | Primitive[] | ConfigObject | ConfigValue[];
+export type Config = Record<string, ConfigValue>;
 
 export const SchemaMappingKeyDict = {
   Circuit: 'Circuit',

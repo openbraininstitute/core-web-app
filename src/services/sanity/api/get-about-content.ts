@@ -1,7 +1,7 @@
 import { getClient } from '@/services/sanity/client';
 import aboutQuery from '@/services/sanity/queries/help-about';
-import { logError } from '@/util/logger';
 import { assertType } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
 
 export type AboutContentProps = {
   aboutContent: unknown;

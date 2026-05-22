@@ -3,11 +3,13 @@ import { cn } from '@/utils/css-class';
 
 type Props = { onBack: () => void };
 
-export default function ContactUs({ onBack }: Props) {
+export function ContactUs({ onBack }: Props) {
   return (
     <div className="h-full max-h-max">
       <div data-testid="contact-us-form" className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-white">Upgrade to Premium – Tell Us Your Needs!</h1>
+        <h1 className="text-3xl font-semibold text-white">
+          Upgrade to Premium – Tell Us Your Needs!
+        </h1>
         <p className="text-primary-3 text-lg font-light">
           Let us know your requirements, and we&apos;ll tailor your premium subscription experience
           to fit your needs.

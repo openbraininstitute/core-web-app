@@ -1,16 +1,11 @@
 'use client';
 
 import { get } from 'es-toolkit/compat';
-import { useAtom } from 'jotai';
-import { Suspense, useLayoutEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { useEntries } from '@/features/scan-config/components/hooks';
-import { useConfigAtom } from '@/features/scan-config/components/hooks/config-atom';
-import {
-  type TSchemaMappingConfiguration,
-  useAtomsMap,
-} from '@/features/scan-config/components/hooks/schema';
+import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
@@ -18,6 +13,7 @@ import {
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import {
+  type Config,
   type ConfigSchema,
   isType,
   ScanConfigActivity,
@@ -36,11 +32,10 @@ import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletoniza
 import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
 import { useAgentState, useAIConfig } from '@/services/ai-agent';
-import { editingAtom, selectedEntryAtom, selectedRootElementAtom } from '@/state/config-highlights';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
-import type { Config } from '@/features/scan-config/components/components';
+import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type { Nullish } from '@/utils/type';
 
 import styles from '@/features/scan-config/scan-config.module.css';
@@ -83,39 +78,23 @@ export function ScanConfigTemplate({
   campaignOriginAction,
 }: Props) {
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
-  const [selectedRootElement, setSelectedRootElement] = useAtom(selectedRootElementAtom);
-  const [editing, setEditing] = useAtom(editingAtom);
-  const [selectedEntry, setSelectedEntry] = useAtom(selectedEntryAtom);
-
-  useLayoutEffect(() => {
-    const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
-    if (!firstRoot) return;
-
-    const rootSpec = selectedRootElement ? schema.properties[selectedRootElement] : undefined;
-    const hasValidSelection =
-      Boolean(selectedRootElement) && rootSpec !== undefined && !isType(rootSpec);
-    if (hasValidSelection) return;
-
-    setSelectedRootElement(firstRoot);
-    setSelectedEntry('');
-  }, [schema, selectedRootElement, setSelectedEntry, setSelectedRootElement]);
+  const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
+  const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
+  const [editing, setEditing] = useState(true);
+  const [selectedEntry, setSelectedEntry] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
   const allEntries = useEntries({ initialConfig, schema });
-  const [atomsMap, setAtomsMap] = useAtomsMap({
+  const [config, setConfig] = useConfig({
     schema,
     initialConfig,
     model: entity,
   });
-  const config = useConfigAtom(schema, atomsMap);
-  const selectedSchemaCandidate = schema.properties[selectedRootElement];
-  const selectedSchema =
-    selectedSchemaCandidate !== undefined && !isType(selectedSchemaCandidate)
-      ? selectedSchemaCandidate
-      : undefined;
+
+  const selectedSchema = schema.properties[selectedRootElement];
   const previousCampaignId = usePrevious(campaignId);
   const isCampaignIdChanged = previousCampaignId !== campaignId;
 
@@ -131,7 +110,13 @@ export function ScanConfigTemplate({
   const results = match(activity)
     .with(ScanConfigActivity.Simulate, () => (
       <Suspense>
-        <SimulationsTab campaignId={campaignId} virtualLabId={virtualLabId} projectId={projectId} />
+        <SimulationsTab
+          campaignId={campaignId}
+          virtualLabId={virtualLabId}
+          projectId={projectId}
+          campaignOriginAction={campaignOriginAction}
+          isCampaignIdChanged={isCampaignIdChanged}
+        />
       </Suspense>
     ))
     .with(ScanConfigActivity.Extract, () => (
@@ -200,11 +185,10 @@ export function ScanConfigTemplate({
         >
           <Left
             schema={schema}
-            atomsMap={atomsMap}
-            setAtomsMap={setAtomsMap}
             selectedRootElement={selectedRootElement}
             setSelectedRootElement={setSelectedRootElement}
             config={config}
+            setConfig={setConfig}
             campaignId={campaignId}
             loading={loading}
             selectedEntry={selectedEntry}
@@ -238,13 +222,12 @@ export function ScanConfigTemplate({
                 schema={schema}
                 selectedRootElement={selectedRootElement}
                 editing={editing}
-                atomsMap={atomsMap}
-                setAtomsMap={setAtomsMap}
                 selectedEntry={selectedEntry}
                 setSelectedEntry={setSelectedEntry}
                 campaignId={campaignId}
                 loading={loading}
                 config={config}
+                setConfig={setConfig}
                 entity={entity}
                 allEntries={allEntries}
                 onNewBlockClick={() => {

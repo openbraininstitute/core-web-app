@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import { atomRateLimit } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import { findConfigKeyInState } from '@/features/scan-config/helpers';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { lastConfigUpdateAtom, preMessageConfigAtom } from '@/state/config-highlights';
@@ -19,7 +20,7 @@ import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { AiAssistant, useAiAssistant } from '../assistant';
 import { fetchMessagesFromDB } from '../assistant/manager/message';
 
-import type { Config } from '@/features/scan-config/components/components';
+import type { Config } from '@/features/scan-config/types';
 import type { AiAgentRateLimitEndpoint } from './rate-limit';
 
 export const agentStateAtom = atom<Record<string, Config>>({});
@@ -110,7 +111,7 @@ export function useServiceAiAgentChat(threadId: string) {
     if (assistantInitialMessages.length > 0) {
       chat.setMessages(assistantInitialMessages);
     }
-  }, [assistantInitialMessages]);
+  }, [assistantInitialMessages, chat.setMessages]);
 
   useEffect(() => {
     const lastMessage = chat.messages[chat.messages.length - 1];
@@ -286,7 +287,7 @@ export function useServiceAiAgentChat(threadId: string) {
   };
 }
 
-export const configStateAtom = atom<Config | null>(null);
+export const configStateAtom = atom<Config>({});
 export const isChatReadyAtom = atom(true);
 
 export function useAgentState(key: string, config?: Config) {
@@ -324,15 +325,32 @@ export function useAIConfig() {
   const [aiAgentState] = useAtom(agentStateAtom);
   const [isChatReady] = useAtom(isChatReadyAtom);
 
-  const aiCircuitId = (aiConfig as any)?.initialize?.circuit?.id_str;
+  const defaultConfig = {
+    aiConfig: null,
+    setAiConfig,
+    isChatReady,
+  };
+
   const activeKey = findConfigKeyInState(aiAgentState as Record<string, unknown>);
-  const agentCircuitId = activeKey
-    ? (aiAgentState as any)?.[activeKey]?.initialize?.circuit?.id_str
-    : undefined;
-  const guardPassed = aiCircuitId === agentCircuitId;
+
+  if (
+    !isPlainObject(aiConfig?.initialize) ||
+    !activeKey ||
+    !isPlainObject((aiAgentState as any)?.[activeKey]?.initialize)
+  )
+    return defaultConfig;
+
+  // Circuit identity guard: only apply when both configs have a circuit object.
+  // Non-circuit workflows (ion channel, skeletonization, etc.) skip this check.
+  const aiCircuit = aiConfig.initialize?.circuit;
+  const agentCircuit = (aiAgentState as any)?.[activeKey]?.initialize?.circuit;
+
+  if (isPlainObject(aiCircuit) && isPlainObject(agentCircuit)) {
+    if (aiCircuit.id_str !== agentCircuit.id_str) return defaultConfig;
+  }
 
   return {
-    aiConfig: guardPassed ? aiConfig : null,
+    aiConfig,
     setAiConfig,
     isChatReady,
   };

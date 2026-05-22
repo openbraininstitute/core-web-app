@@ -1,5 +1,4 @@
 import { isNil } from 'es-toolkit/compat';
-import { atom, useAtom } from 'jotai';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
@@ -26,7 +25,8 @@ export default function Block({
   schema,
   disabled,
   blockSchema,
-  stateAtom,
+  state,
+  setState,
   config,
   entity,
   hideTitle,
@@ -41,14 +41,14 @@ export default function Block({
   config: Config;
   blockSchema?: TBlock;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
-  stateAtom: ReturnType<typeof atom<Record<string, ConfigValue | ConfigValue[]>>> | null;
+  state: Record<string, ConfigValue>;
+  setState: (newState: Record<string, ConfigValue>) => void;
   hideTitle?: boolean;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   rootElement?: string;
   selectedEntry?: string;
   errorPathPrefix?: string;
 }) {
-  const [state, setState] = useAtom(stateAtom ?? atom<Record<string, ConfigValue>>({}));
   const { getFieldDiffClass } = useBlockDiff(rootElement, selectedEntry);
 
   if (!blockSchema) return null;

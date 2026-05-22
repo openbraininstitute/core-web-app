@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { getClient } from '@/services/sanity/client';
 import guidesQuery from '@/services/sanity/queries/help-guides';
-import { logError } from '@/util/logger';
+import { logError } from '@/utils/logger';
 
 import type { PortableTextBlock } from 'next-sanity';
 

@@ -15,8 +15,6 @@ import { type BundledLanguage, codeToHtml, type ShikiTransformer } from 'shiki';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
-import type { Element } from 'hast';
-
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: BundledLanguage;

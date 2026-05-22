@@ -5,8 +5,8 @@ import {
   typeNumberOrNull,
   typeStringOrNull,
 } from '@/services/sanity/type-utils';
-import { logError } from '@/util/logger';
 import { isBoolean } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
 
 import type { TypeDef } from '@/util/type-guards';
 

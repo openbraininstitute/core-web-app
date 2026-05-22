@@ -19,7 +19,7 @@ import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entitie
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
-import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
+import { DEFAULT_PAGE_MEDIUM_SIZE, WorkflowActivityDictValue } from '@/constants';
 import { viewConfig as simulationCampaignExpandedViewConfig } from '@/entity-configuration/definitions/list-expanded-view-defs/simulation/small-microcircuit-simulation';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
@@ -39,6 +39,7 @@ import {
   getTaskCampaignStatusCountMap,
   type TTaskCampaignRow,
 } from '@/entity-configuration/domain/task-functions';
+import { isSimulateCircuitSourceType } from '@/features/scan-config/workflow/simulate-circuit-workflows';
 import { LegacyCampaignStatusCell } from '@/features/task-runner/activity-execution/legacy-status-cell';
 import { ActivityAggregatedStatus } from '@/features/task-runner/activity-execution/status';
 import { ActivityStatusCell } from '@/features/task-runner/activity-execution/status-cell';
@@ -57,7 +58,7 @@ import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
 import { ORIGINAL_CAMPAIGN_ID_QUERY } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-import { ActivityValues, getActivity } from '@/ui/segments/workflows/config';
+import { ActivityValues, getActivity, getWorkflow } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
@@ -404,9 +405,9 @@ export function WorkflowActivity() {
     }
     if (entityType === ExtendedEntitiesTypeDict.MemodelCircuitSimulation) {
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/memodel/${
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/me-model-circuit/${
           (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id
-        }?dataType=${ExtendedEntitiesTypeDict.MemodelCircuit}&initialCampaignId=${selectedRow?.id}`
+        }?initialCampaignId=${selectedRow?.id}`
       );
 
       return;
@@ -420,11 +421,25 @@ export function WorkflowActivity() {
       );
       return;
     }
-    if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign) {
+    if (selectedRow?.type === ExtendedEntitiesTypeDict.SimulationCampaign && entityType) {
+      const workflow = getWorkflow({
+        activity: WorkflowActivityDictValue.simulate,
+        targetType: entityType,
+      });
+      const entityId = (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id;
+      const query = new URLSearchParams({ initialCampaignId: selectedRow.id });
+
+      if (workflow && isSimulateCircuitSourceType(workflow.sourceType)) {
+        query.set('dataType', workflow.sourceType);
+        navigate(
+          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${entityId}?${query}`
+        );
+        return;
+      }
+
+      const configureSegment = workflow ? kebabCase(workflow.sourceType) : 'circuit';
       navigate(
-        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/circuit/${
-          (selectedRow as unknown as ExtendedCampaignsType['data'][0]).entity_id
-        }?initialCampaignId=${selectedRow.id}`
+        `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/simulate/configure/${configureSegment}/${entityId}?${query}`
       );
     }
   };

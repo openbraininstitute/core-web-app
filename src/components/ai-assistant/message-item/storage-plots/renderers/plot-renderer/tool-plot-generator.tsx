@@ -5,9 +5,9 @@ import dynamic from 'next/dynamic';
 import React from 'react';
 
 import FullscreenDialog from '@/components/ai-assistant/message-item/fullscreen-dialog/fullscreen-dialog';
-import { logError } from '@/util/logger';
 import { isString } from '@/util/type-guards';
 import { classNames } from '@/util/utils';
+import { logError } from '@/utils/logger';
 
 import ToolSkeleton from '../skeleton/tool-skeleton';
 
@@ -407,7 +407,7 @@ function CustomPlot({
   let props;
   try {
     props = JSON.parse(content);
-  } catch (ex) {
+  } catch {
     logError('Unable to parse JSON:', content);
     return null;
   }

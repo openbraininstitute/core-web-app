@@ -1,5 +1,5 @@
-import { logError } from '@/util/logger';
 import { assertType } from '@/util/type-guards';
+import { logError } from '@/utils/logger';
 
 type FileIdentifier = string | string[];
 
