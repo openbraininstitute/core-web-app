@@ -1,4 +1,4 @@
-import { DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useState } from 'react';
 
@@ -19,14 +19,17 @@ export default function NeuronPropertyFilter({
     return <div className="text-gray-500">Select a population</div>;
 
   return (
-    <div>
+    <div className="flex flex-col gap-2">
       {value.map((f, i) => {
         const handleValuesChange = (property: string, selected: string[]) =>
           onChange(value.with(i, { filter_dict: { ...f.filter_dict, [property]: selected } }));
 
         return (
-          // biome-ignore lint/suspicious/noArrayIndexKey: no stable unique key available
-          <div key={i} className="border border-gray-300 rounded-md relative">
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: no stable unique key available
+            key={i}
+            className="border border-gray-300 rounded-md relative p-3 flex flex-col gap-2"
+          >
             {i !== 0 && (
               <DeleteOutlined
                 className="absolute top-2 right-2 text-red-500 cursor-pointer hover:text-red-700"
@@ -42,19 +45,21 @@ export default function NeuronPropertyFilter({
                 onValuesChange={(selected) => handleValuesChange(p, selected)}
               />
             ))}
-            <DropdownSelect
-              placeholder="Add a property"
-              options={Object.keys(properties)
-                .filter((key) => !(key in f.filter_dict))
-                .map((key) => ({ label: key, value: key }))}
-              onChange={(selectedKey: string) => {
-                const updated = [...value];
-                updated[i] = {
-                  filter_dict: { ...updated[i].filter_dict, [selectedKey]: [] },
-                };
-                onChange(updated);
-              }}
-            />
+            <div className="w-full flex flex-col mt-[10px]">
+              <DropdownSelect
+                placeholder="Add new property"
+                options={Object.keys(properties)
+                  .filter((key) => !(key in f.filter_dict))
+                  .map((key) => ({ label: key, value: key }))}
+                onChange={(selectedKey: string) => {
+                  const updated = [...value];
+                  updated[i] = {
+                    filter_dict: { ...updated[i].filter_dict, [selectedKey]: [] },
+                  };
+                  onChange(updated);
+                }}
+              />
+            </div>
           </div>
         );
       })}
@@ -85,10 +90,11 @@ function DropdownSelect({
     return (
       <button
         type="button"
-        className="rounded border border-dashed border-gray-400 px-3 py-1 text-sm text-gray-500 hover:border-gray-600 hover:text-gray-700"
+        className="rounded-full border border-gray-300 text-primary-8 font-semibold px-3 py-[6px] flex justify-between"
         onClick={() => setIsOpen(true)}
       >
         {placeholder}
+        <PlusOutlined />
       </button>
     );
   }
