@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { get } from 'es-toolkit/compat';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -38,11 +37,20 @@ import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { getErrorMessage } from '@/utils/error';
 import { log } from '@/utils/logger';
 
+import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
 const LOW_FUNDS_ERROR_CODE = 'ACCOUNTING_INSUFFICIENT_FUNDS_ERROR';
+
+const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
+  CircuitScaleDictionary.Microcircuit,
+  CircuitScaleDictionary.Region,
+  CircuitScaleDictionary.System,
+  CircuitScaleDictionary.WholeBrain,
+]);
+
 type SimulationTabProps = {
   campaignId: string;
   virtualLabId: string;
@@ -298,12 +306,8 @@ export default function SimulationsTab({
     setSelectedSimulationIds([]);
   };
 
-  const shouldTreatSimulationAsTask = [
-    CircuitScaleDictionary.Microcircuit,
-    CircuitScaleDictionary.Region,
-    CircuitScaleDictionary.System,
-    CircuitScaleDictionary.WholeBrain,
-  ].includes(get(model, 'scale', null));
+  const scale = model && 'scale' in model ? model.scale : null;
+  const shouldTreatSimulationAsTask = scale !== null && TASK_LAUNCH_SCALES.has(scale);
 
   // TODO Refactor
   const run = async (simIds: string[]) => {
