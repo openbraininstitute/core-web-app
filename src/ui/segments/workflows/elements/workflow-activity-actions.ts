@@ -5,6 +5,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { config } from '@/config';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { ScanConfigOriginSearchParam } from '@/features/scan-config/helpers';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 import { getWorkflow } from '@/ui/segments/workflows/config/helpers';
 import { buildConfigureUrlForEntity } from '@/ui/segments/workflows/config/routes';
@@ -110,7 +111,7 @@ function buildConfigureUrlForActivityRow(opts: {
   return buildConfigureUrlForEntity({
     ...request,
     workspace: opts.workspace,
-    query: { ...opts.query, initialCampaignId: opts.row.id },
+    query: { ...opts.query, [ScanConfigOriginSearchParam]: opts.row.id },
   });
 }
 
@@ -207,7 +208,6 @@ export function buildWorkflowActivityDuplicateHref(opts: {
   listEntityType: TExtendedEntitiesTypeDict;
   workspace: WorkspaceContext;
   row: TWorkflowActivityTableRow;
-  originalCampaignIdQuery: string;
   query?: Record<string, string | undefined>;
 }): string | null {
   if (isIonChannelModelingDuplicateRow(opts.listEntityType, opts.row)) {
@@ -223,7 +223,7 @@ export function buildWorkflowActivityDuplicateHref(opts: {
       }
     }
 
-    params.set(opts.originalCampaignIdQuery, opts.row.id);
+    params.set(ScanConfigOriginSearchParam, opts.row.id);
 
     return `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${configureSegment}?${params}`;
   }

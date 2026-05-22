@@ -33,7 +33,7 @@ function resolveWorkflowStatus({
   }
 
   // resume URL had a campaign id, but resolve returned nothing → 404 (not a blank pending screen).
-  if (campaign.initialCampaignId && !campaign.isLoading && !campaign.campaignData) {
+  if (campaign.origin && !campaign.isLoading && !campaign.campaignData) {
     return ScanConfigWorkflowStatus.Blocked;
   }
 

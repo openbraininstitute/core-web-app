@@ -24,3 +24,6 @@ export const ScanConfigCampaignOriginActionDict = {
 
 export type TScanConfigCampaignOriginActionDict =
   (typeof ScanConfigCampaignOriginActionDict)[keyof typeof ScanConfigCampaignOriginActionDict];
+
+/** query param for resume/duplicate flows (`?origin={campaignId}`). */
+export const ScanConfigOriginSearchParam = 'origin' as const;

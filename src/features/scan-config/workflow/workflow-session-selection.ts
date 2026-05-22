@@ -1,4 +1,4 @@
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import superjson from 'superjson';
 import { z } from 'zod';
 
@@ -9,6 +9,10 @@ import type { Config, ConfigSchema, ConfigValue } from '@/features/scan-config/t
 
 const WorkflowSessionIdPrefix = 'wf_' as const;
 const WorkflowSessionIdSuffixLength = 10 as const;
+const workflowSessionAlphabet = customAlphabet(
+  'abcdefghijklmnopqrstuvwxyz0123456789',
+  WorkflowSessionIdSuffixLength
+);
 
 export const WorkflowSessionSelectionMode = {
   Single: 'single',
@@ -53,7 +57,7 @@ export type TWorkflowSessionSelectionPayload = z.infer<
 >;
 
 export function createWorkflowSessionId(): string {
-  return `${WorkflowSessionIdPrefix}${nanoid(WorkflowSessionIdSuffixLength)}`;
+  return `${WorkflowSessionIdPrefix}${workflowSessionAlphabet(WorkflowSessionIdSuffixLength)}`;
 }
 
 export function isWorkflowSessionId(value: string | null | undefined): value is string {

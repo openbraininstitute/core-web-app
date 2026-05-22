@@ -14,7 +14,7 @@ import type { TScanConfigRegistryConfig } from '@/ui/segments/workflows/config/s
 
 type ConfigurePageParams = WorkspaceContext & { id?: string };
 type ConfigurePageSearchParams = {
-  initialCampaignId?: string;
+  origin?: string;
   [key: string]: string | string[] | undefined;
 };
 

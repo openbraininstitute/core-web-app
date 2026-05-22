@@ -146,7 +146,7 @@ export default async function Overview({
             entityType={extendedType}
             virtualLabId={context.virtualLabId}
             projectId={context.projectId}
-            initialCampaignId={extractionConfig.campaign.id}
+            origin={extractionConfig.campaign.id}
             initialConfig={extractionConfig.config?.form}
             readOnly={!isWorkflow}
             defaultTab={{
@@ -181,7 +181,7 @@ export default async function Overview({
             entityType={ExtendedEntitiesTypeDict.CellMorphology}
             virtualLabId={context.virtualLabId}
             projectId={context.projectId}
-            initialCampaignId={config.campaign.id}
+            origin={config.campaign.id}
             initialConfig={config.config?.form}
             readOnly={!isWorkflow}
             defaultTab={{
@@ -214,7 +214,7 @@ export default async function Overview({
         entityType={extendedType}
         virtualLabId={context.virtualLabId}
         projectId={context.projectId}
-        initialCampaignId={config.campaign.id}
+        origin={config.campaign.id}
         initialConfig={config.config?.form}
         readOnly={!isWorkflow}
         // This is a temporary solution to show sim campaigns not compliant with obi-one gen config.
@@ -251,7 +251,7 @@ export default async function Overview({
         entityType={ExtendedEntitiesTypeDict.IonChannelModel}
         virtualLabId={context.virtualLabId}
         projectId={context.projectId}
-        initialCampaignId={config.campaign.id}
+        origin={config.campaign.id}
         initialConfig={config.config?.form}
         readOnly={!isWorkflow}
         // This is a temporary solution to show sim campaigns not compliant with obi-one gen config.
@@ -285,7 +285,7 @@ export default async function Overview({
           entityType={extendedType}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
-          initialCampaignId={extractionConfig.campaign.id}
+          origin={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
           readOnly={!isWorkflow}
           defaultTab={{
@@ -337,7 +337,7 @@ export default async function Overview({
           entityType={extendedType}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
-          initialCampaignId={extractionConfig.campaign.id}
+          origin={extractionConfig.campaign.id}
           initialConfig={extractionConfig.config?.form}
           readOnly={!isWorkflow}
           defaultTab={{

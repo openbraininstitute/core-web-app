@@ -45,7 +45,7 @@ export type TUseScanConfigurationParams = {
   entity?: TSupportedEntitiesForScanConfiguration | Nullish;
   virtualLabId: string;
   projectId: string;
-  initialCampaignId?: string;
+  origin?: string;
   initialConfig?: Config;
   defaultTab?: TScanConfigTabs;
   readOnly?: boolean;
@@ -59,7 +59,7 @@ export type TScanConfigurationReadyState = {
   entityType: TSupportedEntityTypesForScanConfiguration;
   virtualLabId: string;
   projectId: string;
-  initialCampaignId?: string;
+  origin?: string;
   initialConfig?: Config;
   defaultTab: TScanConfigTabs;
   readOnly?: boolean;
@@ -88,7 +88,7 @@ export function useScanConfiguration({
   entity: entityFromProps,
   virtualLabId,
   projectId,
-  initialCampaignId,
+  origin,
   initialConfig,
   defaultTab = ScanConfigDefaultTab,
   readOnly,
@@ -204,7 +204,7 @@ export function useScanConfiguration({
         entityType: resolved.usedType,
         virtualLabId,
         projectId,
-        initialCampaignId,
+        origin,
         initialConfig,
         defaultTab,
         readOnly,
@@ -223,7 +223,7 @@ export function useScanConfiguration({
     defaultTab,
     entity,
     error,
-    initialCampaignId,
+    origin,
     initialConfig,
     isLoading,
     projectId,

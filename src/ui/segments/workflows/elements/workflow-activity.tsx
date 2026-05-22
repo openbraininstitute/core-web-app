@@ -55,8 +55,7 @@ import {
 import { BaseTable } from '@/ui/segments/data-table/table';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
 import { useQueryActivity } from '@/ui/segments/project/activities/elements/use-activity';
-import { ORIGINAL_CAMPAIGN_ID_QUERY } from '@/ui/segments/workflows/build/ion-channel-build/helpers';
-import { ActivityValues, getActivity } from '@/ui/segments/workflows/config';
+import { ActivityValues, getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
 import {
   buildWorkflowActivityConfigurationHref,
@@ -69,7 +68,6 @@ import { cn } from '@/utils/css-class';
 
 import type { ColumnsType } from 'antd/es/table/interface';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
@@ -388,7 +386,6 @@ export function WorkflowActivity() {
       listEntityType: entityType,
       workspace,
       row: selectedRow,
-      originalCampaignIdQuery: ORIGINAL_CAMPAIGN_ID_QUERY,
     });
 
     if (href) {

@@ -68,7 +68,7 @@ export type TResolvedScanConfigEntity = {
 };
 
 export type TResolvedScanConfigCampaign = {
-  initialCampaignId?: string;
+  origin?: string;
   initialConfig?: Config;
   campaignData: TCampaignWithFormConfig | null | undefined;
   isLoading: boolean;
