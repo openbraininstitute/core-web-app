@@ -20,11 +20,9 @@ const colors: string[] = [
   '#2347E8', // Blue
 ];
 
-export function useCircuit(id: string, showAxon: boolean) {
-  const promises = React.useRef<Record<string, Promise<Sections>>>({});
+export function useCircuit(circuitId: string, showAxon: boolean) {
   const { virtualLabId, projectId } = useWorkspace();
-  const { data: nodes, error, isLoading } = useCircuitNodes(id, virtualLabId, projectId);
-  const queryClient = useQueryClient();
+  const { data: nodes, error, isLoading } = useCircuitNodes(circuitId, virtualLabId, projectId);
   const circuit: MorphoViewerSmallCircuitCell[] = React.useMemo(() => {
     return (
       nodes?.map((node, i) => ({
@@ -37,52 +35,46 @@ export function useCircuit(id: string, showAxon: boolean) {
     );
   }, [nodes]);
 
-  React.useEffect(() => {
-    nodes?.forEach((n) => {
-      promises.current[n.morphology_file + n.morphology_name] = queryClient.fetchQuery({
-        queryKey: ['morphology', id, n.morphology_file, n.morphology_name],
-        queryFn: async () => {
-          const nameParam = n.morphology_name
-            ? `?name=${encodeURIComponent(n.morphology_name)}`
-            : '';
-          const url = `${config.OBI_ONE_URL}/circuit/viz/${id}/morphologies/${encodeURIComponent(n.morphology_file)}${nameParam}`;
+  const nodesById = React.useMemo(() => {
+    if (!nodes) return new Map<string, NonNullable<typeof nodes>[number]>();
+    return new Map(nodes.map((node) => [node.morphology_file + node.morphology_name, node]));
+  }, [nodes]);
 
-          const res = await authFetch(url, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-              'virtual-lab-id': virtualLabId,
-              'project-id': projectId,
-            },
-          });
+  const loadCell = async (id: string) => {
+    const n = nodesById.get(id);
 
-          const json = await res.json();
-          return SectionsArraySchema.parse(json);
-        },
-        staleTime: Infinity,
-        gcTime: Infinity,
-      });
+    if (!n) return;
+
+    const nameParam = n.morphology_name ? `?name=${encodeURIComponent(n.morphology_name)}` : '';
+    const url = `${config.OBI_ONE_URL}/circuit/viz/${circuitId}/morphologies/${encodeURIComponent(n.morphology_file)}${nameParam}`;
+
+    const res = await authFetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'virtual-lab-id': virtualLabId,
+        'project-id': projectId,
+      },
     });
-  }, [nodes, id, projectId, virtualLabId, queryClient]);
+
+    const json = await res.json();
+
+    const sections = SectionsArraySchema.parse(json);
+    const filtered_sections = sections.filter(
+      (s) => showAxon || s.type !== MorphoViewerTreeItemType.Axon
+    );
+
+    return buildMorphoTree(filtered_sections, id);
+  };
 
   return {
     circuit,
     isLoading,
     error,
-    loadCell: async (morphId: string) => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      const data = await promises.current[morphId];
-      const sections = data.filter((s) => showAxon || s.type !== MorphoViewerTreeItemType.Axon);
-
-      return buildMorphoTree(sections, morphId);
-    },
+    loadCell,
   };
 }
-function useCircuitNodes(
-  id: string,
-  virtualLabId: string,
-  projectId: string
-): { data: any; error: any; isLoading: any } {
+function useCircuitNodes(id: string, virtualLabId: string, projectId: string) {
   return useQuery({
     queryKey: keyBuilder.circuitNodes(id),
     queryFn: async () => {

@@ -30,7 +30,7 @@ export function CircuitPreview({ className, circuit }: CircuitPreviewProps) {
       />
       <div className="flex-1">
         {mode === 'image' && <CircuitImage className={className} circuit={circuit} />}
-        <CircuitViz key={circuit.id} id={circuit.id} visible={mode === 'viz'} />
+        {mode === 'viz' && <CircuitViz key={circuit.id} id={circuit.id} />}
       </div>
     </div>
   );
