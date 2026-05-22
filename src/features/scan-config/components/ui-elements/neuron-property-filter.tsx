@@ -87,10 +87,10 @@ function DropdownSelect({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <button
         type="button"
-        className="rounded-full border border-gray-300 text-primary-8 font-semibold px-3 py-[6px] flex justify-between"
+        className="rounded-full w-full border border-gray-300 text-primary-8 font-semibold px-3 py-[6px] flex justify-between"
         onClick={() => setIsOpen(!isOpen)}
       >
         {placeholder}
