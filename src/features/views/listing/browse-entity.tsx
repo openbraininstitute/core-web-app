@@ -111,6 +111,12 @@ type Props = {
   /** whether to display the brain region dropdown */
   requireSpeciesSelector?: boolean;
   requireScopeSelector?: boolean;
+  requireEntityTypeSelector?: {
+    value: TExtendedEntitiesTypeDict;
+    options: Array<{ label: string; value: TExtendedEntitiesTypeDict; count?: number }>;
+    enabled: boolean;
+    onSelect: (value: TExtendedEntitiesTypeDict) => void;
+  };
   extraQueryParams?: Record<string, unknown>;
 };
 
@@ -132,6 +138,7 @@ export function BrowseEntityScope({
   allowQuery = true,
   requireSpeciesSelector,
   requireScopeSelector,
+  requireEntityTypeSelector,
   extraQueryParams,
 }: Props) {
   const requireBrainRegion =
@@ -422,6 +429,7 @@ export function BrowseEntityScope({
               container: classNames?.tableClassNames?.container,
             }}
             {...mainTableProps}
+            requireEntityTypeSelector={requireEntityTypeSelector}
             filterClassNames={classNames?.filterClassNames}
             // @ts-expect-error
             expandableOptions={expandableOptions}

@@ -12,7 +12,7 @@ function FilterBtn({ disabled, className, children, onClick }: HTMLProps<HTMLBut
   return (
     <button
       className={cn(
-        'border-neutral-2 flex items-center justify-between gap-10 rounded-xl border px-2 py-2',
+        'border-neutral-2 flex items-center justify-between gap-10 rounded-full border px-2 py-2',
         { 'cursor-not-allowed bg-neutral-100': disabled },
         { 'bg-white': !disabled },
         className
@@ -65,7 +65,7 @@ export function FilterControls({
           className="hover:bg-neutral-1 group min-w-max bg-white select-none"
         >
           <div className="flex items-center gap-1">
-            <span className="bg-primary-8 rounded-sm px-2.5 py-1 text-sm font-bold text-white">
+            <span className="bg-primary-8 rounded-full px-2.5 py-1 text-sm font-bold text-white">
               {selectedFiltersCount}
             </span>
             <div className="flex flex-col items-start">

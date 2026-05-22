@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 
 import { useScope } from '@/ui/hooks/use-scope';
 import { EntityDeleteButton } from '@/ui/segments/data-table/elements/delete-button';
@@ -78,12 +78,18 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
 }) {
   const { left, right } = useScrollNav('.ant-table-body');
   const { scope: currentScope } = useScope();
+  const prevScopeRef = useRef(currentScope);
 
+  // Clear row selection when workspace scope changes — not when selection callbacks
+  // or controlled `selectedRows` props change (that would loop with parent-owned state).
   useEffect(() => {
-    if (clearSelectedRows) {
-      clearSelectedRows();
+    if (prevScopeRef.current === currentScope) {
+      return;
     }
-  }, [clearSelectedRows]);
+
+    prevScopeRef.current = currentScope;
+    clearSelectedRows?.();
+  }, [clearSelectedRows, currentScope]);
 
   if (!visible) return null;
 
