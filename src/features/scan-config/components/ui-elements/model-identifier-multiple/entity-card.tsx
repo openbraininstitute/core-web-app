@@ -29,6 +29,8 @@ type TProps = {
   /** when false, hide remove even if `onRemove` is provided (min-1 entity rule) */
   showRemove?: boolean;
   className?: string;
+  onSelect?: () => void;
+  selected?: boolean;
 };
 
 export function ModelIdentifierEntityCard({
@@ -40,18 +42,39 @@ export function ModelIdentifierEntityCard({
   onRemove,
   showRemove = true,
   className,
+  onSelect,
+  selected = false,
 }: TProps) {
   const isSelection = variant === 'selection';
+  const isInteractive = Boolean(onSelect) && !disabled;
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: button cannot be a descendant of button
     <div
       id={`model-identifier-entity-card-${entityName}_${instanceId}`}
       data-testid={`model-identifier-entity-card`}
+      role={isInteractive ? 'button' : undefined}
+      tabIndex={isInteractive ? 0 : undefined}
+      onClick={isInteractive ? onSelect : undefined}
+      onKeyDown={
+        isInteractive
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onSelect?.();
+              }
+            }
+          : undefined
+      }
       className={cn(
         'grid h-auto w-full max-w-full shrink-0 min-w-0 grid-cols-[minmax(0,1fr)_auto]',
         'items-center gap-2 self-start overflow-hidden border border-gray-200 bg-white',
         isSelection ? 'rounded-full px-3 py-2.5 shadow-xs' : 'rounded-full px-4 py-2.5',
         'hover:border-gray-300 hover:shadow-xs hover:bg-gray-50',
+        {
+          'cursor-pointer': isInteractive,
+          'border-primary-8 bg-primary-1/30 ring-1 ring-primary-8/20': selected,
+        },
         className
       )}
       data-scan-config-block-element={`${ScanConfigUIElementDict.ModelIdentifierMultiple}-${variant}`}
@@ -72,7 +95,10 @@ export function ModelIdentifierEntityCard({
         {showRemove && !disabled && onRemove ? (
           <button
             type="button"
-            onClick={onRemove}
+            onClick={(event) => {
+              event.stopPropagation();
+              onRemove();
+            }}
             className="inline-flex size-6 shrink-0 items-center justify-center text-red-500 transition-colors hover:text-red-600 hover:bg-white rounded-full"
             aria-label={`Remove ${entityName}`}
           >

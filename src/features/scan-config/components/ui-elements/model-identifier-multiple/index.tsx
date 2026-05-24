@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react';
 
 import { WorkspaceSection } from '@/constants';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
+import { useSetScanConfigEntityPreview } from '@/features/scan-config/bridge/entity-preview';
 import { useScanConfigMainOverlay } from '@/features/scan-config/bridge/main-overlay-context';
 import { ModelIdentifierBrowseWidget } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/browse-widget';
 import {
@@ -54,6 +55,7 @@ export function ModelIdentifierMultiple({
   const { virtualLabId, projectId } = useWorkspace();
   const workflowField = useScanConfigWorkflowEditorField();
   const { openOverlay, closeOverlay } = useScanConfigMainOverlay();
+  const setEntityPreview = useSetScanConfigEntityPreview();
 
   const fieldSchema = paramSchema as unknown as Record<string, unknown>;
   const parsedValue = useMemo(
@@ -119,7 +121,7 @@ export function ModelIdentifierMultiple({
         })
       );
     },
-    [parsedValue, writeValue]
+    [parsedValue, setEntityPreview, writeValue]
   );
 
   const handleGroupNameChange = useCallback(
