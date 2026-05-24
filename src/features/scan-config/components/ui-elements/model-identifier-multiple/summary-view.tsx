@@ -20,6 +20,7 @@ import {
 } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Badge } from '@/ui/molecules/badge';
+import { ScrollableList } from '@/ui/molecules/scrollable';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
@@ -225,9 +226,9 @@ export function ModelIdentifierSummaryView({
           </Badge>
         </div>
 
-        <div className="flex w-full min-w-0 flex-col gap-2">
+        <ScrollableList itemCount={group.elements.length}>
           {renderEntityCards(group.elements, groupIndex)}
-        </div>
+        </ScrollableList>
 
         <ModelIdentifierAddActionButton
           label={addEntitiesLabel}
@@ -263,9 +264,9 @@ export function ModelIdentifierSummaryView({
         'rounded-2xl border border-neutral-2 bg-white p-4'
       )}
     >
-      <div className="flex w-full min-w-0 flex-col gap-2">
+      <ScrollableList itemCount={parsedValue.items.length}>
         {renderEntityCards(parsedValue.items)}
-      </div>
+      </ScrollableList>
       <ModelIdentifierAddActionButton
         label={addToScanLabel}
         disabled={disabled}
