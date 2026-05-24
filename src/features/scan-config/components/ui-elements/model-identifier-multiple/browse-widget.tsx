@@ -12,6 +12,8 @@ import { ModelIdentifierSelectionCart } from '@/features/scan-config/components/
 import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { Button } from '@/ui/molecules/button';
+import { useMiniDetailView } from '@/ui/segments/mini-detail-view/event';
+import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
@@ -68,6 +70,7 @@ export function ModelIdentifierBrowseWidget({
   onCancel,
 }: TProps) {
   const instanceId = useId();
+  const { mdv } = useMiniDetailView();
   const mergedInputs = useMemo(
     () => mergeConfigurationInputs({ paramSchema: fieldSchema, configurationInputs }),
     [configurationInputs, fieldSchema]
@@ -146,19 +149,26 @@ export function ModelIdentifierBrowseWidget({
   }
 
   return (
-    <div className="grid h-full min-h-0 grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] gap-3 overflow-hidden bg-gray-50 rounded-2xl border border-gray-50">
-      <ModelIdentifierSelectionCart
-        title={title}
-        selectionsByType={selectionsByType}
-        onRemoveEntity={handleRemoveEntity}
-        groupName={showGroupName ? groupName : undefined}
-        onGroupNameChange={setGroupName}
-        disabled={disabled}
-        confirmDisabled={selectedCount === 0}
-        onConfirm={handleConfirm}
-        onCancel={onCancel}
-        className="h-full"
-      />
+    <div
+      className={cn(
+        'grid h-full min-h-0 gap-3 overflow-hidden bg-gray-50 rounded-2xl border border-gray-50',
+        mdv ? 'grid-cols-1' : 'grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)]'
+      )}
+    >
+      {!mdv ? (
+        <ModelIdentifierSelectionCart
+          title={title}
+          selectionsByType={selectionsByType}
+          onRemoveEntity={handleRemoveEntity}
+          groupName={showGroupName ? groupName : undefined}
+          onGroupNameChange={setGroupName}
+          disabled={disabled}
+          confirmDisabled={selectedCount === 0}
+          onConfirm={handleConfirm}
+          onCancel={onCancel}
+          className="h-full"
+        />
+      ) : null}
 
       <div className="relative flex min-h-0 flex-col overflow-hidden bg-white pl-0">
         <Button
@@ -171,7 +181,14 @@ export function ModelIdentifierBrowseWidget({
           <CloseOutlined className="text-primary-8" />
         </Button>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-hidden [grid-template-areas:'body']">
+        <div
+          className={cn(
+            'grid min-h-0 flex-1 gap-2 overflow-hidden',
+            mdv
+              ? "grid-cols-[minmax(0,1fr)_minmax(30rem,44rem)] [grid-template-areas:'body_mini-view']"
+              : "grid-cols-1 [grid-template-areas:'body']"
+          )}
+        >
           <BrowseEntityScope
             id={instanceId}
             requireMiniDetailView

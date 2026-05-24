@@ -13,6 +13,10 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 import { useId } from 'react';
 
+import {
+  useScanConfigEntityPreview,
+  useSetScanConfigEntityPreview,
+} from '@/features/scan-config/bridge/entity-preview';
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
 import {
   getFromIdRefTypeBadgeLabel,
@@ -133,6 +137,8 @@ export function ModelIdentifierSummaryView({
   onRemoveGroup,
 }: Props) {
   const instanceId = useId();
+  const entityPreview = useScanConfigEntityPreview();
+  const setEntityPreview = useSetScanConfigEntityPreview();
   const mergedInputs = mergeConfigurationInputs({ paramSchema: fieldSchema, configurationInputs });
   const addEntitiesLabel = getAddEntitiesLabel(mergedInputs);
   const addToScanLabel = getAddToScanLabel(mergedInputs);
@@ -166,6 +172,18 @@ export function ModelIdentifierSummaryView({
           typeLabel={getFromIdRefTypeBadgeLabel(ref)}
           disabled={disabled}
           showRemove={canRemove}
+          selected={
+            entityPreview?.record.id === entity.id && entityPreview.dataType === entity.entityType
+          }
+          onSelect={() =>
+            setEntityPreview({
+              dataType: entity.entityType,
+              record: {
+                ...entity,
+                type: entity.type ?? entity.entityType,
+              },
+            })
+          }
           onRemove={() => onRemoveEntity(ref, groupIndex)}
         />
       );
