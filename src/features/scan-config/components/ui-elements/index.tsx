@@ -11,11 +11,13 @@ import {
   RootSelector,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import ModelIdentifier from '@/features/scan-config/components/ui-elements/model-identifier';
+import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import Reference from '@/features/scan-config/components/ui-elements/reference';
+import { VoltageDuration } from '@/features/scan-config/components/ui-elements/voltage-duration';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import {
   type Config,
@@ -28,11 +30,9 @@ import {
 } from '@/features/scan-config/types';
 import { isObject } from '@/util/type-guards';
 
-import ModelIdentifierMultiple from './model-identifier_multiple';
-import { VoltageDuration, type VoltageDurationState } from './voltage-duration';
-
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { VoltageDurationState } from '@/features/scan-config/components/ui-elements/voltage-duration';
 import type { Nullish } from '@/utils/type';
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
@@ -89,9 +89,17 @@ export function UIElementRender({
     .with(
       {
         paramSchema: { ui_element: ScanConfigUIElementDict.ModelIdentifierMultiple },
-        entity: P.nonNullable,
       },
-      ({ entity }) => <ModelIdentifierMultiple entities={entity} />
+      ({ paramSchema }) => (
+        <ModelIdentifierMultiple
+          fieldKey={k}
+          value={value}
+          state={state}
+          setState={setState}
+          paramSchema={paramSchema}
+          disabled={disabled}
+        />
+      )
     )
     .with(
       {

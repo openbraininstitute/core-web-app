@@ -3,7 +3,7 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { type QueryClient, useQuery } from '@tanstack/react-query';
 import { omit, pick } from 'es-toolkit/compat';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
@@ -23,8 +23,11 @@ import {
   type TBlock,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { applyWorkflowSessionSelectionPatch } from '@/features/scan-config/workflow/workflow-session-selection';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { WorkspaceContext } from '@/types/common';
 import type { Nullish } from '@/utils/type';
 
@@ -269,18 +272,55 @@ function buildInitialConfigState(
   return state;
 }
 
+function buildConfigState(
+  schema: ConfigSchema,
+  initialConfig: Config | undefined,
+  model: TSupportedEntitiesForScanConfiguration | Nullish,
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null,
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined
+): Config {
+  const baseConfig = buildInitialConfigState(schema, initialConfig, model);
+
+  if (!workflowSessionSelection || !resolveFromIdType) {
+    return baseConfig;
+  }
+
+  return applyWorkflowSessionSelectionPatch({
+    config: baseConfig,
+    schema,
+    sessionSelection: workflowSessionSelection,
+    resolveFromIdType,
+  });
+}
+
 export function useConfig({
   schema,
   initialConfig,
   model,
+  workflowSessionSelection,
+  resolveFromIdType,
 }: {
   schema: ConfigSchema;
   initialConfig?: Config;
   model: TSupportedEntitiesForScanConfiguration | Nullish;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 }) {
   const [configState, setConfigState] = useState<Config>(() =>
-    buildInitialConfigState(schema, initialConfig, model)
+    buildConfigState(schema, initialConfig, model, workflowSessionSelection, resolveFromIdType)
   );
+  const appliedInitialConfigRef = useRef<Config | undefined>(initialConfig);
+
+  useEffect(() => {
+    if (appliedInitialConfigRef.current === initialConfig) {
+      return;
+    }
+
+    appliedInitialConfigRef.current = initialConfig;
+    setConfigState(
+      buildConfigState(schema, initialConfig, model, workflowSessionSelection, resolveFromIdType)
+    );
+  }, [initialConfig, model, resolveFromIdType, schema, workflowSessionSelection]);
 
   return [configState, setConfigState] as const;
 }

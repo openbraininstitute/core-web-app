@@ -63,6 +63,7 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   workspace,
   allowDownload,
   allowDelete,
+  keepSelectionOnScopeChange = false,
 }: {
   clearSelectedRows: RenderButtonProps<T>['clearSelectedRows'];
   children?: ReactNode;
@@ -75,21 +76,23 @@ export default function TableControls<T extends EntityCoreIdentifiable>({
   // and does not means that the entity is downloadable or deletable
   allowDownload?: boolean;
   allowDelete?: boolean;
+  keepSelectionOnScopeChange?: boolean;
 }) {
   const { left, right } = useScrollNav('.ant-table-body');
   const { scope: currentScope } = useScope();
   const prevScopeRef = useRef(currentScope);
 
-  // Clear row selection when workspace scope changes — not when selection callbacks
-  // or controlled `selectedRows` props change (that would loop with parent-owned state).
+  // Clear row selection when workspace scope changes unless the parent opts in to keeping it
+  // (e.g. browse carts with parent-owned `selectedRows`).
   useEffect(() => {
-    if (prevScopeRef.current === currentScope) {
+    if (keepSelectionOnScopeChange || prevScopeRef.current === currentScope) {
+      prevScopeRef.current = currentScope;
       return;
     }
 
     prevScopeRef.current = currentScope;
     clearSelectedRows?.();
-  }, [clearSelectedRows, currentScope]);
+  }, [clearSelectedRows, currentScope, keepSelectionOnScopeChange]);
 
   if (!visible) return null;
 

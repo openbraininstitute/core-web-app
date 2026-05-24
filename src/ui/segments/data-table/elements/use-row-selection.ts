@@ -32,6 +32,8 @@ export type RenderButtonProps<T> = {
 export type TableRowSelectionProps<T extends { id: string }> = {
   selectedRows?: T[];
   onRowsSelected?: (rows: T[]) => void;
+  /** when true, workspace scope changes do not clear row selection */
+  keepSelectionOnScopeChange?: boolean;
 };
 
 /**

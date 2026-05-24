@@ -137,70 +137,62 @@ export function resolvePrimarySessionEntityId(
   return matchedRef?.id;
 }
 
-function buildInitializeConfigFromSessionSelection(opts: {
-  schema: ConfigSchema;
+function buildModelValueFromSessionSelection(opts: {
   sessionSelection: TWorkflowSessionSelectionPayload;
   resolveFromIdType: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
-}): Record<string, ConfigValue | ConfigValue[]> | null {
-  const modelProperty = findInitializeModelProperty(opts.schema);
-  if (!modelProperty) return null;
-
-  const { key: propertyKey } = modelProperty;
-  let modelValue: ConfigValue;
-
+}): ConfigValue | null {
   switch (opts.sessionSelection.mode) {
     case WorkflowSessionSelectionMode.Single:
-      modelValue = selectionRefToFromIdValue(
+      return selectionRefToFromIdValue(
         opts.sessionSelection.item as TWorkflowSessionSelectionRef,
         opts.resolveFromIdType
       );
-      break;
     case WorkflowSessionSelectionMode.List:
-      modelValue = opts.sessionSelection.items.map((item) =>
+      return opts.sessionSelection.items.map((item) =>
         selectionRefToFromIdValue(item as TWorkflowSessionSelectionRef, opts.resolveFromIdType)
       ) as ConfigValue;
-      break;
     case WorkflowSessionSelectionMode.Grouped:
-      modelValue = opts.sessionSelection.groups.map((group) => ({
+      return opts.sessionSelection.groups.map((group) => ({
         name: group.name ?? 'Default name',
         elements: group.items.map((item) =>
           selectionRefToFromIdValue(item as TWorkflowSessionSelectionRef, opts.resolveFromIdType)
         ),
       })) as unknown as ConfigValue;
-      break;
     default:
       return null;
   }
-
-  return { [propertyKey]: modelValue };
 }
 
-export function mergeWorkflowSessionSelectionIntoConfig(opts: {
+/** Overwrites only the schema's initialize model field with browse session selection. */
+export function applyWorkflowSessionSelectionPatch(opts: {
   config: Config;
   schema: ConfigSchema;
   sessionSelection: TWorkflowSessionSelectionPayload;
   resolveFromIdType: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 }): Config {
-  const initializePatch = buildInitializeConfigFromSessionSelection({
-    schema: opts.schema,
-    sessionSelection: opts.sessionSelection,
-    resolveFromIdType: opts.resolveFromIdType,
-  });
-
-  if (!initializePatch) {
+  const modelProperty = findInitializeModelProperty(opts.schema);
+  if (!modelProperty) {
     return opts.config;
   }
 
-  const existingInitialize = opts.config.initialize;
-  const initialize =
-    existingInitialize &&
-    typeof existingInitialize === 'object' &&
-    !Array.isArray(existingInitialize)
-      ? { ...existingInitialize, ...initializePatch }
-      : initializePatch;
+  const modelValue = buildModelValueFromSessionSelection({
+    sessionSelection: opts.sessionSelection,
+    resolveFromIdType: opts.resolveFromIdType,
+  });
+  if (modelValue === null) {
+    return opts.config;
+  }
+
+  const initialize = opts.config.initialize;
+  if (!initialize || typeof initialize !== 'object' || Array.isArray(initialize)) {
+    return opts.config;
+  }
 
   return {
     ...opts.config,
-    initialize: initialize as Config['initialize'],
+    initialize: {
+      ...initialize,
+      [modelProperty.key]: modelValue,
+    } as Config['initialize'],
   };
 }
