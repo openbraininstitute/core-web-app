@@ -38,8 +38,6 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceSection } from '@/constants';
 import type { FeatureFlags, FlagKey } from '@/features/feature-flags/flags';
-import type { TScanConfigWorkflowDefinition } from '@/features/scan-config/workflow/types';
-import type { TScanConfigRegistryConfig } from './scan-config-binding';
 
 const featuresSatisfied = (
   required: readonly FlagKey[] | undefined,
@@ -169,31 +167,10 @@ export function getWorkflow(opts: {
   );
 }
 
-function collectRegistryWorkflows(activity: TActivityEntry): readonly IWorkflowDescriptor[] {
-  const browseWorkflows = activity.browseWorkflows ?? [];
-  return [...activity.workflows, ...browseWorkflows];
-}
-
-/** Resolves registry scan-config config for a workflow definition id. */
-export function findScanConfigRegistryByDefinition(
-  definition: TScanConfigWorkflowDefinition
-): TScanConfigRegistryConfig | null {
-  for (const activity of Object.values(ActivityRegistry)) {
-    for (const workflow of collectRegistryWorkflows(activity)) {
-      const scanConfig = workflow.scanConfig;
-      if (scanConfig?.definition.id !== definition.id) {
-        continue;
-      }
-
-      return {
-        configureBinding: scanConfig.configureBinding,
-        schemaName: scanConfig.schemaName,
-      };
-    }
-  }
-
-  return null;
-}
+export {
+  findScanConfigRegistryByDefinition,
+  findScanConfigRegistryByTargetType,
+} from './scan-config-registry';
 
 export function getSourceType(opts: {
   activity: TActivityValue | string | null | undefined;

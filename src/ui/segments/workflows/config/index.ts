@@ -1,7 +1,6 @@
 export { ActivityRegistry, ActivityValues } from './activities';
 export { EntityTypeCatalog } from './entity-types';
 export {
-  findScanConfigRegistryByDefinition,
   getActivity,
   getBaseModelType,
   getConfigurationInputs,
@@ -23,7 +22,9 @@ export {
 export {
   buildConfigureUrlForEntity,
   buildScanConfigConfigureHref,
+  buildSimulateConfigureUrlFromDataViewEntity,
   buildWorkflowStartingPageUrl,
+  resolveSimulateSourceTypeFromDataView,
 } from './routes';
 export {
   buildEmSynapseMappingConfigureBinding,
@@ -39,6 +40,10 @@ export {
   ScanConfigFromIdType,
   ScanConfigGeneratedApiPath,
 } from './scan-config-binding';
+export {
+  findScanConfigRegistryByDefinition,
+  findScanConfigRegistryByTargetType,
+} from './scan-config-registry';
 export {
   EntityGroupDict,
   WORKFLOW_SESSION_ID_SEARCH_PARAM,

@@ -72,7 +72,7 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
     scanConfig: {
       definition: simulateSingleNeuronCircuitWorkflow,
-      schemaName: SchemaNameDict.CircuitSimulationScanConfig,
+      schemaName: SchemaNameDict.MEModelWithSynapsesCircuitSimulationScanConfig,
       configureBinding: circuitSimulationConfigureBinding(
         ExtendedEntitiesTypeDict.MEModelWithSynapses
       ),

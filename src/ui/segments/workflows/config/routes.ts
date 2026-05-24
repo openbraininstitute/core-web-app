@@ -1,4 +1,7 @@
+import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
+import { WorkflowActivityDictValue } from '@/constants';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 import { WorkflowSchemaSelectionMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import {
@@ -8,13 +11,17 @@ import {
   type TWorkflowSessionSelectionRef,
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
-import { getWorkflow } from '@/ui/segments/workflows/config/helpers';
+import { getTargetType, getWorkflow } from '@/ui/segments/workflows/config/helpers';
 import {
   type TWorkflowInitialStage,
   WORKFLOW_SESSION_ID_SEARCH_PARAM,
   WorkflowInitialStageDict,
   WorkflowInitialStagePolicyDict,
 } from '@/ui/segments/workflows/config/types';
+import {
+  PanelQueryParam,
+  WorkflowSimulatePanels,
+} from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import { makePathParamUrlFromExtendedType } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -266,7 +273,74 @@ export function buildWorkflowStartingPageUrl({
   return appendQuery(pathname, query);
 }
 
-/** Scan-config configure URL; session id in path. */
+/** scan-config configure URL */
+/** maps a data-view entity to the simulate workflow source type */
+// TODO: make it more robust, move this to the domain configuration
+export function resolveSimulateSourceTypeFromDataView(
+  extendedType: TExtendedEntitiesTypeDict,
+  entity: { scale?: ICircuit['scale'] }
+): TExtendedEntitiesTypeDict | null {
+  if (extendedType === ExtendedEntitiesTypeDict.Circuit && entity.scale) {
+    if (entity.scale === CircuitScaleDictionary.SmallMicrocircuit) {
+      return ExtendedEntitiesTypeDict.SmallMicrocircuit;
+    }
+    if (entity.scale === CircuitScaleDictionary.PairNeuron) {
+      return ExtendedEntitiesTypeDict.PairedNeuronCircuit;
+    }
+    if (entity.scale === CircuitScaleDictionary.Single) {
+      return ExtendedEntitiesTypeDict.MEModelWithSynapses;
+    }
+    if (entity.scale === CircuitScaleDictionary.Microcircuit) {
+      return ExtendedEntitiesTypeDict.Microcircuit;
+    }
+    if (entity.scale === CircuitScaleDictionary.Region) {
+      return ExtendedEntitiesTypeDict.BrainRegion;
+    }
+    return null;
+  }
+
+  return extendedType;
+}
+
+/** configure URL for "simulate" on entity detail pages (data view action menu) */
+export function buildSimulateConfigureUrlFromDataViewEntity({
+  workspace,
+  extendedType,
+  entityId,
+  entity,
+}: {
+  workspace: WorkspaceContext;
+  extendedType: TExtendedEntitiesTypeDict;
+  entityId: string;
+  entity: { scale?: ICircuit['scale'] };
+}): string | null {
+  const sourceType = resolveSimulateSourceTypeFromDataView(extendedType, entity);
+  if (!sourceType) {
+    return null;
+  }
+
+  const targetType = getTargetType({
+    activity: WorkflowActivityDictValue.simulate,
+    sourceType,
+  });
+
+  if (!targetType) {
+    return null;
+  }
+
+  return buildConfigureUrlForEntity({
+    activity: WorkflowActivityDictValue.simulate,
+    targetType,
+    workspace,
+    entityId,
+    entityType: sourceType,
+    query: {
+      [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
+      sessionId: createWorkflowSessionId(),
+    },
+  });
+}
+
 export function buildScanConfigConfigureHref({
   activity,
   targetType,
