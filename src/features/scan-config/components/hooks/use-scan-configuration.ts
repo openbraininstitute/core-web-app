@@ -38,6 +38,8 @@ import {
   type TScanConfigRegistryConfig,
 } from '@/ui/segments/workflows/config/scan-config-binding';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
 
 export type TUseScanConfigurationParams = {
@@ -52,6 +54,8 @@ export type TUseScanConfigurationParams = {
   activity?: TScanConfigActivity;
   campaignOriginAction?: TScanConfigCampaignOriginActionDict;
   scanConfig: TScanConfigRegistryConfig;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 };
 
 export type TScanConfigurationReadyState = {
@@ -70,6 +74,8 @@ export type TScanConfigurationReadyState = {
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   generatedEndpoint: string;
   aiEnabled: boolean;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 };
 
 /**
@@ -95,6 +101,8 @@ export function useScanConfiguration({
   activity = ScanConfigActivity.Simulate,
   campaignOriginAction = ScanConfigCampaignOriginActionDict.Task,
   scanConfig,
+  workflowSessionSelection,
+  resolveSessionFromIdType,
 }: TUseScanConfigurationParams): TUseScanConfigurationResult {
   const shouldFetchEntity = !entityFromProps && !!entityId;
 
@@ -215,6 +223,8 @@ export function useScanConfiguration({
         schemaMappingConfig,
         generatedEndpoint: resolved.endpoint,
         aiEnabled,
+        workflowSessionSelection,
+        resolveSessionFromIdType,
       },
     };
   }, [
@@ -228,9 +238,11 @@ export function useScanConfiguration({
     isLoading,
     projectId,
     readOnly,
+    resolveSessionFromIdType,
     resolved,
     schema,
     schemaMappingConfig,
     virtualLabId,
+    workflowSessionSelection,
   ]);
 }

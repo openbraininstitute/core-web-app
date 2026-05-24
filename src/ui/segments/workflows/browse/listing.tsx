@@ -2,7 +2,7 @@
 
 import { useRouter } from '@bprogress/next';
 import { notFound, useSearchParams } from 'next/navigation';
-import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   type TWorkflowSchemaSelection,
@@ -13,7 +13,6 @@ import {
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { useWorkflowSelectionConfig } from '@/ui/segments/workflows/browse/use-workflow-selection-config';
@@ -124,7 +123,6 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const searchParams = useSearchParams();
-  const { scope } = useScope();
   const [selectionsByType, setSelectionsByType] = useState<TWorkflowBrowseSelectionsByType>({});
 
   const { workflow, configurationInputs, selectionConfig, isLoading } = useWorkflowSelectionConfig({
@@ -150,17 +148,6 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     () => Object.values(selectionCountsByType).reduce((sum, count) => sum + (count ?? 0), 0),
     [selectionCountsByType]
   );
-
-  const prevScopeRef = useRef(scope);
-
-  useEffect(() => {
-    if (!isMultiEntityBrowse || prevScopeRef.current === scope) {
-      return;
-    }
-
-    prevScopeRef.current = scope;
-    setSelectionsByType({});
-  }, [isMultiEntityBrowse, scope]);
 
   const defaultEntityType = useMemo(() => {
     return (
@@ -324,6 +311,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         extraQueryParams={extraQueryParams}
         mainTableProps={{
           selectionType: tableSelectionType,
+          ...(isMultiEntityBrowse ? { keepSelectionOnScopeChange: true } : {}),
           ...(trackSelectionsByEntityType
             ? {
                 selectedRows: activeSelectedRows,

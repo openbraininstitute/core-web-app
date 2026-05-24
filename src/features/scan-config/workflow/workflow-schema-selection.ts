@@ -180,6 +180,58 @@ function hasNamedTupleShape(property: Record<string, unknown>): boolean {
   return JSON.stringify(property).includes('NamedTuple');
 }
 
+function hasTupleShape(property: Record<string, unknown>): boolean {
+  const serialized = JSON.stringify(property);
+  if (serialized.includes('NamedTuple')) {
+    return false;
+  }
+
+  return serialized.includes('prefixItems') || serialized.includes('"tuple"');
+}
+
+export const ModelIdentifierFieldStorageMode = {
+  List: 'list',
+  Tuple: 'tuple',
+  Grouped: 'grouped',
+} as const;
+
+export type TModelIdentifierFieldStorageMode =
+  (typeof ModelIdentifierFieldStorageMode)[keyof typeof ModelIdentifierFieldStorageMode];
+
+export function resolveModelIdentifierFieldStorageMode(
+  paramSchema: Record<string, unknown>
+): TModelIdentifierFieldStorageMode {
+  if (hasNamedTupleShape(paramSchema)) {
+    return ModelIdentifierFieldStorageMode.Grouped;
+  }
+
+  if (hasTupleShape(paramSchema)) {
+    return ModelIdentifierFieldStorageMode.Tuple;
+  }
+
+  return ModelIdentifierFieldStorageMode.List;
+}
+
+export function entityTypeForScanConfigFromIdType(
+  fromIdType: string
+): TExtendedEntitiesTypeDict | undefined {
+  if (!isScanConfigFromIdType(fromIdType)) {
+    return undefined;
+  }
+
+  return scanConfigFromIdTypeToEntityType[fromIdType];
+}
+
+export function acceptedEntityTypesFromField(
+  paramSchema: Record<string, unknown>
+): readonly TExtendedEntitiesTypeDict[] {
+  return mapScanConfigFromIdTypesToEntityTypes(readAcceptedFromIdTypes(paramSchema));
+}
+
+export function isScanConfigFromIdTypeValue(value: string): value is TScanConfigFromIdType {
+  return isScanConfigFromIdType(value);
+}
+
 export function scanConfigFromIdTypeForEntityType(
   entityType: TExtendedEntitiesTypeDict
 ): string | undefined {

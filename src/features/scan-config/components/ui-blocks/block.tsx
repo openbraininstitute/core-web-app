@@ -55,7 +55,7 @@ export default function Block({
 
   return (
     <div
-      className="flex flex-col gap-2"
+      className="flex w-full min-w-0 max-w-full flex-col gap-2"
       data-scan-config-block={ScanConfigUIElementDict.BlockSingle}
     >
       {!hideTitle && (
@@ -108,7 +108,7 @@ export default function Block({
                 <div
                   key={k}
                   className={cn(
-                    'w-full flex',
+                    'flex w-full min-w-0 max-w-full',
                     isBooleanInput ? 'flex-row items-center' : 'flex-col'
                   )}
                   data-scan-config-block-element={blockElementSchema.ui_element}
@@ -127,11 +127,11 @@ export default function Block({
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div>
-                        <div className="mb-1 flex items-center gap-1">
+                      <div className="w-full min-w-0 max-w-full">
+                        <div className="mb-1 w-full min-w-0 max-w-full">
                           <div
                             className={cn(
-                              'border rounded-lg flex-1 mr-1',
+                              'w-full min-w-0 max-w-full rounded-lg border',
                               fieldBorderClass,
                               !fieldBorderClass && 'border-transparent'
                             )}

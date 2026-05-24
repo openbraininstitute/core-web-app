@@ -258,6 +258,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
   selectionType,
   onRowsSelected,
   selectedRows,
+  keepSelectionOnScopeChange,
   scrollable = true,
   dataKey,
   expandableConfig,
@@ -337,6 +338,7 @@ export function WrapperTable<T extends EntityCoreIdentifiable>({
         workspace={workspace}
         allowDownload={allowDownload}
         allowDelete={allowDelete}
+        keepSelectionOnScopeChange={keepSelectionOnScopeChange}
       >
         {controls}
       </TableControls>
