@@ -10,7 +10,7 @@ import {
   type MechanismVariablesRoot,
   RootSelector,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
-import ModelIdentifier from '@/features/scan-config/components/ui-elements/model-identifier';
+import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
 import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import NeuronIds from '@/features/scan-config/components/ui-elements/neuron-ids';
@@ -84,7 +84,7 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.ModelIdentifier },
         entity: P.nonNullable,
       },
-      ({ entity }) => <ModelIdentifier entity={entity} />
+      ({ entity }) => <ModelIdentifier entity={entity} value={value} />
     )
     .with(
       {
