@@ -12,7 +12,7 @@ function FilterBtn({ disabled, className, children, onClick }: HTMLProps<HTMLBut
   return (
     <button
       className={cn(
-        'border-neutral-2 flex items-center justify-between gap-10 rounded-full border px-2 py-2',
+        'border-neutral-2 flex items-center justify-between gap-10 rounded-full border px-2 py-2 min-h-12',
         { 'cursor-not-allowed bg-neutral-100': disabled },
         { 'bg-white': !disabled },
         className
@@ -71,8 +71,8 @@ export function FilterControls({
             <div className="flex flex-col items-start">
               <span
                 className={classNames(
-                  'text-sm leading-5 font-bold',
-                  disabled ? 'text-primary-8' : 'text-primary-8'
+                  'text-base leading-5 font-light',
+                  disabled ? 'text-neutral-2' : 'text-primary-9'
                 )}
               >
                 Filters

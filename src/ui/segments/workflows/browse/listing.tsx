@@ -353,7 +353,10 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
             rounded
             variant="default"
             disabled={totalSelectedCount === 0}
-            className={cn('h-12 min-w-64 px-10 text-lg font-bold shadow-skmp-s')}
+            className={cn(
+              'h-12 min-w-64 px-10 text-lg font-bold shadow-skmp-s',
+              'disabled:bg-neutral-2 disabled:text-neutral-4!'
+            )}
             onClick={handleConfigureSelected}
           >
             Use selection {totalSelectedCount > 0 ? `(${totalSelectedCount})` : ''}

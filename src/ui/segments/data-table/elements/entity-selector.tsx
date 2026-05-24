@@ -26,7 +26,7 @@ function EntityTypeCountBadge({ count, className }: { count: number; className?:
       rounded
       variant="default"
       className={cn(
-        'h-6 min-w-6 border-transparent bg-primary-9 px-2 text-xs font-bold text-white',
+        'border-transparent bg-primary-8 h-7 min-w-7 px-2.5 py-1 text-xs font-bold text-white',
         className
       )}
     >
@@ -46,10 +46,15 @@ export function EntityTypeSelector({ options, value, onSelect }: EntityTypeSelec
 
   return (
     <Select value={value} onValueChange={handleValueChange}>
-      <SelectTrigger className="max-w-max min-w-36 max-h-12! min-h-12! rounded-full border-neutral-2 bg-white text-lg shadow-none py-0! px-6">
+      <SelectTrigger
+        className={cn(
+          'max-w-max min-w-36 max-h-12! min-h-12! rounded-full text-primary-9! border-neutral-2 bg-white text-base shadow-none py-0! px-6 pl-2 ring-0',
+          'focus-visible:ring-0'
+        )}
+      >
         <span className="flex items-center gap-2">
-          <span>{selectedOption?.label ?? 'Select entity type'}</span>
           {selectedCount != null ? <EntityTypeCountBadge count={selectedCount} /> : null}
+          <span>{selectedOption?.label ?? 'Select entity type'}</span>
         </span>
       </SelectTrigger>
       <SelectContent
@@ -66,11 +71,11 @@ export function EntityTypeSelector({ options, value, onSelect }: EntityTypeSelec
               value={optionValue}
               textValue={label}
               className={cn(
-                'text-primary-8! text-lg font-bold cursor-pointer rounded-xl',
+                'text-primary-8! text-lg font-light cursor-pointer rounded-xl gap-5',
                 'data-highlighted:text-primary-7!'
               )}
             >
-              <EntityTypeCountBadge count={count ?? 0} className="ml-auto" />
+              <EntityTypeCountBadge count={count ?? 0} className="ml-auto mr-0.5" />
             </SelectItem>
           );
         })}

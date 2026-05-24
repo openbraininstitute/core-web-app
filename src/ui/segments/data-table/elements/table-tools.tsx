@@ -156,7 +156,7 @@ export function TableTools({
       ) : null}
       {showRightColumn ? (
         <div
-          className="flex flex-wrap items-center justify-end gap-3 self-end [grid-area:right]"
+          className="flex flex-wrap items-center justify-end gap-1 self-end [grid-area:right]"
           style={toolbarGrid.hasLeftColumn ? { gridRow: '1 / -1' } : undefined}
         >
           {showEntityType && entityTypeSelector ? (
