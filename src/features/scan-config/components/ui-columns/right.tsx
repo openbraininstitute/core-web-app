@@ -1,6 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
@@ -52,6 +54,15 @@ export function Right({
 }: Props) {
   const entityPreview = useScanConfigEntityPreview();
   const setEntityPreview = useSetScanConfigEntityPreview();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const sessionId = params?.id;
+  const origin = searchParams.get('origin') ?? '';
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: clear stale preview when route session or entity changes
+  useEffect(() => {
+    setEntityPreview(null);
+  }, [sessionId, origin, entity?.id, setEntityPreview]);
 
   if (entityPreview) {
     return (

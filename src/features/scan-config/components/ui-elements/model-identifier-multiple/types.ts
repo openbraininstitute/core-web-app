@@ -1,14 +1,7 @@
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
+import type { TFromIdRef } from '@/features/scan-config/helpers';
 import type { TModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
-
-/** obiOne FromID reference written under an `initialize` model field */
-export type TFromIdRef = {
-  /** fromID const string (e.g. `CellMorphologyFromID`) */
-  type: string;
-  /** entity uuid */
-  id_str: string;
-};
 
 /** namedTuple group shape for grouped `model_identifier_multiple` fields */
 export type TModelIdentifierGroup = {

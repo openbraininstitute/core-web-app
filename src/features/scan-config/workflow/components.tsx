@@ -111,6 +111,9 @@ function ScanConfigWorkflowEditor() {
   return (
     <ScanConfigWorkflowEditorFieldProvider value={workflowFieldContext}>
       <ScanConfigContainer
+        // NOTE: this will not reset the atoms
+        // in another PR, i will add a proper atomFamily for the atoms used within the scan-config
+        key={`${entity.workflowSessionId ?? ''}_${campaign.origin ?? ''}`}
         entity={entity.entity}
         entityId={entity.entityId}
         virtualLabId={workspace.virtualLabId}

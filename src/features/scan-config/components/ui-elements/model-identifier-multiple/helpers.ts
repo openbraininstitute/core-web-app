@@ -1,6 +1,4 @@
 /**
- * @module helpers
- *
  * parse/serialize, FromID mapping, and browse-cart utilities for
  * `model_identifier_multiple`.
  *
@@ -10,6 +8,7 @@
 
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { isFromIdRef, type TFromIdRef } from '@/features/scan-config/helpers';
 import {
   acceptedEntityTypesFromField,
   entityTypeForScanConfigFromIdType,
@@ -18,35 +17,25 @@ import {
   resolveModelIdentifierFieldStorageMode,
   scanConfigFromIdTypeForEntityType,
 } from '@/features/scan-config/workflow/workflow-schema-selection';
+import {
+  type TWorkflowSessionSelectionPayload,
+  type TWorkflowSessionSelectionRef,
+  WorkflowSessionSelectionMode,
+} from '@/features/scan-config/workflow/workflow-session-selection';
 import { getEntityMeta } from '@/ui/segments/workflows/config/helpers';
 import { resolveScanConfigFromIdType } from '@/ui/segments/workflows/config/scan-config-binding';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type {
-  TFromIdRef,
   TModelIdentifierBrowseSelectionsByType,
   TModelIdentifierConfigurationInput,
   TModelIdentifierGroup,
   TModelIdentifierParsedValue,
 } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/types';
 import type { ConfigValue } from '@/features/scan-config/types';
-import type {
-  TWorkflowSessionSelectionPayload,
-  TWorkflowSessionSelectionRef,
-} from '@/features/scan-config/workflow/workflow-session-selection';
 import type { TScanConfigConfigureBinding } from '@/ui/segments/workflows/config/scan-config-binding';
 import type { IWorkflowConfigurationInput } from '@/ui/segments/workflows/config/types';
-
-/** type guard for ObiOne FromID ref objects (`type` + non-empty `id_str`). */
-export function isFromIdRef(value: unknown): value is TFromIdRef {
-  return (
-    isPlainObject(value) &&
-    typeof value.type === 'string' &&
-    typeof value.id_str === 'string' &&
-    value.id_str.length > 0
-  );
-}
 
 /**
  * Type guard to determine if a value conforms to the TModelIdentifierGroup interface.
@@ -248,38 +237,6 @@ export function selectionsByTypeToFromIdRefs(
   return refs;
 }
 
-/**
- * uppercase badge label from extended entity type (entity-configuration domain title)
- *
- * used in browse cart where selections are keyed by browse entity type
- */
-export function getEntityTypeTagLabel(entityType: TExtendedEntitiesTypeDict): string {
-  const domainTitle = getEntityByExtendedType({ type: entityType })?.title;
-  const label = domainTitle ?? getEntityMeta(entityType)?.label ?? entityType;
-  return label.replace(/\s+/g, ' ').toUpperCase();
-}
-
-/**
- * uppercase badge label derived from a stored FromID ref (summary column)
- *
- * maps FromID → entity type via schema rules, not session storage types
- */
-export function getFromIdRefTypeBadgeLabel(ref: TFromIdRef): string {
-  const entityType = entityTypeForScanConfigFromIdType(ref.type);
-  if (entityType) {
-    return getEntityTypeTagLabel(entityType);
-  }
-
-  const domainTitle = getEntityByExtendedType({
-    type: ref.type as TExtendedEntitiesTypeDict,
-  })?.title;
-  if (domainTitle) {
-    return domainTitle.toUpperCase();
-  }
-
-  return ref.type.replace(/_/g, ' ').toUpperCase();
-}
-
 /** total entity count across all types in the browse cart */
 export function countSelectedEntities(
   selectionsByType: TModelIdentifierBrowseSelectionsByType
@@ -300,11 +257,11 @@ export function collectWorkflowSessionRefs(
   }
 
   switch (sessionSelection.mode) {
-    case 'single':
+    case WorkflowSessionSelectionMode.Single:
       return [sessionSelection.item as TWorkflowSessionSelectionRef];
-    case 'list':
+    case WorkflowSessionSelectionMode.List:
       return sessionSelection.items as TWorkflowSessionSelectionRef[];
-    case 'grouped':
+    case WorkflowSessionSelectionMode.Grouped:
       return sessionSelection.groups.flatMap(
         (group) => group.items as TWorkflowSessionSelectionRef[]
       );

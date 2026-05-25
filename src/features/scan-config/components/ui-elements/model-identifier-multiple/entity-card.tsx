@@ -1,7 +1,6 @@
 'use client';
 
 /**
- * @module entity-card
  *
  * pill row showing a resolved entity name, type badge, and optional remove action
  * used in both the configure summary column and the browse overlay cart
@@ -21,7 +20,7 @@ type TProps = {
   /**
    * visual variant:
    * - `summary`: middle-column configure view (default)
-   * - `selection`: browse overlay cart (slightly muted badge)
+   * - `selection`: browse overlay cart
    */
   variant?: 'summary' | 'selection';
   disabled?: boolean;

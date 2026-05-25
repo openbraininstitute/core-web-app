@@ -20,6 +20,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { WorkspaceContext } from '@/types/common';
 import type { IWorkflowDescriptor, TActivityValue } from '@/ui/segments/workflows/config/types';
 
+/** minimal row shape shared by workflow activity tables (campaigns, task configs) */
 export type TWorkflowActivityTableRow = {
   id: string;
   type: TEntityTypeDict;
@@ -42,6 +43,32 @@ function usesStaticScanConfigConfigureRoute(workflow: IWorkflowDescriptor | null
   );
 }
 
+/**
+ * resolves the primary entity reference used to build a scan-config configure URL
+ * from a workflow activities-table row
+ *
+ * this helper only determines whether configure/duplicate is **allowed** and which
+ * entity id satisfies the workflow session route. It does **not** seed the editor
+ * form: resume and duplicate flows pass {@link ScanConfigOriginSearchParam} so the
+ * origin campaign's stored form (including grouped model inputs) is loaded instead
+ *
+ * @param workflow: registry descriptor for the list's target workflow
+ * @param row: selected activities-table record
+ * @returns entity id and optional browse type for URL construction, or `null` when
+ *   the row cannot be opened in configure (unsupported type or missing linkage)
+ *
+ * @remarks
+ * **Task config rows** (`EntityTypeDict.TaskConfig`):
+ * uses `inputs[0].id` as the session primary entity. `entityType` falls back through
+ * `configureBinding.browseType`, then `configurationInputs[0].type`, then `sourceType`
+ * multi-input workflows (e.g. EM synapse mapping) may list more inputs on the row,
+ * those are not reflected here because the origin campaign config is authoritative
+ *
+ * simulation campaign rows (EntityTypeDict.SimulationCampaign):
+ * - static-type scan-config workflows: uses the campaign row id directly
+ * - session-based workflows: uses `entity_id` (the underlying model entity) with
+ *   `workflow.sourceType`
+ */
 function resolveActivityRowEntityRef(
   workflow: IWorkflowDescriptor,
   row: TWorkflowActivityTableRow
@@ -75,7 +102,7 @@ function resolveActivityRowEntityRef(
   return null;
 }
 
-/** Maps an activities-table row to scan-config configure params via the workflow registry. */
+/** maps an activities-table row to scan-config configure params via the workflow registry */
 export function resolveWorkflowActivityConfigureRequest(opts: {
   activity: TActivityValue;
   listEntityType: TExtendedEntitiesTypeDict;
@@ -100,6 +127,16 @@ export function resolveWorkflowActivityConfigureRequest(opts: {
   };
 }
 
+/**
+ * builds a scan-config configure URL for an activities-table row (configure or duplicate)
+ *
+ * sets {@link ScanConfigOriginSearchParam} to the row id so the editor loads the stored
+ * campaign form. uses {@link buildConfigureUrlForEntity} with `skipSelectionPersist: true`
+ * so no partial browse selection is written to `sessionStorage`,
+ * form init skips session patching when `?origin=` is present
+ *
+ * @returns configure href, or `null` when the row is not a supported scan-config target
+ */
 function buildConfigureUrlForActivityRow(opts: {
   activity: TActivityValue;
   listEntityType: TExtendedEntitiesTypeDict;
@@ -115,6 +152,7 @@ function buildConfigureUrlForActivityRow(opts: {
   return buildConfigureUrlForEntity({
     ...request,
     workspace: opts.workspace,
+    skipSelectionPersist: true,
     query: { ...opts.query, [ScanConfigOriginSearchParam]: opts.row.id },
   });
 }
@@ -149,7 +187,7 @@ function buildDetailViewBasePath(
   return `${config.ROOT_ROUTE}/${workspace.virtualLabId}/${workspace.projectId}/workflows/view/${kebabCase(listEntityType)}/${rowId}`;
 }
 
-/** Detail-view URL for the configuration tab (legacy non-scan-config entities). */
+/** detail-view URL for the configuration tab (legacy non-scan-config entities) */
 export function buildWorkflowActivityDetailConfigurationHref(opts: {
   workspace: WorkspaceContext;
   listEntityType: TExtendedEntitiesTypeDict;
@@ -169,7 +207,7 @@ export function buildWorkflowActivityDetailConfigurationHref(opts: {
   return base;
 }
 
-/** Detail-view URL for results or related artifacts. */
+/** detail-view URL for results or related artifacts */
 export function buildWorkflowActivityDetailResultsHref(opts: {
   workspace: WorkspaceContext;
   listEntityType: TExtendedEntitiesTypeDict;
@@ -189,7 +227,7 @@ export function buildWorkflowActivityDetailResultsHref(opts: {
   return base;
 }
 
-/** Prefer registry-based configure URL; fall back to detail-view configuration tab. */
+/** prefer registry-based configure URL; fall back to detail-view configuration tab */
 export function buildWorkflowActivityConfigurationHref(opts: {
   activity: TActivityValue;
   listEntityType: TExtendedEntitiesTypeDict;
@@ -207,6 +245,15 @@ export function buildWorkflowActivityConfigurationHref(opts: {
   );
 }
 
+/**
+ * builds the href for duplicating a workflow activity row into a new configure session
+ *
+ * scan-config campaigns delegate to {@link buildConfigureUrlForActivityRow} (origin +
+ * empty session slot), Ion channel modeling uses a static configure route without a
+ * workflow session id in the path.
+ *
+ * @returns duplicate configure href, or `null` when duplication is not supported for the row
+ */
 export function buildWorkflowActivityDuplicateHref(opts: {
   activity: TActivityValue;
   listEntityType: TExtendedEntitiesTypeDict;
