@@ -112,6 +112,7 @@ function ScanConfigTemplateContent({
     schema,
     initialConfig,
     model: entity,
+    origin,
     workflowSessionSelection,
     resolveFromIdType: resolveSessionFromIdType,
   });

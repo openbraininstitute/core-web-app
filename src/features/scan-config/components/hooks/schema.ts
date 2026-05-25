@@ -153,7 +153,7 @@ export async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
   const json = await res.json();
   const dereferenced = await $RefParser.dereference(json);
 
-  // @ts-expect-error
+  // @ts-expect-error: dereferenced is a JSONSchema6 object, but we know it has the components property
   const theSchema = dereferenced.components.schemas[schemaName] as ConfigSchema;
 
   return theSchema;
@@ -272,14 +272,73 @@ function buildInitialConfigState(
   return state;
 }
 
+/**
+ * determines whether browse {@link applyWorkflowSessionSelectionPatch session selection}
+ * should overwrite the initialize model field when building editor state
+ *
+ * @returns `true` only for fresh configure flows (no origin campaign). Returns `false`
+ *   when session/resolver inputs are missing, or when an origin campaign config is
+ *   already available
+ *
+ * @remarks
+ * resume and duplicate URLs pass `?origin=` and load `initialConfig` from the stored
+ * campaign form. Patching session selection on top would replace grouped model inputs
+ * (e.g. EM synapse mapping neuron sets) with a partial browse selection
+ */
+function shouldApplyWorkflowSessionSelection(opts: {
+  origin?: string;
+  initialConfig?: Config;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+}): boolean {
+  if (!opts.workflowSessionSelection || !opts.resolveFromIdType) {
+    return false;
+  }
+
+  if (opts.origin || opts.initialConfig) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * builds the scan-config editor state from schema defaults, optional origin form,
+ * entity model, and optional workflow browse session selection
+ *
+ * session selection is applied only when {@link shouldApplyWorkflowSessionSelection}
+ * returns `true`; otherwise the origin/initial form is returned unchanged
+ *
+ * @param schema: scan-config schema
+ * @param initialConfig: optional origin form
+ * @param model: entity model
+ * @param workflowSessionSelection: optional workflow browse session selection
+ * @param resolveFromIdType: optional function to resolve the from_id type from the browse type
+ * @param origin: optional campaign id from `?origin=` when resuming or duplicating
+ * @returns the scan-config editor state
+ */
 function buildConfigState(
   schema: ConfigSchema,
   initialConfig: Config | undefined,
   model: TSupportedEntitiesForScanConfiguration | Nullish,
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null,
-  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined
+  resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined,
+  origin?: string
 ): Config {
   const baseConfig = buildInitialConfigState(schema, initialConfig, model);
+
+  // new browse → configure: seed the initialize model field from sessionStorage
+  // duplicate/resume: keep origin campaign form; session selection is route-only
+  if (
+    !shouldApplyWorkflowSessionSelection({
+      origin,
+      initialConfig,
+      workflowSessionSelection,
+      resolveFromIdType,
+    })
+  ) {
+    return baseConfig;
+  }
 
   if (!workflowSessionSelection || !resolveFromIdType) {
     return baseConfig;
@@ -293,21 +352,44 @@ function buildConfigState(
   });
 }
 
+/**
+ * hook for the scan-config form blob (`config` + `setConfig`).
+ *
+ * @param origin: campaign id from `?origin=` when resuming or duplicating
+ * when set, session selection is not merged into the form (see
+ * {@link shouldApplyWorkflowSessionSelection})
+ *
+ * @param schema: scan-config schema
+ * @param initialConfig: optional origin form
+ * @param model: entity model
+ * @param workflowSessionSelection: optional workflow browse session selection
+ * @param resolveFromIdType: optional function to resolve the from_id type from the browse type
+ * @returns the scan-config form blob (`config` + `setConfig`)
+ */
 export function useConfig({
   schema,
   initialConfig,
   model,
+  origin,
   workflowSessionSelection,
   resolveFromIdType,
 }: {
   schema: ConfigSchema;
   initialConfig?: Config;
   model: TSupportedEntitiesForScanConfiguration | Nullish;
+  origin?: string;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
   resolveFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 }) {
   const [configState, setConfigState] = useState<Config>(() =>
-    buildConfigState(schema, initialConfig, model, workflowSessionSelection, resolveFromIdType)
+    buildConfigState(
+      schema,
+      initialConfig,
+      model,
+      workflowSessionSelection,
+      resolveFromIdType,
+      origin
+    )
   );
   const appliedInitialConfigRef = useRef<Config | undefined>(initialConfig);
 
@@ -318,9 +400,16 @@ export function useConfig({
 
     appliedInitialConfigRef.current = initialConfig;
     setConfigState(
-      buildConfigState(schema, initialConfig, model, workflowSessionSelection, resolveFromIdType)
+      buildConfigState(
+        schema,
+        initialConfig,
+        model,
+        workflowSessionSelection,
+        resolveFromIdType,
+        origin
+      )
     );
-  }, [initialConfig, model, resolveFromIdType, schema, workflowSessionSelection]);
+  }, [initialConfig, model, origin, resolveFromIdType, schema, workflowSessionSelection]);
 
   return [configState, setConfigState] as const;
 }

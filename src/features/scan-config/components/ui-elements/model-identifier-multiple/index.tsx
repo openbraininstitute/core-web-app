@@ -23,10 +23,8 @@ import {
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
-import type {
-  TFromIdRef,
-  TModelIdentifierParsedValue,
-} from '@/features/scan-config/components/ui-elements/model-identifier-multiple/types';
+import type { TModelIdentifierParsedValue } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/types';
+import type { TFromIdRef } from '@/features/scan-config/helpers';
 
 type Props = {
   fieldKey: string;

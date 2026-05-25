@@ -18,10 +18,8 @@ import { cn } from '@/utils/css-class';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { TWorkspaceSection } from '@/constants';
-import type {
-  TFromIdRef,
-  TModelIdentifierBrowseSelectionsByType,
-} from '@/features/scan-config/components/ui-elements/model-identifier-multiple/types';
+import type { TModelIdentifierBrowseSelectionsByType } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/types';
+import type { TFromIdRef } from '@/features/scan-config/helpers';
 import type { WorkspaceContext } from '@/types/common';
 import type { TScanConfigConfigureBinding } from '@/ui/segments/workflows/config/scan-config-binding';
 import type { IWorkflowConfigurationInput } from '@/ui/segments/workflows/config/types';
@@ -152,7 +150,10 @@ export function ModelIdentifierBrowseWidget({
     <div
       className={cn(
         'grid h-full min-h-0 gap-3 overflow-hidden bg-gray-50 rounded-2xl border border-gray-50',
-        mdv ? 'grid-cols-1' : 'grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)]'
+        {
+          'grid-cols-1': mdv,
+          'grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)]': !mdv,
+        }
       )}
     >
       {!mdv ? (
@@ -182,12 +183,11 @@ export function ModelIdentifierBrowseWidget({
         </Button>
 
         <div
-          className={cn(
-            'grid min-h-0 flex-1 gap-2 overflow-hidden',
-            mdv
-              ? "grid-cols-[minmax(0,1fr)_minmax(30rem,44rem)] [grid-template-areas:'body_mini-view']"
-              : "grid-cols-1 [grid-template-areas:'body']"
-          )}
+          className={cn('grid min-h-0 flex-1 gap-2 overflow-hidden', {
+            "grid-cols-[minmax(0,1fr)_minmax(30rem,44rem)] [grid-template-areas:'body_mini-view']":
+              mdv,
+            "grid-cols-1 [grid-template-areas:'body']": !mdv,
+          })}
         >
           <BrowseEntityScope
             id={instanceId}

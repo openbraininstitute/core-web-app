@@ -18,10 +18,8 @@ import {
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
-import {
-  getFromIdRefTypeBadgeLabel,
-  mergeConfigurationInputs,
-} from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
+import { mergeConfigurationInputs } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
+import { getFromIdRefTypeBadgeLabel, type TFromIdRef } from '@/features/scan-config/helpers';
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Badge } from '@/ui/molecules/badge';
 import { ScrollableList } from '@/ui/molecules/scrollable';
@@ -29,7 +27,6 @@ import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
 import type {
-  TFromIdRef,
   TModelIdentifierConfigurationInput,
   TModelIdentifierGroup,
   TModelIdentifierParsedValue,

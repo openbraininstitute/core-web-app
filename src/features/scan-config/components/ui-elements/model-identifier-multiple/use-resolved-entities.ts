@@ -1,9 +1,7 @@
 'use client';
 
 /**
- * @module use-resolved-entities
- *
- * react query hook that hydrates fromID / session refs into named entity records
+ * react query hook that hydrates fromID/session refs into named entity records
  * for summary cards and browse cart seeding.
  */
 
@@ -11,15 +9,12 @@ import { useQueries } from '@tanstack/react-query';
 import { useMemo, useRef } from 'react';
 
 import { retrieveEntities } from '@/entity-configuration/domain/requests';
-import {
-  isFromIdRef,
-  resolveEntityFetchTarget,
-} from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
+import { resolveEntityFetchTarget } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
+import { isFromIdRef, type TFromIdRef } from '@/features/scan-config/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { TFromIdRef } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/types';
 import type { TWorkflowSessionSelectionRef } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { WorkspaceContext } from '@/types/common';
 

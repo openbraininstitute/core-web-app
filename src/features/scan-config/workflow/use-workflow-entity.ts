@@ -67,11 +67,13 @@ export function useSessionWorkflowEntity({
       entity: null,
       entityType: configureBinding.scanConfigEntityType,
       entityId,
+      workflowSessionId: sessionId,
       workflowSessionSelection,
     };
   }, [
     configureBinding.browseType,
     configureBinding.scanConfigEntityType,
+    sessionId,
     workflowSessionSelection,
   ]);
 }

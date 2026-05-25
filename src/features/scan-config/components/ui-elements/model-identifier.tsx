@@ -1,63 +1,29 @@
 'use client';
 
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   useScanConfigEntityPreview,
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
-import { isPlainObject } from '@/features/scan-config/components/utils';
+import {
+  getEntityTypeTagLabel,
+  getFromIdRefTypeBadgeLabel,
+  isFromIdRef,
+} from '@/features/scan-config/helpers';
 import {
   type ConfigValue,
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { entityTypeForScanConfigFromIdType } from '@/features/scan-config/workflow/workflow-schema-selection';
-import { getEntityMeta } from '@/ui/segments/workflows/config/helpers';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-
-type TFromIdRef = {
-  type: string;
-  id_str: string;
-};
 
 type ModelIdentifierProps = {
   className?: string;
   entity: TSupportedEntitiesForScanConfiguration;
   value?: ConfigValue;
 };
-
-function isFromIdRef(value: unknown): value is TFromIdRef {
-  return (
-    isPlainObject(value) &&
-    typeof value.type === 'string' &&
-    typeof value.id_str === 'string' &&
-    value.id_str.length > 0
-  );
-}
-
-function getEntityTypeTagLabel(entityType: TExtendedEntitiesTypeDict): string {
-  const domainTitle = getEntityByExtendedType({ type: entityType })?.title;
-  const label = domainTitle ?? getEntityMeta(entityType)?.label ?? entityType;
-  return label.replace(/\s+/g, ' ').toUpperCase();
-}
-
-function getFromIdRefTypeBadgeLabel(ref: TFromIdRef): string {
-  const entityType = entityTypeForScanConfigFromIdType(ref.type);
-  if (entityType) {
-    return getEntityTypeTagLabel(entityType);
-  }
-
-  const domainTitle = getEntityByExtendedType({
-    type: ref.type as TExtendedEntitiesTypeDict,
-  })?.title;
-  if (domainTitle) {
-    return domainTitle.toUpperCase();
-  }
-
-  return ref.type.replace(/_/g, ' ').toUpperCase();
-}
 
 function resolveEntityDataType(
   value: ConfigValue | undefined,
@@ -129,7 +95,7 @@ export function ModelIdentifier({ className, entity, value }: ModelIdentifierPro
           : undefined
       }
       className={cn(
-        'grid h-auto w-full max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto]',
+        'grid min-h-14 h-auto w-full max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto]',
         'items-center gap-2 overflow-hidden rounded-full border border-gray-200 bg-white px-4 py-2.5',
         'hover:border-gray-300 hover:shadow-xs hover:bg-gray-50',
         {

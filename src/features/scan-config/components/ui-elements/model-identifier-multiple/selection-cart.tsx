@@ -11,10 +11,8 @@ import { CheckOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
-import {
-  countSelectedEntities,
-  getEntityTypeTagLabel,
-} from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
+import { countSelectedEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
+import { getEntityTypeTagLabel } from '@/features/scan-config/helpers';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 

@@ -28,7 +28,7 @@ function resolveWorkflowStatus({
     return ScanConfigWorkflowStatus.Blocked;
   }
 
-  if (needsSelection && !entity.workflowSessionSelection) {
+  if (needsSelection && !entity.workflowSessionSelection && !campaign.origin) {
     return ScanConfigWorkflowStatus.Blocked;
   }
 

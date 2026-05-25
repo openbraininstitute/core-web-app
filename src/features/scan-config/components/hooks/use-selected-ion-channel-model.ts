@@ -6,7 +6,7 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
-import type { Config } from '@/features/scan-config/components/components';
+import type { Config } from '@/features/scan-config/types';
 
 function extractModelId(
   config: Config,

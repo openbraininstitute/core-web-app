@@ -64,6 +64,7 @@ export type TResolvedScanConfigEntity = {
   entity: TSupportedEntitiesForScanConfiguration | null;
   entityType: TExtendedEntitiesTypeDict;
   entityId?: string;
+  workflowSessionId?: string;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
 };
 
