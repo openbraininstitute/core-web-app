@@ -57,7 +57,7 @@ export function ModelIdentifierMultiple({
 
   const fieldSchema = paramSchema as unknown as Record<string, unknown>;
   const parsedValue = useMemo(
-    () => parseModelIdentifierFieldValue(value, fieldSchema),
+    () => parseModelIdentifierFieldValue(value, fieldSchema, { allowEmptyGroups: true }),
     [fieldSchema, value]
   );
 

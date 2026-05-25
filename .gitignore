@@ -238,3 +238,5 @@ CLAUDE.md
 .amazonq
 .playwright-mcp
 .code-review
+bugs.md
+!src/__tests__/bugs.md

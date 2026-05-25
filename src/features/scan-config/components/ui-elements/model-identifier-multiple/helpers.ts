@@ -49,7 +49,10 @@ import type { IWorkflowConfigurationInput } from '@/ui/segments/workflows/config
  * @param value - the value being checked.
  * @returns true if the value is a TModelIdentifierGroup, otherwise false
  */
-function isNamedGroup(value: unknown): value is TModelIdentifierGroup {
+function isNamedGroup(
+  value: unknown,
+  opts: { allowEmptyElements?: boolean } = {}
+): value is TModelIdentifierGroup {
   if (!isPlainObject(value)) {
     return false;
   }
@@ -58,7 +61,12 @@ function isNamedGroup(value: unknown): value is TModelIdentifierGroup {
 
   // check that 'name' is a string and 'elements' is an array of TFromIdRef
   const hasValidName = typeof record.name === 'string';
-  const hasValidElements = Array.isArray(record.elements) && record.elements.every(isFromIdRef);
+  // empty groups are invalid when normalizing persisted config, but the editor
+  // preserves them as draft groups after a user clicks "Add group"
+  const hasValidElements =
+    Array.isArray(record.elements) &&
+    (opts.allowEmptyElements || record.elements.length > 0) &&
+    record.elements.every(isFromIdRef);
 
   return hasValidName && hasValidElements;
 }
@@ -75,7 +83,8 @@ function isNamedGroup(value: unknown): value is TModelIdentifierGroup {
  */
 export function parseModelIdentifierFieldValue(
   value: ConfigValue | undefined,
-  paramSchema: Record<string, unknown>
+  paramSchema: Record<string, unknown>,
+  opts: { allowEmptyGroups?: boolean } = {}
 ): TModelIdentifierParsedValue {
   const storageMode = resolveModelIdentifierFieldStorageMode(paramSchema);
 
@@ -84,7 +93,7 @@ export function parseModelIdentifierFieldValue(
 
     if (Array.isArray(value)) {
       for (const entry of value) {
-        if (isNamedGroup(entry)) {
+        if (isNamedGroup(entry, { allowEmptyElements: opts.allowEmptyGroups })) {
           groups.push({
             name: entry.name,
             elements: entry.elements,
