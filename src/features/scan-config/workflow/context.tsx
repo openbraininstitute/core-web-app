@@ -29,6 +29,8 @@ function resolveWorkflowStatus({
     return ScanConfigWorkflowStatus.Blocked;
   }
 
+  // resume/duplicate flows pass `origin` so configure can proceed from an existing
+  // campaign without a fresh session-scoped entity selection in storage.
   if (needsSelection && !entity.workflowSessionSelection && !campaign.origin) {
     return ScanConfigWorkflowStatus.Blocked;
   }

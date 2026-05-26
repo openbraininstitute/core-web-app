@@ -9,6 +9,7 @@
 
 import { CheckOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
+import { useId } from 'react';
 
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
 import { countSelectedEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
@@ -53,11 +54,12 @@ export function ModelIdentifierSelectionCart({
   onCancel,
   className,
 }: Props) {
+  const instanceId = useId();
   const selectedCount = countSelectedEntities(selectionsByType);
 
   return (
     <div
-      id={`selection-cart-${title}`}
+      id={`selection-cart-${instanceId}`}
       className={cn(
         'flex h-full min-h-0 w-full min-w-0 flex-col gap-4 bg-white py-4 px-2',
         'rounded-2xl border border-gray-200',
@@ -73,7 +75,7 @@ export function ModelIdentifierSelectionCart({
           <Input
             value={groupName}
             disabled={disabled}
-            id={`group-name-input-${groupName}`}
+            id={`group-name-input-${instanceId}`}
             placeholder="Name of the group"
             variant="borderless"
             className={cn(

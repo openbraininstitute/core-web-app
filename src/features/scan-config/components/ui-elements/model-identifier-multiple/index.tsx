@@ -73,18 +73,18 @@ export function ModelIdentifierMultiple({
     context: { virtualLabId, projectId },
   });
 
-  const resolvedEntities = useMemo(
-    () =>
-      allRefs.flatMap((ref) => {
-        const entityMatch = entities.find((entry) => entry.id === ref.id_str);
-        if (!entityMatch) {
-          return [];
-        }
+  const resolvedEntities = useMemo(() => {
+    const entitiesById = new Map(entities.map((entry) => [entry.id, entry]));
 
-        return [{ ...entityMatch, ref }];
-      }),
-    [allRefs, entities]
-  );
+    return allRefs.flatMap((ref) => {
+      const entityMatch = entitiesById.get(ref.id_str);
+      if (!entityMatch) {
+        return [];
+      }
+
+      return [{ ...entityMatch, ref }];
+    });
+  }, [allRefs, entities]);
 
   const writeValue = useCallback(
     (nextValue: ConfigValue) => {

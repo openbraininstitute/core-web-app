@@ -95,10 +95,10 @@ function findEntityForRef(
 
 function getEntityLabel(mergedInputs: TModelIdentifierConfigurationInput[]): string {
   if (mergedInputs.length === 1) {
-    return mergedInputs[0]?.label?.toLowerCase() ?? 'neuron';
+    return mergedInputs[0]?.label?.toLowerCase() ?? 'item';
   }
 
-  return 'neuron';
+  return 'item';
 }
 
 function getAddEntitiesLabel(mergedInputs: TModelIdentifierConfigurationInput[]): string {
@@ -118,7 +118,7 @@ function getAddToScanLabel(mergedInputs: TModelIdentifierConfigurationInput[]): 
  * - **list / tuple**: flat card + "Add X to scan"
  * - **grouped**: per-group cards + "Add group to scan"
  *
- * group keys use stable `groupIndex` (not group name) to avoid input focus loss
+ * group list keys use array index (stable while editing names; groups are not reordered in ui)
  */
 export function ModelIdentifierSummaryView({
   parsedValue,

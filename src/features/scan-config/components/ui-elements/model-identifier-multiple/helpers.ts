@@ -97,7 +97,10 @@ export function parseModelIdentifierFieldValue(
       return { storageMode, groups };
     }
 
-    return { storageMode, groups: [{ name: 'Default name', elements: [] }] };
+    return {
+      storageMode,
+      groups: [{ name: 'Default name', elements: [] }],
+    };
   }
 
   const items: TFromIdRef[] = Array.isArray(value)
