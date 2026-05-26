@@ -12,6 +12,8 @@ import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 import type { ColDef, ColumnMovedEvent, GridReadyEvent, IDatasource } from 'ag-grid-community';
 import type { ColumnMeta } from '@/features/circuit-nodes/types';
 
+const PREFERRED_NAME_SET = new Set(PREFERRED_COLUMNS.map((p) => p.name));
+
 const CATEGORICAL_SET_FILTER_MAX = 100;
 
 import 'ag-grid-community/styles/ag-grid.css';
@@ -44,7 +46,7 @@ function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: Bu
     const isNumeric = c.kind === 'numeric';
     const useSetFilter =
       c.kind === 'categorical' && (c.library?.length ?? 0) < CATEGORICAL_SET_FILTER_MAX;
-    const width = PREFERRED_WIDTH_BY_NAME.get(c.name) ?? (isNumeric ? 80 : 100);
+    const width = PREFERRED_WIDTH_BY_NAME.get(c.name) ?? (isNumeric ? 100 : 120);
     return {
       field: c.name,
       headerName: capitalize(c.name.replace(/_/g, ' ')),
@@ -91,6 +93,7 @@ export function NodesGrid({
   onVisibleColumnsChange,
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
+  const autoSizedKeyRef = useRef<string>('');
 
   const [orderedNames, setOrderedNames] = useState<string[]>(() => defaultColumnOrder(columns));
   const [chooserOpen, setChooserOpen] = useState(false);
@@ -98,6 +101,7 @@ export function NodesGrid({
 
   useEffect(() => {
     setOrderedNames(defaultColumnOrder(columns));
+    autoSizedKeyRef.current = '';
   }, [columns]);
 
   const orderedColumns = useMemo(() => {
@@ -159,8 +163,25 @@ export function NodesGrid({
   useEffect(() => {
     const api = gridRef.current?.api;
     if (!api) return;
+    autoSizedKeyRef.current = '';
     api.setGridOption('datasource', datasource);
   }, [datasource]);
+
+  const onModelUpdated = useCallback(() => {
+    const api = gridRef.current?.api;
+    if (!api) return;
+    const key = columns.map((c) => c.name).join('|');
+    if (autoSizedKeyRef.current === key) return;
+    // autoSizeColumns measures already-rendered cell content; wait until at
+    // least the first row has real data (infinite model shows placeholders first).
+    const first = api.getDisplayedRowAtIndex(0);
+    if (!first || !first.data) return;
+    const toAutoSize = columns
+      .filter((c) => !PREFERRED_NAME_SET.has(c.name) && visibleColumns.has(c.name))
+      .map((c) => c.name);
+    autoSizedKeyRef.current = key;
+    if (toAutoSize.length > 0) api.autoSizeColumns(toAutoSize, false);
+  }, [columns, visibleColumns]);
 
   return (
     <div className={`ag-theme-quartz ${styles.gridWrapper}`}>
@@ -193,6 +214,7 @@ export function NodesGrid({
           headerHeight={60}
           onGridReady={onGridReady}
           onColumnMoved={onColumnMoved}
+          onModelUpdated={onModelUpdated}
           context={{ visibleColumns: Array.from(visibleColumns) }}
         />
       </div>
