@@ -49,8 +49,14 @@ type ColumnHandle = CategoricalHandle | NumericHandle | StringHandle | Synthetic
 
 type LoadedColumn = Float32Array | Float64Array | Uint32Array | string[];
 
+type GenericFilter =
+  | TextFilter
+  | NumberFilter
+  | { filterType: 'text'; operator: 'AND' | 'OR'; conditions: TextFilter[] }
+  | { filterType: 'number'; operator: 'AND' | 'OR'; conditions: NumberFilter[] };
+
 type Compiled =
-  | { kind: 'generic'; handle: ColumnHandle; data: LoadedColumn; filter: TextFilter | NumberFilter }
+  | { kind: 'generic'; handle: ColumnHandle; data: LoadedColumn; filter: GenericFilter }
   | { kind: 'set'; data: Uint32Array; mask: Uint8Array };
 
 function classifyDtype(dtype: string): ColumnKind {
@@ -484,8 +490,18 @@ function matchOne(
   handle: ColumnHandle,
   data: LoadedColumn,
   row: number,
-  filter: TextFilter | NumberFilter
+  filter: GenericFilter
 ): boolean {
+  if ('operator' in filter) {
+    const { operator, conditions } = filter;
+    if (conditions.length === 0) return true;
+    if (operator === 'OR') {
+      for (const c of conditions) if (matchOne(handle, data, row, c)) return true;
+      return false;
+    }
+    for (const c of conditions) if (!matchOne(handle, data, row, c)) return false;
+    return true;
+  }
   if (filter.filterType === 'text') {
     let value: string;
     if (handle.kind === 'categorical') {

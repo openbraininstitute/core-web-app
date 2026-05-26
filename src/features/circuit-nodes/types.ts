@@ -43,7 +43,26 @@ export type SetFilter = {
   values: string[];
 };
 
-export type ColumnFilter = TextFilter | NumberFilter | SetFilter;
+export type FilterOperator = 'AND' | 'OR';
+
+export type CombinedTextFilter = {
+  filterType: 'text';
+  operator: FilterOperator;
+  conditions: TextFilter[];
+};
+
+export type CombinedNumberFilter = {
+  filterType: 'number';
+  operator: FilterOperator;
+  conditions: NumberFilter[];
+};
+
+export type ColumnFilter =
+  | TextFilter
+  | NumberFilter
+  | SetFilter
+  | CombinedTextFilter
+  | CombinedNumberFilter;
 
 export type FilterModel = Record<string, ColumnFilter>;
 
