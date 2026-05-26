@@ -118,8 +118,6 @@ export default function BlockDictionary({
         setState={(newState: Record<string, ConfigValue>) => {
           if (!isPlainObject(config[selectedRootElement])) return;
 
-          console.log('new state', newState);
-
           setConfig({
             ...config,
             [selectedRootElement]: {
