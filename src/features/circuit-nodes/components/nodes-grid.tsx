@@ -175,7 +175,7 @@ export function NodesGrid({
     // autoSizeColumns measures already-rendered cell content; wait until at
     // least the first row has real data (infinite model shows placeholders first).
     const first = api.getDisplayedRowAtIndex(0);
-    if (!first || !first.data) return;
+    if (!first?.data) return;
     const toAutoSize = columns
       .filter((c) => !PREFERRED_NAME_SET.has(c.name) && visibleColumns.has(c.name))
       .map((c) => c.name);
