@@ -127,6 +127,7 @@ export const PREFERRED_COLUMNS: readonly PreferredColumn[] = [
   { name: 'morph_class', width: 110 },
   { name: 'synapse_class', width: 120 },
   { name: 'morphology', width: 180 },
+  { name: 'me_combo', width: 160 },
   { name: 'x', width: 100 },
   { name: 'y', width: 100 },
   { name: 'z', width: 100 },
