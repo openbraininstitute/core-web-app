@@ -1,6 +1,6 @@
 'use client';
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { getBrainAtlases } from '@/api/entitycore/queries/general/brain-atlas';
@@ -78,7 +78,7 @@ export function useAvailableHierarchySpeciesQuery() {
 
   return {
     remoteAvailableHierarchies: query.data,
-    loading: query.isLoading,
+    loading: query.isPending,
     error: query.error,
   };
 }
@@ -91,7 +91,7 @@ export function useHierarchyRuntimeMetadataQuery() {
   } = useAvailableHierarchySpeciesQuery();
   const {
     data: atlasData,
-    isLoading: loadingAtlases,
+    isPending: loadingAtlases,
     error: atlasError,
   } = useQuery({
     queryKey: keyBuilderAtlas.all(),
@@ -138,7 +138,7 @@ export function useHierarchyRuntimeMetadataQuery() {
 export function useRemoteUserPreferenceHierarchySpeciesQuery() {
   const {
     data,
-    isLoading: isLoadingRemotePreference,
+    isPending: isLoadingRemotePreference,
     error,
   } = useQuery({
     queryKey: keyBuilderHierarchy.hierarchyPreference(),
@@ -154,4 +154,38 @@ export function useRemoteUserPreferenceHierarchySpeciesQuery() {
     loading: isLoadingRemotePreference,
     error,
   };
+}
+
+/**
+ * parallel bootstrap queries for hierarchy list + user preference.
+ */
+export function useBrainRegionBootstrapQueries() {
+  return useQueries({
+    queries: [
+      {
+        queryKey: keyBuilderHierarchy.hierarchies(),
+        queryFn: async () => getBrainRegionHierarchiesWithSpecies(),
+        staleTime: Infinity,
+        gcTime: Infinity,
+        refetchOnWindowFocus: false,
+        placeholderData: keepPreviousData,
+        select: (response: IBrainRegionHierarchiesResponse) =>
+          transformHierarchiesResponse(response),
+      },
+      {
+        queryKey: keyBuilderHierarchy.hierarchyPreference(),
+        queryFn: () => getWorkspaceHierarchySpeciesPreference(),
+        staleTime: Infinity,
+        gcTime: Infinity,
+        refetchOnWindowFocus: false,
+        placeholderData: keepPreviousData,
+      },
+    ],
+    combine: ([hierarchies, preference]) => ({
+      isLoading: hierarchies.isPending || preference.isPending,
+      error: hierarchies.error ?? preference.error ?? null,
+      remoteAvailableHierarchies: hierarchies.data,
+      remoteUserPreferenceHierarchySpecies: preference.data?.data?.preference,
+    }),
+  });
 }
