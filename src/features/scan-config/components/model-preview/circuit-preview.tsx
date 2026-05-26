@@ -67,7 +67,7 @@ export function CircuitPreview({ className, circuit }: CircuitPreviewProps) {
           onChange={(v) => setMode(v as 'image' | 'viz')}
         />
       </div>
-      <div ref={containerRef} className="flex-1 relative min-h-0">
+      <div ref={containerRef} className="flex-1 relative min-h-0 rounded-2xl overflow-hidden">
         {mode === 'image' && <CircuitImage className={className} circuit={circuit} />}
         {mode === 'viz' && <CircuitViz key={circuit.id} id={circuit.id} />}
         {showTable && tableHeight !== null && containerHeight > 0 && (
@@ -192,7 +192,10 @@ export function CircuitImage({ className, circuit }: CircuitPreviewProps) {
         </Skeleton>
       )}
       {!isLoading && !error && data && loaded && (
-        <div id="scan-config-circuit-preview" className="w-full h-full min-h-0 p-2">
+        <div
+          id="scan-config-circuit-preview"
+          className="w-full h-full min-h-0 p-2 overflow-hidden rounded-2xl shadow-[inset_0_0_0_1px_#fff,0_0_0_1px_rgba(0,0,0,0.04)] bg-white"
+        >
           <div className="w-full h-full overflow-hidden [&_.ant-image]:block! [&_.ant-image]:w-full! [&_.ant-image]:h-full! [&_.ant-image-img]:w-full! [&_.ant-image-img]:h-full! [&_.ant-image-img]:object-contain!">
             <AntdImage
               src={data}
