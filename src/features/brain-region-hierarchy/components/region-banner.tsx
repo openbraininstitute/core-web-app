@@ -14,16 +14,10 @@ import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
 import { TreeSkeleton } from '@/features/brain-region-hierarchy/components/brain-region-skeleton';
 import { SpeciesSelector } from '@/features/brain-region-hierarchy/components/species-selector';
 import {
-  selectedBrainRegionAtom,
+  allowAllSpeciesAtom,
   speciesSelectionModeAtom,
-  useBrainRegionRootHierarchyQuery,
-  workspaceHierarchySpeciesAtom,
 } from '@/features/brain-region-hierarchy/context';
-import {
-  useAvailableHierarchySpeciesQuery,
-  useRemoteUserPreferenceHierarchySpeciesQuery,
-  useWorkspaceHierarchyRegistry,
-} from '@/features/brain-region-hierarchy/hooks';
+import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
 import { Button } from '@/ui/molecules/button';
@@ -65,19 +59,18 @@ type TPortalRegionBannerProps = {
 
 export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerProps) {
   const notifier = useAppNotification();
-  const { changeBulkStoreHierarchySpecies } = useWorkspaceHierarchyRegistry();
-  const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
-  const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
-  const { loading: isLoadingRootHierarchy } = useBrainRegionRootHierarchyQuery();
-  const { loading: isLoadingAvailableHierarchySpecies } = useAvailableHierarchySpeciesQuery();
-  const { loading: isLoadingRemoteUserPreferenceHierarchySpecies } =
-    useRemoteUserPreferenceHierarchySpeciesQuery();
+  const {
+    changeBulkStoreHierarchySpecies,
+    displaySpecies,
+    isUiLoading,
+    selectedBrainRegion,
+    speciesSelectionMode,
+    workspaceHierarchyId,
+    remoteAvailableHierarchies,
+  } = useWorkspaceHierarchyRegistry();
+  const allowAllSpecies = useAtomValue(allowAllSpeciesAtom);
 
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
-  const isRegionLoading =
-    isLoadingRootHierarchy ||
-    isLoadingAvailableHierarchySpecies ||
-    isLoadingRemoteUserPreferenceHierarchySpecies;
 
   const handleSpeciesChange = (hIdOrMode: string) => {
     changeBulkStoreHierarchySpecies(hIdOrMode);
@@ -112,13 +105,19 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
             )}
           >
             <SpeciesSelector
-              selectedSpecies={workspaceSpecies}
+              displaySpecies={displaySpecies}
+              workspaceHierarchyId={workspaceHierarchyId}
+              isAllMode={isAllMode}
+              isLoading={isUiLoading}
+              allowAllSpecies={allowAllSpecies}
+              remoteAvailableHierarchies={remoteAvailableHierarchies}
               onSpeciesChange={handleSpeciesChange}
             />
           </div>
           {!isAllMode && (
             <FocusedModeContent
-              loading={isRegionLoading}
+              loading={isUiLoading}
+              selectedBrainRegion={selectedBrainRegion}
               onOpenTree={() => onSwitchView(ExploreLeftMenuContext.BrainRegionHierarchy)}
             />
           )}
@@ -129,9 +128,15 @@ export function RegionBanner({ view, onSwitchView, classNames }: RegionBannerPro
   );
 }
 
-function FocusedModeContent({ loading, onOpenTree }: { loading: boolean; onOpenTree: () => void }) {
-  const selectedBrainRegion = useAtomValue(selectedBrainRegionAtom);
-
+function FocusedModeContent({
+  loading,
+  selectedBrainRegion,
+  onOpenTree,
+}: {
+  loading: boolean;
+  selectedBrainRegion: BrainRegionHierarchyBase | null;
+  onOpenTree: () => void;
+}) {
   return (
     <>
       <div className="h-6 w-px bg-gray-200 shrink-0" />
@@ -148,10 +153,16 @@ function FocusedModeContent({ loading, onOpenTree }: { loading: boolean; onOpenT
           }}
         >
           <span className="text-neutral-5 text-base shrink-0">Region</span>
-          {loading && (
-            <div className="h-5 w-full animate-pulse rounded-full bg-gray-200 max-w-3/5" />
+          {loading ? (
+            <div
+              className="h-5 w-full max-w-3/5 animate-pulse rounded-full bg-gray-200"
+              aria-hidden
+            />
+          ) : selectedBrainRegion ? (
+            <SelectedRegionPill region={selectedBrainRegion} />
+          ) : (
+            <span className="text-neutral-4 truncate text-sm">Select region</span>
           )}
-          {selectedBrainRegion && !loading && <SelectedRegionPill region={selectedBrainRegion} />}
         </div>
       </div>
     </>

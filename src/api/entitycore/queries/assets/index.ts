@@ -5,6 +5,7 @@ import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { config } from '@/config';
 import { compactRecord } from '@/utils/dictionary';
 
+import type { CacheConfiguration } from '@/api/cache-storage';
 import type { TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type {
   AssetLabel,
@@ -73,6 +74,7 @@ export async function downloadAsset(params: {
   asRawResponse: true;
   retryOnError?: boolean;
   signal?: AbortSignal;
+  cache?: CacheConfiguration;
 }): Promise<Response>;
 
 export async function downloadAsset<T>(params: {
@@ -84,6 +86,7 @@ export async function downloadAsset<T>(params: {
   asRawResponse?: false;
   retryOnError?: boolean;
   signal?: AbortSignal;
+  cache?: CacheConfiguration;
 }): Promise<T>;
 
 /**
@@ -104,6 +107,7 @@ export async function downloadAsset<T>({
   retryOnError = false,
   assetPath = '',
   signal,
+  cache,
 }: {
   ctx?: WorkspaceContext | null;
   entityType: TEntityTypeDict;
@@ -113,6 +117,7 @@ export async function downloadAsset<T>({
   asRawResponse?: boolean;
   retryOnError?: boolean;
   signal?: AbortSignal;
+  cache?: CacheConfiguration;
 }): Promise<T | Response> {
   const api = await authApiClient(config.ENTITY_CORE_URL);
   return await api.get<T>(
@@ -122,7 +127,7 @@ export async function downloadAsset<T>({
       queryParams: compactRecord({ asset_path: assetPath }),
       signal,
     },
-    { asRawResponse, retryOnError }
+    { asRawResponse, retryOnError, cache }
   );
 }
 

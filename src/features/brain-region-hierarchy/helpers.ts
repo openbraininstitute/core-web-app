@@ -2,9 +2,12 @@ import isNil from 'es-toolkit/compat/isNil';
 import memoize from 'memoize-one';
 
 import {
+  type BrainRegionHierarchySelection,
   type IBrainRegionHierarchyExtended,
+  type IHierarchyWithSpecies,
   type IWorkspaceSpecies,
   SPECIES_DISPLAY_NAMES,
+  SpeciesSelectionMode,
 } from '@/features/brain-region-hierarchy/types';
 
 import type { IBrainAtlasRegion } from '@/api/entitycore/types/entities/brain-atlas';
@@ -258,4 +261,84 @@ export function normalizeBrainRegionName(name: string) {
     return name;
   }
   return first.toUpperCase() + name.slice(1);
+}
+
+export function resolveEffectiveHierarchyId({
+  urlHierarchyId,
+  remoteHierarchyId,
+  storageHierarchyId,
+  defaultHierarchyId,
+}: {
+  urlHierarchyId?: string | null;
+  remoteHierarchyId?: string | null;
+  storageHierarchyId?: string | null;
+  defaultHierarchyId: string;
+}): string {
+  return urlHierarchyId || remoteHierarchyId || storageHierarchyId || defaultHierarchyId;
+}
+
+export function createAllSpeciesSelection(
+  perHierarchyMemory?: BrainRegionHierarchySelection['perHierarchyMemory']
+): BrainRegionHierarchySelection {
+  return {
+    hierarchyId: '',
+    speciesName: '',
+    brainRegionId: '',
+    brainRegionName: '',
+    perHierarchyMemory,
+    speciesSelectionMode: SpeciesSelectionMode.All,
+  };
+}
+
+export function resolveDisplayWorkspaceSpecies({
+  isAllMode,
+  workspaceSpecies,
+  workspaceHierarchyId,
+  remoteAvailableHierarchies,
+}: {
+  isAllMode: boolean;
+  workspaceSpecies: IWorkspaceSpecies | null;
+  workspaceHierarchyId: string | undefined;
+  remoteAvailableHierarchies: IHierarchyWithSpecies[] | undefined;
+}): IWorkspaceSpecies | null {
+  if (isAllMode) {
+    return null;
+  }
+
+  if (workspaceSpecies?.displayName) {
+    return workspaceSpecies;
+  }
+
+  const hierarchyId = workspaceSpecies?.hierarchId ?? workspaceHierarchyId;
+  if (!hierarchyId || !remoteAvailableHierarchies) {
+    return null;
+  }
+
+  return (
+    remoteAvailableHierarchies.find((hierarchy) => hierarchy.id === hierarchyId)?.species ?? null
+  );
+}
+
+export function getHierarchyBannerLoading({
+  syncSettled,
+  hasPendingUrlOverride,
+  isBootstrapLoading,
+  isRootHierarchyLoading,
+  isAllMode,
+  displaySpecies,
+}: {
+  syncSettled: boolean;
+  hasPendingUrlOverride: boolean;
+  isBootstrapLoading: boolean;
+  isRootHierarchyLoading: boolean;
+  isAllMode: boolean;
+  displaySpecies: IWorkspaceSpecies | null;
+}): boolean {
+  return (
+    !syncSettled ||
+    hasPendingUrlOverride ||
+    isBootstrapLoading ||
+    isRootHierarchyLoading ||
+    (!isAllMode && !displaySpecies?.displayName)
+  );
 }

@@ -1,7 +1,6 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { Switch } from 'antd';
-import dynamic from 'next/dynamic';
-import { memo, useState } from 'react';
+import { useState } from 'react';
 
 import { IconGear } from '@/components/ai-assistant/icons/gear';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
@@ -12,7 +11,7 @@ import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-confi
 
 import styles from './circuit-viz.module.css';
 
-const CircuitViz = memo(({ id, visible }: { id: string; visible: boolean }) => {
+const CircuitViz = ({ id }: { id: string }) => {
   const [progress, setProgress] = useState(0);
   const [showAxon, setShowAxon] = useState(false);
   const { circuit, isLoading, error, loadCell } = useCircuit(id, showAxon);
@@ -20,8 +19,6 @@ const CircuitViz = memo(({ id, visible }: { id: string; visible: boolean }) => {
   const handleCellHover = (cell: Cell | undefined): void => {
     setHighlightedCellId(cell?.id ?? '');
   };
-
-  if (!visible) return null;
 
   if (isLoading || error) {
     return (
@@ -39,6 +36,8 @@ const CircuitViz = memo(({ id, visible }: { id: string; visible: boolean }) => {
     );
   }
 
+  if (!circuit) return null;
+
   return (
     <div className="h-full w-full relative">
       <MorphoViewerSmallCircuit
@@ -50,6 +49,7 @@ const CircuitViz = memo(({ id, visible }: { id: string; visible: boolean }) => {
         circuit={circuit}
         onCellHover={handleCellHover}
         highlightedCellIds={[highlightedCellId]}
+        // @ts-expect-error
         loadCell={loadCell}
         controls={[
           [
@@ -71,7 +71,7 @@ const CircuitViz = memo(({ id, visible }: { id: string; visible: boolean }) => {
       />
     </div>
   );
-});
+};
 
 export function buildMorphoTree(
   sections: Sections,
@@ -156,6 +156,4 @@ export function buildMorphoTree(
   };
 }
 
-export default dynamic(() => Promise.resolve(CircuitViz), {
-  ssr: false,
-});
+export default CircuitViz;

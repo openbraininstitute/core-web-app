@@ -1,5 +1,6 @@
 import { tableFromIPC } from '@apache-arrow/es2015-esm';
 
+import { swrCacheConfig } from '@/api/cache-storage';
 import { AssetContentType } from '@/api/entitycore/types/shared/global';
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
@@ -26,6 +27,11 @@ export async function getCachedBrainRegionMeshArrayBuffer({
 
   const promise = getBrainRegionMeshArrayBufferQuery({ atlasId, regionId, queryClient });
   cacheMeshes.set(cacheKey, promise);
+
+  promise.catch(() => {
+    cacheMeshes.delete(cacheKey);
+  });
+
   return promise;
 }
 
@@ -61,7 +67,11 @@ async function getBrainRegionMeshArrayBufferQuery({
 
   const time = performance.now();
   const api = await entityCoreApi();
-  const data = await api.get(`/brain-atlas-region/${entity.id}/assets/${asset.id}/download`);
+  const data = await api.get(
+    `/brain-atlas-region/${entity.id}/assets/${asset.id}/download`,
+    undefined,
+    { cache: swrCacheConfig('brain-atlas-meshes') }
+  );
 
   log('debug', 'GLTF', `${performance.now() - time} msec`, data);
   const mesh = data instanceof ArrayBuffer ? data : null;
@@ -93,10 +103,10 @@ export async function getPointCouldData(annotationValue: number, accessToken: st
 }
 
 async function actualGetPointCouldData(annotationValue: number, accessToken: string) {
-  const url = `${config.CELL_API_URL}/circuit?circuit_id=${encodeURIComponent(
-    config.LEGACY_DEFAULT_CIRCUIT_ID || ''
-  )}&region=${annotationValue}&how=arrow`;
-  const rawData = await fetchPointCloud(url, accessToken);
+  const rawData = await fetchPointCloud(
+    { circuitId: config.LEGACY_DEFAULT_CIRCUIT_ID || '', annotationValue },
+    accessToken
+  );
   const table = tableFromIPC(rawData);
   const array = table.toArray();
   const dataPoint = new Float32Array(array.length * 4);

@@ -1,5 +1,6 @@
 import { getServerSession, type NextAuthOptions, type Session, type TokenSet } from 'next-auth';
 
+import { AUTH_PROXY_REDIRECT_TARGET_COOKIE } from '@/auth/constants';
 import { serverConfig as config } from '@/config/server';
 import { log } from '@/utils/logger';
 
@@ -32,6 +33,8 @@ function getSharedCookieDomain(authProxyUrl: string): string {
     return '';
   }
 }
+
+const authProxyHostname = config.AUTH_PROXY_URL ? new URL(config.AUTH_PROXY_URL).hostname : null;
 
 /**
  * Updates or inserts a refresh token in the authentication manager service.
@@ -164,15 +167,18 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async redirect({ url, baseUrl }) {
-      // Used for preview deployments to return back from the auth proxy
-      if (config.AUTH_PROXY_URL) {
-        const authProxyHostname = new URL(config.AUTH_PROXY_URL).hostname;
-        const baseHostname = new URL(baseUrl).hostname;
-        if (baseHostname === authProxyHostname && url.startsWith(baseUrl)) {
-          return `${config.AUTH_PROXY_URL}/api/auth/redirect-after-signin`;
-        }
-      }
-      return url;
+      // Preview detour: route post-OAuth back through the proxy's
+      // redirect-after-signin handler, which reads the redirect-target cookie
+      // and bounces to the original subdomain. Skip if no cookie is set
+      // (user signed in directly on the proxy domain — nothing to dereference).
+      if (!authProxyHostname || !url.startsWith(baseUrl)) return url;
+      if (new URL(baseUrl).hostname !== authProxyHostname) return url;
+      // `next/headers` is server-only but this module is reachable from client
+      // bundles via `auth-fetch`; defer the import to keep it out of them.
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      if (!cookieStore.has(AUTH_PROXY_REDIRECT_TARGET_COOKIE)) return url;
+      return `${config.AUTH_PROXY_URL}/api/auth/redirect-after-signin`;
     },
     async jwt({ token, account, user, profile }) {
       // Initial sign in
