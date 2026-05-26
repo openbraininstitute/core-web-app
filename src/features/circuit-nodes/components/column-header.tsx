@@ -169,21 +169,13 @@ export function ColumnHeader(props: Props) {
     </Dropdown>
   );
 
-  if (isNumeric) {
-    return (
-      <div className={`${styles.header} ${styles.headerRight}`}>
-        {menuBtn}
-        {filterBtn}
-        {labelBtn}
-      </div>
-    );
-  }
-
   return (
-    <div className={styles.header}>
+    <div className={cn(styles.header, isNumeric && styles.headerRight)}>
+      <div className={styles.actions}>
+        {filterBtn}
+        {menuBtn}
+      </div>
       {labelBtn}
-      {filterBtn}
-      {menuBtn}
     </div>
   );
 }

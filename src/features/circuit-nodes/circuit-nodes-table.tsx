@@ -11,14 +11,13 @@ import { GenericError } from '@/ui/molecules/generic-error';
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { DisplayMode, NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
+import type { NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
 type Props = {
   circuit: ICircuit;
   className?: string;
-  onModeChange?: (mode: DisplayMode) => void;
 };
 
 function pickDefaultPopulation(populations: NodePopulation[]): NodePopulation | undefined {
@@ -26,16 +25,11 @@ function pickDefaultPopulation(populations: NodePopulation[]): NodePopulation | 
   return populations.find((p) => p.type === 'biophysical') ?? populations[0];
 }
 
-export default function CircuitNodesTable({ circuit, className, onModeChange }: Props) {
+export default function CircuitNodesTable({ circuit, className }: Props) {
   const { config, isLoading: configLoading, error: configError } = useCircuitConfig(circuit);
 
   const [view, setView] = useState<ViewMode>('nodes');
-  const [mode, setMode] = useState<DisplayMode>('collapsed');
   const [selectedPopulationName, setSelectedPopulationName] = useState<string | undefined>();
-
-  useEffect(() => {
-    onModeChange?.(mode);
-  }, [mode, onModeChange]);
 
   const population = useMemo(() => {
     if (!config) return undefined;
@@ -45,7 +39,7 @@ export default function CircuitNodesTable({ circuit, className, onModeChange }: 
 
   const populationName = population?.name;
 
-  const enabled = mode !== 'collapsed' && view === 'nodes';
+  const enabled = view === 'nodes';
 
   const {
     rowCount,
@@ -73,33 +67,29 @@ export default function CircuitNodesTable({ circuit, className, onModeChange }: 
   }, [columns]);
 
   return (
-    <div className={cn(styles.root, styles[`mode_${mode}`], className)}>
+    <div className={cn(styles.root, className)}>
       <NodesToolbar
         view={view}
         onViewChange={setView}
         populations={config?.nodes ?? []}
         populationName={populationName}
         onPopulationChange={setSelectedPopulationName}
-        mode={mode}
-        onModeChange={setMode}
       />
-      {mode !== 'collapsed' && (
-        <div className={styles.body}>
-          {renderBody({
-            configError,
-            configLoading,
-            workerError,
-            workerLoading,
-            hasPopulation: !!population,
-            columns,
-            rowCount,
-            filteredCount,
-            datasource,
-            visibleColumns,
-            setVisibleColumns,
-          })}
-        </div>
-      )}
+      <div className={styles.body}>
+        {renderBody({
+          configError,
+          configLoading,
+          workerError,
+          workerLoading,
+          hasPopulation: !!population,
+          columns,
+          rowCount,
+          filteredCount,
+          datasource,
+          visibleColumns,
+          setVisibleColumns,
+        })}
+      </div>
     </div>
   );
 }

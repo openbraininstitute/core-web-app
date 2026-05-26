@@ -91,7 +91,6 @@ export type ParsedCircuitConfig = {
 };
 
 export type ViewMode = 'nodes' | 'edges';
-export type DisplayMode = 'collapsed' | 'half' | 'full';
 
 export const CIRCUIT_H5_CACHE = 'obi-circuit-h5-v1';
 

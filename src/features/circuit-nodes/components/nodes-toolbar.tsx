@@ -1,5 +1,4 @@
 import { RiArrowDownSLine } from '@remixicon/react';
-import { Tooltip } from 'antd';
 
 import {
   Select,
@@ -10,9 +9,7 @@ import {
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
-import ModeIcon from './mode-icon';
-
-import type { DisplayMode, NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
+import type { NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
@@ -33,8 +30,6 @@ type Props = {
   populations: NodePopulation[];
   populationName: string | undefined;
   onPopulationChange: (name: string) => void;
-  mode: DisplayMode;
-  onModeChange: (mode: DisplayMode) => void;
 };
 
 export function NodesToolbar({
@@ -43,11 +38,9 @@ export function NodesToolbar({
   populations,
   populationName,
   onPopulationChange,
-  mode,
-  onModeChange,
 }: Props) {
   return (
-    <div className={cn(styles.toolbar, mode === 'collapsed' && styles.toolbarCollapsed)}>
+    <div className={styles.toolbar}>
       <div className={styles.toolbarGroup}>
         <span className={styles.toolbarLabel}>View</span>
         <Select value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
@@ -90,56 +83,6 @@ export function NodesToolbar({
           </SelectContent>
         </Select>
       </div>
-
-      <div className={styles.modeButtons}>
-        <ModeButton
-          active={mode === 'collapsed'}
-          onClick={() => onModeChange('collapsed')}
-          label="Collapse"
-        >
-          <ModeIcon mode="collapsed" />
-        </ModeButton>
-        <ModeButton
-          active={mode === 'half'}
-          onClick={() => onModeChange('half')}
-          label="Half height"
-        >
-          <ModeIcon mode="half" />
-        </ModeButton>
-        <ModeButton
-          active={mode === 'full'}
-          onClick={() => onModeChange('full')}
-          label="Full height"
-        >
-          <ModeIcon mode="full" />
-        </ModeButton>
-      </div>
     </div>
-  );
-}
-
-function ModeButton({
-  active,
-  onClick,
-  label,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Tooltip title={label}>
-      <button
-        type="button"
-        className={cn(styles.modeButton, active && styles.modeButtonActive)}
-        onClick={onClick}
-        aria-pressed={active}
-        aria-label={label}
-      >
-        {children}
-      </button>
-    </Tooltip>
   );
 }
