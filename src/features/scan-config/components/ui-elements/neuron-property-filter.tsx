@@ -36,13 +36,18 @@ export default function NeuronPropertyFilter({
                 onClick={() => onChange(value.filter((_, idx) => idx !== i))}
               />
             )}
-            {Object.keys(f.filter_dict).map((p) => (
+            {Object.keys(f.filter_dict).map((p, idx) => (
               <PropertyValueSelector
+                index={idx + 1}
                 propertyName={p}
                 key={p}
                 values={properties[p]}
                 selected={f.filter_dict[p]}
                 onValuesChange={(selected) => handleValuesChange(p, selected)}
+                onDelete={() => {
+                  const { [p]: _, ...rest } = f.filter_dict;
+                  onChange(value.with(i, { filter_dict: rest }));
+                }}
               />
             ))}
             <div className="w-full flex flex-col mt-[10px]">
@@ -122,16 +127,22 @@ function DropdownSelect({
 }
 
 function PropertyValueSelector({
+  index,
   propertyName,
   values,
   selected,
   onValuesChange,
+  onDelete,
 }: {
+  index: number;
   propertyName: string;
   values: string[];
   selected: string[];
   onValuesChange: (selected: string[]) => void;
+  onDelete: () => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+
   const toggle = (val: string) => {
     if (selected.includes(val)) {
       onValuesChange(selected.filter((s) => s !== val));
@@ -142,26 +153,40 @@ function PropertyValueSelector({
 
   return (
     <div>
-      {propertyName}
-      <div className="flex flex-wrap gap-2">
-        {values.map((val) => {
-          const isSelected = selected.includes(val);
-          return (
-            <button
-              key={val}
-              type="button"
-              className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                isSelected
-                  ? 'border-blue-500 bg-blue-500 text-white'
-                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-              }`}
-              onClick={() => toggle(val)}
-            >
-              {val}
-            </button>
-          );
-        })}
+      <div className="flex items-center gap-2">
+        <DeleteOutlined
+          className="text-red-500 cursor-pointer hover:text-red-700 text-xs"
+          onClick={onDelete}
+        />
+        <button
+          type="button"
+          className="font-semibold text-sm cursor-pointer hover:text-blue-600"
+          onClick={() => setExpanded(!expanded)}
+        >
+          {index}. {propertyName}
+        </button>
       </div>
+      {expanded && (
+        <div className="flex flex-wrap gap-2 mt-1">
+          {values.map((val) => {
+            const isSelected = selected.includes(val);
+            return (
+              <button
+                key={val}
+                type="button"
+                className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                  isSelected
+                    ? 'border-blue-500 bg-blue-500 text-white'
+                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                }`}
+                onClick={() => toggle(val)}
+              >
+                {val}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
