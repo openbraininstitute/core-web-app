@@ -168,6 +168,34 @@ export class NodesSession {
       }
     }
 
+    // SONATA dynamics_params: per-node biophysical parameters living in a
+    // sub-group. Flatten each 1D dataset to a top-level column.
+    const dynamicsGroup = group.get('dynamics_params');
+    if (dynamicsGroup instanceof Group) {
+      const taken = new Set(columnMeta.map((c) => c.name));
+      for (const key of dynamicsGroup.keys()) {
+        if (taken.has(key)) continue;
+        const node = dynamicsGroup.get(key);
+        if (!(node instanceof Dataset)) continue;
+        const shape = node.shape;
+        if (!shape || shape.length !== 1) continue;
+        const rowCount = Number(shape[0]);
+        if (rowCount === 0) continue;
+        if (detectedRowCount !== null && rowCount !== detectedRowCount) continue;
+        if (detectedRowCount === null) detectedRowCount = rowCount;
+
+        const dtype = String(node.dtype);
+        const kind = classifyDtype(dtype);
+        if (kind === 'numeric') {
+          handles.push({ kind: 'numeric', name: key, dataset: node, dtype });
+          columnMeta.push({ name: key, kind: 'numeric', dtype });
+        } else {
+          handles.push({ kind: 'string', name: key, dataset: node, dtype });
+          columnMeta.push({ name: key, kind: 'string', dtype });
+        }
+      }
+    }
+
     this.rowCount = detectedRowCount ?? 0;
 
     // Synthetic node_id column (0-based row index).
