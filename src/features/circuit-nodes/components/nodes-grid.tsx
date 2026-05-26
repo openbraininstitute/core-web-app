@@ -9,7 +9,13 @@ import { ColumnChooser } from '@/features/circuit-nodes/components/column-choose
 import { ColumnHeader } from '@/features/circuit-nodes/components/column-header';
 import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 
-import type { ColDef, ColumnMovedEvent, GridReadyEvent, IDatasource } from 'ag-grid-community';
+import type {
+  ColDef,
+  ColumnMovedEvent,
+  GridReadyEvent,
+  IDatasource,
+  ValueFormatterParams,
+} from 'ag-grid-community';
 import type { ColumnMeta } from '@/features/circuit-nodes/types';
 
 const PREFERRED_NAME_SET = new Set(PREFERRED_COLUMNS.map((p) => p.name));
@@ -18,6 +24,7 @@ const CATEGORICAL_SET_FILTER_MAX = 100;
 
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
+import '@/features/circuit-nodes/components/nodes-grid.css';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
@@ -64,13 +71,14 @@ function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: Bu
         : isNumeric
           ? 'agNumberColumnFilter'
           : 'agTextColumnFilter',
-      filterParams: useSetFilter ? { library: c.library } : undefined,
+      filterParams: useSetFilter ? { library: c.library } : { buttons: ['reset'] },
       suppressHeaderMenuButton: true,
       minWidth: isNumeric ? 60 : 80,
       width,
       cellClass: isNumeric ? 'ag-right-aligned-cell' : undefined,
       valueFormatter: isNumeric
-        ? (p) => (typeof p.value === 'number' ? formatNumber(p.value) : p.value)
+        ? (p: ValueFormatterParams) =>
+            typeof p.value === 'number' ? formatNumber(p.value) : p.value
         : undefined,
     } satisfies ColDef;
   });
@@ -134,7 +142,7 @@ export function NodesGrid({
     if (!e.finished) return;
     const nextOrder = e.api
       .getColumnState()
-      .map((s) => s.colId)
+      .map((s): string | undefined => s.colId)
       .filter((id): id is string => typeof id === 'string');
     setOrderedNames((prev) => (isEqual(prev, nextOrder) ? prev : nextOrder));
   };

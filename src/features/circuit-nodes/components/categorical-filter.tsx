@@ -88,6 +88,12 @@ export function CategoricalFilter({ model, onModelChange, library: rawLibrary }:
     for (const v of scope) next.delete(v);
     update(next);
   };
+  const reset = () => {
+    commit.cancel();
+    setQuery('');
+    setSelected(new Set(library));
+    onModelChange(null);
+  };
 
   return (
     <div className={styles.filterPopover}>
@@ -139,6 +145,11 @@ export function CategoricalFilter({ model, onModelChange, library: rawLibrary }:
             );
           })
         )}
+      </div>
+      <div className={styles.filterFooter}>
+        <button type="button" onClick={reset} className={styles.actionButton}>
+          Reset
+        </button>
       </div>
     </div>
   );
