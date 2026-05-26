@@ -195,11 +195,17 @@ export function UIElementRender({
             disabled={disabled}
             value={getValue()}
             onChange={(newV: string[]) => {
-              setState({
+              const nextState = {
                 ...state,
                 // NOTE: this is requested by James for IT'IS collaboration
                 [k]: Array.isArray(newV) && newV.length === 1 ? newV[0] : newV,
-              });
+              };
+
+              if (paramSchema.property_filter_key) {
+                nextState[paramSchema.property_filter_key] = null;
+              }
+
+              setState(nextState);
             }}
             property={paramSchema.property}
           />
@@ -366,9 +372,10 @@ export function UIElementRender({
       {
         paramSchema: { ui_element: ScanConfigUIElementDict.NeuronPropertyFilter },
       },
-      () => {
-        const getPopulationValue = (): string => {
-          const selectedPopulation = state.population;
+      ({ paramSchema }) => {
+        const getDropdownValue = (): string => {
+          const dropdownValueKey = paramSchema.population_source_dropdown_key;
+          const selectedPopulation = state[dropdownValueKey];
 
           if (Array.isArray(selectedPopulation) && typeof selectedPopulation[0] === 'string') {
             return selectedPopulation[0] ?? '';
@@ -377,7 +384,7 @@ export function UIElementRender({
           return '';
         };
 
-        const selectedPopulation = getPopulationValue();
+        const selectedPopulation = getDropdownValue();
 
         const properties =
           schemaMappingConfig?.properties?.NodePropertyUniqueValuesByPopulation[
@@ -400,7 +407,6 @@ export function UIElementRender({
 
         return (
           <NeuronPropertyFilter
-            population={selectedPopulation}
             properties={properties}
             value={getValue() as unknown as INeuronPropertyFilter[]}
             onChange={(newValue: INeuronPropertyFilter[]) => {

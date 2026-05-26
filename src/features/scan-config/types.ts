@@ -223,6 +223,7 @@ export interface EntityPropertyDropdown extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.EntityPropertyDropdown;
   entity_type: string;
   property: string;
+  property_filter_key?: string;
 }
 export interface ModelSelectorSingle extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelSelectorSingle;
@@ -313,6 +314,7 @@ export interface VoltageDuration extends TBlockElement {
 
 export interface NeuronPropertyFilter extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.NeuronPropertyFilter;
+  population_source_dropdown_key: string;
 }
 
 export interface IBlockUnion extends TRootElement {

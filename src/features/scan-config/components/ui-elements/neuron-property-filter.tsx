@@ -1,29 +1,22 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useState } from 'react';
-import { P } from 'ts-pattern';
-
-import { usePrevious } from '@/hooks/hooks';
 
 export interface INeuronPropertyFilter {
   filter_dict: Record<string, string[]>;
 }
 
 export default function NeuronPropertyFilter({
-  population,
   value,
   properties,
   onChange,
 }: {
-  population: string;
   value: INeuronPropertyFilter[];
   properties: Record<string, string[]>;
   onChange: (newValue: INeuronPropertyFilter[]) => void;
 }) {
-  const prevPopulation = usePrevious(population);
-  if (prevPopulation !== population) onChange([]);
-
-  if (population === '') return <div className="text-gray-500">Select a population</div>;
+  if (Object.keys(properties).length === 0)
+    return <div className="text-gray-500">Select a population</div>;
 
   return (
     <div className="flex flex-col gap-2">
