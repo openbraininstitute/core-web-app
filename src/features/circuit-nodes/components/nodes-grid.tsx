@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CategoricalFilter } from '@/features/circuit-nodes/components/categorical-filter';
 import { ColumnChooser } from '@/features/circuit-nodes/components/column-chooser';
 import { ColumnHeader } from '@/features/circuit-nodes/components/column-header';
-import { DEFAULT_VISIBLE_COLUMNS } from '@/features/circuit-nodes/types';
+import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 
 import type { ColDef, ColumnMovedEvent, GridReadyEvent, IDatasource } from 'ag-grid-community';
 import type { ColumnMeta } from '@/features/circuit-nodes/types';
@@ -35,11 +35,16 @@ type BuildArgs = {
   onOpenChooser: () => void;
 };
 
+const PREFERRED_WIDTH_BY_NAME = new Map(
+  PREFERRED_COLUMNS.filter((p) => p.width !== undefined).map((p) => [p.name, p.width as number])
+);
+
 function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: BuildArgs): ColDef[] {
   return orderedColumns.map((c) => {
     const isNumeric = c.kind === 'numeric';
     const useSetFilter =
       c.kind === 'categorical' && (c.library?.length ?? 0) < CATEGORICAL_SET_FILTER_MAX;
+    const width = PREFERRED_WIDTH_BY_NAME.get(c.name) ?? (isNumeric ? 80 : 100);
     return {
       field: c.name,
       headerName: capitalize(c.name.replace(/_/g, ' ')),
@@ -59,8 +64,8 @@ function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: Bu
           : 'agTextColumnFilter',
       filterParams: useSetFilter ? { library: c.library } : undefined,
       suppressHeaderMenuButton: true,
-      minWidth: isNumeric ? 64 : 70,
-      width: isNumeric ? 84 : 90,
+      minWidth: isNumeric ? 60 : 80,
+      width,
       cellClass: isNumeric ? 'ag-right-aligned-cell' : undefined,
       valueFormatter: isNumeric
         ? (p) => (typeof p.value === 'number' ? formatNumber(p.value) : p.value)
@@ -211,15 +216,12 @@ export function NodesGrid({
 }
 
 export function defaultVisibleColumnSet(columns: ColumnMeta[]): Set<string> {
-  const names = new Set(columns.map((c) => c.name));
-  const filtered = DEFAULT_VISIBLE_COLUMNS.filter((n) => names.has(n));
-  if (filtered.length === 0) return new Set(columns.slice(0, 12).map((c) => c.name));
-  return new Set(filtered);
+  return new Set(columns.map((c) => c.name));
 }
 
 function defaultColumnOrder(columns: ColumnMeta[]): string[] {
   const names = new Set(columns.map((c) => c.name));
-  const preferred = DEFAULT_VISIBLE_COLUMNS.filter((n) => names.has(n));
+  const preferred = PREFERRED_COLUMNS.map((p) => p.name).filter((n) => names.has(n));
   const preferredSet = new Set(preferred);
   const rest = columns.map((c) => c.name).filter((n) => !preferredSet.has(n));
   return [...preferred, ...rest];

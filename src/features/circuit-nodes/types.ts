@@ -94,16 +94,21 @@ export type ViewMode = 'nodes' | 'edges';
 
 export const CIRCUIT_H5_CACHE = 'obi-circuit-h5-v1';
 
-export const DEFAULT_VISIBLE_COLUMNS: readonly string[] = [
-  'node_id',
-  'region',
-  'layer',
-  'mtype',
-  'etype',
-  'morph_class',
-  'synapse_class',
-  'morphology',
-  'x',
-  'y',
-  'z',
+export type PreferredColumn = {
+  name: string;
+  width?: number;
+};
+
+export const PREFERRED_COLUMNS: readonly PreferredColumn[] = [
+  { name: 'node_id', width: 80 },
+  { name: 'region', width: 80 },
+  { name: 'layer', width: 70 },
+  { name: 'mtype', width: 90 },
+  { name: 'etype', width: 80 },
+  { name: 'morph_class', width: 110 },
+  { name: 'synapse_class', width: 120 },
+  { name: 'morphology', width: 180 },
+  { name: 'x', width: 100 },
+  { name: 'y', width: 100 },
+  { name: 'z', width: 100 },
 ];
