@@ -2,6 +2,7 @@
 
 import { type DynamicToolUIPart, getToolName, isToolUIPart, type ToolUIPart } from 'ai';
 import { useAtom, useSetAtom } from 'jotai';
+import { z } from 'zod';
 import React from 'react';
 
 import {
@@ -142,9 +143,7 @@ export function useMessageDiffs({ message }: UseMessageDiffsArgs): MessageDiffAc
     // Only check if it looks like a UUID (entity-specific pages).
     const urlSegments = globalThis.location?.pathname?.split('/').filter(Boolean) ?? [];
     const urlEntityId = urlSegments[urlSegments.length - 1];
-    const isUuid =
-      urlEntityId &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(urlEntityId);
+    const isUuid = z.uuid().safeParse(urlEntityId).success;
     if (isUuid && messageKey) {
       const messageConfig = result.state[messageKey];
       if (messageConfig && !JSON.stringify(messageConfig).includes(urlEntityId)) {
