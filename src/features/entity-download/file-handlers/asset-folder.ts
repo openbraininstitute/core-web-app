@@ -2,6 +2,7 @@ import { Readable } from 'node:stream';
 
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
 
+import type { ReadableStream as NodeReadableStream } from 'node:stream/web';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { FileEntry } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -75,8 +76,7 @@ export async function* getAssetFolderFiles({
 
     yield {
       path: relativePath,
-      // FIXME: align with createAssetFileEntry — remove cast once types are reconciled
-      stream: Readable.fromWeb(response.body as any),
+      stream: Readable.fromWeb(response.body as NodeReadableStream),
       size,
     };
   }

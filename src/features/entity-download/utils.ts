@@ -10,6 +10,7 @@ import template from 'es-toolkit/compat/template';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getSession } from '@/auth-fetch';
 
+import type { ReadableStream as NodeReadableStream } from 'node:stream/web';
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
@@ -98,8 +99,7 @@ export async function createAssetFileEntry({
   }
   return {
     path,
-    // FIXME: @pavlo, please remove type casting
-    stream: Readable.fromWeb(response.body as any),
+    stream: Readable.fromWeb(response.body as NodeReadableStream),
     size: Number(response.headers.get('content-length')),
   };
 }
