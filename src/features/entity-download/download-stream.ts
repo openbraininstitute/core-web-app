@@ -28,8 +28,7 @@ export async function createDownloadStream(params: CreateDownloadStreamParams) {
 
   tarPack.pipe(gzip);
 
-  // FIX: @pavlo, please remove type casting
-  const downloadStream = Readable.toWeb(gzip) as unknown as ReadableStream<Uint8Array>;
+  const downloadStream = Readable.toWeb(gzip) as ReadableStream<Uint8Array>;
 
   const controller = new AbortController();
   // TODO: pass abort signal to getFilesGenerator

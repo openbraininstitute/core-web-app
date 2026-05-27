@@ -234,8 +234,8 @@ export function buildConfigurationFiles(
       title: 'Node sets',
     });
   }
-  // Use `components.provenance.id_mapping` from the config,
-  // fall back to `id_mapping.json` if the file exists.
+  // Spec field is optional and often unset by builders — fall back to the
+  // legacy hardcoded path only if it actually exists.
   const idMappingFromConfig = config.components?.provenance?.id_mapping;
   const idMappingPath = idMappingFromConfig
     ? getAssetPath(idMappingFromConfig, config.manifest)

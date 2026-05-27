@@ -4,15 +4,7 @@ type CreateAssetFolderTicketResponse = {
   ticketId: string;
 };
 
-export async function createAssetFolderDownloadTicket({
-  entityType,
-  entityId,
-  assetId,
-  prefix,
-  filename,
-  virtualLabId,
-  projectId,
-}: {
+type CreateAssetFolderTicketParams = {
   entityType: TEntityTypeDict;
   entityId: string;
   assetId: string;
@@ -20,7 +12,11 @@ export async function createAssetFolderDownloadTicket({
   filename: string;
   virtualLabId?: string;
   projectId?: string;
-}): Promise<CreateAssetFolderTicketResponse> {
+};
+
+export async function createAssetFolderDownloadTicket(
+  params: CreateAssetFolderTicketParams
+): Promise<CreateAssetFolderTicketResponse> {
   const url = `${window.location.origin}/api/entity-download/asset-folder/ticket`;
   const response = await fetch(url, {
     method: 'post',
@@ -28,15 +24,7 @@ export async function createAssetFolderDownloadTicket({
       accept: 'application/json',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      entityType,
-      entityId,
-      assetId,
-      prefix,
-      filename,
-      virtualLabId,
-      projectId,
-    }),
+    body: JSON.stringify(params),
   });
   if (response.ok) {
     return response.json();

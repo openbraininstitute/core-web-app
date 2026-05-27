@@ -23,14 +23,14 @@ export type FolderDownloadConfig = {
   context: { virtualLabId: string; projectId: string };
 };
 
-type FolderGroupItemProps = {
+type FolderRowProps = {
   entry: FolderEntry;
   archiveBaseName: string;
   mimeType: string;
   downloadConfig: FolderDownloadConfig;
 };
 
-function FolderRow({ entry, archiveBaseName, mimeType, downloadConfig }: FolderGroupItemProps) {
+function FolderRow({ entry, archiveBaseName, mimeType, downloadConfig }: FolderRowProps) {
   const notify = useAppNotification();
   const disabled = entry.fileCount === 0;
 
@@ -62,43 +62,41 @@ function FolderRow({ entry, archiveBaseName, mimeType, downloadConfig }: FolderG
   };
 
   return (
-    <div className="flex w-full flex-col">
-      <div className="flex w-full flex-row items-center justify-between gap-y-10">
-        <div className="w-2/3 hyphens-auto">
-          <div className="line-clamp-2 text-lg font-bold text-white">{entry.label}</div>
-          {entry.prefix !== entry.label && (
-            <div className="text-primary-2 text-sm font-light">{entry.prefix}</div>
-          )}
-        </div>
-        <div
+    <div className="flex w-full flex-row items-center justify-between gap-y-10">
+      <div className="w-2/3 hyphens-auto">
+        <div className="line-clamp-2 text-lg font-bold text-white">{entry.label}</div>
+        {entry.prefix !== entry.label && (
+          <div className="text-primary-2 text-sm font-light">{entry.prefix}</div>
+        )}
+      </div>
+      <div
+        className={classNames(
+          'flex flex-row items-center gap-x-3 font-light',
+          disabled ? 'text-gray-400' : 'text-primary-2'
+        )}
+      >
+        <Tooltip title="Uncompressed total. The downloaded .tar.gz archive will be smaller.">
+          <div className="cursor-help">
+            {entry.totalSize ? `~${formatBytes(entry.totalSize)}` : renderEmptyOrValue(null)}
+          </div>
+        </Tooltip>
+        <div>{renderEmptyOrValue(mimeType)}</div>
+        <Button
+          onClick={onClick}
+          type="text"
+          htmlType="button"
+          disabled={disabled}
           className={classNames(
-            'flex flex-row items-center gap-x-3 font-light',
-            disabled ? 'text-gray-400' : 'text-primary-2'
+            'flex items-center justify-center rounded-none border border-solid',
+            'hover:text-primary-6!',
+            disabled
+              ? 'pointer-events-none cursor-not-allowed border-gray-300 bg-transparent text-gray-400!'
+              : 'border-primary-6 text-white'
           )}
-        >
-          <Tooltip title="Uncompressed total. The downloaded .tar.gz archive will be smaller.">
-            <div className="cursor-help">
-              {entry.totalSize ? `~${formatBytes(entry.totalSize)}` : renderEmptyOrValue(null)}
-            </div>
-          </Tooltip>
-          <div>{renderEmptyOrValue(mimeType)}</div>
-          <Button
-            onClick={onClick}
-            type="text"
-            htmlType="button"
-            disabled={disabled}
-            className={classNames(
-              'flex items-center justify-center rounded-none border border-solid',
-              'hover:text-primary-6!',
-              disabled
-                ? 'pointer-events-none cursor-not-allowed border-gray-300 bg-transparent text-gray-400!'
-                : 'border-primary-6 text-white'
-            )}
-            aria-label={`Download ${entry.label}`}
-            title={`Download ${entry.label}`}
-            icon={<DownloadIcon className="text-current!" />}
-          />
-        </div>
+          aria-label={`Download ${entry.label}`}
+          title={`Download ${entry.label}`}
+          icon={<DownloadIcon className="text-current!" />}
+        />
       </div>
     </div>
   );
