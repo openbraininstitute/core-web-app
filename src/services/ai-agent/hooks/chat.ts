@@ -2,10 +2,11 @@
 
 import { useChat } from '@ai-sdk/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { DefaultChatTransport, getToolName, isToolUIPart } from 'ai';
+import { DefaultChatTransport, type FileUIPart, getToolName, isToolUIPart } from 'ai';
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { presignedUrlCache } from '@/components/ai-assistant/message-item/storage-image-part';
 import { atomRateLimit } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -17,6 +18,7 @@ import { useParamProjectId, useParamVirtualLabId } from '@/util/params';
 import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
+import { uploadFilesAndCreateParts } from '../api/upload';
 import { AiAssistant, useAiAssistant } from '../assistant';
 import { fetchMessagesFromDB } from '../assistant/manager/message';
 
@@ -207,10 +209,62 @@ export function useServiceAiAgentChat(threadId: string) {
     setIsChatReady(chat.status === 'ready');
   }, [chat.status, setIsChatReady]);
 
+  const [pendingUserMessage, setPendingUserMessage] = useState<{
+    text: string;
+    files: { name: string; type: string; previewUrl: string; uploaded: boolean }[];
+  } | null>(null);
+
   const sendMessage = useCallback(
-    (text: string) => {
+    async (text: string, files?: File[]) => {
       AiAssistant.isEmptyThread.set(false);
-      chat.sendMessage({ text });
+
+      let fileUIParts: FileUIPart[] | undefined;
+      if (files && files.length > 0 && accessToken && threadId) {
+        // Show a pending message immediately while files upload
+        const pendingFiles = files.map((f) => ({
+          name: f.name,
+          type: f.type,
+          previewUrl: f.type.startsWith('image/') ? URL.createObjectURL(f) : '',
+          uploaded: false,
+        }));
+        setPendingUserMessage({ text, files: pendingFiles });
+
+        try {
+          // Upload files in parallel but update state as each completes
+          const uploadPromises = files.map(async (file, idx) => {
+            const parts = await uploadFilesAndCreateParts([file], accessToken, threadId);
+            setPendingUserMessage((prev) => {
+              if (!prev) return prev;
+              const updated = [...prev.files];
+              updated[idx] = { ...updated[idx], uploaded: true };
+              return { ...prev, files: updated };
+            });
+            return parts[0];
+          });
+          const results = await Promise.all(uploadPromises);
+          fileUIParts = results.filter(Boolean);
+
+          // Seed the presigned URL cache with blob preview URLs so that
+          // StorageImagePart renders instantly without a network round-trip.
+          // This prevents the image from disappearing between the pending
+          // message being removed and the real message rendering.
+          fileUIParts.forEach((part, idx) => {
+            const blobUrl = pendingFiles[idx]?.previewUrl;
+            if (blobUrl && part.url.startsWith('storage://')) {
+              presignedUrlCache[part.url] = blobUrl;
+            }
+          });
+        } catch {
+          // If upload fails, send without files
+        }
+        setPendingUserMessage(null);
+      }
+
+      chat.sendMessage({
+        text,
+        ...(fileUIParts && fileUIParts.length > 0 ? { files: fileUIParts } : {}),
+      });
+
       if (chat.messages.length === 0) {
         try {
           serviceAiAgentThreadSuggestTitle({
@@ -284,6 +338,7 @@ export function useServiceAiAgentChat(threadId: string) {
     status: chat.status,
     error: chat.error,
     stop,
+    pendingUserMessage,
   };
 }
 

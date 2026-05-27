@@ -1,6 +1,7 @@
 'use client';
 
-import { getToolName, isToolUIPart } from 'ai';
+import { RiFileLine } from '@remixicon/react';
+import { getToolName, isFileUIPart, isToolUIPart } from 'ai';
 import React from 'react';
 
 import { GithubFlavorMarkdown } from '@/components/github-flavor-markdown';
@@ -9,6 +10,8 @@ import { classNames } from '@/util/utils';
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import { BackupPlotsWrapper, extractStorageIdsFromMessage } from './backup-plots';
 import { CollapsibleMessage } from './collapsible-message';
+import { ExpandableImage } from './expandable-image';
+import { StorageImagePart } from './storage-image-part';
 import ToolsProgress from './tools-progress';
 import { useMessageDiffs } from './use-message-diffs';
 
@@ -94,6 +97,40 @@ function MessageChild({
         <div className={styles.user}>
           <div className={styles.userContent}>
             <div>{value.parts.map((part) => part.type === 'text' && part.text)}</div>
+            {value.parts.filter(isFileUIPart).map((part, idx) => {
+              if (part.mediaType === 'application/pdf') {
+                return (
+                  <div
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={`file-${idx}`}
+                    className={styles.pdfAttachment}
+                  >
+                    <span className={styles.pdfIcon}>
+                      <RiFileLine size={28} />
+                    </span>
+                    <span className={styles.pdfName}>{part.filename ?? 'document.pdf'}</span>
+                  </div>
+                );
+              }
+              if (part.mediaType?.startsWith('image/')) {
+                return part.url.startsWith('storage://') ? (
+                  <StorageImagePart
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={`file-${idx}`}
+                    url={part.url}
+                    filename={part.filename}
+                  />
+                ) : (
+                  <ExpandableImage
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={`file-${idx}`}
+                    src={part.url}
+                    alt={part.filename ?? 'Attached image'}
+                  />
+                );
+              }
+              return null;
+            })}
           </div>
         </div>
       );
