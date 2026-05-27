@@ -1,3 +1,7 @@
+import { pipeline, Readable } from 'node:stream';
+import { promisify } from 'node:util';
+import { createGzip } from 'node:zlib';
+
 import tar from 'tar-stream';
 
 import { getEntityFilesHandlerMap } from '@/features/entity-download/file-handlers';
@@ -8,10 +12,6 @@ import type {
   EntityBatchDownloadTicket,
 } from '@/features/entity-download/ticket-store';
 import type { FileEntry } from '@/features/entity-download/types';
-
-import { pipeline, Readable } from 'node:stream';
-import { promisify } from 'node:util';
-import { createGzip } from 'node:zlib';
 
 type CreateDownloadStreamParams =
   | Omit<EntityBatchDownloadTicket, 'createdAt'>
