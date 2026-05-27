@@ -33,13 +33,15 @@ export function useAutoScroll({
   }, [containerRef]);
 
   // useLayoutEffect: scroll before paint on loading→loaded (no flash).
+  // Scroll on every messages update — AI SDK v6 produces a new array ref on each streamed chunk.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: messages triggers scroll on each streamed chunk
   React.useLayoutEffect(() => {
     if (isLoadingMessages) return;
 
     if (isAutoScrollRef.current) {
       scrollToBottom();
     }
-  }, [isLoadingMessages, scrollToBottom]);
+  }, [messages, isLoadingMessages, scrollToBottom]);
 
   const prevStatusRef = React.useRef(status);
   React.useEffect(() => {
@@ -51,10 +53,11 @@ export function useAutoScroll({
     prevStatusRef.current = status;
   }, [status, scrollToBottom]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: threadId resets scroll on conversation switch
   React.useEffect(() => {
     setAutoScroll(true);
     scrollToBottom();
-  }, [scrollToBottom, setAutoScroll]);
+  }, [threadId, scrollToBottom, setAutoScroll]);
 
   const handleWheel = React.useCallback(
     (event: React.WheelEvent) => {
