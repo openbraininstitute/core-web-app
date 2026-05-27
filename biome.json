@@ -93,6 +93,11 @@
             "groups": [
               {
                 "type": false,
+                "source": [":NODE:"]
+              },
+              ":BLANK_LINE:",
+              {
+                "type": false,
                 "source": [":PACKAGE:"]
               },
               ":BLANK_LINE:",
@@ -120,6 +125,10 @@
                 ]
               },
               ":BLANK_LINE:",
+              {
+                "type": true,
+                "source": [":NODE:"]
+              },
               {
                 "type": true,
                 "source": [":PACKAGE:"]
