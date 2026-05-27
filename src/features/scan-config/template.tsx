@@ -9,7 +9,7 @@ import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
-  ACTIVITY_AI_CONFIG_MAP,
+  getConfigKeyForEntity,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import {
@@ -31,7 +31,7 @@ import SimulationsTab from '@/features/scan-config/use-cases/simulations/results
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { usePrevious } from '@/hooks/hooks';
 import { messages } from '@/i18n/en/scan-config';
-import { useAgentState } from '@/services/ai-agent';
+import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -98,7 +98,11 @@ export function ScanConfigTemplate({
   const previousCampaignId = usePrevious(campaignId);
   const isCampaignIdChanged = previousCampaignId !== campaignId;
 
-  useAgentState(aiEnabled ? ACTIVITY_AI_CONFIG_MAP[activity] : '', config);
+  useAgentState(
+    aiEnabled ? getConfigKeyForEntity(entityType, activity, entity as { scale?: string } | undefined) : '',
+    config
+  );
+  const { aiConfig } = useAIConfig();
 
   const configurationTabId = ScanConfigTabs[activity].configuration;
   const isConfigurationTab = tab.id === configurationTabId;

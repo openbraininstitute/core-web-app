@@ -217,7 +217,8 @@ export function useScanConfiguration({
       };
     }
 
-    const aiEnabled = entity ? 'scale' in entity && entity.scale !== 'single' : false;
+    const aiEnabled =
+      activity === ScanConfigActivity.Simulate || activity === ScanConfigActivity.Process;
 
     if (!entity && !resolved.usedType) {
       return { isLoading: false, error: null, unresolvedMessage: null, ready: null };

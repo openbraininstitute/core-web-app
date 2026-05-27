@@ -80,8 +80,13 @@ function MessageChild({
   );
   const validStorageIds = useStableArray(memoizedStorageIds);
 
-  const { hasEditStateCalls, handlePreviewRestore, handleConfirmRestore, handleCancelRestore } =
-    useMessageDiffs({ message: value });
+  const {
+    hasEditStateCalls,
+    canRestore,
+    handlePreviewRestore,
+    handleConfirmRestore,
+    handleCancelRestore,
+  } = useMessageDiffs({ message: value });
 
   switch (value.role) {
     case 'user':
@@ -128,7 +133,7 @@ function MessageChild({
             onPreviewRestore={handlePreviewRestore}
             onConfirmRestore={handleConfirmRestore}
             onCancelRestore={handleCancelRestore}
-            hasEditStateCalls={hasEditStateCalls}
+            hasEditStateCalls={hasEditStateCalls && canRestore}
           >
             {children}
           </CollapsibleMessage>

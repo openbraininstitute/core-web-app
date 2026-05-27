@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { atomRateLimit } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
+import { findConfigKeyInState } from '@/features/scan-config/helpers';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { lastConfigUpdateAtom, preMessageConfigAtom } from '@/state/config-highlights';
 import { keyBuilderAI } from '@/ui/use-query-keys/ai-assistant';
@@ -150,13 +151,14 @@ export function useServiceAiAgentChat(threadId: string) {
 
     try {
       const result = editstateResult.output as Record<string, any>;
-      const newConfig = result.state?.smc_simulation_config ?? null;
+      const detectedKey = findConfigKeyInState(result.state);
+      const newConfig = detectedKey ? result.state[detectedKey] : null;
       // Use lastAppliedConfigRef for incremental flash diffs. Falls back
       // to the live agentStateAtom for the very first editstate call.
+      const currentState = jotaiStore.get(agentStateAtom) as Record<string, unknown>;
+      const activeKey = findConfigKeyInState(currentState);
       const oldConfig =
-        lastAppliedConfigRef.current ??
-        (jotaiStore.get(agentStateAtom) as Record<string, unknown>)?.smc_simulation_config ??
-        null;
+        lastAppliedConfigRef.current ?? (activeKey ? currentState[activeKey] : null);
 
       // Snapshot the config before the first editstate call in this message
       // so the diff bar can compute accumulated diffs without walking history.
@@ -290,6 +292,7 @@ export const isChatReadyAtom = atom(true);
 
 export function useAgentState(key: string, config?: Config) {
   const [, setAIAgentState] = useAtom(agentStateAtom);
+  const setLastConfigUpdate = useSetAtom(lastConfigUpdateAtom);
   const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
 
   useEffect(() => {
@@ -305,12 +308,16 @@ export function useAgentState(key: string, config?: Config) {
     );
 
     return () => {
-      if (!defaultConfig) return;
-      setAIAgentState({
-        smc_simulation_config: defaultConfig,
-      });
+      setAIAgentState({});
     };
   }, [defaultConfig, config, key, setAIAgentState]);
+
+  // Clear stale flash state on unmount so the next page doesn't flash
+  useEffect(() => {
+    return () => {
+      setLastConfigUpdate(null);
+    };
+  }, [setLastConfigUpdate]);
 }
 
 export function useAIConfig() {
@@ -324,21 +331,23 @@ export function useAIConfig() {
     isChatReady,
   };
 
+  const activeKey = findConfigKeyInState(aiAgentState as Record<string, unknown>);
+
   if (
     !isPlainObject(aiConfig?.initialize) ||
-    !isPlainObject(aiAgentState?.smc_simulation_config?.initialize)
-  )
-    return defaultConfig;
-  if (
-    !isPlainObject(aiConfig?.initialize?.circuit) ||
-    !isPlainObject(aiAgentState?.smc_simulation_config?.initialize?.circuit)
+    !activeKey ||
+    !isPlainObject((aiAgentState as any)?.[activeKey]?.initialize)
   )
     return defaultConfig;
 
-  const aiCircuitId = aiConfig.initialize.circuit.id_str;
-  const agentCircuitId = aiAgentState.smc_simulation_config.initialize.circuit.id_str;
+  // Circuit identity guard: only apply when both configs have a circuit object.
+  // Non-circuit workflows (ion channel, skeletonization, etc.) skip this check.
+  const aiCircuit = aiConfig.initialize?.circuit;
+  const agentCircuit = (aiAgentState as any)?.[activeKey]?.initialize?.circuit;
 
-  if (aiCircuitId !== agentCircuitId) return defaultConfig;
+  if (isPlainObject(aiCircuit) && isPlainObject(agentCircuit)) {
+    if (aiCircuit.id_str !== agentCircuit.id_str) return defaultConfig;
+  }
 
   return {
     aiConfig,
