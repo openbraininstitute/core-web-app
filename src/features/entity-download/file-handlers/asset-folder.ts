@@ -6,6 +6,22 @@ import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { FileEntry } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
 
+/**
+ * Normalize a folder prefix so it can be used as a directory boundary with
+ * `String.prototype.startsWith` against an asset listing.
+ *
+ * Strips a leading `./` (SONATA manifest-relative form) and any leading `/`,
+ * trims trailing `/`, then appends exactly one `/`. An empty or root-only
+ * prefix returns `''`, which the caller treats as "match every file".
+ *
+ * @example
+ * normalizePrefix('')           // ''
+ * normalizePrefix('/')          // ''
+ * normalizePrefix('./')         // ''
+ * normalizePrefix('./mod')      // 'mod/'
+ * normalizePrefix('/mod/')      // 'mod/'
+ * normalizePrefix('mechanisms') // 'mechanisms/'
+ */
 function normalizePrefix(prefix: string): string {
   let p = prefix.replace(/^\.\//, '');
   p = p.replace(/^\/+/, '');

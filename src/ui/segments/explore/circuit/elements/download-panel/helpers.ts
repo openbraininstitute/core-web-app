@@ -234,7 +234,7 @@ export function buildConfigurationFiles(
       title: 'Node sets',
     });
   }
-  // Spec field is optional and often unset by builders — fall back to the
+  // Spec field is optional and often not set in older circuits - fall back to the
   // legacy hardcoded path only if it actually exists.
   const idMappingFromConfig = config.components?.provenance?.id_mapping;
   const idMappingPath = idMappingFromConfig
