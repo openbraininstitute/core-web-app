@@ -1,6 +1,8 @@
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { CloseOutlined, DeleteOutlined, DownOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 import { useState } from 'react';
+
+import { cn } from '@/utils/css-class';
 
 export interface INeuronPropertyFilter {
   filter_dict: Record<string, string[]>;
@@ -93,35 +95,42 @@ function DropdownSelect({
 
   return (
     <div className="relative w-full">
-      <button
-        type="button"
-        className="rounded-full w-full border border-gray-300 text-primary-8 font-semibold px-3 py-[6px] flex justify-between"
-        onClick={() => setIsOpen(!isOpen)}
+      <div
+        className={cn('w-full border border-gray-300', isOpen ? 'rounded-[18px]' : 'rounded-full')}
       >
-        {placeholder}
-        <PlusOutlined />
-      </button>
-      {isOpen && (
-        <div className="absolute left-0 top-full z-10 mt-1 w-full rounded border border-gray-300 bg-white shadow-sm">
-          {options.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-gray-400">No options available</div>
-          ) : (
-            options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
-                onClick={() => {
-                  onChange(option.value);
-                  setIsOpen(false);
-                }}
-              >
-                {option.label}
-              </button>
-            ))
+        <button
+          type="button"
+          className={cn(
+            'w-full font-semibold px-3 py-[6px] flex justify-between',
+            isOpen ? 'text-gray-300' : 'text-primary-8'
           )}
-        </div>
-      )}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {placeholder}
+          {isOpen ? <CloseOutlined /> : <PlusOutlined />}
+        </button>
+        {isOpen && (
+          <div>
+            {options.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-gray-400">No options available</div>
+            ) : (
+              options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className="block w-full px-3 py-2 text-left hover:bg-gray-100 text-primary-8 font-semibold"
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -153,18 +162,20 @@ function PropertyValueSelector({
 
   return (
     <div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full">
         <DeleteOutlined
-          className="text-red-500 cursor-pointer hover:text-red-700 text-xs"
+          className="text-red-500 cursor-pointer hover:text-red-700 "
           onClick={onDelete}
         />
         <button
           type="button"
-          className="font-semibold text-sm cursor-pointer hover:text-blue-600"
+          className="font-semibold cursor-pointer text-primary-8"
           onClick={() => setExpanded(!expanded)}
         >
-          {index}. {propertyName}
+          <span className="text-gray-300 mr-2">{index}.</span> {propertyName}
         </button>
+        <div className="flex-1" />
+        <DownOutlined onClick={() => setExpanded(!expanded)} />
       </div>
       {expanded && (
         <div className="flex flex-wrap gap-2 mt-1">
