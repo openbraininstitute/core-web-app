@@ -1,8 +1,7 @@
-import React from 'react';
+import { useAtom } from 'jotai';
 
 import Prompt from '../../prompt';
-
-import styles from './footer.module.css';
+import { promptAtom } from '../../state';
 
 interface FooterProps {
   className?: string;
@@ -18,7 +17,8 @@ const isStreaming = (status: FooterProps['status']) =>
   status === 'streaming' || status === 'submitted';
 
 export default function Footer({ className, status, onPrompt, stop, threadId }: FooterProps) {
-  const [prompt, setPrompt] = React.useState('');
+  const [prompt, setPrompt] = useAtom(promptAtom);
+
   const handlePrompt = (value: string) => {
     onPrompt(value);
     setPrompt('');
