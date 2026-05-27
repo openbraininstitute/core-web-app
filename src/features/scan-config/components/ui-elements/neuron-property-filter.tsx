@@ -21,7 +21,7 @@ export default function NeuronPropertyFilter({
     return <div className="text-gray-500">Select a population</div>;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {value.map((f, i) => {
         const handleValuesChange = (property: string, selected: string[]) =>
           onChange(value.with(i, { filter_dict: { ...f.filter_dict, [property]: selected } }));
@@ -30,11 +30,11 @@ export default function NeuronPropertyFilter({
           <div
             // biome-ignore lint/suspicious/noArrayIndexKey: no stable unique key available
             key={i}
-            className="border border-gray-300 rounded-md relative p-3 flex flex-col gap-2"
+            className="border border-gray-300 rounded-md relative p-3 flex flex-col gap-2 pt-2"
           >
             {i !== 0 && (
               <DeleteOutlined
-                className="absolute top-2 right-2 text-red-500 cursor-pointer hover:text-red-700"
+                className="absolute top-1 right-1 text-red-500 cursor-pointer hover:text-red-700 text-sm"
                 onClick={() => onChange(value.filter((_, idx) => idx !== i))}
               />
             )}
@@ -72,6 +72,7 @@ export default function NeuronPropertyFilter({
       })}
 
       <Button
+        className="p-2 rounded-full text-primary-8 font-semibold bg-transparent self-end p-5"
         onClick={() => {
           onChange([...value, { filter_dict: {} }]);
         }}
@@ -161,10 +162,10 @@ function PropertyValueSelector({
   };
 
   return (
-    <div>
+    <div className={cn(index === 1 ? 'mt-2' : '')}>
       <div className="flex items-center gap-2 w-full">
         <DeleteOutlined
-          className="text-red-500 cursor-pointer hover:text-red-700 "
+          className="text-red-500 cursor-pointer hover:text-red-700 text-xs"
           onClick={onDelete}
         />
         <button
@@ -175,20 +176,18 @@ function PropertyValueSelector({
           <span className="text-gray-300 mr-2">{index}.</span> {propertyName}
         </button>
         <div className="flex-1" />
-        <DownOutlined onClick={() => setExpanded(!expanded)} />
+        <DownOutlined className="relative right-[3px]" onClick={() => setExpanded(!expanded)} />
       </div>
       {expanded && (
-        <div className="flex flex-wrap gap-2 mt-1">
+        <div className="flex flex-wrap gap-2 mt-1 text-sm border-gray-300 border-1 rounded-md p-3 bg-white">
           {values.map((val) => {
             const isSelected = selected.includes(val);
             return (
               <button
                 key={val}
                 type="button"
-                className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                  isSelected
-                    ? 'border-blue-500 bg-blue-500 text-white'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                className={`rounded-full border px-3 py-1 transition-colors border-gray-200 text-primary-8 ${
+                  isSelected ? 'bg-gray-300 font-semibold' : 'bg-white hover:bg-gray-200'
                 }`}
                 onClick={() => toggle(val)}
               >
