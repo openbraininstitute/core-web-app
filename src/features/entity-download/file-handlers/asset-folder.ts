@@ -1,10 +1,10 @@
+import { Readable } from 'node:stream';
+
 import { downloadAsset, listDirectoryOfAssets } from '@/api/entitycore/queries/assets';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { FileEntry } from '@/features/entity-download/types';
 import type { WorkspaceContext } from '@/types/common';
-
-import { Readable } from 'node:stream';
 
 function normalizePrefix(prefix: string): string {
   let p = prefix.replace(/^\.\//, '');
