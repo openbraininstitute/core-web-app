@@ -5,13 +5,18 @@ import { useEffect, useState } from 'react';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { serviceAiAgentUrl } from '@/services/ai-agent/api/url';
 
+import { ExpandableImage } from './expandable-image';
 import styles from './message-item.module.css';
 
 /**
  * Module-level cache so resolved presigned URLs persist across re-renders
  * and component remounts (e.g. when scrolling or switching tabs).
+ *
+ * Exported so callers can pre-seed it with blob preview URLs right after
+ * upload, preventing the image from disappearing while the presigned read
+ * URL is fetched.
  */
-const presignedUrlCache: Record<string, string> = {};
+export const presignedUrlCache: Record<string, string> = {};
 
 interface StorageImagePartProps {
   url: string;
@@ -20,7 +25,7 @@ interface StorageImagePartProps {
 
 /**
  * Renders an image from a storage:// URL by resolving it to a presigned S3 URL.
- * Follows the same pattern as neuroagent-ts/frontend ChatMessageHuman.
+ * Clicking the image opens it in a fullscreen dialog (via ExpandableImage).
  */
 export function StorageImagePart({ url, filename }: StorageImagePartProps) {
   const accessToken = useAccessToken();
@@ -58,12 +63,5 @@ export function StorageImagePart({ url, filename }: StorageImagePartProps) {
     return <div className={styles.userImagePlaceholder} />;
   }
 
-  return (
-    <img
-      src={resolvedUrl}
-      alt={filename ?? 'Attached image'}
-      className={styles.userImage}
-      onError={() => setBroken(true)}
-    />
-  );
+  return <ExpandableImage src={resolvedUrl} alt={filename} />;
 }

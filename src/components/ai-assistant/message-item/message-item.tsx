@@ -10,6 +10,7 @@ import { classNames } from '@/util/utils';
 import { MINIMAL_PANEL_SIZE, usePanelWidth } from '../hooks';
 import { BackupPlotsWrapper, extractStorageIdsFromMessage } from './backup-plots';
 import { CollapsibleMessage } from './collapsible-message';
+import { ExpandableImage } from './expandable-image';
 import { StorageImagePart } from './storage-image-part';
 import ToolsProgress from './tools-progress';
 import { useMessageDiffs } from './use-message-diffs';
@@ -115,15 +116,11 @@ function MessageChild({
                     filename={part.filename}
                   />
                 ) : (
-                  <img
+                  <ExpandableImage
                     // eslint-disable-next-line react/no-array-index-key
                     key={`file-${idx}`}
                     src={part.url}
                     alt={part.filename ?? 'Attached image'}
-                    className={styles.userImage}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
                   />
                 );
               }

@@ -102,6 +102,15 @@ export function useBrainRegionUrlBoundaryContext() {
  */
 export const workspaceHierarchySpeciesAtom = atom<IWorkspaceSpecies | null>(null);
 
+/** shared across all {@link useWorkspaceHierarchyRegistry} consumers — init runs once per workspace. */
+export const hierarchyRegistrySyncSettledAtom = atom(false);
+
+/** workspace key while async init is in flight; null when idle. dedupes init across hook instances. */
+export const hierarchyRegistryInitWorkspaceKeyAtom = atom<string | null>(null);
+
+/** last applied URL override key (`all` or `hierarchyId:brainRegionId`) for sync boundaries. */
+export const hierarchyRegistryLastAppliedUrlOverrideAtom = atom<string | null>(null);
+
 const SPECIES_MODE_VALUES = [SpeciesSelectionMode.All, SpeciesSelectionMode.Focused] as const;
 
 /**
@@ -195,11 +204,15 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
       refetchOnWindowFocus: false,
     });
 
-  const { data, isLoading, error } = useQuery(
-    queryOption(config?.hId ?? hierarchyId, !!usedHierarchyId && !loadingRemote)
+  const queryEnabled = !!usedHierarchyId && !loadingRemote;
+  const { data, isPending, error } = useQuery(
+    queryOption(config?.hId ?? hierarchyId, queryEnabled)
   );
 
-  if (isLoading || error || !data) {
+  const loadingRootHierarchy =
+    loadingRemote || (queryEnabled && isPending) || (!error && !data && !!usedHierarchyId);
+
+  if (error || !data) {
     return {
       select,
       queryOption,
@@ -209,11 +222,9 @@ export const useBrainRegionRootHierarchyQuery = (config?: { hId?: string }) => {
         options: [],
       },
       error,
-      loading: isLoading,
+      loading: loadingRootHierarchy,
     };
   }
-
-  const loadingRootHierarchy = isLoading || loadingRemote;
 
   return {
     select,

@@ -1,7 +1,8 @@
-import React from 'react';
+import { useAtom } from 'jotai';
 
 import { useFileAttachments } from '../../hooks/use-file-attachments';
 import Prompt from '../../prompt';
+import { promptAtom } from '../../state';
 
 import type { FileAttachment } from '../../hooks/use-file-attachments';
 
@@ -27,7 +28,7 @@ export default function Footer({
   threadId,
   isUploading,
 }: FooterProps) {
-  const [prompt, setPrompt] = React.useState('');
+  const [prompt, setPrompt] = useAtom(promptAtom);
   const { attachments, addFiles, removeAttachment, clearAttachments, handlePaste } =
     useFileAttachments();
 

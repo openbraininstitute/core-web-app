@@ -183,12 +183,10 @@ export default function Chat({
               ))}
 
               {pendingUserMessage && (
-                <div className={styles.messageItem}>
-                  <PendingUserMessage
-                    text={pendingUserMessage.text}
-                    files={pendingUserMessage.files}
-                  />
-                </div>
+                <PendingUserMessage
+                  text={pendingUserMessage.text}
+                  files={pendingUserMessage.files}
+                />
               )}
 
               {showThinking && !pendingUserMessage && <ThinkingIndicator />}
@@ -282,28 +280,41 @@ function PendingUserMessage({
     <div className={messageStyles.user}>
       <div className={messageStyles.userContent}>
         {text && <div>{text}</div>}
-        {files.map((file) => (
-          <div key={file.name} className={styles.pendingFile}>
-            {file.type.startsWith('image/') && file.previewUrl ? (
-              <img
-                src={file.previewUrl}
-                alt={file.name}
-                className={messageStyles.userImage}
-                style={{ opacity: file.uploaded ? 1 : 0.6 }}
-              />
-            ) : (
-              <div className={styles.pendingFilePill}>
-                {!file.uploaded && <span className={styles.pendingFileSpinner} />}
-                <span>{file.name}</span>
+        {files.map((file) => {
+          if (file.type.startsWith('image/') && file.previewUrl) {
+            // When uploaded, render the image exactly like MessageItem does
+            // (no wrapper div) to avoid layout shift on transition.
+            if (file.uploaded) {
+              return (
+                <img
+                  key={file.name}
+                  src={file.previewUrl}
+                  alt={file.name}
+                  className={messageStyles.userImage}
+                />
+              );
+            }
+            return (
+              <div key={file.name} className={styles.pendingFile}>
+                <img
+                  src={file.previewUrl}
+                  alt={file.name}
+                  className={messageStyles.userImage}
+                  style={{ opacity: 0.6 }}
+                />
+                <div className={styles.pendingFileOverlay}>
+                  <span className={styles.pendingFileSpinner} />
+                </div>
               </div>
-            )}
-            {file.type.startsWith('image/') && !file.uploaded && (
-              <div className={styles.pendingFileOverlay}>
-                <span className={styles.pendingFileSpinner} />
-              </div>
-            )}
-          </div>
-        ))}
+            );
+          }
+          return (
+            <div key={file.name} className={styles.pendingFilePill}>
+              {!file.uploaded && <span className={styles.pendingFileSpinner} />}
+              <span>{file.name}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

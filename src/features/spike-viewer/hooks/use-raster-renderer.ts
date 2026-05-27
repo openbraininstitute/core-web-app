@@ -38,5 +38,9 @@ export function useRasterRenderer(
     rendererRef.current?.setVisiblePopulations(names);
   }, []);
 
-  return { setVisiblePopulations };
+  const setBaseSize = useCallback((size: number) => {
+    rendererRef.current?.setBaseSize(size);
+  }, []);
+
+  return { setVisiblePopulations, setBaseSize };
 }

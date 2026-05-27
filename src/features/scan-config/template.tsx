@@ -203,6 +203,7 @@ export function ScanConfigTemplate({
             activity={activity}
             generatedEndpoint={generatedEndpoint}
             entityType={entityType}
+            aiEnabled={aiEnabled}
           />
           <div
             id="scan-config-controls-middle"

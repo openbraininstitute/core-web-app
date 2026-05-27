@@ -17,6 +17,7 @@ import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { uploadFilesAndCreateParts } from '../api/upload';
+import { presignedUrlCache } from '@/components/ai-assistant/message-item/storage-image-part';
 import { AiAssistant, useAiAssistant } from '../assistant';
 import { fetchMessagesFromDB } from '../assistant/manager/message';
 
@@ -240,6 +241,17 @@ export function useServiceAiAgentChat(threadId: string) {
           });
           const results = await Promise.all(uploadPromises);
           fileUIParts = results.filter(Boolean);
+
+          // Seed the presigned URL cache with blob preview URLs so that
+          // StorageImagePart renders instantly without a network round-trip.
+          // This prevents the image from disappearing between the pending
+          // message being removed and the real message rendering.
+          fileUIParts.forEach((part, idx) => {
+            const blobUrl = pendingFiles[idx]?.previewUrl;
+            if (blobUrl && part.url.startsWith('storage://')) {
+              presignedUrlCache[part.url] = blobUrl;
+            }
+          });
         } catch {
           // If upload fails, send without files
         }
