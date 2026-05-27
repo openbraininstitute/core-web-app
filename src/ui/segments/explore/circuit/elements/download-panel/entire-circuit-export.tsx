@@ -1,15 +1,15 @@
-import { useParams } from 'next/navigation';
-import { get } from 'es-toolkit/compat';
 import { Button } from 'antd';
+import { get } from 'es-toolkit/compat';
+import { useParams } from 'next/navigation';
 
-import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { useAppNotification } from '@/components/notification';
-import { getAssetElement } from '@/api/entitycore/utils';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { DownloadIcon } from '@/components/icons';
-import { formatBytes } from '@/utils/format';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getAssetElement } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
+import { DownloadIcon } from '@/components/icons';
+import { useAppNotification } from '@/components/notification';
+import { getEntityCorePresignedUrl } from '@/services/entity-download/pre-singed-url';
+import { formatBytes } from '@/utils/format';
 import { log } from '@/utils/logger';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -63,7 +63,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
             Download full circuit
           </div>
           <p className="text-primary-2 text-sm leading-normal font-light hyphens-auto">
-            The complete circuit compressed in SONATA format,
+            The complete circuit compressed in SONATA format,{' '}
             <a
               href="https://sonata-extension.readthedocs.io/en/latest/"
               target="_blank"
@@ -74,7 +74,7 @@ export default function EntireCircuitExport({ circuit }: Props) {
             </a>
           </p>
         </div>
-        <div className="text-primary-1 flex flex-row gap-x-3 font-semibold">
+        <div className="text-primary-1 flex flex-row items-center gap-x-3 font-semibold">
           <div>{totalSize}</div>
           <div>{extension}</div>
           <Button

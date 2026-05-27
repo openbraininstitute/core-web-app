@@ -139,7 +139,7 @@ export default function ComponentsConfig({ circuit }: { circuit: ICircuit }) {
             description={electricalModelsContentConfiguration.description}
             mimeType={electricalModelsContentConfiguration.mimeType}
             entries={electricalEntries}
-            archiveBaseName={(e) => `${circuit.id}-${e.label || 'electrical-models'}`}
+            archiveBaseName={(e) => e.label || 'electrical-models'}
             emptyMessage="No electrical models directory in this circuit."
             downloadConfig={{
               entityId: circuit.id,
@@ -152,7 +152,7 @@ export default function ComponentsConfig({ circuit }: { circuit: ICircuit }) {
             description={mechanismsContentConfiguration.description}
             mimeType={mechanismsContentConfiguration.mimeType}
             entries={mechanismsEntry ? [mechanismsEntry] : []}
-            archiveBaseName={() => `${circuit.id}-mechanisms`}
+            archiveBaseName={() => 'mechanisms'}
             emptyMessage="No mechanisms directory in this circuit."
             downloadConfig={{
               entityId: circuit.id,

@@ -189,6 +189,7 @@ export type FolderEntry = {
 };
 
 const CIRCUIT_CONFIG_PATH = 'circuit_config.json';
+const DEFAULT_ID_MAPPING_PATH = 'id_mapping.json';
 
 function filterDirectoryByPrefix(
   directory: DirectoryListContent['files'],
@@ -233,12 +234,16 @@ export function buildConfigurationFiles(
       title: 'Node sets',
     });
   }
-  const idMapping = config.components?.provenance?.id_mapping;
-  if (idMapping) {
-    items.push({
-      path: getAssetPath(idMapping, config.manifest),
-      title: 'ID mapping',
-    });
+  // Use `components.provenance.id_mapping` from the config,
+  // fall back to `id_mapping.json` if the file exists.
+  const idMappingFromConfig = config.components?.provenance?.id_mapping;
+  const idMappingPath = idMappingFromConfig
+    ? getAssetPath(idMappingFromConfig, config.manifest)
+    : directory[DEFAULT_ID_MAPPING_PATH]
+      ? DEFAULT_ID_MAPPING_PATH
+      : null;
+  if (idMappingPath) {
+    items.push({ path: idMappingPath, title: 'ID mapping' });
   }
   return items.map(({ path, title }) => ({
     path,

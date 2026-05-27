@@ -83,23 +83,23 @@ export function DownloadPanel() {
         <EntireCircuitExport circuit={circuit} />
         <div className="bg-primary-8 mx-8 mt-4 flex flex-row items-start justify-between gap-3 rounded-md p-8 shadow-xs">
           <div className="w-3/4 hyphens-auto">
-            <div className="text-xl font-bold tracking-wide text-white uppercase">
-              JSON metadata
-            </div>
+            <div className="text-xl font-bold tracking-wide text-white uppercase">Metadata</div>
             <p className="text-primary-2 text-sm leading-normal font-light hyphens-auto">
-              Stand-alone JSON file with the circuit&apos;s metadata. Not bundled into the archive
-              downloads.
+              Stand-alone JSON file with the circuit&apos;s metadata.
             </p>
           </div>
-          <Button
-            type="link"
-            htmlType="button"
-            className="border-primary-6 flex items-center justify-center rounded-none border border-solid"
-            aria-label="Download JSON metadata"
-            title="Download JSON metadata"
-            icon={<DownloadIcon className="text-white!" />}
-            onClick={onDownloadMetadata}
-          />
+          <div className="text-primary-1 flex flex-row items-center gap-x-3 font-semibold">
+            <div>json</div>
+            <Button
+              type="link"
+              htmlType="button"
+              className="border-primary-6 flex items-center justify-center rounded-none border border-solid"
+              aria-label="Download metadata"
+              title="Download metadata"
+              icon={<DownloadIcon className="text-white!" />}
+              onClick={onDownloadMetadata}
+            />
+          </div>
         </div>
         <div className="border-primary-7 text-primary-4 mx-8 my-8 border-y border-solid py-4 text-xl font-bold tracking-wide uppercase">
           Download components only
