@@ -4,7 +4,10 @@ export type TCircuitContentConfigurationKeys =
   | 'connectivity_metrics'
   | 'nodes'
   | 'edges'
-  | 'morphologies';
+  | 'morphologies'
+  | 'configuration_files'
+  | 'electrical_models'
+  | 'mechanisms';
 
 type CircuitContentConfigurationProps = {
   key: TCircuitContentConfigurationKeys;
@@ -51,6 +54,39 @@ export const morphologiesContentConfiguration: CircuitContentConfigurationProps 
     </p>
   ),
   mimeType: 'h5',
+};
+
+export const configurationFilesContentConfiguration: CircuitContentConfigurationProps = {
+  key: 'configuration_files',
+  name: 'Configuration files',
+  description: (
+    <p className="text-primary-1 w-3/4 text-base font-light">
+      The SONATA circuit config, node sets file, and id mapping file.
+    </p>
+  ),
+  mimeType: 'json',
+};
+
+export const electricalModelsContentConfiguration: CircuitContentConfigurationProps = {
+  key: 'electrical_models',
+  name: 'Electrical models',
+  description: (
+    <p className="text-primary-1 w-3/4 text-base font-light">
+      Neuron electrical model templates (.hoc files), packaged as one archive per directory.
+    </p>
+  ),
+  mimeType: 'tar.gz',
+};
+
+export const mechanismsContentConfiguration: CircuitContentConfigurationProps = {
+  key: 'mechanisms',
+  name: 'Mechanisms',
+  description: (
+    <p className="text-primary-1 w-3/4 text-base font-light">
+      NEURON mechanism source files (.mod), packaged as a single archive.
+    </p>
+  ),
+  mimeType: 'tar.gz',
 };
 
 export const networksContentConfiguration: CircuitContentConfigurationProps[] = [

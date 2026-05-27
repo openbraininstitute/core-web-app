@@ -1,10 +1,11 @@
 import { randomUUID } from 'crypto';
 
-import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { PartialBy } from '@/types/common';
 import { logError, logInfo } from '@/utils/logger';
 
-type DownloadTicket = {
+import type { TEntityTypeDict } from '@/api/entitycore/types';
+
+export type EntityBatchDownloadTicket = {
+  kind: 'entity-batch';
   entityType: TEntityTypeDict;
   virtualLabId?: string | null;
   projectId?: string | null;
@@ -12,7 +13,23 @@ type DownloadTicket = {
   createdAt: number;
 };
 
-type DownloadTicketRequest = PartialBy<DownloadTicket, 'createdAt'>;
+export type AssetFolderDownloadTicket = {
+  kind: 'asset-folder';
+  entityType: TEntityTypeDict;
+  entityId: string;
+  assetId: string;
+  prefix: string;
+  filename: string;
+  virtualLabId?: string | null;
+  projectId?: string | null;
+  createdAt: number;
+};
+
+export type DownloadTicket = EntityBatchDownloadTicket | AssetFolderDownloadTicket;
+
+type DownloadTicketRequest =
+  | Omit<EntityBatchDownloadTicket, 'createdAt'>
+  | Omit<AssetFolderDownloadTicket, 'createdAt'>;
 
 // Ticket expiration time in milliseconds (60 seconds)
 const TICKET_EXPIRATION_MS = 60 * 1000;
@@ -53,7 +70,7 @@ class TicketStore {
 
     // Generate a unique ticket ID
     const ticketId = randomUUID();
-    const newTicket = { ...ticket, createdAt: Date.now() };
+    const newTicket = { ...ticket, createdAt: Date.now() } as DownloadTicket;
     this.tickets.set(ticketId, newTicket);
 
     return ticketId;

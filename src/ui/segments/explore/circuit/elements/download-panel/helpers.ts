@@ -41,6 +41,9 @@ export const updateFileCounterAtom = atomFamily((key: string) => {
       morphologies: 0,
       nodes: 0,
       edges: 0,
+      configuration_files: 0,
+      electrical_models: 0,
+      mechanisms: 0,
     };
     if (update) {
       set(fileCounter, {
@@ -170,6 +173,123 @@ function sanitizePath(path: string): string {
   let sanitized = path.replace(/^\.\//, ''); // Remove leading ./
   sanitized = sanitized.replace(/^\/+/, ''); // Remove leading slashes
   return sanitized;
+}
+
+export type ConfigurationFileItem = {
+  path: string;
+  title: string;
+  size: number | null;
+};
+
+export type FolderEntry = {
+  prefix: string;
+  label: string;
+  fileCount: number;
+  totalSize: number;
+};
+
+const CIRCUIT_CONFIG_PATH = 'circuit_config.json';
+
+function filterDirectoryByPrefix(
+  directory: DirectoryListContent['files'],
+  prefix: string
+): Array<{ path: string; size: number }> {
+  const normalized = prefix.endsWith('/') ? prefix : `${prefix}/`;
+  return Object.entries(directory)
+    .filter(([path]) => path.startsWith(normalized))
+    .map(([path, meta]) => ({ path, size: meta.size }));
+}
+
+function buildFolderEntry(
+  rawPath: string,
+  manifest: Record<string, string> | undefined,
+  directory: DirectoryListContent['files']
+): FolderEntry | null {
+  const resolved = getAssetPath(rawPath, manifest);
+  if (!resolved) return null;
+  const files = filterDirectoryByPrefix(directory, resolved);
+  return {
+    prefix: resolved,
+    label: resolved.split('/').filter(Boolean).pop() ?? resolved,
+    fileCount: files.length,
+    totalSize: files.reduce((acc, f) => acc + (f.size ?? 0), 0),
+  };
+}
+
+export function buildConfigurationFiles(
+  config: {
+    node_sets_file?: string;
+    components?: { provenance?: { id_mapping?: string } };
+    manifest?: Record<string, string>;
+  },
+  directory: DirectoryListContent['files']
+): ConfigurationFileItem[] {
+  const items: Array<{ path: string; title: string }> = [
+    { path: CIRCUIT_CONFIG_PATH, title: 'Circuit config' },
+  ];
+  if (config.node_sets_file) {
+    items.push({
+      path: getAssetPath(config.node_sets_file, config.manifest),
+      title: 'Node sets',
+    });
+  }
+  const idMapping = config.components?.provenance?.id_mapping;
+  if (idMapping) {
+    items.push({
+      path: getAssetPath(idMapping, config.manifest),
+      title: 'ID mapping',
+    });
+  }
+  return items.map(({ path, title }) => ({
+    path,
+    title,
+    size: directory[path]?.size ?? null,
+  }));
+}
+
+export function buildElectricalModelsEntries(
+  config: {
+    components?: { biophysical_neuron_models_dir?: string };
+    networks?: { nodes?: Array<SonataCircuitNetworkNodeConfigItem> };
+    manifest?: Record<string, string>;
+  },
+  directory: DirectoryListContent['files']
+): FolderEntry[] {
+  const candidates = new Set<string>();
+  const topLevel = config.components?.biophysical_neuron_models_dir;
+  if (topLevel) candidates.add(topLevel);
+  for (const node of config.networks?.nodes ?? []) {
+    for (const pop of Object.values(node.populations ?? {})) {
+      if (pop.biophysical_neuron_models_dir) {
+        candidates.add(pop.biophysical_neuron_models_dir);
+      }
+    }
+  }
+  const entries: FolderEntry[] = [];
+  const seenPrefixes = new Set<string>();
+  for (const raw of candidates) {
+    const entry = buildFolderEntry(raw, config.manifest, directory);
+    if (entry && !seenPrefixes.has(entry.prefix)) {
+      seenPrefixes.add(entry.prefix);
+      entries.push(entry);
+    }
+  }
+  return entries;
+}
+
+const DEFAULT_MECHANISMS_DIR = 'mod';
+
+export function buildMechanismsEntry(
+  config: { components?: { mechanisms_dir?: string }; manifest?: Record<string, string> },
+  directory: DirectoryListContent['files']
+): FolderEntry | null {
+  // Per ticket: the spec field is `components.mechanisms_dir`, but in practice it's not yet
+  // populated by circuit builders and mod files are hard-coded to `/mod`.
+  // See https://github.com/openbraininstitute/prod-build-circuit/issues/32
+  const raw = config.components?.mechanisms_dir || DEFAULT_MECHANISMS_DIR;
+  const entry = buildFolderEntry(raw, config.manifest, directory);
+  if (!entry || entry.fileCount === 0) return null;
+  return entry;
 }
 
 export function countConnectivityPaths(

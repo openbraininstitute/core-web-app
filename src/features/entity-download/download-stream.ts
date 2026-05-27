@@ -1,38 +1,28 @@
 import tar from 'tar-stream';
 
 import { getEntityFilesHandlerMap } from '@/features/entity-download/file-handlers';
+import { getAssetFolderFiles } from '@/features/entity-download/file-handlers/asset-folder';
 
-import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type {
+  AssetFolderDownloadTicket,
+  EntityBatchDownloadTicket,
+} from '@/features/entity-download/ticket-store';
+import type { FileEntry } from '@/features/entity-download/types';
 
 import { pipeline, Readable } from 'node:stream';
 import { promisify } from 'node:util';
 import { createGzip } from 'node:zlib';
 
-type CreateDownloadStreamParams = {
-  entityIds: string[];
-  entityType: TEntityTypeDict;
-  projectId?: string | null;
-  virtualLabId?: string | null;
-};
+type CreateDownloadStreamParams =
+  | Omit<EntityBatchDownloadTicket, 'createdAt'>
+  | Omit<AssetFolderDownloadTicket, 'createdAt'>;
 
 /**
- * Creates a download stream for a specific entity type with associated files.
+ * Creates a tar.gz download stream for either an entity-batch or an asset-folder ticket.
  *
- * @param {CreateDownloadStreamParams} params - Parameters for creating the download stream
- * @param {TEntityTypeDict} params.entityType - The type of entity being downloaded
- * @param {string} params.virtualLabId - The ID of the virtual lab
- * @param {string} params.projectId - The ID of the project
- * @param {string[]} params.entityIds - The IDs of the entities to download
- * @returns {ReadableStream} A web-compatible readable stream of compressed tar files
- * @throws {Error} If no handler is found for the specified entity type
+ * @throws {Error} If an entity-batch ticket has no handler for its entity type.
  */
-
-export async function createDownloadStream({
-  entityIds,
-  entityType,
-  projectId,
-  virtualLabId,
-}: CreateDownloadStreamParams) {
+export async function createDownloadStream(params: CreateDownloadStreamParams) {
   const tarPack = tar.pack();
   const gzip = createGzip({ level: 3 });
 
@@ -45,13 +35,7 @@ export async function createDownloadStream({
   // TODO: pass abort signal to getFilesGenerator
   // const { signal } = controller;
 
-  const getFilesGenerator = getEntityFilesHandlerMap[entityType];
-  if (!getFilesGenerator) {
-    throw new Error(`No handler found for entity type ${entityType}`);
-  }
-
-  const ctx = virtualLabId && projectId ? { virtualLabId, projectId } : undefined;
-  const fileEntries = getFilesGenerator(entityIds, ctx);
+  const fileEntries = getFileEntriesGenerator(params);
 
   (async () => {
     try {
@@ -69,4 +53,32 @@ export async function createDownloadStream({
 
   return downloadStream;
 }
+
+function getFileEntriesGenerator(params: CreateDownloadStreamParams): AsyncGenerator<FileEntry> {
+  if (params.kind === 'asset-folder') {
+    const ctx =
+      params.virtualLabId && params.projectId
+        ? { virtualLabId: params.virtualLabId, projectId: params.projectId }
+        : undefined;
+    return getAssetFolderFiles({
+      entityType: params.entityType,
+      entityId: params.entityId,
+      assetId: params.assetId,
+      prefix: params.prefix,
+      ctx,
+    });
+  }
+
+  const getFilesGenerator = getEntityFilesHandlerMap[params.entityType];
+  if (!getFilesGenerator) {
+    throw new Error(`No handler found for entity type ${params.entityType}`);
+  }
+
+  const ctx =
+    params.virtualLabId && params.projectId
+      ? { virtualLabId: params.virtualLabId, projectId: params.projectId }
+      : undefined;
+  return getFilesGenerator(params.entityIds, ctx);
+}
+
 const streamPipeline = promisify(pipeline);
