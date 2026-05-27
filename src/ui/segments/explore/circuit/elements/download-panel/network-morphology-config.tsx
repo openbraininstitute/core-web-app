@@ -43,22 +43,23 @@ export default function NetworkAndMorphologyConfig({ circuit }: { circuit: ICirc
     assets,
     filter: (asset) => asset.label === AssetLabel.sonata_circuit,
   });
+  const configAssetId = configAsset?.id ?? '';
 
   const networksConfig = useQuery({
     queryKey: keyBuilder.asset({
       entityId: circuit.id,
-      assetId: configAsset!.id,
+      assetId: configAssetId,
       assetPath: AssetDefaultPath,
       context: { virtualLabId, projectId },
     }),
     queryFn: () =>
       resolveCircuitConfigAndDirectory<ICircuitSonataConfiguration>({
         entityId: circuit.id,
-        assetId: configAsset!.id,
+        assetId: configAssetId,
         assetPath: AssetDefaultPath,
         context: { virtualLabId, projectId },
       }),
-    enabled: !!circuit && !!configAsset!.id,
+    enabled: !!circuit && !!configAssetId,
     select: (result) => {
       return {
         directory: result.directory,
