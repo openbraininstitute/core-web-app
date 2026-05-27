@@ -6,6 +6,7 @@ import { useAccessToken } from '@/hooks/useAccessToken';
 import { serviceAiAgentUrl } from '@/services/ai-agent/api/url';
 
 import { ExpandableImage } from './expandable-image';
+
 import styles from './message-item.module.css';
 
 /**

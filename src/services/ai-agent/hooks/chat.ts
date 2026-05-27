@@ -6,6 +6,7 @@ import { DefaultChatTransport, type FileUIPart, getToolName, isToolUIPart } from
 import { atom, useAtom, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { presignedUrlCache } from '@/components/ai-assistant/message-item/storage-image-part';
 import { atomRateLimit } from '@/components/ai-assistant/state';
 import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -17,7 +18,6 @@ import { logError } from '@/utils/logger';
 
 import { serviceAiAgentThreadSuggestTitle, serviceAiAgentUrl } from '../api';
 import { uploadFilesAndCreateParts } from '../api/upload';
-import { presignedUrlCache } from '@/components/ai-assistant/message-item/storage-image-part';
 import { AiAssistant, useAiAssistant } from '../assistant';
 import { fetchMessagesFromDB } from '../assistant/manager/message';
 

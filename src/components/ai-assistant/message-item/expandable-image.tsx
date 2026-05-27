@@ -1,8 +1,11 @@
+/* eslint-disable @next/next/no-img-element */
+/** biome-ignore-all lint/performance/noImgElement: images are user-uploaded with dynamic URLs */
 'use client';
 
 import { useRef } from 'react';
 
 import FullscreenDialog from './fullscreen-dialog/fullscreen-dialog';
+
 import dialogStyles from './fullscreen-dialog/fullscreen-dialog.module.css';
 import styles from './message-item.module.css';
 
@@ -25,6 +28,7 @@ export function ExpandableImage({ src, alt = 'Attached image' }: ExpandableImage
 
   return (
     <>
+      {/* biome-ignore lint/a11y/useSemanticElements: img acts as a clickable preview */}
       <img
         src={src}
         alt={alt}
@@ -40,6 +44,7 @@ export function ExpandableImage({ src, alt = 'Attached image' }: ExpandableImage
         onError={(e) => {
           (e.target as HTMLImageElement).style.display = 'none';
         }}
+        // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: img needs click-to-expand
         role="button"
         tabIndex={0}
       />
