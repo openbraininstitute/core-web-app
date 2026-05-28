@@ -288,8 +288,7 @@ export function buildMechanismsEntry(
   config: { components?: { mechanisms_dir?: string }; manifest?: Record<string, string> },
   directory: DirectoryListContent['files']
 ): FolderEntry | null {
-  // Per ticket: the spec field is `components.mechanisms_dir`, but in practice it's not yet
-  // populated by circuit builders and mod files are hard-coded to `/mod`.
+  // The spec field is `components.mechanisms_dir`, with fallback to `/mod` for older circuits.
   // See https://github.com/openbraininstitute/prod-build-circuit/issues/32
   const raw = config.components?.mechanisms_dir || DEFAULT_MECHANISMS_DIR;
   const entry = buildFolderEntry(raw, config.manifest, directory);
