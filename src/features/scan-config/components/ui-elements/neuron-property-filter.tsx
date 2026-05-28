@@ -186,9 +186,10 @@ function PropertyValueSelector({
               <button
                 key={val}
                 type="button"
-                className={`rounded-full border px-3 py-1 transition-colors border-gray-200 text-primary-8 ${
+                className={cn(
+                  'rounded-full border px-3 py-1 transition-colors border-gray-200 text-primary-8',
                   isSelected ? 'bg-gray-300 font-semibold' : 'bg-white hover:bg-gray-200'
-                }`}
+                )}
                 onClick={() => toggle(val)}
               >
                 {val}
