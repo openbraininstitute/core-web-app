@@ -150,11 +150,10 @@ export function useScanConfiguration({
     if (schemaMappingKey) {
       return schemaMappingKey;
     }
-
+    // TODO: WHY DO WE NEED THIS?: THERE SHOULD BE A SINGLE SOURCE OF TRUTH (THE WORFLOW CONFIG)
     if (
       resolved?.usedType === ExtendedEntitiesTypeDict.Circuit ||
-      resolved?.usedType === ExtendedEntitiesTypeDict.MEModelWithSynapses ||
-      resolved?.usedType === ExtendedEntitiesTypeDict.MemodelCircuit
+      resolved?.usedType === ExtendedEntitiesTypeDict.MEModelWithSynapses
     ) {
       return SchemaMappingKeyDict.Circuit;
     }
