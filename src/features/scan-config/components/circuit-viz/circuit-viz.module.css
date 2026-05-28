@@ -8,6 +8,11 @@
   }
 }
 
+div > div.spinner {
+  color: #000;
+  background: #fff;
+}
+
 .morphoViewer {
   font: inherit;
   color: #000;
