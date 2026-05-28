@@ -153,7 +153,8 @@ export function useScanConfiguration({
 
     if (
       resolved?.usedType === ExtendedEntitiesTypeDict.Circuit ||
-      resolved?.usedType === ExtendedEntitiesTypeDict.MEModelWithSynapses
+      resolved?.usedType === ExtendedEntitiesTypeDict.MEModelWithSynapses ||
+      resolved?.usedType === ExtendedEntitiesTypeDict.MemodelCircuit
     ) {
       return SchemaMappingKeyDict.Circuit;
     }
