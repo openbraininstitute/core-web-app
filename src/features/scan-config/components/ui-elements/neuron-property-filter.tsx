@@ -162,7 +162,11 @@ function PropertyValueSelector({
   };
 
   return (
-    <div className={cn(index === 1 ? 'mt-2' : '')}>
+    <div
+      className={cn({
+        'mt-2': index === 1,
+      })}
+    >
       <div className="flex items-center gap-2 w-full">
         <DeleteOutlined
           className="text-red-500 cursor-pointer hover:text-red-700 text-xs"
