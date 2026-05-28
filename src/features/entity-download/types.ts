@@ -26,45 +26,45 @@ export type CsvEntry = CsvEntryBase & {
 };
 
 export type ElectricalCellRecordingJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type IonChannelRecordingJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type EmodelJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type ExperimentalBoutonDensityJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type ExperimentalNeuronDensityJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type ExperimentalSynapsesPerConnectionJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type MemodelJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type ReconstructionMorphologyJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type SingleNeuronSynaptomeJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type NotebookJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 export type EMCellMeshJsonMetadata = {
-  [key: string]: any;
+  [key: string]: unknown;
 };
