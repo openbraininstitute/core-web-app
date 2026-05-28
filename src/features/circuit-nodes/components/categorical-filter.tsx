@@ -11,6 +11,7 @@ import type { InputRef } from 'antd';
 import type { SetFilter } from '@/features/circuit-nodes/types';
 
 import styles from './categorical-filter.module.css';
+import popover from './filter-popover.module.css';
 
 const APPLY_DEBOUNCE_MS = 150;
 
@@ -96,7 +97,7 @@ export function CategoricalFilter({ model, onModelChange, library: rawLibrary }:
   };
 
   return (
-    <div className={styles.filterPopover}>
+    <div className={popover.popover}>
       <Input
         ref={inputRef}
         prefix={<RiSearchLine size={14} />}
@@ -114,10 +115,10 @@ export function CategoricalFilter({ model, onModelChange, library: rawLibrary }:
         size="small"
       />
       <div className={styles.filterActions}>
-        <button type="button" onClick={selectAll} className={styles.actionButton}>
+        <button type="button" onClick={selectAll} className={popover.actionButton}>
           Select all
         </button>
-        <button type="button" onClick={clear} className={styles.actionButton}>
+        <button type="button" onClick={clear} className={popover.actionButton}>
           Clear
         </button>
       </div>
@@ -146,8 +147,8 @@ export function CategoricalFilter({ model, onModelChange, library: rawLibrary }:
           })
         )}
       </div>
-      <div className={styles.filterFooter}>
-        <button type="button" onClick={reset} className={styles.actionButton}>
+      <div className={popover.footer}>
+        <button type="button" onClick={reset} className={popover.actionButton}>
           Reset
         </button>
       </div>

@@ -7,6 +7,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CategoricalFilter } from '@/features/circuit-nodes/components/categorical-filter';
 import { ColumnChooser } from '@/features/circuit-nodes/components/column-chooser';
 import { ColumnHeader } from '@/features/circuit-nodes/components/column-header';
+import { NumericFilter } from '@/features/circuit-nodes/components/numeric-filter';
+import { TextFilter } from '@/features/circuit-nodes/components/text-filter';
 import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 
 import type {
@@ -66,12 +68,8 @@ function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: Bu
       sortable: true,
       resizable: true,
       hide: !visible.has(c.name),
-      filter: useSetFilter
-        ? CategoricalFilter
-        : isNumeric
-          ? 'agNumberColumnFilter'
-          : 'agTextColumnFilter',
-      filterParams: useSetFilter ? { library: c.library } : { buttons: ['reset'] },
+      filter: useSetFilter ? CategoricalFilter : isNumeric ? NumericFilter : TextFilter,
+      filterParams: useSetFilter ? { library: c.library } : undefined,
       suppressHeaderMenuButton: true,
       minWidth: isNumeric ? 60 : 80,
       width,
