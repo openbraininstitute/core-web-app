@@ -1,5 +1,9 @@
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { Modal } from 'antd';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
+
 import capitalize from 'es-toolkit/compat/capitalize';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -71,7 +75,7 @@ function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: Bu
       filter: useSetFilter ? CategoricalFilter : isNumeric ? NumericFilter : TextFilter,
       filterParams: useSetFilter ? { library: c.library } : undefined,
       suppressHeaderMenuButton: true,
-      minWidth: isNumeric ? 60 : 80,
+      minWidth: 60,
       width,
       cellClass: isNumeric ? 'ag-right-aligned-cell' : undefined,
       valueFormatter: isNumeric
@@ -206,6 +210,7 @@ export function NodesGrid({
       <div className={styles.grid}>
         <AgGridReact
           ref={gridRef}
+          theme="legacy"
           columnDefs={columnDefs}
           rowModelType="infinite"
           cacheBlockSize={200}
