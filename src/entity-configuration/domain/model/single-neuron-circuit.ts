@@ -1,3 +1,5 @@
+import { includes } from 'es-toolkit/compat';
+
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
@@ -51,5 +53,5 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: false,
+  isSimulatable: (entity: ICircuit) => entity.has_electrical_cell_models,
 } as const;

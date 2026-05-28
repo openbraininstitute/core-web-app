@@ -16,7 +16,7 @@ import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
 import { MEModelWithSynapsesCircuit } from '@/entity-configuration/domain/model/me-model-with-synapses';
-import { Microcircuit } from '@/entity-configuration/domain/model/mirocircuit';
+import { Microcircuit } from '@/entity-configuration/domain/model/microcircuit';
 import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
