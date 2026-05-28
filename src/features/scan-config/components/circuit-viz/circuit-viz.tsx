@@ -1,11 +1,12 @@
-import { LoadingOutlined } from '@ant-design/icons';
-import { Switch } from 'antd';
 import { useState } from 'react';
 
 import { IconGear } from '@/components/ai-assistant/icons/gear';
+import { LoadingNeuronSpinner } from '@/components/neuron-viewer';
 import { MorphoViewerSmallCircuit } from '@/morpho-viewer';
 
+import DebouncedSwitch from './debounced-switch';
 import { useCircuit } from './hooks';
+import { sequentialCellLoader } from './sequential-loader';
 
 import type { Cell, MorphoViewerTreeItem, Sections } from '@/features/scan-config/types';
 
@@ -19,56 +20,65 @@ const CircuitViz = ({ id }: { id: string }) => {
   const handleCellHover = (cell: Cell | undefined): void => {
     setHighlightedCellId(cell?.id ?? '');
   };
-
-  if (isLoading || error) {
-    return (
-      <div className="w-full h-full flex justify-center items-center">
-        {isLoading && <LoadingOutlined className="text-4xl text-primary-8" />}
-        {!!error && (
-          <details className="text-red-500">
-            <summary>
-              <strong>Couldn't load the visualization</strong>
-            </summary>
-            <div>{error.message}</div>
-          </details>
-        )}
-      </div>
-    );
-  }
-
-  if (!circuit) return null;
+  const reset = () => {
+    sequentialCellLoader.clear();
+    setProgress(0);
+  };
 
   return (
     <div className="h-full w-full relative">
-      <MorphoViewerSmallCircuit
-        className={styles.morphoViewer}
-        gizmo
-        scalebar
-        key={id + showAxon}
-        backgroundColor="white"
-        circuit={circuit}
-        onCellHover={handleCellHover}
-        highlightedCellIds={[highlightedCellId]}
-        // @ts-expect-error
-        loadCell={loadCell}
-        controls={[
-          [
-            <div key="show-axon" className={styles.showAxons}>
-              Show Axons <Switch value={showAxon} onChange={(v) => setShowAxon(v)} />
-            </div>,
-            progress > 0 && progress < 1 && (
-              <div className={styles.progress}>
-                <IconGear />
-                <div>Loading</div>
-                <strong>{(100 * progress).toFixed(0)}%</strong>
-              </div>
-            ),
-          ],
-          'reset-camera',
-          'fullscreen',
-        ]}
-        onLoadProgress={setProgress}
-      />
+      {circuit && circuit.length > 0 && (
+        <MorphoViewerSmallCircuit
+          className={styles.morphoViewer}
+          gizmo
+          scalebar
+          backgroundColor="white"
+          circuit={circuit}
+          onCellHover={handleCellHover}
+          highlightedCellIds={[highlightedCellId]}
+          loadCell={loadCell}
+          controls={[
+            [
+              <div key="show-axon" className={styles.showAxons}>
+                Show Axons{' '}
+                <DebouncedSwitch
+                  value={showAxon}
+                  onChange={(v) => {
+                    reset();
+                    setShowAxon(v);
+                  }}
+                  onClick={reset}
+                />
+              </div>,
+              progress > 0 && progress < 1 && (
+                <div className={styles.progress}>
+                  <IconGear />
+                  <div>Loading</div>
+                  <strong>{(100 * progress).toFixed(0)}%</strong>
+                </div>
+              ),
+            ],
+            'reset-camera',
+            'fullscreen',
+          ]}
+          onLoadProgress={setProgress}
+        />
+      )}
+      {(isLoading || progress === 0 || error) && (
+        <div className="w-full h-full flex justify-center items-center">
+          {(isLoading || progress === 0) && (
+            <LoadingNeuronSpinner className={styles.spinner} label="Circuit" />
+          )}
+          {!!error && (
+            <details className="text-red-500">
+              <summary>
+                <strong>Couldn't load the visualization</strong>
+              </summary>
+              <div>{error.message}</div>
+            </details>
+          )}
+        </div>
+      )}
     </div>
   );
 };
