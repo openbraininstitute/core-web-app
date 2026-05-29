@@ -73,6 +73,7 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
   selectionConfig: TWorkflowSchemaSelection | null | undefined;
   configurationInputs: readonly IWorkflowConfigurationInput[];
   selectionsByType: TWorkflowBrowseSelectionsByType;
+  mergeBrowseSelectionIntoSingleGroup?: boolean;
 }): TWorkflowSessionSelectionPayload | null {
   const { selectionConfig, configurationInputs, selectionsByType } = opts;
 
@@ -91,6 +92,13 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
   }
 
   if (selectionConfig?.selectionMode === WorkflowSchemaSelectionMode.Grouped) {
+    if (opts.mergeBrowseSelectionIntoSingleGroup) {
+      return {
+        mode: WorkflowSessionSelectionMode.Grouped,
+        groups: [{ name: 'Default name', items: groups.flatMap((group) => group.items) }],
+      };
+    }
+
     return { mode: WorkflowSessionSelectionMode.Grouped, groups };
   }
 
@@ -247,6 +255,8 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
       selectionConfig,
       configurationInputs,
       selectionsByType,
+      mergeBrowseSelectionIntoSingleGroup:
+        workflow?.scanConfig?.configureBinding.mergeBrowseSelectionIntoSingleGroup,
     });
 
     if (!payload) {
@@ -272,6 +282,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     targetType,
     virtualLabId,
     workflow?.configureRouting,
+    workflow?.scanConfig?.configureBinding.mergeBrowseSelectionIntoSingleGroup,
   ]);
 
   if (isLoading || shouldRedirectToConfigure) {
