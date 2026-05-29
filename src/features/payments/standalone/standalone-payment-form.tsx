@@ -5,7 +5,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { NotificationPlacements } from 'antd/es/notification/interface';
 import { get } from 'es-toolkit/compat';
 import { useSession } from 'next-auth/react';
-import { useDeferredValue, useEffect, useMemo, useReducer, useState } from 'react';
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   BillingQuoteRequestFlowDict,
@@ -18,14 +26,17 @@ import { useBillingQuoteQuery } from '@/features/payments/hooks';
 import { useCreateStandalonePaymentMutation } from '@/features/payments/standalone/hooks';
 import { StandalonePaymentMethodSection } from '@/features/payments/standalone/payment-method-section';
 import {
-  confirmStripeSetupPaymentMethod,
-  StripeSetupConfirmationError,
-} from '@/features/stripe/confirm-setup';
+  getBackendPaymentErrorDescription,
+  getStripeSetupErrorDescription,
+  isSetupIntentConsumedError,
+} from '@/features/stripe/errors';
+import { resolvePaymentMethodId } from '@/features/stripe/hooks';
 import { formatMinorCurrency } from '@/features/stripe/utils';
 import { messages } from '@/i18n/en/payment';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
+import type { StripePaymentElementChangeEvent } from '@stripe/stripe-js';
 import type { User } from 'next-auth';
 
 const MAX_CONVERSIONS_PER_TRANSACTION = 10;
@@ -38,9 +49,11 @@ const notificationConfig = {
 export function StandalonePaymentForm({
   virtualLabId,
   onCancel,
+  onSetupIntentRefreshNeeded,
 }: {
   virtualLabId: string;
   onCancel: () => void;
+  onSetupIntentRefreshNeeded: () => Promise<void>;
 }) {
   const queryClient = useQueryClient();
   const elements = useElements();
@@ -53,6 +66,8 @@ export function StandalonePaymentForm({
   const [isPaying, setIsPaying] = useState(false);
   const [saveBillingAddressToProfile, setSaveBillingAddressToProfile] = useState<boolean>(false);
   const [stripeElementsReady, setStripeElementsReady] = useState(false);
+  const [cachedPaymentMethodId, setCachedPaymentMethodId] = useState<string | null>(null);
+  const cachedPaymentMethodIdRef = useRef<string | null>(null);
   const [conversionKeys, addConversionKey] = useReducer((keys: Set<string>, key: string) => {
     if (keys.has(key)) {
       return keys;
@@ -113,6 +128,7 @@ export function StandalonePaymentForm({
   const limitReached = Boolean(conversionKey) && !conversionAllowed;
   const currentBillingAddress = billingAddress?.country ? billingAddress : null;
   const user = session?.user as User;
+  const creditsError = !credits ? messages.creditsAmountRequired : undefined;
 
   const disablePaying =
     !stripe ||
@@ -125,29 +141,52 @@ export function StandalonePaymentForm({
     quote.isFetching ||
     isPaying;
 
+  const cachePaymentMethodId = useCallback((paymentMethodId: string) => {
+    cachedPaymentMethodIdRef.current = paymentMethodId;
+    setCachedPaymentMethodId(paymentMethodId);
+  }, []);
+
+  const clearCachedPaymentMethodId = useCallback(() => {
+    cachedPaymentMethodIdRef.current = null;
+    setCachedPaymentMethodId(null);
+  }, []);
+
+  const handleCardChange = useCallback(
+    (event: StripePaymentElementChangeEvent) => {
+      if (isPaying || !cachedPaymentMethodIdRef.current || event.empty) {
+        return;
+      }
+
+      clearCachedPaymentMethodId();
+      void onSetupIntentRefreshNeeded();
+    },
+    [clearCachedPaymentMethodId, isPaying, onSetupIntentRefreshNeeded]
+  );
+
   const onPay = async () => {
     if (disablePaying) return;
     setIsPaying(true);
 
     let paymentMethodId: string;
     try {
-      paymentMethodId = await confirmStripeSetupPaymentMethod({
+      paymentMethodId = await resolvePaymentMethodId({
         billingAddress: currentBillingAddress,
+        cachedPaymentMethodId,
         elements,
         returnUrl: window.location.href,
         stripe,
         user,
       });
+      cachePaymentMethodId(paymentMethodId);
     } catch (error) {
-      const description =
-        error instanceof StripeSetupConfirmationError && error.reason === 'missing_payment_method'
-          ? messages.paymentMethodSaveError
-          : error instanceof Error
-            ? (error.message ?? messages.paymentProcessingErrorFallback)
-            : messages.paymentProcessingErrorFallback;
+      if (isSetupIntentConsumedError(error)) {
+        clearCachedPaymentMethodId();
+        await onSetupIntentRefreshNeeded();
+      }
+
       errorNotify({
         message: messages.paymentProcessingErrorTitle,
-        description,
+        description: getStripeSetupErrorDescription(error),
         ...notificationConfig,
       });
       setIsPaying(false);
@@ -173,6 +212,7 @@ export function StandalonePaymentForm({
           .replace('$$price', formatMinorCurrency(data.amount_total, data.currency)),
         ...notificationConfig,
       });
+      clearCachedPaymentMethodId();
       const accountingKey = keyBuilder.accounting({ virtualLabId });
       onCancel();
       window.setTimeout(() => {
@@ -183,17 +223,9 @@ export function StandalonePaymentForm({
       setIsPaying(false);
     } catch (error) {
       const code = get(error, 'cause.code', 'DEFAULT');
-      const errors = {
-        ENTITY_ALREADY_EXISTS: messages.paymentProcessingErrorEntityAlreadyExists,
-        ENTITY_NOT_CREATED: messages.paymentProcessingErrorEntityNotCreated,
-        ENTITY_NOT_FOUND: messages.paymentProcessingErrorEntityNotFound,
-        PAYMENT_ERROR: `We couldn’t process your payment because the billing country does not match the country associated with your payment method. Please verify your billing details and try again.`,
-        DEFAULT: messages.paymentProcessingError,
-      };
-      const description = get(errors, code, messages.paymentProcessingError);
       errorNotify({
         message: messages.paymentProcessingErrorTitle,
-        description,
+        description: getBackendPaymentErrorDescription(code, 'standalone'),
         ...notificationConfig,
       });
       setIsPaying(false);
@@ -206,6 +238,7 @@ export function StandalonePaymentForm({
         hint={limitReached ? 'Calculation of order full amount limit reached' : conversionText}
         value={credits}
         disabled={isPaying}
+        error={creditsError}
         loadingHint={conversion.isFetching}
         onValueChange={setCredits}
       />
@@ -219,6 +252,7 @@ export function StandalonePaymentForm({
         disabled={isPaying}
         onBillingAddressChange={setBillingAddress}
         onCancel={onCancel}
+        onCardChange={handleCardChange}
         onPay={onPay}
         onPaymentReady={() => setStripeElementsReady(true)}
         onSaveBillingAddressChange={setSaveBillingAddressToProfile}

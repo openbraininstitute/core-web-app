@@ -11,7 +11,7 @@ import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 
-import type { StripeElementsOptions } from '@stripe/stripe-js';
+import type { StripeElementsOptions, StripePaymentElementChangeEvent } from '@stripe/stripe-js';
 import type { TBillingAddress } from '@/api/virtual-lab-svc/queries/types';
 
 export const buildStripeFormOptions = (clientSecret: string): StripeElementsOptions => ({
@@ -149,11 +149,13 @@ export function BillingAddressElement({
 export function BillingCardElement({
   disabled = false,
   framed = true,
+  onChange,
   onReady,
   paymentElementId,
 }: {
   disabled?: boolean;
   framed?: boolean;
+  onChange?: (event: StripePaymentElementChangeEvent) => void;
   onReady: () => void;
   paymentElementId: string;
 }) {
@@ -168,6 +170,7 @@ export function BillingCardElement({
       <PaymentElement
         id={paymentElementId}
         onReady={onReady}
+        onChange={(event) => onChange?.(event)}
         options={{
           fields: {
             billingDetails: 'never',
