@@ -43,8 +43,8 @@
 
 .userContent {
   position: relative;
-  max-width: 80%;
-  padding: 10px 14px;
+  max-width: 85%;
+  padding: 10px 12px;
   border-radius: 14px 14px 2px 14px;
   background-color: var(--color-primary-5);
   color: var(--color-on-primary);
@@ -63,48 +63,54 @@
 }
 
 .userImage {
-  max-width: 100%;
-  max-height: 200px;
-  border-radius: 8px;
-  object-fit: contain;
-  margin-top: 6px;
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.userImageRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
 .userImagePlaceholder {
-  width: 100%;
-  max-width: 200px;
+  width: 80px;
   height: 80px;
-  border-radius: 8px;
-  background-color: var(--color-neutral-7);
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 6px;
-  font-size: 0.8em;
-  color: var(--color-neutral-3);
+  flex-shrink: 0;
+  font-size: 0.7em;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .pdfAttachment {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.15);
+  gap: 6px;
+  margin-bottom: 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.12);
   max-width: 100%;
 }
 
 .pdfIcon {
   flex-shrink: 0;
-  font-size: 1.6em;
+  font-size: 1.2em;
   display: flex;
   align-items: center;
   color: #fff;
 }
 
 .pdfName {
-  font-size: 0.95em;
+  font-size: 0.85em;
   color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
