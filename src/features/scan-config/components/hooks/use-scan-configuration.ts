@@ -150,7 +150,7 @@ export function useScanConfiguration({
     if (schemaMappingKey) {
       return schemaMappingKey;
     }
-
+    // TODO: WHY DO WE NEED THIS?: THERE SHOULD BE A SINGLE SOURCE OF TRUTH (THE WORKFLOW CONFIG)
     if (
       resolved?.usedType === ExtendedEntitiesTypeDict.Circuit ||
       resolved?.usedType === ExtendedEntitiesTypeDict.MEModelWithSynapses
