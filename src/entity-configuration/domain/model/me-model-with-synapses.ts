@@ -47,5 +47,5 @@ export const MEModelWithSynapsesCircuit: EntityCoreTypeConfig<ICircuit> = {
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: true,
+  isSimulatable: (entity: ICircuit) => entity.has_electrical_cell_models,
 } as const;
