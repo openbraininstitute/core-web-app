@@ -1,7 +1,9 @@
 'use client';
 
-import { use } from 'react';
-
+import {
+  type TLegacyWorkflowSessionSearchParams,
+  useLegacyWorkflowSessionFromSearchParams,
+} from '@/features/scan-config/workflow/legacy-session';
 import { Content } from '@/ui/segments/workflows/build/memodel';
 import { Menu } from '@/ui/segments/workflows/build/memodel/menu';
 
@@ -12,10 +14,9 @@ export default function Page({
   searchParams,
 }: ServerSideComponentProp<
   WorkspaceContext & { id: string },
-  { step: BuildStepKeys; sessionId: string }
+  TLegacyWorkflowSessionSearchParams & { step: BuildStepKeys }
 >) {
-  let { sessionId } = use(searchParams);
-  if (!sessionId) sessionId = crypto.randomUUID();
+  const sessionId = useLegacyWorkflowSessionFromSearchParams(searchParams);
 
   return (
     <div className="h-full mx-2 flex flex-col max-h-[calc(100vh-6rem)] w-[calc(100%-10px)] overflow-hidden">

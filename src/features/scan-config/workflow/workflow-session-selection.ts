@@ -1,18 +1,11 @@
-import { customAlphabet } from 'nanoid';
 import superjson from 'superjson';
 import { z } from 'zod';
 
+import { createWorkflowSessionId } from '@/features/scan-config/workflow/session';
 import { findInitializeModelProperty } from '@/features/scan-config/workflow/workflow-schema-selection';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { Config, ConfigSchema, ConfigValue } from '@/features/scan-config/types';
-
-const WorkflowSessionIdPrefix = 'wf_' as const;
-const WorkflowSessionIdSuffixLength = 10 as const;
-const workflowSessionAlphabet = customAlphabet(
-  'abcdefghijklmnopqrstuvwxyz0123456789',
-  WorkflowSessionIdSuffixLength
-);
 
 export const WorkflowSessionSelectionMode = {
   Single: 'single',
@@ -55,18 +48,6 @@ const workflowSessionSelectionPayloadSchema = z.discriminatedUnion('mode', [
 export type TWorkflowSessionSelectionPayload = z.infer<
   typeof workflowSessionSelectionPayloadSchema
 >;
-
-export function createWorkflowSessionId(): string {
-  return `${WorkflowSessionIdPrefix}${workflowSessionAlphabet(WorkflowSessionIdSuffixLength)}`;
-}
-
-export function isWorkflowSessionId(value: string | null | undefined): value is string {
-  if (!value) return false;
-  return (
-    value.startsWith(WorkflowSessionIdPrefix) &&
-    value.length === WorkflowSessionIdPrefix.length + WorkflowSessionIdSuffixLength
-  );
-}
 
 function parseWorkflowSessionSelectionPayload(
   value: unknown

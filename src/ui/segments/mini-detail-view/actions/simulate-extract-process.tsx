@@ -7,8 +7,10 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { config } from '@/config';
 import { type TWorkspaceSection, WorkflowActivityDictValue, WorkspaceSection } from '@/constants';
 import { resolveSimulateConfigureSegment } from '@/features/scan-config/workflow/resolve-configure-segment';
+import { createWorkflowSessionId } from '@/features/scan-config/workflow/session';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { WORKFLOW_SESSION_ID_SEARCH_PARAM } from '@/ui/segments/workflows/config';
 import { WorkflowUseModelButton } from '@/ui/segments/workflows/elements/use-model-button';
 import {
   PanelQueryParam,
@@ -103,7 +105,7 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
               href={{
                 pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/${section}/configure/${configureSegment}/${record.id}`,
                 query: {
-                  sessionId: crypto.randomUUID(),
+                  [WORKFLOW_SESSION_ID_SEARCH_PARAM]: createWorkflowSessionId(),
                   ...useModelQuery,
                 },
               }}

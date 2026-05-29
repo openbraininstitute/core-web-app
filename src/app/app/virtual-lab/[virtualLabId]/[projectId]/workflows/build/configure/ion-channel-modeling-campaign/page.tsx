@@ -1,6 +1,7 @@
 import { tryCatch } from '@/api/utils';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { ScanConfigOriginSearchParam } from '@/features/scan-config/helpers';
+import { createWorkflowSessionId } from '@/features/scan-config/workflow/session';
 import { getQueryClient } from '@/query-provider/server';
 import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -11,13 +12,13 @@ export default async function Page({
   searchParams,
   params,
 }: ServerSideComponentProp<
-  { virtualLabId: string; projectId: string },
-  { sessionId: string; readonly: string; [key: string]: string }
+  { virtualLabId: string; projectId: string; session: string },
+  Record<string, string>
 >) {
   const [{ virtualLabId, projectId }, queryParams] = await Promise.all([params, searchParams]);
   const originCampaignId = queryParams[ScanConfigOriginSearchParam];
   const readonly = queryParams.readonly === 'true';
-  const sessionId = queryParams.sessionId || crypto.randomUUID();
+  const sessionId = queryParams.session || createWorkflowSessionId();
 
   let initialConfig: Record<string, any> | null = null;
   if (originCampaignId) {

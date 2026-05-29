@@ -2,10 +2,10 @@ import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/en
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { config } from '@/config';
 import { WorkflowActivityDictValue } from '@/constants';
+import { createWorkflowSessionId } from '@/features/scan-config/workflow/session';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 import { WorkflowSchemaSelectionMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import {
-  createWorkflowSessionId,
   saveWorkflowSessionSelection,
   type TWorkflowSessionSelectionPayload,
   type TWorkflowSessionSelectionRef,
@@ -336,7 +336,7 @@ export function buildSimulateConfigureUrlFromDataViewEntity({
     entityType: sourceType,
     query: {
       [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
-      sessionId: createWorkflowSessionId(),
+      [WORKFLOW_SESSION_ID_SEARCH_PARAM]: createWorkflowSessionId(),
     },
   });
 }
