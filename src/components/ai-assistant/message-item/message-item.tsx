@@ -102,14 +102,14 @@ function MessageChild({
                   if (!part.mediaType?.startsWith('image/')) return null;
                   return part.url.startsWith('storage://') ? (
                     <StorageImagePart
-                      // eslint-disable-next-line react/no-array-index-key
+                      // biome-ignore lint/suspicious/noArrayIndexKey: stable order from message parts
                       key={`img-${idx}`}
                       url={part.url}
                       filename={part.filename}
                     />
                   ) : (
                     <ExpandableImage
-                      // eslint-disable-next-line react/no-array-index-key
+                      // biome-ignore lint/suspicious/noArrayIndexKey: stable order from message parts
                       key={`img-${idx}`}
                       src={part.url}
                       alt={part.filename ?? 'Attached image'}
@@ -122,7 +122,7 @@ function MessageChild({
               if (part.mediaType === 'application/pdf') {
                 return (
                   <div
-                    // eslint-disable-next-line react/no-array-index-key
+                    // biome-ignore lint/suspicious/noArrayIndexKey: stable order from message parts
                     key={`file-${idx}`}
                     className={styles.pdfAttachment}
                   >

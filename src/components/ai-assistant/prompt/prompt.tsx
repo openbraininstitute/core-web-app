@@ -61,7 +61,8 @@ export default function Prompt({
   const fitTextarea = useCallback(() => {
     const ta = textareaRef.current;
     if (!ta) return;
-    ta.style.height = 'auto';
+    // Reset to 1px (not auto) to get accurate scrollHeight without layout thrash
+    ta.style.height = '1px';
     ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
   }, []);
 
@@ -200,6 +201,7 @@ export default function Prompt({
   };
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: drag-and-drop zone
     <div
       className={classNames(className, styles.prompt, isDragOver && styles.dragOver)}
       onDragEnter={handleDragEnter}
