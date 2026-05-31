@@ -7,6 +7,7 @@ import {
   createCellMorphologyConfig,
 } from '@/ui/segments/contribute/cell-morphology/config';
 import { useCellMorphologyPipeline } from '@/ui/segments/contribute/cell-morphology/pipeline';
+import { useRef } from 'react';
 import {
   AssetUpload,
   Contribution,
@@ -76,12 +77,13 @@ interface ICellMorphologyProps {
 export function CellMorphology({ sessionId }: ICellMorphologyProps) {
   const { projectId, virtualLabId } = useWorkspace();
   const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
+  const brainRegionId = useRef(selectedBrainRegion?.id ?? null);
 
   return (
     <ContributionForm
       config={cellMorphologyConfig}
       sessionId={sessionId}
-      brainRegionId={selectedBrainRegion?.id!}
+      brainRegionId={brainRegionId.current}
       pipeline={useCellMorphologyPipeline}
       progressSteps={CELL_MORPHOLOGY_PROGRESS_STEPS}
       virtualLabId={virtualLabId}
