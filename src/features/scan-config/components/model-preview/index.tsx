@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -23,6 +23,13 @@ export function ModelPreview({ model }: { model: TSupportedEntitiesForScanConfig
     .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single }, () => (
       <ViewerLayout model={model} />
     ))
+    .with(
+      {
+        type: EntityTypeDict.Circuit,
+        scale: P.union(CircuitScaleDictionary.PairNeuron, CircuitScaleDictionary.SmallMicrocircuit),
+      },
+      () => <CircuitPreview circuit={model as ICircuit} enableVisualization />
+    )
     .with({ type: EntityTypeDict.Circuit }, () => <CircuitPreview circuit={model as ICircuit} />)
     .otherwise(() => null);
 }

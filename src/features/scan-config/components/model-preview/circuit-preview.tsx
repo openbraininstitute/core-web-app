@@ -19,14 +19,21 @@ const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
 interface CircuitPreviewProps {
   className?: string;
   circuit: ICircuit;
+  enableVisualization?: boolean;
 }
 
-export function CircuitPreview({ className, circuit }: CircuitPreviewProps) {
+export function CircuitPreview({
+  className,
+  circuit,
+  enableVisualization = false,
+}: CircuitPreviewProps) {
   const [mode, setMode] = useState<'image' | 'viz'>('image');
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const activeMode = enableVisualization ? mode : 'image';
 
   useEffect(() => {
     const el = containerRef.current;
@@ -59,17 +66,19 @@ export function CircuitPreview({ className, circuit }: CircuitPreviewProps) {
     <div className="h-full flex flex-col">
       <div className="flex justify-end items-center gap-2 mb-3">
         <TableToggleButton pressed={showTable} onClick={handleToggleTable} />
-        <Segmented
-          options={[
-            { label: 'Image View', value: 'image' },
-            { label: 'Visualization', value: 'viz' },
-          ]}
-          onChange={(v) => setMode(v as 'image' | 'viz')}
-        />
+        {enableVisualization && (
+          <Segmented
+            options={[
+              { label: 'Image View', value: 'image' },
+              { label: 'Visualization', value: 'viz' },
+            ]}
+            onChange={(v) => setMode(v as 'image' | 'viz')}
+          />
+        )}
       </div>
       <div ref={containerRef} className="flex-1 relative min-h-0 rounded-2xl overflow-hidden">
-        {mode === 'image' && <CircuitImage className={className} circuit={circuit} />}
-        {mode === 'viz' && <CircuitViz key={circuit.id} id={circuit.id} />}
+        {activeMode === 'image' && <CircuitImage className={className} circuit={circuit} />}
+        {activeMode === 'viz' && <CircuitViz key={circuit.id} id={circuit.id} />}
         {showTable && tableHeight !== null && containerHeight > 0 && (
           <div
             className="absolute left-0 right-0 bottom-0 z-20 flex flex-col border-t border-neutral-200 bg-white"
