@@ -82,6 +82,7 @@ export function WorkflowActions<T extends EntityCoreObjectTypes>({
       {!hideUseModelAction &&
         (workflowTargetType && activity ? (
           <WorkflowUseModelButton
+            variant="default"
             activity={activity}
             targetType={workflowTargetType}
             entityId={record.id}

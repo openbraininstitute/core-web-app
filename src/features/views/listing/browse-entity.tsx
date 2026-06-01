@@ -9,6 +9,7 @@ import {
   type ComponentProps,
   type ReactElement,
   type ReactNode,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -46,6 +47,7 @@ import {
 } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { MainTableSkeleton } from '@/ui/segments/data-table/skeleton';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import {
@@ -398,47 +400,49 @@ export function BrowseEntityScope({
         )}
       >
         <div id="main-listing-table-container" className={cn('h-full w-full')}>
-          <MainTable
-            showLoadingState
-            allowDownload={allowDownload}
-            allowDelete={allowDelete}
-            allowFilter={allowFilter}
-            allowSearch={allowSearch}
-            requireSpeciesSelector={requireSpeciesSelector}
-            requireScopeSelector={requireScopeSelector}
-            sticky={{ offsetHeader: 75.5 }}
-            isLoading={isFetching}
-            dataScope={scope}
-            section={section}
-            dataSource={dataSource ?? []}
-            dataType={dataType}
-            workspace={{ virtualLabId, projectId }}
-            dataKey={dataKey}
-            columns={columns}
-            onCellClick={onCellClick}
-            resultPagination={{
-              pagination,
-              totalData: dataSource?.length,
-            }}
-            cls={{
-              table: cn(
-                '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
-                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
-                classNames?.tableClassNames?.table
-              ),
-              container: classNames?.tableClassNames?.container,
-            }}
-            {...mainTableProps}
-            requireEntityTypeSelector={requireEntityTypeSelector}
-            filterClassNames={classNames?.filterClassNames}
-            // @ts-expect-error
-            expandableOptions={expandableOptions}
-            facets={{
-              data: facets,
-              error: facetsError,
-              loading: facetsLoading,
-            }}
-          />
+          <Suspense fallback={<MainTableSkeleton />}>
+            <MainTable
+              showLoadingState
+              allowDownload={allowDownload}
+              allowDelete={allowDelete}
+              allowFilter={allowFilter}
+              allowSearch={allowSearch}
+              requireSpeciesSelector={requireSpeciesSelector}
+              requireScopeSelector={requireScopeSelector}
+              sticky={{ offsetHeader: 75.5 }}
+              isLoading={isFetching}
+              dataScope={scope}
+              section={section}
+              dataSource={dataSource ?? []}
+              dataType={dataType}
+              workspace={{ virtualLabId, projectId }}
+              dataKey={dataKey}
+              columns={columns}
+              onCellClick={onCellClick}
+              resultPagination={{
+                pagination,
+                totalData: dataSource?.length,
+              }}
+              cls={{
+                table: cn(
+                  '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
+                  '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
+                  classNames?.tableClassNames?.table
+                ),
+                container: classNames?.tableClassNames?.container,
+              }}
+              {...mainTableProps}
+              requireEntityTypeSelector={requireEntityTypeSelector}
+              filterClassNames={classNames?.filterClassNames}
+              // @ts-expect-error
+              expandableOptions={expandableOptions}
+              facets={{
+                data: facets,
+                error: facetsError,
+                loading: facetsLoading,
+              }}
+            />
+          </Suspense>
         </div>
       </div>
       {requireMiniDetailView && (

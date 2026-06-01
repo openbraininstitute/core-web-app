@@ -201,7 +201,9 @@ function ScanConfigTemplateContent({
       <div id="template-content" className="flex-1 min-h-0">
         {isConfigurationTab && browseOverlay ? (
           <div id="scan-config-model-selection-overlay" className="h-[calc(100%-0.5rem)] min-h-0">
-            {browseOverlay}
+            <Suspense fallback={<div className="h-full w-full rounded-2xl bg-gray-50" />}>
+              {browseOverlay}
+            </Suspense>
           </div>
         ) : null}
         <div
