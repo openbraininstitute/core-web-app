@@ -17,7 +17,7 @@ export function useThreadSearch(query: string) {
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(query);
-    }, 300);
+    }, 500);
     return () => clearTimeout(timer);
   }, [query]);
 

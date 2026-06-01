@@ -286,11 +286,13 @@ export async function serviceAiAgentThreadSearch({
   query,
   virtualLabId,
   projectId,
+  limit = 20,
 }: {
   accessToken: string;
   query: string;
   virtualLabId: string | null;
   projectId: string | null;
+  limit?: number;
 }): Promise<ThreadSearchResponse> {
   const data = await fetchJSON({
     method: 'GET',
@@ -300,6 +302,7 @@ export async function serviceAiAgentThreadSearch({
       query,
       vlabId: virtualLabId,
       projectId,
+      limit: `${limit}`,
     },
     typeGuard: isThreadSearchResponse,
   });
