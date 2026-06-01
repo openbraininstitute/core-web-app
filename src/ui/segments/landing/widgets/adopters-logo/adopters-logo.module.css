@@ -48,7 +48,7 @@
   --adopters-cols: 3;
   --adopters-logo-col-gap: clamp(14px, 3vw, 32px);
   --adopters-row-gap: clamp(32px, 6vw, 64px);
-  --adopters-logo-height: clamp(64px, 12vw, 120px);
+  --adopters-logo-height: clamp(88px, 18vw, 180px);
   display: grid;
   grid-template-columns: repeat(var(--adopters-cols), minmax(0, 1fr));
   width: 100%;
@@ -57,14 +57,12 @@
 }
 
 .logos > .link {
+  position: relative;
   box-sizing: border-box;
   width: 100%;
   height: var(--adopters-logo-height);
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
+  display: block;
   text-decoration: none;
   color: inherit;
 }
@@ -78,7 +76,7 @@
     --adopters-cols: 2;
     --adopters-logo-col-gap: clamp(14px, 3.5vw, 28px);
     --adopters-row-gap: clamp(28px, 5vw, 56px);
-    --adopters-logo-height: clamp(56px, 14vw, 100px);
+    --adopters-logo-height: clamp(80px, 22vw, 150px);
   }
 
   .root::before {
@@ -98,7 +96,7 @@
     --adopters-cols: 1;
     --adopters-logo-col-gap: 12px;
     --adopters-row-gap: clamp(24px, 8vw, 40px);
-    --adopters-logo-height: clamp(48px, 16vw, 80px);
+    --adopters-logo-height: clamp(72px, 24vw, 120px);
   }
 }
 
@@ -109,10 +107,6 @@
 }
 
 .logoImage {
-  display: block;
-  width: 100%;
-  height: var(--adopters-logo-height);
-  max-width: none;
   object-fit: contain;
   object-position: center;
 }

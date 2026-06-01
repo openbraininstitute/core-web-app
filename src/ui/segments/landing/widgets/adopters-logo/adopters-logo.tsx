@@ -25,10 +25,9 @@ export default function WidgetAdoptersLogo({ data, className }: WidgetAdoptersLo
               <Image
                 alt={adopter.name}
                 className={styles.logoImage}
-                height={adopter.imageHeight}
+                fill
                 sizes="(max-width: 440px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 src={adopter.imageURL}
-                width={adopter.imageWidth}
               />
             );
             return (
