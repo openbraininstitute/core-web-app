@@ -78,7 +78,10 @@ export default function Prompt({
     // Always measure at the compact width so the decision can't oscillate.
     const compactWidth = Math.max(40, main.clientWidth - RESERVED);
     mirror.style.width = `${compactWidth}px`;
-    mirror.textContent = value.length ? value : 'x';
+    // Append a zero-width char when text ends with newline so the mirror
+    // accounts for the empty trailing line (textContent collapses it otherwise)
+    const mirrorText = value.length ? value : 'x';
+    mirror.textContent = mirrorText.endsWith('\n') ? `${mirrorText} ` : mirrorText;
 
     const lines = Math.max(1, Math.round(mirror.scrollHeight / lineHeight));
     const wouldWrap = lines > 1;
