@@ -286,7 +286,6 @@ export async function serviceAiAgentThreadSearch({
   query,
   virtualLabId,
   projectId,
-  limit = 20,
 }: {
   accessToken: string;
   query: string;
