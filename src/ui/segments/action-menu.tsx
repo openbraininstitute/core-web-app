@@ -22,8 +22,13 @@ import {
 } from '@/api/entitycore/types/extended-entity-type';
 import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { WorkflowActivityDictValue, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { resolveSimulateConfigureSegment } from '@/features/scan-config/workflow/resolve-configure-segment';
+import {
+  getSimulateCircuitSourceTypeByScale,
+  isSimulateCircuitSourceType,
+} from '@/features/scan-config/workflow/simulate-circuit-workflows';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { downloadArchive } from '@/services/entity-download';
 import Action from '@/ui/molecules/side-menu-action';
@@ -132,6 +137,12 @@ export default function ActionMenu({
       ? entityType.isSimulatable
       : (entityType.isSimulatable as (e: typeof entity) => boolean)(entity);
 
+  const simulateDataType = isSimulateCircuitSourceType(type)
+    ? type
+    : 'scale' in entity
+      ? (getSimulateCircuitSourceTypeByScale((entity as ICircuit).scale) ?? undefined)
+      : undefined;
+
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-base font-bold">
       <Action
@@ -151,10 +162,17 @@ export default function ActionMenu({
           icon={
             <NextLink
               href={{
-                pathname: `${config.ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${entityType.type.replaceAll('_', '-')}/${entity.id}`,
+                pathname: `${config.ROOT_ROUTE}/${ctx.virtualLabId}/${ctx.projectId}/workflows/simulate/configure/${resolveSimulateConfigureSegment(
+                  {
+                    section: WorkflowActivityDictValue.simulate,
+                    recordType: entityType.type,
+                    dataType: simulateDataType ?? type,
+                  }
+                )}/${entity.id}`,
                 query: {
                   sessionId: crypto.randomUUID(),
                   [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
+                  ...(simulateDataType ? { dataType: simulateDataType } : {}),
                 },
               }}
             >
