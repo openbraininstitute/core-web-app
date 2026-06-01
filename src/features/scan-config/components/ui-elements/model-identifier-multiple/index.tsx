@@ -11,6 +11,7 @@ import {
   collectWorkflowSessionRefs,
   getAllRefsFromParsed,
   parseModelIdentifierFieldValue,
+  resolveEntityFetchTarget,
   serializeModelIdentifierFieldValue,
 } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
 import { ModelIdentifierSummaryView } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/summary-view';
@@ -95,7 +96,7 @@ export function ModelIdentifierMultiple({
 
   const handleRemoveEntity = useCallback(
     (ref: TFromIdRef, groupIndex?: number) => {
-      setEntityPreview((current) => (current?.record.id === ref.id_str ? null : current));
+      setEntityPreview((current) => (current?.id === ref.id_str ? null : current));
       writeValue(
         updateParsedValue(parsedValue, (current) => {
           if (current.storageMode === ModelIdentifierFieldStorageMode.Grouped) {
@@ -194,6 +195,30 @@ export function ModelIdentifierMultiple({
     [parsedValue, writeValue]
   );
 
+  // select an entity in the central column from its ref (id-only preview; the
+  // right column resolves the record itself)
+  const selectPreviewFromRef = useCallback(
+    (ref: TFromIdRef | undefined) => {
+      if (!ref) {
+        return;
+      }
+      const target = resolveEntityFetchTarget(ref);
+      if (target) {
+        setEntityPreview({ dataType: target.entityType, id: target.id });
+      }
+    },
+    [setEntityPreview]
+  );
+
+  // refs for the group currently being edited (pre-update state)
+  const getGroupRefs = useCallback(
+    (groupIndex?: number): readonly TFromIdRef[] =>
+      parsedValue.storageMode === ModelIdentifierFieldStorageMode.Grouped
+        ? (parsedValue.groups[groupIndex ?? 0]?.elements ?? [])
+        : parsedValue.items,
+    [parsedValue]
+  );
+
   const handleBrowseConfirm = useCallback(
     (refs: TFromIdRef[], groupName?: string, groupIndex?: number) => {
       writeValue(
@@ -218,9 +243,21 @@ export function ModelIdentifierMultiple({
           };
         })
       );
+      // preview the first newly-added entity (fallback: the first in the result) (Asked by @James)
+      const previousIds = new Set(getGroupRefs(groupIndex).map((ref) => ref.id_str));
+      selectPreviewFromRef(refs.find((ref) => !previousIds.has(ref.id_str)) ?? refs[0]);
       closeOverlay();
     },
-    [closeOverlay, parsedValue, writeValue]
+    [closeOverlay, getGroupRefs, parsedValue, selectPreviewFromRef, writeValue]
+  );
+
+  // closed without confirming (Cancel or X): preview the top entity of the group (Asked by @James)
+  const handleBrowseCancel = useCallback(
+    (groupIndex?: number) => {
+      selectPreviewFromRef(getGroupRefs(groupIndex)[0]);
+      closeOverlay();
+    },
+    [closeOverlay, getGroupRefs, selectPreviewFromRef]
   );
 
   const handleAddEntities = useCallback(
@@ -246,15 +283,15 @@ export function ModelIdentifierMultiple({
           requireSpecies={workflowField?.requireSpecies}
           disabled={disabled}
           onConfirm={(refs, groupName) => handleBrowseConfirm(refs, groupName, groupIndex)}
-          onCancel={closeOverlay}
+          onCancel={() => handleBrowseCancel(groupIndex)}
         />
       );
     },
     [
-      closeOverlay,
       disabled,
       workflowField,
       fieldSchema,
+      handleBrowseCancel,
       handleBrowseConfirm,
       openOverlay,
       paramSchema.title,

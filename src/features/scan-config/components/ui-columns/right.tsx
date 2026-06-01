@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { WorkspaceSection } from '@/constants';
 import {
-  useScanConfigEntityPreview,
+  usePreviewRecord,
   useSetScanConfigEntityPreview,
 } from '@/features/scan-config/bridge/entity-preview';
 import {
@@ -15,6 +15,7 @@ import {
   type TScanConfigActivity,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import { MiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
@@ -52,7 +53,11 @@ export function Right({
   selectedRootElement,
   config,
 }: Props) {
-  const entityPreview = useScanConfigEntityPreview();
+  const {
+    preview: entityPreview,
+    record: previewRecord,
+    isLoading: isPreviewLoading,
+  } = usePreviewRecord();
   const setEntityPreview = useSetScanConfigEntityPreview();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -64,21 +69,25 @@ export function Right({
     setEntityPreview(null);
   }, [sessionId, origin, entity?.id, setEntityPreview]);
 
-  if (entityPreview) {
+  if (entityPreview && (previewRecord || isPreviewLoading)) {
     return (
       <div
         id="scan-config-controls-right-mini-detail"
         className="h-full min-h-0 rounded-lg px-0.5 py-1"
       >
-        <MiniDetailViewRenderer
-          section={WorkspaceSection.Data}
-          record={entityPreview.record as EntityCoreObjectTypes}
-          dataType={entityPreview.dataType}
-          theme={MiniDetailViewTheme.Light}
-          enableAnimation={false}
-          hideUseModelAction
-          onClose={() => setEntityPreview(null)}
-        />
+        {previewRecord ? (
+          <MiniDetailViewRenderer
+            section={WorkspaceSection.Data}
+            record={previewRecord as EntityCoreObjectTypes}
+            dataType={entityPreview.dataType}
+            theme={MiniDetailViewTheme.Light}
+            enableAnimation={false}
+            hideUseModelAction
+            onClose={() => setEntityPreview(null)}
+          />
+        ) : (
+          <Skeleton className="h-full w-full rounded-lg" />
+        )}
       </div>
     );
   }

@@ -61,14 +61,13 @@ export function ModelIdentifier({ className, entity, value }: ModelIdentifierPro
   const dataType = resolveEntityDataType(value, entity);
   const typeLabel = resolveTypeLabel(value, dataType);
   const isSelected =
-    Boolean(dataType) &&
-    entityPreview?.record.id === entity.id &&
-    entityPreview.dataType === dataType;
+    Boolean(dataType) && entityPreview?.id === entity.id && entityPreview.dataType === dataType;
 
   const handleSelect = dataType
     ? () =>
         setEntityPreview({
           dataType,
+          id: entity.id,
           record: {
             ...entity,
             type: entity.type ?? dataType,

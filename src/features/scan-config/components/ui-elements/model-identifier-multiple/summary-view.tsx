@@ -169,12 +169,11 @@ export function ModelIdentifierSummaryView({
           typeLabel={getFromIdRefTypeBadgeLabel(ref)}
           disabled={disabled}
           showRemove={canRemove}
-          selected={
-            entityPreview?.record.id === entity.id && entityPreview.dataType === entity.entityType
-          }
+          selected={entityPreview?.id === entity.id && entityPreview.dataType === entity.entityType}
           onSelect={() =>
             setEntityPreview({
               dataType: entity.entityType,
+              id: entity.id,
               record: {
                 ...entity,
                 type: entity.type ?? entity.entityType,
