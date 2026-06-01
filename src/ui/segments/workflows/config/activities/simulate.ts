@@ -2,6 +2,8 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 
 import type { IWorkflowDescriptor } from '../types';
 
+const simulatableCircuitFilters = { has_electrical_cell_models: true } as const;
+
 export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
   {
     sourceType: ExtendedEntitiesTypeDict.Memodel,
@@ -35,35 +37,60 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
   {
     sourceType: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.SingleNeuronCircuit }],
+    configurationInputs: [
+      {
+        type: ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+        filters: simulatableCircuitFilters,
+      },
+    ],
     order: 5,
     disabled: false,
   },
   {
     sourceType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.PairedNeuronCircuit }],
+    configurationInputs: [
+      {
+        type: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+        filters: simulatableCircuitFilters,
+      },
+    ],
     order: 6,
     disabled: false,
   },
   {
     sourceType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
     targetType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.SmallMicrocircuit }],
+    configurationInputs: [
+      {
+        type: ExtendedEntitiesTypeDict.SmallMicrocircuit,
+        filters: simulatableCircuitFilters,
+      },
+    ],
     order: 7,
     disabled: false,
   },
   {
     sourceType: ExtendedEntitiesTypeDict.Microcircuit,
     targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.Microcircuit }],
+    configurationInputs: [
+      {
+        type: ExtendedEntitiesTypeDict.Microcircuit,
+        filters: simulatableCircuitFilters,
+      },
+    ],
     disabled: false,
     order: 8,
   },
   {
     sourceType: ExtendedEntitiesTypeDict.BrainRegion,
     targetType: ExtendedEntitiesTypeDict.RegionCircuitSimulation,
-    configurationInputs: [{ type: ExtendedEntitiesTypeDict.BrainRegion }],
+    configurationInputs: [
+      {
+        type: ExtendedEntitiesTypeDict.BrainRegion,
+        filters: simulatableCircuitFilters,
+      },
+    ],
     disabled: false,
     order: 9,
   },

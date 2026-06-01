@@ -46,6 +46,6 @@ export const PairedNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: false,
+  isSimulatable: (entity: ICircuit) => entity.has_electrical_cell_models,
   isDeletable: false,
 } as const;

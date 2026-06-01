@@ -51,5 +51,5 @@ export const SingleNeuronCircuit: EntityCoreTypeConfig<ICircuit> = {
   isBookmarkable: false,
   isDownloadable: true,
   isCopyable: true,
-  isSimulatable: false,
+  isSimulatable: (entity: ICircuit) => entity.has_electrical_cell_models,
 } as const;

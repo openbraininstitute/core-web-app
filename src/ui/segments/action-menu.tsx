@@ -130,7 +130,7 @@ export default function ActionMenu({
   const isSimulatable =
     typeof entityType.isSimulatable === 'boolean'
       ? entityType.isSimulatable
-      : 'scale' in entity && entityType.isSimulatable(entity.scale);
+      : (entityType.isSimulatable as (e: typeof entity) => boolean)(entity);
 
   return (
     <div className="text-primary-9 mt-10 flex flex-col gap-5 px-5 text-base font-bold">
