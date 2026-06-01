@@ -70,16 +70,16 @@ export default function Search({ onSelectThread }: SearchProps) {
 
       {hasQuery && results && (
         <div className={styles.searchModal}>
-          {results.result_list.length === 0 ? (
+          {results.resultList.length === 0 ? (
             <div className={styles.searchEmpty}>No results found</div>
           ) : (
-            results.result_list.map((result) => (
+            results.resultList.map((result) => (
               <button
-                key={result.message_id}
+                key={result.messageId}
                 type="button"
                 className={styles.searchResult}
                 onClick={() => {
-                  onSelectThread(result.thread_id);
+                  onSelectThread(result.threadId);
                   setSearchQuery('');
                 }}
               >
