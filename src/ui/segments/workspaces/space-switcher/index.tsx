@@ -20,6 +20,7 @@ import {
   type TTriggerWorkspaceConfigurationClickEvent,
   useWorkspaceConfigurationClickEvent,
   WorkspaceActions,
+  type WorkspaceActionType,
 } from '@/ui/segments/workspaces/space-manager/event';
 import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { Item } from '@/ui/segments/workspaces/space-switcher/item';
@@ -60,7 +61,11 @@ export function SpaceSwitcher({ className }: Props) {
   const [expandedLabs, setExpandedLabs] = useState<Set<string>>(new Set([]));
   const [collapsedLabs, setCollapsedLabs] = useState<Set<string>>(new Set([]));
   const [currentVirtualLabId, setCurrentVirtualLabId] = useState<string | null>(null);
-  const [boardModalOpen, setBoardModalOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState<{
+    type: WorkspaceActionType;
+    virtualLabId: string | null;
+    projectId: string | null;
+  } | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { status: userStatus, data: sessionData } = useSession();
@@ -122,17 +127,34 @@ export function SpaceSwitcher({ className }: Props) {
     gcTime: Number.POSITIVE_INFINITY,
   });
 
-  const onProfileClick = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const onUserClick = () => {
     setIsExpanded(true);
-    setBoardModalOpen(true);
     makeTriggerWorkspaceConfigurationClickEvent({
       on: true,
       type: WorkspaceActions.ProfileSettings,
       data: null,
+    });
+  };
+
+  const onVlabBannerClick = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
+    if (!virtualLabId) return;
+    setIsExpanded(true);
+    makeTriggerWorkspaceConfigurationClickEvent({
+      on: true,
+      type: WorkspaceActions.VirtualLabConfiguration,
+      data: { virtualLabId, data: { id: virtualLabId } },
+    });
+  };
+
+  const onProjectBannerClick = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation();
+    if (!virtualLabId || !projectId) return;
+    setIsExpanded(true);
+    makeTriggerWorkspaceConfigurationClickEvent({
+      on: true,
+      type: WorkspaceActions.ProjectPreview,
+      data: { virtualLabId, projectId, data: { id: projectId, virtual_lab_id: virtualLabId } },
     });
   };
 
@@ -211,166 +233,143 @@ export function SpaceSwitcher({ className }: Props) {
   const isCurrentProjectLoading =
     !!projectId && !currentProjectName && (projectsLoading || activeProjectLoading);
 
-  useWorkspaceConfigurationClickEvent((event) => {
-    if (isExpanded && event.detail.on) setBoardModalOpen(event.detail.on);
-    else if (isExpanded && !event.detail.on) {
-      setBoardModalOpen(event.detail.on);
-      // TODO: ask for right behavior needed either to close the space switcher or to keep it open
-      setIsExpanded(false);
-    }
-  });
+  // Modals are decoupled from the panel: opening/closing a modal only tracks
+  // which trigger is active (for elevation + selection state); it never
+  // collapses the workspace panel.
+  useWorkspaceConfigurationClickEvent(
+    useCallback((event: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<unknown>>) => {
+      if (!event.detail.on || !event.detail.type) {
+        setActiveModal(null);
+        return;
+      }
+      const payload = event.detail.data as {
+        virtualLabId?: string | null;
+        projectId?: string | null;
+        data?: { id?: string | null; virtual_lab_id?: string | null } | null;
+      } | null;
+      setActiveModal({
+        type: event.detail.type,
+        virtualLabId: payload?.virtualLabId ?? payload?.data?.virtual_lab_id ?? null,
+        projectId: payload?.projectId ?? payload?.data?.id ?? null,
+      });
+    }, [])
+  );
+  const boardModalOpen = activeModal !== null;
+  // Banner segments highlight only when the open modal targets the *current*
+  // workspace lab/project (not a different card selected from the panel).
+  const profileActive = activeModal?.type === WorkspaceActions.ProfileSettings;
+  const vlabSegmentActive =
+    activeModal?.type === WorkspaceActions.VirtualLabConfiguration &&
+    activeModal.virtualLabId === virtualLabId;
+  const projectSegmentActive =
+    activeModal?.type === WorkspaceActions.ProjectPreview && activeModal.projectId === projectId;
 
-  const onClick = () => setIsExpanded(true);
-
-  const onExpandClick = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
+  const onTogglePanel = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
+    // closing the panel collapses every lab card; the active lab re-expands on
+    // its own (empty sets => visibleExpandedLabs auto-includes virtualLabId)
+    if (isExpanded) {
+      setExpandedLabs(new Set());
+      setTryingToExpand(new Set());
+      setCollapsedLabs(new Set());
+      setCurrentVirtualLabId(null);
+    }
     setIsExpanded((prev) => !prev);
-    makeTriggerWorkspaceConfigurationClickEvent({
-      on: false,
-      data: null,
-      type: null,
-    });
   };
 
   return (
-    <div className="flex items-start justify-center gap-1.5">
+    <div
+      className={cn('relative flex items-start justify-center gap-1.5', {
+        'z-1001': boardModalOpen,
+      })}
+    >
       <div id="workspace-switcher" className={cn('relative', className)} ref={dropdownRef}>
-        <button
+        <div
           id="virtual-lab-menu-banner"
-          type="button"
           role="menubar"
-          onClick={onClick}
           className={cn(
-            'relative flex h-10 w-full items-center justify-between gap-1.5 pl-4 text-sm transition-all duration-150 ease-out',
-            'hover:bg-background',
+            'relative flex h-10 w-full items-center gap-1.5 pl-2 pr-4 text-sm transition-all duration-150 ease-out',
             {
-              'border-neutral-2 h-16! rounded-2xl rounded-b-none border border-b-0 bg-white pr-4':
+              'border-neutral-2 h-16! rounded-2xl rounded-b-none border border-b-0 bg-white shadow-2xl':
                 isExpanded,
             },
             {
-              'bg-background hover:shadow-sm border-neutral-2 gap-2 rounded-full border text-gray-700 hover:bg-gray-50':
+              'bg-background hover:shadow-sm border-neutral-2 rounded-full border text-gray-700':
                 !isExpanded,
             },
-            { 'z-1001': boardModalOpen },
             { 'h-12': breakpoint === 'xl' }
           )}
           aria-label={`${currentVirtualLabName}/${currentProjectLabel}`}
-          disabled={labsLoading || myLabLoading || isCurrentProjectLoading}
         >
-          <div
-            className={cn('flex items-center justify-center gap-2', {
-              hidden: isExpanded,
-            })}
-          >
-            {/** biome-ignore lint/a11y/noStaticElementInteractions: button can not have nested buttons */}
-            <div
-              className={cn(
-                'flex h-auto w-auto shrink-0 items-center justify-center rounded-full',
-                'hover:bg-background border-none'
-              )}
-              onKeyDown={onProfileClick}
-              onClick={onProfileClick}
-              tabIndex={-1}
-              title={username}
-              data-label={username}
-            >
-              <UserFilled className="hover:text-primary-6 text-primary-9 shrink-0 text-lg xl:text-xl" />
-            </div>
-            <RiArrowRightSLine className="text-primary-8 font-bold size-5" />
-            {(labsLoading || myLabLoading) && !isExpanded ? (
-              <Skeleton className="h-4 w-16 rounded-full" />
-            ) : (
-              currentVirtualLabName &&
-              !isExpanded && (
-                <div
+          <UserIconButton
+            username={username}
+            onClick={onUserClick}
+            active={profileActive}
+            hidden={userStatus !== 'authenticated' || userLoading}
+          />
+          {!virtualLabId ? (
+            <span className="text-gray-500">Select virtual lab</span>
+          ) : (
+            <>
+              {labsLoading || myLabLoading ? (
+                <Skeleton className="h-4 w-16 rounded-full" />
+              ) : (
+                <button
+                  type="button"
                   id="current-virtual-lab-name"
                   data-testid="current-virtual-lab-name"
-                  className="group flex h-full max-w-20 items-center justify-center gap-1 overflow-hidden select-none"
+                  onClick={onVlabBannerClick}
                   title={currentVirtualLabName}
-                  data-label={currentVirtualLabName}
-                >
-                  <h3 className="text-primary-9 min-w-0 flex-1 truncate group-hover:font-bold">
-                    {currentVirtualLabName}
-                  </h3>
-                </div>
-              )
-            )}
-            <RiArrowRightSLine className="text-primary-8 font-bold size-5" />
-          </div>
-          <AnimatePresence mode="wait">
-            {!isExpanded ? (
-              <div
-                id="breadcrumb"
-                className={cn(
-                  'flex w-full flex-1 items-center space-x-2 overflow-hidden rounded-full py-2 pr-2',
-                  {
-                    'border-neutral-2 h-16! rounded-md rounded-b-none border border-b-0 bg-white':
-                      isExpanded,
-                  }
-                )}
-              >
-                {virtualLabId && (
-                  <>
-                    {isCurrentProjectLoading ? (
-                      <Skeleton className="h-5 w-24 flex-1 rounded-full" />
-                    ) : (
-                      <span
-                        id="current-project-name"
-                        data-testid="current-project-name"
-                        className="text-primary-9 min-w-0 flex-1 truncate text-left font-bold"
-                      >
-                        {currentProjectLabel}
-                      </span>
-                    )}
-                    <motion.div
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.15, ease: 'easeOut' }}
-                      className="bg-transparent inset-shadow-xs group flex size-8 items-center justify-center rounded-full"
-                    >
-                      {isCurrentProjectLoading ? (
-                        <Skeleton className="h-4 w-4 rounded-full" />
-                      ) : (
-                        <RiArrowDownSLine
-                          className="text-primary-9  size-5"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (boardModalOpen) return;
-                            setIsExpanded((prev) => !prev);
-                          }}
-                        />
-                      )}
-                    </motion.div>
-                  </>
-                )}
-                {!virtualLabId && <span className="text-gray-500">Select virtual lab</span>}
-              </div>
-            ) : (
-              userStatus === 'authenticated' &&
-              !userLoading && (
-                <div
-                  id="user-info"
                   className={cn(
-                    'hover:text-primary-8! text-primary-9! flex w-full items-center justify-between gap-2'
+                    'group flex h-7 max-w-28 shrink-0 items-center overflow-hidden rounded-full px-2 transition-colors select-none',
+                    { 'bg-primary-9! text-white': vlabSegmentActive }
                   )}
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <ProfileButton username={username} onProfileClick={onProfileClick} />
-                  </div>
-                  <div className="ml-2 flex shrink-0 items-center gap-2">
-                    <motion.div
-                      className="bg-white inset-shadow-sm group flex size-8 items-center justify-center rounded-full"
-                      animate={{ rotate: isExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.15, ease: 'easeOut' }}
-                      onClick={onExpandClick}
-                    >
-                      <RiArrowDownSLine className="text-primary-9 group-hover:text-primary-8 size-5" />
-                    </motion.div>
-                  </div>
-                </div>
-              )
-            )}
-          </AnimatePresence>
-        </button>
+                  <h3
+                    className={cn('min-w-0 truncate font-medium group-hover:font-bold', {
+                      'text-white!': vlabSegmentActive,
+                      'text-primary-9': !vlabSegmentActive,
+                    })}
+                  >
+                    {currentVirtualLabName}
+                  </h3>
+                </button>
+              )}
+              <RiArrowRightSLine className="text-primary-8 size-5 shrink-0" />
+              {isCurrentProjectLoading ? (
+                <Skeleton className="h-5 w-24 flex-1 rounded-full" />
+              ) : (
+                <button
+                  type="button"
+                  id="current-project-name"
+                  data-testid="current-project-name"
+                  onClick={onProjectBannerClick}
+                  title={currentProjectLabel}
+                  className={cn(
+                    'min-w-0 flex-1 truncate rounded-full px-3 py-1 text-left font-bold transition-colors',
+                    projectSegmentActive
+                      ? 'bg-primary-9! text-white'
+                      : 'text-primary-9 hover:underline'
+                  )}
+                >
+                  {currentProjectLabel}
+                </button>
+              )}
+              <motion.button
+                type="button"
+                aria-label="toggle-workspace-panel"
+                data-testid="toggle-workspace-panel"
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="bg-transparent group flex size-8 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={onTogglePanel}
+                disabled={boardModalOpen}
+              >
+                <RiArrowDownSLine className="text-primary-9 size-5" />
+              </motion.button>
+            </>
+          )}
+        </div>
 
         <AnimatePresence>
           {isExpanded && (
@@ -384,8 +383,7 @@ export function SpaceSwitcher({ className }: Props) {
                 'border-neutral-2 absolute top-full left-0 z-50 w-full overflow-hidden rounded-tr-lg rounded-b-2xl border border-t-0 bg-white',
                 'relative flex flex-col pt-1 pb-2 shadow-2xl',
                 'h-full max-h-[calc(100vh-5.5rem)] min-h-[calc(100vh-5.5rem)]',
-                { 'rounded-t-none': isExpanded },
-                { 'z-1001': boardModalOpen }
+                { 'rounded-t-none': isExpanded }
               )}
             >
               {/* list of user labs */}
@@ -464,43 +462,36 @@ export function SpaceSwitcher({ className }: Props) {
 
 export default SpaceSwitcher;
 
-function ProfileButton({
+function UserIconButton({
   username,
-  onProfileClick,
+  onClick,
+  active,
+  hidden,
 }: {
   username?: string;
-  onProfileClick: (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>
-  ) => void;
+  onClick: () => void;
+  active?: boolean;
+  hidden?: boolean;
 }) {
-  const [isActive, setIsActive] = useState(false);
-  useWorkspaceConfigurationClickEvent(
-    useCallback((data: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<unknown>>) => {
-      const incomingType = data.detail.type;
-      if (incomingType === WorkspaceActions.ProfileSettings) {
-        setIsActive(true);
-      }
-    }, [])
-  );
+  if (hidden) return null;
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: nested inside workspace `<button>` trigger; cannot use `<button>`
-    <div
-      className={cn(
-        'flex h-10 max-w-full min-w-0 flex-row items-center gap-1.5 rounded-full bg-white px-3 shadow-[0px_-2px_15px_0px_rgba(0,0,0,0.1)] xl:h-12 xl:gap-2 xl:px-5',
-        'hover:bg-background',
-        { 'bg-primary-9 hover:text-primary-9 text-white hover:bg-white': isActive }
-      )}
-      onKeyDown={onProfileClick}
-      onClick={onProfileClick}
-      tabIndex={-1}
+    <button
+      type="button"
+      id="user-profile-button"
+      data-testid="user-profile-button"
+      onClick={onClick}
       title={username}
       data-label={username}
+      aria-label={username}
+      className={cn(
+        'border-neutral-2 bg-white relative flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors hover:shadow-sm xl:size-8',
+        { 'bg-primary-9! hover:bg-primary-8!': active }
+      )}
     >
-      <UserFilled className="size-4 shrink-0 text-current xl:size-4.5" />
-      <h3 className="line-clamp-1 min-w-0 flex-1 truncate text-left text-sm font-bold xl:text-base">
-        {username}
-      </h3>
-    </div>
+      <UserFilled
+        className={cn('text-primary-9 text-base xl:text-lg', { 'text-white!': active })}
+      />
+    </button>
   );
 }

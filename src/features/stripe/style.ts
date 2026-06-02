@@ -61,5 +61,8 @@ export const stripeAppearance: StripeElementsOptions['appearance'] = {
     '.Tab--selected': {
       borderColor: '#002766',
     },
+    '.CheckboxLabel': {
+      color: '#002766',
+    },
   },
 };

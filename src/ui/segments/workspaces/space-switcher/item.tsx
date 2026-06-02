@@ -1,16 +1,23 @@
 'use client';
 
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { RiArrowDownSLine, RiArrowRightSLine } from '@remixicon/react';
+import {
+  RiArrowDownSLine,
+  RiArrowRightSLine,
+  RiHome8Line,
+  RiSettings3Line,
+} from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Button } from '@/ui/molecules/button';
 import {
   makeTriggerWorkspaceConfigurationClickEvent,
+  type TTriggerWorkspaceConfigurationClickEvent,
+  useWorkspaceConfigurationClickEvent,
   WorkspaceActions,
 } from '@/ui/segments/workspaces/space-manager/event';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -68,15 +75,17 @@ export function Item({
     }
   }, [tryingToExpand, lab.id, isSuccess, isFetched, toggleLabExpansion]);
 
-  const onDownClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    e.stopPropagation();
-    if (expandedLabs.has(lab.id)) {
-      toggleLabExpansion(lab.id);
-    } else if (tryingToExpand.has(lab.id)) {
+  const toggle = () => {
+    if (expandedLabs.has(lab.id) || tryingToExpand.has(lab.id)) {
       toggleLabExpansion(lab.id);
     } else {
       toggleLabExpansion(lab.id, 'trying');
     }
+  };
+
+  const onToggleClick = (e: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => {
+    e.stopPropagation();
+    toggle();
   };
 
   const onProjectClick = ({
@@ -125,8 +134,35 @@ export function Item({
   const showProjectsEmpty =
     expandedLabs.has(lab.id) && !projectsLoading && isFetched && !hasProjects;
 
+  // Which lab (if any) currently has a manager modal open.
+  const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
+  useWorkspaceConfigurationClickEvent(
+    useCallback((event: CustomEvent<TTriggerWorkspaceConfigurationClickEvent<unknown>>) => {
+      const payload = event.detail.data as { virtualLabId?: string } | null;
+      const isManagerModal =
+        event.detail.type === WorkspaceActions.VirtualLabConfiguration ||
+        event.detail.type === WorkspaceActions.ProjectPreview;
+      setSelectedLabId(event.detail.on && isManagerModal ? (payload?.virtualLabId ?? null) : null);
+    }, [])
+  );
+
+  const isSelected = selectedLabId === lab.id;
+
+  // two orthogonal states shown in distinct visual channels so they never
+  // compete for "current":
+  // - location (URL virtual lab) -> persistent light-blue card + "Active virtual lab" note
+  // - own lab                    -> "My virtual lab" note + home icon, no special fill
+  // - focus (modal open)         -> primary outline ring (border-2), no fill change
+  const eyebrow = isActive ? 'Active virtual lab' : isUserLab ? 'My virtual lab' : null;
+
   return (
-    <div className={cn('border-neutral-2 text-primary-9 bg-background mx-3 rounded-2xl border')}>
+    <div
+      className={cn('text-primary-9 mx-3 overflow-hidden rounded-2xl border', {
+        'border-[#E9F7FF]! bg-white! shadow-xs border-3!': isActive,
+        'border-background bg-background': !isActive,
+        'border-2! border-primary-9!': isSelected,
+      })}
+    >
       {/** biome-ignore lint/a11y/useSemanticElements: button can't have nested buttons */}
       <div
         role="button"
@@ -134,35 +170,42 @@ export function Item({
         aria-label="virtual-lab-item"
         data-testid="virtual-lab-item"
         className={cn(
-          'group flex cursor-pointer items-center justify-between pl-4 pr-2 py-3 transition-colors duration-150 hover:bg-gray-50',
-          'hover:bg-neutral-1 rounded-2xl',
+          'group flex cursor-pointer items-center justify-between pl-4 pr-2 py-3 transition-colors duration-150 rounded-md',
           { 'rounded-b-none': expandedLabs.has(lab.id) },
-          { 'bg-primary-9! text-white': isUserLab }
+          { 'bg-[#E9F7FF]! hover:bg-[#c5e8ff]! hover:border-[#c5e8ff]!': isActive },
+          { 'hover:bg-neutral-1': !isActive }
         )}
-        onKeyDown={onVlabClick}
-        onClick={onVlabClick}
+        onKeyDown={onToggleClick}
+        onClick={onToggleClick}
       >
         <div className="flex min-w-0 flex-1 items-center gap-2 select-none">
-          {isActive && (
-            <div
-              id="active-lab-indicator"
-              className={cn('block size-2 lg:size-2.5 rounded-full', {
-                'bg-white! group-hover:bg-white!': isUserLab,
-                'bg-primary-9! group-hover:bg-primary-8!': !isUserLab && isActive,
-                'bg-primary-9': !isOpen,
-              })}
-            />
-          )}
-          <h4
-            className={cn('text-primary-9 text-md line-clamp-1 truncate font-bold', {
-              'group-hover:text-white! text-white!': isUserLab,
-            })}
-            title={lab.name}
-          >
-            {lab.name}
-          </h4>
+          {isUserLab && <RiHome8Line className="size-6 shrink-0 text-gray-400" aria-hidden />}
+          <div className="flex min-w-0 flex-col">
+            {eyebrow && (
+              <span className="text-primary-7 truncate text-[11px] font-medium uppercase leading-none tracking-wide">
+                {eyebrow}
+              </span>
+            )}
+            <h4 className="text-primary-9 text-md line-clamp-1 truncate font-bold" title={lab.name}>
+              {lab.name}
+            </h4>
+          </div>
         </div>
         <div className="ml-auto flex items-center gap-1">
+          <Button
+            rounded
+            size="sm"
+            variant="outline"
+            aria-label="virtual-lab-settings"
+            data-testid="virtual-lab-settings"
+            className={cn(
+              'flex h-7 w-7 items-center justify-center rounded-full border-none bg-transparent p-0',
+              'hover:shadow-sm'
+            )}
+            onClick={onVlabClick}
+          >
+            <RiSettings3Line className="size-5" />
+          </Button>
           <motion.div
             animate={{ rotate: expandedLabs.has(lab.id) ? 180 : 0 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
@@ -174,18 +217,14 @@ export function Item({
                 rounded
                 size="sm"
                 variant="outline"
+                aria-label="virtual-lab-toggle"
                 className={cn(
                   'flex h-7 w-7 items-center justify-center rounded-full border-none bg-transparent p-0',
-                  'group-hover:active:text-white! group-hover:border group-hover:shadow-sm'
+                  'hover:shadow-sm'
                 )}
-                onClick={onDownClick}
+                onClick={onToggleClick}
               >
-                <RiArrowDownSLine
-                  className={cn(' size-6', {
-                    'group-hover:text-white! text-white!': isUserLab,
-                    'group-hover:text-primary-8! text-primary-8!': !isUserLab && isActive,
-                  })}
-                />
+                <RiArrowDownSLine className="size-6" />
               </Button>
             )}
           </motion.div>
