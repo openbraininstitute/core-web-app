@@ -242,6 +242,7 @@ export function BrainRegionDropdownWithFormItem({
   value?: string;
   onChange?: (value: string) => void;
 }) {
+  const [initialDefault] = useState(defaultBrainRegion);
   const { result: brainRegionHierarchy } = usePrimaryExtendedHierarchySpeciesQuery();
   const handleSelectBrainRegion = useCallback(
     (br: IBrainRegionHierarchy) => {
@@ -259,7 +260,7 @@ export function BrainRegionDropdownWithFormItem({
         value
           ? brainRegionHierarchy?.options.find(({ value: _value }) => value === _value)?.data
           : brainRegionHierarchy?.options.find(
-              ({ value: _value }) => defaultBrainRegion?.id === _value
+              ({ value: _value }) => initialDefault?.id === _value
             )?.data
       }
       onSelectBrainRegion={handleSelectBrainRegion}
