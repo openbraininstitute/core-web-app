@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo } from 'react';
 
+import { parseScanConfigMode, ScanConfigModeSearchParam } from '@/features/scan-config/helpers';
 import { ScanConfigWorkflowEntityProvider } from '@/features/scan-config/workflow/entity-provider';
 import {
   ScanConfigEntitySourceMode,
@@ -61,6 +62,11 @@ function ScanConfigWorkflowContextValueProvider({
   const needsSelection = definition.entity.mode === ScanConfigEntitySourceMode.Session;
   const status = resolveWorkflowStatus({ entity, campaign, needsSelection });
 
+  // the configure route is shared by view and duplicate actions; the duplicate flow flags
+  // itself with `?mode=duplicate`, which overrides the definition's default action so the
+  // editor opens editable instead of the read-only campaign view
+  const modeOverride = parseScanConfigMode(searchParams[ScanConfigModeSearchParam]);
+
   const value = useMemo<TScanConfigWorkflowContextValue>(
     () => ({
       definition,
@@ -69,9 +75,12 @@ function ScanConfigWorkflowContextValueProvider({
       entity,
       campaign,
       status,
-      editor: definition.editor ?? {},
+      editor: {
+        ...(definition.editor ?? {}),
+        ...(modeOverride ? { campaignOriginAction: modeOverride } : {}),
+      },
     }),
-    [campaign, definition, entity, scanConfig, status, workspace]
+    [campaign, definition, entity, modeOverride, scanConfig, status, workspace]
   );
 
   return (

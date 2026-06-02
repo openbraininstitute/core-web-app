@@ -5,7 +5,11 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { config } from '@/config';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { ScanConfigOriginSearchParam } from '@/features/scan-config/helpers';
+import {
+  ScanConfigCampaignOriginActionDict,
+  ScanConfigModeSearchParam,
+  ScanConfigOriginSearchParam,
+} from '@/features/scan-config/helpers';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 import { getWorkflow } from '@/ui/segments/workflows/config/helpers';
 import { buildConfigureUrlForEntity } from '@/ui/segments/workflows/config/routes';
@@ -224,9 +228,17 @@ export function buildWorkflowActivityDuplicateHref(opts: {
     }
 
     params.set(ScanConfigOriginSearchParam, opts.row.id);
+    params.set(ScanConfigModeSearchParam, ScanConfigCampaignOriginActionDict.Duplicate);
 
     return `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${configureSegment}?${params}`;
   }
 
-  return buildConfigureUrlForActivityRow(opts);
+  // flag the duplicate flow so the editor opens editable instead of the read-only view.
+  return buildConfigureUrlForActivityRow({
+    ...opts,
+    query: {
+      ...opts.query,
+      [ScanConfigModeSearchParam]: ScanConfigCampaignOriginActionDict.Duplicate,
+    },
+  });
 }
