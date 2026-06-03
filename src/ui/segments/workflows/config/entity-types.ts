@@ -125,11 +125,10 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   },
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: {
     value: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
-    group: EntityGroupDict.Cellular,
-    label: 'Electron microscopy synaptome',
-    title: 'Electron microscopy synaptome',
-    description:
-      'Build a synaptome campaign from an electron-microscopy cell morphology with segmented spines.',
+    group: EntityGroupDict.Circuit,
+    label: 'Electron Microscopy Circuit',
+    title: 'Electron Microscopy Circuit',
+    description: 'Build a circuit campaign from an electron-microscopy cell morphology.',
   },
   [ExtendedEntitiesTypeDict.EMCellMesh]: {
     value: ExtendedEntitiesTypeDict.EMCellMesh,

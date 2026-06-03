@@ -52,8 +52,8 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
   },
   [WorkflowActivityDictValue.process]: {
     value: WorkflowActivityDictValue.process,
-    label: 'Process Data',
-    name: 'Processing Data',
+    label: 'Process data',
+    name: 'Processing data',
     order: 4,
     disabled: false,
     workflows: ProcessingWorkflows,

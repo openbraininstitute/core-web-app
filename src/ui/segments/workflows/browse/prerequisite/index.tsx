@@ -3,6 +3,7 @@
 import { LoadingOutlined } from '@ant-design/icons';
 
 import { Button } from '@/ui/molecules/button';
+import { cn } from '@/utils/css-class';
 
 import type {
   TBrowsePrerequisite,
@@ -48,7 +49,10 @@ export function WorkflowBrowsePrerequisite({
           rounded
           variant="default"
           disabled={!value || pending}
-          className="h-12 min-w-48 px-10 text-lg font-bold"
+          className={cn(
+            'h-12 min-w-64 px-10 text-lg font-bold shadow-skmp-s',
+            'disabled:bg-neutral-2 disabled:text-neutral-4!'
+          )}
           onClick={onContinue}
         >
           {pending ? (
