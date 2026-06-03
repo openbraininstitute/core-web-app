@@ -23,9 +23,11 @@ import type { TWorkspaceIdentitySchema } from '@/ui/segments/app-setup/workspace
 export function WorkspaceWizard({
   step,
   resolvedWorkspace,
+  redirectUrl,
 }: {
   step: TWizardSteps;
   resolvedWorkspace: TResolvedWorkspace;
+  redirectUrl?: string;
 }) {
   const [sequence, setSequence] = useState<TWizardSteps>(() => step);
   const [accountSetupPayload, setAccountSetupPayload] = useState<TWorkspaceIdentitySchema>();
@@ -77,7 +79,7 @@ export function WorkspaceWizard({
     .with(
       { current: WizardSteps.Customization, customizationPayload: P.nonNullable.select('payload') },
       ({ customizationPayload: cp }) => isCustomizationPayload(cp),
-      ({ payload }) => <WorkspaceCustomization {...payload} />
+      ({ payload }) => <WorkspaceCustomization {...payload} redirectUrl={redirectUrl} />
     )
     .otherwise(() => null);
 }

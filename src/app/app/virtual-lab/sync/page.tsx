@@ -20,7 +20,10 @@ export default async function Page({
   const { data: workspace, error } = await tryCatch(resolveWorkspace());
 
   if (!session || !workspace?.profile) {
-    redirect(`/app/log-in`);
+    const target = queryParams.redirectUrl
+      ? `/app/log-in?callbackUrl=${encodeURIComponent(queryParams.redirectUrl)}`
+      : '/app/log-in';
+    redirect(target);
   }
 
   if (!workspace || error) {
@@ -54,10 +57,18 @@ export default async function Page({
 
   const content = match({ virtualLab, project })
     .with({ virtualLab: P.nullish }, () => (
-      <WorkspaceWizard step={WizardSteps.Identity} resolvedWorkspace={workspace} />
+      <WorkspaceWizard
+        step={WizardSteps.Identity}
+        resolvedWorkspace={workspace}
+        redirectUrl={queryParams.redirectUrl}
+      />
     ))
     .with({ virtualLab: P.nonNullable, project: P.nullish }, () => (
-      <WorkspaceWizard step={WizardSteps.Provision} resolvedWorkspace={workspace} />
+      <WorkspaceWizard
+        step={WizardSteps.Provision}
+        resolvedWorkspace={workspace}
+        redirectUrl={queryParams.redirectUrl}
+      />
     ))
     .otherwise(() => null);
 

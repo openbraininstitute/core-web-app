@@ -24,6 +24,13 @@ export interface NotebookStartInNumberedPodRequest {
   };
   podNumber: number;
   cloud: string;
+  grading?: NotebookGradingLaunch;
+}
+
+export interface NotebookGradingLaunch {
+  token: string;
+  exercise_id: string;
+  tenant_id: string;
 }
 
 export interface EmptyNotebookStartRequest {
@@ -50,6 +57,9 @@ export interface EmptyNotebookStartRequest {
  * @param projectId ID of the project
  * @param cloud : notebook service accepts 'cell_a', 'aws', 'cell_b', 'azure'
  * @param podNum : a user can have multiple pods, but normally simply 0
+ * @param grading : optional grading-launch context. When set, the notebook service writes the
+ *   per-exercise launch file in the spawned pod so the in-pod `obi-notebook` module can
+ *   call /params and /grade against grading-service. See launch-contract.md §2.
  */
 export async function startNotebook(
   id: string,
@@ -57,7 +67,8 @@ export async function startNotebook(
   vlabId: string,
   projectId: string,
   cloud: string,
-  podNum?: number
+  podNum?: number,
+  grading?: NotebookGradingLaunch
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
 
@@ -89,6 +100,7 @@ export async function startNotebook(
     },
     podNumber: podNum === undefined ? 0 : podNum,
     cloud: cloud,
+    ...(grading ? { grading } : {}),
   };
 
   res = await authFetch(

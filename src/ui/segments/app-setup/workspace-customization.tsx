@@ -31,7 +31,21 @@ export type Props = {
   virtualLabName: string;
   projectName: string;
   projectId: string;
+  redirectUrl?: string;
 };
+
+// Reject absolute URLs that point at a different origin to avoid an open redirect.
+// Relative paths are inherently same-origin.
+function isSameOriginTarget(candidate: string): boolean {
+  try {
+    const url = candidate.startsWith('http')
+      ? new URL(candidate)
+      : new URL(candidate, window.location.origin);
+    return url.origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
 
 const virtualLabNameSchema = z
   .string({ message: 'Please enter your virtual lab name' })
@@ -144,6 +158,7 @@ export function WorkspaceCustomization({
   projectId,
   virtualLabName,
   projectName,
+  redirectUrl,
 }: Props) {
   const breakpoint = useDefaultBreakpoint();
   const { error: notifyError } = useAppNotification();
@@ -229,8 +244,10 @@ export function WorkspaceCustomization({
     }
     await mutateRecentWorkspace.mutateAsync();
 
+    const fallback = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`;
+    const target = redirectUrl && isSameOriginTarget(redirectUrl) ? redirectUrl : fallback;
     startTransition(() => {
-      replace(`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}`, {
+      replace(target, {
         showProgress: true,
       });
     });
