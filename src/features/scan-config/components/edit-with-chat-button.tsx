@@ -26,7 +26,10 @@ export function EditWithChatButton() {
       const textarea = document.querySelector<HTMLTextAreaElement>(
         'textarea[data-testid="ai-chat-input"]'
       );
-      textarea?.focus();
+      if (textarea) {
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      }
     });
   }, [isCollapsed, setState, setPrompt]);
 
