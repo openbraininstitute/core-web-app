@@ -5,6 +5,10 @@ import { use } from 'react';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { ResponsiveSideViewer } from '@/components/responsive-side-viewer';
+import {
+  type TLegacyWorkflowSessionSearchParams,
+  useLegacyWorkflowSessionFromSearchParams,
+} from '@/features/scan-config/workflow/legacy-session';
 import { WorkflowSimulateLayout } from '@/ui/layouts/workflow-simulate-layout';
 import { Header } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/header';
 import { MenuSelector } from '@/ui/segments/workflows/simulate/single-neuron/shared/elements/menu-selector';
@@ -26,17 +30,15 @@ export default function Page({
   params: pathParams,
 }: ServerSideComponentProp<
   WorkspaceContext & { id: string },
-  {
+  TLegacyWorkflowSessionSearchParams & {
     step: ExperimentStepKeys;
-    sessionId: string;
     panel: WorkflowSimulatePanelKeys;
     '3d': ThreeDVisualizerQueryParamKeys;
   }
 >) {
-  const queryParams = use(searchParams);
   const { virtualLabId, projectId, id: modelId } = use(pathParams);
-  let sessionId = queryParams?.sessionId;
-  if (!sessionId) sessionId = crypto.randomUUID();
+  const sessionId = useLegacyWorkflowSessionFromSearchParams(searchParams);
+
   const { data: entity } = useSuspenseQuery({
     queryKey: keyBuilder.synaptome({ virtualLabId, projectId, entityId: modelId }),
     queryFn: () => getSingleNeuronSynaptome({ id: modelId, context: { virtualLabId, projectId } }),

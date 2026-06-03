@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { use } from 'react';
 
-import { WorkflowActivityDictValue, WorkspaceScope } from '@/constants';
+import { WorkspaceScope } from '@/constants';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { SCOPE_QUERY_PARAMS } from '@/ui/hooks/use-scope';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';

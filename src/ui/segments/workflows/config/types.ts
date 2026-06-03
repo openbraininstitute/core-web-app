@@ -7,7 +7,7 @@ import type { TScanConfigWorkflowDefinition } from '@/features/scan-config/workf
 import type { TWorkflowSchemaSelection } from '@/features/scan-config/workflow/workflow-schema-selection';
 import type { TScanConfigConfigureBinding } from './scan-config-binding';
 
-export const WORKFLOW_SESSION_ID_SEARCH_PARAM = 'session';
+export const WORKFLOW_SESSION_ID_SEARCH_PARAM = 'session' as const;
 
 export const WorkflowConfigureRoutingDict = {
   Session: 'session',

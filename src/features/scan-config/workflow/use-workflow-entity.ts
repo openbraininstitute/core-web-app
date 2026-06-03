@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 
+import { isWorkflowSessionId } from '@/features/scan-config/workflow/session';
 import {
-  isWorkflowSessionId,
   readWorkflowSessionSelection,
   resolvePrimarySessionEntityId,
 } from '@/features/scan-config/workflow/workflow-session-selection';

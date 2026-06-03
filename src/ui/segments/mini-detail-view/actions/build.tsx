@@ -3,9 +3,10 @@ import Link from 'next/link';
 
 import { config } from '@/config';
 import { WorkflowActivityDictValue } from '@/constants';
+import { createWorkflowSessionId } from '@/features/scan-config/workflow/session';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
-import { getWorkflow } from '@/ui/segments/workflows/config';
+import { getWorkflow, WORKFLOW_SESSION_ID_SEARCH_PARAM } from '@/ui/segments/workflows/config';
 import { WorkflowUseModelButton } from '@/ui/segments/workflows/elements/use-model-button';
 import {
   PanelQueryParam,
@@ -76,7 +77,7 @@ export function WorkflowBuildActions<T extends EntityCoreObjectTypes>({
               href={{
                 pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${configureSegment}/${record.id}`,
                 query: {
-                  sessionId: crypto.randomUUID(),
+                  [WORKFLOW_SESSION_ID_SEARCH_PARAM]: createWorkflowSessionId(),
                   [PanelQueryParam]: WorkflowSimulatePanels.Configuration,
                 },
               }}
