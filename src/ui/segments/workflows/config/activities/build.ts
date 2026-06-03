@@ -56,6 +56,13 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     targetType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     hasMultipleSources: true,
     label: 'Electron microscopy synaptome',
+    breadcrumb: {
+      root: 'Electron microscopy synaptome build',
+      steps: {
+        prerequisite: 'Select em dense reconstruction dataset',
+        selection: 'Select entities',
+      },
+    },
     scanConfig: {
       definition: buildEmSynapseMappingWorkflow,
       schemaName: SchemaNameDict.EMSynapseMappingScanConfig,

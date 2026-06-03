@@ -1,13 +1,11 @@
 'use client';
 
 import { RightOutlined } from '@ant-design/icons';
-import snakeCase from 'es-toolkit/compat/snakeCase';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { upperFirst } from 'node_modules/es-toolkit/dist/string/upperFirst.mjs';
 
+import { convertEntitySlugToExtendedType } from '@/api/entitycore/utils';
 import { config } from '@/config';
-import { WorkflowActivityDictValue } from '@/constants';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import {
   Breadcrumb,
@@ -17,36 +15,43 @@ import {
   BreadcrumbSeparator,
 } from '@/ui/molecules/breadcrumb/index';
 import { useWorkflowSelectionConfig } from '@/ui/segments/workflows/browse/use-workflow-selection-config';
-import {
-  getActivity,
-  getEntityMeta,
-  getWorkflowNewPageBreadcrumbSelectNoun,
-  getWorkflowSegment,
-} from '@/ui/segments/workflows/config';
+import { useWorkflowBreadcrumbState } from '@/ui/segments/workflows/browse/workflow-breadcrumb-context';
+import { getWorkflowSegment, resolveWorkflowBreadcrumb } from '@/ui/segments/workflows/config';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { KebabCase } from '@/utils/type';
 
-export function BuildWorkflowsBreadcrumb() {
+/**
+ * single breadcrumb for every `/workflows/{activity}/new/{type}` page. The trail is resolved
+ * from the workflow registry (explicit {@link IWorkflowDescriptor.breadcrumb}
+ */
+export function WorkflowBreadcrumb() {
   const pathname = usePathname();
-  const activitySegment = getWorkflowSegment(pathname);
-  const category = getActivity(activitySegment)?.name;
+  const activity = getWorkflowSegment(pathname);
 
   const { type } = useParams<{ type: KebabCase<TExtendedEntitiesTypeDict> }>();
+  const targetType = convertEntitySlugToExtendedType({ type });
+
   const { virtualLabId, projectId } = useWorkspace();
+  const { phase, activeEntityType } = useWorkflowBreadcrumbState();
+  const { workflow } = useWorkflowSelectionConfig({ activity, targetType });
 
-  const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
+  if (!workflow || !activity) {
+    return <div className="px-3 pt-4 pb-2" />;
+  }
 
-  const { workflow, selectionConfig } = useWorkflowSelectionConfig({
-    activity: WorkflowActivityDictValue.build,
-    targetType: dataType,
+  const { root, current } = resolveWorkflowBreadcrumb({
+    workflow,
+    activity,
+    phase,
+    activeEntityType: activeEntityType ?? targetType,
   });
 
-  const selectTitle = getWorkflowNewPageBreadcrumbSelectNoun({ workflow, selectionConfig });
-  const buildTitle = workflow?.label ?? getEntityMeta(dataType)?.label;
+  if (!root || !current) {
+    return <div className="px-3 pt-4 pb-2" />;
+  }
+
   const homeLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows`;
-  const leftTitle = [buildTitle, category].filter(Boolean).join(' ');
-  const upperLeftTitle = upperFirst(leftTitle.toLocaleLowerCase());
 
   return (
     <div className="px-3 pt-4 pb-2">
@@ -57,14 +62,14 @@ export function BuildWorkflowsBreadcrumb() {
               asChild
               className="text-primary-9 hover:text-primary-7 text-lg font-light select-none"
             >
-              <Link href={homeLink}>{upperLeftTitle}</Link>
+              <Link href={homeLink}>{root}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator className="text-primary-9 text-lg font-bold">
             <RightOutlined className="text-sm" />
           </BreadcrumbSeparator>
           <BreadcrumbItem className="text-primary-9 hover:text-primary-7 text-lg font-bold select-none">
-            Select {selectTitle}
+            {current}
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>

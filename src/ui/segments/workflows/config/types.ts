@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkflowActivityDictValue } from '@/constants';
 import type { FlagKey } from '@/features/feature-flags/flags';
@@ -63,14 +63,50 @@ export type TEntityTypeMeta = {
 };
 
 /**
- * Browse-table metadata for `/workflows/{activity}/new/{targetType}`.
- * Does not drive single vs multiple selection — that comes from the remote schema.
+ * browse table metadata for `/workflows/{activity}/new/{targetType}`.
+ * does not drive single vs multiple selection, that comes from the remote schema.
  */
 export type IWorkflowConfigurationInput = {
   type: TExtendedEntitiesTypeDict;
   label?: string;
   required?: boolean;
   filters?: Record<string, unknown>;
+};
+
+/**
+ * browse phase on `/workflows/{activity}/new/{type}`
+ * selection: is the entity-picking step
+ * prerequisite: is the optional pre-step a workflow gates the table behind
+ */
+export const WorkflowBreadcrumbPhaseDict = {
+  Prerequisite: 'prerequisite',
+  Selection: 'selection',
+} as const;
+export type TWorkflowBreadcrumbPhase =
+  (typeof WorkflowBreadcrumbPhaseDict)[keyof typeof WorkflowBreadcrumbPhaseDict];
+
+/** inputs handed to a breadcrumb resolver function so a crumb can be computed at render time */
+export type TWorkflowBreadcrumbContext = {
+  workflow: IWorkflowDescriptor;
+  activity: TActivityValue;
+  phase: TWorkflowBreadcrumbPhase;
+  activeEntityType: TExtendedEntitiesTypeDict | null;
+};
+
+/** a breadcrumb crumb: static `ReactNode` (the default) or a function of the render context */
+export type TWorkflowBreadcrumbNode =
+  | ReactNode
+  | ((context: TWorkflowBreadcrumbContext) => ReactNode);
+
+/**
+ * explicit, per-workflow breadcrumb definition for the `/new/{type}` page. When omitted the
+ * resolver derives the trail from the workflow + activity + active selection
+ */
+export type TWorkflowBreadcrumb = {
+  /** first crumb, links back to the workflows home */
+  root: TWorkflowBreadcrumbNode;
+  /** crumb rendered per browse phase; only the phases a workflow reaches need an entry */
+  steps?: Partial<Record<TWorkflowBreadcrumbPhase, TWorkflowBreadcrumbNode>>;
 };
 
 export type IWorkflowDescriptor = {
@@ -105,6 +141,10 @@ export type IWorkflowDescriptor = {
    * through a custom paginated query (loader), absent = default browse behaviour
    */
   browseConfig?: TWorkflowBrowseConfig;
+  /**
+   * explicit breadcrumb for the `/new/{type}` browse page
+   */
+  breadcrumb?: TWorkflowBreadcrumb;
   label?: string;
   description?: string;
   tags?: readonly string[];

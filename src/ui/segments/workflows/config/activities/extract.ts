@@ -14,6 +14,10 @@ export const ExtractionWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.Circuit,
     targetType: ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+    breadcrumb: {
+      root: 'Circuit (beta) extraction',
+      steps: { selection: 'Select circuit (beta)' },
+    },
     scanConfig: {
       definition: extractCircuitWorkflow,
       schemaName: SchemaNameDict.CircuitExtractionScanConfig,

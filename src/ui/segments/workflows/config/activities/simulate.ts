@@ -25,6 +25,10 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.BrowseFirst,
     sourceType: ExtendedEntitiesTypeDict.Memodel,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
+    breadcrumb: {
+      root: 'Single neuron simulation',
+      steps: { selection: 'Select single neuron' },
+    },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.Memodel }],
     order: 1,
     disabled: false,
@@ -34,6 +38,10 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.BrowseFirst,
     sourceType: ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronSynaptomeSimulation,
+    breadcrumb: {
+      root: 'Synaptome simulation',
+      steps: { selection: 'Select synaptome' },
+    },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.SingleNeuronSynaptome }],
     order: 2,
     disabled: false,
@@ -43,6 +51,10 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
     targetType: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
+    breadcrumb: {
+      root: 'Ion channel (beta) simulation',
+      steps: { selection: 'Select ion channel (beta)' },
+    },
     scanConfig: {
       definition: simulateIonChannelWorkflow,
       schemaName: SchemaNameDict.IonChannelModelSimulationScanConfig,
@@ -58,6 +70,10 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.MemodelCircuit,
     targetType: ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
+    breadcrumb: {
+      root: 'Single neuron (beta) simulation',
+      steps: { selection: 'Select single neuron (beta)' },
+    },
     scanConfig: {
       definition: simulateMemodelCircuitWorkflow,
       schemaName: SchemaNameDict.MEModelSimulationScanConfig,
@@ -72,6 +88,10 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.MEModelWithSynapses,
     targetType: ExtendedEntitiesTypeDict.SingleNeuronCircuitSimulation,
+    breadcrumb: {
+      root: 'Synaptome (beta) simulation',
+      steps: { selection: 'Select synaptome (beta)' },
+    },
     scanConfig: {
       definition: simulateSingleNeuronCircuitWorkflow,
       schemaName: SchemaNameDict.MEModelWithSynapsesCircuitSimulationScanConfig,
@@ -93,6 +113,10 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.PairedNeuronCircuit,
     targetType: ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation,
+    breadcrumb: {
+      root: 'Paired neurons (beta) simulation',
+      steps: { selection: 'Select paired neurons (beta)' },
+    },
     scanConfig: {
       definition: simulatePairedNeuronCircuitWorkflow,
       schemaName: SchemaNameDict.CircuitSimulationScanConfig,
@@ -114,6 +138,10 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.SmallMicrocircuit,
     targetType: ExtendedEntitiesTypeDict.SmallMicrocircuitSimulation,
+    breadcrumb: {
+      root: 'Small microcircuit (beta) simulation',
+      steps: { selection: 'Select small microcircuit (beta)' },
+    },
     scanConfig: {
       definition: simulateSmallMicrocircuitWorkflow,
       schemaName: SchemaNameDict.CircuitSimulationScanConfig,
@@ -135,6 +163,10 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.Microcircuit,
     targetType: ExtendedEntitiesTypeDict.MicrocircuitSimulation,
+    breadcrumb: {
+      root: 'Microcircuit (beta) simulation',
+      steps: { selection: 'Select microcircuit (beta)' },
+    },
     scanConfig: {
       definition: simulateMicrocircuitWorkflow,
       schemaName: SchemaNameDict.CircuitSimulationScanConfig,
@@ -154,6 +186,10 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.BrainRegion,
     targetType: ExtendedEntitiesTypeDict.RegionCircuitSimulation,
+    breadcrumb: {
+      root: 'Brain region (beta) simulation',
+      steps: { selection: 'Select brain region (beta)' },
+    },
     scanConfig: {
       definition: simulateRegionCircuitWorkflow,
       schemaName: SchemaNameDict.CircuitSimulationScanConfig,
