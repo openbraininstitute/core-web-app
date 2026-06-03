@@ -1,5 +1,7 @@
 'use client';
 
+import { LoadingOutlined } from '@ant-design/icons';
+
 import { Button } from '@/ui/molecules/button';
 
 import type {
@@ -12,6 +14,8 @@ type WorkflowBrowsePrerequisiteProps = {
   value: TBrowsePrerequisiteValue | null;
   onSelect: (value: TBrowsePrerequisiteValue) => void;
   onContinue: () => void;
+  /** the entities view is loading after confirm; keeps the picker on screen with feedback */
+  pending?: boolean;
 };
 
 /**
@@ -26,6 +30,7 @@ export function WorkflowBrowsePrerequisite({
   value,
   onSelect,
   onContinue,
+  pending = false,
 }: WorkflowBrowsePrerequisiteProps) {
   return (
     <div className="flex h-full min-h-0 flex-col [grid-area:body]">
@@ -42,11 +47,17 @@ export function WorkflowBrowsePrerequisite({
         <Button
           rounded
           variant="default"
-          disabled={!value}
+          disabled={!value || pending}
           className="h-12 min-w-48 px-10 text-lg font-bold"
           onClick={onContinue}
         >
-          Continue
+          {pending ? (
+            <>
+              <LoadingOutlined /> Loading…
+            </>
+          ) : (
+            'Continue'
+          )}
         </Button>
       </div>
     </div>
