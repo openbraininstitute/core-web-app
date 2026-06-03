@@ -2,13 +2,13 @@
 
 import { createContext, useContext, useMemo } from 'react';
 
+import { parseScanConfigMode, ScanConfigModeSearchParam } from '@/features/scan-config/helpers';
 import { ScanConfigWorkflowEntityProvider } from '@/features/scan-config/workflow/entity-provider';
 import {
   ScanConfigEntitySourceMode,
   ScanConfigWorkflowStatus,
   type TResolvedScanConfigEntity,
   type TScanConfigWorkflowContextValue,
-  type TScanConfigWorkflowDefinition,
   type TScanConfigWorkflowPageProps,
   type TScanConfigWorkflowStatus,
 } from '@/features/scan-config/workflow/types';
@@ -16,31 +16,25 @@ import { useWorkflowCampaign } from '@/features/scan-config/workflow/use-workflo
 
 const ScanConfigWorkflowContext = createContext<TScanConfigWorkflowContextValue | null>(null);
 
-function entitySourceRequiresEntity(
-  entitySource: TScanConfigWorkflowDefinition['entity']
-): boolean {
-  return entitySource.mode === ScanConfigEntitySourceMode.RouteId;
-}
-
 function resolveWorkflowStatus({
   entity,
   campaign,
-  requiresEntity,
+  needsSelection,
 }: {
   entity: TResolvedScanConfigEntity;
   campaign: TScanConfigWorkflowContextValue['campaign'];
-  requiresEntity: boolean;
+  needsSelection: boolean;
 }): TScanConfigWorkflowStatus {
   if (campaign.error) {
     return ScanConfigWorkflowStatus.Blocked;
   }
 
-  // Resume URL had a campaign id, but resolve returned nothing → 404 (not a blank pending screen).
-  if (campaign.initialCampaignId && !campaign.isLoading && !campaign.campaignData) {
+  if (needsSelection && !entity.workflowSessionSelection) {
     return ScanConfigWorkflowStatus.Blocked;
   }
 
-  if (requiresEntity && !entity.entity) {
+  // resume URL had a campaign id, but resolve returned nothing → 404 (not a blank pending screen).
+  if (campaign.origin && !campaign.isLoading && !campaign.campaignData) {
     return ScanConfigWorkflowStatus.Blocked;
   }
 
@@ -53,8 +47,8 @@ function resolveWorkflowStatus({
 
 function ScanConfigWorkflowContextValueProvider({
   definition,
+  scanConfig,
   workspace,
-  routeParams,
   searchParams,
   entity,
   children,
@@ -65,24 +59,28 @@ function ScanConfigWorkflowContextValueProvider({
     searchParams,
   });
 
-  const requiresEntity = entitySourceRequiresEntity(definition.entity);
+  const needsSelection = definition.entity.mode === ScanConfigEntitySourceMode.Session;
+  const status = resolveWorkflowStatus({ entity, campaign, needsSelection });
 
-  const status = resolveWorkflowStatus({
-    entity,
-    campaign,
-    requiresEntity,
-  });
+  // the configure route is shared by view and duplicate actions; the duplicate flow flags
+  // itself with `?mode=duplicate`, which overrides the definition's default action so the
+  // editor opens editable instead of the read-only campaign view
+  const modeOverride = parseScanConfigMode(searchParams[ScanConfigModeSearchParam]);
 
   const value = useMemo<TScanConfigWorkflowContextValue>(
     () => ({
       definition,
+      scanConfig,
       workspace,
       entity,
       campaign,
       status,
-      editor: definition.editor ?? {},
+      editor: {
+        ...(definition.editor ?? {}),
+        ...(modeOverride ? { campaignOriginAction: modeOverride } : {}),
+      },
     }),
-    [campaign, definition, entity, status, workspace]
+    [campaign, definition, entity, modeOverride, scanConfig, status, workspace]
   );
 
   return (
@@ -94,6 +92,7 @@ function ScanConfigWorkflowContextValueProvider({
 
 export function ScanConfigWorkflowProvider({
   definition,
+  scanConfig,
   workspace,
   routeParams,
   searchParams,
@@ -102,12 +101,13 @@ export function ScanConfigWorkflowProvider({
   return (
     <ScanConfigWorkflowEntityProvider
       entitySource={definition.entity}
-      workspace={workspace}
       routeParams={routeParams}
+      configureBinding={scanConfig.configureBinding}
     >
       {(entity) => (
         <ScanConfigWorkflowContextValueProvider
           definition={definition}
+          scanConfig={scanConfig}
           workspace={workspace}
           routeParams={routeParams}
           searchParams={searchParams}

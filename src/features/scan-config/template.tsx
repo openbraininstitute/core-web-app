@@ -10,6 +10,7 @@ import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { Left, Middle, Right } from '@/features/scan-config/components/ui-columns';
 import {
   getConfigKeyForEntity,
+  ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import {
@@ -44,7 +45,7 @@ type Props = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   virtualLabId: string;
   projectId: string;
-  initialCampaignId?: string;
+  origin?: string;
   initialConfig?: Config;
   defaultTab?: TScanConfigTabs;
   readOnly?: boolean;
@@ -63,7 +64,7 @@ export function ScanConfigTemplate({
   entity,
   virtualLabId,
   projectId,
-  initialCampaignId,
+  origin,
   initialConfig,
   defaultTab = ScanConfigDefaultTab,
   readOnly,
@@ -84,7 +85,8 @@ export function ScanConfigTemplate({
   const [selectedEntry, setSelectedEntry] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [campaignId, setCampaignId] = useState(initialCampaignId ?? '');
+  const isDuplicate = campaignOriginAction === ScanConfigCampaignOriginActionDict.Duplicate;
+  const [campaignId, setCampaignId] = useState(isDuplicate ? '' : (origin ?? ''));
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [newKey, setNewKey] = useState('');
   const allEntries = useEntries({ initialConfig, schema });
@@ -99,10 +101,12 @@ export function ScanConfigTemplate({
   const isCampaignIdChanged = previousCampaignId !== campaignId;
 
   useAgentState(
-    aiEnabled ? getConfigKeyForEntity(entityType, activity, entity as { scale?: string } | undefined) : '',
+    aiEnabled
+      ? getConfigKeyForEntity(entityType, activity, entity as { scale?: string } | undefined)
+      : '',
     config
   );
-  const { aiConfig } = useAIConfig();
+  useAIConfig();
 
   const configurationTabId = ScanConfigTabs[activity].configuration;
   const isConfigurationTab = tab.id === configurationTabId;

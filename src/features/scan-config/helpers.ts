@@ -68,3 +68,15 @@ export const ScanConfigCampaignOriginActionDict = {
 
 export type TScanConfigCampaignOriginActionDict =
   (typeof ScanConfigCampaignOriginActionDict)[keyof typeof ScanConfigCampaignOriginActionDict];
+
+/** query param for resume/duplicate flows (`?origin={campaignId}`). */
+export const ScanConfigOriginSearchParam = 'origin' as const;
+
+/** query param flagging the editor mode, e.g. `?mode=duplicate` to open editable. */
+export const ScanConfigModeSearchParam = 'mode' as const;
+
+export function parseScanConfigMode(
+  value: string | string[] | undefined
+): TScanConfigCampaignOriginActionDict | undefined {
+  return Object.values(ScanConfigCampaignOriginActionDict).find((action) => action === value);
+}

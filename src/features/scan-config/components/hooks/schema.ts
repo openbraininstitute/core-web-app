@@ -1,5 +1,7 @@
+'use client';
+
 import $RefParser from '@apidevtools/json-schema-ref-parser';
-import { useQuery } from '@tanstack/react-query';
+import { type QueryClient, useQuery } from '@tanstack/react-query';
 import { omit, pick } from 'es-toolkit/compat';
 import { useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
@@ -26,14 +28,37 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import type { WorkspaceContext } from '@/types/common';
 import type { Nullish } from '@/utils/type';
 
+const OBI_ONE_JSON_SCHEMA_STALE_TIME_MS = Number.POSITIVE_INFINITY;
+
+function obiOneJsonSchemaQueryOptions(schemaName: SchemaName) {
+  return {
+    queryKey: keyBuilder.obiOneJsonSchema(schemaName),
+    queryFn: () => fetchSchema({ schemaName }),
+    staleTime: OBI_ONE_JSON_SCHEMA_STALE_TIME_MS,
+  } as const;
+}
+
+export async function fetchObiOneJsonSchema(opts: {
+  qc?: QueryClient;
+  schemaName: SchemaName;
+}): Promise<ConfigSchema> {
+  if (opts.qc) {
+    return opts.qc.fetchQuery(obiOneJsonSchemaQueryOptions(opts.schemaName));
+  }
+
+  return fetchSchema({ schemaName: opts.schemaName });
+}
+
 export function useObioneJsonSchema({ schemaName }: { schemaName?: SchemaName | undefined }) {
   const { data: schema, isLoading } = useQuery({
-    // biome-ignore lint/style/noNonNullAssertion: query only start if the schemaName is present
-    queryKey: keyBuilder.obiOneJsonSchema(schemaName!),
-    // biome-ignore lint/style/noNonNullAssertion: query only start if the schemaName is present
-    queryFn: () => fetchSchema({ schemaName: schemaName! }),
-    // keep data fresh indefinitely to prevent atom regeneration on window focus
-    staleTime: Infinity,
+    ...(schemaName
+      ? obiOneJsonSchemaQueryOptions(schemaName)
+      : {
+          queryKey: ['obi-one-json-schema', 'disabled'] as const,
+          queryFn: (): Promise<ConfigSchema> =>
+            Promise.reject(new Error('useObioneJsonSchema: schemaName is required')),
+          enabled: false,
+        }),
     refetchOnWindowFocus: false,
     enabled: !!schemaName,
   });
@@ -113,7 +138,14 @@ export function isRootBlock(schema: ConfigSchema, key: string) {
   );
 }
 
-async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
+export function isRootBlockSingle(schema: ConfigSchema, key: string) {
+  return (
+    schema.properties?.[key] &&
+    schema.properties[key].ui_element === ScanConfigUIElementDict.BlockUnion
+  );
+}
+
+export async function fetchSchema({ schemaName }: { schemaName: SchemaName }) {
   const res = await fetch(`${config.OBI_ONE_URL}/openapi.json`);
   const json = await res.json();
   const dereferenced = await $RefParser.dereference(json);
