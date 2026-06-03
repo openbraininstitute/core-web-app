@@ -237,20 +237,30 @@ function buildInitialConfigState(
           !isType(subValue) &&
           subValue.ui_element === ScanConfigUIElementDict.ModelIdentifierMultiple
         ) {
+          // best-effort single-model seed. For multi-input workflows (e.g. EM synaptome) the
+          // authoritative value comes from the workflow session selection patch applied later,
+          // so skip seeding for types this field can't map instead of throwing.
           const formModelType = match(model)
             .with(
               { type: EntityTypeDict.CellMorphology },
               () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
             )
+            .with(
+              { type: EntityTypeDict.Memodel },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.Memodel]
+            )
             .otherwise(() => {
               throw new Error(`Unsupported entity type: ${model.type}`);
             });
-          initialConfigforKey[subkey] = [
-            {
-              type: formModelType,
-              id_str: model.id,
-            },
-          ];
+
+          if (formModelType) {
+            initialConfigforKey[subkey] = [
+              {
+                type: formModelType,
+                id_str: model.id,
+              },
+            ];
+          }
         }
       });
 

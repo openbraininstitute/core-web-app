@@ -45,7 +45,9 @@ export function ModelIdentifierEntityCard({
   selected = false,
 }: TProps) {
   const isSelection = variant === 'selection';
-  const isInteractive = Boolean(onSelect) && !disabled;
+  // the card click only previews the entity, so it stays interactive even
+  // in readonly mode. `disabled` still controls the mutating remove action below
+  const isInteractive = Boolean(onSelect);
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: button cannot be a descendant of button

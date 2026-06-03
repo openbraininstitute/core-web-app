@@ -70,9 +70,7 @@ export const buildEmDenseMorphologyLoader = buildDatasetDerivedLoader(
     const byId = new Map(morphologies.data.map((row) => [row.id, row]));
     return morphologyIds
       .map((id) => byId.get(id))
-      .filter((row): row is NonNullable<typeof row> =>
-        Boolean(row)
-      ) as EntityCoreIdentifiableNamed[];
+      .filter((row): row is NonNullable<typeof row> => Boolean(row));
   }
 );
 
@@ -87,5 +85,5 @@ export const buildMemodelLoader = buildDatasetDerivedLoader(async (morphologyIds
     },
   });
 
-  return memodels.data as EntityCoreIdentifiableNamed[];
+  return memodels.data;
 });
