@@ -3,6 +3,13 @@ export const AUTO_INIT_WORKSPACE = 'automatic-init-workspace';
 export const AUTO_ONBOARDING_TOURS = 'automatic-app-onboarding-tours';
 export const LAST_REGISTERED_WORKFLOW = 'last-registered-workflow';
 
+/**
+ * prefix marking a query param as cache-key-only: it is included in the React Query
+ * key (e.g. to bust the cache when a prerequisite changes) but stripped before the
+ * HTTP request so the backend never receives it
+ */
+export const INTERNAL_QUERY_CACHE_PREFIX = 'INTERNAL_QUERY_CACHE__';
+
 export const DEFAULT_CHECKLIST_RENDER_LENGTH = 5;
 export const DEFAULT_PAGE_SIZE = 30;
 export const DEFAULT_PAGE_MEDIUM_SIZE = 15;

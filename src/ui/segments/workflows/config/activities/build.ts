@@ -2,6 +2,14 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { emSynapseMappingActivityFlag } from '@/features/feature-flags';
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
+import {
+  buildEmDenseMorphologyLoader,
+  buildMemodelLoader,
+} from '@/features/scan-config/workflow/loaders/em-dense-morphology-loader';
+import {
+  EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
+  EmDatasetPrerequisiteCards,
+} from '@/ui/segments/workflows/browse/prerequisite/em-dataset-cards';
 
 import { buildEmSynapseMappingConfigureBinding } from '../scan-config-binding';
 import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
@@ -70,6 +78,37 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
         required: true,
       },
     ],
+    // both inputs are scoped to one EMDenseReconstructionDataset: the shared `shareKey`
+    // means the user picks the dataset once and it applies to the cell-morphology and the
+    // ME-model tables alike, each type still loads its own rows from that dataset
+    browseConfig: {
+      [ExtendedEntitiesTypeDict.UniversalCellMorphology]: {
+        prerequisite: {
+          entityType: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
+          label: 'Choose an em-dense reconstruction dataset',
+          required: true,
+          shareKey: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
+          presentation: { kind: 'custom', render: EmDatasetPrerequisiteCards },
+        },
+        loader: {
+          kind: 'custom',
+          build: buildEmDenseMorphologyLoader,
+        },
+      },
+      [ExtendedEntitiesTypeDict.Memodel]: {
+        prerequisite: {
+          entityType: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
+          label: 'Choose an em-dense reconstruction dataset',
+          required: true,
+          shareKey: EM_DENSE_RECONSTRUCTION_DATASET_TYPE,
+          presentation: { kind: 'custom', render: EmDatasetPrerequisiteCards },
+        },
+        loader: {
+          kind: 'custom',
+          build: buildMemodelLoader,
+        },
+      },
+    },
     disabled: false,
     requiredFeatures: [emSynapseMappingActivityFlag.key],
   },

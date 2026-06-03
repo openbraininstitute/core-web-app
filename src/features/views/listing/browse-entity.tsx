@@ -63,9 +63,10 @@ import type {
   EntityCoreIdentifiable,
   EntityCoreIdentifiableNamed,
 } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { EntityCoreResponse, TFacets } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { TSortStateList } from '@/entity-configuration/definitions/types';
+import type { WorkspaceContext } from '@/types/common';
 import type { Props as MainTableProps } from '@/ui/segments/data-table';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
@@ -120,6 +121,28 @@ type Props = {
     onSelect: (value: TExtendedEntitiesTypeDict) => void;
   };
   extraQueryParams?: Record<string, unknown>;
+  /**
+   * optional override for the list fetch. when provided, replaces the entity's domain
+   * `query.list` (a "loader")
+   * rows still render with `dataType` columns/mini-detail, so
+   * the override MUST return rows in the standard entity shape and carry server-side
+   * pagination.
+   * facets default to the entity facet endpoint (not loader-scoped) unless
+   * {@link facetsQueryFn} is provided.
+   */
+  listQueryFn?: (args: {
+    filters: Record<string, unknown>;
+    withFacets?: boolean;
+    context: WorkspaceContext;
+  }) => Promise<EntityCoreResponse<EntityCoreIdentifiableNamed> | undefined>;
+  /**
+   * optional facets override. when provided, facets are computed by this instead of the
+   * default entity facet endpoint — for loaders that have a properly scoped facet query.
+   */
+  facetsQueryFn?: (args: {
+    filters: Record<string, unknown>;
+    context: WorkspaceContext;
+  }) => Promise<TFacets | undefined>;
 };
 
 export function BrowseEntityScope({
@@ -142,6 +165,8 @@ export function BrowseEntityScope({
   requireScopeSelector,
   requireEntityTypeSelector,
   extraQueryParams,
+  listQueryFn,
+  facetsQueryFn,
 }: Props) {
   const requireBrainRegion =
     requireBrainRegionProp ?? dataBrowseListingUsesBrainRegionHierarchy(dataType);
@@ -287,6 +312,13 @@ export function BrowseEntityScope({
     },
     workspace: { virtualLabId, projectId },
     queryFn: async () => {
+      if (listQueryFn) {
+        return listQueryFn({
+          filters: queryFilters,
+          withFacets: false,
+          context: { virtualLabId, projectId },
+        });
+      }
       return entity?.api?.query.list?.({
         filters: queryFilters,
         withFacets: false,
@@ -321,6 +353,9 @@ export function BrowseEntityScope({
     dataType,
     workspace: { virtualLabId, projectId },
     queryFilters,
+    queryFnOverride: facetsQueryFn
+      ? () => facetsQueryFn({ filters: queryFilters, context: { virtualLabId, projectId } })
+      : undefined,
     enabled: () => {
       if (!allowQuery) return false;
       if (

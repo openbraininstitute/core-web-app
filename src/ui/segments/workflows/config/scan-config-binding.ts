@@ -115,6 +115,7 @@ export function memodelCircuitSimulationConfigureBinding(): TScanConfigConfigure
       [ExtendedEntitiesTypeDict.MemodelCircuit]: ScanConfigFromIdType.MEModelFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.MEModelSimulation,
+    schemaMappingKey: SchemaMappingKeyDict.Circuit,
   };
 }
 

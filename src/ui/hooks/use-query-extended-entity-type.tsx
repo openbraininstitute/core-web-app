@@ -12,7 +12,7 @@ import { transformFiltersToQuery } from '@/api/entitycore/transformers';
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import { mergeOrderByWithOverride, SortOrder } from '@/entity-configuration/definitions/types';
+import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
@@ -27,6 +27,7 @@ import { compactRecord } from '@/utils/dictionary';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TFacets } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { TSpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -228,6 +229,7 @@ export function useQueryExtendedEntityTypeFacets({
   queryFilters,
   extraQueryKey,
   enabled,
+  queryFnOverride,
 }: {
   dataKey: string;
   section: TWorkspaceSection;
@@ -237,6 +239,12 @@ export function useQueryExtendedEntityTypeFacets({
   queryFilters?: Record<string, any>;
   extraQueryKey?: Record<string, any>;
   enabled?: boolean | (() => boolean);
+  /**
+   * replaces the default entity facet fetch, used by custom loaders that compute facets
+   * from a different query (e.g. derivation-backed browse), when provided, the default
+   * `entity.api.query.list` facet path and its existence gate are bypassed
+   */
+  queryFnOverride?: () => Promise<TFacets | undefined>;
 }) {
   const entity = getEntityByExtendedType({ type: dataType });
   return useQuery({
@@ -254,6 +262,9 @@ export function useQueryExtendedEntityTypeFacets({
       },
     ],
     queryFn: async () => {
+      if (queryFnOverride) {
+        return queryFnOverride();
+      }
       return (
         await entity?.api?.query.list?.({
           filters: { ...queryFilters, page: 1, page_size: 1 },
@@ -270,6 +281,10 @@ export function useQueryExtendedEntityTypeFacets({
       }
       if (typeof enabled === 'boolean') {
         enable = enabled;
+      }
+
+      if (queryFnOverride) {
+        return enable;
       }
 
       return !!entity?.api?.query.list && enable;

@@ -10,6 +10,7 @@ import {
 } from '@/api/cache-storage';
 import { parseApiError } from '@/api/utils';
 import { getSession } from '@/auth-fetch';
+import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
 import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
 
@@ -170,6 +171,8 @@ class ApiClient {
     const url = new URL(`${this._rootUrl}${endpoint}`);
 
     Object.entries(omitBy(options.queryParams, isNil) || {}).forEach(([key, value]) => {
+      // cache-key-only params are used for the React Query key, never sent to the backend
+      if (key.startsWith(INTERNAL_QUERY_CACHE_PREFIX)) return;
       if (Array.isArray(value)) {
         value.forEach((v) => void url.searchParams.append(`${key}`, `${v}`));
       } else {
