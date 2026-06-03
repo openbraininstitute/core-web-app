@@ -37,7 +37,6 @@ type VerificationResult =
   | { ok: true; params: VerifiedParams }
   | { ok: false; reason: 'invalid' | 'expired' };
 
-// HMAC verification per launch-contract.md §1 and web-launch-route-spec.md §4.
 // Sign the raw `exp` string from the URL (not the re-stringified int) so a value like
 // "007" round-trips without breaking the signature.
 function verifyLaunch(request: NextRequest, secret: string): VerificationResult {

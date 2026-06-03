@@ -59,7 +59,7 @@ export interface EmptyNotebookStartRequest {
  * @param podNum : a user can have multiple pods, but normally simply 0
  * @param grading : optional grading-launch context. When set, the notebook service writes the
  *   per-exercise launch file in the spawned pod so the in-pod `obi-notebook` module can
- *   call /params and /grade against grading-service. See launch-contract.md §2.
+ *   call /params and /grade against grading-service.
  */
 export async function startNotebook(
   id: string,
