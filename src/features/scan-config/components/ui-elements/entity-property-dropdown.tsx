@@ -1,6 +1,6 @@
 import { Select } from 'antd';
 import { get } from 'es-toolkit/compat';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
@@ -26,14 +26,11 @@ export default function EntityPropertyDropdown({
     [schemaMappingConfig?.properties, property]
   );
 
-  const previousOptions = useRef<Array<string>>(null);
-
   useEffect(() => {
-    if (options.length > 0 && options !== previousOptions.current) {
+    if (options.length > 0 && value.length === 0) {
       onChange([options[0]]);
-      previousOptions.current = options;
     }
-  }, [options, onChange]);
+  }, [options, onChange, value]);
 
   return (
     <Select
