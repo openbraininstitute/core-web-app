@@ -180,21 +180,40 @@ export function UIElementRender({
         entity: P.nonNullable,
       },
       ({ paramSchema }) => {
-        const getValue = (): string[] => {
-          if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
-            //@ts-expect-error: TS can't infer the type, this is guaranteed to be a string[]
-            return value;
-          }
-          if (typeof value === 'string') return [value];
-          return [];
-        };
+        // detect if the field supports multiple values by checking for anyOf with an array type
+        const isMultiple = 'anyOf' in paramSchema;
+
+        if (isMultiple) {
+          const getValue = (): Array<string> => {
+            if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
+              return value as string[];
+            }
+            if (typeof value === 'string') return [value];
+            return [];
+          };
+
+          return (
+            <EntityPropertyDropdown
+              multiple
+              disabled={disabled}
+              schemaMappingConfig={schemaMappingConfig}
+              value={getValue()}
+              onChange={(newV: string | Array<string>) => setState({ ...state, [k]: newV })}
+              property={paramSchema.property}
+            />
+          );
+        }
+
+        // single-value mode (e.g. population field with type: "string")
+        const singleValue = typeof value === 'string' ? value : undefined;
 
         return (
           <EntityPropertyDropdown
-            schemaMappingConfig={schemaMappingConfig}
+            multiple={false}
             disabled={disabled}
-            value={getValue()}
-            onChange={(newV: string[]) => {
+            schemaMappingConfig={schemaMappingConfig}
+            value={singleValue ?? ''}
+            onChange={(newV: string[] | string) => {
               const nextState = {
                 ...state,
                 // NOTE: this is requested by James for IT'IS collaboration
