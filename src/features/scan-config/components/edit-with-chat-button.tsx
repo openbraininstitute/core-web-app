@@ -8,7 +8,7 @@ import { promptAtom } from '@/components/ai-assistant/state';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 
-const DEFAULT_PROMPT = 'Help me complete this configuration and suggest improvements';
+const DEFAULT_PROMPT = 'Help me complete an interesting configuration';
 
 export function EditWithChatButton() {
   const { setState, isCollapsed } = usePanelState();
@@ -19,6 +19,18 @@ export function EditWithChatButton() {
       setState(PanelState.Expanded);
     }
     setPrompt(DEFAULT_PROMPT);
+
+    // Focus the chat textarea so the user can just press Enter to send.
+    // Use requestAnimationFrame to wait for the panel to render if it was collapsed.
+    requestAnimationFrame(() => {
+      const textarea = document.querySelector<HTMLTextAreaElement>(
+        'textarea[data-testid="ai-chat-input"]'
+      );
+      if (textarea) {
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      }
+    });
   }, [isCollapsed, setState, setPrompt]);
 
   return (
