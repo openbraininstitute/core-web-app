@@ -20,6 +20,15 @@ export function useFieldError(fieldPath: string | undefined, error: string | und
       else next.delete(fieldPath);
       return next;
     });
+    // drop the entry on unmount so a stale error can't keep the form blocked
+    return () => {
+      setFieldErrors((prev) => {
+        if (!prev.has(fieldPath)) return prev;
+        const next = new Map(prev);
+        next.delete(fieldPath);
+        return next;
+      });
+    };
   }, [fieldPath, error, setFieldErrors]);
 }
 

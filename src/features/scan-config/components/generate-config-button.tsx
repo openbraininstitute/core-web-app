@@ -1,10 +1,12 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { get, isEqual, isString, pick } from 'es-toolkit/compat';
+import { useAtomValue } from 'jotai';
 
 import { authFetch } from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
+import { fieldErrorsAtom } from '@/features/scan-config/components/hooks/field-errors';
 import {
   BuildScanConfigTabs,
   ExtractScanConfigTabs,
@@ -53,6 +55,10 @@ export default function GenerateConfigButton({
   entityType: TSupportedEntityTypesForScanConfiguration;
 }) {
   const { projectId, virtualLabId } = useWorkspace();
+  // ajv schema errors plus field-level errors (e.g. duplicate group names) that
+  // schema validation can't catch; either kind blocks generation
+  const fieldErrors = useAtomValue(fieldErrorsAtom);
+  const hasBlockingErrors = (!!errors && errors.length > 0) || fieldErrors.size > 0;
   const notification = useAppNotification();
   const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
   const queryClient = useQueryClient();
@@ -94,7 +100,7 @@ export default function GenerateConfigButton({
       type="button"
       className={classNames(
         'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-lg drop-shadow',
-        (errors && errors.length > 0) || loading
+        hasBlockingErrors || loading
           ? 'bg-gray-300 text-gray-500'
           : 'bg-linear-to-r from-[#003A8C] to-[#001026] text-white'
       )}
@@ -220,7 +226,7 @@ export default function GenerateConfigButton({
           setLoading(false);
         }
       }}
-      disabled={!!(errors && errors.length > 0) || loading}
+      disabled={hasBlockingErrors || loading}
     >
       <div className="flex justify-between gap-5">
         {!campaignId

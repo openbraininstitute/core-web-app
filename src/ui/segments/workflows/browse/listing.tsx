@@ -504,10 +504,14 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
           className={cn(browseLayoutClassNames.footer, 'items-end gap-3')}
         >
           {confirmedPrerequisite && (
-            <div className="mr-auto flex items-center gap-2 text-neutral-5">
-              <span className="truncate ">
+            <div className="mr-auto flex min-w-0 items-center gap-2 text-neutral-5">
+              <span>
                 {activePrerequisiteConfig?.label}:{' '}
-                <strong className="font-bold text-primary-9">
+                <strong
+                  id="workflow-browse-use-selection-prerequisite-name"
+                  title={confirmedPrerequisite.row.name}
+                  className="inline-block max-w-64 truncate align-bottom font-bold text-primary-9"
+                >
                   {confirmedPrerequisite.row.name}
                 </strong>
               </span>
