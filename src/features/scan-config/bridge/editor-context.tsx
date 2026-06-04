@@ -21,6 +21,8 @@ import type { IWorkflowConfigurationInput } from '@/ui/segments/workflows/config
 export type TScanConfigWorkflowEditorFieldContext = {
   activity: TScanConfigActivity;
   workspaceSection: TWorkspaceSection;
+  /** workflow session id (`wf_…`) from the route; scopes field errors per session */
+  workflowSessionId?: string;
   configureBinding?: TScanConfigConfigureBinding;
   configurationInputs: readonly IWorkflowConfigurationInput[];
   /** carries the picked entities AND the browse prerequisites (see `.prerequisites`) */

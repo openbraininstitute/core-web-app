@@ -1,12 +1,11 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { get, isEqual, isString, pick } from 'es-toolkit/compat';
-import { useAtomValue } from 'jotai';
 
 import { authFetch } from '@/auth-fetch';
 import { useAppNotification } from '@/components/notification';
 import { config as appConfig } from '@/config';
-import { fieldErrorsAtom } from '@/features/scan-config/components/hooks/field-errors';
+import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
 import {
   BuildScanConfigTabs,
   ExtractScanConfigTabs,
@@ -57,7 +56,7 @@ export default function GenerateConfigButton({
   const { projectId, virtualLabId } = useWorkspace();
   // ajv schema errors plus field-level errors (e.g. duplicate group names) that
   // schema validation can't catch; either kind blocks generation
-  const fieldErrors = useAtomValue(fieldErrorsAtom);
+  const fieldErrors = useFieldErrors();
   const hasBlockingErrors = (!!errors && errors.length > 0) || fieldErrors.size > 0;
   const notification = useAppNotification();
   const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
