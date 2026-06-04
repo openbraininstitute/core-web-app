@@ -1,4 +1,10 @@
-import { CloseOutlined, DeleteOutlined, DownOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  CloseOutlined,
+  DeleteOutlined,
+  DownOutlined,
+  PlusOutlined,
+  RightOutlined,
+} from '@ant-design/icons';
 import { Button } from 'antd';
 import { useState } from 'react';
 
@@ -151,7 +157,7 @@ function PropertyValueSelector({
   onValuesChange: (selected: string[]) => void;
   onDelete: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   const toggle = (val: string) => {
     if (selected.includes(val)) {
@@ -180,7 +186,13 @@ function PropertyValueSelector({
           <span className="text-gray-300 mr-2">{index}.</span> {propertyName}
         </button>
         <div className="flex-1" />
-        <DownOutlined className="relative right-[3px]" onClick={() => setExpanded(!expanded)} />
+        {expanded && (
+          <DownOutlined className="relative right-[3px]" onClick={() => setExpanded(!expanded)} />
+        )}
+
+        {!expanded && (
+          <RightOutlined className="relative top-[3px]" onClick={() => setExpanded(!expanded)} />
+        )}
       </div>
       {expanded && (
         <div className="flex flex-wrap gap-2 mt-1 text-sm border-gray-300 border-1 rounded-md p-3 bg-white">
