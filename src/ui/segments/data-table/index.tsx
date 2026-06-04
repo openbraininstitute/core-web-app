@@ -106,6 +106,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
   onRow,
   onRowsSelected,
   selectedRows,
+  keepSelectionOnScopeChange,
   onCellClick,
   tableStyle,
   // us
@@ -192,6 +193,7 @@ export function MainTable<T extends EntityCoreIdentifiableNamed>({
           selectionType={selectionType}
           onRowsSelected={onRowsSelected}
           selectedRows={selectedRows}
+          keepSelectionOnScopeChange={keepSelectionOnScopeChange}
           dataKey={dataKey}
           rowClassName={rowClassName}
           tableStyle={tableStyle}

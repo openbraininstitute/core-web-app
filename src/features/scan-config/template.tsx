@@ -4,6 +4,10 @@ import { get } from 'es-toolkit/compat';
 import { Suspense, useState } from 'react';
 import { match } from 'ts-pattern';
 
+import {
+  ScanConfigMainOverlayProvider,
+  useScanConfigMainOverlayOptional,
+} from '@/features/scan-config/bridge/main-overlay-context';
 import { useEntries } from '@/features/scan-config/components/hooks';
 import { useConfig } from '@/features/scan-config/components/hooks/schema';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
@@ -36,7 +40,9 @@ import { useAgentState, useAIConfig } from '@/services/ai-agent';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
 
 import styles from '@/features/scan-config/scan-config.module.css';
@@ -58,9 +64,19 @@ type Props = {
   aiEnabled: boolean;
   generatedEndpoint: string;
   entityType: TSupportedEntityTypesForScanConfiguration;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 };
 
-export function ScanConfigTemplate({
+export function ScanConfigTemplate(props: Props) {
+  return (
+    <ScanConfigMainOverlayProvider>
+      <ScanConfigTemplateContent {...props} />
+    </ScanConfigMainOverlayProvider>
+  );
+}
+
+function ScanConfigTemplateContent({
   entity,
   virtualLabId,
   projectId,
@@ -77,7 +93,11 @@ export function ScanConfigTemplate({
   generatedEndpoint,
   entityType,
   campaignOriginAction,
+  workflowSessionSelection,
+  resolveSessionFromIdType,
 }: Props) {
+  const browseOverlayContext = useScanConfigMainOverlayOptional();
+  const browseOverlay = browseOverlayContext?.overlay;
   const [tab, setTab] = useState<TScanConfigTabs>(defaultTab);
   const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
   const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
@@ -94,6 +114,9 @@ export function ScanConfigTemplate({
     schema,
     initialConfig,
     model: entity,
+    origin,
+    workflowSessionSelection,
+    resolveFromIdType: resolveSessionFromIdType,
   });
 
   const selectedSchema = schema.properties[selectedRootElement];
@@ -176,15 +199,22 @@ export function ScanConfigTemplate({
 
       <div id="template-separator" className="w-full h-px bg-gray-200 my-2 px-3" />
       <div id="template-content" className="flex-1 min-h-0">
+        {isConfigurationTab && browseOverlay ? (
+          <div id="scan-config-model-selection-overlay" className="h-[calc(100%-0.5rem)] min-h-0">
+            <Suspense fallback={<div className="h-full w-full rounded-2xl bg-gray-50" />}>
+              {browseOverlay}
+            </Suspense>
+          </div>
+        ) : null}
         <div
           id="scan-config-content-columns"
           className={cn(
             'py-2',
             {
               'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-[5px] h-full overflow-hidden *:min-w-0':
-                isConfigurationTab,
+                isConfigurationTab && !browseOverlay,
             },
-            { hidden: !isConfigurationTab }
+            { hidden: !isConfigurationTab || Boolean(browseOverlay) }
           )}
         >
           <Left

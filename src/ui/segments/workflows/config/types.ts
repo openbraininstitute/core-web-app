@@ -5,6 +5,7 @@ import type { FlagKey } from '@/features/feature-flags/flags';
 import type { SchemaName } from '@/features/scan-config/types';
 import type { TScanConfigWorkflowDefinition } from '@/features/scan-config/workflow/types';
 import type { TWorkflowSchemaSelection } from '@/features/scan-config/workflow/workflow-schema-selection';
+import type { TWorkflowBrowseConfig } from '@/ui/segments/workflows/browse/browse-config';
 import type { TScanConfigConfigureBinding } from './scan-config-binding';
 
 export const WORKFLOW_SESSION_ID_SEARCH_PARAM = 'session' as const;
@@ -98,13 +99,18 @@ export type IWorkflowDescriptor = {
    * Not used to decide single vs multiple selection (schema only).
    */
   configurationInputs?: readonly IWorkflowConfigurationInput[];
+  /**
+   * optional per-entity-type browse prerequisite + loader configuration
+   * lets a browse input require a "parent" pick first (prerequisite) and/or fetch its rows
+   * through a custom paginated query (loader), absent = default browse behaviour
+   */
+  browseConfig?: TWorkflowBrowseConfig;
   label?: string;
   description?: string;
   tags?: readonly string[];
   filters?: Record<string, unknown>;
   disabled?: boolean;
   order?: number;
-  beta?: boolean;
   requiredFeatures?: readonly FlagKey[];
   /** when true, browse table shows species / brain region selector */
   requireSpecies?: boolean;

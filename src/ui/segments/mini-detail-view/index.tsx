@@ -23,6 +23,10 @@ import { CircuitPreview } from '@/ui/segments/mini-detail-view/previews/circuit-
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
 import { SingleNeuronSynaptomePreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-synaptome-preview';
+import {
+  MiniDetailViewTheme,
+  type TMiniDetailViewTheme,
+} from '@/ui/segments/mini-detail-view/types';
 import { cn } from '@/utils/css-class';
 
 import { DataActions, WorkflowActions, WorkflowBuildActions } from './actions';
@@ -38,7 +42,6 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { TWorkspaceSection } from '@/constants';
-import type { TMiniDetailViewTheme } from '@/ui/segments/mini-detail-view/types';
 
 type Props = {
   section?: TWorkspaceSection;
@@ -326,9 +329,15 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-1.5 rounded-md p-2 hover:bg-white/20"
+                  className={cn('mt-1.5 rounded-full p-2 hover:bg-white/20', {
+                    'hover:bg-gray-100': theme === MiniDetailViewTheme.Light,
+                  })}
                 >
-                  <CloseOutlined className="text-white" />
+                  <CloseOutlined
+                    className={cn('text-white', {
+                      'text-primary-9': theme === MiniDetailViewTheme.Light,
+                    })}
+                  />
                 </button>
               )}
             </CardTitle>

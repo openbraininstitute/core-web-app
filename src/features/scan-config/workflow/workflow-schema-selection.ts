@@ -2,8 +2,12 @@ import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
+import { isPlainObject } from '@/features/scan-config/components/utils';
+import { isFromIdRef, type TFromIdRef } from '@/features/scan-config/helpers';
 import {
+  type Config,
   type ConfigSchema,
+  type ConfigValue,
   isType,
   ScanConfigUIElementDict,
   type SchemaName,
@@ -176,8 +180,66 @@ function collectFromIdTypeConsts(value: unknown, results: Set<string> = new Set(
   return [...results];
 }
 
+// NOTE: we must find a better way to determine if the schema has a NamedTuple shape
+// checking by stringifying the schema and checking for the word "NamedTuple"
+// is not a good idea because it will fail if the schema is not a string or is not valid JSON
+// will ask James to help with this
 function hasNamedTupleShape(property: Record<string, unknown>): boolean {
   return JSON.stringify(property).includes('NamedTuple');
+}
+
+// NOTE: we must find a better way to determine if the schema has a Tuple shape
+// same as hasNamedTupleShape
+function hasTupleShape(property: Record<string, unknown>): boolean {
+  const serialized = JSON.stringify(property);
+  if (serialized.includes('NamedTuple')) {
+    return false;
+  }
+
+  return serialized.includes('prefixItems') || serialized.includes('"tuple"');
+}
+
+export const ModelIdentifierFieldStorageMode = {
+  List: 'list',
+  Tuple: 'tuple',
+  Grouped: 'grouped',
+} as const;
+
+export type TModelIdentifierFieldStorageMode =
+  (typeof ModelIdentifierFieldStorageMode)[keyof typeof ModelIdentifierFieldStorageMode];
+
+export function resolveModelIdentifierFieldStorageMode(
+  paramSchema: Record<string, unknown>
+): TModelIdentifierFieldStorageMode {
+  if (hasNamedTupleShape(paramSchema)) {
+    return ModelIdentifierFieldStorageMode.Grouped;
+  }
+
+  if (hasTupleShape(paramSchema)) {
+    return ModelIdentifierFieldStorageMode.Tuple;
+  }
+
+  return ModelIdentifierFieldStorageMode.List;
+}
+
+export function entityTypeForScanConfigFromIdType(
+  fromIdType: string
+): TExtendedEntitiesTypeDict | undefined {
+  if (!isScanConfigFromIdType(fromIdType)) {
+    return undefined;
+  }
+
+  return scanConfigFromIdTypeToEntityType[fromIdType];
+}
+
+export function acceptedEntityTypesFromField(
+  paramSchema: Record<string, unknown>
+): readonly TExtendedEntitiesTypeDict[] {
+  return mapScanConfigFromIdTypesToEntityTypes(readAcceptedFromIdTypes(paramSchema));
+}
+
+export function isScanConfigFromIdTypeValue(value: string): value is TScanConfigFromIdType {
+  return isScanConfigFromIdType(value);
 }
 
 export function scanConfigFromIdTypeForEntityType(
@@ -239,6 +301,63 @@ export function findInitializeModelProperty(schema: ConfigSchema): {
   return null;
 }
 
+function collectFromIdRefsFromModelFieldValue(value: ConfigValue | undefined): TFromIdRef[] {
+  if (isFromIdRef(value)) {
+    return [value];
+  }
+
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const refs: TFromIdRef[] = [];
+
+  for (const entry of value) {
+    if (isFromIdRef(entry)) {
+      refs.push(entry);
+      continue;
+    }
+
+    if (isPlainObject(entry) && typeof entry.name === 'string' && Array.isArray(entry.elements)) {
+      for (const element of entry.elements) {
+        if (isFromIdRef(element)) {
+          refs.push(element);
+        }
+      }
+    }
+  }
+
+  return refs;
+}
+
+/**
+ * resolves the primary entity id stored under the schema's initialize model field
+ *
+ * used when configure opens from an origin campaign (`?origin=`) without workflow session
+ * selection, the saved form is authoritative for grouped inputs, but `model_identifier`
+ * still needs a fetched entity for the middle column
+ */
+export function resolvePrimaryEntityIdFromConfigForm(
+  schema: ConfigSchema,
+  config: Config | undefined
+): string | undefined {
+  const modelProperty = findInitializeModelProperty(schema);
+  if (!modelProperty || !config) {
+    return undefined;
+  }
+
+  const initialize = config.initialize;
+  if (!initialize || typeof initialize !== 'object' || Array.isArray(initialize)) {
+    return undefined;
+  }
+
+  const modelFieldValue = initialize[modelProperty.key as keyof typeof initialize] as
+    | ConfigValue
+    | undefined;
+
+  return collectFromIdRefsFromModelFieldValue(modelFieldValue).at(0)?.id_str;
+}
+
 /**
  * Maps schema UI element + property shape to {@link WorkflowSchemaSelectionMode}.
  *
@@ -281,6 +400,7 @@ function buildModelFieldSelection(opts: {
 }): TWorkflowSchemaSelection {
   const propertyRecord = opts.modelField as unknown as Record<string, unknown>;
   const selectionMode = resolveSelectionMode(opts.modelField.ui_element, propertyRecord);
+
   if (selectionMode === WorkflowSchemaSelectionMode.Single) {
     return {
       schemaName: opts.schemaName,

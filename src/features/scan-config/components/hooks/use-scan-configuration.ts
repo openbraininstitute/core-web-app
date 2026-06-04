@@ -33,11 +33,14 @@ import {
   type TSupportedEntitiesForScanConfiguration,
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { resolvePrimaryEntityIdFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
 import {
   resolveScanConfigFromRegistry,
   type TScanConfigRegistryConfig,
 } from '@/ui/segments/workflows/config/scan-config-binding';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { Nullish } from '@/utils/type';
 
 export type TUseScanConfigurationParams = {
@@ -52,6 +55,8 @@ export type TUseScanConfigurationParams = {
   activity?: TScanConfigActivity;
   campaignOriginAction?: TScanConfigCampaignOriginActionDict;
   scanConfig: TScanConfigRegistryConfig;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 };
 
 export type TScanConfigurationReadyState = {
@@ -70,6 +75,8 @@ export type TScanConfigurationReadyState = {
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
   generatedEndpoint: string;
   aiEnabled: boolean;
+  workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
+  resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
 };
 
 /**
@@ -95,15 +102,32 @@ export function useScanConfiguration({
   activity = ScanConfigActivity.Simulate,
   campaignOriginAction = ScanConfigCampaignOriginActionDict.Task,
   scanConfig,
+  workflowSessionSelection,
+  resolveSessionFromIdType,
 }: TUseScanConfigurationParams): TUseScanConfigurationResult {
-  const shouldFetchEntity = !entityFromProps && !!entityId;
+  const registryResolved = useMemo(() => resolveScanConfigFromRegistry(scanConfig), [scanConfig]);
+
+  const { schema, isLoading: loadingSchema } = useObioneJsonSchema({
+    schemaName: registryResolved.schemaName,
+  });
+
+  const entityIdFromForm = useMemo(
+    () =>
+      schema && initialConfig
+        ? resolvePrimaryEntityIdFromConfigForm(schema, initialConfig)
+        : undefined,
+    [initialConfig, schema]
+  );
+
+  const effectiveEntityId = entityId ?? entityIdFromForm;
+  const shouldFetchEntity = !entityFromProps && !!effectiveEntityId;
 
   const {
     entity: fetchedEntity,
     isLoading: loadingEntity,
     error,
   } = useModelQuery({
-    id: shouldFetchEntity ? entityId : undefined,
+    id: shouldFetchEntity ? effectiveEntityId : undefined,
     context: { virtualLabId, projectId },
   });
 
@@ -115,21 +139,16 @@ export function useScanConfiguration({
       return null;
     }
 
-    const {
-      entityType: usedType,
-      schemaName,
-      generatedEndpoint: endpoint,
-      schemaMappingKey: effectiveSchemaMappingKey,
-    } = resolveScanConfigFromRegistry(scanConfig);
+    const entityConfig = getEntityByExtendedType({ type: registryResolved.entityType });
 
-    const entityConfig = getEntityByExtendedType({ type: usedType });
-
-    return { usedType, entityConfig, endpoint, schemaName, effectiveSchemaMappingKey };
-  }, [entity, isEntityLoading, scanConfig]);
-
-  const { schema, isLoading: loadingSchema } = useObioneJsonSchema({
-    schemaName: resolved?.schemaName,
-  });
+    return {
+      usedType: registryResolved.entityType,
+      entityConfig,
+      endpoint: registryResolved.generatedEndpoint,
+      schemaName: registryResolved.schemaName,
+      effectiveSchemaMappingKey: registryResolved.schemaMappingKey,
+    };
+  }, [entity, isEntityLoading, registryResolved]);
 
   const property_endpoints = resolved?.effectiveSchemaMappingKey
     ? get(schema?.property_endpoints, resolved.effectiveSchemaMappingKey, '')
@@ -216,6 +235,8 @@ export function useScanConfiguration({
         schemaMappingConfig,
         generatedEndpoint: resolved.endpoint,
         aiEnabled,
+        workflowSessionSelection,
+        resolveSessionFromIdType,
       },
     };
   }, [
@@ -229,9 +250,11 @@ export function useScanConfiguration({
     isLoading,
     projectId,
     readOnly,
+    resolveSessionFromIdType,
     resolved,
     schema,
     schemaMappingConfig,
     virtualLabId,
+    workflowSessionSelection,
   ]);
 }

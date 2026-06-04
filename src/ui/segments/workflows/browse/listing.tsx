@@ -2,8 +2,9 @@
 
 import { useRouter } from '@bprogress/next';
 import { notFound, useSearchParams } from 'next/navigation';
-import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 
+import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
 import {
   type TWorkflowSchemaSelection,
   WorkflowSchemaSelectionMode,
@@ -13,9 +14,9 @@ import {
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
+import { WorkflowBrowsePrerequisite } from '@/ui/segments/workflows/browse/prerequisite';
 import { useWorkflowSelectionConfig } from '@/ui/segments/workflows/browse/use-workflow-selection-config';
 import {
   buildScanConfigConfigureHref,
@@ -34,6 +35,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { TWorkspaceSection } from '@/constants';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
+import type { TBrowsePrerequisiteValue } from '@/ui/segments/workflows/browse/browse-config';
 import type {
   IWorkflowConfigurationInput,
   TActivityValue,
@@ -74,6 +76,7 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
   selectionConfig: TWorkflowSchemaSelection | null | undefined;
   configurationInputs: readonly IWorkflowConfigurationInput[];
   selectionsByType: TWorkflowBrowseSelectionsByType;
+  mergeBrowseSelectionIntoSingleGroup?: boolean;
 }): TWorkflowSessionSelectionPayload | null {
   const { selectionConfig, configurationInputs, selectionsByType } = opts;
 
@@ -92,6 +95,13 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
   }
 
   if (selectionConfig?.selectionMode === WorkflowSchemaSelectionMode.Grouped) {
+    if (opts.mergeBrowseSelectionIntoSingleGroup) {
+      return {
+        mode: WorkflowSessionSelectionMode.Grouped,
+        groups: [{ name: 'Default name', items: groups.flatMap((group) => group.items) }],
+      };
+    }
+
     return { mode: WorkflowSessionSelectionMode.Grouped, groups };
   }
 
@@ -124,7 +134,6 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
   const searchParams = useSearchParams();
-  const { scope } = useScope();
   const [selectionsByType, setSelectionsByType] = useState<TWorkflowBrowseSelectionsByType>({});
 
   const { workflow, configurationInputs, selectionConfig, isLoading } = useWorkflowSelectionConfig({
@@ -151,17 +160,6 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     [selectionCountsByType]
   );
 
-  const prevScopeRef = useRef(scope);
-
-  useEffect(() => {
-    if (!isMultiEntityBrowse || prevScopeRef.current === scope) {
-      return;
-    }
-
-    prevScopeRef.current = scope;
-    setSelectionsByType({});
-  }, [isMultiEntityBrowse, scope]);
-
   const defaultEntityType = useMemo(() => {
     return (
       getPrimaryConfigurationInput({ activity, targetType })?.type ??
@@ -180,6 +178,110 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     () => configurationInputs.find((input) => input.type === activeEntityType),
     [activeEntityType, configurationInputs]
   );
+
+  // prerequisite selections, keyed by a *share key* so prerequisites can be shared or independent:
+  //  - shared: entries declaring the same `prerequisite.shareKey` resolve to one key → picked once
+  //  - independent: no `shareKey` → keyed by entity type, so each type picks its own
+  // `confirmed` drives the loader; `draft` is the in-progress phase-1 selection.
+  const [confirmedPrerequisiteByKey, setConfirmedPrerequisiteByKey] = useState<
+    Record<string, TBrowsePrerequisiteValue>
+  >({});
+  const [draftPrerequisiteByKey, setDraftPrerequisiteByKey] = useState<
+    Record<string, TBrowsePrerequisiteValue>
+  >({});
+
+  const resolvePrerequisiteKey = useCallback(
+    (entityType: TExtendedEntitiesTypeDict | null | undefined): string | null => {
+      if (!entityType) return null;
+      const prerequisite = workflow?.browseConfig?.[entityType]?.prerequisite;
+      if (!prerequisite) return null;
+      return prerequisite.shareKey ?? entityType;
+    },
+    [workflow]
+  );
+
+  const activeBrowseEntry = activeEntityType
+    ? workflow?.browseConfig?.[activeEntityType]
+    : undefined;
+  const activePrerequisiteConfig = activeBrowseEntry?.prerequisite;
+  const activeLoader = activeBrowseEntry?.loader;
+  const activePrerequisiteKey = resolvePrerequisiteKey(activeEntityType);
+  const confirmedPrerequisite = activePrerequisiteKey
+    ? (confirmedPrerequisiteByKey[activePrerequisiteKey] ?? null)
+    : null;
+  const draftPrerequisite = activePrerequisiteKey
+    ? (draftPrerequisiteByKey[activePrerequisiteKey] ?? null)
+    : null;
+  const showPrerequisitePhase =
+    Boolean(activePrerequisiteConfig?.required) && !confirmedPrerequisite;
+
+  const isCustomLoader = activeLoader?.kind === 'custom';
+
+  // custom loader: list query + matching facets query for the table
+  const loaderListQueryFn = useMemo(
+    () => (isCustomLoader ? activeLoader.build(confirmedPrerequisite) : undefined),
+    [isCustomLoader, activeLoader, confirmedPrerequisite]
+  );
+
+  const loaderFacetsQueryFn = useMemo(
+    () => (isCustomLoader ? activeLoader.facets?.build(confirmedPrerequisite) : undefined),
+    [isCustomLoader, activeLoader, confirmedPrerequisite]
+  );
+
+  // when using a custom loader, stash the prerequisite id in the React Query cache key
+  // switching prerequisites forces a fresh fetch, so don’t get
+  // served stale stuff from the last pick
+  // INTERNAL_QUERY_CACHE_PREFIX just tags this as a cache‑key‑only param: it stays in the key but
+  // gets stripped before the HTTP request (see api‑client), so the backend never sees it
+  const prerequisiteCacheKeyParam = useMemo<Record<string, unknown> | undefined>(
+    () =>
+      isCustomLoader && confirmedPrerequisite
+        ? {
+            [`${INTERNAL_QUERY_CACHE_PREFIX}prerequisite_type`]: confirmedPrerequisite.type,
+            [`${INTERNAL_QUERY_CACHE_PREFIX}prerequisite_id`]: confirmedPrerequisite.id,
+          }
+        : undefined,
+    [isCustomLoader, confirmedPrerequisite]
+  );
+
+  const handlePrerequisiteSelect = useCallback(
+    (value: TBrowsePrerequisiteValue) => {
+      if (!activePrerequisiteKey) return;
+      setDraftPrerequisiteByKey((previous) => ({ ...previous, [activePrerequisiteKey]: value }));
+    },
+    [activePrerequisiteKey]
+  );
+
+  const handlePrerequisiteContinue = useCallback(() => {
+    if (!activePrerequisiteKey || !draftPrerequisite) return;
+    setConfirmedPrerequisiteByKey((previous) => ({
+      ...previous,
+      [activePrerequisiteKey]: draftPrerequisite,
+    }));
+  }, [activePrerequisiteKey, draftPrerequisite]);
+
+  const handlePrerequisiteChange = useCallback(() => {
+    if (!activePrerequisiteKey) return;
+    setConfirmedPrerequisiteByKey((previous) => {
+      const next = { ...previous };
+      delete next[activePrerequisiteKey];
+      return next;
+    });
+    // changing a (possibly shared) prerequisite invalidates rows picked under it, for every type
+    // that resolves to the same key.
+    const affectedTypes = new Set(
+      configurationInputs
+        .map((input) => input.type)
+        .filter((type) => resolvePrerequisiteKey(type) === activePrerequisiteKey)
+    );
+    setSelectionsByType((previous) => {
+      const next = { ...previous };
+      for (const type of affectedTypes) {
+        delete next[type];
+      }
+      return next;
+    });
+  }, [activePrerequisiteKey, configurationInputs, resolvePrerequisiteKey]);
 
   const activeSelectedRows = activeEntityType ? (selectionsByType[activeEntityType] ?? []) : [];
 
@@ -260,6 +362,8 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
       selectionConfig,
       configurationInputs,
       selectionsByType,
+      mergeBrowseSelectionIntoSingleGroup:
+        workflow?.scanConfig?.configureBinding.mergeBrowseSelectionIntoSingleGroup,
     });
 
     if (!payload) {
@@ -285,6 +389,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     targetType,
     virtualLabId,
     workflow?.configureRouting,
+    workflow?.scanConfig?.configureBinding.mergeBrowseSelectionIntoSingleGroup,
   ]);
 
   if (isLoading || shouldRedirectToConfigure) {
@@ -302,10 +407,26 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     return notFound();
   }
 
+  // prerequisite phase: the active input requires an prerequisite that hasn't been confirmed yet
+  if (showPrerequisitePhase && activePrerequisiteConfig) {
+    return (
+      <WorkflowBrowsePrerequisite
+        prerequisite={activePrerequisiteConfig}
+        value={draftPrerequisite}
+        onSelect={handlePrerequisiteSelect}
+        onContinue={handlePrerequisiteContinue}
+      />
+    );
+  }
+
   const tableSelectionType = selectionConfig?.tableSelectionType;
   const showEntityTypeSelector = configurationInputs.length > 1;
   const trackSelectionsByEntityType = showEntityTypeSelector && Boolean(tableSelectionType);
-  const extraQueryParams = activeInput?.filters ?? workflow.filters ?? undefined;
+  const baseExtraQueryParams = activeInput?.filters ?? workflow.filters;
+  const extraQueryParams =
+    baseExtraQueryParams || prerequisiteCacheKeyParam
+      ? { ...baseExtraQueryParams, ...prerequisiteCacheKeyParam }
+      : undefined;
   const browseLayoutClassNames = getBrowseClassNames(isMultiEntityBrowse);
 
   return (
@@ -322,8 +443,11 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         }}
         dataType={activeEntityType}
         extraQueryParams={extraQueryParams}
+        listQueryFn={loaderListQueryFn}
+        facetsQueryFn={loaderFacetsQueryFn}
         mainTableProps={{
           selectionType: tableSelectionType,
+          ...(isMultiEntityBrowse ? { keepSelectionOnScopeChange: true } : {}),
           ...(trackSelectionsByEntityType
             ? {
                 selectedRows: activeSelectedRows,
@@ -347,8 +471,25 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         <div
           id="workflow-browse-use-selection"
           data-testid="workflow-browse-use-selection"
-          className={browseLayoutClassNames.footer}
+          className={cn(browseLayoutClassNames.footer, 'items-end gap-3')}
         >
+          {confirmedPrerequisite && (
+            <div className="mr-auto flex items-center gap-2 text-neutral-5">
+              <span className="truncate ">
+                {activePrerequisiteConfig?.label}:{' '}
+                <strong className="font-bold text-primary-9">
+                  {confirmedPrerequisite.row.name}
+                </strong>
+              </span>
+              <Button
+                variant="link"
+                className="h-8 px-2 underline"
+                onClick={handlePrerequisiteChange}
+              >
+                Change
+              </Button>
+            </div>
+          )}
           <Button
             rounded
             variant="default"

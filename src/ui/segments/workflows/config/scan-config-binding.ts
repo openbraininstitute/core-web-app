@@ -46,6 +46,11 @@ export type TScanConfigConfigureBinding = {
   generatedApiPath: string;
   /** Key under schema `property_endpoints` for circuit / ion-channel mapping (when applicable). */
   schemaMappingKey?: TSchemaMappingKey;
+  /**
+   * When `true`, grouped browse selection merges all configuration-input tabs
+   * into one neuron set instead of one group per tab.
+   */
+  mergeBrowseSelectionIntoSingleGroup?: boolean;
 };
 
 export function resolveScanConfigFromIdType(
@@ -156,5 +161,6 @@ export function buildEmSynapseMappingConfigureBinding(): TScanConfigConfigureBin
       [ExtendedEntitiesTypeDict.Memodel]: ScanConfigFromIdType.MEModelFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.EMSynapseMapping,
+    mergeBrowseSelectionIntoSingleGroup: true,
   };
 }

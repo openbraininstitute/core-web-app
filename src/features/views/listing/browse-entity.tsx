@@ -9,6 +9,7 @@ import {
   type ComponentProps,
   type ReactElement,
   type ReactNode,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -46,6 +47,7 @@ import {
 } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { useDataTableColumns } from '@/ui/segments/data-table/elements/use-data-table-columns';
+import { MainTableSkeleton } from '@/ui/segments/data-table/skeleton';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import {
@@ -61,9 +63,10 @@ import type {
   EntityCoreIdentifiable,
   EntityCoreIdentifiableNamed,
 } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
+import type { EntityCoreResponse, TFacets } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
 import type { TSortStateList } from '@/entity-configuration/definitions/types';
+import type { WorkspaceContext } from '@/types/common';
 import type { Props as MainTableProps } from '@/ui/segments/data-table';
 
 const MainTable = dynamic(() => import('@/ui/segments/data-table'), {
@@ -118,6 +121,28 @@ type Props = {
     onSelect: (value: TExtendedEntitiesTypeDict) => void;
   };
   extraQueryParams?: Record<string, unknown>;
+  /**
+   * optional override for the list fetch. when provided, replaces the entity's domain
+   * `query.list` (a "loader")
+   * rows still render with `dataType` columns/mini-detail, so
+   * the override MUST return rows in the standard entity shape and carry server-side
+   * pagination.
+   * facets default to the entity facet endpoint (not loader-scoped) unless
+   * {@link facetsQueryFn} is provided.
+   */
+  listQueryFn?: (args: {
+    filters: Record<string, unknown>;
+    withFacets?: boolean;
+    context: WorkspaceContext;
+  }) => Promise<EntityCoreResponse<EntityCoreIdentifiableNamed> | undefined>;
+  /**
+   * optional facets override. when provided, facets are computed by this instead of the
+   * default entity facet endpoint — for loaders that have a properly scoped facet query.
+   */
+  facetsQueryFn?: (args: {
+    filters: Record<string, unknown>;
+    context: WorkspaceContext;
+  }) => Promise<TFacets | undefined>;
 };
 
 export function BrowseEntityScope({
@@ -140,6 +165,8 @@ export function BrowseEntityScope({
   requireScopeSelector,
   requireEntityTypeSelector,
   extraQueryParams,
+  listQueryFn,
+  facetsQueryFn,
 }: Props) {
   const requireBrainRegion =
     requireBrainRegionProp ?? dataBrowseListingUsesBrainRegionHierarchy(dataType);
@@ -285,6 +312,13 @@ export function BrowseEntityScope({
     },
     workspace: { virtualLabId, projectId },
     queryFn: async () => {
+      if (listQueryFn) {
+        return listQueryFn({
+          filters: queryFilters,
+          withFacets: false,
+          context: { virtualLabId, projectId },
+        });
+      }
       return entity?.api?.query.list?.({
         filters: queryFilters,
         withFacets: false,
@@ -319,6 +353,9 @@ export function BrowseEntityScope({
     dataType,
     workspace: { virtualLabId, projectId },
     queryFilters,
+    queryFnOverride: facetsQueryFn
+      ? () => facetsQueryFn({ filters: queryFilters, context: { virtualLabId, projectId } })
+      : undefined,
     enabled: () => {
       if (!allowQuery) return false;
       if (
@@ -398,47 +435,49 @@ export function BrowseEntityScope({
         )}
       >
         <div id="main-listing-table-container" className={cn('h-full w-full')}>
-          <MainTable
-            showLoadingState
-            allowDownload={allowDownload}
-            allowDelete={allowDelete}
-            allowFilter={allowFilter}
-            allowSearch={allowSearch}
-            requireSpeciesSelector={requireSpeciesSelector}
-            requireScopeSelector={requireScopeSelector}
-            sticky={{ offsetHeader: 75.5 }}
-            isLoading={isFetching}
-            dataScope={scope}
-            section={section}
-            dataSource={dataSource ?? []}
-            dataType={dataType}
-            workspace={{ virtualLabId, projectId }}
-            dataKey={dataKey}
-            columns={columns}
-            onCellClick={onCellClick}
-            resultPagination={{
-              pagination,
-              totalData: dataSource?.length,
-            }}
-            cls={{
-              table: cn(
-                '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
-                '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
-                classNames?.tableClassNames?.table
-              ),
-              container: classNames?.tableClassNames?.container,
-            }}
-            {...mainTableProps}
-            requireEntityTypeSelector={requireEntityTypeSelector}
-            filterClassNames={classNames?.filterClassNames}
-            // @ts-expect-error
-            expandableOptions={expandableOptions}
-            facets={{
-              data: facets,
-              error: facetsError,
-              loading: facetsLoading,
-            }}
-          />
+          <Suspense fallback={<MainTableSkeleton />}>
+            <MainTable
+              showLoadingState
+              allowDownload={allowDownload}
+              allowDelete={allowDelete}
+              allowFilter={allowFilter}
+              allowSearch={allowSearch}
+              requireSpeciesSelector={requireSpeciesSelector}
+              requireScopeSelector={requireScopeSelector}
+              sticky={{ offsetHeader: 75.5 }}
+              isLoading={isFetching}
+              dataScope={scope}
+              section={section}
+              dataSource={dataSource ?? []}
+              dataType={dataType}
+              workspace={{ virtualLabId, projectId }}
+              dataKey={dataKey}
+              columns={columns}
+              onCellClick={onCellClick}
+              resultPagination={{
+                pagination,
+                totalData: dataSource?.length,
+              }}
+              cls={{
+                table: cn(
+                  '[&_.ant-table]:bg-background! [&_.ant-table-header_th]:bg-background!',
+                  '[&_.ant-table-placeholder]:bg-background! [&_.ant-table-tbody_tr.ant-table-placeholder]:bg-background!',
+                  classNames?.tableClassNames?.table
+                ),
+                container: classNames?.tableClassNames?.container,
+              }}
+              {...mainTableProps}
+              requireEntityTypeSelector={requireEntityTypeSelector}
+              filterClassNames={classNames?.filterClassNames}
+              // @ts-expect-error
+              expandableOptions={expandableOptions}
+              facets={{
+                data: facets,
+                error: facetsError,
+                loading: facetsLoading,
+              }}
+            />
+          </Suspense>
         </div>
       </div>
       {requireMiniDetailView && (

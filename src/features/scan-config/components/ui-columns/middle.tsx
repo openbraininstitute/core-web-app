@@ -15,6 +15,7 @@ import {
   type TSupportedEntityTypesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
+import { cn } from '@/utils/css-class';
 
 import { isPlainObject } from '../utils';
 
@@ -70,7 +71,10 @@ export default function Middle({
       : selectedRootElement;
 
   return (
-    <div className={styles.animateFadeUp} id="scan-config-middle-content">
+    <div
+      className={cn(styles.animateFadeUp, 'w-full min-w-0 max-w-full')}
+      id="scan-config-middle-content"
+    >
       {selectedSchema.ui_element === ScanConfigUIElementDict.BlockDictionary && (
         <BlockDictionary
           campaignId={campaignId}

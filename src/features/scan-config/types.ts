@@ -160,7 +160,7 @@ export interface ModelIdentifier extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifier;
 }
 
-export interface ModelIdentifierMultiple extends TBlockElement {
+export interface TModelIdentifierMultiple extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifierMultiple;
 }
 export interface FloatParameterSweep extends TBlockElement {
@@ -328,7 +328,7 @@ export type TBlockElement = {
 export type ParamSchema =
   | StringInput
   | ModelIdentifier
-  | ModelIdentifierMultiple
+  | TModelIdentifierMultiple
   | FloatParameterSweep
   | IntParameterSweep
   | Reference

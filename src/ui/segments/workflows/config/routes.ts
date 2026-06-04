@@ -57,6 +57,22 @@ function usesStaticScanConfigConfigureRoute(workflow: IWorkflowDescriptor | null
   );
 }
 
+/**
+ * resolves the workflow session id embedded in scan-config configure URLs
+ *
+ * session ids (`wf_*`) are route parameters for session-based workflows, this helper
+ * decides whether to reuse an id, generate an empty slot, or persist browse selection
+ * to `sessionStorage` before returning the id
+ *
+ * resolution order:
+ * 1. `sessionId` — reuse as-is (caller owns storage)
+ * 2. `skipSelectionPersist` new id only; nothing written (duplicate/resume via `?origin=`)
+ * 3. `selection`: persist full browse payload; return its storage key
+ * 4. `entityRef`: wrap as single-item selection, persist, return key
+ * 5. fallback new id with no persisted selection (configure-only entry)
+ *
+ * @returns workflow session id suitable for the configure path segment
+ */
 function resolveScanConfigSessionId(opts: {
   sessionId?: string;
   skipSelectionPersist?: boolean;
@@ -175,6 +191,7 @@ export function buildConfigureUrlForEntity({
   entityId,
   entityType,
   selection,
+  skipSelectionPersist,
   query = {},
 }: {
   activity: TActivityValue;
@@ -183,6 +200,7 @@ export function buildConfigureUrlForEntity({
   entityId: string;
   entityType?: TExtendedEntitiesTypeDict;
   selection?: TWorkflowSessionSelectionPayload;
+  skipSelectionPersist?: boolean;
   query?: Record<string, string | undefined>;
 }): string {
   const workflow = getWorkflow({ activity, targetType });
@@ -222,7 +240,8 @@ export function buildConfigureUrlForEntity({
     activity,
     targetType,
     workspace,
-    entityRef: entityType ? { type: entityType, id: entityId } : undefined,
+    skipSelectionPersist,
+    entityRef: skipSelectionPersist || !entityType ? undefined : { type: entityType, id: entityId },
     selection,
     query,
   });
