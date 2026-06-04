@@ -466,6 +466,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         requireBrainRegion={workflow.requireSpecies}
         requireSpeciesSelector={workflow.requireSpecies}
         requireScopeSelector={workflow.requireScope}
+        allowFilter={workflow.requireFilters}
         section={section}
         classNames={{
           container: browseLayoutClassNames.container,

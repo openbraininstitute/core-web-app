@@ -68,7 +68,8 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
       schemaName: SchemaNameDict.EMSynapseMappingScanConfig,
       configureBinding: buildEmSynapseMappingConfigureBinding(),
     },
-    requireSpecies: true,
+    requireFilters: false,
+    requireSpecies: false,
     order: 5,
     configurationInputs: [
       {

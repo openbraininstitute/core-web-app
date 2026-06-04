@@ -156,6 +156,8 @@ export type IWorkflowDescriptor = {
   requireSpecies?: boolean;
   /** when true, browse table shows workspace scope selector */
   requireScope?: boolean;
+  /** when true, browse table shows filter controls */
+  requireFilters?: boolean;
   /**
    * scan-config configure URL shape; defaults to {@link WorkflowConfigureRoutingDict.Session}.
    * {@link WorkflowConfigureRoutingDict.Standalone} skips persisting a browse selection.
